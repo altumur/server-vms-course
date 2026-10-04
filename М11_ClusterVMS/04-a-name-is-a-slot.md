@@ -151,19 +151,73 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 
 > **Имя из юнита — метка. Имя воркера — слот, взятый по CAS; юнит только говорит, какой слот брать.**
 
-### Побочный эффект: свежий номер и свежая коробка
+### Старый процесс: никто, и только своё имя
 
-Что дальше со старым процессом? Отсечённый воркер не выходит: «отсечён» — не навсегда. На следующем проходе он отпускает всё, что держал, отдаёт имя и берёт **другое** — уже без пожелания, по правилам шага 2: истёкший слот, свободный — или новый номер. На стенде он становится `w-2`:
+Что дальше со старым процессом? Отсечённый воркер не выходит: «отсечён» — не навсегда. Первая версия на следующем проходе отдавала имя и брала **другое**, по правилам шага 2: истёкший слот, свободный — или новый номер. На стенде он становился `w-2` (номер слота — число после последнего дефиса, у всех `w-<сервер>-1` оно 1, следующий — 2; поэтому и предложения слотов, шаг 5, называются `w-2`, `w-3`). После двух процессов с одним именем на сервере оказывался **второй воркер**, о котором юнит не знает: контроллер видел его heartbeat и давал ему камеры, а остановить его было делом человека.
+
+Владелец решил иначе (4 октября; в продукте то же, `r24-names`). Процесс, имя которому дал юнит (`WORKER_NAME`, `<ROLE>_NAME`, `SLOT_INDEX`), — это имя, и другого он не берёт. Имя он запоминает при старте (`Worker.given`, в `claim_slot(prefer=…)`), а отсечённый просит на каждом шаге аренд **только его** — и только свободным или истёкшим (`w2cplatform/contract.py`, `_seek_slot`):
+
+```python
+            if self.given is not None and self.spare_for is None:
+                with self._slot_lock:
+                    self._claim_slot(self.given, 50, steal=False)
+            else:
+                self.claim_slot()
+        except NoOffer:
+            return False                          # a spare with no offer of its set: it waits, as it said at its start
+        except _NameTaken as e:
+            self._name_taken_by(e)
+            return False
+```
+
+`steal=False` — это и есть «у живого не отнимать». В самом захвате (`_claim_slot`) оно стоит рядом с проверкой другой коробки, о которой ниже:
+
+```python
+                if prefer is not None and cur.holder != self.instance:
+                    if not steal and (not cur.claimable(now) or cur.lapsed(now) and self._hung(cand, cur)):
+                        raise _NameTaken(cand, cur.holder, cur.until)   # live, or lapsed with its process hung: its holder's
+                    if steal and not cur.claimable(now):
+                        refused = self._may_take_by_name(cand, cur.holder)
+                        if refused is not None:
+                            self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
+                            raise refused
+```
+
+Пока имя держит живой экземпляр, старый процесс — **никто**: слота нет, heartbeat под именем не пишется, назначение не читается, эпох нет (всё, что огорожено, пока `seeking`, — М10A, урок 8). Один раз за эпизод он говорит в журнал тревогу `worker.name_taken` — кто держит имя и на какой коробке — и в лог:
 
 ```
-srv-a:4101: was fenced as w-srv-a-1 (slot w-srv-a-1 is held by another instance now); rejoined as w-2
+<экземпляр>: its name vms/w-srv-a-1 is held by <держатель> (box <коробка>) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
 ```
 
-Почему `w-2`: номер слота — число после последнего дефиса, и у `w-srv-a-1`, `w-srv-b-1`, `w-srv-c-1` оно у всех 1. Следующий новый номер — 2. Поэтому и предложения слотов (шаг 5) называются `w-2`, `w-3`, хотя воркеры юнитов — `w-<сервер>-1`.
+И оставляет метку `vms/contenders/w-srv-a-1/<коробка>` (объект, как heartbeat: `{name, state: "nameless", box, hostname, server, instance, holder, holder_box, since, at}`), переписывая её раз в `CONTEND_EVERY` (10 с) — его пульс, пока heartbeat под именем чужой. Новый держатель остановился (`SIGTERM` отпускает слот) или замолчал дольше срока слота — старый берёт своё имя и пишет `worker.name_back`. Отнимать имя у живого он не будет никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. Захват имени у живого держателя остался **только при старте** — это перезапуск после `kill -9`, где юнит знает, какой процесс настоящий. Процесс без имени (не дали ни имени, ни индекса) возвращается, как раньше, под свободным номером. Тесты: `vmsserver/tests/test_names.py` — `test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number`, `test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder`, `test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number`; на стенде модуля — `test_lesson4_failover.py::test_two_processes_with_one_name_the_old_one_is_nobody`.
 
-Это значит: после двух процессов с одним именем на сервере оказывается **второй воркер**, `w-2`, о котором юнит не знает. Контроллер видит его heartbeat и может назначить ему камеры — он такой же воркер, как любой. Остановить его — дело человека: `kill` (то есть `SIGTERM`) — и он отпустит свой слот, а контроллер раздаст его камеры (шаг 6). Если вы видите в `/servers` воркер с номером вместо имени сервера, а скрипт запасных его не запускал, — это он.
+### Свежая коробка: одно имя на двух машинах
 
-И второй случай того же рода — **свежая коробка**. `%l` — это имя хоста. Две только что поставленные машины с именем по умолчанию (`localhost`, `debian`, два клона одной виртуальной машины) дадут своим воркерам одно имя — `w-localhost-1` на обоих серверах, — хотя `SERVER_NAME` в `w2c.env` у них разный. Тогда каждый перезапуск одного отнимает имя у другого, отсечённый уходит под свежий номер, а имена в списках перестают говорить, на каком сервере воркер. Ничего не теряется — слот и эпоха делают своё, — но кластер выглядит странно. Имя хоста задают до `install.sh`: `hostnamectl set-hostname srv-a`.
+И второй случай того же рода — **свежая коробка**. `%l` — это имя хоста. Две только что поставленные машины с именем по умолчанию (`localhost`, `debian`, два клона одной виртуальной машины) дают своим воркерам одно имя — `w-localhost-1` на обоих серверах, — хотя `SERVER_NAME` в `w2c.env` у них разный. Раньше каждый перезапуск одного отнимал имя у другого, а заметить это можно было только по логам двух машин.
+
+Теперь живого держателя с **другой** коробки не трогают. Коробку экземпляр носит в своём имени: `<коробка>:<pid>:<6 hex>`, где коробка — `BOX_ID`, если его сказал рантайм, иначе идентификатор машины (`/etc/machine-id`), иначе имя хоста (`runtime.box`). Имя хоста одно на двух клонах — идентификатор машины у них разный. Правило — `Worker._may_take_by_name`:
+
+```python
+    def _may_take_by_name(self, slot: str, holder: str) -> "NameOnAnotherBox | None":
+        here, there = runtime.box_of(self.instance), runtime.box_of(holder)
+        if here is None or there is None or here == there:
+            return None
+        return NameOnAnotherBox(slot, holder, there, socket.gethostname(), here, getattr(self, "NAME_ENV", ""))
+```
+
+Та же коробка — это перезапуск, имя берётся. Имя, которое коробки не называет (`INSTANCE_ID`, идентификатор аллокации: такие имена даёт планировщик и сам переносит индекс между узлами), — тоже берётся, как раньше. Живой держатель с другой коробки — отказ: процесс пишет, что делать, и выходит, а юнит его перезапускает:
+
+```
+w-localhost-1 is held by a live process on another machine (box <коробка>, instance <держатель>): two machines are given one name, usually because they share the hostname 'localhost' (the units name their processes from it, w-%l-1). Give this machine another hostname, or set WORKER_NAME in its unit to a name no other machine uses. This machine (box <своя>) leaves the name alone: taking it would stop the other machine's live process
+```
+
+Каждый отказ переписывает метку `vms/contenders/<имя>/<коробка>` с `state: "refused"`; начало эпизода (`since`) берётся из прежней свежей метки, так что перезапуски юнита эпизод не множат. Метка, не обновлявшаяся `CONTENDER_FRESH` (300 с), не читается. Кто её видит:
+
+- `/servers` — у строки держателя поле `name_conflict`: `{holder, holder_box, contenders: [{state, box, hostname, server, instance, holder_seen, since, for_s, at}]}`, `null`, пока никто не просит;
+- контроллер — раз за эпизод тревога `worker.name_conflict` (`Controller.say_name_conflicts`, шаг прохода `name_conflicts`): кто держит, какая коробка просит, с какого момента;
+- `/metrics` — `vms_name_conflicts`, число имён со свежей меткой (из отчёта прохода, поле `name_conflicts`).
+
+Когда держатель с той коробки уходит и его слот истекает, следующий перезапуск берёт имя как истёкшее и метку убирает. Тест: `test_names.py::test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_seen`. Имя хоста всё равно задают до `install.sh`: `hostnamectl set-hostname srv-a` — отказ лишь не даёт двум машинам драться за одно имя молча.
 
 ## Шаг 4 — Кто решает N
 
@@ -426,8 +480,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items":
 
 ## Что может пойти не так
 
-- **Две машины с одним именем хоста.** Одно `w-%l-1` на двух серверах: процессы отнимают имя друг у друга, отсечённый уходит под номер. Задайте имя хоста до установки.
-- **Воркер `w-2`, которого никто не запускал.** Старый процесс после двух процессов с одним именем. Найдите его и остановите `SIGTERM` — он отпустит слот.
+- **Две машины с одним именем хоста.** Одно `w-%l-1` на двух серверах: держит тот, кто взял первым, второй выходит со словами и перезапускается юнитом; `/servers` показывает `name_conflict`, контроллер — тревогу `worker.name_conflict`, `vms_name_conflicts` 1. Задайте имя хоста (или `WORKER_NAME` в юните) до установки.
+- **Процесс, который держит ничего и пишет `worker.name_taken`.** Старый процесс после двух процессов с одним именем на одной коробке: ждёт своё имя и другого не берёт. Если он не нужен — остановите его `SIGTERM`; если нужен он, а не новый, — остановите новый, и старый возьмёт имя сам.
 - **Плановая остановка оставила слот `released: false`.** `TimeoutStopSec` слишком короткий, или процесс не обрабатывает `SIGTERM`. 20 секунд, и выход обязан идти через `release_slot()`.
 - **Запасной, запущенный руками без `SPARE_FOR`.** Это не запасной, а обычный процесс: он заведёт новый слот вместо предложения, и камер станет хватать двоим.
 - **Скрипт запасных, который гасит «лишние».** Гонка с недостачей следующего прохода; остановка — решение человека.

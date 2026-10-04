@@ -157,8 +157,9 @@ def test_two_processes_with_one_name_the_old_one_is_nobody():
     """The unit restarted while the old process still lived — it hung past systemd's stop, or somebody started a
     second copy by hand. The new one takes the name; the old one's next renewal finds the slot held by another:
     fenced at the slot, and every epoch says the same. It stops. And it is nobody (the review's sixth pass): the name
-    is the new one's, so the old says nothing under it and reads nothing of its assignment. It may come back as a
-    worker of a free name, and what the epochs said of it goes with it."""
+    is the new one's, so the old says nothing under it and reads nothing of its assignment. And it takes no other name
+    (the owner's decision of 4 Oct): it came back as `w-2` once — a second worker on srv-a its unit knew nothing of. It
+    waits for its own, free or lapsed, and what the epochs said of it goes with it."""
     c, ctl, a, act_a, _ = _recording(b=False)
     c.wall.advance(5)
     b = c.worker("srv-a"); b.reconcile_once()
@@ -170,10 +171,13 @@ def test_two_processes_with_one_name_the_old_one_is_nobody():
     a.heartbeat_once()                                                     # one heartbeat under the name, and it is the new one's
     assert ctl.workers_seen()["w-srv-a-1"].extra == theirs and theirs["fenced"] is False and theirs["alloc"] == b.instance
     assert a.reconcile_once() == [] and a.rows == []                       # not even the assignment is read
-    name = a.rejoin()                                                      # a free slot, from nothing — and what the epochs
+    assert a.rejoin() is None and "w-2" not in ctl.slots()
+    assert a.nameless["holder"] == b.instance                              # nobody, waiting: no other number taken
+    b.release_slot()                                                       # the new one stops: the name is free
+    name = a.rejoin()                                                      # its own name, from nothing — and what the epochs
     a.heartbeat_once()                                                     # said of it goes with it: the number of this lesson
     told = ctl.workers_seen()[name].extra
-    assert name != "w-srv-a-1" and told["conflicts"] == 3 and "slot w-srv-a-1" in told["was_fenced"] and told["fenced"] is False
+    assert name == "w-srv-a-1" and told["conflicts"] == 3 and "slot w-srv-a-1" in told["was_fenced"] and told["fenced"] is False
 
 
 def test_the_reassignment_window_is_the_same_window_with_a_different_verdict():

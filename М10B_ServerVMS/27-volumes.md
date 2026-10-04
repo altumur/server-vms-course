@@ -484,6 +484,39 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 **Сетевой том на слишком старом `obsd` — `wrong`, и регистратор его не берёт.** Том, который может взять другая коробка, требует от демона умения его бросить (`WRITER_ABANDON`, движок с патчем 07). Демон без этого регистратор проверяет один раз (`Session.abandons`) и такой том не заявляет вовсе; причина — в `refused` его heartbeat'а и на странице томов: *obsd on srv-a is too old to write net safely — a volume any server may take: this obsd cannot give a volume up when another server takes it. Update obsd on srv-a; volumes on its own disks are not affected* (урок 10, шаг 3; `test_lock_lost.py::test_a_recorder_takes_no_network_volume_on_an_obsd_that_cannot_give_one_up`).
 
+### Тома, который был, нет: найти, а не сделать заново
+
+Диск не примонтировался после перезагрузки. Точка монтирования пуста или её нет вовсе, движок отвечает «тома там нет» (`VOLUME_EXISTS` — нет), и `Archive.open` делал то, что делает с любым новым томом: **форматировал** его — пустой, на том диске, куда теперь попадает путь, обычно на системном. Регистратор писал в него как ни в чём не бывало: ни ошибки, ни тревоги, недели записей не видно, системный диск заполняется (решение владельца 4 октября; в продукте то же, `r24-names`).
+
+Теперь перед форматированием `Archive.open` спрашивает (`may_format`), можно ли:
+
+```python
+            if not vol.exists():
+                if self.may_format is not None:
+                    self.may_format()              # was in use here, and is gone: not made again, empty, in its place
+```
+
+«Был в работе» у курса означает одно: подсистема уже открывала этот том **по этому адресу**. При первом удачном открытии регистратор пишет метку — объект `rec/used/<том>` `{url, at, by, instance, server}` (`Subsystem.used_key`, `RecWorker._mark_used`) — рядом с heartbeat'ами, в объектах, а не в строке хранилища: это запись о месте, а не решение, которого кто-то ждёт. Не строка захвата (`rec/holds/<том>`): захват бывает и у тома, который так ни разу и не открылся, а у собственного тома сервера и у закреплённого диска захвата нет вовсе. Метка ставится всем. Ответ — `RecWorker._may_format`:
+
+```python
+    def _may_format(self, vol) -> None:
+        try:
+            raw = self.objects.get(self.sub.used_key(vol.name))
+        except OSError as e:
+            raise ArchiveError("away", f"{vol.name} is not there, and whether it was in use cannot be read now ({e}): "
+                                       f"not formatted until it can", "UNAVAILABLE") from None
+        if not raw:
+            return                                        # never opened: a new volume, formatted
+        try:
+            mark = json.loads(raw)
+        except PARSE_ERRORS:
+            mark = None                                   # a mark that does not read: in use, by the safe side
+        if isinstance(mark, dict) and str(mark.get("url", "")) != vol.url:
+            return                                        # opened at another address: this one is new, formatted
+```
+
+а дальше — `ArchiveError("wrong", …, "VOLUME_MISSING")` со словами для оператора: том был в работе по такому-то адресу и его там нет — диск не примонтирован, каталог удалён или переименован; на его месте ничего не форматируется, потому что пустой том спрятал бы записи; примонтируйте — и запись пойдёт как была, записи тем временем уходят на другой том; если том должен начаться пустым, объявите его под другим именем или адресом. Это обычный `wrong` из списка выше: том отдаётся, регистратор берёт следующий из `servable`, контроллер ставит его записи туда, где ёмкость есть; брать больше нечего — регистратор остаётся на нём с нулевой ёмкостью и этой причиной в `volume_error`, ничего не форматируя. Раз за эпизод (у каждого регистратора, который на него наткнулся) — тревога `volume.missing` в событиях тома (`rec/<том>/e0`, как `archive.volume.busy`): `{volume, url, recorder, server, detail}`. Эпизод кончается, когда том снова открылся. Примонтировали назад — следующий проход открывает его как был, без форматирования. Новый том или том, объявленный заново по другому адресу, форматируется как раньше: метки по этому адресу нет. Не читается хранилище объектов — `away`: не известно, был ли том, и форматировать его до ответа никто не будет. Тест: `test_volumes.py::test_a_volume_whose_directory_is_gone_is_not_made_again_empty_and_its_recordings_go_elsewhere`.
+
 ### Молчащий демон не останавливает жизнь регистратора
 
 Каждый вызов к `obsd` ждёт не больше `OBSD_TIMEOUT` — десять секунд, меньше аренды. Проходы идут в том же потоке, что продлевает аренды, и демон, который принял запрос и замолчал, иначе держал бы поток дольше аренды: регистратор отсечён, все записи остановлены из-за одного молчащего процесса. Дольше ждёт только `WRITER_CLOSE` — его сброс протокол разрешает растянуть. Тесты в `test_archive_outage.py`: `test_a_daemon_that_is_not_there_does_not_stop_the_recorder`, `test_a_daemon_that_says_nothing_does_not_stop_the_recorder_living`, `test_the_recorders_calls_wait_less_than_a_lease_and_only_a_close_waits_for_its_flush`, `test_when_the_daemon_answers_again_the_volume_opens_and_the_outage_is_over` и `test_backfill_waits_while_the_volume_is_taking_nothing` — пока том ничего не берёт, дозаписи некуда класть то, что она принесёт.
@@ -617,6 +650,7 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - **Локальный диск, который не открылся, считают `away`.** Регистратор держит сломанный диск вечно, его записи никуда не уходят, а на экране «вернётся через минуту».
 - **Сетевой том, который не открылся, считают `wrong`.** Каждый обрыв сети перетасовывает все записи тома.
 - **Сломанный том отдают, даже когда больше некуда.** Коробка перестаёт писать совсем из-за диагностики.
+- **Том, которого нет, форматируют заново.** Непримонтированный диск становится пустым томом на системном, записи пропадают из виду, системный диск заполняется. Том, открытый по этому адресу раньше (метка `rec/used/<том>`), не форматируется: `volume.missing`, том отдаётся.
 - **Отказавший посреди работы том берут назад на следующем проходе.** Регистратор мигает между «взял» и «отдал». Нужна пауза `REFUSED_FOR`.
 - **Ключ в адресе тома.** Он на странице, в heartbeat'е и в строке. `refuse` не пропускает `@` в части хоста и параметры с именами учётных данных.
 - **Идентификатор ключа из адреса.** Адрес с `@` не пройдёт `refuse`, и s3-том дойдёт до демона без `access_key`. Идентификатор — своё поле строки.

@@ -97,8 +97,10 @@ def test_a_camera_in_two_assignments_costs_one_pipeline_not_fifty():
 def test_only_a_slot_row_naming_another_holder_fences_and_a_fence_is_not_for_ever():
     """The replacement took w-1. The old instance reads the slot row, finds another holder and fences — that is a
     "no". It used to stay so: alive, heartbeating `fenced: true`, recording nothing until somebody restarted it.
-    On its next pass it takes a free slot and starts from nothing."""
+    On its next pass it takes a free slot and starts from nothing — a process that took whatever was free; one named by
+    its unit takes its own name back only (`test_names.py`)."""
     box, ctl, store, act, a = _worker(1)
+    a.given = None                                                    # not named by its unit: any free slot will do
     box.wall.advance(46)                                              # a long pause: the slot lapsed
     b = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     assert b.name == "w-1"

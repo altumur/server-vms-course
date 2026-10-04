@@ -274,14 +274,19 @@ class Archive:
     refusal it always was.
 
     `share`: for a volume that does not exist yet and has no `quota`, how big to format it — given what the daemon
-    says of the disk it will be on (`space_where`)."""
+    says of the disk it will be on (`space_where`).
+
+    `may_format`: asked before a volume that is not there is formatted, and raising `ArchiveError` when it must not be:
+    one that was in use at this address and is gone — a disk not mounted — is not made again, empty, in its place
+    (`RecWorker._may_format`; the owner's decision of 4 Oct)."""
 
     def __init__(self, url: str, name: str = "", quota: int = 0, owner: str = "", session: Session | None = None,
                  wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ, access_key: str = "",
                  sequence_flush_ms: int = SEQUENCE_FLUSH_MS, block_flush_s: int = BLOCK_FLUSH_S,
-                 confirm=None, lock_refresh: int = 0, share=None, fence=None, on_unclean=None):
+                 confirm=None, lock_refresh: int = 0, share=None, fence=None, on_unclean=None, may_format=None):
         self.url, self.name, self.quota, self.owner = url, name or url, int(quota), owner
         self.share = share                         # no quota and no volume yet: its size from the disk (`space_where`)
+        self.may_format = may_format               # no volume there: may one be made (raises `ArchiveError` if not)
         self.session = session or Session(client="vms-archive")
         self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
         self.sequence_flush_ms, self.block_flush_s = int(sequence_flush_ms), int(block_flush_s)
@@ -359,13 +364,16 @@ class Archive:
 
     # Opening is the only honest test: a row can name a path that does not exist, a mount that is gone or a
     # bucket nobody can reach. A volume that is not there yet is FORMATTED — at its quota, which is the size of
-    # the ring — and then mounted for writing under `owner`. A volume that IS there keeps its size, and `quota`
+    # the ring — unless `may_format` says it was there before and must be found, not made — and then mounted for
+    # writing under `owner`. A volume that IS there keeps its size, and `quota`
     # becomes that size, read from the volume (the review's third pass): the number a recorder computed at its
     # start is a guess for a volume it has yet to format, never news about one that exists.
     def open(self, write: bool = True) -> "Archive":
         try:
             vol = self._open_volume()
             if not vol.exists():
+                if self.may_format is not None:
+                    self.may_format()              # was in use here, and is gone: not made again, empty, in its place
                 if not self.quota and self.share is not None:
                     self.quota = self.share(self.space_where())
                 if not self.quota:
