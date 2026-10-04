@@ -654,7 +654,13 @@ class VmsWorker(Worker):
     def refresh(self) -> None:
         """Read the assignment and the rows it names. A fresh worker knows
         nothing and reads everything; nothing about what is running is stored."""
+        lost_before = set(self.lost_to_epoch)
         a = self.assignment()
+        # The assignment read now: what the lease step let go before this read is the pass's to judge again (the review's
+        # thirteenth pass, major 6) — cleared HERE, at the read, and not when the whole refresh ran through: a refresh
+        # that failed after a good read left the units let go fenced for no reason, and one that failed AT the read, or
+        # before it, keeps them so (`_actuate`). What the lease step lets go while this runs is not cleared with them.
+        self.lost_to_epoch -= lost_before
         self.assignment_rev = a.rev
         rows, errors = [], {}
         for unit in a.units:
@@ -1020,6 +1026,14 @@ class VmsWorker(Worker):
                 return False
             if verb == "start" or unit not in self.epochs:
                 try:
+                    # …NOT ONE THE LEASE STEP LET GO SINCE THE ASSIGNMENT WAS LAST READ (the review's thirteenth pass,
+                    # major 6; `n2_pass_stale_assignment`): the step found a newer epoch — the camera's new holder took
+                    # it — and let the camera go; the next pass's `refresh` raised once, the pass went on with the list
+                    # read before, and the reconciler took epoch 3 by CAS from the holder of 2. The beat had this rule
+                    # (`serve_requests`); the pass did not. Whether it is still mine is the next read's to say.
+                    if unit in self.lost_to_epoch:
+                        raise NotReadThisPass(f"{self.name}: {unit} was let go to a newer epoch since the assignment "
+                                              f"was last read: not taken back until it is read again")
                     cam = dict(cam, epoch=self.take_epoch(unit))   # a new epoch for a new writer
                 except (OSError, NotReadThisPass) as e:
                     # The store did not answer for the epoch — or for the assignment, and the unit may be another's now
@@ -1098,8 +1112,7 @@ class VmsWorker(Worker):
     # and the pass used to be the only place the local work was done.
     def reconcile_once(self, now: float | None = None) -> list[tuple[str, int]]:
         try:
-            self.refresh()
-            self.lost_to_epoch.clear()                # the assignment read again: what is still mine is the pass's to take
+            self.refresh()                            # the assignment read again: what is still mine is the pass's to take
         except OSError as e:
             self.store_errors += 1
             log.warning("%s: the store did not answer (%s); going on with the last assignment read", self.name, e)

@@ -1066,7 +1066,10 @@ def test_a_range_just_copied_is_neither_copied_again_nor_taken_for_what_the_sour
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
-    r = _rec(box, keep_days=1.0, settle=1000.0)
+    # The block stays open until the test closes it: with the product's five seconds (`BLOCK_FLUSH_S`) the engine wrote
+    # it on its own whenever the run was slow enough, and "the volume does not show the copy yet" was a race with the
+    # engine's timer — seen once in a full run under load. An hour is longer than any run; `seal` closes it.
+    r = _rec(box, keep_days=1.0, settle=1000.0, env={"BLOCK_FLUSH_S": "3600"})
     now = 1000000.0
     _ours(box, r, 1, ((now - 80000, now - 76400), (now - 70000, now - 66400)))
     before = r.our_coverage(1)

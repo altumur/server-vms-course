@@ -41,7 +41,8 @@ def _recording(box, rec_con, rec_ctl, r, name="1"):
 
 def test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it():
     box, rec_con, rec_ctl = _site()
-    r = recorder(box)
+    r = recorder(box, env={"BLOCK_FLUSH_S": "3600"})   # the block open until `seal`, not the engine's five seconds:
+                                                       # "not visible" was a race with its timer on a slow run
     r.heartbeat_once()
     _recording(box, rec_con, rec_ctl, r)
     assert r.volume == "srv-1" and r.store.formatted and r.store.url == f"file://{box.root}/volume"
@@ -855,6 +856,19 @@ def test_a_seal_that_did_not_come_back_leaves_no_dead_writer_and_the_next_pass_m
 
 # -- the review's sixth pass: the network volume and its writer -----------------------------------------------------
 
+def _name_given(box, worker="r-1"):
+    """The controller's word that `worker`'s name may be taken now (`Controller.names_given`, in its pass report): it
+    has watched the slot stand still past its limit with nobody to say whether the process runs (`wait`) — the only
+    way another box gets a held name (the review's thirteenth pass, blockers 2–4). The wall only: the frozen process's
+    own clock, and its write window, do not move."""
+    from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, SLOT_TERM
+    ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects,
+                         wall=box.wall)
+    ctl.look()
+    box.wall.advance(SLOT_TERM + SLOT_LOST_AFTER + HUNG_MOVE_AFTER + 1)
+    assert worker in ctl.publish_names()["names_given"]
+
+
 def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_network_volume_from_a_frozen_one():
     """Blocker 2, the review's run: `r-1` on box A frozen whole, and a second `r-1` started on box B (a scheduler
     replacing the allocation under the same index). The place followed the name: B took the hold AT ONCE and mounted as
@@ -869,9 +883,9 @@ def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_netwo
         t = box.wall()
         assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
         # A live holder of another box keeps its name now (`NameOnAnotherBox`, the owner's decision of 4 Oct): B gets it
-        # once A's slot has lapsed by the wall — A frozen, renewing nothing. Its monotonic clock, and its write window,
-        # have not moved.
-        box.wall.advance(a.slot_ttl + 1)
+        # once the controller gives it — A frozen, renewing nothing (`_name_given`). Its monotonic clock, and its write
+        # window, have not moved.
+        _name_given(box)
         a2 = recorder(box, "r-1", "srv-2", obsd=Session(db.socket, client="rec-r-1", timeout=1),
                       env={"ARCHIVE_LOCK_REFRESH_S": "2"}, instance="box-b:7:a2a2a2")   # the same slot, ANOTHER host:
         # it takes the lapsed NAME
@@ -1300,7 +1314,7 @@ def test_a_second_instance_pinned_to_the_same_network_volume_on_another_box_wait
     try:
         t = box.wall()
         assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
-        box.wall.advance(a.slot_ttl + 1)                               # A frozen: its slot lapses by the wall, and only then
+        _name_given(box)                                               # A frozen: the controller gives its name, and only then
         a2 = recorder(box, "r-1", "srv-2", obsd=Session(db.socket, client="rec-r-1", timeout=1), instance="box-b:7:a2a2a2",
                       env={"ARCHIVE_LOCK_REFRESH_S": "2", "VOLUME": "net"})   # does another box get its name (4 Oct)
         os.kill(da.proc.pid, signal.SIGSTOP)
@@ -1361,7 +1375,7 @@ def test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_o
         raise AssertionError("a live holder's name was taken from another box")
     except NameOnAnotherBox:
         pass
-    box.wall.advance(again.slot_ttl + 1)                               # …and once it lapses, the name — but the hold waits
+    _name_given(box)                                                   # …and once the controller gives it, the name — but the hold waits
     elsewhere = recorder(box, "r-1", "srv-2", obsd=Session(ObsdDaemon.get().socket, client="rec-r-1-b"),
                          instance="box-c:5:cccccc")
     elsewhere.lease_pass()
@@ -1386,9 +1400,9 @@ def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
     assert box_instance({"INSTANCE_ID": "alloc-1", "BOX_ID": "node-7"}) == f"node-7:{os.getpid()}:alloc-1"
     box = Box()
     a = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})
-    box.wall.advance(a.slot_ttl + 1)                 # each takes the name lapsed: a live holder of another box keeps it (4 Oct)
+    _name_given(box)                                 # each takes the name given: a live holder of another box keeps it (4 Oct)
     twin = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-b"})              # the same hostname, another box
-    box.wall.advance(a.slot_ttl + 1)
+    _name_given(box)
     again = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})
     for r in (twin, again):
         r._shared = {"net"}

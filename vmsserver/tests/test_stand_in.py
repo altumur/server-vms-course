@@ -14,7 +14,7 @@ import threading
 import time
 
 from vms.worker import FakeActuator, VmsWorker
-from w2cplatform.contract import SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem, Worker
+from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem, Worker
 from w2cplatform.epoch import Lease, next_epoch
 from tests.conftest import Box
 
@@ -70,10 +70,14 @@ def test_a_step_that_starts_late_in_the_lease_is_stood_in_for_before_the_lease_e
 
 def test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go():
     """A step hung for ever does not hold units for ever. Up to `STAND_IN_FOR` the stand-in renews; after it,
-    nothing — the lease runs out, the slot row lapses, a spare takes the name, and when the step finally comes
-    back the loop finds itself fenced at the slot."""
+    nothing — the lease runs out, the slot row lapses, a spare takes the name — once the controller gives it (the
+    review's thirteenth pass: nothing says whether its process runs, `wait`, to the controller's limit) — and when the
+    step finally comes back the loop finds itself fenced at the slot."""
+    from vms.config import SPEC
+    from vms.controller import VmsController
     box = Box()
     w = _holder(box)
+    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     w.take_epoch("1")
     w.renew_leases()
     with w.guarded("pass"):
@@ -89,8 +93,10 @@ def test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go():
         assert w.stand_in_renewals == held, "the stand-in went on renewing past STAND_IN_FOR"
         assert not w.may_write("1"), "a step hung past STAND_IN_FOR still holds its camera"
         assert _slot_row(box, w).lapsed(box.wall()), "a step hung past STAND_IN_FOR still holds its slot"
-        _tick(box, SLOT_LOST_AFTER)                                 # …and the margin past the lapse (the twelfth pass)
-        spare = _holder(box, name=None, instance="spare:1")         # a nameless process takes a lapsed slot first
+        ctl.look()
+        _tick(box, SLOT_LOST_AFTER + HUNG_MOVE_AFTER + 1)           # …the margin past the lapse, and the limit
+        assert "w-1" in ctl.publish_names()["names_given"]
+        spare = _holder(box, name=None, instance="spare:1")         # a nameless process takes a given slot first
         assert spare.name == "w-1"
     assert w.lease_pass() == ["1"]
     assert not w.recording_allowed and "held by another instance" in w.fenced_reason
@@ -106,13 +112,14 @@ def test_a_slot_row_another_instance_took_is_not_written_over_by_the_stand_in():
     w.renew_leases()
     with w.guarded("pass"):
         _tick(box, 10)
-        _holder(box, name="w-1", instance="other:1")                # takes w-1 by preference, from a live holder
+        here = w.instance.rsplit(":", 2)[0]                         # this box: the unit's restart may take a live name
+        _holder(box, name="w-1", instance=f"{here}:1:other1")       # takes w-1 by preference, from a live holder
         theirs = _slot_row(box, w)
         stamp = w.leases["1"].last_renewal
         _tick(box, 5)
         assert not w.stand_in_once()
         row = _slot_row(box, w)
-        assert (row.holder, row.gen, row.until) == ("other:1", theirs.gen, theirs.until), "the stand-in wrote over another instance's slot"
+        assert (row.holder, row.gen, row.until) == (f"{here}:1:other1", theirs.gen, theirs.until), "the stand-in wrote over another instance's slot"
         assert w.leases["1"].last_renewal == stamp, "the stand-in renewed a lease for an instance that is nobody"
         for _ in range(4):
             _tick(box, 5)
@@ -317,22 +324,22 @@ def test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_
         w.claim_slot(prefer="t-1")
         return w
     box = Box()
-    first = worker(box, "first:1")
+    first = worker(box, "box-a:1:first")                           # (one box: a live name is taken only on its own box)
     assert first.claim_hold(["disk"]) == "disk"
-    again = worker(box, "again:1")                                 # the same name, another instance
+    again = worker(box, "box-a:2:again")                           # the same name, another instance
     assert again.claim_hold(["disk"]) == "disk"                    # a place of one host: at once, as before
 
     box = Box()
-    first = worker(box, "first:1")
+    first = worker(box, "box-a:1:first")
     assert first.claim_hold(["net"]) == "net"
-    again = worker(box, "again:1")
+    again = worker(box, "box-a:2:again")
     assert again.claim_hold(["net"]) is None                       # may be written from another host: not at once
     _tick(box, again.slot_ttl + again.HOLD_SKEW - 1)
     assert again.claim_hold(["net"]) is None
     _tick(box, 1)
     assert again.claim_hold(["net"]) == "net"                      # the row stood still a term and the skew
     again.release_hold()
-    third = worker(box, "third:1")
+    third = worker(box, "box-a:3:third")
     assert third.claim_hold(["net"]) == "net"                      # let go on purpose: at once
 
 

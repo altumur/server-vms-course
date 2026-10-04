@@ -41,7 +41,7 @@ import time
 
 from w2cplatform import runtime
 from w2cplatform.console import framed, heartbeats
-from w2cplatform.contract import Subsystem, is_live, read_hold
+from w2cplatform.contract import Subsystem, read_hold
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
 from w2cplatform.secrets import hide_in_url
@@ -197,8 +197,8 @@ class Look:
     def holder(self, sub: str, unit, now: float, lost_after: float = 45.0, phase: str | None = None,
                field: str | None = None):
         for w, _, hb, st in self.units(sub).get(str(unit), ()):
-            if not is_live(sub, hb.ts, now, lost_after):
-                continue
+            if not self.rec.eyes.fresh(f"{sub}/heartbeats/{w}", hb.token, lost_after, hb.ts, sub):
+                continue                                  # by what this recorder saw change, not the holder's clock (13th)
             if phase is not None and st.get("phase") != phase:
                 continue
             if field is not None and not st.get(field):
@@ -623,17 +623,20 @@ class RecWorker(VmsWorker):
         last, holder = self.last_source.get(cam), self.last_holder.get(cam)
         if last is None or holder is None:
             return None
-        now = self.wall()
         try:
             hb = self._look().heard("vms").get(holder)
-            if hb is not None and is_live("vms", hb.ts, now, 45.0):
+            if hb is not None and self.eyes.fresh(f"vms/heartbeats/{holder}", hb.token, 45.0, hb.ts, "vms"):
                 return None                              # it speaks, and does not say it runs the camera
             placed, _ = self.vars.get(SPEC.sub.config("placement", cam))
             if not placed or placed.get("worker") != holder:
                 return None
             key = SPEC.sub.slot_key(holder)
             slot = read_slot(key, holder, self.vars.get(key)[0])
-            if slot is not None and (slot.released or slot.holder == "" or slot.until <= now):
+            # …"out" by how long this recorder has seen the row stand still, a slot's term — not by the holder's `until`
+            # against this clock (the thirteenth pass, blocker 4): a holder 50 s behind lost its recording here
+            from w2cplatform.contract import SLOT_TERM
+            if slot is not None and (slot.released or slot.holder == "" or
+                                     self.eyes.age(key, (slot.holder, slot.until, slot.gen)) > SLOT_TERM):
                 return None
         except OSError as e:
             self.store_errors += 1
@@ -906,10 +909,13 @@ class RecWorker(VmsWorker):
             # review's second pass, M9), and — the third pass — running in one that went stale not long ago: a recorder
             # that VANISHED. Its recordings were written until its last heartbeat, so that is when "not written" began,
             # and the grace for a start does not apply; past the grace, the rule below covers it anyway.
-            said = [hb.ts for _, _, hb, st in units.get(str(other["id"]), ()) if st.get("phase") == "running"]
-            running = any(is_live(self.SUB.name, ts, now, self.LOST_AFTER) for ts in said)
-            gone = [ts for ts in said if not is_live(self.SUB.name, ts, now, self.LOST_AFTER)
-                    and now - ts <= self.LOST_AFTER + self.START_GRACE]
+            # …by how long each heartbeat has stood still on THIS recorder's clock (`Eyes`; the thirteenth pass, blocker
+            # 4): a primary whose recorder's clock ran behind was "vanished" while it wrote, and the backup carried too
+            sub = self.SUB.name
+            ages = [self.eyes.age(f"{sub}/heartbeats/{w}", hb.token, hb.ts, sub)
+                    for w, _, hb, st in units.get(str(other["id"]), ()) if st.get("phase") == "running"]
+            running = any(a <= self.LOST_AFTER for a in ages)
+            gone = [now - a for a in ages if self.LOST_AFTER < a <= self.LOST_AFTER + self.START_GRACE]
             until = float(other.get("until") or 0)
             should = bool(other.get("enabled")) and (until == 0 or until > now)
             if not should or running:
@@ -2355,8 +2361,8 @@ class RecWorker(VmsWorker):
         from .config import local_only
         units = look.units(self.SUB.name)
         for name, _, hb, st in sorted((e for rid in recs for e in units.get(rid, ())), key=lambda e: e[:2]):
-            if not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
-                continue                      # silent, or a clock from the future (M9 of the review): not a source
+            if not self.eyes.fresh(f"{self.SUB.name}/heartbeats/{name}", hb.token, self.LOST_AFTER, hb.ts, self.SUB.name):
+                continue                      # silent by what this recorder saw change — whatever its clock (13th)
             if not st.get("coverage"):
                 continue
             url = hb.extra.get("archive_url", "")

@@ -120,10 +120,14 @@ def box(env: dict) -> str:
     return socket.gethostname()
 
 
-# The box an instance name says it ran on — `box:pid:rnd`, as `instance_on_box` makes it — or None for a name that says
-# none: an `INSTANCE_ID` or an allocation's id is a scheduler's, and nothing is guessed from it.
+# The box an instance name says it ran on — `box:pid:rnd`, as `instance_on_box` makes it, or the older `host:pid` (the
+# product's `OnThisBox` reads both; М11's bench names its incarnations so) — or None for a name that says none: an
+# `INSTANCE_ID` or an allocation's id is a scheduler's, and nothing is guessed from it. Since the thirteenth review a name
+# that says no box is never this box's (`Worker._on_this_box`): a live holder's name is taken only on its own box.
 def box_of(instance: str) -> str | None:
     parts = str(instance or "").rsplit(":", 2)
+    if len(parts) == 2 and parts[0] and parts[1].isdigit():
+        return parts[0]
     return parts[0] if len(parts) == 3 and parts[0] and parts[1].isdigit() else None
 
 

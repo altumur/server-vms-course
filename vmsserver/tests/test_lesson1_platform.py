@@ -112,7 +112,11 @@ def test_identity_by_claim_is_a_platform_piece():
     a third, after the first lapsed, gets the first's name back — and with
     it, its assignment — once the margin past the lapse is out, when the
     controller would move that assignment too (the review's twelfth pass,
-    blocker 2). The controller hands nothing out."""
+    blocker 2). The controller hands nothing out — but it says which names are
+    given: it has watched the slots, and a worker that never said where it runs
+    is `wait`, whose name stays until the controller's limit (the thirteenth
+    pass, blockers 2 and 4; `Controller.publish_names`)."""
+    from w2cplatform.contract import HUNG_MOVE_AFTER
     box = Box()
     sub = Subsystem("thing")
     ctl = Controller(sub, box.vars, box.objects, wall=box.wall)
@@ -121,7 +125,10 @@ def test_identity_by_claim_is_a_platform_piece():
     assert a.claim_slot() == "w-1" and b.claim_slot() == "w-2"        # `count = 2`: two names, in order
     ctl.assign("w-1", ["1", "2"])
     assert a.renew_slot() and b.renew_slot()
-    box.wall.advance(91)                                               # A went silent: the slot's TTL and the margin past it
+    ctl.look()                                                         # the controller sees them renewed
+    box.wall.advance(91 + HUNG_MOVE_AFTER)                             # A went silent: the slot's TTL, the margin, the limit
+    assert b.renew_slot()
+    assert list(ctl.publish_names()["names_given"]) == ["w-1"]         # B's renewal is new to it: B's name stays
     c = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="C")
     assert c.claim_slot() == "w-1" and c.assignment().units == ["1", "2"]   # the replacement inherits
     assert not a.renew_slot()                                          # A, if it is still alive, finds out

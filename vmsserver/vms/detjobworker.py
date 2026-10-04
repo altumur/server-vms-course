@@ -100,7 +100,7 @@ class DetJobWorker(Worker):
     # `from`, `to`, `fragments` — never an index: the device's own archive is behind its door, and this is all a heartbeat carries
     # (М10B Lesson 15). Enough to tell "nobody recorded this" from "somebody did, just not us".
     def device_has(self, cam, t0: float, t1: float) -> bool:
-        found = holder_of(self.objects, "vms/", str(cam), self.wall(), field="coverage")
+        found = holder_of(self.objects, "vms/", str(cam), self.wall(), field="coverage", eyes=self.eyes)   # fresh by change (the 13th pass)
         if found is None or not found[2].get("coverage"):
             return False
         cov = found[2]["coverage"] if isinstance(found[2]["coverage"], dict) else {}

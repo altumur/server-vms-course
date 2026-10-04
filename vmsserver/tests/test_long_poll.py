@@ -639,6 +639,40 @@ def test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_only_by_the_
     assert dev.did == [("output", 2, "pulse", 0)]
 
 
+def test_a_camera_the_lease_step_let_go_is_not_taken_back_by_a_pass_whose_assignment_did_not_read():
+    """The review's thirteenth pass, major 6 (`n2_pass_stale_assignment`) — the beat's rule above, on the PASS: the lease
+    step let the camera go to its new holder; the next pass's `refresh` raised once (one read timed out), the pass went
+    on with the assignment read before, and the reconciler took the next epoch by CAS — the new holder fenced by a pass
+    that had not read its assignment since. Now a camera let go since the last read is not taken back until the
+    assignment reads again — cleared at the read itself, so a refresh that fails AFTER a good read does not keep it."""
+    from w2cplatform.epoch import current_epoch, next_epoch
+    for fails in ("the whole refresh", "the assignment's read", "a row after the assignment"):
+        box = Box()
+        holder, cid, dev, _called = _holder(box)
+        holder.reconcile_once()
+        unit, key = str(cid), VMS.sub.epoch_key(str(cid))
+        theirs, _ = next_epoch(box.vars, key)                        # the camera's new holder took the next epoch
+        assert unit in holder.lease_pass() and unit not in holder.leases
+        real_refresh, real_assignment, real_get = holder.refresh, holder.assignment, holder.vars.get
+        if fails == "the whole refresh":
+            holder.refresh = lambda: (_ for _ in ()).throw(OSError("one read timed out"))
+        elif fails == "the assignment's read":
+            holder.assignment = lambda: (_ for _ in ()).throw(OSError("one read timed out"))
+        else:
+            holder.vars.get = lambda path, *a, **k: ((_ for _ in ()).throw(OSError("one read timed out"))
+                                                     if path.startswith("vms/cameras/") else real_get(path, *a, **k))
+        acts = holder.reconcile_once()
+        holder.refresh, holder.assignment, holder.vars.get = real_refresh, real_assignment, real_get
+        if fails == "a row after the assignment":                      # the assignment DID read, and names it here:
+            assert current_epoch(box.vars, key) == theirs + 1, fails   # the pass's to take, as it always was
+            continue
+        assert ("start", int(unit)) not in acts and current_epoch(box.vars, key) == theirs, (fails, acts)
+        assert unit not in holder.leases and unit in holder.lost_to_epoch, fails
+        box.clock.advance(30)                                         # past the reconciler's backoff for the start
+        holder.reconcile_once()                                       # the assignment reads, and still names it here
+        assert current_epoch(box.vars, key) == theirs + 1 and holder.may_write(unit), fails
+
+
 def test_a_store_that_does_not_answer_on_a_beat_is_waited_out_and_said_once():
     """Four looks a second at a store that is away would be four warnings a second. A beat the store did not
     answer is counted and said once per outage; the beats go on, and the first one answered says so. The loop

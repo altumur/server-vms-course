@@ -29,7 +29,7 @@ import urllib.error
 import urllib.request
 
 from w2cplatform.access import token_of
-from w2cplatform.console import (PAGE, ClaimLost, Mount, SpecConsole, framed, heartbeats, holder_of, holders, label,  # noqa: F401
+from w2cplatform.console import (PAGE, ClaimLost, Mount, SpecConsole, framed, heartbeats, holder_of, holders, label, no_paths,  # noqa: F401
                                  object_body, path_id, send_file)   # (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import HEARTBEATS, slot_number
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
@@ -134,7 +134,8 @@ class LiveFront:
             # …and what a gateway carries is what PLACEMENT reads (feedback DQ): its server's row from the console when
             # there is one (`live/servers/<server>`), its heartbeat's otherwise — `labels_of`, not the heartbeat alone.
             with self.live.one_pass():                   # each gateway asked: the heartbeats and the rows read once
-                sets = [set(self.live.labels_of(w)) for w in holders(self.live.objects, "live/", self.ctl.wall())]
+                sets = [set(self.live.labels_of(w)) for w in holders(self.live.objects, "live/", self.ctl.wall(),
+                                                                     eyes=self.live.eyes)]   # fresh by change (13th)
             if labels and not any(set(labels) <= s for s in sets):
                 carried = set().union(*sets) if sets else set()
                 unknown = sorted(set(labels) - carried)
@@ -240,8 +241,8 @@ def coverage_of(found) -> tuple[float, float] | None:
         return None
 
 
-def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float) -> list[dict]:
-    cov = coverage_of(holder_of(objects, "vms/", cam, now, field="coverage"))
+def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float, eyes=None) -> list[dict]:
+    cov = coverage_of(holder_of(objects, "vms/", cam, now, field="coverage", eyes=eyes))
     if cov is None:
         return []
     want = (max(cov[0], t0), min(cov[1], t1))
@@ -520,7 +521,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             except Refused as e:
                 return 400, {"detail": str(e), "error": str(e)}
             except OSError as e:
-                return 503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"}
+                return 503, {"detail": f"the store did not answer: {no_paths(e)}", "error": "store unavailable"}   # no path (13th)
             if prior is not None:
                 return prior
             try:
@@ -588,7 +589,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 floor, why = visible_from(rec_ctl.unit(unit), now), "the recording shows"
             except PARSE_ERRORS:
                 floor, why = now - BACKFILL_MAX * 30, "a recording shows"
-            cov = coverage_of(holder_of(ctl.objects, "vms/", cam, now, field="coverage") if ctl is not None else None)
+            cov = coverage_of(holder_of(ctl.objects, "vms/", cam, now, field="coverage", eyes=ctl.eyes)
+                              if ctl is not None else None)
             if cov is not None and cov[0] > floor:
                 floor, why = cov[0], "the device holds"
             if t1 <= floor:
@@ -795,7 +797,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             return 400, {"detail": "from and to are unix seconds, and to is after from", "error": "bad range"}
         # The holder, resolved NOW — never written into a span when it was drawn: a camera that moved between the
         # drawing and the click would make a stored worker name a 404; one heartbeat read cannot go stale.
-        found = holder_of(ctl.objects, "vms/", cam, con_wall(), field="playback_url")
+        found = holder_of(ctl.objects, "vms/", cam, con_wall(), field="playback_url", eyes=ctl.eyes)   # by change (13th)
         if found is None:
             return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
         url, key = found[2]["playback_url"], found[1].extra.get("playback_key") or None
@@ -866,7 +868,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                     fenced = bool(sp.get("fenced")) or (cur is not None and 0 < sp["epoch"] < cur)
                     ours.append({**sp, "fenced": fenced, "recording": unit, "recorder": name,
                                  "volume": hb.extra.get("volume", ""), "media": f"/export/{cid}?rec={unit}"})
-        extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall()) if ctl is not None else []
+        extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall(), ctl.eyes) if ctl is not None else []
         spans = sorted(ours + extra_, key=lambda d: (d["start"], d["epoch"]))
         gone = unserved_volumes(ctl.objects, con_wall()) if ctl is not None else []
         if unreachable or gone:
@@ -1410,6 +1412,9 @@ def vms_metrics(ctl):
         return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{label(k)}"}} {v}' for k, v in total.items()]
                 + ["# TYPE vms_requests_expired_total counter"]
                 + [f'vms_requests_expired_total{{sub="{label(s)}"}} {n}' for s, n in sorted(jobs.expired.items())]
+                # …and the commands ended whose holder began them and went without saying how (the thirteenth pass)
+                + ["# TYPE vms_requests_unknown_total counter"]
+                + [f'vms_requests_unknown_total{{sub="{label(s)}"}} {n}' for s, n in sorted(jobs.unknown.items())]
                 + road + beat_lines(sub, hbs))
     return lines
 

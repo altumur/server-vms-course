@@ -118,6 +118,9 @@ def _doors(s) -> None:
     w.heartbeat_once(); ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     door = w.serve_playback("127.0.0.1", 0)
     rec_con = SpecController(REC_SPEC, con.vars, con.objects, wall=s.wall)
+    v = s.door("reccontroller", "reccontroller on srv-b")
+    rc = SpecController(REC_SPEC, v, s.objects_on("srv-b", v, "reccontroller on srv-b"), wall=s.wall)
+    s.wall.watchers += [rec_con, rc]                      # each judges by what it saw change: it looks as time moves
     srv = serve(con, port=0, rec_ctl=rec_con)
     try:
         for url in (f"http://127.0.0.1:{door.server_address[1]}/playback/1?from=0&to=1",
@@ -150,8 +153,6 @@ def _doors(s) -> None:
     finally:
         door.shutdown(); srv.shutdown()
     rec_con.create({"name": "1", "cam": "1"})
-    v = s.door("reccontroller", "reccontroller on srv-b")
-    rc = SpecController(REC_SPEC, v, s.objects_on("srv-b", v, "reccontroller on srv-b"), wall=s.wall)
     rc.ensure_placed(); rc.redistribute(); rc.ensure_home(1); rc.unplace_deleted()
     # The pass as the loops run it (`cluster/__main__._placement_pass`): its report, then the snapshot.
     for c in (ctl, rc):

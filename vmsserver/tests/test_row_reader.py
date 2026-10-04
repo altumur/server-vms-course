@@ -956,6 +956,8 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
     res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
     for peer in ("srv-2", "srv-3"):                                     # the power cut: both said a heartbeat an hour ago
         _peer_heartbeat(box, peer, box.wall() - 3600, 10)
+    res.live_resources()                                                # …which this resource sees, and sees stand still:
+    box.clock.advance(res.lost_after + 1)                               # silent by ITS clock (the thirteenth pass, blocker 4)
     res.heartbeat()
     assert res.restore() == {"pulled": 0}
     hb = res.heartbeat()

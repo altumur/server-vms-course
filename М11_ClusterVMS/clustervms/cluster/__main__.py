@@ -274,6 +274,7 @@ def resource() -> None:
         res.heartbeat()
     except Exception:                             # noqa: BLE001
         logging.exception("resource heartbeat failed")
+    res.start_beat(stop)                          # the beat on its own thread: a hung pass does not silence the server (13th)
     try:                                          # back with an empty disk? pull my buckets from my peers first — and a
         logging.info("restore: %s", res.restore())   # restore that raises does not end the process (the seventh review)
     except Exception:                             # noqa: BLE001
