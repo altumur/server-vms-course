@@ -339,10 +339,16 @@ class NoSuchRoute(Exception):
 # grace a body arrives at `rate` on average or its read is late (`pace`): by `grace + got / rate` seconds after it
 # began, `got` bytes are in. A body that comes at the rate the deadline always assumed is not touched — the deadline
 # was this floor's last point; a trickle is let go at the grace, not at the end of what it declared.
+#
+# …AND PAST THE HEADERS THERE IS ALWAYS ONE (the review's twelfth pass, major 8). The headers' deadline gave way to one
+# a year off (`Deadlined.parse_request`), and only a handler that called `body_deadline` got a floor: one that read its
+# client without it waited a byte at a time for as long as the client trickled. `lazy`: past the headers, the first read
+# that finds no floor sets one — the handler's timeout for a grace and `BODY_RATE` after it — whoever reads.
 class DeadlineReader(io.RawIOBase):
     def __init__(self, sock, deadline, op_timeout: float):
         self.sock, self.deadline, self.op = sock, deadline, op_timeout
         self.got, self.floor = 0, None                   # bytes received; (since, grace, rate, got then) while a body is read
+        self.lazy = False                                # past the headers: a read with no floor sets a body's (`readinto`)
 
     def readable(self) -> bool:
         return True
@@ -351,6 +357,8 @@ class DeadlineReader(io.RawIOBase):
         self.floor = (time.monotonic(), float(grace), float(rate), self.got)
 
     def readinto(self, b) -> int:
+        if self.floor is None and self.lazy:
+            self.pace(self.op, BODY_RATE)
         now = time.monotonic()
         left = self.deadline() - now
         if self.floor is not None:
@@ -855,14 +863,20 @@ class Deadlined:
         self.deadline = time.monotonic() + self._headers   # each request of a connection that is kept: its own headers' time
         reader = getattr(self.rfile, "raw", None)
         if isinstance(reader, DeadlineReader):
-            reader.floor = None                          # …and no body's floor from the request before
+            reader.floor, reader.lazy = None, False      # …and no body's floor from the request before
         super().handle_one_request()
 
     # Past the headers the request is its handler's: each operation has the socket's own timeout, and a body is given
-    # a deadline of its own by whoever reads it (`SpecConsole.read_body`).
+    # a deadline of its own by whoever reads it (`SpecConsole.read_body`) — or, read without one, a body's floor from its
+    # first read (`DeadlineReader.lazy`; the review's twelfth pass: it was a year). What the handler waits for that is
+    # not its client — a device, a peer — no deadline here can end: each door bounds those waits itself (the holder's
+    # reads of a device: `VmsWorker._door_read`).
     def parse_request(self):
         ok = super().parse_request()
-        self.deadline = time.monotonic() + 365 * 86400.0
+        self.deadline = float("inf")
+        reader = getattr(self.rfile, "raw", None)
+        if isinstance(reader, DeadlineReader):
+            reader.lazy = True
         return ok
 
     def busy_unless(self, routes: tuple, path: str, monitor: tuple = MONITOR_ROUTES) -> bool:
