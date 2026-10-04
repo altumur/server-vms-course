@@ -86,7 +86,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 from .doors import numeric, unnamable
-from .secrets import NOT_AN_ADDRESS, credential_params, hide_in_url, is_secret_field
+from .secrets import NOT_AN_ADDRESS, address_refusal, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES,
                        OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
@@ -693,20 +693,18 @@ class SubsystemSpec:
                     u.port
                 except ValueError:                       # its words quote the port it could not read: a password
                     raise Refused(f"{name} is not an address: {NOT_AN_ADDRESS}") from None   # (the twelfth review, major 16)
-                # …a login in the PATH too: a scheme that names its host in the path (`driverpack://acme/user:pw@host`)
-                # carried a password past `netloc` into the snapshot (the product team's addition to the tenth round).
-                # A file's name is a name, `@` and all.
-                if u.username or u.password or "@" in u.netloc or ("@" in u.path and u.netloc.lower() != "file"):
-                    raise Refused(f"{name} may not carry a login: put it in cred_username / cred_secret — "
-                                  f"a url field is in the snapshot, and the snapshot leaves the cluster")
-                # …NOR IN ITS PARAMETERS (the eleventh review, blocker 4; the rule and its list: `secrets.is_credential_param`):
-                # `…/videostream.cgi?usr=admin&pwd=…` went past the login rule into the snapshot and onto every viewer's
-                # page. The refusal names the parameters, never their values.
-                creds = credential_params(str(fields[name]))
-                if creds:
-                    raise Refused(f"{name} may not carry a credential in its parameters ({', '.join(dict.fromkeys(creds))}): "
-                                  f"put the login in cred_username and the password or token in cred_secret — a url "
-                                  f"field is in the snapshot, and the snapshot leaves the cluster")
+                # …A LOGIN NOR A CREDENTIAL ANYWHERE IN IT — the platform's one rule (`secrets.address_refusal`), the one a
+                # volume's url and the domain's door ask. This was a copy of it, and the copy fell behind (the thirteenth
+                # review, blocker 6): it read the `@` of the netloc and the path only, and `…/relay?src=rtsp%3A%2F%2Fadmin
+                # %3A…%40cam` — how a relay like go2rtc is told what to fetch — was 201, the password in the row, the
+                # page and the snapshot. What the copy had learnt before, a review at a time: a login in the path of a
+                # scheme that names its host there (the tenth round), a credential pair (the eleventh review, blocker 4).
+                # The words name the parameter, never its value.
+                why = address_refusal(str(fields[name]))
+                if why:
+                    raise Refused(f"{name} may not be stored as typed: {why}. Put the login in cred_username and the "
+                                  f"password or token in cred_secret — a url field is in the snapshot, and the snapshot "
+                                  f"leaves the cluster")
                 # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/cam7#@nvr50/ch/1` is
                 # device `cam7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
                 # rights asked of one device, another device opened. Nothing a camera is reached at holds one.

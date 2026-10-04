@@ -156,15 +156,20 @@ def device_of(source: str) -> str:
     vendor = u.netloc.strip().lower().rstrip(".")
     if vendor == "file":
         return "file/" + parts[0] if parts else "file"
+    # …and the key as a page says an address (the thirteenth review, major 9; a run): what the cuts below leave of a row
+    # stored before the refusals is still a credential in the vendor or the host — `acme:hunter2/10.0.0.5` (a password
+    # where a port stands), `acme/10.0.0.5&password=hunter2` (a pair) —, and the key is in `POST /requests`,
+    # `vms/requests/*`, the heartbeat and `vms/devices/<key>`. A key with none in it is the key it always was.
+    said = lambda key: hide_in_url(f"{scheme}://{key}")[len(scheme) + 3:]
     if not parts:
-        return vendor
+        return said(vendor)
     # The host in the path, without what a row stored before the refusals put around it (the twelfth review's sweep):
     # a login before an `@`, a `;name=value`, a port that is no number — `acme/admin:…@10.0.0.5`, `10.0.0.5;password=…`.
     host = _host(parts[0].rsplit("@", 1)[-1].split(";", 1)[0], scheme)
     head, colon, port = host.rpartition(":")
     if colon and not host.endswith("]") and port and not port.isdigit():
         host = f"{head}:{SECRET_MASK}"
-    return f"{vendor}/{host}"
+    return said(f"{vendor}/{host}")
 
 
 # WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
@@ -352,7 +357,10 @@ def channel_key(source: str) -> str:
 # …AND NO PASSWORD IN ITS WORDS (the product team's addition to the tenth round): the refusal repeated the source as
 # typed, `driverpack://acme/u:hunter2@10.0.0.5:8²/…` and all, into the reply and the journal's detail. What is said is
 # the source with whatever stands before an `@` hidden (`shown_source`) — and, since the eleventh review (blocker 4), the
-# value of every credential parameter (`secrets.hide_in_url`: `?usr=…&pwd=…`). And a `?` in a `driverpack://` source
+# value of every credential parameter (`secrets.hide_in_url`: `?usr=…&pwd=…`). Since the thirteenth (major 8) the
+# refusal says no address at all: `driverpack://acme/admin:Hunter2/ch/1` has its host in the path, where the hiding did
+# not look, and the reply quoted the password as "the port"; what is wrong is said, the source is the caller's own and
+# `shown_source` is for the log. And a `?` in a `driverpack://` source
 # is refused here as `SubsystemSpec.refuse` refuses a `#`: `urlsplit` ends the path there, and `acme/cam7?@nvr50/ch/1`
 # is device `cam7` to the rights and maybe `nvr50` to a driver that reads the whole string.
 def shown_source(source: str) -> str:
@@ -365,26 +373,25 @@ def shown_source(source: str) -> str:
 def source_refusal(source: str) -> str | None:
     from urllib.parse import urlsplit
     src = str(source or "").strip()
-    said = repr(shown_source(src))
     try:
         u = urlsplit(src)
     except ValueError:                                   # its words quote the host, a login and all (the twelfth review)
         from w2cplatform.secrets import NOT_AN_ADDRESS
-        return f"{said} is not an address: {NOT_AN_ADDRESS}"
+        return f"the source is not an address: {NOT_AN_ADDRESS}"
     host = u.netloc
     if u.scheme.lower() == "driverpack":
         parts = [p for p in u.path.split("/") if p]
         if u.netloc.lower() == "file":
             return None                                  # a file's name, as typed: `gstvms.uri` asks the rest
         if "?" in src:
-            return f"{said} holds '?': a device's address is vendor/host/ch/n, and what follows a '?' could name another host"
+            return "the source holds '?': a device's address is vendor/host/ch/n, and what follows a '?' could name another host"
         host = parts[0] if parts else ""
         if len(parts) >= 3 and parts[1].lower() == "ch" and any(c.isdigit() and not "0" <= c <= "9" for c in parts[2]):
-            return f"the channel in {said} is written in digits that are not 0–9: write it in plain digits"
+            return "the channel of the source is written in digits that are not 0–9: write it in plain digits"
     host = host.rsplit("@", 1)[-1]
     port = host[host.rfind("]") + 2:] if host.startswith("[") and "]:" in host else (host.split(":")[1] if host.count(":") == 1 else "")
     if port and (numeric(port) is None or not 0 < numeric(port) <= 65535):
-        return f"the port in {said} is not a port: a number from 1 to 65535, in plain digits"
+        return "the port of the source is not a port: a number from 1 to 65535, in plain digits"
     return None
 
 

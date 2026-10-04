@@ -155,3 +155,35 @@ def test_a_user_deleted_takes_every_grant_naming_them_and_the_last_admin_stays()
     assert users.get("anna").kind == "local"                            # nothing changed
     users.create_local("bob", "new", ["operator"])                       # the name is free again — and holds nothing
     assert not domain_may(v, "bob", "view", 1000.0)
+
+
+def test_an_address_inside_a_list_or_an_object_is_refused_at_the_door_and_on_the_camera():
+    """vmsserver's thirteenth review, minor — a run: the domain's door and a camera's own console asked only a value that
+    was a string, and `{"source": ["rtsp://admin:…@…"]}` or `{"source": {"url": "…?pwd=…"}}` for a camera that was off
+    was 202 with the password in the reply, kept, carried home and applied — on the camera's flash and in what it
+    published. `refuse_addresses` asks every string inside (`secrets.refusal_within`), and an address inside a parameter
+    too (the review's blocker 6): refused at the door before anything is kept, and on the camera whoever sends it; the
+    words name the place, never the value. A list of plain addresses is taken."""
+    from tests.test_lesson9_pending import CAM, _domain_with_a_camera_that_went_off
+    leaks = lambda x: "hunter2" in json.dumps(x, default=str).lower()
+    nested = (["rtsp://admin:Hunter2@10.0.0.5/s"], {"url": "http://h/x?pwd=Hunter2"},
+              [{"relay": "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"}],
+              "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs")
+    for value in nested:
+        wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
+        try:
+            api.update_camera(CAM, {"source": value}, idempotency_key="n", token="anna")
+            raise AssertionError(f"the door kept {value!r}")
+        except ApiError as e:
+            assert e.status == 400 and e.detail.startswith("source") and not leaks(e.detail), e.detail
+        assert not leaks([fed.domain_holder.vars.get(k)[0] for k in fed.domain_holder.vars.list("")])
+        d = DeviceCluster("SN1", FakeVariables(), wall=Clock())
+        d.boot()
+        try:
+            d._update(1, {"source": value}, None)
+            raise AssertionError(f"the camera applied {value!r}")
+        except ApiError as e:
+            assert e.status == 400 and not leaks(e.detail), e.detail
+        assert not leaks(d.row())
+    wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
+    assert api.update_camera(CAM, {"labels": ["rtsp://10.0.0.5/s", "yard"]}, idempotency_key="ok", token="anna")

@@ -66,7 +66,22 @@ class Sealer:
             raise ValueError("a key ring names its current key, and every key is 32 bytes")
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM     # only where there is a key to use it with
         self._aead = {kid: AESGCM(k) for kid, k in keys.items()}
+        self._keys = dict(keys)
         self.current = current
+
+    # A KEYED DIGEST, for a copy that is compared and never read back — the idempotency claim's "the same body?" (the
+    # thirteenth review, major 7: an unsalted sha256 of a body that carries `cred_secret` gave the password back to a
+    # dictionary of seven words, beside a row that held it sealed). HMAC-SHA256 under a key derived from the ring's
+    # for this purpose alone, so no digest is ever made with the sealing key itself; `kid:hex`, and `kid` asks the
+    # digest of a console a rotation ahead or behind by the key it was made with. None: this process lacks that kid.
+    def mac(self, purpose: str, data: bytes, kid: str | None = None) -> str | None:
+        import hashlib
+        import hmac
+        kid = kid or self.current
+        if kid not in self._keys:
+            return None
+        sub = hmac.new(self._keys[kid], b"w2c-mac:" + purpose.encode(), hashlib.sha256).digest()
+        return f"{kid}:{hmac.new(sub, data, hashlib.sha256).hexdigest()}"
 
     @classmethod
     def from_file(cls, path: str) -> "Sealer":

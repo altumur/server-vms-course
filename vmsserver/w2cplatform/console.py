@@ -1080,9 +1080,12 @@ class IdempotencyKeys:
     on the way past, at most once a minute."""
 
     # `prefix` is `<sub>/idem/`; `wall` stamps `at`; `clock` rate-limits pruning and ages a pending claim;
-    # `sleep` is the wait between polls (injected for tests).
-    def __init__(self, vars_, prefix: str, wall, ttl: float = 86400.0, clock=time.monotonic, sleep=time.sleep):
+    # `sleep` is the wait between polls (injected for tests); `sealer` is the cluster's key ring, when this process
+    # holds one (`sealing.py`) — the key the body's digest is made with.
+    def __init__(self, vars_, prefix: str, wall, ttl: float = 86400.0, clock=time.monotonic, sleep=time.sleep,
+                 sealer=None):
         self.vars, self.prefix, self.wall, self.ttl, self.clock, self.sleep = vars_, prefix, wall, ttl, clock, sleep
+        self.sealer = sealer
         self._pruned = -1e9
         self._seen: dict[str, tuple[int, float]] = {}    # pending claim -> (its revision, when THIS process first saw it)
         self._mine: dict[str, dict] = {}                 # the claims this process holds: whose, and of what body
@@ -1096,31 +1099,58 @@ class IdempotencyKeys:
             raise Refused("Idempotency-Key must be one path segment")
         return self.prefix + key
 
-    # Whose request, and of what: `sub` and the sha256 of the body go into the claim, so a replay is answered
-    # only to the same caller with the same body.
-    @staticmethod
-    def _tag(sub, body) -> dict:
+    # Whose request, and of what: `sub` and a digest of the body go into the claim, so a replay is answered only to
+    # the same caller with the same body.
+    #
+    # NEVER A BARE HASH OF A BODY THAT CARRIES A SECRET (the thirteenth review, major 7; a run). It was the body's
+    # sha256, kept a day under `<sub>/idem/`: the camera's row held `cred_secret` sealed, and `admin123` and
+    # `qwerty2024` came back from the claims by hashing a dictionary of seven words into the body around them —
+    # whoever reads the store had the password the key ring was there to keep from him. Now:
+    #   a key ring   `mac`: HMAC of the body under a key derived from the ring's (`Sealer.mac`), which the store never
+    #                holds; every console of the cluster holds the same ring, so any of them answers the retry
+    #   none         `digest`: the sha256 of the body as a page would say it — every `*_secret` masked, every address
+    #                hidden (`mask_secrets`) —: nothing in it a dictionary could find (and without a key the row holds
+    #                the password in the clear anyway, which the console says once, at the first secret it writes)
+    def _tag(self, sub, body) -> dict:
         import hashlib
         out = {}
         if sub is not None:
             out["sub"] = str(sub)
         if body is not None:
-            out["sha256"] = hashlib.sha256(body if isinstance(body, bytes) else str(body).encode()).hexdigest()
+            raw = body if isinstance(body, bytes) else str(body).encode()
+            if self.sealer is not None:
+                out["mac"] = self.sealer.mac("idem", raw)
+            else:
+                out["digest"] = hashlib.sha256(self._said(raw)).hexdigest()
         return out
+
+    @staticmethod
+    def _said(raw: bytes) -> bytes:
+        try:
+            body = json.loads(raw or b"{}")
+        except PARSE_ERRORS:
+            return b"not JSON"                           # refused by whoever reads it; what it held is not kept
+        return json.dumps(mask_secrets([{"": body}])[0][""], sort_keys=True).encode()
 
     # A key is a name for ONE request by ONE caller. Replayed by somebody else, or with another body, it used to be
     # answered with the first caller's reply — a stranger got anna's 201, and anna's own second mark under a reused
     # key was silently not written (the review's second pass, minor). A claim that carries no tag — written before
     # tags, or by a test — matches anybody, as it did.
-    @staticmethod
-    def _mismatch(items: dict, tag: dict):
-        for k in ("sub", "sha256"):
+    #
+    # A `mac` made under another kid of the ring (a console a rotation ahead or behind) is asked again under that kid;
+    # one this console cannot make — the kid is not in its ring — is another body: refused, not answered.
+    def _mismatch(self, items: dict, tag: dict, body=None):
+        for k in ("sub", "mac", "digest"):
             if k in items and k in tag and items[k] != tag[k]:
+                if k == "mac" and self.sealer is not None and body is not None:
+                    raw = body if isinstance(body, bytes) else str(body).encode()
+                    if self.sealer.mac("idem", raw, str(items[k]).split(":", 1)[0]) == items[k]:
+                        continue
                 return 422, {"detail": "this Idempotency-Key names another request: a key is one caller's, for one body",
                              "error": "key reused"}
         return None
 
-    # Try `put({state: pending, at, sub, sha256}, cas=0)`: success means ours to answer — return `None` (the
+    # Try `put({state: pending, at, sub, mac or digest}, cas=0)`: success means ours to answer — return `None` (the
     # caller does the write, then `store`). On `Conflict`, another instance holds it: poll up to 40 × 50 ms; if the
     # row vanished (pruned or the claimant crashed mid-flight) claim again; if `state == done` return `(status,
     # body)`; after the polls, `409 in flight`. `test_a_retry_that_lands_on_another_console_is_one_camera`
@@ -1141,7 +1171,7 @@ class IdempotencyKeys:
             if items is None:
                 self._seen.pop(path, None)
                 return self.claim(key, sub, body)                        # pruned or crashed mid-flight: claim again
-            wrong = self._mismatch(items, tag)
+            wrong = self._mismatch(items, tag, body)
             if wrong is not None:
                 return wrong                                             # somebody else's key, or another body under it: not this reply
             if items.get("state") == "done":
@@ -1291,7 +1321,8 @@ class SpecConsole:
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
         self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
         self.gate = Gate(ctl.vars, self.wall, lambda: self.journal)   # who is calling, and may they (`access.py`)
-        self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall)   # in the store: any instance answers a retry
+        self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall,   # in the store: any instance answers a retry
+                                    sealer=getattr(ctl, "sealer", None))                 # its digests under the cluster's key
         self.epoch_policy: dict[str, str] = {self.spec.name: self.spec.older_epochs}   # replaced by the Mount's shared one
         self.clock = time.monotonic                      # ages the caches below; a test sets its own
         self._scan: tuple[float, dict] = (-1e9, {})
