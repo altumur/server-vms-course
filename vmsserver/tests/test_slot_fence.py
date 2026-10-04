@@ -95,6 +95,7 @@ def test_a_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_
         _let_go(box, w, was)                                           # the other instance stops in order
         assert _keep(w, lambda: None) == [], kind
         assert w.name == was and w.renew_slot() is True and w.may_stand_in() is True, kind
+        assert w.assignment().units == ["u", "v"], kind                # its own name's list, read again — as its next pass does
         w.take_epoch("v")
         assert "v" in w.epochs and w.may_write("v"), kind
 

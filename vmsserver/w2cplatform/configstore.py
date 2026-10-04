@@ -494,6 +494,13 @@ def _door(daemon: "StoreDaemon", role_of):
             self.send_response(code)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(raw)))
+            # ANSWERED IS LET GO (the product's cross-check, after the twelfth review). Kept alive, an answered
+            # connection held its place at the socket until its next request's headers' deadline: a client pool of
+            # sixteen idle per process, four processes of one role, and the fifth was refused `busy` for five
+            # seconds. No caller of this door sends a second request on a connection (`unix_transport`, `peer_call`),
+            # so none is kept — a caller that keeps its socket keeps nothing of the door's.
+            self.send_header("Connection", "close")
+            self.close_connection = True
             self.end_headers()
             self.wfile.write(raw)
 

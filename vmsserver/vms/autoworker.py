@@ -168,6 +168,16 @@ class AutoWorker(Worker):
         started = self.clock()
         acted: list[str] = []
         units = sorted(self.assignment().units)
+        # A SCENARIO THAT WENT AWAY IS LET GO (the product's cross-check, after the twelfth review). Its epoch and lease
+        # stayed: renewed for a scenario another evaluator decided, and when it came back the pass decided under the
+        # epoch of its first stay — `running` — though the other evaluator had taken the next one meanwhile, until a
+        # lease step found it fenced. Gone from the assignment read now, it is released here, as the detector, the
+        # scan, the survey and the gateway release theirs; back, it is taken under a new epoch.
+        for gone in [u for u in self.epochs if u not in units]:
+            self.release(gone)
+            for said in (self.status_by_unit, self.holes, self.held_from, self.gave_up, self.cut, self._fit):
+                said.pop(gone, None)
+            self.said_without.discard(gone)
         if only is not None:
             units = [u for u in units if any(self._touches(k, t) for k in self._keys_of.get(u, ()) for t in only)]
         rows = {}
