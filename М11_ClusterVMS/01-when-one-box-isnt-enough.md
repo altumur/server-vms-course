@@ -183,7 +183,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": "", "items": {
   "holder": "srv-a:4101",
   "until": "1757500045.0",
   "released": "false",
-  "gen": "1"
+  "gen": "1",
+  "server": "srv-a"
 }}
 → 200 {"index": 1004}
 ```

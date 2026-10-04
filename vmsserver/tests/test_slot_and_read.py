@@ -27,7 +27,7 @@ def test_a_slot_a_worker_has_to_make_is_named_after_its_kind():
     assert (rec.name, cam.name, live.name, auto.name) == ("r-1", "w-1", "g-1", "a-1")
     again = recorder(box, None, "srv-a", acl=False)
     assert again.name == "r-2"
-    box.wall.advance(46)                                              # r-1 lapsed: taken before a new number is made
+    box.wall.advance(91)                                              # r-1 lapsed, and the margin out: taken before a new number
     third = recorder(box, None, "srv-a", acl=False)
     assert third.name in ("r-1", "r-2")
 

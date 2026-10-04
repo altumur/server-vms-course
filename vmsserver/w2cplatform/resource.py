@@ -102,7 +102,7 @@ from .doors import MAX_LIMIT, safe_rel, safe_segment
 
 log = logging.getLogger(__name__)
 
-from .contract import BUILD, PRESENCE, SCHEMA, check_schema, is_live, parse_heartbeat
+from .contract import ALIVE_EVERY, BUILD, PRESENCE, SCHEMA, check_schema, is_live, parse_heartbeat
 from .rows import PARSE_ERRORS, Table, answer, counts as garbled_by_table, finite
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
@@ -347,18 +347,35 @@ def peers_of(server: str, live: list[str], copies: int) -> list[str]:
 # registration here says the same name, or until it has said nothing for `PRESENCE_KEPT` (the worker touches its lock
 # at every heartbeat) — then it is removed: the server does not run it any more. A `.json` that does not read is a
 # process whose name is not known yet: under `?`, so it is taken for nobody's.
+#
+# …AND WHAT CANNOT BE READ IS NOT "NOT HERE" (the review's twelfth pass, blocker 3). A directory that does not list (no
+# rights, EIO, the volume not mounted where the workers write), a lock that does not open (EMFILE), a LIVE lock whose
+# `.json` is absent, torn or names no subsystem — each was read as an empty list, or as a lock under `?`: the worker "not
+# listed" by a resource that answers, its slot released, its cameras given to a second holder while its process still
+# wrote them. Now the resource says what it could not read: a directory that does not list says no lists at all
+# (`presence_error`, `workers`/`running` absent — "not said", which `slot_fate` takes for `wait`); a live lock whose
+# owner it cannot read, or a lock it cannot open, is counted (`presence_unread`), and then no worker of this server is
+# judged by being absent from the lists (`Controller.said_on`). A `.json` that reads, with `name: ""`, is a process that
+# is nobody — a spare waiting, a process fenced off its name — and writes nothing: not a doubt. And whose locks are held
+# is said by the lock's own name too (`running_instances`, `presence_name(instance)`): the controller matches it against
+# the instance a slot names as its holder, so a live holder is "running" whatever its `.json` says (`slot_fate`).
 PRESENCE_KEPT = 86400.0
+PRESENCE_FIELDS = ("workers", "running", "running_instances", "presence_unread", "presence_error")   # what `presence_here` says, all of it
 
 
-def workers_here(root: str | None, now: float | None = None) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+def presence_here(root: str | None, now: float | None = None) -> dict:
+    """`{"workers": {sub: [name]}, "running": {sub: [name]}}`, with `presence_unread: n` when n live registrations (or
+    locks that do not open) could not be read — or `{"presence_error": why}` alone when the directory does not list."""
     import fcntl
     now = time.time() if now is None else now
-    d = os.path.join(root, PRESENCE) if root else None
+    if not root:
+        return {"workers": {}, "running": {}, "running_instances": []}
+    d = os.path.join(root, PRESENCE)
     try:
-        names = sorted(os.listdir(d)) if d else []
-    except OSError:
-        return {}, {}
-    seen = []                                                 # (sub, name, alive, touched, lock path)
+        names = sorted(os.listdir(d))
+    except OSError as e:                                      # missing too: a worker that registered here made it
+        return {"presence_error": f"{d} does not list: {e.strerror or e}"}
+    seen, unread, held = [], 0, []                            # seen: (sub, name, alive, touched, lock path)
     for n in names:
         if not n.endswith(".lock"):
             continue
@@ -372,14 +389,23 @@ def workers_here(root: str | None, now: float | None = None) -> tuple[dict[str, 
                 except OSError:                               # held: the process lives
                     alive = True
             touched = os.path.getmtime(lock)
-            try:
-                with open(lock[:-len(".lock")] + ".json") as j:
-                    said = json.load(j)
-                sub, name = str(said["sub"]), str(said["name"])
-            except (OSError, *PARSE_ERRORS):
-                sub, name = "?", n[:-len(".lock")]
+            if alive:
+                held.append(n[:-len(".lock")])
+        except FileNotFoundError:
+            continue                                          # removed between the listing and the look: gone
         except OSError:
+            unread += 1                                       # a lock that does not open may be held: not known
             continue
+        try:
+            with open(lock[:-len(".lock")] + ".json") as j:
+                said = json.load(j)
+            sub, name = said["sub"], said["name"]
+            if not isinstance(sub, str) or not sub or not isinstance(name, str):
+                raise TypeError("sub or name is not a name")
+        except (OSError, *PARSE_ERRORS):
+            sub, name = "?", n[:-len(".lock")]
+            if alive:
+                unread += 1                                   # a live process whose name cannot be read
         seen.append((sub, name, alive, touched, lock))
     placed: dict[str, set] = {}
     alive_: dict[str, set] = {}
@@ -390,11 +416,21 @@ def workers_here(root: str | None, now: float | None = None) -> tuple[dict[str, 
                 with suppress(OSError):
                     os.remove(path)
             continue
-        if name:
+        if name and sub != "?":
             placed.setdefault(sub, set()).add(name)
             if alive:
                 alive_.setdefault(sub, set()).add(name)
-    return ({k: sorted(v) for k, v in placed.items()}, {k: sorted(v) for k, v in alive_.items()})
+    out = {"workers": {k: sorted(v) for k, v in placed.items()}, "running": {k: sorted(v) for k, v in alive_.items()},
+           "running_instances": sorted(held)}
+    if unread:
+        out["presence_unread"] = unread
+    return out
+
+
+def workers_here(root: str | None, now: float | None = None) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """`(workers, running)` as `presence_here` reads them — empty where it could not read (a bench's view)."""
+    said = presence_here(root, now)
+    return said.get("workers", {}), said.get("running", {})
 
 
 def resources_seen(objects) -> dict[str, dict]:
@@ -731,6 +767,8 @@ class Resource:
         # as last read, the peers left alone for a while after they did not answer, and the blobs a peer did not take.
         self._door_said = ""
         self._door_refused = False                 # said once in the log while the store refuses the row
+        self._door_since = ""                      # `since` as the row says it, kept through the refreshes of `at`
+        self._alive_at: float | None = None        # by `wall`, when `at` was last written (`say_door`)
         self._doors: tuple[float, dict] | None = None
         self._peer_rest: dict[str, float] = {}     # server -> by `clock`, until when it is not asked (`_fan_out`)
         self._peers_silent: set[str] = set()       # the peers that did not answer when last asked: logged once a spell
@@ -883,7 +921,8 @@ class Resource:
               # The workers placed on this server and those whose process runs, by subsystem (`workers_here`): what
               # tells a hung worker from a dead one (`Controller.slot_fate`; the owner's decision on the review's eleventh
               # pass). The files' own clock, not `wall`: what is compared is a file's age
-              **dict(zip(("workers", "running"), workers_here(self.root))),
+              # …and what it could not read of them, said and not taken for "not here" (`presence_here`; the twelfth pass)
+              **presence_here(self.root),
               "short": sum(self.short.values()),                     # bytes the last pass was asked to free and could not
               "waits": self.watch.counts(),                          # the requests it holds (`/events/wait`): now, and refused
               # The watermark's row, when it does not parse: what the pass acts on instead (`relieve`; the review's
@@ -910,27 +949,42 @@ class Resource:
         return hb
 
     # -- the cluster's objects ------------------------------------------------------------
-    # `platform/doors/<server> {url, since}` — where this resource answers, for the other resources that read every
+    # `platform/doors/<server> {url, since, at}` — where this resource answers, for the other resources that read every
     # server's objects (`doors`). Said by the first heartbeat of the process, and again whenever the address differs
-    # from what the row says: one read at start, nothing after. `since` is when this address was first said. A store
-    # that refuses the row (a grant missing) or does not answer is not the heartbeat's trouble: said once in the log,
-    # asked again by the next heartbeat; meanwhile the other servers do not find this one's objects.
+    # from what the row says: one read at start. `since` is when this address was first said. A store that refuses the
+    # row (a grant missing) or does not answer is not the heartbeat's trouble: said once in the log, asked again by the
+    # next heartbeat; meanwhile the other servers do not find this one's objects.
+    #
+    # …AND `at`, AGAIN EVERY `ALIVE_EVERY` (the review's twelfth pass, blocker 5 and major 9): that this resource is
+    # there, said in the store — which outlives a server, and which every controller reaches when it cannot reach this
+    # server's door. A controller that cannot read this resource's heartbeat fresh asks it (`Controller.resource_state`):
+    # fresh, the server is there and only its door is not — nothing moves; stale, the server is silent — and a controller
+    # started after it went sees that too. One write per `ALIVE_EVERY` per server; the pulse of a long pass says it too.
     def say_door(self) -> bool:
-        if not self.url or self._door_said == self.url:
+        if not self.url:
+            return False
+        now = self.wall()                                    # the row's own clock: what a reader compares `at` with
+        if self._door_said == self.url and self._alive_at is not None and 0 <= now - self._alive_at < ALIVE_EVERY:
             return False
         key = f"{DOORS}/{self.server}"
         try:
-            items, _ = self.vars.get(key)
-            if not items or items.get("url") != self.url:
-                self.vars.put(key, {"url": self.url, "since": str(self.wall())})
+            if self._door_said != self.url:
+                items, _ = self.vars.get(key)
+                same = bool(items) and items.get("url") == self.url
+                self._door_since = str(items.get("since")) if same and items.get("since") else str(self.wall())
+            self.vars.put(key, {"url": self.url, "since": self._door_since, "at": str(now)})
         except Exception as e:                               # noqa: BLE001 — the door unsaid is not the heartbeat unsent
             if not self._door_refused:
                 self._door_refused = True
                 log.error("%s: could not say where this resource answers (%s: %s): the other servers do not find its "
                           "objects until it is said — asked again with every heartbeat", self.server, key, e)
             return False
-        self._door_said, self._door_refused = self.url, False
+        self._door_said, self._door_refused, self._alive_at = self.url, False, now
         return True
+
+    # What the pulse of a long step says beside the heartbeat it sends again (`_pulsing`).
+    def say_alive(self) -> None:
+        self.say_door()
 
     # `{server: url}` of every OTHER resource that said its door, read from the store at most every `DOORS_FRESH`
     # seconds. A row that is not a door (`url` not an http address, a server that is not a name) is left out and
@@ -1026,11 +1080,19 @@ class Resource:
     # logged, and the next one asked (`blobs.verify`; the reader checks again).
     def object_read(self, key: str, scope: str = "local") -> tuple[tuple[bytes, float, str] | None, list[str]]:
         from .blobs import BlobMismatch, verify
+        # A key that names a directory, or an in-flight `put`'s temporary file, is no object (the review's twelfth pass,
+        # minor): the directory's read raised past the door and dropped the connection, and `<key>.….tmp` was served as an
+        # object though no listing names it (`FsObjectStore.list` passes such files by). Both: 404, here and anywhere.
+        if key.endswith(".tmp"):
+            return None, []
         local = local_store(self.objects)
         mine = None
         st = _stat(local, key)
         if st is not None:
-            data = local.get(key)
+            try:
+                data = local.get(key)
+            except (IsADirectoryError, NotADirectoryError):
+                data = None
             if data is not None:
                 mine = (data, st[0], self.server)
         if scope != "cluster":
@@ -1632,8 +1694,15 @@ class Resource:
                         return
                     last = getattr(self, "_last_heartbeat", None)
                     if last is not None:
-                        self.objects.put(f"{RESOURCES}/{self.server}/heartbeat",
-                                         json.dumps({**last, "ts": self.wall(), "pass_seconds": round(running, 1)}).encode())
+                        # The workers and whose process runs are looked at again for every pulse (the review's twelfth
+                        # pass, blocker 4): sent as the pass found them, a worker restarted after the pass began and
+                        # frozen since was "placed, not running" for as long as the pass ran — dead, by its old
+                        # registration — and its slot was freed while its new process still held its lock. The look
+                        # is a listing and a `flock` per worker, nothing of the volumes' walk.
+                        beat = {k: v for k, v in last.items() if k not in PRESENCE_FIELDS}
+                        beat.update(presence_here(self.root), ts=self.wall(), pass_seconds=round(running, 1))
+                        self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(beat).encode())
+                    self.say_alive()
                 except Exception:                             # noqa: BLE001 — one beat lost, not the pulse
                     log.warning("%s: a pulse of the pass did not go out", self.server, exc_info=True)
 

@@ -89,8 +89,8 @@ from .doors import numeric, unnamable
 from .secrets import NOT_AN_ADDRESS, credential_params, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, OFFER_GRACE, SLOTS,
-                       SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, label_set, one_pass, read_slot, slot_number,
-                       stored)
+                       SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, label_set, one_pass, read_slot,
+                       slot_number, stored)
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -146,6 +146,25 @@ UNIT_LABELS = Table("unit_label", "the unit stays where it is: no server's row c
 # three hundred characters were rows nobody's server would ever read (the review's tenth pass, minor).
 SERVER_WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.\-]{0,252}")
 REACH_BUDGET = 10                 # moves `ensure_reach` makes in one pass: a server's labels edited moves its units over a few
+
+
+# THE BUDGET IS A SETTING (the review's twelfth pass, major 7; the owner's decision of 4 Oct). A group bigger than the
+# budget never moved, and the log said "raise it, or move them by hand" — with nothing to raise and no door to move by.
+# Now `REACH_BUDGET` in the controller's environment raises it; a group left for it is an alarm (`units.over_budget`),
+# not a log line only. No manual-move door: the owner's word. A value that is no positive whole number: the default,
+# said once.
+def reach_budget(env) -> int:
+    raw = env.get("REACH_BUDGET")
+    if raw in (None, ""):
+        return REACH_BUDGET
+    try:
+        n = int(str(raw).strip())
+        if n <= 0:
+            raise ValueError("not positive")
+        return n
+    except ValueError as e:
+        log.error("REACH_BUDGET=%r is not a positive whole number (%s): %d moves a pass, the default", raw, e, REACH_BUDGET)
+        return REACH_BUDGET
 
 
 def parse_labels(text) -> frozenset:
@@ -858,6 +877,10 @@ class SpecController(Controller):
         self.last_reach_moves = 0                        # what the last `ensure_reach` moved or unplaced (the pass report)
         self.last_reach_waiting = 0                      # …and the units of groups it left whole where they are (the eleventh)
         self._reach_said: set = set()                    # …those groups, said in the log once a spell
+        self._reach_budget_said: set = set()             # …those left for the budget, said in the journal once a spell
+        self.reach_budget = reach_budget(os.environ)     # moves `ensure_reach` makes in one pass (`REACH_BUDGET`)
+        self.last_leaving_waiting = 0                    # units `redistribute` could not move off a leaving worker
+        self._leaving_said: set = set()                  # …the groups of them, said in the log once a spell
         # The key that seals `*_secret` fields on the way into the store (`sealing.py`) — the console's process
         # has it (`SECRETS_KEY`); a process without it writes secrets in the clear, and says so once.
         from .sealing import Sealer
@@ -920,8 +943,8 @@ class SpecController(Controller):
 
     # -- what a server reaches, from the console (feedback DQ) ----------------------------------------------------
     # A camera's labels say which network segments its address answers on; a server's say which ones the machine is
-    # plugged into. The server's half came from the node alone: `LABELS`, filled from `meta.labels` in `client.hcl`,
-    # read by a worker when it starts. Changing it was a file on the machine and a restart, for a fact the operator
+    # plugged into. The server's half came from the node alone: `LABELS` in the server's environment (`w2c.env`, or a
+    # unit's), read by a worker when it starts. Changing it was a file on the machine and a restart, for a fact the operator
     # learns in the console, beside the cameras that carry the same labels — and a label decided only the NEXT
     # placement: a camera stayed on a server that no longer reached its VLAN, recorded by nobody, and nothing said so.
     #
@@ -936,7 +959,7 @@ class SpecController(Controller):
     #
     # …AND A ROW THAT DID NOT READ IS NOT KNOWN, NOT "NO ROW" (the review's tenth pass, major; a run). A row that did not
     # parse kept what was last read of that server, else its NODE's: after a restart of the controller there was no
-    # last read, the node's `client.hcl` was the stale `vlan:b` the row had been written to correct, and `ensure_reach`
+    # last read, the node's `LABELS` was the stale `vlan:b` the row had been written to correct, and `ensure_reach`
     # took 12 cameras of 12 off the server in two passes, "srv-a no longer reaches vlan:a". And a listing that left
     # the row out for one pass was "no row": the node's labels again, 5 cameras of 5 moved, and they did not come back.
     # Now each server's row is read BY ITS KEY — the listed ones, the servers this subsystem's workers run on, and the
@@ -1247,11 +1270,12 @@ class SpecController(Controller):
 
     # The operator's half: the row is marked `deleted: "true"` (not removed) and derived rows get their
     # `on_delete`. Its placement is the controller's half, taken back on the next pass by `unplace_deleted`
-    # — a console's token cannot touch an assignment, and does not need to.
+    # — the console writes as `console` (`acl_console`, its rights in the store), which cannot touch an
+    # assignment, and does not need to.
     def delete(self, uid) -> None:
         """The operator's half: the row is marked. Its placement is the controller's
-        half, taken back on the next pass (`unplace_deleted`) — a console's token
-        cannot touch an assignment, and does not need to."""
+        half, taken back on the next pass (`unplace_deleted`) — the console's writer
+        (`acl_console`) cannot touch an assignment, and does not need to."""
         self.write(self._row_key(uid), lambda it: {**it, "deleted": "true"} if it else None)
         self._derived(None, uid, deleted=True)
 
@@ -1764,11 +1788,16 @@ class SpecController(Controller):
 
     # How many units of `row`'s group — `row` with them — have no place yet: what its first placement must make room for.
     def _group_waiting(self, row: dict) -> int:
+        return len(self._group_rows_waiting(row))
+
+    # …and those rows, `row` among them.
+    def _group_rows_waiting(self, row: dict) -> list[dict]:
         value = self.group_value(row) if self.spec.group_by else ""
         if not value:
-            return 1
-        return sum(1 for o in self._rows_by("group", self.group_value).get(value, ())
-                   if not self.retired(o) and (str(o["id"]) == str(row["id"]) or self.placement(o["id"]) is None))
+            return [row]
+        out = [o for o in self._rows_by("group", self.group_value).get(value, ())
+               if not self.retired(o) and str(o["id"]) != str(row["id"]) and self.placement(o["id"]) is None]
+        return [row] + out
 
     # `most-free-capacity`: the worker with the largest `capacity_of − load`, strictly positive; ties go to
     # the first in sorted order.
@@ -1803,7 +1832,13 @@ class SpecController(Controller):
         # with room for every unit of the group waiting to be placed, when one has it (the product's cross-check of the
         # eleventh review — two channels of four fitted on the near worker, and the other two were unplaceable for good).
         if len(pool) > 1:                               # pinned to its group's worker already: nothing to choose
-            pool = self._room_for_group(pool, self._group_waiting(row))
+            # …and onto a worker EVERY waiting unit of the group may go to (the review's twelfth pass, major 6): the
+            # first channel's own labels chose the worker, the others were pinned to it, and a channel that needs a label
+            # that worker lacks was never placed. Where no worker takes them all, the first goes where it may, as before.
+            waiting = self._group_rows_waiting(row)
+            if len(waiting) > 1:
+                pool = [w for w in pool if all(w in self.eligible(m, pool) for m in waiting if m is not row)] or pool
+            pool = self._room_for_group(pool, len(waiting))
         best, free, near = self._pick(pool, uid, self.near_index())      # the pass's one look (`near_index`), not one per unit
         if best is None:
             return None                                 # "the system is full" — or nothing that can reach it; never "w-1 is full"
@@ -1883,7 +1918,7 @@ class SpecController(Controller):
         errors = []
         self.last_reach_moves = 0
         decom = {"decommissioned": [], "released": [], "standing": {}}
-        slots = {"released": {}, "hung": {}, "hung_moved": []}
+        slots = {"released": {}, "hung": {}, "hung_moved": [], "unjudged": {}, "units_unjudged": 0}
 
         # The operator's decommissions and the slots nobody runs any more FIRST (`Controller.apply_decommissions`,
         # `release_unlisted`): a slot they release is then read by `redistribute` below, which moves what it listed in
@@ -1936,13 +1971,29 @@ class SpecController(Controller):
         rep["servers_decommissioned_total"] = total("servers_decommissioned_total", len(decom["decommissioned"]))
         rep["decommission_requests_standing"] = len(decom["standing"])   # asked, and the server still answers
         rep["workers_hung"] = sorted(slots["hung"])                 # its process runs, and it neither renews nor speaks
+        # …and the hung workers whose units moved anyway, past the limit — counted since the store was new (the review's
+        # twelfth pass, minor: an alarm in the journal, and no number)
+        rep["workers_hung_moved_total"] = total("workers_hung_moved_total", len(slots["hung_moved"]))
         rep["hung_move_after"] = self.hung_move_after                # …and how long it keeps its units: a spare judges by it
+        # Slots nobody can judge (`slot_fate` `wait`/`unsure`) with units on them, and how many units wait so (the review's
+        # twelfth pass, blocker 5) — and the live workers that could not write their name beside their lock (blocker 3)
+        rep["workers_unjudged"] = sorted(slots["unjudged"])
+        rep["units_unjudged"] = slots["units_unjudged"]
+        try:
+            rep["workers_presence_unsaid"] = sorted(w for w, hb in self.workers_seen(SLOT_LOST_AFTER).items()
+                                                    if hb.extra.get("presence_unsaid"))
+        except Exception:                             # noqa: BLE001 — the heartbeats unread: the other numbers stand
+            rep["workers_presence_unsaid"] = []
         # Names a live instance holds and another process asks for — of another box, or left nobody on its own (the
         # owner's decision of 4 Oct; the product's name): `<name>_name_conflicts` on the console's `/metrics`
         rep["name_conflicts"] = names["name_conflicts"]
         # The units of groups `ensure_reach` left whole where they are, and the servers whose row did not read on the last
         # read — each was a line in the log or on a page only, for days (the eleventh review, a major and a minor)
         rep["reach_waiting"] = self.last_reach_waiting
+        rep["reach_budget"] = self.reach_budget
+        # Units `redistribute` could not move off a worker that is leaving — a group no worker takes whole, a unit nothing
+        # has room or reach for (the review's twelfth pass, blocker 7: every counter said 0)
+        rep["units_left_on_leaving"] = self.last_leaving_waiting
         rep["servers_labels_unread"] = len(self._server_rows_unread)
         # The spares' numbers, per label set (`offer_spares`; the product's names): what the console publishes as
         # `<name>_workers_needed`, `_units_short`, `_spare_offers` while this report is fresh
@@ -2103,28 +2154,32 @@ class SpecController(Controller):
             log.info("%s: %s", self.sub.name, e)
             return None
 
-    # The controller's one unasked move: for each released slot (scale-in, or released by the controller) that still lists
-    # units, move each to the live worker with the most free capacity; stop when the system is full (the
-    # unit waits, listed where it was). A merely lapsed slot is not touched: that is a crash, and its
-    # process returns under the same name. Two more cases when the spec requires a resource: a live worker
-    # whose server's resource went silent (it has nowhere to write), and a slot that lapsed AND whose
-    # server's resource is silent — the server is gone, and with one worker per server (`distinct_hosts`)
-    # nobody will claim that slot until the server returns; its units go to the workers that are here. `test_scale_in_releases_a_slot_and_the_controller_redistributes`:
-    # a silent `w-3` moves nothing; after `release_slot()` its two cameras go to `w-1`/`w-2` with reason
-    # `slot w-3 released; …`.
+    # The controller's one unasked move: the units of every worker that is LEAVING (`leaving`) go to the live workers
+    # with the most free capacity, a channel group whole; what has no room waits, listed where it was, counted. Leaving
+    # is: a released slot (an orderly stop, or released by the controller — `release_unlisted`, a decommission), a live
+    # worker whose server's resource is silent where the spec requires one, one that holds no place where places are
+    # held, one on a drained or decommissioned server, and a slot that stopped renewing whose fate says its units move
+    # (`slot_fate`: `move`, `hung_moved`). A slot that merely lapsed, or whose worker is hung, or that nobody can judge,
+    # is not touched — it is waited for. `test_scale_in_releases_a_slot_and_the_controller_redistributes`: a silent `w-3`
+    # moves nothing; after `release_slot()` its two cameras go to `w-1`/`w-2` with reason `slot w-3 released; …`.
     def redistribute(self, workers: list[str] | None = None) -> list[tuple]:
-        """The controller's one unasked move: a slot that was RELEASED — the
-        scheduler scaled in, or the controller freed it — still lists units. Move
-        them to the workers that are here. A slot that merely lapsed is not
-        touched: that is a crash, and its process returns under the same name."""
+        """The controller's one unasked move: the units of a worker that is leaving
+        (`leaving`: a released slot, a drained, decommissioned or silent server, a
+        dead slot by `slot_fate`) go to the workers that are here — a channel group
+        whole, or not at all. A slot that merely lapsed is not touched: its
+        process returns under the same name."""
         self.unplace_deleted()
         moves = []
         seen = sorted(workers if workers is not None else self.workers_seen())
         gone_for = self.leaving(seen)
         idx = None                                    # one look at what is followed, taken when a unit is moved
+        self.last_leaving_waiting, waits = 0, set()
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]
+            done: set[str] = set()
             for unit in sorted(self.assignment(gone).units, key=_unit_key):
+                if unit in done:
+                    continue
                 try:
                     uid = self.spec.parse_id(unit)
                 except PARSE_ERRORS as e:
@@ -2135,19 +2190,49 @@ class SpecController(Controller):
                     continue
                 row = self._parsed(uid)
                 if row is GARBLED_ROW:
+                    self.last_leaving_waiting += 1
                     continue                            # its filters cannot be read: it waits where it is, the others move
-                pool = self.eligible(row, live) if row else live
-                if row and len(pool) > 1:                # the first of a group goes where the whole group has room (the
-                    pool = self._room_for_group(pool, len(self._reach_group(row, gone)))   # eleventh review's sibling)
+                # THE GROUP GOES WHOLE, OR STAYS WHOLE (the review's twelfth pass, blocker 7; `ensure_reach`'s rule). The
+                # first channel of a recorder went where IT fitted, the next ones were pinned to that worker
+                # (`eligible`) — and with no room or no reach for them there they stayed on the leaving worker: a drained,
+                # released, decommissioned or dead slot, a recorder split, and the channels left behind written by
+                # nobody, every counter at 0. Now the units of the group on the leaving worker go together onto a worker
+                # that every one of them may go to AND that has room for all of them — or none goes, said once and
+                # counted (`units_left_on_leaving` in the pass report, on `/metrics`).
+                group = self._reach_group(row, gone) if row else []
+                done |= {str(m["id"]) for m in group}
+                if len(group) > 1:
+                    fits = None
+                    for m in group:
+                        e = set(self.eligible(m, live))
+                        fits = e if fits is None else fits & e
+                    pool = [w for w in live if w in fits and self.capacity_of(w) - self.load(w) >= len(group)]
+                else:
+                    pool = self.eligible(row, live) if row else live
                 idx = self.near_index() if idx is None else idx
                 best, free, near = self._pick(pool, uid, idx)
                 if best is None:
-                    # THIS unit waits, listed where it was — and the next one is looked at: each has filters of
-                    # its own, and a `break` here let one unit with a rare label, first in the list, hold every
+                    # THIS unit (or group) waits, listed where it was — and the next one is looked at: each has filters
+                    # of its own, and a `break` here let one unit with a rare label, first in the list, hold every
                     # other unit of a dead worker for ever (the platform review; feedback BC).
+                    self.last_leaving_waiting += max(1, len(group))
+                    if len(group) > 1:
+                        key = (str(uid), gone)
+                        waits.add(key)
+                        if key not in self._leaving_said:
+                            self._leaving_said.add(key)
+                            log.warning("%s: %s and %d more of one %s stay on %s (%s): no live worker takes all of them "
+                                        "— moved together when one does, asked again every pass", self.sub.name, uid,
+                                        len(group) - 1, self.spec.group_by, gone, why)
                     continue
-                if self.move_from(uid, gone, best, f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}"):
-                    moves.append((uid, gone, best))
+                for m in group or [row]:
+                    mid = m["id"] if m else uid
+                    reason = (f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}" if mid == uid else
+                              f"with {uid}, one {self.spec.group_by}: {why}; on {self.server_of(best)}")
+                    if not self.move_from(mid, gone, best, reason):
+                        break                           # somebody moved it first: the rest of the group, next pass
+                    moves.append((mid, gone, best))
+        self._leaving_said &= waits
         return moves
 
     # The workers whose units must go, and why — `redistribute` moves them, `offer_spares` counts what is left on them
@@ -2190,8 +2275,24 @@ class SpecController(Controller):
     #                 worker's, not a slot's before its fate says move — those are waited for, not short
     #   free          the room (`capacity − load`) of the workers in the pool whose labels cover the set
     #   units_short   waiting − free, at least 0. A set no live worker covers has no free room: short by itself
-    #   needed        ceil(units_short / CAPACITY), less the offers of the set a spare took and whose worker has not
-    #                 been heard yet — for `OFFER_GRACE` (90 s) from the take it is a worker on its way
+    #   needed        ceil(units_short / per), at most the servers a spare of the set could carry units on, less the
+    #                 offers of the set a spare took and whose worker has not been heard yet — for `OFFER_GRACE` (90 s)
+    #                 from the take it is a worker on its way
+    #
+    # …AND ONLY WHAT A SPARE COULD TAKE (the twelfth round's «Вопросы», found rebuilding three-cameras by runs). Three
+    # things the count did not ask:
+    #   per           a spare says its capacity in its first heartbeat, after it was started for the count. The count
+    #                 is by the smallest capacity the live workers of the set announce (a spare is started from the
+    #                 same unit and environment as the role's workers, so says the same), the fallback `CAPACITY`
+    #                 only where none is live — never by this controller's own fallback while the workers say better
+    #   a server      a spare runs on a server: one whose resource is not silent, not drained, not decommissioned, and
+    #                 whose labels cover the set (its row; else its workers' word; a server whose labels nobody has said yet
+    #                 may cover it). Under `servers: distinct` only a server with no live worker of this subsystem
+    #                 can carry a spare's units — on any other it idles by policy, the camera stays unplaced, and the
+    #                 next pass offered again: spares raised to `MAX_WORKERS` on every server, each idle
+    #   none          no such server: no offer is written — it could only hang, or start a spare that idles. The
+    #                 shortage stays counted (`units_short`), the reason is said (`spares_withheld`, on `/metrics`),
+    #                 and an alarm goes once an episode (`spares.no_server`)
     #
     # ONE OFFER PER WORKER NEEDED. A nameless process MAKES a slot, `w-(N+1)` — so "the extra spares find no slot and
     # wait" needs a slot only a spare may take: `<sub>/slots/<prefix>-<N>` `{holder:"", until:"0", released:"false",
@@ -2227,13 +2328,27 @@ class SpecController(Controller):
             elif s.holder and not s.released and name not in heard and now - s.taken_at < OFFER_GRACE:
                 starting[label_set(s.offer)] = starting.get(label_set(s.offer), 0) + 1
         rule = CONSTRAINTS[self.spec.constraint]
-        out = {"units_short": {}, "workers_needed": {}, "spare_offers": {}, "spares_starting": {}}
-        per = max(1, int(self.capacity))
+        out = {"units_short": {}, "workers_needed": {}, "spare_offers": {}, "spares_starting": {}, "spares_withheld": {}}
+        hosts, distinct = self._spare_hosts(), self.policy()["servers"] == "distinct"
+        carrying = {self.server_of(w) for w in pool}         # under `distinct`, a server that has its one worker
         for labels in sorted(set(waiting) | set(offers) | set(starting)):
             asks = {"labels": [l for l in labels.split(",") if l]}
-            free = sum(max(0, self.capacity_of(w) - self.load(w)) for w in pool if rule(asks, self.labels_of(w)))
+            covering = [w for w in pool if rule(asks, self.labels_of(w))]
+            free = sum(max(0, self.capacity_of(w) - self.load(w)) for w in covering)
             short = max(0, waiting.get(labels, 0) - free)
-            needed = max(0, math.ceil(short / per) - starting.get(labels, 0))
+            caps = [self.capacity_of(w) for w in (covering or pool)]
+            per = max(1, int(min(caps) if caps else self.capacity))
+            reach = None if hosts is None else [h for h, has in hosts.items() if has is None or rule(asks, has)]
+            room = None if reach is None else [h for h in reach if h not in carrying] if distinct else reach
+            want = math.ceil(short / per)
+            fits = want if room is None or (room and not distinct) else len(room)   # spares that could carry units
+            needed = max(0, min(want, fits) - starting.get(labels, 0))
+            if want > fits:
+                what = labels or "every unit"
+                out["spares_withheld"][labels] = (
+                    f"no server a spare could run on reaches {what}" if not reach else
+                    f"servers: distinct, and {len(reach) - len(room)} of the {len(reach)} servers that reach {what} have "
+                    f"their worker already: {len(room)} could carry a spare, {want} needed")
             have = sorted(offers.get(labels, []), key=lambda o: (slot_number(o[0]), o[0]))
             for name, idx in have[needed:][::-1]:            # the newest first; one a spare took meanwhile is its own
                 try:
@@ -2246,7 +2361,46 @@ class SpecController(Controller):
                     have.append(("", 0))
             out["units_short"][labels], out["workers_needed"][labels] = short, needed
             out["spare_offers"][labels], out["spares_starting"][labels] = len(have), starting.get(labels, 0)
+        self._said_withheld(out["spares_withheld"])
         return out
+
+    # The servers a spare could run on, and what each reaches: `{server: labels}` — labels None where nobody has said
+    # them yet (no row, no worker there ever). Not drained, not decommissioned, its resource not silent (one never heard
+    # is a bench's, or a box before its resource starts; one whose door this process cannot reach is there: either may
+    # carry one). No server known at all: a bench that says
+    # nothing of its servers — every count as before (`offer_spares`).
+    def _spare_hosts(self) -> dict[str, frozenset | None] | None:
+        known = self.servers_known()
+        if not known:
+            return None
+        rows = self.server_labels() or {}
+        node: dict[str, set] = {}
+        for hb in self._per_pass(self.sub.heartbeats_prefix(), lambda: self.workers_seen(max_age=1e12), "any_age").values():
+            if isinstance(hb.extra.get("server"), str):
+                node.setdefault(hb.extra["server"], set()).update(l for l in str(hb.extra.get("labels", "")).split(",") if l)
+        gone = set(self.decommission_requests()) | {self.draining()}
+        out = {}
+        for server in sorted(known):
+            if server in gone or self.resource_state(server) == "silent":
+                continue                                # gone or leaving: no spare runs on it (one only this process
+                                                        # cannot reach — `unreachable` — is there, and may carry one)
+            if server in rows:
+                out[server] = frozenset(rows[server])
+            elif server in self._server_rows_unread:
+                out[server] = frozenset()               # its row did not read: it reaches no label known (`labels_of`)
+            else:
+                out[server] = frozenset(node[server]) if server in node else None
+        return out
+
+    # A shortage no offer can answer, said once an episode — an alarm: somebody has to give a server the labels, or
+    # start a machine (`offer_spares`).
+    def _said_withheld(self, withheld: dict) -> None:
+        said = self.__dict__.setdefault("_withheld_said", set())
+        from .events import ALARM
+        for labels in sorted(set(withheld) - said):
+            log.error("%s: spares for labels '%s' are short and none is offered: %s", self.sub.name, labels, withheld[labels])
+            self.journal.say("spares.no_server", ALARM, of=self.sub.name, labels=labels, why=withheld[labels])
+        said.clear(); said.update(withheld)
 
     # One offer for `labels`, created under the next number nobody has (`cas=0`); one made under us: the next number.
     def _offer(self, names: list, labels: str, now: float) -> bool:
@@ -2326,8 +2480,13 @@ class SpecController(Controller):
     # one alphabet was placed by a node's word; a server's row cannot hold the word, so the camera stays where it is,
     # counted once (`UNIT_LABELS`). Each move and each place given back is a line in the log with its reason; the pass
     # report counts them (`reach_moves`, and `reach_moves_total` since the store was new).
-    def ensure_reach(self, budget: int = REACH_BUDGET, workers: list[str] | None = None) -> list[tuple]:
+    #
+    # …COUNTED OVER THE WHOLE PASS (the review's twelfth pass, minor): the walk stopped at the budget, and what it had not
+    # reached was not counted — `units_waiting_for_reach` showed 0 while units stood on a server that no longer reached
+    # them. The walk goes on past the budget now, moving nothing, and counts every unit it leaves off its reach.
+    def ensure_reach(self, budget: int | None = None, workers: list[str] | None = None) -> list[tuple]:
         """Units whose worker no longer passes the constraint, moved to one that does — or unplaced, with the reason."""
+        budget = self.reach_budget if budget is None else budget
         self.last_reach_moves = self.last_reach_waiting = 0
         rule = CONSTRAINTS[self.spec.constraint]
         if budget <= 0 or self.spec.constraint == "none" or self.server_labels() is None:
@@ -2346,11 +2505,9 @@ class SpecController(Controller):
                             "pass", self.sub.name, group[0]["id"], len(group) - 1, self.spec.group_by, worker,
                             group[0]["id"], words)
 
-        whole = True                                      # every unit looked at: what waits no longer is unsaid below
+        spent = False                                     # the budget spent: the rest only counted
         for row in self.units():
-            if len(moves) >= budget:
-                whole = False
-                break
+            spent = spent or len(moves) >= budget
             uid = row["id"]
             if str(uid) in done:
                 continue
@@ -2369,12 +2526,15 @@ class SpecController(Controller):
             group = self._reach_group(row, pl.worker)
             done |= {str(m["id"]) for m in group}
             if len(group) > budget:
-                wait(group, pl.worker, f"its {len(group)} units are more than the {budget} moves a pass may make "
-                                       f"(REACH_BUDGET) — raise it, or move them by hand")
+                wait(group, pl.worker, f"its {len(group)} units are more than the {budget} moves a pass may make — "
+                                       f"REACH_BUDGET in the controller's environment raises it")
+                self._over_budget(group, pl.worker, budget)
                 continue
-            if len(moves) + len(group) > budget:
-                whole = False
-                break                                     # the group goes whole, next pass
+            if spent or len(moves) + len(group) > budget:
+                spent = True
+                self.last_reach_waiting += len(group)     # the group goes whole, next pass: counted, not said
+                waits.add((str(uid), pl.worker))          # …and not said again as waiting for another reason
+                continue
             idx = self.near_index() if idx is None else idx
             others = [w for w in pool if w != pl.worker]
             fits = None
@@ -2401,10 +2561,23 @@ class SpecController(Controller):
                     break                                 # somebody moved it first: the rest of the group waits for the next pass
                 moves.append((m["id"], pl.worker, best))
                 log.warning("%s: %s moved from %s to %s: %s", self.sub.name, m["id"], pl.worker, best, reason)
-        if whole:
-            self._reach_said &= waits
+        self._reach_said &= waits
+        self._reach_budget_said &= waits
         self.last_reach_moves = len(moves)
         return moves
+
+    # A group too big for the budget, said once a spell in the journal — an alarm: it waits until somebody raises it.
+    def _over_budget(self, group: list[dict], worker: str, budget: int) -> None:
+        key = (str(group[0]["id"]), worker)
+        if key in self._reach_budget_said:
+            return
+        self._reach_budget_said.add(key)
+        from .events import ALARM
+        self.journal.say("units.over_budget", ALARM, of=self.sub.name, unit=str(group[0]["id"]), units=len(group),
+                         worker=worker, budget=budget,
+                         why=(f"{len(group)} units of one {self.spec.group_by} stay on {worker}, whose server no longer "
+                              f"reaches them: they move together, and that is more than the {budget} moves a pass may "
+                              f"make — raise REACH_BUDGET in the controller's environment"))
 
     # Why a unit is off its server — the labels it needs that the server does not reach — or None when one of them is a
     # word no server's row can hold (`LABEL_WORD`): then it is not moved for it (counted once, `UNIT_LABELS`).

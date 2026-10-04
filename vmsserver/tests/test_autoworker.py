@@ -745,3 +745,29 @@ def test_a_loud_camera_does_not_cut_the_quiet_one_a_scenario_watches():
     w = _worker(box, log)
     assert w.reconcile_once() == ["one"] and "cut" not in w.status()[0]
     assert log.asked[0]["unit"] == "12"
+
+
+def test_one_camera_row_that_cannot_be_read_does_not_withdraw_the_scenarios():
+    """The review's twelfth pass, major 20, and the product's cross-check: the catalogue read the rows bare, and one torn
+    camera file raised out of the check of every scenario the evaluator holds — nothing was decided, every pass — and
+    out of `GET /auto/catalog` and every `POST /auto/scenarios`. Now each row is read on its own (`Catalog._row`): the
+    scenario that names the torn camera fires as before and says that camera is not checked; the catalogue offers the
+    camera with `can: null` and why; a new scenario is checked against the rest."""
+    from vms.auto import Catalog
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"),
+                ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    _scenario(box); _assigned(box, "door-on-badge")
+    f = box.vars._file("vms/cameras/7")
+    text = open(f).read()
+    open(f, "w").write(text[: len(text) // 2])                               # the lobby's row, torn
+    w = _worker(box, log)
+    assert w.reconcile_once() == ["door-on-badge"]                           # decided, and filed
+    st = w.status_by_unit["door-on-badge"]
+    assert st["phase"] == "running" and any("camera 7" in u and "not checked" in u for u in st["unchecked"]), st
+    reply = Catalog(box.vars).reply()
+    assert reply["vms"]["7"]["can"] is None and "cannot be read" in reply["vms"]["7"]["unread"], reply["vms"]
+    assert "12" in reply["vms"]
+    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con.create({**DOOR, "name": "door-again"})                               # checked against the rest, not a 500

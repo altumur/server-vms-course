@@ -20,7 +20,7 @@ A process that took whatever was free (no name given) rejoins as before.
 import json
 import urllib.request
 
-from w2cplatform.contract import NameOnAnotherBox, Slot
+from w2cplatform.contract import SLOT_LOST_AFTER, NameOnAnotherBox, Slot
 from w2cplatform.events import ALARM
 from vms.config import SPEC
 from vms.controller import VmsController
@@ -96,7 +96,8 @@ def test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no
 def test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder():
     """No ping-pong: the old process does not take its name back from the live new one, however long it asks — the
     take of a live holder's name is a START's (the unit says which process is the current one). Once the holder stops
-    renewing — it hangs, or dies without a word — the name lapses, and its own nobody takes it."""
+    renewing — it hangs, or dies without a word — the name lapses, and its own nobody takes it once the margin past the
+    lapse is out (`SLOT_LOST_AFTER`: the units would move then, and the name goes with them)."""
     box = Box()
     a = _unit(box)
     b = _unit(box)
@@ -106,7 +107,9 @@ def test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_ho
         _tick(box, 5, b)
         assert b.lease_pass() == [] and b.recording_allowed                # b is never fenced by a
     assert _holder(box) == b.instance
-    _tick(box, b.slot_ttl + 1)                                           # b silent past its slot
+    _tick(box, b.slot_ttl + 1)                                           # b silent past its slot…
+    assert a.rejoin() is None                                            # …within the margin: what it started may still write
+    _tick(box, SLOT_LOST_AFTER)                                          # …and past it (the twelfth pass, blocker 2)
     assert a.rejoin() == NAME and _holder(box) == a.instance
     b.lease_pass()
     assert not b.recording_allowed and b.rejoin() is None                # now b is the nobody, and takes nothing else

@@ -8,18 +8,18 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1011, "items": {
   "at": "1757500186.0",
   "rev": "2"
 }}
-→ 200 {"index": 1023}
+→ 200 {"index": 1028}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1016, "items": {
   "units": "2,3",
   "rev": "4"
 }}
-→ 200 {"index": 1024}
+→ 200 {"index": 1029}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": "", "items": {"units": "1", "rev": "1"}}
-→ 200 {"index": 1025}
+→ 200 {"index": 1030}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1013, "items": {
@@ -28,18 +28,18 @@ POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1013, "items": {
   "at": "1757500186.0",
   "rev": "2"
 }}
-→ 200 {"index": 1026}
+→ 200 {"index": 1031}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1024, "items": {"units": "3", "rev": "5"}}
-→ 200 {"index": 1027}
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1029, "items": {"units": "3", "rev": "5"}}
+→ 200 {"index": 1032}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1025, "items": {
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1030, "items": {
   "units": "1,2",
   "rev": "2"
 }}
-→ 200 {"index": 1028}
+→ 200 {"index": 1033}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": 1015, "items": {
@@ -48,27 +48,27 @@ POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": 1015, "items": {
   "at": "1757500186.0",
   "rev": "2"
 }}
-→ 200 {"index": 1029}
+→ 200 {"index": 1034}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1027, "items": {"units": "", "rev": "6"}}
-→ 200 {"index": 1030}
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1032, "items": {"units": "", "rev": "6"}}
+→ 200 {"index": 1035}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
-POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1028, "items": {
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1033, "items": {
   "units": "1,2,3",
   "rev": "3"
 }}
-→ 200 {"index": 1031}
+→ 200 {"index": 1036}
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1017, "items": {"epoch": "2"}}
-→ 200 {"index": 1032}
+→ 200 {"index": 1037}
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/epoch/2", "cas": 1018, "items": {"epoch": "2"}}
-→ 200 {"index": 1033}
+→ 200 {"index": 1038}
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/epoch/3", "cas": 1019, "items": {"epoch": "2"}}
-→ 200 {"index": 1034}
+→ 200 {"index": 1039}

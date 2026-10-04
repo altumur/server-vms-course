@@ -119,7 +119,7 @@ from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_M
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence
-from .events import ALARM, EventLog
+from .events import ALARM, CONSOLE, EventLog
 
 
 # The default flow one operator is expected to read, in events a minute. Past it a timeline of separate
@@ -148,7 +148,7 @@ def blobs_slots() -> threading.BoundedSemaphore:
     return _blobs[0]
 from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate, caller_addr, is_local, session_cookie,
                      token_of)
-from .journal import Journal
+from .journal import AUDIT, Journal
 from .resource import resources_seen
 from .limits import TooLarge
 from .spec import GARBLED_ROW, LABEL_WORD, Refused, SpecController, server_name
@@ -1367,14 +1367,19 @@ class SpecConsole:
         return self._epochs[1]
 
     # The epochs of the units IN an answer — a camera's, or one unit's: a handful of rows read by name, no scan,
-    # and read now, so a fence that fell a moment ago shows. `pairs` is `{(subsystem, unit)}`.
-    def epochs_of(self, pairs) -> dict:
+    # and read now, so a fence that fell a moment ago shows. `pairs` is `{(subsystem, unit)}`. `refused`, when given,
+    # collects the subsystems whose epoch rows this console may not read (its rights in the store).
+    def epochs_of(self, pairs, refused: set | None = None) -> dict:
         out = {}
         for sub, unit in pairs:
             try:
                 e = current_epoch(self.ctl.vars, f"{sub}/epoch/{unit}")
             except (*PARSE_ERRORS, OSError):
                 continue                                 # no epoch row, a torn one, or no store: the events stand as their resource marked them
+            except Exception:                            # noqa: BLE001 — the store's refusal (М11's rights): not its to read
+                if refused is not None:
+                    refused.add(sub)
+                continue
             if e:
                 out[(sub, unit)] = e
         return out
@@ -1397,9 +1402,9 @@ class SpecConsole:
     # under its prefix (the course's decision on the platform's names: `vms_resources_live`, `rec_resources_live`, …
     # were one fact said as many times as there were subsystems mounted).
     # The servers this subsystem runs on, as the placement sees them: every server a worker heartbeats from
-    # or a resource heartbeats from — the archive root its workers say they record into (on a cluster the
-    # value of Nomad's `meta.archive`, the label the scheduler placed by), the state of its resource (`live`,
-    # `silent`, `unknown`), its workers with load and capacity, and whether the controller would place
+    # or a resource heartbeats from — the archive root its workers say they record into (the server's events
+    # root, `runtime.events_root`), the state of its resource (`live`, `silent`, `unreachable` — it writes to the
+    # store but its heartbeat cannot be read here — or `unknown`), its workers with load and capacity, and whether the controller would place
     # there now, with the reason when it would not.
     # What one subsystem can say about a machine that is about to stop: how many of ITS units are still
     # assigned there, whether anything it holds would be stranded by the stop, and — for a subsystem whose
@@ -1532,7 +1537,7 @@ class SpecConsole:
     #   PUT     {"labels": ["vlan:cctv-a", …]} — the administrator's labels; [] reaches nothing. A server nobody has
     #           announced (`servers_known`), a name that is not a host's, a body that is not JSON, a label that is not a
     #           string: 400, in words (the review's tenth pass)
-    #   DELETE  back to the node's (`LABELS`, `meta.labels` in `client.hcl`)
+    #   DELETE  back to the node's (`LABELS` in the server's environment)
     #
     # A path that names no unit: `admin` on the whole cluster to write (`needs`) — a server's labels decide where every
     # unit may go. Each write is a journal line with the name and the labels; the controller moves what it decides on
@@ -1664,12 +1669,24 @@ class SpecConsole:
                   f"{p}_decommission_requests_standing {r('decommission_requests_standing', int)}",
                   f"# TYPE {p}_workers_hung gauge",
                   f"{p}_workers_hung {len(rep.get('workers_hung')) if isinstance(rep.get('workers_hung'), list) else 0}",
+                  # slots nobody can judge (`wait`, `unsure`) with units on them, and those units: written by nobody until
+                  # judged — and live workers whose name is not beside their lock (the review's twelfth pass, blockers 5, 3)
+                  f"# TYPE {p}_workers_hung_moved_total counter",
+                  f"{p}_workers_hung_moved_total {r('workers_hung_moved_total', int)}",
+                  f"# TYPE {p}_workers_unjudged gauge",
+                  f"{p}_workers_unjudged {len(rep.get('workers_unjudged')) if isinstance(rep.get('workers_unjudged'), list) else 0}",
+                  f"# TYPE {p}_units_unjudged gauge", f"{p}_units_unjudged {r('units_unjudged', int)}",
+                  f"# TYPE {p}_workers_presence_unsaid gauge",
+                  f"{p}_workers_presence_unsaid {len(rep.get('workers_presence_unsaid')) if isinstance(rep.get('workers_presence_unsaid'), list) else 0}",
                   # names a live instance holds and another process asks for — of another box, or left nobody on its own
                   # (the owner's decision of 4 Oct; the product's name): `worker.name_conflict`, `/servers`' `name_conflict`
                   f"# TYPE {p}_name_conflicts gauge", f"{p}_name_conflicts {r('name_conflicts', int)}",
                   # units of groups left whole on a server that no longer reaches them, and servers whose labels row did
                   # not read on the pass's last read (the eleventh review: each was a log line or a page only)
                   f"# TYPE {p}_units_waiting_for_reach gauge", f"{p}_units_waiting_for_reach {r('reach_waiting', int)}",
+                  # …and units left on a worker that is leaving, a group no live worker takes whole among them (the
+                  # review's twelfth pass, blocker 7)
+                  f"# TYPE {p}_units_left_on_leaving gauge", f"{p}_units_left_on_leaving {r('units_left_on_leaving', int)}",
                   f"# TYPE {p}_servers_labels_unread gauge", f"{p}_servers_labels_unread {r('servers_labels_unread', int)}",
                   f"# TYPE {p}_rows_garbled gauge", f"{p}_rows_garbled {r('garbled', int)}",     # rows that do not parse: units nobody serves (the review's second pass, M7)
                   # What a worker says about itself and placement does not read — a person can, now: fenced
@@ -1786,8 +1803,12 @@ class SpecConsole:
         if ts is None or now - ts > self.SPARES_FRESH:
             return []
         lines = []
+        # …and `<p>_spares_withheld{labels}` 1 for a set short with no server a spare could carry its units on (the
+        # twelfth round's «Вопросы»): no offer, and the reason in the pass report
+        withheld = rep.get("spares_withheld") if isinstance(rep.get("spares_withheld"), dict) else {}
+        rep = {**rep, "spares_withheld_n": {k: 1 for k in withheld}}
         for field, metric in (("workers_needed", "workers_needed"), ("units_short", "units_short"),
-                              ("spare_offers", "spare_offers")):
+                              ("spare_offers", "spare_offers"), ("spares_withheld_n", "spares_withheld")):
             said = rep.get(field) if isinstance(rep.get(field), dict) else {}
             sets = {"": 0, **{str(k): v for k, v in said.items()}} if field == "workers_needed" else said
             lines += [f"# TYPE {p}_{metric} gauge",
@@ -1942,8 +1963,8 @@ class SpecConsole:
     #         - `GET /where/<id>` — `{worker, reason}` from the stored placement (404 with nulls if
     #       unplaced), plus `directory` (the assignments' answer) and `scans`.
     #   - `GET /resources` — every resource heartbeat with `state: live | silent` by `lost_after`.
-    #   - `GET /servers` — `servers()`: per server, `archive` (what its workers record into — Nomad's `meta.archive`
-    #     on a cluster), `resource` (`live | silent | unknown`), `workers`, `placeable` and `why`.
+    #   - `GET /servers` — `servers()`: per server, `archive` (what its workers record into — the server's events
+    #     root), `resource` (`live | silent | unreachable | unknown`), `workers`, `placeable` and `why`.
     #   - `GET /unplaceable` — `ctl.unplaceable()`.
     #         - `GET /events?from&to&cam|unit&kind&subsystem&limit&keep&class` — 503 if no index; else
     #       `current_epochs` from every `<sub>/epoch/*` row (`epochs`, cached `EPOCH_CACHE` seconds) and
@@ -1997,8 +2018,16 @@ class SpecConsole:
             raise NoSuchRoute(f"{path}: one id after /{segs[1]}/, and nothing after it")
         return segs[1], path_id(path) or None
 
+    # …and an id that is no id of this subsystem — `/where/None`, `/cameras/x` where ids are numbers — is the sender's, a
+    # 400 in words (the coordinator's find in the twelfth round): `parse_id` raised `ValueError` out of `dispatch`, and
+    # `GET /where/None` dropped the connection; `PUT`/`DELETE /cameras/x` answered 500 "the write failed".
     def _uid(self, path):
-        return self.spec.parse_id(path_id(path))
+        raw = path_id(path)
+        try:
+            return self.spec.parse_id(raw)
+        except ValueError:
+            raise Refused(f"{raw[:80]!r} is not an id of {self.spec.name}: its ids are "
+                          f"{'whole numbers' if self.spec.numeric else 'names'}") from None
 
     # What a gated caller may LOOK at: `(unit, labels) -> bool`, or None when this console is open. A list is
     # not a route that names a unit, so the gate lets in anybody with any grant — and the list then shows them
@@ -2453,7 +2482,11 @@ class SpecConsole:
                     configured = [r for r in configured if str(r.get("id")) in ok]
                 return h._send(200, {"rows": rows, "configured": configured})
             if path.startswith("/where/"):
-                uid = self._uid(path); pl = ctl.placement(uid)
+                try:
+                    uid = self._uid(path)
+                except Refused as e:
+                    return h._send(400, {"detail": str(e), "error": "not an id"})
+                pl = ctl.placement(uid)
                 return h._send(200 if pl else 404, {"worker": pl.worker if pl else None,
                                                     "reason": pl.reason if pl else ctl.unplaced_reason(uid),   # nowhere, and why (DQ)
                                                     "directory": con.where(uid), "scans": con.scans})
@@ -2490,6 +2523,21 @@ class SpecConsole:
                                           cls=q.get("class"), by=q.get("by", "t"))
                     if narrow:
                         refence(rep["events"], con.epochs_of({(e["subsystem"], e["unit"]) for e in rep["events"]}), con.epoch_policy)
+                    else:
+                        # …AND A SUBSYSTEM THE SCAN DID NOT SEE IS ASKED BY NAME (the twelfth round's «Вопросы» 6, found
+                        # by runs): the scan lists the empty prefix, and a store that answers only what the console may
+                        # read (М11's rights) leaves out every subsystem outside them — `live/`, `det/` — and their
+                        # events stood "current" whatever their epoch. The units of such a subsystem in THIS answer are
+                        # read by name; a subsystem whose rows the console may not read at all is said (`epochs_unread`),
+                        # its events as their resource marked them. The journal and the console's marks are written
+                        # by one writer under epoch 1 and have no epoch rows: not asked.
+                        seen_subs, refused = {s for s, _ in cur} | {AUDIT, CONSOLE}, set()
+                        other = [e for e in rep["events"] if e.get("subsystem") not in seen_subs]
+                        if other:
+                            refence(other, con.epochs_of({(e["subsystem"], e["unit"]) for e in other}, refused),
+                                    con.epoch_policy)
+                        if refused:
+                            rep = {**rep, "epochs_unread": sorted(refused)}
                     sees = self._visible(h)
                     if sees is not None:                 # …and so are the events: a unit's, to whoever may view that unit;
                         known: dict = {}                 # what names no unit — the journal — to whoever may view the whole cluster
@@ -2763,6 +2811,8 @@ class Mount:
                 refusal, warning = refusal or r, warning or w
             if refusal:
                 log.warning("server %s was not decommissioned (asked by %s): %s", server, user, refusal)
+                # …and in the journal, beside the decommissions that were made (the review's twelfth pass, minor)
+                self.root.journal.say("server.decommission_refused", server=server, user=user, why=refusal)
                 return 409, {"detail": refusal, "error": "server answers"}
             row = ctl.decommission(server, user, str(body.get("why") or ""))
         except Refused as e:
@@ -2831,6 +2881,11 @@ class Mount:
                         u.path.endswith("/decommission") and u.path.count("/") == 3:
                     user = mnt.admit(self, method)               # `admin`: every unit of a server moves
                     if user is None:
+                        return
+                    # …its body read as every other door's is (`read_body`; the review's twelfth pass, minor): read
+                    # bare, `Content-Length: -1` held the thread 30 s and answered 503 "the store did not take it", and
+                    # 20 MB was read whole
+                    if method == "POST" and not read_body(self, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
                         return
                     return self._send(*mnt.decommission_route(self, method, u.path, user))
                 if u.path in mnt.MOUNT_ROUTES:

@@ -179,3 +179,22 @@ def test_a_garbled_request_is_answered_in_words():
         assert r.status == 400 and "is not a number of bytes" in json.loads(r.read())["error"]
     finally:
         _stop(s)
+
+
+def test_a_key_that_names_a_directory_or_a_temporary_file_is_no_object():
+    """The review's twelfth pass, minor: `GET /v1/objects/vms` — a key that is a directory — dropped the connection, and
+    an in-flight put's `….tmp` file was served as an object though no listing names it. Both are 404, on either scope."""
+    box = Box()
+    s = _servers(box)
+    try:
+        (a, oa, _), (b, ob, _) = s["srv-a"], s["srv-b"]
+        oa.put("vms/heartbeats/w-1", b'{"w": 1}')
+        with open(os.path.join(oa.root, "vms", "heartbeats", "w-1.x1.tmp"), "wb") as f:
+            f.write(b"half")
+        for scope in ("local", "cluster"):
+            for key in ("vms", "vms/heartbeats", "vms/heartbeats/w-1.x1.tmp"):
+                st, _, _ = _call("GET", f"{a.url}/v1/objects/{key}?scope={scope}")
+                assert st == 404, (key, scope, st)
+            assert _call("GET", f"{a.url}/v1/objects/vms/heartbeats/w-1?scope={scope}")[0] == 200
+    finally:
+        _stop(s)

@@ -107,14 +107,24 @@ vms/slots/w-srv-a-1   {"holder": "srv-a:4101", "until": "1757500045.0", "release
 ```
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1008}
+→ 200 {
+  "items": {
+    "holder": "srv-a:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-a"
+  },
+  "index": 1008
+}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items": {
   "holder": "srv-a:4102",
   "until": "1757500045.0",
   "released": "false",
-  "gen": "2"
+  "gen": "2",
+  "server": "srv-a"
 }}
 → 200 {"index": 1012}
 ```
@@ -124,7 +134,16 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items":
 ```
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4102", "until": "1757500045.0", "released": "false", "gen": "2"}, "index": 1012}
+→ 200 {
+  "items": {
+    "holder": "srv-a:4102",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "2",
+    "server": "srv-a"
+  },
+  "index": 1012
+}
 ```
 
 `holder` — не он. Продлевать нечего, и первый отсекает себя целиком: останавливает все конвейеры и пишет в журнал `FENCED (slot w-srv-a-1 is held by another instance now)`. Записывать для этого ничего не нужно — он узнаёт, **прочитав**. Никто ему не сообщал.
@@ -174,7 +193,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 
 ```python
                 if prefer is not None and cur.holder != self.instance:
-                    if not steal and (not cur.claimable(now) or cur.lapsed(now) and self._hung(cand, cur)):
+                    if not steal and (not cur.claimable(now) or cur.lapsed(now) and self._held(cand, cur)):
                         raise _NameTaken(cand, cur.holder, cur.until)   # live, or lapsed with its process hung: its holder's
                     if steal and not cur.claimable(now):
                         refused = self._may_take_by_name(cand, cur.holder)
@@ -189,7 +208,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 <экземпляр>: its name vms/w-srv-a-1 is held by <держатель> (box <коробка>) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
 ```
 
-И оставляет метку `vms/contenders/w-srv-a-1/<коробка>` (объект, как heartbeat: `{name, state: "nameless", box, hostname, server, instance, holder, holder_box, since, at}`), переписывая её раз в `CONTEND_EVERY` (10 с) — его пульс, пока heartbeat под именем чужой. Новый держатель остановился (`SIGTERM` отпускает слот) или замолчал дольше срока слота — старый берёт своё имя и пишет `worker.name_back`. Отнимать имя у живого он не будет никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. Захват имени у живого держателя остался **только при старте** — это перезапуск после `kill -9`, где юнит знает, какой процесс настоящий. Процесс без имени (не дали ни имени, ни индекса) возвращается, как раньше, под свободным номером. Тесты: `vmsserver/tests/test_names.py` — `test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number`, `test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder`, `test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number`; на стенде модуля — `test_lesson4_failover.py::test_two_processes_with_one_name_the_old_one_is_nobody`.
+И оставляет метку `vms/contenders/w-srv-a-1/<коробка>` (объект, как heartbeat: `{name, state: "nameless", box, hostname, server, instance, holder, holder_box, since, at}`), переписывая её раз в `CONTEND_EVERY` (10 с) — его пульс, пока heartbeat под именем чужой. Новый держатель остановился (`SIGTERM` отпускает слот) или замолчал дольше срока слота — старый берёт своё имя и пишет `worker.name_back`. Отнимать имя у живого он не будет никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. **И истёкшее имя он берёт только тогда, когда контроллер перенёс бы его камеры** (`Worker._held`; двенадцатое ревью, блокер 2): 45 секунд после конца слота (`SLOT_LOST_AFTER`) контроллер считает слот живым — то, что начал прежний процесс, может ещё писать, — и процесс без имени, взявший имя в этом окне, забирал вместе с ним камеры зависшего: проба ревьюера дала двух писателей на +46…+89 с. Теперь имя держится, пока `slot_fate` говорит `alive`, `hung` или `unsure`, а вопрос, на который хранилище не ответило, — «не знаю», и имя тоже держится (была «не завис»). Тесты: `vmsserver/tests/test_slot_fate.py::test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin`, `::test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone`. Захват имени у живого держателя остался **только при старте** — это перезапуск после `kill -9`, где юнит знает, какой процесс настоящий. Процесс без имени (не дали ни имени, ни индекса) возвращается, как раньше, под свободным номером. Тесты: `vmsserver/tests/test_names.py` — `test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number`, `test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder`, `test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number`; на стенде модуля — `test_lesson4_failover.py::test_two_processes_with_one_name_the_old_one_is_nobody`.
 
 ### Свежая коробка: одно имя на двух машинах
 
@@ -230,9 +249,12 @@ w-localhost-1 is held by a live process on another machine (box <коробка>
 #                 worker's, not a slot's before its fate says move — those are waited for, not short
 #   free          the room (`capacity − load`) of the workers in the pool whose labels cover the set
 #   units_short   waiting − free, at least 0. A set no live worker covers has no free room: short by itself
-#   needed        ceil(units_short / CAPACITY), less the offers of the set a spare took and whose worker has not
-#                 been heard yet — for `OFFER_GRACE` (90 s) from the take it is a worker on its way
+#   needed        ceil(units_short / per), at most the servers a spare of the set could carry units on, less the
+#                 offers of the set a spare took and whose worker has not been heard yet — for `OFFER_GRACE` (90 s)
+#                 from the take it is a worker on its way
 ```
+
+**Предложение — только туда, где запасной понесёт камеры** (двенадцатое ревью, «Вопросы»: найдено при пересборке `three-cameras` запусками). Счёт не спрашивал трёх вещей. Ёмкость он делил на свою константу `CAPACITY`, а не на то, что скажет запасной; теперь `per` — наименьшая ёмкость, которую называют живые воркеры этого набора (запасной стартует тем же юнитом и окружением и скажет то же), константа — только когда живых нет. Предложения писались и для набора, который не покрывает ни один сервер, — они висели, никем не взятые. И под `servers: distinct` запасной, поднятый на сервере, где воркер уже есть, простаивал по политике (`idle_by_policy`), камера оставалась неразмещённой, а следующий проход предлагал снова — скрипты поднимали простаивающих запасных до `MAX_WORKERS` на каждом сервере. Теперь сервер, на котором запасной может встать (`SpecController._spare_hosts`), — не списан, не в drain, его ресурс не молчит, метки покрывают набор (строка консоли, иначе слово его воркеров; сервер, о метках которого никто ещё не сказал, может покрыть); под `distinct` — ещё и без живого воркера этой подсистемы. Не хватает таких серверов — предложений столько, сколько их есть, недостача остаётся в `units_short`, причина — в отчёте (`spares_withheld`) и на `/metrics` (`vms_spares_withheld{labels}`), тревога `spares.no_server` — раз за эпизод. Тесты: `vmsserver/tests/test_spares.py::test_no_offer_where_no_server_could_carry_a_spare`, `::test_under_distinct_servers_a_spare_is_offered_only_where_it_would_not_idle`, `::test_the_shortage_is_counted_by_what_the_workers_announce_not_the_controllers_fallback`.
 
 Две вещи здесь стоят того, чтобы их прочитать дважды. **Считается после переносов**: смерть сервера не поднимает ни одного лишнего процесса, если живым хватает места, — камеры сначала расходятся по свободной ёмкости. **И не всё молчащее — недостача**: камеры зависшего воркера и камеры слота, судьба которого ещё не «переносить», — это ожидание, а не нехватка.
 
@@ -329,7 +351,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1048, "items": {
   "gen": "1",
   "offer": "",
   "offered_at": "1757500000.0",
-  "taken_at": "1757500000.0"
+  "taken_at": "1757500000.0",
+  "server": "srv-c"
 }}
 → 200 {"index": 1049}
 ```
@@ -412,7 +435,16 @@ POST /v1/write {"op": "delete", "key": "vms/slots/w-2", "cas": 1048}
 ```
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 GET /v1/get?key=vms/slots/w-srv-c-1
-→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+→ 200 {
+  "items": {
+    "holder": "srv-c:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-c"
+  },
+  "index": 1006
+}
 ```
 
 `released: false`, срок ещё не вышел — для контроллера имя держится. И контроллер **не пишет ничего**. В трассе после этого чтения от него нет ни одной записи.
@@ -425,7 +457,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items":
   "holder": "srv-c:4102",
   "until": "1757500047.0",
   "released": "false",
-  "gen": "2"
+  "gen": "2",
+  "server": "srv-c"
 }}
 → 200 {"index": 1010}
 
@@ -467,7 +500,7 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
   "at": "1757500100.0",
   "why": "srv-c burnt"
 }}
-→ 200 {"index": 1014}
+→ 200 {"index": 1016}
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items": {
@@ -476,7 +509,7 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items":
   "released": "true",
   "gen": "1"
 }}
-→ 200 {"index": 1015}
+→ 200 {"index": 1017}
 ```
 
 Консоль написала строку о сервере, а не слот. Слот пишет контроллер, и его CAS стоит на той строке, которую он только что проверил. Дальше в той же трассе камера 2 уезжает на `w-srv-b-1` с причиной `slot w-srv-c-1 released; most free capacity (49); on srv-b`. На srv-c больше ничего не размещается, и процессу на нём не дают слот, пока оператор не вернёт его (`DELETE /servers/srv-c/decommission`) — именно об этом спрашивает каждый воркер при старте (урок 1, шаг 6). Тома, которые держал воркер (`rec/holds/*`), освобождение слота не отпускает, и консоль их называет. Подробно — в М10A, урок 7, шаг 7. Права на эту строку — в уроке 5.

@@ -1100,7 +1100,8 @@ def test_a_hundred_devices_of_two_hundred_that_never_answer_cost_a_pass_and_a_he
         assert slow == hung and hb.extra["devices_slow"] == len(hung)
         named = next(d for d in hb.extra["devices"] if d["device"] in hung)
         assert "channels" not in named and "playbacks" not in named        # not known is not said as 0
-        assert all(st.get("coverage") == {"from": 0.0, "to": 60.0, "fragments": 0} for st in hb.status), \
+        said = lambda cov: {k: v for k, v in (cov or {}).items() if k != "said_at"}   # said last, with its age (the twelfth)
+        assert all(said(st.get("coverage")) == {"from": 0.0, "to": 60.0, "fragments": 0} for st in hb.status), \
             "a camera of a hung device lost the coverage its device said last"
         assert all(holder.may_write(str(c)) for c in cams)
     finally:
@@ -1590,7 +1591,10 @@ def test_a_question_that_hangs_after_its_round_ended_names_the_device_slow_and_c
         d = hb.extra["devices"][0]
         assert d.get("state") == "slow" and begun <= d["since"] <= time.time(), d
         assert hb.extra.get("devices_slow") == 1
-        assert sum(1 for st in hb.status if st.get("coverage") == {"from": 0.0, "to": 60.0, "fragments": 0}) == 32
+        aged = [st["coverage"] for st in hb.status if isinstance(st.get("coverage"), dict)]
+        assert sum(1 for c in aged if {k: v for k, v in c.items() if k != "said_at"} == {"from": 0.0, "to": 60.0,
+                                                                                       "fragments": 0}) == 32
+        assert all("said_at" in c for c in aged)                              # said last, and said so (the twelfth pass)
     finally:
         gate.set()
 
@@ -1804,3 +1808,43 @@ def test_another_serial_number_under_the_same_key_is_said_and_counted():
         assert fresh.identity_changes == 1
     finally:
         logging.getLogger("vmsworker").removeHandler(catch)
+
+
+def test_the_doors_two_questions_share_one_wait_and_a_coverage_said_before_says_its_age():
+    """The review's twelfth pass, minors: the listing door asked the coverage, then the listing, each up to
+    `DOOR_ASK_WAIT` — a door promising its wait waited twice it; and the coverage the device said last went out (at the
+    door, in the heartbeat) as if said now. Now both questions are inside one deadline, and a coverage said again
+    without an answer carries `said_at`."""
+    box = _real_box()
+    gate = threading.Event()
+
+    class Slow(FakeDevice):
+        def coverage(self, cam):
+            gate.wait(0.15)
+            return super().coverage(cam)
+
+        def recordings(self, cam, t0, t1):
+            gate.wait(30)
+            return super().recordings(cam, t0, t1)
+
+    holder, cams = _nvr_holder(box, 1, lambda key: Slow(key, channels=["1"], coverage={"1": (0.0, 60.0)},
+                                                        index={"1": [(0.0, 60.0)]}))
+    holder.DOOR_ASK_WAIT = 0.3
+    holder.reconcile_once()
+    try:
+        t0 = time.monotonic()
+        try:
+            holder.recordings(cams[0], 0.0, 30.0)
+            raise AssertionError("a hung listing answered")
+        except TimeoutError:
+            pass
+        assert time.monotonic() - t0 < holder.DOOR_ASK_WAIT + 0.1, time.monotonic() - t0   # one wait, not two
+        dev = holder.devices["acme/10.0.0.50"]
+        key = ("coverage", id(dev), str(cams[0]))
+        holder._said_coverage[key], holder._said_coverage_at[key] = {"from": 0.0, "to": 60.0}, 1234.0
+        holder._heard = {}                                                    # this round: the device said nothing
+        cov = holder._coverage_of(dev, cams[0])
+        assert cov["said_at"] == 1234.0 and cov["to"] == 60.0, cov
+    finally:
+        holder._heard = None
+        gate.set()

@@ -1810,3 +1810,32 @@ def test_a_relay_port_written_in_a_digit_that_is_not_ascii_is_a_misfit_and_not_a
             assert code == 400 and "relay" in body.get("detail", ""), (port[:5], code, body)
     finally:
         srv.shutdown()
+
+
+def test_an_id_that_is_no_id_is_a_400_in_words_on_every_route_that_takes_one():
+    """The coordinator's find in the twelfth round: `GET /where/None` dropped the connection — `parse_id` raised out of
+    `dispatch` — and `PUT`/`DELETE /cameras/x` answered 500 "the write failed". Swept over every mount and every family
+    that takes an id, with ids that are no id: nothing drops, nothing is a 5xx, and the routes that read an id say 400
+    in words."""
+    import http.client
+    box = Box()
+    *_, srv, base = _console_with_jobs(box, None)
+    try:
+        bad_ones = []
+        for bad in ("None", "x", "1.5", "%00"):
+            for prefix in ("", "/rec", "/det", "/detjob", "/auto"):
+                for fam in ("where", "cameras", "recordings", "units", "jobs", "scenarios", "timeline", "export", "whep"):
+                    for method in ("GET", "PUT", "DELETE"):
+                        try:
+                            st, _ = _call(base, method, f"{prefix}/{fam}/{bad}", {} if method == "PUT" else None)
+                        except (http.client.RemoteDisconnected, ConnectionError, urllib.error.URLError) as e:
+                            st = type(e).__name__
+                        if not isinstance(st, int) or st >= 500:
+                            bad_ones.append((method, f"{prefix}/{fam}/{bad}", st))
+        assert bad_ones == [], bad_ones
+        st, out = _call(base, "GET", "/where/None")
+        assert st == 400 and "not an id of vms" in out["detail"] and "whole numbers" in out["detail"], out
+        assert _call(base, "PUT", "/cameras/x", {"name": "n"})[0] == 400
+        assert _call(base, "DELETE", "/cameras/x")[0] == 400
+    finally:
+        srv.shutdown()

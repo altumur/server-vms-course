@@ -42,7 +42,16 @@
 ```
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1010}
+→ 200 {
+  "items": {
+    "holder": "srv-a:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-a"
+  },
+  "index": 1010
+}
 ```
 
 Держатель — он сам. Имя `w-srv-a-1` никто не брал: на другом сервере нет юнита с этим именем, а контроллер переносит камеры, а не имена. Слот истёк, но остался его, и экземпляр продлевает его как обычно:
@@ -53,9 +62,10 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1010, "items":
   "holder": "srv-a:4101",
   "until": "1757500138.0",
   "released": "false",
-  "gen": "1"
+  "gen": "1",
+  "server": "srv-a"
 }}
-→ 200 {"index": 1036}
+→ 200 {"index": 1042}
 ```
 
 Второе — эпохи. Экземпляр продлевает аренду каждой своей камеры и на каждой находит, что эпоха уже не его:
@@ -63,23 +73,23 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1010, "items":
 ```
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/epoch/1
-→ 200 {"items": {"epoch": "2"}, "index": 1033}
+→ 200 {"items": {"epoch": "2"}, "index": 1039}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/epoch/2
-→ 200 {"items": {"epoch": "2"}, "index": 1034}
+→ 200 {"items": {"epoch": "2"}, "index": 1040}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/epoch/3
-→ 200 {"items": {"epoch": "2"}, "index": 1035}
+→ 200 {"items": {"epoch": "2"}, "index": 1041}
 ```
 
-Эпохи 1033–1035 — те самые, что `w-srv-b-1` взял в уроке 8. Каждая аренда потеряна, и каждая камера останавливается: `camera 1 stopped: a newer epoch was issued for it`. Третье — назначение:
+Эпохи 1039–1041 — те самые, что `w-srv-b-1` взял в уроке 8. Каждая аренда потеряна, и каждая камера останавливается: `camera 1 stopped: a newer epoch was issued for it`. Третье — назначение:
 
 ```
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/workers/w-srv-a-1
-→ 200 {"items": {"units": "", "rev": "6"}, "index": 1031}
+→ 200 {"items": {"units": "", "rev": "6"}, "index": 1037}
 ```
 
 Пусто: контроллер уже убрал камеры из назначения. Значит, это не захват, а переезд — тот же случай, что в шаге 4, — и экземпляр отпускает камеры, ничего больше не делая. Последняя строка трассы:

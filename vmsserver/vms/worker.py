@@ -11,7 +11,7 @@ starts one, holds a lease per camera, writes what it observes into the
 camera's bucket on ITS server's resource, and publishes a heartbeat
 carrying its status. It records nothing: recording is the recorder's
 (`recorder.py`), a subscriber like any other. It never writes
-configuration. Nomad (or systemd, on one box) supervises the process; the
+configuration. systemd (launchd on a Mac, a scheduler where there is one) supervises the process; the
 process supervises its pipelines; nothing supervises the loop, because the
 loop is the process.
 
@@ -68,9 +68,9 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # heartbeat object of this slot name: if one exists and was written by a different instance, `previous_hb`
 # is its `ts` and `previous_instance` its instance — the controller's `failover_seconds` computes `started −
 # previous_hb` from these, measured from what the workers wrote.
-# `test_a_replacement_without_a_name_inherits_the_lapsed_slot`: two nameless workers get `w-1`, `w-2`; after
-# `w-1` lapses (46 s of wall clock) a third nameless worker gets `w-1` back and starts its two cameras with
-# epoch 2.
+# `test_a_replacement_without_a_name_inherits_the_lapsed_slot`: two nameless workers get `w-1`, `w-2`; 46 s of wall
+# clock after `w-1` went silent a nameless worker makes `w-3` (within the margin what `w-1` started may still write);
+# at 91 s a third nameless worker gets `w-1` back and starts its two cameras with epoch 2.
 #
 # ## Notes
 # - Ordering: the slot is claimed in the constructor, before any assignment is read (the name is the row
@@ -466,7 +466,7 @@ def live_port(cid, base: int | None = None) -> int:
         return base
 
 
-# `WORKER_NAME` if set; else `w-<NOMAD_ALLOC_INDEX>`; else `None` — claim whatever is free, a lapsed slot
+# `WORKER_NAME` if set; else `w-<SLOT_INDEX>`; else `None` — claim whatever is free, a lapsed slot
 # first. The recorder uses the same rule with `RECORDER_NAME` and `r-`.
 def slot_from_environment(env: dict, name_env: str = "WORKER_NAME", prefix: str = "w") -> str | None:
     return runtime.slot(env, name_env, prefix)   # None: claim whatever is free — a lapsed slot first
@@ -577,6 +577,7 @@ class VmsWorker(Worker):
         self._dev_said: set = set()                      # devices said slow, (question, device) said failing: once a spell
         self._open_failed: dict[str, str] = {}           # device key -> why it did not open, until it opens
         self._said_coverage: dict[tuple, object] = {}    # ("coverage", device, camera) -> what the device said last
+        self._said_coverage_at: dict[tuple, float] = {}  # …and when it said it (`wall`)
         self._said_status: dict[tuple, object] = {}      # ("channels" | "in_use", device) -> what the device said last
         self._heard: dict | None = None                  # the heartbeat's one round of answers, while it is being written
         self.reanswered = 0                              # requests answered before by this slot, said again (`_answered_before`)
@@ -655,20 +656,24 @@ class VmsWorker(Worker):
         self.assignment_rev = a.rev
         rows, errors = [], {}
         for unit in a.units:
-            items, _ = self.vars.get(self.SUB.config(self.ROWS, unit))
-            if items and items.get("deleted") != "true":
-                try:
-                    rows.append(self.parse_row(items))
-                    self.row_parsed(unit)
-                except PARSE_ERRORS as e:                # `Infinity` in an int field too (the tenth round's sweep)
-                    # One row that does not parse is that unit's (`Worker.row_garbled`; the sixth pass, the follow-up),
-                    # and it is not a unit taken away: what runs under the row read last keeps running, and a unit
-                    # never read whole is not started. Raised out of here, it froze the whole worker at the rows of
-                    # the pass before.
-                    errors[unit] = self.row_garbled(unit, e)
-                    last = next((r for r in self.rows if str(r["id"]) == unit), None)
-                    if last is not None:
-                        rows.append(last)
+            try:
+                # The read inside the guard too (the review's twelfth pass, major 18): a torn file is `Garbled` from the
+                # store itself, before any parse — read bare, it raised out of here at its unit: a deleted camera 4 went
+                # on being recorded and a new camera 5 never started, every pass, for one torn row of another camera.
+                items, _ = self.vars.get(self.SUB.config(self.ROWS, unit))
+                if not items or items.get("deleted") == "true":
+                    continue
+                rows.append(self.parse_row(items))
+                self.row_parsed(unit)
+            except PARSE_ERRORS as e:                    # `Infinity` in an int field too (the tenth round's sweep)
+                # One row that does not parse is that unit's (`Worker.row_garbled`; the sixth pass, the follow-up),
+                # and it is not a unit taken away: what runs under the row read last keeps running, and a unit
+                # never read whole is not started. Raised out of here, it froze the whole worker at the rows of
+                # the pass before.
+                errors[unit] = self.row_garbled(unit, e)
+                last = next((r for r in self.rows if str(r["id"]) == unit), None)
+                if last is not None:
+                    rows.append(last)
         self.rows, self.row_errors = rows, errors
         self._refresh_devices()
 
@@ -707,6 +712,7 @@ class VmsWorker(Worker):
             for k in [k for k, c in self._dev_calls.items() if k[0] != "open" and k[1] not in held and c["returned"].is_set()]:
                 del self._dev_calls[k]
         self._said_coverage = {k: v for k, v in self._said_coverage.items() if k[1] in held}
+        self._said_coverage_at = {k: v for k, v in self._said_coverage_at.items() if k in self._said_coverage}
         self._said_status = {k: v for k, v in self._said_status.items() if k[1] in held}
         self._slow_asks &= held
         self._open_failed = {k: v for k, v in self._open_failed.items() if k in want and k not in self.devices}
@@ -2004,6 +2010,10 @@ class VmsWorker(Worker):
     # A camera's coverage as its device says it (`status_extra`): from the heartbeat's round, or asked on its own; a
     # device that did not answer has the coverage it said LAST — the summary of an archive that was there a moment ago,
     # beside `state: slow` for its device — and one that never answered has none.
+    #
+    # …WITH ITS AGE WHEN IT IS NOT FRESH (the review's twelfth pass, minor): the coverage said last went out as if said
+    # now. Said again without an answer this round, it carries `said_at` — when the device said it — so whoever reads it
+    # (a recorder closing a gap, the page) knows how old the archive's summary is.
     def _coverage_of(self, dev, cid):
         if not hasattr(dev, "coverage"):
             return None
@@ -2011,7 +2021,16 @@ class VmsWorker(Worker):
         heard = self._heard if self._heard is not None else self._ask_devices([(key, dev, lambda: dev.coverage(cid))])
         if key in heard:
             self._said_coverage[key] = heard[key]
-        return self._said_coverage.get(key)
+            self._said_coverage_at[key] = self.wall()
+            return heard[key]
+        return self._aged_coverage(key)
+
+    # What the device said last of a camera's coverage, with `said_at` — or None when it never said.
+    def _aged_coverage(self, key):
+        said = self._said_coverage.get(key)
+        if not isinstance(said, dict) or key not in self._said_coverage_at:
+            return said
+        return {**said, "said_at": self._said_coverage_at[key]}
 
     # Where the device's footage is, span by span, clipped to `[t0, t1)`. `None` means this driver cannot
     # list — which is not the same answer as "the device holds nothing here", and the caller must be able
@@ -2021,12 +2040,16 @@ class VmsWorker(Worker):
         if row is None:
             raise KeyError(cam)
         dev = self.device_of_row(row)
-        if dev is None or self._door_coverage(dev, cam) is None:
+        # ONE WAIT FOR THE DOOR'S TWO QUESTIONS (the review's twelfth pass, minor): the coverage, then the listing, each
+        # up to `DOOR_ASK_WAIT` — a door that promised five seconds waited ten. Both are asked inside the one deadline.
+        until = time.monotonic() + self.DOOR_ASK_WAIT
+        if dev is None or self._door_coverage(dev, cam, until) is None:
             raise KeyError(cam)
         lister = getattr(dev, "recordings", None)
         if lister is None:
             return None
-        return self._door_ask(dev, ("door-recordings", id(dev), str(cam), float(t0), float(t1)), lambda: lister(cam, t0, t1))
+        return self._door_ask(dev, ("door-recordings", id(dev), str(cam), float(t0), float(t1)), lambda: lister(cam, t0, t1),
+                              until)
 
     # A question the playback door puts to a device, ON THE DEVICE'S LINE (the eleventh review, a minor): `coverage` and
     # the listing went into the device beside the heartbeat's questions, and a recorder that answers one request at a
@@ -2034,7 +2057,7 @@ class VmsWorker(Worker):
     # an answer that does not come is a `TimeoutError` — the door's 503, "ask again".
     DOOR_ASKS_PER_DEVICE = 4                             # a door's questions on one device's line at once: the next is 503
 
-    def _door_ask(self, dev, key, fn):
+    def _door_ask(self, dev, key, fn, until: float | None = None):
         def run():
             try:
                 return True, fn()
@@ -2047,7 +2070,8 @@ class VmsWorker(Worker):
             waiting = sum(1 for k, c in self._dev_calls.items() if str(k[0]).startswith("door-") and c["dev"] is dev)
         if waiting >= self.DOOR_ASKS_PER_DEVICE and key not in self._dev_calls:
             raise TimeoutError(f"the device has {waiting} questions of this door on its line already — ask again")
-        heard = self._ask_devices([(key, dev, run)], grace=self.DOOR_ASK_WAIT)
+        wait = self.DOOR_ASK_WAIT if until is None else max(0.0, min(self.DOOR_ASK_WAIT, until - time.monotonic()))
+        heard = self._ask_devices([(key, dev, run)], grace=wait)
         if key not in heard:
             raise TimeoutError(f"the device has not answered within {self.DOOR_ASK_WAIT:.0f} s — it is busy or does not "
                                f"answer; ask again")
@@ -2058,14 +2082,14 @@ class VmsWorker(Worker):
 
     # …and what a door asks first: the camera's coverage, by the line — or, when it does not come, what the device said
     # of it last (`_said_coverage`, the heartbeat's): an archive that was there a moment ago is still worth a request.
-    def _door_coverage(self, dev, cam):
+    def _door_coverage(self, dev, cam, until: float | None = None):
         if not hasattr(dev, "coverage"):
             return None
         try:
-            return self._door_ask(dev, ("door-coverage", id(dev), str(cam)), lambda: dev.coverage(cam))
+            return self._door_ask(dev, ("door-coverage", id(dev), str(cam)), lambda: dev.coverage(cam), until)
         except TimeoutError:
             if ("coverage", id(dev), str(cam)) in self._said_coverage:
-                return self._said_coverage[("coverage", id(dev), str(cam))]
+                return self._aged_coverage(("coverage", id(dev), str(cam)))
             raise
 
     # A range out of the device's own archive. The ceiling belongs to the hardware, not to this worker:
@@ -2258,7 +2282,7 @@ class VmsWorker(Worker):
     # `Worker.heartbeat(status, …)` to the object `vms/<name>/heartbeat` with the extras the platform reads
     # by name: `server`, `instance`, `alloc`, `labels` (comma-joined), `assignment_rev`, `fenced`,
     # `conflicts`, `passes`, `capacity`, `headroom`, `started`, `previous_hb`, `previous_instance`, `archive`
-    # (the resource root it records into — on a cluster the value of Nomad's `meta.archive`, via `$ARCHIVE`). The
+    # (the resource root it records into — `$ARCHIVE`, else the server's events root, `runtime.events_root`). The
     # controller's `capacity_of`, `labels_of`, `server_of`, `headroom`, `failover_seconds` and the console's
     # metrics all read from here.
     #
@@ -2290,7 +2314,7 @@ class VmsWorker(Worker):
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
                        previous_server=self.previous_server,
                        devices=self.device_status(),
-                       # `archive`: the resource tree its events go to — Nomad's meta.archive, through $ARCHIVE. A
+                       # `archive`: the resource tree its events go to — `$ARCHIVE`, else the events root. A
                        # recorder says its own volume there instead (`RecWorker.heartbeat_extra`).
                        **{"archive": self.archive_root, **self.heartbeat_extra()})
 
@@ -2558,7 +2582,7 @@ class VmsWorker(Worker):
     # (`between`). 0 — only on the pass, which is what a caller that does not say gets, and what the loop always did;
     # the process says a quarter of a second (`commands_beat`).
     def run(self, poll: float = 2.0, stop=None, beat: float = 0.0) -> None:
-        """One box: the loop as a process. Nomad or systemd restarts it."""
+        """One box: the loop as a process. systemd or launchd restarts it."""
         import threading
         stop = stop or threading.Event()
         lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)

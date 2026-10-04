@@ -110,7 +110,9 @@ def test_identity_by_claim_is_a_platform_piece():
     """A name is a slot: taken by CAS, renewed, released on purpose or lapsed
     by silence. Two processes claiming without a preference get two names;
     a third, after the first lapsed, gets the first's name back — and with
-    it, its assignment. The controller hands nothing out."""
+    it, its assignment — once the margin past the lapse is out, when the
+    controller would move that assignment too (the review's twelfth pass,
+    blocker 2). The controller hands nothing out."""
     box = Box()
     sub = Subsystem("thing")
     ctl = Controller(sub, box.vars, box.objects, wall=box.wall)
@@ -119,7 +121,7 @@ def test_identity_by_claim_is_a_platform_piece():
     assert a.claim_slot() == "w-1" and b.claim_slot() == "w-2"        # `count = 2`: two names, in order
     ctl.assign("w-1", ["1", "2"])
     assert a.renew_slot() and b.renew_slot()
-    box.wall.advance(46)                                               # A went silent for longer than the slot TTL
+    box.wall.advance(91)                                               # A went silent: the slot's TTL and the margin past it
     c = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="C")
     assert c.claim_slot() == "w-1" and c.assignment().units == ["1", "2"]   # the replacement inherits
     assert not a.renew_slot()                                          # A, if it is still alive, finds out

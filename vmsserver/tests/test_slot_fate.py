@@ -17,7 +17,7 @@ import urllib.request
 
 from w2cplatform.contract import HUNG_MOVE_AFTER, SLOTS_GARBLED, ServerDecommissioned, Slot, Worker
 from w2cplatform.events import ALARM
-from w2cplatform.resource import Resource, workers_here
+from w2cplatform.resource import Resource, resources_seen, workers_here
 from vms.config import SPEC
 from vms.controller import VmsController
 from vms.worker import FakeActuator, VmsWorker
@@ -433,7 +433,7 @@ def test_a_spare_and_the_console_judge_a_hung_worker_by_the_controllers_limit_no
 def test_the_resource_says_which_workers_are_placed_and_which_run():
     """`workers_here`: a registration whose lock is held is in `workers` and `running`; one let go is in `workers` only; a
     newer registration under the same name replaces an old one let go; a resource heartbeat carries both, and a `ts`
-    that is no finite number is no resource heartbeat at all."""
+    that is no finite number is no live resource heartbeat — a resource known and silent."""
     box = Box()
     root = box.archive
     a = Worker(SPEC.sub, "w-1", box.vars, box.objects, clock=box.clock, wall=box.wall)
@@ -452,7 +452,7 @@ def test_the_resource_says_which_workers_are_placed_and_which_run():
     assert ctl.said_on("srv-1") == ({"w-1", "w-2"}, {"w-1", "w-2"})
     box.objects.put("platform/resources/srv-x/heartbeat",
                     b'{"server": "srv-x", "ts": Infinity, "url": "", "mirrors": {}}')
-    assert ctl.resource_state("srv-x") == "unknown"                          # not live for ever
+    assert ctl.resource_state("srv-x") == "silent"                           # not live for ever: known, and not live (the twelfth pass)
     a.absent(); again.absent()
 
 
@@ -522,3 +522,321 @@ def test_a_slot_row_that_does_not_parse_moves_only_on_two_words_and_is_never_rel
         assert all(unlisted.ctl.where(int(c)) == "w-2" for c in unlisted.on_w1)
     finally:
         _forget_garbled()
+
+
+# -- the twelfth pass: two holders of the same cameras ---------------------------------------------------------------
+
+def _two_writers(site, worker):
+    """The cameras of w-1 that `worker` records while w-1's process still records them."""
+    worker.reconcile_once(); worker.reconcile_once()
+    return sorted(set(map(str, site.ws["w-1"].actuator.running)) & set(map(str, worker.actuator.running)))
+
+
+def test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin():
+    """The review's twelfth pass, blocker 2 (`f1_spare_in_margin`): for the 45 s after a hung worker's slot ran out the
+    controller says "alive" — what it started may still write — and a spare asked only "hung?": it took w-1, and cameras
+    1 and 3 with it, at +46…+89 s, two writers. Now a name is given when the controller would move its units and not
+    before (`Worker._held`): within the margin, and hung past it, the spare makes a slot of its own; dead, it takes it."""
+    for dt in (46, 60, 89, 95, 100):
+        site = _Site()
+        box = site.box
+        site.tick(dt)
+        assert site.fate() in ("alive", "hung"), (dt, site.fate())
+        spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
+                          server="srv-2")
+        assert spare.name == "w-3" and _two_writers(site, spare) == [], dt
+    site.ws["w-1"].absent(); site.beat()
+    assert site.fate() == "move"
+    spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+    assert spare.name == "w-1"                                               # dead: its name, and its cameras
+
+
+def test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone():
+    """Blocker 2's second half (`f6_hung_fail_open`): a store that raised while the spare asked was "not hung" — it took
+    the hung worker's name. Now a question that cannot be asked is "not known": the name stays, the spare makes its own."""
+    site = _Site()
+    box = site.box
+    site.tick(100)
+    assert site.fate() == "hung"
+    real = box.objects.list
+
+    def failing(prefix, *a, **k):
+        if prefix.startswith("platform/resources"):
+            raise OSError(5, "I/O error")
+        return real(prefix, *a, **k)
+    box.objects.list = failing
+    try:
+        spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
+                          server="srv-2")
+    finally:
+        box.objects.list = real
+    assert spare.name == "w-3" and _two_writers(site, spare) == []
+
+
+def test_a_garbled_slot_row_of_a_hung_worker_is_not_taken_when_it_stands_still():
+    """Major 4 (`f2_garbled_hung`): a hung worker's slot row torn — it stands still, its holder is hung — and a seeking
+    process that watched it a term took it, and the units, past `slot_fate`. Now the stood-still row is taken only
+    where the controller would move its units: hung, it is left; the process makes a slot of its own."""
+    try:
+        site = _Site()
+        box, ctl = site.box, site.ctl
+        box.vars.put("vms/slots/w-1", {"holder": site.ws["w-1"].instance, "until": "torn", "released": "false",
+                                       "gen": "1"})
+        site.tick(100)
+        assert ctl.slot_fate("w-1", None)[0] == "hung"
+        seeker = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
+                           server="srv-2")
+        assert seeker.name == "w-3"                                          # first look: the row noted, not taken
+        site.tick(seeker.slot_ttl + seeker.HOLD_SKEW + 1, live=("w-2", "w-3") if "w-3" in site.ws else ("w-2",))
+        assert seeker.renew_slot()
+        seeker.slot = None
+        assert seeker.claim_slot() != "w-1" and ctl.slot_fate("w-1", None)[0] == "hung"
+        assert _two_writers(site, seeker) == []
+    finally:
+        _forget_garbled()
+
+
+def test_what_the_resource_cannot_read_of_its_workers_is_not_taken_for_their_end():
+    """Blocker 3 (`f3_resource_cannot_look`, `probe_presence_json`): a resource that answers and could not read who runs
+    on it said "not listed" — a directory that does not list, a lock that does not open, a live lock whose `.json` is
+    absent, torn, names no subsystem or nobody — and the hung w-1's slot was released, its cameras given to w-2 while it
+    wrote them, in each case. Now what is not read is said (`presence_error`, `presence_unread`), a live holder is
+    matched by its lock's own name (`running_instances`), and nothing of it releases or moves: hung, or `unsure`."""
+    import builtins, glob
+    for mode in ("no listing", "lock does not open", "json absent", "json torn", "json without sub", "json nobody"):
+        site = _Site()
+        ctl, res = site.ctl, site.res["srv-1"]
+        d = os.path.join(site.roots["srv-1"], ".workers")
+        for p in glob.glob(os.path.join(d, "*.json")):
+            if mode == "json absent":
+                os.remove(p)
+            elif mode == "json torn":
+                open(p, "w").write('{"sub": "vms", "na')
+            elif mode == "json without sub":
+                open(p, "w").write(json.dumps({"name": "w-1", "pid": 1}))
+            elif mode == "json nobody":
+                open(p, "w").write(json.dumps({"sub": "vms", "name": "", "pid": 1}))
+        site.tick(100)                                                       # w-1 hung, its lock held
+        real = builtins.open
+        if mode == "no listing":
+            os.chmod(d, 0)
+        elif mode == "lock does not open":
+            def no_lock(path, *a, **k):
+                if isinstance(path, str) and path.endswith(".lock") and "rb" in (a[0] if a else k.get("mode", "r")):
+                    raise OSError(24, "Too many open files")
+                return real(path, *a, **k)
+            builtins.open = no_lock
+        try:
+            hb = res.heartbeat()
+        finally:
+            builtins.open = real
+            os.chmod(d, 0o755)
+        fate, _, why = ctl.slot_fate("w-1", ctl.slots()["w-1"])
+        assert fate in ("hung", "unsure"), (mode, fate, why, hb.get("workers"), hb.get("presence_unread"))
+        rep = ctl.pass_once()
+        assert rep["slots_released"] == [] and sorted(ctl.assignment("w-1").units) == site.on_w1, (mode, rep)
+        site.ws["w-2"].reconcile_once()
+        assert not set(map(str, site.on_w1)) & set(map(str, site.ws["w-2"].actuator.running)), mode
+        if fate == "unsure":
+            assert rep["workers_unjudged"] == ["w-1"] and rep["units_unjudged"] == len(site.on_w1), (mode, rep)
+            assert ("worker.unjudged", ALARM) in site.said.kinds(), mode
+
+
+def test_a_worker_that_cannot_write_its_name_beside_its_lock_says_so_and_tries_again():
+    """Blocker 3's other half: `_say_present` on ENOSPC only logged, and the `.json` stayed absent or naming nobody. Now
+    the heartbeat says it (`presence_unsaid`), the controller counts it (`workers_presence_unsaid`) and judges the
+    worker "unsure" — never released, never moved by the resource's word — and the next heartbeat writes it again."""
+    site = _Site()
+    w1, ctl = site.ws["w-1"], site.ctl
+    f, d, _ = w1._presence
+    w1._presence = (f, d, None)                                              # what it is called must be said again…
+    real = os.replace
+
+    def full(src, dst):
+        if str(dst).startswith(d):
+            raise OSError(28, "No space left on device")
+        return real(src, dst)
+    os.replace = full                                                        # …and the archive's volume is full
+    try:
+        w1.heartbeat_once()
+    finally:
+        os.replace = real
+    hb = ctl._heard("w-1")
+    assert "No space left" in hb.extra["presence_unsaid"]
+    assert ctl.pass_once()["workers_presence_unsaid"] == ["w-1"]
+    for p in os.listdir(d):
+        if p.endswith(".json"):
+            os.remove(os.path.join(d, p))                                    # the resource reads no name for its lock
+    site.tick(100)
+    assert site.fate() in ("hung", "unsure") and ctl.pass_once()["slots_released"] == []
+    w1.heartbeat_once()                                                      # room again: said, and the mark gone
+    assert "presence_unsaid" not in ctl._heard("w-1").extra
+    assert any(p.endswith(".json") for p in os.listdir(d))
+
+
+def test_the_resources_pulse_during_a_long_pass_says_who_runs_now():
+    """Blocker 4 (`p8_pulse_stale_running`): the pulse of a long pass sent the heartbeat of the pass's start again with
+    the time moved on — `workers`/`running` as they were. w-1 restarted after the pass began and froze: by the old list
+    it was "placed, not running", and its slot was freed while its new process held its lock. Now every pulse looks
+    again (`presence_here`): the restarted, frozen w-1 is running — hung, nothing moves."""
+    import time
+    site = _Site()
+    box, ctl, res = site.box, site.ctl, site.res["srv-1"]
+    res.clock, res.PULSE_SECONDS = box.clock, 0.02
+    site.ws["w-1"].absent()
+    res.heartbeat()                                                          # the pass begins: w-1 placed, not running
+    seen = {}
+
+    class Slow:
+        def pass_(self, now):
+            again = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
+                              server="srv-1")                               # restarted under its name…
+            assert again.present(site.roots["srv-1"])
+            again.heartbeat_once()
+            box.wall.advance(100); box.clock.advance(100)                    # …and frozen, while the pass runs on
+            site.res["srv-2"].heartbeat()
+            time.sleep(0.2)
+            seen["fate"] = ctl.slot_fate("w-1", ctl.slots()["w-1"])[0]
+            seen["running"] = resources_seen(box.objects)["srv-1"].get("running")
+            seen["keep"] = again
+            return {}
+    res.register("slow", Slow())
+    res.pass_()
+    assert seen["running"] == {"vms": ["w-1"]} and seen["fate"] == "hung", seen
+    seen["keep"].absent()
+
+
+def test_a_controller_started_after_a_server_died_moves_its_cameras():
+    """Blocker 5 (`p1_fresh_reader`): srv-1 went whole — its worker, its resource, and (as in М11, where they are files on
+    it) both their heartbeats. A controller that had heard srv-1 moved its cameras; one started after it read nothing:
+    "never said which server", `wait` for ever, no sign. Now the store keeps what outlives the server — the server in the
+    slot row (`Slot.server`), and when its resource last said it is there (`at` on its door row) — and the fresh
+    controller judges the two silences: the cameras move. A slot it still cannot judge is counted and an alarm."""
+    site = _Site()
+    box = site.box
+    assert box.vars.get("vms/slots/w-1")[0]["server"] == "srv-1"
+    assert box.vars.get("platform/doors/srv-1")[0]["at"]
+    site.up.discard("srv-1")
+    site.tick(100)
+    for key in ("vms/heartbeats/w-1", "platform/resources/srv-1/heartbeat"):
+        box.objects.delete(key)                                              # gone with the server
+    fresh = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, capacity=4,
+                          wall=box.wall)
+    fresh.journal = _Said()
+    assert fresh.resource_state("srv-1") == "silent"
+    fate, server, why = fresh.slot_fate("w-1", fresh.slots()["w-1"])
+    assert (fate, server) == ("move", "srv-1"), why
+    fresh.pass_once()
+    assert all(fresh.where(int(c)) == "w-2" for c in site.on_w1)
+
+    lost = _Site()                                                           # …and where even the store says nothing
+    lost.up.discard("srv-1")
+    lost.tick(100)
+    lost.box.vars.delete("platform/doors/srv-1")
+    lost.box.objects.delete("platform/resources/srv-1/heartbeat")
+    lost.box.objects.delete("vms/heartbeats/w-1")
+    rep = lost.ctl.pass_once()
+    assert lost.fate() == "wait" and sorted(lost.ctl.assignment("w-1").units) == lost.on_w1
+    assert rep["workers_unjudged"] == ["w-1"] and rep["units_unjudged"] == len(lost.on_w1), rep
+    assert lost.said.kinds().count(("worker.unjudged", ALARM)) == 1
+    lost.ctl.pass_once()
+    assert lost.said.kinds().count(("worker.unjudged", ALARM)) == 1         # once an episode
+
+
+def test_a_resource_whose_door_cannot_be_reached_is_not_a_silent_server():
+    """Major 9 (`p6` door_down): the resource is alive, only its door is closed to the controller — its heartbeat seen
+    ageing. "Silent", the hung worker's cameras moved and a nameless process took its name. Now the resource's own row
+    in the store (`at`, every `ALIVE_EVERY`) is the second opinion: fresh, the server is `unreachable` — `unsure`, nothing
+    moves, the name stays, and decommissioning it is refused."""
+    site = _Site()
+    box, ctl = site.box, site.ctl
+    stale = box.objects.get("platform/resources/srv-1/heartbeat")
+    site.tick(100)                                                           # w-1 hung; srv-1's resource beats…
+    box.objects.put("platform/resources/srv-1/heartbeat", stale)             # …and is seen as it was 100 s ago
+    assert ctl.resource_state("srv-1") == "unreachable"
+    assert site.fate() == "unsure"
+    ctl.pass_once()
+    assert sorted(ctl.assignment("w-1").units) == site.on_w1
+    spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
+                      server="srv-2")
+    assert spare.name == "w-3" and _two_writers(site, spare) == []
+    refusal, _ = ctl.decommission_refusal("srv-1")
+    assert refusal and "said it is there" in refusal, refusal
+    site.up.discard("srv-1"); site.tick(60)                                  # really gone now: both stale
+    box.objects.put("platform/resources/srv-1/heartbeat", stale)
+    assert ctl.resource_state("srv-1") == "silent" and site.fate() == "move"
+
+
+def test_a_worker_clock_ahead_does_not_hold_its_cameras_without_limit():
+    """Major 17: srv-1 off, and its worker's last words dated an hour ahead — the slot's `until` and the heartbeat's
+    `ts`. The move waited the hour and decommissioning answered 409; `until` 1e308 was "alive" for ever. Now a slot
+    dated further ahead than one term (`SLOT_AHEAD`) is no lease to read, a heartbeat past `FUTURE_TOLERANCE` is not
+    heard, and the skew is counted: the server's two silences move the cameras as for any other worker."""
+    from w2cplatform.contract import SKEW_MAX
+    for until in (3600.0, 1e308):
+        site = _Site()
+        box, ctl = site.box, site.ctl
+        row = dict(box.vars.get("vms/slots/w-1")[0])
+        hb = json.loads(box.objects.get("vms/heartbeats/w-1"))
+        site.up.discard("srv-1")
+        row["until"] = box.wall() + until
+        box.vars.put("vms/slots/w-1", row)
+        hb["ts"] = box.wall() + 3600
+        box.objects.put("vms/heartbeats/w-1", json.dumps(hb).encode())
+        site.tick(100)
+        assert site.fate() == "move", until
+        assert ctl.decommission_refusal("srv-1")[0] is None
+        assert SKEW_MAX.get("vms", 0) > 1000
+        ctl.pass_once()
+        assert all(ctl.where(int(c)) == "w-2" for c in site.on_w1), until
+
+
+def test_the_decommission_door_reads_its_body_as_every_door_and_a_refusal_is_journalled():
+    """The review's twelfth pass, minors: the decommission door read its body bare — `Content-Length: -1` held the
+    thread 30 s and answered 503 "the store did not take it", 20 MB was read whole — and its 409 was a log line only.
+    Now the body goes through `read_body` (400 at once, 413 past the limit), and a refusal is `server.decommission_refused`
+    in the journal with its reason; a hung worker moved past the limit is counted (`workers_hung_moved_total`)."""
+    import http.client
+    import time
+    from w2cplatform.eventdatabase import EventIndex
+    site = _Site()
+    box = site.box
+    _, _, _, srv, base = _console(box)
+    try:
+        host, port = srv.server_address[:2]
+        for length, want in (("-1", 400), (str(20 << 20), 413)):
+            c = http.client.HTTPConnection(host, port, timeout=10)
+            t0 = time.monotonic()
+            c.putrequest("POST", "/servers/srv-1/decommission")
+            c.putheader("Content-Type", "application/json"); c.putheader("Content-Length", length)
+            c.endheaders()
+            r = c.getresponse()
+            assert r.status == want and time.monotonic() - t0 < 5, (length, r.status)
+            c.close()
+        st, out = _call(base, "POST", "/servers/srv-1/decommission", {"why": "burnt"}, user="anna")
+        assert st == 409
+    finally:
+        srv.shutdown()
+    kinds = [e["kind"] for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1)["events"]]
+    assert "server.decommission_refused" in kinds, kinds
+    site.tick(100); site.ctl.pass_once()
+    site.tick(HUNG_MOVE_AFTER)
+    assert site.ctl.pass_once()["workers_hung_moved_total"] == 1
+    assert site.ctl.pass_once()["workers_hung_moved_total"] == 1                # counted once an episode
+
+
+def test_a_resource_heartbeat_that_does_not_parse_is_a_silent_server_not_an_unknown_one():
+    """The review's twelfth pass, minor (a regression for NaN): a known resource whose heartbeat says `ts: NaN` was
+    "unknown" — `wait` for ever, its server's cameras recorded by nobody. Now a heartbeat there that does not parse is a
+    resource known and not live: silent, and the two silences move the cameras — unless its row in the store says it
+    is there (`unreachable`)."""
+    site = _Site()
+    box = site.box
+    site.up.discard("srv-1")
+    site.tick(100)
+    box.objects.put("platform/resources/srv-1/heartbeat",
+                    b'{"server": "srv-1", "ts": NaN, "url": "http://srv-1", "mirrors": {}}')
+    box.vars.delete("platform/doors/srv-1")
+    box.objects.delete("vms/heartbeats/w-1")
+    site.ctl.resource_state("srv-1")                                         # read once: the heartbeat counted as garbled
+    assert site.ctl.resource_state("srv-1") == "silent" and site.fate() == "move"
