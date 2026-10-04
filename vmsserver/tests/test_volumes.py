@@ -377,8 +377,15 @@ def test_the_console_writes_out_the_command_and_does_not_run_it():
     try:
         _, view = route(None, "GET", "/volumes", {})
         assert view["needed"] == 1 and view["how"] == "w2c-spares.sh recworker"
+        # …but М11 under Nomad (the appendix) opens the same configstore socket, and its console is a Nomad
+        # allocation: the scheduler's words (the thirteenth review, minor — it advised the spares script, which an
+        # appendix site does not run)
+        os.environ["NOMAD_ALLOC_ID"] = "alloc-1"
+        _, view = route(None, "GET", "/volumes", {})
+        assert view["needed"] == 1 and view["how"].startswith("nomad job scale recworker "), view["how"]
     finally:
         del os.environ["PLATFORM_STORE"]
+        os.environ.pop("NOMAD_ALLOC_ID", None)
 
 
 def test_the_numbers_a_scaling_policy_reads():

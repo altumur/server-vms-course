@@ -407,6 +407,56 @@ def test_the_domains_jobs_name_stores_that_open():
         assert open_vars(re.search(rf"^\s*{var}=(\S+)", agent, re.M).group(1)) is not None, var
 
 
+def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_rights():
+    """The thirteenth review, major 11: the signer opens `configstore:///run/configstore/domain.sock`, and no rights file
+    named a role `domain` — so no daemon opened that socket, its first `get` was `StoreUnavailable` and the job went
+    round its restarts. The test above only made the handle (`open_vars` is lazy), so it said nothing of it. Here a real
+    daemon with М11's committed rights file, its sockets in a directory of the test's: the signer's own store URL (its
+    default, and the line its job gives the books) is a socket the daemon opened, and the signer's first start runs
+    through it — its keys made and kept, the key set published, a person created, logged in and the people published,
+    a book written — and a second start reads the same keys. The agent's socket reads the key set but not the keys."""
+    import inspect
+    import os
+    import re
+    import shutil
+    import tempfile
+    import pytest
+    from domain import signer_service
+    from domain.agent import KEYS_PATH, DomainPublisher
+    from domain.identity import IdentityStore
+    from domain.signer import Signer
+    from w2cplatform.configstore import LocalBackend, StoreDaemon
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.storemachine import Rights
+    from w2cplatform.variables import Forbidden, open_vars
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    rights = Rights.load(os.path.join(here, "..", "..", "М11_ClusterVMS", "clustervms", "deploy", "configstore-rights.json"))
+    own = re.search(r'"(configstore:///run/configstore/\w+\.sock)"', inspect.getsource(signer_service.main)).group(1)
+    job = open(os.path.join(here, "deploy", "signer.nomad.hcl")).read()
+    assert re.search(r"^\s*CLUSTERS=north=([^|]+)\|", job, re.M).group(1) == own       # the books: the same socket
+    assert 'SIGNER_PORT={{ env "NOMAD_PORT_https" }}' in job                              # …and the port Nomad gave
+    d = tempfile.mkdtemp(prefix="cs", dir="/tmp")                                          # a socket's path is short
+    daemon = StoreDaemon(LocalBackend("north", 1000), node_id="north", sockets=d, rights=rights)
+    try:
+        assert os.path.exists(own.replace("configstore://", "").replace("/run/configstore", d)), sorted(os.listdir(d))
+        vars_ = open_vars(own.replace("/run/configstore", d))
+        assert vars_.get("domain/signer")[0] is None                                       # answered: nothing there yet
+        signer = Signer("acme", vars_)                                                     # its keys made, and kept
+        DomainPublisher(vars_).publish_keys(signer.tokens.keyset())
+        ids = IdentityStore(signer, vars_, FsObjectStore(os.path.join(d, "objects")), publish_floor=0)
+        ids.create_local("ann", "a long enough password", ["admin"])
+        assert ids.login("ann", "a long enough password") and ids.publish(force=True)
+        vars_.put("domain/sources/north", {"book": "{}"})
+        assert Signer("acme", vars_).tokens.keyset().to_items() == signer.tokens.keyset().to_items()
+        agent = open_vars(f"configstore://{d}/domainagent.sock")
+        assert agent.get(KEYS_PATH)[0] is not None
+        with pytest.raises(Forbidden):
+            agent.get("domain/signer")
+    finally:
+        daemon.stop()
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
     """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A

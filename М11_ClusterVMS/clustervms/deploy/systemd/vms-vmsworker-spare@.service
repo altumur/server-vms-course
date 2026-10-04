@@ -7,7 +7,11 @@
 [Unit]
 Description=VMS spare worker %i — takes an offer of its label set, else waits holding nothing
 After=network-online.target configstore.service w2c-resource.service
-Wants=network-online.target configstore.service
+Wants=network-online.target
+# The store's member must be UP already, not pulled up (the thirteenth review, major 12): `Wants=` started a stopped
+# `configstore` whenever the spares' timer started a spare — past the administrator who stopped it, and past polkit,
+# which lets the spares' user start this template and nothing else. Not running: this spare does not start.
+Requisite=configstore.service
 
 [Service]
 User=vms
@@ -35,6 +39,10 @@ NotifyAccess=main
 ExecStart=/opt/w2c/bin/w2c-run.sh worker
 Restart=always
 RestartSec=2
+# A set the runner refuses (no `SPARE_FOR=` line, or not a label set) is exit 2: the same file at every restart, so no
+# restart (the thirteenth review, minor) — it stays failed, said in its journal, and the spares' script tries the next
+# number.
+RestartPreventExitStatus=2
 TimeoutStopSec=20
 WatchdogSec=360
 NoNewPrivileges=yes

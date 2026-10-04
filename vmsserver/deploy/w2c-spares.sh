@@ -20,7 +20,9 @@
 # `start`, the units `vms-vmsworker-spare@<n>`, `vms-recworker-spare@<n>`) — and nothing else: no stop, no other
 # unit, no `reset-failed`. What it writes for a spare is read by the spare's runner one line deep (`w2c-run.sh`: `SPARE_FOR=`,
 # checked against the labels' alphabet), so the file it may write sets no other variable in a process holding the
-# role's key. On macOS it is root still: `launchctl bootstrap system` has no polkit to narrow it.
+# role's key. On macOS it runs as the box's user (`install.sh --box`, the thirteenth review, major 15): the roles' plists
+# are that user's (`~/Library/LaunchAgents`), a spare is bootstrapped into that user's launchd domain (`gui/<uid>`) and
+# runs as its role does — as that user, with no more than the box already has.
 #
 # The rules it follows:
 #
@@ -53,7 +55,8 @@
 #
 #   Linux   SPARE_FOR=<set> into $SPARES_ENV/vms-<role>-spare@<n>.service.env; systemctl start vms-<role>-spare@<n>
 #   macOS   the role's own plist ($LAUNCHD_DIR/com.w2c.vms.<role>.plist) copied as com.w2c.vms.<role>.spare-<n> — no
-#           name, SPARE_FOR=<set>, its doors on ports the OS gives — into $SPARES_DIR, and `launchctl bootstrap`ped
+#           name, SPARE_FOR=<set>, its doors on ports the OS gives, its log beside its role's — into $SPARES_DIR, and
+#           `launchctl bootstrap gui/<uid>`ped
 set -eu
 
 ME="${0##*/}"
@@ -64,9 +67,11 @@ SERVER="${SERVER_NAME:-$(hostname -s 2>/dev/null || hostname)}"
 # its environment files and its credentials are its template's — the role's unit's — and nothing this script says. A
 # spare itself is a process of a VMS subsystem, and keeps the subsystem's names: the unit `vms-<role>-spare@<n>`
 # (macOS: `com.w2c.vms.<role>.spare-<n>`), the group `vms-<role>` of its role's store socket.
+SPARES_DIR="${SPARES_DIR:-${W2C_BOX:+$W2C_BOX/state/run/w2c-spares}}"   # macOS: the spares' plists, under the box
 SPARES_DIR="${SPARES_DIR:-/var/run/w2c-spares}"
 SPARES_ENV="${SPARES_ENV:-/run/w2c-spares}"         # Linux: each spare's set, read by its runner (its timers' RuntimeDirectory)
-LAUNCHD_DIR="${LAUNCHD_DIR:-/Library/LaunchDaemons}" # macOS: where `install.sh` put the roles' plists
+LAUNCHD_DIR="${LAUNCHD_DIR:-${HOME:-}/Library/LaunchAgents}" # macOS: where `install.sh --box` put the roles' plists
+DOMAIN="gui/$(id -u)"                               # macOS: the box's user's launchd domain
 NAME=vms
 roles=$(printf '%s' "${*:-${SPARES_ROLES:-recworker}}" | tr ',' ' ')
 
@@ -85,7 +90,7 @@ running() {
     if [ "$linux" = 1 ]; then
         systemctl is-active --quiet "$NAME-$1-spare@$2"
     else
-        launchctl print "system/com.w2c.$NAME.$1.spare-$2" >/dev/null 2>&1
+        launchctl print "$DOMAIN/com.w2c.$NAME.$1.spare-$2" >/dev/null 2>&1
     fi
 }
 
@@ -124,11 +129,13 @@ start() {                                           # sh has no locals: the argu
             vmsworker) plutil -replace EnvironmentVariables.RTSP_PORT -string auto "$plist" ;;
             recworker) plutil -replace EnvironmentVariables.ARCHIVE_PORT -string 0 "$plist" ;;
         esac
-        plutil -replace StandardErrorPath -string "/var/log/w2c/$label.log" "$plist"
-        plutil -replace StandardOutPath -string "/var/log/w2c/$label.log" "$plist"
+        logs=$(plutil -extract StandardErrorPath raw -o - "$plist" 2>/dev/null) || logs=""
+        logs=${logs%/*}
+        plutil -replace StandardErrorPath -string "${logs:-.}/$label.log" "$plist"   # beside its role's
+        plutil -replace StandardOutPath -string "${logs:-.}/$label.log" "$plist"
         chmod 0644 "$plist"
-        launchctl bootout "system/$label" >/dev/null 2>&1 || true              # one that ended leaves its label behind
-        launchctl bootstrap system "$plist"
+        launchctl bootout "$DOMAIN/$label" >/dev/null 2>&1 || true             # one that ended leaves its label behind
+        launchctl bootstrap "$DOMAIN" "$plist"
     fi
 }
 

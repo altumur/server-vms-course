@@ -17,17 +17,19 @@
 ### `task "signer"`
 - `driver = "podman"`.
 - `config { image = "vms/domainvms:latest"; args = ["python3", "-m", "domain.signer_service"] }`.
-- `identity { env = true }` — `NOMAD_TOKEN`; the comment lists what it may write: `domain/signer`, `identity/*`, `domain/keys`, `domain/revoked` (the policy also adds licence and placement).
+- No `identity` block: the store is no Nomad Variable any more. The comment in its place names the store — the domain holder's configstore by the domain's own socket, the role `domain` of М11's rights file (`domain/*` and `identity/*` written, the holder's cluster read, and the domain's keys `domain/signer`, which no other role reads).
 - `template { … destination = "local/signer.env"  env = true }`:
   - `DOMAIN_ID=acme` — the domain name: token `iss`, root CN `acme root g<n>`, the registrar id prefix, the licence's `domain`.
-  - (no store line: the signer opens its default, `configstore:///run/configstore/domain.sock` — a role М11's rights file does not have yet; the domain's split, М12A/B, adds it. Its `CLUSTERS` names this cluster's store and objects and the other cluster as one that reports — it named `nomad://` stores before, refused at start: the twelfth review, major 22.)
+  - (no store line: the signer opens its default, `configstore:///run/configstore/domain.sock`. No rights file named a role `domain`, so no daemon opened that socket: the first read was `StoreUnavailable` and the job went round its restarts — the thirteenth review, major 11. М11's `cluster/rights.py` has the role now, socket group `w2c-domain`; `tests/test_lesson3_readview_api_gateway.py::test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_rights` starts a real daemon with the committed rights file and runs the signer's first reads and writes through that socket.)
   - `OBJECT_STORE_URL=http://minio.north:9000/domain` — the `domain` bucket for `identity/rev-N` and `users/<id>/prefs`; plain HTTP is enough here because the identity store only `put`s and `get`s (no listing).
   - `TOKEN_LIFETIME=900` — 15 minutes, the number Lesson 4 defends; not read by the code (`identity.TOKEN_LIFETIME` is the constant).
   - `IDENTITY_PUBLISH_FLOOR=60` — the minimum seconds between identity publishes: the stated RPO for users.
-  - `CLUSTERS=…`, `LOST_AFTER=45` — given `CLUSTERS` (the console's format), the service also runs the domain's pass over the books every 5 s (`domain/books.py`: sources, primaries, polls, upstream, asks). The books carry tokens this job mints, so the pass runs here and not in the console. `CENTRE` and `STAR` (Lesson 17) are optional.
+  - `CLUSTERS=…`, `LOST_AFTER=45` — given `CLUSTERS` (the console's format), the service also runs the domain's pass over the books every 5 s (`domain/books.py`: sources, primaries, polls, upstream, asks). The books carry tokens this job mints, so the pass runs here and not in the console. `CENTRE` and `STAR` (Lesson 17) are optional. The holder's own cluster is named by `domain.sock`, not `console.sock`: the books are `domain/*` rows, which the console's role does not write.
+  - `SIGNER_PORT={{ env "NOMAD_PORT_https" }}` — the port Nomad gave the group; without it the process listened on 8445 whatever the service registration said (the thirteenth review, major 11).
 - `resources { cpu = 200  memory = 128 }` — signing is cheap; scrypt on login is the only real work.
 
 ## Notes
-- The port is dynamic and the code binds `SIGNER_PORT` (default 8445), which is not set from `NOMAD_PORT_https` here; the registered port and the listening port would differ unless the template adds `SIGNER_PORT={{ env "NOMAD_PORT_https" }}`.
+- The port is dynamic and the code binds `SIGNER_PORT` (default 8445), set from `NOMAD_PORT_https` in the template.
+- The domain's console (`console.nomad.hcl`) opens the same role: both are the domain's processes on the holder, so both read the keys — the narrowing between them is the round that splits М12.
 - The port is named `https` but the service speaks plain HTTP; a bench would put TLS in front (the LDevID/renewal flow the docstring defers needs mTLS).
 - Same one-line `config`/`resources` style as the other jobspecs.

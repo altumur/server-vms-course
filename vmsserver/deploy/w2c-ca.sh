@@ -11,11 +11,19 @@
 #                                       new crl.pem (in the CA directory and in every bundle under it)
 #   w2c-ca.sh crl                       crl.pem made again from what is revoked — before the list's nextUpdate, and
 #                                       for a CA directory from before the list (the test fixtures were)
+#   w2c-ca.sh own <tls dir> <user>      hand a bundle copied to a server to the user whose daemon reads it: every file
+#                                       that user's, its keys and raft.secret 0600, the certificates and the list 0644,
+#                                       the directory 0750 to the user's group — `install.sh` runs it on /etc/w2c/tls
+#                                       for `configstore` (М11)
 #
 # The CA directory is $W2C_CA_DIR (default ./w2c-ca) and stays on the operator's machine: ca.key never goes to a
-# server. A server gets its bundle copied to /etc/w2c/tls (0700, keys 0600). Every server of a group gets the SAME
-# raft.secret — it is the raft port's password, made once by `init`. After `revoke`, crl.pem goes to EVERY server's
-# /etc/w2c/tls: a door re-reads it when the file changes (the review's thirteenth pass, major 5).
+# server. A server gets its bundle copied to /etc/w2c/tls, and then given to the daemon's user (`own`): the store's
+# member runs as `configstore`, not root, and a bundle copied as root with keys 0600 was a `PermissionError` — the
+# store came up on no server (the thirteenth review, major 14). The raft secret stays its owner's alone (`tls.py`
+# refuses one others may read, a group included), so the files are the user's, not a group's. Every server of a group
+# gets the SAME raft.secret — it is the raft port's password, made once by `init`. After `revoke`, crl.pem goes to
+# EVERY server's /etc/w2c/tls (and `own` again): a door re-reads it when the file changes (the review's thirteenth
+# pass, major 5).
 #
 # Every certificate `issue` signs is kept in <ca dir>/issued/<server>/<serial>.pem, so `revoke` finds the ones a
 # re-issue has replaced in the bundle — a stolen bundle is an old certificate as often as the current one.
@@ -162,10 +170,30 @@ revoke() {
     echo "$server still knows raft.secret: make a new one (openssl rand -hex 32), put it on every member, restart the group."
 }
 
+# A bundle on a server, the daemon's: the files its user's, nobody else reading a key or the secret.
+own() {
+    dir=${1:-}; user=${2:-}
+    [ -n "$dir" ] && [ -n "$user" ] || die "own <tls dir> <user>"
+    [ -d "$dir" ] || die "$dir: no such directory (copy the server's bundle there first)"
+    group=$(id -gn "$user") || die "no user $user"
+    for f in "$dir"/*; do
+        [ -f "$f" ] || continue
+        chown "$user:$group" "$f"
+        case "$f" in
+            *.key|*/raft.secret) chmod 0600 "$f" ;;
+            *) chmod 0644 "$f" ;;
+        esac
+    done
+    chgrp "$group" "$dir"
+    chmod 0750 "$dir"
+    echo "$dir: $user's (keys and raft.secret 0600, certificates 0644)"
+}
+
 case "${1:-}" in
     init) init ;;
     issue) shift; issue "$@" ;;
     revoke) shift; revoke "$@" ;;
     crl) crl ;;
-    *) die "usage: w2c-ca.sh init | issue <server> [role…] | revoke <server> | crl" ;;
+    own) shift; own "$@" ;;
+    *) die "usage: w2c-ca.sh init | issue <server> [role…] | revoke <server> | crl | own <tls dir> <user>" ;;
 esac

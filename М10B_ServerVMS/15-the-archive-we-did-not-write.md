@@ -163,19 +163,33 @@ def device_of(source: str) -> str:
                     want = self.PLAYBACK_PIECE_BYTES
                     if pace is not None:                 # a slow reader: what he takes in `PLAYBACK_PACE_SECONDS`
                         want = max(self.PLAYBACK_MIN_PIECE, min(want, int(pace * self.PLAYBACK_PACE_SECONDS)))
-                    if who is None:
-                        held = want if budget.take(want, self.PLAYBACK_BUDGET_WAIT) else 0
-                    else:
-                        held = budget.take_share(who, want, min(want, self.PLAYBACK_MIN_PIECE), self.PLAYBACK_BUDGET_WAIT)
-                    if not held:
-                        raise OverflowError(f"this door holds {budget.limit} bytes of footage at once, and they are "
-                                            f"all being sent — retry")
-                    # Seconds: `PLAYBACK_FIRST` for the first piece; then as many as the bytes held come to at the rate
-                    # the last piece came at — never more than `PLAYBACK_PIECE`, never less than one.
+                    least = min(want, self.PLAYBACK_MIN_PIECE)
+                    full = (f"this door holds {budget.limit} bytes of footage at once, and they are all being sent — "
+                            f"retry")
+                    # THE BYTES ARE TAKEN ONCE THE DEVICE HAS OPENED ITS FOOTAGE (the thirteenth review, major 19; a
+                    # run, `h13_door many`: twenty hung NVRs × eight reads held the door's 64 MiB while it waited for
+                    # them to open, and 144 of 160 requests, healthy devices' among them, were "the door is full").
+                    # The piece is sized by what the budget would give now (`room`, waited for as a take is), and the
+                    # bytes are taken when the device says the footage is open (`_door_read`'s `opened`): a device that
+                    # never opens holds none of them.
+                    plan = budget.room(who, want, least, self.PLAYBACK_BUDGET_WAIT)
+                    if not plan:
+                        raise OverflowError(full)
+
+                    def admit():
+                        nonlocal held
+                        if who is None:
+                            held = plan if budget.take(plan, self.PLAYBACK_BUDGET_WAIT) else 0
+                        else:
+                            held = budget.take_share(who, plan, min(plan, least), self.PLAYBACK_BUDGET_WAIT)
+                        if not held:
+                            raise OverflowError(full)
+                    # Seconds: `PLAYBACK_FIRST` for the first piece; then as many as the bytes planned come to at the
+                    # rate the last piece came at — never more than `PLAYBACK_PIECE`, never less than one.
                     span = min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE) if rate is None else \
-                        max(1.0, min(self.PLAYBACK_PIECE, held / max(rate, 1.0)))
+                        max(1.0, min(self.PLAYBACK_PIECE, plan / max(rate, 1.0)))
                     b = min(t1, at + span)
-                    got = self._door_read(dev, cam, at, b)   # opened, read and closed before a byte of it is sent
+                    got = self._door_read(dev, cam, at, b, admit)   # opened, read and closed before a byte is sent
                     size = sum(len(c) for c in got)
                     budget.force(size - held, who)       # what the piece really is, whatever was asked
                     held = size
@@ -199,23 +213,37 @@ def device_of(source: str) -> str:
 ```python
         threading.Thread(target=run, name=f"{self.name}-read", daemon=True).start()
         until = job["since"] + self.DOOR_ASK_WAIT + self.PLAYBACK_STALL + (t1 - t0) / self.PLAYBACK_DEVICE_PACE
-        out, opened = [], False
+        out, is_open = [], False
         while True:
-            wait = min(self.PLAYBACK_STALL if opened else self.DOOR_ASK_WAIT, until - time.monotonic())
+            wait = min(self.PLAYBACK_STALL if is_open else self.DOOR_ASK_WAIT, until - time.monotonic())
             try:
                 kind, value = job["q"].get(timeout=max(0.0, wait))
             except queue.Empty:
-                job["given_up"] = True
-                if not opened:
+                job["given_up"] = job["lost"] = True
+                if not is_open:
                     why = f"the device has not opened its footage within {self.DOOR_ASK_WAIT:g} s"
                 elif time.monotonic() >= until:
                     why = f"the device gave {t1 - t0:.0f} s of footage slower than {self.PLAYBACK_DEVICE_PACE:g} s a second"
                 else:
                     why = f"the device gave nothing for {self.PLAYBACK_STALL:g} s"
                 raise TimeoutError(f"{why} — it is busy or does not answer; the playback was cut, ask again") from None
+            if kind == "open":
+                is_open = True
+                if opened is not None:
+                    began = time.monotonic()
+                    try:
+                        opened()                         # the piece's bytes: waited for, then the device read on
+                    except BaseException:
+                        job["given_up"] = True           # not read on; its session closed by its own thread
+                        raise
+                    until += time.monotonic() - began
 ```
 
-Открытие ждут `DOOR_ASK_WAIT` (5 с), столько же, сколько вопрос; свой отказ устройства («занято», `OverflowError`) остаётся 503, как был. Каждую порцию потока ждут `PLAYBACK_STALL` (10 с). Весь кусок должен прийти за `PLAYBACK_STALL` плюс его секунды, делённые на `PLAYBACK_DEVICE_PACE` (0,5 секунды записи в секунду): так обрывается и устройство, которое капает по байту чуть быстрее срока простоя, а карта, которую отдают со скоростью записи, укладывается с запасом. Не дождалась первый кусок — 503 со словами «ask again». Не дождалась следующий — ответ обрывается на виду, как при отказе устройства посреди, и соединение свободно. На устройство — не больше `DOOR_READS_PER_DEVICE` (8) чтений, которые ещё не вернулись; следующему — 503. А пока не вернулось чтение, на котором дверь уже сдалась, или пока линия устройства сидит в одном вопросе дольше `DOOR_ASK_WAIT`, дверь отвечает 503 сразу (`_door_stuck`) и даже покрытия не спрашивает. Так зависшее устройство держит горсть потоков, ждущих внутри него, но не соединения двери. Чтение, на котором сдались, дальше не читается (порции потокового драйвера больше не берутся), а сессию закрывает его собственный поток, когда устройство вернётся. Проба ревьюера теперь: восемь ответов 503 за 5 с, а `/playback` к здоровому, `/recordings` и `/devices` с того же адреса — 200. Тесты: `test_long_poll.py::test_a_playback_door_to_a_hung_recorder_answers_ask_again_and_keeps_its_connections_for_the_others` и `test_long_poll.py::test_a_playback_whose_device_stops_giving_footage_half_way_is_cut_at_the_stall_and_lets_the_connection_go` (устройство, замолчавшее посреди, и устройство, которое капает, обрываются, место двери освобождается, а сессия закрывается, когда устройство вернулось). Что остаётся: поток, ждущий внутри зависшего драйвера, кончится только вместе с вызовом — дверь его не ждёт, но и прервать не может; их не больше `DOOR_READS_PER_DEVICE` на устройство.
+Открытие ждут `DOOR_ASK_WAIT` (5 с), столько же, сколько вопрос; свой отказ устройства («занято», `OverflowError`) остаётся 503, как был. Каждую порцию потока ждут `PLAYBACK_STALL` (10 с). Весь кусок должен прийти за `PLAYBACK_STALL` плюс его секунды, делённые на `PLAYBACK_DEVICE_PACE` (0,5 секунды записи в секунду): так обрывается и устройство, которое капает по байту чуть быстрее срока простоя, а карта, которую отдают со скоростью записи, укладывается с запасом. Не дождалась первый кусок — 503 со словами «ask again». Не дождалась следующий — ответ обрывается на виду, как при отказе устройства посреди, и соединение свободно. На устройство — не больше `DOOR_READS_PER_DEVICE` (8) чтений, которые ещё не вернулись; следующему — 503. А пока не вернулось чтение, на котором дверь уже сдалась, дверь отвечает 503 сразу (`_door_stuck`) и даже покрытия не спрашивает — этой **камере** (ниже). Так зависшее устройство держит горсть потоков, ждущих внутри него, но не соединения двери. Чтение, на котором сдались, дальше не читается (порции потокового драйвера больше не берутся), а сессию закрывает его собственный поток, когда устройство вернётся. Проба ревьюера теперь: восемь ответов 503 за 5 с, а `/playback` к здоровому, `/recordings` и `/devices` с того же адреса — 200. Тесты: `test_long_poll.py::test_a_playback_door_to_a_hung_recorder_answers_ask_again_and_keeps_its_connections_for_the_others` и `test_long_poll.py::test_a_playback_whose_device_stops_giving_footage_half_way_is_cut_at_the_stall_and_lets_the_connection_go` (устройство, замолчавшее посреди, и устройство, которое капает, обрываются, место двери освобождается, а сессия закрывается, когда устройство вернулось). Что остаётся: поток, ждущий внутри зависшего драйвера, кончится только вместе с вызовом — дверь его не ждёт, но и прервать не может; их не больше `DOOR_READS_PER_DEVICE` на устройство и `DOOR_READS` на дверь.
+
+**Зависшее чтение закрывает дверь одной камере, а не всему видеорегистратору** (тринадцатое ревью, major 18, воспроизведено запуском пробы `h13_door readhang`). `_door_stuck` смотрел на устройство целиком: повисло чтение канала 1 — и каналы 2 и 4 получали 503 сразу и через 30 с, а `/devices` показывал `state: None`. Регистратор не мог добрать пропуски всего регистратора, и никто не видел почему; зависший вопрос `recordings` закрывал дверь так же — в двенадцатом проходе `/playback` при нём отдавал данные. Теперь «застряла» камера, на чьём чтении дверь сдалась: ей — 503 сразу, соседи читаются как раньше. Застряли чтения двух камер одного устройства (`DOOR_STUCK_CHANNELS`) — застряло устройство целиком. Вопрос одной камеры (её покрытие, её список) чтений не останавливает: дверь берёт покрытие, сказанное последним, а у чтения свои сроки. Вопрос всего устройства (каналы, занятые сессии), висящий дольше `DOOR_ASK_WAIT`, по-прежнему значит, что устройство не отвечает, и тогда 503 сразу всем. Застрявшее теперь видно: в `/devices` и в heartbeat у устройства `reads_stuck` — список камер — и `state: slow`, а в heartbeat держателя `door_reads_stuck`, рядом с `devices_slow`. Строка этой цифры в `/metrics` — консоли, и она в списке открытого. Тесты: `test_long_poll.py::test_one_cameras_hung_read_closes_the_door_to_that_camera_not_to_its_nvr_and_is_said`, `::test_a_hung_question_of_one_camera_stops_no_read_and_a_hung_question_of_the_device_stops_them_all`.
+
+**Зависшие чтения не держат байтов двери, а потоков у двери — предел** (тринадцатое ревью, major 19, проба `h13_door many`). Двадцать зависших регистраторов по восемь чтений: 144 запроса из 160 получили «дверь полна», и здоровые тоже, — каждое чтение брало байты куска из бюджета до того, как спросить устройство, и держало их, пока дверь ждала открытия; а потоки были ограничены только на устройство, 8 × устройства. Теперь кусок меряется тем, что бюджет дал бы сейчас (`ByteBudget.room`, с тем же ожиданием, но ничего не беря), а сами байты берутся, когда устройство сказало, что открыло запись (`opened` у `_door_read`, листинг выше). Устройство, которое не открывает, не держит ничего. Чтение, повисшее уже после открытия, отдаёт байты, когда дверь на нём сдалась, хотя его поток ещё внутри устройства. И чтений у двери не больше `DOOR_READS` (32) по всем устройствам вместе, считая те, на которых она сдалась, — дальше 503 сразу. Чего это не делает: когда предел занят зависшими устройствами, 503 получают и здоровые, пока те не вернутся, — зато потоков ограниченное число, и это видно в `door_reads_stuck`. Тест: `test_long_poll.py::test_hung_reads_hold_none_of_the_doors_bytes_and_the_door_holds_a_bounded_number_of_them`.
 
 **Ядро держит у соединения четверть мегабайта, а не четыре.** Сокету на запись ядро само наращивает буфер под медленного читателя до мегабайтов (на macOS в тесте — 0,7–0,8 МБ, в Linux до `tcp_wmem`, 4 МБ). Соединение, отрезанное за темп, оставляло эти байты в ядре, пока сокет не закрылся, и бюджет двери их не видел. Обработчик двери ставит `SO_SNDBUF` в `PLAYBACK_SNDBUF` (256 КиБ: полоса LAN на её задержку). Тот же тест проверяет это на сокете самой двери; Linux показывает число удвоенным.
 

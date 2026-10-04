@@ -51,18 +51,28 @@ def test_a_worker_is_named_by_its_unit_one_per_server():
 
 
 def test_every_plist_is_its_units_twin():
-    """launchd has no `%l` and no groups per unit: the plist names the same socket (under /var/run, macOS has no
-    /run), the same verb, and the name with `@HOST@`, which `install.sh` replaces."""
+    """launchd has no `%l` and no groups per unit: the plist names the same socket, the same verb, and the name with
+    `@HOST@`, which `install.sh` replaces. Under the box (the thirteenth review, major 15): a Mac has no /data and no
+    /opt/w2c of ours, so the runner, the sockets and the logs are the box's — `__BOX__`, which `install.sh --box`
+    replaces — and every plist names its box (`W2C_BOX`), whose files the runner reads."""
     for label, name in PLISTS.items():
         with open(os.path.join(DEPLOY, "launchd", f"{label}.plist"), "rb") as f:
             p = plistlib.load(f)
         role, verb = UNITS[name]
-        assert p["Label"] == label and p["ProgramArguments"] == ["/opt/w2c/bin/w2c-run.sh", verb], label
-        assert p["EnvironmentVariables"]["PLATFORM_STORE"] == f"configstore:///var/run/configstore/{role}.sock", label
-        assert p["KeepAlive"] is True, label
+        assert p["Label"] == label and p["ProgramArguments"] == ["__BOX__/bin/w2c-run.sh", verb], label
+        assert p["EnvironmentVariables"]["PLATFORM_STORE"] == f"configstore://__BOX__/state/run/configstore/{role}.sock", label
+        assert p["KeepAlive"] is True and p["StandardErrorPath"] == f"__BOX__/state/logs/{label}.log", label
+    for f in sorted(os.listdir(os.path.join(DEPLOY, "launchd"))):
+        if f.endswith(".plist"):
+            with open(os.path.join(DEPLOY, "launchd", f), "rb") as fh:
+                p = plistlib.load(fh)
+            assert p["EnvironmentVariables"]["W2C_BOX"] == "__BOX__", f
+            body = repr(p)
+            assert not [w for w in ("/opt/", "/etc/w2c", "/etc/vms", "/var/", "/data", "/usr/local") if w in body], (f, body)
     with open(os.path.join(DEPLOY, "launchd", "com.w2c.configstore.plist"), "rb") as f:
         p = plistlib.load(f)
-    assert p["ProgramArguments"][1] == "configstore" and p["EnvironmentVariables"]["CONFIGSTORE_SOCKETS"] == "/var/run/configstore"
+    assert p["ProgramArguments"][1] == "configstore"
+    assert p["EnvironmentVariables"]["CONFIGSTORE_SOCKETS"] == "__BOX__/state/run/configstore"
     with open(os.path.join(DEPLOY, "launchd", "com.w2c.vms.vmsworker.plist"), "rb") as f:
         assert plistlib.load(f)["EnvironmentVariables"]["WORKER_NAME"] == "w-@HOST@-1"
 
@@ -101,6 +111,47 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
                       "/etc/w2c/tls -tuning lan -join srv-a@10.0.0.1:8300")
 
 
+def test_the_runner_writes_as_its_group_however_it_was_started_and_finds_a_box_by_its_directory():
+    """The thirteenth review, major 13: a unit says `UMask=0007`, but Nomad's `raw_exec` hands on the agent's 0022 —
+    the events archive's buckets came out 2755 `vms:w2c-events`, the resource (`w2c`) could not delete them, and its
+    retention stopped. The runner sets 0007 itself: started under 0022, what it execs has 0007. And major 15: a box on
+    macOS (`install.sh --box <dir>`) has no /etc/w2c and no /data — a plist says `W2C_BOX`, and the runner reads that
+    box's two files, runs its code, and gives the store's member the box's journal, sockets, rights and TLS."""
+    d = tempfile.mkdtemp(prefix="run-")
+    py = os.path.join(d, "python3")
+    with open(py, "w") as f:
+        f.write("#!/bin/sh\necho \"$@\"\necho \"umask=$(umask)\"\nenv\n")
+    os.chmod(py, 0o755)
+    with open(os.path.join(d, "w2c.env"), "w") as f:
+        f.write("SERVER_NAME=mac-a\nCONFIGSTORE_RAFT=127.0.0.1:8301\nCONFIGSTORE_API=127.0.0.1:8300\n")
+    with open(os.path.join(d, "vms.env"), "w") as f:
+        f.write("CAPACITY=9\n")
+    env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d}
+    out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], env=env, capture_output=True, text=True,
+                         check=True, preexec_fn=lambda: os.umask(0o022)).stdout.splitlines()
+    got = dict(l.split("=", 1) for l in out[1:] if "=" in l)
+    assert got["umask"] in ("0007", "007"), got["umask"]
+    assert got["SERVER_NAME"] == "mac-a" and got["CAPACITY"] == "9"                     # the box's two files
+    assert got["PYTHONPATH"].startswith(f"{d}/clustervms:{d}/vmsserver")                 # …and its code
+    out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "configstore"], env=env, capture_output=True,
+                         text=True, check=True).stdout.splitlines()
+    assert out[0] == (f"-m w2cplatform.configstore -id mac-a -dir {d}/state/configstore -raft 127.0.0.1:8301 -api "
+                      f"127.0.0.1:8300 -sockets {d}/state/run/configstore -rights {d}/configstore-rights.json -tls "
+                      f"{d}/tls -tuning lan -bootstrap")
+
+
+def test_the_controllers_reach_budget_is_named_where_an_operator_looks():
+    """The thirteenth review, minor: `REACH_BUDGET` (the twelfth review's M7: how many units a pass moves to a server
+    that reaches them; a group left over is `units.over_budget`) was read by the controller and named in no env file of
+    the delivery and in neither entry point's list of settings. Both env examples (this module's and the box's) name
+    it, and both entry points' docstrings."""
+    import cluster.__main__ as cm
+    import vms.__main__ as vm
+    assert "REACH_BUDGET" in (cm.__doc__ or "") and "REACH_BUDGET" in (vm.__doc__ or "")
+    for path in (os.path.join(SYSTEMD, "vms.env.example"), os.path.join(M10, "vms.env.example")):
+        assert "#REACH_BUDGET=10" in open(path, encoding="utf-8").read(), path
+
+
 def _run_spare(d: str, said: str | None, env: dict | None = None, w2c_env: str = "") -> subprocess.CompletedProcess:
     """`w2c-run.sh worker` as a spare's template runs it: `SPARE_FILE` names `said` (None: no file at all), the two
     shared files empty but for `w2c_env`, and a `python3` that prints its environment."""
@@ -128,16 +179,19 @@ def test_a_spares_runner_takes_only_its_set_from_its_file_and_refuses_one_outsid
     names (`SPARE_FILE`) and nothing else, checked against the labels' alphabet (`spec.LABEL_WORD`, comma-joined; empty
     is the empty set): every other line is ignored, a set outside the alphabet, no such line or no file at all is a
     spare that does not start — nothing exec'd. And neither name comes from the shared files: a regular unit never
-    becomes a spare by a line in `w2c.env`."""
+    becomes a spare by a line in `w2c.env`. The thirteenth review, minor: the set is the file's FIRST line — what the
+    spares' script writes — not the first `SPARE_FOR=` anywhere in it; a file that opens with anything else is refused."""
     from w2cplatform.spec import LABEL_WORD
     d = tempfile.mkdtemp(prefix="spare-")
-    hostile = (f"LD_PRELOAD={d}/evil.so\nPYTHONPATH={d}/evil\nSECRETS_KEY={d}/stolen\n"
-               "SPARE_FOR=vlan:dmz,zone-1.b_2\nSPARE_FOR=second\n")
+    hostile = (f"SPARE_FOR=vlan:dmz,zone-1.b_2\nLD_PRELOAD={d}/evil.so\nPYTHONPATH={d}/evil\nSECRETS_KEY={d}/stolen\n"
+               "SPARE_FOR=second\n")
     out = _run_spare(d, hostile)
     assert out.returncode == 0, out.stderr
     got = dict(l.split("=", 1) for l in out.stdout.splitlines()[1:] if "=" in l)
-    assert got["SPARE_FOR"] == "vlan:dmz,zone-1.b_2"                                   # the first such line, that line only
+    assert got["SPARE_FOR"] == "vlan:dmz,zone-1.b_2"                                   # the first line, that line only
     assert "LD_PRELOAD" not in got and "SECRETS_KEY" not in got
+    out = _run_spare(d, "# a comment first\nSPARE_FOR=vlan:dmz\n")
+    assert out.returncode == 2 and "is not SPARE_FOR=" in out.stderr and "-m cluster" not in out.stdout, out.stderr
     assert got["PYTHONPATH"] == f"{d}/clustervms:{d}/vmsserver"                        # the runner's own, nothing added
     out = _run_spare(d, "SPARE_FOR=\n")
     assert out.returncode == 0 and "SPARE_FOR=" in out.stdout.splitlines(), out.stderr  # the empty set is a set
@@ -149,7 +203,7 @@ def test_a_spares_runner_takes_only_its_set_from_its_file_and_refuses_one_outsid
         assert out.returncode == 2 and "is not a label set" in out.stderr and "-m cluster" not in out.stdout, bad
     for said in (None, "LD_PRELOAD=x\n", "# SPARE_FOR=a\n"):
         out = _run_spare(d, said)
-        assert out.returncode == 2 and "no SPARE_FOR= line" in out.stderr and "-m cluster" not in out.stdout, said
+        assert out.returncode == 2 and "is not SPARE_FOR=" in out.stderr and "-m cluster" not in out.stdout, said
     out = _run_spare(d, "SPARE_FOR=x\n", w2c_env=f"SPARE_FOR=from-a-shared-file\nSPARE_FILE={d}/other\n")
     assert out.returncode == 0 and "SPARE_FOR=x" in out.stdout.splitlines()
     regular = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], capture_output=True, text=True,
@@ -207,6 +261,10 @@ def test_the_spares_script_runs_as_its_own_user_whom_polkit_lets_start_a_spare_t
              ("w2c-spares", manage, "start", "vms-liveworker-spare@1.service", "no"),
              ("w2c-spares", manage, "start", "vms-vmsworker-spare@.service", "no"),
              ("w2c-spares", manage, "start", "vms-vmsworker-spare@1.service.d", "no"),
+             ("w2c-spares", manage, "start", "vms-recworker-spare@99.service", "yes"),          # the number: 1 to 99
+             ("w2c-spares", manage, "start", "vms-recworker-spare@100.service", "no"),          # (the thirteenth review)
+             ("w2c-spares", manage, "start", "vms-vmsworker-spare@99999999999999999999.service", "no"),
+             ("w2c-spares", manage, "start", "vms-vmsworker-spare@01.service", "no"),
              ("w2c-spares", manage, "start", "sshd.service", "no"),
              ("w2c-spares", manage, None, None, "no"),
              ("w2c-spares", "org.freedesktop.systemd1.manage-unit-files", None, None, "no"),
@@ -230,6 +288,83 @@ def test_install_installs_the_units_there_are():
     assert spares == ["vms-vmsworker-spare@", "vms-recworker-spare@"]
     assert sorted(f[:-len(".service")] for f in os.listdir(os.path.join(DEPLOY, "systemd")) if f.endswith(".service")) == sorted(listed + spares)
     assert "rights --check" in src and "--spares" in src and "@BOXID@" in src
+
+
+def _install_on_a_mac(*args: str, box_files=None) -> tuple[subprocess.CompletedProcess, str, str, list[str]]:
+    """`install.sh` RUN on the macOS path: `uname` says Darwin, there is no `systemctl`, `launchctl` and `ioreg` are
+    shims (the first writes its line down), `HOME` is the test's; the rest are the real tools. `(the process, the home,
+    the shims' directory, launchctl's lines)`."""
+    import shutil
+    import sys
+    bin_ = tempfile.mkdtemp(prefix="mac-", dir="/tmp")
+    home = os.path.join(bin_, "home")
+    os.makedirs(home)
+    log = os.path.join(bin_, "calls")
+    open(log, "w").close()
+    shims = {"uname": "echo Darwin", "launchctl": f'echo "launchctl $*" >> "{log}"',
+             "ioreg": 'echo \'    "IOPlatformUUID" = "0A1B2C3D-0000-1111-2222-333344445555"\''}
+    for name, body in shims.items():
+        with open(os.path.join(bin_, name), "w") as f:
+            f.write(f"#!/bin/sh\n{body}\n")
+        os.chmod(os.path.join(bin_, name), 0o755)
+    for tool in ("sh", "cp", "mv", "rm", "mkdir", "chmod", "chgrp", "chown", "sed", "install", "id", "hostname",
+                 "dirname", "basename", "cat"):
+        os.symlink(shutil.which(tool), os.path.join(bin_, tool))
+    env = {"PATH": bin_, "HOME": home, "PYTHON": sys.executable}
+    out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "install.sh"), *args], env=env, capture_output=True,
+                         text=True, timeout=120)
+    return out, home, bin_, [l.strip() for l in open(log)]
+
+
+def test_on_a_mac_the_box_is_a_directory_named_to_the_installer_and_everything_goes_under_it():
+    """The thirteenth review, major 15: on macOS `install.sh` failed at `mkdir /data` — the root volume is read-only,
+    there is no /data, and `synthetic.conf` was named nowhere. The decision aligned with the product: macOS REQUIRES
+    `--box <dir>` (no default: refused without it), and everything goes under the box — the code and `bin/w2c-run.sh`,
+    `w2c.env` and `vms.env` written from the examples with the box's places in them, `configstore-rights.json`,
+    `secrets/` and `tls/` (0700, a bundle there handed to the user), `state/` — and the plists, `__BOX__` replaced, go
+    to the user's `~/Library/LaunchAgents` and are bootstrapped into the user's launchd domain, not `system`. Nothing
+    of /data, /etc/w2c or /etc/vms is named in what it wrote: those are Linux's. A box whose sockets' paths would not
+    fit a unix socket is refused before anything is written."""
+    import plistlib
+    import shutil
+    import stat
+    out, home, bin_, calls = _install_on_a_mac()
+    assert out.returncode == 2 and "--box <dir>" in out.stderr and calls == [], out.stderr
+    long_box = os.path.join(bin_, "b" * 80)
+    out, home, bin_, calls = _install_on_a_mac("--box", long_box)
+    assert out.returncode == 2 and "too long" in out.stderr and not os.path.exists(long_box), out.stderr
+    box = os.path.join(tempfile.mkdtemp(prefix="box-", dir="/tmp"), "box")
+    os.makedirs(os.path.join(box, "tls"))
+    for f in ("ca.pem", "server.pem", "server.key", "raft.secret"):
+        shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__import__("vms").__file__)), "..", "tests", "tls",
+                                 "srv-a", f), os.path.join(box, "tls", f))
+        os.chmod(os.path.join(box, "tls", f), 0o644)
+    out, home, bin_, calls = _install_on_a_mac("--box", box, "--spares")
+    assert out.returncode == 0, out.stdout + out.stderr
+    for p in ("bin/w2c-run.sh", "bin/w2c-spares.sh", "vmsserver/vms/config.py", "clustervms/cluster/rights.py",
+              "configstore-rights.json", "state/configstore", "state/run/configstore", "state/logs", "state/events",
+              "state/objects", "state/vms/obsd/volume"):
+        assert os.path.exists(os.path.join(box, p)), p
+    mode = lambda p: stat.S_IMODE(os.stat(os.path.join(box, p)).st_mode)        # noqa: E731
+    assert mode("secrets") == mode("state/configstore") == 0o700 and mode("tls") == 0o750
+    assert mode("tls/raft.secret") == mode("tls/server.key") == 0o600              # the bundle, the user's alone
+    w2c, vms_ = open(os.path.join(box, "w2c.env")).read(), open(os.path.join(box, "vms.env")).read()
+    assert f"PLATFORM_DIR={box}/state\n" in w2c and f"ARCHIVE={box}/state/events\n" in w2c and f"W2C_TLS={box}/tls\n" in w2c
+    assert f"OBJECTS=cluster://{box}/state/objects?" in w2c
+    assert f"ARCHIVE_VOLUME=file://{box}/state/vms/obsd/volume\n" in vms_ and f"SHM_DIR={box}/state/run/vms\n" in vms_
+    agents = os.path.join(home, "Library", "LaunchAgents")
+    labels = sorted(f[:-len(".plist")] for f in os.listdir(agents))
+    assert labels == sorted(f[:-len(".plist")] for f in os.listdir(os.path.join(DEPLOY, "launchd")) if f.endswith(".plist"))
+    uid = os.getuid()
+    for label in labels:
+        raw = open(os.path.join(agents, f"{label}.plist")).read()
+        assert "__BOX__" not in raw and "@HOST@" not in raw and "@BOXID@" not in raw, label
+        p = plistlib.loads(raw.encode())
+        assert p["ProgramArguments"][0] == f"{box}/bin/w2c-run.sh" and p["EnvironmentVariables"]["W2C_BOX"] == box, label
+        assert f"launchctl bootstrap gui/{uid} {agents}/{label}.plist" in calls, (label, calls)
+    for text in [w2c, vms_] + [open(os.path.join(agents, f)).read().split("-->", 1)[1] for f in os.listdir(agents)]:
+        assert not [w for w in ("/data/", "/etc/w2c", "/etc/vms", "/var/run", "/opt/w2c") if w in text], text
+    assert not [c for c in calls if " system" in c], calls
 
 
 # -- the box's layout (WP-E), the spares' templates, launchd's twins, the watchdog, Nomad's groups ----------------------
@@ -313,9 +448,13 @@ def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
     `SPARE_FOR=` alone: no set, no start) and its fan-out on a port the OS gives; a recorder's door likewise. Nothing
     else may differ, so a line given to the role is given to its spares or this fails. And no `EnvironmentFile=` in a
     spare either (the product's cross-check, 4 Oct): a file read whole is every variable its writer wants."""
+    # …and what a spare depends on (the thirteenth review, major 12): what the role's unit `Wants=` — pulled up with it
+    # at boot — a spare `Requisite=`s, up already or the spare does not start; and a worker spare whose set is refused
+    # (exit 2) is not restarted (the same review, minor).
     allowed = {"vms-vmsworker": {("env", "WORKER_NAME"), ("env", "RTSP_PORT"), ("env", "SPARE_FILE"), ("Description",),
-                                 ("WantedBy",)},
-               "vms-recworker": {("env", "WORKER_NAME"), ("env", "ARCHIVE_PORT"), ("Description",), ("WantedBy",)}}
+                                 ("WantedBy",), ("Wants",), ("Requisite",), ("RestartPreventExitStatus",)},
+               "vms-recworker": {("env", "WORKER_NAME"), ("env", "ARCHIVE_PORT"), ("Description",), ("WantedBy",),
+                                 ("Wants",), ("Requisite",)}}
     for role, ok in allowed.items():
         a, b = unit(os.path.join(SYSTEMD, f"{role}.service")), unit(os.path.join(SYSTEMD, f"{role}-spare@.service"))
         diff = {(k,) for k in set(a) | set(b) if k not in ("env", "Environment") and a.get(k) != b.get(k)}
@@ -329,10 +468,28 @@ def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
     assert unit(os.path.join(SYSTEMD, "vms-recworker-spare@.service"))["env"]["ARCHIVE_PORT"] == "0"
 
 
-# The spellings that differ between the two supervisors and nothing else: macOS has no /run (it is /var/run), no
-# credentials directory (the key is read where it lies), no %l and no %m (`install.sh` puts @HOST@ and @BOXID@).
+def test_a_spare_starts_nothing_it_depends_on_and_a_refused_set_is_not_restarted():
+    """The thirteenth review, major 12: the spare templates said `Wants=configstore.service vms-obsd.service`, so the
+    spares' timer starting a spare made PID 1 start a stopped engine — the administrator stops it to hand the volumes
+    over (`install-obsd.sh`, its `chown -R`) — past polkit, which lets the spares' user start the template and nothing
+    else. A spare `Requisite=`s what its role's unit `Wants=` (and is ordered `After=` it): up already, or the spare does
+    not start; nothing else is wanted but the network target. The role's unit keeps `Wants=` — at boot it pulls its
+    store and its engine up, and the recorder outlives the engine's stop (`away`, then `remounted`), so no restart of it
+    asks for one. And the minor: a worker spare whose set its runner refuses ends 2 at every start — no restart."""
+    for role in ("vms-vmsworker", "vms-recworker"):
+        regular, spare = unit(os.path.join(SYSTEMD, f"{role}.service")), unit(os.path.join(SYSTEMD, f"{role}-spare@.service"))
+        wanted = regular["Wants"][0].split()
+        assert spare["Wants"] == ["network-online.target"], role
+        assert spare["Requisite"][0].split() == [u for u in wanted if u != "network-online.target"], role
+        assert set(spare["Requisite"][0].split()) <= set(spare["After"][0].split()), role
+    assert unit(os.path.join(SYSTEMD, "vms-vmsworker-spare@.service"))["RestartPreventExitStatus"] == ["2"]
+
+
+# The spellings that differ between the two supervisors and nothing else: on macOS everything is under the box
+# (`__BOX__`, the thirteenth review, major 15) — its sockets under `state/run/`, the key read where it lies in
+# `secrets/` (no credentials directory) — and there is no %l and no %m (`install.sh` puts @HOST@ and @BOXID@).
 def _as_launchd(value: str) -> str:
-    return (value.replace("/run/", "/var/run/").replace("%d/platform.key", "/etc/w2c/secrets/platform.key")
+    return (value.replace("/run/", "__BOX__/state/run/").replace("%d/platform.key", "__BOX__/secrets/platform.key")
             .replace("%l", "@HOST@").replace("%m", "@BOXID@"))
 
 
@@ -344,7 +501,7 @@ def test_every_plist_says_what_its_unit_says_name_for_name():
         with open(os.path.join(DEPLOY, "launchd", f"{label}.plist"), "rb") as f:
             p = plistlib.load(f)
         u = unit(os.path.join(SYSTEMD, f"{name}.service"))
-        assert p["EnvironmentVariables"] == {k: _as_launchd(v) for k, v in u["env"].items()}, label
+        assert p["EnvironmentVariables"] == {"W2C_BOX": "__BOX__", **{k: _as_launchd(v) for k, v in u["env"].items()}}, label
 
 
 def test_the_worker_and_the_recorder_tell_systemds_watchdog_that_their_loop_turns():

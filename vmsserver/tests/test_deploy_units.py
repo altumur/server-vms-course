@@ -609,7 +609,7 @@ def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_
                          f'echo "systemctl start $2" >> "{log}"; : > "{bin_}/active-$2" ;; '
                          f'*) echo "systemctl $*" >> "{log}" ;; esac',
             "uname": "echo Darwin",
-            "launchctl": f'case "$1" in print) [ -f "{bin_}/active-${{2#system/}}" ] ;; bootout) ;; '
+            "launchctl": f'case "$1" in print) [ -f "{bin_}/active-${{2##*/}}" ] ;; bootout) ;; '
                          f'bootstrap) echo "launchctl bootstrap $2 $3" >> "{log}"; : > "{bin_}/active-$(basename "$3" .plist)" ;; '
                          f'*) echo "launchctl $*" >> "{log}" ;; esac'}
     names = ("curl", "systemctl") if linux else ("curl", "uname", "launchctl")
@@ -619,7 +619,7 @@ def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_
         os.chmod(os.path.join(bin_, name), 0o755)
     path = bin_ + os.pathsep + os.environ.get("PATH", "")
     if not linux:                                    # only the shims and the plain tools: no systemctl to be found
-        for tool in ("sed", "grep", "tr", "cat", "mkdir", "cp", "chmod", "basename", "hostname", "plutil"):
+        for tool in ("sed", "grep", "tr", "cat", "mkdir", "cp", "chmod", "basename", "hostname", "plutil", "id"):
             found = shutil.which(tool)
             if found:
                 os.symlink(found, os.path.join(bin_, tool))
@@ -719,7 +719,9 @@ def test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_
     launchd runs the role from) copied as `com.w2c.vms.<role>.spare-<n>` — the same program and environment, its key
     included, but no `WORKER_NAME`, `SPARE_FOR=<set>`, its fan-out on a port the OS gives and its own log — and
     `launchctl bootstrap`ped; a loaded label is what the next run counts against the ceiling. Every call is made before
-    the script ends (the coordinator's flaky test: the `nohup` child wrote its line after the script had)."""
+    the script ends (the coordinator's flaky test: the `nohup` child wrote its line after the script had). Into the
+    box's user's launchd domain (`gui/<uid>`), not `system` (the thirteenth review, major 15: a box on macOS is a
+    directory, its plists the user's `~/Library/LaunchAgents`, every process that user's), its log beside its role's."""
     import plistlib
     import shutil
     if not shutil.which("plutil"):
@@ -728,7 +730,7 @@ def test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_
     out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, linux=False)
     assert out.returncode == 0, out.stderr
     plist = os.path.join(out.dir, "spares", "com.w2c.vms.vmsworker.spare-1.plist")
-    assert calls == [f"launchctl bootstrap system {plist}"], calls + [out.stdout, out.stderr]
+    assert calls == [f"launchctl bootstrap gui/{os.getuid()} {plist}"], calls + [out.stdout, out.stderr]
     assert "started vms-vmsworker-spare@1" in out.stdout
     with open(plist, "rb") as f:
         p = plistlib.load(f)
@@ -758,3 +760,40 @@ def test_every_spares_unit_runs_the_script_for_its_role():
         assert svc["RuntimeDirectoryMode"] == "0755", svc
         assert unit(name + ".timer")["Timer"]["OnUnitActiveSec"] == "1min"
     assert os.access(os.path.join(DEPLOY, "w2c-spares.sh"), os.X_OK)
+
+
+def test_a_bundle_copied_to_a_server_is_given_to_the_daemons_user_who_can_then_read_it():
+    """The thirteenth review, major 14: the store's member runs as `configstore` (`User=configstore`), its TLS directory
+    is 0750 root:configstore — and `w2c-ca.sh` said to copy the bundle in as root with keys 0600, so the daemon could
+    not read its own key or the raft secret: `PermissionError`, and the store came up on no server. Group read would not
+    do for the secret (`tls.raft_secret` refuses one anybody but its owner may read). `w2c-ca.sh own <dir> <user>`
+    hands the bundle to the daemon's user — the files its, the keys and the secret 0600, the certificates 0644, the
+    directory 0750 to its group — and М11's `install.sh` runs it on /etc/w2c/tls for `configstore`, after the user is
+    made. Here as the test's own user: a bundle as a checkout leaves it (the secret readable by others) is refused by
+    `tls`, and after `own` the secret, the server's and the client's contexts all load."""
+    import pwd
+    import shutil
+    import stat
+    import subprocess
+    import tempfile
+    import pytest
+    from w2cplatform import tls
+    d = os.path.join(tempfile.mkdtemp(prefix="tls-"), "tls")
+    shutil.copytree(os.path.join(HERE, "tests", "tls", "srv-a"), d)
+    os.chmod(os.path.join(d, "raft.secret"), 0o644)
+    with pytest.raises(ValueError):
+        tls.raft_secret(d)                                              # readable by others: refused
+    me = pwd.getpwuid(os.getuid()).pw_name
+    out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-ca.sh"), "own", d, me], capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    mode = lambda p: stat.S_IMODE(os.stat(os.path.join(d, p)).st_mode)          # noqa: E731
+    assert mode("") == 0o750 and os.stat(d).st_gid == pwd.getpwnam(me).pw_gid
+    for f in os.listdir(d):
+        assert os.stat(os.path.join(d, f)).st_uid == os.getuid(), f
+        assert mode(f) == (0o600 if f.endswith(".key") or f == "raft.secret" else 0o644), (f, oct(mode(f)))
+    assert tls.raft_secret(d) and tls.server_context(d) and tls.client_context(d)
+    assert subprocess.run(["sh", os.path.join(DEPLOY, "w2c-ca.sh"), "own", d, "no-such-user-here"],
+                          capture_output=True, text=True).returncode != 0
+    m11 = open(os.path.join(HERE, "..", "М11_ClusterVMS", "clustervms", "deploy", "install.sh"), encoding="utf-8").read()
+    linux = m11.split("systemd-sysusers /etc/sysusers.d/w2c-cluster.conf", 1)[1]           # after the user is made
+    assert 'w2c-ca.sh" own /etc/w2c/tls configstore' in linux

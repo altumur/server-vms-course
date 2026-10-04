@@ -5,6 +5,8 @@
 #   w2c-run.sh configstore                  this server's member of the store's raft group, a socket per role
 #   w2c-run.sh worker|recorder|controller|reccontroller|console|resource      python3 -m cluster <verb>
 #   w2c-run.sh rights                       print the rights file generated from the spec
+#   w2c-run.sh spares <role>...             a box on macOS: `w2c-spares.sh` with the box's two files read (a Linux
+#                                           server's timers give it them by `EnvironmentFile=`)
 #
 # The environment comes from two files, the platform's and the subsystem's (the product's split):
 #
@@ -19,15 +21,29 @@
 # A SPARE'S SET is the one thing its own file says, and the only thing read from it (the product's cross-check, 4 Oct).
 # A spare's template names that file (`Environment=SPARE_FILE=/run/w2c-spares/%n.env`, written by `w2c-spares.sh`
 # under its own user); it was `EnvironmentFile=` before, and whoever could write the file could set ANY variable —
-# `LD_PRELOAD`, `PYTHONPATH` — in a process that holds the role's key and groups. Here only the line `SPARE_FOR=` is
-# taken from it, checked against the labels' alphabet (`spec.LABEL_WORD`, comma-joined; empty is the empty set);
-# no such line, or a set outside the alphabet: the spare does not start. Neither name is taken from the two shared
-# files: a regular unit never becomes a spare by a line there.
+# `LD_PRELOAD`, `PYTHONPATH` — in a process that holds the role's key and groups. Here only its FIRST line is read,
+# and it must be `SPARE_FOR=<set>` — what `w2c-spares.sh` writes, and nothing after it is looked at (the thirteenth
+# review, minor: the first such line anywhere in the file was taken) — checked against the labels' alphabet
+# (`spec.LABEL_WORD`, comma-joined; empty is the empty set); another first line, or a set outside the alphabet: the
+# spare does not start (exit 2, which its template does not restart). Neither name is taken from the two shared files:
+# a regular unit never becomes a spare by a line there.
+#
+# WHAT IT WRITES IS ITS GROUP'S (the thirteenth review, major 13): `umask 0007` before anything runs. A unit says
+# `UMask=0007`, but Nomad's `raw_exec` (the appendix, `deploy/nomad/`) hands on the agent's 0022 — the events
+# archive's buckets came out 2755 `vms:w2c-events`, the resource (`w2c`) could not delete them, and its retention
+# stopped. The archive and the objects are setgid directories shared by a group; this makes it so however it was run.
+#
+# A BOX ON macOS (`install.sh --box <dir>`, the thirteenth review, major 15): there is no /data and no /etc/w2c there,
+# and everything is under the box. A plist says `W2C_BOX=<dir>`, and the defaults below are the box's: the code and
+# this runner, `w2c.env`, `vms.env` and `configstore-rights.json` in it, `tls/` beside them, the store's journal and its
+# sockets under `state/`.
 set -eu
+umask 0007
 
-W2C_ENV="${W2C_ENV:-/etc/w2c/w2c.env}"
-VMS_ENV="${VMS_ENV:-/etc/vms/vms.env}"
-W2C_HOME="${W2C_HOME:-/opt/w2c}"            # vmsserver/ and clustervms/, as `install.sh` copied them
+BOX="${W2C_BOX:-}"
+W2C_ENV="${W2C_ENV:-${BOX:+$BOX/w2c.env}}"; W2C_ENV="${W2C_ENV:-/etc/w2c/w2c.env}"
+VMS_ENV="${VMS_ENV:-${BOX:+$BOX/vms.env}}"; VMS_ENV="${VMS_ENV:-/etc/vms/vms.env}"
+W2C_HOME="${W2C_HOME:-${BOX:-/opt/w2c}}"    # vmsserver/ and clustervms/, as `install.sh` copied them
 
 load() {
     [ -r "$1" ] || return 0
@@ -59,13 +75,13 @@ label_set() {
 }
 if [ -n "${SPARE_FILE:-}" ]; then
     said=no
+    line=
     if [ -r "$SPARE_FILE" ]; then
-        while IFS= read -r line || [ -n "$line" ]; do
-            case "$line" in SPARE_FOR=*) spare=${line#SPARE_FOR=}; said=yes; break ;; esac
-        done <"$SPARE_FILE"
+        IFS= read -r line <"$SPARE_FILE" || true          # the first line, and only it
+        case "$line" in SPARE_FOR=*) spare=${line#SPARE_FOR=}; said=yes ;; esac
     fi
     if [ "$said" != yes ]; then
-        echo "w2c-run.sh: no SPARE_FOR= line in $SPARE_FILE — a spare whose set is not said does not start" >&2
+        echo "w2c-run.sh: the first line of $SPARE_FILE is not SPARE_FOR=<set> — a spare whose set is not said does not start" >&2
         exit 2
     fi
     if ! label_set "$spare"; then
@@ -79,7 +95,7 @@ export PYTHONPATH="$W2C_HOME/clustervms:$W2C_HOME/vmsserver${PYTHONPATH:+:$PYTHO
 export VMSSERVER_PATH="$W2C_HOME/vmsserver"
 PYTHON="${PYTHON:-python3}"
 
-program="${1:?w2c-run.sh configstore | worker | recorder | controller | reccontroller | console | resource | rights}"
+program="${1:?w2c-run.sh configstore | worker | recorder | controller | reccontroller | console | resource | rights | spares}"
 shift
 case "$program" in
     configstore)
@@ -88,6 +104,10 @@ case "$program" in
         # from its journal, so systemd restarting it with the same flags just brings it back.
         start="-bootstrap"
         [ -n "${CONFIGSTORE_JOIN:-}" ] && start="-join $CONFIGSTORE_JOIN"
+        if [ -n "$BOX" ]; then                          # a box on macOS: its own places (`install.sh --box`)
+            : "${CONFIGSTORE_DIR:=$BOX/state/configstore}" "${CONFIGSTORE_SOCKETS:=$BOX/state/run/configstore}"
+            : "${CONFIGSTORE_RIGHTS:=$BOX/configstore-rights.json}" "${W2C_TLS:=$BOX/tls}"
+        fi
         # shellcheck disable=SC2086
         exec "$PYTHON" -m w2cplatform.configstore -id "${SERVER_NAME:?SERVER_NAME in $W2C_ENV}" \
             -dir "${CONFIGSTORE_DIR:-/data/platform/configstore}" -raft "${CONFIGSTORE_RAFT:?CONFIGSTORE_RAFT in $W2C_ENV}" \
@@ -96,6 +116,8 @@ case "$program" in
             -tuning "${CONFIGSTORE_TUNING:-lan}" $start "$@" ;;
     worker|recorder|controller|reccontroller|console|resource|rights)
         exec "$PYTHON" -m cluster "$program" "$@" ;;
+    spares)
+        exec sh "$W2C_HOME/bin/w2c-spares.sh" "$@" ;;
     *)
         echo "w2c-run.sh: no such program: $program" >&2
         exit 2 ;;
