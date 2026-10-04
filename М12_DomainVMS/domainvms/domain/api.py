@@ -42,14 +42,15 @@ class ApiError(Exception):
 
 # An address that carries a credential, refused in the cluster's words (`secrets.address_refusal`) and named by its
 # field: the domain's `_refuse_secrets`, and a camera's own console (`Device._update`), which a kept edit reaches
-# without the domain's door (Lesson 9).
+# without the domain's door (Lesson 9). Inside a list or an object too (`secrets.refusal_within`; vmsserver's
+# thirteenth review, minor): only a value that was a string was asked, and `{"source": ["rtsp://admin:…@…"]}` was
+# 202, kept, and applied on the camera — the password in the reply, on the camera's flash and in what it published.
 def refuse_addresses(fields: dict) -> None:
-    from w2cplatform.secrets import address_refusal
-    for k in sorted(fields, key=str):
-        why = address_refusal(fields[k]) if isinstance(fields[k], str) else None
-        if why:
-            raise ApiError(400, f"{k}: {why} — a device's login and password are set in the camera's own cluster, in "
-                                f"cred_username / cred_secret; an address is shown, kept, backed up and relayed")
+    from w2cplatform.secrets import refusal_within
+    found = refusal_within(fields)                       # a field's name that is an address is asked too
+    if found:
+        raise ApiError(400, f"{found[0]}: {found[1]} — a device's login and password are set in the camera's own "
+                            f"cluster, in cred_username / cred_secret; an address is shown, kept, backed up and relayed")
 
 
 class ConsoleAPI:

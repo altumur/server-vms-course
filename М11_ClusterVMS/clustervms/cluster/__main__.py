@@ -31,6 +31,8 @@ is not a Python process). `rights` prints the configstore's rights file generate
     CAPACITY                           worker: cameras it can carry on this server
     COMMANDS_BEAT                      worker: how often it looks at its request rows between passes, seconds (0.25);
                                        0 — only on the pass. Each look is one list of `vms/requests/` in the store
+    REACH_BUDGET                       controller: units one pass moves to a server that reaches them (`ensure_reach`,
+                                       10); a group left for the next pass is the alarm `units.over_budget`
 """
 from __future__ import annotations
 

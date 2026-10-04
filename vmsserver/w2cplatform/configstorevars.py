@@ -47,6 +47,15 @@ on its own server (`configstore.py`). Standard library only; a process that open
 # answered once. A definite answer — the index, `Conflict`, `Forbidden`, a bad key — forgets it. A different write
 # to the same key is another operation, with an id of its own.
 #
+# …AND A LATER WRITE TO THE KEY ENDS IT (the review's thirteenth pass, major 4). The id was kept by content until a
+# definite answer to THAT content, so `put on` (ambiguous: it landed), `put off` (OK), `put on` again went with the
+# first `on`'s id and was answered from the machine's memory — «OK», and the row stayed `off`. The same with delete,
+# put, delete and with create-only. A repeat is a repeat only of the LAST write asked of its key: one remembered
+# write per key (`_Unknown`), replaced by any other write to that key and forgotten by any definite answer to one.
+# Asked again after another write, the old content is a new operation, with a new id, and is applied. The machine
+# holds the same line from its side: an id that comes back with another write is refused, not answered
+# (`storemachine._fingerprint`).
+#
 # ## A row has the store's ceiling
 # `storemachine.MAX_VALUE` is declared as this handle's `max_bytes` (a URL may declare less), so an oversized row is
 # `TooLarge` here as on any store that has a ceiling (`limits.py`) — and the daemon's 413 is the same exception.
@@ -124,27 +133,29 @@ def unix_transport(path: str):
     return call
 
 
-# The writes of unknown outcome a handle remembers, the newest `UNKNOWN_KEPT`; shared by a handle's `as_writer` copies,
-# which a process's threads use at once.
+# The writes of unknown outcome a handle remembers: the last write asked of a key, when its outcome is unknown — one
+# per key, the newest `UNKNOWN_KEPT` keys; shared by a handle's `as_writer` copies, which a process's threads use at
+# once. `what` is the write's whole content; its id is handed out again only for the same content.
 class _Unknown:
     def __init__(self):
-        self.ids: collections.OrderedDict[str, str] = collections.OrderedDict()
+        self.ids: collections.OrderedDict[str, tuple[str, str]] = collections.OrderedDict()   # key → (what, id)
         self.lock = threading.Lock()
 
-    def get(self, what: str) -> str | None:
+    def get(self, key: str, what: str) -> str | None:
         with self.lock:
-            return self.ids.get(what)
+            kept = self.ids.get(key)
+            return kept[1] if kept and kept[0] == what else None
 
-    def keep(self, what: str, op_id: str) -> None:
+    def keep(self, key: str, what: str, op_id: str) -> None:
         with self.lock:
-            self.ids[what] = op_id
-            self.ids.move_to_end(what)
+            self.ids[key] = (what, op_id)
+            self.ids.move_to_end(key)
             while len(self.ids) > UNKNOWN_KEPT:
                 self.ids.popitem(last=False)
 
-    def forget(self, what: str) -> None:
+    def forget(self, key: str) -> None:
         with self.lock:
-            self.ids.pop(what, None)
+            self.ids.pop(key, None)
 
 
 class ConfigstoreVariables:
@@ -165,19 +176,19 @@ class ConfigstoreVariables:
         return ConfigstoreVariables(self.path, writer, {**self.acl, writer: allowed}, self.max_bytes, self.timeout,
                                     self.transport, self._unknown)
 
-    # A write, with the id of the same write whose outcome is unknown, or a new one.
+    # A write, with the id of the same write whose outcome is unknown — the last one asked of its key — or a new one.
     def _write(self, body: dict) -> dict:
-        what = json.dumps(body, sort_keys=True)
-        op_id = self._unknown.get(what) or uuid.uuid4().hex
+        key, what = body["key"], json.dumps(body, sort_keys=True)
+        op_id = self._unknown.get(key, what) or uuid.uuid4().hex
         try:
             got = self._call("POST", "/v1/write", {**body, "id": op_id})
         except StoreUnavailable:
-            self._unknown.keep(what, op_id)        # "not done" this time; an earlier copy may still land
+            self._unknown.keep(key, what, op_id)   # "not done" this time; an earlier copy may still land
             raise
         except BaseException:
-            self._unknown.forget(what)
+            self._unknown.forget(key)
             raise
-        self._unknown.forget(what)
+        self._unknown.forget(key)
         return got
 
     def _refuse(self, path: str) -> None:

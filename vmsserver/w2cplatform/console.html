@@ -162,7 +162,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
   .legend span { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:middle; }
   form { display:grid; gap:6px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
   form label { display:grid; gap:2px; font-size:12px; color:var(--muted); }
-  input[type=text], input[type=number] { font:inherit; padding:4px 6px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--fg); }
+  input[type=text], input[type=number], input[type=password] { font:inherit; padding:4px 6px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--fg); }
   .row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   .err { color:var(--stale); font-size:12px; white-space:pre-wrap; }
   details summary { cursor:pointer; color:var(--muted); font-size:13px; }
@@ -342,10 +342,12 @@ async function loadSpec() {
   $('#toggle').style.display = hasEnabled() ? '' : 'none';
 }
 // One labelled input per spec field by type: checkbox for bool (checked by default value), number for
-// int/float (`step="any"` for float; default as value when adding), text otherwise (placeholder `a, b` for
-// lists, or the default when adding); `required` only on the add form.
+// int/float (`step="any"` for float; default as value when adding), password for a `*_secret` (the thirteenth
+// review, minor: `cred_secret` was typed in the clear, on the screen, as `access_secret` beside it never was),
+// text otherwise (placeholder `a, b` for lists, or the default when adding); `required` only on the add form.
 function input(f, adding) {
   const attrs = `name="${f.name}"${f.required && adding ? ' required' : ''}`;
+  if (f.name.endsWith('_secret')) return `<label>${f.name} <input type="password" ${attrs} autocomplete="new-password"></label>`;
   if (f.type === 'bool') return `<label>${f.name} <input type="checkbox" ${attrs} ${f.default ? 'checked' : ''}></label>`;
   if (f.type === 'int' || f.type === 'float') return `<label>${f.name} <input type="number" ${attrs} ${f.type === 'float' ? 'step="any"' : ''} ${adding && f.default != null ? `value="${f.default}"` : ''} style="width:6em"></label>`;
   const ph = f.type === 'list' ? 'a, b' : (adding && f.default ? String(f.default) : '');
@@ -580,12 +582,15 @@ $('#del').onclick = async () => {
   catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
 };
 // Shows `#edit` and fills each spec field from the unit: checkbox for bool, comma-joined for list, value
-// otherwise. Sets the toggle text to Enable/Disable from `c.enabled`.
+// otherwise — but a `*_secret` stays EMPTY, saying in its placeholder whether one is set: the row reads `***`, and a
+// form filled with it saved `***` as the password on the next Save (empty is "unchanged", `fields`).
+// Sets the toggle text to Enable/Disable from `c.enabled`.
 function fillEdit(c) {
   const f = $('#edit'); f.style.display = 'grid';
   for (const fd of spec.fields) {
     const el = f.elements[fd.name]; if (!el) continue;
-    if (fd.type === 'bool') el.checked = !!c[fd.name];
+    if (fd.name.endsWith('_secret')) { el.value = ''; el.placeholder = c[fd.name] ? 'set: type to replace' : 'not set'; }
+    else if (fd.type === 'bool') el.checked = !!c[fd.name];
     else if (fd.type === 'list') el.value = (c[fd.name] || []).join(', ');
     else el.value = c[fd.name] ?? '';
   }

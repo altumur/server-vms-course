@@ -14,7 +14,8 @@
     "domain/grants",
     "domain/revoked",
     "domain/break_glass",
-    "domain/grants/*"
+    "domain/grants/*",
+    "objects/vms/commands/*"
    ],
    "write": [
     "vms/cameras/*",
@@ -206,15 +207,18 @@
    "read": [
     "platform/schema",
     "domain/*",
-    "relay/*"
+    "relay/*",
+    "!domain/signer*"
    ],
    "write": [
     "domain/*",
-    "relay/*"
+    "relay/*",
+    "!domain/signer*"
    ],
    "delete": [
     "domain/*",
-    "relay/*"
+    "relay/*",
+    "!domain/signer*"
    ]
   },
   "member": {
@@ -222,10 +226,31 @@
    "read": [
     "platform/schema",
     "domain/*",
-    "relay/*"
+    "relay/*",
+    "!domain/signer*"
    ],
    "write": [],
    "delete": []
+  },
+  "domain": {
+   "group": "w2c-domain",
+   "read": [
+    "platform/schema",
+    "domain/*",
+    "identity/*",
+    "relay/*",
+    "vms/*",
+    "rec/*",
+    "platform/*"
+   ],
+   "write": [
+    "domain/*",
+    "identity/*"
+   ],
+   "delete": [
+    "domain/*",
+    "identity/*"
+   ]
   }
  }
 }

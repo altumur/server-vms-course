@@ -25,6 +25,8 @@ job "recworker" {
 
     task "recworker" {
       driver       = "raw_exec"
+      # No umask of its own (the agent's 0022 is handed on): the runner sets 0007, as a unit's UMask= — what it
+      # writes in the setgid events archive and objects is the group's (the thirteenth review, major 13).
       user         = "vms"                           # its groups are the task's: `vms-nomad.sysusers` (the socket, vms-obsd, the key ring)
       kill_timeout = "40s"                           # the pipelines stop, the writer closes after its flush, then the hold goes
       config {

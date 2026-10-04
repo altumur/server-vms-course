@@ -1674,3 +1674,157 @@ def test_the_line_on_the_card_names_its_camera_and_another_cameras_line_is_not_g
         finally:
             shutil.rmtree(path, ignore_errors=True)
         assert abs(skew2 - (-30.0 if second == "SN-A" else 0.0)) < 0.01, (second, skew2)
+
+
+# -- the thirteenth review -------------------------------------------------------------------------------------------
+def test_two_boots_with_the_clock_unset_stay_apart_and_the_set_clock_places_the_boot_it_was_set_in_and_no_other():
+    """The thirteenth review, blocker 7, its probe `pq1_two_reboots`, on the card: boot 1 (NTP at 10 s) films 300 s; the
+    camera is off 30 s, boot 2 films 60 s with its clock never set; off 30 s again, boot 3 boots unset and is set 40 s
+    later — or comes up with its clock set before the card opens. "Unset again" was told through the note's conversion,
+    which for an unset boot is a guess: boot 3 looked a step back of boot 2's length, lost `adrift`, and boot 2 was never
+    told apart — its frames 30 s early for good. Every unset boot goes on right after the card's newest now (`adrift`),
+    the first of the run is kept (`drift`), and when the clock is set the boot it is set in lands where it was captured,
+    while boot 2 — whose clock nobody set — is UNPLACED (`CamLine.unplaced`, kept in the card's note): its span on the
+    card, apart from both, and no frame of boot 3 in it. A boot set before the card opens goes on by the anchor, not by
+    boot 2's guess (fifty-six years ahead); a process of boot 3 started again before NTP goes on adrift, the run kept."""
+    import json
+    import shutil
+    for case in ("ntp", "set", "restart"):
+        set_at_boot = case == "set"
+        path = tempfile.mkdtemp(prefix="card-")
+        true, boot_at, rtc = [1_780_000_000.0], [1_780_000_000.0], [False]
+        start = true[0]
+        camclock = lambda: true[0] if rtc[0] else true[0] - boot_at[0]     # 1970 and its uptime until NTP
+        steady = lambda: true[0] - boot_at[0]
+
+        def ntp_at(after):
+            def at(el):
+                if abs(el - (boot_at[0] - start) - after) < 0.05:
+                    rtc[0] = True
+            return at
+        try:
+            p = _Process(path, camclock, steady, boot="b1")
+            p.film(0, start, start + 300, true, camclock, ntp_at(10.0))
+            p.close()
+            true[0] = boot_at[0] = start + 330                          # boot 2: unset, and never set
+            rtc[0] = False
+            q = _Process(path, camclock, steady, boot="b2", epoch=2)
+            q.film(3300, start, start + 390, true, camclock)
+            q.close()
+            assert q.ring.line.adrift is not None and q.ring.line.drift == q.ring.line.adrift
+            true[0] = boot_at[0] = start + 420                          # boot 3: unset again — or set before the card
+            rtc[0] = set_at_boot
+            r = _Process(path, camclock, steady, boot="b3", epoch=3)
+            assert (r.ring.line.adrift is None) == set_at_boot, case
+            n = 4200
+            if case == "restart":                                       # boot 3's process starts again before NTP
+                n = r.film(n, start, start + 440, true, camclock)
+                r.close()
+                r = _Process(path, camclock, steady, boot="b3", epoch=4)
+                assert r.ring.line.adrift is not None and r.ring.line.drift is not None, case
+            r.film(n, start, start + 500, true, camclock, ntp_at(40.0))
+            line = r.ring.line
+            r.close()
+            note = json.loads(CardBuffer(path).read_note("line.json"))
+            got, _ = _on_card(path)
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+        assert sorted(got) == list(range(3000)) + list(range(3300, 3900)) + list(range(4200, 5000)), case
+        assert all(abs(got[i] - (start + i / 10)) < 0.002 for i in list(range(3000)) + list(range(4200, 5000))), case
+        assert len(line.unplaced) == 1 and note["unplaced"] == [list(u) for u in line.unplaced], (case, note)
+        lo, hi = (unix_s(int(v)) for v in line.unplaced[-1])
+        two = [got[i] for i in range(3300, 3900)]
+        assert got[2999] < lo <= min(two) and max(two) < hi <= got[4200], (case, lo, hi, min(two), max(two))
+        assert line.adrift is None and line.drift is None and note["adrift"] is None, case
+
+
+def test_a_boot_that_films_before_its_card_opens_with_the_clock_unset_goes_on_after_the_cards_newest():
+    """The sibling of blocker 7 the review did not name: a card is often mounted after the camera's process starts
+    (`CardRecorder.CARD_RETRY`), so the ring has placed frames on the line before the line is restored. A reboot with
+    the clock unset put the line's NOW right after the card's newest, and the frames placed before it went before it —
+    over the last seconds of the boot before. The line moves what it placed with it (`CamLine.restore`): the boot's
+    first frame is right after the card's newest, `adrift` there."""
+    import shutil
+    path = tempfile.mkdtemp(prefix="card-")
+    true, boot_at, rtc = [1_780_000_000.0], [1_780_000_000.0], [True]
+    start = true[0]
+    camclock = lambda: true[0] if rtc[0] else true[0] - boot_at[0]
+    steady = lambda: true[0] - boot_at[0]
+    try:
+        p = _Process(path, camclock, steady, boot="b1")
+        p.film(0, start, start + 60, true, camclock)
+        p.close()
+        true[0] = boot_at[0] = start + 90                               # reboot, unset; 20 s filmed with no card
+        rtc[0] = False
+        ring = CamRing(window=600.0, clock=camclock, steady=steady)
+        ring.line.boot = lambda: "b2"
+        n = 900
+        while start + n / 10 < start + 110:
+            true[0] = start + n / 10
+            ring.add(_shot(n, camclock()))
+            n += 1
+        act = CardActuator(ring, threaded=False)
+        act.card = CardBuffer(path, segment_span=10.0)                  # …and only now the card
+        first = ring.after(0)[0]
+        act.card.close()
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
+    assert first.begin > archive_ms(start + 59.9) and ring.adrift() is not None, (first.begin, ring.adrift())
+    assert abs(first.begin - ring.adrift()) <= 1, (first.begin, ring.adrift())
+
+
+def test_a_cameras_serial_said_after_its_card_was_attached_takes_back_a_line_another_cameras_note_gave():
+    """The thirteenth review, a minor, its probe `pq3_serial_order`: the check of the serial in `line.json` ran when the
+    card was attached (`CardActuator._restore_line`) — and the course's camera process attaches it in its recorder
+    (`CardRecorder.reconcile_once`) before М12's `tie` says the serial: SN-A's line, its clock's step of +30 taken up
+    (skew −30), went on for SN-B. The serial is said when the actuator is built now (`serial=`), and one said later
+    takes the line back (`CardActuator.serial`, `CamLine.retake`): SN-B's line on its own clock, in either order, after
+    what the card holds — and SN-A's own process still goes on from its line."""
+    import json
+    import shutil
+    for order, second in (("built", "SN-B"), ("late", "SN-B"), ("late", "SN-A")):
+        path = tempfile.mkdtemp(prefix="card-")
+        true, skew = [100_000.0], [0.0]
+        start = true[0]
+        camclock, steady = (lambda: true[0] + skew[0]), (lambda: true[0] - start)
+
+        def process(serial, epoch, how):
+            ring = CamRing(window=600.0, clock=camclock, steady=steady)
+            ring.line.boot = lambda: "b1"
+            if how == "built":
+                act = CardActuator(ring, CardBuffer(path, segment_span=10.0), threaded=False, serial=serial)
+            else:                                                       # the card first (the recorder), the serial after
+                act = CardActuator(ring, None, threaded=False)
+                act.card = CardBuffer(path, segment_span=10.0)
+                act.serial = serial
+            act("start", {"id": "1-card", "epoch": epoch})
+            return ring, act
+        try:
+            ring, act = process("SN-A", 1, "built")
+            for n in range(300):
+                true[0] = start + n / 10
+                if n == 100:
+                    skew[0] += 30.0
+                ring.add(_shot(n, camclock()))
+                if n % 5 == 4:
+                    act.drain()
+            act.note_line(force=True)
+            act.stop_all()
+            act.card.close()
+            true[0] = start + 40
+            ring2, act2 = process(second, 2, order)
+            for n in range(400, 450):
+                true[0] = start + n / 10
+                ring2.add(_shot(n, camclock()))
+            act2.drain()
+            act2.note_line(force=True)
+            skew2, said = ring2.skew(), json.loads(act2.card.read_note("line.json"))["serial"]
+            act2.stop_all()
+            act2.card.close()
+            got, _ = _on_card(path)
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+        case = (order, second)
+        assert said == second and abs(skew2 - (-30.0 if second == "SN-A" else 0.0)) < 0.01, (case, skew2)
+        assert sorted(got) == list(range(300)) + list(range(400, 450)), case
+        assert min(got[i] for i in range(400, 450)) > max(got[i] for i in range(300)), case   # after what the card holds

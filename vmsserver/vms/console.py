@@ -1146,11 +1146,13 @@ def scale_hint(rec_ctl: SpecController, unserved: int, spare: int) -> dict:
     needed = max(0, unserved - spare)                   # a spare takes an archive on its next pass
     if not needed:
         return {"needed": 0, "how": None}
-    if str(os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL") or "").startswith("configstore://"):
-        return {"needed": needed, "how": "w2c-spares.sh recworker"}
+    # Nomad first (the thirteenth review, minor): М11's appendix runs its jobs on the same configstore sockets, and a
+    # console that is a Nomad allocation advised the spares script, which a site run by Nomad does not have.
     if os.environ.get("NOMAD_ALLOC_ID"):
         live = len(rec_ctl.workers_seen())
         return {"needed": needed, "how": f"nomad job scale recworker {live + needed}"}
+    if str(os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL") or "").startswith("configstore://"):
+        return {"needed": needed, "how": "w2c-spares.sh recworker"}
     taken = list(rec_ctl.slots())
     nxt = max([slot_number(n) for n in taken] + [0]) + 1
     prefix = (taken[0].rsplit("-", 1)[0] if taken and "-" in taken[0] else "r")

@@ -6,14 +6,16 @@
 // rule is all that user is let do through systemd: the verb `start` — no stop, no restart, no `reset-failed`, no unit
 // file written — of `vms-vmsworker-spare@<n>.service` and `vms-recworker-spare@<n>.service`, the role's units but the
 // name (`install.sh`'s SPARE_UNITS; `tests/test_units.py` holds the two lists together). Anything else it asks is
-// refused outright, not passed on to an administrator's password prompt nobody is at.
+// refused outright, not passed on to an administrator's password prompt nobody is at. The instance's number is 1 to 99
+// (the thirteenth review, minor: `@99999999999999999999` was let through): the script's ceilings per role (`MAX_WORKERS`,
+// `MAX_RECORDERS`, …) are single digits by default, and a number past the rule is a start refused, which the script says.
 polkit.addRule(function (action, subject) {
     if (subject.user !== "w2c-spares") {
         return polkit.Result.NOT_HANDLED;
     }
     if (action.id === "org.freedesktop.systemd1.manage-units" &&
         action.lookup("verb") === "start" &&
-        /^vms-(vmsworker|recworker)-spare@[1-9][0-9]*\.service$/.test(action.lookup("unit") || "")) {
+        /^vms-(vmsworker|recworker)-spare@[1-9][0-9]?\.service$/.test(action.lookup("unit") || "")) {
         return polkit.Result.YES;
     }
     return polkit.Result.NO;

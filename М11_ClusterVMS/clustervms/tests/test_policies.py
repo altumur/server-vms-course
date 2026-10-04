@@ -51,7 +51,7 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
     `vms-<role>`, the platform's `w2c-<role>` — which is what a unit joins (`SupplementaryGroups=`)."""
     r = rights()
     for role in doc()["roles"]:
-        platform = role in ("resource", "domainagent", "member")
+        platform = role in ("resource", "domain", "domainagent", "member")
         assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
     assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
 
@@ -65,8 +65,9 @@ def _expected_writes() -> dict[str, set[str]]:
         "vmsworker": set(WORKER_ACL) | rows(WORKER_OBJECTS),
         "recworker": set(REC_SPEC.sub.acl_worker()) | rows(REC_SPEC.sub.acl_objects_worker()),
         "resource": {DOORS + "/*"},
-        "domainagent": {"domain/*", "relay/*"},
+        "domainagent": {"domain/*", "relay/*", "!domain/signer*"},
         "member": set(),
+        "domain": {"domain/*", "identity/*"},
     }
 
 
@@ -98,7 +99,28 @@ def test_nothing_writes_what_it_has_no_business_writing():
     for role, key in denied:
         assert not r.allows(role, "write", key), f"{role} may write {key}"
     for role in r.roles:
-        assert not r.allows(role, "delete", "vms/epoch/7") and (role == "domainagent") == r.allows(role, "delete", "domain/keys")
+        assert not r.allows(role, "delete", "vms/epoch/7")
+        assert (role in ("domain", "domainagent")) == r.allows(role, "delete", "domain/keys"), role
+
+
+def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
+    """The thirteenth review, major 11: the М12 signer opened `domain.sock`, and no rights file named a role `domain` —
+    no daemon opened that socket, the first read was `StoreUnavailable`, the signer went round its restarts. The role
+    is the platform's (`w2c-domain`, a group configstore is a member of): the domain's rows and the people's
+    (`identity/*`) written, the holder's own cluster read. And the least of DOMAIN-PLATFORM.md's narrowing: the domain's
+    keys (`domain/signer`) are read and written by `domain` alone — the agent and a member's report read `domain/*`
+    but not them."""
+    r = rights()
+    assert r.groups["domain"] == "w2c-domain"
+    for action, key in (("read", "domain/signer"), ("write", "domain/signer"), ("write", "identity/users/u1"),
+                        ("read", "identity/pointer"), ("write", "domain/sources/north"), ("read", "vms/cameras/7"),
+                        ("delete", "domain/pending/north")):
+        assert r.allows("domain", action, key), (action, key)
+    for role in ("domainagent", "member", "console", "vmsworker"):
+        for action in ("read", "write", "delete"):
+            assert not r.allows(role, action, "domain/signer"), (role, action)
+    assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants/north")
+    assert r.allows("member", "read", "domain/keys") and not r.allows("domain", "write", "vms/cameras/7")
 
 
 # -- what the processes DO: every scene of the stand, and the doors the scenes do not knock on ------------------------

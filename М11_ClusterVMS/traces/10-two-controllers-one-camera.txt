@@ -18,7 +18,11 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 409 {"kind": "conflict", "error": "vms/placement/1: cas='' but the version is 1009", "index": 1009}
+→ 409 {
+  "kind": "conflict",
+  "error": "vms/placement/1: the version is 1009, not the one the write named",
+  "index": 1009
+}
 
 # … and 59 GET requests, omitted
 # where(1) = w-srv-a-1; placement reason: 'most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live'

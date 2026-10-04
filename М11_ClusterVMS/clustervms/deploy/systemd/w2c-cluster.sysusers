@@ -21,6 +21,7 @@ g vms               -
 u vms               -     "VMS subsystem processes"                            /data/vms -
 u w2c-spares        -     "w2c spares (starts spare units, by polkit)"         -  -
 g w2c-resource      -
+g w2c-domain        -
 g w2c-domainagent   -
 g w2c-member        -
 g vms-console       -
@@ -29,6 +30,7 @@ g vms-reccontroller -
 g vms-vmsworker     -
 g vms-recworker     -
 m configstore w2c-resource
+m configstore w2c-domain
 m configstore w2c-domainagent
 m configstore w2c-member
 m configstore vms-console

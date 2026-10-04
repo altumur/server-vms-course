@@ -181,6 +181,26 @@ class ByteBudget:
                     return 0
                 self.cond.wait(left)
 
+    # What `take_share` (a person) or `take` (`who` None) would give now, waited for up to `wait` like them — and NOT
+    # taken: the door sizes a piece by it before the device is asked, and takes the bytes once the device has opened
+    # its footage (the thirteenth review, major 19: a hung open held a piece's bytes for as long as the door waited).
+    def room(self, who: str | None, most: int, least: int, wait: float) -> int:
+        deadline = time.monotonic() + wait
+        with self.cond:
+            while True:
+                if who is None:
+                    if not self.used or self.used + most <= self.limit:
+                        return int(most)
+                else:
+                    mine, share = self.held.get(who, 0), self.share(who)
+                    n = min(int(most), share - mine, self.limit - self.used - (share if mine else 0))
+                    if n >= least:
+                        return n
+                left = deadline - time.monotonic()
+                if left <= 0:
+                    return 0
+                self.cond.wait(left)
+
     def _mine(self, who: str | None, n: int) -> None:
         if who is not None:
             left = self.held.get(who, 0) + n
@@ -2008,6 +2028,9 @@ class VmsWorker(Worker):
                 st["state"] = "slow" if id(dev) in slow else ("failed" if failed else "asking")
                 if st["state"] != "failed" and (since := self._asking_since(dev)) is not None:
                     st["since"] = since                  # since when the device has not answered (the eleventh review)
+            if stuck := self.reads_stuck(dev):           # the playback door's reads it has not come back from: the
+                st["reads_stuck"] = stuck                # cameras, and the device slow (the thirteenth review, major 18)
+                st.setdefault("state", "slow")
             out.append({**st, **({"can": self.described[key]} if key in self.described else {}),
                         **({"same_serial_as": self.coincidences[key][0]} if key in self.coincidences else {})})
         opening = self._opening()
@@ -2226,7 +2249,7 @@ class VmsWorker(Worker):
         if row is None:
             raise KeyError(cam)
         dev = self.device_of_row(row)
-        if dev is not None and (why := self._door_stuck(dev)):
+        if dev is not None and (why := self._door_stuck(dev, cam)):
             raise TimeoutError(why)                      # a device the door already waited for in vain: 503 at once
         cov = self._door_coverage(dev, cam) if dev is not None else None   # by the device's line (the eleventh review)
         if cov is None:
@@ -2243,19 +2266,33 @@ class VmsWorker(Worker):
                     want = self.PLAYBACK_PIECE_BYTES
                     if pace is not None:                 # a slow reader: what he takes in `PLAYBACK_PACE_SECONDS`
                         want = max(self.PLAYBACK_MIN_PIECE, min(want, int(pace * self.PLAYBACK_PACE_SECONDS)))
-                    if who is None:
-                        held = want if budget.take(want, self.PLAYBACK_BUDGET_WAIT) else 0
-                    else:
-                        held = budget.take_share(who, want, min(want, self.PLAYBACK_MIN_PIECE), self.PLAYBACK_BUDGET_WAIT)
-                    if not held:
-                        raise OverflowError(f"this door holds {budget.limit} bytes of footage at once, and they are "
-                                            f"all being sent — retry")
-                    # Seconds: `PLAYBACK_FIRST` for the first piece; then as many as the bytes held come to at the rate
-                    # the last piece came at — never more than `PLAYBACK_PIECE`, never less than one.
+                    least = min(want, self.PLAYBACK_MIN_PIECE)
+                    full = (f"this door holds {budget.limit} bytes of footage at once, and they are all being sent — "
+                            f"retry")
+                    # THE BYTES ARE TAKEN ONCE THE DEVICE HAS OPENED ITS FOOTAGE (the thirteenth review, major 19; a
+                    # run, `h13_door many`: twenty hung NVRs × eight reads held the door's 64 MiB while it waited for
+                    # them to open, and 144 of 160 requests, healthy devices' among them, were "the door is full").
+                    # The piece is sized by what the budget would give now (`room`, waited for as a take is), and the
+                    # bytes are taken when the device says the footage is open (`_door_read`'s `opened`): a device that
+                    # never opens holds none of them.
+                    plan = budget.room(who, want, least, self.PLAYBACK_BUDGET_WAIT)
+                    if not plan:
+                        raise OverflowError(full)
+
+                    def admit():
+                        nonlocal held
+                        if who is None:
+                            held = plan if budget.take(plan, self.PLAYBACK_BUDGET_WAIT) else 0
+                        else:
+                            held = budget.take_share(who, plan, min(plan, least), self.PLAYBACK_BUDGET_WAIT)
+                        if not held:
+                            raise OverflowError(full)
+                    # Seconds: `PLAYBACK_FIRST` for the first piece; then as many as the bytes planned come to at the
+                    # rate the last piece came at — never more than `PLAYBACK_PIECE`, never less than one.
                     span = min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE) if rate is None else \
-                        max(1.0, min(self.PLAYBACK_PIECE, held / max(rate, 1.0)))
+                        max(1.0, min(self.PLAYBACK_PIECE, plan / max(rate, 1.0)))
                     b = min(t1, at + span)
-                    got = self._door_read(dev, cam, at, b)   # opened, read and closed before a byte of it is sent
+                    got = self._door_read(dev, cam, at, b, admit)   # opened, read and closed before a byte is sent
                     size = sum(len(c) for c in got)
                     budget.force(size - held, who)       # what the piece really is, whatever was asked
                     held = size
@@ -2283,40 +2320,81 @@ class VmsWorker(Worker):
     #   the whole piece     `PLAYBACK_STALL` and the piece's seconds over `PLAYBACK_DEVICE_PACE`: a device that trickles
     #                       a byte just inside the stall deadline is cut all the same — a card played back at the speed
     #                       it was recorded is well inside it
-    #   per device          `DOOR_READS_PER_DEVICE` reads not back at once, the next 503; and a device with a read the
-    #                       door gave up on and that has not come back since — or whose line has been in one question
-    #                       longer than `DOOR_ASK_WAIT` — is answered 503 at once (`_door_stuck`): a hung device holds a
-    #                       handful of threads that wait inside it, never the door's connections
+    #   per device          `DOOR_READS_PER_DEVICE` reads not back at once, the next 503
+    #   per door            `DOOR_READS` reads not back at once, every device's together — a read given up on whose
+    #                       thread is still inside the device counted — the next 503 (the thirteenth review, major 19:
+    #                       twenty hung NVRs held the door's threads at eight each, and nothing bounded the sum)
+    #   stuck               a CAMERA with a read the door gave up on and that has not come back since is answered 503 at
+    #                       once (`_door_stuck`); its device's other cameras are read as before — one channel's hung read
+    #                       closed `/playback` to every channel of an NVR (the thirteenth review, major 18). A device
+    #                       with such reads on `DOOR_STUCK_CHANNELS` of its cameras is stuck as a whole, and so is one
+    #                       whose line has been in a question of the whole device (its channels, its sessions in use)
+    #                       longer than `DOOR_ASK_WAIT`; a question of one camera (its coverage, its listing) that hangs
+    #                       stops no read — the door falls back on the coverage said last, and a read has its own
+    #                       deadlines. What is stuck is said: `reads_stuck` on the device in `/devices` and the
+    #                       heartbeat, `door_reads_stuck` beside `devices_slow`.
     #
     # A read given up on is not read further (a streaming driver's chunks are no longer taken), and its session is closed
     # by its own thread whenever the device comes back.
     PLAYBACK_STALL = 10.0                # seconds a device's read may give nothing before the door gives up on it
     PLAYBACK_DEVICE_PACE = 0.5           # seconds of footage a second a device gives at least, over a whole piece
     DOOR_READS_PER_DEVICE = 8            # the door's reads of one device not back at once: the next is 503
+    DOOR_READS = 32                      # …of every device together: the next is 503
+    DOOR_STUCK_CHANNELS = 2              # cameras of one device with a read given up on: the device is stuck as a whole
 
-    def _door_stuck(self, dev) -> str | None:
-        now = time.monotonic()
+    # The cameras of a device whose read this door gave up on and that has not come back: `{camera: since}` (monotonic).
+    def _reads_lost(self, dev) -> dict[str, float]:
+        lost: dict[str, float] = {}
         with self._dev_lock:
-            lost = [j["since"] for j in self._door_reads.get(id(dev), ()) if j["given_up"]]
+            for j in self._door_reads.get(id(dev), ()):
+                if j["lost"]:
+                    lost[j["cam"]] = min(lost.get(j["cam"], j["since"]), j["since"])
+        return lost
+
+    def _door_stuck(self, dev, cam) -> str | None:
+        now = time.monotonic()
+        lost = self._reads_lost(dev)
+        with self._dev_lock:
             head = self._dev_heads.get(id(dev))
-        if lost:
-            return (f"the device has not come back from a read this door gave up on {now - min(lost):.0f} s ago — it is "
-                    f"busy or does not answer; ask again")
-        if head is not None and now - head["t0"] > self.DOOR_ASK_WAIT:
+        if str(cam) in lost:
+            return (f"the device has not come back from a read of this camera that this door gave up on "
+                    f"{now - lost[str(cam)]:.0f} s ago — it is busy or does not answer; ask again")
+        if len(lost) >= self.DOOR_STUCK_CHANNELS:
+            return (f"the device has not come back from reads of {len(lost)} of its cameras that this door gave up on, "
+                    f"the first {now - min(lost.values()):.0f} s ago — it is busy or does not answer; ask again")
+        whole = head is not None and str(head["key"][0]) not in ("coverage", "door-coverage", "door-recordings")
+        if whole and now - head["t0"] > self.DOOR_ASK_WAIT:
             return (f"the device has not answered a question for {now - head['t0']:.0f} s — it is busy or does not "
                     f"answer; ask again")
         return None
 
-    def _door_read(self, dev, cam, t0: float, t1: float) -> list[bytes]:
-        import queue
-        if why := self._door_stuck(dev):
-            raise TimeoutError(why)
-        job = {"since": time.monotonic(), "given_up": False, "q": queue.Queue()}
+    # The playback door's reads the device has not come back from, said (the thirteenth review, major 18: a device whose
+    # reads hung was `state: None` in `/devices`, and the regression was seen by nobody): the cameras of each, and the
+    # count over the devices for the heartbeat.
+    def reads_stuck(self, dev) -> list[str]:
+        return sorted(self._reads_lost(dev))
+
+    def door_reads_stuck(self) -> int:
         with self._dev_lock:
-            jobs = self._door_reads.setdefault(id(dev), [])
+            return sum(1 for jobs in self._door_reads.values() for j in jobs if j["lost"])
+
+    # `opened`: called on the door's thread when the device has opened the footage, before a chunk is taken — the door
+    # takes the piece's bytes there (`playback_pieces`); what it raises gives the read up and is raised to the door.
+    def _door_read(self, dev, cam, t0: float, t1: float, opened=None) -> list[bytes]:
+        import queue
+        if why := self._door_stuck(dev, cam):
+            raise TimeoutError(why)
+        # `given_up`: nobody waits for it any more, not read on; `lost`: given up because the device did not answer in
+        # time — what makes its camera stuck. A read let go for the door's own reason (no bytes free) is not lost.
+        job = {"since": time.monotonic(), "given_up": False, "lost": False, "q": queue.Queue(), "cam": str(cam)}
+        with self._dev_lock:
+            jobs = self._door_reads.get(id(dev), [])
+            every = sum(len(j) for j in self._door_reads.values())
             if len(jobs) >= self.DOOR_READS_PER_DEVICE:
                 raise TimeoutError(f"the device has {len(jobs)} reads of this door under way already — ask again")
-            jobs.append(job)
+            if every >= self.DOOR_READS:
+                raise TimeoutError(f"this door has {every} reads of devices under way already — ask again")
+            self._door_reads.setdefault(id(dev), []).append(job)
 
         def run():
             sid, said = None, None
@@ -2352,14 +2430,14 @@ class VmsWorker(Worker):
 
         threading.Thread(target=run, name=f"{self.name}-read", daemon=True).start()
         until = job["since"] + self.DOOR_ASK_WAIT + self.PLAYBACK_STALL + (t1 - t0) / self.PLAYBACK_DEVICE_PACE
-        out, opened = [], False
+        out, is_open = [], False
         while True:
-            wait = min(self.PLAYBACK_STALL if opened else self.DOOR_ASK_WAIT, until - time.monotonic())
+            wait = min(self.PLAYBACK_STALL if is_open else self.DOOR_ASK_WAIT, until - time.monotonic())
             try:
                 kind, value = job["q"].get(timeout=max(0.0, wait))
             except queue.Empty:
-                job["given_up"] = True
-                if not opened:
+                job["given_up"] = job["lost"] = True
+                if not is_open:
                     why = f"the device has not opened its footage within {self.DOOR_ASK_WAIT:g} s"
                 elif time.monotonic() >= until:
                     why = f"the device gave {t1 - t0:.0f} s of footage slower than {self.PLAYBACK_DEVICE_PACE:g} s a second"
@@ -2367,7 +2445,15 @@ class VmsWorker(Worker):
                     why = f"the device gave nothing for {self.PLAYBACK_STALL:g} s"
                 raise TimeoutError(f"{why} — it is busy or does not answer; the playback was cut, ask again") from None
             if kind == "open":
-                opened = True
+                is_open = True
+                if opened is not None:
+                    began = time.monotonic()
+                    try:
+                        opened()                         # the piece's bytes: waited for, then the device read on
+                    except BaseException:
+                        job["given_up"] = True           # not read on; its session closed by its own thread
+                        raise
+                    until += time.monotonic() - began
             elif kind == "chunk":
                 out.append(value)
             else:
@@ -2486,6 +2572,8 @@ class VmsWorker(Worker):
                 # inside `PERFORM_GRACE` (`_slow`) and calls into devices not back yet — on `/metrics` as `vms_devices_slow`
                 # and `vms_commands_in_flight` (`vms/console.py`, `beat_lines`).
                 **({"devices_slow": len(self._slow | self._slow_asks)} if self._slow or self._slow_asks else {}),
+                # The playback door's reads a device has not come back from (`_door_read`; the thirteenth review).
+                **({"door_reads_stuck": stuck} if (stuck := self.door_reads_stuck()) else {}),
                 # Devices whose open has not come back (`device_status`; the tenth pass): `state: opening` each.
                 **({"devices_opening": len(opening)} if (opening := self._opening()) else {}),
                 # Keys whose device said another identity than before (`_changed`): counted since the process started.

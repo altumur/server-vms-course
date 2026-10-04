@@ -2059,3 +2059,205 @@ def test_a_playback_whose_device_stops_giving_footage_half_way_is_cut_at_the_sta
         gate.set()
         srv.shutdown()
         srv.server_close()
+
+
+class _Archive(FakeDevice):
+    """A device with an archive of its own, whose calls the test can hang: `hang_open` (camera ids whose open waits for
+    `gate`), `hang_read` (whose read gives nothing until `gate`), `hang_ask` (questions — `recordings`, `channels` —
+    that wait for `gate`)."""
+
+    def __init__(self, key, gate, hang_open=(), hang_read=(), hang_ask=(), **kw):
+        super().__init__(key, **kw)
+        self.gate, self.hang_open, self.hang_read, self.hang_ask = gate, hang_open, hang_read, hang_ask
+
+    def coverage(self, cam):
+        return {"from": 0.0, "to": 60.0, "fragments": 0}
+
+    def recordings(self, cam, t0, t1):
+        if "recordings" in self.hang_ask:
+            self.gate.wait(30)
+        return [(0.0, 60.0)]
+
+    def channels(self):
+        if "channels" in self.hang_ask:
+            self.gate.wait(30)
+        return super().channels()
+
+    def open_playback(self, cam, t0, t1):
+        if str(cam) in self.hang_open:
+            self.gate.wait(30)
+        return super().open_playback(cam, t0, t1)
+
+    def read(self, sid):
+        if str(self.open[sid][0]) in self.hang_read:
+            self.gate.wait(30)
+        return super().read(sid)
+
+
+def _wait_for(cond, most: float = 5.0) -> None:
+    deadline = time.monotonic() + most
+    while not cond() and time.monotonic() < deadline:
+        time.sleep(0.02)
+    assert cond()
+
+
+def test_one_cameras_hung_read_closes_the_door_to_that_camera_not_to_its_nvr_and_is_said():
+    """The thirteenth review, major 18 — a run (`h13_door readhang`): one hung read of channel 1 made the door answer 503
+    to every channel of the NVR, at once and still after 30 s, and `/devices` said `state: None` — the recorder could not
+    close the gaps of the whole NVR, and nobody saw why. Now what is stuck is the CAMERA whose read the door gave up on:
+    its neighbours are read as before, it is answered 503 at once, `/devices` names it (`reads_stuck`, `state: slow`)
+    and the heartbeat counts it (`door_reads_stuck`). Reads given up on two cameras of one device: the device is stuck as
+    a whole. And when the device comes back, so does the door."""
+    box = _real_box()
+    gate, hang = threading.Event(), set()
+    holder, cams = _nvr_holder(box, 4, lambda k: _Archive(k, gate, hang_open=hang, channels=["1", "2", "3", "4"],
+                                                          max_playbacks=16, bps=1000))
+    holder.DOOR_ASK_WAIT = 0.3
+    for _ in range(2):
+        holder.reconcile_once()
+        holder.heartbeat_once()
+    key = "acme/10.0.0.50"
+    try:
+        hang.add(str(cams[0]))
+        try:
+            holder.playback(cams[0], 0, 2)
+            raise AssertionError("a hung read answered")
+        except TimeoutError:
+            pass
+        assert holder.playback(cams[1], 0, 2)                                   # its neighbour: read as before
+        began = time.monotonic()
+        try:
+            holder.playback(cams[0], 0, 2)
+            raise AssertionError("a camera given up on was asked again")
+        except TimeoutError as e:
+            assert "this camera" in str(e) and time.monotonic() - began < 0.2, (str(e), time.monotonic() - began)
+        st = next(d for d in holder.device_status() if d["device"] == key)
+        assert st["reads_stuck"] == [str(cams[0])] and st["state"] == "slow", st
+        assert holder.heartbeat_extra()["door_reads_stuck"] == 1
+        hang.add(str(cams[2]))                                                 # a second camera of it hangs too
+        try:
+            holder.playback(cams[2], 0, 2)
+            raise AssertionError("a hung read answered")
+        except TimeoutError:
+            pass
+        began = time.monotonic()
+        try:
+            holder.playback(cams[3], 0, 2)
+            raise AssertionError("a device stuck on two cameras was read")
+        except TimeoutError as e:
+            assert "2 of its cameras" in str(e) and time.monotonic() - began < 0.2, str(e)
+        hang.clear()
+        gate.set()                                                             # the device comes back
+        _wait_for(lambda: not holder._door_reads)
+        assert holder.playback(cams[0], 0, 2) and holder.playback(cams[3], 0, 2)
+        st = next(d for d in holder.device_status() if d["device"] == key)
+        assert "reads_stuck" not in st and "door_reads_stuck" not in holder.heartbeat_extra()
+    finally:
+        gate.set()
+
+
+def test_a_hung_question_of_one_camera_stops_no_read_and_a_hung_question_of_the_device_stops_them_all():
+    """The same finding's second half: a `recordings` question that hung put the device's line «in a question», and the
+    door answered 503 to every read of the device — in r12 `/playback` gave the footage. A question of one camera (its
+    listing, its coverage) stops no read now: the door falls back on the coverage the device said last and reads, the
+    read having deadlines of its own. A question of the whole device (its channels) that hangs past `DOOR_ASK_WAIT` is
+    still a device that does not answer: its reads are 503 at once."""
+    for hung in ("recordings", "channels"):
+        box = _real_box()
+        gate, asks = threading.Event(), set()
+        holder, cams = _nvr_holder(box, 2, lambda k: _Archive(k, gate, hang_ask=asks, channels=["1", "2"],
+                                                              max_playbacks=4, bps=1000))
+        holder.DOOR_ASK_WAIT = 0.3
+        for _ in range(2):
+            holder.reconcile_once()
+            holder.heartbeat_once()                                            # the coverage said, kept
+        try:
+            asks.add(hung)
+            ask = holder.recordings if hung == "recordings" else (lambda *a: holder.device_status())
+            threading.Thread(target=lambda: _quiet(ask, cams[0], 0.0, 30.0), daemon=True).start()
+            time.sleep(holder.DOOR_ASK_WAIT + 0.2)                             # the line in that question, past the wait
+            if hung == "recordings":
+                assert holder.playback(cams[0], 0, 2) and holder.playback(cams[1], 0, 2)
+            else:
+                began = time.monotonic()
+                try:
+                    holder.playback(cams[1], 0, 2)
+                    raise AssertionError("a device whose line hangs was read")
+                except TimeoutError as e:
+                    assert "has not answered a question" in str(e) and time.monotonic() - began < 0.2, str(e)
+        finally:
+            gate.set()
+
+
+def _quiet(fn, *a):
+    try:
+        fn(*a)
+    except Exception:                                                          # noqa: BLE001 — a hung question's end
+        pass
+
+
+def test_hung_reads_hold_none_of_the_doors_bytes_and_the_door_holds_a_bounded_number_of_them():
+    """The thirteenth review, major 19 — a run (`h13_door many`): twenty hung NVRs × eight reads, and 144 of 160 requests
+    got «the door is full», the healthy devices' among them — each hung read had taken a piece's bytes of the door's
+    budget before the device was asked, and held them while the door waited; and the door's threads were bounded per
+    device only. Now the bytes are taken once the device has opened its footage: eight reads hanging in the open hold
+    none, and a healthy device is read beside them on a budget of two pieces. A read that hangs after the open gives its
+    bytes back when the door gives it up, its thread still inside the device. And the door's reads are bounded over
+    every device (`DOOR_READS`): past it, 503 at once — a hung device's threads are a bounded number, whatever is
+    asked."""
+    box = _real_box()
+    gate, hang_open, hang_read = threading.Event(), set(), set()
+    holder, cams = _nvr_holder(box, 8, lambda k: _Archive(k, gate, hang_open=hang_open if k.endswith(".50") else (),
+                                                          hang_read=hang_read, channels=[str(c) for c in range(1, 9)],
+                                                          max_playbacks=16, bps=1000))
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    healthy = con.create_camera({"name": "b1", "source": "driverpack://acme/10.0.0.60/ch/1"})["id"]
+    slow = con.create_camera({"name": "c1", "source": "driverpack://acme/10.0.0.70/ch/1"})["id"]
+    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    holder.DOOR_ASK_WAIT, holder.PLAYBACK_BUDGET_WAIT, holder.PLAYBACK_STALL = 1.0, 0.5, 0.3
+    holder.PLAYBACK_BUDGET = 2 * holder.PLAYBACK_PIECE_BYTES
+    for _ in range(2):
+        holder.reconcile_once()
+        holder.heartbeat_once()
+    budget = holder.playback_budget()
+    try:
+        hang_open.update(str(c) for c in cams)
+        got = []
+        hung = [threading.Thread(target=lambda c=c: got.append(_outcome(holder.playback, c, 0, 2)), daemon=True)
+                for c in cams]
+        for t in hung:
+            t.start()
+        _wait_for(lambda: sum(len(j) for j in holder._door_reads.values()) == 8)
+        assert budget.used == 0                                                  # eight waiting to open: no bytes held
+        assert holder.playback(healthy, 0, 2)                                     # the healthy one, beside them
+        for t in hung:
+            t.join(5)
+        assert len(got) == 8 and all(o == "TimeoutError" for o in got), got
+        hang_read.add(str(slow))                                                 # opened, then gives nothing
+        assert _outcome(holder.playback, slow, 0, 2) == "TimeoutError"
+        assert budget.used == 0 and holder.door_reads_stuck() == 9                 # its bytes back, its thread inside
+        holder.DOOR_READS = 9                                                    # the door's reads, every device's
+        began = time.monotonic()
+        try:
+            holder.playback(healthy, 0, 2)
+            raise AssertionError("a read past the door's bound was begun")
+        except TimeoutError as e:
+            assert "this door has 9 reads" in str(e) and time.monotonic() - began < 0.2, str(e)
+        threads = sum(1 for t in threading.enumerate() if t.name == f"{holder.name}-read")
+        for c in cams * 3:                                                       # asked again and again: no thread more
+            assert _outcome(holder.playback, c, 0, 2) == "TimeoutError"
+        assert sum(1 for t in threading.enumerate() if t.name == f"{holder.name}-read") <= threads <= 9
+        hang_open.clear(); hang_read.clear()
+        gate.set()
+        _wait_for(lambda: not holder._door_reads)
+        assert holder.playback(healthy, 0, 2) and holder.playback(cams[0], 0, 2) and budget.used == 0
+    finally:
+        gate.set()
+
+
+def _outcome(fn, *a) -> str:
+    try:
+        fn(*a)
+        return "ok"
+    except Exception as e:                                                     # noqa: BLE001 — what the door raised
+        return type(e).__name__

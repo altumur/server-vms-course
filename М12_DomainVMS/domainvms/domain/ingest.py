@@ -90,6 +90,7 @@ stream id names the camera) and the long poll is an HTTP request held for up to 
 """
 from __future__ import annotations
 
+import collections
 import dataclasses
 import json
 import logging
@@ -219,6 +220,19 @@ FRAME_AHEAD = 60.0
 # offset: earlier on the camera's clock, never later); a held poll's wake measures nothing; and a range told by an
 # offset the requests after it showed to be one request's travel — a move down from an offset not held firm — fails,
 # and backfill asks it again (`_untold`).
+#
+# …AND THE ROAD EXPLAINS ONLY WHAT ITS ROUND TRIP GREW BY, AND NEVER FOR GOOD (the thirteenth review, major 10, its probe
+# `pq4_cluster_step_rtt`: this cluster's clock stepped 5.5 s, the camera's road a steady 0.6 s there and back — a rise of
+# 5.5 that its round trip brought under `CLOCK_STEP` was neither a provisional rise nor a small one, and no request ever
+# said anything else: 2125 frames 5.5 s early, nothing counted). Three such zones: a rise in (`CLOCK_STEP`, `CLOCK_STEP` +
+# rtt], a small one in (`OFFSET_HOLD`, `OFFSET_HOLD` + rtt], and a provisional rise that requests agreed with only "as their
+# round trip explains" — told nobody, for good. The offset held was measured over the same road, its travel in it: what
+# can be travel in a rise is what the round trip GREW BY since the least the camera said (`rtt_least`; a plateau is a
+# round trip grown by its whole length, a steady road grew by nothing). What the road leaves of a rise is the rise
+# (`proven`): past `CLOCK_STEP` provisional at once; past `OFFSET_HOLD` a small rise, counted for `OFFSET_RISE` — the one
+# past `CLOCK_STEP` that the road brings under it too; and a provisional rise agreed with by requests whose road leaves
+# it under `CLOCK_STEP` is confirmed as a small one is, after `OFFSET_RISE`. A request agreeing with a provisional rise
+# only as far as its round trip grew is a plateau the rise was: the rise is withdrawn then, not held to the plateau's end.
 OFFSET_HOLD = 0.25
 OFFSET_RISE = 30.0
 RISE_REQUESTS = 3
@@ -348,6 +362,8 @@ class _Camera:
     target: float | None = None                                  # …a lower offset the open stream slews to (`_slewed`)
     leap: bool = False                                           # …further down than `CLOCK_STEP`: a leap of the frames takes it
     provisional: float | None = None                             # …a rise past `CLOCK_STEP` taken at once: the offset before it
+    slow: bool = False                                           # …and a request its road takes under `CLOCK_STEP` agreed
+    rtt_least: float | None = None                               # the least round trip the camera said (`_offset`)
     newest: float | None = None                                  # the newest frame it pushed, on its own clock
     clock_steps: int = 0                                         # times the held offset moved
     asks: dict[str, dict] = field(default_factory=dict)          # asks for this camera: {id: {action, deadline, by}}
@@ -496,9 +512,11 @@ class Ingest:
         (`rtt`, the camera's word) explains its rise counts for none (the twelfth review). While it slews, the offset
         held is where it goes (`target`)."""
         held = cam.target if cam.target is not None else cam.offset
+        if rtt is not None:
+            cam.rtt_least = rtt if cam.rtt_least is None else min(cam.rtt_least, rtt)
 
-        def travelled(rise: float, bound: float) -> bool:        # the camera's last round trip leaves no more than `bound`
-            return rtt is not None and rise - rtt <= bound
+        def proven(rise: float) -> float:                        # the least a rise can be: the road's travel taken out
+            return rise if rtt is None else rise - max(0.0, rtt - cam.rtt_least)
         if not cam.told:
             cam.offset, cam.told, cam.agreed = offset, True, (now, 1)
         elif offset < held - OFFSET_HOLD and cam.provisional is not None:
@@ -507,11 +525,7 @@ class Ingest:
             # frames, slewed, nothing lost, or at once when no frame was put by it; neither is a step of anybody's clock,
             # and neither is counted.
             log.info("camera %s: a request travelled %.1f s; the offset it raised goes back", ref, held - offset)
-            if cam.newest is None:
-                cam.offset, cam.target, cam.leap = cam.provisional, None, False
-            else:
-                cam.target, cam.leap = cam.provisional, False
-            cam.provisional, cam.rise, cam.agreed = None, None, (now, 1)
+            self._withdraw(cam, now)
         elif offset < held - OFFSET_HOLD:
             firm = self._firm(cam, now)
             if cam.newest is None:
@@ -528,36 +542,56 @@ class Ingest:
             if not firm:
                 self._untold(ref, offset, now)                   # what it was held at was a request's travel
             cam.agreed = (now, 1)
-        elif offset > held + CLOCK_STEP:
+        elif offset > held + CLOCK_STEP and proven(offset - held) > CLOCK_STEP:
             # A rise past `CLOCK_STEP`: taken at once, PROVISIONALLY (DZ, the product's rule): a camera that rebooted with
             # its clock unset goes on after the card's newest frame, its offset up by the reboot's length, and its frames
             # land where they were captured only by the new one. The requests after it say which it was: back on the old
-            # clock withdraws it (above), `RISE_REQUESTS` agreeing make it a step, counted then. One whose own round trip
-            # explains it is the travel of a plateau the stream is already in: nothing (the twelfth review).
-            if not travelled(offset - held, CLOCK_STEP):
-                if cam.provisional is None:
-                    cam.provisional = held
-                cam.offset, cam.target, cam.leap, cam.newest, cam.rise = offset, None, False, None, None
-                cam.agreed = (now, 1)
+            # clock withdraws it (above), `RISE_REQUESTS` agreeing make it a step, counted then. One whose road explains
+            # it past `CLOCK_STEP` is a rise up to it (below; the twelfth and thirteenth reviews).
+            if cam.provisional is None:
+                cam.provisional = held
+            cam.offset, cam.target, cam.leap, cam.newest, cam.rise = offset, None, False, None, None
+            cam.agreed, cam.slow = (now, 1), False
         elif offset > held + OFFSET_HOLD:
-            if not travelled(offset - held, OFFSET_HOLD):        # a plateau of travel under `CLOCK_STEP`: nothing either
+            # A rise up to `CLOCK_STEP` — or past it, by no more than the road explains (the thirteenth review, major 10:
+            # that one was nothing, for good): what the road leaves of it counts, past `OFFSET_HOLD`; a request whose road
+            # explains it all — a plateau of travel — counts for none.
+            if proven(offset - held) > OFFSET_HOLD:
                 since, low, n = cam.rise or (now, offset, 0)
                 cam.rise = (since, min(low, offset), n + 1)
                 if now - since >= OFFSET_RISE and n + 1 >= RISE_REQUESTS:
                     self._moved(ref, cam, cam.rise[1])
                     cam.agreed = (since, n + 1)                  # every request of the window agreed with it: firm
-        elif cam.provisional is not None and travelled(cam.offset - cam.provisional, CLOCK_STEP):
-            pass                                                 # agrees with the rise as its round trip explains: no word
+        elif cam.provisional is not None and proven(cam.offset - cam.provisional) <= OFFSET_HOLD:
+            # Agrees with a provisional rise only as far as its road grew: a plateau of travel the rise was (the
+            # thirteenth review, a minor: held up while the plateau lasted, it put every frame of it as late — 654 frames
+            # of a plateau of 6 s for a minute). Withdrawn, by the frames, as a request back on the old clock does.
+            log.info("camera %s: its requests travel as long as the offset rose (%.1f s): the offset goes back", ref,
+                     cam.offset - cam.provisional)
+            self._withdraw(cam, now)
         else:
             cam.rise = None                                      # inside the hold: what was held stands
             cam.agreed = (cam.agreed[0], cam.agreed[1] + 1)
-            if cam.provisional is not None and cam.agreed[1] >= RISE_REQUESTS:
+            if cam.provisional is not None and proven(cam.offset - cam.provisional) <= CLOCK_STEP:
+                cam.slow = True                                  # …a rise its road takes under `CLOCK_STEP`: as a small one
+            if cam.provisional is not None and cam.agreed[1] >= RISE_REQUESTS and \
+                    (not cam.slow or now - cam.agreed[0] >= OFFSET_RISE):
                 cam.clock_steps += 1                             # the requests after it agree: a step, not a request's travel
                 log.warning("camera %s: its clock moved %.3f s against this cluster's (it rebooted with its clock unset, or "
                             "this cluster's clock stepped): its frames are put on this clock by the new difference",
                             ref, cam.provisional - cam.offset)
-                cam.provisional = None
+                cam.provisional, cam.slow = None, False
                 cam.agreed = (float("-inf"), cam.agreed[1])     # firm: a step of a clock — the next one back is taken at once
+
+    @staticmethod
+    def _withdraw(cam: _Camera, now: float) -> None:
+        """A provisional rise withdrawn: to the offset held before it — by the frames, slewed, or at once when no frame
+        was put by it — uncounted."""
+        if cam.newest is None:
+            cam.offset, cam.target, cam.leap = cam.provisional, None, False
+        else:
+            cam.target, cam.leap = cam.provisional, False
+        cam.provisional, cam.rise, cam.agreed, cam.slow = None, None, (now, 1), False
 
     @staticmethod
     def _firm(cam: _Camera, now: float) -> bool:
@@ -1413,6 +1447,10 @@ class _RingFrames:
         ms = self.ring.adrift()
         return None if ms is None else unix_s(ms)
 
+    def unplaced(self) -> list[tuple[float, float]]:
+        """`[lo, hi)` of the line where frames of unset boots lie with no capture time (`CamRing.unplaced`), unix s."""
+        return [(unix_s(lo), unix_s(hi)) for lo, hi in self.ring.unplaced()]
+
 
 class _OwnFrames:
     """What a pusher given no camera ring keeps itself: the course's model frames (dicts with `t`), in the order they
@@ -1442,6 +1480,9 @@ class _OwnFrames:
 
     def adrift(self) -> float | None:
         return self.line.adrift
+
+    def unplaced(self) -> list[tuple[float, float]]:
+        return [(lo, hi) for lo, hi in self.line.unplaced]
 
     def skew(self) -> float:
         return self.line.skew()
@@ -1520,6 +1561,7 @@ _CARD_BACK = 10.0                      # a read of the card that goes on mid-gro
 # How late the card's gate acts on what the pusher says (`uncovered`): a pass of the gate and a key frame — the
 # recorder's `DEFER_MARGIN`. The pusher says "lagging" this much before what it has not sent would leave memory.
 GATE_NOTICE = 5.0
+FAILED_KEPT = 64                       # ranges the camera could not read, remembered with why (`failed_ranges`)
 DELIVERED_KEPT = 256                   # stretches an ingest took, remembered for the card's budget (`delivered`)
 DELIVERED_SEAM = 0.25                  # two pieces this close are one stretch: a hole the stream skips is a group at least
 # The uplink has room for a range's piece when this pass's push left the stream this close to its newest frame — a pass and
@@ -1591,7 +1633,11 @@ class CameraPusher:
         `clock` and `steady` — the camera's steady clock (`time.monotonic` with the real clock; a test's clock gives
         its own, or none)."""
         self.serial, self.flash, self.dial, self.card, self.recording = str(serial), flash, dial, card, recording
-        self.failed_ranges: list[tuple[float, float, str]] = []        # ranges answered "could not read", and why
+        # Ranges answered "could not read", and why: the last `FAILED_KEPT` of them, and how many in all (the thirteenth
+        # review, a minor: a list of every one grew by ~144 a day per hole while a camera's clock stayed unset).
+        self.failed_ranges: collections.deque = collections.deque(maxlen=FAILED_KEPT)
+        self.ranges_failed = 0
+        self.unplaced_left = 0                                         # frames with no capture time left out (`_placed`)
         self.perform = perform or (lambda action: "refused: this camera performs no actions")
         self.ring_seconds = ring_seconds
         self.versions: dict[str, int] = {}                             # per road; -1 first: answered at once (AF)
@@ -2061,7 +2107,25 @@ class CameraPusher:
                 raise OSError("the card was written by another camera before this one began: its footage of that time "
                               "is not this camera's")
             t0 = self.foreign_before                                   # only what this camera wrote on it
-        return self.card(recording, t0, t1, max_bytes)
+        pieces = self.card(recording, t0, t1, max_bytes)
+        spans = [(lo, hi) for lo, hi in self.frames.unplaced() if lo <= t1 and hi > t0]
+        return self._placed(pieces, spans) if spans else pieces
+
+    # FRAMES WITH NO CAPTURE TIME ARE NOT ANSWERED (the thirteenth review, blocker 7). The frames of unset boots the set
+    # clock could not place (`vms.card.CamLine.unplaced`) lie on the card where a guess put them — a boot's length or more
+    # early — and read there they were another moment's pictures in the hole. A range leaves them out: what is left of
+    # the answer is placed, and the frames left out are counted (`unplaced_left`) and logged.
+    def _placed(self, pieces, spans):
+        left = 0
+        for piece in pieces:
+            kept = [s for s in piece if not any(lo <= unix_s(s.begin) < hi for lo, hi in spans)]
+            left += len(piece) - len(kept)
+            if kept:
+                yield kept
+        if left:
+            self.unplaced_left += left
+            log.warning("camera %s: %d frames of a range were captured in a boot whose clock was never set: they have no "
+                        "capture time, and are left out of the answer", self.serial, left)
 
     def _poll(self, road: dict, key: str, wait: float):
         """The first ingest of a road that answers, and what it said — or (None, None)."""
@@ -2251,6 +2315,7 @@ class CameraPusher:
         except Unreachable:
             return False                                               # said again next pass: the range is still asked
         self.failed_ranges.append((t0, t1, str(e)))
+        self.ranges_failed += 1
         return True
 
     def _answer(self, ing, token: str, work: dict) -> tuple[list, bool]:
@@ -2476,7 +2541,8 @@ def tie(pusher: CameraPusher, recorder) -> CameraPusher:
     recorder.stream_delivery, recorder.stream_remember = pusher.delivery, pusher.remember
     if getattr(recorder, "actuator", None) is not None:
         recorder.actuator.serial = pusher.serial                       # whose line the card keeps (the twelfth review),
-        recorder.actuator.note_line(force=True)                        # …said on a card open already
+        recorder.actuator.note_line(force=True)                        # …said on a card open already — and a line gone on
+                                                                       # from another camera's note taken back (13th)
     if pusher.card is None:
         pusher.card = recorder.answer_range
     recorder.remember_card()                                           # a card open already: what it kept, now

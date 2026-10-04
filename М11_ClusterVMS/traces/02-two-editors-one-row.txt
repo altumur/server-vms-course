@@ -87,7 +87,11 @@ POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
   "live": "always",
   "kind": "video"
 }}
-→ 409 {"kind": "conflict", "error": "vms/cameras/1: cas=1005 but the version is 1006", "index": 1006}
+→ 409 {
+  "kind": "conflict",
+  "error": "vms/cameras/1: the version is 1006, not the one the write named",
+  "index": 1006
+}
 
 # console on srv-a → /run/configstore/console.sock
 GET /v1/get?key=vms/cameras/1
