@@ -119,7 +119,7 @@ from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_M
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence
-from .events import ALARM, EventLog
+from .events import ALARM, CONSOLE, EventLog
 
 
 # The default flow one operator is expected to read, in events a minute. Past it a timeline of separate
@@ -148,7 +148,7 @@ def blobs_slots() -> threading.BoundedSemaphore:
     return _blobs[0]
 from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate, caller_addr, is_local, session_cookie,
                      token_of)
-from .journal import Journal
+from .journal import AUDIT, Journal
 from .resource import resources_seen
 from .limits import TooLarge
 from .spec import GARBLED_ROW, LABEL_WORD, Refused, SpecController, server_name
@@ -2529,8 +2529,9 @@ class SpecConsole:
                         # read (М11's rights) leaves out every subsystem outside them — `live/`, `det/` — and their
                         # events stood "current" whatever their epoch. The units of such a subsystem in THIS answer are
                         # read by name; a subsystem whose rows the console may not read at all is said (`epochs_unread`),
-                        # its events as their resource marked them.
-                        seen_subs, refused = {s for s, _ in cur}, set()
+                        # its events as their resource marked them. The journal and the console's marks are written
+                        # by one writer under epoch 1 and have no epoch rows: not asked.
+                        seen_subs, refused = {s for s, _ in cur} | {AUDIT, CONSOLE}, set()
                         other = [e for e in rep["events"] if e.get("subsystem") not in seen_subs]
                         if other:
                             refence(other, con.epochs_of({(e["subsystem"], e["unit"]) for e in other}, refused),

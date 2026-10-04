@@ -2366,7 +2366,8 @@ class SpecController(Controller):
 
     # The servers a spare could run on, and what each reaches: `{server: labels}` — labels None where nobody has said
     # them yet (no row, no worker there ever). Not drained, not decommissioned, its resource not silent (one never heard
-    # is a bench's, or a box before its resource starts: it may carry one). No server known at all: a bench that says
+    # is a bench's, or a box before its resource starts; one whose door this process cannot reach is there: either may
+    # carry one). No server known at all: a bench that says
     # nothing of its servers — every count as before (`offer_spares`).
     def _spare_hosts(self) -> dict[str, frozenset | None] | None:
         known = self.servers_known()
@@ -2380,8 +2381,9 @@ class SpecController(Controller):
         gone = set(self.decommission_requests()) | {self.draining()}
         out = {}
         for server in sorted(known):
-            if server in gone or self.resource_state(server) in ("silent", "unreachable"):
-                continue                                # gone, leaving, or not known to be there: no spare runs on it
+            if server in gone or self.resource_state(server) == "silent":
+                continue                                # gone or leaving: no spare runs on it (one only this process
+                                                        # cannot reach — `unreachable` — is there, and may carry one)
             if server in rows:
                 out[server] = frozenset(rows[server])
             elif server in self._server_rows_unread:
