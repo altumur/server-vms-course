@@ -1,6 +1,6 @@
 ---
 name: platform-review
-description: Ревью кода, проектных записок и ADR платформы VMS (w2cplatform, vmsserver, vmsserver-go, ClusterVMS, DomainVMS) по архитектурным правилам из .cursor/rules. Используй, когда просят проверить diff, PR, модуль, ADR или module-design.md платформы, найти нарушения архитектуры или «посмотреть глазами ревьювера».
+description: Ревью кода, проектных записок и ADR платформы VMS (w2cplatform, vmsserver, ClusterVMS, DomainVMS; Go-реализация — в продукте `vmssubsystem`) по архитектурным правилам из .cursor/rules. Используй, когда просят проверить diff, PR, модуль, ADR или module-design.md платформы, найти нарушения архитектуры или «посмотреть глазами ревьювера».
 ---
 
 # Ревью платформы VMS
@@ -34,6 +34,8 @@ description: Ревью кода, проектных записок и ADR пл�
 
 Читай файлы из `.cursor/rules/` до того, как писать находки. Всегда: `service-boundaries.mdc`, `messaging-contracts.mdc`, `resilience.mdc`, `observability.mdc`. Дальше по классу и по содержанию изменения — см. карту правил в `architecture.mdc`. Изменение затрагивает ADR, `module-design.md` или другие записки — добавь `adr-format.mdc`, `doc-language.mdc`, `mermaid-diagrams.mdc`.
 
+Всегда читай и `ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md`: платформа знает только спеки подсистем, хуков нет (§1.1, §4). Новое нарушение границы — находка: платформа называет поле, роль или строку подсистемы, хук вместо спеки, поведение платформы определено через запись видео.
+
 Признаки нарушений в коде по каждому правилу и соответствие общих терминов правил словарю проекта — в [references/signals.md](references/signals.md). Прочитай его целиком.
 
 ## 4. Проверь
@@ -56,7 +58,7 @@ description: Ревью кода, проектных записок и ADR пл�
 
 ```markdown
 ### [blocker] Воркер пишет сегмент без проверки эпохи
-[vms/worker.go:212](vmsserver-go/vms/worker.go:212) · правило: `consensus-and-leadership.mdc` — токен ограждения
+[vmsworker/vms/worker.go](../vmssubsystem/vmsworker/vms/worker.go) · правило: `consensus-and-leadership.mdc` — токен ограждения
 
 Что не так: одно предложение.
 Сценарий отказа: воркер A на паузе GC → контроллер отдаёт камеру воркеру B с эпохой 5 → A просыпается и дописывает e4 → в архиве два конкурирующих сегмента.
