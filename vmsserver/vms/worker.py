@@ -61,7 +61,7 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # `instance` defaults to `NOMAD_ALLOC_ID`, else the base class's `hostname:pid:6hex`. Calls
 # `Worker.__init__` with `name=None` and then `claim_slot(prefer=name or slot_from_environment(env))` — so
 # construction *is* the claim, and `self.name` is set afterwards. Then: `archive_root` from the argument or
-# `$ARCHIVE` (`/data/archive`); `capacity` from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I,
+# `$ARCHIVE`, else `<PLATFORM_DIR>/events` (`runtime.events_root`: `/data/platform/events`); `capacity` from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I,
 # measured on ITS server"; the actuator (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self,
 # self._actuate)`; `recording_allowed = True`; `server` from the argument, `NOMAD_NODE_NAME`,
 # `NOMAD_NODE_ID`, else the hostname; `labels`, `alloc`; the two start clocks. Finally it reads the previous
@@ -528,7 +528,7 @@ class VmsWorker(Worker):
         self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
         # …or, started as a spare (`SPARE_FOR`), an offer of its set — none: nobody, waiting (`Worker.claim_at_start`)
         self.claim_at_start(name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX), env)
-        self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
+        self.archive_root = runtime.events_root(env, archive_root)   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
         # THIS instance's two doors. Defaults are what they always were, so a box with one worker is
         # unchanged; `auto` asks the OS, which is what makes a SECOND worker on the same box possible at

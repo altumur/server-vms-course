@@ -12,11 +12,13 @@
                   it publishes
     LABELS        what this server can reach, comma-separated
     INSTANCE_ID   this incarnation — what failover is measured from
+    PLATFORM_DIR  the platform's state: config/, objects/, events/ (`/data/platform`)
+    ARCHIVE       the platform's events archive, the resource's tree (`<PLATFORM_DIR>/events`)
 
 Not one of these names an orchestrator, and that is the whole point of the
 module. A systemd unit sets `WORKER_NAME=w-%l-1` (Quadlet on one box `%i`), and
-the platform's env file (`/etc/w2c/w2c.env`, on the course's box
-`/data/config/w2c.env`) the server and its labels; an orchestrator, where a site has
+the platform's env file (`/etc/w2c/w2c.env` — on the course's box a link into
+`/data/platform/etc`) the server and its labels; an orchestrator, where a site has
 one, maps its own (an allocation index, a node's name, a `fieldRef`) into the
 same. The loop reads these names and never learns who filled them in — the same rule the package already keeps for the stores
 (see `variables.open_vars`).
@@ -27,10 +29,33 @@ loses the second claim rather than corrupting the first.
 """
 from __future__ import annotations
 
+import os
 import socket
 
 SLOT_INDEX, SERVER_NAME, LABELS, INSTANCE_ID = "SLOT_INDEX", "SERVER_NAME", "LABELS", "INSTANCE_ID"
 WORKER_NAME, SPARE_FOR = "WORKER_NAME", "SPARE_FOR"
+PLATFORM_DIR, ARCHIVE = "PLATFORM_DIR", "ARCHIVE"
+
+# THE PLATFORM'S LAYOUT, each default said once (the owner's decisions, 4 October). All the platform's mutable state
+# is under one root on the data partition — `config/` (the file store's rows), `objects/` (heartbeats, the snapshot),
+# `events/` (the events archive: the resource's, written by its clients of the group `w2c-events`), and in a
+# cluster `configstore/` — and its configuration is `/etc/w2c`, which on an A/B box is a LINK to
+# `/data/platform/etc`: /etc is on the root slot an OS update replaces. A unit and the code say `/etc/w2c/…`, never
+# the link's target. A subsystem's own paths are its own (`vms/config.py`: `/data/vms/…`, `/etc/vms`).
+DATA = "/data/platform"                          # PLATFORM_DIR unset
+ETC = "/etc/w2c"                                 # → /data/platform/etc: w2c.env, configstore-rights.json, tls/, secrets/
+KEY_FILE = ETC + "/secrets/platform.key"         # the cluster's key ring (`sealing.py`): 0640, group `w2c-secrets`
+
+
+def platform_dir(env: dict) -> str:
+    return env.get(PLATFORM_DIR) or DATA
+
+
+# The events archive: what a process was given, else `$ARCHIVE` (a key of `w2c.env` — the archive is the
+# platform's), else `events/` under the platform's root. Every writer of buckets and the resource ask this one
+# function, so the box's archive cannot be in two places by two defaults.
+def events_root(env: dict, given: str | None = None) -> str:
+    return given or env.get(ARCHIVE) or os.path.join(platform_dir(env), "events")
 
 
 # The slot to prefer: the role's own name (`RECORDER_NAME`, …), else the unit's `WORKER_NAME`, else

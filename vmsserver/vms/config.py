@@ -71,6 +71,12 @@ SURVEY_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__
 PLAYBACK_PORT = 8083     # the holder's playback surface: HTTP, because a browser must be able to seek it
 LIVE_PORT_BASE = 20000       # a camera's RTP port on its worker's loopback: the RTSP fan-out's one subscriber (gstvms/livesrv.py)
 SHM_DIR = "/run/vms"         # the tee's shared-memory branch: <SHM_DIR>/<cam>.shm — a subscriber on the SAME server reads it (shmsrc), no RTSP hop
+# The VMS's own paths on the box, beside the platform's (`w2cplatform.runtime`: `/data/platform`, `/etc/w2c`): its
+# configuration `/etc/vms` (on an A/B box a link to `/data/vms/etc`), and the server's own volume — a ring of
+# ObjectStorage, opened by the host's obsd as `vms-obsd`: the archive engine is the VMS's, so its volumes are under
+# `/data/vms/obsd` (the owner, 4 October), and not beside the platform's events archive.
+VMS_DATA = "/data/vms"
+OWN_VOLUME = f"file://{VMS_DATA}/obsd/volume"   # a recorder with nothing declared (`ARCHIVE_VOLUME` to say another)
 RTSP_PORT = 8554             # the worker's RTSP fan-out: rtsp://<server>:8554/<cam> — what a recorder, a gateway, a detector subscribe to
 
 

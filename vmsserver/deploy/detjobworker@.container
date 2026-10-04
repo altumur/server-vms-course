@@ -19,10 +19,17 @@ After=network.target
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms detjobworker
 Environment=DETJOB_NAME=%i
-EnvironmentFile=/data/config/w2c.env
-EnvironmentFile=/data/config/vms.env
-Volume=/data/platform:/data/platform:z
-Volume=/data/archive:/data/archive:z
+EnvironmentFile=/etc/w2c/w2c.env
+EnvironmentFile=/etc/vms/vms.env
+# The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
+# `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
+Volume=/data/platform/config:/data/platform/config:z
+Volume=/data/platform/objects:/data/platform/objects:z
+GroupAdd=2103
+PodmanArgs=--umask=0007
+Volume=/data/platform/events:/data/platform/events:z
+# a CLIENT of the platform's events archive: `w2c-events`, by number — what it writes there the resource deletes.
+GroupAdd=2102
 AddDevice=/dev/dri
 Network=host
 StopTimeout=10

@@ -73,11 +73,11 @@ def bucket_path(root: str, subsystem: str, unit: str, epoch: int, start: float) 
 Получается такое:
 
 ```
-/data/archive/vms/7/e3/20260912T100000Z.events.jsonl
-              │   │  │  └── начало промежутка, UTC
-              │   │  └───── эпоха: кто писал
-              │   └──────── единица
-              └──────────── подсистема
+/data/platform/events/vms/7/e3/20260912T100000Z.events.jsonl
+                      │   │  │  └── начало промежутка, UTC
+                      │   │  └───── эпоха: кто писал
+                      │   └──────── единица
+                      └──────────── подсистема
 ```
 
 Четыре уровня, и **каждый отвечает на вопрос, который иначе пришлось бы задавать индексу**. Какой подсистеме? Какой единице? Кто писал? За какой промежуток? Всё это читается из имени файла, без открытия и без базы. Отсюда и `parse_bucket` (шаг 6), и восстановление индекса из одного обхода каталога.
@@ -394,15 +394,15 @@ def subsystems_under(root: str) -> dict[str, list[str]]:
 Счётчик, наблюдающий свои тики:
 
 ```python
->>> log = EventLog("/data/archive", "counter", "7", epoch=3, bucket_seconds=600)
+>>> log = EventLog("/data/platform/events", "counter", "7", epoch=3, bucket_seconds=600)
 >>> log.append(t0 + 12.5, "tick", n=1)
-'/data/archive/counter/7/e3/20260912T100000Z.events.jsonl'
+'/data/platform/events/counter/7/e3/20260912T100000Z.events.jsonl'
 >>> log.append(t0 + 700, "tick", n=2)            # следующий промежуток — по часам
-'/data/archive/counter/7/e3/20260912T101000Z.events.jsonl'
->>> buckets_under("/data/archive", "counter", "7", 600)
+'/data/platform/events/counter/7/e3/20260912T101000Z.events.jsonl'
+>>> buckets_under("/data/platform/events", "counter", "7", 600)
 [Bucket('counter','7',3,…10:00,…10:10,'counter/7/e3/20260912T100000Z.events.jsonl',1),
  Bucket('counter','7',3,…10:10,…10:20,'counter/7/e3/20260912T101000Z.events.jsonl',1)]
->>> subsystems_under("/data/archive")
+>>> subsystems_under("/data/platform/events")
 {'counter': ['7']}
 ```
 
