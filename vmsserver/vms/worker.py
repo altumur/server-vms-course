@@ -524,6 +524,7 @@ class VmsWorker(Worker):
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
         self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
         self.epoch_errors: dict[str, str] = {}                # camera -> why its epoch could not be taken (a garbled row)
+        self.lost_to_epoch: set[str] = set()                  # cameras the lease step let go since the last assignment read (`requests`)
         self.row_errors: dict[str, str] = {}                  # camera -> why its own row is not followed (it does not parse)
         self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
         # …or, started as a spare (`SPARE_FOR`), an offer of its set — none: nobody, waiting (`Worker.claim_at_start`)
@@ -1094,6 +1095,7 @@ class VmsWorker(Worker):
     def reconcile_once(self, now: float | None = None) -> list[tuple[str, int]]:
         try:
             self.refresh()
+            self.lost_to_epoch.clear()                # the assignment read again: what is still mine is the pass's to take
         except OSError as e:
             self.store_errors += 1
             log.warning("%s: the store did not answer (%s); going on with the last assignment read", self.name, e)
@@ -1184,6 +1186,7 @@ class VmsWorker(Worker):
             self.actuator("stop", {"id": uid})
             self.reconciler.actual.pop(uid, None)
             self.release(unit)
+            self.lost_to_epoch.add(unit)
         return lost
 
     # A fenced instance used to stay fenced: alive, renewing nothing, heartbeating `fenced: true` — which
@@ -1687,6 +1690,15 @@ class VmsWorker(Worker):
                         self._slow.add(id(dev))
                 if id(dev) in self._performing:
                     continue                             # a call into this device has not returned: wait your turn
+            if unit not in self.leases and unit in self.lost_to_epoch:
+                # LET GO SINCE THE ASSIGNMENT WAS READ: NOT TAKEN BACK BETWEEN PASSES (found by the flaky
+                # `test_a_fenced_holder_on_a_beat_does_not_act`, run beside the М12 suite). The lease step found a
+                # newer epoch — the camera's new holder took it — and let the camera go; a beat 0.25 s later, on rows
+                # read at the last pass, found it held without a lease and took the next epoch by CAS: the new holder
+                # fenced by one that had not read its assignment since, the command performed by the old one, and the
+                # two taking it from each other beat by beat until the old one's pass. Whether the camera is still mine
+                # is the pass's to say, after the assignment is read (`reconcile_once`); until then, whoever holds it acts.
+                continue
             if unit not in self.leases:
                 try:
                     self.take_epoch(unit)                # a device commanded is a unit fenced: its epoch, before the first command

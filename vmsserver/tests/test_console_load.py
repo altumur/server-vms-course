@@ -146,6 +146,30 @@ def test_past_its_bound_on_connections_the_console_answers_503_at_once():
         srv.shutdown(); _restore(was)
 
 
+def test_every_bounded_door_queues_as_many_connections_as_it_serves_before_it_accepts_one():
+    """The store's role sockets refused the sixth caller of a burst (`test_configstorevars`: `socketserver`'s queue of
+    5); the console's doors are the same class (`Bounded`). The kernel's queue holds every lane the door serves — the
+    common slots, the reserve, the monitors', the box's — on its TCP door (`door_server`, `ConsoleServer`: a full queue
+    drops the SYN, a second's wait) and its unix one (`UnixConsoleServer`: a full queue refuses `connect`)."""
+    import socketserver
+    from tests.test_configstorevars import _queued
+    from w2cplatform.console import Bounds, UnixConsoleServer, door_server
+    tcp = door_server(("127.0.0.1", 0), socketserver.BaseRequestHandler, limit=20, per_address=20)   # never accepts
+    try:
+        assert _queued(socket.AF_INET, tcp.server_address, 20) == 20
+    finally:
+        tcp.server_close()
+    d = tempfile.mkdtemp(prefix="cq", dir="/tmp")
+    path = os.path.join(d, "console.sock")
+    lanes = Bounds(limit=12, per_address=12, reserve=3, box=4, monitor=5, monitors=())
+    unix = UnixConsoleServer(path, socketserver.BaseRequestHandler, lanes)
+    try:
+        assert _queued(socket.AF_UNIX, path, 24) == 24
+    finally:
+        unix.server_close()
+        os.rmdir(d)
+
+
 # -- the sixth pass: whose connections ----------------------------------------------------------------------------------
 class _Unix(http.client.HTTPConnection):
     """HTTP through the console's unix socket — what `curl --unix-socket <path> http://console/…` does on the box."""

@@ -530,9 +530,17 @@ def _door(daemon: "StoreDaemon", role_of):
 
 # So many connections served at once, so many of them to one address; the next is refused on the spot (`busy`), and
 # what it sent is not read. Mixed in before a threading server: the count is taken before a thread is made.
+# The kernel's queue of connections not yet accepted is the door's bound too (`request_queue_size`, asked by `listen`
+# in the server's `__init__`, so `bound` comes first): `socketserver`'s own is 5, and a unix socket whose queue is
+# full refuses `connect` outright (macOS; a TCP one drops the SYN, a second's retry) — six callers at once, before
+# the accepting thread woke, and the sixth was `ConnectionRefusedError`, never counted, never answered `busy`.
 class _Bounded:
     daemon_threads = True
     per_address: int | None = None
+
+    @property
+    def request_queue_size(self) -> int:
+        return self.limit
 
     def bound(self, limit: int, per_address: int | None = None) -> None:
         self.limit, self.per_address = limit, per_address
@@ -604,10 +612,13 @@ def _unix_server(path: str, handler, mode: int, group: str | None):
                 return self.shutdown_request(request)
             linger.add(request)                      # its request unread: finished, not reset
 
+        def __init__(self, path, handler):
+            self.bound(ROLE_CONNECTIONS)             # before `listen`: the queue is as long as the bound
+            super().__init__(path, handler)
+
     if os.path.exists(path):
         os.unlink(path)                              # a socket left by a daemon that was killed
     srv = UnixDoor(path, handler)
-    srv.bound(ROLE_CONNECTIONS)
     os.chmod(path, mode)
     if group:
         try:
