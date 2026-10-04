@@ -90,7 +90,7 @@ class LiveWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, ctl: SpecController | None = None, url: str = "",
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
-                 peer_factory=None, env: dict | None = None):
+                 peer_factory=None, env: dict | None = None, archive_root: str | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
         self.gate = Gate(self.vars, self.wall, glass=False)   # who may be given a stream here (`handler`): a token, never the console's emergency session
@@ -101,6 +101,10 @@ class LiveWorker(Worker):
         self.url = url or env.get("GATEWAY_URL", "")
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "100"))
         self.labels = runtime.labels(env)
+        # Its server's events archive — where its journal goes (`Worker.journal`: `worker.name_taken`, an alarm). It had
+        # none, and those lines went to its log alone while every other worker's reached the archive (the product's
+        # cross-check, 4 Oct: its gateway had the same gap). A gateway writes no events of its own beside them.
+        self.archive_root = runtime.events_root(env, archive_root)
         self.peer_factory = peer_factory or FakePeer
         self.upstreams: dict[str, Upstream] = {}
         self.sessions: dict[str, tuple[str, object]] = {}          # session id -> (cam, peer)

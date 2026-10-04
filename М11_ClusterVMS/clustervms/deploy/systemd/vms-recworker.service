@@ -29,6 +29,8 @@ Environment=SECRETS_KEY=%d/platform.key
 # /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would
 # override `Environment=` (systemd's rule), and the socket and the name above are the unit's, never a file's.
 UMask=0007
+Type=simple
+NotifyAccess=main
 ExecStart=/opt/w2c/bin/w2c-run.sh recorder
 Restart=always
 RestartSec=2

@@ -341,6 +341,60 @@ def test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_a
     assert w.fetched == ["open-2"]
 
 
+def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted():
+    """The product's cross-check (4 Oct): a command for a camera with no holder hung for ever. In the course too: a
+    command is ended by its HOLDER at its deadline, and the console's sweep passed every row with an `action` by — a
+    camera placed nowhere had its command standing for good, never answered, never counted. Filed through the door
+    for an unplaced camera, the row stands while a holder could still come for it, and the reaper's turn ends it
+    `COMMAND_REAP_AFTER` past its deadline, counted on `/metrics` with the requests that expired. Its siblings in the
+    same sweep: a command whose deadline is not a time (ended once its filing is older than the longest a command may
+    wait), one a holder answered whose answer never reached a heartbeat (cleared, not counted twice), a scenario's row
+    with an action nobody serves, in another family; a `record` and a young backfill are not this pass's."""
+    from vms import jobs
+    from vms.__main__ import _reap_turn
+    from vms.console import vms_metrics, vms_routes
+    box = Box(); ctl, con = _ctl(box)
+    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.93/ch/1"})["id"]
+    assert ctl.placement(gate) is None                                    # no worker anywhere: nobody holds it
+    route = vms_routes(None, None, con)
+    data = json.dumps({"unit": str(gate), "action": "output", "port": 1}).encode()
+    filed = route(type("H", (), {"headers": {"Content-Length": str(len(data)), "Idempotency-Key": "open-gate"},
+                                 "rfile": io.BytesIO(data)})(), "POST", "/requests", {})
+    assert filed[0] == 202
+    until = float(filed[1]["queued"]["valid_until"])
+    now = box.wall()
+    con.vars.put(SPEC.sub.request_key("no-deadline"), {"unit": str(gate), "action": "output", "port": "1",
+                                                       "valid_until": "soon", "at": str(now)})
+    con.vars.put(SPEC.sub.request_key("answered"), {"unit": str(gate), "action": "output", "port": "1",
+                                                    "valid_until": str(now + 30)})
+    box.objects.put("vms/commands/answered", json.dumps({"instance": "w-x", "outcome": "performed"}).encode())
+    rec.vars.put(REC_SPEC.sub.request_key("snap-0"), {"unit": str(gate), "action": "snapshot", "at": str(now),
+                                                      "valid_until": str(now + 30), "by": "auto/s-1"})
+    rec.vars.put(REC_SPEC.sub.request_key("s-1"), {"action": "record", "cam": str(gate), "minutes": "10", "at": str(now)})
+    rec.vars.put(REC_SPEC.sub.request_key("7-1-2"), {"unit": "7", "cam": "7", "from": "1", "to": "2", "at": str(now),
+                                                     "action": "backfill"})
+
+    def standing(c, spec):
+        return sorted(k.rsplit("/", 1)[1] for k in c.vars.list(spec.sub.requests_prefix()))
+
+    was = dict(jobs.expired)
+    box.wall.advance(until - now + jobs.COMMAND_REAP_AFTER - 5)           # past its deadline: a holder's still, if one comes
+    _reap_turn([], [rec, con])
+    assert standing(con, SPEC) == ["answered", "no-deadline", "open-gate"]
+    box.wall.advance(10)                                                  # a minute past it: nobody will
+    _reap_turn([], [rec, con])
+    assert standing(con, SPEC) == ["no-deadline"]                         # its filing is not ten minutes old yet
+    assert standing(rec, REC_SPEC) == ["7-1-2", "s-1"]
+    assert jobs.expired.get("vms", 0) == was.get("vms", 0) + 1           # the answered one is not counted again
+    assert jobs.expired.get("rec", 0) == was.get("rec", 0) + 1
+    box.wall.advance(jobs.COMMAND_MAX_VALID)
+    _reap_turn([], [rec, con])
+    assert standing(con, SPEC) == [] and jobs.expired["vms"] == was.get("vms", 0) + 2
+    text = "\n".join(vms_metrics(con)())
+    assert f'vms_requests_expired_total{{sub="vms"}} {jobs.expired["vms"]}' in text, text
+
+
 def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_mark_is_made_once():
     """The review's second pass (minor): a unit `live: on-demand` is held — its device on the line, nothing
     recorded — under no epoch and so under no lease; its commands went to the device with no fence at all, and the

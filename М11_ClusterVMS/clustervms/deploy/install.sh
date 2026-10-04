@@ -5,7 +5,9 @@
 #
 #   --spares   also `w2c-spares.sh` and its timers (М10's `vmsserver/deploy/`): every minute it reads the console's
 #              numbers and starts the spares this server can serve — never stops one (lesson 4) — each from its role's
-#              template (`vms-vmsworker-spare@.service`, `vms-recworker-spare@.service`; macOS: the role's plist)
+#              template (`vms-vmsworker-spare@.service`, `vms-recworker-spare@.service`; macOS: the role's plist).
+#              On Linux it runs as `w2c-spares` (`w2c-cluster.sysusers`), and the polkit rule `w2c-spares.rules` lets
+#              that user `systemctl start` those templates' instances and nothing else
 #
 # Both: /etc/w2c -> /data/platform/etc and /etc/vms -> /data/vms/etc (mutable configuration on the data partition).
 # Linux (systemd): /opt/w2c/{vmsserver,clustervms,bin/w2c-run.sh}; `w2c-cluster.sysusers` and `.tmpfiles`; the archive's
@@ -98,6 +100,9 @@ if command -v systemctl >/dev/null 2>&1; then
     for u in $SPARE_UNITS; do
       install -m 0644 "$HERE/systemd/$u.service" "/etc/systemd/system/$u.service"
     done
+    # What the spares' user may ask systemd for: `start` of these templates' instances, nothing else. polkitd reads
+    # its rules directory again by itself; without the rule the script's `systemctl start` is refused, and it says so.
+    install -D -m 0644 "$HERE/systemd/w2c-spares.rules" /etc/polkit-1/rules.d/50-w2c-spares.rules
     rm -f /usr/local/bin/w2c-spares.sh
     cp "$VMSSERVER/deploy/w2c-spares.sh" /usr/local/bin/w2c-spares.sh; chmod 0755 /usr/local/bin/w2c-spares.sh
     for f in "$VMSSERVER"/deploy/w2c-spares*.service "$VMSSERVER"/deploy/w2c-spares*.timer; do

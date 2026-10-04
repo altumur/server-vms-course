@@ -20,6 +20,7 @@ depend on its still being assigned.
 """
 from __future__ import annotations
 
+import json
 import logging
 import time
 
@@ -480,6 +481,56 @@ BACKFILL_TTL = 86400.0
 # while the family is empty. The day-old backfills, which need their rows read, stay on the thirty-second cycle.
 CLEAR_EVERY = 2.0
 
+# …AND A COMMAND NOBODY HOLDS THE CAMERA FOR HAS AN END (the product's cross-check, 4 Oct: its command for a camera with
+# no holder hung for ever, until its reaper closed it). A command (`action`: `output`, `preset`, a scenario's) is ended
+# by its HOLDER at its `valid_until` (`VmsWorker.requests`: `expired`, in its heartbeat) — and a camera that is placed
+# nowhere, or whose holder is gone, has none: the row stood for good, unanswered and uncounted, and its caller never
+# learned how it ended. A command still standing `COMMAND_REAP_AFTER` past its deadline is ended here, on the reaper's
+# thirty seconds, and counted with the requests that expired (`vms_requests_expired_total`) — so every command has an
+# outcome at most `valid_until` + a minute + a turn after it was filed. A minute: a holder expires its own rows at the
+# deadline and says so within a heartbeat (ten seconds), and two consoles' clocks may differ by a few. A row whose
+# holder DID answer it (its mark says how: `VmsWorker._confirm`) and whose answer never reached a heartbeat is cleared
+# and not counted again. A deadline that is not a time is the holder's refusal when there is one; with none, the row
+# ends once its filing is older than the longest a command may wait (`COMMAND_MAX_VALID`, the holder's `MAX_VALID`).
+# A `record` is the console's own to end (`record_on_request`, every two seconds), and a backfill has its day.
+COMMAND_REAP_AFTER = 60.0
+COMMAND_MAX_VALID = 600.0
+
+
+# One standing command, looked at by the reaper: True when it was ended here.
+def _end_command(ctl, key: str, it: dict, idx, now: float) -> bool:
+    try:
+        until = finite(it.get("valid_until") or 0)
+    except (TypeError, ValueError):
+        until = 0.0
+    if not until:
+        try:
+            until = finite(it.get("at")) + COMMAND_MAX_VALID
+        except (TypeError, ValueError):
+            return False                                    # not known when it was filed either: not known to be over
+    if now - until < COMMAND_REAP_AFTER:
+        return False                                        # its holder's to end, if it has one
+    rid = key.rsplit("/", 1)[1]
+    mark = ctl.objects.get(f"{ctl.sub.name}/commands/{rid}")     # the holder's mark (`VmsWorker.command_key`)
+    try:
+        ctl.vars.delete(key, cas=idx)                       # by CAS: a row filed again under the same id is a new one
+    except Exception:                                       # noqa: BLE001 — changed meanwhile, or the store: the next pass
+        return False
+    try:
+        said = json.loads(mark) if mark else None
+    except PARSE_ERRORS:
+        said = {}
+    if isinstance(said, dict) and said.get("outcome"):
+        log.info("%s: command %s was answered (%s) and its answer never reached a heartbeat: its row is cleared",
+                 ctl.spec.name, rid, said.get("outcome"))
+        return True
+    _expired(ctl.spec.name)
+    why = ("its holder began it and never said how it went: whether the device acted is not known" if mark
+           else "no worker held its camera to perform it")
+    log.warning("%s: command %s for %s ended unperformed %.0f s past its deadline — %s", ctl.spec.name, rid,
+                it.get("unit", "?"), now - until, why)
+    return True
+
 
 def clear_requests(ctl, sweep: bool = True) -> int:
     from w2cplatform.console import heartbeats
@@ -500,8 +551,16 @@ def clear_requests(ctl, sweep: bool = True) -> int:
         if not sweep:
             continue                                        # the short cycle: answered rows only, nothing read
         it, idx = ctl.vars.get(key)
-        if not it or it.get("action") or not (("from" in it and "to" in it) or "asks" in it):
-            continue                                        # a command or a `record`: its own `valid_until` ends it
+        if not it:
+            continue
+        action = str(it.get("action") or "")
+        if action == "record":
+            continue                                        # the console's own turn ends it (`record_on_request`)
+        if action and action != "backfill":
+            _end_command(ctl, key, it, idx, now)            # a command: its holder ends it — or, with none, this
+            continue
+        if not (("from" in it and "to" in it) or "asks" in it):
+            continue
         try:
             old = now - finite(it.get("at", now) or now) > BACKFILL_TTL
         except (TypeError, ValueError):

@@ -14,9 +14,11 @@ User=vms
 Group=vms
 SupplementaryGroups=vms-vmsworker w2c-events w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/vmsworker.sock
-# Its label set, `SPARE_FOR=<set>` and nothing else: written by `w2c-spares.sh` before it starts the instance. No `-`:
-# a spare whose set is not said does not start at all — without it, it would be a worker taking any free name.
-EnvironmentFile=/run/w2c-spares/%n.env
+# Its label set: the file `w2c-spares.sh` writes before it starts the instance, of which `w2c-run.sh` reads the line
+# `SPARE_FOR=` and nothing else, checked against the labels' alphabet — no line, or no set: it does not start, else it
+# would be a worker taking any free name. Not `EnvironmentFile=` (the product's cross-check, 4 Oct): whoever could
+# write the file — the spares' user — could set any variable, `LD_PRELOAD` too, in a process holding this key.
+Environment=SPARE_FILE=/run/w2c-spares/%n.env
 Environment=RTSP_HOST=0.0.0.0
 # A second worker on this server: its fan-out on a port the OS gives (`auto`), published in its heartbeat (`live_url`)
 # — 8554 is the server's own worker's.
@@ -28,6 +30,8 @@ UMask=0007
 RuntimeDirectory=vms
 RuntimeDirectoryMode=0755
 RuntimeDirectoryPreserve=yes
+Type=simple
+NotifyAccess=main
 ExecStart=/opt/w2c/bin/w2c-run.sh worker
 Restart=always
 RestartSec=2

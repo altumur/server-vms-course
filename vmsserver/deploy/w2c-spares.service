@@ -4,16 +4,22 @@
 #
 # Deliberately NOT a container. It talks to systemd on this host, and the two ways to let a container do
 # that are a privileged container or the D-Bus socket bind-mounted into it — both of which hand root on
-# the box to something that also speaks HTTP to the world. This is a page of shell run by root, once
-# a minute, with no listening socket; that is the smaller thing to audit.
+# the box to something that also speaks HTTP to the world. This is a page of shell, once a minute, with no
+# listening socket — and no longer root: it runs as `w2c-spares`, and what systemd lets that user do is one
+# verb on two templates (М11's `w2c-spares.rules`); that is the smaller thing to audit.
 [Unit]
 Description=w2c: start a recorder for every declared archive nobody holds
 After=network-online.target
 
 [Service]
 Type=oneshot
+# NOT ROOT (the product's cross-check, 4 Oct): its own user, in no group but its own — polkit lets `w2c-spares` do one thing,
+# `start`, of the spares' templates and nothing else (М11's `w2c-spares.rules`, its user in `w2c-cluster.sysusers`,
+# both installed by its `install.sh --spares`); it opens no store and reads no key.
+User=w2c-spares
+Group=w2c-spares
 ExecStart=/usr/local/bin/w2c-spares.sh recworker
-# CONSOLE, MAX_RECORDERS, SERVER_NAME, SPARES_RUN — the same files the units read (the platform's `w2c.env`, then
+# CONSOLE, MAX_RECORDERS, SERVER_NAME — the same files the units read (the platform's `w2c.env`, then
 # the VMS's `vms.env`; /etc/w2c and /etc/vms, links into the data partition on the course's box), so the box has
 # one place to configure. `-` because a box that has not written one yet is a box with the defaults, not a failure.
 EnvironmentFile=-/etc/w2c/w2c.env
@@ -28,3 +34,5 @@ NoNewPrivileges=yes
 # write, kept between runs — a spare restarted by systemd reads its file again.
 RuntimeDirectory=w2c-spares
 RuntimeDirectoryPreserve=yes
+# Its user's, 0755: a spare (user `vms`) reads its own file there, and only the line `SPARE_FOR=` of it (`w2c-run.sh`).
+RuntimeDirectoryMode=0755

@@ -1404,7 +1404,8 @@ def vms_metrics(ctl):
                 road += histogram("vms_request_seen_to_device_seconds", f'worker="{label(w)}"', h, w, "command_wait")
         # …and the requests of automation this console dropped as too old (`jobs.expired`): a scenario said
         # `fired` and nothing happened. Zero is the number this should stay at; climbing, it says the requests'
-        # loop is late (the review's second pass).
+        # loop is late (the review's second pass). `sub="vms"` is the commands the reaper ended because no holder
+        # did — a camera placed nowhere, or its holder gone (`jobs.COMMAND_REAP_AFTER`).
         from . import jobs
         return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{label(k)}"}} {v}' for k, v in total.items()]
                 + ["# TYPE vms_requests_expired_total counter"]

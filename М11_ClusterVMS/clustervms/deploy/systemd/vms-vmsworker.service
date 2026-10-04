@@ -32,6 +32,11 @@ UMask=0007
 RuntimeDirectory=vms
 RuntimeDirectoryMode=0755
 RuntimeDirectoryPreserve=yes
+# `simple`, not `notify` (the product's units): the watchdog needs only `NotifyAccess` — the runner `exec`s, so the
+# loop is the main process — and under `notify` a SPARE waiting for an offer, which says nothing until it is somebody,
+# would hold `systemctl start` (and `w2c-spares.sh` behind it) until its start timed out.
+Type=simple
+NotifyAccess=main
 ExecStart=/opt/w2c/bin/w2c-run.sh worker
 Restart=always
 RestartSec=2

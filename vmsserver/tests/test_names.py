@@ -178,3 +178,33 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
     assert d.name == NAME and _holder(box) == d.instance                 # a lapsed name is anybody's of that name
     assert _mark(box, "machine-b") is None
     assert ctl.pass_once()["name_conflicts"] == 0
+
+
+def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive():
+    """The product's cross-check (4 Oct): its live gateway wrote `worker.name_taken` — the ALARM that says a process is
+    nobody because another instance holds its name — into its own log and nowhere else. The course's gateway had the
+    same gap: `LiveWorker` had no `archive_root`, so its journal (`Worker.journal`) was the log only, while its
+    container mounts the archive for its registration. Every kind of worker, told the archive the way its entry point
+    tells it (`ARCHIVE` in its environment), writes its journal there: the alarm into the alarms' tree, the line beside
+    it into the audit family's."""
+    import tempfile
+    from w2cplatform.events import alarm_tree, buckets_under
+    from vms.autoworker import AutoWorker
+    from vms.detjobworker import DetJobWorker
+    from vms.detworker import DetWorker
+    from vms.liveworker import LiveWorker
+    from vms.surveyworker import SurveyWorker
+    box = Box()
+    made = {"VmsWorker": lambda env: VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock,
+                                               wall=box.wall, server="srv-a", env=env)}
+    for cls in (LiveWorker, AutoWorker, DetWorker, DetJobWorker, SurveyWorker):
+        made[cls.__name__] = lambda env, cls=cls: cls(None, box.vars, box.objects, clock=box.clock, wall=box.wall,
+                                                      server="srv-a", env=env)
+    for kind, make in made.items():
+        root = tempfile.mkdtemp(prefix="events-")
+        w = make({"ARCHIVE": root})
+        role = f"{w.sub.name}worker"
+        w.journal.say("worker.name_taken", ALARM, of=w.sub.name, worker=w.name, holder="another")
+        w.journal.say("worker.name_back", of=w.sub.name, worker=w.name)
+        said = buckets_under(root, "audit", role, 600) + buckets_under(root, alarm_tree("audit"), role, 600)
+        assert sorted(b.subsystem for b in said) == sorted(["audit", alarm_tree("audit")]), (kind, root, said)

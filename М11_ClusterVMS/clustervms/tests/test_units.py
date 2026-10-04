@@ -101,6 +101,125 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
                       "/etc/w2c/tls -tuning lan -join srv-a@10.0.0.1:8300")
 
 
+def _run_spare(d: str, said: str | None, env: dict | None = None, w2c_env: str = "") -> subprocess.CompletedProcess:
+    """`w2c-run.sh worker` as a spare's template runs it: `SPARE_FILE` names `said` (None: no file at all), the two
+    shared files empty but for `w2c_env`, and a `python3` that prints its environment."""
+    spare, w2c = os.path.join(d, "spare.env"), os.path.join(d, "w2c.env")
+    if os.path.exists(spare):
+        os.remove(spare)
+    if said is not None:
+        with open(spare, "w") as f:
+            f.write(said)
+    with open(w2c, "w") as f:
+        f.write(w2c_env)
+    py = os.path.join(d, "python3")
+    with open(py, "w") as f:
+        f.write("#!/bin/sh\necho \"$@\"\nenv\n")
+    os.chmod(py, 0o755)
+    full = {"PATH": os.environ["PATH"], "W2C_ENV": w2c, "VMS_ENV": os.path.join(d, "none"), "PYTHON": py,
+            "W2C_HOME": d, "SPARE_FILE": spare, **(env or {})}
+    return subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], env=full, capture_output=True, text=True)
+
+
+def test_a_spares_runner_takes_only_its_set_from_its_file_and_refuses_one_outside_the_alphabet():
+    """The product's cross-check (4 Oct): the spare's template read its file by `EnvironmentFile=`, so whoever could
+    write `/run/w2c-spares/<unit>.env` — the spares' script's user — could set ANY variable in a process holding the
+    role's key and groups: `LD_PRELOAD`, `PYTHONPATH`. The runner reads the line `SPARE_FOR=` of the file the unit
+    names (`SPARE_FILE`) and nothing else, checked against the labels' alphabet (`spec.LABEL_WORD`, comma-joined; empty
+    is the empty set): every other line is ignored, a set outside the alphabet, no such line or no file at all is a
+    spare that does not start — nothing exec'd. And neither name comes from the shared files: a regular unit never
+    becomes a spare by a line in `w2c.env`."""
+    from w2cplatform.spec import LABEL_WORD
+    d = tempfile.mkdtemp(prefix="spare-")
+    hostile = (f"LD_PRELOAD={d}/evil.so\nPYTHONPATH={d}/evil\nSECRETS_KEY={d}/stolen\n"
+               "SPARE_FOR=vlan:dmz,zone-1.b_2\nSPARE_FOR=second\n")
+    out = _run_spare(d, hostile)
+    assert out.returncode == 0, out.stderr
+    got = dict(l.split("=", 1) for l in out.stdout.splitlines()[1:] if "=" in l)
+    assert got["SPARE_FOR"] == "vlan:dmz,zone-1.b_2"                                   # the first such line, that line only
+    assert "LD_PRELOAD" not in got and "SECRETS_KEY" not in got
+    assert got["PYTHONPATH"] == f"{d}/clustervms:{d}/vmsserver"                        # the runner's own, nothing added
+    out = _run_spare(d, "SPARE_FOR=\n")
+    assert out.returncode == 0 and "SPARE_FOR=" in out.stdout.splitlines(), out.stderr  # the empty set is a set
+    word64 = "a" * 64
+    assert LABEL_WORD.fullmatch(word64) and not LABEL_WORD.fullmatch(word64 + "a")
+    assert _run_spare(d, f"SPARE_FOR={word64}\n").returncode == 0
+    for bad in ("vlan dmz", "$(touch x)", ",a", "a,", "a,,b", "-a", "a;b", "склад", word64 + "a", "a\tb"):
+        out = _run_spare(d, f"SPARE_FOR={bad}\n")
+        assert out.returncode == 2 and "is not a label set" in out.stderr and "-m cluster" not in out.stdout, bad
+    for said in (None, "LD_PRELOAD=x\n", "# SPARE_FOR=a\n"):
+        out = _run_spare(d, said)
+        assert out.returncode == 2 and "no SPARE_FOR= line" in out.stderr and "-m cluster" not in out.stdout, said
+    out = _run_spare(d, "SPARE_FOR=x\n", w2c_env=f"SPARE_FOR=from-a-shared-file\nSPARE_FILE={d}/other\n")
+    assert out.returncode == 0 and "SPARE_FOR=x" in out.stdout.splitlines()
+    regular = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], capture_output=True, text=True,
+                             env={"PATH": os.environ["PATH"], "W2C_ENV": os.path.join(d, "w2c.env"), "PYTHON": os.path.join(d, "python3"),
+                                  "VMS_ENV": os.path.join(d, "none"), "W2C_HOME": d})
+    assert regular.returncode == 0 and not [l for l in regular.stdout.splitlines() if l.startswith(("SPARE_FOR=", "SPARE_FILE="))]
+
+
+def _polkit(rule: str, user: str, action: str, verb: str | None, unit_: str | None) -> str | None:
+    """What the rule file answers, run by node against a stub `polkit`: "yes", "no", "not_handled" — or None when
+    there is no node to run it."""
+    import shutil
+    node = shutil.which("node")
+    if node is None:
+        return None
+    js = ("const R={YES:'yes',NO:'no',NOT_HANDLED:'not_handled'};let f;const polkit={Result:R,addRule:g=>{f=g}};"
+          + open(rule, encoding="utf-8").read()
+          + f"\nconst d={json.dumps({'verb': verb, 'unit': unit_})};"
+          + f"process.stdout.write(String(f({{id:{json.dumps(action)},lookup:k=>d[k]===null?undefined:d[k]}},"
+          + f"{{user:{json.dumps(user)}}})));")
+    return subprocess.run([node, "-e", js], capture_output=True, text=True, check=True).stdout
+
+
+def test_the_spares_script_runs_as_its_own_user_whom_polkit_lets_start_a_spare_template_and_nothing_else():
+    """The product's cross-check (4 Oct): the spares' timer ran its script as root. It runs as `w2c-spares` — a user
+    in no group but its own (`w2c-cluster.sysusers`), so no store socket, no key, no archive — and the polkit rule
+    `install.sh --spares` installs lets that user do one thing through systemd: `start`, of an instance of a spare
+    template, the templates being exactly `install.sh`'s SPARE_UNITS. Run by node where there is one: start of
+    `vms-vmsworker-spare@2.service` yes; stop, restart, reset-failed of it no; start of the regular worker, of a
+    template that is not a spare's, of a spare with no number, or a unit file written: no; another user: not this
+    rule's business."""
+    import re
+    src = open(os.path.join(DEPLOY, "install.sh"), encoding="utf-8").read()
+    spares = src.split('SPARE_UNITS="', 1)[1].split('"', 1)[0].split()
+    rule = os.path.join(SYSTEMD, "w2c-spares.rules")
+    text = open(rule, encoding="utf-8").read()
+    named = re.search(r"/\^vms-\(([a-z|]+)\)-spare@", text).group(1).split("|")
+    assert sorted(f"vms-{r}-spare@" for r in named) == sorted(spares)
+    assert 'install -D -m 0644 "$HERE/systemd/w2c-spares.rules" /etc/polkit-1/rules.d/' in src
+    users = _sysusers(os.path.join(SYSTEMD, "w2c-cluster.sysusers"))
+    assert ["u", "w2c-spares", "-"] == next(l for l in users if l[:2] == ["u", "w2c-spares"])[:3]
+    assert not [l for l in users if l[0] == "m" and l[1] == "w2c-spares"]                 # in no group but its own
+    for f in sorted(os.listdir(M10)):
+        if f.startswith("w2c-spares") and f.endswith(".service"):
+            u = unit(os.path.join(M10, f))
+            assert u["User"] == ["w2c-spares"] and u["Group"] == ["w2c-spares"] and "SupplementaryGroups" not in u, f
+            assert u["RuntimeDirectory"] == ["w2c-spares"] and u["RuntimeDirectoryMode"] == ["0755"], f
+    manage = "org.freedesktop.systemd1.manage-units"
+    cases = [("w2c-spares", manage, "start", "vms-vmsworker-spare@2.service", "yes"),
+             ("w2c-spares", manage, "start", "vms-recworker-spare@1.service", "yes"),
+             ("w2c-spares", manage, "stop", "vms-vmsworker-spare@2.service", "no"),
+             ("w2c-spares", manage, "restart", "vms-vmsworker-spare@2.service", "no"),
+             ("w2c-spares", manage, "reset-failed", "vms-vmsworker-spare@2.service", "no"),
+             ("w2c-spares", manage, "start", "vms-vmsworker.service", "no"),
+             ("w2c-spares", manage, "start", "vms-liveworker-spare@1.service", "no"),
+             ("w2c-spares", manage, "start", "vms-vmsworker-spare@.service", "no"),
+             ("w2c-spares", manage, "start", "vms-vmsworker-spare@1.service.d", "no"),
+             ("w2c-spares", manage, "start", "sshd.service", "no"),
+             ("w2c-spares", manage, None, None, "no"),
+             ("w2c-spares", "org.freedesktop.systemd1.manage-unit-files", None, None, "no"),
+             ("w2c-spares", "org.freedesktop.systemd1.reload-daemon", None, None, "no"),
+             ("vms", manage, "start", "vms-vmsworker-spare@2.service", "not_handled")]
+    for user, action, verb, unit_, want in cases:
+        got = _polkit(rule, user, action, verb, unit_)
+        if got is None:
+            import pytest
+            pytest.skip("no node here to run the polkit rule; its names were checked above")
+        assert got == want, (user, action, verb, unit_, got)
+
+
 def test_install_installs_the_units_there_are():
     """The units, enabled; the spares' templates with `--spares` (never enabled: `w2c-spares.sh` starts their
     instances); and every unit file there is is one of the two."""
@@ -190,10 +309,11 @@ def test_every_unit_writes_as_its_groups_and_sees_the_rest_of_the_system_read_on
 def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
     """The twelfth review, blocker 6 (the owner's decision: a spare has the regular unit's credentials, keys, environment,
     user and groups): `vms-<role>-spare@.service`, which `w2c-spares.sh` starts, is its role's unit with only these
-    differences — no `WORKER_NAME`; a worker's set from its one-line file (`EnvironmentFile`, no `-`: no set, no
-    start) and its fan-out on a port the OS gives; a recorder's door likewise. Nothing else may differ, so a line given
-    to the role is given to its spares or this fails."""
-    allowed = {"vms-vmsworker": {("env", "WORKER_NAME"), ("env", "RTSP_PORT"), ("EnvironmentFile",), ("Description",),
+    differences — no `WORKER_NAME`; a worker's set from its one-line file (`SPARE_FILE`, of which the runner reads
+    `SPARE_FOR=` alone: no set, no start) and its fan-out on a port the OS gives; a recorder's door likewise. Nothing
+    else may differ, so a line given to the role is given to its spares or this fails. And no `EnvironmentFile=` in a
+    spare either (the product's cross-check, 4 Oct): a file read whole is every variable its writer wants."""
+    allowed = {"vms-vmsworker": {("env", "WORKER_NAME"), ("env", "RTSP_PORT"), ("env", "SPARE_FILE"), ("Description",),
                                  ("WantedBy",)},
                "vms-recworker": {("env", "WORKER_NAME"), ("env", "ARCHIVE_PORT"), ("Description",), ("WantedBy",)}}
     for role, ok in allowed.items():
@@ -202,8 +322,10 @@ def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
         diff |= {("env", k) for k in set(a["env"]) | set(b["env"]) if a["env"].get(k) != b["env"].get(k)}
         assert diff <= ok, (role, diff - ok)
     w = unit(os.path.join(SYSTEMD, "vms-vmsworker-spare@.service"))
-    assert w["EnvironmentFile"] == ["/run/w2c-spares/%n.env"] and w["env"]["RTSP_PORT"] == "auto"
+    assert w["env"]["SPARE_FILE"] == "/run/w2c-spares/%n.env" and w["env"]["RTSP_PORT"] == "auto"
     assert "WORKER_NAME" not in w["env"]
+    for name in ("vms-vmsworker-spare@", "vms-recworker-spare@"):
+        assert "EnvironmentFile" not in unit(os.path.join(SYSTEMD, f"{name}.service")), name
     assert unit(os.path.join(SYSTEMD, "vms-recworker-spare@.service"))["env"]["ARCHIVE_PORT"] == "0"
 
 
@@ -237,8 +359,12 @@ def test_the_worker_and_the_recorder_tell_systemds_watchdog_that_their_loop_turn
     from w2cplatform.contract import HUNG_MOVE_AFTER, Worker
     from tests.conftest import Cluster
     for name in ("vms-vmsworker", "vms-recworker", "vms-vmsworker-spare@", "vms-recworker-spare@"):
-        sec = float(unit(os.path.join(SYSTEMD, f"{name}.service"))["WatchdogSec"][0])
+        u = unit(os.path.join(SYSTEMD, f"{name}.service"))
+        sec = float(u["WatchdogSec"][0])
         assert Worker.STAND_IN_FOR < sec < HUNG_MOVE_AFTER, name
+        # the product's units (4 Oct): the main process may notify, and `simple` — under `notify` a spare waiting for
+        # an offer, which says nothing until it is somebody, would hold `systemctl start` and the script behind it
+        assert sec == 360 and u["Type"] == ["simple"] and u["NotifyAccess"] == ["main"], name
     d = tempfile.mkdtemp(prefix="notify-", dir="/tmp")
     path = os.path.join(d, "n.sock")
     s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
