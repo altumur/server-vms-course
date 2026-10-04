@@ -20,11 +20,8 @@ outside a fence that does not start like a trace line.
 Before the rework the traces were Nomad's Variables API (`PUT /v1/var/…?namespace=default&cas=0`, `{"Items": …}`,
 `"ModifyIndex"`). No scene can make such a request now, so a lesson still quoting one is a lesson still to be
 rewritten: any line of that format anywhere in a lesson — prose, table or fence — fails the first test, and the checks
-above can no longer be passed by a line that no pattern matches.
-
-`STILL_IN_NOMAD_FORMAT` names the lessons another package rewrites in parallel with this one (06–10). A lesson in it
-is skipped only WHILE it still holds a Nomad-format line; the day it holds none, it is checked like the others, so
-the set can only make the check weaker for a lesson nobody has rewritten yet — and should be emptied once they are.
+above can no longer be passed by a line that no pattern matches. Every lesson of the module is checked; none is
+skipped (lessons 06–10 were the last to be rewritten, and the set that skipped them meanwhile is gone).
 """
 import glob
 import os
@@ -42,9 +39,6 @@ ANSWER = re.compile(r"^→ \d{3}( |$)")
 # Nomad's Variables API, as the old traces printed it: a route, a query, a body, a version.
 NOMAD = re.compile(r"/v1/vars?[/?]|[?&]namespace=|\"ModifyIndex\"|\{\"Items\"|X-Nomad-Token")
 
-# Lessons rewritten by WP5b at the same time as this file (М11 rework, plan's work package 5b).
-STILL_IN_NOMAD_FORMAT = {"06-what-stays-on-the-server.md", "07-events-the-database-that-is-a-cache.md",
-                         "08-pull-the-power.md", "09-two-instances-of-one-worker.md", "10-the-controller.md"}
 
 FENCE = re.compile(r"^\s*(```|~~~)")
 
@@ -68,10 +62,6 @@ def _elided(line: str) -> bool:
 
 def _nomad_lines(text: str) -> list[tuple[int, str]]:
     return [(n, l.strip()) for n, l in enumerate(text.splitlines(), 1) if NOMAD.search(l)]
-
-
-def _skipped(lesson: str, text: str) -> bool:
-    return os.path.basename(lesson) in STILL_IN_NOMAD_FORMAT and bool(_nomad_lines(text))
 
 
 def quotes(text: str) -> list[tuple[int, str]]:
@@ -102,8 +92,6 @@ def test_no_lesson_quotes_nomads_api():
     found = []
     for lesson in _lessons():
         text = open(lesson, encoding="utf-8").read()
-        if _skipped(lesson, text):
-            continue
         found += [f"{os.path.basename(lesson)}:{n}: {l}" for n, l in _nomad_lines(text)]
     assert not found, "a lesson still quotes Nomad's Variables API:\n" + "\n".join(found)
 
@@ -113,8 +101,6 @@ def test_every_quoted_line_of_a_trace_is_in_a_trace():
     missing, checked = [], 0
     for lesson in _lessons():
         text = open(lesson, encoding="utf-8").read()
-        if _skipped(lesson, text):
-            continue
         for n, line in quotes(text):
             checked += 1
             if line not in lines:
