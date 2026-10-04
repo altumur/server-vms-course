@@ -1,5 +1,9 @@
-"""python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller|
-detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontroller — the box's processes.
+"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|controller|console|resource —
+the VMS's processes on a box. The controllers of the other subsystems are the platform's, run from their specs
+(`python3 -m w2cplatform controller rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the boundary's step 5);
+the loops of `controller`, `console` and `resource` here are the platform's too (`host.controller_loop`,
+`host.sweep_loop`, `host.every`, `host.run_resource`) — run over the VMS's own controller (a device is one group),
+console (its routes) and resource (its keeps) until the boundary's step 6 turns those into declarations.
 
     PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
     ARCHIVE=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
@@ -28,8 +32,9 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
 # ================================================================================================
 # # __main__.py — `python3 -m vms worker | controller | console | resource | …`: the box's processes
 #
-# **Role in the module.** The entrypoint every deploy unit runs (`deploy/*.container` all say `Exec=python3
-# -m vms <verb>`; the Containerfile's default `CMD` is `worker`). It reads the environment, opens the two
+# **Role in the module.** The entrypoint of the VMS's units (`deploy/*.container` say `Exec=python3 -m vms <verb>`,
+# the controllers of the other subsystems `Exec=python3 -m w2cplatform controller <sub>`; the Containerfile's default
+# `CMD` is `worker`). It reads the environment, opens the two
 # file-backed stores under `$PLATFORM_DIR` with the *right token for the verb*, builds the process's object
 # from `worker.py` / `controller.py` / `console.py` / `resource.py` / …, and runs it until SIGTERM/SIGINT. It is
 # glue and nothing else: no logic of its own beyond wiring, and each verb's token is deliberately narrower
@@ -44,7 +49,7 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
 #   formats its server's own volume at `ARCHIVE_VOLUME`, by default `config.OWN_VOLUME` (`/data/vms/obsd/volume`:
 #   the archive engine is the VMS's, and so are its volumes).
 #   `MEDIA_DIR` is read by `gstvms/uri.py`, not here.
-# - `OBSD_SOCKET` — the host's ObjectStorage daemon (`w2cplatform/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
+# - `OBSD_SOCKET` — the host's ObjectStorage daemon (`vms/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
 #   recorder waits for one answer from it — shorter than a lease.
 # - `WORKER_NAME` — the slot to claim (systemd's `%i`); unset: `NOMAD_ALLOC_INDEX` → `w-<index>`; neither:
 #   `None`, which makes `VmsWorker` claim the first free slot, a lapsed one first.
@@ -58,14 +63,15 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
 #
 # ## Module-level names
 # - `root` — `$PLATFORM_DIR`, read once at import.
-# - `stop` — a `threading.Event` set by the SIGTERM/SIGINT handler; every verb loops on it. The handler is
-#   installed when the module is RUN (`if __name__ == "__main__"`), never at import: a process that imports the
-#   module (the tests do) keeps its own signals.
+# - `stop` — the platform's flag (`w2cplatform.host.stop`), set by the SIGTERM/SIGINT handler; every verb loops on
+#   it. The handler is installed when the module is RUN (`if __name__ == "__main__"`), never at import: a process that
+#   imports the module (the tests do) keeps its own signals.
 #
 # ### `if __name__ == "__main__"`
-# Dispatch table on `sys.argv[1]`: worker, controller, console, resource, gateway, livecontroller, detworker,
-# detcontroller. `test_the_units_run_the_entrypoints_the_package_has` regex-extracts the names and matches
-# them against the `Exec=` lines of the Quadlet units.
+# Dispatch table on `sys.argv[1]`: the workers (worker, recorder, gateway, detworker, detjobworker, surveyworker,
+# autoworker) and the three processes of the platform that still run a hook of the VMS's (controller, console,
+# resource). `test_the_units_run_the_entrypoints_the_package_has` regex-extracts the names and matches them against
+# the `Exec=` lines of the Quadlet units — `python3 -m vms <verb>` and `python3 -m w2cplatform controller <sub>`.
 #
 # ## Notes
 # - Three tokens, three processes: `vmsworker` (epochs, slots), `vmscontroller` (placement), `console`
@@ -87,7 +93,8 @@ import signal
 import sys
 import threading
 
-from w2cplatform import runtime
+from w2cplatform import host, runtime
+from w2cplatform.host import stop
 from w2cplatform.objects import FsObjectStore
 from w2cplatform.variables import open_vars, store_url
 
@@ -100,7 +107,6 @@ root = runtime.platform_dir(os.environ)
 # this is `file://` — in-process, no daemon, no hop. `PLATFORM_STORE=configstore:///run/configstore/<role>.sock` in a
 # cluster (`store_url`), `k8s://…` later; not one of those names appears in the loop.
 STORE_URL = store_url(os.environ, "file://" + os.path.join(root, "config"))
-stop = threading.Event()
 
 
 # Builds `vmsworker`:
@@ -206,26 +212,6 @@ def recorder() -> None:
         srv.shutdown()
 
 
-def reccontroller() -> None:
-    """The fourth subsystem's controller: the platform's class from rec.subsystem.yaml, placing recordings on
-    recorders — one per server, where the archive is. No code of its own."""
-    from w2cplatform.spec import SpecController
-    from .config import REC_SPEC
-    vars_ = open_vars(STORE_URL, writer="reccontroller", acl={"reccontroller": REC_SPEC.acl_controller()})
-    _controller_loop(SpecController(REC_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
-
-
-# Builds `vmscontroller` and runs the placement pass every 5 s:
-# - Variables as writer `vmscontroller` with `SPEC.acl_controller()` — `vms/workers/*`, `vms/placement/*`,
-#   `vms/slots/*`; never a camera's row (see `w2cplatform/spec.py`).
-# - `VmsController(vars_, objects, capacity=$CAPACITY)`.
-# - Each pass: `ensure_placed()` (deleted rows unplaced first, then every unplaced camera onto the workers
-#   it currently sees by their heartbeats), `redistribute()` (only the cameras of a *released* slot —
-#   scale-in — move; a merely silent slot is a crash and is left for the scheduler), `publish_snapshot()`
-#   (one object per worker under `vms/snapshot/` in the object store). Any exception is logged and the
-#   loop continues; `stop.wait(5)`
-#   between passes. No port, no state: the process can be restarted at any moment, and two of them agree by
-#   CAS.
 # A worker registers with its server's resource before it runs (`Worker.present`): a lock in the resource's tree for as
 # long as the process lives. A silent worker whose process the resource names running is HUNG, and keeps its units for
 # `HUNG_MOVE_AFTER`; one that is not running is dead, and its units move (`Controller.slot_fate`; the owner, 3 Oct).
@@ -233,59 +219,22 @@ def _present(w) -> None:
     w.present(runtime.events_root(os.environ))
 
 
-def _controller_loop(ctl) -> None:
-    """One controller process per subsystem, the same loop: unplace what was deleted, place what is new onto the
-    workers it sees, move what a released slot left, bring one unit home if its server came back, publish the
-    snapshot. Nothing else, ever."""
-    if os.environ.get("ARCHIVE"):                     # a slot it frees, and why, in this server's journal (`journal.py`)
-        from w2cplatform.journal import Journal
-        ctl.journal = Journal(os.environ["ARCHIVE"], "controller", ctl.wall)
-    if os.environ.get("HUNG_MOVE_AFTER"):             # how long a hung worker keeps its units (`Controller.hung_move_after`)
-        ctl.hung_move_after = float(os.environ["HUNG_MOVE_AFTER"])
-    while not stop.is_set():
-        # ONE pass around both (the scaling pass after the eighth review): the snapshot asks every unit's row, placement
-        # and server, which the placement pass has just read — kept for the pass, they cost the snapshot no read at all
-        # (`contract.one_pass`; what the pass wrote is read back from the store).
-        with ctl.one_pass():
-            ctl.pass_once(1)                          # place, move (what a server no longer reaches too), bring ONE unit home — and report; it does not raise
-            # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
-            # inside the block above, placement had already succeeded — and the log said "placement pass
-            # failed", naming the one thing that had not. The reverse hid the other half: a placement that
-            # threw skipped the publish, the layer above went quietly stale, and the word "snapshot" appeared
-            # nowhere. Two jobs, two failures, two sentences.
-            try:
-                ctl.publish_snapshot()
-            except Exception:                         # noqa: BLE001
-                # What the layer above loses by this: its copy stops ageing forward. The age itself is on
-                # `/metrics` as `<sub>_snapshot_age_seconds`, read from the store rather than kept in this
-                # process, so it survives a restart and any console can answer it.
-                logging.exception("publishing the snapshot failed — the layer above is now reading a stale copy")
-        stop.wait(5)
-
-
+# Builds `vmscontroller` and runs the platform's placement loop over it (`host.controller_loop`), every 5 s — the VMS's
+# own controller because a device is one group (`VmsController.group_value`: the hook the boundary's step 6 turns into
+# a declaration); every other subsystem's controller is the platform's, from its spec (`python3 -m w2cplatform`):
+# - Variables as writer `vmscontroller` with `SPEC.acl_controller()` — `vms/workers/*`, `vms/placement/*`,
+#   `vms/slots/*`; never a camera's row (see `w2cplatform/spec.py`).
+# - `VmsController(vars_, objects, capacity=$CAPACITY)`.
+# - Each pass: `ensure_placed()` (deleted rows unplaced first, then every unplaced camera onto the workers
+#   it currently sees by their heartbeats), `redistribute()` (only the cameras of a *released* slot —
+#   scale-in — move; a merely silent slot is a crash and is left for the scheduler), `publish_snapshot()`
+#   (one object per worker under `vms/snapshot/` in the object store) — each in a try of its own, said once a
+#   spell (`host.step`). No port, no state: the process can be restarted at any moment, and two of them agree by CAS.
 def controller() -> None:
     from .config import SPEC
     vars_ = open_vars(STORE_URL, writer="vmscontroller", acl={"vmscontroller": SPEC.acl_controller()})
     objects = FsObjectStore(os.path.join(root, "objects"))
-    _controller_loop(VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50"))))
-
-
-def livecontroller() -> None:
-    """The second subsystem's controller: the platform's class from live.subsystem.yaml, placing fan-outs on
-    gateways by viewer headroom. No code of its own."""
-    from w2cplatform.spec import SpecController
-    from .config import LIVE_SPEC
-    vars_ = open_vars(STORE_URL, writer="livecontroller", acl={"livecontroller": LIVE_SPEC.acl_controller()})
-    _controller_loop(SpecController(LIVE_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
-
-
-def detcontroller() -> None:
-    """The third subsystem's controller: the platform's class from det.subsystem.yaml, placing models on
-    GPU-labelled detector workers by stream headroom. No code of its own."""
-    from w2cplatform.spec import SpecController
-    from .config import DET_SPEC
-    vars_ = open_vars(STORE_URL, writer="detcontroller", acl={"detcontroller": DET_SPEC.acl_controller()})
-    _controller_loop(SpecController(DET_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
+    host.controller_loop(VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50"))))
 
 
 def detworker() -> None:
@@ -298,16 +247,6 @@ def detworker() -> None:
     logging.info("detector %s (instance %s) claimed its slot; models: %s", d.name, d.instance, ",".join(d.models))
     _present(d)
     d.run(stop=stop)
-
-
-def autocontroller() -> None:
-    """The seventh subsystem's controller: scenarios placed on evaluators. `AutoController` and not the
-    platform's class, because a scenario that says nothing runnable must be refused where it is written —
-    and only this subsystem knows what runnable means."""
-    from .auto import AutoController
-    from .config import AUTO_SPEC
-    vars_ = open_vars(STORE_URL, writer="autocontroller", acl={"autocontroller": AUTO_SPEC.acl_controller()})
-    _controller_loop(AutoController(vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
 def autoworker() -> None:
@@ -331,16 +270,6 @@ def autoworker() -> None:
     a.run(stop=stop)
 
 
-def detjobcontroller() -> None:
-    """The fifth subsystem's controller: the platform's class from detjob.subsystem.yaml, placing scans
-    beside the recorder holding the footage they read, and on a GPU server when it cannot. No code of its
-    own — and, until the placement predicate lands, no notion that a job ever finishes."""
-    from w2cplatform.spec import SpecController
-    from .config import DETJOB_SPEC
-    vars_ = open_vars(STORE_URL, writer="detjobcontroller", acl={"detjobcontroller": DETJOB_SPEC.acl_controller()})
-    _controller_loop(SpecController(DETJOB_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
-
-
 def detjobworker() -> None:
     """A scan worker: a worker of the `detjob` subsystem. Same box, same models and same GPU as
     `detworker`, a separate process because it carries a separate budget — a retro-search must not be able
@@ -354,15 +283,6 @@ def detjobworker() -> None:
     logging.info("scan worker %s (instance %s) claimed its slot; models: %s", j.name, j.instance, ",".join(j.models))
     _present(j)
     j.run(stop=stop)
-
-
-def surveycontroller() -> None:
-    """The sixth subsystem's controller: the platform's class from survey.subsystem.yaml, placing watches
-    beside the worker holding the camera. No code of its own."""
-    from w2cplatform.spec import SpecController
-    from .config import SURVEY_SPEC
-    vars_ = open_vars(STORE_URL, writer="surveycontroller", acl={"surveycontroller": SURVEY_SPEC.acl_controller()})
-    _controller_loop(SpecController(SURVEY_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
 def surveyworker() -> None:
@@ -418,33 +338,14 @@ def gateway() -> None:
 # - `serve(ctl, archive, $CONSOLE_HOST, $CONSOLE_PORT)` from `vms/console.py` starts the
 #   `ThreadingHTTPServer` in a daemon thread; the main thread waits on `stop`, then `srv.shutdown()`.
 # Housekeeping the console owns BECAUSE THE ACL SAYS SO. `<sub>/blobs/*` is the console's to write
-# (Lesson 27), so it is the console's to collect; the controller could not delete a blob if it wanted to,
-# and that is the right way round — the process that creates a thing is the one that can be trusted to
-# know when nothing names it.
-#
-# Its own loop and its own log line. That is Lesson 28 applied before the same mistake is made twice: a
-# sweep that fails inside somebody else's `try` would be reported as somebody else's failure, and the
-# consequence — blobs accumulating with nothing reclaiming them — is exactly the kind that shows up as a
-# disk full a year later.
-def _sweep_loop(controllers, every: float = 60.0) -> None:
-    while not stop.is_set():
-        for c in controllers:
-            try:
-                r = c.sweep_blobs()
-                if r["deleted"]:
-                    logging.info("swept %d blob(s) nothing names in %s", r["deleted"], c.spec.name)
-            except Exception:                         # noqa: BLE001
-                logging.exception("the blob sweep failed in %s — nothing is reclaiming its blobs", c.spec.name)
-        stop.wait(every)
-
-
+# (Lesson 27), so it is the console's to collect: the platform's sweep (`host.sweep_loop`), in a loop and a log
+# line of its own (Lesson 28) — a sweep that fails inside somebody else's `try` would be reported as somebody else's
+# failure, and blobs accumulating with nothing reclaiming them shows up as a disk full a year later.
 # The console's second pass, beside the sweep: a job's row follows the worker that finished it. The worker
 # cannot write the row (its ACL forbids configuration) and the controller must not (one row, one writer),
 # so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
 def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
-    while not stop.is_set():
-        _reap_turn(controllers, requests, rec_ctl, det_ctl, survey_ctl)
-        stop.wait(every)
+    host.every(lambda: _reap_turn(controllers, requests, rec_ctl, det_ctl, survey_ctl), every)
 
 
 # One turn of it, in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): `scan_what_arrived`
@@ -505,16 +406,19 @@ def _reap_turn(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
 # thirty seconds they piled up behind a holder that answers up to sixteen a second, and a holder started again found
 # them standing. Apart from `_requests_loop` because that one is automation's way in, and a failure here is not its.
 def _clear_loop(requests, every: float | None = None) -> None:
-    from .jobs import CLEAR_EVERY, clear_requests
-    while not stop.is_set():
-        for c in requests:
-            try:
-                gone = clear_requests(c, sweep=False)
-                if gone:
-                    logging.debug("%s: %d answered request(s) cleared", c.spec.name, gone)
-            except Exception:                         # noqa: BLE001
-                logging.exception("clearing answered requests failed in %s — the reaper's pass clears them", c.spec.name)
-        stop.wait(CLEAR_EVERY if every is None else every)
+    from .jobs import CLEAR_EVERY
+    host.every(lambda: _clear_turn(requests), CLEAR_EVERY if every is None else every)
+
+
+def _clear_turn(requests) -> None:
+    from .jobs import clear_requests
+    for c in requests:
+        try:
+            gone = clear_requests(c, sweep=False)
+            if gone:
+                logging.debug("%s: %d answered request(s) cleared", c.spec.name, gone)
+        except Exception:                             # noqa: BLE001
+            logging.exception("clearing answered requests failed in %s — the reaper's pass clears them", c.spec.name)
 
 
 # The console's third loop: what AUTOMATION asked for, turned into rows — and a short loop, apart from the
@@ -531,9 +435,7 @@ def _clear_loop(requests, every: float | None = None) -> None:
 def _requests_loop(rec_ctl=None, det_ctl=None, job_ctl=None, every: float = 2.0) -> None:
     from .jobs import Remembered
     mem = Remembered()
-    while not stop.is_set():
-        _requests_turn(rec_ctl, det_ctl, job_ctl, mem)
-        stop.wait(every)
+    host.every(lambda: _requests_turn(rec_ctl, det_ctl, job_ctl, mem), every)
 
 
 # One turn of it: each key read once in it (`contract.one_pass`) — `detect_on_request` read every detector, every
@@ -614,7 +516,7 @@ def console() -> None:
     det_ctl, rec_ctl = SpecController(DET_SPEC, vars_, objects), SpecController(REC_SPEC, vars_, objects)
     job_ctl = SpecController(DETJOB_SPEC, vars_, objects)
     survey_ctl = SpecController(SURVEY_SPEC, vars_, objects)
-    threading.Thread(target=_sweep_loop, args=([ctl, det_ctl, rec_ctl, job_ctl, survey_ctl],), daemon=True).start()
+    threading.Thread(target=host.sweep_loop, args=([ctl, det_ctl, rec_ctl, job_ctl, survey_ctl],), daemon=True).start()
     # `[rec_ctl, ctl]`: two families of requests to clear now — footage a person asked for, and commands
     # somebody sent a device (a relay, a preset). Same division as everywhere: the worker performs and
     # says so in its heartbeat, the controller removes the row, because a worker writes no configuration.
@@ -639,65 +541,24 @@ def resource() -> None:
     """The resource process: no controller — a policy pass, a heartbeat, its HTTP,
     and the event index over its own tree."""
     import socket
-    import time
     from w2cplatform.resource import serve
     from .resource import vms_resource
     vars_ = open_vars(STORE_URL)
     objects = FsObjectStore(os.path.join(root, "objects"))
-    host, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
+    bind, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
     res = vms_resource(runtime.events_root(os.environ), socket.gethostname(),
-                       os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
-    srv = serve(res, host, port)
-    try:                                                                  # a store away at the start does not end the process
-        res.heartbeat()                                                   # (the review's eighth pass, beside М11's minor)
-    except Exception:                                                     # noqa: BLE001
-        logging.exception("resource heartbeat failed")
-    # Outside the loop and in a try of its own (the review's seventh pass): a peer whose heartbeat or copy does not
-    # parse raised out of here, and the resource process ended at every start — no door, no heartbeat, no pass.
-    # The beat on a thread of its own (the review's thirteenth pass, blocker 5): that this resource is here and who runs
-    # on it, whatever the loop below is doing — a pass or a restore that hangs on a disk no longer silences the server.
-    res.start_beat(stop)
-    try:
-        logging.info("restore: %s", res.restore())
-    except Exception:                                                     # noqa: BLE001
-        logging.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
-    logging.info("resource %s on %s", res.server, srv.server_address)
-    last_policy = 0.0
-    while not stop.is_set():
-        # Two jobs, two tries (feedback BI): a pass that reads the store must not stop the heartbeat — with the
-        # store away the resource stopped HEARTBEATING, was called silent, and the recordings were moved off a
-        # server that was perfectly well.
-        try:
-            res.heartbeat()
-        except Exception:                                                 # noqa: BLE001
-            logging.exception("resource heartbeat failed")
-        try:
-            if time.time() - last_policy >= 600:
-                last_policy = time.time()                                 # a pass that raised is tried in ten minutes, not in ten seconds
-                logging.info("policy: %s", res.pass_())
-        except Exception:                                                 # noqa: BLE001
-            logging.exception("resource pass failed")
-        # What the restore left with peers — a peer that did not answer, a bucket that did not come — is asked for again,
-        # its pause doubling up to ten minutes (`Resource.restore_due`; the review's eighth pass): it ran once, at the start.
-        try:
-            if res.restore_due():
-                logging.info("restore again: %s", res.restore())
-        except Exception:                                                 # noqa: BLE001
-            logging.exception("restore failed again; asked again later")
-        stop.wait(10)
-    srv.shutdown()
+                       os.environ.get("RESOURCE_URL", f"http://{bind}:{port}"), vars_, objects)
+    host.run_resource(res, serve(res, bind, port))     # the platform's loop: heartbeat, beat, restore, policy pass
 
 
 if __name__ == "__main__":
     # Only when run: a module imported (the tests) must not take the process's signals. Installed at import, the
     # handler swallowed a SIGTERM or SIGINT sent to the test run itself: the run went on with `stop` set, and the first
-    # test to drive `_controller_loop` ran no pass and failed, alone (the review's fifth pass saw that once). Which
+    # test to drive the controller's loop ran no pass and failed, alone (the review's fifth pass saw that once). Which
     # signal reached that run is not known — no test of the suite sends one to the runner (the sixth pass:
     # `tests/test_pass_failures.py` has the evidence, `tests/run.py` the guard).
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
-    {"worker": worker, "controller": controller, "recorder": recorder, "reccontroller": reccontroller, "console": console, "resource": resource,
-     "gateway": gateway, "livecontroller": livecontroller, "detworker": detworker, "detcontroller": detcontroller,
-     "detjobworker": detjobworker, "detjobcontroller": detjobcontroller,
-     "surveyworker": surveyworker, "surveycontroller": surveycontroller,
-     "autoworker": autoworker, "autocontroller": autocontroller}[sys.argv[1]]()
+    {"worker": worker, "recorder": recorder, "gateway": gateway, "detworker": detworker, "detjobworker": detjobworker,
+     "surveyworker": surveyworker, "autoworker": autoworker,
+     "controller": controller, "console": console, "resource": resource}[sys.argv[1]]()

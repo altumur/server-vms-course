@@ -335,7 +335,7 @@ FAKE_PPS = b"\x00\x00\x00\x01\x68\xce\x38\x80"
 
 
 def fake_samples(t0: float, t1: float, step: float = 1.0, gop: float = 2.0, size: int = 256) -> list:
-    from w2cplatform.obsd import archive_ms, video
+    from vms.obsd import archive_ms, video
     out, t, since_key = [], float(t0), None
     while t < t1 - 1e-9:
         end = min(t + step, t1)
@@ -423,7 +423,7 @@ class FakeActuator:
     # What a camera would do to a running recording: `[t0, t1)` of frames through its sink, the sequence
     # finished at the end. Returns what the engine said of each, `{status: count}`.
     def feed(self, cid, t0: float, t1: float, step: float = 1.0) -> dict:
-        from w2cplatform.obsd import ObsdError
+        from vms.obsd import ObsdError
         sink = (self.started.get(cid) or {}).get("sink")
         if sink is None or cid not in self.running:
             raise RuntimeError(f"recording {cid} is not running here: nothing to feed")
@@ -529,7 +529,7 @@ class VmsWorker(Worker):
 
     SUB = VMS                       # the subsystem whose assignment and rows this worker runs
     ROWS = "cameras"                # <sub>/<ROWS>/<id>
-    SLOT_PREFIX, NAME_ENV = "w", "WORKER_NAME"
+    SLOT_PREFIX, NAME_ENV = SPEC.slot_prefix, SPEC.slot_name_env   # `slot:` in vms.subsystem.yaml
     parse_row = staticmethod(row)
 
     def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,

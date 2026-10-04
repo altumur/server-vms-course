@@ -3,7 +3,7 @@
 # # archive.py — one volume, as the recorder and its readers see it
 #
 # Footage is not files. It is ObjectStorage — the product's engine — behind the host's daemon `obsd`
-# (`w2cplatform/obsd.py`), and what a volume holds is STREAMS of samples, cut by the engine into sequences
+# (`vms/obsd.py`), and what a volume holds is STREAMS of samples, cut by the engine into sequences
 # that open on a key frame, packed into blocks of a size fixed when the volume was formatted. This module is
 # the course's vocabulary over that, and nothing more:
 #
@@ -40,7 +40,7 @@ from urllib.parse import urlsplit, unquote
 from w2cplatform.doors import numeric
 from w2cplatform.secrets import NOT_AN_ADDRESS, hide_in_url
 from w2cplatform.events import EventLog
-from w2cplatform.obsd import Closed, ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
+from vms.obsd import Closed, ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
 from w2cplatform.rows import PARSE_ERRORS, Table, finite
 
 SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource

@@ -13,7 +13,7 @@ import socket
 import tempfile
 import threading
 
-from w2cplatform.obsd import Session
+from vms.obsd import Session
 from vms.recworker import RecWorker
 from tests.conftest import Box, obsd_session, recorder
 
@@ -230,7 +230,7 @@ def test_a_silent_daemon_costs_a_pass_one_wait_and_not_one_per_question():
     the pass behind them. A connection that went silent fails at once for a timeout after — the pass's budget — so
     twenty questions of a daemon that answers none wait for one of them."""
     import time
-    from w2cplatform.obsd import Unavailable
+    from vms.obsd import Unavailable
     silent = _Silent()
     try:
         s = Session(silent.path, client="t", timeout=0.3)

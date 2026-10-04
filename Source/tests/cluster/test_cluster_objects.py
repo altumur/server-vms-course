@@ -181,7 +181,7 @@ def test_a_command_mark_is_a_row_and_conflicts_across_the_cluster():
             a.put_new("vms/heartbeats/w-1", b"{}")
             raise AssertionError("a create-only write went to files")
         except ValueError as e:
-            assert "CREATE_ONLY" in str(e)
+            assert "objects.rows" in str(e)
     finally:
         c.stop()
 

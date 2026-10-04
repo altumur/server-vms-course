@@ -18,7 +18,7 @@ lists do not ask for — and every read the code makes is granted.
 import json
 import os
 
-from cluster.objectstore import is_create_only
+from cluster.objectstore import is_row
 from cluster.rights import render, roles
 from vms.config import REC_SPEC, SPEC, WORKER_ACL, WORKER_OBJECTS
 from w2cplatform.resource import DOORS
@@ -57,7 +57,7 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
 
 
 def _expected_writes() -> dict[str, set[str]]:
-    rows = lambda objs: {OBJECTS + p for p in objs if is_create_only(p)}            # noqa: E731
+    rows = lambda objs: {OBJECTS + p for p in objs if is_row(p)}            # noqa: E731
     return {
         "console": set(SPEC.acl_console()) | set(REC_SPEC.acl_console()),
         "vmscontroller": set(SPEC.acl_controller()),
@@ -79,7 +79,7 @@ def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_
     assert got == _expected_writes()
     for role, g in doc()["roles"].items():
         assert set(g["delete"]) == set(g["write"]), role                         # a role deletes what it writes
-        assert all(not p.startswith(OBJECTS) or is_create_only(p[len(OBJECTS):]) for p in g["write"]), role
+        assert all(not p.startswith(OBJECTS) or is_row(p[len(OBJECTS):]) for p in g["write"]), role
 
 
 def test_nothing_writes_what_it_has_no_business_writing():
@@ -176,7 +176,7 @@ def _doors(s) -> None:
         door.shutdown(); srv.shutdown()
     rec_con.create({"name": "1", "cam": "1"})
     rc.ensure_placed(); rc.redistribute(); rc.ensure_home(1); rc.unplace_deleted()
-    # The pass as the loops run it (`cluster/__main__._placement_pass`): its report, then the snapshot.
+    # The pass as the loops run it (`w2cplatform.host.placement_pass`): its report, then the snapshot.
     for c in (ctl, rc):
         c.pass_once(1); c.publish_snapshot()
     assert ctl.slots()[w.name].released and ctl.decommission_marks()       # the row was read, the slot released, the mark written

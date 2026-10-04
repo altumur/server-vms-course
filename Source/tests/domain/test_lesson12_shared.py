@@ -140,7 +140,8 @@ def test_a_field_with_a_default_can_never_inherit_and_one_that_inherits_is_left_
     assert eff["alarms"] == (["io.input", "tamper"], "camera + domain rev 1")
 
     old = SubsystemSpec.from_dict({"name": "vms", "unit": {"rows": "cameras", "id": "numeric", "fields": {
-        "source": {"type": "url"}, "events_retention_days": {"type": "int", "default": 365}}}})
+        "source": {"type": "url"}, "events_retention_days": {"type": "int", "default": 365}}},
+        "placement": {"capacity": {"from": "capacity", "default": 50}}})
     was = old.row(old.items(old.new_row(7, {"source": "driverpack://file/a.mp4"})))
     assert view.effective(was, old)["events_retention_days"] == (365, "camera")        # the defect: 14 never applies
     try:

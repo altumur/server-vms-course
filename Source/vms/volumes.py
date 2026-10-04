@@ -318,7 +318,7 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 # not before the `until` its holder's clock wrote (`_hold_live`).
 def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0, eyes=None) -> list[dict]:
     from w2cplatform.console import heard_live, heartbeats
-    from w2cplatform.resource import resources_seen
+    from w2cplatform.resource import resources_seen, space_total
     have = {v.server for v in declared(vars_) if on_a_box(v)}
     res = resources_seen(objects)
     out = {}
@@ -330,9 +330,8 @@ def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0
         # with the resource's events: declared at the partition's size, the ring would be resized past the room.
         # Through `rows.number` (the review's seventh pass): a word in one recorder's `archive_quota` raised out of the
         # whole page of volumes. Not said, the partition's size; neither said, 0, as before.
-        space = (res.get(server) or {}).get("space")
         total = number(f"{sub.heartbeat_key(name)}#archive_quota", hb.extra.get("archive_quota") or None, int, None) or \
-            number(f"platform/resources/{server}/heartbeat#space.total", (space if isinstance(space, dict) else {}).get("total"), int, 0)
+            space_total(res, server)                     # the platform's reading of its resource (the boundary's step 5)
         out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
                        "why": "this box records here and the disk is not declared as a volume"}
     return [out[k] for k in sorted(out)]

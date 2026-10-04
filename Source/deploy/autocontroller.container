@@ -1,15 +1,18 @@
 # /etc/containers/systemd/autocontroller.container — the auto subsystem's
 # controller: scenarios placed on evaluators, one per box (one per cluster in
-# М11). NOT the platform's SpecController as it stands: `AutoController` adds the
-# one thing the platform cannot do — refuse a scenario the evaluator could not run, at the moment the
-# operator writes it. No port; its token writes auto/workers/*, auto/placement/*, auto/slots/*.
+# М11). The platform's SpecController from auto.subsystem.yaml: placing is all it does, and it writes no
+# scenario — refusing one the evaluator could not run is the console's, where the operator writes it
+# (`AutoController` in `python3 -m vms console`). No port; its token writes auto/workers/*, auto/placement/*,
+# auto/slots/*.
 [Unit]
 Description=VMS auto controller — the only writer of scenario placement
 After=network.target
 
 [Container]
 Image=localhost/vmsserver:latest
-Exec=python3 -m vms autocontroller
+# The platform's controller from the spec `auto.subsystem.yaml` (`SPEC_DIR` in the image), in the platform's loop
+# (`w2cplatform/host.py`; the boundary's step 5) — no code of the VMS's runs here.
+Exec=python3 -m w2cplatform controller auto
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
 # The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid

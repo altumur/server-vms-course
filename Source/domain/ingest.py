@@ -52,7 +52,7 @@ What the product found running it on a box (feedback AC–AG), all of it here:
                  The camera sends a piece's worth a pass, beside its stream, and a piece it had no answer for goes
                  again under its own number — the ingest takes the repeat as a repeat (the seventh review)
     frames       two forms, each for its road, and ONE place that turns the one into the other. The card's frame
-                 is a sample record (`w2cplatform.obsd.Sample`: archive ms, the key flag, the body) — as it lies
+                 is a sample record (`vms.obsd.Sample`: archive ms, the key flag, the body) — as it lies
                  on the card and as it travels in a range's answer, never re-made. The PUSH's frame, in this
                  module, is a dict with `t` (when it was captured, the camera's clock) and `key`. A break
                  continued off the card puts card frames into the push, and the PUSHER makes them push frames
@@ -103,7 +103,7 @@ from vms.card import PIECE_BYTES       # what one piece of a camera's card may w
 from vms.card import RING_BYTES        # …and the camera's ring: what a pusher with no camera ring keeps at most
 from vms.card import CamLine           # …and the camera's line of time, which steps of its clock do not move
 from vms.card import RING_AHEAD        # …and how much later than the camera's clock its frame may lie on its line
-from w2cplatform.obsd import archive_ms, unix_s
+from vms.obsd import archive_ms, unix_s
 
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite
 
@@ -315,7 +315,7 @@ def _is_sample(frame) -> bool:
 
 def _shift(frames: list, by: float) -> list:
     """Frames that carry a capture time (`t`, the camera's clock) moved onto the cluster's; others as they are.
-    A sample record off a camera's card (`w2cplatform.obsd.Sample`, archive ms) is moved the same way — on its own,
+    A sample record off a camera's card (`vms.obsd.Sample`, archive ms) is moved the same way — on its own,
     in a range's answer, and inside a push frame made of it (`wire`)."""
     if not by:
         return list(frames)

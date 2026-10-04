@@ -14,7 +14,7 @@ unit:
     start:  {type: int,    default: 0}
     labels: {type: list}
 placement:
-  capacity:   {from: capacity, fallback: 4}
+  capacity:   {from: capacity, default: 4}
   headroom:   {from: headroom}
   constraint: labels-subset
   tie_break:  most-free-capacity

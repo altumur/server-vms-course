@@ -313,7 +313,7 @@ def test_spread_by_keeps_two_copies_off_one_server():
         "name": "copy",
         "unit": {"rows": "copies", "id": "name",
                  "fields": {"name": {"type": "string", "required": True}, "cam": {"type": "string", "required": True}}},
-        "placement": {"capacity": {"from": "capacity", "fallback": 50}, "spread_by": "cam"},
+        "placement": {"capacity": {"from": "capacity", "default": 50}, "spread_by": "cam"},
     })
     assert spec.spread_by == "cam"
 

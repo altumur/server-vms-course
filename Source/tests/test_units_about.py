@@ -40,7 +40,8 @@ TALLY = {"name": "tally", "about": {"sub": "testsub", "field": "counter"},
                   "fields": {"name": {"type": "string", "required": True},
                              "counter": {"type": "string", "required": True, "fixed": True},
                              "labels": {"type": "list"}}},
-         "tables": ["notes"], "rights": {"unit_of": {"notes": "counter"}}}
+         "tables": ["notes"], "rights": {"unit_of": {"notes": "counter"}},
+         "placement": {"capacity": {"from": "capacity", "default": 4}}}
 
 
 class Clock:

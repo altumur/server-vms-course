@@ -68,7 +68,7 @@ class FakeStore:
 
 # -- the archive's engine: a live `obsd`, one per test run ------------------------------------------------
 #
-# The archive is ObjectStorage, and ObjectStorage is a process (`w2cplatform/obsd.py`). The tests do not
+# The archive is ObjectStorage, and ObjectStorage is a process (`vms/obsd.py`). The tests do not
 # imitate it: they start the real daemon, once, on a socket of their own, with volumes in temp directories —
 # never the box's daemon, never its socket. Without the daemon the archive cannot be tested, and the tests
 # that need it say how to get it rather than pass for want of it.
@@ -102,7 +102,7 @@ class ObsdDaemon:
         atexit.register(self.stop)
         # The one engine this course supports gives a volume up (`WRITER_ABANDON`, its patch 07): a build without it is
         # not a daemon to run the suite on — said here, once, and not as forty tests failing each in its own way.
-        from w2cplatform.obsd import Session
+        from vms.obsd import Session
         probe = Session(self.socket, client="conftest-probe")
         try:
             new_enough = probe.abandons()
@@ -162,7 +162,7 @@ class ObsdDaemon:
 
 
 def obsd_session(client: str = "test", token: str | None = None):
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     return Session(ObsdDaemon.get().socket, client=client, token=token)
 
 

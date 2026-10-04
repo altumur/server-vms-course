@@ -15,6 +15,9 @@
 # make "what did the detector see on Tuesday" unanswerable and a second run double every count. Separate
 # trees also make a re-run free to compare and a deletion a deletion of one directory.
 name: detjob
+# The slot a worker of this subsystem makes, `j-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: j, name_env: DETJOB_NAME}
 about: {sub: vms, field: cam}   # a scan reads a camera's footage: its events, grants and labels are the camera's
 unit:
   rows: jobs                         # detjob/jobs/<name>
@@ -39,7 +42,7 @@ unit:
                                                  # run from today
     labels:  {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
 placement:
-  capacity:   {from: capacity, fallback: 2}      # scans a worker will carry at once — its OWN number, in its OWN
+  capacity:   {from: capacity, default: 2}      # scans a worker will carry at once — its OWN number, in its OWN
                                                  # heartbeat. This is why a scan is a subsystem and not a flag on a
                                                  # `det` row: a retro-search must not be able to spend the streams
                                                  # live detection is running on. Two budgets, one worker process.

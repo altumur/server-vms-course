@@ -9,7 +9,7 @@ import json
 import time
 import urllib.request
 
-from w2cplatform.obsd import unix_s
+from vms.obsd import unix_s
 from w2cplatform.spec import SpecController
 from vms import volumes
 from vms.config import DET_SPEC, LIVE_SPEC, REC_SPEC, SPEC
@@ -132,7 +132,7 @@ def test_footage_fetched_into_a_gap_goes_into_the_backfill_stream_and_waits_to_b
 
 
 def test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place():
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
     r.session = Session("/nonexistent/obsd.sock", client="nobody")
@@ -180,7 +180,7 @@ def test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_l
     one that kept the volume it started with would write into a closed one for as long as the pipeline ran, and
     nothing restarts a pipeline for a remount. And `WRITER_STOPPED` — the engine stopped this writer — is a
     remount too, not a refusal to skip past for ever."""
-    from w2cplatform.obsd import ObsdError
+    from vms.obsd import ObsdError
     from vms.recworker import RecSink
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
@@ -210,7 +210,7 @@ def test_a_fetched_range_lands_under_its_lease_into_the_volume_it_was_fetched_fo
     ended, under epoch 0 when the lease had gone, and to remember the whole DELIVERED range as landing — the groups
     the engine refused or that began without a key frame included, so they were never asked for again."""
     import dataclasses
-    from w2cplatform.obsd import FLAG_NEED_KEY_FRAME
+    from vms.obsd import FLAG_NEED_KEY_FRAME
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
     r.heartbeat_once()
@@ -242,7 +242,7 @@ def test_a_daemon_restarted_between_two_samples_is_a_remount_and_the_recording_g
     every handle answered `UNKNOWN_HANDLE`, the recorder took it for a passing outage and wrote into dead handles
     until somebody restarted IT. Any `UNKNOWN_HANDLE` is the engine lost now: the next pass mounts the volume again,
     the same pipeline goes on into the new writer, and the heartbeat says what happened — while it lasts, and after."""
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
     try:
@@ -272,7 +272,7 @@ def test_a_daemon_that_crashed_is_a_remount_once_its_lock_is_stale():
     """The same, by SIGKILL: no writer was closed, and the volume's lock is the dead daemon's until it is stale
     (`lockRefreshSec`). The remount is `busy` until then — kept, said — and then the recording goes on."""
     import time as _time
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
     try:
@@ -303,7 +303,7 @@ def test_an_engine_gone_at_the_finish_of_a_fetched_range_does_not_take_the_pass_
     """The review's fourth pass, a minor. The finish after a fetched range's last group, and a keep's copy's, stood
     outside the `try`: the engine gone between the last sample and the finish raised out of `_land` — every request
     of the pass with it, and what had landed not counted. It is the engine lost now, said, and what landed counts."""
-    from w2cplatform.obsd import Unavailable
+    from vms.obsd import Unavailable
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
     r.heartbeat_once()
@@ -365,7 +365,7 @@ def test_a_daemon_that_froze_between_two_samples_is_a_remount_and_the_recording_
     linger, picked up by the next mount under the same owner — and the same pipeline goes on into it."""
     import os
     import signal
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
     try:
@@ -405,7 +405,7 @@ def test_a_close_that_waits_on_the_leases_thread_waits_one_call_and_not_thirty_s
     one call's timeout now; a close that did not come back in it leaves the session to the daemon, as a silence does."""
     import os
     import signal
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
     try:
@@ -430,7 +430,7 @@ def test_a_sample_that_races_its_writers_own_close_is_not_the_engine_lost():
     """The review's fourth pass, a minor. A handle this client closed answers `UNKNOWN_HANDLE` like a handle the
     daemon lost, and was counted as one: `SESSION_LOST`, a remount, an outage in the heartbeat for a close of our own.
     The client remembers what it closed: that answer is `Closed`, and the session is not lost."""
-    from w2cplatform.obsd import Closed, SessionLost
+    from vms.obsd import Closed, SessionLost
     from tests.conftest import store
     st = store()
     w = st.writer
@@ -483,7 +483,7 @@ def test_a_long_range_is_fetched_from_a_backup_a_minute_at_a_time_and_lands_whol
     """Blocker 6. A range was one request and one list — a day from a backup, tens of gigabytes in two recorders'
     memory. It is asked for about a minute at a time and landed before the next minute is asked for, cut at key
     frames so that nothing is fetched twice and nothing is left between two pieces."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     from tests.conftest import door, footage, store
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
@@ -520,7 +520,7 @@ def test_a_long_range_is_fetched_from_a_backup_a_minute_at_a_time_and_lands_whol
 def _two_boxes_over_one_network_volume():
     """Two daemons — two hosts — and a network volume both may serve, in one directory. Recorder A on daemon A holds
     it and records camera 1; recorder B on daemon B is a spare. The volume's engine lock goes stale after 2 s."""
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     da, db = ObsdDaemon.fresh(), ObsdDaemon.fresh()
     box, rec_con, rec_ctl = _site()
@@ -566,7 +566,7 @@ def test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_t
     import os
     import signal
     from w2cplatform.eventdatabase import EventIndex
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import footage
     box, da, db, a, b = _two_boxes_over_one_network_volume()
     try:
@@ -632,7 +632,7 @@ def test_an_unclean_volume_is_recovered_only_under_a_hold_confirmed_this_second(
     """The review's fifth pass, blocker 1 and its second question. `VOLUME_UNCLEAN` is recovered by the recorder that
     holds the volume — the hold confirmed once more right before `VOLUME_RECOVER`; refused then, nothing is recovered.
     And an `Archive` nobody told to recover (no `on_unclean`) refuses as it always did."""
-    from w2cplatform.obsd import CODE, ObsdError
+    from vms.obsd import CODE, ObsdError
     from vms.archive import Archive, ArchiveError
 
     class Volume:
@@ -684,7 +684,7 @@ def test_a_mount_whose_answer_was_lost_leaves_its_session_and_the_next_one_picks
     import os
     import signal
     import threading
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
     try:
@@ -756,7 +756,7 @@ def test_a_remount_on_a_frozen_daemon_costs_the_pass_one_call_and_not_three():
     and the volume is mounted again on the next pass."""
     import os
     import signal
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
     try:
@@ -789,7 +789,7 @@ def test_after_a_second_restart_of_the_daemon_a_lost_session_is_not_taken_for_a_
     list of the handles it closed outlived the session: after the second restart the new volume handle — the same
     number as the first session's, closed at the first remount — answered `UNKNOWN_HANDLE` as `Closed`, `lost` stayed
     False, and the volume was never mounted again. The list is the session's now, emptied when the session is lost."""
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from vms.archive import ArchiveError
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
@@ -822,7 +822,7 @@ def test_a_seal_that_did_not_come_back_leaves_no_dead_writer_and_the_next_pass_m
     session is left behind on the next pass — and the volume is mounted again."""
     import os
     import signal
-    from w2cplatform.obsd import ObsdError, Session
+    from vms.obsd import ObsdError, Session
     from tests.conftest import ObsdDaemon
     d = ObsdDaemon.fresh()
     try:
@@ -880,7 +880,7 @@ def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_netwo
     WAITS; for a volume any box may serve, the same name waits too. A hold let go on purpose is taken at once."""
     import os
     import signal
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     box, da, db, a, b = _two_boxes_over_one_network_volume()
     try:
         t = box.wall()
@@ -1032,7 +1032,7 @@ def test_a_restart_of_the_daemon_first_met_by_a_close_does_not_leave_the_closed_
     restart read as `Closed` on every question, for ever: `away`, never `lost`, never mounted again. A new daemon is
     known by its HELLO now — another pid — before any request reaches it."""
     import tempfile
-    from w2cplatform.obsd import ObsdError, Session
+    from vms.obsd import ObsdError, Session
     from vms.archive import Archive, ArchiveError
     from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon, footage
     d = ObsdDaemon.fresh()
@@ -1068,7 +1068,7 @@ def test_a_daemon_restarted_under_the_same_pid_does_not_get_the_dead_ones_closed
     up for its whole life, so when it issues a number, whatever the list holds under that number or a higher one was
     another daemon's, and is forgotten."""
     import tempfile
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from vms.archive import Archive, ArchiveError
     from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon, footage
     d = ObsdDaemon.fresh()
@@ -1105,7 +1105,7 @@ def test_a_late_handle_of_the_dead_session_does_not_cost_the_new_one_its_generat
     own closes were then not written down, a sample that raced one was `SESSION_LOST`, and the volume was mounted once
     more for nothing. One generation per daemon: a straggler is lost, and nothing else changes."""
     import tempfile
-    from w2cplatform.obsd import Closed, Session, SessionLost
+    from vms.obsd import Closed, Session, SessionLost
     from vms.archive import Archive
     from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon, footage
     d = ObsdDaemon.fresh()
@@ -1150,7 +1150,7 @@ def test_a_lock_under_our_owner_held_by_another_process_is_not_this_sessions_orp
     daemon lists its sessions with their process ids: while this recorder's own client name is there under another
     pid, no session is left, and the status says who is writing. And for any other holder one session is left, not one
     every ten seconds."""
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from vms.archive import Archive
     from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon
     box, rec_con, rec_ctl = _site()
@@ -1191,7 +1191,7 @@ def test_a_lock_under_our_owner_held_by_another_process_is_not_this_sessions_orp
 def _pinned_over_one_network_volume():
     """Two daemons — two hosts — and a network volume `net` both may serve. Recorder A on daemon A is PINNED to it
     (`VOLUME=net`), holds it and records camera 1. The volume's engine lock goes stale after 2 s."""
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from tests.conftest import ObsdDaemon
     da, db = ObsdDaemon.fresh(), ObsdDaemon.fresh()
     box, rec_con, rec_ctl = _site()
@@ -1213,7 +1213,7 @@ def test_a_pinned_network_volume_is_held_and_a_free_recorder_on_another_box_does
     import os
     import signal
     from w2cplatform.contract import Slot
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     box, da, db, a = _pinned_over_one_network_volume()
     try:
         assert Slot.from_items("net", box.vars.get("rec/holds/net")[0]).by == "r-1"
@@ -1249,7 +1249,7 @@ def test_a_pinned_network_volume_whose_lock_another_writer_took_is_a_volume_erro
     import os
     import signal
     from w2cplatform.eventdatabase import EventIndex
-    from w2cplatform.obsd import ObsdError, Session
+    from vms.obsd import ObsdError, Session
     from vms.archive import Archive
     from tests.conftest import TEST_BLOCK, TEST_READ, footage
     box, da, db, a = _pinned_over_one_network_volume()
@@ -1312,7 +1312,7 @@ def test_a_second_instance_pinned_to_the_same_network_volume_on_another_box_wait
     still — and says what it waits for; the first, woken, is the only writer; handed over on purpose, at once."""
     import os
     import signal
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     box, da, db, a = _pinned_over_one_network_volume()
     try:
         t = box.wall()
@@ -1350,7 +1350,7 @@ def test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_o
     old one is gone. An instance of the name on ANOTHER host still waits out the hold."""
     from w2cplatform.contract import Slot
     from tests.conftest import ObsdDaemon
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     box, rec_con, rec_ctl = _site()
     volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
     old = recorder(box, "r-1", "srv-1", instance="box-a:100:aaaaaa")
@@ -1426,7 +1426,7 @@ def test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_
     an alarm and said in words an operator can act on; the recorder records into its own disk meanwhile, and nothing is
     done to the other writer. Once that writer is gone and the pause is over, the volume is taken again."""
     from w2cplatform.eventdatabase import EventIndex
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from vms.archive import Archive
     from vms.config import REC_SPEC
     from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon
@@ -1467,7 +1467,7 @@ def test_one_busy_pass_and_then_a_network_down_for_ten_minutes_lets_no_volume_go
     is written the pass the store answers."""
     import vms.recworker as rw
     from w2cplatform.eventdatabase import EventIndex
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     from vms.archive import Archive, ArchiveError
     from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon
     down = [False]

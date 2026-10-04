@@ -9,6 +9,12 @@
 # `vms/next_id`, `vms/idem/*`, `vms/retention/*`; the controller's gets `vms/workers/*`, `vms/placement/*`,
 # `vms/slots/*`.
 name: vms
+# The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: w, name_env: WORKER_NAME}
+# Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
+# a holder's mark before it acts on a device (`VmsWorker`, `put_new`): created ONCE across every server.
+objects: {rows: [commands/*]}
 unit:
   # the row directory `vms/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
   # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.
@@ -38,7 +44,55 @@ unit:
     # are the device's. A source another live camera already is, is refused for anybody (`volumes.refuse_camera`);
     # a change of device or channel asks for `admin` on every camera of the device it leaves and of the one it
     # moves to, not on this camera alone (`vms/console.py`, `source_cams`).
-    source:                {type: url,    required: true}     # driverpack://file/<name> or driverpack://<vendor>/<host>
+    # WHAT A LOGIN LOOKS LIKE IN A CAMERA'S ADDRESS — the VMS's knowledge, not the platform's (the boundary's step 4).
+    # The platform reads an address as RFC 3986 writes one: a login before an `@`, a port that is no number, `name=value`
+    # pairs, an address escaped into a path segment. Everything below is how cameras and recorders spell a login on top
+    # of that, found one review at a time; the platform refuses a `source` that carries one (`SubsystemSpec.refuse`, in
+    # words naming `credentials`) and hides it wherever a stored one is said, by these rules.
+    #
+    # `schemes` — what a camera is reached by; `credentials` — where the login and the password go instead.
+    # `secret_in`:
+    # - `param`: the names a camera gives a credential parameter (the eleventh review, blocker 4: `?usr=admin&pwd=…`),
+    #   read as words — `pwd` the whole name or its last word (`user_id`, `X-Amz-Signature`), `pwd*` a word beginning
+    #   with it (`pwd_md5`, `passwordHash`), `*pwd` a last word ending with it (`userpwd`, `clientsecret`). `p`, `code`,
+    #   `pin` are not here: too many cameras mean something else by them (a profile, a codec), and a list that refuses
+    #   those refuses cameras, not passwords. A word that only begins a name (`token_bucket`, `authmode`, `passage`) is
+    #   no credential (the thirteenth review, minor). `=auth` — the whole name only: as the last word of a longer one
+    #   (`rtsp_auth`, `enable_auth`, `basic_auth`, `x-auth`) it says how the camera authenticates, not with what; a Wi-Fi
+    #   key (`psk`, `wpa_psk`) and a private key (`privkey`) are credentials (the product's r28-secrets2).
+    # - the XMeye/Xiongmai chain in the path, `/user=admin_password=…_channel=1_stream=0.sdp` (the twelfth review,
+    #   blocker 8): a password ends at the last `_` before the next `name=`, `Hun_ter2_channel=1` is `Hun_ter2`;
+    # - a password's name segment gives the next segment (`/user/admin/password/…/snap.jpg`); not `pass` or `pw`:
+    #   `/live/pass/stream`, `/pw/1` are paths (the thirteenth review);
+    # - DriverPack names its host in the path, `driverpack://<vendor>/<host>/ch/<n>` (the thirteenth review, major 8):
+    #   a port there that is no number (`acme/admin:…/ch/1`; digits of any script are digits — `8²` is a key of its own,
+    #   the review's tenth pass), digits a `/` cut from an `@` further on, and a login before
+    #   an escaped `@` (`acme/admin:…%4010.0.0.5`) are a login and a password. Read in every source's path — a first
+    #   segment `host:word` is no camera's path either;
+    # - go2rtc's `?src=` holds another address (the thirteenth review, blocker 6): read as one, three levels deep.
+    source:
+      type: url
+      required: true
+      schemes: [driverpack, rtsp, rtsps, http, https, onvif]
+      credentials: {login: cred_username, secret: cred_secret}
+      secret_in:
+        - param: [user, usr, username, userid, login, loginuse, loginpas, loginpass, account, key, keyid, apikey, authkey,
+                  accesskey, secretkey, sig, signature, sid, session, sessionid, pw, psd, pass, password, passwd, pwd, psw,
+                  userpass, passcode, passphrase, secret, token, "=auth", authorization, cred, creds, credential, credentials,
+                  psk, privkey, privatekey,
+                  "password*", "passwd*", "pwd*", "psw*", "secret*",
+                  "*password", "*passwd", "*pwd", "*secret", "*token"]
+        - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?:password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'
+          in: path
+        - regex: '(?i)(?:^|/)(?:password|passwd|pwd|psw)/(?P<secret>[^/]+)'
+          in: path
+        - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[]*):(?P<secret>[^/]*[^/\d²³¹⁰⁴-⁹₀-₉①-⑨][^/]*)(?=/|$)'
+          in: path
+        - regex: '^/[^/]*?:(?P<secret>[0-9]+)(?=/[^?#]*@)'
+          in: path
+        - regex: '^/(?P<login>[^/]*?)%40'
+          in: path
+        - nested: src
     # the reconciler only starts enabled rows and stops what is disabled; the worker reports `phase:
     # pending` for a disabled camera. `PUT {"enabled": false}` bumps `revision` and the worker stops the
     # pipeline.
@@ -170,9 +224,9 @@ unit:
 placement:
   # `SpecController.capacity_of(worker)` reads `extra["capacity"]` from the worker's latest heartbeat (any
   # age); a worker that never said anything counts as 50 (the constructor's `capacity` argument overrides
-  # the fallback). `test_capacity_is_the_workers_word_not_the_controllers`: workers saying 2 and 6 are
+  # the default; a spec without `default` does not load). `test_capacity_is_the_workers_word_not_the_controllers`: workers saying 2 and 6 are
   # filled to 2 and 6; unknown `w-9` is 50.
-  capacity:   {from: capacity, fallback: 50}    # the worker's word, from its heartbeat; the fallback for one that said nothing
+  capacity:   {from: capacity, default: 50}    # the worker's word, from its heartbeat; the default for one that said nothing
   # `SpecController.headroom()` sums `extra["headroom"]` over workers seen in the last 45 s; the console
   # exports it as `vms_headroom` and `vms_worker_headroom{worker,server}` — what the autoscaler sums. The
   # worker computes it as `capacity − len(rows)`.

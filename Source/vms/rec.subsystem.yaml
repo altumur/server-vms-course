@@ -25,6 +25,12 @@
 # Created by the operator: a camera exists without a recording (watched: live, detected, its events kept),
 # and records when a row is here — from the page's Record form, which POSTs `/rec/recordings`.
 name: rec
+# The slot a worker of this subsystem makes, `r-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: r, name_env: RECORDER_NAME}
+# Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
+# a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone.
+objects: {rows: [used/*]}
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -57,7 +63,7 @@ unit:
     min_depth_days: {type: float,  default: 0}
     when:           {type: string, default: always}  # a BACKUP recording (home on a backup volume): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
 placement:
-  capacity:   {from: capacity, fallback: 50}         # cameras a recorder can write — its own number, from its heartbeat: disks and NIC
+  capacity:   {from: capacity, default: 50}         # cameras a recorder can write — its own number, from its heartbeat: disks and NIC
   headroom:   {from: headroom}
   constraint: labels-subset
   # STILL `requires: resource` with the footage in obsd (the review's third pass asked why). The footage no longer

@@ -98,7 +98,7 @@ import sys
 import threading
 import time
 
-from w2cplatform.obsd import SMPL, Sample, archive_ms, unix_s
+from vms.obsd import SMPL, Sample, archive_ms, unix_s
 from w2cplatform.rows import PARSE_ERRORS, finite, number
 from w2cplatform.secrets import hide_in_url
 

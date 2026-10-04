@@ -692,7 +692,7 @@ def test_an_archive_that_refuses_writes_mid_run_is_handed_back():
     And it does not take `vol-a` straight back on the next pass: opening may well succeed and the first write
     fail again — a recorder flapping between taking and dropping the same broken archive. It is left alone for
     a while, long enough for somebody to fix it."""
-    from w2cplatform.obsd import ObsdError
+    from vms.obsd import ObsdError
     from vms.recworker import RecSink
     from vms.worker import fake_samples
     box = Box()
@@ -859,7 +859,7 @@ def test_the_boxs_own_volume_keeps_the_size_it_has_and_a_smaller_quota_waits_for
     assert shrunk["volume"] == "srv-a" and shrunk["was"] == 64 << 20 and shrunk["quota_bytes"] == 32 << 20
 
     def refused(size):
-        from w2cplatform.obsd import ObsdError
+        from vms.obsd import ObsdError
         raise ObsdError(5, "WRITER_RESIZE", "the disk said no")
     real_resize, again.store.resize = again.store.resize, refused
     volumes.write(box.vars, {**row, "quota_bytes": 128 << 20})
@@ -883,7 +883,7 @@ def test_a_new_volume_without_a_quota_is_sized_by_the_disk_the_daemon_writes_to(
     free on it is said here: half."""
     import shutil
     from collections import namedtuple
-    from w2cplatform.obsd import Volume
+    from vms.obsd import Volume
     from vms.recworker import RecWorker
     box = Box()
     real, real_share, real_space, given = shutil.disk_usage, RecWorker._share_of_space, Volume.space, []

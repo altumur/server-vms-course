@@ -9,7 +9,9 @@ After=network.target
 
 [Container]
 Image=localhost/vmsserver:latest
-Exec=python3 -m vms detcontroller
+# The platform's controller from the spec `det.subsystem.yaml` (`SPEC_DIR` in the image), in the platform's loop
+# (`w2cplatform/host.py`; the boundary's step 5) — no code of the VMS's runs here.
+Exec=python3 -m w2cplatform controller det
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
 # The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid

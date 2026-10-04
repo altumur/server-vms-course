@@ -135,7 +135,7 @@ def _spec(**over):
     d = {"name": "thing", "unit": {"rows": "things", "id": "name", "fields": {
         "name": {"type": "string", "required": True}, "note": {"type": "string"},
         "api_secret": {"type": "string"}, "mask": {"type": "blob"}}},
-        "placement": {"capacity": {"from": "capacity", "fallback": 50}}}
+        "placement": {"capacity": {"from": "capacity", "default": 50}}}
     d.update(over)
     return SubsystemSpec.from_dict(d)
 

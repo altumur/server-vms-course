@@ -112,7 +112,7 @@ def test_what_the_stream_reaches_and_memory_does_not_hold_comes_off_the_card_and
     """Memory holds the last twenty seconds and the stream reaches back thirty: the ten between come off the REAL card
     (`Sample` records, turned into push frames by `wire`, the record riding along), from a keyframe; and where the
     card's part reaches memory, memory follows it in the middle of a group of pictures — every second once, in order."""
-    from w2cplatform.obsd import archive_ms
+    from vms.obsd import archive_ms
     wall = Clock(0.0)
     card, asked = real_card(0, 60), []
 

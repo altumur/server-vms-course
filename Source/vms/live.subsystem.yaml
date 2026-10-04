@@ -6,6 +6,9 @@
 # controller class, same console class, same ACL shape as the VMS; nothing
 # about video in the platform.
 name: live
+# The slot a worker of this subsystem makes, `g-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: g, name_env: GATEWAY_NAME}
 about: {sub: vms, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:
   rows: streams                      # live/streams/<cam>
@@ -15,7 +18,7 @@ unit:
     labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
     grace:     {type: int, default: 30}         # seconds a gateway keeps the subscription after the last viewer
 placement:
-  capacity:   {from: capacity, fallback: 100}   # viewers a gateway can carry — its own number, from its heartbeat
+  capacity:   {from: capacity, default: 100}   # viewers a gateway can carry — its own number, from its heartbeat
   headroom:   {from: headroom}                  # what the autoscaler moves N on: viewers it could still take
   constraint: labels-subset                     # a stream's labels ⊆ the gateway's server's labels
   tie_break:  most-free-capacity

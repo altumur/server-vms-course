@@ -50,14 +50,14 @@ class DetWorker(Worker):
     """`name` is a slot (`d-1`); `models` maps a kind to a factory `(unit) -> Model`; unknown kinds are
     reported as `phase: unsupported` and run nothing."""
 
-    SLOT_PREFIX = "d"                            # a slot it has to make is `d-<n>`, like the ones it is given
+    SLOT_PREFIX = DET_SPEC.slot_prefix                          # a slot it has to make is `d-<n>`, like the ones it is given
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None, archive_root: str | None = None,
                  env: dict | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(DET, None, vars_, objects, clock=clock, wall=wall)
-        self.claim_slot(prefer=name if name is not None else runtime.slot(env, "DET_NAME", "d"))
+        self.claim_slot(prefer=name if name is not None else runtime.slot(env, DET_SPEC.slot_name_env, DET_SPEC.slot_prefix))
         self.models = models if models is not None else {"motion": FakeModel, "linecross": FakeModel, "lpr": FakeModel}
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "8"))
         self.server = runtime.server(env, server)

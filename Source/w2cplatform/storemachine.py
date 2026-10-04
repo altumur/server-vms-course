@@ -63,11 +63,11 @@ the group, and what a test stand applies in one process — the same code, so th
 # ## The rights file — who may do what, by the socket the caller came through
 # `/etc/w2c/configstore-rights.json` (generated from the spec by `python3 -m cluster rights`, М11), in the product's
 # format (its configstore round 2):
-#     {"roles": {"vmsworker": {"group": "vms-vmsworker", "read": ["vms/*"], "write": ["vms/epoch/*", "vms/slots/*"],
-#                              "delete": []}, …}}
+#     {"roles": {"testsubworker": {"group": "testsub-worker", "read": ["testsub/*"],
+#                                  "write": ["testsub/epoch/*", "testsub/slots/*"], "delete": []}, …}}
 # A trailing `*` is a prefix, anything else one key; a pattern that starts with `!` DENIES, and the denials are asked
 # before the grants (`"read": ["domain/*", "!domain/break_glass"]`). The daemon opens a socket per role, owned by the
-# role's `group` (`configstore.socket_group`; a role without one: `vms-<role>`, `w2c-<role>` for the platform's), so
+# role's `group` (`configstore.socket_group`; a role without one: `w2c-<role>`), so
 # a role is WHICH socket a process could open (its unit's `SupplementaryGroups=`), and `Rights.allows` is asked
 # before anything is forwarded or applied. `admin` is the root-only socket and may do everything but two things
 # nobody does: delete an epoch row, or delete `domain/*` — which only the domain's own roles do (`DOMAIN_ROLES`:

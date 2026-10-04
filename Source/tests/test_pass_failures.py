@@ -14,7 +14,7 @@ import logging
 
 from vms.config import SPEC
 from vms.controller import VmsController
-from vms.__main__ import _controller_loop, stop
+from w2cplatform.host import controller_loop, stop
 from w2cplatform.console import SpecConsole
 from w2cplatform.objects import FsObjectStore
 from tests.conftest import Box
@@ -29,11 +29,11 @@ class _Recorder(logging.Handler):
 
 
 def _one_pass(ctl) -> list[str]:
-    """One turn of the REAL loop — the same function `__main__.controller` runs.
+    """One turn of the REAL loop — the platform's (`host.controller_loop`), which every controller process runs.
 
     Driven by the loop's own `stop.wait(5)` at the end of a pass: it sets the flag,
     so the pass runs once and the `while` exits. The point of going through
-    `_controller_loop` rather than calling the four methods by hand is that the
+    `controller_loop` rather than calling the four methods by hand is that the
     thing under test IS the try blocks.
 
     `stop` is cleared FIRST: it is the module's own flag, and a loop that finds it set runs no pass at all.
@@ -66,7 +66,7 @@ def _one_pass(ctl) -> list[str]:
 
     stop.wait = wait_once
     try:
-        _controller_loop(ctl)
+        controller_loop(ctl)
     finally:
         stop.wait = real_wait
         logging.getLogger().removeHandler(rec)

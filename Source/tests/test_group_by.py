@@ -199,7 +199,7 @@ def test_a_spec_that_asks_for_both_on_one_field_is_refused_at_load():
     d = {"name": "x", "unit": {"rows": "units", "id": "name",
                                "fields": {"name": {"type": "string", "required": True},
                                           "cam": {"type": "string"}}},
-         "placement": {"capacity": {"from": "capacity", "fallback": 8},
+         "placement": {"capacity": {"from": "capacity", "default": 8},
                        "spread_by": "cam", "group_by": "cam"}}
     try:
         SubsystemSpec.from_dict(d)

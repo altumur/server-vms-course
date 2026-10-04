@@ -913,7 +913,7 @@ def test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares
     import inspect
     import vms.__main__ as m
     from vms.jobs import clear_requests
-    assert "_clear_loop" in inspect.getsource(m.console) and "clear_requests(" in inspect.getsource(m._clear_loop)
+    assert "_clear_loop" in inspect.getsource(m.console) and "clear_requests(" in inspect.getsource(m._clear_turn)
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()

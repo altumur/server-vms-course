@@ -65,6 +65,9 @@ COPY vms vms
 COPY gstvms gstvms
 # So `python3 -m vms …` resolves the packages from any working directory; the units do not set it.
 ENV PYTHONPATH=/app
+# The subsystems this image carries, as the platform knows them: by their specs (`w2cplatform/catalog.py`) —
+# which objects are rows, how a camera's address carries a login, and what `python3 -m w2cplatform` runs.
+ENV SPEC_DIR=/app/vms
 # The default verb is the worker; every unit overrides it with `Exec=` (`controller`, `console`, `resource`,
 # and the worker unit repeats `worker` explicitly).
 CMD ["python3", "-m", "vms", "worker"]

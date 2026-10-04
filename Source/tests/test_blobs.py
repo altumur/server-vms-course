@@ -106,7 +106,7 @@ def test_a_blob_may_not_be_in_the_snapshot():
     is one object per worker under a ceiling, and a blob is by definition what did
     not fit in a row."""
     base = {"name": "panel", "unit": {"rows": "panels", "fields": {"host": {"type": "string"},
-                                                                   "firmware": {"type": "blob"}}}}
+                                                                   "firmware": {"type": "blob"}}}, "placement": {"capacity": {"from": "capacity", "default": 4}}}
     spec = SubsystemSpec.from_dict(base)
     assert spec.snapshot == ["host"]                              # the default leaves it out rather than refusing
     try:

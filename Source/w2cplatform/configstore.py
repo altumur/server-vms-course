@@ -85,7 +85,7 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # the author's decision). The door answered a data request marked `X-Configstore-Forwarded: <role>` with that role's
 # rights — the product's `hashicorp/raft` carries no commands, so its daemon forwards them so — but this daemon
 # never sent the mark, and any daemon's certificate made itself any role with it: srv-b's certificate deleted
-# `vms/slots/*` as `vmsworker` and `domain/keys/*` as `domain` at srv-a's door. The path is gone: a data request on
+# another role's slots and `domain/keys/*` as `domain` at srv-a's door. The path is gone: a data request on
 # the `-api` door is 403, marked or not, until a daemon that forwards exists (mTLS, its second round).
 #
 # ## Faults — "not done" and "do not know" are different answers
@@ -166,16 +166,15 @@ SOCKETS = "/run/configstore"                        # `<role>.sock` and `admin.s
 DATA = runtime.DATA + "/configstore"                # journal, dump, member.json — the platform's state (`runtime.DATA`)
 RIGHTS_FILE = runtime.ETC + "/configstore-rights.json"   # generated from the spec (М11: `python3 -m cluster rights`)
 ADMIN_URL = f"{STORE_SCHEME}://{SOCKETS}/admin.sock"
-PLATFORM_ROLES = frozenset({"resource"})            # the platform's own processes among the store's callers
 
 
-# A role socket's group: what the rights file says for the role (`group`, the product's format), else `w2c-<role>` for
-# the platform's own processes and `vms-<role>` for the subsystems' (the product's boundary: vms is a subsystem, not
-# the platform).
+# A role socket's group: what the rights file says for the role (`group`, the product's format), else `w2c-<role>`.
+# Whose a role is — the platform's or a subsystem's, and which — is the rights file's to say, generated from the specs;
+# the daemon names no subsystem (the boundary's step 4: a role without a group was `<a subsystem's name>-<role>` here).
 def socket_group(role: str, rights: Rights | None = None) -> str:
     if rights is not None and role in rights.groups:
         return rights.groups[role]
-    return ("w2c-" if role in PLATFORM_ROLES else "vms-") + role
+    return "w2c-" + role
 
 
 LEADER_WAIT = 5.0          # how long a command may wait for a leader before the daemon answers 503

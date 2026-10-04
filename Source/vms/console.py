@@ -273,7 +273,7 @@ def recordings_of(rec_ctl, cam) -> list[str]:
 # fourth pass, major). A store that does not answer is not "nobody's": the name is not taken.
 def own_name_is_hers(rec_ctl, cam) -> bool:
     try:
-        items, _ = rec_ctl.vars.get(rec_ctl._row_key(rec_ctl.spec.parse_id(str(cam))))
+        items, _ = rec_ctl.vars.get(rec_ctl.row_key(rec_ctl.spec.parse_id(str(cam))))
     except (OSError, *PARSE_ERRORS):                 # a row nested past JSON's depth too (the tenth round)
         return False
     return not items or str(items.get("cam", cam)) == str(cam)
@@ -974,7 +974,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # timelines are asked first, the rule is run over all of them, and each stretch is read from the door that
         # holds its owner. A door that does not answer is named in the reply's headers: a piece with a hole the
         # caller can see.
-        from w2cplatform.obsd import Sample, unix_s
+        from vms.obsd import Sample, unix_s
         from .archive import Span, authoritative
         # `rec` picks ONE of this camera's recordings — never another camera's: the gate checked `view` on the
         # camera in the path, and a recording named in the query must be hers (the review's second pass, blocker 1).

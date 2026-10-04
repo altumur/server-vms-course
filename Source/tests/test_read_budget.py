@@ -195,7 +195,7 @@ def _rec(vars_, objects):
 
 
 def _loop_pass(ctl) -> None:
-    """One turn of the controller's loop: the pass and the snapshot, in one pass of reads (`_controller_loop`)."""
+    """One turn of the controller's loop: the pass and the snapshot, in one pass of reads (`host.controller_loop`)."""
     with ctl.one_pass():
         ctl.pass_once(1)
         ctl.publish_snapshot()

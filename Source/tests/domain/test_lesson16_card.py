@@ -128,7 +128,7 @@ def test_a_break_of_ten_minutes_is_half_a_minute_of_stream_and_the_rest_is_backf
 def test_the_camera_answers_a_range_off_its_card_with_the_cards_own_frames_on_the_clusters_clock():
     """The recorder asks on the cluster's clock; the camera — its clock ninety seconds fast — reads its card on its
     own and answers with the card's sample records, from a key frame; they come back on the cluster's clock."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     wall = Clock(100_000.0)
     fast = Clock(wall() + 90)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
@@ -244,7 +244,7 @@ def test_a_range_the_card_could_not_read_fails_and_a_later_ask_lands_it():
     """The card failed the read — a segment shorter than written, a card gone for a moment — at the first piece or in
     the middle of the answer. The answer is an error, the request is over, nothing of the pieces that did come is
     handed over, and the recorder's next ask is answered with the frames."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     card = _card(wall() - 1000, wall())
@@ -529,7 +529,7 @@ def test_below_the_streams_bitrate_what_the_stream_skips_is_on_the_card_and_back
     Every frame the recorder did not get is on the card, and backfill — ranges asked of the camera — lands it all."""
     from vms.card import CamRing, CardActuator, CardBuffer
     from vms.worker import FAKE_PPS, FAKE_SPS
-    from w2cplatform.obsd import archive_ms, unix_s, video
+    from vms.obsd import archive_ms, unix_s, video
     wall = Clock(100_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
     start, size = wall(), 100_000                                       # ten frames a second of 100 kB: 8 Mbit/s
@@ -619,7 +619,7 @@ def test_a_camera_clock_that_steps_back_loses_no_frame_on_the_way_to_the_recorde
     review: the camera's steady clock tells it from a pause): the ingest's offset moves for neither."""
     from vms.card import CamRing, CardActuator, CardBuffer
     from vms.worker import FAKE_PPS, FAKE_SPS
-    from w2cplatform.obsd import archive_ms, video
+    from vms.obsd import archive_ms, video
     for step in (-30.0, -5.0, +30.0):
         wall = Clock(100_000.0)
         fed, north, south, signer, ingest, cam, *_ = _site(wall)
@@ -680,7 +680,7 @@ def test_a_lagging_stream_keeps_on_the_card_what_it_skipped_until_backfill_has_i
     until the stream is at its live edge again."""
     from vms.card import CamRing, CardActuator, CardBuffer
     from vms.worker import FAKE_PPS, FAKE_SPS
-    from w2cplatform.obsd import archive_ms, unix_s, video
+    from vms.obsd import archive_ms, unix_s, video
     wall = Clock(100_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
     start, size = wall(), 100_000                                       # ten frames a second of 100 kB: 8 Mbit/s
@@ -773,7 +773,7 @@ def _sensor(ring, start, camclock, wall, n, size=200):
     """Ten frames a second up to now into the camera's ring, each stamped by the camera's clock where it was captured and
     carrying its number; returns the next number."""
     from vms.worker import FAKE_PPS, FAKE_SPS
-    from w2cplatform.obsd import archive_ms, video
+    from vms.obsd import archive_ms, video
     while start + n / 10 <= wall():
         t, key = camclock() - (wall() - start - n / 10), n % 20 == 0
         body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + \
@@ -797,7 +797,7 @@ def test_backfill_across_a_forward_step_of_the_cameras_clock_asks_the_card_for_t
     captured in the hole (asked from the key frame before it), each where it was captured; with what the stream carried, every
     frame of the two minutes is at the server once."""
     from vms.card import CamRing, CardActuator, CardBuffer
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     for jump in (10.0, 30.0):
         wall = Clock(100_000.0)
         fed, north, south, signer, ingest, cam, *_ = _site(wall)
@@ -928,7 +928,7 @@ def _restart_with_a_full_card(case: str):
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.spec import SpecController
     from w2cplatform.variables import FileVariables
-    from w2cplatform.obsd import archive_ms
+    from vms.obsd import archive_ms
     note = case
     wall = Clock(100_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
@@ -1048,7 +1048,7 @@ def test_backfill_after_a_step_and_a_restart_of_the_cameras_process_lands_the_ho
     import os
     from domain.ingest import Ingest
     from domain.agent import ClusterTrust
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     for jump in (30.0, -30.0):
         for move in (False, True):
             wall = Clock(100_000.0)
@@ -1116,7 +1116,7 @@ def test_a_camera_without_an_rtc_battery_has_its_first_boots_hole_backfilled_and
     `CardBuffer.relabel`); a reboot unset again goes on after the card's newest until it is set: the first boot's hole
     lands whole, each frame where it was captured, and a hole after the reboot holds the second boot's frames only."""
     import shutil
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     wall = Clock(1_780_000_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
     boot, rtc, down = [wall()], [False], [False]
@@ -1183,7 +1183,7 @@ def test_a_range_being_answered_when_the_cameras_clock_is_set_fails_and_lands_wh
     server hears RANGE FAILED, asks again, and the range lands whole, every frame where it was captured."""
     import shutil
     from domain.ingest import RangeFailed
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     wall = Clock(1_780_000_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
     boot, rtc = wall(), [False]
@@ -1364,7 +1364,7 @@ def _road(scenario: str, travel: float, dur: float = 20.0) -> dict:
     and where, and where the range landed."""
     from vms.card import CamRing, CardActuator, CardBuffer
     from vms.worker import FAKE_PPS, FAKE_SPS
-    from w2cplatform.obsd import archive_ms, unix_s, video
+    from vms.obsd import archive_ms, unix_s, video
     wall = Clock(100_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
     start, st, captured = wall(), {"n": 0, "slow": False}, {}
@@ -1603,7 +1603,7 @@ def test_a_camera_without_an_rtc_that_reboots_for_longer_than_the_clock_step_bac
     again after NTP it lands whole, every frame where it was captured. The second boot's own seconds, asked before NTP,
     land where they were captured by the second boot's offset. A camera whose clock is never set has the first boot's
     hole refused for as long as it stays unset — and nothing anywhere off by the reboot."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     for R, ntp in ((30.0, 40.0), (8.0, 40.0), (30.0, None)):
         start, last, first, answers, refused = _rtcless(R, ntp)
         for k, frames in answers.items():
@@ -1624,7 +1624,7 @@ def test_a_range_told_before_the_cameras_clock_was_set_and_begun_after_it_fails_
     it was told (`uplink_free`). Read on the moved line, it brought what lay where the range had been. A range told
     before the line moved is refused when it is begun (`CameraPusher._stale_range`), as one being answered fails at the
     move (`test_a_range_being_answered_when_the_cameras_clock_is_set_fails…`): asked again, it lands where captured."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     wall = Clock(1_780_000_000.0)
     fed, north, south, signer, ingest, cam, *_ = _site(wall)
     boot, rtc = wall(), [False]
@@ -1751,7 +1751,7 @@ def test_a_camera_without_an_rtc_that_reboots_twice_before_ntp_answers_no_range_
     gives no frame at all: its frames have no capture time and are left out (`CameraPusher.unplaced_left`), never
     another moment's. With boot 2's road up, its frames reached the recorder live where they were captured. A camera
     whose clock is never set refuses both, every time."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     for ntp, down2 in ((40.0, True), (40.0, False), (None, True)):
         start, answers, refused, live, pusher = _two_reboots(ntp, down2)
         case = (ntp, down2)

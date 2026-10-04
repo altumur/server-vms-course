@@ -97,6 +97,10 @@ POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": "", "items": {
 → 200 {"index": 1007}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=objects/rec/used/disks-a
+→ 200 {"items": null, "index": ""}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=rec/holds/disks-a
 → 200 {
   "items": {
@@ -118,3 +122,13 @@ POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": 1007, "items": {
   "by": "r-srv-a-1"
 }}
 → 200 {"index": 1008}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=objects/rec/used/disks-a
+→ 200 {"items": null, "index": ""}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "objects/rec/used/disks-a", "cas": null, "items": {
+  "data": "{\"url\": \"/data/srv-a/disks\", \"at\": 1757500000.0, \"by\": \"r-srv-a-1\", \"instance\": \"srv-a:4101\", \"server\": \"srv-a\"}"
+}}
+→ 200 {"index": 1009}

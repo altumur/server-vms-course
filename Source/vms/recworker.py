@@ -42,7 +42,7 @@ import time
 from w2cplatform import runtime
 from w2cplatform.console import framed, heartbeats
 from w2cplatform.contract import Subsystem, read_hold
-from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
+from vms.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
 from w2cplatform.secrets import hide_in_url
 from w2cplatform.objects import ObjectStore
@@ -381,7 +381,7 @@ class RecWorker(VmsWorker):
     # ten minutes a pass, the rest on the passes after (`requests`), the way a planned gap is (`backfill`).
     PIECE = 60.0
     RANGE_CAP = 600.0
-    SLOT_PREFIX, NAME_ENV = "r", "RECORDER_NAME"
+    SLOT_PREFIX, NAME_ENV = REC_SPEC.slot_prefix, REC_SPEC.slot_name_env   # `slot:` in rec.subsystem.yaml
     parse_row = staticmethod(rec_row)
 
     def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,
@@ -2442,7 +2442,7 @@ class RecWorker(VmsWorker):
     # half after the cut has no key frame to open a sequence on, and the half before it would be fetched again as
     # the next piece's lead-in. `read(t0, t1)` is a source's frames of a range; yields `(from, to, frames)`.
     def _pieces(self, read, t0: float, t1: float):
-        from w2cplatform.obsd import unix_s
+        from vms.obsd import unix_s
         at = t0
         while at < t1:
             hi = min(t1, at + self.PIECE)
@@ -2788,7 +2788,7 @@ class RecWorker(VmsWorker):
 
     def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str, store=None,
               report: bool = True) -> dict:
-        from w2cplatform.obsd import unix_s
+        from vms.obsd import unix_s
         store = self.store if store is None else store
         epoch = self.epochs.get(unit)
         if store is None or store is not self.store or epoch is None or not self.may_record(unit):
@@ -3217,7 +3217,7 @@ class RecWorker(VmsWorker):
     # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole
     # inside a sequence would be drawn as footage. What the door handed over starts on a key frame.
     def _copy_in(self, rec: str, samples: list) -> bool:
-        from w2cplatform.obsd import unix_s
+        from vms.obsd import unix_s
         last, kept = None, 0
         for smp in samples:
             if last is None and not smp.key:

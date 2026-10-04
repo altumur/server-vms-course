@@ -13,7 +13,7 @@ and it is all of this:
                                                          takes the lapsed slot and inherits its assignment
 
 Who decides how many workers there are: not the controller. The scheduler
-runs `count` of them (Nomad, or `systemctl start vmsworker@w-N` on one box)
+runs `count` of them (Nomad, or `systemctl start <name>worker@w-N` on one box)
 and an autoscaler moves `count` from a headroom metric the workers export.
 The platform's part is to give `count` interchangeable processes stable
 names — the slots — so that assignments survive a reschedule. A slot is
@@ -22,7 +22,7 @@ what the slot held. A slot that merely lapses (a crash) is left alone: the
 scheduler brings the process back, and it claims the same slot.
 
 `Controller` and `Worker` are the two base classes. The platform never
-imports anything from a subsystem; the live and det subsystems prove the
+imports anything from a subsystem; the other subsystems prove the
 shape is generic by running a subsystem that counts seconds through it.
 """
 # ================================================================================================
@@ -36,8 +36,8 @@ shape is generic by running a subsystem that counts seconds through it.
 # `<name>/workers/<worker>`; a heartbeat object `<name>/<worker>/heartbeat`; an epoch prefix
 # `<name>/epoch/<unit>` the workers take by CAS; an event log on the resource (`events.py`); and a slot
 # prefix `<name>/slots/<worker>` — identity by claim. It depends on `variables.py`, `objects.py`,
-# `epoch.py` and `longpoll.py` (a loop's early pass) and nothing else. `spec.SpecController` extends `Controller`; `vms.worker.VmsWorker` and the
-# gateway (`vms/liveworker.py`) and the detector (`vms/detworker.py`) extend `Worker`. The file's own docstring settles who
+# `epoch.py` and `longpoll.py` (a loop's early pass) and nothing else. `spec.SpecController` extends `Controller`; each
+# subsystem's worker extends `Worker`. The file's own docstring settles who
 # decides how many workers there are: not the controller. The scheduler runs `count` of them; the platform's
 # part is to give those interchangeable processes stable names — the slots — so assignments survive a
 # reschedule. A slot released on an orderly stop is redistributed by the controller; a slot that merely
@@ -53,9 +53,9 @@ shape is generic by running a subsystem that counts seconds through it.
 # dicts, empty at start.
 #
 # ## Notes
-# - The tests enforce the boundary: `test_the_platform_knows_nothing_about_video` asserts no import from
-#   `vms/` and not the word "camera" in this file; `test_lesson8_live.py` and `test_lesson9_det.py` run two more subsystems through the
-#   same `Controller`/`Worker`.
+# - The tests enforce the boundary: `tests/test_boundary.py` asserts no import from a subsystem and none of a
+#   subsystem's words in this file, and runs the platform on a test subsystem alone through the same
+#   `Controller`/`Worker`.
 # - Ordering that matters: a worker claims its slot before reading its assignment (the name is the row key);
 #   it takes an epoch before writing anything for a unit; it renews slot and leases on a shorter period than
 #   `slot_ttl` / `lease_ttl − margin`.
@@ -275,7 +275,7 @@ MOVED_FATES = ("move", "hung_moved", "unsure_moved")
 
 # A slot's term as its judge counts it: from when it saw the row renewed (`Controller.slot_fate`; the review's thirteenth
 # pass, blocker 4). A renewal dates its slot one term ahead by its holder's clock (`slot_ttl`, 45 s); the `until` it
-# writes is that clock's, and is read for what a page shows — `until` an hour ahead held a dead server's cameras for an
+# writes is that clock's, and is read for what a page shows — `until` an hour ahead held a dead server's units for an
 # hour (the twelfth pass, major 17), one 50 s behind gave a live worker's away.
 SLOT_TERM = 45.0
 # The fates under which a lapsed slot's NAME may be taken by another process (`Worker._held`): its units move with it
@@ -389,7 +389,7 @@ _garbled_keys: set[str] = set()
 # …AND WHAT IT IS CALLED BY IS A NAME (the review's tenth pass, major). `worker` and `server` went on as they stood: a
 # heartbeat saying `"server": ["srv-x"]` parsed, and every reader that keys or sorts by it raised — `/servers`,
 # `/unplaceable`, `/drain`, `/metrics` of the console, a resource's `restore` and mirror, and the controller's
-# `ensure_reach`, `redistribute`, `ensure_home` (a new unit not placed, a dead recorder's units not moved); a `5` among
+# `ensure_reach`, `redistribute`, `ensure_home` (a new unit not placed, a dead worker's units not moved); a `5` among
 # strings raised in every `sorted`. A worker's or a resource's `worker` and `server` are non-empty strings, or the
 # heartbeat does not parse: that heartbeat's trouble, skipped and counted like any other.
 NAMES = ("worker", "server")
@@ -454,7 +454,7 @@ def is_live(sub: str, ts: float, now: float, lost_after: float) -> bool:
 # -- FRESHNESS BY CHANGE, ON THE JUDGE'S CLOCK (the review's thirteenth pass, blocker 4; the owner's decision of 4 Oct) --
 # `is_live` compares two machines' clocks, and `FUTURE_TOLERANCE` is all the slack it has. Every "is it still there?"
 # that moves something, gives a name away or lets a server go was asked so: a resource's `ts`, its door row's `at`, a
-# slot's `until`, a worker's `ts`. A server whose clock ran 6…30 s ahead or 50 s behind had a live worker's cameras
+# slot's `until`, a worker's `ts`. A server whose clock ran 6…30 s ahead or 50 s behind had a live worker's units
 # carried off at 10 s, a hung one's given a second writer at 10 s instead of 900, and a live server ahead by 30 s was
 # decommissioned (`n3`, `n4`, `n6`, `n7`, reproduced by runs). The judge now asks whether what it reads has CHANGED, and
 # how long it has stood still by ITS OWN clock: a heartbeat's `ts` and a door row's `at` are tokens that change with
@@ -599,7 +599,7 @@ DECOMMISSIONS = Table("decommission", "read as a decommission still, until it is
 
 # A name, and the key layout derived from it. Every path the platform touches for a subsystem is produced
 # here, so the layout is in one place.
-# - `name` — the prefix (`vms`, `live`, `det`).
+# - `name` — the prefix (`a`, `b`, `testsub`).
 @dataclass
 class Subsystem:
     name: str
@@ -628,7 +628,7 @@ class Subsystem:
     # `<name>/snapshot/<worker>` — one object per worker, the same shape the heartbeat key already has.
     # The snapshot used to be ONE object for the whole cluster, and it was the only place in the platform
     # where data grew in a single object: an object store has a ceiling (Nomad Variables: 64 KiB on the
-    # whole object), and 600 cameras — the cluster's own design maximum — did not fit under it. Sharded by
+    # whole object), and 600 units — the cluster's own design maximum — did not fit under it. Sharded by
     # the worker that holds the unit, it grows the way the cluster grows: more units means more workers
     # means more objects, each the size of one worker's assignment.
     #
@@ -652,7 +652,7 @@ class Subsystem:
     # The shape the blob sweep's row already has, generalised: the console writes it, a worker's pass reads
     # it, and the platform never looks inside. It exists because the alternative — a POST that answers 202
     # and stores nothing — is a lie that survives right up until somebody checks whether the thing happened.
-    # What a request MEANS is the subsystem's: the recorder reads a range to fetch, another subsystem could
+    # What a request MEANS is the subsystem's: one subsystem reads a range to fetch, another could
     # read something else entirely.
     def request_key(self, rid: str) -> str:
         return f"{self.name}/{REQUESTS}/{rid}"
@@ -708,11 +708,11 @@ class Subsystem:
     # worker is. Same row (`Slot`), same CAS-with-a-lease rule, same fencing; what differs is where the
     # candidates come from. A slot's name a worker invents (`w-<max+1>`) because one process is as good as
     # another. A hold's name it cannot: the places are a list somebody else wrote down — the administrator's
-    # volumes, in M10B — and a worker may only take one of those, one at a time, exclusively.
+    # places, in M10B — and a worker may only take one of those, one at a time, exclusively.
     #
     # Two rows and not one because they answer different questions and lapse for different reasons: the
     # slot says which process of the deployment this is (the scheduler's business), the hold says which
-    # archive it writes into (the operator's). A process can lose the second and keep the first — it
+    # place it writes into (the operator's). A process can lose the second and keep the first — it
     # becomes a spare — and that is a normal state, not a failure.
     def hold_key(self, place: str) -> str:
         return f"{self.name}/holds/{place}"
@@ -769,8 +769,8 @@ class Subsystem:
 # THE CONTROLLER'S LIMIT, AS IT SAID IT (the product's alignment of the owner's decision on hung workers). A spare asks
 # whether a lapsed slot's worker is hung before it takes the name (`Worker._hung`), and the console says so on `/servers`
 # (`Mount._judged`) — each through `Controller.slot_fate`, with `HUNG_MOVE_AFTER` as compiled in, while the controller
-# read its own from its environment: told an hour, it held a hung worker's cameras back and a spare took the name — and
-# the cameras — at fifteen minutes, a second writer; told a minute, it moved them and the spare still waited. The
+# read its own from its environment: told an hour, it held a hung worker's units back and a spare took the name — and
+# the units — at fifteen minutes, a second writer; told a minute, it moved them and the spare still waited. The
 # controller says its limit in its pass report (`<sub>/controller/pass`, `hung_move_after` — the one object it writes
 # beside the shards, `acl_objects_controller`; anyone of the subsystem reads it), and the others judge by that: one limit,
 # one rule, one verdict. No report yet, or a word in it: the default, as the controller's own.
@@ -809,15 +809,15 @@ def published_names(objects, sub: "Subsystem", field: str = "names_given") -> di
 # - `worker` — the slot name.
 # - `units` — the subsystem's unit ids as strings; the platform does not know what they are.
 # - `rev` — bumped on every change, so a worker can tell a new assignment from the one it already applied
-#   (`assignment_rev` in the VMS heartbeat).
+#   (`assignment_rev` in a subsystem's heartbeat).
 # What a worker that files requests for OTHER subsystems may write, and nothing else.
 #
-# Every ACL so far has been about one prefix: a subsystem writes inside its own name. Automation is the
-# first thing that must reach across, because a scenario's whole job is to ask somebody else to act — and
-# the narrowness is the point. Not `vms/*`, which would let it edit cameras; not `vms/requests/*` by
+# Every ACL so far has been about one prefix: a subsystem writes inside its own name. A subsystem of scenarios
+# is the first thing that must reach across, because a scenario's whole job is to ask somebody else to act — and
+# the narrowness is the point. Not `a/*`, which would let it edit another subsystem's units; not `a/requests/*` by
 # accident of a wildcard, but by a grant that names the targets out loud in the process's token:
 #
-#     open_vars(url, writer="autoworker", acl={"autoworker": AUTO.acl_worker() + requests_acl("vms", "rec", "det")})
+#     open_vars(url, writer="xworker", acl={"xworker": X.acl_worker() + requests_acl("a", "b")})
 #
 # `requests` is the right family to open because of what it already is: bounded work, addressed to a unit,
 # performed by whoever holds it, cleared when done. A grant on it cannot change configuration, cannot
@@ -855,7 +855,7 @@ class Assignment:
 
 # A worker's own report, written as one JSON object.
 # - `worker` — the name; `ts` — wall-clock time of the write; `status` — a list of per-unit dicts (the read
-#   model: `{id, phase, epoch, …}` in the VMS); `extra` — every other top-level key (`server`, `labels`,
+#   model: `{id, phase, epoch, …}` in a subsystem); `extra` — every other top-level key (`server`, `labels`,
 #   `capacity`, `headroom`, `conflicts`, `started`, `previous_hb`, …). The platform reads `extra` by name in
 #   `SpecController` and the console's `/metrics`; it never defines the keys.
 @dataclass
@@ -913,7 +913,7 @@ class Slot:
     # THE SERVER ITS HOLDER RUNS ON, in the store (the review's twelfth pass, blocker 5; the owner's decision of 4 Oct).
     # Where a worker runs was said in its heartbeat alone — an object, and in М11 a file on that very server: with the
     # server gone, a controller started after it had nothing to read, "never said which server", and the server's
-    # cameras waited for ever. The holder writes it into every renewal of its name (`Worker.server`), and the controller
+    # units waited for ever. The holder writes it into every renewal of its name (`Worker.server`), and the controller
     # reads it where the heartbeat is gone (`slot_fate`). "" — not said (a worker of no server, an older build).
     server: str = ""
 
@@ -1005,8 +1005,8 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 
 
 # The same for a PLACE's row, `<name>/holds/<place>` — the same row, read by the same people (the review's sixth pass,
-# beside the slot's). Read bare, one garbled hold among the candidates raised out of every claim: a recorder took no
-# volume at all, and the console's list of volumes failed whole. The row is that place's trouble: no candidate until
+# beside the slot's). Read bare, one garbled hold among the candidates raised out of every claim: a worker took no
+# place at all, and the console's list of places failed whole. The row is that place's trouble: no candidate until
 # it is mended, counted (`HOLDS_GARBLED`, `holds_garbled` in the heartbeat and on `/metrics`), logged once.
 HOLDS = Table("hold", "skipped — nobody takes that place until it is mended")
 HOLDS_GARBLED = HOLDS.counts                      # subsystem -> hold rows that did not parse, this process
@@ -1020,8 +1020,8 @@ def read_hold(key: str, place: str, items) -> "Slot | None":
 # -- one pass, one read of each key (the scaling pass after the eighth review) ----------------------------------------
 # A controller's pass asks a dozen questions per unit — its row, its placement, which server a worker is on, whether
 # that server's resource answers, who is leaving — and every question was a read of the store, asked again for the
-# next unit. A thousand cameras on twenty workers cost one idle pass some 64 000 reads (`tests/test_read_budget.py`
-# counts them): the snapshot alone read every heartbeat again for every camera, and `ensure_home` every recorder's.
+# next unit. A thousand units on twenty workers cost one idle pass some 64 000 reads (`tests/test_read_budget.py`
+# counts them): the snapshot alone read every heartbeat again for every unit, and `ensure_home` every worker's.
 # Within one pass an answer cannot be more than a pass old anyway; so inside `one_pass` the store is asked ONCE per key
 # and per listing, and the answer is kept until the pass ends — never longer: nothing survives between passes, and
 # the process can still be killed anywhere.
@@ -1107,7 +1107,7 @@ def one_pass(*ctls):
 
 
 # The only writer of `<name>/*`. It holds nothing: every method reads the store, decides, and writes by CAS,
-# so two instances are harmless — this is the property `spec.SpecController` and the VMS controller inherit,
+# so two instances are harmless — this is the property `spec.SpecController` and a subsystem's controller inherit,
 # and the reason the controller is never on the recovery path.
 class Controller:
     """The only writer of <name>/*. Holds nothing: every method reads the
@@ -1196,8 +1196,8 @@ class Controller:
     # `server_of`, `place_of` ask it per unit and per candidate, and each asking was a listing and a read of every one.
     #
     # Its own name in the pass's memo (the review's tenth pass, minor): it was `(prefix, "")`, and `near_index` keeps the
-    # followed subsystem's heartbeats under the same `(prefix, "")` as a DICT — in one pass shared by a recorder's
-    # controller (`near: vms`) and the VMS's, the list read here was that dict, and `hb.ts` an `AttributeError`.
+    # followed subsystem's heartbeats under the same `(prefix, "")` as a DICT — in one pass shared by a following
+    # subsystem's controller (`near: a`) and `a`'s own, the list read here was that dict, and `hb.ts` an `AttributeError`.
     def _heartbeats(self) -> list[Heartbeat]:
         def read():
             out = []
@@ -1286,8 +1286,8 @@ class Controller:
     # anything, and no subsystem learns a new word.
     #
     # Why it is needed at all, when a stopped process is noticed anyway: being noticed is the SLOW path.
-    # A recorder's units move when its slot has lapsed AND its server's resource is silent — two
-    # independent silences, about a minute and a half of not recording. A planned stop is not a silence:
+    # A worker's units move when its slot has lapsed AND its server's resource is silent — two
+    # independent silences, about a minute and a half of nobody doing the work. A planned stop is not a silence:
     # we know about it before it happens, and the work can leave first.
     #
     # One server at a time, and that is the whole of the mutual exclusion: the row holds ONE name, written
@@ -1337,8 +1337,8 @@ class Controller:
     # -- a slot that stopped renewing: what happens to it, decided in one place ----------------------------------
     # THE OPERATOR OPERATES SERVERS, NOT WORKERS (the owner's decision, 3 Oct, on the review's eleventh pass). There was
     # a door to retire a WORKER from the console (`POST /workers/<w>/retire`), and it asked the operator the one thing
-    # they cannot know: whether a process that says nothing is dead or hung. A hung one went on recording beside the
-    # worker its cameras were given to — two holders of cameras 1 and 3 — and a request refused as "alive" stood, and
+    # they cannot know: whether a process that says nothing is dead or hung. A hung one went on writing beside the
+    # worker its units were given to — two holders of units 1 and 3 — and a request refused as "alive" stood, and
     # retired the same process at its next silence an hour and a half later. That door is gone. What becomes of a slot
     # that stopped renewing is decided by the controller from facts, by ONE rule (`slot_fate`), which three things read:
     # the move off a dead worker (`gone_servers` → `redistribute`), releasing a slot (`release_unlisted`), and a
@@ -1405,7 +1405,7 @@ class Controller:
     #            not a silent server, major 9). Nothing moves, as `wait` — and, unlike `wait`, the name is not given to
     #            a nameless process either (`Worker._held`). Until `hung_move_after` past the slot's `until`, as `hung`:
     #            then `unsure_moved`, moved anyway, with an alarm (`worker.unsure_moved`) and the name given — a worker
-    #            nobody can judge left its cameras written by nobody for ever, and an alarm was all (the owner's middle
+    #            nobody can judge left its units written by nobody for ever, and an alarm was all (the owner's middle
     #            way for `hung`, applied to the doubt: a hung process is KNOWN to run and moves at the limit, so one
     #            that MAY run moves there too). `wait` keeps its old rule: it is what an older resource or a worker
     #            that never registered got before the resource said anything (the owner, 3 Oct: "old resource without
@@ -1413,7 +1413,7 @@ class Controller:
     #
     # WHAT THE STORE REMEMBERS (the review's twelfth pass, blocker 5; the owner's decision of 4 Oct). A controller started
     # after a server died had read nothing of it: in М11 the worker's heartbeat and the resource's are files on that very
-    # server, and "never said which server" held its cameras for ever. Two facts now live in the store, which outlives
+    # server, and "never said which server" held its units for ever. Two facts now live in the store, which outlives
     # any server: the server a slot's holder runs on (`Slot.server`, in every renewal) and when each resource last said
     # it is there (`at` on its door row, every `ALIVE_EVERY`; `resource_state`). A fresh controller reads both: the slot
     # lapsed past the margin, no heartbeat to read, the resource's row older than `SLOT_LOST_AFTER` — two silences, and
@@ -1423,8 +1423,8 @@ class Controller:
     # asked of what THIS controller has seen change, by its own clock (`Eyes`): the slot alive for a term (`SLOT_TERM`)
     # from when it saw the row renewed — not until the `until` its holder's clock wrote; the worker heard when its
     # heartbeat changed within `SLOT_LOST_AFTER`; the resource by its heartbeat and its door row the same way
-    # (`resource_state`). A clock ahead holds nothing (`until` an hour on held a dead server's cameras for an hour — the
-    # twelfth pass, major 17) and a clock behind takes nothing away (one 50 s behind had a live worker's cameras moved at
+    # (`resource_state`). A clock ahead holds nothing (`until` an hour on held a dead server's units for an hour — the
+    # twelfth pass, major 17) and a clock behind takes nothing away (one 50 s behind had a live worker's units moved at
     # 10 s). The writers' times are counted as a skew where a change is first seen, and said (`say_skews`).
     #
     # A SLOT ROW THAT DOES NOT PARSE (`slot` None; the product's DZ) is not a dead worker: no lease to read, so it is
@@ -1558,9 +1558,9 @@ class Controller:
     # How long a hung worker's units stay with it, past its slot's `until`, before they move anyway (`slot_fate`): fifteen
     # minutes, as the product's `HUNG_MOVE_AFTER` — time for the server's supervisor to see a process that has stopped
     # answering and restart it (systemd's `WatchdogSec`, launchd's `KeepAlive`), or for the person paged by `worker.hung`
-    # to look, before its cameras get a second writer; and short enough that a process hung for good leaves no hole for
+    # to look, before its units get a second writer; and short enough that a process hung for good leaves no hole for
     # ever. Its stand-in has already held the slot `STAND_IN_FOR` (five minutes) when the hang was in one step.
-    # `HUNG_MOVE_AFTER` in the controller's environment (`vms/__main__._controller_loop`) — and said in its pass report, by
+    # `HUNG_MOVE_AFTER` in the controller's environment (a subsystem's controller loop) — and said in its pass report, by
     # which every other process judges (`published_hung_limit`).
     hung_move_after = HUNG_MOVE_AFTER
 
@@ -1589,7 +1589,7 @@ class Controller:
     #
     # …EACH BY WHETHER IT CHANGED, ON THIS CONTROLLER'S CLOCK (the review's thirteenth pass, blocker 4): the heartbeat's
     # `ts` and the row's `at` are the resource's clock, and were compared with this one — a resource 6 s ahead or 50 s
-    # behind was "silent" while it beat, and a live worker's cameras went. Now they are tokens: changed within
+    # behind was "silent" while it beat, and a live worker's units went. Now they are tokens: changed within
     # `lost_after`, the resource is there. The row is looked at every time, so a silence is timed from its last change.
     def resource_state(self, server: str, lost_after: float = 45.0) -> str:
         from .resource import RESOURCES
@@ -1843,7 +1843,7 @@ class Controller:
         return {"unread": str(items.error)} if isinstance(items, Unread) else dict(items)
 
     # The controller's lines in the journal (`journal.py`): a decommission carried out, a slot it released and why, a
-    # hung worker. The log only, unless the process is given a resource tree (`vms/__main__._controller_loop`: `ARCHIVE`).
+    # hung worker. The log only, unless the process is given a resource tree (a subsystem's controller loop gives it one).
     @property
     def journal(self) -> Journal:
         j = self.__dict__.get("_journal")
@@ -1903,7 +1903,7 @@ class Controller:
     #
     # …and the slots left where nobody can judge them (`wait`, `unsure`) while units are assigned to them: `unjudged`
     # `{worker: why}`, an alarm once an episode (`worker.unjudged`), `<sub>_workers_unjudged` and `_units_unjudged` on
-    # `/metrics` (the review's twelfth pass, blocker 5: a server's cameras waited on `wait` with no sign anywhere but a
+    # `/metrics` (the review's twelfth pass, blocker 5: a server's units waited on `wait` with no sign anywhere but a
     # line of a lesson). `units_unjudged` — how many units wait so.
     def release_unlisted(self) -> dict:
         released, hung, moved, unjudged, units, doubted = {}, {}, [], {}, 0, {}
@@ -2049,7 +2049,7 @@ class Worker:
         # set and nothing else, then and every time it has to claim again.
         self.spare_for: str | None = None
         # Renewals — of the slot, a lease, a place — the store did not answer, since start: a lease step that added
-        # one is followed by another at the loop's next look, not a period later (`VmsWorker.run`, the raft
+        # one is followed by another at the loop's next look, not a period later (a subsystem worker's `run`, the raft
         # prototype's finding).
         self.unanswered = 0
         self.hold: str | None = None              # the PLACE this worker took, if its subsystem has places to take
@@ -2059,7 +2059,7 @@ class Worker:
         self._hold_seen: dict[str, tuple[int, float]] = {}
         self._slot_seen: dict[str, tuple[int, float]] = {}   # …and each garbled slot row's (`_garbled_stale`)
         # What this process has seen change, and when, by its own clock (`Eyes`; the review's thirteenth pass, blocker 4):
-        # whose heartbeat is fresh enough to read a camera from — a holder, a recorder — by change, not by its writer's `ts`
+        # whose heartbeat is fresh enough to read a unit from — a holder, another subsystem's worker — by change, not by its writer's `ts`
         self.eyes = Eyes(clock, wall)
         self._presence = None                     # the lock this process holds on its server (`present`)
         self._presence_unsaid: str | None = None  # why its name could not be written beside the lock, while it cannot
@@ -2110,8 +2110,8 @@ class Worker:
     #
     # …AND `wait` KEEPS IT, as `unsure` does, until the controller's limit (the review's thirteenth pass, blocker 2; the
     # owner's decision of 4 Oct). `wait` gave it "as before the resource said anything": a worker whose `present()` failed
-    # (EACCES, ENOSPC on the events tree) and went on working is `wait` — its cameras held back by the controller, and a
-    # spare took the name and the cameras with it at +100 s, two writers (`n9_unregistered_hung_name`).
+    # (EACCES, ENOSPC on the events tree) and went on working is `wait` — its units held back by the controller, and a
+    # spare took the name and the units with it at +100 s, two writers (`n9_unregistered_hung_name`).
     #
     # …AND BY THE CONTROLLER'S EYES, NOT THIS PROCESS'S (the thirteenth pass, blocker 4). A controller built here at the
     # moment of the claim has seen nothing change: to call a slot lapsed it had to believe the holder's `until`, a clock
@@ -2257,9 +2257,9 @@ class Worker:
                 # still when its holder is hung, too, and was taken past `slot_fate` with the hung worker's units.
                 free += sorted((n for n in names if n not in known and rows[n][0] and self._garbled_stale(n, rows[n][1])
                                 and not self._held(n, rows[n][1])), key=slot_number)
-                # A NEW slot is named after the kind of worker taking it (`SLOT_PREFIX`: `r` a recorder, `g` a
-                # gateway, `a` an evaluator — the letters a process given a name already had), not `w-` for
-                # everybody: a recorder that had to make a slot looked like a camera worker in every list, every
+                # A NEW slot is named after the kind of worker taking it (`SLOT_PREFIX`: one letter per subsystem's
+                # worker — the letters a process given a name already had), not `w-` for
+                # everybody: a worker of one kind that had to make a slot looked like one of another in every list, every
                 # heartbeat and every log line (the product's box, feedback BU). Slots that exist keep their
                 # names; a lapsed or free one is still taken before a new one is made.
                 nxt = f"{self.SLOT_PREFIX}-{max([slot_number(n) for n in names] + [0]) + 1}"
@@ -2296,7 +2296,7 @@ class Worker:
                     # of THIS box, always — the unit is the authority on which process is the current one. From any other
                     # holder — another box, or a name that says no box — only where the controller gives the name (`_held`):
                     # the slot's lapse was read by `until` alone, and a process named on box B took a hung worker's name
-                    # and its cameras from box A at +50…+600 s, two writers (`n5_named_takes_hung`).
+                    # and its units from box A at +50…+600 s, two writers (`n5_named_takes_hung`).
                     if steal and not self._on_this_box(cur.holder) and self._held(cand, idx):
                         refused = self._may_take_by_name(cand, cur.holder, held=cur.claimable(now))
                         self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
@@ -2383,7 +2383,7 @@ class Worker:
                         name, e, CONTENDER_FRESH)
 
     # The worker's own lines in the journal (`journal.py`): `worker.name_taken`, `worker.name_back`. Into its server's
-    # resource tree when it has one (`archive_root`), else the log only — as the controller's.
+    # resource tree when it has one (the root its subsystem gave it), else the log only — as the controller's.
     @property
     def journal(self) -> Journal:
         j = self.__dict__.get("_journal")
@@ -2426,7 +2426,7 @@ class Worker:
                          server=self.server or "", since=n["since"], nameless_s=round(now - n["since"]))
 
     # Still me? Read the slot; if `holder` is another instance, return False — the instance is fenced as a
-    # whole (the VMS worker stops recording on this). Otherwise extend `until` by CAS; a `Conflict` is also
+    # whole (a subsystem's worker stops its work on this). Otherwise extend `until` by CAS; a `Conflict` is also
     # False. A worker with no slot (fixed name without claim) returns True — but not one that gave its name up to
     # another instance and has not claimed another yet (`keep_slot`): that one is nobody, and False.
     def renew_slot(self) -> bool:
@@ -2509,25 +2509,25 @@ class Worker:
     # whoever is free.
     #
     # Order matters and is the caller's: it passes candidates in the order it wants them taken (a
-    # recorder puts its own server's disks before a network archive any box could serve). A `Conflict`
+    # subsystem that writes to a disk puts its own server's disks before a network place any box could serve). A `Conflict`
     # means somebody took this one between the read and the write — try the next candidate, and only
     # repeat the sweep if contention was the reason we ran out.
     #
-    # THE PLACE FOLLOWS THE NAME (feedback CF). A recorder killed and started again by systemd is the same
+    # THE PLACE FOLLOWS THE NAME (feedback CF). A worker killed and started again by systemd is the same
     # worker: it takes its slot back at once, from a holder that has not lapsed (`claim_slot(prefer=…)` —
-    # М10B Lesson 17: systemd is the authority on which process is the current `r-1`). Its volume did not
-    # follow: the hold waited out its TTL — 45 s in which nothing on that volume was recorded, by the very
+    # М10B Lesson 17: systemd is the authority on which process is the current `r-1`). Its place did not
+    # follow: the hold waited out its TTL — 45 s in which nothing was written into that place, by the very
     # process that held it a moment ago. So a hold says WHOSE slot holds it (`by`), and the worker of that
     # slot takes it back at once, before any other candidate. The previous instance finds out at its next
     # `renew_hold` and stops writing there; what it wrote in between is fenced by the new epochs, as a slot's is.
-    # Anybody else still waits for the TTL — the product's own lesson, from its archive daemon: a place
+    # Anybody else still waits for the TTL — the product's own lesson, from the daemon it writes through: a place
     # kept for its owner must be kept LONGER than the time the owner takes to come back.
     #
     # ONLY A PLACE THAT CANNOT BE WRITTEN FROM TWO HOSTS FOLLOWS THE NAME (the review's sixth pass, blocker 2). The
     # instance that took the name may be on another box, and the one it took it from frozen, not dead. Where the place
     # is a disk that is harmless — the two are on one host. Where any box may write it, taking it at once skipped the
     # one wait the previous holder's write window is measured against (`_hold_stale`), and two instances of one name
-    # wrote one volume. The subsystem says which places follow, given who holds the place now (`hold_follows_name`:
+    # wrote one place. The subsystem says which places follow, given who holds the place now (`hold_follows_name`:
     # the row's `holder`, `host:pid:rnd` — the seventh pass gave the same-host restart its place back); the rest wait
     # like anybody's.
     #
@@ -2540,11 +2540,11 @@ class Worker:
     # The price: a process that first looks at a long-dead hold waits one term from that look. A released hold, or
     # one nobody holds, is free at once, as before.
     #
-    # And no generation in the daemon's `owner` (`rec:<volume>`, `Archive`). The owner is how the next holder of the
-    # volume on this host picks up the writer a vanished one left, detached — with a generation in it the successor
-    # names another owner, and waits out the daemon's grace with nothing recorded, which is what the owner is there
-    # to prevent (feedback CF). The fence is the hold, confirmed by CAS right before every `VOLUME_MOUNT_RW`
-    # (`RecWorker._confirm_hold`); on one host the daemon itself keeps one writer per volume.
+    # And no generation in the `owner` a subsystem names to its daemon (`<sub>:<place>`). The owner is how the next
+    # holder of the place on this host picks up the writer a vanished one left, detached — with a generation in it the
+    # successor names another owner, and waits out the daemon's grace with nothing written, which is what the owner is
+    # there to prevent (feedback CF). The fence is the hold, confirmed by CAS right before every mount for writing
+    # (by the subsystem's worker); on one host the daemon itself keeps one writer per place.
     HOLD_SKEW = 5.0
 
     def _hold_stale(self, cand: str, cur: "Slot", idx) -> bool:
@@ -2597,7 +2597,7 @@ class Worker:
 
     # Whether `place`, held under this worker's NAME by the instance `holder`, is taken back at once (`_claim_hold`).
     # Yes, unless the subsystem knows the place can be written from another host than the holder's
-    # (`RecWorker.hold_follows_name`).
+    # (a subsystem's worker overrides this).
     def hold_follows_name(self, place: str, holder: str = "") -> bool:
         return True
 
@@ -2605,7 +2605,7 @@ class Worker:
     # holds this place now, so this one must stop writing into it. Losing a hold is NOT losing the slot —
     # the process stays itself and becomes a spare.
     #
-    # ONE AT A TIME, AND A LOST RACE IS READ AGAIN (the review's fourth pass, a minor). The recorder renews from two
+    # ONE AT A TIME, AND A LOST RACE IS READ AGAIN (the review's fourth pass, a minor). A subsystem's worker renews from two
     # threads — the pass, and a keep's `seal`, which confirms the hold before it mounts the writer again — and the
     # one that lost the CAS to the other took the conflict for the hold taken: let go of its own fresh hold, stopped
     # writing, and waited out the term to take it back. Renewals are serialised now, and a conflict is answered by
@@ -2696,7 +2696,7 @@ class Worker:
             raise NoSlot(f"{self.instance} gave slot {self.seeking} up and holds no other: no epoch for {unit}")
         # …NOR FROM A STEP NOBODY STOOD IN FOR (the product's cross-check of the review's twelfth pass). A loop stuck in a
         # step past `STAND_IN_FOR` let its units go — and when the step came back it went on with the assignment it had
-        # read before it hung: the next camera of the list was started, its epoch taken by CAS over the worker the units
+        # read before it hung: the next unit of the list was started, its epoch taken by CAS over the worker the units
         # had moved to meanwhile, which then fenced — a second writer made by a process that had been absent for minutes.
         # Nothing new is taken in such a step; the loop's next lease step and pass look again at what is its own.
         if self.step_abandoned():
@@ -2707,7 +2707,7 @@ class Worker:
         # was still on it, its lease had just been fenced, the reconciler started it again, and the epoch CAS, which
         # the store DID answer, fenced the worker the unit had moved to. A new epoch is taken only for a unit of the
         # assignment whose read answered last; what is not known to be this worker's is not taken from anybody. A
-        # worker that holds the unit's epoch already goes on under it (`VmsWorker._actuate`, feedback BK).
+        # worker that holds the unit's epoch already goes on under it (a subsystem worker's actuation, feedback BK).
         if self.assigned_now is not NEVER_READ and (self.assigned_now is None or str(unit) not in self.assigned_now):
             raise NotReadThisPass(
                 f"{self.name}: {unit} is not in the assignment read last" if self.assigned_now is not None else
@@ -2743,14 +2743,14 @@ class Worker:
         lease = self.leases.get(unit)
         return lease is not None and lease.may_record()
 
-    # Units recording past their lease's end, unconfirmed: `{unit: seconds}`.
+    # Units written past their lease's end, unconfirmed: `{unit: seconds}`.
     def unconfirmed(self) -> dict[str, float]:
         return {u: round(l.unconfirmed(), 1) for u, l in self.leases.items() if l.unconfirmed() > 0}
 
     # Renews every lease; returns the units whose lease was lost — fenced or expired — for the subsystem to
     # stop.
-    # THE SLOT ROW, KEPT BY EVERY LOOP — not only the holder's and the evaluator's (found beside the stand-in, after
-    # the fourth review). The detector, scan, survey and gateway workers claimed their slot once, at construction,
+    # THE SLOT ROW, KEPT BY EVERY LOOP — not only the two that renewed it already (found beside the stand-in, after
+    # the fourth review). The other subsystems' workers claimed their slot once, at construction,
     # and never renewed it: the row lapsed after `slot_ttl` in ordinary work, and a spare or a restarted process
     # could take the name of a worker that was alive and holding units. `keep_slot` renews it on the loop's lease
     # step; a store that does not answer keeps the slot (not known is not "taken"); a row naming ANOTHER instance
@@ -2761,12 +2761,12 @@ class Worker:
     # every candidate is taken under it — and the worker was left with no slot and the OLD name: `renew_slot` with no
     # slot said "still me", the stand-in renewed for it, the next pass read the other instance's assignment and took
     # epochs on its units with `may_write` true, and its heartbeat went out over the legitimate one. Two processes took
-    # the same detectors in turn, until a restart. Now a name given up is `seeking` until another is claimed, and
+    # the same units in turn, until a restart. Now a name given up is `seeking` until another is claimed, and
     # while it is the instance is fenced: `renew_slot` says no (so the stand-in renews nothing), `may_stand_in` says no,
     # `take_epoch` raises `NoSlot`, the assignment it reads is empty and no heartbeat goes out under the name. Every
-    # lease step claims again, as `VmsWorker.rejoin` does for a fenced holder.
+    # lease step claims again, as a subsystem worker's `rejoin` does for a fenced holder.
     #
-    # …AND THE HOLDER TOO (the review's sixth pass). `VmsWorker` and the recorder do not come through here: they fence
+    # …AND THE HOLDER TOO (the review's sixth pass). Some subsystems' workers do not come through here: they fence
     # the instance (`fence`) and take a free slot on a later pass (`rejoin`) — and that path kept the old name through
     # a claim that failed, the very thing closed here. It gives the name up by the same line now (`give_up_name`) and
     # claims by the same try (`_seek_slot`); what is fenced while `seeking` is one list, for every worker.
@@ -2800,7 +2800,7 @@ class Worker:
 
     # One try at a free slot for an instance that gave its own up. True when it is somebody again. Whatever the claim
     # raised — the store did not answer, every candidate was taken under it, a token refused — the instance stays
-    # nobody and tries again: `VmsWorker.rejoin` comes through here too (the review's sixth pass).
+    # nobody and tries again: a subsystem worker's `rejoin` comes through here too (the review's sixth pass).
     #
     # …AND A PROCESS NAMED BY ITS UNIT ASKS FOR THAT NAME ONLY (the owner's decision of 4 Oct; the product's `RejoinSlot`).
     # It took whatever was free (`claim_slot()`), and a unit-named process fenced off its name became `w-2`: a second
@@ -2845,7 +2845,7 @@ class Worker:
 
     # -- the stand-in ----------------------------------------------------------------
     # THE LOOP THAT WORKS IS THE LOOP THAT RENEWS (feedback DD; the fourth review's open item). A step hung on a call
-    # to the store or the engine — a pass, a pump, a recorder's call into obsd — stopped renewing too: after the
+    # to the store or the engine — a pass, a pump, a worker's call into its daemon — stopped renewing too: after the
     # lease's TTL the worker's units went to a neighbour, though the process was alive and about to come back. So
     # every step of a loop marks its start and end (`guarded`), and beside the loop a thread (`start_stand_in`)
     # looks every `STAND_IN_WAKE` seconds: a step that has run longer than half of what a lease allows
@@ -2862,8 +2862,8 @@ class Worker:
     #   never in the way      the slot lock taken only if free: a loop renewing it right now needs no stand-in
     #
     # The product's `Worker.RunStandIn` is the same rule; there the stand-in renews leases and the slot row. Here it
-    # renews the place (`hold`) as well — a recorder's network volume lapses as fast as its slot, and a recorder hung
-    # in obsd is the case this was written for.
+    # renews the place (`hold`) as well — a network place lapses as fast as its slot, and a worker hung
+    # in its daemon is the case this was written for.
     STAND_IN_FOR = 300.0          # five minutes: long enough for a store or a daemon to come back, short of "for ever"
     STAND_IN_WAKE = 2.0           # how often the stand-in looks; far inside `stand_in_after`
     STAND_IN_AFTER = 0.5          # of the lease's write window (`ttl − margin`): 12.5 s of the default 25
@@ -2968,8 +2968,8 @@ class Worker:
         return True
 
     # …AND THE HEARTBEAT (the scaling pass after the eighth review). The stand-in renewed the leases and the slot and wrote
-    # no heartbeat: 45 s into a hung step the controller and the recorders judged the holder dead — the recorders lost the
-    # fan-out they record from, the controller moved its units — while the stand-in held its leases for five minutes. So
+    # no heartbeat: 45 s into a hung step the controller and the workers following it judged the holder dead — they lost the
+    # fan-out they read from, the controller moved its units — while the stand-in held its leases for five minutes. So
     # while it stands in, it writes one whenever the last is `STAND_IN_HEARTBEAT` old, and only after it has confirmed the
     # slot is this instance's in this step (`mark["last"]`).
     #
@@ -2981,7 +2981,7 @@ class Worker:
     # is" has it; one that wants to know how fresh the status is reads `as_of`. A pipeline that died under the hung step
     # is in that status as running until the loop comes back — for at most `STAND_IN_FOR`, after which the stand-in
     # stops, the heartbeat goes stale too, and the units honestly go.
-    STAND_IN_HEARTBEAT = 10.0     # the loop's heartbeat rhythm (`VmsWorker.run`)
+    STAND_IN_HEARTBEAT = 10.0     # the loop's heartbeat rhythm (a subsystem worker's `run`)
 
     def _stand_in_heartbeat(self, mark: dict, age: float) -> bool:
         if self._last_heartbeat is None or self.seeking is not None or not self._heartbeat_lock.acquire(blocking=False):
@@ -3005,12 +3005,12 @@ class Worker:
         return True
 
     # The place, by CAS and only while the row names this instance; never let go of here — losing it is the loop's
-    # to act on (`renew_hold` clears `hold`, and a recorder mounts by what `hold` says).
+    # to act on (`renew_hold` clears `hold`, and a worker mounts by what `hold` says).
     #
     # And only while the subsystem says the step is worth holding the place for (`may_stand_in_hold`; the review's fifth
-    # pass, a minor): a recorder's step stuck on a daemon that answers nothing writes nothing, and five minutes of a
-    # network volume held for it were five minutes no box whose daemon answers could take it. A renewal it did make is
-    # told (`note_hold_confirmed`), from before the store was asked — what a recorder fences its samples by.
+    # pass, a minor): a worker's step stuck on a daemon that answers nothing writes nothing, and five minutes of a
+    # network place held for it were five minutes no box whose daemon answers could take it. A renewal it did make is
+    # told (`note_hold_confirmed`), from before the store was asked — what a worker fences its samples by.
     def _stand_in_hold(self) -> None:
         if self.hold is None or not self.may_stand_in_hold() or not self._hold_lock.acquire(blocking=False):
             return
@@ -3029,12 +3029,12 @@ class Worker:
             self._hold_lock.release()
 
     # Whether the stand-in may renew the place for the step that hangs now. A subsystem whose place is written through
-    # an engine says no while that engine is silent (`RecWorker.may_stand_in_hold`).
+    # an engine says no while that engine is silent (its worker overrides this).
     def may_stand_in_hold(self) -> bool:
         return True
 
-    # The place confirmed by the store at `at` (the clock, before it was asked). Nothing here; a recorder fences its
-    # samples by it (`RecWorker.note_hold_confirmed`).
+    # The place confirmed by the store at `at` (the clock, before it was asked). Nothing here; a subsystem's worker may
+    # fence its samples by it (overriding this).
     def note_hold_confirmed(self, at: float) -> None:
         pass
 
@@ -3092,7 +3092,7 @@ class Worker:
         return sum(l.conflicts for l in self.leases.values())
 
     # Writes `Heartbeat(name, wall(), status, extra)` to `<name>/<name>/heartbeat` in the object store. The
-    # VMS passes `server`, `labels`, `capacity`, `headroom`, `conflicts`, `started`, `previous_hb`, etc. as
+    # subsystem passes `server`, `labels`, `capacity`, `headroom`, `conflicts`, `started`, `previous_hb`, etc. as
     # `extra`.
     #
     # -- registered with its server: the process lives (the owner's decision, 3 Oct, on the review's eleventh pass) ---
@@ -3147,7 +3147,7 @@ class Worker:
                 json.dump({"sub": self.sub.name, "name": name, "pid": os.getpid()}, out)
             os.replace(path + ".tmp", path)
         except OSError as e:
-            # …SAID, NOT ONLY LOGGED (the review's twelfth pass, blocker 3): ENOSPC on the archive's volume left the
+            # …SAID, NOT ONLY LOGGED (the review's twelfth pass, blocker 3): ENOSPC on the place it writes into left the
             # `.json` absent or naming nobody while the lock was held — and a resource that answers read the worker as
             # "not listed", its slot released under a process that still wrote. Now the heartbeat says so
             # (`presence_unsaid`, which `slot_fate` takes for "unsure": its name and units stay up to the hung limit,
@@ -3178,7 +3178,7 @@ class Worker:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
         # Rows of this subsystem this process could not read, by table (`rows.Table`): `slots_garbled` (`read_slot`),
         # `assignments_garbled` (its own assignment), `holds_garbled` (`read_hold`), and those of a subsystem's own
-        # tables — a recorder's `volumes_garbled`, `keeps_garbled`.
+        # tables — `<table>_garbled` each.
         for name, n in garbled_counts(self.sub.name).items():
             extra.setdefault(name, n)
         if self.seeking is not None:
@@ -3205,6 +3205,6 @@ class Worker:
         self.__dict__.get("_rows_garbled_said", set()).discard(str(unit))
 
     # what a subsystem implements
-    # Abstract: what a subsystem implements (the VMS's is М9 Lesson 6's loop).
+    # Abstract: what a subsystem implements (one subsystem's is М9 Lesson 6's loop).
     def reconcile_once(self, now: float) -> list:
         raise NotImplementedError

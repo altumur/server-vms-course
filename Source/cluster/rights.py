@@ -11,7 +11,7 @@ anything is forwarded or applied (`w2cplatform/storemachine.py`, `Rights`). The 
 it to the code both ways, and to every write and read the module's stand makes.
 
 WRITES come from the code's own lists — `acl_console`, `acl_controller`, `acl_worker`, `WORKER_ACL` — and, of the
-objects, only what is still a row: the create-only keys (`objectstore.CREATE_ONLY`, a worker's mark before a device
+objects, only what is still a row: the keys the specs name rows (`objects.rows`, `objectstore.is_row`: a worker's mark before a device
 command). Every other object is a file on its writer's server now (`cluster://`), and no grant names it. A role
 deletes what it writes; the store refuses the two deletes nobody does whatever the file says (an epoch row, and
 `domain/*` but by the domain's own roles). READS are the list below, each with the code that makes it.
@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import sys
 
-from cluster.objectstore import ROWS_PREFIX, is_create_only
+from cluster.objectstore import ROWS_PREFIX, is_row
 from vms.config import (AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, REC_SPEC, SPEC, SURVEY_SPEC, WORKER_ACL,
                         WORKER_OBJECTS)
 from vms.recworker import PRIMARIES
@@ -48,7 +48,7 @@ def group(role: str) -> str:
 
 def _rows(objects: list[str]) -> list[str]:
     """Of a list of object prefixes, the ones that are rows in the store: `objects/<key>` for the create-only keys."""
-    return [OBJECTS + p for p in objects if is_create_only(p)]
+    return [OBJECTS + p for p in objects if is_row(p)]
 
 
 # The subsystems whose buckets a resource may hold — and so whose days it reads (`resource.retention_days`): every

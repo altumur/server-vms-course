@@ -19,7 +19,7 @@ from vms.card import (MEMORY_BUDGET, PIECE_BYTES, QUEUE_BYTES, QUEUE_LEN, RING_B
                       CardBuffer, CardError, CardRecorder, NeedKey, NoRecording, declare_card, memory_split)
 from vms.config import REC_SPEC
 from vms.worker import FakeDevice, fake_samples
-from w2cplatform.obsd import archive_ms, unix_s
+from vms.obsd import archive_ms, unix_s
 from w2cplatform.spec import SpecController
 from tests.conftest import REC_ACL, footage, recorder
 from tests.test_lesson11_edge import CARD, _box, _holder
@@ -602,7 +602,7 @@ def test_a_write_is_given_time_by_what_it_moves_before_the_card_is_said_stalled(
     import threading
     import time
     from vms.card import STALL_FLOOR
-    from w2cplatform.obsd import video
+    from vms.obsd import video
     card = CardBuffer(tempfile.mkdtemp(prefix="card-"), stall_after=0.3)
     real, seen = card._write, {}
 
@@ -1449,7 +1449,7 @@ def _shot(n: int, t: float):
     """The camera's frame number `n`, captured at `t` on its own clock: ten a second, a key frame every two seconds, its
     number in its body."""
     from vms.worker import FAKE_PPS, FAKE_SPS
-    from w2cplatform.obsd import video
+    from vms.obsd import video
     key = n % 20 == 0
     body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + b"\x80" * 100 + \
         n.to_bytes(8, "big")

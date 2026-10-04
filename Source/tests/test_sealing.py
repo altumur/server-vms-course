@@ -330,7 +330,7 @@ def test_bound_to_is_read_at_load_and_a_name_it_does_not_know_is_refused():
 
     def spec(fields):
         return SubsystemSpec.from_dict({"name": "t", "unit": {"id": "numeric", "rows": "units", "fields": fields},
-                                        "placement": {}})
+                                        "placement": {"capacity": {"from": "capacity", "default": 4}}})
     assert spec({"url": {"type": "url"}, "x_secret": {"bound_to": "url"}}).fields["x_secret"].bound_to == ("url",)
     for bad, words in (({"x_secret": {"bound_to": ["url"]}}, "names no field"),
                        ({"x_secret": {"bound_to": ["x_secret"]}}, "names no field"),

@@ -16,6 +16,9 @@
 # an epoch and a lease — "exactly one evaluator" comes out of machinery that already exists rather than out
 # of care.
 name: auto
+# The slot a worker of this subsystem makes, `a-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: a, name_env: AUTO_NAME}
 unit:
   rows: scenarios                    # auto/scenarios/<name>
   id: name                           # the operator's name for it: "door-on-badge"
@@ -46,7 +49,7 @@ unit:
     enabled:         {type: bool,   default: true}
     labels:          {type: list}
 placement:
-  capacity:   {from: capacity, fallback: 50}       # scenarios an evaluator can carry: a window and a query each
+  capacity:   {from: capacity, default: 50}       # scenarios an evaluator can carry: a window and a query each
   headroom:   {from: headroom}
   constraint: labels-subset
   # The evaluator reads events, and events live on resources. On a box that is the resource on this server;
