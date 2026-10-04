@@ -64,9 +64,10 @@ B: put("vms/cameras/7", {...}, cas=1001)  -> Conflict    B опоздал и у�
 Начнём с того, что файл объявляет о себе и своих ошибках:
 
 ```python
-"""A config store with the semantics Nomad Variables promise — a
-raft-assigned ModifyIndex, PUT with cas=<index> succeeding only if the index
-still matches, a conflict otherwise — on one box, as files.
+"""A config store with the semantics a raft-backed store promises (М11's
+`configstore://`, and Nomad Variables before it) — a raft-assigned
+ModifyIndex, PUT with cas=<index> succeeding only if the index still matches,
+a conflict otherwise — on one box, as files.
 
 One JSON file per path under <root>/vars/, one counter file for the index,
 one lock. Every write is atomic (write-then-rename) and serialised by the
@@ -281,8 +282,8 @@ def _lock_exclusive(f, wait: float | None = None) -> None:
                 raise TypeError("its items are not a map")
             if isinstance(idx, bool) or not isinstance(idx, int):
                 raise TypeError("its index is not a whole number")
-            # A value that is not a string (a hand edit: `1e999`, `true`, a list) is its JSON text — what Nomad would hold
-            # had it been written so: its reader's parse error, the field's, and the rest of the row still says what it says.
+            # A value that is not a string (a hand edit: `1e999`, `true`, a list) is its JSON text — what a store of strings
+            # would hold had it been written so: its reader's parse error, the field's, and the rest of the row still says what it says.
             items = {k: v if isinstance(v, str) else json.dumps(v) for k, v in items.items()}
         except (ValueError, TypeError, KeyError, RecursionError) as e:
             raise Garbled(path, f"{type(e).__name__}: {e}") from None
@@ -458,8 +459,8 @@ def test_two_processes_one_cas_winner():
 ```python
     def as_writer(self, writer: str, allowed: list[str]) -> "FileVariables":
         """The same store seen through another identity, allowed only these
-        prefixes ('vms/*', 'vms/epoch/*') — what a Nomad ACL policy does."""
-        v = FileVariables(self.root, writer, dict(self.acl))
+        prefixes ('vms/*', 'vms/epoch/*') — what the daemon's rights file does for a role."""
+        v = FileVariables(self.root, writer, dict(self.acl), volatile=self.volatile)
         v.acl[writer] = allowed
         return v
 ```

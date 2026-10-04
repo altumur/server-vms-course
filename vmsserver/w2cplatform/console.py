@@ -1673,6 +1673,9 @@ class SpecConsole:
                   # judged — and live workers whose name is not beside their lock (the review's twelfth pass, blockers 5, 3)
                   f"# TYPE {p}_workers_hung_moved_total counter",
                   f"{p}_workers_hung_moved_total {r('workers_hung_moved_total', int)}",
+                  # …and those nobody could judge (`unsure`), moved past the same limit
+                  f"# TYPE {p}_workers_unsure_moved_total counter",
+                  f"{p}_workers_unsure_moved_total {r('workers_unsure_moved_total', int)}",
                   f"# TYPE {p}_workers_unjudged gauge",
                   f"{p}_workers_unjudged {len(rep.get('workers_unjudged')) if isinstance(rep.get('workers_unjudged'), list) else 0}",
                   f"# TYPE {p}_units_unjudged gauge", f"{p}_units_unjudged {r('units_unjudged', int)}",

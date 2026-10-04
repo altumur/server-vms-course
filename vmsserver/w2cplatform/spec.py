@@ -88,9 +88,9 @@ from urllib.parse import urlsplit
 from .doors import numeric, unnamable
 from .secrets import NOT_AN_ADDRESS, credential_params, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, OFFER_GRACE, SLOTS,
-                       SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, label_set, one_pass, read_slot,
-                       slot_number, stored)
+from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES,
+                       OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
+                       label_set, one_pass, read_slot, slot_number, stored)
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -1584,12 +1584,12 @@ class SpecController(Controller):
     #
     # That is still the rule where the server's resource cannot say who runs on it (`_moves_off_silent`). Where it can,
     # the one rule decides (`Controller.slot_fate`; the owner's decisions on the review's eleventh pass and on the
-    # rework): a dead process at its slot's end, a silent server, a hung one past `hung_move_after` — `move`,
-    # `hung_moved`. The name stays from when it meant only the second.
+    # rework): a dead process at its slot's end, a silent server, a hung or unsure one past `hung_move_after` — `move`,
+    # `hung_moved`, `unsure_moved` (`MOVED_FATES`). The name stays from when it meant only the second.
     def gone_servers(self, lost_after: float = 45.0) -> dict[str, str]:
-        """Slots that stopped renewing whose units move now (`slot_fate`: move, hung_moved): {slot: server}."""
+        """Slots that stopped renewing whose units move now (`slot_fate`: `MOVED_FATES`): {slot: server}."""
         return {w: server for w, (fate, server, _) in self.fates().items()
-                if fate in ("move", "hung_moved") and self.assignment(w).units}
+                if fate in MOVED_FATES and self.assignment(w).units}
 
     # Under `shared` too: it waited for an orchestrator to reschedule the worker onto a neighbour, and there is none —
     # a gone server's units waited for ever (the rework without an orchestrator).
@@ -1918,7 +1918,7 @@ class SpecController(Controller):
         errors = []
         self.last_reach_moves = 0
         decom = {"decommissioned": [], "released": [], "standing": {}}
-        slots = {"released": {}, "hung": {}, "hung_moved": [], "unjudged": {}, "units_unjudged": 0}
+        slots = {"released": {}, "hung": {}, "hung_moved": [], "unjudged": {}, "units_unjudged": 0, "unsure_moved": []}
 
         # The operator's decommissions and the slots nobody runs any more FIRST (`Controller.apply_decommissions`,
         # `release_unlisted`): a slot they release is then read by `redistribute` below, which moves what it listed in
@@ -1974,6 +1974,8 @@ class SpecController(Controller):
         # …and the hung workers whose units moved anyway, past the limit — counted since the store was new (the review's
         # twelfth pass, minor: an alarm in the journal, and no number)
         rep["workers_hung_moved_total"] = total("workers_hung_moved_total", len(slots["hung_moved"]))
+        # …and the unsure ones moved past the same limit (the owner's middle way, applied to the doubt)
+        rep["workers_unsure_moved_total"] = total("workers_unsure_moved_total", len(slots["unsure_moved"]))
         rep["hung_move_after"] = self.hung_move_after                # …and how long it keeps its units: a spare judges by it
         # Slots nobody can judge (`slot_fate` `wait`/`unsure`) with units on them, and how many units wait so (the review's
         # twelfth pass, blocker 5) — and the live workers that could not write their name beside their lock (blocker 3)
@@ -2159,8 +2161,8 @@ class SpecController(Controller):
     # is: a released slot (an orderly stop, or released by the controller — `release_unlisted`, a decommission), a live
     # worker whose server's resource is silent where the spec requires one, one that holds no place where places are
     # held, one on a drained or decommissioned server, and a slot that stopped renewing whose fate says its units move
-    # (`slot_fate`: `move`, `hung_moved`). A slot that merely lapsed, or whose worker is hung, or that nobody can judge,
-    # is not touched — it is waited for. `test_scale_in_releases_a_slot_and_the_controller_redistributes`: a silent `w-3`
+    # (`slot_fate`: `MOVED_FATES`). A slot that merely lapsed, or whose worker is hung, or that nobody can judge, is not
+    # touched — it is waited for, up to `hung_move_after` for the last two. `test_scale_in_releases_a_slot_and_the_controller_redistributes`: a silent `w-3`
     # moves nothing; after `release_slot()` its two cameras go to `w-1`/`w-2` with reason `slot w-3 released; …`.
     def redistribute(self, workers: list[str] | None = None) -> list[tuple]:
         """The controller's one unasked move: the units of a worker that is leaving
@@ -2258,7 +2260,7 @@ class SpecController(Controller):
             if self.assignment(w).units:
                 gone_for.setdefault(w, f"server {self.server_of(w)} decommissioned")
         for w, (fate, server, why) in self.fates().items():           # a slot that stopped renewing, and its units move (`slot_fate`)
-            if fate in ("move", "hung_moved") and self.assignment(w).units:
+            if fate in MOVED_FATES and self.assignment(w).units:
                 gone_for.setdefault(w, why)
         return gone_for
 
