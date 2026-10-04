@@ -473,6 +473,20 @@ def _api(m: "Member", ctx, route: str, body: dict) -> tuple[int, dict]:
     return r.status, json.loads(r.read() or b"{}")
 
 
+# A member in its group, not a group of one: it counts the other two, and all three name one leader. Which one is the
+# election's business — a member restarted may win one (the same term's log, the same rows), and a test that asked
+# for «follower» failed whenever its election timer fired before the leader reached it.
+def _in_its_group(c: Member, g: Group, within: float = 10.0) -> dict:
+    end = time.monotonic() + within
+    while True:
+        leaders = {m.status()["leader"] for m in g.members}
+        st = c.status()
+        if len(c.daemon.backend.raft.otherNodes) == 2 and len(leaders) == 1 and None not in leaders:
+            return st
+        assert time.monotonic() < end, (leaders, st)
+        time.sleep(0.05)
+
+
 def test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a_group_of_one(monkeypatch):
     """The review's thirteenth pass, blocker 1, by its probe (`probe_join_window.py`): `member.json` was written as the
     join was accepted and the partners half a second later; killed between the two, the member came back on its
@@ -480,8 +494,8 @@ def test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a
     was 7. The library's tick that keeps the partners is switched off here, so what is on disk is only what the
     membership itself wrote: the joined member's `member.json` names its partners (the bootstrap member among them,
     whom no journal names), and so does the member whose door took the join — `add` writes at once (the sibling).
-    Restarted with the same flags, srv-c is a follower of the real group and the epoch is 7, its create-only a
-    conflict. And a member that joined but knows no partner (a `member.json` from before) does not start alone: it
+    Restarted with the same flags, srv-c is a member of the real group (one leader for all three) and the epoch is 7,
+    its create-only a conflict. And a member that joined but knows no partner (a `member.json` from before) does not start alone: it
     asks its `-join` door, or refuses with words."""
     monkeypatch.setattr(configstore.RaftBackend, "_keep_peers", lambda self: None)
     g = Group(2)
@@ -499,8 +513,8 @@ def test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a
         c.start(join=a.adv)
         _ready(c)
         _caught_up(c, g.leader())
-        st = c.status()
-        assert st["state"] == "follower" and sorted(m["id"] for m in st["members"]) == list(NAMES), st
+        st = _in_its_group(c, g)
+        assert sorted(m["id"] for m in st["members"]) == list(NAMES), st
         assert c.daemon.backend.rep.m.rows["vms/epoch/cam5"][0] == {"epoch": "7"}
         with pytest.raises(Conflict):
             open_vars(c.url("vmsworker")).put("vms/epoch/cam5", {"epoch": "1"}, cas=0)
@@ -514,7 +528,7 @@ def test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a
             assert "does not start as a group of one" in str(e), e
         c.start(join=a.adv)                                         # its -join door says who the group is
         _ready(c)
-        assert c.status()["state"] == "follower"
+        _in_its_group(c, g)
         assert sorted(configstore.RaftBackend.member_doc(c.data)["partners"]) == sorted(
             [g.members[0].raft, g.members[1].raft])
     finally:
@@ -548,6 +562,60 @@ def test_a_join_under_another_spelling_of_a_members_raft_address_is_refused():
         assert len(a.daemon.backend.raft.otherNodes) == 1
     finally:
         g.stop()
+
+
+def test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_refused():
+    """The product's cross-check (hashicorp/raft): a new voter's raft address was checked by a TCP answer, and every
+    listener answers TCP — srv-a's own `-api` door among them: srv-b joined with `raft=<srv-a's -api>`, 200, a voter
+    nobody runs, and the group of two had no majority. A new voter must now answer the raft library's handshake with
+    this installation's secret AND say, in the library's own status, that it is the very address asked for (`add`,
+    `_raft_says`). Refused (409), the group unchanged and writing: the `-api` door, a listener that says nothing, the
+    raft port of another installation's group (another secret), and srv-c's own raft port asked for under another
+    spelling — the group would dial an address srv-c does not answer to as itself. Under its own: 200, two members."""
+    g = Group(1)
+    dirs, backends = [], []
+    silent = socket.socket()
+    try:
+        a = g.members[0]
+        v = open_vars(a.url())
+        ctx_b, ctx_c = tls.client_context(os.path.join(TLS, "srv-b")), tls.client_context(os.path.join(TLS, "srv-c"))
+        silent.bind(("127.0.0.1", 0))
+        silent.listen(4)
+        stranger_tls = tempfile.mkdtemp(prefix="cs", dir="/tmp")    # another installation: another raft secret
+        dirs.append(stranger_tls)
+        for f in ("ca.pem", "crl.pem"):
+            shutil.copy(os.path.join(TLS, "srv-c", f), stranger_tls)
+        with open(os.path.join(stranger_tls, "raft.secret"), "w") as f:
+            f.write("cd" * 32 + "\n")
+        os.chmod(os.path.join(stranger_tls, "raft.secret"), 0o600)
+        stranger = f"127.0.0.1:{_port()}"
+        dirs.append(tempfile.mkdtemp(prefix="cs", dir="/tmp"))
+        backends.append(configstore.RaftBackend("stranger", stranger, [], dirs[-1], "lan",
+                                                tls.raft_secret(stranger_tls)))
+        for raft in (f"127.0.0.1:{a.api_port}", f"127.0.0.1:{silent.getsockname()[1]}", stranger):
+            t0 = time.monotonic()
+            code, said = _api(a, ctx_b, "/v1/join", {"id": "srv-b", "raft": raft})
+            assert (code, said["kind"]) == (409, "refused") and "raft port" in said["error"], (raft, code, said)
+            assert time.monotonic() - t0 < 3 * configstore.ANSWER_WAIT, raft
+        c_port = _port()
+        dirs.append(tempfile.mkdtemp(prefix="cs", dir="/tmp"))
+        backends.append(configstore.RaftBackend("srv-c", f"127.0.0.1:{c_port}", [a.raft], dirs[-1], "lan",
+                                                tls.raft_secret(os.path.join(TLS, "srv-c"))))
+        code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"localhost:{c_port}"})
+        assert (code, said["kind"]) == (409, "refused") and f"127.0.0.1:{c_port}" in said["error"], (code, said)
+        assert [m["id"] for m in a.status()["members"]] == ["srv-a"] and not a.daemon.backend.raft.otherNodes
+        v.put("vms/cameras/after-the-refusals", {"name": "x"}, cas=0)          # the group of one still writes
+        code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"127.0.0.1:{c_port}"})
+        assert code == 200, said
+        assert sorted(m["id"] for m in a.status()["members"]) == ["srv-a", "srv-c"]
+        v.put("vms/cameras/with-srv-c", {"name": "y"}, cas=0)                  # a majority of two answers
+    finally:
+        silent.close()
+        for b in backends:
+            b.stop()
+        g.stop()
+        for d in dirs:
+            shutil.rmtree(d, ignore_errors=True)
 
 
 def test_a_member_restarted_on_its_journal_comes_back_with_its_rows():

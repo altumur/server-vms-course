@@ -686,6 +686,209 @@ def refused_missing():
     raise AssertionError("a door opened without its revocation list")
 
 
+def _forge(ca: str, server: str, roles: list[str], out: str) -> None:
+    """A bundle in `out` whose `server.pem` the CA of `ca` signed for `roles` — one `w2c-ca.sh issue` would not make,
+    another tool's."""
+    import subprocess
+    os.makedirs(out, exist_ok=True)
+    key, pem, csr, ext = (os.path.join(out, f) for f in ("server.key", "server.pem", "x.csr", "x.ext"))
+    with open(ext, "w") as f:
+        f.write("basicConstraints = critical, CA:FALSE\nkeyUsage = critical, digitalSignature, keyEncipherment\n"
+                "extendedKeyUsage = serverAuth, clientAuth\n"
+                f"subjectAltName = DNS:{server}," + ",".join(f"URI:{tls.ROLE_URI}{r}" for r in roles) + "\n")
+    for cmd in (["ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", key],
+                ["req", "-new", "-key", key, "-subj", f"/CN={roles[0]}.{server}", "-out", csr],
+                ["x509", "-req", "-in", csr, "-CA", os.path.join(ca, "ca.pem"), "-CAkey", os.path.join(ca, "ca.key"),
+                 "-CAserial", os.path.join(ca, "ca.srl"), "-days", "30", "-sha256", "-extfile", ext, "-out", pem]):
+        subprocess.run(["openssl", *cmd], check=True, capture_output=True, timeout=30)
+    for f in ("ca.pem", "crl.pem", "raft.secret"):
+        shutil.copy(os.path.join(ca, f), out)
+    os.chmod(os.path.join(out, "raft.secret"), 0o600)
+    os.remove(csr)
+    os.remove(ext)
+
+
+def test_a_certificate_with_the_store_role_and_another_is_no_daemons_at_the_door_on_a_call_or_at_start():
+    """The product's cross-check (hashicorp/raft): a certificate that carries `configstore` TOGETHER with another role
+    (configstore+recworker) was a daemon wherever the role was asked — `require_role` granted on any of its roles. A
+    daemon's certificate carries exactly one role: `w2c-ca.sh issue` refuses `configstore` with another; the `-api`
+    door answers such a certificate 403 (status and join alike); a daemon dialling a door that shows one refuses it;
+    and a daemon handed one as its own refuses to start — the door and the member alike. A recorder's certificate of
+    several roles is still several roles: the rule is the store's."""
+    import subprocess
+    ca, dual = short_dir(), short_dir()
+    try:
+        _w2c_ca(ca, "init")
+        for server in ("srv-a", "srv-b"):
+            _w2c_ca(ca, "issue", server)
+        script = os.path.join(HERE, os.pardir, "deploy", "w2c-ca.sh")
+        for roles in (["configstore", "recworker"], ["recworker", "configstore"]):
+            done = subprocess.run(["sh", script, "issue", "srv-x", *roles], env={**os.environ, "W2C_CA_DIR": ca},
+                                  capture_output=True, text=True, timeout=60)
+            assert done.returncode != 0 and "one role" in done.stderr, (roles, done.stdout, done.stderr)
+        assert not os.path.exists(os.path.join(ca, "srv-x", "server.pem"))
+        _forge(ca, "srv-b", ["configstore", "recworker"], dual)
+        assert tls.peer_roles(ssl._ssl._test_decode_cert(os.path.join(dual, "server.pem"))) == {"configstore",
+                                                                                                "recworker"}
+        with refused("one role"):
+            tls.client_context(dual)                  # our own contexts are not built on it: the caller's is plain ssl
+
+        def plain(side):
+            ctx = ssl.SSLContext(side)
+            ctx.load_cert_chain(os.path.join(dual, "server.pem"), os.path.join(dual, "server.key"))
+            ctx.load_verify_locations(os.path.join(dual, "ca.pem"))
+            ctx.check_hostname = side == ssl.PROTOCOL_TLS_CLIENT
+            return ctx
+
+        join = json.dumps({"id": "srv-b", "raft": "127.0.0.1:1"}).encode()
+        with Daemon(api=True, tls_dir=os.path.join(ca, "srv-a")) as dm:
+            api, ctx = dm.d.api_url, plain(ssl.PROTOCOL_TLS_CLIENT)
+            for method, route, body in (("GET", "/v1/status", b""), ("POST", "/v1/join", join)):
+                code, said = _dial(api, ctx, "srv-a", method, route, body)
+                assert (code, said.get("kind")) == (403, "forbidden") and "one role" in said["error"], (route, said)
+            assert _dial(api, tls.client_context(os.path.join(ca, "srv-b")), "srv-a", "GET", "/v1/status")[0] == 200
+
+        class Shows:                                  # a door that shows the certificate, as another program's might
+            def get(self):
+                ctx = plain(ssl.PROTOCOL_TLS_SERVER)
+                ctx.verify_mode = ssl.CERT_REQUIRED
+                return ctx
+
+        door = configstore._TlsServer(("127.0.0.1", 0), configstore._door(StoreDaemon(LocalBackend(), node_id="srv-b"),
+                                                                          configstore._peer_role), Shows())
+        threading.Thread(target=door.serve_forever, daemon=True).start()
+        try:
+            with pytest.raises(PermissionError):
+                configstore.peer_call(f"srv-b@127.0.0.1:{door.server_address[1]}", os.path.join(ca, "srv-a"), "GET",
+                                      "/v1/status")
+        finally:
+            door.shutdown()
+            door.server_close()
+        with refused("one role"):
+            StoreDaemon(LocalBackend(), node_id="srv-b", api=("127.0.0.1", 0), tls_dir=dual)
+        with refused("one role"):
+            configstore.start_member("srv-b", short_dir(), f"127.0.0.1:{_free_port()}", bootstrap=True, tls_dir=dual)
+    finally:
+        shutil.rmtree(ca, ignore_errors=True)
+        shutil.rmtree(dual, ignore_errors=True)
+
+
+def test_a_revocation_is_never_lifted_by_the_list_going_missing_or_changing_unseen():
+    """The product's cross-check (hashicorp/raft): a revocation could be lifted by accident — the list missing at start
+    meant no revocation, a list deleted while running read as empty, and one rewritten with the same size and mtime
+    was not read again. Here: missing at start, no door (as before); deleted while the door runs, the door keeps the
+    list it holds — the revoked srv-x stays out and srv-b stays in (it used to shut the door on everybody); and a
+    list rewritten in place with the same size and the same mtime is seen by its CONTENT — srv-x, revoked by the new
+    list, is out at once. A list that does not load keeps the one held too, and is tried again on the next caller."""
+    ca = short_dir()
+    try:
+        _w2c_ca(ca, "init")
+        for server in ("srv-a", "srv-b", "srv-x"):
+            _w2c_ca(ca, "issue", server)
+        crl = os.path.join(ca, "srv-a", "crl.pem")
+        before = open(crl, "rb").read()
+        _w2c_ca(ca, "revoke", "srv-x")
+        after = open(os.path.join(ca, "crl.pem"), "rb").read()
+        assert after != before
+        # The two lists at one size: text outside a PEM block is no part of it (OpenSSL reads the blocks).
+        width = max(len(before), len(after))
+        before, after = (t + b"#" * (width - len(t)) + b"\n" for t in (before, after))
+        with open(crl, "wb") as f:
+            f.write(before)
+        stamp = os.stat(crl)
+        ctxs = {s: tls.client_context(os.path.join(ca, s)) for s in ("srv-b", "srv-x")}
+        with Daemon(api=True, tls_dir=os.path.join(ca, "srv-a")) as dm:
+            api = dm.d.api_url
+            status = lambda who: _dial(api, ctxs[who], "srv-a", "GET", "/v1/status", b"")[0]   # noqa: E731
+            assert status("srv-x") == 200 and status("srv-b") == 200
+            with open(crl, "r+b") as f:                       # rewritten in place: the same inode, size and mtime
+                f.write(after)
+            os.utime(crl, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+            assert (os.stat(crl).st_ino, os.stat(crl).st_size, os.stat(crl).st_mtime_ns) == \
+                (stamp.st_ino, stamp.st_size, stamp.st_mtime_ns)
+            with pytest.raises((ssl.SSLError, ConnectionError, OSError)):
+                status("srv-x")
+            said = io.StringIO()
+            with contextlib.redirect_stderr(said):
+                os.remove(crl)                                # deleted while running: the list held stays
+                with pytest.raises((ssl.SSLError, ConnectionError, OSError)):
+                    status("srv-x")
+                assert status("srv-b") == 200 and status("srv-b") == 200
+                with open(crl, "wb") as f:                    # half a copy: does not load — the list held stays
+                    f.write(after[:len(after) // 2])
+                with pytest.raises((ssl.SSLError, ConnectionError, OSError)):
+                    status("srv-x")
+                assert status("srv-b") == 200
+            lines = said.getvalue().splitlines()              # each trouble said once, not per caller
+            assert len(lines) == 2 and all("could not be read" in line for line in lines), lines
+            with open(crl, "wb") as f:                        # the copy finished: read on the next caller
+                f.write(before)
+            assert status("srv-x") == 200
+        os.remove(crl)
+        with refused_missing():
+            tls.ServerContext(os.path.join(ca, "srv-a"))
+    finally:
+        shutil.rmtree(ca, ignore_errors=True)
+
+
+def _another_ca(ca: str) -> None:
+    """Another installation's CA in `ca`, made by `w2c-ca.sh init` and named apart: every CA the script makes is
+    «w2c installation CA», and OpenSSL, finding ours by that name first, would refuse the stranger by luck."""
+    import subprocess
+    _w2c_ca(ca, "init")
+    ext = os.path.join(ca, "x.ext")
+    with open(ext, "w") as f:
+        f.write("[req]\ndistinguished_name = dn\n[dn]\n[ca]\nbasicConstraints = critical, CA:TRUE\n"
+                "keyUsage = critical, keyCertSign, cRLSign\nsubjectKeyIdentifier = hash\n")
+    subprocess.run(["openssl", "req", "-x509", "-new", "-key", os.path.join(ca, "ca.key"), "-sha256", "-days", "30",
+                    "-subj", "/CN=another installation CA", "-config", ext, "-extensions", "ca",
+                    "-out", os.path.join(ca, "ca.pem")], check=True, capture_output=True, timeout=30)
+    os.remove(ext)
+    _w2c_ca(ca, "crl")
+
+
+def test_ca_pem_is_exactly_one_ca_certificate_and_a_foreign_ca_beside_it_is_refused_not_trusted():
+    """The product's cross-check (hashicorp/raft): `load_verify_locations(ca.pem)` trusts EVERY certificate in the
+    file, so a foreign CA appended to it (with its list appended to `crl.pem`, which the leaf check needs) let that
+    CA's daemon certificate through the `-api` door — 200 on status. `ca.pem` is exactly one CA certificate block now,
+    in any of the spellings OpenSSL reads; two are refused by the door, the caller and the raft password alike, and
+    the CA is loaded from the one block only. CRLF line ends and text around the block are fine."""
+    ours, foreign = short_dir(), short_dir()
+    try:
+        _w2c_ca(ours, "init")
+        _w2c_ca(ours, "issue", "srv-a")
+        _another_ca(foreign)
+        _w2c_ca(foreign, "issue", "srv-b")
+        bundle = os.path.join(ours, "srv-a")
+        ca_text = open(os.path.join(bundle, "ca.pem")).read()
+        crl_text = open(os.path.join(bundle, "crl.pem")).read()
+        alien = open(os.path.join(foreign, "ca.pem")).read()
+        # The stranger's daemon: its own CA's certificate, and our CA and list, which are no secret, to dial us.
+        for f in ("ca.pem", "crl.pem"):
+            shutil.copy(os.path.join(bundle, f), os.path.join(foreign, "srv-b", f))
+        alien_ctx = tls.client_context(os.path.join(foreign, "srv-b"))
+        for spelling in (alien, alien.replace("CERTIFICATE", "TRUSTED CERTIFICATE")):
+            with open(os.path.join(bundle, "ca.pem"), "w") as f:
+                f.write(ca_text + spelling)
+            with open(os.path.join(bundle, "crl.pem"), "w") as f:
+                f.write(crl_text + open(os.path.join(foreign, "crl.pem")).read())
+            for build in (tls.server_context, tls.client_context, tls.ServerContext, tls.raft_secret):
+                with refused("one CA certificate"):
+                    build(bundle)
+        with open(os.path.join(bundle, "crl.pem"), "w") as f:
+            f.write(crl_text)
+        for text in ("# the installation's CA\r\n" + ca_text.replace("\n", "\r\n") + "\r\n\r\n", "\n\n" + ca_text):
+            with open(os.path.join(bundle, "ca.pem"), "w") as f:
+                f.write(text)
+            with Daemon(api=True, tls_dir=bundle) as dm:
+                assert _dial(dm.d.api_url, tls.client_context(bundle), "srv-a", "GET", "/v1/status", b"")[0] == 200
+                with pytest.raises((ssl.SSLError, ConnectionError, OSError)):
+                    _dial(dm.d.api_url, alien_ctx, "srv-a", "GET", "/v1/status", b"")
+    finally:
+        shutil.rmtree(ours, ignore_errors=True)
+        shutil.rmtree(foreign, ignore_errors=True)
+
+
 # -- the handle -----------------------------------------------------------------------------------------
 def test_a_write_asked_again_after_its_outcome_was_unknown_carries_its_first_id_and_is_applied_once():
     """The review's twelfth pass, minor, and its probe: two calls of the same `put` after a cut connection carried two
@@ -790,8 +993,9 @@ def test_the_raft_secret_is_refused_readable_by_others_or_short_and_is_keyed_by_
     password handed to the library is the secret keyed with the installation's CA — the same for every member of one
     installation, another for another installation with the same secret. The thirteenth pass, minor: the key was
     the hash of `ca.pem`'s BYTES, so one more newline, or a second CA added for a rotation, changed one member's
-    password and it dropped out of its group. It is the first CA certificate in the file now, whatever text is
-    around it."""
+    password and it dropped out of its group. It is the CA certificate in the file now, whatever text is around it;
+    and a second certificate beside it is refused, not keyed past (the product's cross-check: `ca.pem` is exactly
+    one CA)."""
     d = short_dir()
     try:
         shutil.copy(os.path.join(TLS, "ca.pem"), d)
@@ -806,10 +1010,14 @@ def test_the_raft_secret_is_refused_readable_by_others_or_short_and_is_keyed_by_
         assert mine != "ab" * 32 and mine == tls.raft_secret(d)
         ca_text = open(os.path.join(TLS, "ca.pem")).read()
         other_ca = open(os.path.join(TLS, "srv-a", "server.pem")).read()     # any other certificate will do
-        for text in ("\n" + ca_text + "\n\n", ca_text.replace("\n", "\r\n"), ca_text + other_ca):
+        for text in ("\n" + ca_text + "\n\n", ca_text.replace("\n", "\r\n")):
             with open(os.path.join(d, "ca.pem"), "w") as f:
-                f.write(text)                          # an editor's newlines; a CA added after it for a rotation
+                f.write(text)                          # an editor's newlines
             assert tls.raft_secret(d) == mine
+        with open(os.path.join(d, "ca.pem"), "w") as f:
+            f.write(ca_text + other_ca)                # a second certificate beside the CA
+        with refused("one CA certificate"):
+            tls.raft_secret(d)
         with open(os.path.join(d, "ca.pem"), "w") as f:
             f.write(other_ca)                          # another installation's CA
         assert tls.raft_secret(d) != mine

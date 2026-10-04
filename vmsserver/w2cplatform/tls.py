@@ -34,6 +34,14 @@ can take it as it is — a role is a name in the certificate, not a property of 
 # is not opened. A door re-reads the list when the file changes (`ServerContext`), so the operator copies the new
 # `crl.pem` to every server and no daemon needs a restart. A list has a `nextUpdate` (`W2C_CA_CRL_DAYS`, ten years by
 # default): past it OpenSSL takes no certificate at all — make a new list (`w2c-ca.sh crl`) before then.
+# A REVOCATION IS NEVER LIFTED BY ACCIDENT (the product's cross-check). A change of the file was seen by its inode, size
+# and mtime: a list rewritten in place with the same size and mtime (`cp -p`, a restored backup) was never read, and
+# its revocation never reached the door; a list deleted while the door ran shut it on everybody. The list is seen by
+# its CONTENT now (a hash per connection — a small file), and a list that went missing or does not load (half a copy)
+# leaves the door the list it holds, said on stderr and tried again on the next caller; missing at start, no door.
+# A revocation reaches NEW connections: one opened before it lives until it is answered (the door answers one request
+# and closes), and a revoked server that is a member stays a voter of the group over the raft port — `revoke` is
+# followed by `configstore leave <server>` and a new raft secret (below).
 # Open, and said by `w2c-ca.sh revoke`: the revoked server still knows `raft.secret`, which the TLS list does not
 # cover — the raft port takes whoever holds it. Until mTLS is on the raft port too (the product's `hashicorp/raft`
 # runs TLS there), a revocation is finished by a new secret on every member and a restart of the group.
@@ -42,6 +50,18 @@ can take it as it is — a role is a name in the certificate, not a property of 
 # A certificate says which roles it may act as with `urn:w2c:role:<role>` SAN URIs — any one of them grants — and
 # a certificate without one says it with its CN, `<role>.<server>`. The CA is the installation's own and signs only
 # what `w2c-ca.sh` issues, so a role in a certificate it signed is a role somebody installed.
+# A DAEMON'S CERTIFICATE CARRIES ONE ROLE (the product's cross-check of its hashicorp/raft store). «Any one grants»
+# made a certificate of `configstore` and `recworker` a store daemon at every door that asked for the store — and a
+# recorder that holds its key a daemon of the group. The store's role is never shared (`SOLE_ROLES`): `w2c-ca.sh issue`
+# refuses it with another, a door refuses a peer whose certificate carries it with another whatever role the door
+# asks (`require_role`), and no context is built on such a certificate of our own (`_context`) — the daemon does not
+# start with one.
+#
+# ## The CA is one certificate (the product's cross-check)
+# `load_verify_locations(ca.pem)` trusts every certificate in the file: a CA appended to it — and its list appended
+# to `crl.pem`, which the leaf check asks — let that CA's daemon through the door. `ca.pem` holds exactly one CA
+# certificate block, else nothing is built (`_installation_ca`); the context trusts the DER of that block only, so
+# text around it (a comment, CRLF line ends) is neither trust nor refusal. A new CA is a new bundle on every server.
 #
 # ## Both sides check
 # - The SERVER requires a client certificate signed by the CA (`server_context`), and the door asks
@@ -55,9 +75,13 @@ can take it as it is — a role is a name in the certificate, not a property of 
 # ================================================================================================
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
 import os
 import re
 import ssl
+import sys
 import threading
 
 from .runtime import ETC
@@ -81,16 +105,20 @@ class Bundle:
         return [p for p in (self.ca, self.cert, self.key, self.crl) if not os.path.exists(p)]
 
 
-# Both sides alike: our certificate, the peer's REQUIRED, signed by our CA and not on its revocation list.
+# Both sides alike: our certificate, the peer's REQUIRED, signed by our CA — the one certificate of `ca.pem` — and not
+# on its revocation list.
 def _context(directory: str, name: str, side) -> ssl.SSLContext:
     b = Bundle(directory, name)
     if b.missing():
         raise FileNotFoundError(f"TLS files missing: {', '.join(b.missing())} (made by deploy/w2c-ca.sh; a bundle "
                                 f"from before the revocation list gets its crl.pem from `w2c-ca.sh crl`)")
+    shared = _sole_refusal(own_roles(directory, name))
+    if shared:
+        raise ValueError(f"{b.cert}: {shared} — issue the server's store certificate again (w2c-ca.sh issue)")
     ctx = ssl.SSLContext(side)
     ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     ctx.load_cert_chain(b.cert, b.key)
-    ctx.load_verify_locations(b.ca)
+    ctx.load_verify_locations(cadata=_installation_ca(b.ca))   # that block alone: nothing else in the file is trusted
     ctx.load_verify_locations(b.crl)             # a PEM file of lists: OpenSSL takes the CRLs in it
     ctx.verify_flags |= ssl.VERIFY_CRL_CHECK_LEAF
     ctx.verify_mode = ssl.CERT_REQUIRED
@@ -112,28 +140,42 @@ def client_context(directory: str, name: str = "server") -> ssl.SSLContext:
 
 class ServerContext:
     """A door's context, made again when the revocation list on disk changes — a revocation reaches a running door
-    with the file, not with a restart. `get()` per connection: a `stat` of one file."""
+    with the file, not with a restart. `get()` per connection: one small file read and hashed. A list that went
+    missing or does not load leaves the door the list it holds (the notes: never lifted by accident)."""
 
     def __init__(self, directory: str, name: str = "server"):
         self.directory, self.name = directory, name
         self.crl = Bundle(directory, name).crl
         self.lock = threading.Lock()
-        self.seen, self.ctx = self._stamp(), server_context(directory, name)
+        self.said = ""                               # the last trouble with the list, said once on stderr
+        self.seen = self._digest()
+        self.ctx = server_context(directory, name)   # missing or unloadable at start: no door
 
-    def _stamp(self):
+    # The list's content, not its inode, size or mtime: a list rewritten in place with the same three is another list.
+    def _digest(self) -> str | None:
         try:
-            st = os.stat(self.crl)
-            return st.st_ino, st.st_size, st.st_mtime_ns
+            with open(self.crl, "rb") as f:
+                return hashlib.sha256(f.read()).hexdigest()
         except FileNotFoundError:
             return None
 
     def get(self) -> ssl.SSLContext:
-        stamp = self._stamp()
+        digest = self._digest()
         with self.lock:
-            if stamp != self.seen:
-                # A list that went missing or does not load keeps the door shut, not open: no context, no handshake.
-                self.ctx = server_context(self.directory, self.name)
-                self.seen = stamp
+            if digest == self.seen:
+                return self.ctx
+            try:
+                if digest is None:
+                    raise FileNotFoundError(f"{self.crl} is missing")
+                ctx = server_context(self.directory, self.name)
+            except (OSError, ssl.SSLError, ValueError) as e:
+                if str(e) != self.said:
+                    self.said = str(e)
+                    print(f"configstore: the revocation list {self.crl} could not be read ({e}); the door goes on "
+                          f"with the list it read before, revocations and all — copy crl.pem there again",
+                          file=sys.stderr, flush=True)
+                return self.ctx                      # not taken as seen: the next caller reads the file again
+            self.ctx, self.seen, self.said = ctx, digest, ""
             return self.ctx
 
 
@@ -145,20 +187,28 @@ class ServerContext:
 # (`ca.pem`, which every member holds): a key worked out for one installation's secret is no use against another's.
 #
 # KEYED WITH THE CA, NOT WITH THE FILE'S BYTES (the review's thirteenth pass, minor). The key was the hash of
-# `ca.pem` as bytes: one more newline from an editor, or a second CA added to the bundle for a rotation, and that
-# member's password changed — it dropped out of its group without a word. The key is now the CA certificate itself:
-# the DER of the FIRST certificate in `ca.pem` (`_installation_ca`), whatever text surrounds it; a CA added for a
-# rotation goes AFTER it, and the password stays.
+# `ca.pem` as bytes: one more newline from an editor, and that member's password changed — it dropped out of its group
+# without a word. The key is now the CA certificate itself: the DER of the one certificate in `ca.pem`
+# (`_installation_ca`), whatever text surrounds it. A second certificate beside it is refused, here as at the doors
+# (the product's cross-check: `ca.pem` is exactly one CA — the notes above).
 SECRET_CHARS = 32
-_PEM_CERT = re.compile(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", re.S)
+_PEM_CERT = re.compile(r"-----BEGIN CERTIFICATE-----(.*?)-----END CERTIFICATE-----", re.S)
+# Every block OpenSSL takes as a trusted certificate: `CERTIFICATE`, `TRUSTED CERTIFICATE`, `X509 CERTIFICATE`.
+_ANY_CERT = re.compile(r"-----BEGIN (?:TRUSTED |X509 )?CERTIFICATE-----")
 
 
 def _installation_ca(path: str) -> bytes:
+    """The DER of the one CA certificate in `path`; `ValueError` for none, or for more than one."""
     with open(path, encoding="ascii", errors="replace") as f:
-        block = _PEM_CERT.search(f.read())
-    if block is None:
-        raise ValueError(f"{path} holds no certificate: the installation's CA is ca.pem (deploy/w2c-ca.sh)")
-    return ssl.PEM_cert_to_DER_cert(block.group(0))
+        text = f.read()
+    blocks, every = _PEM_CERT.findall(text), len(_ANY_CERT.findall(text))
+    if len(blocks) != 1 or every != 1:
+        raise ValueError(f"{path} holds {every} certificates, not one CA certificate: a door trusts every certificate "
+                         f"in its CA file, so ca.pem is the installation's CA alone (deploy/w2c-ca.sh)")
+    try:
+        return base64.b64decode("".join(blocks[0].split()), validate=True)
+    except (binascii.Error, ValueError):
+        raise ValueError(f"{path}: its CA certificate block is not base64 (deploy/w2c-ca.sh)") from None
 
 
 def raft_secret(directory: str) -> str:
@@ -221,10 +271,32 @@ def peer_server(cert: dict | None) -> str:
     return next((v for k, v in cert.get("subjectAltName", ()) if k == "DNS"), "")
 
 
+# Roles a certificate never carries with another (the notes: one role) — the store's: its daemon is a member of the group.
+SOLE_ROLES = frozenset({"configstore"})
+
+
+def _sole_refusal(roles: set[str]) -> str:
+    shared = roles & SOLE_ROLES
+    if shared and len(roles) > 1:
+        return (f"the certificate carries {', '.join(sorted(roles))}: a daemon's certificate carries one role, and "
+                f"{', '.join(sorted(shared))} is never shared")
+    return ""
+
+
+def own_roles(directory: str, name: str = "server") -> set[str]:
+    """The roles of our own certificate in `directory`, read as a peer reads them."""
+    # `_test_decode_cert` is the `ssl` module's own reading of a PEM file into `getpeercert()`'s form (CPython's).
+    return peer_roles(ssl._ssl._test_decode_cert(Bundle(directory, name).cert))
+
+
 def require_role(sock, role: str) -> dict:
-    """The peer of a TLS socket acts as `role`, or `PermissionError` naming what it is instead."""
+    """The peer of a TLS socket acts as `role`, or `PermissionError` naming what it is instead. A certificate that
+    carries a sole role with another is refused whatever `role` is asked."""
     cert = sock.getpeercert()
     roles = peer_roles(cert)
+    shared = _sole_refusal(roles)
+    if shared:
+        raise PermissionError(f"the peer's certificate for {peer_server(cert) or 'no server'}: {shared}")
     if role not in roles:
         who = ", ".join(sorted(roles)) or "no role"
         raise PermissionError(f"the peer's certificate is for {who} of {peer_server(cert) or 'no server'}, not {role}")

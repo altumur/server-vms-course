@@ -49,7 +49,8 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 #   answered as anybody else's: a data request is 403, whatever it carries (the thirteenth pass, major 1 — below).
 #   A join that would leave a voter nobody runs is refused: an id already in the group at another raft address, a
 #   raft address another id holds — however it is spelled, compared as the addresses it resolves to — or one where
-#   nothing answers (`RaftBackend.add`).
+#   no raft member of this installation answers as that address (`RaftBackend.add`, `_raft_says`). A certificate that
+#   carries `configstore` with another role is no daemon's, on either side of the door and as our own (`tls.py`).
 # - the raft port (`-raft`) — the library's own, pickle on the wire: an open one is code execution for anyone
 #   who reaches it. `password=` from `<tls>/raft.secret` encrypts and authenticates it (the product's
 #   `hashicorp/raft` puts TLS there instead; `password=` needs the `cryptography` module). The library is told to
@@ -180,7 +181,7 @@ def socket_group(role: str, rights: Rights | None = None) -> str:
 LEADER_WAIT = 5.0          # how long a command may wait for a leader before the daemon answers 503
 JOIN_WAIT = 30.0           # a membership change: one at a time, a log entry, a new member catching up
 BIND_WAIT = 10.0           # how long the library may take to open the raft port
-ANSWER_WAIT = 2.0          # how long a new voter's raft port may take to accept, before it is added
+ANSWER_WAIT = 2.0          # how long a new voter's raft port may take over each step of its handshake, before it is added
 
 # What every door bears (the review's twelfth pass, major 1; the notes above).
 ROLE_CONNECTIONS = 64      # connections one socket (a role's, `admin.sock`) serves at once
@@ -307,6 +308,64 @@ def _loopback(ip: str) -> bool:
         return ipaddress.ip_address(ip.split("%", 1)[0]).is_loopback
     except ValueError:
         return False
+
+
+# WHAT ANSWERS AT A NEW VOTER'S ADDRESS IS ASKED WHO IT IS (the product's cross-check of its hashicorp/raft store). A
+# TCP answer was the proof, and every listener answers TCP: a join with `raft=<a member's -api>` was taken, and the
+# group counted a voter that never speaks raft — a group of one became two with no majority. The listener must now
+# go through the library's own handshake with this installation's secret — each side sends 32 random bytes under the
+# password and the other echoes them back (pysyncobj 0.3, `TcpConnection`/`TcpTransport`) — and then answer the
+# library's `status` utility with its own address (`self`), which must be the very address the group will dial:
+# under another spelling the group's voter is not that daemon's own name, and the library drops its connections.
+# What the listener sends is unpickled only after the password authenticated it, as the library itself does.
+MAX_HANDSHAKE = 1 << 20      # a status frame is a few KiB; a length past this is no raft listener's
+
+
+def _raft_says(where: tuple[str, int], encryptor, timeout: float) -> str:
+    """The address the raft listener at `where` calls itself, or `PermissionError` when it is none of this
+    installation's (no handshake, another secret, no status)."""
+    import struct
+    import zlib
+    from pysyncobj import pickle as wire             # the library's own pickling of its messages
+
+    def frame(message) -> bytes:
+        data = encryptor.encrypt_at_time(zlib.compress(wire.dumps(message), 3), int(time.monotonic()))
+        return struct.pack("i", len(data)) + data
+
+    def exactly(s, n: int) -> bytes:
+        got = b""
+        while len(got) < n:
+            more = s.recv(n - len(got))
+            if not more:
+                raise ConnectionError("closed")
+            got += more
+        return got
+
+    def read(s, mine: bytes):
+        n = struct.unpack("i", exactly(s, 4))[0]
+        if not 0 < n <= MAX_HANDSHAKE:
+            raise ValueError(f"a frame of {n} bytes")
+        echo, message = wire.loads(zlib.decompress(encryptor.decrypt(exactly(s, n))))
+        if echo != mine:
+            raise ValueError("our bytes not echoed")
+        return message
+
+    try:
+        with socket.create_connection(where, timeout=timeout) as s:
+            s.settimeout(timeout)
+            mine = os.urandom(32)
+            s.sendall(frame(mine))                   # the first message goes unwrapped: the other has no key yet
+            theirs = read(s, mine)
+            s.sendall(frame((theirs, ["status"])))
+            status = read(s, mine)
+        said = getattr(status.get("self"), "address", None) if isinstance(status, dict) else None
+        if not isinstance(said, str):
+            raise ValueError("no address in its status")
+        return said
+    except Exception as e:                           # noqa: BLE001 — whatever it did, it did not prove it is raft
+        raise PermissionError(f"{where[0]}:{where[1]} is no raft port of this installation — nothing went through "
+                              f"the raft handshake with its secret ({type(e).__name__}): start its daemon, then "
+                              f"join with its -raft address") from None
 
 
 NO_SECRET = ("a raft port without its secret is a group of one on this box's loopback — pickle on that port is "
@@ -506,7 +565,8 @@ class RaftBackend:
     # compared as what it resolves to (`_places`) — the members' rows, this daemon's own, and the library's voters,
     # which a row may not name. A retry spelled another way is the retry, under the spelling the group holds. An
     # address that resolves to nothing, or to every interface (`0.0.0.0`), names no server; and a new voter must
-    # answer on its raft port before it is added — its daemon starts before it asks to join (`start_member`).
+    # answer on its raft port before it is added — its daemon starts before it asks to join (`start_member`) — as a
+    # raft member of this installation that calls itself that very address, not merely as a listener (`_raft_says`).
     def add(self, node_id: str, raft: str, api: str, deadline: float = JOIN_WAIT) -> None:
         if not self.secret:
             raise PermissionError(NO_SECRET)
@@ -529,11 +589,10 @@ class RaftBackend:
         raft = mine or raft                          # a retry keeps the spelling the group holds
         end = time.monotonic() + deadline
         if raft not in voters:
-            try:
-                socket.create_connection(sorted(here)[0], timeout=ANSWER_WAIT).close()
-            except OSError as e:
-                raise PermissionError(f"nothing answers at {raft} ({type(e).__name__}): start its daemon, then "
-                                      f"join") from None
+            said = _raft_says(sorted(here)[0], self.raft.encryptor, ANSWER_WAIT)
+            if said != raft:
+                raise PermissionError(f"the raft port at {raft} calls itself {said}: join it as {said}, the address "
+                                      f"its daemon was started with (-raft)")
             self._apply(self.raft.addNodeToCluster, raft, deadline=deadline, write=True)
             self._save_partners()
         self.submit({"op": "member", "id": node_id, "raft": raft, "api": api}, max(1.0, end - time.monotonic()))
@@ -927,6 +986,10 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
     # Without `-tls` there is no secret, and `RaftBackend` takes no partner and listens on loopback only, by its socket
     # (the review's twelfth pass, blocker 1) — a join is refused here, before anything is asked of a member.
     password = tls.raft_secret(tls_dir) if tls_dir else None
+    if tls_dir:
+        # The bundle whole before the member runs: one CA, its list, our certificate — the store's role alone (the
+        # product's cross-check: a certificate of configstore and another role does not start a daemon).
+        tls.client_context(tls_dir)
     if password is None and join and not RaftBackend.has_state(data):
         raise ValueError(f"{NO_SECRET}; -join makes a group of more")
     if RaftBackend.has_state(data):
