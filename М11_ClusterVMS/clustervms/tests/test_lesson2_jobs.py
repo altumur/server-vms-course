@@ -124,3 +124,26 @@ def test_each_process_opens_its_roles_socket_and_its_objects_on_its_own_server()
     vars_, _ = m.stores("console", {"CONFIG_URL": f"file://{d}/config", "OBJECTS": f"file://{d}/o"})
     assert type(vars_).__name__ == "FileVariables"
     assert m.OBJECTS == "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
+
+
+def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_rights():
+    """The thirteenth review, major 20 (`m11_console_turn`): the reaper (`vms/jobs.py`, `clear_requests`) reads a
+    holder's mark (`vms/commands/<id>`, a create-only row of the store here) to tell a command its holder began from
+    one nobody performed — and the console's rights did not grant that read: `Forbidden: console may not read
+    objects/vms/commands/x1` on every turn, the command stood, `vms_requests_expired_total` did not move, and the
+    exception left the rows after it unlooked at. Through the console's own socket, under the committed rights: a
+    command past its deadline that its holder began (a mark, no outcome) and one nobody held are both ended and
+    counted; one its holder answered (a mark with an outcome) is cleared and not counted."""
+    import json
+    from vms import jobs
+    c = Cluster(); c.resources_up()
+    con, w = c.console(), c.worker("srv-a")
+    late = c.wall() - jobs.COMMAND_REAP_AFTER - 60
+    for rid in ("x1", "x2", "x3"):
+        con.vars.put(f"vms/requests/{rid}", {"action": "output", "unit": "1", "valid_until": late, "at": late - 30}, cas=0)
+    assert w._mark("x1", "1", late - 20) and w._mark("x3", "1", late - 20)            # the holder's marks, by its socket
+    w.objects.put("vms/commands/x3", json.dumps({"instance": w.instance, "outcome": "performed"}).encode())
+    before = jobs.expired.get("vms", 0)
+    jobs.clear_requests(con)
+    assert con.vars.list("vms/requests/") == [], con.vars.list("vms/requests/")
+    assert jobs.expired.get("vms", 0) - before == 2

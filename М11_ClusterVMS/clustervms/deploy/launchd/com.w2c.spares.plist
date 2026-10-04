@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- /Library/LaunchDaemons/com.w2c.spares.plist — every minute, the spares this server can serve: `w2c-spares.sh`
+<!-- ~/Library/LaunchAgents/com.w2c.spares.plist — every minute, the spares this server can serve: `w2c-spares.sh`
      reads the console's numbers and starts what is missing — the role's own plist copied without its name as
-     `com.w2c.vms.<role>.spare-<n>` under /var/run/w2c-spares and bootstrapped, so a spare runs as its role does (the
+     `com.w2c.vms.<role>.spare-<n>` under __BOX__/state/run/w2c-spares and bootstrapped, so a spare runs as its role does (the
      twelfth review, blocker 6) — never stops one. The timers' twin (`w2c-spares[-<role>].timer`); installed by
-     `install.sh --spares` only. -->
+     `install.sh` with its spares flag only. Run through the runner (`w2c-run.sh spares`), which reads the box's
+     `w2c.env` and `vms.env` first: the console's address, the ceilings, this server's name and labels. -->
 <plist version="1.0">
 <dict>
 	<key>Label</key>
 	<string>com.w2c.spares</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>W2C_BOX</key>
+		<string>__BOX__</string>
+	</dict>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/usr/local/bin/w2c-spares.sh</string>
+		<string>__BOX__/bin/w2c-run.sh</string>
+		<string>spares</string>
 		<string>recworker</string>
 		<string>vmsworker</string>
 	</array>
 	<key>StartInterval</key>
 	<integer>60</integer>
 	<key>StandardErrorPath</key>
-	<string>/var/log/w2c/com.w2c.spares.log</string>
+	<string>__BOX__/state/logs/com.w2c.spares.log</string>
 	<key>StandardOutPath</key>
-	<string>/var/log/w2c/com.w2c.spares.log</string>
+	<string>__BOX__/state/logs/com.w2c.spares.log</string>
 </dict>
 </plist>

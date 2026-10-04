@@ -7,7 +7,12 @@
 [Unit]
 Description=VMS spare recorder %i — takes a declared volume nobody holds
 After=network-online.target configstore.service w2c-resource.service vms-obsd.service
-Wants=network-online.target configstore.service vms-obsd.service
+Wants=network-online.target
+# The store's member and the archive's engine must be UP already, not pulled up (the thirteenth review, major 12):
+# `Wants=` started a stopped engine whenever the spares' timer started a spare — the administrator stops it to hand
+# the volumes over (`install-obsd.sh`, `chown -R`), and PID 1 brought it back under the chown, past polkit, which lets
+# the spares' user start this template and nothing else. Either not running: this spare does not start.
+Requisite=configstore.service vms-obsd.service
 
 [Service]
 User=vms

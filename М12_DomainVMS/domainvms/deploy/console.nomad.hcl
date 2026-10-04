@@ -46,7 +46,10 @@ job "console" {
           # cluster by this node's store and objects; another cluster's store is
           # not opened from here (a configstore has no remote reader): it is a
           # member that REPORTS (`name=report`, `domain/uplink.py`).
-          CLUSTERS=north=configstore:///run/configstore/console.sock|cluster:///data/platform/objects?resource=http://127.0.0.1:8090,south=report
+          # The domain holder's own cluster by the DOMAIN's socket (the thirteenth review, major 11, a sibling): this
+          # console writes the domain's pending edits, topology, crossings and members — `domain/*` rows, which the
+          # cluster console's role does not write.
+          CLUSTERS=north=configstore:///run/configstore/domain.sock|cluster:///data/platform/objects?resource=http://127.0.0.1:8090,south=report
           LOST_AFTER=45
           REFRESH_INTERVAL=5
           # WHAT THE CODE OPENS, THE JOB TURNS ON (М10's eighth review, minor: the reserve and the lanes were in the

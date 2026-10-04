@@ -42,7 +42,9 @@ job "domain-signer" {
         # major 22: `nomad://` is gone).
         volumes = ["/run/vms-console:/run/vms-console", "/run/configstore:/run/configstore", "/data/platform/objects:/data/platform/objects"]
       }
-      identity { env = true }    # NOMAD_TOKEN: may write domain/signer, identity/*, domain/keys, domain/revoked, and the books
+      # Its store: the domain holder's configstore by the domain's own socket (`signer_service`'s default,
+      # configstore:///run/configstore/domain.sock) — the role `domain` of М11's rights file: `domain/*` and
+      # `identity/*`, and the domain's keys, which no other role reads (the thirteenth review, major 11).
       template {
         data        = <<-EOT
           DOMAIN_ID=acme
@@ -51,11 +53,16 @@ job "domain-signer" {
           IDENTITY_PUBLISH_FLOOR=60
           # The books (domain/books.py): sources, primaries, polls, upstream, asks — they carry tokens this
           # job mints, so their pass runs here. The same list as the domain's console; CENTRE/STAR, Lesson 17.
-          CLUSTERS=north=configstore:///run/configstore/console.sock|cluster:///data/platform/objects?resource=http://127.0.0.1:8090,south=report
+          # The holder's own cluster by the DOMAIN's socket (the thirteenth review, major 11): the books are `domain/*`
+          # rows, which the console's role does not write.
+          CLUSTERS=north=configstore:///run/configstore/domain.sock|cluster:///data/platform/objects?resource=http://127.0.0.1:8090,south=report
           LOST_AFTER=45
           # The box's own door to the door in (`/login` through a flood, from the node: `--unix-socket`), and the
           # monitors' lane for `/healthz` (М10's eighth review: in the code, and not turned on here).
           SIGNER_UNIX=/run/vms-console/signer.sock
+          # The port Nomad gave the group (`port "https" {}` is dynamic): the process listened on 8445 whatever the
+          # service said (the thirteenth review, major 11).
+          SIGNER_PORT={{ env "NOMAD_PORT_https" }}
           CONSOLE_MONITORS=127.0.0.1,{{ env "attr.unique.network.ip-address" }},${var.monitors}
         EOT
         destination = "local/signer.env"

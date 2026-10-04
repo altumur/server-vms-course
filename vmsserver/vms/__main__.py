@@ -18,6 +18,8 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
     GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
     DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; NOMAD_META_labels=gpu says where it is
     COMMANDS_BEAT=0.25               worker: how often it looks at its request rows between passes, in seconds; 0 — only on the pass
+    REACH_BUDGET=10                  controller: units it moves in one pass to a server that reaches them (`ensure_reach`);
+                                     a group left for a later pass is the alarm `units.over_budget` (`spec.reach_budget`)
     LONG_POLL=0                      autoworker: do not ask the resources to say when a watched event is written; it finds
                                      them on its pass, every PASS_SECONDS, as it did (`w2cplatform/longpoll.py`)
 """

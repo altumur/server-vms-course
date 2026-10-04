@@ -31,8 +31,15 @@ from w2cplatform.resource import DOORS, MIRROR_KEY, SPACE_KEY
 
 OBJECTS = ROWS_PREFIX + "/"    # the rows of the create-only objects, a worker's mark before a device command (`objectstore`)
 
-# Whose each socket is (the product's format): a subsystem's role `vms-<role>`, the platform's own `w2c-<role>`.
-PLATFORM = ("resource", "domainagent", "member")
+# Whose each socket is (the product's format): a subsystem's role `vms-<role>`, the platform's own `w2c-<role>` — the
+# domain is the platform's (the owner, 4 Oct: "the domain is a platform service").
+PLATFORM = ("resource", "domain", "domainagent", "member")
+
+# The domain's keys (`domain/signer`: the token key and the issuing key, М12 `signer.py`) are read by the domain's own
+# processes alone — not by its agent in a member cluster, nor by a member's report, both of which read `domain/*`.
+# The thirteenth review, major 11 asked for the role; this is the least of the narrowing DOMAIN-PLATFORM.md lists, the
+# rest (each member its own rows, the agent's other holder-only keys) is the round that splits М12.
+SIGNER_KEYS = "!domain/signer*"
 
 
 def group(role: str) -> str:
@@ -68,9 +75,12 @@ def roles() -> dict[str, dict]:
     rec_rows = _rows(REC_SPEC.sub.acl_objects_worker())                  # none: a recorder commands no device
     out = {
         # The page and the API, one per server: the operator's rows of both subsystems; reads every row of both, the
-        # platform's (drain, decommission, the doors /servers shows), and the gate's.
+        # platform's (drain, decommission, the doors /servers shows), and the gate's. And a holder's mark before a
+        # device command (`objects/vms/commands/<id>`, a create-only row): the console's reaper reads it to tell a
+        # command the holder answered from one nobody performed (`vms/jobs.py`, `_end_command`) — the thirteenth
+        # review, major 20: `Forbidden` on every turn, and the command stood.
         "console": role("console", SPEC.acl_console() + REC_SPEC.acl_console(),
-                        [SCHEMA_KEY, "vms/*", "rec/*", "platform/*", *_gate()]),
+                        [SCHEMA_KEY, "vms/*", "rec/*", "platform/*", *_gate(), *worker_rows, *rec_rows]),
         # Placement, one pass at a time and safe at two: its prefixes; reads its subsystem, the other's epochs
         # (`near`, a camera's backup), the platform's rows (decommission, the drain).
         "vmscontroller": role("vmscontroller", SPEC.acl_controller(), [SCHEMA_KEY, "vms/*", "rec/*", "platform/*"]),
@@ -91,9 +101,19 @@ def roles() -> dict[str, dict]:
                          + [f"{t}/{family}{tail}" for t in TREES for family in ("retention", "alarms_retention")
                             for tail in ("", "/*")]),
         # М12, in a member cluster's store: the domain's agent writes the domain's rows and the relay's, and is the one
-        # role of the cluster that deletes `domain/*` (`storemachine.DOMAIN_ROLES`); a member's report reads them.
-        "domainagent": role("domainagent", ["domain/*", "relay/*"], [SCHEMA_KEY, "domain/*", "relay/*"]),
-        "member": role("member", [], [SCHEMA_KEY, "domain/*", "relay/*"]),
+        # role of the cluster that deletes `domain/*` (`storemachine.DOMAIN_ROLES`); a member's report reads them —
+        # neither the domain's keys (`SIGNER_KEYS`).
+        "domainagent": role("domainagent", ["domain/*", "relay/*", SIGNER_KEYS],
+                            [SCHEMA_KEY, "domain/*", "relay/*", SIGNER_KEYS]),
+        "member": role("member", [], [SCHEMA_KEY, "domain/*", "relay/*", SIGNER_KEYS]),
+        # М12, in the DOMAIN HOLDER's store (the thirteenth review, major 11: the signer opened `domain.sock`, which no
+        # rights file named, so no daemon opened it — `StoreUnavailable` at its first read and a loop of restarts). The
+        # domain's own processes on the holder: the signer (its keys, the key set, the revocations, the people
+        # `identity/*`, the books its pass writes) and the domain's console (pending edits, topology, crossings,
+        # members) — both by `CLUSTERS`' own line for the holder's cluster, whose snapshot and heartbeats they read too.
+        # With the agent, the one role that deletes `domain/*` (`storemachine.DOMAIN_ROLES`).
+        "domain": role("domain", ["domain/*", "identity/*"],
+                       [SCHEMA_KEY, "domain/*", "identity/*", "relay/*", "vms/*", "rec/*", "platform/*"]),
     }
     return out
 
