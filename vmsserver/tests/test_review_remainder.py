@@ -425,6 +425,10 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
     assert str(door) in w.lease_pass() and not w.may_write(str(door)) and str(door) not in w.leases
     con.vars.delete(SPEC.sub.request_key("d2"))
     con.vars.put(SPEC.sub.request_key("d3"), {"unit": str(door), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
+    # "still assigned to it" is what a pass reads: let go by the lease step, the unit is not taken back on the rows read
+    # before (a beat between passes; `test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_…`)
+    assert w.requests() == [] and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "2"
+    w.reconcile_once()                                                                                 # the double assignment still stands
     assert [d["request"] for d in w.requests()] == ["d3"] and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "3"
     assert str(door) in w2.lease_pass() and not w2.may_write(str(door))
 
