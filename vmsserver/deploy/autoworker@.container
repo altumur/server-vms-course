@@ -18,12 +18,19 @@ Exec=python3 -m vms autoworker
 Environment=AUTO_NAME=%i
 # CAPACITY here is scenarios: each one is a window read per pass — and one query per KIND the pass's
 # scenarios watch, shared between them, not one per scenario (М10B Lesson 25).
-EnvironmentFile=/data/config/w2c.env
-EnvironmentFile=/data/config/vms.env
+EnvironmentFile=/etc/w2c/w2c.env
+EnvironmentFile=/etc/vms/vms.env
 # read-write: `auto/epoch/*`, `auto/slots/*` and the two request families (its token); its own events and
 # its cursor go under the archive, beside everything else written on this box.
-Volume=/data/platform:/data/platform:z
-Volume=/data/archive:/data/archive:z
+# The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
+# `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
+Volume=/data/platform/config:/data/platform/config:z
+Volume=/data/platform/objects:/data/platform/objects:z
+GroupAdd=2103
+PodmanArgs=--umask=0007
+Volume=/data/platform/events:/data/platform/events:z
+# a CLIENT of the platform's events archive: `w2c-events`, by number — what it writes there the resource deletes.
+GroupAdd=2102
 Network=host
 
 [Service]

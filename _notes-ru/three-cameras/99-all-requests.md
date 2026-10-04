@@ -2,8 +2,8 @@
 genre: записки
 kind: разбор кода
 subject: М11_ClusterVMS
-source-commit: 2b66bea
-date: 2026-10-02
+source-commit: 6fd86b5
+date: 2026-10-04
 status: draft
 ---
 
@@ -13,274 +13,475 @@ status: draft
 > Это разбор: я читал код и восстанавливал по нему, как всё устроено, максимально простыми словами.
 > **Источник истины — код.** Где записки расходятся с кодом, прав код.
 > Проект описывает себя сам: [`README.md`](../../README.md) и указатели модулей.
-> Состояние: коммит `2b66bea`, 2 октября 2026.
+> Состояние: коммит `6fd86b5`, 4 октября 2026.
 
 [← карта разбора](README.md) · назад: [10-limits-and-scale.md](10-limits-and-scale.md)
 
 
-Порядок — временной. Список собран из записей запросов частей 2–8, а не придуман заново: где часть сворачивает повтор («то же для w-2», «×3»), он свёрнут и здесь. Ответы сокращены до существенного. `ModifyIndex` и время, как и везде в разборе, условные; в скобках справа — раздел, где запрос разобран.
+Порядок — временной, по частям. Список собран заново из трасс, по которым написаны части 2–8: настоящий код курса на стенде из трёх серверов, `srv-a`, `srv-b`, `srv-c`. Где трасса сворачивает повтор («коротко — только записи»), он свёрнут и здесь. Ответы сокращены до существенного. Индексы `index` и время, как и везде в разборе, условные. **Каждая часть — свой прогон с нуля**, поэтому номера `index` между частями не продолжаются: в части 3 камеры записаны с `index` 1010, 1015, 1020, а в частях 4–7 те же камеры — 1008, 1010, 1012. Это не ошибка и не другие камеры; сверять номера можно только внутри одной части. В скобках справа от заголовка блока — раздел, где запросы разобраны.
+
+**Кто спрашивает** (первая колонка):
+
+| Метка | Кто | Куда идут его запросы к хранилищу |
+|---|---|---|
+| `OP` | браузер оператора `anna` (в 8.2 ещё `boris`) → консоль, HTTP `:8080` | — |
+| `con` | консоль (`vms-console`) на `srv-a`, в части 6 — на `srv-b`; в 8.2 две: `con-a` и `con-b` | `/run/configstore/console.sock` |
+| `ctl` | контроллер на `srv-a` | `/run/configstore/vmscontroller.sock` |
+| `w-srv-a-1` … | воркер, юнит `vms-vmsworker` своего сервера; `w-2` — запасной на `srv-c` | `/run/configstore/vmsworker.sock` |
+| `res-a` … | ресурс платформы (`w2c-resource`) на `srv-a`, `srv-b`, `srv-c` | `/run/configstore/resource.sock` |
+| `root` | администратор на `srv-a` | `/run/configstore/admin.sock` |
+
+**Как читать строку.** `GET /v1/get?key=…` и `GET /v1/list?prefix=…` — чтения хранилища ключей (`configstore`). `POST /v1/write put <ключ> cas=…` — запись: `cas=""` значит «только создать», `cas=N` — «только если версия ещё N»; ответ `index N` — новая версия ключа, `409` — конфликт CAS. `пусто` — ключа нет: хранилище отвечает `200 {"items": null, "index": ""}`, а не 404.
+
+Объекты — не ключи хранилища. `GET /v1/objects…?scope=cluster` — запрос к ресурсу **своего** сервера: он отдаёт объект или список объектов всего кластера и сам ходит за чужими файлами к ресурсам других серверов. `FILE <ключ>` — файл объекта, записанный на своём сервере.
+
+Чтения `domain/*` консоли (`domain/keys`, `member`, `root`, `grants`, `revoked`, `break_glass` — проверка доступа, обычно дважды на HTTP-запрос) схлопнуты в одну строку `×N domain/*`. Полностью они показаны только в 3.2.
 
 ```
-── подготовка (до прихода оператора) ─────────────────────────────── (2.2–2.5)
-w-1  GET  /v1/var/platform/schema                            → 404  формат мой (при старте)
-w-1  GET  /v1/vars?prefix=vms/slots/                         → []
-w-1  GET  /v1/var/vms/slots/w-1                              → 404
-w-1  PUT  /v1/var/vms/slots/w-1?cas=0                        → 1001  holder srv-1:1841:9f3c2a, until +45, gen 1
-w-1  GET  /v1/var/objects/vms/heartbeats/w-1                 → 404  прошлого отчёта нет
-w-1  PUT  /v1/var/objects/vms/heartbeats/w-1                 → 1002  status [], capacity 50, headroom 50
-w-2  GET  /v1/var/platform/schema                            → 404
-w-2  GET  /v1/vars?prefix=vms/slots/                         → [w-1]
-w-2  GET  /v1/var/vms/slots/w-1                              → занят: until впереди, released false
-w-2  GET  /v1/var/vms/slots/w-2                              → 404
-w-2  PUT  /v1/var/vms/slots/w-2?cas=0                        → 1003
-     …и heartbeat, как у w-1. w-3 читает строки w-1 и w-2 и берёт w-3
-res  GET  /v1/var/platform/schema                            → 404  (при старте)
-res  PUT  /v1/var/objects/platform/resources/srv-1/heartbeat → 1007  space, volumes, waits
-     …то же для srv-2 и srv-3
-con  GET  /v1/var/platform/schema                            → 404  (при старте консоли)
-ctl  GET  /v1/var/platform/schema                            → 404  (при старте контроллера)
+── 2.2 воркеры берут имена ───────────────────────────────────────────────────────────────── (2.2)
+w-srv-a-1 GET  /v1/get?key=platform/schema                     → пусто          формат хранилища мой
+w-srv-a-1 GET  /v1/get?key=platform/decommission/srv-a         → пусто          мой сервер не списан
+w-srv-a-1 GET  /v1/list?prefix=vms/slots/                      → {}
+w-srv-a-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → пусто
+w-srv-a-1 POST /v1/write put vms/slots/w-srv-a-1 cas=""         → index 1004     holder srv-a:4101, until t0+45, gen 1
+res-a     GET  /v1/list?prefix=platform/doors/                  → srv-a, srv-b, srv-c  (записаны первыми heartbeat'ами ресурсов)
+res-a     GET  /v1/get?key=platform/doors/srv-b                 → url http://srv-b:8090   …и srv-c: где отвечают чужие ресурсы
+w-srv-a-1 GET  /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster → 404        прошлого отчёта нет
+w-srv-b-1 GET  schema, decommission/srv-b                       → пусто
+w-srv-b-1 GET  /v1/list?prefix=vms/slots/                      → [w-srv-a-1]
+w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101, released false: занят
+w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-b-1                 → пусто
+w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=""         → index 1005
+res-b     GET  doors: список, srv-a, srv-c
+w-srv-b-1 GET  /v1/objects/vms/heartbeats/w-srv-b-1?scope=cluster → 404
+w-srv-c-1 …то же; читает строки w-srv-a-1 и w-srv-b-1 — заняты
+w-srv-c-1 POST /v1/write put vms/slots/w-srv-c-1 cas=""         → index 1006
+res-c     GET  doors: список, srv-a, srv-b
+w-srv-c-1 GET  /v1/objects/vms/heartbeats/w-srv-c-1?scope=cluster → 404
 
-── проход контроллера по пустому кластеру: 77 чтений, 1 запись ────── (2.5)
-ctl  GET  /v1/vars?prefix=vms/placement/   ×3                → []   удалённые, завершённые, сверка
-ctl  GET  /v1/vars?prefix=vms/workers/                       → []
-ctl  GET  /v1/vars?prefix=vms/cameras/                       → []   ensure_placed: 5 чтений
-ctl  … redistribute: 35 чтений — heartbeat'ы ×4, слоты ×1, ресурсы ×3 (листинг и три GET каждый раз),
-       platform/drain → 404, vms/policy → 404
-ctl  … ensure_home(1): 35 чтений — те же, потом листинг камер
-ctl  GET  /v1/vars?prefix=vms/cameras/                       → []
-ctl  GET  /v1/vars?prefix=objects/vms/snapshot/              → []   шардов ещё нет
-ctl  PUT  /v1/var/objects/vms/snapshot/unplaced              → пустой шард: «камер нет»
+── 2.3 первый heartbeat каждого воркера ───────────────────────────────────────────────────── (2.3)
+w-srv-a-1 FILE vms/heartbeats/w-srv-a-1                                         484 Б: status [], server srv-a,
+                                                                                labels vlan:cctv, capacity 50, headroom 50
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1                                         то же, файл на srv-b
+w-srv-c-1 FILE vms/heartbeats/w-srv-c-1                                         то же, файл на srv-c
 
-── создание камеры 1 (T+0.0) ─────────────────────────────────────── (3.1–3.3)
-OP   POST /cameras  Idempotency-Key: 8f4b21e0-…              → 201  id 1, worker null
-con  GET  /v1/var/domain/keys, member, root, grants, revoked, break_glass   → 404  «кто звонит»
-con  GET  /v1/var/domain/… те же шесть                       → 404  «можно ли ему»: консоль открыта
-con  PUT  /v1/var/vms/idem/8f4b21e0-…?cas=0                  → 4401  state pending, sub, sha256
-con  GET  /v1/vars?prefix=vms/idem/                          → 1 путь   (подчистка, не чаще раза в минуту)
-con  GET  /v1/var/vms/idem/8f4b21e0-…                        → свежий — оставить
-con  GET  /v1/var/vms/next_id                                → 404
-con  PUT  /v1/var/vms/next_id?cas=0                          → 4405  n 1
-con  PUT  /v1/var/vms/idem/8f4b21e0-…?cas=4401               → 4407  id "1" в захвате
-con  GET  /v1/vars?prefix=vms/cameras/                       → []   источник не занят
-con  PUT  /v1/var/vms/cameras/1?cas=0                        → 4409  revision 1, пароль запечатан
-con  GET  /v1/var/vms/retention/1                            → 404  срок не задан — не пишется
-con  GET  /v1/var/vms/alarms_retention/1                     → 404  то же
-con  PUT  /v1/var/vms/idem/8f4b21e0-…?cas=4407               → 4414  state done, ответ 201
+── 2.4 ресурсы отчитываются о дисках ──────────────────────────────────────────────────────── (2.4)
+res-a     FILE platform/resources/srv-a/heartbeat                               571 Б: space, volumes, waits, restore
+res-b     FILE platform/resources/srv-b/heartbeat
+res-c     FILE platform/resources/srv-c/heartbeat
 
-── создание камеры 2 (T+1.2) ─────────────────────────────────────── (3.5)
-OP   POST /cameras  Idempotency-Key: c1a9f742-…              → 201  id 2, worker null
-con  GET  /v1/var/domain/…  ×12                              → 404
-con  PUT  /v1/var/vms/idem/c1a9f742-…?cas=0                  → 4415
-con  GET  /v1/var/vms/next_id                                → n 1, ModifyIndex 4405
-con  PUT  /v1/var/vms/next_id?cas=4405                       → 4418  n 2
-con  PUT  /v1/var/vms/idem/c1a9f742-…?cas=4415               → 4419  id "2"
-con  GET  /v1/vars?prefix=vms/cameras/                       → [vms/cameras/1]
-con  GET  /v1/var/vms/cameras/1                              → source и ref не совпадают
-con  PUT  /v1/var/vms/cameras/2?cas=0                        → 4421
-con  GET  /v1/var/vms/retention/2                            → 404
-con  GET  /v1/var/vms/alarms_retention/2                     → 404
-con  PUT  /v1/var/vms/idem/c1a9f742-…?cas=4419               → 4423  state done
+── 2.5 проход контроллера по пустому кластеру: 18 чтений, 0 записей, 10 объектных, 2 файла ── (2.5)
+ctl       GET  /v1/objects/vms/controller/pass?scope=cluster    → 404          прошлого отчёта прохода нет
+ctl       GET  /v1/list?prefix=platform/decommission/          → {}           списывать некого
+ctl       GET  /v1/list?prefix=vms/decommissioned/             → {}
+ctl       GET  /v1/list?prefix=vms/slots/                      → три слота
+ctl       GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101, until t0+45, released false
+ctl       GET  /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster → 484 Б, X-Server srv-a
+          …то же для w-srv-b-1 и w-srv-c-1 (их файлы на srv-b и srv-c, ресурс srv-a приносит их сам)
+ctl       GET  /v1/list?prefix=vms/placement/                  → {}
+ctl       GET  /v1/list?prefix=vms/workers/                    → {}
+ctl       GET  /v1/list?prefix=vms/cameras/                    → {}
+ctl       GET  /v1/list?prefix=vms/servers/                    → {}           меток серверов из консоли нет
+ctl       GET  /v1/objects?prefix=vms/heartbeats/&scope=cluster → 3 файла, по одному на сервере
+ctl       GET  /v1/get?key=vms/servers/srv-a … srv-c   ×3      → пусто        метки берутся из heartbeat'ов (LABELS)
+ctl       GET  /v1/objects?prefix=platform/resources/&scope=cluster → 3 файла
+ctl       GET  /v1/objects/platform/resources/srv-a/heartbeat?scope=cluster → 571 Б   …и srv-b, srv-c
+ctl       GET  /v1/get?key=vms/policy                          → пусто
+ctl       GET  /v1/get?key=platform/drain                      → пусто        никого не выводят
+ctl       GET  /v1/get?key=vms/workers/w-srv-a-1 … w-srv-c-1 ×3 → пусто      назначений нет
+ctl       FILE vms/controller/pass                                              ok true, unplaced 0
+ctl       GET  /v1/objects?prefix=vms/snapshot/&scope=cluster  → {}
+ctl       FILE vms/snapshot/unplaced                                            75 Б: неразмещённых нет
 
-── создание камеры 3 (T+2.0) ─────────────────────────────────────── (3.5)
-OP   POST /cameras  Idempotency-Key: 2d7c6b18-…              → 201  id 3, worker null
-     те же запросы, что у камеры 2; проверка источника читает две строки,
-     vms/cameras/1 и vms/cameras/2; строка камеры 3 ложится с индексом 4433
+── состояние перед приходом оператора ─────────────────────────────── (2, «Состояние хранилища…»)
+root      GET  /v1/list?prefix=                                → 6 ключей: platform/doors/srv-a..c (1001–1003),
+                                                                 vms/slots/w-srv-a-1..w-srv-c-1 (1004–1006)
+root      GET  /v1/get?key=…  ×6                               → строки дверей и слотов, как выше
+root      GET  /v1/objects?prefix=&scope=cluster               → 8 файлов: на srv-a — ресурс, pass, heartbeat
+                                                                 w-srv-a-1, snapshot/unplaced; на srv-b и srv-c —
+                                                                 ресурс и heartbeat воркера
+root      GET  /v1/list?prefix=objects/                        → {}           объектов в хранилище ключей нет
 
-── проход контроллера (T+3.4): 395 чтений, 10 записей ─────────────── (4.1–4.6)
-ctl  GET  /v1/vars?prefix=vms/placement/   ×2                → []   unplace_deleted, unplace_retired
-ctl  GET  /v1/vars?prefix=vms/workers/                       → []   sync_assignments…
-ctl  GET  /v1/vars?prefix=vms/placement/                     → []   …и решений сверять не с чем
-ctl  GET  /v1/vars?prefix=vms/cameras/                       → 3 пути
-ctl  GET  /v1/var/vms/cameras/1..3                           → 3 строки
-     камера 1:
-ctl  GET  /v1/var/vms/placement/1                            → 404  решения нет
-ctl  GET  /v1/var/vms/cameras/1                              → та же строка
-ctl  GET  /v1/vars?prefix=objects/vms/heartbeats/ + w-1..3   → живые: server, labels, capacity
-ctl  GET  /v1/vars?prefix=vms/slots/ + w-1..3                → released false
-ctl  GET  heartbeat'ы воркеров + /v1/vars?prefix=objects/platform/resources/ + srv-1..3   → live
-     …эти восемь запросов трижды, по разу на воркера
-ctl  GET  /v1/var/vms/policy                                 → 404  shared
-ctl  GET  /v1/var/platform/drain                             → 404  никого не выводят
-ctl  GET  heartbeat'ы воркеров (листинг и три объекта)  ×6   метки и сервер каждого (eligible)
-ctl  GET  /v1/vars?prefix=vms/cameras/ + 1..3                → соседи по прибору: нет
-ctl  GET  /v1/vars?prefix=objects/rec/heartbeats/            → []   записи нет — дома нет
-ctl  GET  heartbeat'ы воркеров, затем /v1/var/vms/workers/w-1   → 404  load 0
-     …то же для w-2 и w-3
-ctl  GET  heartbeat'ы воркеров ×2 и ресурсов ×1              → сервер победителя и его ресурс, для reason
-ctl  GET  /v1/var/vms/placement/1                            → 404
-ctl  PUT  /v1/var/vms/placement/1?cas=0                      → 4441  w-1 + reason
-ctl  GET  /v1/var/vms/workers/w-1                            → 404
-ctl  PUT  /v1/var/vms/workers/w-1?cas=0                      → 4444  units "1", rev 1
-     камеры 2 и 3: те же чтения (у w-1 теперь load 1, потом у w-2 тоже)
-ctl  PUT  /v1/var/vms/placement/2?cas=0                      → 4449  w-2
-ctl  PUT  /v1/var/vms/workers/w-2?cas=0                      → 4452  units "2"
-ctl  PUT  /v1/var/vms/placement/3?cas=0                      → 4457  w-3
-ctl  PUT  /v1/var/vms/workers/w-3?cas=0                      → 4460  units "3"
-     redistribute — 41 чтение, ни одной записи:
-ctl  GET  /v1/vars?prefix=vms/placement/ и по каждой строке: placement/N, cameras/N
-ctl  GET  heartbeat'ы, слоты, по воркеру — его сервер и ресурс, platform/drain, vms/policy
-     ensure_home(1) — 44 чтения, ни одной записи:
-ctl  GET  пул заново (те же чтения, что в 4.1), листинг камер,
-          и на каждую камеру: /v1/vars?prefix=objects/rec/heartbeats/ → [], placement/N
-     publish_snapshot — 20 чтений, 4 записи (T+3.7):
-ctl  GET  /v1/vars?prefix=vms/cameras/ + 1..3
-ctl  GET  /v1/var/vms/placement/N + heartbeat'ы воркеров     → сервер каждой камеры, ×3
-ctl  GET  /v1/vars?prefix=objects/vms/snapshot/              → [unplaced]
-ctl  PUT  /v1/var/objects/vms/snapshot/w-1..3                → по шарду на воркера
-ctl  PUT  /v1/var/objects/vms/snapshot/unplaced              → снова пустой
+── 3.2 создание камеры 1 «Ворота»: 18 чтений, 5 записей ──────────────────────────────── (3.1–3.3)
+OP        POST /cameras  Idempotency-Key: k-anna-0001           → 201  id 1, revision 1, worker null
+con       GET  /v1/get?key=domain/keys, member, root, grants, revoked, break_glass  → пусто   кто звонит
+con       GET  /v1/get?key=domain/… те же шесть                → пусто        можно ли ему: доступ открыт
+con       POST /v1/write put vms/idem/k-anna-0001 cas=""        → index 1007     state pending, sub anna, sha256
+con       GET  /v1/list?prefix=vms/idem/                       → [k-anna-0001]  подчистка старых ключей
+con       GET  /v1/get?key=vms/idem/k-anna-0001                → свежий — оставить
+con       GET  /v1/get?key=vms/next_id                         → пусто
+con       POST /v1/write put vms/next_id cas=""                 → index 1008     n 1
+con       POST /v1/write put vms/idem/k-anna-0001 cas=1007      → index 1009     id "1" зарезервирован в ключе
+con       GET  /v1/list?prefix=vms/cameras/                    → {}           источник не занят
+con       POST /v1/write put vms/cameras/1 cas=""               → index 1010     revision 1, labels vlan:cctv
+con       GET  /v1/get?key=vms/retention/1                     → пусто        срок не задан — не пишется
+con       GET  /v1/get?key=vms/alarms_retention/1              → пусто        то же
+con       POST /v1/write put vms/idem/k-anna-0001 cas=1009      → index 1011     state done, status 201, тело ответа
 
-── воркеры забирают камеры (T+4.1 … T+5.0) ───────────────────────── (5.1–5.3)
-w-1  GET  /v1/var/vms/workers/w-1                            → units "1", rev 1, ModifyIndex 4444
-w-1  GET  /v1/var/vms/cameras/1                              → revision 1
-w-1  GET  /v1/var/vms/epoch/1                                → 404  эпохи нет
-w-1  PUT  /v1/var/vms/epoch/1?cas=0                          → 4463  epoch 1
-     пайплайн: ни одного запроса к хранилищу
-     …то же на w-2 (камера 2) и w-3 (камера 3)
-w-1  GET  /v1/vars?prefix=vms/requests/                      → []   заявок нет: каждые 0,25 с
-w-1  GET  /v1/vars?prefix=objects/vms/commands/              → []   уборка отметок, раз в 30 с
+── 3.5 камера 2 «Парковка»: 17 чтений, 5 записей ──────────────────────────────────────────── (3.5)
+OP        POST /cameras  Idempotency-Key: k-anna-0002           → 201  id 2
+con       GET  ×12 domain/* (проверка доступа)
+con       POST /v1/write put vms/idem/k-anna-0002 cas=""        → index 1012
+con       GET  /v1/get?key=vms/next_id                         → n 1 @1008      подчистки idem нет: раз в минуту
+con       POST /v1/write put vms/next_id cas=1008               → index 1013     n 2
+con       POST /v1/write put vms/idem/k-anna-0002 cas=1012      → index 1014     id "2"
+con       GET  /v1/list?prefix=vms/cameras/ и /v1/get?key=vms/cameras/1 → источник другой
+con       POST /v1/write put vms/cameras/2 cas=""               → index 1015
+con       GET  retention/2, alarms_retention/2                 → пусто
+con       POST /v1/write put vms/idem/k-anna-0002 cas=1014      → index 1016     state done
 
-── продление слота и аренд (примерно раз в 10 с) ─────────────────── (5.2, 8.6)
-w-1  GET  /v1/var/platform/schema                            → 404
-w-1  GET  /v1/var/vms/slots/w-1                              → holder — я
-w-1  PUT  /v1/var/vms/slots/w-1?cas=…                        → until +45
-w-1  GET  /v1/var/vms/epoch/1                                → epoch 1 — мой
-     …то же на w-2 и w-3
+── 3.5 камера 3 «Склад»: 18 чтений, 5 записей ─────────────────────────────────────────────── (3.5)
+OP        POST /cameras  Idempotency-Key: k-anna-0003           → 201  id 3
+          те же запросы; проверка источника читает cameras/1 и cameras/2
+con       POST /v1/write put vms/idem/k-anna-0003 cas=""        → index 1017
+con       POST /v1/write put vms/next_id cas=1013               → index 1018     n 3
+con       POST /v1/write put vms/idem/k-anna-0003 cas=1017      → index 1019     id "3"
+con       POST /v1/write put vms/cameras/3 cas=""               → index 1020
+con       POST /v1/write put vms/idem/k-anna-0003 cas=1019      → index 1021     state done
 
-── отчёт (T+10.3) ────────────────────────────────────────────────── (5.4)
-w-1  PUT  /v1/var/objects/vms/heartbeats/w-1                 → 4466  running, observed_revision 1, headroom 49
-     …то же на w-2 и w-3
+── 4 проход контроллера, размещающий три камеры: 31 чтение, 6 записей, 11 объектных, 5 файлов ── (4.1–4.5)
+ctl       GET  /v1/objects/vms/controller/pass?scope=cluster    → 543 Б        отчёт прошлого прохода
+ctl       GET  /v1/list?prefix=platform/decommission/          → {}
+ctl       GET  /v1/list?prefix=vms/decommissioned/             → {}
+ctl       GET  /v1/list?prefix=vms/slots/                      → три слота
+ctl       GET  /v1/get?key=vms/slots/w-srv-X-1 + /v1/objects/vms/heartbeats/w-srv-X-1  ×3 → живы
+ctl       GET  /v1/list?prefix=vms/placement/                  → {}
+ctl       GET  /v1/list?prefix=vms/workers/                    → {}
+ctl       GET  /v1/list?prefix=vms/cameras/                    → cameras/1..3 (1008, 1010, 1012)
+ctl       GET  /v1/get?key=vms/cameras/1 … 3   ×3              → строки камер, labels vlan:cctv
+ctl       GET  /v1/get?key=vms/placement/1                     → пусто        решения нет
+ctl       GET  /v1/objects?prefix=vms/heartbeats/&scope=cluster → 3 файла
+ctl       GET  /v1/objects?prefix=platform/resources/&scope=cluster → 3 файла
+ctl       GET  /v1/objects/platform/resources/srv-X/heartbeat?scope=cluster ×3 → 571 Б: ресурсы живы
+ctl       GET  /v1/get?key=vms/policy                          → пусто
+ctl       GET  /v1/get?key=platform/drain                      → пусто
+ctl       GET  /v1/list?prefix=vms/servers/                    → {}
+ctl       GET  /v1/get?key=vms/servers/srv-a … srv-c   ×3      → пусто        метки — из heartbeat'ов
+ctl       GET  /v1/objects?prefix=rec/heartbeats/&scope=cluster → {}          записи нет — «дома» нет
+ctl       GET  /v1/get?key=vms/workers/w-srv-a-1 … w-srv-c-1 ×3 → пусто      нагрузка 0 у всех
+ctl       POST /v1/write put vms/placement/1 cas=""             → index 1013     worker w-srv-a-1, reason «most free
+                                                                               capacity (50) among 3 worker(s)…»  ← сначала
+ctl       POST /v1/write put vms/workers/w-srv-a-1 cas=""       → index 1014     units "1", rev 1               ← потом
+ctl       GET  /v1/get?key=vms/placement/2                     → пусто
+ctl       GET  /v1/get?key=vms/workers/w-srv-a-1               → units "1"    у w-srv-a-1 нагрузка 1
+ctl       POST /v1/write put vms/placement/2 cas=""             → index 1015     w-srv-b-1
+ctl       POST /v1/write put vms/workers/w-srv-b-1 cas=""       → index 1016     units "2", rev 1
+ctl       GET  /v1/get?key=vms/placement/3                     → пусто
+ctl       GET  /v1/get?key=vms/workers/w-srv-b-1               → units "2"
+ctl       POST /v1/write put vms/placement/3 cas=""             → index 1017     w-srv-c-1
+ctl       POST /v1/write put vms/workers/w-srv-c-1 cas=""       → index 1018     units "3", rev 1
+ctl       GET  /v1/get?key=vms/placement/1 … 3   ×3            → решения, только что записанные
+ctl       GET  /v1/list?prefix=vms/placement/                  → 1013, 1015, 1017
+ctl       GET  /v1/get?key=vms/workers/w-srv-c-1               → units "3"
+ctl       FILE vms/controller/pass                                              unplaced 0, units_short 0
+ctl       GET  /v1/objects?prefix=vms/snapshot/&scope=cluster  → [unplaced]
+ctl       FILE vms/snapshot/w-srv-a-1                                           389 Б: камера 1, server srv-a
+ctl       FILE vms/snapshot/w-srv-b-1                                           401 Б: камера 2
+ctl       FILE vms/snapshot/w-srv-c-1                                           383 Б: камера 3
+ctl       FILE vms/snapshot/unplaced                                            снова пустой
 
-── подтверждение (T+12.0) ────────────────────────────────────────── (6.1–6.4)
-OP   GET  /cameras                                           → rows 3 × running, configured 3
-con  GET  /v1/var/domain/…  ×12                              → 404  ворота
-con  GET  /v1/vars?prefix=objects/vms/heartbeats/ + w-1..3   → фактическое
-con  GET  /v1/vars?prefix=vms/cameras/ + 1..3                → желаемое
-con  GET  /v1/var/domain/…  ×6                               → 404  фильтр по правам: всего 26 чтений
-OP   GET  /where/1                                           → w-1 + reason, directory w-1
-con  GET  /v1/var/domain/…  ×6, /v1/var/vms/cameras/1, /v1/var/domain/…  ×6
-con  GET  /v1/var/vms/placement/1                            → worker, reason
-con  GET  /v1/vars?prefix=vms/workers/ + w-1..3              → directory: всего 18 чтений
-OP   GET  /metrics                                           → vms_cameras_running 3
-con  GET  heartbeat'ы воркеров ×7, ресурсов ×1, шарды снапшота (листинг и четыре),
-          /v1/var/objects/vms/controller/pass → 404          → ворот нет: всего 38 чтений
-dom  GET  /v1/vars?prefix=objects/vms/snapshot/ + unplaced, w-1..3   (слой над кластером, если он есть)
+── 5 воркеры забирают камеры: у каждого 3 чтения, 1 запись, 1 файл ────────────────────── (5.1–5.5)
+w-srv-a-1 GET  /v1/get?key=vms/workers/w-srv-a-1               → units "1", rev 1 @1014
+w-srv-a-1 GET  /v1/get?key=vms/cameras/1                       → revision 1 @1008
+w-srv-a-1 GET  /v1/get?key=vms/epoch/1                         → пусто        эпохи нет
+w-srv-a-1 POST /v1/write put vms/epoch/1 cas=""                 → index 1019     epoch 1
+          пайплайн: ни одного запроса к хранилищу
+w-srv-a-1 FILE vms/heartbeats/w-srv-a-1                                         736 Б: running, observed_revision 1,
+                                                                                epoch 1, headroom 49
+w-srv-b-1 POST /v1/write put vms/epoch/2 cas=""                 → index 1020     (чтения те же)
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1
+w-srv-c-1 POST /v1/write put vms/epoch/3 cas=""                 → index 1021
+w-srv-c-1 FILE vms/heartbeats/w-srv-c-1
 
-── правка камеры 2 (после T+12.0) ────────────────────────────────── (7.1)
-OP   PUT  /cameras/2  Idempotency-Key: 3f9c1e2a-…            → 200  revision 2
-con  GET  /v1/var/domain/…  ×6, /v1/var/vms/cameras/2, /v1/var/domain/…  ×6
-con  GET  /v1/var/vms/cameras/2   ×4                         → admit_cams: строка до и после правки
-con  PUT  /v1/var/vms/idem/3f9c1e2a-…?cas=0                  → 5130
-con  GET  /v1/var/vms/cameras/2                              → ModifyIndex 4421
-con  PUT  /v1/var/vms/cameras/2?cas=4421                     → 5133  revision 1→2
-con  PUT  /v1/var/vms/idem/3f9c1e2a-…?cas=5130               → 5135  state done
-w-2  GET  /v1/var/vms/workers/w-2                            → units "2"
-w-2  GET  /v1/var/vms/cameras/2                              → revision 2 → перезапуск под той же эпохой
-w-2  PUT  /v1/var/objects/vms/heartbeats/w-2                 → observed_revision 2
+── продление имени и эпох, lease_pass (раз в ~8 с): 2+K чтений, 1 запись ──────────────── (5.2, 8.6)
+w-srv-a-1 GET  /v1/get?key=platform/schema                     → пусто
+w-srv-a-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101 — я, @1004
+w-srv-a-1 POST /v1/write put vms/slots/w-srv-a-1 cas=1004       → index 1022     until +45 от сейчас
+w-srv-a-1 GET  /v1/get?key=vms/epoch/1                         → epoch 1 — моя     по чтению на каждую камеру
+          …то же на w-srv-b-1 и w-srv-c-1
 
-── удаление камеры 2 ─────────────────────────────────────────────── (7.2)
-OP   DELETE /cameras/2                                       → 200  deleted 2
-con  GET  /v1/var/domain/…  ×12 и /v1/var/vms/cameras/2  ×5  → ворота, как у правки
-con  GET  /v1/var/vms/cameras/2                              → есть и не помечена
-con  GET  /v1/var/vms/cameras/2                              → ModifyIndex 5133
-con  PUT  /v1/var/vms/cameras/2?cas=5133                     → 5140  deleted true
-con  GET  /v1/var/vms/retention/2                            → 404  срок не задавали
-con  PUT  /v1/var/vms/retention/2?cas=0                      → 5142  days 0 — пишется и без строки
-w-2  GET  /v1/var/vms/workers/w-2                            → units "2"  (ещё называет её)
-w-2  GET  /v1/var/vms/cameras/2                              → deleted → пайплайн гаснет
-w-2  PUT  /v1/var/objects/vms/heartbeats/w-2                 → status [], headroom 50
-ctl  GET  /v1/vars?prefix=vms/placement/ и по строке: placement/N, cameras/N   → у второй пометка
-ctl  GET  /v1/var/vms/workers/w-2
-ctl  PUT  /v1/var/vms/workers/w-2?cas=4452                   → units "", rev 2       ← сначала
-ctl  GET  /v1/var/vms/placement/2
-ctl  PUT  /v1/var/vms/placement/2?cas=4449                   → worker "", reason deleted  ← потом
-ctl  PUT  /v1/var/objects/vms/snapshot/w-1, w-3              → шарды
-ctl  PUT  /v1/var/objects/vms/snapshot/w-2, unplaced         → пустые
+── между проходами, beat_once (каждые 0,25 с): 1 чтение; раз в 30 с — 2 чтения, 1 объектный ─ (5, 10)
+w-srv-a-1 GET  /v1/objects?prefix=vms/commands/&scope=cluster  → {}           уборка отметок, раз в 30 с
+w-srv-a-1 GET  /v1/list?prefix=objects/vms/commands/           → {}           отметки — строки «только создать»
+w-srv-a-1 GET  /v1/list?prefix=vms/requests/                   → {}           заявок нет; этот листинг — каждый раз
+          тот же листинг vms/requests/ — и в конце каждого прохода (pump_once)
+
+── 6.1 GET /cameras (консоль на srv-b): 22 чтения, 4 объектных ────────────────────────────── (6.1)
+OP        GET  /cameras                                        → 200  rows 3 × running/converged, configured 3
+con       GET  ×18 domain/* (проверка доступа)
+con       GET  /v1/objects?prefix=vms/heartbeats/&scope=cluster → 3 файла     фактическое
+con       GET  /v1/objects/vms/heartbeats/w-srv-X-1?scope=cluster ×3 → 736, 748, 730 Б
+con       GET  /v1/list?prefix=vms/cameras/ + /v1/get?key=vms/cameras/1..3   → желаемое
+
+── 6.2 GET /where/1: 18 чтений ────────────────────────────────────────────────────────────── (6.2)
+OP        GET  /where/1                                        → 200  worker w-srv-a-1 + reason, directory w-srv-a-1
+con       GET  ×12 domain/* (проверка доступа)
+con       GET  /v1/get?key=vms/cameras/1                       → есть
+con       GET  /v1/get?key=vms/placement/1                     → worker, reason @1013
+con       GET  /v1/list?prefix=vms/workers/ + /v1/get?key=vms/workers/w-srv-X-1 ×3 → directory: units "1", "2", "3"
+
+── 6.3 GET /metrics: 8 чтений, 57 объектных ───────────────────────────────────────────────── (6.3)
+OP        GET  /metrics                                        → 200  text/plain, 11 606 Б; vms_cameras_running 3
+con       GET  /v1/objects?prefix=vms/heartbeats/ + три heartbeat'а  ×8 раз → 32 объектных: каждая серия читает заново
+con       GET  /v1/objects?prefix=vms/snapshot/ + снапшоты w-srv-a-1..c-1, /v1/objects/vms/controller/pass → 607 Б
+con       GET  /v1/list?prefix=vms/servers/ + /v1/get?key=vms/servers/srv-a..c ×3 → пусто   ×2, с heartbeat'ами
+          между ними (ещё 3 × 4 объектных)
+con       GET  /v1/objects?prefix=platform/resources/ + три heartbeat'а ресурсов  ×2 → w2c_resources_live 3
+          domain/* не читаются: /metrics без проверки доступа
+
+── 7.1 правка камеры 2 (PUT, консоль на srv-a): 22 чтения, 4 записи ──────────────────────── (7.1)
+OP        PUT  /cameras/2 {events_retention_days: 30}  Idempotency-Key: k-anna-0004 → 200  revision 2
+con       GET  ×12 domain/* (проверка доступа)
+con       GET  /v1/get?key=vms/cameras/2   ×5                   → @1010        строка до правки
+con       POST /v1/write put vms/idem/k-anna-0004 cas=""        → index 1022
+con       GET  /v1/list?prefix=vms/idem/ + /v1/get?key=vms/idem/k-anna-0004   подчистка
+con       GET  /v1/get?key=vms/cameras/2                       → @1010
+con       POST /v1/write put vms/cameras/2 cas=1010             → index 1023     revision 1→2, events_retention_days 30
+con       GET  /v1/get?key=vms/retention/2                     → пусто
+con       POST /v1/write put vms/retention/2 cas=""             → index 1024     days 30: поле задано — пишется
+con       GET  /v1/get?key=vms/alarms_retention/2              → пусто        поле не задано — не пишется
+con       POST /v1/write put vms/idem/k-anna-0004 cas=1022      → index 1025     state done, status 200
+w-srv-b-1 GET  /v1/get?key=vms/workers/w-srv-b-1               → units "2"
+w-srv-b-1 GET  /v1/get?key=vms/cameras/2                       → revision 2 @1023 → перезапуск под той же эпохой
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1                                         эпохи {2: 1}
+
+── 7.2 удаление камеры 3: 20 чтений, 2 записи; ключа идемпотентности у DELETE нет ─────────── (7.2)
+OP        DELETE /cameras/3                                    → 200  {deleted: 3}
+con       GET  ×12 domain/* (проверка доступа)
+con       GET  /v1/get?key=vms/cameras/3   ×7                   → @1012        есть и не помечена
+con       POST /v1/write put vms/cameras/3 cas=1012             → index 1026     та же строка + deleted "true"
+con       GET  /v1/get?key=vms/retention/3                     → пусто
+con       POST /v1/write put vms/retention/3 cas=""             → index 1027     days 0 — пишется и без срока;
+                                                                               alarms_retention не трогается
+w-srv-c-1 GET  /v1/get?key=vms/workers/w-srv-c-1               → units "3"    ещё называет её
+w-srv-c-1 GET  /v1/get?key=vms/cameras/3                       → deleted @1026 → пайплайн гаснет
+w-srv-c-1 FILE vms/heartbeats/w-srv-c-1                                         status []
+          проход контроллера: 27 чтений, 2 записи, 11 объектных, 4 файла
+ctl       POST /v1/write put vms/workers/w-srv-c-1 cas=1018     → index 1028     units "", rev 2        ← сначала
+ctl       POST /v1/write put vms/placement/3 cas=1017           → index 1029     worker "", reason deleted  ← потом
+ctl       FILE vms/controller/pass
+ctl       FILE vms/snapshot/w-srv-a-1, w-srv-b-1, w-srv-c-1
+w-srv-c-1 GET  /v1/get?key=vms/workers/w-srv-c-1               → units "", rev 2 @1028
+w-srv-c-1 FILE vms/heartbeats/w-srv-c-1
 ```
 
 ## Отказы части 8
 
-В основном сценарии этих запросов нет: каждый блок — то, чем отличается от него один отказ.
+В основном сценарии этих запросов нет: каждый блок — то, чем от него отличается один отказ. Каждая сцена — свой прогон с нуля: три камеры созданы и работают, как в конце части 6; правки и удаления части 7 в них нет. Большинство трасс части 8 показывают только записи; чтения в них посчитаны и названы числом.
 
 ```
-── 8.1 «Сохранить» дважды ───────────────────────────────────────────────────
-con² PUT  /v1/var/vms/idem/8f4b21e0-…?cas=0                  → 409  ключ уже занят
-con² GET  /v1/var/vms/idem/8f4b21e0-…                        → pending, id "1": первая ещё пишет
-con² GET  /v1/var/vms/idem/8f4b21e0-…                        → done → тот же 201
-     (или 409 «in flight», если первая так и не дописала)
+── 8.1 «Сохранить» дважды ────────────────────────────────────────────────────────────────── (8.1)
+OP        POST /cameras  Idempotency-Key: k-anna-0001           → 201  id 1   первое нажатие: как в 3.2, idem done @1011
+OP        POST /cameras  Idempotency-Key: k-anna-0001           → 201  id 1   второе, то же тело
+con       GET  ×12 domain/* (проверка доступа)
+con       POST /v1/write put vms/idem/k-anna-0001 cas=""        → 409 conflict, версия 1011   ключ уже занят
+con       GET  /v1/get?key=vms/idem/k-anna-0001                → state done, status 201 → тот же ответ; камера одна
+OP        POST /cameras  Idempotency-Key: k-anna-0001, name «Ворота-2» → 422 «key reused»
+con       GET  ×12 domain/* (проверка доступа)
+con       POST /v1/write put vms/idem/k-anna-0001 cas=""        → 409          sha256 тела другой
+con       GET  /v1/get?key=vms/idem/k-anna-0001                → sha256 не совпадает → 422
 
-── 8.2 два оператора на разных консолях ─────────────────────────────────────
-conA GET  /v1/var/vms/next_id                                → n 1, ModifyIndex 4405
-conБ GET  /v1/var/vms/next_id                                → n 1, ModifyIndex 4405
-conБ PUT  /v1/var/vms/next_id?cas=4405                       → 4418  n 2
-conA PUT  /v1/var/vms/next_id?cas=4405                       → 409
-conA GET  /v1/var/vms/next_id                                → n 2, 4418   (после случайной паузы)
-conA PUT  /v1/var/vms/next_id?cas=4418                       → 4426  n 3
-conA GET  /v1/vars?prefix=vms/cameras/, cameras/1, cameras/2 → источник не занят
-conA PUT  /v1/var/vms/cameras/3?cas=0
+── 8.2 два оператора на разных консолях ───────────────────────────────────────────────────── (8.2)
+OP-anna   POST /cameras «Ворота» → консоль srv-a, Idempotency-Key: k-anna-0001 → 201  id 2
+OP-boris  POST /cameras «Парковка» → консоль srv-b, Idempotency-Key: k-boris-0001 → 201  id 1
+con-a     POST /v1/write put vms/idem/k-anna-0001 cas=""        → index 1007
+con-a     GET  /v1/list?prefix=vms/idem/, /v1/get?key=vms/idem/k-anna-0001
+con-a     GET  /v1/get?key=vms/next_id                         → пусто
+          ── сюда стенд вклинивает весь запрос boris ──
+con-b     POST /v1/write put vms/idem/k-boris-0001 cas=""       → index 1008
+con-b     GET  /v1/list?prefix=vms/idem/, idem/k-anna-0001, idem/k-boris-0001
+con-b     GET  /v1/get?key=vms/next_id                         → пусто
+con-b     POST /v1/write put vms/next_id cas=""                 → index 1009     n 1
+con-b     POST /v1/write put vms/idem/k-boris-0001 cas=1008     → index 1010     id "1"
+con-b     GET  /v1/list?prefix=vms/cameras/                    → {}
+con-b     POST /v1/write put vms/cameras/1 cas=""               → index 1011     «Парковка»
+con-b     GET  retention/1, alarms_retention/1                 → пусто
+con-b     POST /v1/write put vms/idem/k-boris-0001 cas=1010     → index 1012     done
+          ── запрос anna продолжается ──
+con-a     POST /v1/write put vms/next_id cas=""                 → 409 conflict, версия 1009
+con-a     GET  /v1/get?key=vms/next_id                         → n 1 @1009
+con-a     POST /v1/write put vms/next_id cas=1009               → index 1014     n 2
+con-a     POST /v1/write put vms/idem/k-anna-0001 cas=1007      → index 1015     id "2"
+con-a     GET  /v1/list?prefix=vms/cameras/ + /v1/get?key=vms/cameras/1 → источник другой
+con-a     POST /v1/write put vms/cameras/2 cas=""               → index 1016     «Ворота»
+con-a     GET  retention/2, alarms_retention/2                 → пусто
+con-a     POST /v1/write put vms/idem/k-anna-0001 cas=1015      → index 1017     done
+con-a/b   GET  ×24 domain/* (проверка доступа, по 12 на запрос)
 
-── 8.3 метка, которой нет ни на одном сервере ───────────────────────────────
-OP   GET  /where/4                                           → 404  worker null
-OP   GET  /unplaceable                                       → [{id 4, labels [vlan:cctv-dmz], workers_live 3}]
-ctl  PUT  /v1/var/objects/vms/snapshot/unplaced              → cameras [{id 4, …}]
+── 8.3 метка, которой нет ни на одном сервере ─────────────────────────────────────────────── (8.3)
+OP        POST /cameras «Касса», labels [vlan:cctv-dmz]  Idempotency-Key: k-anna-0004 → 201  id 4
+con       POST /v1/write put vms/idem/k-anna-0004 cas=""        → index 1022
+con       POST /v1/write put vms/next_id cas=1011               → index 1023     n 4
+con       POST /v1/write put vms/idem/k-anna-0004 cas=1022      → index 1024     id "4"
+con       POST /v1/write put vms/cameras/4 cas=""               → index 1025     labels vlan:cctv-dmz
+con       POST /v1/write put vms/idem/k-anna-0004 cas=1024      → index 1026     done
+          проход контроллера: 26 чтений, 1 запись, 11 объектных, 5 файлов; размещения и назначения нет
+ctl       POST /v1/write put vms/slots/w-2 cas=""               → index 1027     предложение слота: holder "",
+                                                                               gen 0, offer vlan:cctv-dmz
+ctl       FILE vms/controller/pass                                              unplaced 1, units_short/workers_needed/
+                                                                                spare_offers {vlan:cctv-dmz: 1}
+ctl       FILE vms/snapshot/w-srv-a-1, w-srv-b-1, w-srv-c-1
+ctl       FILE vms/snapshot/unplaced                                            камера 4
+OP        GET  /unplaceable                                    → 200  [{id 4, labels [vlan:cctv-dmz], workers_live 3}]
+con       GET  33 чтения (12 — domain/*), 8 объектных: heartbeat'ы воркеров, слоты (и w-2), ресурсы,
+          vms/policy, platform/drain, platform/decommission/, камеры 1..4, placement/1..4 (4 → пусто), vms/servers/*
 
-── 8.4 замолчал ресурс srv-2 (и 8.6 — слот w-2 отпущен) ─────────────────────
-ctl  PUT  /v1/var/vms/placement/2?cas=4449                   → w-1, reason «resource on srv-2 silent…»   ← первым
-ctl  PUT  /v1/var/vms/workers/w-2?cas=…                      → units ""
-ctl  PUT  /v1/var/vms/workers/w-1?cas=…                      → units "1,2"
+── 8.4 замолчал ресурс srv-b ──────────────────────────────────────────────────────────────── (8.4)
+          50 с: воркеры продлевают имена и пишут heartbeat'ы, ресурсы srv-a и srv-c тоже; ресурс srv-b молчит
+w-srv-a-1 POST /v1/write put vms/slots/w-srv-a-1 cas=1004       → index 1022     until t0+65
+w-srv-a-1 FILE vms/heartbeats/w-srv-a-1
+w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=1005       → index 1023     воркер на srv-b жив
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1
+w-srv-c-1 POST /v1/write put vms/slots/w-srv-c-1 cas=1006       → index 1024
+w-srv-c-1 FILE vms/heartbeats/w-srv-c-1
+res-a     FILE platform/resources/srv-a/heartbeat
+res-c     FILE platform/resources/srv-c/heartbeat
+          …ещё два таких раунда (слоты 1025–1027, 1028–1030); FILE platform/resources/srv-b/heartbeat — ни разу
+          проход контроллера: 27 чтений, 3 записи, 11 объектных, 4 файла
+ctl       POST /v1/write put vms/placement/2 cas=1015           → index 1031     w-srv-a-1, reason «resource on srv-b
+                                                                               silent; most free capacity (49)…»  ← первым
+ctl       POST /v1/write put vms/workers/w-srv-b-1 cas=1016     → index 1032     units ""
+ctl       POST /v1/write put vms/workers/w-srv-a-1 cas=1014     → index 1033     units "1,2", rev 2
+ctl       FILE vms/controller/pass, vms/snapshot/w-srv-a-1, w-srv-c-1, w-srv-b-1
+w-srv-a-1 POST /v1/write put vms/epoch/2 cas=1020               → index 1034     epoch 2: камера 2 теперь здесь
+w-srv-a-1 FILE vms/heartbeats/w-srv-a-1                                         эпохи {1: 1, 2: 2}
+w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=1029       → index 1035     lease_pass: эпоха 2 не его — камеру 2 отдал
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1                                         работает []
 
-── 8.6 w-2 упал: слот просрочен ─────────────────────────────────────────────
-ctl  GET  /v1/vars?prefix=vms/slots/, /v1/var/vms/slots/w-2  → until в прошлом, released false: ждать
-w-2  GET  /v1/var/platform/schema                            → 404  (так выглядело продление, пока он жил)
-w-2  GET  /v1/var/vms/slots/w-2                              → ModifyIndex 5120
-w-2  PUT  /v1/var/vms/slots/w-2?cas=5120                     → 5121  until +45
-new  GET  /v1/var/platform/schema, /v1/vars?prefix=vms/slots/, slots/w-1..w-3, slots/w-2
-new  PUT  /v1/var/vms/slots/w-2?cas=5121                     → holder alloc-0099, gen 2
-new  GET  /v1/var/objects/vms/heartbeats/w-2                 → прежний отчёт: отсюда меряется перерыв
-new  GET  /v1/var/vms/workers/w-2, /v1/var/vms/cameras/2     → units "2": назначение унаследовано
-ctl  GET  /v1/var/vms/slots/w-2                              → по слову оператора (Controller.retire, справочник)
-ctl  PUT  /v1/var/vms/slots/w-2?cas=5120                     → released true — единственное изменение
+── 8.5 воркер один, а не три ──────────────────────────────────────────────────────────────── (8.5)
+          проход контроллера: 25 чтений, 6 записей, 9 объектных, 2 файла
+ctl       POST /v1/write put vms/placement/1 cas=""             → index 1011     w-srv-a-1, «most free capacity (50)
+                                                                               among 1 worker(s)…»
+ctl       POST /v1/write put vms/workers/w-srv-a-1 cas=""       → index 1012     units "1", rev 1
+ctl       POST /v1/write put vms/placement/2 cas=""             → index 1013     w-srv-a-1, capacity (49)
+ctl       POST /v1/write put vms/workers/w-srv-a-1 cas=1012     → index 1014     units "1,2", rev 2
+ctl       POST /v1/write put vms/placement/3 cas=""             → index 1015     w-srv-a-1, capacity (48)
+ctl       POST /v1/write put vms/workers/w-srv-a-1 cas=1014     → index 1016     units "1,2,3", rev 3
+ctl       FILE vms/controller/pass, vms/snapshot/w-srv-a-1                      workers_needed 0
+w-srv-a-1 POST /v1/write put vms/epoch/1, 2, 3 cas=""          → index 1017, 1018, 1019   epoch 1 у каждой
+w-srv-a-1 FILE vms/heartbeats/w-srv-a-1                                         работает [1, 2, 3]
 
-── 8.7 две копии w-2 ─────────────────────────────────────────────────────────
-new  PUT  /v1/var/vms/slots/w-2?cas=1011                     → holder alloc-2b, gen 2
-new  GET  /v1/var/vms/workers/w-2, /v1/var/vms/cameras/2
-new  GET  /v1/var/vms/epoch/2                                → epoch 1
-new  PUT  /v1/var/vms/epoch/2?cas=1024                       → epoch 2
-old  GET  /v1/var/platform/schema                            → 404
-old  GET  /v1/var/vms/slots/w-2                              → holder alloc-2b — не я: никто (seeking), гасит всё
-old  GET  /v1/var/platform/schema  ×2, /v1/vars?prefix=vms/slots/, slots/w-1..w-3
-old  GET  /v1/var/vms/slots/w-4                              → 404
-old  PUT  /v1/var/vms/slots/w-4?cas=0                        → holder alloc-2, gen 1
-old  GET  /v1/var/vms/workers/w-4                            → 404  начинает пустым
-old  PUT  /v1/var/objects/vms/heartbeats/w-4                 → was_fenced «slot w-2 is held by another instance now»
-     переназначение, а не зомби: слот мой, а одна эпоха сменилась —
-wrk  GET  /v1/var/vms/epoch/1, 2, 3                          → у камеры 2 эпоха 2 → гаснет только она
+── 8.6а w-srv-b-1 упал — как развёрнут М11 (воркер не регистрируется у ресурса) ─────────────── (8.6)
+          t+15 с: живые продлевают имена, ресурсы всех трёх серверов пишут heartbeat
+w-srv-a-1 POST /v1/write put vms/slots/w-srv-a-1 cas=1004       → index 1022     until t0+60
+w-srv-c-1 POST /v1/write put vms/slots/w-srv-c-1 cas=1006       → index 1023
+w-srv-a-1, w-srv-c-1  FILE vms/heartbeats/<свой>
+res-a, res-b, res-c   FILE platform/resources/<srv>/heartbeat
+          t+40, t+50, t+95, t+100 с: проходы контроллера — по 33 чтения, 0 записей, 14–22 объектных, 4 файла
+ctl       FILE vms/controller/pass, vms/snapshot/w-srv-a-1, w-srv-b-1, w-srv-c-1   (каждый проход)
+          slot_fate(w-srv-b-1): t+40 alive «holds its name for another 6 s»; t+50 alive «stopped renewing…
+          may still be writing for 41 s more»; t+95, t+100 wait «cannot be told — left to the process and its
+          supervisor». Камера 2 остаётся за w-srv-b-1
+          systemd поднимает w-srv-b-1 заново (новый процесс, то же имя)
+w-srv-b-1 GET  schema, decommission/srv-b                       → пусто
+w-srv-b-1 GET  /v1/list?prefix=vms/slots/ + строки трёх слотов → свой: holder srv-b:4102, until t0+45 — истёк
+w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-b-1                 → @1005
+w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=1005       → index 1032     holder srv-b:4104, gen 2
+w-srv-b-1 GET  /v1/objects/vms/heartbeats/w-srv-b-1?scope=cluster → 748 Б      прежний отчёт
+w-srv-b-1 GET  /v1/get?key=vms/workers/w-srv-b-1               → units "2"    назначение на месте
+w-srv-b-1 GET  /v1/get?key=vms/cameras/2                       → @1010
+w-srv-b-1 GET  /v1/get?key=vms/epoch/2                         → epoch 1 @1020
+w-srv-b-1 POST /v1/write put vms/epoch/2 cas=1020               → index 1033     epoch 2
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1                                         работает [2] под эпохой 2
 
-── 8.8 камер больше, чем ёмкости ────────────────────────────────────────────
-new  PUT  /v1/var/vms/slots/w-2?cas=0                        → второй воркер, после nomad job scale
-new  PUT  /v1/var/objects/vms/heartbeats/w-2                 → capacity 50, headroom 50
+── 8.6б то же, но воркеры зарегистрированы у ресурса (Worker.present) ───────────────────────── (8.6)
+          t+15 с и t+40 с — как в 8.6а
+          t+50 с: слот истёк, ресурс srv-b говорит «процесс не работает» — fate move;
+          проход: 38 чтений, 4 записи (одна из них — эпоха воркера), 22 объектных, 4 файла
+ctl       POST /v1/write put vms/placement/2 cas=1015           → index 1028     w-srv-a-1, reason «w-srv-b-1's process
+                                                                               on srv-b is not running: moved when its slot ran out…»
+ctl       POST /v1/write put vms/workers/w-srv-b-1 cas=1016     → index 1029     units "", rev 2
+ctl       POST /v1/write put vms/workers/w-srv-a-1 cas=1014     → index 1030     units "1,2", rev 2
+ctl       FILE vms/controller/pass, vms/snapshot/w-srv-a-1, w-srv-c-1, w-srv-b-1
+w-srv-a-1 POST /v1/write put vms/epoch/2 cas=1020               → index 1031     epoch 2
+          t+95, t+100 с: по 34 чтения, 0 записей; fate move
+          systemd поднимает w-srv-b-1: те же чтения слотов, затем
+w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=1005       → index 1036     holder srv-b:4104, gen 2
+w-srv-b-1 GET  /v1/objects/vms/heartbeats/w-srv-b-1?scope=cluster → 765 Б
+w-srv-b-1 GET  /v1/get?key=vms/workers/w-srv-b-1               → units "", rev 2   начинает пустым
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1                                         работает []
 
-── 8.9 строка не читается ────────────────────────────────────────────────────
-w-2  GET  /v1/var/vms/slots/w-2                              → until «завтра», ModifyIndex 1028
-w-2  PUT  /v1/var/vms/slots/w-2?cas=1028                     → переписана целиком
-w-2  GET  /v1/var/vms/epoch/2                                → epoch «два»
-w-2  PUT  /v1/var/objects/vms/heartbeats/w-2                 → камера 2: failed, why «its epoch could not be taken…»
+── 8.7 две копии w-srv-a-1 ────────────────────────────────────────────────────────────────── (8.7)
+w-srv-a-1² GET schema, decommission/srv-a                       → пусто         вторая копия, srv-a:4104
+w-srv-a-1² GET /v1/list?prefix=vms/slots/ + слоты всех трёх, затем свой ещё раз → holder srv-a:4101 @1004
+w-srv-a-1² POST /v1/write put vms/slots/w-srv-a-1 cas=1004      → index 1022     holder srv-a:4104, gen 2
+w-srv-a-1² GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster → 736 Б
+w-srv-a-1² GET /v1/get?key=vms/workers/w-srv-a-1               → units "1"
+w-srv-a-1² GET /v1/get?key=vms/cameras/1                       → @1008
+w-srv-a-1² GET /v1/get?key=vms/epoch/1                         → epoch 1 @1019
+w-srv-a-1² POST /v1/write put vms/epoch/1 cas=1019              → index 1023     epoch 2
+w-srv-a-1² FILE vms/heartbeats/w-srv-a-1                                        работает [1] под эпохой 2
+w-srv-a-1  GET /v1/get?key=platform/schema                     → пусто         первая копия просыпается
+w-srv-a-1  GET /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4104, gen 2 — не я:
+                                                                 камеру 1 теряет, recording_allowed false
+
+── 8.8 камер больше, чем ёмкости (в трассе CAPACITY=1) ────────────────────────────────────── (8.8)
+con       POST /v1/write put vms/next_id cas=1011               → index 1022     n 4
+con       POST /v1/write put vms/cameras/4 cas=""               → index 1023     «Касса», vlan:cctv
+          консоль и проход контроллера вместе: 33 чтения, 3 записи, 11 объектных, 5 файлов
+ctl       POST /v1/write put vms/slots/w-2 cas=""               → index 1024     предложение: offer vlan:cctv, gen 0
+ctl       FILE vms/controller/pass                                              units_short, workers_needed,
+                                                                                spare_offers {vlan:cctv: 1}
+ctl       FILE vms/snapshot/w-srv-a-1, w-srv-b-1, w-srv-c-1, unplaced
+          w2c-spares.sh на srv-c читает /metrics: vms_workers_needed{labels="vlan:cctv"} 1, vms_units_short 1,
+          vms_spare_offers 1 → systemd-run --unit vms-vmsworker-spare-1 --setenv SPARE_FOR=vlan:cctv
+w-2       POST /v1/write put vms/slots/w-2 cas=1024             → index 1025     holder srv-c:4104, gen 1, taken_at
+                                                                               (запасной: 7 чтений, 1 объектный)
+w-2       FILE vms/heartbeats/w-2
+          проход контроллера и запасного вместе: 34 чтения, 3 записи, 12 объектных, 7 файлов
+ctl       POST /v1/write put vms/placement/4 cas=""             → index 1026     w-2, «most free capacity (1)
+                                                                               among 4 worker(s)…; on srv-c»
+ctl       POST /v1/write put vms/workers/w-2 cas=""             → index 1027     units "4", rev 1
+ctl       FILE vms/controller/pass, vms/snapshot/w-srv-a-1, w-srv-b-1, w-srv-c-1, w-2, unplaced
+w-2       POST /v1/write put vms/epoch/4 cas=""                 → index 1028     epoch 1
+w-2       FILE vms/heartbeats/w-2                                               работает [4]
+
+── 8.9 строка не читается ─────────────────────────────────────────────────────────────────── (8.9)
+root      POST /v1/write put vms/cameras/2 cas=1010             → index 1022     revision «два» (правка руками)
+          проход контроллера: 24 чтения, 0 записей, 11 объектных, 4 файла; garbled 1, камера 2 остаётся на w-srv-b-1
+ctl       FILE vms/controller/pass, vms/snapshot/w-srv-a-1, w-srv-c-1, w-srv-b-1
+w-srv-b-1 GET  /v1/get?key=vms/workers/w-srv-b-1               → units "2"
+w-srv-b-1 GET  /v1/get?key=vms/cameras/2                       → revision «два» @1022 — не разбирается
+w-srv-b-1 FILE vms/heartbeats/w-srv-b-1                                         камера 2 running по прежней строке,
+                                                                                why «its row does not parse…»
+OP        GET  /cameras                                        → 200  у камеры 2 в rows то же why
+
+── 8.10 списание сервера srv-c ────────────────────────────────────────────────────────────── (8.10)
+OP        POST /servers/srv-c/decommission {why: «srv-c сгорел»} → 409 «server answers»: ресурс слышен 0 с назад
+          100 с спустя srv-c молчит
+OP        POST /servers/srv-c/decommission {why: «srv-c сгорел»} → 202 state requested,
+                                                                 subsystems.vms: workers [w-srv-c-1], units ["3"]
+con       15 чтений, 58 объектных, затем
+con       POST /v1/write put platform/decommission/srv-c cas=null → index 1028  by anna, why
+          проход контроллера: 30 чтений, 5 записей, 11 объектных, 4 файла
+ctl       POST /v1/write put vms/slots/w-srv-c-1 cas=1006       → index 1029     released true
+ctl       POST /v1/write put vms/decommissioned/srv-c cas=null  → index 1030     slots w-srv-c-1, units "3"
+ctl       POST /v1/write put vms/placement/3 cas=1017           → index 1031     w-srv-a-1, reason «slot w-srv-c-1
+                                                                               released; most free capacity (49)…»
+ctl       POST /v1/write put vms/workers/w-srv-c-1 cas=1018     → index 1032     units ""
+ctl       POST /v1/write put vms/workers/w-srv-a-1 cas=1014     → index 1033     units "1,3", rev 2
+ctl       FILE vms/controller/pass                                              servers_decommissioned [srv-c],
+                                                                                slots_released [w-srv-c-1]
+ctl       FILE vms/snapshot/w-srv-a-1, w-srv-b-1, w-srv-c-1
 ```
 
 ## Итог по числам
 
-| Что | Запросов к Nomad | Из них работы |
-|---|---|---|
-| создание камеры 1 | 23 | 9: пять записей и четыре чтения; плюс 12 чтений ворот и 2 подчистки |
-| создание камеры 2 / камеры 3 | 22 / 23 | 9 и по чтению на каждую уже заведённую камеру; подчистки нет |
-| первый проход контроллера, три камеры | 395 чтений, 10 записей | 6 записей размещения и 4 шарда снапшота |
-| холостой проход контроллера | 134 чтения, 4 записи | только снапшот |
-| воркер поднимает камеру | 4 | назначение, строка, эпоха — чтение и запись |
-| продление воркера | 3 + по чтению на камеру | одна запись — слот |
-| `GET /cameras` / `/where/1` / `/metrics` | 26 / 18 / 38 | ворота — 18, 12 и 0 из них |
-| правка | 21 | 4; ключ идемпотентности страница шлёт, для `PUT` он необязателен |
-| удаление | 22 | 5; ключа идемпотентности нет вовсе |
+| Что | Хранилище | Объекты | Из них работы |
+|---|---|---|---|
+| создание камеры 1 | 18 чтений, 5 записей | — | 5 записей и 6 чтений; 12 чтений — `domain/*` |
+| создание камеры 2 / камеры 3 | 17 / 18 чтений, по 5 записей | — | подчистки `idem` нет; по чтению на каждую уже заведённую камеру |
+| проход контроллера по пустому кластеру | 18 чтений, 0 записей | 10 запросов, 2 файла | только отчёт прохода и пустой `unplaced` |
+| первый проход контроллера, три камеры | 31 чтение, 6 записей | 11 запросов, 5 файлов | 3 размещения, 3 назначения, снапшот |
+| устойчивый проход контроллера, три камеры | 25 чтений, 0 записей | 11 запросов, 4 файла | только отчёт и снапшот |
+| воркер поднимает камеру | 3 чтения, 1 запись | 1 файл | назначение, строка, эпоха — чтение и запись |
+| продление воркера (`lease_pass`) | 2 + по чтению на камеру, 1 запись | — | одна запись — слот |
+| между проходами (`beat_once`, 0,25 с) | 1 чтение; раз в 30 с — 2 | раз в 30 с — 1 запрос | заявки; раз в 30 с — уборка отметок команд |
+| `GET /cameras` / `/where/1` / `/metrics` | 22 / 18 / 8 чтений | 4 / 0 / 57 запросов | `domain/*` — 18, 12 и 0 из них |
+| правка | 22 чтения, 4 записи | — | 12 чтений — `domain/*`; ключ идемпотентности страница шлёт и для `PUT` |
+| удаление | 20 чтений, 2 записи | — | 12 чтений — `domain/*`; ключа идемпотентности нет вовсе |
 
-Обратите внимание на асимметрию в конце: **воркер гасит видео раньше, чем контроллер тронул размещение**. Консоль только помечает строку, воркер на своём проходе её пропускает, а контроллер приходит потом и делает две записи бухгалтерии ([часть 7](07-edit-and-delete.md)). И на число чтений холостого прохода: оно растёт как `камеры × (воркеры + 16)`, потому что контроллер ничего не запоминает внутри прохода ([4.6](04-placement.md), [часть 10](10-limits-and-scale.md)).
+Обратите внимание на асимметрию в 7.2: **воркер гасит видео раньше, чем контроллер тронул размещение**. Консоль только помечает строку, воркер на своём проходе её пропускает, а контроллер приходит потом и делает две записи учёта ([часть 7](07-edit-and-delete.md)). И на число чтений прохода контроллера: в устойчивом проходе оно растёт примерно как `2 × камеры + 19`, потому что контроллер читает каждую строку камеры и её размещение заново. Объектных запросов при этом около 11 на проход, сколько бы ни было камер: heartbeat'ы, ресурсы и снапшоты читаются списком ([4.6](04-placement.md), [часть 10](10-limits-and-scale.md)). Объектные чтения на стенде не кэшируются; в продукте `LIST_FRESH=1.0` с, и запросов будет меньше.
 
 ---
 

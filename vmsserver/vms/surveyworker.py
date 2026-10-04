@@ -73,7 +73,7 @@ class SurveyWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("SURVEY_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")
+        self.archive_root = runtime.events_root(env, archive_root)
         self.step = self.STEP if step is None else float(step)
         self.fetch = fetch or _fetch_bytes           # the door: reading, and what costs a session
         self.index = index or device_recordings      # the listing: where the footage is, and it costs none

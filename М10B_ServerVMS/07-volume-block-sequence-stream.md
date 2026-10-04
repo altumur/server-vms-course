@@ -282,7 +282,7 @@ def classify(e: Exception) -> ArchiveError:
 
 Два флага говорят, что произошло: `formatted` — том был новым, `reattached` — демон вернул писателя, которого оставил исчезнувший процесс (шаг 12). Читателям писатель не нужен: консоль и другие открывают том с `open(write=False)`.
 
-`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`: ничего не объявлено, регистратор форматирует том своего сервера — `volume` рядом с деревом ресурса, `file:///data/volume` возле `/data/archive` (урок 10), — и пишет в него поток `1/e<эпоха>`.
+`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`: ничего не объявлено, регистратор форматирует том своего сервера — без `ARCHIVE_VOLUME` это `volume` рядом с деревом ресурса (на коробке точка входа задаёт `file:///data/vms/obsd/volume`, урок 10), — и пишет в него поток `1/e<эпоха>`.
 
 ## Шаг 8 — Положить кадр, закончить поток, изменить размер
 

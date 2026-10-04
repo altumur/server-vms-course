@@ -1,0 +1,36 @@
+# /etc/sysusers.d/w2c.conf — who the PLATFORM's processes run as on this box, and the groups of its clients.
+# Installed and applied by install-obsd.sh (`systemd-sysusers`), beside `obsd.conf` (the VMS's archive engine).
+# ================================================================================================
+# NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
+# ================================================================================================
+# # w2c.sysusers — the user `w2c` and the three groups its services let in
+#
+# **Role.** The platform's processes no longer run as root on the box (the owner's decision, 4 October): the
+# resource is `w2c`. What made it root — its retention deleting buckets the workers wrote as root — is gone with
+# the shape below: a platform service owns its directory, and whoever writes into it is a CLIENT, by a group of its
+# own — the same pattern as obsd (`vms-obsd`) and, in a cluster, configstore (a socket per role).
+#
+# - `u w2c 2100` — the platform's user, its primary group `w2c` with the same number: the events archive
+#   (`/data/platform/events`) is its, and only the resource deletes buckets there, mirrors and restores them.
+# - `g w2c-events 2102` — the events archive's clients: every process that writes its buckets (the holder, the
+#   recorder, the detector, the scan, the survey, the evaluator, the console's marks) joins it; the tree is setgid
+#   to it, and every writer's umask is 0007 — so every bucket a client makes is a file of this group, mode 0660, in
+#   directories of this group, 2770, and the resource, a member, deletes it.
+# - `g w2c-store 2103` — the platform's file stores (`file://`): `/data/platform/config` (the rows) and
+#   `/data/platform/objects` (heartbeats, the snapshot), setgid to it. Every process opens them, and so the
+#   resource — not root — still takes the rows' lock, writes `platform/doors/<server>` and its heartbeat.
+# - `g w2c-secrets 2104` — the cluster's key ring, `/etc/w2c/secrets/platform.key` (0640, this group): the
+#   processes that seal or open a secret (the console, the holder, the recorder) join it, nobody else.
+#
+# FIXED NUMBERS, all four, for the reason `vms-obsd` has one (`obsd.sysusers`): the box's processes run in
+# containers, which have no /etc/passwd or /etc/group of the host's — they run as `User=2100` and join
+# `GroupAdd=2102`, by number. `install-obsd.sh` refuses a box where one of these names exists with another number.
+# The names are the product's (`/var/lib/w2c/events`, the group `w2c-events`; its install.sh); the numbers are
+# the course's box's.
+# ================================================================================================
+u w2c          2100     "w2c platform (the resource)" /data/platform -
+g w2c-events   2102     -
+g w2c-store    2103     -
+g w2c-secrets  2104     -
+m w2c          w2c-events
+m w2c          w2c-store
