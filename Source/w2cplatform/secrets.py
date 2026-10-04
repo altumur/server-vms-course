@@ -43,7 +43,8 @@ Everything between those two points renders it as `***`."""
 # - `is_credential_param(name)`, `credential_params(url)`, `hide_in_url(value)` — a credential carried in an
 #   address's parameters (the eleventh review, blocker 4): refused where a url field is written
 #   (`SubsystemSpec.refuse`), hidden wherever a stored one is said. Pairs in the path and in chains too (the twelfth
-#   review, blocker 8).
+#   review, blocker 8). `said_name(name)` — a parameter's name as a refusal may say it (one that hides a pair, `pass%3D…`,
+#   by that pair's name). `hide_logins(s)` — whatever stands before an `@`, as `…`.
 # - `address_refusal(value)` — why an address may not be stored, in words that never repeat it (a spec's url field — a
 #   camera's source —, a volume's url, the domain's kept edits, a camera's own console), an address inside a parameter
 #   too (the thirteenth review, blocker 6); `NOT_AN_ADDRESS` — the words for one `urlsplit` cannot read;
@@ -114,11 +115,16 @@ def _masked(v, depth: int = 0):
 # enough). A name outside the list is a parameter like any other: the list is what the refusal names, and a camera
 # that hides its password under another name is one to add to it. `p`, `code`, `pin` are not on it: too many cameras
 # mean something else by them (a profile, a codec), and a list that refuses those refuses cameras, not passwords.
+#
+# …and the product's r28-secrets2: a Wi-Fi key (`psk`, `wpa_psk`) and a private key (`privkey`) are credentials; `auth` as
+# the LAST word of a longer name is not — `<x>_auth=1`, `enable_auth=0`, `basic_auth`, `x-auth` say how the other end
+# authenticates, not with what (decided as the product; `auth` alone, `authorization`, `authkey`, `authtoken` still are).
 _CRED_NAMES = frozenset({"user", "usr", "username", "userid", "login", "loginuse", "loginpas", "loginpass", "account",
                          "key", "keyid", "apikey", "authkey", "accesskey", "secretkey", "sig", "signature", "sid",
                          "session", "sessionid", "pw", "psd", "pass", "password", "passwd", "pwd", "psw", "userpass",
                          "passcode", "passphrase", "secret", "token", "auth", "authorization", "cred", "creds",
-                         "credential", "credentials"})
+                         "credential", "credentials", "psk", "privkey", "privatekey"})
+_MODES = frozenset({"auth"})                             # a last word that names a mode, unless it is the whole name
 _PASSWORD = ("password", "passwd", "pwd", "psw", "secret")
 _GLUED_HEAD = ("password", "passwd", "pwd", "psw")
 _GLUED_TAIL = ("password", "passwd", "pwd", "secret", "token")
@@ -140,15 +146,34 @@ def _unquoted(s: str) -> str:
     return s
 
 
+# A NAME THAT HIDES A PAIR (the product's r28-secrets2): `?pass%3Dhunter2=1` is, unescaped, `pass=hunter2` — a pair inside
+# the name — and the name read as one word was nobody's. A name whose unescaping holds a `=`, `&` or `;` is read as the
+# pairs it holds, each by its own name; and said by that name alone (`said_name`), never by what follows it.
+_HIDDEN_PAIR = re.compile(r"[=&;]")
+
+
 def is_credential_param(name: str) -> bool:
+    text = _unquoted(str(name))
+    if _HIDDEN_PAIR.search(text):
+        return any(_credential_words(part.split("=", 1)[0]) for part in re.split(r"[&;]", text))
+    return _credential_words(text)
+
+
+def _credential_words(text: str) -> bool:
     # NFKC: a full-width `ｐｗｄ` is `pwd` to whoever reads it (a probe of the thirteenth review)
-    words = [w.lower() for w in _WORDS.findall(unicodedata.normalize("NFKC", _unquoted(str(name))).strip())]
+    words = [w.lower() for w in _WORDS.findall(unicodedata.normalize("NFKC", text).strip())]
     if not words:
         return False
     bare = "".join(words)
     tail = words[:-1] if len(words) > 1 and words[-1] == "id" else words
-    return (bare in _CRED_NAMES or tail[-1] in _CRED_NAMES or tail[-1].endswith(_GLUED_TAIL)
+    return (bare in _CRED_NAMES or (tail[-1] in _CRED_NAMES and tail[-1] not in _MODES) or tail[-1].endswith(_GLUED_TAIL)
             or any(w in _PASSWORD or w.startswith(_GLUED_HEAD) for w in words))
+
+
+def said_name(name: str) -> str:
+    """A parameter's name as a refusal may say it: as written — or, for one that hides a pair, the name of that pair."""
+    text = _unquoted(str(name))
+    return _HIDDEN_PAIR.split(text, 1)[0] if _HIDDEN_PAIR.search(text) else str(name)
 
 
 # PAIRS IN THE PATH ARE PAIRS (the twelfth review, blocker 8; a run). Pairs were read in the query and after a `;` in a
@@ -214,8 +239,8 @@ def _pairs(s: str) -> tuple[tuple[str, int, int], ...]:
 
 
 def credential_params(url: str) -> list[str]:
-    """The names of the parameters of `url` that carry a credential, as written."""
-    return [name for name, _, _ in _pairs(str(url)) if is_credential_param(name)]
+    """The names of the parameters of `url` that carry a credential, as written (`said_name`)."""
+    return [said_name(name) for name, _, _ in _pairs(str(url)) if is_credential_param(name)]
 
 
 # …and a stored one is never said (a row kept from before the refusal; one another build wrote): whatever stands before
@@ -226,7 +251,19 @@ def credential_params(url: str) -> list[str]:
 # A run up to an `@`, tried only where a run can begin — the start, or after a `/` or an `@` (the eleventh review's
 # sweep): unanchored, `[^/@]*@` was tried from every position of a run with no `@` in it, and a source of 100 000
 # characters held a console's thread for minutes. The same matches; one scan of the string.
-USERINFO = re.compile(r"(?<![^/@])[^/@]*@")
+#
+# …AND NOT ACROSS A QUERY'S PAIRS (the product's r28-secrets2): `x://10.0.0.5:554/s?x=y@b` was said
+# `x://10.0.0.5:***/…@b` — the run from the path's segment took `s?x=y`, and the `@` made the port a secret. A run
+# begins after a `/`, an `@`, a `&`, a `;` or an `=` and ends at the next of them: `?x=…@b`. It may cross a `?` (a
+# secret with a `/` and a `?` in it, `KEY:12/3?4@host`). Only at an address's authority — right after its `://` — does
+# it run across all of them, as a userinfo with `=` or `&` in its password does (`_AUTHORITY_LOGIN`).
+USERINFO = re.compile(r"(?<![^/@&;=])[^/@&;=]*@")
+_AUTHORITY_LOGIN = re.compile(r"(?<=://)[^/@]*@")
+
+
+def hide_logins(s: str) -> str:
+    """Whatever stands before an `@` in `s`, as `…`."""
+    return USERINFO.sub("…@", _AUTHORITY_LOGIN.sub("…@", s))
 
 
 # WHERE AN ADDRESS NAMES ITS HOST: the authority — and, for a scheme that names its host in the path, the path's first
@@ -248,13 +285,22 @@ def _hosts(s: str) -> list[tuple[int, int]]:
 
 # The span of a host's port when it is no port: not digits — or digits followed, past the host, by an `@`
 # (`s3://KEY:12/34…@host`: the `/` cut a secret that begins with digits, and its head stood where a port does).
+#
+# …an `@` of THIS address's: before any pair and any address inside it (the product's r28-secrets2). go2rtc's
+# `http://h:1984/api/s?src=x://admin:…@h2` was said `h:***`: the `@` of the address in its `src` made the
+# relay's own port a secret.
 def _port_span(s: str, lo: int, hi: int) -> tuple[int, int] | None:
     host = s[lo:hi]
     colon = host.rfind(":")
     if colon < 0 or (host.startswith("[") and colon < host.find("]")):
         return None
     port = host[colon + 1:]
-    return (lo + colon + 1, hi) if port and (not port.isdigit() or "@" in s[hi:]) else None
+    return (lo + colon + 1, hi) if port and (not port.isdigit() or _login_after(s, hi)) else None
+
+
+def _login_after(s: str, i: int) -> bool:
+    at = s.find("@", i)
+    return at >= 0 and not any(0 <= s.find(mark, i, at) for mark in ("=", "&", ";", "://"))
 
 
 # AN ADDRESS INSIDE AN ADDRESS (the thirteenth review, blocker 6; a run). A relay is told what to fetch in a parameter —
@@ -267,13 +313,21 @@ def _port_span(s: str, lo: int, hi: int) -> tuple[int, int] | None:
 _NESTED = 3
 
 
+# …and one whose `//` stands unescaped (`/proxy/x%3A//admin%3A…%40h2/s`, a probe beside the product's
+# r28-secrets2): each segment alone is no address, the escaped `:` and the literal `//` together are. The rest of the
+# path from that segment is the address. Each segment is unescaped once: one scan, whatever the path's length.
 def _nested(s: str) -> list[tuple[str, int, int, str]]:
     out = []
     at = s.find("://")
     q = s.find("?", at + 3)
-    for a, b in _split(s, at + 3, len(s) if q < 0 else q, "/"):
-        if "%" in s[a:b] and "://" in _unquoted(s[a:b]):
-            out.append(("a path segment", a, b, _unquoted(s[a:b])))
+    end = len(s) if q < 0 else q
+    segs = [(a, b, _unquoted(s[a:b]) if "%" in s[a:b] else s[a:b]) for a, b in _split(s, at + 3, end, "/")]
+    for a, b, u in segs:
+        if "%" in s[a:b] and "://" in u:
+            out.append(("a path segment", a, b, u))
+        elif "%" in s[a:b] and b < end and "://" in u[-3:] + _unquoted(s[b:min(end, b + 9)]):
+            out.append(("a path segment", a, end, _unquoted(s[a:end])))
+            break
     for name, a, b in _pairs(s):
         inner = _unquoted(s[a:b])
         if "://" in inner:
@@ -282,10 +336,14 @@ def _nested(s: str) -> list[tuple[str, int, int, str]]:
 
 
 def hide_in_url(value, _depth: int = 0):
-    if not isinstance(value, str) or "://" not in value:
+    if not isinstance(value, str):
         return value
-    s = USERINFO.sub("…@", value)
-    spans = [(a, b) for name, a, b in _pairs(s) if b > a and is_credential_param(name)]
+    if "://" not in value:
+        return SECRET_MASK if _escaped_whole(value) and address_refusal(value, _depth) else value
+    s = hide_logins(value)
+    # a pair's value — and, for a name that hides a pair (`pass%3D…=1`), the name with it
+    spans = [(a - 1 - len(name) if _HIDDEN_PAIR.search(_unquoted(name)) else a, b) for name, a, b in _pairs(s)
+             if b > a and is_credential_param(name)]
     for lo, hi in _hosts(s):
         port = _port_span(s, lo, hi)
         if port is not None:
@@ -322,11 +380,21 @@ NOT_AN_ADDRESS = ("its host or port cannot be read — a password with an unesca
                   "the login goes in its own field")
 
 
+# AN ADDRESS ESCAPED WHOLE (the product's r28-secrets2, the domain's door): `["x%3A%2F%2Fadmin%3A…%40h2"]` has no
+# `://` to see, and was no address — taken, kept, handed on to whoever unescapes it. A value that is an
+# address once unescaped is that address: refused for what it would be refused for, and said masked whole.
+def _escaped_whole(s: str) -> bool:
+    return "%" in s and "://" in _unquoted(s)
+
+
 def address_refusal(value, _depth: int = 0) -> str | None:
     from urllib.parse import urlsplit
     s = str(value)
     if "://" not in s:
-        return None
+        if not _escaped_whole(s):
+            return None
+        why = address_refusal(_unquoted(s), _depth + 1)
+        return f"it is an address escaped whole that may not be stored: {why}" if why else None
     if _depth > _NESTED:
         return f"it nests addresses more than {_NESTED} deep, and what is not read is not known to carry no login"
     try:

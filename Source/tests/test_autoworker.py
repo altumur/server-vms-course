@@ -581,23 +581,33 @@ def test_the_merge_says_which_servers_a_window_is_missing():
     """A reader that decides on a window needs to know it is whole. The merge now says so, server by server:
     one live by heartbeat that did not answer; one that answered but is rebuilding after a restart (its own
     `catching up`); one silent inside the window. A server silent since before the window cannot have
-    written in it, and does not make it incomplete."""
+    written in it, and does not make it incomplete. Silent by what the merge SAW (the product's r29-writers2): a
+    heartbeat that has not changed for `lost_after` of the reader's clock — srv-d and srv-e stopped a minute ago, and
+    srv-e's last word, by its own clock, is two hours old: it wrote nothing in the window."""
     import json as _json
     from w2cplatform.eventdatabase import MergedIndex
     box = Box()
-    now = box.wall()
-    for server, age in (("srv-a", 0), ("srv-b", 0), ("srv-c", 0), ("srv-d", 60), ("srv-e", 7200)):
-        box.objects.put(f"platform/resources/{server}/heartbeat",
-                        _json.dumps({"server": server, "ts": now - age, "url": f"http://{server}"}).encode())
+
+    def beat(servers, age=0):
+        for server in servers:
+            box.objects.put(f"platform/resources/{server}/heartbeat",
+                            _json.dumps({"server": server, "ts": box.wall() - age, "url": f"http://{server}"}).encode())
 
     def fetch(url, params):
         if url == "http://srv-b":
             raise OSError("timed out")
         return {"events": [], "truncated": False, "state": "catching up" if url == "http://srv-c" else "live"}
 
-    rep = MergedIndex(box.objects, fetch=fetch, wall=box.wall).query(now - 300, now)
+    m = MergedIndex(box.objects, fetch=fetch, wall=box.wall, clock=box.clock)
+    beat(("srv-a", "srv-b", "srv-c", "srv-d"))
+    beat(("srv-e",), age=7200)
+    m.query(box.wall() - 300, box.wall())                     # the first look: every heartbeat taken as just changed
+    box.wall.advance(60); box.clock.advance(60)
+    beat(("srv-a", "srv-b", "srv-c"))
+    now = box.wall()
+    rep = m.query(now - 300, now)
     assert rep["complete"] is False
-    assert rep["incomplete"] == {"srv-b": "did not answer", "srv-c": "said catching up", "srv-d": "silent"}
+    assert rep["incomplete"] == {"srv-b": "did not answer", "srv-c": "said catching up", "srv-d": "silent"}, rep
 
 
 # -- the notes on the event log's load: one query per kind a pass, and what a pass costs ----------------------

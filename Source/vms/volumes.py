@@ -311,15 +311,20 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 # a row — nothing here writes configuration on a process's behalf. The operator presses the button, and
 # from that moment the disk is a volume with a number on it, which is the whole point: the number can be
 # made smaller, and a second volume can have the rest.
-def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0) -> list[dict]:
-    from w2cplatform.console import heartbeats
+#
+# Who is live — here and in `served`'s three readers below — by what the asker saw CHANGE (`eyes`, its long-lived
+# `Eyes`; the product's r29-writers2): `now - hb.ts` was the recorder's clock against the console's, with no bound ahead.
+# Without eyes, `is_live` (bounded both ways). A hold is live likewise: renewed within a slot's term of the asker's clock,
+# not before the `until` its holder's clock wrote (`_hold_live`).
+def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0, eyes=None) -> list[dict]:
+    from w2cplatform.console import heard_live, heartbeats
     from w2cplatform.resource import resources_seen
     have = {v.server for v in declared(vars_) if on_a_box(v)}
     res = resources_seen(objects)
     out = {}
     for name, hb in heartbeats(objects, sub.name + "/").items():
         server, root = str(hb.extra.get("server", "")), str(hb.extra.get("archive", ""))
-        if not server or not root or server in have or now - hb.ts > lost_after:
+        if not server or not root or server in have or not heard_live(sub.name, name, hb, now, lost_after, eyes):
             continue
         # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
         # with the resource's events: declared at the partition's size, the ring would be resized past the room.
@@ -359,16 +364,25 @@ def holders(vars_, sub: Subsystem, garbled: set | None = None) -> dict[str, Slot
 # see, because `home: <that volume>` is a preference and would otherwise put the footage somewhere else
 # without a word. `wanted`/`serving` is the same arithmetic one line up: how many processes the declared
 # list needs, and how many of them exist.
-def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=None) -> dict:
+def _hold_live(sub: Subsystem, name: str, slot, now: float, eyes) -> bool:
+    if slot is None or slot.released or slot.holder == "":
+        return False
+    if eyes is None:
+        return now <= slot.until
+    from w2cplatform.contract import SLOT_TERM
+    return eyes.age(sub.hold_key(name), (slot.holder, slot.until, slot.gen)) <= SLOT_TERM
+
+
+def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=None, eyes=None) -> dict:
     garbled, unread = set(), set()
     vols, held = declared(vars_, unread), holders(vars_, sub, garbled)
-    broken = _unwritable(objects, sub, now, lost_after) if objects is not None else {}
-    writing = _writing(objects, sub, now, lost_after) if objects is not None else {}
-    refusing = _refusing(objects, sub, now, lost_after) if objects is not None else {}
+    broken = _unwritable(objects, sub, now, lost_after, eyes) if objects is not None else {}
+    writing = _writing(objects, sub, now, lost_after, eyes) if objects is not None else {}
+    refusing = _refusing(objects, sub, now, lost_after, eyes) if objects is not None else {}
     rows = []
     for v in vols:
         slot = held.get(v.name)
-        live = slot is not None and not slot.released and slot.holder != "" and now <= slot.until
+        live = _hold_live(sub, v.name, slot, now, eyes)
         err = broken.get(v.name) if live else None
         # The rule at the source — and the url as a page may say it (`hide_in_url`; the twelfth review, major 15): a row
         # declared before `refuse` saw `?X-Amz-Credential=…`, `?secret=…` or `KEY:SECRET@` stood on `/volumes` as stored.
@@ -390,7 +404,7 @@ def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=
     # it, is shown; it writes by the row it read last (`RecWorker.volume_pass`).
     for name in sorted(unread):
         slot = held.get(name)
-        live = slot is not None and not slot.released and slot.holder != "" and now <= slot.until
+        live = _hold_live(sub, name, slot, now, eyes)
         rows.append({"name": name, "served_by": slot.holder if live else None, "writing": None, "garbled": True,
                      "why": f"its row ({key(name)}) does not parse, so no recorder takes it and the console cannot show "
                             f"it: mend the row — declare the volume again — or delete it"
@@ -407,11 +421,11 @@ def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=
 # screen was green. A declaration can name a path that is not there, a mount that went away or a bucket
 # nobody can reach, and none of that is visible in the row — only the process that opened it knows, so
 # the process says so (`volume_error` in its heartbeat) and this reads it.
-def _unwritable(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str, str]:
-    from w2cplatform.console import heartbeats
+def _unwritable(objects, sub: Subsystem, now: float, lost_after: float, eyes=None) -> dict[str, str]:
+    from w2cplatform.console import heard_live, heartbeats
     out = {}
-    for hb in heartbeats(objects, sub.name + "/").values():
-        if now - hb.ts > lost_after:
+    for name, hb in heartbeats(objects, sub.name + "/").items():
+        if not heard_live(sub.name, name, hb, now, lost_after, eyes):
             continue                                    # a silent recorder's last word is not news about a volume
         vol, err = str(hb.extra.get("volume", "")), str(hb.extra.get("volume_error", ""))
         if vol and err:
@@ -424,11 +438,11 @@ def _unwritable(objects, sub: Subsystem, now: float, lost_after: float) -> dict[
 # refusing writes, given up for an engine that stopped answering, or not taken at all because its host's engine cannot
 # serve it safely (`refused` in the recorder's heartbeat; the review's sixth pass). An unserved volume used to read
 # "no recorder has taken it" and nothing more, with the reason only in a heartbeat's JSON.
-def _refusing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str, list[str]]:
-    from w2cplatform.console import heartbeats
+def _refusing(objects, sub: Subsystem, now: float, lost_after: float, eyes=None) -> dict[str, list[str]]:
+    from w2cplatform.console import heard_live, heartbeats
     out: dict[str, list[str]] = {}
     for name, hb in sorted(heartbeats(objects, sub.name + "/").items()):
-        if now - hb.ts > lost_after:
+        if not heard_live(sub.name, name, hb, now, lost_after, eyes):
             continue
         refused = hb.extra.get("refused")
         for vol, why in sorted((refused if isinstance(refused, dict) else {}).items()):
@@ -438,12 +452,12 @@ def _refusing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[st
 
 # `{volume: what the console says}` for the volumes whose live holder reports its writer stuck or losing
 # (Lesson 10, feedback U). Served, and not writing well: a different sentence from "cannot write there".
-def _writing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str, str]:
-    from w2cplatform.console import heartbeats
+def _writing(objects, sub: Subsystem, now: float, lost_after: float, eyes=None) -> dict[str, str]:
+    from w2cplatform.console import heard_live, heartbeats
     from .writerwatch import describe
     out = {}
     for name, hb in heartbeats(objects, sub.name + "/").items():
-        if now - hb.ts > lost_after:
+        if not heard_live(sub.name, name, hb, now, lost_after, eyes):
             continue
         try:                                            # one recorder's `writer` that is not what it says: that recorder's
             vol, said = str(hb.extra.get("volume", "")), describe(hb.extra.get("writer") or {})

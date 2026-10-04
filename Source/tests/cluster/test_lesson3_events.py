@@ -37,7 +37,7 @@ def _merged(c, rs):
             raise ConnectionError(s)
         return rs[s].index.query(float(p["from"]), float(p["to"]), p.get("kind"),
                                  p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
-    m = MergedIndex(c.objects, fetch=fetch, wall=c.wall)
+    m = MergedIndex(c.objects, fetch=fetch, wall=c.wall, clock=c.wall)
     m.SEEN_FOR = 0.0          # these tests move only the wall: each query reads the resources afresh (the cache: М10's Lesson 13)
     return m
 
@@ -80,8 +80,9 @@ def test_a_dead_resource_makes_the_answer_incomplete_by_name_not_wrong():
     _observe(c, "srv-b", "vms", "8", 1, t + 20, "motion")
     rs = _resources(c)
     for s in rs: _index(c, rs, s)
-    c.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()                  # srv-a went silent
     m = _merged(c, rs)
+    m.live(m.seen())                                                                     # the console's first look
+    c.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()                  # srv-a went silent — by what it saw (r29)
     assert [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/8"] and m.state == "live; srv-a unreachable"   # unavailable, and the state says so
     rs["srv-a"].heartbeat()
     assert [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/7", "vms/8"] and m.state == "live"   # back with its disks: its database answers again, nothing rebuilt

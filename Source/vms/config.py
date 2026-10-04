@@ -147,6 +147,17 @@ def _host(raw: str, scheme: str) -> str:
     return host + (f":{port}" if port else "")
 
 
+# A `driverpack://` source's vendor and path, without a login a row stored before the refusals put in either (the
+# product's r28-secrets2): `driverpack://acme/admin:Hun/ter2@10.0.0.5/ch/1` — a password with a `/` in it — read as
+# device `acme/admin:***` with no channel, and `driverpack://admin:…@acme/10.0.0.5/ch/1` as `…@acme/…`: the channels of
+# one recorder were two devices. A login ends at the last `@`, in the vendor's place or in the path; the key is the
+# host after it. A file's name is a name, `@` and all.
+def _vendor_and_path(u) -> tuple[str, list[str]]:
+    vendor = u.netloc.rsplit("@", 1)[-1].strip().lower().rstrip(".")
+    path = u.path if vendor == "file" else u.path.rsplit("@", 1)[-1]
+    return vendor, [p for p in path.split("/") if p]
+
+
 def device_of(source: str) -> str:
     """The thing DriverPack connects to. Cameras sharing it share one session:
     `driverpack://acme/10.0.0.50/ch/17` and `…/ch/18` are two channels of one NVR;
@@ -166,8 +177,7 @@ def device_of(source: str) -> str:
         # …nor are credentials in its parameters (the eleventh review, blocker 4): the key is in the heartbeat, `/devices`
         # and the log, and a row stored before the refusal named its password there.
         return hide_in_url(f"{scheme}://{_host(u.netloc, scheme)}{u.path}" + (f"?{u.query}" if u.query else ""))
-    parts = [p for p in u.path.split("/") if p]
-    vendor = u.netloc.strip().lower().rstrip(".")
+    vendor, parts = _vendor_and_path(u)
     if vendor == "file":
         return "file/" + parts[0] if parts else "file"
     # …and the key as a page says an address (the thirteenth review, major 9; a run): what the cuts below leave of a row
@@ -229,10 +239,15 @@ def device_identities(vars_) -> dict[str, str]:
 # what that holder hears, it writes into the row in the same pass (`describe_devices`). A row nobody holds now is
 # the past — a grant on the cluster again, as for a key nobody has opened. The heartbeats are read once a request, at
 # the first `known` (`objects`; without them nothing is known).
+#
+# …AND "ALIVE" IS WHAT THE CONSOLE SAW CHANGE (the product's r29-writers2): the holders were judged by their `ts`
+# against the console's clock — a holder dead an hour whose clock ran ahead kept its devices "known", and a box 100 s
+# behind made every device it holds unknown, a grant on the cluster to move a camera within it. `eyes` — the console's
+# long-lived `Eyes` — judge them (`holders(eyes=)`); without them, `is_live`.
 class Devices:
-    def __init__(self, vars_, objects=None, now=None):
+    def __init__(self, vars_, objects=None, now=None, eyes=None):
         self.vars, self.ids = vars_, {}
-        self.objects, self.now = objects, now
+        self.objects, self.now, self.eyes = objects, now, eyes
         self._held: set[str] | None = None
 
     def identity(self, key: str) -> str:
@@ -248,7 +263,7 @@ class Devices:
             if self.objects is not None:
                 from w2cplatform.console import holders
                 now = self.now() if callable(self.now) else (time.time() if self.now is None else self.now)
-                for hb in holders(self.objects, SPEC.sub.name + "/", now).values():
+                for hb in holders(self.objects, SPEC.sub.name + "/", now, eyes=self.eyes).values():
                     devs = hb.extra.get("devices")
                     for d in devs if isinstance(devs, list) else ():
                         if isinstance(d, dict) and isinstance(d.get("device"), str) and d.get("can"):
@@ -264,8 +279,8 @@ class Devices:
         return ("id", ident) if ident else ("at", key)
 
 
-def one_device(vars_, objects=None, now=None) -> Devices:
-    return Devices(vars_, objects, now)
+def one_device(vars_, objects=None, now=None, eyes=None) -> Devices:
+    return Devices(vars_, objects, now, eyes)
 
 
 # -- the device row: what the holder found the device to be -----------------------------------------------
@@ -341,8 +356,8 @@ def channel_of(source: str) -> str | None:
         u = urlsplit(str(source))                        # `str` as `channel_key` and `device_of` read it: `5` raised here
     except ValueError:                                   # not a URL at all (`[` with no `]`): no channel to name
         return None
-    parts = [p for p in u.path.split("/") if p]
-    return parts[2] if u.netloc != "file" and len(parts) >= 3 and parts[1] == "ch" else None
+    vendor, parts = _vendor_and_path(u)                 # a login stored in the path is not the host (r28-secrets2)
+    return parts[2] if vendor != "file" and len(parts) >= 3 and parts[1] == "ch" else None
 
 
 # …and the channel as two sources are COMPARED by (the eighth pass's sibling of `device_of`): `…/ch/02` and `…/ch/2`,
@@ -354,8 +369,8 @@ def channel_key(source: str) -> str:
         u = urlsplit(str(source).strip())
     except ValueError:
         return ""
-    parts = [p for p in u.path.split("/") if p]
-    if u.netloc.lower() == "file" or len(parts) < 3 or parts[1].lower() != "ch":
+    vendor, parts = _vendor_and_path(u) if u.scheme.lower() == "driverpack" else ("", [p for p in u.path.split("/") if p])
+    if vendor == "file" or u.netloc.lower() == "file" or len(parts) < 3 or parts[1].lower() != "ch":
         return ""
     n = numeric(parts[2])
     return str(n) if n is not None else parts[2]
@@ -379,8 +394,8 @@ def channel_key(source: str) -> str:
 # is device `cam7` to the rights and maybe `nvr50` to a driver that reads the whole string.
 def shown_source(source: str) -> str:
     """The source as a refusal or a log may say it: what stands before an `@` hidden, and every credential parameter."""
-    from w2cplatform.secrets import USERINFO, hide_in_url
-    s = USERINFO.sub("…@", str(source))             # anchored: one scan, whatever its length (the eleventh review)
+    from w2cplatform.secrets import hide_in_url, hide_logins
+    s = hide_logins(str(source))                     # anchored: one scan, whatever its length (the eleventh review)
     return hide_in_url(s) if "://" in s else s
 
 

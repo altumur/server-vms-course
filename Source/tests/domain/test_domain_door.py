@@ -168,7 +168,8 @@ def test_an_address_inside_a_list_or_an_object_is_refused_at_the_door_and_on_the
     leaks = lambda x: "hunter2" in json.dumps(x, default=str).lower()
     nested = (["rtsp://admin:Hunter2@10.0.0.5/s"], {"url": "http://h/x?pwd=Hunter2"},
               [{"relay": "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"}],
-              "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs")
+              "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs",
+              ["rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"])            # escaped whole (the product's r28-secrets2)
     for value in nested:
         wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
         try:
@@ -187,3 +188,32 @@ def test_an_address_inside_a_list_or_an_object_is_refused_at_the_door_and_on_the
         assert not leaks(d.row())
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
     assert api.update_camera(CAM, {"labels": ["rtsp://10.0.0.5/s", "yard"]}, idempotency_key="ok", token="anna")
+
+
+def test_what_a_member_answers_is_masked_before_the_domain_hands_it_on_or_keeps_it():
+    """The product's r28-secrets2: the domain handed the member console's reply to its caller as it came, and kept it as
+    the idempotency copy — a member of another build, or a row stored there before the refusals, put the camera's
+    password in both. The reply is masked as a cluster masks a row (`api.said`): `*_secret` as `***`, every address
+    hidden, at any depth — for an edit and for a create, and in what a retry under the same key is answered with."""
+    from types import SimpleNamespace
+    leaks = lambda x: "hunter2" in json.dumps(x, default=str).lower()
+    row = {"id": 7, "name": "gate", "source": "rtsp://admin:Hunter2@10.0.0.5/s", "cred_secret": "Hunter2",
+           "extra": [{"relay": "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam"}], "cred_username": "admin"}
+
+    class Member:
+        def update_camera(self, camera, fields, subject):
+            return dict(row, **fields)
+
+        def create_camera(self, fields, subject):
+            return dict(row, **fields)
+
+    class Directory:
+        def where(self, camera):
+            return SimpleNamespace(found=True, cluster="room-a", worker="w-1", complete=True)
+
+    api = ConsoleAPI(Directory(), lambda name: Member())
+    for resp in (api.update_camera(7, {"name": "gate2"}, "k1"), api.update_camera(7, {"name": "gate2"}, "k1"),
+                 api.create_camera({"name": "yard"}, "room-a", "k2"), api.create_camera({"name": "yard"}, "room-a", "k2")):
+        assert not leaks(resp), resp
+        assert resp["result"]["cred_secret"] == "***" and resp["result"]["cred_username"] == "admin"
+    assert not leaks(api._seen)

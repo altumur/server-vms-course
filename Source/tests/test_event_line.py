@@ -74,12 +74,16 @@ def test_a_reader_says_which_time_it_asks_in():
 def test_the_merge_knows_a_copy_by_its_name():
     """srv-a is silent; srv-b and srv-c both hold copies of its buckets. The same line from both is one event;
     two events of one kind in one instant are two — they used to be one, because a copy was known by where and
-    when it was written."""
+    when it was written. Silent by what the merge saw (r29-writers2): srv-a's heartbeat stood still for a minute."""
     box = Box()
+
+    def beat(servers, age=0):
+        for server in servers:
+            box.objects.put(f"platform/resources/{server}/heartbeat",
+                            json.dumps({"server": server, "ts": box.wall() - age, "url": f"http://{server}"}).encode())
     now = box.wall()
-    for server, age in (("srv-a", 600), ("srv-b", 0), ("srv-c", 0)):
-        box.objects.put(f"platform/resources/{server}/heartbeat",
-                        json.dumps({"server": server, "ts": now - age, "url": f"http://{server}"}).encode())
+    beat(("srv-a",), age=600)
+    beat(("srv-b", "srv-c"))
     row = {"subsystem": "vms", "unit": "7", "cam": 7, "epoch": 1, "t": now - 900, "kind": "io.input", "server": "srv-a",
            "bucket": "vms/7/e1/x.events.jsonl", "class": "observation"}
     twins = [{**row, "id": "7-e1-abc-1"}, {**row, "id": "7-e1-abc-2"}, {**row, "id": "7-e1-abc-3", "occurred": now - 1500}]
@@ -89,7 +93,11 @@ def test_the_merge_knows_a_copy_by_its_name():
         asked.append(params)
         return {"events": list(twins), "truncated": False, "state": "live"}
 
-    m = MergedIndex(box.objects, fetch=fetch, wall=box.wall)
+    m = MergedIndex(box.objects, fetch=fetch, wall=box.wall, clock=box.clock)
+    m.live(m.seen())                                                   # the merge's first look
+    box.wall.advance(60); box.clock.advance(60)
+    beat(("srv-b", "srv-c"))
+    asked.clear()
     assert [e["id"] for e in m.query(now - 1000, now)["events"]] == ["7-e1-abc-1", "7-e1-abc-2", "7-e1-abc-3"]
     assert "by" not in asked[0]
     got = m.query(now - 2000, now, by="occurred")["events"]

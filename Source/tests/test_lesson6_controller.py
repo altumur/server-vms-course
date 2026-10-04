@@ -106,7 +106,9 @@ def test_the_failure_arithmetic():
     # controller down: the read model still answers (heartbeats), recording continues, edits stop
     rows = VmsController(box.vars, box.objects, wall=box.wall).read_model()
     assert [r["phase"] for r in rows] == ["running", "running"]
-    # worker down: the console shows the last snapshot with its age; edits still land in the store
+    # worker down: the console shows the last snapshot with its age — how long IT has seen the heartbeat stand still
+    # (r29-writers2) —; edits still land in the store
+    ctl.read_model()
     box.wall.advance(100)
     ctl.update_camera(1, {"name": "edited while w-1 was down"})
     rows = ctl.read_model(lost_after=45)

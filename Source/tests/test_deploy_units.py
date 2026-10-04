@@ -85,6 +85,11 @@ def test_who_may_write_where_is_in_the_mounts_too():
     assert vols("w2c-resource.container")[OBJECTS] == f"{OBJECTS}:z"                  # the heartbeat is written, and its door's row
     assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
     assert "obsd.service" in unit("recworker@.container")["Unit"]["After"]
+    # …ordered after the host's engine, never starting it (the product's r28-ops2): a restart of a recorder — its crash,
+    # `Restart=always` — started the obsd the administrator had stopped to hand the volumes over. No unit wants another.
+    for n in os.listdir(DEPLOY):
+        if n.endswith((".container", ".service")):
+            assert "Wants" not in unit(n).get("Unit", {}) or unit(n)["Unit"]["Wants"] in ("network-online.target",), n
     assert unit("w2c-resource.container")["Service"]["Restart"] == "always"         # a process, not a timer: the database lives in it
 
 

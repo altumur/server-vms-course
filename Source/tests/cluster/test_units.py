@@ -429,7 +429,7 @@ def test_every_unit_writes_as_its_groups_and_sees_the_rest_of_the_system_read_on
             continue
         name = f[:-len(".service")].replace("-spare@", "")
         u = unit(os.path.join(SYSTEMD, f))
-        assert u["UMask"] == ["0007"] and u["ProtectSystem"] == ["strict"], f
+        assert u["UMask"] == (["0077"] if name == "configstore" else ["0007"]) and u["ProtectSystem"] == ["strict"], f
         assert u["ProtectHome"] == ["yes"] and u["PrivateTmp"] == ["yes"] and u["NoNewPrivileges"] == ["yes"], f
         if name == "configstore":
             assert u["ReadWritePaths"] == ["/data/platform/configstore"]
@@ -448,13 +448,13 @@ def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
     `SPARE_FOR=` alone: no set, no start) and its fan-out on a port the OS gives; a recorder's door likewise. Nothing
     else may differ, so a line given to the role is given to its spares or this fails. And no `EnvironmentFile=` in a
     spare either (the product's cross-check, 4 Oct): a file read whole is every variable its writer wants."""
-    # …and what a spare depends on (the thirteenth review, major 12): what the role's unit `Wants=` — pulled up with it
-    # at boot — a spare `Requisite=`s, up already or the spare does not start; and a worker spare whose set is refused
-    # (exit 2) is not restarted (the same review, minor).
+    # …and what a spare depends on (the thirteenth review, major 12): what its role's unit is ordered after, a spare
+    # `Requisite=`s, up already or the spare does not start; and a worker spare whose set is refused (exit 2) is not
+    # restarted (the same review, minor).
     allowed = {"vms-vmsworker": {("env", "WORKER_NAME"), ("env", "RTSP_PORT"), ("env", "SPARE_FILE"), ("Description",),
-                                 ("WantedBy",), ("Wants",), ("Requisite",), ("RestartPreventExitStatus",)},
+                                 ("WantedBy",), ("Requisite",), ("RestartPreventExitStatus",)},
                "vms-recworker": {("env", "WORKER_NAME"), ("env", "ARCHIVE_PORT"), ("Description",), ("WantedBy",),
-                                 ("Wants",), ("Requisite",)}}
+                                 ("Requisite",)}}
     for role, ok in allowed.items():
         a, b = unit(os.path.join(SYSTEMD, f"{role}.service")), unit(os.path.join(SYSTEMD, f"{role}-spare@.service"))
         diff = {(k,) for k in set(a) | set(b) if k not in ("env", "Environment") and a.get(k) != b.get(k)}
@@ -468,21 +468,59 @@ def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
     assert unit(os.path.join(SYSTEMD, "vms-recworker-spare@.service"))["env"]["ARCHIVE_PORT"] == "0"
 
 
-def test_a_spare_starts_nothing_it_depends_on_and_a_refused_set_is_not_restarted():
+def test_no_unit_starts_what_it_depends_on_and_a_refused_set_is_not_restarted():
     """The thirteenth review, major 12: the spare templates said `Wants=configstore.service vms-obsd.service`, so the
     spares' timer starting a spare made PID 1 start a stopped engine — the administrator stops it to hand the volumes
-    over (`install-obsd.sh`, its `chown -R`) — past polkit, which lets the spares' user start the template and nothing
-    else. A spare `Requisite=`s what its role's unit `Wants=` (and is ordered `After=` it): up already, or the spare does
-    not start; nothing else is wanted but the network target. The role's unit keeps `Wants=` — at boot it pulls its
-    store and its engine up, and the recorder outlives the engine's stop (`away`, then `remounted`), so no restart of it
-    asks for one. And the minor: a worker spare whose set its runner refuses ends 2 at every start — no restart."""
-    for role in ("vms-vmsworker", "vms-recworker"):
-        regular, spare = unit(os.path.join(SYSTEMD, f"{role}.service")), unit(os.path.join(SYSTEMD, f"{role}-spare@.service"))
-        wanted = regular["Wants"][0].split()
-        assert spare["Wants"] == ["network-online.target"], role
-        assert spare["Requisite"][0].split() == [u for u in wanted if u != "network-online.target"], role
-        assert set(spare["Requisite"][0].split()) <= set(spare["After"][0].split()), role
+    over (`install-obsd.sh`, its `chown -R`) — past polkit. And the product's r28-ops2, the same in the ROLE units: the
+    console, the two controllers, the worker and the resource said `Wants=configstore.service`, the recorder
+    `Wants=… vms-obsd.service` — any restart of one (its own crash, `Restart=always`) started the store's member or the
+    engine the administrator had stopped. Every unit is enabled on its own (`WantedBy=multi-user.target`, `install.sh`),
+    so boot needs no `Wants=`: a role unit is ORDERED after what it uses (`After=`) and wants nothing but the network
+    target. No role needs `Requisite=` either: each outlives its store (a worker records past its lease's end,
+    `UNCONFIRMED_MAX`) and the recorder its engine (`away`, then `remounted`), and `Requisite=` would stop them with it.
+    A spare `Requisite=`s the store's member — and a recorder's spare the engine —: up already, or it does not start.
+    And the minor: a worker spare whose set its runner refuses ends 2 at every start — no restart."""
+    for f in sorted(os.listdir(SYSTEMD)):
+        if not f.endswith(".service"):
+            continue
+        u = unit(os.path.join(SYSTEMD, f))
+        assert u.get("Wants", ["network-online.target"]) == ["network-online.target"], f
+        assert "Requires" not in u and "BindsTo" not in u, f
+        after = u["After"][0].split()
+        if f != "configstore.service":
+            assert "configstore.service" in after, f                         # ordered after the store's member…
+        if f.startswith("vms-recworker"):
+            assert "vms-obsd.service" in after, f                            # …and the recorder after the engine
+        requisite = u.get("Requisite", [""])[0].split()
+        assert requisite == ((["configstore.service", "vms-obsd.service"] if f.startswith("vms-recworker") else
+                              ["configstore.service"]) if "-spare@" in f else []), f
+        assert set(requisite) <= set(after), f
     assert unit(os.path.join(SYSTEMD, "vms-vmsworker-spare@.service"))["RestartPreventExitStatus"] == ["2"]
+
+
+def test_the_stores_journal_is_its_members_alone_however_it_was_started():
+    """The product's r28-ops2: `configstore.service` said `UMask=0007`, the box's rule for what a role writes into the
+    shared archive and objects — and the store's member wrote its raft journal and snapshots 0660, the rows readable by
+    whoever joins its group, past the rights file. Its journal is its own: `UMask=0077` in the unit, `Umask` 63 in the
+    plist, and the runner sets 0077 itself for the store's member (it sets 0007 for every other program, the thirteenth
+    review's major 13 — and would have undone the unit's). The directory is 0700 on a Mac box as on Linux."""
+    assert unit(os.path.join(SYSTEMD, "configstore.service"))["UMask"] == ["0077"]
+    with open(os.path.join(DEPLOY, "launchd", "com.w2c.configstore.plist"), "rb") as f:
+        assert plistlib.load(f)["Umask"] == 0o077
+    d = tempfile.mkdtemp(prefix="run-")
+    py = os.path.join(d, "python3")
+    with open(py, "w") as f:
+        f.write("#!/bin/sh\necho \"umask=$(umask)\"\n")
+    os.chmod(py, 0o755)
+    with open(os.path.join(d, "w2c.env"), "w") as f:
+        f.write("SERVER_NAME=a\nCONFIGSTORE_RAFT=127.0.0.1:8301\nCONFIGSTORE_API=127.0.0.1:8300\n")
+    env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d}
+    for program, mask in (("configstore", ("0077", "077")), ("worker", ("0007", "007"))):
+        out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), program], env=env, capture_output=True,
+                             text=True, check=True, preexec_fn=lambda: os.umask(0o022)).stdout
+        assert out.strip().split("=", 1)[1] in mask, (program, out)
+    script = open(os.path.join(DEPLOY, "install.sh"), encoding="utf-8").read()
+    assert 'chmod 0700 "$BOX/state/configstore"' in script
 
 
 # The spellings that differ between the two supervisors and nothing else: on macOS everything is under the box

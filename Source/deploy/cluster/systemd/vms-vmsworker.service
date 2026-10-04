@@ -6,7 +6,9 @@
 [Unit]
 Description=VMS worker — holds its cameras: DriverPack, the fan-out, the events
 After=network-online.target configstore.service w2c-resource.service
-Wants=network-online.target configstore.service
+# Ordered after the store's member, never starting it (the product's r28-ops2): `Wants=` made every restart of
+# this unit start what the administrator had stopped. Each is enabled on its own, so boot brings it up anyway.
+Wants=network-online.target
 
 [Service]
 User=vms

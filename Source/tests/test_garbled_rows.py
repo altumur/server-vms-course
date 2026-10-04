@@ -466,18 +466,26 @@ def test_a_heartbeat_with_a_number_past_any_number_or_nested_ten_thousand_deep_s
 
 def test_a_snapshot_written_by_a_clock_running_ahead_is_not_fresh_and_its_lead_is_measured():
     """A controller whose clock ran an hour ahead and then stopped wrote shards an hour ahead: `max(0, now − ts)` read
-    them as age 0 for that hour — the copy above "fresh" while nothing published it. A shard further ahead than the
-    heartbeats' tolerance has no age anybody can vouch for: the oldest there can be, counted once, and its lead goes
-    into `heartbeat_skew_seconds_max`."""
+    them as age 0 for that hour — the copy above "fresh" while nothing published it. The ninth pass bounded it at the
+    heartbeats' tolerance; the product's r29-writers2 takes the writer's clock out of it: a shard's age is how long the
+    reader has seen it stand still (`Eyes`), and its lead is measured where it changes (`heartbeat_skew_seconds_max`).
+    Stopped an hour ahead, it ages a minute in a minute; written 100 s behind on every pass, it is never old."""
     from w2cplatform.contract import SKEW_MAX
-    from w2cplatform.rows import FIELDS
     box, ctl = _placed(2)
     ctl.publish_snapshot()
+    assert ctl.snapshot_age() == 0
     box.objects.put("vms/snapshot/w-1", json.dumps({"ts": box.wall() + 3600, "cameras": []}).encode())
-    assert ctl.snapshot_age() == box.wall()
-    assert SKEW_MAX.get("vms", 0) >= 3600 and "vms/snapshot/w-1#ts" in FIELDS.bad
-    box.objects.put("vms/snapshot/w-1", json.dumps({"ts": box.wall() + 2, "cameras": []}).encode())   # within tolerance
-    assert ctl.snapshot_age() == 0 and "vms/snapshot/w-1#ts" not in FIELDS.bad
+    assert ctl.snapshot_age() == 0 and SKEW_MAX.get("vms", 0) >= 3600          # a change, seen now: its lead measured
+    box.wall.advance(60)                                                          # …and then nothing more
+    assert ctl.snapshot_age() == 60
+    for _ in range(3):                                                            # a controller 100 s behind, every pass
+        ctl.publish_snapshot()
+        for key in box.objects.list("vms/snapshot/"):
+            shard = json.loads(box.objects.get(key))
+            box.objects.put(key, json.dumps({**shard, "ts": box.wall() - 100}).encode())
+        assert ctl.snapshot_age() == 0                                            # a shard just written, 100 s "old"
+        box.wall.advance(5)
+        assert ctl.snapshot_age() == 5
     SKEW_MAX.pop("vms", None)
     _forget_garbled()
 

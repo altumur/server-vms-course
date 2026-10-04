@@ -2488,13 +2488,17 @@ def written_from_heartbeats(objects, wall=time.time, fresh: float = 45.0):
     the camera comes back to, and whatever restarted meanwhile (feedback CB). A `written_through` that is not a number
     is not said (`rows.number`, counted once): it raised out of every poll and push at this ingest (the eighth review's
     sibling)."""
-    from w2cplatform.console import heartbeats
+    from w2cplatform.console import heard_live, heartbeats
+    from w2cplatform.contract import Eyes, judge_clock
     from w2cplatform.rows import number
+    # A recorder fresh by what this ingest saw CHANGE (`Eyes`; the product's r29-writers2): `now - hb.ts` was the
+    # recorder's clock against the ingest's — a dead recorder an hour ahead said its `written_through` for that hour.
+    eyes = Eyes(judge_clock(wall), wall)
 
     def written(ref) -> float | None:
         now, best = wall(), None
         for name, hb in heartbeats(objects, "rec/").items():
-            if now - hb.ts > fresh:
+            if not heard_live("rec", name, hb, now, fresh, eyes):
                 continue
             for st in hb.status:
                 if str(st.get("cam")) == f"ref:{ref}" and st.get("written_through") is not None:

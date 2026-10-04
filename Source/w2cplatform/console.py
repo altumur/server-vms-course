@@ -274,10 +274,16 @@ def heartbeats(objects, sub: str) -> dict[str, Heartbeat]:
 def holders(objects, prefix: str, now: float, lost_after: float = 45.0, eyes=None) -> dict[str, Heartbeat]:
     """The heartbeats fresh enough to act on."""
     sub = prefix.rstrip("/")
+    return {w: hb for w, hb in heartbeats(objects, prefix).items() if heard_live(sub, w, hb, now, lost_after, eyes)}
+
+
+# One heartbeat, by the same rule — for a reader that walks every heartbeat and wants the silent ones too (the product's
+# r29-writers2: a subsystem's readers judged by the writer's `ts` against their own `now`, so a dead process whose clock
+# ran ahead stayed fresh, and one behind lost what it held).
+def heard_live(sub: str, w: str, hb: Heartbeat, now: float, lost_after: float = 45.0, eyes=None) -> bool:
     if eyes is not None:
-        return {w: hb for w, hb in heartbeats(objects, prefix).items()
-                if eyes.fresh(f"{sub}/heartbeats/{w}", hb.token, lost_after, hb.ts, sub)}
-    return {w: hb for w, hb in heartbeats(objects, prefix).items() if is_live(sub, hb.ts, now, lost_after)}
+        return eyes.fresh(f"{sub}/heartbeats/{w}", hb.token, lost_after, hb.ts, sub)
+    return is_live(sub, hb.ts, now, lost_after)
 
 
 # `(worker, its heartbeat, the unit's status entry)` for the process holding `unit` right now, or None.
@@ -1153,6 +1159,10 @@ class IdempotencyKeys:
     #   none         `digest`: the sha256 of the body as a page would say it — every `*_secret` masked, every address
     #                hidden (`mask_secrets`) —: nothing in it a dictionary could find (and without a key the row holds
     #                the password in the clear anyway, which the console says once, at the first secret it writes)
+    # …and with a ring, the `digest` beside the `mac` (the product's r28-secrets2): a kid removed from the ring within the
+    # claim's day left every console unable to make the claim's `mac`, and a correct retry was 422 "key reused". The
+    # digest is asked only then — the kid gone —, and says no secret: two bodies that differ only in a `*_secret` are one
+    # body to it, as they are to a console without a key.
     def _tag(self, sub, body) -> dict:
         import hashlib
         out = {}
@@ -1162,8 +1172,7 @@ class IdempotencyKeys:
             raw = body if isinstance(body, bytes) else str(body).encode()
             if self.sealer is not None:
                 out["mac"] = self.sealer.mac("idem", raw)
-            else:
-                out["digest"] = hashlib.sha256(self._said(raw)).hexdigest()
+            out["digest"] = hashlib.sha256(self._said(raw)).hexdigest()
         return out
 
     @staticmethod
@@ -1180,13 +1189,15 @@ class IdempotencyKeys:
     # tags, or by a test — matches anybody, as it did.
     #
     # A `mac` made under another kid of the ring (a console a rotation ahead or behind) is asked again under that kid;
-    # one this console cannot make — the kid is not in its ring — is another body: refused, not answered.
+    # one this console cannot make — the kid is not in its ring, removed since — is judged by the `digest` beside it, and
+    # without one is another body: refused, not answered.
     def _mismatch(self, items: dict, tag: dict, body=None):
         for k in ("sub", "mac", "digest"):
             if k in items and k in tag and items[k] != tag[k]:
                 if k == "mac" and self.sealer is not None and body is not None:
                     raw = body if isinstance(body, bytes) else str(body).encode()
-                    if self.sealer.mac("idem", raw, str(items[k]).split(":", 1)[0]) == items[k]:
+                    again = self.sealer.mac("idem", raw, str(items[k]).split(":", 1)[0])
+                    if again == items[k] or (again is None and "digest" in items):
                         continue
                 return 422, {"detail": "this Idempotency-Key names another request: a key is one caller's, for one body",
                              "error": "key reused"}
@@ -1567,7 +1578,7 @@ class SpecConsole:
         held = ctl.holds_by()
         # …and whether another process wants its name (the owner's decision of 4 Oct; the product's field): who holds it,
         # and who else asks, from which box, since when — `name_conflict`, null when nobody does.
-        contended = contenders(ctl.objects, ctl.sub, now)
+        contended = contenders(ctl.objects, ctl.sub, now, ctl.eyes)
         for s in out.values():
             for row in s["workers"]:
                 self._judged(row, held)

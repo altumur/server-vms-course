@@ -370,6 +370,33 @@ def test_a_group_left_whole_on_a_leaving_slot_is_short_and_a_spare_too_small_for
         assert said.lines.count(("units.left_on_leaving", ALARM)) == 1             # once a spell
 
 
+def test_a_new_group_that_did_not_fit_is_short_whole_and_a_spare_that_can_take_it_takes_it_whole():
+    """The product's r29-writers2 (d): the product places what of a new channel group fits and counts only the remainder
+    in the shortage. The course does not split a group — one device, one session, one worker (`group_by`) — and decides
+    to count the WHOLE group: a group whose first channels went onto a worker without room for the rest waits pinned to
+    that worker (`eligible`), and moves only whole (`ensure_reach`). Counted by its waiting channels alone, the remainder
+    "fitted" the room of ANOTHER worker it may not go to: two workers of 4 with a camera each, a 4-channel NVR — three
+    channels on w-1, one waiting, "short 0", no offer, the fourth channel written by nobody. Now the piece is the group
+    whole — its waiting channels and those placed on a worker without room for them —: short 4, one spare needed; and a
+    worker with room for all four, once it comes, takes the group whole."""
+    box = Box()
+    for name, server in (("w-1", "srv-a"), ("w-2", "srv-b")):
+        _worker(box, name, server=server, capacity=4)
+    _cameras(box, 2)
+    ctl = _ctl(box, capacity=4)
+    ctl.pass_once()
+    con = _con(box)
+    ids = [con.create_camera({"source": f"driverpack://acme/10.0.0.50/ch/{c}"})["id"] for c in range(1, 5)]
+    rep = ctl.pass_once()
+    where = [ctl.where(i) for i in ids]
+    assert where.count(None) == 1 and len({w for w in where if w}) == 1, where     # three on one worker, one waiting
+    assert rep["units_short"] == {"": 4} and rep["workers_needed"] == {"": 1}, rep
+    _worker(box, "w-3", server="srv-c", capacity=4)
+    for _ in range(3):
+        rep = ctl.pass_once()
+    assert [ctl.where(i) for i in ids] == ["w-3"] * 4 and rep["units_short"] == {"": 0}, ([ctl.where(i) for i in ids], rep)
+
+
 def test_under_distinct_servers_a_spare_is_offered_only_where_it_would_not_idle():
     """«Вопросы» 2: under `servers: distinct` a spare started on a server that already has its worker idles by policy;
     the camera stayed unplaced, `workers_needed` stayed 1, and the next pass offered again — spares raised on every
