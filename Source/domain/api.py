@@ -53,6 +53,16 @@ def refuse_addresses(fields: dict) -> None:
                             f"cluster, in cred_username / cred_secret; an address is shown, kept, backed up and relayed")
 
 
+# WHAT A MEMBER ANSWERS IS SAID AS A PAGE SAYS IT (the product's r28-secrets2): the domain handed the member console's
+# reply to its caller as it came, and kept it a day as the idempotency copy (`_seen`) — a member of another build, or a
+# row stored there before the refusals, put a camera's password in both (`cred_secret`, an address with a login). The
+# member's reply is masked the way the cluster masks a row (`mask_secrets`): a `*_secret` as `***`, every address
+# hidden, at any depth.
+def said(reply):
+    from w2cplatform.secrets import mask_secrets
+    return mask_secrets([{"": reply}])[0][""]
+
+
 class ConsoleAPI:
     def __init__(self, directory: DomainDirectory, consoles: Callable[[str], ClusterConsole],
                  verifier: Callable[[str], str] | None = None, pending=None, last_known=None):
@@ -126,7 +136,7 @@ class ConsoleAPI:
                 raise ApiError(503, f"{ans.cluster} did not answer the edit")
             self._seen[idempotency_key] = kept
             return kept
-        resp = {"camera": camera, "cluster": ans.cluster, "worker": ans.worker, "result": result,
+        resp = {"camera": camera, "cluster": ans.cluster, "worker": ans.worker, "result": said(result),
                 "authenticated": self.verifier is not None}
         self._seen[idempotency_key] = resp
         return resp
@@ -167,6 +177,6 @@ class ConsoleAPI:
         self._refuse_secrets(fields)
         subject = self._subject(token)
         result = self.consoles(cluster).create_camera(fields, subject)
-        resp = {"cluster": cluster, "result": result, "authenticated": self.verifier is not None}
+        resp = {"cluster": cluster, "result": said(result), "authenticated": self.verifier is not None}
         self._seen[idempotency_key] = resp
         return resp

@@ -171,9 +171,10 @@ def test_the_age_is_the_stalest_shard_and_never_the_freshest():
     ctl.ensure_placed(workers=["w-1", "w-2"])
     ctl.publish_snapshot()
 
-    stale = json.loads(box.objects.get("vms/snapshot/w-1"))
-    stale["ts"] = box.wall() - 300                                  # w-1's shard stopped moving
-    box.objects.put("vms/snapshot/w-1", json.dumps(stale).encode())
+    ctl.snapshot_age()                                              # the reader's first look
+    box.wall.advance(300)                                           # w-1's shard stopped moving; w-2's goes on
+    fresh = json.loads(box.objects.get("vms/snapshot/w-2"))
+    box.objects.put("vms/snapshot/w-2", json.dumps({**fresh, "ts": box.wall()}).encode())
 
     assert round(ctl.snapshot_age()) == 300, "the freshest shard was taken, and the RPO looked better than it is"
 

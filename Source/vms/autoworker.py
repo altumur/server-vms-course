@@ -324,11 +324,11 @@ class AutoWorker(Worker):
     # there): those live by their heartbeats, each with the address its `/events` is asked at. The long poll is
     # held at that address and no other. An index that keeps no such list (a test's) has nowhere to hold one.
     def _resources(self) -> dict[str, str]:
-        seen = getattr(self.index, "seen", None)
-        if seen is None:
+        seen, live = getattr(self.index, "seen", None), getattr(self.index, "live", None)
+        if seen is None or live is None:
             return {}
-        now, lost_after = self.wall(), getattr(self.index, "lost_after", 45.0)
-        return {s: str(hb.get("url") or "") for s, hb in seen().items() if now - float(hb["ts"]) <= lost_after}
+        got = seen()
+        return {s: str(got[s].get("url") or "") for s in live(got)}      # live as the index judges it (r29-writers2)
 
     # Called by the process before `run`: ask the resources to say when an event a scenario watches is written,
     # instead of finding it at the end of a two-second wait. `LONG_POLL=0`: not asked, the loop as it was.

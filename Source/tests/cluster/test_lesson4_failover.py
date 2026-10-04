@@ -349,6 +349,8 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     t = c.wall()
     assert r1.actuator.feed("1", t - 600, t, step=10) == {"OK": 60}                           # ten minutes into srv-a's volume, as 1/e1
     r1.heartbeat_once(); rec.workers_seen()
+    routes = cluster_routes(ctl)
+    routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})       # the console looks, as its page does (r29)
     # srv-a dies: w-srv-a-1, r-srv-a-1 and srv-a's resource silent
     r1.session.vanish()                                                                         # no BYE: the writer is left detached
     _silence(c, "srv-a", 93, alive=[b, r2])
@@ -364,8 +366,8 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     r2.heartbeat_once()
     assert rec.workers_seen()["r-srv-b-1"].status[0]["via"] == "shm" and rec.where("1") == "r-srv-b-1"
     assert live_url("srv-b", 1) == "rtsp://srv-b:8554/1"                                        # what r-srv-b-1 would read had the camera landed on srv-c
-    # the timeline: e1 in srv-a's volume unavailable by name — and srv-a's footage comes back with its disks
-    routes = cluster_routes(ctl)
+    # the timeline: e1 in srv-a's volume unavailable by name — and srv-a's footage comes back with its disks; silent by
+    # what the console saw: r-srv-a-1's heartbeat has stood still since its look (the product's r29-writers2)
     _, tl = routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})
     assert [s for s in tl["segments"] if s["epoch"] == 1] == []
     assert [(g["volume"], g["server"]) for g in tl["unavailable"]] == [("srv-a", "srv-a")] and "not lost" in tl["note"]

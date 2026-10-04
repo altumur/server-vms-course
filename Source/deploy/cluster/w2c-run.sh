@@ -98,6 +98,9 @@ program="${1:?w2c-run.sh configstore | worker | recorder | controller | reccontr
 shift
 case "$program" in
     configstore)
+        # …but the store's journal is its member's alone (the product's r28-ops2): raft log and snapshots 0600. The unit
+        # says `UMask=0077` and the plist `Umask` 63; the 0007 above would undo them.
+        umask 0077
         # The daemon's flags from the platform's file. `-bootstrap` on the first server of a cluster (CONFIGSTORE_JOIN
         # empty), `-join <member>` on every other; both count only the first time — a daemon taken into a group starts
         # from its journal, so systemd restarting it with the same flags just brings it back.

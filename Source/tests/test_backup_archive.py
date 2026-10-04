@@ -401,7 +401,8 @@ def test_a_card_learns_about_its_primary_in_another_cluster_from_the_book_its_ag
 
     carry(written=True)
     assert not card.primary_needs_cover(row)
-    box.wall.advance(card.CARRIED_LOST_AFTER + 1)             # the agent has not reached the domain since
+    box.wall.advance(card.CARRIED_LOST_AFTER + 1)             # the agent has not reached the domain since —
+    box.clock.advance(card.CARRIED_LOST_AFTER + 1)            # …by the card's own clock (`Eyes`; r29-writers2)
     assert card.primary_needs_cover(row)                      # nobody can vouch for the book: record
 
     carry(should=False, written=False)                        # the operator switched the room's recording off

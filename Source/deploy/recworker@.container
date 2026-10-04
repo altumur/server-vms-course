@@ -28,8 +28,9 @@
 # ================================================================================================
 [Unit]
 Description=VMS recorder %i — the recordings of its assignment, into this box's archive
+# Ordered after the host's engine, never starting it (the product's r28-ops2): `Wants=` made a recorder's restart start
+# the obsd the administrator had stopped to hand the volumes over. `install-obsd.sh` enables it on its own.
 After=network.target obsd.service
-Wants=obsd.service
 
 [Container]
 Image=localhost/vmsserver:latest

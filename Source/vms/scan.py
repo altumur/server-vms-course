@@ -115,8 +115,8 @@ def written_through(spans: list[Span]) -> float:
 # What was recorded of `unit` in `[t0, t1)`, as the volumes' index has it: asked of the archive door of every
 # live recorder (`/timeline/<unit>`), since each serves the one volume it holds and a recording's life may have
 # been written into several. `None` when no door answered at all — "nobody could say" is not "nothing recorded".
-def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0) -> list[Span] | None:
-    seen = recording_read(objects, unit, t0, t1, now, timeout=timeout)
+def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0, eyes=None) -> list[Span] | None:
+    seen = recording_read(objects, unit, t0, t1, now, timeout=timeout, eyes=eyes)
     return seen.spans if seen.answered else None
 
 
@@ -178,16 +178,19 @@ def door_spans(key: str, body) -> tuple[list[dict], bool]:
     return out, whole
 
 
-def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, timeout: float = 5.0) -> Read:
+#
+# Which doors are live by what the scan worker saw change (`eyes`, its `Eyes`; the product's r29-writers2): `is_live` was
+# the recorder's clock against the worker's, and a recorder behind by 100 s was a door nobody asked — its minutes were
+# "unread", the scan waited, then ended without them. Without eyes, `is_live` still.
+def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, timeout: float = 5.0, eyes=None) -> Read:
     import json as _json
     import urllib.request
-    from w2cplatform.console import heartbeats
-    from w2cplatform.contract import is_live
+    from w2cplatform.console import heard_live, heartbeats
     out, answered, silent, read, garbled = set(), False, [], set(), []
     every = heartbeats(objects, "rec/")
     for w, hb in sorted(every.items()):
         url = str(hb.extra.get("archive_url") or "")
-        if not url or not is_live("rec", hb.ts, now, 45.0):   # whose clock: `is_live` (the review's second pass, M9)
+        if not url or not heard_live("rec", w, hb, now, 45.0, eyes):   # whose clock: the reader's (M9, r29-writers2)
             continue
         try:
             with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
@@ -211,7 +214,7 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
         def held_it(recorder: str) -> bool:
             hb = every.get(recorder)
             return hb is not None and any(str(st.get("id")) == str(unit) for st in hb.status if isinstance(st, dict))
-        unread = [g["volume"] for g in unserved_volumes(objects, now)
+        unread = [g["volume"] for g in unserved_volumes(objects, now, eyes=eyes)
                   if g["volume"] not in read and g["volume"] not in off and held_it(g["recorder"])]
     return Read(sorted(out, key=lambda s: (s.start, s.epoch)), answered, silent, unread, garbled)
 

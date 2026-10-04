@@ -16,7 +16,9 @@ User=configstore
 Group=configstore
 RuntimeDirectory=configstore
 RuntimeDirectoryMode=0755
-UMask=0007
+# Its journal is its own (the product's r28-ops2): the raft log and snapshots 0600, not the 0660 of what a role writes
+# into the shared archive (`UMask=0007`); the sockets are chmod'ed by the daemon itself. `w2c-run.sh` sets the same.
+UMask=0077
 ExecStart=/opt/w2c/bin/w2c-run.sh configstore
 Restart=always
 RestartSec=2
