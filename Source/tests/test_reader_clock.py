@@ -111,24 +111,6 @@ def test_a_scan_asks_the_door_of_a_recorder_behind_and_not_of_a_dead_one_ahead()
         srv.shutdown()
 
 
-def test_a_device_is_known_through_a_holder_behind_and_not_through_a_dead_one_ahead():
-    """`config.Devices.held` — what makes a device known, and moving a camera within it a grant on that camera, not on
-    the cluster — took the holders live by `ts`: a holder an hour behind made its devices unknown, one dead an hour
-    ahead kept a replaced recorder's identity known (the tenth pass's hole, by a clock)."""
-    from vms.config import one_device
-    box = Box()
-    eyes = _eyes(box)
-    for dev, ident in (("acme/10.0.0.5", "SN5"), ("acme/10.0.0.6", "SN6")):
-        box.vars.put(SPEC.sub.config("devices", dev), {"identity": ident})
-    _beat(box, SPEC, "w-ahead", AHEAD, devices=[{"device": "acme/10.0.0.6", "can": True}])
-    _beat(box, SPEC, "w-behind", BEHIND, devices=[{"device": "acme/10.0.0.5", "can": True}])
-    one_device(box.vars, box.objects, box.wall, eyes).held()                                # the first look
-    box.wall.advance(46)
-    _beat(box, SPEC, "w-behind", BEHIND, devices=[{"device": "acme/10.0.0.5", "can": True}])
-    same = one_device(box.vars, box.objects, box.wall, eyes)
-    assert same.known("acme/10.0.0.5") and not same.known("acme/10.0.0.6")
-
-
 def test_a_contender_is_fresh_while_it_asks_whatever_its_clock_and_not_after():
     """`contract.contenders` read a mark fresh while `now - at <= CONTENDER_FRESH` — the claimant's clock: one an hour
     ahead that stopped asking was a name conflict for an hour, one an hour behind that asks every pass was never one."""

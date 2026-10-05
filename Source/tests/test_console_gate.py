@@ -1438,7 +1438,7 @@ def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_secon
 def _opened(box, *keys, holder: str = "w-held") -> None:
     """Device rows as their holders write them once they have opened the devices and learned what each is (`identity`)
     — and the heartbeat of the live holder that holds them now and has heard them describe themselves (`can`): a row is
-    known only while a holder says so (`config.Devices.known`; the review's tenth pass). The holder has no room, so
+    known only while a holder says so (the review's tenth pass). The holder has no room, so
     nothing is placed on it."""
     from w2cplatform.contract import Heartbeat
     for key in keys:
@@ -1731,7 +1731,8 @@ def test_a_press_of_a_relay_and_a_move_of_a_camera_read_the_rows_of_their_device
     """The review's ninth pass, minor — a count: `one_device` read every device row there is on every command, move and
     scenario edit; rows are never removed, and with 1000 of them one press of a relay was 1009 reads of the store (in
     М11, a thousand HTTP calls to Nomad). A device's row is read when a right is asked about that device, once a
-    request (`config.Devices`), and "one channel, one camera" reads none (`refuse_camera`). Counted as here — every
+    request (`config.Devices`, until the boundary's step 6 — the platform reads none now), and "one channel, one camera"
+    reads none (`refuse_camera`). Counted as here — every
     read of the process, the gate's too — before and after: 1013 → 14 for the press, 2019 → 19 for the move; pinned with
     room, and not growing with the stale rows."""
     from w2cplatform.variables import FileVariables

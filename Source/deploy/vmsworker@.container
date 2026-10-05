@@ -39,7 +39,7 @@ Image=localhost/vmsserver:latest
 # the `worker` verb of `vms/__main__.py` (also the image's default `CMD`, repeated so the unit reads on its
 # own).
 Exec=python3 -m vms worker
-# the slot preference: `__main__.worker` reads `WORKER_NAME` and `VmsWorker.claim_slot(prefer=…)` takes
+# the slot preference: `__main__.worker` reads `WORKER_NAME` and `Worker.claim_at_start` takes
 # exactly that slot by CAS, even from a holder that has not lapsed — systemd is the authority on which
 # process is the current `w-1`, and the old one finds out at its next `renew_slot` and fences.
 Environment=WORKER_NAME=%i

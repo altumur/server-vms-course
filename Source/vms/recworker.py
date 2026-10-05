@@ -15,8 +15,8 @@ The worker that holds the camera may be anywhere, `servers: shared`; the
 recorder must be where its volume can be served — `requires: resource`,
 one per volume — and when its server dies the controller moves its
 recordings to a recorder that holds a volume. Footage from before the move
-stays in the volume it was written to, under the old epoch; the console's
-timeline merges the two.
+stays in the volume it was written to, under the old epoch; the page merges
+the two, reading each recorder's door (ADR 0015: the bytes bypass the console).
 
     RECORDER_NAME / SLOT_INDEX     -> the slot to claim: r-<index>
     SERVER_NAME (or the hostname)  -> `server` in the heartbeat
@@ -2077,8 +2077,10 @@ class RecWorker(VmsWorker):
     #
     # How long that lasts depends on whose the place is:
     #
-    #   a disk of this server     stays this recorder's for as long as the silence lasts. Nobody else can write
-    #                             to it: it is here
+    #   a disk of this server     stays this recorder's for as long as the silence lasts — where its row names THIS
+    #                             recorder's server (`server_field: server`; ADR 0029, `Worker.held_strictly`): this
+    #                             server's daemon keeps one writer there. A row that names another server, or that
+    #                             could not be read, and a recorder that names no server, are strict as below
     #   a network archive         any box may serve it, and one that can reach the store will take the hold when
     #                             it lapses. Two writers in one archive is not a duplicate, it is damage — so
     #                             when the hold has gone `slot_ttl − margin` unconfirmed, it is let go, and its

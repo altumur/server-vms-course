@@ -109,7 +109,7 @@ from w2cplatform.events import ALARM, OBSERVATION
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_key, channel_of, describe, device_of,
-                     device_identities, device_row, identity_of, live_shm, live_url, said_id, COMMAND_ARG_MAX,
+                     device_identities, device_row, identity_of, live_shm, live_url, COMMAND_ARG_MAX,
                      playback_url, port_of, row)
 from w2cplatform.reconcile import CONVERGED, Reconciler, Want
 
@@ -876,8 +876,8 @@ class VmsWorker(Worker):
     # would be a lie that refuses scenarios.
     #
     # …and WHICH DEVICE it is, in its own word (`identity`; the review's eighth pass): a DNS name and the address it
-    # resolves to are two keys here and one recorder, and only the process that opened it can ask the hardware. The
-    # console reads it back to tell the two spellings apart (`config.one_device`).
+    # resolves to are two keys here and one recorder, and only the process that opened it can ask the hardware. Every
+    # holder reads them back to tell two spellings of one device apart (`config.device_identities`, below).
     #
     # A NAME WHOSE IDENTITY ANOTHER KEY HAS IS SAID, NOT REFUSED (the owner's decisions on the review's ninth pass). The
     # eighth pass made the holder refuse such a name as a second name of a device known already. Two runs of the ninth
