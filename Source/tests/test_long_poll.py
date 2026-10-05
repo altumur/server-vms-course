@@ -757,7 +757,7 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
     # the holder's own link: the device is busy when the row is first seen, and free a second and a half later
     put("c", box.wall() - 0.75, filed=box.wall() - 0.5)
     busy = {"rid": "x", "row": holder.rows[0], "it": {}, "at": box.clock(), "returned": threading.Event(), "answered": True}
-    holder._performing[id(dev)] = busy
+    holder._performing[holder.request_target(holder.rows[0])] = busy   # the device's key: what the base compares
     holder.requests()
     assert holder.wait["count"] == 4                                 # not called: the device has a call in flight
     box.clock.advance(1.5); box.wall.advance(1.5)
@@ -1112,8 +1112,7 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
         time.sleep(4.0)
         gaps = [b - a for a, b in zip(leased[mark - 1:], leased[mark:])]
         assert len(gaps) >= 2 and max(gaps) <= 1.0 + 3 * VmsWorker.REQUESTS_HOLD + 0.5, f"lease steps {gaps}"
-        slow = {id(d) for k, d in holder.devices.items() if k in hung}
-        assert holder._slow and holder._slow <= slow                 # what is not waited for is what did not answer
+        assert holder._slow and holder._slow <= hung                 # what is not waited for is what did not answer
         assert all(holder.may_act(str(c)) for c in cams)
     finally:
         gate.set()
@@ -1776,7 +1775,7 @@ def test_a_slow_question_does_not_keep_a_relay_from_being_answered_in_its_look()
         holder.reconcile_once()
         holder.heartbeat_once()                                       # the coverage hangs: slow for questions
         dev = holder.devices["acme/10.0.0.50"]
-        assert id(dev) in holder._slow_asks and id(dev) not in holder._slow
+        assert id(dev) in holder._slow_asks and "acme/10.0.0.50" not in holder._slow
         box.vars.put("vms/requests/r-1", {"unit": str(cams[0]), "action": "output", "port": "1",
                                           "valid_until": str(time.time() + 30)})
         done = holder.requests()

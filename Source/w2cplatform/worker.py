@@ -6,8 +6,10 @@ holds a lease on it, renews both on a period shorter than they last, fences itse
 name and rejoins under a free one, registers with its server's resource, says what it holds in a heartbeat, and serves
 the request rows of the units it holds — once each, at most once, its answer in the heartbeat. A subsystem's worker
 subclasses `Worker` and implements its own work: `reconcile_once` (what runs equals what is assigned), `status` (what
-the heartbeat says of each unit), and, for a subsystem whose units take requests, `perform` (one request against what
-it holds). Everything else here runs from the spec alone, and the platform's own tests run it on `testsub`.
+the heartbeat says of each unit), and, for a subsystem whose units take requests, what one holder knows of them:
+`held_rows` (what is open now), `request_target` (the key of what a request goes into) and `perform` (the call). Everything
+else here — the fence and the epoch before a request's first act, the marks, the deadline, the `command` lines — runs
+from the spec alone, and the platform's own tests run it on `testsub`.
 """
 from __future__ import annotations
 
@@ -25,7 +27,7 @@ from . import runtime
 from .contract import (ASSIGNMENTS, Assignment, BUILD, CONTENDER_FRESH, CONTEND_EVERY, DECOMMISSION, DECOMMISSIONS, Eyes, HOLDS, Heartbeat, NAMELESS, NEVER_READ, NameOnAnotherBox, NoOffer, NoSlot, NotReadThisPass, PRESENCE, REFUSED, SCHEMA, SLOTS, SchemaTooNew, ServerDecommissioned, Slot, Subsystem, _NameTaken, _read_contender, check_schema, label_set, presence_name, published_names, read_assignment, read_hold, read_slot, slot_number, stored)
 from .doors import numeric
 from .epoch import Lease, next_epoch
-from .events import ALARM, OBSERVATION, OF
+from .events import ALARM, COMMAND, COMMAND_FAILED, OBSERVATION, OF
 from .journal import Journal
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .objects import ObjectStore
@@ -146,7 +148,7 @@ class Worker:
         # The units of the assignment as the last read of it answered, or None when that read did not answer
         # (`assignment`, `take_epoch`); `NEVER_READ` until it is first read.
         self.assigned_now: frozenset[str] | None | object = NEVER_READ
-        self._life()                              # the life cycle's own state: the fence, the counters, the requests
+        self._life()                              # the life cycle's own state: the fence, the epochs let go, the requests
 
     # The spec of `sub` in this process's catalogue (`catalog.spec`: what it loaded, else `SPEC_DIR`), or the refusal.
     @staticmethod
@@ -946,6 +948,13 @@ class Worker:
                 f"{self.name}: {unit} is not in the assignment read last" if self.assigned_now is not None else
                 f"{self.name}: its assignment did not answer, and {unit} may be another's now: no new epoch for it "
                 f"until the assignment is read again")
+        # …NOR FOR A UNIT THE LEASE STEP LET GO SINCE THAT READ (`lost_to_epoch`; the review's thirteenth pass, major 6):
+        # the step found a newer epoch — the unit's new holder took it — and the list read before still names the unit.
+        # Whether it is still this worker's is the next read's to say. The rule was kept twice — by one subsystem's gate
+        # and by the requests — and by no other caller; it is the epoch's now, whoever asks for one.
+        if str(unit) in self.lost_to_epoch:
+            raise NotReadThisPass(f"{self.name}: {unit} was let go to a newer epoch since the assignment was last read: "
+                                  f"not taken back until it is read again")
         epoch, _ = next_epoch(self.vars, self.sub.epoch_key(unit))
         self.epochs[unit] = epoch
         self.leases[unit] = Lease(self.vars, self.sub.epoch_key(unit), epoch, self.lease_ttl, self.lease_margin, self.clock,
@@ -1142,7 +1151,7 @@ class Worker:
     # Whether this instance may be stood in for at all. A subsystem that fences an instance says no once it has; and
     # an instance that gave its slot up and has no other is nobody to stand in for (`keep_slot`).
     def may_stand_in(self) -> bool:
-        return self.seeking is None and self.__dict__.get("writing_allowed", True)
+        return self.seeking is None and self.writing_allowed
 
     # Marks one step of the loop. Nested steps are one step: the outermost one's start is what the stand-in judges.
     @contextmanager
@@ -1354,7 +1363,7 @@ class Worker:
 
     # Sum of `conflicts` over all leases, and those met under a name it lost (`rejoin`); goes into the heartbeat.
     def conflicts(self) -> int:
-        return sum(l.conflicts for l in self.leases.values()) + self.__dict__.get("conflicts_carried", 0)
+        return sum(l.conflicts for l in self.leases.values()) + self.conflicts_carried
 
     # Writes `Heartbeat(name, wall(), status, extra)` to `<name>/heartbeats/<worker>` in the object store. The loop's
     # heartbeat (`heartbeat_once`) passes the platform's fields (`platform_fields`: `server`, `labels`, `capacity`,
@@ -1502,14 +1511,15 @@ class Worker:
     #   stop_all_units()     stop everything local: an orderly stop
     #   fence_units()        …and when the instance is fenced (default: `stop_all_units`)
     #   forget_units()       forget what it held when it rejoins under another name
-    #   perform(target, row, it), held_rows(), request_target(row)   a subsystem whose units take requests (below)
+    #   held_rows(), request_target(row), perform(target, row, it)   a subsystem whose units take requests (below)
     # ================================================================================================================
     LEASE_EVERY: float | None = None              # seconds between lease steps; None: a third of `ttl − margin`
     HEARTBEAT_EVERY = 10.0                        # seconds between heartbeats of the loop
 
+    # THE LIFE CYCLE'S OWN STATE, made with the worker (`__init__`) and nowhere else: the fence, what the lease step let
+    # go, the counters, the requests. Every rule that reads it — the fence and the epoch before a request's first act, a
+    # line's and a stand-in's fence — is the base's, and a subsystem neither keeps a copy nor checks that it is there.
     def _life(self) -> None:
-        if "writing_allowed" in self.__dict__:
-            return
         self.writing_allowed = True               # the instance-wide fence: False while it is nobody (`fence`, `rejoin`)
         self.fenced_reason: str | None = None
         self.was_fenced: str | None = None        # why it was fenced last, once it has rejoined
@@ -1517,7 +1527,7 @@ class Worker:
         self.store_errors = 0                     # passes and renewals the store did not answer
         self.pass_failures = 0                    # parts of the loop that raised, since the process started
         self.passes = 0
-        self.lost_to_epoch: set[str] = set()      # units the lease step let go since the last assignment read (`requests`)
+        self.lost_to_epoch: set[str] = set()      # units the lease step let go since the last assignment read (`take_epoch`)
         self.epoch_errors: dict[str, str] = {}    # unit -> why its epoch could not be taken (a garbled row)
         self.pass_refused = False                 # a resource did not answer this pass: early passes back off (`run`)
         self._requests_state()
@@ -1542,7 +1552,6 @@ class Worker:
     def lease_pass(self) -> list[str]:
         """Renew the slot and every lease. Another holder on my slot: the instance
         fences. A lost lease: that one unit stops and gives its epoch up."""
-        self._life()
         if self.writing_allowed and self.waiting_for_offer():
             self._seek_slot()                         # a spare with no offer yet: nobody, holding nothing — not a fence
             return []
@@ -1596,7 +1605,6 @@ class Worker:
     # whatever that slot's assignment says (the product's Go worker, feedback BC: a supervisor does not restart a
     # process that has not died). Returns the new name, or None while there is no slot to take.
     def rejoin(self) -> str | None:
-        self._life()
         if self.writing_allowed:
             return self.name
         # A store raised past this build: nobody to rejoin as (the review's second pass, m4) — with the version it last
@@ -1626,7 +1634,6 @@ class Worker:
     # (`fence_units`). Idempotent. After this the subsystem starts nothing and writes nothing; the heartbeat says
     # `fenced: true` while the name is still this instance's, and nothing at all once the name is another's.
     def fence(self, why: str) -> None:
-        self._life()
         if not self.writing_allowed:
             return
         log.error("%s: FENCED (%s). Stopping every unit.", self.name, why)
@@ -1665,7 +1672,6 @@ class Worker:
     # name last said (`previous_*`: what `SpecController.failover_seconds` measures) — and what the subsystem adds
     # (`heartbeat_fields`).
     def heartbeat_once(self) -> None:
-        self._life()
         self.heartbeat(self.status(), **{**self.platform_fields(), **self.heartbeat_fields()})
 
     def platform_fields(self) -> dict:
@@ -1674,7 +1680,7 @@ class Worker:
                 **({"capacity": cap, "headroom": self.headroom()} if cap is not None else {}),
                 "conflicts": self.conflicts(), "started": self.started_wall, **self.previous_said(),
                 **({"fenced": True} if not self.writing_allowed else {}),
-                **({"fetched": self.fetched_said()} if self.fetched else {})}
+                **self.requests_fields()}
 
     # THE INSTANCE BEFORE THIS ONE UNDER ITS NAME: the heartbeat it left — its `ts`, its instance, its server — read once
     # per name this instance holds, before this instance's first heartbeat under it writes over it. What failover is
@@ -1739,7 +1745,6 @@ class Worker:
     # subsystem's worker had this loop as a copy of its own; there is one loop.)
     def run(self, poll: float = 2.0, stop=None, beat: float = 0.0) -> None:
         """One box: the loop as a process. systemd or launchd restarts it."""
-        self._life()
         stop = stop or threading.Event()
         lease_every = self.LEASE_EVERY or max(1.0, (self.lease_ttl - self.lease_margin) / 3)
         stand_in = self.start_stand_in()
@@ -1905,6 +1910,14 @@ class Worker:
     # no longer exist are cleared every `MARK_SWEEP` seconds, by whichever worker gets there. A unit held with no lease
     # takes one before its first request, so a second holder fences the first.
     #
+    # THE SUBSYSTEM SAYS ONLY WHAT ONE HOLDER KNOWS (ADR 0013): what it holds open now (`held_rows`), the key of what a
+    # request against a row goes into (`request_target`: compared, never called — one call at a time into each), the call
+    # (`perform`), and, if it has words of its own, how it names a unit moved since the request was given
+    # (`moved_refusal`) and what group a row is in (`request_group`, the spec's `group_by` by default). The rest is this
+    # class's and no hook: the fence (`writing_allowed`), the epoch taken before the first act and its rules (`take_epoch`:
+    # nothing taken for a unit not on the assignment read last, nor for one the lease step let go since), and the two
+    # kinds every holder writes, `command` and `command.failed`, with the unit's `of` (`events.COMMAND`).
+    #
     # LOOKED AT FOUR TIMES A SECOND (2 October 2026) — `beat` — with every rule above, each row read ONCE, when it first
     # appears (the review's seventh pass, M5). THE ROAD IS MEASURED HERE, where it ends (`_measure`): `wait` from this
     # worker's first sight of the row to the call (one clock); `road` from the request's `at` (two clocks) and `request`
@@ -1938,9 +1951,8 @@ class Worker:
         self._marks_looked: set[str] = set()             # requests whose mark was read at their first sight (`_confirm`)
         self._appeared: dict[str, float] = {}            # request -> the wall time of the last listing that did not have it
         self._listed: tuple[float, set] | None = None    # (when, which requests) of the previous listing
-        self._slow: set[int] = set()                     # targets whose last call did not answer inside `PERFORM_GRACE`
-        self._performing: dict[int, dict] = {}           # target -> the one call in flight into it
-        self._unit_targets: dict[str, object] = {}       # unit -> its target, when the subsystem names none (`request_target`)
+        self._slow: set = set()                          # targets (their keys) whose last call did not answer inside `PERFORM_GRACE`
+        self._performing: dict = {}                      # target key -> the one call in flight into it
         self.reanswered = 0                              # requests answered before by this slot, said again (`_answered_before`)
         self._beat_failed = False                        # the look between passes is failing: said once (`beat_once`)
         self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
@@ -1953,17 +1965,15 @@ class Worker:
     def serve_requests(self) -> None:
         self.requests()
 
-    # The hooks: the rows of the units this worker holds now (`{id: row}`), what a request against one goes into — one
-    # call at a time into each (`request_target`; None: not open yet, asked again on the next look), every target it has
-    # (`request_targets`), the call itself (`perform`), and how a refusal names a unit moved since the request was given.
+    # What the subsystem gives: the rows of the units this worker holds now (`{id: row}`); the KEY of what a request
+    # against one goes into (`request_target`) — anything comparable, one call at a time into each key, the unit itself
+    # unless the subsystem says otherwise; None: not open yet, asked again on the next look; the call itself (`perform`,
+    # handed that key); and how a refusal names a unit moved since the request was given.
     def held_rows(self) -> dict[str, dict]:
         return {}
 
     def request_target(self, row: dict):
-        return self._unit_targets.setdefault(str(row["id"]), object())
-
-    def request_targets(self) -> list:
-        return list(self._unit_targets.values())
+        return str(row["id"])
 
     def perform(self, target, row: dict, it: dict) -> dict:
         raise NotImplementedError
@@ -2003,7 +2013,7 @@ class Worker:
         from .rows import number
         refuse_own_of(self.sub.name, str(unit), fields)   # at once: a line the suppressor swallows is refused as well
         epoch = self.epochs.get(str(unit))
-        if epoch is None or not self.resource_root or not self.__dict__.get("writing_allowed", True):
+        if epoch is None or not self.resource_root or not self.writing_allowed:
             return None
         t = self.wall()
         occurred = number(f"{self.sub.name}/{unit}#occurred", fields.pop("occurred", None), default=None)
@@ -2063,7 +2073,7 @@ class Worker:
     # nobody ever counted. A summary goes under the epoch its window was opened under; a unit let go since, or a fenced
     # instance, drops it — a predecessor's storm is not written into a successor's bucket.
     def flush_suppressed(self) -> int:
-        if not self.__dict__.get("writing_allowed", True) or not self.resource_root:
+        if not self.writing_allowed or not self.resource_root:
             return 0
         written = 0
         for unit, t, kind, fields in self.suppressor.flush(self.wall()):
@@ -2158,9 +2168,20 @@ class Worker:
             out.append(said)
         return ",".join(out)
 
+    # WHAT THE FAMILY SAYS IN THE HEARTBEAT, every holder's (the product's names; a spec's `metrics:` reads them): what was
+    # answered (`fetched`, which the console's clearing reads), the outcomes counted, the answers said again, the calls
+    # not back yet, and the road to the call as histograms since the process started (`_measure`). Each only once there
+    # is something to say.
+    def requests_fields(self) -> dict:
+        return {**({"fetched": self.fetched_said()} if self.fetched else {}),
+                **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {}),
+                **({"commands_reanswered": self.reanswered} if self.reanswered else {}),
+                **({"commands_in_flight": len(self._performing)} if self._performing else {}),
+                **({"command_road": self.road, "command_request": self.request_road, "command_wait": self.wait}
+                   if self.wait["count"] else {})}
+
     def requests(self, budget: int | None = None, now: float | None = None) -> list[dict]:
         from .rows import finite
-        self._life()
         budget = self.COMMANDS_PER_LOOK if budget is None else budget
         now = self.wall() if now is None else now
         held_from = time.monotonic()                     # the waits below are real seconds: so is their bound
@@ -2186,7 +2207,7 @@ class Worker:
         self._listed = (listed_at, present)
         answered = set(self.fetched)
         in_flight = {c["rid"] for c in self._performing.values()}
-        self._slow &= {id(t) for t in self.request_targets()}
+        self._slow &= {t for t in map(self.request_target, mine.values()) if t is not None}   # a target let go is not slow
         for key in keys:
             if len(done) - base - again - from_calls + len(begun) >= budget:
                 break                                    # this look has acted on its share: the rest is the next look's
@@ -2254,12 +2275,12 @@ class Worker:
             target = self.request_target(row)
             if target is None:
                 continue                                 # what it goes into is not open yet: ask again next look
-            if id(target) in self._performing:
+            if target in self._performing:
                 # A call this look began into the same target, not yet back: waited for — inside its own `PERFORM_GRACE`
                 # and the look's `REQUESTS_HOLD` — so that two requests to a target that answers at once go in one look; a
                 # target that does not answer is not waited for twice.
-                ahead = self._performing[id(target)]
-                if id(target) not in self._slow and any(c is ahead for c, _ in begun):
+                ahead = self._performing[target]
+                if target not in self._slow and any(c is ahead for c, _ in begun):
                     left = min(ahead["t0"] + self.PERFORM_GRACE, held_from + self.REQUESTS_HOLD) - time.monotonic()
                     if left > 0:
                         ahead["returned"].wait(left)
@@ -2268,20 +2289,18 @@ class Worker:
                         from_calls += len(got_back)
                         done += got_back
                     elif time.monotonic() - ahead["t0"] >= self.PERFORM_GRACE:
-                        self._slow.add(id(target))
-                if id(target) in self._performing:
+                        self._slow.add(target)
+                if target in self._performing:
                     continue                             # a call into this target has not returned: wait your turn
-            if unit not in self.leases and unit in self.lost_to_epoch:
-                # LET GO SINCE THE ASSIGNMENT WAS READ: NOT TAKEN BACK BETWEEN PASSES. Whether the unit is still mine is the
-                # pass's to say, after the assignment is read; until then, whoever holds it acts.
-                continue
             if unit not in self.leases:
                 try:
                     self.take_epoch(unit)                # a unit acted on is a unit fenced: its epoch, before the first request
                 except OSError:
                     raise                                # the store did not answer: not known, for every request
                 except NotReadThisPass:
-                    continue                             # not known to be mine since the assignment was read: the pass says
+                    # Not on the assignment read last, or LET GO SINCE IT WAS READ (`lost_to_epoch`): not taken back
+                    # between passes. Whether the unit is still mine is the pass's to say; until then, whoever holds it acts.
+                    continue
                 except Exception as e:                   # noqa: BLE001 — a garbled epoch row, or no slot: this request's refusal
                     self.epoch_errors[unit] = str(e)
                     self._refused(rid, row, it, f"its unit's epoch could not be taken: {e}", done)
@@ -2307,7 +2326,7 @@ class Worker:
                 self.fetched.append(rid)
                 done.append({"request": rid, "unit": row["id"], "error": why})
                 self.commands["unknown"] += 1
-                self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
+                self.observe(row["id"], COMMAND_FAILED, action=str(it.get("action", "")), error=why)
                 log.warning("%s: request %s not performed — %s", self.name, rid, why)
                 continue
             call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False,
@@ -2322,11 +2341,11 @@ class Worker:
                 call["took"] = time.monotonic() - t0
                 call["returned"].set()
 
-            self._performing[id(target)] = call
+            self._performing[target] = call
             in_flight.add(rid)
             self._measure(rid, it)                       # the road ends here: the call
             threading.Thread(target=run, daemon=True).start()
-            begun.append((call, id(target)))
+            begun.append((call, target))
         # The calls this look began, waited for TOGETHER, `PERFORM_GRACE` at most and never past `REQUESTS_HOLD`; one that
         # outlasts a whole `PERFORM_GRACE` names its target slow, and its answer is collected by a later look.
         if begun:
@@ -2413,7 +2432,7 @@ class Worker:
                     done.append({"request": rid, "unit": row["id"], **call["out"]})
                     self.commands["performed"] += 1
                     self._confirm(rid, row, "performed", it)
-                    self.observe(row["id"], "command", **call["out"])    # what was done to a unit is an event about it
+                    self.observe(row["id"], COMMAND, **call["out"])      # what was done to a unit is an event about it
             elif not call["answered"] and self.clock() - call["at"] >= self.PERFORM_TIMEOUT:
                 call["answered"] = True
                 self._refused(rid, row, it, f"{self.REQUEST_TARGET} did not answer", done)
@@ -2423,4 +2442,4 @@ class Worker:
         self.fetched.append(rid)                         # a refusal is an answer: do not ask for ever
         done.append({"request": rid, "unit": row["id"], "error": why})
         self.commands["refused"] += 1
-        self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
+        self.observe(row["id"], COMMAND_FAILED, action=str(it.get("action", "")), error=why)

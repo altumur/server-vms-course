@@ -952,14 +952,9 @@ class VmsWorker(Worker):
                 return False
             if verb == "start" or unit not in self.epochs:
                 try:
-                    # …NOT ONE THE LEASE STEP LET GO SINCE THE ASSIGNMENT WAS LAST READ (the review's thirteenth pass,
-                    # major 6; `n2_pass_stale_assignment`): the step found a newer epoch — the camera's new holder took
-                    # it — and let the camera go; the next pass's `refresh` raised once, the pass went on with the list
-                    # read before, and the reconciler took epoch 3 by CAS from the holder of 2. The beat had this rule
-                    # (`serve_requests`); the pass did not. Whether it is still mine is the next read's to say.
-                    if unit in self.lost_to_epoch:
-                        raise NotReadThisPass(f"{self.name}: {unit} was let go to a newer epoch since the assignment "
-                                              f"was last read: not taken back until it is read again")
+                    # …not one the lease step let go since the assignment was last read (the review's thirteenth pass,
+                    # major 6; `n2_pass_stale_assignment`): `take_epoch` refuses it (`NotReadThisPass`), whoever asks —
+                    # this gate and the requests alike.
                     cam = dict(cam, epoch=self.take_epoch(unit))   # a new epoch for a new writer
                 except (OSError, NotReadThisPass) as e:
                     # The store did not answer for the epoch — or for the assignment, and the unit may be another's now
@@ -1124,15 +1119,14 @@ class VmsWorker(Worker):
         return f"camera {unit}"
 
     # A command goes into the DEVICE that carries the camera — one session per device, one call into it at a time — and
-    # is performed only by the holder of a camera it holds.
+    # is performed only by the holder of a camera it holds. What the base compares is the device's KEY (`device_of`),
+    # given while the device is open; `perform` calls the session that key names.
     def held_rows(self) -> dict[str, dict]:
         return {str(r["id"]): r for r in self.rows}
 
     def request_target(self, row: dict):
-        return self.device_of_row(row)
-
-    def request_targets(self) -> list:
-        return list(self.devices.values())
+        key = device_of(row["source"]) if row.get("source") else None
+        return key if key in self.devices else None
 
     def moved_refusal(self, unit: str) -> str:
         return (f"camera {unit} was moved to another device after this command was given: it was not performed — give it "
@@ -1173,11 +1167,14 @@ class VmsWorker(Worker):
     # `ARG_MAX` is that command's refusal, its value not repeated.
     ARG_MAX = COMMAND_ARG_MAX
 
-    def perform(self, dev, row: dict, it: dict) -> dict:
+    def perform(self, device: str, row: dict, it: dict) -> dict:
         action = str(it.get("action", ""))
         long = [f for f in ("port", "state", "pulse_ms", "n") if len(str(it.get(f, ""))) > self.ARG_MAX]
         if long:
             raise ValueError(f"`{long[0]}` is {len(str(it[long[0]]))} characters long: an argument is a number or a word")
+        dev = self.devices.get(device)
+        if dev is None:
+            raise ValueError(f"device {device} is not open now")    # closed between the look and the call
         if action == "output":
             port, state, ms = int(it.get("port", 0)), str(it.get("state", "pulse")), int(it.get("pulse_ms", 0) or 0)
             if not hasattr(dev, "output"):
@@ -1263,7 +1260,7 @@ class VmsWorker(Worker):
                 known.setdefault(device_of(r["source"]), set()).add(str(channel_of(r["source"]) or r["id"]))
         devices = sorted(self.devices.items())
         heard = self._heard if self._heard is not None else self._ask_devices(self._status_asks(devices))
-        slow = self._slow | self._slow_asks
+        slow = self._slow_devices()
         out = []
         for key, dev in devices:
             have = known.get(key, set())
@@ -1769,14 +1766,19 @@ class VmsWorker(Worker):
                 **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
                 "devices": self.device_status(), **self.heartbeat_extra()}
 
+    # The devices said slow: those whose last command did not answer inside `PERFORM_GRACE` (the base's `_slow`, by the
+    # device's key) and those whose last question did not answer inside `DEVICE_GRACE` (`_slow_asks`, by session).
+    def _slow_devices(self) -> set[int]:
+        return self._slow_asks | {id(d) for k, d in self.devices.items() if k in self._slow}
+
+    # What the requests family says (`fetched`, the outcomes, the road) is the base's (`Worker.requests_fields`); here,
+    # what only a holder of devices can say.
     def heartbeat_extra(self) -> dict:
-        return {"fetched": self.fetched_said(),
-                **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {}),
-                **({"commands_reanswered": self.reanswered} if self.reanswered else {}),
-                # What the beat waits on, said (the review's eighth pass, minor): devices whose last call did not answer
-                # inside `PERFORM_GRACE` (`_slow`) and calls into devices not back yet — on `/metrics` as `vms_devices_slow`
-                # and `vms_commands_in_flight` (metrics vms.subsystem.yaml declares, `metrics:`).
-                **({"devices_slow": len(self._slow | self._slow_asks)} if self._slow or self._slow_asks else {}),
+        # What the beat waits on, said (the review's eighth pass, minor): devices whose last call did not answer — on
+        # `/metrics` as `vms_devices_slow` (metrics vms.subsystem.yaml declares, `metrics:`), beside the base's
+        # `commands_in_flight`.
+        slow = self._slow_devices()
+        return {**({"devices_slow": len(slow)} if slow else {}),
                 # The playback door's reads a device has not come back from (`_door_read`; the thirteenth review).
                 **({"door_reads_stuck": stuck} if (stuck := self.door_reads_stuck()) else {}),
                 # Devices whose open has not come back (`device_status`; the tenth pass): `state: opening` each.
@@ -1787,10 +1789,6 @@ class VmsWorker(Worker):
                 **({"events_refused": self.events_refused} if self.events_refused else {}),
                 # Devices whose identity another key's row says too (`describe_devices`; the ninth pass): said, not refused.
                 **({"identity_coincidences": len(self.coincidences)} if self.coincidences else {}),
-                **({"commands_in_flight": len(self._performing)} if self._performing else {}),
-                # The road to the device, as histograms since this process started (`_measure`).
-                **({"command_road": self.road, "command_request": self.request_road, "command_wait": self.wait}
-                   if self.wait["count"] else {}),
                 # The playback door's key, once the door is open (`vms/playback.py`): what the console signs a viewer's
                 # address with, and what a process derives its capability from. Here and not in a camera's status:
                 # statuses are the read model the page shows.
