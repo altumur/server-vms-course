@@ -17,6 +17,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from w2cplatform.objects import FsObjectStore  # noqa: E402
+from w2cplatform.reconcile import Reconciler, Want  # noqa: E402
 from w2cplatform.variables import FileVariables  # noqa: E402
 from w2cplatform.worker import Worker  # noqa: E402
 
@@ -256,9 +257,14 @@ class CounterWorker(Worker):
     subsystem's own work would. Everything else — the slot, the leases, the fence, the stand-in, the heartbeat's own
     fields, the requests — is the platform's `Worker`, which is what a test of the platform proves here.
 
+    Its pass is the platform's reconcile helper (`w2cplatform/reconcile.py`, ADR 0033): what runs is made equal to what
+    is assigned, and a counter whose epoch could not be taken waits its backoff, spread by jitter, before it is tried
+    again.
+
     Not knowing is not "no": a pass whose read does not answer goes on with the rows it read last; a row that does not
     parse is that counter's (`row_garbled`); a counter whose lease the lease step lost is stopped by the platform
-    (`stop_unit`) and started again under a new epoch by the next pass, if it is still this worker's."""
+    (`stop_unit`: dropped from the helper, no failure) and started again under a new epoch by the next pass, if it is
+    still this worker's."""
     ROWS = "counters"
 
     def __init__(self, vars_, objects, name: str | None = None, clock=time.monotonic, wall=time.time,
@@ -276,6 +282,10 @@ class CounterWorker(Worker):
         self.counts: dict[str, int] = {}
         self.started: list[str] = []
         self.stopped: list[str] = []
+        # a counter's edit is ONE call: it keeps its epoch (`restart`), never a stop and a start
+        self.reconciler = Reconciler(self._start, lambda unit: (self.stop_unit(unit), self.release(unit)),
+                                     restart=lambda unit, want: unit in self.running)
+        self.reconciler.now = clock
         self.claim_at_start(name, dict(env or {}))
         if resource_root:
             self.present(resource_root)
@@ -301,26 +311,32 @@ class CounterWorker(Worker):
             self.refresh()
         except OSError:
             self.store_errors += 1                   # the rows read last stand
-        for unit in [u for u in self.running if u not in self.rows]:
-            self.stop_unit(unit)
-            self.release(unit)
-        if self.writing_allowed:
-            for unit in self.rows:
-                if unit in self.running and unit in self.epochs and self.may_write(unit):
-                    continue
-                try:
-                    epoch = self.epochs[unit] if unit in self.epochs and self.may_write(unit) else self.take_epoch(unit)
-                except Exception as e:               # noqa: BLE001 — no epoch now (the store, a step abandoned, not read)
-                    self.epoch_errors[unit] = str(e)
-                    continue
-                self.epoch_errors.pop(unit, None)
-                self.running[unit] = epoch
-                self.counts.setdefault(unit, int(self.rows[unit].get("start") or 0))
-                self.started.append(unit)
+        for unit in [u for u in self.reconciler.running() if u in self.rows]:
+            if not (unit in self.epochs and self.may_write(unit)):
+                self.reconciler.drop(unit)           # running under no epoch it may write by: taken again below
+        wants = {u: Want(int(r.get("revision") or 0), r) for u, r in self.rows.items()}
+        if not self.writing_allowed:                 # fenced: nothing starts, and what is not its own any more stops
+            wants = {u: w for u, w in wants.items() if u in self.reconciler.running()}
+        self.reconciler.once(wants)
         self.passes += 1
         return sorted(self.running)
 
+    # The helper's start: under the epoch it holds and may write by, else a new one. None now — the store, a step
+    # abandoned, an assignment not read — is a failed start, retried after its backoff.
+    def _start(self, unit: str, want: Want) -> bool:
+        try:
+            epoch = self.epochs[unit] if unit in self.epochs and self.may_write(unit) else self.take_epoch(unit)
+        except Exception as e:                       # noqa: BLE001
+            self.epoch_errors[unit] = str(e)
+            return False
+        self.epoch_errors.pop(unit, None)
+        self.running[unit] = epoch
+        self.counts.setdefault(unit, int(want.body.get("start") or 0))
+        self.started.append(unit)
+        return True
+
     def stop_unit(self, unit) -> None:
+        self.reconciler.drop(str(unit))
         if self.running.pop(str(unit), None) is not None:
             self.stopped.append(str(unit))
 
@@ -330,6 +346,8 @@ class CounterWorker(Worker):
 
     def forget_units(self) -> None:
         self.rows, self.row_errors = {}, {}
+        self.reconciler.clear()
+        self.reconciler.reset_backoff()              # another name: what failed under the old one waits for nothing
 
     def unit_word(self, unit) -> str:
         return f"counter {unit}"

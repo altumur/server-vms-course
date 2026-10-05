@@ -10,7 +10,7 @@ detectors, on any server. It takes an epoch per camera by CAS when it
 starts one, holds a lease per camera, writes what it observes into the
 camera's bucket on ITS server's resource, and publishes a heartbeat
 carrying its status. It records nothing: recording is the recorder's
-(`recorder.py`), a subscriber like any other. It never writes
+(`recworker.py`), a subscriber like any other. It never writes
 configuration. systemd (launchd on a Mac, a scheduler where there is one) supervises the process; the
 process supervises its pipelines; nothing supervises the loop, because the
 loop is the process.
@@ -35,10 +35,10 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # a lease, a heartbeat with server, labels and capacity
 #
 # **Role in the module.** Lesson 4. One process, N pipelines, its own loop. `VmsWorker` extends
-# `w2cplatform.worker.Worker` (see `contract.py` for `claim_slot`, `renew_slot`, `release_slot`,
-# `take_epoch`, `renew_leases`, `heartbeat`) and is the thing that knows what a camera is. It reads its
-# assignment `vms/workers/<me>` and the camera rows it names, runs М9's `Reconciler` over them
-# (`reconciler.py`) with an actuator that builds `driverpacksrc ! tee ! …` (`gstvms/actuator.py`;
+# `w2cplatform.worker.Worker` (the base worker has `claim_slot`, `claim_at_start`, `renew_slot`, `release_slot`,
+# `take_epoch`, `renew_leases`, `lease_pass`, `heartbeat`) and is the thing that knows what a camera is. It reads its
+# assignment `vms/workers/<me>` and the camera rows it names, runs the platform's reconcile helper over them
+# (`w2cplatform/reconcile.py`, ADR 0033 — М9's loop) with an actuator that builds `driverpacksrc ! tee ! …` (`gstvms/actuator.py`;
 # `FakeActuator` here without GStreamer), takes an epoch per camera by CAS when it starts one, holds a lease
 # per camera, writes events into the camera's bucket on this server's resource, and publishes a heartbeat
 # carrying its status. It never writes configuration: its token is `vms/epoch/*`, `vms/slots/*` and
@@ -63,7 +63,7 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # `<PLATFORM_DIR>/events` — `runtime.events_root`, the platform's) and then `claim_at_start(name, env)` (no name:
 # the runtime's, by the spec's `slot`, `Worker.given_name`) — so construction *is* the claim, and `self.name` is set afterwards. Then: `capacity`
 # from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I, measured on ITS server"; the actuator
-# (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self, self._actuate)`; `writing_allowed = True`;
+# (`FakeActuator()` if none); an empty `rows`; the reconciler over its gate (`new_reconciler`); `writing_allowed = True`;
 # `server` from the argument, `SERVER_NAME`, else the hostname; `labels` (`LABELS`), `alloc` (`INSTANCE_ID`). The
 # previous instance's heartbeat under this slot name — what the controller's `failover_seconds` measures from — is
 # the platform's to read (`Worker.previous_said`), before the first heartbeat.
@@ -73,14 +73,16 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 #
 # ## Notes
 # - Ordering: the slot is claimed in the constructor, before any assignment is read (the name is the row
-#   key); an epoch is taken in `_actuate` before the pipeline starts; `lease_pass` checks the slot before
-#   the leases.
+#   key); an epoch is taken in `_actuate` before the pipeline starts; the base worker's `lease_pass` checks the
+#   slot before the leases.
 # - Recovery needs no controller: `test_restart_with_the_controller_stopped` deletes the controller, starts
 #   a fresh `w-1` with an empty `actual`, and it starts all three cameras from its assignment with epoch 2
 #   each — the old instance is fenced by construction.
-# - Three exits from a lost lease, all in `lease_pass`: reassignment (stop that one, continue), zombie
-#   (fence everything), and slot taken (fence everything, first). A lease that merely expired because the
-#   loop stalled shows up as `may_act` false in `_actuate` and a fresh epoch on the next start.
+# - The exits from a lost lease are the base worker's `lease_pass`: the slot held by another instance (fence
+#   everything, first), and a lease lost — a newer epoch issued (the camera reassigned, or a zombie's) or unconfirmed
+#   past its ceiling — which stops that one camera (`stop_unit`: dropped from the reconciler, no failure) and goes on.
+#   A lease that merely expired because the loop stalled shows up as `may_act` false in `_actuate` and a fresh epoch
+#   on the next start.
 # - `observe` returns the bucket path, which the tests read back with `read_bucket`; the worker keeps
 #   `observed` only for tests and diagnostics.
 # ================================================================================================
@@ -109,7 +111,7 @@ from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_key, channel_of, describe, device_of,
                      device_identities, device_row, identity_of, live_shm, live_url, said_id, COMMAND_ARG_MAX,
                      playback_url, port_of, row)
-from .reconciler import CONVERGED, Reconciler
+from w2cplatform.reconcile import CONVERGED, Reconciler, Want
 
 
 # `COMMANDS_BEAT`: how often a holder looks at its request rows BETWEEN passes, in seconds (`VmsWorker.between`).
@@ -502,7 +504,7 @@ class VmsWorker(Worker):
     "whichever slot is free" — a lapsed one first, so a replacement
     inherits its assignment. A worker on a cluster is a worker on a box
     whose stores happen to be raft: same class, same heartbeat. The
-    recorder (`recorder.py`) is this class over another subsystem's rows."""
+    recorder (`recworker.py`) is this class over another subsystem's rows."""
 
     SUB = VMS                       # the subsystem whose assignment and rows this worker runs
     REQUEST_TARGET = "the device"   # what a request's refusal calls what was called
@@ -564,13 +566,23 @@ class VmsWorker(Worker):
         self.identity_changes = 0                         # a key whose device said another identity than before (`describe_devices`)
         self.events_refused = 0                           # lines a device posted that could not be written (`drain_bus`)
         self.assignment_rev = 0
-        self.reconciler = Reconciler(self, self._actuate)
+        self._pass_now: float | None = None               # a test's own `now` for one pass (`reconcile_once(now)`)
+        self.reconciler = self.new_reconciler()
         self.labels = labels_from_environment(env)
         self.alloc = runtime.instance(env) or ""          # published as `alloc` for the readers that already know that name
         self.started_at = clock()
 
-    # -- the store, as the reconciler sees it ------------------------------------
-    # The reconciler's store: `self.rows`.
+    # -- what the reconciler runs -----------------------------------------------------
+    # The platform's helper (`w2cplatform/reconcile.py`, ADR 0033) over this worker's gate, all three verbs: a restart is
+    # ONE call (an edit keeps the held epoch and lease — no new writer, no break in `<id>/e<epoch>`, nothing asked of a
+    # silent store), never a stop and a start; its delays run on this worker's clock (`now`).
+    def new_reconciler(self) -> Reconciler:
+        r = Reconciler(lambda uid, want: self._actuate("start", want.body), lambda uid: self._actuate("stop", {"id": uid}),
+                       restart=lambda uid, want: self._actuate("restart", want.body))
+        r.now = lambda: self.now() if self._pass_now is None else self._pass_now
+        return r
+
+    # The rows the reconciler runs: `self.rows`, less what `desired` holds back.
     def desired(self) -> list[dict]:
         """What the reconciler runs. A row with `live: on-demand` is NOT here: its device is
         still held (see `_refresh_devices`) and its archive still served, but no pipeline is
@@ -1063,7 +1075,7 @@ class VmsWorker(Worker):
         return self.clock() - self.started_at
 
     # -- the passes ---------------------------------------------------------------
-    # One pass: `refresh`, `reconciler.reconcile(now)`, count the pass, log each action. The base class's
+    # One pass: `refresh`, `reconciler.once` over the wanted rows, count the pass, log each action. The base class's
     # abstract method; called by `run` and directly by every test.
     #
     # NOT KNOWING IS NOT "NO" (feedback BC). A store that did not answer says nothing about what this worker
@@ -1076,7 +1088,15 @@ class VmsWorker(Worker):
         except OSError as e:
             self.store_errors += 1
             log.warning("%s: the store did not answer (%s); going on with the last assignment read", self.name, e)
-        actions = self.reconciler.reconcile(self.now() if now is None else now)
+        wants = {r["id"]: Want(r["revision"], r) for r in self.desired() if r["enabled"]}
+        self._pass_now = now
+        try:
+            p = self.reconciler.once(wants)
+        finally:
+            self._pass_now = None
+        # The pass as it was done: the stops, then each restart, start or failure in the order the cameras are wanted.
+        done = {**{u: "restart" for u in p.restarted}, **{u: "start" for u in p.started}, **{u: "failed" for u in p.failed}}
+        actions = [("stop", u) for u in p.stopped] + [(done[u], u) for u in wants if u in done]
         self.passes += 1
         for verb, cid in actions:
             log.info("%s: %s camera %s", self.name, verb, cid)
@@ -1113,7 +1133,7 @@ class VmsWorker(Worker):
 
     # The bus, drained: `actuator.pump()` gives `(dead, posted)`; every posted `(cid, kind, fields)` becomes
     # `observe(...)` — a line only if I still hold the epoch; every dead camera becomes
-    # `reconciler.lost(cid, now)` (restart after backoff) plus `observe(cid, "silent")` — "the event with no
+    # `reconciler.forget(cid)` (restart after backoff) plus `observe(cid, "silent")` — "the event with no
     # picture behind it, by definition".
     def pump_once(self) -> None:
         """The bus, drained: what elements posted becomes events — if I still
@@ -1130,9 +1150,9 @@ class VmsWorker(Worker):
     # A lost lease stops ONE pipeline: `lost` names units the way the lease does — as text — and the reconciler keys by
     # the row's id, which the spec parsed (a number for cameras, a name for recordings): matched, never cast.
     def stop_unit(self, unit) -> None:
-        uid = next((k for k in self.reconciler.actual if str(k) == str(unit)), unit)
+        uid = next((k for k in self.reconciler.running() if str(k) == str(unit)), unit)
         self.actuator("stop", {"id": uid})
-        self.reconciler.actual.pop(uid, None)
+        self.reconciler.drop(uid)                   # stopped by its lease, not failed: started again, if still mine
 
     def stop_all_units(self) -> None:
         self.actuator.stop_all()                    # with GStreamer, EOS lets the last access units reach each sink
@@ -1143,7 +1163,8 @@ class VmsWorker(Worker):
 
     def forget_units(self) -> None:
         self.rows, self.assignment_rev = [], 0
-        self.reconciler.clear()
+        self.reconciler.clear()                     # another name, another assignment: what failed under the old one
+        self.reconciler.reset_backoff()             # …waits for nothing here
 
     def unit_word(self, unit) -> str:
         return f"camera {unit}"
@@ -1185,7 +1206,7 @@ class VmsWorker(Worker):
                 log.error("%s: a device posted an event that cannot be written (%s: %.200s); dropped — the other events "
                           "are written", self.name, type(e).__name__, e)
         for cid in dead:
-            self.reconciler.lost(cid, self.now())
+            self.reconciler.forget(cid)                 # died, not by command: started again after its delay
             self.observe(cid, "silent")                 # the event with no picture behind it, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
 
@@ -1217,23 +1238,23 @@ class VmsWorker(Worker):
             return {"action": action, "n": n}
         raise ValueError(f"unknown action {action!r}")
 
-    # The read model, per assigned row: `id`, `ref`, `name`, `enabled`, `phase` (`running` if in
-    # `reconciler.actual`; `pending` if disabled; `failed` if in `reconciler.failures`; else `pending`),
+    # The read model, per assigned row: `id`, `ref`, `name`, `enabled`, `phase` (`running` if the reconciler
+    # runs it; `pending` if disabled; `failed` if it has failures in a row; else `pending`),
     # `position` (`converged | lagging | stalled`), `revision`, `observed_revision` (what is actually
     # running), `epoch` (held, or 0). This list is the heartbeat's `status`; the controller's `read_model`
     # and the console's `/cameras` show it, and `/metrics` counts `phase == running` into
     # `vms_cameras_running`.
     def status(self) -> list[dict]:
-        st = self.reconciler.status()
+        running, st = self.reconciler.running(), self.reconciler.status()
         out, back = [], self.held_back()
         for cam in self.rows:
             cid = cam["id"]
-            pos, lag = st.get(cid, (CONVERGED, 0))
-            phase = "running" if cid in self.reconciler.actual else ("pending" if not cam["enabled"] else
-                                                                     ("failed" if cid in self.reconciler.failures else "pending"))
+            pos = st[cid].state if cid in st else CONVERGED
+            phase = "running" if cid in running else ("pending" if not cam["enabled"] else
+                                                      ("failed" if cid in st and st[cid].failures else "pending"))
             lease = self.leases.get(str(cid))
             out.append({"id": cid, "ref": cam.get("ref", ""), "name": cam.get("name", str(cid)), "enabled": cam["enabled"], "phase": phase, "position": pos,
-                        "revision": cam["revision"], "observed_revision": self.reconciler.actual.get(cid, {}).get("revision", 0),
+                        "revision": cam["revision"], "observed_revision": running.get(cid, 0),
                         "epoch": self.epochs.get(str(cid), 0),
                         # recording under an epoch the store has not confirmed: said, not hidden
                         **({"lease": "unconfirmed", "unconfirmed_s": round(lease.unconfirmed(), 1)}
@@ -1857,7 +1878,7 @@ class VmsWorker(Worker):
     #
     # The index is fetched and not heartbeated, and that is a decision rather than a detail. Thirty days of
     # motion recording on thirty-two channels is thousands of spans; the heartbeat is ONE object under a
-    # ceiling (М10A Lesson 25 and 26), and a field that grows with the device does not belong in it. The
+    # ceiling (М10A Lesson 19), and a field that grows with the device does not belong in it. The
     # heartbeat keeps the summary — two numbers, enough to draw a timeline and to know there is something
     # to ask about — and whoever needs the spans pays a request for them.
     #

@@ -219,7 +219,7 @@ def test_an_offline_backup_stands_in_for_a_failure_and_never_for_a_decision():
     row = next(r for r in backup.rows if r["id"] == "1-copy")
     assert not backup.primary_needs_cover(row)
 
-    primary.actuator.stop_all(); primary.reconciler.actual.clear(); primary.heartbeat_once()   # the primary stops writing
+    primary.actuator.stop_all(); primary.reconciler.clear(); primary.heartbeat_once()   # the primary stops writing
     assert not backup.primary_needs_cover(row)                          # …not yet: it may be starting
     box.wall.advance(backup.START_GRACE + 1)
     primary.heartbeat_once()
@@ -249,7 +249,7 @@ def _primary_stops(box, primary, backup, holder, after: float = 100.0):
     box.wall.advance(after)
     holder.heartbeat_once(); primary.heartbeat_once(); backup.heartbeat_once()
     stopped = box.wall()
-    primary.actuator.stop_all(); primary.reconciler.actual.clear(); primary.heartbeat_once()
+    primary.actuator.stop_all(); primary.reconciler.clear(); primary.heartbeat_once()
     backup.reconcile_once()                                            # the backup's next pass sees it quiet
     return stopped
 

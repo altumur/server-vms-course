@@ -499,7 +499,7 @@ def _gate(ring, act, pusher, wall, row):
     class Gate(CardRecorder):
         def __init__(self):                                             # the gate alone: no slot, no store, no engine
             self.ring, self.actuator, self.wall, self.name, self.rows = ring, act, wall, "cam", [row]
-            self.reconciler = SimpleNamespace(actual={row["id"]})
+            self.reconciler = SimpleNamespace(running=lambda: {row["id"]: 1})
             self.holding = {row["id"]: True}
             self._primary_back_since, self._cover_since, self._kept_until = {}, {}, {}
             self.stream_says, self.resumes = edge_gate(pusher), edge_resumes(pusher)
@@ -873,7 +873,7 @@ def _camera_process(wall, vars_, objects, root, flash, dial):
     rec.lease_pass(); rec.heartbeat_once()
     SpecController(REC_SPEC, vars_, objects, wall=wall).ensure_placed()
     rec.reconcile_once(); rec.heartbeat_once()
-    assert rec.card is not None and "1-card" in rec.reconciler.actual
+    assert rec.card is not None and "1-card" in rec.reconciler.running()
     rec.card.segment_span = 10.0
     return ring, act, rec, camera_process(SERIAL, flash, dial, rec)
 

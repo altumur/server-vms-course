@@ -303,7 +303,7 @@ def test_the_recorder_reads_past_a_recording_whose_row_does_not_parse():
     _garble(box, "rec/recordings/1")
     r.lease_pass()
     acts = r.reconcile_once()
-    assert ("start", "1-b") in acts and "1-b" in r.reconciler.actual, acts
+    assert ("start", "1-b") in acts and "1-b" in r.reconciler.running(), acts
     assert r.backup_sources({"id": "1-b", "cam": "1", "home": ""}) == []                    # walked, not raised
     assert r.primary_needs_cover({"id": "1-b", "cam": "1", "home": ""}) in (True, False)
 

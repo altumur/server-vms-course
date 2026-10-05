@@ -1,9 +1,8 @@
 """The VMS — the first subsystem the platform hosts.
 
-    reconciler.py   М9 Lesson 6's loop, unchanged: desired persisted, actual derived
     archive.py      the archive: volumes of ObjectStorage through the host's obsd — streams, the index, the ring
     worker.py       vmsworker — DriverPack as the worker: N pipelines against an assignment
-    controller.py   vmscontroller — the only writer of vms/*: cameras, assignment, placement
+    controller.py   the VMS's words over the platform's controller (the process is `w2c-controller@vms`)
     console.py      the one-box console: the platform's SpecConsole over the VMS spec, plus /timeline, /export, /segment and the WHEP door
     gateway.py      the live gateway — the second subsystem's worker: a camera's fan-out as the unit, viewers as the capacity
     detworker.py    the detector worker — the second subsystem's worker: a model on a camera as the unit, streams as the capacity
@@ -20,10 +19,9 @@ and nothing in platform/ imports from here.
 #
 # **Role in the module.** No code, only the docstring. It names the VMS as the *first subsystem* — the thing
 # the platform (`w2cplatform/`) was built to host without knowing what it is — and gives a one-line map of
-# the package: `reconciler.py` (М9 Lesson 6's loop, unchanged: desired persisted, actual derived),
-# `archive.py` (the archive: volumes of ObjectStorage through the host's `obsd` — streams, the index, the ring), `worker.py`
-# (vmsworker — DriverPack as the worker, N pipelines against an assignment), `controller.py` (vmscontroller
-# — the only writer of `vms/*`: cameras, assignment, placement) and `console.py` (the one-box console: the
+# the package: `archive.py` (the archive: volumes of ObjectStorage through the host's `obsd` — streams, the index, the ring), `worker.py`
+# (vmsworker — DriverPack as the worker, N pipelines against an assignment, over the platform's reconcile helper),
+# `controller.py` (the VMS's words over the platform's controller, whose process is `w2c-controller@vms`) and `console.py` (the one-box console: the
 # platform's `SpecConsole` over the VMS spec, plus `/timeline`, `/export` and `/segment`).
 #
 # The last sentence fixes the dependency direction that

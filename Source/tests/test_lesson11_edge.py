@@ -464,13 +464,13 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     # 3. the lost lease: a reassignment names the unit the way the lease does — as text
     r1 = recorder(box, "r-1", "srv-1", acl=False)
     r1.lease_pass(); r1.reconcile_once()
-    held = sorted(r1.reconciler.actual)
+    held = sorted(r1.reconciler.running())
     assert held and all(not str(u).isdigit() for u in held)                # the point: nothing here is a number
     rec.move(held[0], "r-2", "operator asked")
     r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.resource_root + "-2"})
     r2.lease_pass(); r2.reconcile_once()
     assert r1.lease_pass() == [held[0]] and r1.writing_allowed        # released, not fenced — and no ValueError
-    assert held[0] not in r1.reconciler.actual
+    assert held[0] not in r1.reconciler.running()
 
 
 # -- a full disk: nothing for the recorder to watch ---------------------------------------------------

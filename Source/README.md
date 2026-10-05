@@ -33,10 +33,11 @@ Source/
                                runs — `controller_loop`, `placement_pass`, `step` (said once a spell), `sweep_loop`, `run_resource`
     console.js, console.css    Lesson 16 the console module every page is built from (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, version 1, the product's file):
                                the tree, the forms, servers, the domain, rights, the journal — from /spec and the platform's doors
+    reconcile.py               Lesson 4  the reconcile helper (ADR 0033): М9 Lesson 6's loop — desired persisted, running derived,
+                               backoff that doubles to a ceiling, spread by jitter — for any worker with a set of pipelines
     console.html               Lesson 16 the platform's page: the module and its mount, nothing else — `/` for a root subsystem with no page
                                of its own (`<sub>.shell.html` beside its spec); only the console's root serves a page
   vms/                         the VMS — the first subsystem
-    reconciler.py              Lesson 4  М9 Lesson 6's loop, copied unchanged: the contract
     obsd.py                    М10B L6  the client (the VMS's: the platform knows no archive engine) of ObjectStorage's daemon: frames over a unix socket, Session/Volume/Writer/Reader, SMPL samples,
                                archive time; a silence is `Unavailable` after a timeout and is not asked twice
     archive.py                 М10B L7  the course's vocabulary over obsd: streams <recording>/e<epoch> (…/backfill, e0 for a keep's copy), Span,

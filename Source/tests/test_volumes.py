@@ -199,11 +199,13 @@ def test_a_withdrawn_volume_stops_the_recordings_and_leaves_the_process_running(
         _net(box, n)
     r = _recorder(box, "r-1", "srv-a")
     assert r.volume_pass() == "s3-cold"
-    r.reconciler.actual["7-cold"] = {"id": "7-cold"}                   # pretend it is recording one into it
+    from w2cplatform.reconcile import Reconciler, Want
+    r.reconciler = Reconciler(lambda k, w: True, lambda k: None)       # pretend it is recording one into it
+    r.reconciler.once({"7-cold": Want(1)})
 
     volumes.delete(box.vars, "s3-cold")
     assert r.volume_pass() == "s3-main"                                # stopped there, took what was free
-    assert r.reconciler.actual == {}                                   # and carries nothing of the old archive
+    assert r.reconciler.running() == {}                                   # and carries nothing of the old archive
     assert r.writing_allowed and r.name == "r-1"                     # still itself: not fenced, still its slot
     assert volumes.holders(box.vars, REC_SPEC.sub)["s3-cold"].released  # let go on purpose, so the row says so
 

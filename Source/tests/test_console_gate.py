@@ -1138,13 +1138,13 @@ def test_a_cards_recorder_does_not_record_another_cameras_recording_even_when_th
     from vms.config import REC_SPEC
     from tests.test_camera_card import _camera, _film, _status
     box, rec, ring, act, rec_ctl = _camera(when=None)
-    assert rec.card_cam == "1" and "1-card" in rec.reconciler.actual
+    assert rec.card_cam == "1" and "1-card" in rec.reconciler.running()
     row = REC_SPEC.new_row("2-b", {"name": "2-b", "cam": "2", "home": "card"})
     box.vars.put("rec/recordings/2-b", REC_SPEC.items(row))                              # past the door
     rec_ctl.ensure_placed()
     rec.reconcile_once(); rec.heartbeat_once()
     st = _status(rec, "2-b")
-    assert st["phase"] != "running" and "2-b" not in rec.reconciler.actual
+    assert st["phase"] != "running" and "2-b" not in rec.reconciler.running()
     assert "card in camera 1" in st["why"] and "camera 2's" in st["why"]
     _film(ring, box.wall(), box.wall() + 10, act=act)
     assert act.stats("1-card")["samples_written"] == 20 and act.stats("2-b").get("samples_written", 0) == 0
@@ -1358,11 +1358,11 @@ def test_two_spellings_of_one_channel_are_one_camera_to_its_holder_which_says_de
         w.reconcile_once(); w.heartbeat_once()
         said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
         assert said["2"]["device_state"] == "busy" and "device busy: camera 1" in said["2"]["why"], said
-        assert "device_state" not in said["1"] and 1 in w.reconciler.actual and 2 not in w.reconciler.actual
+        assert "device_state" not in said["1"] and 1 in w.reconciler.running() and 2 not in w.reconciler.running()
         assert _call(base, "DELETE", "/cameras/1", token="admin")[0] == 200
         placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
         said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
-        assert said["2"].get("device_state") != "busy" and 2 in w.reconciler.actual    # the channel is the second's now
+        assert said["2"].get("device_state") != "busy" and 2 in w.reconciler.running()    # the channel is the second's now
     finally:
         srv.shutdown()
 
@@ -1878,7 +1878,7 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
         placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
         said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
         assert all(said[c].get("device_state") == "refused" for c in made), said
-        assert not set(made) & {str(c) for c in w.reconciler.actual}             # never dialled
+        assert not set(made) & {str(c) for c in w.reconciler.running()}             # never dialled
     finally:
         srv.shutdown()
 

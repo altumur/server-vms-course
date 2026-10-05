@@ -724,7 +724,7 @@ class RecWorker(VmsWorker):
     def status_extra(self, cam: dict) -> dict:
         src = self.source(cam["cam"])
         out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": (None if src is None else "shm" if src[1].startswith("shm://") else "rtsp")}
-        if cam["id"] in self.waiting and cam["id"] not in self.reconciler.actual:
+        if cam["id"] in self.waiting and cam["id"] not in self.reconciler.running():
             out["why"] = "camera held by nobody"
             if str(cam["cam"]) in self.behind_loopback:
                 out["why"] = (f"the camera's stream is served on loopback on {self.behind_loopback[str(cam['cam'])]}: "
@@ -789,7 +789,7 @@ class RecWorker(VmsWorker):
     # An orderly stop goes through `stop_all`, past `_actuate`: the rings held through a break are written first here
     # (the review's second pass) — the ring is the only copy of the break, and the restart would not have it.
     def before_stop_all(self) -> None:
-        for uid in list(self.reconciler.actual):
+        for uid in list(self.reconciler.running()):
             self._release_if_broken(uid)
 
     # -- a backup that records only for a primary that is down (Lesson 26) -----------------------------
@@ -814,7 +814,7 @@ class RecWorker(VmsWorker):
     def gate_pass(self, now: float | None = None) -> list[tuple[str, str]]:
         now = self.wall() if now is None else now
         done = []
-        running = {str(u) for u in self.reconciler.actual}       # once, not once per row (the scaling pass)
+        running = {str(u) for u in self.reconciler.running()}       # once, not once per row (the scaling pass)
         for row in self.rows:
             uid = str(row["id"])
             if not self._offline_backup(row) or uid not in running:
@@ -986,8 +986,9 @@ class RecWorker(VmsWorker):
 
     # -- the passes: the worker's, plus a re-subscription when the camera's holder moved -------------------
     # The camera's worker moved: the source is another server's fan-out now — or, if it moved HERE, the
-    # shared-memory branch. The pipeline reading the old source is stopped and counted lost, so the
-    # reconciler starts it again on the new one, under a new rec epoch (a start is a new writer).
+    # shared-memory branch. The pipeline reading the old source is stopped and dropped from the loop — moved, not
+    # failed — so the reconciler starts it again on the new one in the same pass, under a new rec epoch (a start is a new
+    # writer).
     @one_look
     def resubscribe(self, now: float | None = None) -> list[int]:
         now = self.now() if now is None else now
@@ -995,12 +996,12 @@ class RecWorker(VmsWorker):
         # Whose fan-out: the RECORDING's camera (`cam`), not the recording's own id — the two are the same string
         # only while the recording is named after its camera, and `7-cloud` moved with its camera too.
         cams = {str(r["id"]): str(r.get("cam") or r["id"]) for r in self.rows}
-        for cid in list(self.reconciler.actual):
+        for cid in list(self.reconciler.running()):
             src = self.source(cams.get(str(cid), cid))
             if src is not None and self.sources.get(cid) not in (None, src[1]):
                 self._release_if_broken(cid)                      # the ring is the only copy of the break (CB): written before the stop
                 self.actuator("stop", {"id": cid})
-                self.reconciler.lost(cid, now)
+                self.reconciler.drop(cid)                 # moved, not failed: started on the new source this pass
                 self.sources.pop(cid, None)
                 moved.append(cid)
                 log.info("%s: camera %s is held elsewhere now (%s): re-subscribing", self.name, cid, src[1])
@@ -1034,7 +1035,7 @@ class RecWorker(VmsWorker):
     def writer_pass(self, now: float | None = None) -> dict:
         wall = self.wall() if now is None else now
         measure = getattr(self.actuator, "offered", None)
-        running = list(self.reconciler.actual)
+        running = list(self.reconciler.running())
         vals = [measure(c) for c in running] if measure else []
         # Per recording: when what it was offered last GREW. A pipeline that is up and fed nothing — a source
         # that stalled, a fan-out that stopped — is `running` for ever; `last_frame_at` is the number that says
@@ -1077,7 +1078,7 @@ class RecWorker(VmsWorker):
             for cid in running:
                 self._release_if_broken(cid)
                 self.actuator("stop", {"id": cid})
-                self.reconciler.lost(cid, self.now())
+                self.reconciler.forget(cid)
             self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
             self._lost_why, self._lost_at = f"the writer was {state['state']}: reopened", wall
         return state
@@ -1968,10 +1969,10 @@ class RecWorker(VmsWorker):
     # running, and may take another volume on the next pass.
     def leave_volume(self, why: str) -> None:
         logging.warning("%s: %s — stopping its recordings", self.name, why)
-        for uid in list(self.reconciler.actual):
+        for uid in list(self.reconciler.running()):
             self._release_if_broken(uid)
             self.actuator("stop", {"id": uid})
-            self.reconciler.actual.pop(uid, None)
+            self.reconciler.drop(uid)
             self.release(str(uid))
         # A fetch in flight lands into the volume it STARTED on (`_land` checks) and finds it gone; it is given a
         # moment to finish its group rather than be cut in the middle of one.
@@ -2592,7 +2593,7 @@ class RecWorker(VmsWorker):
                 self._refuse_request(rid, unit, cam, why, done)
                 continue
             ours = self.our_coverage(unit)
-            if unit in self.reconciler.actual:
+            if unit in self.reconciler.running():
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
             # `RANGE_CAP` of it a pass, from where the last pass stopped: a request for a day is not a day in one go
             # (blocker 6). Done — reported, and the console removes the row — when the last piece of it is.
@@ -3290,7 +3291,7 @@ class RecWorker(VmsWorker):
         from w2cplatform.console import label
         keeps = "".join(f'rec_keep_missing_seconds{{keep="{label(kid)}"}} {e.get("missing", 0)}\n'
                         for kid, e in sorted(self.keep_state.items()))
-        return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
+        return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.running())}\n"
                 f"# TYPE rec_volume_wait gauge\nrec_volume_wait {1 if self.volume_wait else 0}\n"
                 f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n"
                 f"# TYPE rec_footage_dropped_seconds_total counter\nrec_footage_dropped_seconds_total {self.dropped_seconds:.1f}\n"
