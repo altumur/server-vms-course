@@ -64,23 +64,44 @@ unit:
           type: object
           required: [sub, action]
           anyOf:
-            - properties: {sub: {const: vms}, action: {const: output}, unit: {type: [string, integer]}, port: {type: [string, integer]},
-                           state: {type: string}, pulse_ms: {type: [string, integer]}}
+            - properties:
+                sub: {const: vms}
+                action: {const: output}
+                unit: {type: [string, integer]}
+                port: {type: [string, integer]}
+                state: {type: string}
+                pulse_ms: {type: [string, integer]}
               required: [unit, port]
               additionalProperties: false
             - properties: {sub: {const: vms}, action: {const: preset}, unit: {type: [string, integer]}, n: {type: [string, integer]}}
               required: [unit, n]
               additionalProperties: false
-            - properties: {sub: {const: rec}, action: {const: record}, cam: {type: [string, integer]}, minutes: {type: [number, string]},
-                           archive: {type: string}}
+            - properties:
+                sub: {const: rec}
+                action: {const: record}
+                cam: {type: [string, integer]}
+                minutes: {type: [number, string]}
+                archive: {type: string}
               required: [cam, minutes]
               additionalProperties: false
-            - properties: {sub: {const: det}, action: {const: detect}, cam: {type: [string, integer]}, kind: {type: string},
-                           minutes: {type: [number, string]}, params: {}}
+            - properties:
+                sub: {const: det}
+                action: {const: detect}
+                cam: {type: [string, integer]}
+                kind: {type: string}
+                minutes: {type: [number, string]}
+                params: {}
               required: [cam, kind, minutes]
               additionalProperties: false
-            - properties: {sub: {const: det}, action: {const: scan}, cam: {type: [string, integer]}, kind: {type: string},
-                           before: {type: [number, string]}, after: {type: [number, string]}, rec: {type: string}, params: {}}
+            - properties:
+                sub: {const: det}
+                action: {const: scan}
+                cam: {type: [string, integer]}
+                kind: {type: string}
+                before: {type: [number, string]}
+                after: {type: [number, string]}
+                rec: {type: string}
+                params: {}
               required: [cam, kind]
               additionalProperties: false
     # The ceiling on firing, per scenario. Automation that can fire without bound is automation that can ring: a sensor
