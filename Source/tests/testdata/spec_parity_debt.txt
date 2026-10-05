@@ -121,8 +121,6 @@ course-only rec.subsystem.yaml unit.fields.home.must_match
 course-only rec.subsystem.yaml unit.fields.home.ref
 course-only rec.subsystem.yaml worker.reads
 course-only vms.subsystem.yaml metrics
-course-only vms.subsystem.yaml objects   # the product's loader refuses `commands/*`: the platform's family for a spec with `requests:` (the course derives it too); the course drops it
-course-only vms.subsystem.yaml objects.rows   # the same
 course-only vms.subsystem.yaml placement.group_by
 course-only vms.subsystem.yaml placement.group_by.cut_at
 course-only vms.subsystem.yaml placement.group_by.field

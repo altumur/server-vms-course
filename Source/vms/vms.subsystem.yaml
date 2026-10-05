@@ -13,9 +13,6 @@ name: vms
 # The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: w, name_env: WORKER_NAME}
-# Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
-# a holder's mark before it acts on a device (`VmsWorker`, `put_new`): created ONCE across every server.
-objects: {rows: [commands/*]}
 # The fields of its holder's heartbeat that are strings and that something decides by (beside the platform's own):
 # the key its door's tokens for footage are checked with (`playback.py`). One not a string garbles the heartbeat.
 heartbeat: {strings: [playback_key]}

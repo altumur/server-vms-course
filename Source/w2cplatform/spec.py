@@ -578,6 +578,9 @@ def _object_patterns(name, objects, family: str) -> tuple:
         if not p or any(not x or x == ".." or ("*" in x and x != "*") for x in segs):
             raise ValueError(f"spec {name}: objects.{family} takes key patterns under the subsystem's name — names "
                              f"separated by '/', a whole segment '*' — not {p!r}")
+        if family == "rows" and segs[0] == "commands":
+            raise ValueError(f"spec {name}: objects.rows: {p!r} is the platform's family — a request's marks are rows for "
+                             f"every spec with `requests:` (`catalog.rows_of`), and a spec does not name them")
         if family == "door" and segs[0] in ("*", *PLATFORM_FAMILIES):
             raise ValueError(f"spec {name}: objects.door: {p!r} names a family of the platform's own "
                              f"({', '.join(PLATFORM_FAMILIES)}) or every one — a door gives those out unasked")
