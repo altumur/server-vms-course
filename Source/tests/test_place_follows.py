@@ -23,8 +23,8 @@ def _shelf(box, spec, name, server):
 
 
 def _worker(box, spec, instance, server="srv-1"):
-    w = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance=instance)
-    w.spec, w.server = spec, server
+    w = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance=instance, spec=spec)
+    w.server = server
     w.claim_slot(prefer="t-1")
     return w
 
@@ -65,8 +65,9 @@ def test_a_place_follows_the_name_only_from_where_its_row_says_it_is():
     assert first.claim_hold(["s1"]) == "s1"
     again = _worker(box, spec, "box-a:2:again")
     assert again.claim_hold(["s1"]) == "s1"                           # its server's place: at once
-    elsewhere = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="box-b:3:x")
-    elsewhere.spec, elsewhere.server = spec, "srv-2"
+    elsewhere = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="box-b:3:x",
+                       spec=spec)
+    elsewhere.server = "srv-2"
     assert not elsewhere.hold_follows_name("s1", again.instance)      # the name on another server: no
     assert again.hold_follows_name("net", first.instance)             # any box's place, from the holder's own box
     assert not elsewhere.hold_follows_name("net", first.instance)     # …and from another box, no

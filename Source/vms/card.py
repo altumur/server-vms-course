@@ -104,7 +104,6 @@ from w2cplatform.secrets import hide_in_url
 
 from . import volumes
 from .archive import stitch
-from .config import REC_SPEC
 from .recworker import REC, RecWorker
 from .worker import VmsWorker
 
@@ -2032,7 +2031,7 @@ class CardRecorder(RecWorker):
     # every turn was a new alarm. The status says what is true now (`_short_now`); the alarm's episode ends only when the
     # ring has reached far enough for `WELL_FOR`.
     def prebuffer_pass(self, now: float | None = None) -> dict:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         now, reach, short = self.wall() if now is None else now, self.ring.reach(), {}
         for row in self.rows:
             uid = str(row["id"])
@@ -2052,9 +2051,8 @@ class CardRecorder(RecWorker):
                 continue
             self.prebuffer_short[uid] = now
             st = self.ring.status(now)
-            EventLog(self.resource_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
-                now, "card.prebuffer.short", cls=ALARM, cam=row.get("cam"), reach_s=round(reach, 1), need_s=need,
-                ring_bytes=st["ring_max_bytes"], window_s=st["ring_window_s"])
+            self.write_event(uid, now, "card.prebuffer.short", ALARM, cam=row.get("cam"), reach_s=round(reach, 1),
+                             need_s=need, ring_bytes=st["ring_max_bytes"], window_s=st["ring_window_s"])
             log.warning("%s: the ring holds %.0f s of %s and a break is noticed after %.0f: its start will not be on the "
                         "card (the ring is %d MiB — a lower bitrate, or more memory)", self.name, reach, uid, need,
                         st["ring_max_bytes"] >> 20)
@@ -2065,7 +2063,7 @@ class CardRecorder(RecWorker):
     # begins — a write refused, a write that has not returned — and once a day while it lasts, through the closing,
     # the opening again and the next refusal: one episode, until a write lands on the card again.
     def failing_pass(self, now: float | None = None) -> str:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         now = self.wall() if now is None else now
         state, error = self._card_said()
         bad = state in ("stalled", "failing") or (state == "recording" and bool(error)) or (
@@ -2092,8 +2090,7 @@ class CardRecorder(RecWorker):
         for row in self.rows:
             uid = str(row["id"])
             if uid in self.epochs:
-                EventLog(self.resource_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
-                    now, "card.failing", cls=ALARM, cam=row.get("cam"), state=state, error=error)
+                self.write_event(uid, now, "card.failing", ALARM, cam=row.get("cam"), state=state, error=error)
                 said += 1
         if said:
             self.failing_said = now
@@ -2170,7 +2167,7 @@ class CardRecorder(RecWorker):
     # is the alarm `camera.footage.lost` — once an episode: when it begins, once a day while it lasts, and over when
     # nothing more was lost for `WELL_FOR`.
     def footage_pass(self, now: float | None = None) -> float:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         now = self.wall() if now is None else now
         said = self._stream() or {}
         # The pusher's numbers through `rows.number` (the review's tenth pass): `float` took `nan` for seconds, and
@@ -2191,9 +2188,8 @@ class CardRecorder(RecWorker):
         for row in self.rows:
             uid = str(row["id"])
             if uid in self.epochs:
-                EventLog(self.resource_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
-                    now, "camera.footage.lost", cls=ALARM, cam=row.get("cam"), lost_s=round(grew, 1), failed_s=failed,
-                    evicted_s=evicted, why=said.get("failed_why", ""))
+                self.write_event(uid, now, "camera.footage.lost", ALARM, cam=row.get("cam"), lost_s=round(grew, 1),
+                                 failed_s=failed, evicted_s=evicted, why=said.get("failed_why", ""))
                 told += 1
         if told:
             self.lost_said = now
@@ -2204,7 +2200,7 @@ class CardRecorder(RecWorker):
 
     def stream_pass(self, now: float | None = None) -> bool:
         """Whether the camera's uplink does not carry its stream — and the alarm, once an episode."""
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         now = self.wall() if now is None else now
         said = self._stream() or {}
         if not said.get("lagging"):
@@ -2218,9 +2214,8 @@ class CardRecorder(RecWorker):
         for row in self.rows:
             uid = str(row["id"])
             if uid in self.epochs:
-                EventLog(self.resource_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
-                    now, "camera.uplink.short", cls=ALARM, cam=row.get("cam"), behind_s=said.get("behind_s"),
-                    cut_s=said.get("cut_s"), failed_s=said.get("failed_s"))
+                self.write_event(uid, now, "camera.uplink.short", ALARM, cam=row.get("cam"), behind_s=said.get("behind_s"),
+                                 cut_s=said.get("cut_s"), failed_s=said.get("failed_s"))
                 told += 1
         if told:
             self.uplink_said = now

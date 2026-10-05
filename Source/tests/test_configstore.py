@@ -659,9 +659,10 @@ def test_the_platforms_cas_loops_run_on_configstore_unchanged():
 
     g = Group(3)
     try:
+        from tests.conftest import testsub
         sub = Subsystem("testsub")
-        a = _W(sub, None, open_vars(g.members[1].url("testsubworker")), _Objects())
-        b = _W(sub, None, open_vars(g.members[2].url("testsubworker")), _Objects())
+        a = _W(sub, None, open_vars(g.members[1].url("testsubworker")), _Objects(), spec=testsub())
+        b = _W(sub, None, open_vars(g.members[2].url("testsubworker")), _Objects(), spec=testsub())
         assert a.claim_slot() == "w-1" and b.claim_slot() == "w-2"   # w-1 is taken by CAS, on another server
         assert a.take_epoch("7") == 1 and a.renew_slot() and a.renew_leases() == []
         assert b.take_epoch("7") == 2                                 # somebody else started the unit

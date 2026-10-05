@@ -25,8 +25,8 @@ def _shelf(box, spec, name, server):
 
 
 def _worker(box, spec):
-    w = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="box-a:1:w")
-    w.spec, w.server = spec, "srv-1"
+    w = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="box-a:1:w", spec=spec)
+    w.server = "srv-1"
     w.claim_slot(prefer="t-1")
     return w
 
@@ -120,8 +120,9 @@ def test_a_strict_place_another_worker_took_is_let_go_by_the_lease_step():
     _shelf(box, spec, "net", "")
     w = _worker(box, spec)
     assert w.claim_hold(["net"]) == "net"
-    other = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="box-b:2:other")
-    other.spec, other.server = spec, "srv-2"
+    other = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="box-b:2:other",
+                   spec=spec)
+    other.server = "srv-2"
     other.claim_slot(prefer="t-2")
     assert other.claim_hold(["net"]) is None                             # looks: renewed a moment ago
     _tick(box, w.slot_ttl + w.HOLD_SKEW)

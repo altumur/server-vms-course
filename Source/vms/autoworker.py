@@ -34,7 +34,6 @@ from w2cplatform import runtime
 from w2cplatform.doors import unit_ref
 from w2cplatform.worker import Worker
 from w2cplatform.eventdatabase import MergedIndex
-from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
 
 from .auto import Catalog, fires, refusal
@@ -99,8 +98,6 @@ class AutoWorker(Worker):
     # says `truncated` when it had to cut, so this is a budget rather than a trap — but a scenario still
     # wants its window whole, and one query per kind is what keeps it that way.
     PER_KIND = 500
-
-    spec = AUTO_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     def __init__(self, name: str | None, vars_: Variables, objects, index=None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None,
@@ -397,9 +394,8 @@ class AutoWorker(Worker):
             log.warning("%s: %s is over its ceiling of %s/min — %d firing(s) not filed", self.name, unit,
                         row["rate_per_minute"], len(refused))
             if unit in self.epochs:
-                EventLog(self.resource_root, AUTO.name, unit, self.epochs[unit]).append(   # written now; about then
-                    now, "suppressed", occurred=max(refused), scenario=unit, count=len(refused),
-                    since=min(refused), until=max(refused))
+                self.write_event(unit, now, "suppressed", occurred=max(refused), scenario=unit,   # written now; about then
+                                 count=len(refused), since=min(refused), until=max(refused))
         self.late_by_unit[unit], self.suppressed_by_unit[unit] = late, len(refused)
         self.forget(now)
         # The cursor moves only past a window that was WHOLE. A server that did not answer, a resource that
@@ -536,8 +532,8 @@ class AutoWorker(Worker):
             self.fired[fid] = self.wall()
             self.late += 1
             if unit in self.epochs:
-                EventLog(self.resource_root, AUTO.name, unit, self.epochs[unit]).append(
-                    self.wall(), "fired", occurred=at, scenario=unit, actions=0, late=round(self.wall() - at, 3))
+                self.write_event(unit, self.wall(), "fired", occurred=at, scenario=unit, actions=0,
+                                 late=round(self.wall() - at, 3))
             return False
         for i, action in enumerate(row["then"]):
             sub, name = str(action.get("sub", "")), str(action.get("action", ""))
@@ -566,8 +562,7 @@ class AutoWorker(Worker):
         # a held cursor is minutes back: a line appended to a bucket that had closed, and that a neighbour
         # mirroring this server had already copied without it.
         if unit in self.epochs:
-            EventLog(self.resource_root, AUTO.name, unit, self.epochs[unit]).append(
-                self.wall(), "fired", occurred=at, scenario=unit, actions=len(row["then"]))
+            self.write_event(unit, self.wall(), "fired", occurred=at, scenario=unit, actions=len(row["then"]))
         return True
 
     def forget(self, now: float) -> None:

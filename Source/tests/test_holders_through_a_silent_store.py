@@ -72,11 +72,10 @@ def test_the_holders_unconfirmed_max_is_its_specs_and_off_stops_data_at_the_leas
     (footage carries its epoch: a second writer is a duplicate), `<seconds>` records on up to that long past the
     lease's end, and `off` — the platform's default — stops the camera when the lease is not confirmed in time."""
     from vms import worker as vw
+    from tests.conftest import in_catalogue
     assert vw.SPEC.unconfirmed_max is None and _worker()[4].unconfirmed_max is None
-    real = vw.VmsWorker.spec
-    try:
-        for said in (60, "off"):
-            vw.VmsWorker.spec = _spec_with(said)
+    for said in (60, "off"):
+        with in_catalogue(_spec_with(said)):                         # the spec its worker runs by: the catalogue's
             box, ctl, store, act, w = _worker()
             store.down = True
             if said == 60:
@@ -86,8 +85,6 @@ def test_the_holders_unconfirmed_max_is_its_specs_and_off_stops_data_at_the_leas
             else:
                 assert w.unconfirmed_max == 0.0
                 assert _silence(box, w, 24) == [] and sorted(_silence(box, w, 8)) == ["1", "2"]
-    finally:
-        vw.VmsWorker.spec = real
 
 
 def _spec_with(unconfirmed_max):
@@ -150,14 +147,15 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
     with open(os.path.join(SOURCE, "vms", "rec.subsystem.yaml"), encoding="utf-8") as f:
         d = yaml.safe_load(f)
     places = {k: v for k, v in d["placement"]["places"].items() if k != "lease"}
+    from tests.conftest import in_catalogue
+    from vms.config import REC_SPEC
     loose = SubsystemSpec.from_dict({**d, "placement": {**d["placement"], "places": places}})
-    real = RecWorker.spec
-    for kind, stays, spec in (("local", True, real), ("network", False, real), ("network", True, loose)):
-        RecWorker.spec = spec
+    for kind, stays, spec in (("local", True, REC_SPEC), ("network", False, REC_SPEC), ("network", True, loose)):
         box = Box()
         row = {"name": "vol", "kind": kind, "url": os.path.join(box.root, "vol"), "quota_bytes": 10 ** 9}
         volumes.write(box.vars, {**row, "server": "srv-a"} if kind == "local" else row)
-        r = _recorder(box, "r-1", "srv-a")
+        with in_catalogue(spec):                                     # the spec the recorder runs by: the catalogue's
+            r = _recorder(box, "r-1", "srv-a")
         assert r.lease_pass() == [] and r.hold == "vol" and r.volume == "vol"
         r.vars = Flaky(box.vars); r.vars.down = True
         box.clock.advance(8); box.wall.advance(8)
@@ -165,7 +163,6 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
         assert r.hold == "vol" and r.volume == "vol" and r.store_errors >= 1      # one error: nothing is let go
         for _ in range(8):
             box.clock.advance(8); box.wall.advance(8); r.lease_pass()
-        RecWorker.spec = real
         assert (r.hold == "vol") is stays and (r.volume == "vol") is stays, (kind, spec.places)
 
 

@@ -25,7 +25,7 @@ from . import runtime
 from .contract import (ASSIGNMENTS, Assignment, BUILD, CONTENDER_FRESH, CONTEND_EVERY, DECOMMISSION, DECOMMISSIONS, Eyes, HOLDS, Heartbeat, NAMELESS, NEVER_READ, NameOnAnotherBox, NoOffer, NoSlot, NotReadThisPass, PRESENCE, REFUSED, SCHEMA, SLOTS, SchemaTooNew, ServerDecommissioned, Slot, Subsystem, _NameTaken, _read_contender, check_schema, label_set, presence_name, published_names, read_assignment, read_hold, read_slot, slot_number, stored)
 from .doors import numeric
 from .epoch import Lease, next_epoch
-from .events import ALARM
+from .events import ALARM, OBSERVATION, OF
 from .journal import Journal
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .objects import ObjectStore
@@ -33,6 +33,11 @@ from .rows import PARSE_ERRORS, garbled_counts
 from .variables import Conflict, Variables, cas_pause
 
 log = logging.getLogger(__name__)
+
+
+# A worker whose subsystem has no spec in this process (`Worker.__init__`): it does not start.
+class NoSpec(ValueError):
+    pass
 
 
 # Runs its assignment and reports. Reads `<name>/workers/<me>` and the units it names; writes its heartbeat
@@ -49,8 +54,17 @@ class Worker:
     def __init__(self, sub: Subsystem, name: str | None, vars_: Variables, objects: ObjectStore,
                  lease_ttl: float = 30.0, lease_margin: float = 5.0, clock=time.monotonic, wall=time.time,
                  instance: str | None = None, slot_ttl: float = 45.0, resource_root: str | None = None,
-                 env: dict | None = None):
+                 env: dict | None = None, spec=None):
         self.sub, self.vars, self.objects = sub, vars_, objects
+        # THE SPEC, ALWAYS (the architect's rule after step 7: a platform key is executed by the platform, and the platform
+        # has no path where the spec is absent). Every key of it a worker carries out — `lease`, `placement.places`,
+        # `events.suppress`, `slot`, `about`, `requests` — is read here from the spec, and a worker without one ran on
+        # defaults: a class that forgot to name its spec made `w-<n>`, renewed no strict place and stamped no `of`, and
+        # nothing said so. The spec is the catalogue's, by the subsystem's name — the one the controller and the console
+        # run by (`catalog.spec`); a test may hand its own. None of either: the worker does not start.
+        self.spec = spec if spec is not None else self._catalogue_spec(sub, env)
+        if self.spec.name != sub.name:
+            raise ValueError(f"a worker of {sub.name} runs by {sub.name}'s spec, not {self.spec.name}'s")
         # This server's resource tree — where `observe` and the journal write (`runtime.events_root`: the caller's,
         # else `RESOURCE_ROOT`, else the platform's events root). Set here, before the claim, so no subsystem has to
         # remember it: one that forgot had `observe` write nothing, silently, and a journal opened on no tree.
@@ -62,8 +76,11 @@ class Worker:
         # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_write`): what
         # the subsystem's spec says (`lease: {unconfirmed_max}`) — 0, not at all, unless it says otherwise; `None` is
         # "for as long as the silence lasts". Never the environment: a weakening of the single writer is the spec's.
-        self.unconfirmed_max: float | None = getattr(self.spec, "unconfirmed_max", 0.0)
+        self.unconfirmed_max: float | None = self.spec.unconfirmed_max
         self.epochs: dict[str, int] = {}          # unit -> epoch this worker holds
+        # unit -> what it is about (`<about.sub>/<id>`, "" for nothing), read from its row when its epoch was taken
+        # (`take_epoch`): the `of` of every line and mark written of it (`of`). None: the row did not read then.
+        self.abouts: dict[str, str | None] = {}
         self.leases: dict[str, Lease] = {}
         # The process; a name is a slot. Its box in it (`runtime.box`: `BOX_ID`, the machine's id, the hostname) — what
         # a live holder's name may be taken by at a start is read from (`_may_take_by_name`).
@@ -127,6 +144,15 @@ class Worker:
         self.assigned_now: frozenset[str] | None | object = NEVER_READ
         self._life()                              # the life cycle's own state: the fence, the counters, the requests
 
+    # The spec of `sub` in this process's catalogue (`catalog.spec`: what it loaded, else `SPEC_DIR`), or the refusal.
+    @staticmethod
+    def _catalogue_spec(sub: Subsystem, env: dict | None):
+        from . import catalog
+        try:
+            return catalog.spec(sub.name, env)
+        except ValueError as e:
+            raise NoSpec(f"a worker of {sub.name} runs by its spec, and this process has none for it: {e}") from None
+
     # -- identity by claim ----------------------------------------------------------
     # Become somebody. Lists the slot rows; with `prefer` (the unit's `WORKER_NAME`, `SLOT_INDEX`) the
     # candidate list is just that name and it is taken by CAS even from a holder that has not lapsed — the
@@ -144,15 +170,15 @@ class Worker:
     # What a slot this worker has to MAKE is called (`<prefix>-<n>`), and the variable its unit names the one it is
     # started under beside `WORKER_NAME`: the spec's `slot: {prefix, name_env}`, read here and nowhere else. Each
     # subsystem's class copied them (`SLOT_PREFIX`, `NAME_ENV`) and passed `runtime.slot` its own reading — a key the
-    # loader read and a subsystem carried out, and a class that forgot made `w-<n>` whatever its spec said. A worker
-    # with no spec (a bare one of a test) makes `w-<n>` and is named in `WORKER_NAME`.
+    # loader read and a subsystem carried out, and a class that forgot made `w-<n>` whatever its spec said. A spec that
+    # says no `slot` makes `w-<n>`, named in `WORKER_NAME`.
     @property
     def slot_prefix(self) -> str:
-        return self.spec.slot_prefix if self.spec is not None else "w"
+        return self.spec.slot_prefix
 
     @property
     def name_env(self) -> str:
-        return self.spec.slot_name_env if self.spec is not None else runtime.WORKER_NAME
+        return self.spec.slot_name_env
 
     # The name the runtime gave this process (`runtime.slot`: its spec's variable, `WORKER_NAME`, `SLOT_INDEX`), or
     # None — "whichever is free, a lapsed one first".
@@ -686,7 +712,7 @@ class Worker:
     # The server the place's row names ("" — any box may write it), or None: the spec names no field for it, or the row
     # does not read now.
     def _place_server(self, place: str) -> str | None:
-        places = getattr(self.spec, "places", None) or {}
+        places = self.spec.places
         if not places.get("server_field"):
             return None
         try:
@@ -766,7 +792,7 @@ class Worker:
     # direction, as `hold_follows_name` reads the same row the other way. `row` is the place's row as the caller holds it
     # this second; without it, the row as it read when the place was taken (a silent store answers nothing now).
     def held_strictly(self, place: str, row: dict | None = None) -> bool:
-        places = getattr(self.spec, "places", None) or {}
+        places = self.spec.places
         if places.get("lease") != "strict":
             return False
         field = places.get("server_field")
@@ -891,11 +917,42 @@ class Worker:
         self.epochs[unit] = epoch
         self.leases[unit] = Lease(self.vars, self.sub.epoch_key(unit), epoch, self.lease_ttl, self.lease_margin, self.clock,
                                   self.unconfirmed_max)
+        self.abouts[str(unit)] = self._read_about(str(unit))
         return epoch
+
+    # WHAT A UNIT IS ABOUT — the `of` of every line and mark this worker writes of it (`<about.sub>/<id>`, the index's
+    # second column), "" for a unit about nothing but itself. The PLATFORM's to say, from the spec's `about` and the unit's
+    # row: it was each subsystem's, passed by hand at each line, and a line that forgot it (a refused request, written
+    # through `observe`) was found by a query for its unit and by none for what the unit is about. `about.field` is
+    # `fixed`, so what was read when the epoch was taken holds while the epoch does; a row that did not read then is read
+    # again at the next line. A unit this worker holds no epoch for (a line under epoch 0) is read at its line.
+    def of(self, unit) -> str:
+        unit = str(unit)
+        if not self.spec.about_sub:
+            return ""
+        got = self.abouts.get(unit)
+        if got is None:
+            got = self._read_about(unit)
+            if got is not None and unit in self.epochs:
+                self.abouts[unit] = got
+        return got or ""
+
+    # The unit's row, read now, for what it is about; None when it does not read (the store, a garbled row).
+    def _read_about(self, unit: str) -> str | None:
+        if not self.spec.about_sub:
+            return ""
+        try:
+            items, _ = self.vars.get(self.sub.config(self.spec.rows, unit))
+        except (OSError, *PARSE_ERRORS):
+            return None
+        if items is not None and not isinstance(items, dict):
+            return None
+        return self.spec.of_row(items)
 
     # Forget the unit's epoch and lease (the worker stopped it). The lease is marked let go as well: the stand-in may
     # hold it from before, and a lease the loop released is renewed by nobody.
     def release(self, unit: str) -> None:
+        self.abouts.pop(str(unit), None)
         self.epochs.pop(unit, None)
         lease = self.leases.pop(unit, None)
         if lease is not None:
@@ -1407,7 +1464,6 @@ class Worker:
     #   forget_units()       forget what it held when it rejoins under another name
     #   perform(target, row, it), held_rows(), request_target(row)   a subsystem whose units take requests (below)
     # ================================================================================================================
-    spec = None                                   # the subsystem's spec, when its worker serves requests by it (below)
     LEASE_EVERY: float | None = None              # seconds between lease steps; None: a third of `ttl − margin`
     HEARTBEAT_EVERY = 10.0                        # seconds between heartbeats of the loop
 
@@ -1554,14 +1610,12 @@ class Worker:
     def status(self) -> list[dict]:
         return []
 
-    # What this worker can carry: the number its subsystem set (`capacity`), else its spec's `placement.capacity.default`,
-    # else None — it says nothing, and the controller's fallback applies. It said 0 when its subsystem set none: the
-    # controller takes a said number as the worker's word (`capacity_of`), and nothing was ever placed on it.
+    # What this worker can carry: the number its subsystem set (`capacity`), else its spec's `placement.capacity.default`.
+    # It said 0 when its subsystem set none: the controller takes a said number as the worker's word (`capacity_of`), and
+    # nothing was ever placed on it.
     def capacity_said(self) -> int | None:
         cap = getattr(self, "capacity", None)
-        if cap is None and self.spec is not None:
-            cap = self.spec.capacity_default
-        return cap
+        return self.spec.capacity_default if cap is None else cap
 
     def headroom(self) -> int:
         return max(0, int(self.capacity_said() or 0) - len(self.assignment().units))
@@ -1854,7 +1908,7 @@ class Worker:
 
     # Whether this worker's units take requests: its spec declares `requests:`.
     def serves_requests(self) -> bool:
-        return bool(self.spec is not None and (self.spec.requests or self.spec.requests_free))
+        return bool(self.spec.requests or self.spec.requests_free)
 
     def serve_requests(self) -> None:
         self.requests()
@@ -1881,7 +1935,7 @@ class Worker:
     # The group a unit is in, as the platform reads it from the spec (`placement.group_by`): what a request's `group` was
     # stamped with when the console asked for its rights — performed only in the group it was filed for.
     def request_group(self, row: dict) -> str:
-        if self.spec is None or not self.spec.group_by:
+        if not self.spec.group_by:
             return ""
         from .spec import url_cut
         v = str(row.get(self.spec.group_by) or "")
@@ -1906,6 +1960,7 @@ class Worker:
 
     def observe(self, unit, kind: str, **fields) -> str | None:
         from .rows import number
+        self._refuse_of(fields)
         epoch = self.epochs.get(str(unit))
         if epoch is None or not self.resource_root or not self.__dict__.get("writing_allowed", True):
             return None
@@ -1917,13 +1972,13 @@ class Worker:
             lines[-1] = (lt, lk, {**lf, "occurred": occurred})
         return self._write_lines(unit, epoch, lines, self.class_of(unit, kind))
 
-    # The spec's suppressor, made at its first use (a subsystem may set `spec` after the base is built).
+    # The spec's suppressor, made at its first use.
     @property
     def suppressor(self):
         from .events import Suppressor
         s = self.__dict__.get("_suppressor")
         if s is None:
-            s = self.__dict__["_suppressor"] = Suppressor(self.spec.suppress if self.spec is not None else {})
+            s = self.__dict__["_suppressor"] = Suppressor(self.spec.suppress)
         return s
 
     @suppressor.setter
@@ -1933,16 +1988,41 @@ class Worker:
     # The traffic class of one line: `observation`; a subsystem's worker that knows which of a unit's kinds are alarms
     # says so (the platform fixes the two words, `events.py`).
     def class_of(self, unit, kind: str) -> str:
-        from .events import OBSERVATION
         return OBSERVATION
 
     def _write_lines(self, unit, epoch: int, lines, cls: str) -> str | None:
-        from .events import EventLog
-        log_ = EventLog(self.resource_root, self.sub.name, str(unit), epoch, getattr(self, "bucket_seconds", self.BUCKET_SECONDS))
+        log_ = self._event_log(unit, epoch)
         path = None
         for t, kind, fields in lines:
             path = log_.append(t, kind, cls, **fields)
         return path
+
+    # A LINE ABOUT A UNIT, WRITTEN AS SAID — not suppressed, not fenced here: what a subsystem's worker writes beside
+    # `observe` (an alarm of its own judging, the lines a pass of its work produced), under the epoch it holds for the
+    # unit, or under the one it names (`epoch`: 0 for what no epoch fences — a keep's line, a volume's). Into the unit's
+    # bucket on this server's resource, as `observe`'s; None when no epoch is held for it and none is named.
+    def write_event(self, unit, t: float, kind: str, cls: str = OBSERVATION, *, epoch: int | None = None,
+                    durable: bool = False, **fields) -> str | None:
+        self._refuse_of(fields)
+        epoch = self.epochs.get(str(unit)) if epoch is None else epoch
+        if epoch is None or not self.resource_root:
+            return None
+        return self._event_log(unit, epoch).append(t, kind, cls, durable, **fields)
+
+    # The writer of a unit's lines under `epoch`, every line of it stamped with what the unit is about (`of`).
+    def _event_log(self, unit, epoch: int):
+        from .events import EventLog
+        return EventLog(self.resource_root, self.sub.name, str(unit), epoch,
+                        getattr(self, "bucket_seconds", self.BUCKET_SECONDS), of=self.of(unit))
+
+    # `of` is the PLATFORM's (`of`): a line that says its own is refused, so a subsystem that still passes it — the way
+    # each did before the base stamped it — fails at the line, not in a query that finds less than it should. Two writers
+    # of one column drift, and the one that forgets is the one nobody sees.
+    @staticmethod
+    def _refuse_of(fields: dict) -> None:
+        if OF in fields:
+            raise ValueError(f"`{OF}` is stamped by the worker from its spec's `about` (`Worker.of`): a subsystem does not "
+                             f"say what a unit is about, line by line — {OF}={fields[OF]!r} refused")
 
     # WINDOWS THAT CLOSED WITH NOBODY LEFT TO CLOSE THEM — the storm stopped, so no observation came to carry the summary
     # out. Once a pass (`pump_once`), and wherever a subsystem drains its lines: without it a burst that ENDS is a burst
@@ -1961,7 +2041,7 @@ class Worker:
         return written
 
     def most_valid(self) -> float:
-        return float((self.spec.requests or {}).get("most_valid") or self.MAX_VALID) if self.spec is not None else self.MAX_VALID
+        return float((self.spec.requests or {}).get("most_valid") or self.MAX_VALID)
 
     @staticmethod
     def _histogram() -> dict:
@@ -2239,8 +2319,8 @@ class Worker:
     # The answer, written into the mark once the target has said it. A store that does not take the write: the mark is
     # OWED (`_marks_owed`) and written again at every look until it does, or the row is gone (the review's eighth pass).
     def _confirm(self, rid: str, row: dict, outcome: str, it: dict) -> None:
-        mark = json.dumps({"instance": self.instance, "slot": self.name, "unit": str(row["id"]), "outcome": outcome,
-                           "action": str(it.get("action", "")), "at": self.wall()}).encode()
+        mark = json.dumps({"instance": self.instance, "slot": self.name, "unit": str(row["id"]), **self._of_said(row["id"]),
+                           "outcome": outcome, "action": str(it.get("action", "")), "at": self.wall()}).encode()
         try:
             self.objects.put(self.command_key(rid), mark)
             self._marks_owed.pop(rid, None)
@@ -2271,7 +2351,13 @@ class Worker:
         if put_new is None:
             return None
         return bool(put_new(self.command_key(rid), json.dumps({"instance": self.instance, "slot": self.name, "unit": unit,
-                                                               "at": now}).encode()))
+                                                               **self._of_said(unit), "at": now}).encode()))
+
+    # …and a mark says it too, as a line does (`of`): what was done to a unit is about what the unit is about. Absent for a
+    # unit about nothing but itself.
+    def _of_said(self, unit) -> dict:
+        of = self.of(unit)
+        return {OF: of} if of else {}
 
     # What the calls in flight have come to: performed, refused, or — after `PERFORM_TIMEOUT` — not answered. A call
     # that timed out is answered ONCE and stays in flight until it returns: the target is busy for as long as it is.

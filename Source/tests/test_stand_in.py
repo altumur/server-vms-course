@@ -17,7 +17,7 @@ import time
 from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, Heartbeat, NoSlot, Slot, Subsystem
 from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, next_epoch
-from tests.conftest import Box, controller_ctl, counter_worker, testsub
+from tests.conftest import Box, controller_ctl, counter_worker, spec_named, testsub
 
 
 def _holder(box, name="w-1", **kw):
@@ -220,7 +220,7 @@ def test_the_stand_in_renews_the_place_only_while_it_is_this_instances():
     loop's."""
     box = Box()
     sub = Subsystem("t")
-    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1")
+    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1", spec=spec_named("t"))
     w.claim_slot(prefer="t-1")
     assert w.claim_hold(["shelf"]) == "shelf"
     with w.guarded("pass"):
@@ -244,7 +244,7 @@ def test_the_stand_in_does_not_hold_the_place_for_a_step_on_a_silent_engine_and_
     (`note_hold_confirmed`) — what a worker fences every write to the place by."""
     box = Box()
     sub = Subsystem("t")
-    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1")
+    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1", spec=spec_named("t"))
     w.claim_slot(prefer="t-1")
     assert w.claim_hold(["shelf"]) == "shelf"
     told, silent = [], [True]
@@ -320,7 +320,7 @@ def test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_
     sub = Subsystem("t")
 
     def worker(box, instance):
-        w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance=instance)
+        w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance=instance, spec=spec_named("t"))
         w.hold_follows_name = lambda place, holder: place != "net"  # what a subsystem says of a network place held elsewhere
         w.claim_slot(prefer="t-1")
         return w

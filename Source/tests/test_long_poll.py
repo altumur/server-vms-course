@@ -443,7 +443,8 @@ def test_the_wait_is_the_poll_when_nothing_arrives_and_stop_ends_it_at_once():
     once when `stop` is set, early when the wake is set — but not sooner than the gap after the last pass began;
     and a worker that never asked for the long poll waits by `stop` alone, as every loop did."""
     box = Box()
-    w = Worker(Subsystem("thing"), "t-1", box.vars, box.objects)
+    from tests.conftest import spec_named
+    w = Worker(Subsystem("thing"), "t-1", box.vars, box.objects, spec=spec_named("thing"))
     stop = threading.Event()
     t0 = time.monotonic()
     assert w.wait_next(0.2, stop) is False and 0.19 <= time.monotonic() - t0 < 0.6      # no wake: `stop.wait(poll)`

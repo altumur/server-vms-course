@@ -446,7 +446,8 @@ def _testsub_box():
 
 def _counter_worker(sub, vars_, objects, clock, wall, instance: str, server: str):
     """testsub's worker, a stub: it holds the counters it was given — takes each one's epoch, lets go of the ones taken
-    away — and says so in its heartbeat. Everything else is the platform's `Worker`."""
+    away — and says so in its heartbeat. Everything else is the platform's `Worker`, run by testsub's spec."""
+    from w2cplatform.spec import SubsystemSpec
     from w2cplatform.worker import Worker
 
     class CounterWorker(Worker):
@@ -461,7 +462,8 @@ def _counter_worker(sub, vars_, objects, clock, wall, instance: str, server: str
                            headroom=4 - len(units))
             return units
 
-    w = CounterWorker(sub, None, vars_, objects, clock=clock, wall=wall, instance=instance)
+    w = CounterWorker(sub, None, vars_, objects, clock=clock, wall=wall, instance=instance,
+                      spec=SubsystemSpec.load(TESTSUB))
     w.server = server
     w.claim_slot()
     return w
@@ -518,9 +520,8 @@ def _piece_worker():
             self.counts[str(row["id"])] += int(it["add"])
             return {"added": int(it["add"])}
 
-    CounterWorker.spec = spec
     w = CounterWorker(spec.sub, None, vars_, objects, clock=clock, wall=wall, instance="A",
-                      resource_root=os.path.join(root, "tree"))   # its server's resource tree (the platform's default is /data)
+                      resource_root=os.path.join(root, "tree"), spec=spec)   # its server's resource tree (the platform's default is /data)
     w.server, w.capacity, w.counts = "srv-1", 4, {}
     w.claim_slot()
     Controller(spec.sub, vars_, objects, wall=wall).assign(w.name, ["c1"])

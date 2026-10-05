@@ -41,7 +41,7 @@ def counter_worker(sub, vars_, objects, wall, instance: str, server: str):
                            server=self.server, capacity=4, headroom=4 - len(units))
             return units
 
-    w = CounterWorker(sub, None, vars_, objects, clock=wall, wall=wall, instance=instance)
+    w = CounterWorker(sub, None, vars_, objects, clock=wall, wall=wall, instance=instance, spec=spec())
     w.server = server
     w.claim_slot()
     return w

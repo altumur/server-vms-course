@@ -34,7 +34,6 @@ import urllib.error
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
 from w2cplatform.worker import Worker
-from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
 
 from .config import SURVEY_SPEC
@@ -61,8 +60,6 @@ class SurveyWorker(Worker):
     # and for the same reason: a heartbeat is one object under a ceiling, and the console's decision is
     # idempotent on its own because the request's id is the range.
     HITS_REPORTED = 32
-
-    spec = SURVEY_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
@@ -185,8 +182,7 @@ class SurveyWorker(Worker):
                         break
                     looked[0] = a
                     for ts, kind, fields in self._watch(model, a, b, looked):
-                        EventLog(self.resource_root, SURVEY, unit, self.epochs[unit], of=SURVEY_SPEC.of_row(row)).append(
-                            ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
+                        self.write_event(unit, ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
                         self.events_written += 1
                         fired.append(ts)
                     watched.append((a, b))               # all of it looked at: now it is watched
