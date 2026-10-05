@@ -134,7 +134,7 @@ from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_M
                        DecommissionRefused, SchemaTooNew, builds, contenders, is_live, label_set, name_conflict,
                        parse_heartbeat, read_slot, schema_version)
 from .epoch import current_epoch
-from .canonical import canonical_json, exact_int, field_text, number_text, parse_json
+from .canonical import canonical_json, field_text, number_text, parse_json
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence, unit_id
 from .events import ALARM, CONSOLE_MARKS, OF, EventLog
@@ -1115,7 +1115,7 @@ class SendMixin:
 
     def _body(self):
         n = int(self.headers.get("Content-Length", 0))
-        return json.loads(self.rfile.read(n) or b"{}", parse_int=exact_int)   # its digits, exactly (`canonical.py`)
+        return parse_json(self.rfile.read(n) or b"{}")   # its digits exactly; `NaN`, `1e400`, a lone surrogate refused
 
 
 # A REQUEST'S BODY IS A JSON OBJECT, OR A REFUSAL (the review's tenth round, the routes that failed whole). A body that
@@ -1126,10 +1126,11 @@ def object_body(h) -> dict:
     try:
         # A subsystem's route is handed a length and a stream (`headers`, `rfile`), not always this console's handler.
         reader = getattr(h, "_body", None)
-        body = reader() if reader is not None else json.loads(h.rfile.read(int(h.headers.get("Content-Length", 0) or 0)) or b"{}",
-                                                              parse_int=exact_int)
+        body = reader() if reader is not None else parse_json(h.rfile.read(int(h.headers.get("Content-Length", 0) or 0)) or b"{}")
     except PARSE_ERRORS as e:
-        raise Refused(f"the body is not JSON that can be read ({type(e).__name__})") from None
+        r = Refused(f"the body is not JSON that can be read ({type(e).__name__})")
+        r.fault = getattr(e, "fault", "not_json")        # the shared table's word (`canonical.Fault`)
+        raise r from None
     if not isinstance(body, dict):
         raise Refused(f"the body is a JSON object, not {type(body).__name__}")
     return body
@@ -2868,13 +2869,13 @@ class SpecConsole:
         try:
             body = object_body(h)
         except Refused as e:
-            return 400, {"detail": str(e), "error": "bad body"}
+            return 400, {"detail": str(e), "error": "bad body", **({"fault": e.fault} if getattr(e, "fault", "") else {})}
         if "schema" in req:
             from .schema import Invalid, check
             try:
                 check(req["schema"], body, "the request")
-            except Invalid as e:
-                return 400, {"detail": str(e), "error": "refused"}
+            except Invalid as e:                         # past `maxLength`: the shared table's `too_long`
+                return 400, {"detail": str(e), "error": "refused", **({"fault": "too_long"} if e.keyword == "maxLength" else {})}
             except RecursionError:
                 return 400, {"detail": "the request is nested past what is read", "error": "refused"}
         ref = str(body.get("unit", ""))
@@ -2918,13 +2919,14 @@ class SpecConsole:
             out = {k: t for k, v in body.items() if k not in ("unit", "id", "valid_until")
                    and (t := field_text(v)) is not None}
         except PARSE_ERRORS:                                # `NaN`, `Infinity`: Python reads them, JSON has none
-            return 400, {"detail": "a request's values are JSON, and NaN and the infinities are not", "error": "bad body"}
+            return 400, {"detail": "a request's values are JSON, and NaN and the infinities are not", "error": "bad body",
+                         "fault": "not_json"}
         props = (req["schema"].get("properties") or {}) if isinstance(req.get("schema"), dict) else {}
         for k, t in out.items():
             most = props[k].get("maxLength") if isinstance(props.get(k), dict) else None
             if isinstance(most, int) and len(t) > most:
                 return 400, {"detail": f"the request's {k} is at most {most} characters as written, not {len(t)}",
-                             "error": "refused"}
+                             "error": "refused", "fault": "too_long"}
         out.update(unit=uid)
         if "valid_for" in req:
             # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity`

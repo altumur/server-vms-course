@@ -1,6 +1,7 @@
 """Lesson 12, step 7, and Lesson 16, step 8 — scenarios between cameras, end to end.
 
-A scenario lives in the shared document (Lesson 12):
+A scenario lives in the shared document (Lesson 12), as `auto`'s document there — `settings.shared.auto.scenarios`,
+declared in `auto.subsystem.yaml` (`domain.shared`) with the schema the signer checks it by:
 
     {"when": {"camera": "SN2", "kind": "motion"},
      "then": {"camera": "SN5", "action": "preset", "arg": 3, "within": 10}}
@@ -22,10 +23,13 @@ The action a scenario names is what the domain writes into the token to ask (`ac
 other, so a camera — or whoever holds its token — can ask for preset 3 and nothing else.
 
 What each camera raises and can be asked to do is its own word — `can` in its heartbeat (М10B Lesson 25: the
-holder of a device is the one that knows it). The domain checks a scenario against it when the document is
-written (`refusals`): the trigger must raise the kind, the target must be able to do the action. A camera that
-has not said is not refused — it is named on every pass (`unchecked`) — and the page builds its form from
-`catalog`, so an operator picks a kind the gate camera raises and a preset the yard camera has.
+holder of a device is the one that knows it). The VMS's domain worker checks every scenario against it on each
+pass over the books (`refusals`): the trigger must raise the kind, the target must be able to do the action — one
+that cannot is named on every pass, and the camera refuses its ask by the same rule (`misfit`). The signer checks
+only what a scenario may BE (the schema): the
+platform asks no subsystem's code when the document is written. A camera that has not said is named on every pass
+(`unchecked`), and the page builds its form from `catalog`, so an operator picks a kind the gate camera raises and a
+preset the yard camera has.
 """
 from __future__ import annotations
 
@@ -93,15 +97,19 @@ def _within(then: dict) -> float:
 SCENARIOS = Table("scenario", "skipped — the other scenarios are read", "scenario of the shared settings")
 
 
+WHERE = "settings/shared/auto/scenarios"   # `auto`'s document in the shared settings (`auto.subsystem.yaml`)
+
+
 def _scenarios(settings: dict) -> list[dict]:
-    scs = settings.get("scenarios") or []
+    held = (settings.get("shared") or {}).get("auto") if isinstance(settings.get("shared"), dict) else None
+    scs = (held.get("scenarios") if isinstance(held, dict) else None) or []
     if not isinstance(scs, list):
-        SCENARIOS.garbled("settings/scenarios", TypeError(f"the scenarios are a list, not {type(scs).__name__}"))
+        SCENARIOS.garbled(WHERE, TypeError(f"the scenarios are a list, not {type(scs).__name__}"))
         return []
-    SCENARIOS.parsed("settings/scenarios")
+    SCENARIOS.parsed(WHERE)
     out = []
     for i, sc in enumerate(scs):
-        key = f"settings/scenarios/{i}"
+        key = f"{WHERE}/{i}"
         if not isinstance(sc, dict) or not all(isinstance(sc.get(k, {}), dict) for k in ("when", "then")):
             SCENARIOS.garbled(key, TypeError("a scenario is an object with a `when` and a `then` that are objects"))
             continue
@@ -116,8 +124,9 @@ def _action(then: dict) -> dict:
 
 
 def refusals(settings: dict, crossings) -> list[str]:
-    """Scenarios that could never act, each with its reason — checked when the document is WRITTEN (feedback AL),
-    so an operator is told, not left with a scenario that silently never fires.
+    """Scenarios that could never act, each with its reason — said on every pass over the books (feedback AL: an
+    operator is told, not left with a scenario that silently never fires). Not when the document is written: the
+    signer that signs it asks no subsystem's code (ADR-0032), and checks a scenario's shape by its schema alone.
 
     The two ends ask different things. The TARGET must hold a poll: an ask reaches a camera through the poll it
     keeps open to an ingest, every member camera holds one, and a camera that is not a member (a server
@@ -229,8 +238,8 @@ class Scenarios:
             target = str(then.pop("camera", ""))
             if not target or target == self.serial:
                 continue                                          # its own automation, not an ask
-            try:                                                  # refused when written; a document from before the
-                within = _within(then)                            # rule is that scenario's trouble, said, not the event's
+            try:                                                  # past the schema, a `within` out of range is that
+                within = _within(then)                            # scenario's trouble, said, not the event's
                 then.pop("within", None)
                 cap = int(sc.get("rate_per_minute") or RATE)
             except PARSE_ERRORS as e:

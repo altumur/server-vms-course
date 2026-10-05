@@ -1,6 +1,8 @@
 # /etc/systemd/system/vms-domainpart.service — the VMS's worker on the domain, on the server that holds it
 # (`w2c-run.sh vms domainpart`): the books' pass for every member (sources, primaries, polls, upstream, asks), its slot
-# and heartbeat under `domain/vms/`, its door (/metrics, /catalog); the tokens its books carry asked of the signer.
+# and heartbeat under `domain/vms/`, its door (/metrics, /catalog); the tokens its books carry asked of the signer, on its
+# socket in `/run/w2c-signer` — whose group, `vms-vmsdomaintokens`, this unit alone joins (ADR-0031: the tokens socket's
+# own group, one member; not the store's role group, `vms-vmsdomain`, whose members are whoever opens that socket).
 [Unit]
 Description=vms domain worker — the VMS's books for every member (this server holds the domain)
 After=network-online.target configstore.service w2c-domain.service
@@ -9,7 +11,7 @@ Wants=network-online.target
 [Service]
 User=vms
 Group=vms
-SupplementaryGroups=vms-vmsdomain w2c-store w2c-secrets
+SupplementaryGroups=vms-vmsdomain vms-vmsdomaintokens w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/vmsdomain.sock
 Environment=SIGNER_TOKENS_UNIX=/run/w2c-signer/tokens.sock
 Environment=DOMAINPART_PORT=8096

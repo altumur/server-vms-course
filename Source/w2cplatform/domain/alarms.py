@@ -20,7 +20,9 @@ reported the door forced.
                     to" the moment it was made
     silence         a member that stopped reporting is itself an ALARM on the list, not only a state: "silent
                     since 14:21" — and a witness a subsystem declares (`domain.witness`), kept by another process
-                    than its agent, tells a member that is alive but not reporting from one that is gone
+                    than its agent, tells a member that is alive but not reporting from one that is gone. The
+                    witness names what it heard of by the member's own name — the field its spec declares for it,
+                    `member_field`, carries that name — so the domain matches a member as it is called
     history         the domain keeps what it read, a week of it (`AlarmHistory`): the page is a day and a hundred
                     lines, and a member whose card died takes the rest with it
 
@@ -201,20 +203,23 @@ class AlarmHistory:
 
 
 class DomainAlarms:
-    """The one list. `doors(member)` is that member's `ReportedDoor`; `history` is the domain's `AlarmHistory`;
-    `ref_of(member)` the name the witnesses know a member's unit by — the member's own name unless a subsystem names
-    its boxes otherwise."""
+    """The one list. `doors(member)` is that member's `ReportedDoor`; `history` is the domain's `AlarmHistory`."""
 
     def __init__(self, fed, doors, wall=time.time, per_member: int = 100, history: AlarmHistory | None = None,
-                 lost_after: float = 45.0, ref_of=str):
+                 lost_after: float = 45.0):
         self.fed, self.doors, self.wall, self.per_member = fed, doors, wall, per_member
-        self.history, self.lost_after, self.ref_of = history, lost_after, ref_of
+        self.history, self.lost_after = history, lost_after
 
-    # When a member's unit was last heard of, as the witnesses a spec declares say (`domain.witness`: one object per
-    # witnessing process, `<sub>/<witness>/<name>` = {ts, cluster, units: {ref: seconds since}}, in their clusters'
-    # stores — read directly, or carried in a relay's or a member's report). A witness is another process than the
-    # agent, so a member whose agent died is still heard of — the domain's one sign that it is alive.
-    def alive_at(self, ref: str) -> tuple[float, str] | None:
+    # When a member was last heard of, as the witnesses a spec declares say (`domain.witness: {report, member_field}`:
+    # one object per witnessing process, `<sub>/<report>/<name>` = {ts, cluster, units: {<member>: seconds since}}, in
+    # their clusters' stores — read directly, or carried in a relay's or a member's report). A witness is another
+    # process than the agent, so a member whose agent died is still heard of — the domain's one sign that it is alive.
+    #
+    # BY THE MEMBER'S OWN NAME (ADR-0010). The witness names what it heard of by the field its spec declares for it
+    # (`member_field`, fixed), which carries the member's name — so nothing here turns one name into another. It was a
+    # `ref_of(member)` handed in by whoever built the list: the tests gave one, the signer and the console none, and a
+    # member its witness named by another name than its own was never alive outside the tests.
+    def alive_at(self, member: str) -> tuple[float, str] | None:
         best = None
         for name, c in self.fed.clusters.items():
             try:
@@ -227,7 +232,7 @@ class DomainAlarms:
                 d = published(name, key, raw, lambda d: (finite(d["ts"]), dict(d.get("units") or {})))
                 if d is None:
                     continue
-                age = (d.get("units") or {}).get(str(ref))
+                age = (d.get("units") or {}).get(str(member))
                 if age is None:
                     continue
                 try:
@@ -285,7 +290,7 @@ class DomainAlarms:
                  **self._history_cut(name, since)}
             if reported is not None:
                 silent_since = float(reported) + self.lost_after
-                alive = self.alive_at(self.ref_of(name))
+                alive = self.alive_at(name)
                 # Silence is news, and of two kinds the operator acts on differently: a member a witness still hears
                 # of is alive and not reporting — its agent, its certificate, its road to the domain; one nobody
                 # hears of either is gone — broken, stolen, unpowered.

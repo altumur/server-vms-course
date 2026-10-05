@@ -1,5 +1,6 @@
 # /usr/lib/tmpfiles.d/w2c-domain.conf — the directory of the signer's tokens socket, on the server that holds the domain.
-# setgid to the books' worker's group: the socket the signer (w2c) makes there is 0660 and takes that group, so
-# `vms-domainpart` (vms, in vms-vmsdomain) opens it and nothing else of the box does. The signer's other door and the
-# console's are their units' own `RuntimeDirectory=` (0700).
-d /run/w2c-signer 2750 w2c vms-vmsdomain -
+# setgid to the tokens socket's own group (ADR-0031: `<deployment>-<sub>domaintokens`, `domain.rights.tokens_group`): the
+# socket the signer (w2c) makes there is 0660 and takes that group, whose one member is `vms-domainpart` — so it opens it
+# and nothing else of the box does, whatever joins the store's role groups (configstore is in every one of them). The
+# signer's other door and the console's are their units' own `RuntimeDirectory=` (0700).
+d /run/w2c-signer 2750 w2c vms-vmsdomaintokens -

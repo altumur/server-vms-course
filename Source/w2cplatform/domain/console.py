@@ -8,9 +8,9 @@ one writer for each of its outputs. This process READS: the members and their pu
 and what only the signer knows (its term, its failing steps, the rows it could not read) from the view it publishes
 (`domain/view`). It writes what a person decides and needs no key for: admitting a member, the topology, the grants, an
 edit kept again — each a line of its own journal (`domainconsole`). What needs a key — the shared settings, a handover,
-the people with their passwords — it hands to the signer as it came, with the person's token, and answers what the
-signer said; the signer checks it whole. While a handover freezes the holder it refuses early (`/api/holder`'s
-`frozen_for`), but the rule is the signer's.
+the people with their passwords, a move of the domain here — it hands to the signer as it came, with the person's token,
+and answers what the signer said; the signer checks it whole. While a handover freezes the holder it refuses early
+(`/api/holder`'s `frozen_for`), but the rule is the signer's.
 
 ONE SET OF PATHS, LITERALLY (the contract of the console module, §10a; ADR-0003): every human route of the holder
 lives under `/domain/*`, the same path a cluster console forwards without rewriting, and the page on either is the
@@ -48,6 +48,8 @@ platform's module. `/api/*` is the processes' (the signer's) — here only the l
                                                 spec declares shared (`{doc, delivery, declared}`), read with no key
     PUT  /domain/shared                         → the signer's `/api/shared`
     POST /domain/handover                       → the signer's `/api/handover`
+    POST /domain/move                           {recovery, stolen?} → the signer's `/api/move`: the domain moved onto
+                                                this cluster, the holder gone — checked by the recovery file there
     /domain/users[/<name>], /domain/break-glass[/<cluster>]   → the signer's `/api/people/…`
     POST /api/login                             → the signer's: a person's password goes there, a token comes back
     GET|POST|DELETE /session                    the door in, by the domain's key set (the platform's shapes)
@@ -83,8 +85,9 @@ GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row")
 # The holder's page (the console module's contract, §10a): the module mounted with `sections: ["domain"]`, nothing else.
 HOLDER_PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page.html")
 # What a person's request is handed to at the signer: the operations that need the domain's keys (ADR-0032).
-TO_SIGNER = {"/domain/shared": "/api/shared", "/domain/handover": "/api/handover", "/domain/users": "/api/people/users",
-             "/domain/break-glass": "/api/people/break-glass", "/api/login": "/api/login"}
+TO_SIGNER = {"/domain/shared": "/api/shared", "/domain/handover": "/api/handover", "/domain/move": "/api/move",
+             "/domain/users": "/api/people/users", "/domain/break-glass": "/api/people/break-glass",
+             "/api/login": "/api/login"}
 LOGIN_URL = "/api/login"
 
 
@@ -150,7 +153,8 @@ class Console:
 
     def shared_view(self) -> dict:
         """`GET /domain/shared`: the document the signer signed last (read from the store, no key), which members hold
-        it, and what each spec declares shared with the field's type — `{doc, delivery, declared}`."""
+        it, and what each spec declares shared with the field's type — `{doc, delivery, declared}`; a document a spec
+        declares (`{name, type: json, schema}`) with its schema, for a form to be built from."""
         from .shared import SharedSettings
         doc, _ = SharedSettings(self.view.fed.domain_holder.vars, self.view.fed.domain_holder.objects, None).current()
         shown = {k: v for k, v in doc.items() if k != "settings"}
@@ -159,8 +163,12 @@ class Console:
             delivery = SharedSettings(self.view.fed.domain_holder.vars, None, None).delivery(self.view.fed)
         except Exception as e:                                   # noqa: BLE001 — the document is shown all the same
             delivery = {"sentence": f"who holds it is not known: {e}"}
-        declared_ = {s.name: [{"name": f, "type": s.fields[f].type} for f in s.domain.shared]
-                     for s in declared.specs() if s.domain.shared}
+        def one(s, f: str) -> dict:
+            d = s.domain.documents.get(f)
+            if d is not None:
+                return {"name": f, "type": "json", "schema": d.schema}
+            return {"name": f, "type": s.fields[f].type}
+        declared_ = {s.name: [one(s, f) for f in s.domain.shared] for s in declared.specs() if s.domain.shared}
         return {"doc": shown, "delivery": delivery, "declared": declared_}
 
     def view_doc(self) -> tuple[int, dict]:
@@ -236,9 +244,12 @@ class Console:
                 if self.journal is not None and was != now_:
                     self.journal.say("domain.grants.changed", user=by or "?", target=cluster,
                                      added=",".join(sorted(now_ - was)), removed=",".join(sorted(was - now_)))
+        # THE CODE SAYS WHOSE THE FAULT IS (the architect's rule): 409 when the refusal depends on rows that exist — the
+        # last admin, a name a person and a subject would share; 400 when the request is wrong by the spec on its own —
+        # a grant wider than the family's declared `grant` (`domain.names`).
         except LastAdmin as e:
             raise ApiError(409, str(e)) from None
-        except BadName as e:
+        except (BadName, declared.GrantTooWide) as e:
             raise ApiError(400, str(e)) from None
         except declared.Refused as e:
             raise ApiError(409, str(e)) from None
@@ -551,8 +562,8 @@ class Console:
                     return
                 route = console.signer_route(u.path, "POST")
                 if route is not None:
-                    if u.path == "/api/login" or u.path == "/domain/handover":
-                        return self._to_signer("POST", route)     # the door in; a handover is the signer's to refuse
+                    if u.path in ("/api/login", "/domain/handover", "/domain/move"):
+                        return self._to_signer("POST", route)     # the door in; a handover, a move: the signer's
                     return self._early() or self._to_signer("POST", route)
                 try:
                     if u.path == "/domain/stranded/apply":
@@ -666,8 +677,9 @@ class Console:
                     if not read_body(self, self.MAX_BODY):
                         return
                     raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}"
-                # a handover waits for its target's report and for the move: minutes are its own bound, not ten seconds
-                timeout = 90.0 if route == "/api/handover" else 10.0
+                # a handover waits for its target's report and for the move, a move reads every member it reaches:
+                # minutes are their own bound, not ten seconds
+                timeout = 90.0 if route in ("/api/handover", "/api/move") else 10.0
                 self._send(*console.ask_signer(method, route, raw, self._token(), timeout))
 
             def _topology(self):
@@ -698,8 +710,8 @@ class Console:
     def signer_route(path: str, method: str = "GET") -> str | None:
         """The signer's route a person's request at `path` is handed to — None for one of this door's own, or for a
         method the signer's operation does not take there (`PUT /domain/shared`, `POST /domain/handover`, `POST
-        /api/login`; the people's routes with every method)."""
-        one = {"/domain/shared": "PUT", "/domain/handover": "POST", "/api/login": "POST"}
+        /domain/move`, `POST /api/login`; the people's routes with every method)."""
+        one = {"/domain/shared": "PUT", "/domain/handover": "POST", "/domain/move": "POST", "/api/login": "POST"}
         for mine, theirs in TO_SIGNER.items():
             if path == mine:
                 return theirs if one.get(mine, method) == method else None

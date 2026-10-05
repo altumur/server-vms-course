@@ -9,7 +9,9 @@
 # platform's own: a controller of every subsystem, the console, the resource, the domain's — has a group of the same
 # name as its socket's (`vms-<role>` for a worker, the platform's `w2c-<role>`):
 # a unit joins its own and opens no other socket; the daemon chowns every socket to its group, so configstore is a
-# member of each. vms-obsd (М10's `obsd.sysusers`, gid 2101) is the group the archive's engine lets in.
+# member of each. vms-obsd (М10's `obsd.sysusers`, gid 2101) is the group the archive's engine lets in. The signer's
+# tokens socket has a group of its own, `vms-vmsdomaintokens` (ADR-0031: `<deployment>-<sub>domaintokens`), and no `m`
+# line: its one member is the VMS's domain worker, by its unit's `SupplementaryGroups=` — not configstore, not `vms`.
 # `w2c-spares.sh` (`install.sh --spares`) runs as `w2c` too (ADR 0030), whom polkit lets `systemctl start` a spare
 # template's instance and nothing else (`w2c-spares.rules`; the product's cross-check, 4 Oct: the script ran as root).
 u w2c               2100  "w2c platform (the resource)"                        /data/platform -
@@ -41,6 +43,7 @@ g vms-liveworker -
 g w2c-surveycontroller -
 g vms-surveyworker -
 g vms-vmsdomain   -
+g vms-vmsdomaintokens -
 m configstore w2c-resource
 m configstore w2c-domain
 m configstore w2c-domainconsole

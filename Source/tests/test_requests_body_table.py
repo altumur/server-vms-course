@@ -190,3 +190,19 @@ def test_a_json_field_is_written_in_the_canonical_form_from_a_shape_or_from_text
             assert not taken and f"{(4000, 4001, 4008)[n]} bytes of JSON" in str(e), (n, e)
     ctl.create({"name": "spaced", "rule": '{"s":   ' + " " * 100 + '"' + "a" * 3992 + '"}'})   # 4100 typed, 4000 stored
     assert len(vars_.get("deck/decks/spaced")[0]["rule"]) == 4000
+
+
+def test_a_refused_body_value_says_its_kind_as_the_shared_table_names_it():
+    """`fault` — the table's word for a refusal (the architect with «Паритет», 2026-10-06): `not_json` (`NaN`, a cut
+    text, a lone surrogate — JSON's `\\ud800` escape lets one through, and it is no character), `not_number` (`1e400`),
+    `too_long` (past `maxLength` as written). A lone surrogate is refused at the body, not let through to the store."""
+    vars_, served = _family()
+    cases = [("NaN", "not_json"), ('"\\ud800"', "not_json"), ('{"x": "a\\udfffb"}', "not_json"),
+             ("1e400", "not_number"), ('{"x": 1e400}', "not_number"), ('"' + "a" * 33 + '"', "too_long")]
+    wrong = []
+    with served as call:
+        for i, (raw, fault) in enumerate(cases):
+            st, out = call("POST", "/requests", raw=f'{{"unit": "jar/a", "v": {raw}}}'.encode(), key=f"f{i}")
+            if st != 400 or (out or {}).get("fault") != fault or vars_.get(f"jar/requests/f{i}")[0] is not None:
+                wrong.append(f"{raw}: {st} {out}, the table says {fault}")
+    assert not wrong, "\n".join(wrong)

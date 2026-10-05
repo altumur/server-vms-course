@@ -34,8 +34,8 @@ function fixtures(P,deposed){
   b.FIX["/domain/alarms"]={events:[{kind:"session.debug_open",member:"hold",unit:"console",t:9,person:"stand-admin",id:"x1"},{kind:"session.debug_open",member:"quiet",unit:"console",t:8,person:"stand-admin",id:"x2"},
     {kind:"session.debug_open",member:"hold",unit:"domain",t:3,person:"stand-admin",id:"x3"},{kind:P,member:p("m"),of:"testsub/1",t:1,subsystem:P,unit:P},
     {kind:"thing.lost",subsystem:"audit",unit:"audit/worker",of:"testsub/2",member:"quiet",t:0}],complete:false,sentence:P};
-  b.FIX["/domain/shared"]={doc:{rev:7,term:3,at:1,by:P,shared:{testsub:{tags:[P,"b"],depth:3,on:true}}},delivery:{sentence:P,refused:{[p("m")]:P}},
-    declared:{testsub:[{name:"tags",type:"list"},{name:"depth",type:"int"},{name:"on",type:"bool"}],[p("sub")]:[{name:P,type:"string"}]}};
+  b.FIX["/domain/shared"]={doc:{rev:7,term:3,at:1,by:P,shared:{testsub:{tags:[P,"b"],depth:3,on:true,rules:{a:[1],why:P}}}},delivery:{sentence:P,refused:{[p("m")]:P}},
+    declared:{testsub:[{name:"tags",type:"list"},{name:"depth",type:"int"},{name:"on",type:"bool"},{name:"rules",type:"json"}],[p("sub")]:[{name:P,type:"string"}]}};
   b.FIX["/domain/handover"]={sentence:"handed"};
   b.FIX["/domain/stranded/apply"]={ok:true};
   b.FIX["/domain/testsub/things/"+encodeURIComponent(p("ref"))]={ok:true};
@@ -74,7 +74,15 @@ async function run(tag,P,deposed){
     fld("testsub/tags").value="x\n\n y ";fld("testsub/depth").value="";fld("testsub/on").value="false";
     n=w.__calls.length;sh().querySelector('[data-a="publish"]').click();await b.ready(80);
     const s=w.__calls.slice(n).find(x=>x.method==="PUT");
-    out[T("sharedPut")]=!!s&&s.path==="/domain/shared"&&s.body.base_rev===7&&JSON.stringify(s.body.shared.testsub)==='{"tags":["x","y"],"depth":null,"on":false}';
+    out[T("sharedPut")]=!!s&&s.path==="/domain/shared"&&s.body.base_rev===7&&JSON.stringify(s.body.shared.testsub)===JSON.stringify({tags:["x","y"],depth:null,on:false,rules:{a:[1],why:P}});
+    // json-документ (сценарии домена): текст с отступами; не JSON — ничего не уходит, набранное остаётся; JSON — объектом
+    const js=()=>fld("testsub/rules");
+    out[T("sharedJsonAsText")]=!!js()&&js().tagName==="TEXTAREA"&&js().value===JSON.stringify({a:[1],why:P},null,2)&&!/object Object/.test(sh().textContent);
+    js().value="{bad";n=w.__calls.length;sh().querySelector('[data-a="publish"]').click();await b.ready(60);
+    out[T("sharedJsonInvalidNotSentKept")]=!w.__calls.slice(n).some(x=>x.method==="PUT")&&/Не JSON, ничего не отправлено/.test(sh().textContent)&&js().value==="{bad";
+    js().value='{"b": 2}';n=w.__calls.length;sh().querySelector('[data-a="publish"]').click();await b.ready(80);
+    const s2=w.__calls.slice(n).find(x=>x.method==="PUT");
+    out[T("sharedJsonSentParsed")]=!!s2&&JSON.stringify(s2.body.shared.testsub.rules)==='{"b":2}';
     // передача: диалог с теми, кому можно, затем POST /domain/handover {to}
     n=w.__calls.length;main().querySelector('[data-a="handover"]').click();await b.ready(30);
     const dlg=d.querySelector(".pc-dialog-f");dlg.elements.to.value="quiet";dlg.requestSubmit();await b.ready(80);

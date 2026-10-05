@@ -1,4 +1,5 @@
-"""python3 -m w2cplatform.w2cctl — the platform's operator tool (the product's `w2cctl`): secrets at rest.
+"""python3 -m w2cplatform.w2cctl — the platform's operator tool (the product's `w2cctl`): secrets at rest, and the
+move of the domain onto a member when its holder is gone.
 
     w2cctl secrets new <path>              a key ring with one key (`sealing.new_key_file`): 0640, never inside a store
     w2cctl secrets status [<prefix> ...]   every `*_secret` of the rows under the prefixes — at the top of a row, or of a
@@ -7,6 +8,12 @@
                                            and there is a ring to seal it with
     w2cctl secrets seal [<prefix> ...]     seal what is in the clear, re-seal what an older key sealed, under the current
                                            key, by CAS, the row's meaning unchanged
+    w2cctl domain move <door> <recovery-file> [stolen]
+                                           the domain moved onto the cluster whose domain console is <door> (its
+                                           `POST /domain/move`, the door a person's page uses — the same door, not a
+                                           second road): the file is the domain's recovery file, or the signer's backup
+                                           for a domain whose root is the holder's own; `stolen` drops the old holder's
+                                           keys at once. Prints the move's sentence; exit 1 when it was refused
 
 The prefixes are, by default, the domain's and the people's — `domain/`, `identity/` (DOMAIN-PLATFORM.md: the signer's
 keys, the people's hashes, the emergency hashes and the books' tokens lay there in the clear, and nothing sealed or even
@@ -94,10 +101,39 @@ def seal(vars_, sealer, wanted) -> int:
     return written
 
 
+# THE MOVE GOES THROUGH THE DOOR A PERSON'S PAGE USES (ADR-0032's addition): the stand and the drills move the domain as
+# an operator would, by the new holder's domain console, which hands it to its signer — the one process that may
+# perform it, checked by the file. No function the tests alone call moves a domain.
+def move(door: str, recovery: str, stolen: bool = False, timeout: float = 120.0) -> tuple[int, dict]:
+    """`POST <door>/domain/move {recovery, stolen}` with the file's text: `(status, body)`."""
+    import json
+    import urllib.error
+    import urllib.request
+    with open(recovery, encoding="utf-8") as f:
+        text = f.read()
+    req = urllib.request.Request(door.rstrip("/") + "/domain/move", method="POST",
+                                 data=json.dumps({"recovery": text, "stolen": stolen}).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read() or b"{}")
+        except ValueError:
+            return e.code, {"detail": f"the door answered {e.code}"}
+    except (OSError, ValueError) as e:
+        return 502, {"detail": f"{door} did not answer: {e}"}
+
+
 def main(argv: list[str], env: dict | None = None) -> int:
     from w2cplatform.sealing import Sealer, new_key_file, platform_stores
     from w2cplatform.variables import open_vars
     env = os.environ if env is None else env
+    if argv[:2] == ["domain", "move"] and len(argv) in (4, 5) and argv[4:] in ([], ["stolen"]):
+        st, out = move(argv[2], argv[3], stolen=argv[4:] == ["stolen"])
+        print(out.get("sentence") or out.get("detail") or out, file=sys.stdout if st == 200 else sys.stderr)
+        return 0 if st == 200 else 1
     if argv[:2] == ["secrets", "new"] and len(argv) == 3:
         new_key_file(argv[2], store=platform_stores(env))
         print(f"a key ring with one key: {argv[2]}")
