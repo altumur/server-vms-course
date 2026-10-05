@@ -530,6 +530,7 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
         try:
             mine = self.renew_slot()
         except OSError as e:
+            self.unanswered += 1
             log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
             return []
         except SchemaTooNew:
