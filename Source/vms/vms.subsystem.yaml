@@ -481,8 +481,6 @@ display:
   kinds:
     io.input: вход устройства
     silent: камера молчит
-    command: команда выполнена
-    command.failed: команда не выполнена
   tree:
     group_by: folders
     nested_by: "/"

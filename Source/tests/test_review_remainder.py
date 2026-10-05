@@ -232,12 +232,11 @@ def test_a_command_carries_a_deadline_and_a_near_one():
 
     # the console says it at the door (the spec's `requests.most_valid`), and a scenario cannot ask for more either
     from vms.auto import MAX_VALID_FOR
-    from vms.worker import VmsWorker
     from w2cplatform.console import SpecConsole
     with Served(SpecConsole(con, wall=box.wall)) as call:
         far = {"unit": f"vms/{door}", "action": "output", "port": 1, "valid_until": now + 601}
         assert call("POST", "/requests", far, key="far-1")[1]["error"] == "too far"
-    assert MAX_VALID_FOR == VmsWorker.MAX_VALID == SPEC.requests["most_valid"]
+    assert MAX_VALID_FOR == w.most_valid() == SPEC.requests["most_valid"]
 
 
 def test_a_command_retried_is_one_command():

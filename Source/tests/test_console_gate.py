@@ -1643,7 +1643,7 @@ def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartb
     r.requests(budget=10)
     said = r.heartbeat_extra()
     for rid, (_, _, why) in cases.items():
-        assert why in said["requests_refused"][rid] and rid in said["fetched"].split(","), (rid, said["requests_refused"])
+        assert why in said["requests_refused"][rid] and rid in r.requests_fields()["fetched"].split(","), (rid, said["requests_refused"])
     import glob
     from w2cplatform.events import read_bucket
     lines = [ln for p in glob.glob(os.path.join(r.resource_root, "rec", "1", "e*", "*.events.jsonl")) for ln in read_bucket(p)]
