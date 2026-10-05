@@ -1657,11 +1657,17 @@ class SubsystemSpec:
             return v
         return url_host(v, self.group_schemes) if self.group_cut == "host" else url_cut(v, self.group_cut)
 
-    # …and a value whose host cannot be told (`cut_at: host`, `host_of_url` None): no group, like a value naming no host,
-    # and unlike it a place nobody can say whose it is — a reader that decodes `h%2Ecorp` or reads `010.0.0.5` as octal
-    # reaches another unit's host. The console asks the cluster's grant to move a unit there (`reach_of_change`).
-    def group_unreadable(self, value) -> bool:
-        return self.group_cut == "host" and bool(value) and host_of_url(str(value), self.group_schemes) is None
+    # …and why a value of the `group_by` field may not be stored, None when it may (ADR 0053): with `cut_at: host`
+    # declared there is no unit without a group but the ones `schemes.<s>.none` says — a host nobody can tell
+    # (`h%2Ecorp`, decoded by one reader and not by the next; `010.0.0.5`, octal to another) is a place nobody can say
+    # whose it is, and a "no group" there would let one unit's rights reach another's host. Refused at write, 400, in
+    # words that never repeat the value (`refuse`).
+    def group_refusal(self, value) -> str | None:
+        if self.group_cut != "host" or not value or host_of_url(str(value), self.group_schemes) is not None:
+            return None
+        return (f"{self.group_by} names no host that can be told: its host is neither a host name (letters, digits, "
+                f"'-' and '.', no escapes) nor an IP address in its usual form, or it does not parse — units are "
+                f"grouped by the host they are on, and one nobody can tell is refused")
 
     def ref(self, uid) -> str:
         from .doors import unit_ref
@@ -1904,6 +1910,12 @@ class SubsystemSpec:
                 if "#" in str(fields[name]):
                     raise Refused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
                                   f"and maybe another to the driver")
+            # …AND THE HOST OF ITS GROUP CAN BE TOLD (`cut_at: host`, ADR 0053): asked of any type the field is, by
+            # `group_refusal` — no unit without a group but those the spec's `none` says
+            if name == self.group_by and fields.get(name):
+                why = self.group_refusal(fields[name])
+                if why:
+                    raise Refused(why)
 
     # A value against its field's schema: `Refused` in the schema's words, where it failed (`schema.check`).
     @staticmethod
@@ -2033,13 +2045,15 @@ def url_cut(v, segment: str) -> str:
 # — and neither is a login. One spelling: lower case and no trailing dot (the root's); an IP address as `ipaddress`
 # writes it — an IPv6 one unbracketed, its zero runs folded (RFC 5952), its zone dropped, an IPv4-mapped one as the IPv4
 # address it is. The host is judged AS WRITTEN: a percent-escape in it is not decoded (`h%2Ecorp` is decoded by one
-# reader and not by the next), and a host that is neither a name of RFC 1123 labels nor an IP literal is NO group — "",
-# which groups with nothing — as is an address that does not parse (a control character, a broken escape, a port that
-# is not a number, a login in characters a login is not written in). A name does not resolve: `h.corp` and the address
-# it resolves to are two hosts, for an asked network is no rule.
+# reader and not by the next), and a host that is neither a name of RFC 1123 labels nor an IP literal is a host nobody
+# can tell, as is an address that does not parse (a control character, a broken escape, a port that is not a number, a
+# login in characters a login is not written in) or names no authority. Such a value is REFUSED at write (ADR 0053,
+# `SubsystemSpec.group_refusal`): with the grouping declared there is no unit without a group but the ones the spec's
+# `none` says; a row stored before is in no group ("", with nobody). A name does not resolve: `h.corp` and the address it
+# resolves to are two hosts, for an asked network is no rule.
 #
-# Grouping by the host may still be refused as a VALUE (`secret_in`): refusing is the field's, grouping is this — a row
-# written before a rule refused its address still has the host it names.
+# A readable host is grouped even where the value is refused for another reason (`secret_in`): refusing a login is the
+# field's, grouping is this — a row written before a rule refused its address still has the host it names.
 #
 # HOW A SCHEME WRITES ITS HOST when it does not follow RFC 3986 the spec DECLARES, per scheme (`group_by.schemes`), in a
 # closed dictionary — nothing of any scheme is known here:
@@ -2052,7 +2066,8 @@ def url_cut(v, segment: str) -> str:
 #                            the one WRITTEN in the path, never one only decoding makes.
 #   fragment: keep | none    `none`: the scheme has no fragment, `#` is a character like another (`x://a#@h/` is on `h`,
 #                            the host after the LAST `@`, as RFC 3986 cuts a login).
-#   none: [<authority>, …]   authorities that name no host: `x://local/…` groups with nothing.
+#   none: [<authority>, …]   authorities that name no host, in the host's one spelling: `x://local/…` groups with
+#                            nobody — the only addresses without a group (ADR 0053).
 GROUP_SCHEME_WORDS = {"host": ("authority", "path"), "fragment": ("keep", "none")}
 _SCHEME_NAME = re.compile(r"[a-z][a-z0-9+.\-]*")
 _HOST_LABEL = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?")
@@ -2189,15 +2204,16 @@ def url_host(v, schemes: dict | None = None) -> str:
 
 
 def host_of_url(v, schemes: dict | None = None) -> str | None:
-    """`url_host`, saying why there is none: "" when `v` names no host — it is no address with an authority, or the spec
-    says its authority names none (`none`) — and None when the host it names cannot be told: the address does not parse,
-    or its host is neither a name nor an IP. A unit moved onto such a host is moved where nobody can say whose it is."""
+    """`url_host`, saying why there is none: "" when the spec says the address names none (its authority is one of the
+    scheme's `none`, compared in the host's one spelling), and None when no host can be told — it is no address with an
+    authority, it does not parse, or its host is neither a name nor an IP. With `cut_at: host` declared, None is a value
+    the field refuses (`SubsystemSpec.group_refusal`; ADR 0053): `none` says the only addresses without a group."""
     s = "" if v is None else str(v)
     if any(ord(c) < 0x20 or ord(c) == 0x7F for c in s):
         return None
     scheme, sep, rest = s.partition("://")
     if not sep or not _SCHEME_NAME.fullmatch(scheme.lower()):
-        return ""
+        return None
     opts = (schemes or {}).get(scheme.lower()) or {}
     if opts.get("fragment", "keep") == "keep":
         rest, _, fragment = rest.partition("#")
@@ -2205,11 +2221,10 @@ def host_of_url(v, schemes: dict | None = None) -> str | None:
             return None
     cut = min([i for i in (rest.find("/"), rest.find("?")) if i >= 0], default=len(rest))
     authority, path = rest[:cut], rest[cut:].partition("?")[0]
-    if not authority:
-        return ""
-    if _BROKEN_ESCAPE.search(path):
+    if not authority or _BROKEN_ESCAPE.search(path):
         return None
-    if authority.lower() in {a.lower() for a in opts.get("none") or ()}:
+    if opts.get("none") and (_authority_host(authority) or authority.lower()) in {
+            host_spelling(a) or a.lower() for a in opts["none"]}:
         return ""
     if opts.get("host", "authority") == "path" and path[1:].split("/", 1)[0]:
         host = _host_in_path(path) if _authority_host(authority, host=False) else ""

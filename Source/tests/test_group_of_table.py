@@ -4,9 +4,11 @@ names (`placement.group_by: {field: source, cut_at: host, schemes: …}`; «Ар
 The product's `deviceOf` (vmsworker/vms/gate.go) answers the same rows; «Паритет» replaces the file with the table
 shared with the product, and this test reads that one as it reads this.
 
-Columns: the source; its group, or `(none)`; `refused` when the source field refuses it as a value (`refusal`: its
-`secret_in` and address rules) — the group is there all the same: refusing is the field's, grouping is `group_by`'s, and a
-row written before a rule refused its source is still on the host it names. A note may follow."""
+Columns: the source; its group, or `(none)`; `refused` when a write of it is refused — by the field (`refusal`: its
+`secret_in` and address rules) or because no host can be told in it (`SubsystemSpec.group_refusal`, ADR 0053). A readable
+host is a group all the same: refusing a login is the field's, grouping is `group_by`'s, and a row written before a rule
+refused its source is still on the host it names. The only rows without a group and not refused are the `none` ones (a
+file). A note may follow."""
 from __future__ import annotations
 
 import copy
@@ -34,15 +36,20 @@ def _rows():
 
 
 def _wrong(spec, refusals: bool) -> list[str]:
+    """Each row's group; that a host nobody can tell is refused exactly where the table has no group and a refusal; and —
+    `refusals` — that a write of the source is refused exactly where the table says."""
     source = spec.fields[spec.group_by]
     wrong = []
     for i, raw, group, refused in _rows():
         got = spec.group_of(raw)
         if got != group:
             wrong.append(f"line {i}: {raw} is in group {got or '(none)'}; the table: {group or '(none)'}")
-        if refusals and (source.refusal(raw) is not None) != refused:
-            wrong.append(f"line {i}: {raw} is {'' if refused else 'not '}refused by the table, "
-                         f"and the field says {source.refusal(raw)!r}")
+        no_host = spec.group_refusal(raw)
+        if (no_host is not None) != (refused and not group):
+            wrong.append(f"line {i}: {raw}: no host to tell is {'' if no_host else 'not '}refused: {no_host!r}")
+        why = source.refusal(raw) or no_host
+        if refusals and (why is not None) != refused:
+            wrong.append(f"line {i}: {raw} is {'' if refused else 'not '}refused by the table, and a write says {why!r}")
     return wrong
 
 

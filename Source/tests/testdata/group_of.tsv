@@ -1,13 +1,14 @@
-# group_of.tsv — a camera's source and the group the platform puts it in (`placement.group_by: {field: source, cut_at:
-# host, schemes: …}` of vms.subsystem.yaml; `w2cplatform.spec.url_host`), read by tests/test_group_of_table.py.
+# group_of.tsv — a camera's source and the group the platform puts it in (ADR 0053: `placement.group_by: {field: source,
+# cut_at: host, schemes: …}` of vms.subsystem.yaml; `w2cplatform.spec.url_host`), read by tests/test_group_of_table.py.
 # The group is the HOST the source names, in one spelling: neither the scheme nor the port is part of it; lower case, no
 # trailing dot; an IP as written once (IPv6 unbracketed, RFC 5952, no zone; IPv4-mapped as IPv4); a percent-escape in a
-# host is not decoded. (none): no group — not a host, or not an address. «Паритет» replaces this file with the table
-# shared with the product.
+# host is not decoded. (none): no group. With the grouping declared, the only sources without a group that are taken
+# are the `none` ones (driverpack://file/…); a host nobody can tell is refused at write, 400 (ADR 0053).
+# This is the course's seed of the table, until «Паритет» replaces it with the table shared with the product.
 #
-# Columns, tab-separated: the source; its group, or (none); `refused` when the source field refuses it as a value
-# (`refusal`: its `secret_in` and address rules) and the group is there all the same — refusing is the field's, grouping is group_by's;
-# a note.
+# Columns, tab-separated: the source; its group, or (none); `refused` when a write of it is refused — by the field's
+# `secret_in` and address rules, or because no host can be told in it — and a readable host is its group all the same
+# (refusing a login is the field's, grouping is group_by's); a note.
 #
 # one host, whatever the scheme and the port
 rtsp://nvr50/ch/1	nvr50
@@ -35,24 +36,26 @@ rtsp://admin:hunter2@nvr50/ch/1	nvr50	refused	a password in the source: refused,
 ipint://cam7#@nvr50/Acme/N8	nvr50	refused	ipint has no fragment: '#' is a character, the host after the last '@'
 ipint://admin:pa@ss@nvr50/Acme/N8	nvr50	refused	…the LAST '@'
 rtsp://cam7#@nvr50/ch/1	cam7	refused	rtsp has a fragment: the host is before the '#'
-# no host: no group
-rtsp://nvr%2Ecorp/ch/1	(none)		a percent-escape is not decoded: decoded by one reader, not by the next
-rtsp://nvr%2ecorp/ch/1	(none)
-rtsp://nvr_50/ch/1	(none)		an underscore is no host name's
-rtsp://nvr 50/ch/1	(none)		a space
-rtsp://-nvr/ch/1	(none)		a label starting with '-'
-rtsp://nvr..corp/ch/1	(none)		an empty label
-rtsp://nvré/ch/1	(none)		non-ASCII
-rtsp://010.0.0.50/ch/1	(none)		a leading zero: octal to inet_aton
-rtsp://10.1/ch/1	(none)		a short form: 10.0.0.1 to inet_aton
-rtsp://256.0.0.1/ch/1	(none)		ends in a number and is no IPv4 address
+# no host to tell: no group, and refused (ADR 0053)
+rtsp://nvr%2Ecorp/ch/1	(none)	refused	a percent-escape is not decoded: decoded by one reader, not by the next
+rtsp://nvr%2ecorp/ch/1	(none)	refused
+rtsp://nvr_50/ch/1	(none)	refused	an underscore is no host name's
+rtsp://nvr 50/ch/1	(none)	refused	a space
+rtsp://-nvr/ch/1	(none)	refused	a label starting with '-'
+rtsp://nvr..corp/ch/1	(none)	refused	an empty label
+rtsp://nvré/ch/1	(none)	refused	non-ASCII
+rtsp://010.0.0.50/ch/1	(none)	refused	a leading zero: octal to inet_aton
+rtsp://10.1/ch/1	(none)	refused	a short form: 10.0.0.1 to inet_aton
+rtsp://0x0a.0.0.1/ch/1	(none)	refused	hex: 10.0.0.1 to inet_aton
+rtsp://256.0.0.1/ch/1	(none)	refused	ends in a number and is no IPv4 address
 rtsp://[10.0.0.1]/ch/1	(none)	refused	brackets hold IPv6 only
-rtsp://[fe80::1%eth0]/ch/1	(none)		a zone is introduced by %25
+rtsp://[fe80::1%eth0]/ch/1	(none)	refused	a zone is introduced by %25
 rtsp://[::1/ch/1	(none)	refused	no closing bracket
+rtsp://[::1]x/ch/1	(none)	refused	something after the ']' that is no port
 rtsp://cam:hunter2/ch/1	(none)	refused	a password where the port goes: the address does not parse
-rtsp://nvr50/ch/%zz	(none)		a broken escape: the address does not parse
-rtsp:///ch/1	(none)		no authority
-nvr50	(none)		not an address
+rtsp://nvr50/ch/%zz	(none)	refused	a broken escape: the address does not parse
+rtsp:///ch/1	(none)	refused	no authority
+nvr50	(none)	refused	not an address
 # driverpack://<vendor>/<address>/…: the host is the path's first segment, and the vendor no part of it
 driverpack://acme/10.0.0.50/ch/17	10.0.0.50
 driverpack://acme/10.0.0.50/ch/18	10.0.0.50		another channel of one NVR
@@ -62,9 +65,12 @@ driverpack://acme/NVR-1./ch/1	nvr-1		one spelling
 driverpack://acme/[fe80::1%25eth0]/ch/1	fe80::1
 driverpack://acme	acme		no address: the vendor's, the authority is the host
 driverpack://acme/	acme		an empty first segment: the same
-driverpack://file/clips/a.mp4	(none)		a file, no device (`none: [file]`)
+driverpack://acme?x/10.0.0.5	acme		RFC 3986: what follows '?' is the query, the path is empty
+driverpack://acme/[::1]x/ch/1	(none)	refused	something after the ']' that is no port
+driverpack://file/clips/a.mp4	(none)		a file, no device (`none: [file]`): the lawful exception
 driverpack://file	(none)
-driverpack://acme/nvr%2Ecorp/ch/1	(none)		a percent-escape in the host is not decoded here either
+driverpack://FILE./clips/a.mp4	(none)		`none` is compared in the host's one spelling
+driverpack://acme/nvr%2Ecorp/ch/1	(none)	refused	a percent-escape in the host is not decoded here either
 driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1	10.0.0.5	refused	a login written before the rule: its host is still read
 driverpack://acme/admin:Hunter2@10.0.0.5/ch/1	10.0.0.5	refused
 driverpack://acme/admin:pa/ss@10.0.0.5/ch/1	10.0.0.5	refused	a password with a '/': the host after the path's last '@'

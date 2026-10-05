@@ -111,7 +111,7 @@ def test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_decla
     """`cut_at: host`: neither the scheme, the port, a login nor the path is part of the group; the host in lower case
     without the root's dot, an IP as `ipaddress` writes it (IPv6 unbracketed and folded, no zone; IPv4-mapped as IPv4).
     A host as written: an escape is not decoded, and what is neither a name of RFC 1123 labels nor an IP — or an address
-    that does not parse — is no group (""). `schemes` says where a scheme writes its host: the path's first segment
+    that does not parse — is no host, refused at write (ADR 0053). `schemes` says where a scheme writes its host: the path's first segment
     (`host: path`, the authority then a name the group does not hold; an empty segment leaves it the authority), no
     fragment (`fragment: none`: `#` is a character, the host after the last `@`), authorities naming none (`none`)."""
     assert url_host("x://H.:8/a/1") == url_host("y://h/b/2") == url_host("x://u:p@h") == "h"
@@ -125,7 +125,7 @@ def test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_decla
     hub = {"m": {"host": "path", "none": ["local"]}}
     assert url_host("m://hub1/H.Example/a", hub) == url_host("m://hub2/h.example:21/b", hub) == "h.example"
     assert url_host("m://hub1", hub) == url_host("m://hub1/", hub) == "hub1"           # no host in the path: the authority
-    assert url_host("m://local/x", hub) == url_host("m://LOCAL", hub) == ""
+    assert url_host("m://local/x", hub) == url_host("m://LOCAL", hub) == url_host("m://u@local.:9/x", hub) == ""
     assert url_host("m://hub/a:b%40h/x", hub) == url_host("m://hub/a:b/c@h/x", hub) == "h"   # a login set aside
     assert url_host("m://hub/a:b%40h%2Ecorp/x", hub) == ""                     # a host only decoding makes is none
     # testsub2: a tally's feed by its host — a mirror's in its path, and the shelf's own copy (`local`) none
@@ -133,9 +133,14 @@ def test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_decla
     assert spec.group_of("https://Feed.Example/t1") == spec.group_of("sftp://feed.example:22/t2") == "feed.example"
     assert spec.group_of("mirror://hub/feed.example/t3#x@y") == "feed.example"
     assert spec.group_of("mirror://local/t4") == "" == spec.group_of("")
-    # no group either way, and only one of them a host nobody can tell: the console asks the cluster's grant for it
-    assert spec.group_unreadable("https://feed_1.example/t5") and spec.group_unreadable("mirror://hub/h%2Ecorp/t6")
-    assert not spec.group_unreadable("mirror://local/t4") and not spec.group_unreadable("")
+    # ADR 0053: with `cut_at: host` there is no unit without a group but the ones `none` says — a host nobody can tell is
+    # refused at write, in words that do not repeat it; `local` is the lawful exception, and a value not given asks nothing
+    for unreadable in ("https://feed_1.example/t5", "mirror://hub/h%2Ecorp/t6", "https://010.0.0.5/t7", "sftp:///t8"):
+        _refused(lambda: spec.refuse({"feed": unreadable}), "feed names no host that can be told")
+        assert unreadable not in str(spec.group_refusal(unreadable))
+    assert spec.group_refusal("mirror://local/t4") is None and spec.group_refusal("") is None
+    spec.refuse({"feed": "mirror://local/t4"})
+    spec.refuse({"feed": "https://feed.example/t1"})
 
 
 def test_the_schemes_of_a_group_are_a_closed_dictionary_said_beside_cut_at_host_only():

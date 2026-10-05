@@ -552,8 +552,8 @@ class VmsWorker(Worker):
     # the host in one spelling, `ACME`, `:80` and the root's dot aside), so both are here: the first by id is opened, every
     # other is «device busy» in this worker's heartbeat (`status`: `why`, `device_state: busy`) and not opened — two
     # pipelines on one channel are camera 2's picture in camera 1's archive (the review's sixth pass). A host the platform
-    # cannot read (`012.0.0.50`) is no group, and may be on another worker: one spelling is the operator's rule, and moving
-    # a camera there is the cluster's grant. `{camera id: the camera whose channel it is already}`.
+    # cannot read (`012.0.0.50`) is refused at the door (ADR 0053); a row stored before is in no group, and may be on
+    # another worker. `{camera id: the camera whose channel it is already}`.
     #
     # …AND A SOURCE THE VMS CANNOT READ IS NOT OPENED (the review's tenth pass, major, where it was a refusal at the door in
     # the VMS's words, `config.source_refusal`, until the boundary's step 6): a channel written in digits that are not

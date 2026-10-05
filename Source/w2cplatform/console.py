@@ -3032,8 +3032,7 @@ class SpecConsole:
     # `reach.group` names reaches every OTHER unit of the group the unit leaves and of the group it joins — one
     # connection is one group (`placement.group_by`), and moving a unit within a group shows that unit another's input;
     # a group no other unit is in yet is nobody's to open but the cluster's (`"*"`: a name nobody can say whose it is, a
-    # host nobody holds), and so is a host nobody can tell (`group_unreadable`: `cut_at: host` reads none in the value);
-    # and moved to another group, every unit named by a row that names it (`rights.names` of any
+    # host nobody holds); and moved to another group, every unit named by a row that names it (`rights.names` of any
     # subsystem served here — a scenario that commands it answers for every unit it reaches). A change of a field
     # `reach.cluster` names is the cluster's. A request whose action `reach.requests` names reaches every unit of its
     # unit's group: what it does is done to the one connection.
@@ -3047,12 +3046,8 @@ class SpecConsole:
         g_old, g_new, me = ctl.group_value(old), ctl.group_value(new), str(old.get("id"))
         members = lambda g: {self.spec.ref(u["id"]) for u in ctl.units() if g and str(u["id"]) != me and ctl.group_value(u) == g}
         out |= members(g_old) | members(g_new)
-        gb = self.spec.group_by
-        # …moved onto a host nobody can tell (`group_unreadable`: no group, and not because it names none) — a reader that
-        # decodes it may reach another unit's: the cluster's, like a group nobody is in
-        unreadable = bool(gb) and gb in new and norm(old.get(gb)) != norm(new.get(gb)) and self.spec.group_unreadable(new.get(gb))
-        if g_new != g_old or unreadable:
-            if (g_new and not members(g_new)) or unreadable:
+        if g_new != g_old:
+            if g_new and not members(g_new):
                 out.add("*")
             out |= self.named_with(self.spec.ref(me))
         return out
