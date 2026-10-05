@@ -67,7 +67,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 | VMS | `python3 -m vms detjobworker`, `surveyworker`, `autoworker` (уроки 21, 23, 25) | `detjobworker@`, `surveyworker@`, `autoworker@` |
 | VMS | `python3 -m vms jobs` — хозяйство VMS: заявки, ставшие работой, и закрытая законченная работа | `vmsjobs.container` |
 
-`domainpart` — тоже глагол VMS, но держателя домена, а не коробки: его юнит — `deploy/domain/systemd/vms-domainpart.service` (М12).
+`domainpart` — тоже глагол VMS, но держателя домена, а не коробки: его юнит — `deploy/domain/systemd/vms-domainpart.service` (М12B).
 
 **Контроллеры, ресурс и консоль коробки — процессы платформы по спекам VMS.** Своих у VMS нет: она кладёт в образ семь спек (`SPEC_DIR=/app/vms`), и платформа работает по ним. Контроллер каждой подсистемы — экземпляр шаблона `w2c-controller@.container`, и имя экземпляра — имя спеки: восьмая спека получит контроллер ещё одним экземпляром того же шаблона. Ресурс держит то, что велят `holds:` спек (М10A, урок 14). Консоль ставит VMS в корень (`CONSOLE_ROOT=vms`), остальные спеки — под своими именами, `/rec/…`, `/live/…` (`test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name`). Как устроены их юниты, — урок 21 М10A, шаги 1 и 3. У VMS остаются её воркеры и `jobs`.
 
