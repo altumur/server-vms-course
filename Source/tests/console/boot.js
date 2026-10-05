@@ -1,11 +1,11 @@
 // Загрузка консоли курса в jsdom с поддельным API (копия продуктового vms/consoletest/boot.js; другое здесь — путь страницы).
 const fs=require("fs");const{JSDOM}=require("jsdom");
-// Страница по умолчанию — страница VMS курса, Source/vms/shell.html (корень при CONSOLE_ROOT=vms), с модулем платформы (w2cplatform/console.js), вписанным на
+// Страница по умолчанию — страница VMS курса, Source/vms/vms.shell.html (корень при CONSOLE_ROOT=vms), с модулем платформы (w2cplatform/console.js), вписанным на
 // место своего <script src>: в jsdom нет сервера, который его отдал бы. CONSOLE_FILE — другая страница (модуль на
 // фиктивной подсистеме, платформенная страница, копия до правки).
 const FILE=process.env.CONSOLE_FILE||(()=>{
   const path=require("path"),os=require("os");
-  const page=fs.readFileSync(path.join(__dirname,"..","..","vms","shell.html"),"utf8"),mod=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+  const page=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8"),mod=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
   const tmp=path.join(os.tmpdir(),"shell-boot-"+process.pid+".html");
   fs.writeFileSync(tmp,page.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${mod}</script>`));
   process.on("exit",()=>{try{fs.unlinkSync(tmp)}catch(e){}});

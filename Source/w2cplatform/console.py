@@ -3,8 +3,9 @@ already says what its units are, which fields the operator owns and what
 leaves the cluster; that is everything a console needs to list, edit and
 show them. So the console is one class, run from the same spec:
 
-    GET  /                       the page: the subsystem's own (`shell.html` beside its spec), else the platform's
-                                 (console.html) — the console module and its mount, which shows any spec
+    GET  /                       the page, at the console's root alone: the root subsystem's own (`<sub>.shell.html`
+                                 beside its spec), else the platform's (console.html) — the console module and its
+                                 mount, which shows any spec; a mounted subsystem serves none (404)
     GET  /platform/console.js[?v=1], /platform/console.css   the console module every page is built from, and its look;
                                  open (it draws the login); another version is 404
     GET/POST/DELETE /session, POST /session/break-glass   the door in (`session`): {open, login_url, user?, until?, via?}
@@ -70,8 +71,8 @@ rule in this file.
 #
 # ## Module-level names
 # - `PAGE` — absolute path of `console.html` beside this file: the platform's own page, the console module and its mount
-#   and nothing else; served at `/` for a subsystem with no page of its own. `SHELL` — a subsystem's own page, the file
-#   of that name beside its spec (`page_of`); `MODULE`, `MODULE_CSS`, `MODULE_VERSION` — the console module every page is
+#   and nothing else; served at `/` for a root subsystem with no page of its own. `SHELL` — a subsystem's own page,
+#   `<sub>.shell.html` beside its spec (`page_of`); `MODULE`, `MODULE_CSS`, `MODULE_VERSION` — the console module every page is
 #   built from, served at `/platform/console.js` and `/platform/console.css` (`send_module`).
 #
 # ### `__init__(self, ctl, marks_root=None, index=None, worst_failover=0.0, wall=None,
@@ -179,16 +180,17 @@ PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.html")
 MODULE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.js")
 MODULE_CSS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.css")
 MODULE_VERSION = "1"                   # the contract's version (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §3): `?v=` names it
-SHELL = "shell.html"
+SHELL = "{}.shell.html"
 
 
-# THE PAGE AT `/` (the boundary's step 3): a subsystem's own page when it has one — `shell.html` beside its spec, the
-# page that mounts the platform's console module and adds what is its own — else the platform's page, the module and
-# its mount and nothing else, which shows any spec. A spec built in code (`from_dict`) has no file, so no page of its own.
+# THE PAGE AT `/` (the boundary's step 3; КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §1): a subsystem's own page when it has one —
+# `<sub>.shell.html` beside `<sub>.subsystem.yaml`, the page that mounts the platform's console module and adds what is
+# its own — else the platform's page, the module and its mount and nothing else, which shows any spec. A spec built in
+# code (`from_dict`) has no file, so no page of its own. Only the console's root serves it (`SpecConsole.serves_page`).
 def page_of(spec) -> str:
     from . import catalog
     f = catalog.file_of(spec.name)
-    own = os.path.join(os.path.dirname(f), SHELL) if f else None
+    own = os.path.join(os.path.dirname(f), SHELL.format(spec.name)) if f else None
     return own if own and os.path.isfile(own) else PAGE
 
 
@@ -1407,6 +1409,9 @@ class SpecConsole:
         # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
         # does; in a `Mount` only the root does (`Mount._adopt`), so a scrape of every page says each fact once.
         self.says_platform = True
+        # …and whether it serves a page at `/` (`page_of`): a console alone does; in a `Mount` only the root, for its
+        # root subsystem — a mounted one's units are shown by the module on the root's page (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §1).
+        self.serves_page = True
         # How many events a minute one operator is expected to read. Past it the timeline stops showing
         # lines and starts showing counts — see `timeline`. The number belongs to the CONSOLE and not to a
         # subsystem's policy, because the screen merges every subsystem and the attention it competes for
@@ -2302,7 +2307,7 @@ class SpecConsole:
     # - `_body()` — the JSON request body, `{}` if empty.
     # - `_uid()` — the id segment (`path_id`: the one after the family, the one the gate checked) through `spec.parse_id`.
     # - `do_GET` — routes, in order:
-    #   - `GET /` or `/index.html` — the page (`page_of`), with its CSP; `/platform/console.js|css` — the module (`send_module`).
+    #   - `GET /` or `/index.html` — the page (`page_of`), with its CSP, at the root alone (`serves_page`); `/platform/console.js|css` — the module (`send_module`).
     #   - `GET /spec` — `describe()`.
     #         - `GET /<rows>` — `{rows: ctl.read_model(lost_after), configured: ctl.units()}`: the
     #       heartbeats' view over the configured rows.
@@ -3130,6 +3135,9 @@ class SpecConsole:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
         if method == "GET":
             if path in ("/", "/index.html"):
+                if not self.serves_page:
+                    return h._send(404, {"detail": f"{spec.name} is mounted: the page is the console root's",
+                                         "error": "not found"})
                 page = page_of(spec)
                 return send_file(h, page, "text/html; charset=utf-8", headers=(("Content-Security-Policy", page_csp(page)),))
             if path in MODULE_ROUTES:
@@ -3388,6 +3396,7 @@ class Mount:
         self.units[console.spec.name] = console
         console.units = self.units
         console.says_platform = console is self.root         # the platform's lines once per process: the root's page
+        console.serves_page = console is self.root           # one page per process, the root's: `/<sub>/` is none
 
     def mount(self, name: str, console: SpecConsole) -> "Mount":
         self.mounts[name] = console

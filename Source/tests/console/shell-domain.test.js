@@ -5,7 +5,7 @@
 // Члены в фикстуре — списком, как их ждёт модуль (контракт; курсовой /domain пока говорит их словарём — долг части A,
 // в отчёте шага); камеры и архивы — units курса, пересечения — его tables.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-dom-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));

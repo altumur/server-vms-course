@@ -451,3 +451,36 @@ def test_a_claim_nobody_will_answer_does_not_hold_its_key_for_a_day():
     finally:
         srv.shutdown()
 
+
+def test_the_vms_page_is_served_at_the_consoles_root_and_none_under_rec_or_live():
+    """The VMS's page is `vms/vms.shell.html`, beside `vms.subsystem.yaml` (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §1; no file of
+    the old name is left), served at `/` of the console whose root is the VMS (`CONSOLE_ROOT=vms`, as the deployment
+    builds it). The recorder and the live gateways are mounted: `/rec/` and `/live/` serve no page — 404 — and the
+    module shows their units on the VMS's page."""
+    import tempfile
+    import urllib.error
+    from w2cplatform import host
+    from w2cplatform.console import page_csp
+    vms = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms")
+    own = os.path.join(vms, "vms.shell.html")
+    assert os.path.isfile(own) and not os.path.exists(os.path.join(vms, "shell.html"))
+    m, _ = host.build_console({"SPEC_DIR": vms, "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "vms"})
+    assert {"rec", "live"} <= set(m.mounts), sorted(m.mounts)
+    srv = m.serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def get(path):
+        try:
+            with urllib.request.urlopen(base + path, timeout=10) as r:
+                return r.status, r.headers, r.read()
+        except urllib.error.HTTPError as e:
+            return e.code, e.headers, e.read()
+    try:
+        status, headers, body = get("/")
+        assert status == 200 and body == open(own, "rb").read() and headers["Content-Security-Policy"] == page_csp(own)
+        for sub in ("rec", "live"):
+            for path in (f"/{sub}/", f"/{sub}/index.html"):
+                status, _, body = get(path)
+                assert status == 404 and b"the page is the console root's" in body, (path, status, body[:200])
+    finally:
+        srv.shutdown(); srv.server_close()

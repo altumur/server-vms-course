@@ -301,7 +301,7 @@ def test_the_catalogue_says_what_each_unit_raises_and_can_do():
 
 
 def test_the_pages_scenario_form_offers_exactly_the_actions_the_auto_spec_accepts():
-    """The VMS's page (`vms/shell.html`, «Сценарии») builds its «то» from a catalogue (`RACTIONS`), and the catalogue is
+    """The VMS's page (`vms/vms.shell.html`, «Сценарии») builds its «то» from a catalogue (`RACTIONS`), and the catalogue is
     the auto spec's `then`: each `anyOf` of its schema is one action, its `required` (beside `sub` and `action`) the
     fields the form will not send empty, the rest optional — an operator cannot ask for what no executor is written for,
     and is not refused at the door for a field the form never showed. The page's words for the triggers are the VMS
@@ -310,7 +310,7 @@ def test_the_pages_scenario_form_offers_exactly_the_actions_the_auto_spec_accept
     import os
     import re
     page = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms",
-                             "shell.html"), encoding="utf-8").read()
+                             "vms.shell.html"), encoding="utf-8").read()
     cat = page.split("const RACTIONS=[", 1)[1].split("];", 1)[0]
     offered = {}
     for m in re.finditer(r'\{sub:"(\w+)",action:"(\w+)",label:"[^"]*",fields:\[(.*?)\]\}', cat):

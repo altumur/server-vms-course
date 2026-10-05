@@ -20,7 +20,7 @@ is nobody's catalogue.
 # - `register(spec, path)` — a spec this process loaded, and the file it was loaded from. A second spec of one name
 #   replaces the first (a test that loads a changed copy); `version` moves, so what was derived from the old one is
 #   derived again. `file_of(name)` — the file the name was last loaded from (a copy registered without one keeps it):
-#   what lies beside it is the subsystem's (its page, `console.page_of`).
+#   what lies beside it is the subsystem's (its page `<sub>.shell.html`, `console.page_of`).
 # - `load_dir(path)` — every `*.subsystem.yaml` of a directory, in name order; refused when there is none: a process
 #   told to run from an empty directory runs nothing, and says so at its start rather than idling.
 # - `specs()` / `spec(name)` — what is loaded; with nothing loaded, the directory `SPEC_DIR` names first.
