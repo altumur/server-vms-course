@@ -187,6 +187,16 @@ def testsub2():
     return _read(TESTSUB2)
 
 
+def spec_named(name: str):
+    """The least spec a subsystem can say — a unit with a name, and what a worker that said nothing counts for — under a
+    name of the test's own: what a test of the platform's bare mechanics (a slot, an epoch, a wait) runs a `Worker` by.
+    A worker runs by its spec, always (`Worker.__init__`); this one says nothing a mechanism would read."""
+    from w2cplatform.spec import SubsystemSpec
+    return SubsystemSpec.from_dict({"name": name, "unit": {"rows": f"{name}s", "id": "name",
+                                                           "fields": {"name": {"type": "string", "required": True}}},
+                                    "placement": {"capacity": {"from": "capacity", "default": 4}}})
+
+
 class in_catalogue:
     """`with in_catalogue(testsub2()):` — the specs in this process's catalogue for the block (what the resource reads
     holds and object rows from), and the catalogue as it was after it: the next test knows what it knew before."""
@@ -250,8 +260,7 @@ class CounterWorker(Worker):
                  slot_ttl: float = 45.0, env: dict | None = None, spec=None):
         spec = spec or testsub()
         super().__init__(spec.sub, None, vars_, objects, lease_ttl, lease_margin, clock, wall,
-                         instance or f"{server}:{next(_INSTANCES)}", slot_ttl)
-        self.spec = spec
+                         instance or f"{server}:{next(_INSTANCES)}", slot_ttl, spec=spec)
         self.server, self.capacity, self.labels = server, capacity, list(labels)
         self.resource_root = resource_root
         self.rows: dict[str, dict] = {}

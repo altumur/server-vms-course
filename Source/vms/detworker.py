@@ -22,7 +22,7 @@ import time
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
 from w2cplatform.worker import Worker
-from w2cplatform.events import ALARM, OBSERVATION, EventLog
+from w2cplatform.events import ALARM, OBSERVATION
 from w2cplatform.variables import Variables
 
 from .config import DET_SPEC
@@ -49,8 +49,6 @@ class FakeModel:
 class DetWorker(Worker):
     """`name` is a slot (`d-1`); `models` maps a kind to a factory `(unit) -> Model`; unknown kinds are
     reported as `phase: unsupported` and run nothing."""
-
-    spec = DET_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None, resource_root: str | None = None,
@@ -152,9 +150,8 @@ class DetWorker(Worker):
     # Writes the lines the suppressor handed back — the observation, nothing, or the summary of a window that
     # just closed and then the observation — each under its class, into the unit's bucket under its epoch.
     def _write(self, unit: str, row: dict, lines) -> None:
-        log_ = EventLog(self.resource_root, DET.name, unit, self.epochs[unit], of=DET_SPEC.of_row(row))   # about its camera
-        for t, kind, fields in lines:
-            log_.append(t, kind, self.row_class(row, kind), **fields)
+        for t, kind, fields in lines:                      # about its camera: the platform's `of` (`Worker.of`)
+            self.write_event(unit, t, kind, self.row_class(row, kind), **fields)
             self.status_by_unit[unit]["events"] = self.status_by_unit[unit].get("events", 0) + 1; self.events_written += 1
 
     # Windows that closed with no observation left to carry the summary out: the scene went still. Once a pass —

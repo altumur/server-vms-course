@@ -189,7 +189,7 @@ def test_a_taken_offer_whose_worker_is_not_heard_counts_as_issued_for_90_s():
     _cameras(box, 3)
     ctl = _ctl(box)
     ctl.pass_once()
-    spare = Worker(SPEC.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall)
+    spare = Worker(SPEC.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, spec=SPEC)
     assert spare.claim_slot(spare_for="") == "w-2"                          # took it, and never says a word
     assert ctl.pass_once()["spares_starting"] == {"": 1}                    # the controller sees it taken
     assert OFFER_GRACE == 90.0

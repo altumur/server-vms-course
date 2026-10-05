@@ -364,7 +364,7 @@ def test_a_slot_until_infinity_is_that_slots_trouble_alone():
     judged as ever. `NaN` and a word the same."""
     site = _Site()
     ctl, box = site.ctl, site.box
-    w9 = Worker(testsub().sub, "w-9", box.vars, box.objects, clock=box.clock, wall=box.wall)
+    w9 = Worker(testsub().sub, "w-9", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=testsub())
     w9.heartbeat([], server="srv-2")
     try:
         for bad in ("Infinity", "NaN", "soon"):
@@ -394,7 +394,7 @@ def test_a_garbled_slot_row_nobody_touches_for_a_term_can_be_claimed_again():
     box.vars.put("testsub/slots/w-1", {"holder": "x", "until": "soon", "released": "false", "gen": "7"})
     try:
         ctl = controller_ctl(box)
-        w = Worker(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall)
+        w = Worker(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, spec=testsub())
         idx = box.vars.get("testsub/slots/w-1")[1]
         assert not w._garbled_stale("w-1", idx)                              # first look: from now
         box.clock.advance(w.slot_ttl + w.HOLD_SKEW - 1)
@@ -474,13 +474,13 @@ def test_the_resource_says_which_workers_are_placed_and_which_run():
     that is no finite number is no live resource heartbeat — a resource known and silent."""
     box = Box()
     root = box.resource_root
-    a = Worker(testsub().sub, "w-1", box.vars, box.objects, clock=box.clock, wall=box.wall)
-    b = Worker(testsub().sub, "w-2", box.vars, box.objects, clock=box.clock, wall=box.wall)
+    a = Worker(testsub().sub, "w-1", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=testsub())
+    b = Worker(testsub().sub, "w-2", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=testsub())
     assert a.present(root) and b.present(root)
     assert workers_here(root) == ({"testsub": ["w-1", "w-2"]}, {"testsub": ["w-1", "w-2"]})
     b.absent()
     assert workers_here(root) == ({"testsub": ["w-1", "w-2"]}, {"testsub": ["w-1"]})
-    again = Worker(testsub().sub, "w-2", box.vars, box.objects, clock=box.clock, wall=box.wall)
+    again = Worker(testsub().sub, "w-2", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=testsub())
     assert again.present(root)
     assert workers_here(root) == ({"testsub": ["w-1", "w-2"]}, {"testsub": ["w-1", "w-2"]})
     assert len([f for f in os.listdir(os.path.join(root, ".workers")) if f.endswith(".lock")]) == 2   # the old one removed

@@ -1629,7 +1629,9 @@ def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartb
     route refused them; since the boundary's step 6 the platform files a backfill by its shape alone (`requests:`), and
     the recorder judges what only it can — a day at most, a second at least, not in the future, not before anything the
     recording shows (its `retention_days`) — and refuses it in words: in its heartbeat (`requests_refused`), on the
-    recording's events (`archive.backfill.refused`), the row closed (`fetched`)."""
+    recording's events (`archive.backfill.refused`), the row closed (`fetched`). The line is about the recording's
+    camera (`of: vms/1`), as the recorder's other lines are: it is written through the platform's `observe`, which said
+    no `of` until the base stamped it (the architect's rule after step 7) — a query for the camera did not find it."""
     from tests.vmsconftest import recorder
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
@@ -1637,7 +1639,8 @@ def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartb
     r = recorder(box)
     r.lease_pass()
     r.rows = [rec.unit("1")]
-    r.may_act = lambda unit: True                    # the recording's holder, its lease its own
+    r.take_epoch("1")                                # the recording's holder: its epoch, what its lines are written under
+    r.may_act = lambda unit: True                    # …its lease its own
     t = box.wall()
     cases = {"day": (t - 40 * 365 * 86400, t, "at most 86400 s"), "ms": (t - 60, t - 59.5, "at least 1 s"),
              "future": (t + 3600, t + 7200, "from now"), "1970": (0.5, 600, "before anything the recording shows"),
@@ -1648,6 +1651,11 @@ def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartb
     said = r.heartbeat_extra()
     for rid, (_, _, why) in cases.items():
         assert why in said["requests_refused"][rid] and rid in said["fetched"].split(","), (rid, said["requests_refused"])
+    import glob
+    from w2cplatform.events import read_bucket
+    lines = [ln for p in glob.glob(os.path.join(r.resource_root, "rec", "1", "e*", "*.events.jsonl")) for ln in read_bucket(p)]
+    refused = [ln for ln in lines if ln["kind"] == "archive.backfill.refused"]
+    assert sorted(ln["request"] for ln in refused) == sorted(cases) and {ln.get("of") for ln in refused} == {"vms/1"}, refused
 
 
 def _raw_call(url, method="GET", body: bytes | None = None, headers=None):

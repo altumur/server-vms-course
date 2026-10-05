@@ -26,8 +26,7 @@ class _Bare(Worker):
 
 
 def _bare(box, spec, name, **kw):
-    cls = type("Bare", (_Bare,), {"spec": spec})
-    w = cls(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, **kw)
+    w = _Bare(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, spec=spec, **kw)
     w.server = "srv-1"
     w.claim_slot(name)
     return w
@@ -55,19 +54,15 @@ def test_the_loop_calls_the_pass_the_way_the_abstract_declares_it():
 def test_a_worker_whose_subsystem_sets_no_capacity_says_the_specs_default_and_is_placed_by_it():
     """`platform_fields` said `capacity: 0` for a worker whose subsystem set none, and the controller reads a said number
     as the worker's word (`capacity_of`): nothing was ever placed on it, whatever `placement.capacity.default` said. It
-    says the spec's default now; a worker with no spec and no capacity says none, and the controller's fallback holds."""
+    says the spec's default now — and every worker has a spec (`Worker.__init__`); a heartbeat that says no capacity
+    (an older build's) is counted at the controller's fallback."""
     box = Box()
     w = _bare(box, testsub(), "w-1", resource_root=box.resource_root)
     w.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(w.sub.heartbeat_key("w-1")))
     assert hb.extra["capacity"] == testsub().capacity_default == 4 and hb.extra["headroom"] == 4
     assert controller(box, capacity=1).capacity_of("w-1") == 4                 # the worker's word, not the fallback
-    plain = _Bare(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
-    plain.server = "srv-1"
-    plain.claim_slot("w-2")                                                     # no spec, no capacity
-    plain.heartbeat_once()
-    said = Heartbeat.from_bytes(box.objects.get(plain.sub.heartbeat_key("w-2"))).extra
-    assert "capacity" not in said and "headroom" not in said
+    box.objects.put(w.sub.heartbeat_key("w-2"), Heartbeat("w-2", box.wall(), [], {"server": "srv-1"}).to_bytes())
     assert controller(box, capacity=1).capacity_of("w-2") == 1                 # not said: the fallback
 
 
@@ -129,8 +124,6 @@ def test_an_early_pass_is_the_platforms_loop_and_a_worker_may_look_at_what_was_t
     seen = []
 
     class Early(_Bare):
-        spec = testsub()
-
         def reconcile_once(self, now=None):
             seen.append("full")
             return []
@@ -138,7 +131,8 @@ def test_an_early_pass_is_the_platforms_loop_and_a_worker_may_look_at_what_was_t
         def early_pass(self, touched):
             seen.append(("early", frozenset(touched)))
 
-    w = Early(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
+    w = Early(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, resource_root=box.resource_root,
+              spec=testsub())
     w.claim_slot("w-1")
     w.start_stand_in = lambda: threading.Event()
 

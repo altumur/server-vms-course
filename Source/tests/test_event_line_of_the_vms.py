@@ -76,6 +76,35 @@ def test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it():
     assert EventIndex(box.resource_root, "srv-1", wall=box.wall).query(t - 60, t - 40, by="occurred")["events"][0]["kind"] == "io.input"
 
 
+def test_no_vms_module_says_what_a_unit_is_about_the_platform_stamps_it():
+    """`of` — the camera a recording, a detector, a scan or a watch is about — is the platform's to write on a line
+    (`Worker.of`, from the spec's `about` and the unit's row): nine call sites passed it by hand, and the one written
+    through `observe` (a recording's refused backfill) did not. No VMS module passes `of` to anything now, and none
+    writes a unit's lines through an `EventLog` of its own beside the worker's `observe` and `write_event` — the
+    camera's own log (`archive.event_log`: `vms/<cam>`, about nothing but itself) is the one writer left."""
+    import ast
+    from tests.productdir import SOURCE
+    found = []
+    for top in ("vms", "gstvms"):
+        for d, _, files in os.walk(os.path.join(SOURCE, top)):
+            for f in sorted(files):
+                if not f.endswith(".py"):
+                    continue
+                p = os.path.join(d, f)
+                with open(p, encoding="utf-8") as fh:
+                    tree = ast.parse(fh.read())
+                for node in ast.walk(tree):
+                    if not isinstance(node, ast.Call):
+                        continue
+                    name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+                    where = f"{os.path.relpath(p, SOURCE)}:{node.lineno}"
+                    if any(k.arg == "of" for k in node.keywords):
+                        found.append(f"{where}: says `of`")
+                    if name == "EventLog" and os.path.relpath(p, SOURCE) != os.path.join("vms", "archive.py"):
+                        found.append(f"{where}: an EventLog of its own")
+    assert not found, "\n".join(found)
+
+
 def test_only_what_our_own_element_said_is_an_observation():
     """The filter was a list of names to drop. On the product's box `rtpbin` posted `application/x-rtp-source-sdes`
     every few seconds and each became an event of the camera. The question is who posted it."""

@@ -6,7 +6,7 @@ from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, current_epoch, next_epoch
 from w2cplatform.spec import SpecController, SubsystemSpec
 from w2cplatform.variables import Conflict, FileVariables, Forbidden
-from tests.conftest import Box, Clock, console_ctl, controller_ctl, counter_worker
+from tests.conftest import Box, Clock, console_ctl, controller_ctl, counter_worker, spec_named
 
 
 def test_the_config_store_survives_a_restart_and_refuses_a_stale_cas():
@@ -101,7 +101,7 @@ def test_controller_and_worker_bases_speak_only_the_contract():
     box = Box()
     sub = Subsystem("thing")
     ctl = Controller(sub, box.vars, box.objects, wall=box.wall)
-    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall)
+    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=spec_named("thing"))
     assert ctl.workers_seen() == {}                            # nobody has heartbeaten
     w.heartbeat([{"id": 1, "phase": "running"}], server="srv-1")
     seen = ctl.workers_seen()
@@ -128,8 +128,9 @@ def test_identity_by_claim_is_a_platform_piece():
     box = Box()
     sub = Subsystem("thing")
     ctl = Controller(sub, box.vars, box.objects, wall=box.wall)
-    a = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="A")
-    b = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="B")
+    spec = spec_named("thing")                                          # the least a spec can say: a worker runs by one
+    a = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="A", spec=spec)
+    b = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="B", spec=spec)
     assert a.claim_slot() == "w-1" and b.claim_slot() == "w-2"        # `count = 2`: two names, in order
     ctl.assign("w-1", ["1", "2"])
     assert a.renew_slot() and b.renew_slot()
@@ -137,14 +138,14 @@ def test_identity_by_claim_is_a_platform_piece():
     box.wall.advance(91 + HUNG_MOVE_AFTER)                             # A went silent: the slot's TTL, the margin, the limit
     assert b.renew_slot()
     assert list(ctl.publish_names()["names_given"]) == ["w-1"]         # B's renewal is new to it: B's name stays
-    c = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="C")
+    c = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="C", spec=spec)
     assert c.claim_slot() == "w-1" and c.assignment().units == ["1", "2"]   # the replacement inherits
     assert not a.renew_slot()                                          # A, if it is still alive, finds out
     assert ctl.released_slots() == []                                  # a lapse is not a release
     b.release_slot()                                                   # scale-in: B is told to stop and says so
     ctl.assign("w-2", ["3"])
     assert ctl.released_slots() == ["w-2"]                             # what the subsystem redistributes
-    d = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="D")
+    d = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="D", spec=spec)
     assert d.claim_slot(prefer="w-7") == "w-7"                         # the scheduler's index wins, and creates
     assert sorted(ctl.slots()) == ["w-1", "w-2", "w-7"] and sub.slot_key("w-1") == "thing/slots/w-1"
     assert sub.acl_worker() == ["thing/epoch/*", "thing/slots/*", "thing/holds/*"]   # what it is, and where it writes

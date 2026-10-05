@@ -51,7 +51,7 @@ from w2cplatform.variables import Variables
 
 from . import volumes
 from .archive import Archive, ArchiveError, Fenced, classify, overlaps, stitch, subtract
-from .config import REC_SPEC, rec_row
+from .config import rec_row
 from .worker import FakeActuator, VmsWorker
 from .writerwatch import WriterWatch
 
@@ -79,12 +79,6 @@ from w2cplatform.domain.agent import DOMAIN_SEEN  # noqa: E402,F401
 log = logging.getLogger("recworker")
 REC = Subsystem("rec")
 
-
-# The camera a keep's lines are about — its camera, as `rights.unit_of` says whose a keep is (rec.subsystem.yaml): a
-# query for the camera finds them (`of`, the index's second column).
-def keep_of(k) -> str:
-    from .config import REC_SPEC
-    return REC_SPEC.table_unit("keeps", {"cam": k.cam})[0]
 VOLUME_MISSING = "VOLUME_MISSING"       # a volume in use at its address before, and not there now (`RecWorker._may_format`)
 
 
@@ -304,7 +298,6 @@ class RecWorker(VmsWorker):
     worker's fan-out, writing into the volume it holds."""
 
     SUB = REC
-    spec = REC_SPEC                 # its requests are backfills and the resource's asks to free bytes (`requests`, below)
     ROWS = "recordings"
     # How long a volume that refused writes is left alone before this recorder tries it again. Opening it
     # may well succeed — the directories are there — and the first write fail again, so without a pause a
@@ -1330,12 +1323,12 @@ class RecWorker(VmsWorker):
     ROW_UNREAD_AFTER = 600.0
 
     def _row_unread(self, name: str) -> None:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         now = self.wall()
         since, said = self._vol_unread or (now, None)
         if now - since >= self.ROW_UNREAD_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
-            EventLog(self.resource_root, REC.name, name, 0).append(now, "archive.volume.unreadable", cls=ALARM, volume=name,
-                                                                  since=since, seconds=round(now - since))
+            self.write_event(name, now, "archive.volume.unreadable", ALARM, epoch=0, volume=name, since=since,
+                             seconds=round(now - since))
             log.error("%s: the settings of volume %s have not been readable for %.0f minutes: this recorder goes on writing it "
                       "as it was set when last read, and a change made since — switched off, a new size — does not reach "
                       "it. Correct the volume's settings on the volumes page, or delete and declare it again",
@@ -1379,14 +1372,14 @@ class RecWorker(VmsWorker):
     BUSY_FOR = 600.0
 
     def _busy_too_long(self, now: float) -> None:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         name, quiet = self.hold, self.clock() - self._busy_since
         why = (f"{name} has been in use by another writer for {quiet / 60:.0f} minutes although this recorder holds it, so "
                f"nothing is being recorded into it. A recorder on another server may be stuck with {name} still open: "
                f"check obsd and the recorders on the other servers. This recorder lets {name} go and tries it again in "
                f"{self.REFUSED_FOR / 60:.0f} minutes")
-        EventLog(self.resource_root, REC.name, name, 0).append(now, "archive.volume.busy", cls=ALARM, volume=name,
-                                                              seconds=round(quiet), detail=self.archive_error)
+        self.write_event(name, now, "archive.volume.busy", ALARM, epoch=0, volume=name, seconds=round(quiet),
+                         detail=self.archive_error)
         log.error("%s: %s", self.name, why)
         self.refused[name] = (now + self.REFUSED_FOR, why)
         self.leave_volume(why)
@@ -1519,14 +1512,13 @@ class RecWorker(VmsWorker):
         self._missing_said.pop(vol.name, None)        # found: the next time it is missing is another episode
 
     def _say_missing(self, vol, e: ArchiveError) -> None:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         if self._missing_said.get(vol.name) == vol.url:
             return
         self._missing_said[vol.name] = vol.url
         log.error("%s: %s", self.name, e.detail)
-        EventLog(self.resource_root, REC.name, vol.name, 0).append(self.wall(), "volume.missing", cls=ALARM, volume=vol.name,
-                                                                  url=vol.url, recorder=self.name or "", server=self.server or "",
-                                                                  detail=e.detail)
+        self.write_event(vol.name, self.wall(), "volume.missing", ALARM, epoch=0, volume=vol.name, url=vol.url,
+                         recorder=self.name or "", server=self.server or "", detail=e.detail)
 
     # The box's own volume, which nobody declared: no size of its own (`quota_bytes` 0) — `default_quota` formats it
     # if it is new, and a volume that exists keeps the size it has. Declared with a quota, it would be resized at
@@ -1807,10 +1799,10 @@ class RecWorker(VmsWorker):
     # `VOLUME_UNCLEAN`, recovered under a confirmed hold (`Archive._mount_rw`): an ALARM, because footage may be gone —
     # two writers in one ring, a crash in the middle of a block — and somebody is asked about it afterwards.
     def _unclean(self, vol, result: int, detail: str) -> None:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         said = {0: "clean", 1: "recovered", 2: "failed"}.get(int(result), str(result))
-        EventLog(self.resource_root, REC.name, vol.name, 0).append(
-            self.wall(), "archive.volume.recovered", cls=ALARM, volume=vol.name, result=said, detail=detail)
+        self.write_event(vol.name, self.wall(), "archive.volume.recovered", ALARM, epoch=0, volume=vol.name, result=said,
+                         detail=detail)
         log.error("%s: %s was not cleanly unmounted (%s): recovered under this recorder's hold — %s", self.name,
                   vol.name, detail, said)
 
@@ -1844,9 +1836,8 @@ class RecWorker(VmsWorker):
             return
         self.resize_error = ""
         if vol.quota_bytes < was:
-            from w2cplatform.events import EventLog
-            EventLog(self.resource_root, REC.name, vol.name, 0).append(
-                self.wall(), "archive.volume.shrunk", durable=True, volume=vol.name, was=was, quota_bytes=vol.quota_bytes)
+            self.write_event(vol.name, self.wall(), "archive.volume.shrunk", epoch=0, durable=True, volume=vol.name, was=was,
+                             quota_bytes=vol.quota_bytes)
             log.warning("%s: %s shrunk from %d to %d bytes: its oldest footage is given up first", self.name, vol.name,
                         was, vol.quota_bytes)
         if vol.url == self.default_url:
@@ -1957,16 +1948,15 @@ class RecWorker(VmsWorker):
     # shows, and the stretch is what the engine's flush periods leave unwritten at most — a bound, said as one
     # (`exact: false`).
     def _say_dropped(self, st: Archive, known: bool) -> None:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         from .archive import parse_stream
         for name, (a, b) in sorted(st.dropped.items()):
             p = parse_stream(name)
             if p is None:
                 continue
             self.dropped_seconds += b - a
-            EventLog(self.resource_root, REC.name, p[0], p[1]).append(
-                self.wall(), "archive.footage.dropped", cls=ALARM, volume=st.name, seconds=round(b - a, 1), since=a,
-                until=b, exact=known)
+            self.write_event(p[0], self.wall(), "archive.footage.dropped", ALARM, epoch=p[1], volume=st.name,
+                             seconds=round(b - a, 1), since=a, until=b, exact=known)
             log.error("%s: %s%.0f s of recording %s are lost (%.0f–%.0f): the writer had taken them and not yet "
                       "written them when volume %s was given up. A backup recording or the camera's own archive may "
                       "still hold them — ask for a backfill of that stretch", self.name, "" if known else "up to ",
@@ -2053,7 +2043,7 @@ class RecWorker(VmsWorker):
     DEPTH_EVERY, SHALLOW_AGAIN = 60.0, 86400.0
 
     def depth_pass(self, now: float | None = None) -> dict:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         if self.store is None or self.engine_lost or self.clock() - self._depth_at < self.DEPTH_EVERY:
             return self.depths                       # (an engine found lost is not asked again on the leases' thread)
         self._depth_at, now = self.clock(), self.wall() if now is None else now
@@ -2074,8 +2064,8 @@ class RecWorker(VmsWorker):
             if now - self.shallow.get(unit, -1e18) < self.SHALLOW_AGAIN or unit not in self.epochs:
                 continue
             self.shallow[unit] = now
-            EventLog(self.resource_root, REC.name, unit, self.epochs[unit], of=REC_SPEC.of_row(row)).append(
-                now, "archive.shallow", cls=ALARM, cam=row.get("cam"), depth_days=depths[unit], min_depth_days=floor)
+            self.write_event(unit, now, "archive.shallow", ALARM, cam=row.get("cam"), depth_days=depths[unit],
+                             min_depth_days=floor)
             logging.warning("%s: recording %s holds %.1f day(s) and was promised %.0f: the ring of %s has closed",
                             self.name, unit, depths[unit], floor, self.volume)
         return self.depths
@@ -2975,7 +2965,7 @@ class RecWorker(VmsWorker):
     @one_look
     def keep_pass(self, now: float | None = None) -> dict:
         import hashlib
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         from . import keeps
         from .footage import recorder_doors
         if not self.incidents or self.store is None:
@@ -3015,9 +3005,8 @@ class RecWorker(VmsWorker):
                 now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
                 if now_in + 1.0 < before:
                     lost = round(before - now_in, 1)
-                    EventLog(self.resource_root, REC.name, rec, 0, of=keep_of(k)).append(
-                        now, "archive.keep.lost", cls=ALARM, cam=k.cam, keep=k.id, recording=rec, seconds=lost,
-                        volume=self.volume)
+                    self.write_event(rec, now, "archive.keep.lost", ALARM, epoch=0, cam=k.cam, keep=k.id, recording=rec,
+                                     seconds=lost, volume=self.volume)
                     logging.error("%s: %.0f s of keep %s (%s) are gone from %s: its ring took them",
                                   self.name, lost, k.id, rec, self.volume)
                 gaps = subtract((k.since, k.until), self.store.coverage(rec))
@@ -3053,9 +3042,9 @@ class RecWorker(VmsWorker):
                 # Durable, with how much of the keep the volume held: what `keep_held` is restored from when this
                 # recorder starts again — in memory only, a restart forgot what had been copied, and the incidents
                 # ring taking it afterwards raised no `archive.keep.lost` (the review's third pass, a minor).
-                EventLog(self.resource_root, REC.name, rec, 0, of=keep_of(k)).append(
-                    now, "archive.keep.copied", durable=True, cam=k.cam, keep=k.id, recording=rec, bytes=size,
-                    sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1), volume=self.volume)
+                self.write_event(rec, now, "archive.keep.copied", epoch=0, durable=True, cam=k.cam, keep=k.id, recording=rec,
+                                 bytes=size, sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1),
+                                 volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
             if "sha256" not in entry and k.id in self.keep_state and "sha256" in self.keep_state[k.id]:
                 entry["sha256"] = self.keep_state[k.id]["sha256"]
@@ -3167,7 +3156,7 @@ class RecWorker(VmsWorker):
     # is short goes into the heartbeat (`missing_since`, beside `missing` — the console's `rec_keep_missing_seconds`),
     # and past `KEEP_UNCOPIED_AFTER` it is an alarm, once a day while it lasts.
     def _keep_uncopied(self, k, entry: dict, missing: float, now: float) -> None:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         if missing <= 0:
             self._keep_short.pop(k.id, None)
             return
@@ -3175,9 +3164,8 @@ class RecWorker(VmsWorker):
         entry["missing_since"] = since
         if now - since >= self.KEEP_UNCOPIED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
             unit = (sorted(k.recordings) or [str(k.cam)])[0]
-            EventLog(self.resource_root, REC.name, unit, 0, of=keep_of(k)).append(
-                now, "archive.keep.uncopied", cls=ALARM, cam=k.cam, keep=k.id, seconds=round(missing, 1),
-                since=since, volume=self.volume)
+            self.write_event(unit, now, "archive.keep.uncopied", ALARM, epoch=0, cam=k.cam, keep=k.id,
+                             seconds=round(missing, 1), since=since, volume=self.volume)
             logging.error("%s: keep %s is %.0f s short of what it names, for %.0f s: no door that answers from here has "
                           "them", self.name, k.id, missing, now - since)
             said = now
@@ -3191,13 +3179,13 @@ class RecWorker(VmsWorker):
     # alarm, once per keep and episode, again once a day while it lasts — as `_keep_uncopied`. Since when is this
     # recorder's sight of it: a recorder started again starts the hour again.
     def _keep_unreadable(self, k, entry: dict, now: float) -> None:
-        from w2cplatform.events import ALARM, EventLog
+        from w2cplatform.events import ALARM
         since, said = self._keep_garbled.get(k.id, (now, None))
         entry["garbled_since"] = since
         if now - since >= self.KEEP_GARBLED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
             unit = (sorted(k.recordings) or [str(k.cam)])[0]
-            EventLog(self.resource_root, REC.name, unit, 0, of=keep_of(k)).append(
-                now, "archive.keep.garbled", cls=ALARM, cam=k.cam, keep=k.id, since=since, volume=self.volume)
+            self.write_event(unit, now, "archive.keep.garbled", ALARM, epoch=0, cam=k.cam, keep=k.id, since=since,
+                             volume=self.volume)
             logging.error("%s: keep %s of camera %s has not been readable for %.0f min: its camera's footage is held as "
                           "far as the keep can be read, and none of it is copied for safekeeping. Mend the keep or lift "
                           "it and set it again", self.name, k.id, k.cam, (now - since) / 60)

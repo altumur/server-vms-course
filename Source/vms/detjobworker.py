@@ -33,7 +33,6 @@ import time
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
 from w2cplatform.worker import Worker
-from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
 
 from .config import DETJOB_SPEC
@@ -56,8 +55,6 @@ class DetJobWorker(Worker):
     # what keeps a long job and a live subsystem in the same process.
     STRETCHES_PER_PASS = 4
     STEP = 1.0                     # seconds of media between two looks; a real model decodes, this one counts
-
-    spec = DETJOB_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     # A job whose interval reaches past what is RECORDED follows the recording: the footage of its last
     # minutes is written while it runs. Done is when the footage has reached the end (`written_through`),
@@ -248,8 +245,7 @@ class DetJobWorker(Worker):
                 for sc in left[:self.STRETCHES_PER_PASS]:
                     n = 0
                     for ts, kind, fields in self._stretch(model, sc):
-                        EventLog(self.resource_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
-                            ts, kind, cam=_cam(row["cam"]), job=job, source="archive", **fields)
+                        self.write_event(job, ts, kind, cam=_cam(row["cam"]), job=job, source="archive", **fields)
                         n += 1
                     log_.append(sc, n, self.wall())         # the line AFTER the events: a crash costs one re-scan
                     self.events_written += n
@@ -278,9 +274,8 @@ class DetJobWorker(Worker):
                 return self._status(job, row, "failed", scans=scans, log=log_, why=why_not)
             if not self.may_act(job):
                 return self._status(job, row, "waiting", scans=scans, log=log_, why=why + "; ".join(missing))
-            EventLog(self.resource_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
-                float(row["from"]), "scan.partial", cam=_cam(row["cam"]), job=job, source="archive", missing=list(missing),
-                waited=round(self.wall() - waited["since"]))
+            self.write_event(job, float(row["from"]), "scan.partial", cam=_cam(row["cam"]), job=job, source="archive",
+                             missing=list(missing), waited=round(self.wall() - waited["since"]))
             partial = log_.wait(self.wall(), partial=missing)["partial"]
             log.warning("scan %s: done without %s — waited %.0f s", job, "; ".join(missing), self.wall() - waited["since"])
         if partial is not None:

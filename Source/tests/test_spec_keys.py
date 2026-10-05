@@ -59,23 +59,22 @@ def test_a_slot_is_named_by_the_spec_and_a_worker_started_under_its_variable_tak
 
 def test_the_base_worker_names_its_slot_by_its_spec_and_no_subsystem_class_copies_it():
     """`slot:` is executed by the platform (the architect's rule: a key the loader reads and a subsystem executes must
-    not exist). A worker whose class names nothing but its spec makes `k-<n>`, and started under the spec's variable
-    takes that name; a worker with no spec makes `w-<n>`. (Each subsystem's worker class copied the spec's into
+    not exist). A worker of a spec that says `slot: {prefix: k}` makes `k-<n>`, and started under the spec's variable
+    takes that name; a spec that says no `slot` makes `w-<n>`. (Each subsystem's worker class copied the spec's into
     `SLOT_PREFIX` and `NAME_ENV`, and passed `runtime.slot` its own reading: a class that forgot made `w-<n>`.)"""
     from tests.conftest import Box
     from w2cplatform.worker import Worker
     spec = _spec(slot={"prefix": "k", "name_env": "KEEPER_NAME"})
-    keeper = type("Keeper", (Worker,), {"spec": spec})
 
-    def started(box, cls, env):
-        w = cls(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall)
+    def started(box, spec, env):
+        w = Worker(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, spec=spec)
         w.claim_at_start(None, env)
         return w.name
     box = Box()
-    assert started(box, keeper, {}) == "k-1"                                # made: the spec's prefix
-    assert started(box, keeper, {"KEEPER_NAME": "k-7"}) == "k-7"            # given in the spec's variable
-    assert started(box, keeper, {"SLOT_INDEX": "3"}) == "k-3"
-    assert started(Box(), Worker, {}) == "w-1"                              # no spec: `w`
+    assert started(box, spec, {}) == "k-1"                                  # made: the spec's prefix
+    assert started(box, spec, {"KEEPER_NAME": "k-7"}) == "k-7"              # given in the spec's variable
+    assert started(box, spec, {"SLOT_INDEX": "3"}) == "k-3"
+    assert started(Box(), _spec(), {}) == "w-1"                             # no `slot`: `w`
 
 
 def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
@@ -165,9 +164,8 @@ def test_how_long_data_goes_on_past_an_unconfirmed_lease_is_the_specs_and_typed(
         _refused(lambda bad=bad: _spec(lease=bad), "lease.unconfirmed_max is forever, off or a number of seconds")
     box = Box()
     for said, want in (("forever", None), (90, 90.0), ("off", 0.0)):
-        holder = type("Holder", (Worker,), {"spec": _spec(lease={"unconfirmed_max": said})})
-        w = holder(SubsystemSpec.from_dict(_testsub()).sub, "w-1", box.vars, box.objects, clock=box.clock,
-                   wall=box.wall)
+        spec = _spec(lease={"unconfirmed_max": said})
+        w = Worker(spec.sub, "w-1", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=spec)
         assert w.unconfirmed_max == want, (said, w.unconfirmed_max)
     assert SubsystemSpec.from_dict(_testsub2()).places["lease"] == "strict"
     two = _testsub2()

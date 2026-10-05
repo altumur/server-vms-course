@@ -173,30 +173,26 @@ def test_a_stretch_that_failed_halfway_is_not_recorded_as_done():
     between the work and the line costs a re-scan of one stretch, never a
     stretch nobody will look at again. Written the other way round the failure
     is silent and permanent."""
-    import vms.detjobworker as mod
     box = _site()
     for i in range(3):
         _footage(box, "7", 1, i * 10, i * 10 + 9)
     _job(box, frm=0, to=30)
     w = _worker(box)
 
-    real, seen = mod.EventLog, {"n": 0}
+    real, seen = w.write_event, {"n": 0}
 
-    class Exploding(real):
-        def append(self, t, kind, **fields):
-            seen["n"] += 1
-            if seen["n"] > 3:
-                raise OSError("the disk went away mid-stretch")
-            return real.append(self, t, kind, **fields)
+    def exploding(unit, t, kind, *a, **fields):                  # the scan's lines go through the platform's writer
+        seen["n"] += 1
+        if seen["n"] > 3:
+            raise OSError("the disk went away mid-stretch")
+        return real(unit, t, kind, *a, **fields)
 
-    mod.EventLog = Exploding
+    w.write_event = exploding
     try:
         w.reconcile_once()
         raise AssertionError("the failure was swallowed")
     except OSError:
         pass
-    finally:
-        mod.EventLog = real
 
     log = ScanLog(box.resource_root, "7-lpr-1")
     assert len(log.read()) == 0, "a stretch that never finished is written down as finished"

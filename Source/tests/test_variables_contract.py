@@ -274,7 +274,8 @@ def test_the_platforms_cas_loops_run_over_a_non_numeric_version():
         def list(self, p): return sorted(k for k in self.d if k.startswith(p))
 
     now = [1000.0]
-    w = _W(Subsystem("probe"), None, v, _Objects(), wall=lambda: now[0], clock=lambda: now[0])
+    from tests.conftest import spec_named
+    w = _W(Subsystem("probe"), None, v, _Objects(), wall=lambda: now[0], clock=lambda: now[0], spec=spec_named("probe"))
     w.claim_slot(prefer="w-1")                                  # CAS on probe/slots/w-1
     assert w.name == "w-1"
     assert w.renew_slot() is True                               # read, compare, write back — still opaque

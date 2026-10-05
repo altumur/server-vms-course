@@ -51,7 +51,8 @@ def test_a_heartbeat_written_on_one_server_is_read_on_another():
     c = Three()
     try:
         sub = Subsystem("vms")
-        w = Worker(sub, "w-srv-a-1", c.vars, c.store["srv-a"], wall=c.wall)
+        from vms.config import SPEC
+        w = Worker(sub, "w-srv-a-1", c.vars, c.store["srv-a"], wall=c.wall, spec=SPEC)
         w.heartbeat([{"id": 7, "phase": "running"}], server="srv-a")
         assert os.path.exists(os.path.join(c.root, "srv-a", "objects", "vms", "heartbeats", "w-srv-a-1"))
         assert not [k for k in c.vars.list("objects/")]                     # not a row: a file

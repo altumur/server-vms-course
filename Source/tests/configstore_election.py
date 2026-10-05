@@ -56,6 +56,7 @@ from w2cplatform.configstore import TUNINGS  # noqa: E402
 from w2cplatform.contract import Subsystem
 from w2cplatform.worker import Worker
 from w2cplatform.variables import open_vars  # noqa: E402
+from tests.conftest import spec_named  # noqa: E402
 
 POLL = 2.0                     # `Worker.run`'s default `poll`: the lease step is LOOKED AT this often
 NAMES = ("srv-a", "srv-b", "srv-c")
@@ -127,7 +128,7 @@ class Sim:
 
     def __init__(self, i: int, node: Node, units: int, timeout: float):
         self.node = node
-        self.w = _W(Subsystem("bench"), None, open_vars(node.url(f"timeout={timeout}")), Objects())
+        self.w = _W(Subsystem("bench"), None, open_vars(node.url(f"timeout={timeout}")), Objects(), spec=spec_named("bench"))
         self.w.claim_slot(prefer=f"w-{i}")
         for u in range(units):
             self.w.take_epoch(f"{i}-{u}")

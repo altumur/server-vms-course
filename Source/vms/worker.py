@@ -505,7 +505,6 @@ class VmsWorker(Worker):
     recorder (`recorder.py`) is this class over another subsystem's rows."""
 
     SUB = VMS                       # the subsystem whose assignment and rows this worker runs
-    spec = SPEC                     # …its spec: what the platform serves its requests by (`requests:`, `group_by`)
     REQUEST_TARGET = "the device"   # what a request's refusal calls what was called
     ROWS = "cameras"                # <sub>/<ROWS>/<id>
     parse_row = staticmethod(row)

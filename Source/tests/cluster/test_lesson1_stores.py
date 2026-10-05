@@ -11,6 +11,8 @@ from w2cplatform.contract import Controller, Subsystem
 from w2cplatform.worker import Worker
 from w2cplatform.epoch import next_epoch
 from tests.cluster.conftest import Cluster
+from tests.conftest import spec_named
+from vms.config import SPEC as VMS_SPEC
 
 
 def test_cas_is_the_same_promise_as_the_files_made():
@@ -55,7 +57,7 @@ def test_the_epoch_issuer_under_four_threads_on_the_clusters_store():
 def test_m10s_base_classes_run_on_the_cluster_stores_unchanged():
     c = Cluster(); sub = Subsystem("thing")
     ctl = Controller(sub, c.vars, c.objects, wall=c.wall)
-    w = Worker(sub, None, c.vars, c.objects, clock=c.clock, wall=c.wall, instance="A")
+    w = Worker(sub, None, c.vars, c.objects, clock=c.clock, wall=c.wall, instance="A", spec=spec_named("thing"))
     assert w.claim_slot() == "w-1"
     w.heartbeat([{"id": 1, "phase": "running"}], server="srv-a")
     assert list(ctl.workers_seen()) == ["w-1"] and ctl.workers_seen()["w-1"].extra["server"] == "srv-a"
@@ -70,7 +72,7 @@ def test_objects_are_files_on_each_server_read_across():
     the Variables. The contract is the point — nothing in vms/ knows which store it is talking to."""
     c = Cluster(); sub = Subsystem("vms")
     v = c.door("vmsworker")
-    w = Worker(sub, "w-srv-a-1", v, c.objects_on("srv-a", v), clock=c.clock, wall=c.wall)
+    w = Worker(sub, "w-srv-a-1", v, c.objects_on("srv-a", v), clock=c.clock, wall=c.wall, spec=VMS_SPEC)
     w.heartbeat([{"id": 7, "phase": "running", "pad": "x" * 100_000}], server="srv-a")
     assert os.path.exists(os.path.join(c.servers["srv-a"].objects, "vms", "heartbeats", "w-srv-a-1"))
     assert c.vars.list("objects/") == []                                  # not a row: a file
