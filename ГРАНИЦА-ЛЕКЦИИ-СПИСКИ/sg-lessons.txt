@@ -1,0 +1,35 @@
+sg — ADR 0032 finished in the course: lesson lines that now say something untrue (file:line — untrue — true now)
+
+== М12_DomainVMS ==
+
+М12_DomainVMS/04-who-may-call-it.md:236 — «Дверь входа — у подписывающего домена (`POST /login` у `signer_service`)» — the door is `POST /api/login` (the product's name; ADR-0032 «/api/login»). The cluster console's `/session` says `login_url = LOGIN_URL + "/api/login"`; at the holder the domain console serves `/session` itself (`login_url: "/api/login"`) and hands `POST /api/login` to the signer.
+
+М12_DomainVMS/04-who-may-call-it.md:238 — «Цикл `signer_service` раз в 5 с публикует набор идентичностей, чистит список отзыва и делает проход по книгам (`domain/books.py`)» — the books are a subsystem worker's pass (since earlier steps); the signer's loop is now the holder's WHOLE pass (`signer_service.Holder.steps`, ADR-0032): the identity set, the revocation list, whether it still holds the domain (`DomainHolder.check`), following members and topology, the read view, closing kept edits (`PendingEdits.collect`), the week of alarms (`DomainAlarms.keep`), the backup sealed (`Holder.backup`), the view published (`domain/view`). Each a `Steps` step; the view shows `pass_failures`.
+
+М12_DomainVMS/04-who-may-call-it.md:257 — «домен ставит пароль и публикует его хеш (`DomainPublisher.publish_break_glass`)» — the emergency hash is set by the SIGNER's people operation (`PUT /api/people/break-glass/<cluster>`, `breakglass.set_password`, sealed with the ring); the domain console's `PUT /domain/break-glass/<cluster>` only hands it on. `GET /domain/break-glass` (also the signer's) says `{clusters: {<c>: {set_at}}}`.
+
+М12_DomainVMS/06-secure-introduction-a-box-joins-the-domain.md:98 — «`Members.knocking`, в консоли `GET /api/members`… Администратор принимает его (`POST /api/members`, `how: accepted by …`)» — the routes are `GET|POST /domain/members` (§10a). A knocking member is named with the key its agent presents on its report mark (`uplink.report`: `key`, `seal`) and that key's `fingerprint` (fields `last`, `times`, `key`, `fingerprint` — the product's words; were `reported`, `reports`); the agent logs its fingerprint at start. `POST /domain/members {name, fingerprint}` admits the member WITH the presented key (`Members.accept`), and a fingerprint that is not the presented key's is 409.
+
+М12_DomainVMS/14-alarms-from-every-member.md:120 — «читая свежую страницу, список дописывает её в объект члена в хранилище домена» — the list reads only (`DomainAlarms.list` writes nothing); the week is written by the signer's pass (`DomainAlarms.keep`: each reporting member's whole page), one writer of the history (ADR-0032). `GET /domain/alarms` at the domain console writes nothing.
+
+М12_DomainVMS/14-alarms-from-every-member.md:128 — «Порядок в ответе: сначала страница дописывается в историю, потом история читается» — no keeping in the answer any more: the pass keeps; the answer unites the fresh page with the history as the last pass left it (deduplicated by `t_src`).
+
+М12_DomainVMS/14-alarms-from-every-member.md:168 — «Историю хранит тот, кто её уже прочитал, — держатель домена» — precisely: the signer's pass on the holder (the domain console reads it).
+
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:212 — «один объект `domain/view`, оставленный проходом домена» — true, and the pass is the SIGNER's (`Holder.publish_view`); the view's `url` is the domain console's address (`CONSOLE_URL`), where cluster consoles hand `/domain/*`. The domain console serves `GET /domain` only from that object (404 when the signer has not published one) — it no longer composes or publishes a view.
+
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:197 — «`GuardedPending` ставит перед ней охрану держателя» (the freeze told as a library guard on one write) — the freeze is checked by the SIGNER in each of its four operations (`Holder.refusal`: 503 frozen, 409 replaced — `/api/shared`, `/api/handover`, `/api/people/…`, and the pass's backup seals nothing while frozen); the domain console reads `frozen_for` from `GET /api/holder` and refuses its own writes early (members, topology, grants, kept edits), but the rule does not depend on it.
+
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:185–205 (`handover(...)` as library code only) — a planned handover is an operation of the signer: `POST /api/handover {to}` (the domain console's `POST /domain/handover` hands it on, 90 s bound), `Holder.handover` → `term.handover`, to a member whose store the signer writes (`can_hand_to` in the view's `term`); journalled `domain.handover` / `domain.handover.called_off`. A domain whose root is off the holder (step 9) has no handover operation in the signer: the recovery file is not there.
+
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:47 (`claim()` signs `{term, holder, at}`) — the record may also name `url`: where the holder's signer answers (`SIGNER_URL`), so a replaced holder can send a stranded kept edit to the new holder's console (`POST /domain/stranded/apply {path, key}` → the new signer's `/api/holder` → `console` → `POST /domain/pending/<member>`).
+
+М12_DomainVMS/15-a-domain-holder-on-one-node.md (stranded, ~174–176) — the stranded list is shown by the signer (`GET /api/holder`: `stranded: [{path, key, value}]`) and in the view's `term`; applying one again is `POST /domain/stranded/apply` at the domain console (kept edits only; anything else is made again by hand).
+
+== М10A_Platform (outside М12, for the same lesson round) ==
+
+М10A_Platform/18-Secrets.md:218 — «службы домена на держателе (М12): подписант и консоль домена | держат запечатанными ключи…» — only the SIGNER holds and opens them (ADR-0032). The domain console has no ring (no `LoadCredential`, no `SECRETS_KEY`), groups `w2c-domainconsole w2c-store w2c-events` only, its own store role `domainconsole` with no `domain/signer*` (read or write) and no `identity/*`, and `InaccessiblePaths` on the key directory and the signer's sockets; people and emergency hashes are written through the signer's `/api/people/…`.
+
+== Deploy, for whoever describes the holder's units (М11/М12) ==
+
+Source/deploy/domain/systemd/README.md now says it; any lesson table that gives `w2c-domain-console` the role `domain`, `SECRETS_KEY` or `w2c-secrets` is untrue: role `domainconsole` (socket `/run/configstore/domainconsole.sock`, group `w2c-domainconsole`), no key. Both processes journal: the signer as role `domain`, the console as `domainconsole` (`runtime.events_said`, `RESOURCE_ROOT`).
