@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import json
 import os
-import tempfile
 import threading
 import time
 
@@ -52,10 +51,13 @@ HISTORY = "domain/alarm-history"      # in the domain's object store: <member>, 
 
 class Card:
     """A member's events of subsystem `sub`, on its card: М10's buckets, `<sub>/<unit>/e<epoch>/<start>Z.events.jsonl`.
-    `on_alarm()` is called when an alarm is written — the member's agent, woken to report now."""
+    `on_alarm()` is called when an alarm is written — the member's agent, woken to report now. `root` is the card:
+    the caller names it — a card made up in a temp dir is alarms written where nobody reads them, and never removed."""
 
-    def __init__(self, sub: str, root: str | None = None, unit: str = "1", bucket: int = BUCKET, on_alarm=None):
-        self.sub, self.root, self.unit, self.bucket = sub, root or tempfile.mkdtemp(prefix="card-"), unit, bucket
+    def __init__(self, sub: str, root: str, unit: str = "1", bucket: int = BUCKET, on_alarm=None):
+        if not root:
+            raise ValueError("a card needs its root: where the member's events are")
+        self.sub, self.root, self.unit, self.bucket = sub, root, unit, bucket
         self.on_alarm = on_alarm
 
     def observe(self, epoch: int, t: float, kind: str, alarm: bool = False, unit: str | None = None, **fields) -> None:
