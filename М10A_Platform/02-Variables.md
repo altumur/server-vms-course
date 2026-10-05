@@ -85,9 +85,9 @@ B: put("testsub/counters/c1", {...}, cas=1001)  -> Conflict    B опоздал 
 
 ```python
 """A config store with the semantics a raft-backed store promises (М11's
-`configstore://`, …) — a raft-assigned
-ModifyIndex, PUT with cas=<index> succeeding only if the index still matches,
-a conflict otherwise — on one box, as files.
+`configstore://`) — a raft-assigned ModifyIndex, PUT with cas=<index>
+succeeding only if the index still matches, a conflict otherwise — on one box,
+as files.
 
 One JSON file per path under <root>/vars/, one counter file for the index,
 one lock. Every write is atomic (write-then-rename) and serialised by the
@@ -408,15 +408,15 @@ def epoch_row(path: str) -> bool:
 def refuse_delete(path: str, writer: str | None, acl: dict) -> None:
     if epoch_row(path):
         raise Forbidden(f"{path} is an epoch: a counter nobody deletes")
-    if path.startswith("domain/") and writer != DOMAIN_WRITER:
-        raise Forbidden(f"{path} is the domain's: only its agent removes it")
-    if writer is not None and acl:
-        allowed = acl.get(writer, [])
-        if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
-            raise Forbidden(f"{writer} may not delete {path}")
+    from .rights import DOMAIN_ROLES, refusal
+    if path.startswith("domain/") and writer not in DOMAIN_ROLES:
+        raise Forbidden(f"{path} is the domain's: only its own roles remove it")
+    why = refusal(writer, acl, path, "delete")
+    if why:
+        raise Forbidden(why)
 ```
 
-Кому нельзя писать путь, тому нельзя его и удалить. Строки домена (`domain/*`, М12) удаляет только его агент. А **строку эпохи не удаляет никто** — даже хранилище, открытое без токена. Эпоха — счётчик (урок 6). Удалённый, он начнётся с единицы, а именем `e1` уже названы чужие записи и события: два писателя под одним именем и маркер ограждения, который пошёл назад.
+Кому нельзя писать путь, тому нельзя его и удалить: удаление спрашивает тот же вычислитель прав, что и запись (`rights.refusal`, шаг 14). Строки домена (`domain/*`, М12) удаляют только его собственные роли (`DOMAIN_ROLES`: `domain` и `domainagent`). А **строку эпохи не удаляет никто** — даже хранилище, открытое без токена. Эпоха — счётчик (урок 6). Удалённый, он начнётся с единицы, а именем `e1` уже названы чужие записи и события: два писателя под одним именем и маркер ограждения, который пошёл назад.
 
 ```python
     def list(self, prefix: str) -> list[str]:
@@ -438,20 +438,20 @@ def refuse_delete(path: str, writer: str | None, acl: dict) -> None:
 ```python
 def test_the_config_store_survives_a_restart_and_refuses_a_stale_cas():
     box = Box()
-    idx = box.vars.put("vms/cameras/7", {"name": "gate", "revision": 1}, cas=0)
+    idx = box.vars.put("testsub/counters/gate", {"name": "gate", "revision": 1}, cas=0)
     assert idx == 1001
     again = FileVariables(box.vars.root)                       # a new process, same directory
-    items, idx2 = again.get("vms/cameras/7")
+    items, idx2 = again.get("testsub/counters/gate")
     assert items == {"name": "gate", "revision": "1"} and idx2 == idx
     try:
-        again.put("vms/cameras/7", {"name": "x"}, cas=idx - 1); raise AssertionError("must conflict")
+        again.put("testsub/counters/gate", {"name": "x"}, cas=idx - 1); raise AssertionError("must conflict")
     except Conflict:
         pass
-    assert again.put("vms/cameras/7", {"name": "x"}, cas=idx) == 1002
-    assert again.list("vms/") == ["vms/cameras/7"] and again.get("nope") == (None, 0)
+    assert again.put("testsub/counters/gate", {"name": "x"}, cas=idx) == 1002
+    assert again.list("testsub/") == ["testsub/counters/gate"] and again.get("nope") == (None, 0)
 ```
 
-Ключ в тесте — строка из М10B, `vms/cameras/7`; хранилищу всё равно, что за ней стоит, и тест это показывает: ни одно утверждение не смотрит в содержимое. Пять утверждений, и каждое — про отдельное обещание. `idx == 1001` — счётчик начинается с 1000. `FileVariables(box.vars.root)` — второй объект на тот же каталог: это и есть «другой процесс» в тесте, и он видит то, что записал первый. `revision` вернулась строкой `"1"`, хотя записывали число — то самое приведение к строке, показанное явно, чтобы дальше в курсе оно никого не удивляло. `cas=idx - 1` — версия, которой уже нет, и это `Conflict`. `cas=idx` — та самая, и она проходит, отдавая 1002.
+Ключ в тесте — строка счётчика `gate` выдуманной подсистемы `testsub` (урок 1); хранилищу всё равно, что за ней стоит, и тест это показывает: ни одно утверждение не смотрит в содержимое. Пять утверждений, и каждое — про отдельное обещание. `idx == 1001` — счётчик начинается с 1000. `FileVariables(box.vars.root)` — второй объект на тот же каталог: это и есть «другой процесс» в тесте, и он видит то, что записал первый. `revision` вернулась строкой `"1"`, хотя записывали число — то самое приведение к строке, показанное явно, чтобы дальше в курсе оно никого не удивляло. `cas=idx - 1` — версия, которой уже нет, и это `Conflict`. `cas=idx` — та самая, и она проходит, отдавая 1002.
 
 Последняя строка проверяет две мелочи разом: `list` с префиксом видит ключ, а отсутствующий ключ — это `(None, 0)`.
 
@@ -523,10 +523,10 @@ def test_two_processes_one_cas_winner():
 
 ```python
     def put(self, path: str, items: dict, cas: int | None = None) -> int:
-        if self.writer is not None and self.acl:
-            allowed = self.acl.get(self.writer, [])
-            if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
-                raise Forbidden(f"{self.writer} may not write {path}")
+        from .rights import refusal                     # the platform's one evaluator: `!` denials first
+        why = refusal(self.writer, self.acl, path)
+        if why:
+            raise Forbidden(why)
         …
         check(path, items_bytes(items), self.max_bytes)
         self._file(path)                                # a key too long for a file's name: refused before the lock
@@ -534,44 +534,55 @@ def test_two_processes_one_cas_winner():
             …
 ```
 
-Три решения в четырёх строках.
+Вопрос «может ли этот дескриптор писать этот путь» задаёт не хранилище, а `w2cplatform/rights.py` — один вычислитель прав на все хранилища платформы: файловое, в памяти, ручку к демону кластера и файл прав самого демона. Правило, которое держит одно из них и не держит другое, не держится нигде: запрет, который файл прав демона знает, а ACL коробки пропускает, на одной коробке не запрещает ничего. Вот его вход для дескриптора:
 
-**Условие входа — `self.writer is not None and self.acl`.** Проверка работает, только если есть и личность, и хоть какой-то ACL. Дескриптор без имени не ограничен; дескриптор с именем, но с пустым словарём — тоже. Второе спасает тесты: `Box` создаёт хранилище без ACL, и десятки тестов пишут через него что угодно, не объявляя прав.
+```python
+def refusal(writer: str | None, acl: dict | None, key: str, action: str = "write") -> str | None:
+    """Why the in-process handle `writer` may not `action` `key` under `acl` ({writer: [patterns]}); None if it may."""
+    if writer is None or not acl:
+        return None
+    return None if allowed(acl.get(writer, []), key) else f"{writer} may not {action} {key}"
+```
+
+Три решения в этих четырёх строках.
+
+**Условие входа — `writer is None or not acl`: тогда отказа нет.** Проверка работает, только если есть и личность, и хоть какой-то ACL. Дескриптор без имени не ограничен; дескриптор с именем, но с пустым словарём — тоже. Второе спасает тесты: `Box` создаёт хранилище без ACL, и десятки тестов пишут через него что угодно, не объявляя прав.
 
 Обратная сторона: **пустой список прав у известного имени запрещает всё**, а отсутствие имени — разрешает. Разница между `as_writer("x", [])` и просто `FileVariables(root)` — это разница между «этому нельзя ничего» и «проверка выключена», и они не должны выглядеть одинаково.
 
 **Место — до блокировки.** Отказ не берёт `flock` и не трогает счётчик версий: ошибочно настроенный процесс, ломящийся в чужой префикс в цикле, не тормозит остальных и не двигает индексы.
 
-**Отказ — исключение, а не `False`.** `put` возвращает индекс; вернуть `False` значило бы, что вызывающий обязан проверить, а он не станет. `Forbidden` нельзя не заметить.
+**Отказ — исключение, а не `False`.** `put` возвращает индекс; вернуть `False` значило бы, что вызывающий обязан проверить, а он не станет. `refusal` возвращает слова отказа, а `put` превращает их в `Forbidden`, который нельзя не заметить.
 
 ## Шаг 15 — Сопоставление
 
-Одна строка, которую стоит прочитать вслух:
+Две функции, которые стоит прочитать вслух:
 
 ```python
-any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed)
-```
-
-Шаблон — это либо **точный путь**, либо **префикс со звёздочкой на конце**. `"testsub/next_id"` совпадает только сам с собой. `"testsub/epoch/*"` совпадает с `testsub/epoch/c1` и `testsub/epoch/c812`. Звёздочка в середине не поддерживается, и `"testsub/*/heartbeat"` не значит ничего — такой шаблон просто ни с чем не совпадёт.
-
-Стоит заметить, что `"testsub/epoch/*"` совпадает и с `testsub/epoch/` (пустой хвост), и даже с `testsub/epoch/c1/extra`. Для нашей раскладки ключей это безвредно: вложенных ключей под эпохами не бывает. Но правило нужно знать, потому что в М11 его проверяет демон `configstore` по файлу прав — и проверяет той же строкой, к которой добавлен запрет:
-
-```python
-def _hit(pattern: str, key: str) -> bool:
+def hit(pattern: str, key: str) -> bool:
     return key == pattern or (pattern.endswith("*") and key.startswith(pattern[:-1]))
 …
+def allowed(patterns, key: str) -> bool:
+    pats = list(patterns or ())
+    if any(hit(p[1:], key) for p in pats if p.startswith("!")):
+        return False                          # a denial wins over every grant, wherever it stands in the list
+    return any(hit(p, key) for p in pats if not p.startswith("!"))
+```
+
+Шаблон — это либо **точный путь**, либо **префикс со звёздочкой на конце**. `"testsub/next_id"` совпадает только сам с собой. `"testsub/epoch/*"` совпадает с `testsub/epoch/c1` и `testsub/epoch/c812`. Звёздочка в середине не поддерживается, и `"testsub/*/heartbeat"` не значит ничего — такой шаблон просто ни с чем не совпадёт. Шаблон с `!` впереди **запрещает**, и запрет сильнее любого разрешения, где бы он ни стоял в списке: `["domain/*", "!domain/signer*"]` — каждая строка домена, кроме ключа подписанта.
+
+Стоит заметить, что `"testsub/epoch/*"` совпадает и с `testsub/epoch/` (пустой хвост), и даже с `testsub/epoch/c1/extra`. Для нашей раскладки ключей это безвредно: вложенных ключей под эпохами не бывает. Но правило нужно знать, потому что в М11 его проверяет демон `configstore` по файлу прав — и проверяет той же функцией:
+
+```python
     def allows(self, role: str, action: str, key: str) -> bool:
         if action == "delete" and (epoch_row(key) or (key.startswith("domain/") and role not in DOMAIN_ROLES)):
             return False                          # nobody, `admin` included (`variables.refuse_delete`)
         if role == ADMIN:
             return True                           # `PEER` is no role of the file: no grant on any row (twelfth pass)
-        pats = self.roles.get(role, {}).get(action, [])
-        if any(_hit(p[1:], key) for p in pats if p.startswith("!")):
-            return False                          # a denial wins over every grant, wherever it stands in the list
-        return any(_hit(p, key) for p in pats if not p.startswith("!"))
+        return allowed(self.roles.get(role, {}).get(action, []), key)   # a denial first, wherever it stands
 ```
 
-Роль — это сокет, через который пришёл процесс (`/run/configstore/<роль>.sock`); права у неё три — `read`, `write`, `delete`; шаблон с `!` впереди запрещает, и запрет сильнее любого разрешения, где бы он ни стоял в списке. Строку эпохи не удаляет никто — та же `epoch_row`, что и на коробке.
+Роль — это сокет, через который пришёл процесс (`/run/configstore/<роль>.sock`); права у неё три — `read`, `write`, `delete`. Строку эпохи не удаляет никто, и строки домена — никто, кроме его ролей, — те же `epoch_row` и `DOMAIN_ROLES`, что и на коробке.
 
 Почему не регулярные выражения: потому что этот список читают люди, и читают его как утверждение об архитектуре. `testsub/placement/*` в списке контроллера — это «размещение пишет только контроллер». Регулярное выражение сказало бы то же самое, но его пришлось бы разбирать.
 
@@ -580,19 +591,19 @@ def _hit(pattern: str, key: str) -> bool:
 ```python
 def test_one_writer_per_prefix():
     box = Box()
-    ctl = box.vars.as_writer("vmscontroller", ["vms/*"])
-    wrk = box.vars.as_writer("vmsworker-1", ["vms/epoch/*"])
-    ctl.put("vms/cameras/7", {"name": "gate"})
-    wrk.put("vms/epoch/7", {"epoch": 1})
+    ctl = box.vars.as_writer("testsubcontroller", ["testsub/*"])
+    wrk = box.vars.as_writer("testsubworker-1", ["testsub/epoch/*"])
+    ctl.put("testsub/counters/gate", {"name": "gate"})
+    wrk.put("testsub/epoch/gate", {"epoch": 1})
     try:
-        wrk.put("vms/cameras/7", {"name": "mine now"}); raise AssertionError("a worker never writes configuration")
+        wrk.put("testsub/counters/gate", {"name": "mine now"}); raise AssertionError("a worker never writes configuration")
     except Forbidden:
         pass
 ```
 
-Три записи: разрешённая контроллеру, разрешённая воркеру и запрещённая воркеру. Третья — та самая, которую искали три дня в М9. Ключи и имена здесь снова из М10B; правило от них не зависит.
+Три записи: разрешённая контроллеру, разрешённая воркеру и запрещённая воркеру. Третья — та самая, которую искали три дня в М9. Ключи и имена здесь снова `testsub`; правило от них не зависит.
 
-Обратите внимание, что контроллер получил здесь `["vms/*"]` — весь префикс подсистемы. Это грубая версия, которая приходит из `Subsystem.acl_controller()` и годится, пока подсистемы-как-данных ещё нет. В уроке 9 её сменит точная, у `testsub` это `["testsub/workers/*", "testsub/placement/*", "testsub/slots/*", "testsub/decommissioned/*"]` — без `testsub/counters/*`, потому что строки единиц пишет **консоль**, а не контроллер. Сейчас этого различия ещё негде показать — платформа не знает, как называются строки оператора, — но помнить о нём стоит: пока список грубый, токен контроллера разрешает больше, чем ему позволяет роль, и разделение из урока 1 держится на внимательности, а не на отказе. Урок 9 сузит список до точного.
+Обратите внимание, что контроллер получил здесь `["testsub/*"]` — весь префикс подсистемы. Это грубая версия, которая приходит из `Subsystem.acl_controller()` и годится, пока подсистемы-как-данных ещё нет. В уроке 9 её сменит точная, у `testsub` это `["testsub/workers/*", "testsub/placement/*", "testsub/slots/*", "testsub/decommissioned/*"]` — без `testsub/counters/*`, потому что строки единиц пишет **консоль**, а не контроллер. Сейчас этого различия ещё негде показать — платформа не знает, как называются строки оператора, — но помнить о нём стоит: пока список грубый, токен контроллера разрешает больше, чем ему позволяет роль, и разделение из урока 1 держится на внимательности, а не на отказе. Урок 9 сузит список до точного.
 
 **Результат:** `variables.py` — хранилище, `as_writer` и четыре строки прав в `put`; все три теста зелёные; и ответ своими словами на вопрос, почему читать можно без блокировки, а писать нельзя.
 
@@ -629,7 +640,7 @@ def test_one_writer_per_prefix():
 - Правило «один писатель на префикс» проверяется, а не соблюдается: попытка выйти за список — `Forbidden`.
 - Ограничение — свойство дескриптора, а не хранилища: `as_writer` даёт новый взгляд на тот же каталог.
 - Проверка стоит до блокировки и до CAS: отказ не тратит ни индекс, ни очередь.
-- Шаблон — точный путь или префикс со звёздочкой в конце; списки читаются как утверждения об архитектуре, и потому не регулярные выражения. Демон кластера проверяет ту же строку и добавляет к ней запрет `!`.
+- Шаблон — точный путь или префикс со звёздочкой в конце, а с `!` впереди — запрет, который сильнее любого разрешения; списки читаются как утверждения об архитектуре, и потому не регулярные выражения. Вычислитель один на все хранилища (`rights.py`): ACL коробки и файл прав демона кластера отвечают одинаково.
 
 ## Упражнения
 
