@@ -137,8 +137,9 @@ events:
   suppress:
     tally.tick: {window: 5, by: [unit]}
 snapshot: [name, of, mode, step]
-# what a member reports to the domain beside its heartbeats and snapshot, and who says when a tally was last heard of
-domain: {reports: [counts/], witness: seen}
+# what a member reports to the domain beside its heartbeats and snapshot, and who says when a tally was last heard of:
+# `testsub2/seen/*`, naming each member it heard of by the field that carries the member's name — `of`, fixed
+domain: {reports: [counts/], witness: {report: seen, member_field: of}}
 metrics:
   - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
   - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}

@@ -392,7 +392,7 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 Новая квота в строке — новый размер кольца, без остановки записи: регистратор, который уже держит этот том, вызывает `Archive.resize` (шаг 8). Уменьшение освобождает старейшее.
 
-Первый том страница томов предлагает сама (`volumes.suggest`): известно, куда коробка пишет (поле `archive` в heartbeat'е регистратора), и подставляется размер, на который регистратор отформатировал свой том (`archive_quota`), а без него — размер раздела (`test_reader_clock.py::test_a_volume_is_served_by_a_holder_behind_and_no_longer_by_a_dead_one_ahead`, вторая половина). Дальше оператор уменьшает число и ставит рядом второй том.
+Первый том оператору не нужно набирать вслепую: регистратор говорит в heartbeat'е, куда коробка пишет (`archive`), и размер, на который он отформатировал свой том (`archive_quota`), — страница может предложить это как строку тома. Записывает строку оператор, своим токеном: процесс конфигурацию за него не пишет. Дальше оператор уменьшает число и ставит рядом второй том.
 
 **Процессы по-прежнему запускает планировщик.** Консоль показывает `served N/M · K spare`; `spare: 0` при `serving < wanted` — единственное состояние, которому нужен человек, и консоль его называет, а не исправляет сама. Это то же правило урока 4: платформа не запускает процессов — но обязана сказать число.
 
@@ -433,7 +433,7 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 Регистратор такой том **не берёт** — холд не заявляет, ничего не монтирует — и говорит почему: `unservable`, в heartbeat'е вместе с `refused`, а страница томов дописывает это к причине «никто не взял» (`volumes.served`: *r-1 does not take it: obsd on srv-a is too old to write net safely…*). Том берёт регистратор коробки, чей демон умеет. Сообщение написано для оператора: что не так, что это значит и что делать, — без номеров патчей и имён операций. Номер патча — в комментарии рядом, для того, кто читает код. Закреплённый (`$VOLUME`) сетевой том получает тот же отказ: холд не заявлен, ёмкость ноль, причина — в `volume_wait`. Том, который регистратор уже держал, а демон заменили старой сборкой, отпускается. Диски этого сервера не затронуты.
 
-Раньше для демона без операции был запасной режим — писатель «парковался»: оставался смонтированным и ничего не получал. Ревью показало запуском, что режим небезопасен (шестое ревью, блокер 1): процесс регистратора A стоял 51 секунду (GC, swap, `SIGSTOP`) при живом демоне; B взял холд, но монтирование отвечало `ALREADY_LOCKED` — замок движка освежал демон A; A проснулся и запарковал писателя; через 41 секунду B всё ещё был `busy`, и навсегда. Режим убран целиком. Тест: `test_lock_lost.py::test_a_recorder_takes_no_network_volume_on_an_obsd_that_cannot_give_one_up` (проба подменена: набор идёт только на движке с патчем 07).
+Запасного режима для демона без операции нет — писателя, который «паркуется»: остаётся смонтированным и ничего не получает. Ревью показало запуском, почему такой режим небезопасен (шестое ревью, блокер 1): процесс регистратора A стоял 51 секунду (GC, swap, `SIGSTOP`) при живом демоне; B взял холд, но монтирование отвечало `ALREADY_LOCKED` — замок движка освежал демон A; A проснулся и запарковал писателя; через 41 секунду B всё ещё был `busy`, и навсегда. Тест: `test_lock_lost.py::test_a_recorder_takes_no_network_volume_on_an_obsd_that_cannot_give_one_up` (проба подменена: набор идёт только на движке с патчем 07).
 
 **Отвечает ли демон вообще.** Регистратор продлевал холд, пока работал сам, что бы ни делал его демон: демон заморожен на 320 секунд — холд продлён все 320 (шестое ревью; воспроизведено запуском), на томе не пишется ничего, и коробка с живым демоном взять его не может. Теперь проход раз за проход шлёт демону `PING` (`_hear_engine`) и помнит, с какого момента тот молчит (`_engine_silent_since`; молчание при монтировании считается тоже — `_away`). Через молчание холд продлевается `ENGINE_SILENT_FOR` — 300 секунд, тот же срок, что у подменщика, по той же причине: демон обычно возвращается быстрее, — и не дольше:
 
@@ -644,12 +644,12 @@ class RecWorker(VmsWorker):
         now = self.now() if now is None else now
         moved = []
         cams = {str(r["id"]): str(r.get("cam") or r["id"]) for r in self.rows}
-        for cid in list(self.reconciler.actual):
+        for cid in list(self.reconciler.running()):
             src = self.source(cams.get(str(cid), cid))
             if src is not None and self.sources.get(cid) not in (None, src[1]):
                 self._release_if_broken(cid)                      # the ring is the only copy of the break (CB): written before the stop
                 self.actuator("stop", {"id": cid})
-                self.reconciler.lost(cid, now)
+                self.reconciler.drop(cid)                 # moved, not failed: started on the new source this pass
                 self.sources.pop(cid, None)
                 moved.append(cid)
                 log.info("%s: camera %s is held elsewhere now (%s): re-subscribing", self.name, cid, src[1])
@@ -668,7 +668,7 @@ class RecWorker(VmsWorker):
         return out
 ```
 
-**Чей источник.** `reconciler.actual` держит id **записей**, а держателя ищут по **камере** — `cam` из строки записи. Первая версия передавала в `source` id записи: для записи `1`, названной по камере, это одно и то же, и тест проходил; запись `7-cloud` не переподписывалась никогда (найдено при разборе второго ревью). Перед остановкой — `_release_if_broken`: кольцо резервной записи — единственная копия обрыва (урок 26), и остановка в обход сверки не должна его терять.
+**Чей источник.** `reconciler.running()` держит id **записей**, а держателя ищут по **камере** — `cam` из строки записи. Первая версия передавала в `source` id записи: для записи `1`, названной по камере, это одно и то же, и тест проходил; запись `7-cloud` не переподписывалась никогда (найдено при разборе второго ревью). Перед остановкой — `_release_if_broken`: кольцо резервной записи — единственная копия обрыва (урок 26), и остановка в обход сверки не должна его терять.
 
 **Четыре части, и хранилище не роняет остальные.** `gate_pass` читает строки, `writer_pass` — том; то, что часть не смогла прочитать, она называет в логе и считает, а не уносит проход с собой.
 
@@ -680,9 +680,9 @@ class RecWorker(VmsWorker):
 
 `src is not None` — важная оговорка: **временное отсутствие держателя не считается переездом**. Воркер перезапускается, его heartbeat на секунду стареет, `source` возвращает `None` — и конвейер не трогается. Он ещё может ожить на том же адресе. Переподписка только тогда, когда есть **новый** адрес.
 
-Реакция: остановить, `lost` (то есть забыть и оштрафовать откатом), забыть адрес. Дальше цикл сверки поднимет заново — уже через `enrich`, который возьмёт новый адрес.
+Реакция: остановить, `drop`, забыть адрес. `drop`, а не `forget` (урок 2, шаг 6): запись переехала, а не упала, и ждать отката ей нечего. Дальше цикл сверки поднимет её в том же проходе — `resubscribe` идёт первым в `reconcile_once` — уже через `enrich`, который возьмёт новый адрес.
 
-И тонкость, названная в комментарии: *under a new rec epoch (a start is a new writer)*. Перезапуск идёт через `start`, а не `restart` (конвейер выпал из `actual`), значит ворота берут **новую эпоху записи** (урок 3). Видео после переезда ляжет в поток `7/e2`, а записанное раньше останется в `7/e1` того же тома.
+И тонкость, названная в комментарии: *under a new rec epoch (a start is a new writer)*. Перезапуск идёт через `start`, а не `restart` (конвейер выпал из работающих), значит ворота берут **новую эпоху записи** (урок 3). Видео после переезда ляжет в поток `7/e2`, а записанное раньше останется в `7/e1` того же тома.
 
 Правильно ли это? Да, и по причине из урока 7: **эпоха — часть имени потока, единственное, что у потока есть кроме кадров**. Это буквально другой конвейер, читающий другой источник. Зомби, дописавший секунду под старой эпохой, пишет свой поток, а не поверх преемника; индекс говорит, какой эпохе принадлежат какие минуты (`authoritative`, урок 8). Это и проверяет `test_a_recording_started_twice_writes_two_streams_and_overwrites_nothing`: в томе остаются оба потока, `1/e1` и `1/e2`, и таймлайн помечает первый отсечённым.
 
@@ -1032,10 +1032,10 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 ```python
     def leave_volume(self, why: str) -> None:
         logging.warning("%s: %s — stopping its recordings", self.name, why)
-        for uid in list(self.reconciler.actual):
+        for uid in list(self.reconciler.running()):
             self._release_if_broken(uid)
             self.actuator("stop", {"id": uid})
-            self.reconciler.actual.pop(uid, None)
+            self.reconciler.drop(uid)
             self.release(str(uid))
         …
         # The writer is closed while the volume is still ours — its flush is what puts the last minutes on the
@@ -1183,7 +1183,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
             for cid in running:
                 self._release_if_broken(cid)
                 self.actuator("stop", {"id": cid})
-                self.reconciler.lost(cid, self.now())
+                self.reconciler.forget(cid)
             self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
             self._lost_why, self._lost_at = f"the writer was {state['state']}: reopened", wall
 ```
@@ -1201,7 +1201,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
         from w2cplatform.console import label
         keeps = "".join(f'rec_keep_missing_seconds{{keep="{label(kid)}"}} {e.get("missing", 0)}\n'
                         for kid, e in sorted(self.keep_state.items()))
-        return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
+        return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.running())}\n"
                 f"# TYPE rec_volume_wait gauge\nrec_volume_wait {1 if self.volume_wait else 0}\n"
                 f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n"
                 f"# TYPE rec_footage_dropped_seconds_total counter\nrec_footage_dropped_seconds_total {self.dropped_seconds:.1f}\n"

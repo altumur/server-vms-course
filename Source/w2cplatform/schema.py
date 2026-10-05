@@ -32,7 +32,11 @@ DEPTH = 32                                   # a schema nested past this is no s
 
 
 class Invalid(ValueError):
-    """What a value is not, and where in it."""
+    """What a value is not, and where in it; `keyword` — the schema's word that refused it (`maxLength`, …)."""
+
+    def __init__(self, msg: str, keyword: str = ""):
+        super().__init__(msg)
+        self.keyword = keyword
 
 
 def load(schema, what: str, depth: int = 0):
@@ -162,7 +166,7 @@ def check(schema, v, where: str = "") -> None:
         if "minLength" in schema and len(v) < schema["minLength"]:
             raise Invalid(f"{at} is at least {schema['minLength']} characters" if schema["minLength"] > 1 else f"{at} is not empty")
         if "maxLength" in schema and len(v) > schema["maxLength"]:
-            raise Invalid(f"{at} is at most {schema['maxLength']} characters, not {len(v)}")
+            raise Invalid(f"{at} is at most {schema['maxLength']} characters, not {len(v)}", "maxLength")
         if "pattern" in schema and not re.search(schema["pattern"], v):
             raise Invalid(f"{at} does not match {schema['pattern']!r}")
     if isinstance(v, (list, tuple)):

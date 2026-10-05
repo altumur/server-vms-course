@@ -67,7 +67,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 | VMS | `python3 -m vms detjobworker`, `surveyworker`, `autoworker` (уроки 21, 23, 25) | `detjobworker@`, `surveyworker@`, `autoworker@` |
 | VMS | `python3 -m vms jobs` — хозяйство VMS: заявки, ставшие работой, и закрытая законченная работа | `vmsjobs.container` |
 
-`domainpart` — тоже глагол VMS, но держателя домена, а не коробки: его юнит — `deploy/domain/systemd/vms-domainpart.service` (М12).
+`domainpart` — тоже глагол VMS, но держателя домена, а не коробки: его юнит — `deploy/domain/systemd/vms-domainpart.service` (М12B).
 
 **Контроллеры, ресурс и консоль коробки — процессы платформы по спекам VMS.** Своих у VMS нет: она кладёт в образ семь спек (`SPEC_DIR=/app/vms`), и платформа работает по ним. Контроллер каждой подсистемы — экземпляр шаблона `w2c-controller@.container`, и имя экземпляра — имя спеки: восьмая спека получит контроллер ещё одним экземпляром того же шаблона. Ресурс держит то, что велят `holds:` спек (М10A, урок 14). Консоль ставит VMS в корень (`CONSOLE_ROOT=vms`), остальные спеки — под своими именами, `/rec/…`, `/live/…` (`test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name`). Как устроены их юниты, — урок 21 М10A, шаги 1 и 3. У VMS остаются её воркеры и `jobs`.
 
@@ -77,7 +77,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
 RECORDER_NAME=r-1                a recorder's slot (systemd: %i); CAPACITY here is recordings — this server's disks and NIC
 GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
-DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; NOMAD_META_labels=gpu says where it is
+DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; LABELS=gpu says where it is
 ```
 
 **Одна переменная, четыре значения.** Примечание к файлу это подчёркивает: `CAPACITY` означает разное в зависимости от глагола.
@@ -129,9 +129,13 @@ DET_NAME=d-1                     a detector worker's slot; CAPACITY here is stre
 ```python
 def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
-    The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
+    The controller writes its journal into the events archive (`host.controller_loop`, by `RESOURCE_ROOT`), so the
+    archive is mounted for it, as a client of it (`w2c-events`) — unmounted, its lines lay in the container's layer;
+    footage is mounted nowhere — it is behind the host's obsd."""
     vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
-    assert EVENTS not in vols("w2c-controller@.container")
+    groups = lambda n: (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"].get("GroupAdd", []))
+    assert vols("w2c-controller@.container")[EVENTS] == f"{EVENTS}:z" and "2102" in groups("w2c-controller@.container")
+    assert "RESOURCE_ROOT=" in open(os.path.join(DEPLOY, "w2c.env.example")).read()     # …which the unit's env file says
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
@@ -160,7 +164,7 @@ def test_who_may_write_where_is_in_the_mounts_too():
 
 Каждая строка — утверждение из модуля, выраженное монтированием.
 
-**У контроллера нет архива.** Ни одна копия шаблона платформы, контроллер записей тоже, не монтирует ни событий, ни видео (урок 21 М10A, шаг 3). Ошибка в размещении записей не может испортить архив — не потому, что код правильный, а потому что архива у контроллера нет.
+**У контроллера — только его журнал.** Контроллер пишет свой журнал — какой слот он освободил и почему (`host.controller_loop`, `journal.py`) — в `audit/controller/` архива событий, который назвал `RESOURCE_ROOT`, и шаблон платформы монтирует ему этот архив клиентом (`w2c-events`, `GroupAdd=2102`; урок 21 М10A, шаг 3). Видео не смонтировано ему ни в одной копии шаблона, контроллеру записей тоже: ошибка в размещении записей не может испортить запись — не потому, что код правильный, а потому что видео у контроллера нет.
 
 **Спула нет ни у кого.** Это не строка про один юнит, а цикл по всем `.container` каталога. Видео не пишется в файлы, которые можно смонтировать: регистратор отдаёт кадры демону `obsd` через сокет, а демон пишет в том (урок 10). Цикл сторожит, чтобы локальная очередь не вернулась «на время» ни в одном юните.
 
@@ -546,7 +550,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
     assert not [n for n in os.listdir(DEPLOY) if n.endswith("controller.container")]   # no controller of a subsystem's name
     …
     for name, entry in [("vmsworker@.container", "worker"), ("w2c-resource.container", "resource"),
-                        ("console.container", "console"), ("vmsjobs.container", "jobs"), …, *platform.items()]:
+                        ("w2c-console.container", "console"), ("vmsjobs.container", "jobs"), …, *platform.items()]:
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
         …                                                                              # the platform's: `python3 -m w2cplatform …`
@@ -595,7 +599,7 @@ console:
 
 ```bash
 deploy/install-obsd.sh                       # vms-obsd (2101), w2c (2100) и группы клиентов, /etc/w2c и /etc/vms — ссылки в /data, каталоги, кольца — vms-obsd, юнит
-systemctl start w2c-resource console w2c-controller@vms w2c-controller@rec vmsjobs
+systemctl start w2c-resource w2c-console w2c-controller@vms w2c-controller@rec vmsjobs
 systemctl start vmsworker@w-1 recworker@r-1
 systemctl start w2c-controller@live liveworker@g-1
 systemctl start w2c-controller@det detworker@d-1
@@ -650,7 +654,7 @@ systemctl restart obsd                  # регистраторы держат 
 
 - У процессов коробки два хозяина: контроллеры всех подсистем, ресурс и консоль — платформы, от `w2c`, по спекам (урок 21 М10A); у VMS — её воркеры и `jobs` и её спеки в образе. Контроллер подсистемы — экземпляр одного шаблона платформы, `w2c-controller@<sub>`.
 - Три токена разбивают `vms/*` на непересекающиеся части, и обе ACL вырезаны из одной YAML.
-- Монтирования повторяют ACL в байтах: у контроллера нет архива, у регистратора нет медиа, спула нет ни у кого — видео за демоном.
+- Монтирования повторяют ACL в байтах: у контроллера только архив событий для его журнала, у регистратора нет медиа, спула нет ни у кого — видео за демоном.
 - Имя экземпляра systemd — это слот, и супервизор является авторитетом по вопросу, кто сейчас `w-1`.
 - Движок архива — демон хоста, один на коробку: правило «один писатель на том» значит что-то, только если все регистраторы спрашивают один демон.
 - Сроки выводятся из того, что делает остановка: ожидание писателя (90 с) длиннее истечения захвата (45 с), остановка регистратора (40 с) длиннее сброса (30 с), остановка демона (60 с) — по README.

@@ -21,9 +21,12 @@ READ — on every member, when the domain may be gone:
                     that would make the agent a writer of rows, and a change of default a write to five
                     hundred units, each of which might be off
     declared        a subsystem's fields the domain holds a value for are its spec's `domain.shared`; their values
-                    are `settings.shared.<sub>.<field>`, and nothing else is taken there. The platform resolves
-                    them (`resolve`: the unit's, the domain's, the spec's `inherit`; `merge: union` adds) and
-                    serves them at one door, `GET /domain/shared/<sub>` (`door`), on the cluster's console
+                    are `settings.shared.<sub>.<field>`, and nothing else is taken — not there, not beside it. The
+                    platform resolves them (`resolve`: the unit's, the domain's, the spec's `inherit`; `merge: union`
+                    adds) and serves them at one door, `GET /domain/shared/<sub>` (`door`), on the cluster's console.
+                    An entry of `domain.shared` may be a DOCUMENT the domain holds whole — `{name, type: json,
+                    schema}`, no unit's field — and its value is checked by its schema (`refusals`), as a field's
+                    with a schema is: one rule over whatever the specs declare, no field known by what it means
 
     domain/shared            in the domain holder's Variables: {object, rev, term, sha256} — the pointer, and the CAS
     shared/rev-<n>           in the domain holder's objects: the signed document
@@ -65,23 +68,21 @@ class SharedSettings:
 
     # `base_rev` is the revision the editor was looking at. Two editors on one document are Lesson 3's two
     # tabs: the second is told, not overwritten — the CAS on the pointer is what tells them.
-    def edit(self, mutate, base_rev: int, by: str | None = None, check=None) -> int:
-        """`check(settings) -> [reasons]`: refusals of the document it would become — Lesson 16's scenarios whose
-        units cannot be reached — what a subsystem's check says. Any reason is a 409, and nothing is written."""
+    #
+    # WHAT THE DOCUMENT MAY HOLD IS THE SPECS', AND NOTHING ELSE IS ASKED (ADR-0010, ADR-0032). The fields and the
+    # documents the specs declare, each by its schema (`refusals`) — a 400, the edit wrong by the specs on its own; a
+    # revision moved underneath it is a 409, `Conflict`. What a value MEANS — that the units a document names can do
+    # what it asks of them — is no check here: the platform asks no subsystem's code; the subsystem says it on its pass.
+    def edit(self, mutate, base_rev: int, by: str | None = None) -> int:
         doc, idx = self.current()
         if int(doc["rev"]) != base_rev:
             raise Conflict(f"shared settings are at rev {doc['rev']}; the edit was made against rev {base_rev}")
         settings = json.loads(json.dumps(doc.get("settings", {})))
         mutate(settings)
-        undeclared = undeclared_shared(settings)
-        if undeclared:
+        wrong = refusals(settings)
+        if wrong:
             from .api import ApiError
-            raise ApiError(409, "; ".join(undeclared))
-        if check is not None:
-            reasons = check(settings)
-            if reasons:
-                from .api import ApiError
-                raise ApiError(409, "; ".join(reasons))
+            raise ApiError(400, "; ".join(wrong))
         new = sign({"rev": int(doc["rev"]) + 1, "term": self.term(), "at": self.wall(), "by": by,
                     "settings": settings}, self.issuer)
         raw = json.dumps(new, ensure_ascii=False, sort_keys=True).encode()
@@ -160,14 +161,18 @@ def carry(domain_vars, domain_objects, member_vars, member_objects, keys: KeySet
     return f"took rev {ptr['rev']}"
 
 
-def undeclared_shared(settings: dict) -> list[str]:
-    """What `settings.shared` holds that no spec declares (`domain.shared`): a subsystem not on the domain, a field it
-    does not share. Each a reason to refuse the edit — the document carries the declared fields and nothing else."""
+def refusals(settings: dict) -> list[str]:
+    """Why the document `settings` would be wrong by the specs — each a reason to refuse the edit whole: anything beside
+    `shared`, a subsystem not on the domain, a field it does not share (`domain.shared`), a value its schema refuses — a
+    document's (`{name, type: json, schema}`) or a field's that has one. The document carries the declared and nothing
+    else, each as its spec says it may be."""
+    from w2cplatform.schema import Invalid, check
     from . import declared
-    out = []
+    out = [f"settings.{k}: the document holds `shared` and nothing beside it"
+           for k in sorted(settings) if k != "shared"]
     shared = settings.get("shared") or {}
     if not isinstance(shared, dict):
-        return ["settings.shared is {<sub>: {<field>: value}}"]
+        return out + ["settings.shared is {<sub>: {<field>: value}}"]
     for sub, values in shared.items():
         s = declared.spec(sub)
         if s is None or not isinstance(values, dict):
@@ -176,6 +181,16 @@ def undeclared_shared(settings: dict) -> list[str]:
         stray = sorted(set(values) - set(s.domain.shared))
         if stray:
             out.append(f"shared settings for {sub!r}: {stray} are not in its domain.shared {list(s.domain.shared)}")
+        for name, v in values.items():
+            f = s.domain.documents.get(name) or s.fields.get(name)
+            if name in stray or f is None or f.schema is None:
+                continue
+            try:
+                check(f.schema, v, f"{sub}.{name}")
+            except Invalid as e:
+                out.append(f"shared settings for {sub!r}: {e}")
+            except RecursionError:
+                out.append(f"shared settings for {sub!r}: {name} is nested past what is read")
     return out
 
 
@@ -185,7 +200,7 @@ def resolve(spec, settings: dict, label: str | None, row: dict | None = None) ->
     A shared field the page groups by is never a unit's value from the domain: what the domain holds there are the
     groups it offers (`door`). `row` None: what a unit that set nothing would get."""
     row = row or {}
-    shared = set(spec.domain.shared) if spec.domain else set()
+    shared = set(spec.domain.shared) - set(spec.domain.documents) if spec.domain else set()
     domain = ((settings.get("shared") or {}).get(spec.name) or {}) if label else {}
     out = {}
     for k in set(row) | {n for n, f in spec.fields.items() if f.inherits}:
@@ -206,13 +221,16 @@ def resolve(spec, settings: dict, label: str | None, row: dict | None = None) ->
 def door(spec, doc: dict | None, row: dict | None = None) -> dict:
     """`GET /domain/shared/<sub>`: the fields its spec shares and nothing else — each inheriting one resolved (for a
     unit, `?unit=<id>`, or for one that set nothing), with where the value came from, its `inherit` and `merge`; the
-    field the page groups by as the groups the domain offers (`groups`)."""
+    field the page groups by as the groups the domain offers (`groups`); a document the domain holds whole as it is."""
     settings = (doc or {}).get("settings", {})
     label = f"domain rev {doc['rev']}" if doc else None
     resolved = resolve(spec, settings, label, row)
     domain = (settings.get("shared") or {}).get(spec.name) or {}
     fields = {}
     for name in spec.domain.shared if spec.domain else ():
+        if name in spec.domain.documents:
+            fields[name] = {"value": domain.get(name), "from": label if name in domain else None}
+            continue
         f = spec.fields[name]
         if f.inherits:
             value, came = resolved.get(name, (None, None))

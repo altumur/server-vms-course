@@ -114,7 +114,9 @@ from w2cplatform.trust.tokens import TokenError, kid_of, verify
 log = logging.getLogger("ingest")
 
 INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
-POLLED = "rec/polled"                  # `/<ingest>`: when each camera last polled here, as ages: {"cluster", "ingest", "ts", "units"} — the rec spec's witness (`domain.witness`)
+# `/<ingest>`: when each member last polled here, as ages — {"cluster", "ingest", "ts", "units": {<member>: seconds}};
+# the rec spec's witness (`domain.witness`)
+POLLED = "rec/polled"
 FORWARDED = "rec/forwarded"            # `/<forwarder>`: what a relay's forwarder dropped, per camera (`chain.Forwarder.publish`)
 LINGER = 10.0                          # how long a stream nobody wants any more keeps being asked for
 # Asks (step 8). An outcome is kept this long for the asker to read — the product's automation remembers
@@ -371,6 +373,7 @@ class _Camera:
     version: int = 0
     said: tuple | None = None                                    # what the last poll was told
     polled_at: float | None = None                               # when it last polled, on the cluster's clock
+    polled_by: str | None = None                                 # …the member that did: its stream token's subject
 
 
 class Ingest:
@@ -440,7 +443,9 @@ class Ingest:
 
     # When each camera last polled — the domain's witness that a camera is alive when its agent is not reporting
     # (Lesson 14): the poll is kept by the camera's pusher, another process than its agent. Ages, not times, so
-    # the domain reads them against the object's own `ts` and a clock difference cancels out.
+    # the domain reads them against the object's own `ts` and a clock difference cancels out. Named by the MEMBER that
+    # polled — its stream token's subject, the camera's home (the rec spec's `witness.member_field`): the domain
+    # matches a silent member by its own name (ADR-0010), and a camera that is a member, `cam-SN0`, is no longer `SN0`.
     # One object per INGEST, not per cluster (feedback AZ): a cluster runs several (Lesson 16, step 7), each knows only
     # the cameras that poll it, and one shared object would be whichever wrote last.
     #
@@ -449,8 +454,11 @@ class Ingest:
     # (`LeakyQueue.dropped`), a peer that fell behind is cut clean (`PeerLink.dropped`), and repeats are not handed on at
     # all (`_InOrder.repeats`): all three, when not nought, under `lost`.
     def publish_polled(self, objects) -> dict:
-        now = self.wall()
-        cams = {ref: round(now - c.polled_at, 3) for ref, c in self.cams.items() if c.polled_at is not None}
+        now, cams = self.wall(), {}
+        for c in list(self.cams.values()):
+            if c.polled_at is not None and c.polled_by:
+                age = round(now - c.polled_at, 3)
+                cams[c.polled_by] = min(age, cams.get(c.polled_by, age))    # a member's freshest poll
         key = f"{POLLED}/" + "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in self.name)
         steps = {ref: c.clock_steps for ref, c in list(self.cams.items()) if c.clock_steps}
         objects.put(key, json.dumps({"cluster": self.cluster, "ingest": self.name, "ts": now, "units": cams,
@@ -718,9 +726,9 @@ class Ingest:
 
     def _poll_once(self, token: str, ref: str, camera_now: float | None, version: int | None,
                    rtt: float | None = None) -> dict:
-        self._check(token, ref, camera_now, rtt)
+        p = self._check(token, ref, camera_now, rtt)
         now, cam = self.wall(), self._cam(ref)
-        cam.polled_at = now
+        cam.polled_at, cam.polled_by = now, str(p.get("sub") or "") or None
         firm = self._told(cam)                                   # None: a rise is provisional — new ranges wait
         push, ranges, asks, told = False, {}, {}, {}
         for ing in self._cluster():
