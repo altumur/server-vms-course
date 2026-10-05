@@ -32,7 +32,7 @@ job "console" {
       driver = "raw_exec"
       # No umask of its own (the agent's 0022 is handed on): the runner sets 0007, as a unit's UMask= — what it
       # writes in the setgid events archive and objects is the group's (the thirteenth review, major 13).
-      user   = "vms"                                 # its groups are the task's: `vms-nomad.sysusers` (the socket, the key ring)
+      user   = "w2c"                                 # the platform's (ADR 0023); its groups: `vms-nomad.sysusers` (the socket, the key ring)
       config {
         command = "${var.w2c_home}/bin/w2c-run.sh"
         args    = ["console"]

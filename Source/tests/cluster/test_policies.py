@@ -55,10 +55,11 @@ def test_the_committed_file_is_what_the_spec_generates():
 def test_each_role_says_its_sockets_group_in_the_products_format():
     """The product's format (its configstore round 2): each role carries its socket's `group` — a VMS subsystem's
     `vms-<role>`, the platform's `w2c-<role>` — which is what a unit joins (`SupplementaryGroups=`). The console is the
-    platform's process (ADR 0014), so its group is `w2c-console`."""
+    platform's process (ADR 0014), so its group is `w2c-console`; so is every subsystem's controller (ADR 0023): the
+    role keeps the spec's name, `<sub>controller`, its group is `w2c-<sub>controller`."""
     r = rights()
     for role in doc()["roles"]:
-        platform = role in ("resource", "console", "domain", "domainagent")
+        platform = role in ("resource", "console", "domain", "domainagent") or role.endswith("controller")
         assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
     assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
 

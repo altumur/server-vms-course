@@ -1,5 +1,6 @@
 # /etc/systemd/system/w2c-console.service — the page and the API, on every server: any server's :8080 is the
-# console, nothing in front of it. The platform's process over the specs (ADR 0014), so its names are the platform's.
+# console, nothing in front of it. The platform's process over the specs (ADR 0014), so its names and its user are the
+# platform's (ADR 0023).
 # Stateless: every instance reads the same store and the same objects, and a retried POST is answered the same by
 # whichever gets it (the Idempotency-Key is a row, vms/idem/*).
 [Unit]
@@ -10,10 +11,11 @@ After=network-online.target configstore.service w2c-resource.service
 Wants=network-online.target
 
 [Service]
-User=vms
-Group=vms
-# Its store socket's group; the events archive (an operator's marks) and the objects (WP-E); the key ring's.
-SupplementaryGroups=w2c-console w2c-events w2c-store w2c-secrets
+User=w2c
+Group=w2c
+# Its store socket's group; the objects' (WP-E: the heartbeats the workers write there); the key ring's. The events
+# archive (an operator's marks) is `w2c`'s own: no group for it.
+SupplementaryGroups=w2c-console w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/console.sock
 Environment=CONSOLE_PORT=8080
 # What is at `/`: the deployment's word (`host.build_console`); every other spec of `SPEC_DIR` is mounted under its name.

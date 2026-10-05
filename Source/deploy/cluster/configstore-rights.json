@@ -148,7 +148,7 @@
    ]
   },
   "autocontroller": {
-   "group": "vms-autocontroller",
+   "group": "w2c-autocontroller",
    "read": [
     "platform/schema",
     "auto/*",
@@ -195,7 +195,7 @@
    ]
   },
   "detcontroller": {
-   "group": "vms-detcontroller",
+   "group": "w2c-detcontroller",
    "read": [
     "platform/schema",
     "det/*",
@@ -239,7 +239,7 @@
    ]
   },
   "detjobcontroller": {
-   "group": "vms-detjobcontroller",
+   "group": "w2c-detjobcontroller",
    "read": [
     "platform/schema",
     "detjob/*",
@@ -283,7 +283,7 @@
    ]
   },
   "livecontroller": {
-   "group": "vms-livecontroller",
+   "group": "w2c-livecontroller",
    "read": [
     "platform/schema",
     "live/*",
@@ -328,7 +328,7 @@
    ]
   },
   "reccontroller": {
-   "group": "vms-reccontroller",
+   "group": "w2c-reccontroller",
    "read": [
     "platform/schema",
     "rec/*",
@@ -378,7 +378,7 @@
    ]
   },
   "surveycontroller": {
-   "group": "vms-surveycontroller",
+   "group": "w2c-surveycontroller",
    "read": [
     "platform/schema",
     "survey/*",
@@ -421,7 +421,7 @@
    ]
   },
   "vmscontroller": {
-   "group": "vms-vmscontroller",
+   "group": "w2c-vmscontroller",
    "read": [
     "platform/schema",
     "vms/*",

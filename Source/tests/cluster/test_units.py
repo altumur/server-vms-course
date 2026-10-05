@@ -19,27 +19,40 @@ from tests.cluster.test_recorder_job import unit
 HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Source/
 DEPLOY = os.path.join(HERE, "deploy", "cluster")
 # The role each unit runs as, and what `w2c-run.sh` is told to run: the platform's verbs (`python3 -m w2cplatform.cluster`)
-# and the VMS's processes (`python3 -m vms`).
+# and the VMS's processes (`python3 -m vms`). A subsystem's controller is an instance of the platform's template
+# (`w2c-controller@<sub>`, ADR 0023); its role keeps the spec's name.
 UNITS = {"w2c-resource": ("resource", "resource"), "w2c-console": ("console", "console"),
          "vms-jobs": ("console", "vms jobs"),
-         "vms-vmscontroller": ("vmscontroller", "controller vms"), "vms-reccontroller": ("reccontroller", "controller rec"),
+         "w2c-controller@vms": ("vmscontroller", "controller vms"), "w2c-controller@rec": ("reccontroller", "controller rec"),
          "vms-vmsworker": ("vmsworker", "vms worker"), "vms-recworker": ("recworker", "vms recorder")}
 PLISTS = {"com.w2c.resource": "w2c-resource", "com.w2c.console": "w2c-console", "com.w2c.vms.jobs": "vms-jobs",
-          "com.w2c.vms.vmscontroller": "vms-vmscontroller", "com.w2c.vms.reccontroller": "vms-reccontroller",
+          "com.w2c.controller.vms": "w2c-controller@vms", "com.w2c.controller.rec": "w2c-controller@rec",
           "com.w2c.vms.vmsworker": "vms-vmsworker", "com.w2c.vms.recworker": "vms-recworker"}
+
+
+def service(name: str) -> dict:
+    """A systemd unit by name; an instance (`w2c-controller@vms`) is its template's file with `%i` put in, as systemd
+    reads it."""
+    base, _, instance = name.partition("@")
+    if not instance:
+        return unit(os.path.join(DEPLOY, "systemd", f"{name}.service"))
+    text = open(os.path.join(DEPLOY, "systemd", f"{base}@.service"), encoding="utf-8").read().replace("%i", instance)
+    with tempfile.NamedTemporaryFile("w", suffix=".service", delete=False, encoding="utf-8") as f:
+        f.write(text)
+    return unit(f.name)
 
 
 def test_every_unit_opens_its_roles_socket_and_joins_its_group():
     groups = {r: g["group"] for r, g in json.load(open(RIGHTS, encoding="utf-8"))["roles"].items()}
     for name, (role, verb) in UNITS.items():
-        u = unit(os.path.join(DEPLOY, "systemd", f"{name}.service"))
+        u = service(name)
         assert u["env"]["PLATFORM_STORE"] == f"configstore:///run/configstore/{role}.sock", name
         assert u["SupplementaryGroups"][0].split()[0] == groups[role], name
         assert u["ExecStart"] == [f"/opt/w2c/bin/w2c-run.sh {verb}"], name
         assert "configstore.service" in u["After"][0], name                         # the store's member first
-        # the platform's user for the resource; the deployment's for the rest — the console too (the product's unit),
-        # which is the platform's by its group and its name (ADR 0014), not by its user
-        assert u["User"] == (["w2c"] if role == "resource" else ["vms"]), name
+        # a platform process runs as the platform's user, never the subsystem's (ADR 0023): the resource, the console,
+        # every controller; the subsystem's processes as `vms` — its housekeeping too, on the console's socket
+        assert u["User"] == (["w2c"] if name.startswith("w2c-") else ["vms"]), name
         assert "EnvironmentFile" not in u, f"{name}: a file would override what the unit says"
     store = unit(os.path.join(DEPLOY, "systemd", "configstore.service"))
     assert store["ExecStart"] == ["/opt/w2c/bin/w2c-run.sh configstore"] and store["RuntimeDirectory"] == ["configstore"]
@@ -309,7 +322,8 @@ def test_install_installs_the_units_there_are():
     spares = src.split('SPARE_UNITS="', 1)[1].split('"', 1)[0].split()
     assert sorted(listed) == sorted(["configstore", *UNITS])
     assert spares == ["vms-vmsworker-spare@", "vms-recworker-spare@"]
-    assert sorted(f[:-len(".service")] for f in os.listdir(os.path.join(DEPLOY, "systemd")) if f.endswith(".service")) == sorted(listed + spares)
+    files = {n.split("@", 1)[0] + "@" if "@" in n else n for n in listed}                 # an instance: its template's file
+    assert sorted(f[:-len(".service")] for f in os.listdir(os.path.join(DEPLOY, "systemd")) if f.endswith(".service")) == sorted(files | set(spares))
     assert "rights --check" in src and "--spares" in src and "@BOXID@" in src
 
 
@@ -416,11 +430,12 @@ def test_the_users_and_groups_are_the_boxs_by_number_and_configstore_owns_every_
     groups = {l[1] for l in ours + box if l[0] in "ug"}
     rights = json.load(open(RIGHTS, encoding="utf-8"))["roles"]
     assert {r["group"] for r in rights.values()} <= {l[2] for l in ours if l[:2] == ["m", "configstore"]}
-    for f in sorted(os.listdir(SYSTEMD)):
-        if f.endswith(".service"):
-            u = unit(os.path.join(SYSTEMD, f))
-            joined = set(" ".join(u.get("SupplementaryGroups", [])).split()) | set(u.get("Group", []))
-            assert joined <= groups, (f, joined - groups)
+    named = [f[:-len(".service")] for f in sorted(os.listdir(SYSTEMD)) if f.endswith(".service") and not f.endswith("@.service")
+             or f.endswith("-spare@.service")] + [n for n in UNITS if "@" in n]       # a template by its instances
+    for n in named:
+        u = service(n)
+        joined = set(" ".join(u.get("SupplementaryGroups", [])).split()) | set(u.get("Group", []))
+        assert joined <= groups, (n, joined - groups)
     assert unit(os.path.join(SYSTEMD, "configstore.service"))["User"] == ["configstore"]
 
 
@@ -444,8 +459,12 @@ def test_every_unit_writes_as_its_groups_and_sees_the_rest_of_the_system_read_on
     """WP-E and the twelfth review's minor (the protection was configstore's alone): every unit `UMask=0007`,
     `ProtectSystem=strict` with what it writes said, `ProtectHome`, `PrivateTmp`. The objects' group for every
     process that opens them, the events archive's for the resource and its writers, the key ring's for the three
-    that open a password — the console, the holder, the recorder — and no other."""
-    events = {"w2c-resource", "w2c-console", "vms-vmsworker", "vms-recworker"}
+    that open a password — the console, the holder, the recorder — and no other. A platform process (`User=w2c`: the
+    resource, the console, every controller) joins no subsystem's group (ADR 0023); the console writes its marks into
+    the events archive as its owner, `w2c`, and joins no `w2c-events` — that group is the resource's and the
+    subsystems' writers'."""
+    events = {"w2c-resource", "vms-vmsworker", "vms-recworker"}
+    writes_events = events | {"w2c-console"}
     secrets = {"w2c-console", "vms-vmsworker", "vms-recworker"}
     for f in sorted(os.listdir(SYSTEMD)):
         if not f.endswith(".service"):
@@ -460,8 +479,12 @@ def test_every_unit_writes_as_its_groups_and_sees_the_rest_of_the_system_read_on
         joined = set(u["SupplementaryGroups"][0].split())
         writes = set(u["ReadWritePaths"][0].split())
         assert "w2c-store" in joined and "/data/platform/objects" in writes, f
-        assert ("w2c-events" in joined) == (name in events) == ("/data/platform/events" in writes), f
+        assert ("w2c-events" in joined) == (name in events), f
+        assert ("/data/platform/events" in writes) == (name in writes_events), f
         assert ("w2c-secrets" in joined) == (name in secrets) == ("LoadCredential" in u), f
+        if u["User"] == ["w2c"]:
+            assert not [g for g in joined if g.startswith("vms")], f                       # no subsystem's group
+            assert u["Group"] == ["w2c"], f
 
 
 def test_a_spare_is_its_roles_unit_line_for_line_but_the_name():
@@ -562,7 +585,7 @@ def test_every_plist_says_what_its_unit_says_name_for_name():
     for label, name in PLISTS.items():
         with open(os.path.join(DEPLOY, "launchd", f"{label}.plist"), "rb") as f:
             p = plistlib.load(f)
-        u = unit(os.path.join(SYSTEMD, f"{name}.service"))
+        u = service(name)
         assert p["EnvironmentVariables"] == {"W2C_BOX": "__BOX__", **{k: _as_launchd(v) for k, v in u["env"].items()}}, label
 
 
@@ -614,19 +637,22 @@ def test_a_nomad_task_can_read_the_key_and_open_its_socket():
     0750 root:w2c — `Sealer.from_file` raised and the tasks went round their restarts. The ring is 2710
     root:w2c-secrets now, the key 0640 to the same group, and `vms-nomad.sysusers` makes `vms` a member of what its
     tasks open: each task's store socket, the engine's group for the recorder, the key ring for every task given a
-    key, and the box's events and objects."""
+    key, and the box's events and objects. The console's task is the platform's and runs as `w2c` (ADR 0023), a
+    member of its socket's group and the key ring's, and of no subsystem's group."""
     import re
-    member = {l[2] for l in _sysusers(os.path.join(DEPLOY, "nomad", "vms-nomad.sysusers")) if l[:2] == ["m", "vms"]}
+    lines = _sysusers(os.path.join(DEPLOY, "nomad", "vms-nomad.sysusers"))
+    member = {u: {l[2] for l in lines if l[:2] == ["m", u]} for u in ("vms", "w2c")}
     rights = json.load(open(RIGHTS, encoding="utf-8"))["roles"]
-    for job in ("console", "vmsworker", "recworker"):
+    for job, user in (("console", "w2c"), ("vmsworker", "vms"), ("recworker", "vms")):
         src = open(os.path.join(DEPLOY, "nomad", f"{job}.nomad.hcl"), encoding="utf-8").read()
-        assert re.search(r'\buser\s*=\s*"vms"', src), job
+        assert re.search(r'\buser\s*=\s*"' + user + '"', src), job
         role = re.search(r'configstore:///run/configstore/(\w+)\.sock', src).group(1)
-        assert rights[role]["group"] in member, job
+        assert rights[role]["group"] in member[user], job
         if "SECRETS_KEY" in src:
-            assert "w2c-secrets" in member, job
+            assert "w2c-secrets" in member[user], job
         if "OBSD_SOCKET" in src:
-            assert "vms-obsd" in member, job
-    assert {"w2c-events", "w2c-store"} <= member
+            assert "vms-obsd" in member[user], job
+    assert {"w2c-events", "w2c-store"} <= member["vms"]
+    assert not [g for g in member["w2c"] if g.startswith("vms")]                           # no subsystem's group
     tmp = {l.split()[1]: l.split()[2:5] for l in open(os.path.join(SYSTEMD, "w2c-cluster.tmpfiles")) if l.startswith("d ")}
     assert tmp["/data/platform/etc/secrets"] == ["2710", "root", "w2c-secrets"]

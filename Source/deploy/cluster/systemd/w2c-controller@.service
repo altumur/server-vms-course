@@ -1,0 +1,35 @@
+# /etc/systemd/system/w2c-controller@.service — a subsystem's controller, the platform's process from the spec
+# (`python3 -m w2cplatform.cluster controller <sub>`): `w2c-controller@vms` places cameras, `w2c-controller@rec`
+# recordings — one instance per subsystem of the catalogue, on every server. One would do; several are safe, because
+# every write is a CAS (lesson 10) — and with one on every server none has to be moved anywhere. It never starts a
+# process: it publishes numbers and offers (`<sub>/slots/<w-N>` with `offer`), and `w2c-spares.sh` on each server does
+# the starting. The platform's, so its names and its user are the platform's (ADR 0023): never the subsystem's.
+[Unit]
+Description=w2c controller — placement of %i
+After=network-online.target configstore.service w2c-resource.service
+# Ordered after the store's member, never starting it (the product's r28-ops2): `Wants=` made every restart of
+# this unit start what the administrator had stopped. Each is enabled on its own, so boot brings it up anyway.
+Wants=network-online.target
+
+[Service]
+User=w2c
+Group=w2c
+# Its store socket's group — the role keeps the spec's name, `<sub>controller`, the socket is the platform's — and the
+# objects' (WP-E): it reads the heartbeats the workers write there, and its snapshot is objects on this server.
+SupplementaryGroups=w2c-%icontroller w2c-store
+Environment=PLATFORM_STORE=configstore:///run/configstore/%icontroller.sock
+# /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would
+# override `Environment=` (systemd's rule), and the socket and the name above are the unit's, never a file's.
+UMask=0007
+ExecStart=/opt/w2c/bin/w2c-run.sh controller %i
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/data/platform/objects
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

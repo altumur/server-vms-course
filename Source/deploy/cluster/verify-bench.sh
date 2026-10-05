@@ -35,7 +35,7 @@ else
 fi
 
 # 2
-for u in configstore w2c-resource w2c-console vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker vms-obsd; do
+for u in configstore w2c-resource w2c-console w2c-controller@vms w2c-controller@rec vms-vmsworker vms-recworker vms-obsd; do
   systemctl is-active --quiet "$u.service" && ok "$u active" || bad "$u not active"
 done
 

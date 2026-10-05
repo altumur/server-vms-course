@@ -6,7 +6,10 @@
 # Without the last one the tasks could not read the key at all (the twelfth review, major 13: it was 0750 root:w2c,
 # and `vms` is not in `w2c`): `Sealer.from_file` raised and every task went round its restarts. What it costs: on such
 # a node the roles are one user, and the sockets tell the tasks' processes apart no more than Nomad does.
-m vms w2c-console
+# The console's task is the platform's and runs as `w2c` (ADR 0023): `w2c` is a member of its socket's group and the
+# key ring's (the events archive and the objects are its own: the box's `w2c.sysusers`).
+m w2c w2c-console
+m w2c w2c-secrets
 m vms vms-vmsworker
 m vms vms-recworker
 m vms vms-obsd

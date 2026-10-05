@@ -37,7 +37,8 @@ OBJECTS = ROWS_PREFIX + "/"    # the rows of the create-only objects, a worker's
 # Whose each socket is (the product's format): the platform's own roles `w2c-<role>`, a subsystem deployment's
 # `<deployment>-<role>` — the directory the specs ship in (`SPEC_DIR`'s name), unless `ROLE_GROUP` says otherwise.
 # The console and the domain are the platform's processes (ADR 0014: `python3 -m w2cplatform console`; the owner, 4 Oct:
-# "the domain is a platform service").
+# "the domain is a platform service"), and so is every subsystem's controller (`python3 -m w2cplatform controller <sub>`,
+# ADR 0023): its role keeps the spec's name, `<sub>controller`, and its socket is the platform's, `w2c-<sub>controller`.
 PLATFORM = ("resource", "console", "domain", "domainagent")
 
 # The domain's keys (`domain/signer`: the token key and the issuing key) are read by the domain's own processes alone —
@@ -45,8 +46,8 @@ PLATFORM = ("resource", "console", "domain", "domainagent")
 SIGNER_KEYS = "!domain/signer*"
 
 
-def group(role: str, deployment: str) -> str:
-    return ("w2c-" if role in PLATFORM else f"{deployment}-") + role
+def group(role: str, deployment: str, platform: bool = False) -> str:
+    return ("w2c-" if platform or role in PLATFORM else f"{deployment}-") + role
 
 
 def _rows(objects: list[str]) -> list[str]:
@@ -79,9 +80,9 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
     """`{role: {group, read, write, delete}}` — the whole file's content, for the specs given; `deployment` names the
     groups of the subsystems' roles (`group`)."""
 
-    def role(name: str, write: list[str], read: list[str], delete: list[str] | None = None) -> dict:
+    def role(name: str, write: list[str], read: list[str], delete: list[str] | None = None, platform: bool = False) -> dict:
         write = list(dict.fromkeys(write))
-        return {"group": group(name, deployment), "read": list(dict.fromkeys(read)), "write": write,
+        return {"group": group(name, deployment, platform), "read": list(dict.fromkeys(read)), "write": write,
                 "delete": list(dict.fromkeys(write if delete is None else delete))}
 
     names = {s.name for s in specs}
@@ -101,7 +102,8 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # Placement, one pass at a time and safe at two: its prefixes; reads its subsystem, the ones it refers to, the
         # platform's rows (decommission, the drain).
         out[f"{s.name}controller"] = role(f"{s.name}controller", s.acl_controller(),
-                                          [SCHEMA_KEY, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"])
+                                          [SCHEMA_KEY, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"],
+                                          platform=True)
         # The holder: its claims, what its spec says it writes, its marks; reads its subsystem, what its units are about,
         # whether its server is decommissioned (`Worker._claim_slot`), what a holder's door asks (`Gate.gated`: the key
         # set, and `domain/member` while there is none), the door keys its page door checks a token by (`door/keys`) and

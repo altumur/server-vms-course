@@ -84,8 +84,9 @@ Source/
                                Lesson 5  GstRecActuator: shmsrc (the worker on this server) or rtspsrc ! rtph264depay (another server), then h264parse ! watchdog ! appsink —
                                each access unit a sample into the volume's writer
   deploy/                      Quadlet, on М9's box: Containerfile (localhost/vmsserver:latest, the image М11 builds FROM), obsd.service (the host's archive engine),
-                               vmsworker@.container, recworker@.container (the only writer of footage), vmscontroller.container, reccontroller.container, console.container, w2c-resource.container,
-                               liveworker@.container, livecontroller.container, detworker@.container, detcontroller.container, w2c.env.example + vms.env.example, check-quadlet.sh
+                               vmsworker@.container, recworker@.container (the only writer of footage), w2c-controller@.container (every subsystem's
+                               controller, one instance per spec, as `w2c`), console.container, w2c-resource.container,
+                               liveworker@.container, detworker@.container, w2c.env.example + vms.env.example, check-quadlet.sh
   tests/                       the suite: no GStreamer, but the archive's tests start a real obsd (OBSD_BIN); every runner keeps the run's
                                temp dirs under a root of its own (/tmp/w2c-tests-<pid> on macOS), removed at exit (runroot.py)
     cluster/                   М11's suite, its own runner (python3 tests/cluster/run.py), the traced stand (stand.py, trace.py)

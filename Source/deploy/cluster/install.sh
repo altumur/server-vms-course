@@ -51,7 +51,9 @@ else
   OS=other
 fi
 
-UNITS="configstore w2c-resource w2c-console vms-jobs vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker"
+# A subsystem's controller is an instance of the platform's template (`w2c-controller@<sub>`, ADR 0023): its file is
+# `w2c-controller@.service`, one for every subsystem.
+UNITS="configstore w2c-resource w2c-console vms-jobs w2c-controller@vms w2c-controller@rec vms-vmsworker vms-recworker"
 # A spare is its role's unit but the name (the twelfth review, blocker 6): installed with the spares, never enabled —
 # `w2c-spares.sh` starts `vms-<role>-spare@<n>`.
 SPARE_UNITS="vms-vmsworker-spare@ vms-recworker-spare@"
@@ -189,7 +191,9 @@ if [ "$OS" = linux ]; then
   sh "$SOURCE/deploy/install-obsd.sh"
   [ -e /etc/systemd/system/vms-obsd.service ] || ln -s obsd.service /etc/systemd/system/vms-obsd.service
   for u in $UNITS; do
-    install -m 0644 "$HERE/systemd/$u.service" "/etc/systemd/system/$u.service"
+    f="$u"
+    case "$u" in *@?*) f="${u%%@*}@" ;; esac              # an instance: its template's file
+    install -m 0644 "$HERE/systemd/$f.service" "/etc/systemd/system/$f.service"
   done
   if [ "$SPARES" = yes ]; then
     for u in $SPARE_UNITS; do
