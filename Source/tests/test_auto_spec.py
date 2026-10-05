@@ -39,7 +39,7 @@ def _evaluator(box, *names):
         def query(self, *a, **kw): return {"events": [], "state": "live", "truncated": False}
     return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
                       box.objects, index=_Quiet(), clock=box.clock, wall=box.wall, server="srv-a",
-                      resource_root=box.archive, env={})
+                      resource_root=box.resource_root, env={})
 
 
 def test_a_scenario_is_a_row_and_its_shapes_survive_the_round_trip():
@@ -195,7 +195,7 @@ def _held(box, key_source, **devkw):
     ctl.ensure_placed()
     token = box.vars.as_writer("vmsworker", WORKER_ACL)
     w = VmsWorker("w-1", token, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-a", env={},
-                  resource_root=box.archive, device_factory=lambda key: FakeDevice(key, channels=["1"], **devkw))
+                  resource_root=box.resource_root, device_factory=lambda key: FakeDevice(key, channels=["1"], **devkw))
     return w, cid
 
 

@@ -61,7 +61,7 @@ def test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it():
     ctl = VmsController(box.vars, box.objects, wall=box.wall)
     ctl.create_camera({"source": "driverpack://file/1.mp4"}); ctl.assign("w-1", ["1"])
     act = FakeActuator()
-    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w.reconcile_once()
     t = box.wall()
     act.post(1, "io.input", port="1", occurred=t - 50)                 # the device said when the contact closed
@@ -73,7 +73,7 @@ def test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it():
     lines = {e["kind"] + e.get("port", ""): e for e in read_bucket(p)}
     assert lines["io.input1"]["t"] == t and lines["io.input1"]["occurred"] == t - 50
     assert "occurred" not in lines["motion"] and "occurred" not in lines["io.input2"]
-    assert EventIndex(box.archive, "srv-1", wall=box.wall).query(t - 60, t - 40, by="occurred")["events"][0]["kind"] == "io.input"
+    assert EventIndex(box.resource_root, "srv-1", wall=box.wall).query(t - 60, t - 40, by="occurred")["events"][0]["kind"] == "io.input"
 
 
 def test_only_what_our_own_element_said_is_an_observation():

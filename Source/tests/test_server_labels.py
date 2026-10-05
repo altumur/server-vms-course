@@ -478,19 +478,19 @@ def test_the_labels_route_answers_a_bad_body_a_bad_label_and_an_unknown_server_w
             assert _call(base, "PUT", "/servers/srv-a/labels", {"labels": labels})[0] == 400, labels
         for name in ("*", "srv%252Fa", "srv%0Aa", "x" * 300, "srv-x"):
             code, body = _call(base, "PUT", f"/servers/{name}/labels", {"labels": []})
-            assert code == 400 and box.archive not in json.dumps(body), (name[:20], code, body)
+            assert code == 400 and box.resource_root not in json.dumps(body), (name[:20], code, body)
         assert "no server srv-x is known here" in _call(base, "PUT", "/servers/srv-x/labels", {"labels": []})[1]["detail"]
         assert not [k for k in box.vars.list("vms/servers/")]
         real = con_ctl.vars.put                                       # the console's own view of the store
 
         def refuses(key, *a, **k):
             if key.startswith("vms/servers/"):
-                raise OSError(f"[Errno 28] No space left on device: '{box.archive}/store/{key}'")
+                raise OSError(f"[Errno 28] No space left on device: '{box.resource_root}/store/{key}'")
             return real(key, *a, **k)
         con_ctl.vars.put = refuses
         try:
             code, body = _call(base, "PUT", "/servers/srv-a/labels", {"labels": ["vlan:a"]})
-            assert code == 503 and box.archive not in json.dumps(body), body
+            assert code == 503 and box.resource_root not in json.dumps(body), body
         finally:
             con_ctl.vars.put = real
     finally:

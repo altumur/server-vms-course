@@ -18,7 +18,7 @@ from tests.conftest import Box
 def test_every_line_has_a_name_and_two_events_in_one_instant_are_two():
     box = Box()
     t = box.wall() - 100
-    log = EventLog(box.tree, "testsub", "c7", 3)
+    log = EventLog(box.resource_root, "testsub", "c7", 3)
     p = log.append(t, "lane.jam", lane="1")
     log.append(t, "lane.jam", lane="1")                                # the same kind, the same instant, the same fields
     log.append(t + 1, "tick", id="c7-evt-0042")                        # a name the writer was handed is kept
@@ -27,7 +27,7 @@ def test_every_line_has_a_name_and_two_events_in_one_instant_are_two():
     unit, epoch, proc, n = a["id"].rsplit("-", 3)
     assert (unit, epoch) == ("c7", "e3") and len(proc) == 10 and int(b["id"].rsplit("-", 1)[1]) == int(n) + 1
     assert "v" not in a and "occurred" not in a                        # no version written; no second time nobody knows
-    rows = EventIndex(box.tree, "srv-1", wall=box.wall).query(t - 1, t + 2)["events"]
+    rows = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(t - 1, t + 2)["events"]
     assert [r["id"] for r in rows] == [a["id"], b["id"], c["id"]]      # …and the reader hands the names on
 
     for bad in ({"occurred": "yesterday"}, {"occurred": True}, {"v": 2}):
@@ -44,11 +44,11 @@ def test_a_reader_says_which_time_it_asks_in():
     by `occurred`, it does, because the index reads `MAX_EVENT_LATENESS` further on."""
     box = Box()
     t = box.wall() - 7200
-    log = EventLog(box.tree, "testsub", "c7", 1)
+    log = EventLog(box.resource_root, "testsub", "c7", 1)
     log.append(t + 10, "tick")                                                     # written as it happened
     log.append(t + 3000, "lane.jam", occurred=t + 5)                               # fifty minutes late
     log.append(t + 3010, "tick")
-    db = EventIndex(box.tree, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     window = (t, t + 600)
     assert [e["kind"] for e in db.query(*window)["events"]] == ["tick"]
     late = db.query(*window, by="occurred")["events"]
@@ -56,7 +56,7 @@ def test_a_reader_says_which_time_it_asks_in():
     assert late[0]["occurred"] == t + 5
     assert [e["kind"] for e in db.query(t + 2700, t + 3300, by="occurred")["events"]] == ["tick"]     # …and not where it was written
 
-    EventLog(box.tree, "testsub", "c7", 1).append(t + 5000, "lane.jam", occurred=t + 20)   # later than the index looks
+    EventLog(box.resource_root, "testsub", "c7", 1).append(t + 5000, "lane.jam", occurred=t + 20)   # later than the index looks
     assert MAX_EVENT_LATENESS == 3600 and len(db.query(*window, by="occurred")["events"]) == 2
     assert len(db.query(t + 4900, t + 5100)["events"]) == 1                        # by `t` it is always found
 

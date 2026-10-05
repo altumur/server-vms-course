@@ -41,7 +41,7 @@ def _box():
 def _holder(box, factory, act=None, wall=None):
     """The holder claims its slot and heartbeats first: a controller places on workers it can see."""
     w = VmsWorker("w-1", box.vars, box.objects, act or FakeActuator(), clock=box.clock, wall=wall or box.wall,
-                  server="srv-1", resource_root=box.archive, device_factory=factory)
+                  server="srv-1", resource_root=box.resource_root, device_factory=factory)
     w.heartbeat_once()
     return w
 
@@ -467,7 +467,7 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     held = sorted(r1.reconciler.actual)
     assert held and all(not str(u).isdigit() for u in held)                # the point: nothing here is a number
     rec.move(held[0], "r-2", "operator asked")
-    r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.archive + "-2"})
+    r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.resource_root + "-2"})
     r2.lease_pass(); r2.reconcile_once()
     assert r1.lease_pass() == [held[0]] and r1.writing_allowed        # released, not fenced — and no ValueError
     assert held[0] not in r1.reconciler.actual
@@ -796,10 +796,10 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
     rec_ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
     r = recorder(box, "r-1", "srv-1", acl=False)
-    r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.archive + "-2"})   # somewhere for the work to go
+    r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.resource_root + "-2"})   # somewhere for the work to go
     r.heartbeat_once(); r2.heartbeat_once(); rec_ctl.ensure_placed(); r.lease_pass(); r.reconcile_once(); r.heartbeat_once()
     assert rec_ctl.where("1") == "r-1"
-    m = make_console(con, box.archive, wall=box.wall, mounts={"rec": rec_ctl})   # the console's token: it may say "draining"
+    m = make_console(con, box.resource_root, wall=box.wall, mounts={"rec": rec_ctl})   # the console's token: it may say "draining"
 
     assert m.drain_route("GET", {})[1] == {"draining": "", "safe": True,
                                            "subsystems": {"vms": {"draining": "", "subsystem": "vms"},
@@ -1063,7 +1063,7 @@ def test_a_job_is_not_promised_minutes_the_device_does_not_have():
                         Heartbeat(w.name, box.wall(), [st], hb.extra).to_bytes())
 
         j = DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
-                         clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive, env={"LABELS": "gpu"})
+                         clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root, env={"LABELS": "gpu"})
         assert j.device_has("1", 100.0, 200.0)                     # a span it really has
         assert not j.device_has("1", 1000.0, 2000.0)               # inside the summary, and empty
     finally:

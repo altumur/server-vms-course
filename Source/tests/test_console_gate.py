@@ -56,8 +56,8 @@ class Tokens:
 def _console(box, access=None):
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    m = make_console(ctl, box.archive, box.wall, mounts={"rec": rec},
-                     index=EventIndex(box.archive, "srv-1", wall=box.wall))       # this box's own events, read where they lie
+    m = make_console(ctl, box.resource_root, box.wall, mounts={"rec": rec},
+                     index=EventIndex(box.resource_root, "srv-1", wall=box.wall))       # this box's own events, read where they lie
     if access is not None:
         m.root.gate.impl = access
         for con in m.mounts.values():
@@ -82,7 +82,7 @@ def _call(base, method, path, body=None, token=None, user=None):
 
 
 def _audit(box):
-    return [(e["kind"], e.get("user")) for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]]
+    return [(e["kind"], e.get("user")) for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]]
 
 
 def test_a_cluster_with_no_key_set_is_as_open_as_it_was_and_says_so():
@@ -110,7 +110,7 @@ def test_the_journal_says_who_made_changed_and_deleted_a_unit_and_who_turned_the
 
     def lines():
         return [{k: e.get(k) for k in ("kind", "user", "target", "fields", "policy") if e.get(k) is not None}
-                for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]]
+                for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]]
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4", "cred_secret": "hunter2"}, user="anna")[0] == 201
         assert _call(base, "PUT", "/cameras/1", {"enabled": False, "priority": 5}, user="boris")[0] == 200
@@ -263,7 +263,7 @@ def test_the_gate_asks_who_and_the_grant_says_what():
         # the one local account: admitted, and every use that ACTS is an alarm with the person's name in it — a
         # read is not (the session's opening was the alarm for looking; a page polls every three seconds)
         assert _call(base, "GET", "/cameras", token="glass:carol")[0] == 200
-        alarms = lambda: [(e["kind"], e["user"]) for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", cls="alarm")["events"]]
+        alarms = lambda: [(e["kind"], e["user"]) for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", cls="alarm")["events"]]
         assert alarms() == []
         assert _call(base, "DELETE", "/cameras/1", token="glass:carol")[0] == 200
         assert alarms() == [("access.break_glass", "break-glass(carol)")]
@@ -406,7 +406,7 @@ def test_the_emergency_door_closes_after_a_handful_of_wrong_passwords():
         assert glass("open-sesame") == 200                                                        # the account works
         assert [glass("wrong") for _ in range(5)] == [403] * 5
         assert glass("wrong") == 429 and glass("open-sesame") == 429                              # closed, to the right password too
-        alarms = [e["kind"] for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", cls="alarm")["events"]]
+        alarms = [e["kind"] for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", cls="alarm")["events"]]
         assert alarms.count("access.break_glass.refused") == 5 and alarms.count("access.break_glass.limited") == 1
         assert alarms.count("access.break_glass.opened") == 1                                     # nothing more for the guesses past the limit
         box.wall.advance(901)
@@ -659,7 +659,7 @@ def _console_with_jobs(box, access):
               "det": SpecController(DET_SPEC, vars_, box.objects, wall=box.wall),
               "detjob": SpecController(DETJOB_SPEC, vars_, box.objects, wall=box.wall),
               "auto": SpecController(AUTO_SPEC, vars_, box.objects, wall=box.wall)}
-    m = make_console(ctl, box.archive, box.wall, mounts=mounts, index=EventIndex(box.archive, "srv-1", wall=box.wall))
+    m = make_console(ctl, box.resource_root, box.wall, mounts=mounts, index=EventIndex(box.resource_root, "srv-1", wall=box.wall))
     for con in (m.root, *m.mounts.values()):
         con.gate.impl = access
     srv = m.serve("127.0.0.1", 0)
@@ -868,7 +868,7 @@ def test_a_backfill_is_two_finite_numbers_a_handful_at_a_time_and_a_line():
         assert _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 9e4, "to": t - 8.9e4}, token="admin")[0] == 202  # another person
         row = box.vars.get(REC_SPEC.sub.request_key(f"1-{int(t - 3600)}-{int(t)}"))[0]
         assert (row["unit"], row["cam"], row["by"]) == ("1", "1", "guard")                    # its recording, whose, who
-        lines = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
+        lines = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
                  if e["kind"] == "archive.backfill.asked"]
         assert len(lines) == per + 2 and lines[0]["user"] == "guard" and lines[0]["target"] == "rec/1"
     finally:
@@ -934,7 +934,7 @@ def _device_site(box, dev, access=None):
     ctl, rec, m, srv, base = _console(box, access or Tokens({"admin": [("admin", None, ())]}))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  resource_root=box.archive, device_factory=lambda k: dev)
+                  resource_root=box.resource_root, device_factory=lambda k: dev)
     w.heartbeat_once()
     play = w.serve_playback("127.0.0.1", 0)
     for ch in (1, 2):
@@ -1069,8 +1069,8 @@ def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
         code, body = get(1)
         assert code == 401 and json.loads(body)["reason"] == "expired"   # two minutes on: ask `/rec/where` again
 
-        reads = [(e["user"], e.get("recording")) for b in buckets_under(box.archive, "audit", "door-r-1", 600)
-                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
+        reads = [(e["user"], e.get("recording")) for b in buckets_under(box.resource_root, "audit", "door-r-1", 600)
+                 for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"] == "archive.read"]
         assert reads == [("viewer", "1")]                            # the door says the door was USED, and by whom
     finally:
         pd.shutdown(); play.shutdown(); srv.shutdown()
@@ -1236,8 +1236,8 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
     ctl = VmsController(vars_, box.objects, wall=box.wall)
     mounts = {n: SpecController(specs[n], vars_, box.objects, wall=box.wall) for n in ("rec", "det", "survey")}
     mounts.update(detjob=SpecController(DETJOB_SPEC, vars_, box.objects, wall=box.wall), auto=SpecController(AUTO_SPEC, vars_, box.objects, wall=box.wall))
-    m = make_console(ctl, box.archive, box.wall, live_ctl=SpecController(LIVE_SPEC, vars_, box.objects, wall=box.wall),
-                     mounts=mounts, index=EventIndex(box.archive, "srv-1", wall=box.wall))
+    m = make_console(ctl, box.resource_root, box.wall, live_ctl=SpecController(LIVE_SPEC, vars_, box.objects, wall=box.wall),
+                     mounts=mounts, index=EventIndex(box.resource_root, "srv-1", wall=box.wall))
     consoles = {"vms": m.root, **m.mounts}
     for (sub, field), how in points.items():
         con = consoles[sub]
@@ -1351,7 +1351,7 @@ def test_two_spellings_of_one_channel_are_one_camera_to_its_holder_which_says_de
         code, body = _call(base, "POST", "/cameras", {"source": "driverpack://ACME/10.0.0.50/ch/02"}, token="admin")
         assert code == 201, body                                                          # another spelling: the platform takes it
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      resource_root=box.archive)
+                      resource_root=box.resource_root)
         placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w.heartbeat_once(); placer.ensure_placed()
         assert placer.where(1) == placer.where(2) == "w-1"                                # one group, one worker
@@ -1415,7 +1415,7 @@ def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_secon
     devs = {"acme/10.0.0.50": FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042"),
             "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["7"], relays=2, identity="ACME-SN-0042")}
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  resource_root=box.archive, device_factory=lambda k: devs.get(k))
+                  resource_root=box.resource_root, device_factory=lambda k: devs.get(k))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     try:
         for ch in (1, 2):
@@ -1468,7 +1468,7 @@ def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_th
                      "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  resource_root=box.archive)                           # the course's build: no device factory
+                  resource_root=box.resource_root)                           # the course's build: no device factory
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     try:
         for ch in (1, 2):
@@ -1513,7 +1513,7 @@ def test_an_empty_word_from_a_device_does_not_unsay_what_it_said_before():
     def holder():
         act = FakeActuator()
         return act, VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
-                              resource_root=box.archive, device_factory=lambda k: devs.get(k))
+                              resource_root=box.resource_root, device_factory=lambda k: devs.get(k))
     act, w = holder()
     try:
         for ch in (1, 2):
@@ -1552,7 +1552,7 @@ def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidenc
     devs = {k: FakeDevice(k, channels=["1"], relays=1, identity="CLONE-0000") for k in ("acme/10.0.0.50", "acme/10.0.0.60")}
     act = FakeActuator()
     w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
-                  resource_root=box.archive, device_factory=lambda k: devs.get(k))
+                  resource_root=box.resource_root, device_factory=lambda k: devs.get(k))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     said: list[str] = []
 
@@ -1683,13 +1683,13 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
         g = _gateway(box, "g-1")
         door_token = keys.signer.issue("viewer", "live/1", "g-1", ("whep",), box.wall())[0]
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  resource_root=box.archive)
+                  resource_root=box.resource_root)
     holder = w.serve_playback("127.0.0.1", 0)
     rec_door = RecWorker.serve_archive(SimpleNamespace(store=None, wall=box.wall, epochs={}, server="srv-1", name="r-1",
                                                        objects=box.objects, vars=box.vars, resource_root=None, eyes=None,
                                                        _visible_from=lambda *a: None, _kept_of=lambda *a: None,
                                                        _held_since=lambda *a: None), "127.0.0.1", 0)
-    res = serve_resource(platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
+    res = serve_resource(platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
     doors = {"holder": f"http://127.0.0.1:{holder.server_address[1]}", "gateway": g.url,
              "recorder": f"http://127.0.0.1:{rec_door.server_address[1]}", "resource": f"http://127.0.0.1:{res.server_address[1]}"}
     entry = json.dumps({"glass": {"who": "carol", "why": "the domain is down", "password": "open-sesame"}}).encode()
@@ -1846,7 +1846,7 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
         for i, bad in enumerate(("driverpack://acme/10.0.0.5:8²/ch/1", "driverpack://acme/10.0.0.6/ch/①")):
             box.vars.put(f"vms/cameras/{10 + i}", {"id": str(10 + i), "name": f"old{i}", "source": bad, "revision": "1"})
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      resource_root=box.archive)
+                      resource_root=box.resource_root)
         placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w.heartbeat_once(); placer.ensure_placed()
         w.reconcile_once(); w.heartbeat_once()                        # neither raises

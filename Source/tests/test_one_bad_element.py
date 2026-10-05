@@ -284,13 +284,13 @@ def test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_eva
     from w2cplatform.resource import platform_resource
     from tests.test_autoworker import DOOR, _Log, _assigned, _scenario, _worker as _auto, ev
     box = Box()
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
-    EventLog(box.archive, "vms", "8", 1).append(old, "motion")
+    EventLog(box.resource_root, "vms", "8", 1).append(old, "motion")
     box.vars.put("vms/retention/8", {"days": "30"})
     box.vars.put("auto/scenarios/s1", {"name": "s1", "when": DEEP, "then": "[]"})
     out = res.pass_()
-    assert "errors" not in out and bucket_names_under(box.archive, "vms", "8", 600) == [], out
+    assert "errors" not in out and bucket_names_under(box.resource_root, "vms", "8", 600) == [], out
 
     t = box.wall()
     log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
@@ -388,13 +388,13 @@ def test_a_frontier_or_a_waiting_file_that_does_not_read_is_not_there():
     from w2cplatform.events import Frontier
     from vms.scan import SURVEY, ScanLog
     box = Box()
-    fr = Frontier(box.archive, SURVEY, "7-lpr")
+    fr = Frontier(box.resource_root, SURVEY, "7-lpr")
     for raw in ("[1]", '{"watched_through": %s}' % ("9" * 400), DEEP, '{"watched_through": NaN}'):
         os.makedirs(os.path.dirname(fr.path), exist_ok=True)
         with open(fr.path, "w") as f:
             f.write(raw)
         assert fr.read() is None, raw[:20]
-    log = ScanLog(box.archive, "7-lpr-1")
+    log = ScanLog(box.resource_root, "7-lpr-1")
     os.makedirs(os.path.dirname(log._waiting_path()), exist_ok=True)
     for raw in ("[1]", '{"since": %s}' % ("9" * 400), DEEP):
         with open(log._waiting_path(), "w") as f:
@@ -423,7 +423,7 @@ def test_a_restore_whose_listing_skipped_lines_asks_that_peer_again():
             return b'{"t": 1, "kind": "motion"}\n'
 
     peers = Peers()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=peers)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=peers)
     box.objects.put("platform/resources/srv-2/heartbeat", json.dumps(
         {"server": "srv-2", "ts": box.wall(), "url": "http://srv-2", "mirrors": {"srv-1": 20}}).encode())
     got = res.restore()
@@ -546,7 +546,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     ctl.assign("w-1", ["1", "2"])
     act = FakeActuator()
-    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w.reconcile_once()
     act.post(1, "io.input", port="1", occurred=int(BIG))              # a driver's integer of 400 digits
     act.post(1, "io.input", port="2", occurred=float("nan"))          # …and `nan`, which `float` took for a time
@@ -595,7 +595,7 @@ def test_a_keep_line_whose_seconds_or_moment_is_no_number_is_that_lines():
     from vms.recworker import REC, RecWorker
     box = Box()
     t = box.wall()
-    p = EventLog(box.archive, REC.name, "1", 1).path_for(t)
+    p = EventLog(box.resource_root, REC.name, "1", 1).path_for(t)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     good = {"t": t, "kind": "archive.keep.copied", "keep": "k1", "recording": "1", "volume": "v1", "seconds": 30.0, "id": "a"}
     with open(p, "w") as f:
@@ -604,7 +604,7 @@ def test_a_keep_line_whose_seconds_or_moment_is_no_number_is_that_lines():
         f.write(json.dumps({**good, "t": "yesterday", "seconds": 50.0, "id": "c"}) + "\n")
         f.write(json.dumps({**good, "kind": "archive.keep.lost", "t": t + 1, "seconds": 10.0, "id": "d"}) + "\n")
         f.write("5\n")                                                 # a line that is no object
-    me = types.SimpleNamespace(resource_root=box.archive, volume="v1")
+    me = types.SimpleNamespace(resource_root=box.resource_root, volume="v1")
     held = RecWorker._keeps_held_before(me, [types.SimpleNamespace(id="k1")], lambda k: ["1"], lambda k, rec: 0.0)
     assert held == {("k1", "1"): 20.0}, held
     assert rows.counts()["field"].get(REC.name, 0) >= 1                 # both lines: one spell of recording 1's copies

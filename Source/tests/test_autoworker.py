@@ -70,7 +70,7 @@ def _worker(box, log, name="a-1"):
     the one family of somebody else's it may write."""
     vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec"))
     return AutoWorker(name, vars_, box.objects, index=log, clock=box.clock, wall=box.wall,
-                      server="srv-a", resource_root=box.archive, env={})
+                      server="srv-a", resource_root=box.resource_root, env={})
 
 
 def _assigned(box, scenario, worker="a-1"):
@@ -196,7 +196,7 @@ def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
         w.reconcile_once()
     assert len(box.vars.list("vms/requests/")) == 3 and w.suppressed == 47
     w.heartbeat_once()
-    lines = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(t - 60, t + 1, subsystem="auto")["events"]
+    lines = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(t - 60, t + 1, subsystem="auto")["events"]
              if e["kind"] == "suppressed"]
     assert [(e["count"], e["since"], e["until"]) for e in lines] == [(47, bounce[3]["t"], bounce[49]["t"])]
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
@@ -697,7 +697,7 @@ def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_
     reqs = [box.vars.get(p)[0] for p in box.vars.list("vms/requests/")]
     assert len(reqs) == 1 and float(reqs[0]["at"]) == t - 3              # the fresh one; the old one is not filed
     assert w.status()[0]["late"] == 1 and w.late == 1
-    fired = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(t - 400, t + 1, subsystem="auto")["events"]
+    fired = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(t - 400, t + 1, subsystem="auto")["events"]
              if e["kind"] == "fired"]
     # written NOW, about THEN (feedback BL): `t` files the line, `occurred` is the cause's moment
     assert sorted((e["occurred"], e.get("late"), e["t"]) for e in fired) == [(t - 120, 120.0, t), (t - 3, None, t)]

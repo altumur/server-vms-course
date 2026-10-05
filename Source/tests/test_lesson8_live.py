@@ -33,7 +33,7 @@ def _box():
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     live_ctl = SpecController(LIVE_SPEC, box.vars.as_writer("livecontroller", LIVE_SPEC.acl_controller()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root)
     w.heartbeat_once()
     con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed()   # the console writes the row, the controller places
     w.reconcile_once(); w.heartbeat_once()
@@ -45,7 +45,7 @@ def _gateway(box, name, capacity=100, labels="", url=""):
     g = LiveWorker(name, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects,
                     ctl=SpecController(LIVE_SPEC, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects, wall=box.wall),
                     capacity=capacity, clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": labels},
-                    resource_root=box.archive)
+                    resource_root=box.resource_root)
     g.serve("127.0.0.1", 0); g.heartbeat_once()
     return g
 
@@ -214,10 +214,10 @@ def test_a_dead_gateway_loses_its_fan_outs_to_the_survivor_and_viewers_reconnect
         assert live_ctl.redistribute() == []                                             # …and nobody can say g-1 is dead: nothing moves
         # …until the server can (the owner's decision on the review's eleventh pass): g-1 registered with srv-1's
         # resource, its process ended, and the resource says g-1 is placed there and not alive — its fan-out moves
-        g1.present(box.archive); g1.heartbeat_once(); g1.absent()
+        g1.present(box.resource_root); g1.heartbeat_once(); g1.absent()
         box.clock.advance(100); box.wall.advance(100)
         g2.heartbeat_once(); w.heartbeat_once()
-        Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall).heartbeat()
+        Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall).heartbeat()
         assert live_ctl.slot_fate("g-1", live_ctl.slots()["g-1"])[0] == "move", live_ctl.slot_fate("g-1", live_ctl.slots()["g-1"])
         assert [m[:3] for m in live_ctl.redistribute()] == [("1", "g-1", "g-2")]
         g2.reconcile_once(); g2.heartbeat_once()
@@ -513,11 +513,11 @@ def test_who_watched_a_camera_live_is_a_line_in_the_journal():
 
     def said(role="liveworker", kind="live.view"):
         return [{k: e[k] for k in ("kind", "user", "target", "session", "gateway", "holder") if k in e}
-                for b in buckets_under(box.archive, "audit", role, 600)
-                for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith(kind)]
+                for b in buckets_under(box.resource_root, "audit", role, 600)
+                for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"].startswith(kind)]
     with door_keys(box.vars):
         con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
-        m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.archive, box.wall,
+        m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.resource_root, box.wall,
                          live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
         for con in (m.root, *m.mounts.values()):
             con.gate.impl = Tokens({"anna": [("view", "vms/1", ())]})

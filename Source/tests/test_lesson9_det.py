@@ -26,7 +26,7 @@ def _box():
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     det_ctl = SpecController(DET_SPEC, box.vars.as_writer("detcontroller", DET_SPEC.acl_controller()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root)
     w.heartbeat_once()
     con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
@@ -37,7 +37,7 @@ def _box():
 
 def _det(box, name, labels="gpu", capacity=8):
     d = DetWorker(name, box.vars.as_writer("detworker", ["det/epoch/*", "det/slots/*"]), box.objects, capacity=capacity,
-                  clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive, env={"LABELS": labels})
+                  clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root, env={"LABELS": labels})
     d.heartbeat_once()
     return d
 
@@ -93,8 +93,8 @@ def test_a_model_on_a_camera_is_placed_on_a_gpu_worker_and_writes_its_own_bucket
         assert st["phase"] == "running" and st["events"] == 2 and st["source"] == "rtsp://srv-1:8554/1" and st["worker"] == "d-2"
         # its own prefix on the same resource — and a line crossed is an ALARM (det.subsystem.yaml, `alarms`), so the
         # tree is the alarms' one, with the alarms' days (M12 of the review: these used to be observations)
-        assert subsystems_under(box.archive) == {"det.alarms": ["1-linecross"]}
-        e1 = os.path.join(box.archive, "det.alarms", "1-linecross", "e1")
+        assert subsystems_under(box.resource_root) == {"det.alarms": ["1-linecross"]}
+        e1 = os.path.join(box.resource_root, "det.alarms", "1-linecross", "e1")
         lines = [l for b in sorted(os.listdir(e1)) for l in read_bucket(os.path.join(e1, b))]
         assert [(l["kind"], l["pass"], l["cam"], l["class"]) for l in lines] == [("linecross", 3, 1, "alarm"), ("linecross", 6, 1, "alarm")]
         assert det_ctl.unit("1-linecross")["alarms"] == ["linecross", "lpr"]            # the row says which kinds; the operator may change it
@@ -142,7 +142,7 @@ def test_motion_is_an_observation_and_its_repeats_collapse_into_one_line_and_a_s
         det_ctl.ensure_placed(); gpu.reconcile_once()
         for _ in range(10):
             box.wall.advance(2); gpu.reconcile_once()                                  # eleven observations in twenty seconds
-        e1 = os.path.join(box.archive, "det", "1-motion", "e1")
+        e1 = os.path.join(box.resource_root, "det", "1-motion", "e1")
         lines = lambda: [l for b in sorted(os.listdir(e1)) for l in read_bucket(os.path.join(e1, b))]   # noqa: E731
         assert [l["kind"] for l in lines()] == ["motion"] and "class" not in lines()[0]   # one line, an observation
         assert gpu.status_by_unit["1-motion"]["events"] == 1
@@ -152,7 +152,7 @@ def test_motion_is_an_observation_and_its_repeats_collapse_into_one_line_and_a_s
         summary = lines()[-1]
         assert len(lines()) == 2 and summary["kind"] == "motion" and summary["repeats"] == 10
         assert summary["since"] == lines()[0]["t"] and summary["until"] == lines()[0]["t"] + 20
-        assert not os.path.isdir(os.path.join(box.archive, "det.alarms"))             # motion is nobody's alarm
+        assert not os.path.isdir(os.path.join(box.resource_root, "det.alarms"))             # motion is nobody's alarm
     finally:
         srv.shutdown(); srv.server_close()
 

@@ -22,7 +22,7 @@ from tests.test_lease_step import T_POLL, _Pausing, _Turns
 
 def _holder(box, name="w-1", **kw):
     return VmsWorker(name, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                     resource_root=box.archive, **kw)
+                     resource_root=box.resource_root, **kw)
 
 
 def _workers(box):
@@ -37,11 +37,11 @@ def _workers(box):
     common = dict(clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": "gpu"})
     live_vars = box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"])
     return [DetWorker("d-1", box.vars.as_writer("detworker", ["det/epoch/*", "det/slots/*"]), box.objects,
-                      resource_root=box.archive, **common),
+                      resource_root=box.resource_root, **common),
             DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
-                         resource_root=box.archive, **common),
+                         resource_root=box.resource_root, **common),
             SurveyWorker("s-1", box.vars.as_writer("surveyworker", SURVEY_SPEC.sub.acl_worker()), box.objects,
-                         resource_root=box.archive, **common),
+                         resource_root=box.resource_root, **common),
             LiveWorker("g-1", live_vars, box.objects, ctl=SpecController(LIVE_SPEC, live_vars, box.objects, wall=box.wall), **common)]
 
 
@@ -50,7 +50,7 @@ def _all_workers(box):
     from vms.config import AUTO_SPEC
     from w2cplatform.contract import requests_acl
     auto = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
-                      box.objects, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive, env={})
+                      box.objects, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root, env={})
     return [_holder(box)] + _workers(box) + [auto]
 
 

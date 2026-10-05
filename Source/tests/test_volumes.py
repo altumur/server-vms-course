@@ -780,7 +780,7 @@ def test_the_boxs_own_volume_keeps_the_size_it_has_and_a_smaller_quota_waits_for
     assert again.store.size() == 32 << 20 and "quota_note" not in hb and "shrink_pending" not in hb   # …on two
     assert hb["volume_quota"] == 32 << 20
     from w2cplatform.eventdatabase import EventIndex                  # and the recorder says when the engine did it
-    [shrunk] = [e for e in EventIndex(box.archive, "srv-a", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+    [shrunk] = [e for e in EventIndex(box.resource_root, "srv-a", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
                 if e["kind"] == "archive.volume.shrunk"]
     assert shrunk["volume"] == "srv-a" and shrunk["was"] == 64 << 20 and shrunk["quota_bytes"] == 32 << 20
 
@@ -956,7 +956,7 @@ def test_a_volume_whose_directory_is_gone_is_not_made_again_empty_and_its_record
         assert again.volume_pass() == "disk-b"
         assert spare.volume_pass() in ("", "disk-a") and spare.store is None and spare.capacity == 0
         assert not os.path.exists(url)
-    alarms = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+    alarms = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
               if e["kind"] == "volume.missing"]
     assert len(alarms) == 2, alarms                                      # once each recorder that met it, not every pass
     assert all(a["class"] == "alarm" and a["volume"] == "disk-a" and a["url"] == url for a in alarms), alarms

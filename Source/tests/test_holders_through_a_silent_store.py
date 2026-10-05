@@ -19,7 +19,7 @@ def _worker(n=2, env=None):
     box, ctl = _box_with_cameras(n)
     ctl.assign("w-1", [str(i) for i in range(1, n + 1)])
     store, act = Flaky(box.vars), FakeActuator()
-    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive, env=env)
+    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root, env=env)
     w.claim_slot(prefer="w-1")
     w.reconcile_once()
     assert act.running == set(range(1, n + 1))
@@ -181,7 +181,7 @@ def test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source
     box, ctl, con, rec_con, rec_ctl, w = _box()
     vars_, objects = Flaky(box.vars.as_writer("recworker-r-1", REC_ACL)), Flaky(box.objects)
     act = FakeActuator()
-    r = RecWorker("r-1", vars_, objects, act, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive,
+    r = RecWorker("r-1", vars_, objects, act, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root,
                   block=TEST_BLOCK, read=TEST_READ, default_quota=TEST_QUOTA, obsd=obsd_session("rec-outage"),
                   env={"ARCHIVE_VOLUME": f"file://{box.root}/vol-srv-1"})
     r.lease_pass(); r.heartbeat_once()
@@ -204,11 +204,11 @@ def _moved_away(n=2):
     box, ctl = _box_with_cameras(n)
     ctl.assign("w-1", [str(i) for i in range(1, n + 1)])
     store, act = OneRead(box.vars), FakeActuator()
-    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w.claim_slot(prefer="w-1")
     assert len(w.reconcile_once()) == n
     act2 = FakeActuator()
-    w2 = VmsWorker("w-2", box.vars, box.objects, act2, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    w2 = VmsWorker("w-2", box.vars, box.objects, act2, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w2.claim_slot(prefer="w-2")
     ctl.assign("w-1", [str(i) for i in range(2, n + 1)]); ctl.assign("w-2", ["1"])
     assert w2.reconcile_once() == [("start", 1)] and act2.epochs == {1: 2}

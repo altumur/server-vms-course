@@ -83,22 +83,22 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     st = store()
     t0 = utc("2026-09-12T10:00:00")
     box.wall.t = t0 + 2000
-    log = event_log(box.archive, 7, 3)                             # the worker holds epoch 3 for camera 7
+    log = event_log(box.resource_root, 7, 3)                             # the worker holds epoch 3 for camera 7
     p = log.append(t0 + 12.5, "motion", zone="gate")               # not recorded: still an event
-    assert parse_bucket(p, box.archive) == ("vms", "7", 3, t0) and read_bucket(p)[0]["zone"] == "gate"
+    assert parse_bucket(p, box.resource_root) == ("vms", "7", 3, t0) and read_bucket(p)[0]["zone"] == "gate"
     log.append(t0 + 40.0, "silent")                                # the event with no footage, by definition
     p2 = log.append(t0 + 700.0, "person", score=0.9)               # the next bucket: rolled by the clock
-    assert subsystems_under(box.archive) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
-    db = EventIndex(box.archive, "box", wall=box.wall)
+    assert subsystems_under(box.resource_root) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
+    db = EventIndex(box.resource_root, "box", wall=box.wall)
     assert [e["kind"] for e in db.query(t0, t0 + 1200, unit="vms/7")["events"]] == ["motion", "silent", "person"]
     # now a recorder records the camera under ITS epoch, into its volume: a span on the timeline, the events still the worker's
     footage(st, "7", 4, t0 + 600, t0 + 1200)
     assert st.units() == ["7"]
     assert [(x["epoch"], x["fenced"]) for x in st.timeline("7", t0, t0 + 1200, current_epoch=4)] == [(4, False)]
-    assert subsystems_under(box.archive) == {"vms": ["7"]}         # the resource's tree holds no footage at all
+    assert subsystems_under(box.resource_root) == {"vms": ["7"]}         # the resource's tree holds no footage at all
     # bucket retention is the platform's, and footage is not on its tree for it to touch
     box.vars.put("vms/retention/7", {"days": 30})                  # what the VMS controller writes for a camera's events
-    platform = Resource(box.archive, "box", "http://box", box.vars, box.objects, wall=lambda: t0 + 40 * 86400)
+    platform = Resource(box.resource_root, "box", "http://box", box.vars, box.objects, wall=lambda: t0 + 40 * 86400)
     platform.index = db
     assert platform.retain() == 2 and not os.path.exists(p) and not os.path.exists(p2)
     assert db.query(t0, t0 + 1200, unit="vms/7")["events"] == []

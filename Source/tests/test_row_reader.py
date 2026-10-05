@@ -85,7 +85,7 @@ def test_a_recorder_keeps_writing_into_its_volume_when_that_volumes_row_stops_pa
     assert rows["a-good"]["served_by"] and "still holds it" in rows["a-good"]["why"]
     # …and not without a word for ever (the eighth pass, a minor): past `ROW_UNREAD_AFTER` an alarm, once a day
     from w2cplatform.eventdatabase import EventIndex
-    unreadable = lambda: [e for e in EventIndex(box.archive, "srv-a", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+    unreadable = lambda: [e for e in EventIndex(box.resource_root, "srv-a", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
                           if e["kind"] == "archive.volume.unreadable"]
     assert unreadable() == []
     for _ in range(3):
@@ -281,7 +281,7 @@ def test_restore_beats_under_the_same_pulse_as_the_pass():
             seen.append(resources_seen(box.objects)["srv-1"]["ts"] == box.wall())
             return b'{"ts": 1}\n'
 
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peer())
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peer())
     res.PULSE_SECONDS = 0.02
     box.objects.put("platform/resources/srv-2/heartbeat", json.dumps(
         {"server": "srv-2", "ts": box.wall(), "url": "http://srv-2", "mirrors": {"srv-1": 6}}).encode())
@@ -299,7 +299,7 @@ def test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so():
 
     def full(path):
         return 100, 2                                                   # 98 % used
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
     [vol] = list(res.volumes)
     asked = lambda: box.vars.get(res._free_key(REC_SPEC, vol))[0]
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
@@ -308,7 +308,7 @@ def test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so():
     out = res.relieve()
     assert out["space"] == "over" and asked()["free"] == "48" and "(high)" in res.heartbeat()["space_garbled"]
     assert "settings read last" in res.space_garbled
-    fresh = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
+    fresh = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
     box.vars.delete(res._free_key(REC_SPEC, vol))
     assert fresh.relieve()["space"] == "over" and asked()["free"] == "48" and "the defaults" in fresh.space_garbled   # the row's `low` stands
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
@@ -334,16 +334,16 @@ def test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept():
     from w2cplatform.events import EventLog, bucket_names_under
     from w2cplatform.resource import platform_resource
     box = Box()
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     for cam in ("7", "8", "9"):
-        EventLog(box.archive, "vms", cam, 1).append(old, "motion")
+        EventLog(box.resource_root, "vms", cam, 1).append(old, "motion")
         box.vars.put(f"vms/retention/{cam}", {"days": "30"})
     box.vars.put(keeps.key("9-1-2"), {"cam": "9", "from": "yesterday", "to": "today"})
     for _ in range(2):
         res.retain()
-    assert bucket_names_under(box.archive, "vms", "7", 600) == [] and bucket_names_under(box.archive, "vms", "8", 600) == []
-    assert len(bucket_names_under(box.archive, "vms", "9", 600)) == 1
+    assert bucket_names_under(box.resource_root, "vms", "7", 600) == [] and bucket_names_under(box.resource_root, "vms", "8", 600) == []
+    assert len(bucket_names_under(box.resource_root, "vms", "9", 600)) == 1
     assert keeps.declared(box.vars) == [] and keeps.KEEPS.counts.get("rec") == 1
     assert "rows_garbled" in res.heartbeat()
     _forget_garbled()
@@ -538,7 +538,7 @@ def test_a_resource_comes_up_over_a_peer_whose_heartbeat_names_no_address():
     ended the resource process at every start. Such a peer takes nothing and gives nothing back; the start goes on."""
     from w2cplatform.resource import Resource
     box = Box()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     box.objects.put("platform/resources/srv-2/heartbeat", json.dumps(
         {"server": "srv-2", "ts": box.wall(), "mirrors": {"srv-1": 3}}).encode())
     box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
@@ -641,7 +641,7 @@ def test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_c
         def get(self, url, server, path):
             return (good if url == "http://srv-2" else dead).get(url, server, path)
 
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
     for peer in ("srv-0", "srv-2"):                                    # srv-0 sorts first: its refusal must not end the loop
         box.objects.put(f"platform/resources/{peer}/heartbeat", json.dumps(
             {"server": peer, "ts": box.wall(), "url": f"http://{peer}", "mirrors": {"srv-1": 20}}).encode())
@@ -678,7 +678,7 @@ def test_a_mirror_copies_to_every_peer_past_one_that_refuses_and_past_a_bucket_t
     box, ctl = _box_with_cameras(1)
     t = box.wall()
     for i in range(4):
-        log = EventLog(box.archive, "vms", "7", 1)
+        log = EventLog(box.resource_root, "vms", "7", 1)
         for n in range(1 + (200 if i == 1 else 0)):                   # the second bucket is the big one
             log.append(t - 86400 + i * 600 + n * 0.01, "motion", note="x" * 50)
     sent: dict = {"srv-2": [], "srv-3": []}
@@ -697,7 +697,7 @@ def test_a_mirror_copies_to_every_peer_past_one_that_refuses_and_past_a_bucket_t
 
     refuse_413 = [False]
     box.vars.put(R.MIRROR_KEY, {"enabled": "true", "copies": "2"})
-    res = R.Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    res = R.Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
     for peer in ("srv-2", "srv-3"):
         box.objects.put(f"platform/resources/{peer}/heartbeat", json.dumps(
             {"server": peer, "ts": box.wall(), "url": f"http://{peer}"}).encode())
@@ -714,7 +714,7 @@ def test_a_mirror_copies_to_every_peer_past_one_that_refuses_and_past_a_bucket_t
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
     assert 'w2c_resource_mirror_too_big_total{server="srv-1"} 1' in text and 'w2c_resource_mirror_failures_total{server="srv-1"} 1' in text
     # …and a peer that refuses 413 under the bound: counted, and the bucket is not sent to it again
-    res2 = R.Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    res2 = R.Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
     refuse_413[0] = True
     sent["srv-3"].clear()
     assert res2.mirror()["mirrored"] == 3 and res2.mirror_too_big == 1
@@ -820,7 +820,7 @@ def test_a_door_that_answers_a_span_another_build_writes_costs_that_span_and_not
         assert DOOR_SPANS.counts.get("rec") == 1
     finally:
         good.shutdown(); odd.shutdown(); lists.shutdown()
-    log = ScanLog(box.archive, "job-1")
+    log = ScanLog(box.resource_root, "job-1")
     for s in plan(got.spans, t - 3600, t):
         log.append(s, events=1, at=t)
     with open(log.path, "a") as f:
@@ -888,13 +888,13 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
     from w2cplatform.events import EventLog, bucket_names_under
     from w2cplatform.resource import platform_resource
     box = Box()
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     now = box.wall()
     day = lambda d: now - d * 86400
     for d in (40, 35, 32):
         for cam in ("7", "8"):
-            EventLog(box.archive, "vms", cam, 1).append(day(d), "motion")
-        EventLog(box.archive, "auto", "any-door", 1).append(day(d), "fired")
+            EventLog(box.resource_root, "vms", cam, 1).append(day(d), "motion")
+        EventLog(box.resource_root, "auto", "any-door", 1).append(day(d), "fired")
     for unit in ("vms/retention/7", "vms/retention/8", "auto/retention/any-door"):
         box.vars.put(unit, {"days": "30"})
     box.vars.put("auto/scenarios/any-door", {"name": "any-door", "when": json.dumps([{"sub": "vms", "kind": "io.input"}]),
@@ -902,7 +902,7 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
     box.vars.put(keeps.key("7-a"), {"cam": "7", "from": str(day(36)), "to": str(day(34)), "at": "yesterday"})   # sound but for `at`
     box.vars.put(keeps.key("8-b"), {"cam": "8", "from": str(day(33)), "to": "later"})                          # its end lost
     res.retain()
-    left = lambda sub, unit: sorted(round((now - b.start) / 86400) for b in bucket_names_under(box.archive, sub, unit, 600))
+    left = lambda sub, unit: sorted(round((now - b.start) / 86400) for b in bucket_names_under(box.resource_root, sub, unit, 600))
     assert left("vms", "7") == [35]                                    # its interval, and no more
     assert left("vms", "8") == [32]                                    # from its start on: 40 and 35 go
     assert left("auto", "any-door") == []                              # about nobody (the spec's `holds:`, step 6): no keep holds it
@@ -961,7 +961,7 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
         def get(self, url, server, path):
             return peers[url].get(url, server, path)
 
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
     for peer in ("srv-2", "srv-3"):                                     # the power cut: both said a heartbeat an hour ago
         _peer_heartbeat(box, peer, box.wall() - 3600, 10)
     res.live_resources()                                                # …which this resource sees, and sees stand still:
@@ -988,7 +988,7 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
     assert res.restore_due()
     assert res.restore()["pulled"] == 10
     assert all(east.asked.count(p) == 1 for p in paths[:10]) and len(east.asked) == 10   # east was not asked again
-    assert sum(1 for _ in __import__("os").scandir(f"{box.archive}/vms/7/e1")) == 20
+    assert sum(1 for _ in __import__("os").scandir(f"{box.resource_root}/vms/7/e1")) == 20
     box.clock.advance(RESTORE_RETRY_MAX)
     _peer_heartbeat(box, "srv-2", box.wall(), 10)
     _peer_heartbeat(box, "srv-3", box.wall(), 10)
@@ -1013,7 +1013,7 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
             return self.objects.put(key, data)
 
     store = Away(box2.objects)
-    res2 = Resource(box2.archive, "srv-1", "http://srv-1", box2.vars, store, wall=box2.wall, clock=box2.clock, peers=Peers())
+    res2 = Resource(box2.resource_root, "srv-1", "http://srv-1", box2.vars, store, wall=box2.wall, clock=box2.clock, peers=Peers())
     east.asked.clear()
     try:
         res2.restore()
@@ -1034,7 +1034,7 @@ def test_one_server_alone_is_restored_once_and_not_asked_again_for_ever():
     copies — its restore is done at the first try, not due every ten minutes for the life of the box."""
     from w2cplatform.resource import RESTORE_RETRY_MAX, Resource
     box = Box()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     res.heartbeat()
     assert res.restore() == {"pulled": 0} and "restore" not in res.heartbeat()
     box.clock.advance(RESTORE_RETRY_MAX)
@@ -1052,7 +1052,7 @@ def test_the_restores_pause_does_not_overflow_after_a_thousand_tries():
         def mirrored(self, url, server):
             raise OSError("503")
 
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Dead())
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Dead())
     _peer_heartbeat(box, "srv-2", box.wall(), 3)
     res._restore_tries = 2000
     assert res.restore()["peers_failed"] == ["srv-2"]
@@ -1073,11 +1073,11 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
     from w2cplatform.holds import UNITS as UNIT_ROWS
     from w2cplatform.resource import platform_resource
     box = Box()
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     for sub, unit in (("vms", "7"), ("vms", "8"), ("det", "55"), ("auto", "s1"), ("rec", "r9")):
-        EventLog(box.archive, sub, unit, 1).append(old, "motion")                     # inside the keep below
-        EventLog(box.archive, sub, unit, 1).append(old - 86400, "motion")             # a day before it: nobody's keep
+        EventLog(box.resource_root, sub, unit, 1).append(old, "motion")                     # inside the keep below
+        EventLog(box.resource_root, sub, unit, 1).append(old - 86400, "motion")             # a day before it: nobody's keep
         box.vars.put(f"{sub}/retention/{unit}", {"days": "30"})
     box.vars.put(keeps.key(f"7-{int(old) - 60}-{int(old) + 60}"), {"cam": "7", "from": old - 60, "to": old + 60})
     for path in ("det/units/55", "auto/scenarios/s1", "rec/recordings/r9"):
@@ -1087,12 +1087,12 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
     for _ in range(2):
         out = res.pass_()
         assert "errors" not in out, out
-    assert bucket_names_under(box.archive, "vms", "8", 600) == []                      # swept by its days
-    assert len(bucket_names_under(box.archive, "vms", "7", 600)) == 1                  # the kept minutes, and only them
+    assert bucket_names_under(box.resource_root, "vms", "8", 600) == []                      # swept by its days
+    assert len(bucket_names_under(box.resource_root, "vms", "7", 600)) == 1                  # the kept minutes, and only them
     for sub, unit in (("det", "55"), ("rec", "r9")):
-        left = bucket_names_under(box.archive, sub, unit, 600)
+        left = bucket_names_under(box.resource_root, sub, unit, 600)
         assert len(left) == 1 and left[0].start <= old < left[0].end, (sub, unit, left)   # held as ANY, the rest swept
-    assert bucket_names_under(box.archive, "auto", "s1", 600) == []                    # about nobody: held by no keep
+    assert bucket_names_under(box.resource_root, "auto", "s1", 600) == []                    # about nobody: held by no keep
     assert UNIT_ROWS.counts == {"det": 1, "rec": 1}, UNIT_ROWS.counts                 # once each, not once per read
     assert res.heartbeat()["rows_garbled"]["unit_row"] == 2
     os.remove(box.vars._file("det/units/55"))

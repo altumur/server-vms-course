@@ -43,7 +43,7 @@ def _keep(box, cam, since, until, recordings=None):
 
 
 def _events(box, kind):
-    return [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+    return [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
             if e["kind"] == kind]
 
 
@@ -283,17 +283,17 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
     from w2cplatform.events import buckets_under
     from w2cplatform.resource import platform_resource
     box = Box()
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     t0 = box.wall() - 5 * DAY
-    log = event_log(box.archive, 7, 3)
+    log = event_log(box.resource_root, 7, 3)
     log.append(t0 + 10, "alarm", zone="gate"); log.append(t0 + 3000, "motion")     # two buckets, fifty minutes apart
-    event_log(box.archive, 8, 1).append(t0 + 10, "motion")
+    event_log(box.resource_root, 8, 1).append(t0 + 10, "motion")
     keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
     box.vars.put("vms/retention/7", {"days": 0}); box.vars.put("vms/retention/8", {"days": 0})
 
     assert res.retain() == 2                                           # camera 8's, and camera 7's outside the keep
-    left = buckets_under(box.archive, "vms", "7", 600)
-    assert len(left) == 1 and left[0].start <= t0 + 10 < left[0].end and buckets_under(box.archive, "vms", "8", 600) == []
+    left = buckets_under(box.resource_root, "vms", "7", 600)
+    assert len(left) == 1 and left[0].start <= t0 + 10 < left[0].end and buckets_under(box.resource_root, "vms", "8", 600) == []
 
 
 def test_a_keep_holds_every_subsystems_events_about_its_camera():
@@ -307,7 +307,7 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     from w2cplatform.events import ALARM, EventLog, subsystems_under
     from w2cplatform.resource import platform_resource
     box = Box()
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     t0 = box.wall() - 5 * DAY
     box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "deleted": "true"})  # deleted: {days: 0}
     box.vars.put("det/units/8-motion", {"name": "8-motion", "cam": "8", "kind": "motion"})
@@ -323,14 +323,14 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     units = [("det", "7-motion"), ("det", "8-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"),
              ("auto", "gate"), ("auto", "yard"), ("auto", "anywhere"), ("det", "orphan")]
     for sub, unit in units:
-        EventLog(box.archive, sub, unit, 1).append(t0 + 10, "seen", ALARM)            # the alarms' tree…
-        EventLog(box.archive, sub, unit, 1).append(t0 + 10, "stats")                  # …and the observations'
+        EventLog(box.resource_root, sub, unit, 1).append(t0 + 10, "seen", ALARM)            # the alarms' tree…
+        EventLog(box.resource_root, sub, unit, 1).append(t0 + 10, "stats")                  # …and the observations'
         box.vars.put(f"{sub}/retention/{unit}", {"days": 0}); box.vars.put(f"{sub}/alarms_retention/{unit}", {"days": 0})
     keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
 
     res.retain()
-    left = {(sub, u) for sub, us in subsystems_under(box.archive).items() for u in us if sub != "audit"   # the pass's own journal
-            if any(f.endswith(".events.jsonl") for _, _, fs in __import__("os").walk(f"{box.archive}/{sub}/{u}") for f in fs)}
+    left = {(sub, u) for sub, us in subsystems_under(box.resource_root).items() for u in us if sub != "audit"   # the pass's own journal
+            if any(f.endswith(".events.jsonl") for _, _, fs in __import__("os").walk(f"{box.resource_root}/{sub}/{u}") for f in fs)}
     held = {("det", "7-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"), ("det", "orphan")}
     assert left == held | {(s + ".alarms", u) for s, u in held}                 # camera 8's, in both trees, are gone
 
@@ -478,7 +478,7 @@ def test_a_restarted_recorder_starts_from_what_the_incidents_volume_holds_for_ev
     k.keep_pass()
     assert k.keep_held[(first.id, "7-x")] == 300
     k.after_stop()
-    shutil.rmtree(os.path.join(box.archive, "rec"))                    # the event tree's retention took the copied events
+    shutil.rmtree(os.path.join(box.resource_root, "rec"))                    # the event tree's retention took the copied events
 
     again = recorder(box, "r-keep", "srv-1", acl=False)
     again.lease_pass()

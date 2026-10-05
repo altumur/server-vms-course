@@ -19,18 +19,18 @@ DAY = 86400.0
 def test_the_writer_picks_the_tree_and_the_index_answers_under_one_name():
     box = Box()
     t = box.wall() - 100
-    log = EventLog(box.tree, "testsub", "c7", 3)
+    log = EventLog(box.resource_root, "testsub", "c7", 3)
     po = log.append(t, "stats", n=1)
     pa = log.append(t + 1, "lane.jam", ALARM, lane="1")
-    assert os.path.relpath(po, box.tree).startswith("testsub/c7/e3/") and os.path.relpath(pa, box.tree).startswith("testsub.alarms/c7/e3/")
-    assert subsystems_under(box.tree) == {"testsub": ["c7"], "testsub.alarms": ["c7"]}    # one more directory, to whatever walks the tree
+    assert os.path.relpath(po, box.resource_root).startswith("testsub/c7/e3/") and os.path.relpath(pa, box.resource_root).startswith("testsub.alarms/c7/e3/")
+    assert subsystems_under(box.resource_root) == {"testsub": ["c7"], "testsub.alarms": ["c7"]}    # one more directory, to whatever walks the tree
 
     # a bucket written BEFORE alarms had a tree holds both classes, in the first one — and is read as it was
     old = po.replace(os.path.basename(po), "20200101T000000Z.events.jsonl")
     with open(old, "w") as f:
         f.write(json.dumps({"t": 1577836805.0, "kind": "lane.jam", "class": "alarm", "lane": "2"}) + "\n")
 
-    db = EventIndex(box.tree, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     rows = db.query(0, box.wall(), subsystem="testsub")["events"]
     assert [(r["subsystem"], r["kind"], r["class"]) for r in rows] == [
         ("testsub", "lane.jam", "alarm"), ("testsub", "stats", "observation"), ("testsub", "lane.jam", "alarm")]
@@ -60,10 +60,10 @@ def test_deleting_a_unit_ends_its_observations_and_not_the_record_of_what_happen
     con = console_ctl(box, testsub2())
     unit = con.create({"name": "t1", "of": "c1", "alarm_days": 400})["id"]
     t = box.wall() - 2 * DAY
-    log = EventLog(box.tree, "testsub2", str(unit), 1)
+    log = EventLog(box.resource_root, "testsub2", str(unit), 1)
     log.append(t, "stats", n=1)
     log.append(t, "lane.jam", ALARM, lane="1")
-    res = Resource(box.tree, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 0
 
     con.delete(unit)
@@ -71,12 +71,12 @@ def test_deleting_a_unit_ends_its_observations_and_not_the_record_of_what_happen
                                                                               # its days were INHERITED and it had no row of its own
     assert box.vars.get(f"testsub2/alarms_retention/{unit}")[0] == {"days": "400"}   # its alarms: the row is left alone
     assert res.retain() == 1
-    assert buckets_under(box.tree, "testsub2", str(unit), 600) == [] and len(buckets_under(box.tree, "testsub2.alarms", str(unit), 600)) == 1
-    rows = EventIndex(box.tree, "srv-1", wall=box.wall).query(0, box.wall(), subsystem="testsub2")["events"]
+    assert buckets_under(box.resource_root, "testsub2", str(unit), 600) == [] and len(buckets_under(box.resource_root, "testsub2.alarms", str(unit), 600)) == 1
+    rows = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall(), subsystem="testsub2")["events"]
     assert [(r["kind"], r["class"]) for r in rows] == [("lane.jam", "alarm")]
 
     box.wall.advance(399 * DAY)
-    assert res.retain() == 1 and buckets_under(box.tree, "testsub2.alarms", str(unit), 600) == []   # …and by their own days, they go
+    assert res.retain() == 1 and buckets_under(box.resource_root, "testsub2.alarms", str(unit), 600) == []   # …and by their own days, they go
 
 
 def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
@@ -86,12 +86,12 @@ def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
     from w2cplatform.tables import write_row
     box = Box()
     t = box.wall() - 5 * DAY
-    EventLog(box.tree, "testsub", "c7", 1).append(t + 10, "lane.jam", ALARM, lane="1")
-    EventLog(box.tree, "testsub", "c8", 1).append(t + 10, "lane.jam", ALARM, lane="1")
+    EventLog(box.resource_root, "testsub", "c7", 1).append(t + 10, "lane.jam", ALARM, lane="1")
+    EventLog(box.resource_root, "testsub", "c8", 1).append(t + 10, "lane.jam", ALARM, lane="1")
     for unit in ("c7", "c8"):
         box.vars.put(f"testsub/alarms_retention/{unit}", {"days": 1})
     write_row(testsub2(), "notches", box.vars, {"of": "c7", "from": t, "to": t + 60}, "anna", box.wall())
-    res = platform_resource(box.tree, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     with in_catalogue(testsub2()):                                     # the resource reads the holds testsub2 declares
         assert res.retain() == 1
-    assert len(buckets_under(box.tree, "testsub.alarms", "c7", 600)) == 1 and buckets_under(box.tree, "testsub.alarms", "c8", 600) == []
+    assert len(buckets_under(box.resource_root, "testsub.alarms", "c7", 600)) == 1 and buckets_under(box.resource_root, "testsub.alarms", "c8", 600) == []

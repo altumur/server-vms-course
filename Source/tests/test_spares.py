@@ -36,7 +36,7 @@ def _con(box):
 
 def _worker(box, name=None, server="srv-a", capacity=2, env=None, vars_=None):
     w = VmsWorker(name, vars_ or box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
-                  capacity=capacity, server=server, resource_root=box.archive, env=env or {})
+                  capacity=capacity, server=server, resource_root=box.resource_root, env=env or {})
     if w.name is not None:
         w.heartbeat_once()
     return w
@@ -225,7 +225,7 @@ def test_the_numbers_on_metrics_without_a_token_while_the_pass_is_fresh():
     live.pass_once()
     auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
     auto.pass_once()
-    m = make_console(_con(box), box.archive, box.wall, live_ctl=live, mounts={"auto": auto})
+    m = make_console(_con(box), box.resource_root, box.wall, live_ctl=live, mounts={"auto": auto})
     srv = m.serve("127.0.0.1", 0)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
 
@@ -331,7 +331,7 @@ def test_a_withheld_shortage_and_the_reach_budget_are_numbers_on_metrics():
     _con(box).set_server_labels("srv-a", ["vlan:lan"])
     rep = ctl.pass_once()
     assert rep["spares_withheld"] and rep["reach_budget"] == ctl.reach_budget
-    srv = make_console(_con(box), box.archive, box.wall).serve("127.0.0.1", 0)
+    srv = make_console(_con(box), box.resource_root, box.wall).serve("127.0.0.1", 0)
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/metrics") as r:
             text = r.read().decode()

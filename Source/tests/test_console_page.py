@@ -32,7 +32,7 @@ def test_the_console_names_its_own_script_in_a_content_security_policy_and_no_ot
     digest = "'sha256-" + base64.b64encode(hashlib.sha256(scripts[0].encode()).digest()).decode() + "'"
     assert page_csp() == f"script-src {digest}; object-src 'none'; base-uri 'none'"
     box = Box()
-    with Served(SpecConsole(console_ctl(box), marks_root=box.tree, wall=box.wall)) as call:
+    with Served(SpecConsole(console_ctl(box), marks_root=box.resource_root, wall=box.wall)) as call:
         with urllib.request.urlopen(call.base + "/") as r:
             assert r.headers["Content-Security-Policy"] == page_csp()
             assert "text/html" in r.headers["Content-Type"]

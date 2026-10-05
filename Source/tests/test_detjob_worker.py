@@ -46,7 +46,7 @@ def _footage(box, rec, epoch, a, b):
 def _worker(box, name="j-1", **kw):
     return DetJobWorker(name, box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
                         models={"lpr": Every}, clock=box.clock, wall=box.wall, server="srv-1",
-                        resource_root=box.archive, env={"LABELS": "gpu"}, step=60.0, **kw)
+                        resource_root=box.resource_root, env={"LABELS": "gpu"}, step=60.0, **kw)
 
 
 def _job(box, name="7-lpr-1", frm=0, to=10, rec="7", cam="7"):
@@ -61,10 +61,10 @@ def test_a_scan_writes_what_it_saw_into_its_own_tree_under_its_epoch():
     w = _worker(box)
     w.reconcile_once(); w.heartbeat_once()
 
-    root = os.path.join(box.archive, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
+    root = os.path.join(box.resource_root, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
     lines = [l for f in sorted(os.listdir(root)) for l in read_bucket(os.path.join(root, f))]
     assert lines and all(l["cam"] == 7 and l["source"] == "archive" and l["job"] == "7-lpr-1" for l in lines)
-    assert not os.path.exists(os.path.join(box.archive, "det", "7-lpr-1"))     # never the live detector's tree
+    assert not os.path.exists(os.path.join(box.resource_root, "det", "7-lpr-1"))     # never the live detector's tree
 
 
 def test_the_events_carry_media_time_not_the_clock():
@@ -73,7 +73,7 @@ def test_the_events_carry_media_time_not_the_clock():
     box = _site(); _footage(box, "7", 1, 0, 10); _job(box)
     w = _worker(box)
     w.reconcile_once()
-    root = os.path.join(box.archive, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
+    root = os.path.join(box.resource_root, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
     ts = [l["t"] for f in sorted(os.listdir(root)) for l in read_bucket(os.path.join(root, f))]
     assert ts and all(m(0) <= t < m(10) for t in ts)
     assert all(box.wall() - t > 6 * 24 * 3600 for t in ts)                      # a week back, not now
@@ -85,7 +85,7 @@ def test_what_the_operator_did_not_ask_for_does_not_become_an_event():
     box = _site(); _footage(box, "7", 1, 0, 10); _job(box, frm=5, to=8)
     w = _worker(box)
     w.reconcile_once()
-    root = os.path.join(box.archive, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
+    root = os.path.join(box.resource_root, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
     lines = sorted((l for f in sorted(os.listdir(root)) for l in read_bucket(os.path.join(root, f))),
                    key=lambda l: l["t"])
     ts = [l["t"] for l in lines]
@@ -117,11 +117,11 @@ def test_a_restarted_worker_resumes_and_does_not_double_the_events():
         _footage(box, "7", 1, i * 10, i * 10 + 9)
     _job(box, frm=0, to=30)
     w = _worker(box); w.reconcile_once()
-    before = ScanLog(box.archive, "7-lpr-1").events()
+    before = ScanLog(box.resource_root, "7-lpr-1").events()
 
     w2 = _worker(box, name="j-1")                                               # same slot, new process
     w2.reconcile_once()
-    assert ScanLog(box.archive, "7-lpr-1").events() == before                   # nothing was scanned twice
+    assert ScanLog(box.resource_root, "7-lpr-1").events() == before                   # nothing was scanned twice
     assert w2.status_by_unit["7-lpr-1"]["phase"] == "done"
 
 
@@ -134,7 +134,7 @@ def test_nobody_answering_is_not_no_events():
     w.reconcile_once()
     st = w.status_by_unit["7-lpr-1"]
     assert st["phase"] == "waiting" and "archive door" in st["why"]
-    assert not os.path.exists(os.path.join(box.archive, "detjob", "7-lpr-1"))
+    assert not os.path.exists(os.path.join(box.resource_root, "detjob", "7-lpr-1"))
 
 
 def test_the_heartbeat_says_how_much_of_the_interval_had_footage():
@@ -158,14 +158,14 @@ def test_a_terminal_row_is_reported_and_not_worked_on():
         _footage(box, "7", 1, i * 10, i * 10 + 9)
     ctl = _job(box, frm=0, to=60)
     w = _worker(box); w.reconcile_once()
-    done_after_one_pass = len(ScanLog(box.archive, "7-lpr-1").read())
+    done_after_one_pass = len(ScanLog(box.resource_root, "7-lpr-1").read())
     assert 0 < done_after_one_pass < 6                                          # really unfinished
 
     ctl.update("7-lpr-1", {"state": "done"})
     w2 = _worker(box, name="j-1"); w2.reconcile_once()
     assert w2.status_by_unit["7-lpr-1"]["phase"] == "done"
     assert "7-lpr-1" not in w2.epochs                                           # no epoch taken
-    assert len(ScanLog(box.archive, "7-lpr-1").read()) == done_after_one_pass    # and no stretch worked
+    assert len(ScanLog(box.resource_root, "7-lpr-1").read()) == done_after_one_pass    # and no stretch worked
 
 
 def test_a_stretch_that_failed_halfway_is_not_recorded_as_done():
@@ -198,10 +198,10 @@ def test_a_stretch_that_failed_halfway_is_not_recorded_as_done():
     finally:
         mod.EventLog = real
 
-    log = ScanLog(box.archive, "7-lpr-1")
+    log = ScanLog(box.resource_root, "7-lpr-1")
     assert len(log.read()) == 0, "a stretch that never finished is written down as finished"
     w2 = _worker(box, name="j-1"); w2.reconcile_once()
-    assert len(ScanLog(box.archive, "7-lpr-1").read()) == 3                     # it was redone, and finished
+    assert len(ScanLog(box.resource_root, "7-lpr-1").read()) == 3                     # it was redone, and finished
 
 
 def _holder_of_camera(box, cam, cov=None):
@@ -263,7 +263,7 @@ def test_one_door_answering_is_not_the_whole_recording_and_the_job_waits_for_the
         w.reconcile_once()
     st = w.status_by_unit["7-lpr-1"]
     assert st["phase"] == "waiting" and "r-a" in st["why"] and st["covered"] == 300   # B's five minutes, scanned
-    assert [d["from"] for d in ScanLog(box.archive, "7-lpr-1").read()] == [m(5)]
+    assert [d["from"] for d in ScanLog(box.resource_root, "7-lpr-1").read()] == [m(5)]
     srv = door(box, a, name="r-a", server="srv-2")                          # A's door answers again
     try:
         w.reconcile_once(); w.reconcile_once()
@@ -347,7 +347,7 @@ def test_a_job_that_waits_past_its_deadline_ends_done_and_says_what_it_did_not_r
     w2.reconcile_once(); w2.reconcile_once()
     st = w2.status_by_unit["7-lpr-1"]
     assert st["phase"] == "done" and st["partial"] == ["nobody serves volume warm"] and st["covered"] == 600
-    lines = [l for d, _, fs in os.walk(os.path.join(box.archive, "detjob", "7-lpr-1")) for f in fs if f.endswith(".events.jsonl")
+    lines = [l for d, _, fs in os.walk(os.path.join(box.resource_root, "detjob", "7-lpr-1")) for f in fs if f.endswith(".events.jsonl")
              for l in read_bucket(os.path.join(d, f)) if l["kind"] == "scan.partial"]
     assert len(lines) == 1 and lines[0]["missing"] == ["nobody serves volume warm"] and lines[0]["t"] == m(0)
 

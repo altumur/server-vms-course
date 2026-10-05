@@ -88,7 +88,7 @@ def test_the_console_never_hands_out_the_secret_and_the_store_holds_one_copy():
     secret = "Hunter2-not-in-any-reply"
     box = Box()
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(con, box.archive, port=0, wall=box.wall)
+    srv = serve(con, box.resource_root, port=0, wall=box.wall)
     port = srv.server_address[1]
     base = f"http://127.0.0.1:{port}"
     try:
@@ -189,7 +189,7 @@ def test_a_credential_in_an_addresss_parameters_is_refused_and_a_stored_one_is_s
     key = f"vms/cameras/{ok['id']}"
     items, idx = box.vars.get(key)
     box.vars.as_writer("console", SPEC.acl_console()).put(key, {**items, "source": CRED_QUERIES[0][0]}, cas=idx)
-    srv = serve(con, box.archive, port=0, wall=box.wall)
+    srv = serve(con, box.resource_root, port=0, wall=box.wall)
     try:
         page = urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/cameras").read().decode()
         upd = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/cameras/{ok['id']}", method="PUT",
@@ -620,7 +620,7 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
             con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
         finally:
             os.environ.pop("SECRETS_KEY", None)
-        srv = serve(con, box.archive, port=0, wall=box.wall)
+        srv = serve(con, box.resource_root, port=0, wall=box.wall)
         base = f"http://127.0.0.1:{srv.server_address[1]}"
 
         def send(method, path, body, k):

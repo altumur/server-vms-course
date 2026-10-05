@@ -56,7 +56,7 @@ def test_what_could_not_be_freed_is_a_number_anybody_can_read():
     It is in the resource's heartbeat now, and a console exports it for every server."""
     box = Box()
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"})
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall,
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall,
                    space_probe=lambda root: (1_000_000, 100_000))      # 90 % full: 150 000 to free
     files = _files()
     [vol] = list(res.volumes)
@@ -92,7 +92,7 @@ def test_a_recording_cut_inside_its_floor_raises_an_alarm_and_a_young_ring_does_
 
     def alarms():
         return [(e["unit"], e["kind"], e["class"], e["depth_days"], e["min_depth_days"])
-                for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]]
+                for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]]
 
     box.clock.advance(61)                                                # once a minute: `lease_pass` read it already
     assert r.depth_pass() == {"7": 10.0, "8": 2.0} and alarms() == []

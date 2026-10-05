@@ -675,7 +675,7 @@ def _holder(box, dev, **attrs):
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  resource_root=box.archive, device_factory=lambda k: dev)
+                  resource_root=box.resource_root, device_factory=lambda k: dev)
     for k, v in attrs.items():
         setattr(w, k, v)
     w.heartbeat_once()
@@ -1061,11 +1061,11 @@ def test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole
     from w2cplatform import longpoll, resource as wr
     from w2cplatform.console import ConsoleServer
     box = Box()
-    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    res = wr.Resource(box.resource_root, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
     srv = wr.serve(res, "127.0.0.1", 0)
     port = srv.server_address[1]
     path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
-    copy = os.path.join(box.archive, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
     put = lambda n, body=b"": f"PUT {path} HTTP/1.1\r\nHost: x\r\nContent-Length: {n}\r\n\r\n".encode() + body
     try:
         assert isinstance(srv, ConsoleServer)
@@ -1093,13 +1093,13 @@ def test_the_resources_door_gives_a_mirrored_body_a_deadline_whole():
     leaves no copy. A PUT that is not a mirrored bucket or a blob is no route of this door: 404."""
     from w2cplatform import resource as wr
     box = Box()
-    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    res = wr.Resource(box.resource_root, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
     was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0
     srv = wr.serve(res, "127.0.0.1", 0)
     wr.DOOR_TIMEOUT = was
     port = srv.server_address[1]
     path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
-    copy = os.path.join(box.archive, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
 
     def trickle(target: str, n: int) -> tuple[bytes, float]:
         s = socket.create_connection(("127.0.0.1", port))
@@ -1141,13 +1141,13 @@ def test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared
     whole. The same floor for every door that reads a body: the console's too (`read_body`)."""
     from w2cplatform import resource as wr
     box = Box()
-    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    res = wr.Resource(box.resource_root, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
     was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0
     srv = wr.serve(res, "127.0.0.1", 0)
     wr.DOOR_TIMEOUT = was
     port = srv.server_address[1]
     path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
-    copy = os.path.join(box.archive, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+    copy = os.path.join(box.resource_root, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
 
     def trickle(p: int, target: str, n: int, head: bytes = b"PUT") -> tuple[bytes, float]:
         s = socket.create_connection(("127.0.0.1", p))
@@ -1265,13 +1265,13 @@ def test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole():
     import tracemalloc
     from w2cplatform import resource as wr
     box = Box()
-    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    res = wr.Resource(box.resource_root, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
     rel = "vms/7/e1/1757499600.events.jsonl"
-    os.makedirs(os.path.join(box.archive, os.path.dirname(rel)), exist_ok=True)
+    os.makedirs(os.path.join(box.resource_root, os.path.dirname(rel)), exist_ok=True)
     line = b'{"t": 1, "kind": "motion", "pad": "' + b"p" * 200 + b'"}\n'
-    with open(os.path.join(box.archive, rel), "wb") as f:
+    with open(os.path.join(box.resource_root, rel), "wb") as f:
         f.write(line * (4 * (1 << 20) // len(line)))                 # four megabytes of one bucket
-    size = os.path.getsize(os.path.join(box.archive, rel))
+    size = os.path.getsize(os.path.join(box.resource_root, rel))
     was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0                      # a second a write: the whole would need four
     srv = wr.serve(res, "127.0.0.1", 0)
     wr.DOOR_TIMEOUT = was

@@ -208,15 +208,15 @@ def test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_a
     from w2cplatform.events import EventLog
     from w2cplatform.resource import Resource
     box = Box()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     old = box.wall() - 40 * 86400
     for unit in ("7", "8"):
-        EventLog(box.archive, "vms", unit, 1).append(old, "stats", "observation")
+        EventLog(box.resource_root, "vms", unit, 1).append(old, "stats", "observation")
     box.vars.put("vms/retention", {"days": "30"})
     box.vars.put("vms/retention/7", {"days": "a month"})
     assert res.retain() == 1
     from w2cplatform.events import bucket_names_under
-    assert len(bucket_names_under(box.archive, "vms", "7", 600)) == 1 and bucket_names_under(box.archive, "vms", "8", 600) == []
+    assert len(bucket_names_under(box.resource_root, "vms", "7", 600)) == 1 and bucket_names_under(box.resource_root, "vms", "8", 600) == []
     assert res.retention_garbled == ["vms/7"]
     box.vars.put("vms/retention/7", {"days": "30"})                                          # mended: swept by its days
     assert res.retain() == 1 and res.retention_garbled == []
@@ -233,26 +233,26 @@ def test_one_bucket_the_resource_cannot_remove_stops_no_other_and_is_counted():
     from w2cplatform.resource import Resource
     from vms.controller import VmsController
     box = Box()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     old = box.wall() - 40 * 86400
     for unit in ("7", "8"):
-        EventLog(box.archive, "vms", unit, 1).append(old, "stats", "observation")
+        EventLog(box.resource_root, "vms", unit, 1).append(old, "stats", "observation")
     box.vars.put("vms/retention", {"days": "30"})
-    [b7] = bucket_names_under(box.archive, "vms", "7", 600)
-    locked = os.path.dirname(os.path.join(box.archive, b7.path))
+    [b7] = bucket_names_under(box.resource_root, "vms", "7", 600)
+    locked = os.path.dirname(os.path.join(box.resource_root, b7.path))
     os.chmod(locked, 0o555)                                                  # its directory: no unlink in it
     try:
         if os.access(locked, os.W_OK):
             return                                                           # run as root: nothing is refused to it
         assert res.retain() == 1                                             # 8's swept, 7's left
-        assert bucket_names_under(box.archive, "vms", "8", 600) == [] and res.retain_failed == 1
+        assert bucket_names_under(box.resource_root, "vms", "8", 600) == [] and res.retain_failed == 1
         hb = res.heartbeat()
         assert hb["retain_failed"] == 1
         text = SpecConsole(VmsController(box.vars, box.objects, wall=box.wall), wall=box.wall).metrics_text()
         assert 'w2c_resource_retain_failures_total{server="srv-1"} 1' in text
     finally:
         os.chmod(locked, 0o755)
-    assert res.retain() == 1 and bucket_names_under(box.archive, "vms", "7", 600) == []
+    assert res.retain() == 1 and bucket_names_under(box.resource_root, "vms", "7", 600) == []
 
 
 # -- a unit's own row, as each worker reads it ------------------------------------------------------------------
@@ -404,17 +404,17 @@ def test_days_that_are_no_number_of_days_keep_the_units_buckets_and_nought_still
     from w2cplatform.events import EventLog, bucket_names_under
     from w2cplatform.resource import RETENTION, Resource
     box = Box()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
     t = box.wall()
     days = {"1": "ten", "2": "nan", "3": "inf", "4": "-1", "5": "0", "6": "-inf"}
     for unit, d in days.items():
-        EventLog(box.archive, "vms", unit, 1).append(t - 3 * 86400, "stats", "observation")
+        EventLog(box.resource_root, "vms", unit, 1).append(t - 3 * 86400, "stats", "observation")
         box.vars.put(f"vms/retention/{unit}", {"days": d})
     assert res.retain() == 1                                           # the `0`: nothing of the rest
     assert res.retain() == 0                                           # and the next pass sweeps none of them either
     for unit in ("1", "2", "3", "4", "6"):
-        assert len(bucket_names_under(box.archive, "vms", unit, 600)) == 1, unit
-    assert bucket_names_under(box.archive, "vms", "5", 600) == []
+        assert len(bucket_names_under(box.resource_root, "vms", unit, 600)) == 1, unit
+    assert bucket_names_under(box.resource_root, "vms", "5", 600) == []
     named = ["vms/1", "vms/2", "vms/3", "vms/4", "vms/6"]
     assert res.retention_garbled == named
     hb = res.heartbeat()
@@ -551,7 +551,7 @@ def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the
     try:
         c2 = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      resource_root=box.archive)
+                      resource_root=box.resource_root)
         w.heartbeat_once()
         ctl.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); c2.ensure_placed()
         w.reconcile_once(); w.heartbeat_once()
