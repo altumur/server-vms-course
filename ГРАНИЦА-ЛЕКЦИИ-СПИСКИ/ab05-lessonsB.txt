@@ -1,0 +1,11 @@
+_notes-ru/three-cameras/10-limits-and-scale.md: 45
+АВТОМАТИЗАЦИЯ-В-ПРОДУКТЕ.md: 84,91,196,199
+ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md: 114,157
+КАМЕРЫ-НА-ПЛАТФОРМЕ.md: 436,469
+М10A_Platform/08-Controller-and-Worker.md: 315
+М10B_ServerVMS/12-the-vms-console.md: 759
+М10B_ServerVMS/25-automation.md: 4,148,153,204,206,228
+ОБРАТНАЯ-СВЯЗЬ-ИЗ-ПРОДУКТА.md: 414,416,421,427,7446
+РЕВЬЮ-SERVERVMS-10-ОТВЕТ.md: 69
+РЕВЬЮ-SERVERVMS-12.md: 237
+РЕВЬЮ-SERVERVMS-9-ОТВЕТ.md: 126

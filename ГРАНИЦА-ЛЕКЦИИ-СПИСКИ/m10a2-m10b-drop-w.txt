@@ -1,0 +1,91 @@
+m10a2-w — what М10B 03/04 must DROP (or cut to a link) now that М10A teaches the platform halves.
+Where it went: М10A 06 (may_act/may_write, unconfirmed_max, Шаг 8а), М10A 07 (slot claim, prefer/given, runtime names, take_epoch
+rules incl. NotReadThisPass/step_abandoned, Шаг 11 places), М10A 08 (gates, renew_leases, stand-in, keep_slot/seeking, heartbeat,
+NEW Шаг 9 «Рантайм воркера»: hooks, lease_pass, fence, rejoin, run, between/beat, pump_once, heartbeat_once/platform_fields, observe,
+lost_to_epoch), М10A 14 («Семейство запросов»: request life cycle, marks, clear_requests/sweep, metrics) and М10A 15 (POST /requests
+idempotent). Line numbers are of the М10B files at base 5076fdc1. Keep in М10B only what is the VMS's: devices, actuator/pipelines,
+fan-out (live_url/live_shm), drain_bus, enrich, status/status_extra, headroom in cameras, the holder/recorder split, device asks.
+
+## М10B_ServerVMS/03-vmsworker-the-process.md
+- l.4 «Вы напишете»: `slot_from_environment`, `labels_from_environment`, «конструктор (создание есть захват)», «ворота `_actuate`» —
+  identity-by-claim and the gate are platform (М10A 07/08). Keep: `FakeActuator`, `desired`, `refresh`, `enrich`, `now`, the VMS part
+  of `_actuate` (epoch reuse on restart, enrich, sealed password). Say the gate checks are the platform's (`writing_allowed`,
+  `take_epoch`, `may_write`) and link М10A 08 Шаг 8.
+- l.11 «соединение трёх механизмов М10A в одной функции» — reframe: `_actuate` USES the platform gates; their meaning is М10A 08.
+- l.36–54 Шаг 1 (NOMAD_ALLOC_INDEX, NOMAD_NODE_NAME, NOMAD_META_labels, NOMAD_ALLOC_ID) — Nomad is gone and these are the platform's
+  runtime names (`WORKER_NAME`/`SLOT_INDEX`/`SERVER_NAME`/`LABELS`/`INSTANCE_ID`/`BOX_ID`, М10A 07 Шаг 9). Cut the step to a line + link;
+  keep only `CAPACITY` (the VMS's measured capacity) and `SHM_DIR`.
+- l.56–80 Шаг 2 `slot_from_environment`/`labels_from_environment` — now thin wrappers over `runtime.slot`/`runtime.labels`
+  (vms/worker.py:493–510); the three modes and «индекс — предпочтение, захват — доказательство» are М10A 07 Шаги 1, 9. Drop; keep at
+  most the label-alphabet warning (VMS-side).
+- l.84–103 Шаг 3 «конструктор, который есть захват» — the claim is `Worker.claim_at_start` (platform; spare/offer, decommissioned server;
+  М10A 07/11). The listing is untrue (archive_root, NOMAD_ALLOC_ID, self.claim_slot). Drop the claim discussion; show the VMS
+  constructor lines (resource_root via runtime.events_root, shm_dir, capacity, actuator, reconciler, sealer, unconfirmed_max from
+  UNCONFIRMED_MAX) and link М10A 07/08.
+- l.105–114 «четыре атрибута класса — весь шаблон подсистемы» — slot prefix/name env are the spec's (`slot: {prefix, name_env}`, М10A 07
+  Шаг 4, М10A 09). Rewrite or drop (the architect's R1 on «это весь шаблон подсистемы»).
+- l.116–138 constructor block: `archive_root`, `recording_allowed`, `fenced_reason`, the `NOMAD_NODE_NAME`/`NOMAD_NODE_ID` server chain —
+  untrue (resource_root; writing_allowed/fenced_reason are the base's `_life()`; server is `runtime.server(env, server)`). Drop the
+  fence-flag lines (М10A 08 Шаг 9).
+- l.197–257 Шаг 5 «Ворота»: the three checks (fenced instance, epoch, lease) — platform (М10A 08 Шаг 8 gates, Шаг 9 fence; М10A 07 Шаг 7
+  NotReadThisPass/lost_to_epoch). Listing untrue (`recording_allowed`, `may_record`). Keep only start-vs-restart epoch reuse (the VMS
+  meaning of "same writer"), enrich, stop-before-release; link the gates.
+- l.243–245 «Третья: аренда. `may_write(unit)`…» — `may_write` is the DATA question now (М10A 06 Шаг 8а); fine as a use, the lease
+  arithmetic is М10A 06.
+- Итог/Упражнения l.327–343: bullets on index/claim, «создание есть захват», «три проверки ворот» — drop or link; exercise 7
+  (NOMAD_ALLOC_INDEX) — Nomad.
+
+## М10B_ServerVMS/04-vmsworker-holding-the-camera.md
+- l.4 «Вы напишете»: `heartbeat_once` (partly), `lease_pass`, `fence`, `run` — platform (М10A 08 Шаг 9). Keep: enrich, observe (the VMS
+  version with suppressor/class_of), drain_bus/pump_once (the VMS part), status, status_extra, headroom, `_heartbeat_now` VMS fields.
+- l.163–207 Шаг 3а, the `requests()` listing and «Не единица», «valid_until», «Срок обязателен», «Отказ — это тоже ответ» — the request
+  family's life cycle is the platform's (`Worker.requests`, М10A 14 «Семейство запросов»). Keep: what a COMMAND is to a device (one
+  session, one call at a time, `perform` → driver, `ARG_MAX`, `command`/`command.failed` events on the unit); link М10A 14.
+- l.209–239 the console reaper (`_end_command`, `COMMAND_REAP_AFTER`, `jobs.clear_requests`, `vms_requests_*_total`, «Начатую команду
+  жнец оставляет…») — now `w2cplatform/requests.py` `clear_requests`/`turn`, `REAP_AFTER`, `w2c_requests_*_total`; vms/jobs.py keeps only
+  the VMS's own reaping (record/backfill). Drop; link М10A 14.
+- l.241–316 «Не больше одного раза» (marks `<sub>/commands/<id>`, `_mark`, `put_new`, CANNOT_MARK, `_confirm`, `_marks_owed`,
+  `_answered_before`, `mark_of` with PARSE_ERRORS, the four outcomes) — platform (М10A 14). Untrue there: the command gate
+  `self.may_write(unit)` is `self.may_act(unit)` now. Cut to a link; keep «для двери "возможно, дважды" хуже, чем "ни разу"» as the
+  VMS example.
+- l.318 «`POST /requests` без `Idempotency-Key` — 400…» — М10A 15 (idempotent submission). Drop.
+- l.320–322 FETCHED_BYTES/FETCHED_COUNT, `said_id`, `CLEAR_EVERY` — platform (Worker.FETCHED_*, requests.py). Drop; link М10A 14.
+- l.326 stand-in paragraph — М10A 08 Шаг 8. Cut to a sentence + link.
+- l.328–347 «Ничего долгого там, где продлеваются аренды», PERFORM_GRACE/TIMEOUT, REQUESTS_HOLD, COMMANDS_PER_LOOK, calls waited
+  together, `_slow` — platform (`Worker.requests`, М10A 14). Keep the device numbers (HUNG_DEVICES as the VMS's design number, the
+  200-device measurement) as the VMS's use; the mechanism is М10A 14.
+- l.349–419 device asks (`_ask_devices`, DEVICE_GRACE/HOLD, `_slow_asks`, a line per device, opening/identity) — STAYS (VMS devices).
+- l.421 «Воркер, которому больше нельзя писать, не действует» — platform rule (М10A 08 Шаги 8–9: `may_act`, writing_allowed). Drop/link.
+- l.423–442 «Заявку смотрят четыре раза в секунду» (COMMANDS_BEAT, `between`, beat failures said once), «Камеру, которую отпустил шаг
+  аренды, такт обратно не берёт» (`lost_to_epoch`), the n2 pass case — the beat and lost_to_epoch are platform (М10A 08 Шаг 9; М10A 07
+  Шаг 7). Keep: COMMANDS_BEAT as the VMS's choice of `beat`, and the `refresh` clearing of lost_to_epoch (VMS code; see
+  m10a2-code-w.txt item 3). l.423 also «в кластере — `GET /v1/vars?prefix=…` к Nomad» — Nomad gone (configstore).
+- l.444 «Строку читают один раз, а чужую — больше никогда» (`_requests_read`) — platform (Worker.requests). Drop/link; l.444 also Nomad.
+- l.446–458 road measurement (`_measure`, `wait`/`road`/`request_road`, skew) — platform (`Worker._measure`, metrics in requests.py);
+  check the metric names (w2c_… vs vms_…) before keeping any. Cut to a link.
+- l.460–465 `POST /requests` example — keep as a VMS example (device output), link М10A 15.
+- l.561–594 Шаг 7 heartbeat table — VmsWorker passes its own fields (m10a2-code-w.txt item 8). Listing untrue: `recording_allowed`,
+  `archive_root`. Keep the VMS fields (alloc, assignment_rev, previous_*, devices, archive); the platform's fields
+  (server/labels/capacity/headroom/conflicts/fenced/fetched/schema/build/pending_writes/present) are М10A 08 (heartbeat,
+  platform_fields). «Воркеру никто не звонит» — М10A 08 Шаг 9.
+- l.596–659 Шаг 8 «Зомби и переназначение» — `lease_pass` is the base's (М10A 08 Шаг 9: the three rules BC, silent store BK, the
+  product's box test 16 s/36 s). The listing is the old body (now the `stop_unit` hook). Drop the mechanism; keep only VMS consequences:
+  `stop_unit` = stop one pipeline; «Упавший конвейер поднимается под той же эпохой» (`_actuate`); camera status `lease: unconfirmed`,
+  `vms_worker_unconfirmed`; UNCONFIRMED_MAX. l.642 `may_record` → `may_write`, requests ask `may_act`. l.649 «Их семь … ClusterWorker и
+  ClusterRecorder» — untrue (no Cluster* classes; the list is М10A 07 Шаг 7). l.650–651 step_abandoned / NotReadThisPass — М10A 07 Шаг 7.
+- l.661–711 Шаг 9 «Отсечение» (`fence`, `rejoin`, the given name, `conflicts_carried`, «никто под чужим именем») — platform (М10A 08
+  Шаги 8–9). Listing untrue (`recording_allowed`, `super().conflicts()`, `self.rows…` inside rejoin — now the `forget_units` hook). Keep:
+  the holder's hooks `fence_units` (actuator.stop_all + reconciler.clear) and `forget_units` (rows, assignment_rev, reconciler);
+  `vms_worker_fenced`.
+- l.713–812 Шаг 10 «Цикл как процесс» (`run`, own try per step, lease_every arithmetic, heartbeat 10/45, pass_failures, between/beat,
+  beat failures, «поддерживать жизнь и делать работу — разные вещи», the network-archive recorder story) — platform (М10A 08 Шаг 9).
+  Listing untrue («Nomad or systemd restarts it», no guarded, no first heartbeat, no `again`). Keep: `drain_bus` (l.781–800), «Шину
+  прокачивает и такт» (the VMS bus on the beat), the EOS / StopTimeout=20 sentence (VMS stop_all_units), the product driver-host 15 s vs
+  45 s note.
+- l.814–833 the stop sequence and released-vs-lapsed — platform (М10A 07 Шаг 7, М10A 08 Шаг 9). Cut to a link; keep the EOS sentence.
+- l.835–854 Результат: `archive_root=tmp`, `NOMAD_NODE_NAME`, `w.recording_allowed` — untrue (resource_root, SERVER_NAME, writing_allowed).
+- l.858–868 «Что может пойти не так»: «Отсечение по потере одной аренды без проверки назначения» (the rule is now the opposite: a lost
+  lease stops one unit and nothing checks the assignment — М10A 08 Шаг 9), «Продление раз в 25 с», «Выход без release_slot» — platform;
+  move/drop.
+- l.880 Итог «потерянная аренда на камере, которой уже нет в назначении, — переназначение» — untrue (no assignment check). Rewrite.
+- l.890 exercise 6 «Уберите проверку `unit not in assigned` в `lease_pass`» — the check does not exist. Drop.

@@ -1,0 +1,44 @@
+pl — lesson lines that now say something untrue (not edited; the agent edited only М10A 07 step 11, 09 dictionary row,
+11 line on `places.lease`, as allowed)
+
+== placement.places.lease: strict now executed by the base Worker (commit 3bf7d60e)
+М10B_ServerVMS/27-volumes.md:397-418 — the comment block and the `except OSError` code show RecWorker.lease_pass letting
+  go of a network archive itself (`quiet = self.clock() - self._hold_confirmed`, `leave_volume(...)`). True now: the
+  platform's lease step does it before RecWorker's (`Worker._strict_place_pass`, which calls `leave_place` →
+  `RecWorker.leave_volume`); RecWorker's `except OSError` only logs and remounts by the last rows. Also: a pass that
+  comes late with the store ANSWERING renews once more (CAS on its own row) and keeps the volume.
+М10B_ServerVMS/27-volumes.md:420 — "`self._shared` — какие тома адресные … Спросить в момент молчания уже не у кого":
+  `_shared` is no longer asked in the silence; the platform asks where the place lies as its row said at the take
+  (`Worker._place_where`, filled by `claim_hold`).
+М10B_ServerVMS/10-recworker.md:379 — "отметка ставится внутри `renew_hold`/`claim_hold`" (of RecWorker): true, but they
+  are the base Worker's now (`Worker.claim_hold`, `renew_hold`, `note_hold_confirmed`); RecWorker overrides none of them.
+М10B_ServerVMS/10-recworker.md:381, :1051 — `_may_write_volume` / `_may_close_volume` are one-line wrappers over the
+  platform's `Worker.may_write_place` / `may_close_place` (windows unchanged: `slot_ttl − lease_margin`,
+  `slot_ttl + HOLD_SKEW`); whether a volume is fenced is decided by `placement.places.lease: strict` and the row's
+  `server`, not by `volumes.any_box`.
+
+== slot: {prefix, name_env} now read by the base Worker (commit of the scan)
+М10A_Platform/07-Slot-and-Runtime.md:138 — code shows `nxt = f"{self.SLOT_PREFIX}-…"`; now `self.slot_prefix` (a property
+  of the base: the spec's `slot.prefix`, `w` with no spec).
+М10A_Platform/07-Slot-and-Runtime.md:172 — "Префикс — род воркера (`SLOT_PREFIX`)": now `Worker.slot_prefix`, read from the
+  spec by the base; no subsystem class says it.
+М10A_Platform/07-Slot-and-Runtime.md:257 and М11_Cluster/04-a-name-is-a-slot.md:230 — `getattr(self, "NAME_ENV", "")`; now
+  `self.name_env` (the spec's `slot.name_env`, `WORKER_NAME` with no spec).
+М11_Cluster/04-a-name-is-a-slot.md:71 — `self.SLOT_PREFIX` → `self.slot_prefix`.
+М10B_ServerVMS/03-vmsworker-the-process.md:92 — `claim_slot(prefer=… slot_from_environment(env, self.NAME_ENV,
+  self.SLOT_PREFIX))`; now `self.claim_at_start(name, env)`, the base resolving the runtime's name by the spec
+  (`Worker.given_name`); `slot_from_environment` is gone.
+М10B_ServerVMS/03-vmsworker-the-process.md:108, :112 — `SLOT_PREFIX, NAME_ENV = "w", "WORKER_NAME"` as class attributes
+  ("четыре атрибута класса … весь шаблон"): now `SUB`, `spec`, `ROWS`, `parse_row` — the slot words are the spec's.
+М10B_ServerVMS/10-recworker.md:475 — `SLOT_PREFIX, NAME_ENV = "r", "RECORDER_NAME"`: gone; `spec = REC_SPEC` carries them.
+
+== spec YAML (commits 7cd631a9, 7fcfffae)
+(no lesson quotes the rewritten multi-line flow constructs; the `lease: {unconfirmed_max: off}` of auto/live is new — a
+lesson on auto (М10B 25) or live (М10B 08) that lists the spec's top keys may add it.)
+
+== М11 stand trace 03-a-recorder-starts regenerated (the claim reads where the place lies)
+М11_Cluster/03-units-on-every-server.md:236-262 — the quoted requests go from the hold's first write (`cas: ""`, index
+  1007) straight to "А сразу после — тот же холд ещё раз, чтение и запись по CAS". True now: between them the recorder
+  reads the volume's row once, `GET /v1/get?key=rec/volumes/disks-a` — the base Worker's `claim_hold` remembering where
+  the place it took lies (`_place_server` → `_place_where`), what `placement.places.lease: strict` is judged by in a
+  silence (`Worker.held_strictly`). Source/traces/03-a-recorder-starts.txt holds the new sequence.

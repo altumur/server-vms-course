@@ -1,0 +1,5 @@
+ДЕТЕКТОРЫ-В-ПРОДУКТЕ.md: 105
+М10A_Platform/README.md: 51
+М10B_ServerVMS/12-the-vms-console.md: 866
+М10B_ServerVMS/25-automation.md: 512
+М11_Cluster/10-the-controller.md: 328

@@ -1,0 +1,278 @@
+# s5 (the coordinator of step 5 itself): the conftest split, the store/resource/page tests, PLATFORM_TESTS
+
+## tests/conftest.py split (commit 129130da)
+tests/conftest.py now holds only the platform's helpers (Clock, Box with `tree`, Served, as_kept, published_snapshot(objects,
+sub, rows) — rows REQUIRED, key_ring, door_keys, ByName, and testsub: TESTSUB/TESTSUB2, testsub(), testsub2(), controller,
+console_ctl, controller_ctl, CounterWorker, counter_worker) and is scanned by the boundary. The VMS's helpers moved to
+tests/vmsconftest.py: Box (prefix vmsserver-, `archive`), published_snapshot(rows="cameras"), door_site, cam, FakeStore,
+ObsdDaemon/obsd_session/obsd_volume/OBSD_*, TEST_QUOTA/BLOCK/READ, REC_ACL, recorder, store, footage, page_door, door
+(and four_workers, appended by a3).
+  М10A_Platform/01-Intro.md:229 — "Третий путь, `self.archive`, — дерево ресурса…" and "/tmp/vmsserver-*" — untrue for the
+    platform's Box: its third path is `self.tree`, the temp dir is `/tmp/w2c-*`; `archive` and `vmsserver-*` are the VMS Box's
+    (tests/vmsconftest.py, a subclass)
+  М10A_Platform/01-Intro.md:233 — "Ниже в файле — помощники следующих уроков: … published_snapshot … А за ними — помощники
+    тес[тов VMS]…" — the VMS's helpers are no longer below in that file: they are tests/vmsconftest.py; published_snapshot
+    takes `rows` (no default); conftest.py also holds testsub/testsub2 and CounterWorker
+  М10B_ServerVMS/27-volumes.md:23, 08-visibility-retention-timeline.md:19 and :137, 06-objectstorage-the-engine.md:400 and :695,
+    18-what-the-archive-gives-up-first.md:21, 16-backfill-from-the-edge.md:19, 12-the-vms-console.md:37 — `tests/conftest.py`
+    (ObsdDaemon, OBSD_GRACE_S, footage, store, door) → `tests/vmsconftest.py`
+  ГРАНИЦА-ЛЕКЦИИ-ПОСТРОЧНО.md:17 — "`cam(i, ...)` … lives in the shared `tests/conftest.py`" → in `tests/vmsconftest.py`
+
+## store, resource and page tests on testsub keys (commit 0b8266b7) — no test renamed
+test_storemachine, test_configstore, test_configstorevars, test_memvariables, test_store_durable, test_variables_contract,
+test_resource_objects, test_doors, test_console_page: keys `vms/…` → `testsub/…` (`vms/cameras/N` → `testsub/counters/N`),
+`rec/recordings/…` → `testsub2/tallies/…`, roles vmsworker/vmscontroller/recworker → testsubworker/testsubcontroller/testsub2worker.
+The fixture certificate tests/tls/srv-a/recworker.{pem,key} was replaced by testsub2worker.{pem,key} (same test CA).
+  М10A_Platform/02-Variables.md:439.., :581.. and М10A_Platform/06-Epoch-and-Lease.md:282.., :303.. (listed by a5 below) and
+    М10A_Platform/05-Subsystem.md:9 ("В уроках 2–4 ключи набирались руками: "vms/cameras/7", "vms/epoch/7",
+    "vms/heartbeats/w-1"") — the platform's tests of lessons 2–4 type testsub's keys now (`testsub/counters/gate`,
+    `testsub/epoch/…`, `testsub/heartbeats/w-1`)
+tests/test_configstorevars.py::test_a_process_reads_platform_store_and_no_other_name -> kept (the platform's rule, host.py);
+  its VMS half (vms/__main__ opens its stores through host.stores, no CONFIG_URL) ->
+  tests/test_deploy_units.py::test_the_vms_processes_open_their_stores_through_the_platforms_one_function
+  (no citations)
+
+## PLATFORM_TESTS
+tests/conftest.py added (scanned); tests/test_doors_shut.py removed (a VMS test as a whole: vms/config's is_loopback,
+announce_host, local_only, the holder's doors, the recorder, the gateway) — its file and names unchanged.
+
+## code comments updated (not lessons)
+Source/w2cplatform/__init__.py:40, Source/vms/__init__.py:30, Source/README.md:108,126 — the renamed
+test_the_platform_knows_nothing_about_its_subsystems.
+
+
+# ==== sub-agent a1 ====
+tests/test_slot_fate.py::test_a_hung_worker_on_a_server_that_answers_keeps_its_cameras_and_no_second_holder_is_made -> tests/test_slot_fate.py::test_a_hung_worker_on_a_server_that_answers_keeps_its_units_and_no_second_holder_is_made
+  М10A_Platform/07-Slot-and-Runtime.md:519
+  М10B_ServerVMS/12-the-vms-console.md:859
+tests/test_slot_fate.py::test_a_hung_worker_past_HUNG_MOVE_AFTER_has_its_cameras_moved_with_an_alarm -> tests/test_slot_fate.py::test_a_hung_worker_past_HUNG_MOVE_AFTER_has_its_units_moved_with_an_alarm
+  М10A_Platform/07-Slot-and-Runtime.md:519
+tests/test_slot_fate.py::test_a_dead_process_on_a_server_that_answers_has_its_cameras_moved_and_keeps_its_name -> tests/test_slot_fate.py::test_a_dead_process_on_a_server_that_answers_has_its_units_moved_and_keeps_its_name
+  М10A_Platform/07-Slot-and-Runtime.md:519
+tests/test_slot_fate.py::test_a_silent_server_moves_its_workers_cameras -> tests/test_slot_fate.py::test_a_silent_server_moves_its_workers_units
+  М10A_Platform/07-Slot-and-Runtime.md:519
+tests/test_slot_fate.py::test_a_controller_started_after_a_server_died_moves_its_cameras -> tests/test_slot_fate.py::test_a_controller_started_after_a_server_died_moves_its_units
+  М10A_Platform/07-Slot-and-Runtime.md:95
+  М10A_Platform/07-Slot-and-Runtime.md:400
+  М10A_Platform/07-Slot-and-Runtime.md:415
+  М10A_Platform/07-Slot-and-Runtime.md:439
+  М10A_Platform/07-Slot-and-Runtime.md:519
+  М10A_Platform/08-Controller-and-Worker.md:348
+  М10A_Platform/11-SpecController-placement.md:696
+  М10A_Platform/11-SpecController-placement.md:932
+  М10A_Platform/11-SpecController-placement.md:995
+  М10B_ServerVMS/12-the-vms-console.md:861
+  М11_Cluster/08-pull-the-power.md:116
+tests/test_slot_fate.py::test_a_worker_clock_ahead_does_not_hold_its_cameras_without_limit -> tests/test_slot_fate.py::test_a_worker_clock_ahead_does_not_hold_its_units_without_limit
+  М10A_Platform/07-Slot-and-Runtime.md:421
+  М10A_Platform/07-Slot-and-Runtime.md:519
+tests/test_slot_fate.py::test_an_unsure_worker_keeps_its_cameras_and_name_until_HUNG_MOVE_AFTER_then_they_move_with_an_alarm -> tests/test_slot_fate.py::test_an_unsure_worker_keeps_its_units_and_name_until_HUNG_MOVE_AFTER_then_they_move_with_an_alarm
+  М10A_Platform/07-Slot-and-Runtime.md:413
+  М10A_Platform/08-Controller-and-Worker.md:364
+  М10B_ServerVMS/12-the-vms-console.md:861
+  М11_Cluster/08-pull-the-power.md:120
+
+# ==== sub-agent a2 ====
+# sub-agent a2: tests renamed / moved / split (old -> new), and their citations in the repo's *.md.
+# "split": the platform half stays in the platform module on testsub, the VMS half (the original, verbatim) moved to
+# tests/test_vms_worker_loops.py. A citation that speaks of the VMS's workers (VmsWorker, the recorders, the detector…)
+# now belongs to the moved test; one that speaks of the platform's rule, to the platform half.
+
+test_stand_in.py::test_every_workers_loop_has_a_stand_in_for_a_pass_that_hangs -> test_vms_worker_loops.py::test_every_workers_loop_has_a_stand_in_for_a_pass_that_hangs
+  (split; platform half: test_stand_in.py::test_the_loop_has_a_stand_in_for_a_pass_that_hangs)
+  (no citations)
+test_stand_in.py::test_a_fast_run_starts_the_stand_in_and_it_renews_nothing -> test_vms_worker_loops.py::test_a_fast_run_starts_the_stand_in_and_it_renews_nothing
+  (split; platform half: test_stand_in.py::test_a_fast_loop_starts_the_stand_in_and_it_renews_nothing)
+  (no citations)
+test_stand_in.py::test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given_up -> test_vms_worker_loops.py::test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given_up
+  (split; platform half: test_stand_in.py::test_the_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given_up)
+  М10A_Platform/08-Controller-and-Worker.md:477
+test_stand_in.py::test_every_workers_stand_in_says_its_last_heartbeat_again_for_a_pass_that_hangs -> test_vms_worker_loops.py::test_every_workers_stand_in_says_its_last_heartbeat_again_for_a_pass_that_hangs
+  (split; platform half: test_stand_in.py::test_the_loops_stand_in_says_its_last_heartbeat_again_for_a_pass_that_hangs)
+  М10A_Platform/08-Controller-and-Worker.md:460   (cited as `…::` after a test_stand_in.py citation)
+
+test_slot_fence.py::test_a_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_says_nothing_under_that_name -> (kept, on testsub)
+  (split; VMS half: test_vms_worker_loops.py::test_every_kind_of_vms_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_says_nothing)
+  (no citations)
+test_slot_fence.py::test_the_detector_and_the_gateway_with_no_slot_run_nothing_of_the_name_they_gave_up -> test_vms_worker_loops.py::test_the_detector_and_the_gateway_with_no_slot_run_nothing_of_the_name_they_gave_up
+  (split; platform half: test_slot_fence.py::test_a_worker_with_no_slot_runs_nothing_of_the_name_it_gave_up)
+  (no citations)
+test_slot_fence.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds -> test_vms_worker_loops.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds
+  (split; platform half: test_slot_fence.py::test_a_fenced_worker_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds)
+  М10A_Platform/08-Controller-and-Worker.md:595   (cites `test_slot_fence.py::` — the platform lesson: point it at the platform half)
+  М10B_ServerVMS/04-vmsworker-holding-the-camera.md:707   (cites `test_slot_fence.py::` — the VMS lesson: the moved test, in test_vms_worker_loops.py)
+  РЕВЬЮ-SERVERVMS-6-ОТВЕТ.md:33   (a review answer: names VmsWorker, RecWorker, CardRecorder — the moved test, true as is but for the module)
+test_slot_fence.py::test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_takes_its_name -> (kept, on testsub)
+  (split; VMS half: test_vms_worker_loops.py::test_the_vms_holder_and_recorders_fenced_for_the_schema_stop_speaking_when_another_instance_takes_the_name)
+  М10A_Platform/08-Controller-and-Worker.md:637
+  М10A_Platform/17-Drain-and-Schema.md:221
+  М10B_ServerVMS/04-vmsworker-holding-the-camera.md:709   (the VMS lesson, about the holder: the VMS half is the one over VmsWorker)
+test_slot_fence.py::test_a_worker_on_a_store_raised_past_its_build_is_nobody_once_another_instance_takes_its_name -> (kept, on testsub)
+  (split; VMS half: test_vms_worker_loops.py::test_every_kind_of_vms_worker_on_a_store_raised_past_its_build_is_nobody_once_another_instance_takes_its_name)
+  М10A_Platform/08-Controller-and-Worker.md:637
+  М10A_Platform/17-Drain-and-Schema.md:221
+test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted -> (kept, on testsub)
+  (split; VMS half: test_vms_worker_loops.py::test_one_garbled_slot_row_leaves_no_kind_of_vms_worker_nobody_and_is_counted)
+  М10A_Platform/08-Controller-and-Worker.md:262
+  М10A_Platform/07-Slot-and-Runtime.md:158
+  М10A_Platform/07-Slot-and-Runtime.md:160
+
+test_names.py::test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive -> test_vms_worker_loops.py::test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive
+  (split; platform half: test_names.py::test_a_worker_given_its_servers_resource_writes_its_journal_into_its_events_tree)
+  М10B_ServerVMS/13-live-video.md:431   (cites `test_names.py::` — the module is now test_vms_worker_loops.py)
+
+test_lease_step.py::test_the_evaluators_loop_has_the_same_lease_step -> test_vms_worker_loops.py::test_the_evaluators_loop_has_the_same_lease_step
+  (moved whole: its subject is `AutoWorker.run`, a loop of the VMS's own)
+  (no citations)
+
+# ==== sub-agent a3 ====
+tests/test_near_by.py::test_the_detector_lands_beside_the_recorder_holding_its_camera -> tests/test_near_by.py::test_the_tally_lands_beside_the_worker_holding_its_counter
+  (no citations)
+tests/test_near_by.py::test_no_recorder_for_this_camera_is_a_fallback_not_a_refusal -> tests/test_near_by.py::test_no_holder_for_this_counter_is_a_fallback_not_a_refusal
+  (no citations)
+tests/test_near_by.py::test_the_scan_follows_the_recording_it_reads_not_its_own_name -> tests/test_near_by.py::test_a_unit_follows_the_unit_its_field_names_not_its_own_name
+  (no citations)
+tests/test_near_by.py::test_two_recordings_of_one_camera_settle_the_tie_the_same_way_twice -> tests/test_near_by.py::test_two_holders_of_one_counter_settle_the_tie_the_same_way_twice
+  (no citations)
+tests/test_near_by.py::test_neither_detectors_nor_scans_have_a_home -> tests/test_detjob_spec.py::test_neither_detectors_nor_scans_have_a_home   (moved, unchanged)
+  (no citations)
+tests/test_snapshot_shards.py::test_a_worker_that_is_gone_stops_reporting_its_cameras -> tests/test_snapshot_shards.py::test_a_worker_that_is_gone_stops_reporting_its_units
+  М10A_Platform/19-Snapshot-and-Limits.md:213
+tests/test_retire.py::test_the_whole_cycle_does_not_start_the_scan_over -> tests/test_jobs.py::test_the_whole_cycle_does_not_start_the_scan_over   (moved, unchanged: the cycle through vms.jobs.reap)
+    + platform half kept as tests/test_retire.py::test_the_whole_cycle_does_not_start_finished_work_over (testsub2; the row written by the test)
+  (no citations)
+tests/test_placement_decides.py::test_a_worker_whose_slot_left_a_garbled_heartbeat_starts_all_the_same -> tests/test_vms_workers_survive.py::test_a_worker_whose_slot_left_a_garbled_heartbeat_starts_all_the_same   (moved, unchanged: VmsWorker.__init__'s previous_hb)
+  М10B_ServerVMS/03-vmsworker-the-process.md:154
+tests/test_pass_failures.py::test_importing_the_entry_point_takes_none_of_the_runners_signals -> tests/test_vms_entry_point.py::test_importing_the_entry_point_takes_none_of_the_runners_signals   (moved, unchanged)
+  (no citations)
+tests/test_pass_failures.py::test_a_pass_that_raises_half_way_still_renews_the_leases_and_heartbeats -> split:
+    platform half KEPT under its name in tests/test_pass_failures.py (one testsub worker, `Worker.run`);
+    VMS half -> tests/test_vms_workers_survive.py::test_every_vms_worker_kind_renews_its_leases_when_a_pass_raises (det, detjob, survey, live)
+  РЕВЬЮ-SERVERVMS-2-ОТВЕТ.md:88   (cites it for survey/det/detjob/live — those four are now in the VMS test)
+  М10B_ServerVMS/13-live-video.md:412   (cites it for the live gateway — the live worker is now in the VMS test)
+
+# ==== sub-agent a4 ====
+tests/test_blobs.py::test_changing_the_blob_moves_the_revision_and_the_reconciler_restarts -> tests/test_det_mask_restart.py::test_changing_the_blob_moves_the_revision_and_the_reconciler_restarts   (split: platform half stays as tests/test_blobs.py::test_changing_the_blob_moves_the_revision)
+tests/test_alarm_tree.py::test_deleting_a_camera_ends_its_observations_and_not_the_record_of_what_happened -> tests/test_alarm_tree.py::test_deleting_a_unit_ends_its_observations_and_not_the_record_of_what_happened
+tests/test_event_line.py::test_a_scenario_counts_in_event_time_and_is_named_after_the_event -> tests/test_event_line_of_the_vms.py::test_a_scenario_counts_in_event_time_and_is_named_after_the_event
+tests/test_event_line.py::test_within_is_between_when_two_things_happened_and_a_late_event_is_too_late_to_act_on -> tests/test_event_line_of_the_vms.py::test_within_is_between_when_two_things_happened_and_a_late_event_is_too_late_to_act_on
+tests/test_event_line.py::test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it -> tests/test_event_line_of_the_vms.py::test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it
+  М10A_Platform/12-Events.md:154
+  РЕВЬЮ-SERVERVMS-2-ОТВЕТ.md:83
+tests/test_event_line.py::test_only_what_our_own_element_said_is_an_observation -> tests/test_event_line_of_the_vms.py::test_only_what_our_own_element_said_is_an_observation
+tests/test_epoch_meaning.py::test_a_live_detector_still_strikes_its_zombie_through -> tests/test_epoch_meaning.py::test_a_live_unit_still_strikes_its_zombie_through
+tests/test_epoch_meaning.py::test_the_default_is_what_every_subsystem_but_the_scan_says -> tests/test_epoch_meaning_of_the_vms.py::test_the_default_is_what_every_subsystem_but_the_scan_says   (split: platform half new in tests/test_epoch_meaning.py::test_the_default_is_fenced_and_earlier_run_only_where_a_spec_says_it)
+tests/test_journal.py::test_who_deleted_it_who_kept_it_and_who_took_the_volume_away -> tests/test_journal.py::test_who_deleted_it_who_shelved_it_and_who_took_the_shelf_away
+tests/test_journal.py::test_a_recorder_that_holds_no_volume_gives_its_recordings_up -> tests/test_journal.py::test_a_worker_that_holds_no_place_gives_its_units_up
+tests/test_doors_shut.py (whole file, 5 tests, names unchanged) — stays as is, a VMS test module: to be dropped from PLATFORM_TESTS
+  АУТЕНТИФИКАЦИЯ-В-ПРОДУКТЕ.md:157 (file cited; still valid)
+
+# ==== sub-agent a5 ====
+# a5 — renamed / moved tests of test_store_outage.py and test_lesson1_platform.py, with their citations
+# (VMS module for moved tests: Source/tests/test_holders_through_a_silent_store.py — NOT a platform test)
+
+## test_store_outage.py
+
+test_store_outage.py::test_a_store_that_does_not_answer_is_not_an_empty_assignment -> test_store_outage.py::test_a_store_that_does_not_answer_is_not_an_empty_assignment (kept, platform half on testsub)
+  + VMS half (the original body) -> test_holders_through_a_silent_store.py::test_a_pipeline_that_fell_while_the_store_is_away_comes_back_under_the_epoch_it_holds
+  (no citations)
+test_store_outage.py::test_a_lease_that_ran_out_with_nobody_asking_stops_that_camera_and_it_comes_back_under_a_new_epoch -> test_store_outage.py::test_a_lease_that_ran_out_with_nobody_asking_stops_that_unit_and_it_comes_back_under_a_new_epoch
+  (no citations)
+test_store_outage.py::test_a_camera_in_two_assignments_costs_one_pipeline_not_fifty -> test_store_outage.py::test_a_unit_in_two_assignments_costs_one_unit_not_fifty
+  (no citations)
+test_store_outage.py::test_ten_minutes_of_silence_stop_nothing_and_the_store_coming_back_stops_nothing_either -> kept (platform half on testsub)
+  + VMS half (the original body) -> test_holders_through_a_silent_store.py::test_a_holder_says_in_its_status_and_metrics_how_long_it_has_recorded_unconfirmed
+  (no citations)
+test_store_outage.py::test_a_camera_given_to_somebody_else_during_the_silence_stops_at_the_stores_first_answer -> test_store_outage.py::test_a_unit_given_to_somebody_else_during_the_silence_stops_at_the_stores_first_answer
+  (no citations)
+test_store_outage.py::test_the_ceiling_and_off -> kept (platform half on testsub: the lease's ceiling, `unconfirmed_max`)
+  + VMS half (the original body: `UNCONFIRMED_MAX` from the env) -> test_holders_through_a_silent_store.py::test_the_holders_unconfirmed_max_is_the_ceiling_and_off_is_none
+  (no citations)
+test_store_outage.py::test_a_camera_never_started_waits_and_an_action_waits_for_the_stores_word -> test_holders_through_a_silent_store.py::test_a_camera_never_started_waits_and_an_action_waits_for_the_stores_word (moved, unchanged)
+  + platform half -> test_store_outage.py::test_a_unit_never_started_waits_and_an_action_waits_for_the_stores_word
+  (no citations)
+test_store_outage.py::test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go -> test_holders_through_a_silent_store.py::test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go (moved, unchanged)
+  М10B_ServerVMS/27-volumes.md:429   (cites it as `test_store_outage.py::…`; the file is test_holders_through_a_silent_store.py now)
+test_store_outage.py::test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last -> test_holders_through_a_silent_store.py::test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last (moved, unchanged)
+  М10B_ServerVMS/10-recworker.md:569
+  РЕВЬЮ-SERVERVMS-2-ОТВЕТ.md:29
+test_store_outage.py::test_a_worker_whose_camera_row_read_failed_takes_no_epoch_for_a_camera_its_new_assignment_does_not_name -> test_store_outage.py::test_a_worker_whose_unit_row_read_failed_takes_no_epoch_for_a_unit_its_new_assignment_does_not_name
+  М10A_Platform/07-Slot-and-Runtime.md:466
+  М10B_ServerVMS/04-vmsworker-holding-the-camera.md:651
+test_store_outage.py::test_a_fallen_pipeline_of_a_camera_still_held_comes_back_under_its_epoch_when_the_assignment_read_failed -> test_holders_through_a_silent_store.py::test_a_fallen_pipeline_of_a_camera_still_held_comes_back_under_its_epoch_when_the_assignment_read_failed (moved, unchanged)
+  М10A_Platform/07-Slot-and-Runtime.md:466   (cites it under `tests/test_store_outage.py::…`)
+  М10B_ServerVMS/04-vmsworker-holding-the-camera.md:651   (same)
+
+Other lines about the file that are no longer true:
+  М10B_ServerVMS/04-vmsworker-holding-the-camera.md:659 — "tests/test_store_outage.py — пятнадцать сценариев…": now 12 platform
+    scenarios on testsub there + 7 of the holder/recorder in test_holders_through_a_silent_store.py (4 of them the VMS halves
+    of split tests).
+
+## test_lesson1_platform.py
+
+test_lesson1_platform.py::test_the_platform_knows_nothing_about_video -> test_lesson1_platform.py::test_the_platform_knows_nothing_about_its_subsystems
+  М10A_Platform/01-Intro.md:358
+  М10A_Platform/README.md:22
+  М10A_Platform/module-design.md:11
+  М10B_ServerVMS/17-on-the-box.md:710
+  Source/README.md:108,126   (UPDATED by a5)
+  Source/w2cplatform/__init__.py:40   (code comment — NOT edited: platform code is out of a5's scope)
+  Source/vms/__init__.py:30           (code comment — NOT edited: product code is out of a5's scope)
+  What it checks now: no `from <p>`/`import <p>` for every package of SUBSYSTEM_PACKAGES (vms, gstvms, cluster — was vms
+  alone), and not the unit word of every subsystem package that carries `<p>/<p>.subsystem.yaml` (today: "camera", read
+  from vms/vms.subsystem.yaml); the Subsystem keys checked on "testsub" instead of "vms".
+
+Listings of test code in lessons that no longer match (keys moved to testsub, no renames):
+  М10A_Platform/02-Variables.md:439..  test_the_config_store_survives_a_restart_and_refuses_a_stale_cas — keys
+    `testsub/counters/gate` (were `vms/cameras/7`), Box from tests.conftest
+  М10A_Platform/02-Variables.md:581..  test_one_writer_per_prefix — writers `testsubcontroller` / `testsubworker-1` over
+    `testsub/*` / `testsub/epoch/*`
+  М10A_Platform/06-Epoch-and-Lease.md:282.., :303..  test_epoch_issuer_never_reuses_a_number, test_lease_on_a_monotonic_clock —
+    epoch key `testsub/epoch/gate` (was `vms/epoch/7`)
+
+# ==== sub-agent a6 ====
+tests/test_sealing.py::test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_only -> tests/test_vms_secrets.py::test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_only   (moved intact; platform half added as tests/test_sealing.py::test_the_store_holds_ciphertext_and_an_edit_of_another_field_seals_nothing_again)
+  (no citations)
+tests/test_sealing.py::test_a_camera_whose_password_cannot_be_opened_says_why_in_its_status -> tests/test_vms_secrets.py::test_a_camera_whose_password_cannot_be_opened_says_why_in_its_status   (moved intact)
+  (no citations)
+tests/test_sealing.py::test_a_value_that_only_looks_sealed_stops_its_own_camera_and_is_refused_at_the_door -> tests/test_vms_secrets.py::test_a_value_that_only_looks_sealed_stops_its_own_camera_and_is_refused_at_the_door   (moved intact; platform half added as tests/test_sealing.py::test_a_value_that_only_looks_sealed_does_not_open_and_is_refused_at_the_door)
+  РЕВЬЮ-SERVERVMS-2-ОТВЕТ.md:27
+tests/test_sealing.py::test_bound_to_is_read_at_load_and_a_name_it_does_not_know_is_refused -> tests/test_sealing.py::test_bound_to_is_read_at_load_and_a_name_it_does_not_know_is_refused   (name kept; its "the shipped camera's password is bound to its source" assertion moved to tests/test_vms_secrets.py::test_the_shipped_secrets_are_bound_to_their_addresses, which also checks the volume's access_secret -> url)
+  М10A_Platform/09-SubsystemSpec.md:127   (still true: the loader test lists the same refusals)
+tests/test_sealing.py::test_a_volumes_secret_goes_into_the_store_sealed -> tests/test_sealing.py::test_a_tables_secret_goes_into_the_store_sealed
+  (no citations)
+tests/test_sealing.py::test_a_volumes_key_not_sent_is_kept_and_a_new_address_needs_a_new_one -> tests/test_sealing.py::test_a_tables_key_not_sent_is_kept_and_a_new_address_needs_a_new_one
+  М10A_Platform/18-Secrets.md:260
+
+# ==== s5, second round (after merging main 3f141968) ====
+
+## the merge
+tests/test_where_volume.py takes its VMS helpers (Box, door, footage, store) from tests/vmsconftest.py.
+tests/test_sealing.py: the file-local `_keyed_shelves` workaround is gone — testsub2's shelves now have `feed` with
+`feed_secret: {bound_to: [feed]}` (main's), and the table tests use them (field names `key_secret`/`url` → `feed_secret`/
+`feed`); no test renamed. No lesson cites `_keyed_shelves` or those field names.
+
+## a declared table or rows named like a console route is refused at load (w2cplatform/spec.py, CONSOLE_ROUTES)
+New closed set `spec.CONSOLE_ROUTES` = the first segments the console answers itself (session, healthz, index.html, spec,
+where, resources, servers, domain, policy, unplaceable, events, metrics, marks, requests, mounts, drain, schema). A spec
+whose `unit.rows` or a DECLARED table (`tables: {<t>: {key, fields…}}`) is one of them does not load ("… a route the
+console answers itself (`/<t>`) — no request would reach that family"). A table only named (`tables: [x]`) is served by
+nobody and is not refused by this rule. New test:
+  tests/test_spec_declarations.py::test_a_table_or_rows_named_like_a_route_of_the_console_is_refused_at_load_and_the_routes_are_the_dispatchs
+  (also holds the set equal to the literal routes of SpecConsole.dispatch, _declared and Mount's _route).
+Lessons to say it:
+  М10A_Platform/09-SubsystemSpec.md — the `tables:` row of the dictionary (and wherever `unit.rows` is described): add that
+    a declared table and the rows may not be named like a console route (spec.CONSOLE_ROUTES), refused at load.
+  М10A_Platform/15-SpecConsole.md — where the console's routes are listed: the list is a closed set the loader holds specs to.
+
+testsub2's table `marks` → `notches` (with `journal: {written: notch.cut, deleted: notch.cleared}`); `holds:`,
+`rights.unit_of`, `rights.routes.view` and the metric `marks_unshelved` → `notches_unshelved` follow.
+  М10A_Platform/15-SpecConsole.md:744 — the yaml example `{name: marks_unshelved, count: table marks, …}` → `{name:
+    notches_unshelved, count: table notches, …}` (a table may not be named `marks` any more: `/marks` is the console's)
+
+tests/test_journal.py: the second journaled table is back (testsub2's `notches`, cut by anna and cleared by boris through
+the console, as the original's keeps were made and lifted), so the test is as strong as before step 5.
+  tests/test_journal.py::test_who_deleted_it_who_shelved_it_and_who_took_the_shelf_away
+    -> tests/test_journal.py::test_who_deleted_it_who_held_it_and_who_took_the_shelf_away   (no citations; the original
+    name before step 5 was test_who_deleted_it_who_kept_it_and_who_took_the_volume_away — no citations either)
+tests/test_alarm_tree.py, tests/test_where_place.py, tests/test_boundary.py: testsub2's `marks` → `notches`.

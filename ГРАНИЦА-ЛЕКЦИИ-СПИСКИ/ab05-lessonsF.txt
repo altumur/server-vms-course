@@ -1,0 +1,16 @@
+ARCHITECTURE.md: 216
+ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md: 116,165,166
+М10A_Platform/02-Variables.md: 553
+М10A_Platform/08-Controller-and-Worker.md: 280,293,313
+М10A_Platform/14-Resource.md: 4,430,808,810,820,823,848
+М10A_Platform/15-SpecConsole.md: 589
+М10B_ServerVMS/05-driverpacksrc.md: 236
+М10B_ServerVMS/11-the-resource-process.md: 4,27,121,128,138,140,163,178,201,209,211,232,236,322,400,405,413
+М10B_ServerVMS/17-on-the-box.md: 421
+М10B_ServerVMS/18-what-the-archive-gives-up-first.md: 473,482
+М10B_ServerVMS/README.md: 34
+М11_Cluster/06-what-stays-on-the-server.md: 302
+М11_Cluster/module-design.md: 68
+ОБРАТНАЯ-СВЯЗЬ-ИЗ-ПРОДУКТА.md: 3385,6351,6990
+РЕВЬЮ-SERVERVMS-4-ОТВЕТ.md: 29
+РЕВЬЮ-SERVERVMS-9.md: 133

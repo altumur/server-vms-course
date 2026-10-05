@@ -1,0 +1,13 @@
+_notes-ru/three-cameras/02-before-first-camera.md: 246
+_notes-ru/three-cameras/05-workers-and-epochs.md: 273
+_notes-ru/without-an-orchestrator.md: 53
+ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md: 91,114
+ЖУРНАЛ-СОБЫТИЙ-ПЕРЕНОС-В-ПРОДУКТ.md: 151
+М10A_Platform/04-ObjectStore.md: 180
+М10A_Platform/08-Controller-and-Worker.md: 270,305
+М10A_Platform/15-SpecConsole.md: 466,498,587,632,634
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md: 324,573,587
+М10B_ServerVMS/12-the-vms-console.md: 646,760,761,774
+М11_Cluster/01-when-one-box-isnt-enough.md: 228
+М12_DomainVMS/13-a-stream-from-another-cluster.md: 112
+ОБРАТНАЯ-СВЯЗЬ-ИЗ-ПРОДУКТА.md: 7330

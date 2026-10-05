@@ -1,0 +1,43 @@
+Lessons now untrue after the "run root" change (agent tag tmp) — file:line — what is untrue — what is true now
+
+М10A_Platform/01-Intro.md:4 — «`tests/conftest.py` — «коробку» в `/tmp`» — the box is a temp dir under the run's root
+  (`tests/runroot.py`: `<system temp dir>/w2c-tests-<pid>`, or `/tmp/w2c-tests-<pid>` when that is too long for a unix
+  socket — always so on macOS), removed when the run ends.
+М10A_Platform/01-Intro.md:108-128 (step 4, the runner's listing) — the listing lacks the run-root block that every runner
+  now has right after `sys.path.insert`, before `import w2cplatform`:
+      from tests import runroot  # noqa: E402
+      RUN_ROOT = runroot.enter()
+  and `main` now takes module names (`python3 tests/run.py [test_module …]`, no names = every module; an unknown name →
+  exit 2) and prints `temp: <root>` first. The docstring's usage line changed accordingly. The text below the listing
+  should say what `runroot.enter()` does (one root per run, `tempfile.tempdir` and TMPDIR pointed at it, removed at exit
+  via atexit — also on SIGTERM, which the runner turns into an exit — and the roots of dead runs reaped at start).
+М10A_Platform/01-Intro.md:15 and :393 — «`tests/run.py` должен напечатать `0 passed, 0 failed, 0 skipped`» — it prints
+  `temp: <root>` first, then the summary.
+М10A_Platform/01-Intro.md:235 — «Каталог не удаляется. Это сознательно: после упавшего теста в `/tmp/vmsserver-*` остаётся
+  ровно то состояние… Цена — мусор в `/tmp`, который чистит ОС.» — false now: the box's dir is under the run root and is
+  removed with it at exit; the OS did NOT clean it (macOS keeps $TMPDIR for days; ~400 000 such dirs were found on
+  5 October and the litter stopped the nightly runs on 3–4 October). To look at a failed test's state, stop the run while
+  it is alive (the root is `temp:` in the first line) — there is no keep switch.
+М10A_Platform/01-Intro.md:405 (troubleshooting row) — «В `/tmp` тысячи каталогов `vmsserver-*` | Так и задумано… Чистит ОС.»
+  — false now: a run leaves none; thousands of them are leftovers of runs before this change (or of a run killed by
+  SIGKILL, whose root `w2c-tests-<pid>` the next run reaps).
+М10A_Platform/03-RegisterScheme.md:145 — `CONTRACT_URL=configstore:///tmp/cs/admin.sock` — still works as an example of a
+  socket dir, but the course's own tests no longer put socket dirs in /tmp by hand (`dir="/tmp"` is gone from
+  test_configstore, test_configstorevars, test_console_load, cluster/test_trace, cluster/test_units,
+  domain/test_lesson3_readview_api_gateway, configstore_election): they are under the short run root.
+М10B_ServerVMS/06-objectstorage-the-engine.md:433 — the quoted line's comment «# the system's temp dir: a unix socket path is
+  short» — now «# the run's root (`tests/runroot.py`): a unix socket path is short» (tests/vmsconftest.py).
+М10B_ServerVMS/06-objectstorage-the-engine.md:440 — «Временный каталог проекта бывает глубоким, поэтому демон получает каталог
+  системы.» — the daemon's dir is under the run's root, which the runner keeps short (≤45 bytes; /tmp/w2c-tests-<pid> on
+  macOS, whose own temp dir is 48 bytes and too long once a run root and a socket go under it). The «set TMPDIR shorter»
+  error stays for a run outside the runners.
+М12_DomainVMS/14-alarms-from-every-member.md (and module-design.md:528) — not untrue, but if a listing of `Card` is added:
+  `Card(sub, root, unit="1", bucket=BUCKET, on_alarm=None)` — `root` is required (an empty one → ValueError); the
+  `tempfile.mkdtemp(prefix="card-")` default is gone. New test: test_lesson14_alarms.py::
+  test_a_card_is_where_its_caller_says_and_nowhere_made_up (the lesson's test count 10 → 11 in module-design.md:528).
+М11_Cluster/06-what-stays-on-the-server.md:150 and :157 — «"size": 593» and «→ 200 {"bytes": 593, …}» — now 530 in both
+  (traces/06-objects-across-servers.txt regenerated). 593 was the heartbeat's size with the box's temp path in it as
+  long as the author's macOS temp dir happened to be (/var/folders/…/T, 48 bytes); the stand now shows the size of the
+  object as the trace shows it, the box's root as `/data` — 530 on any machine, whatever the run root's pid.
+  UNTIL THIS LESSON EDIT IS MADE, M11's tests/cluster/test_lessons_quote_traces.py::
+  test_every_quoted_line_of_a_trace_is_in_a_trace FAILS (it names exactly these two lines).

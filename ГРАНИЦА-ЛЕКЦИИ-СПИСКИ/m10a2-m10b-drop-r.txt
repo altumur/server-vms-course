@@ -1,0 +1,73 @@
+М10B 03/04 — what must go once М10A 14 «Шаг 14 — Семейство запросов» teaches the requests family (agent r, m10a2).
+Line numbers are of main 5076fdc1; find by quote. "→ link" = replace by one sentence + link to
+М10A_Platform/14-Resource.md, heading «Шаг 14 — Семейство запросов: работа, о которой попросили».
+
+## М10B_ServerVMS/03-vmsworker-the-process.md
+- No requests material (L222 mentions NotReadThisPass for take_epoch only — the worker-runtime agent's, not this list).
+
+## М10B_ServerVMS/04-vmsworker-holding-the-camera.md — Шаг 3а (L159–465)
+KEEP (the VMS's own part): L161–163 why a command goes over the device's one session and is a row performed by the
+holder (shorten to motivation + link); the VMS hooks — `held_rows` = the rows it holds, `request_target` =
+`device_of_row`, `request_targets` = its devices, `moved_refusal` in device words, `REQUEST_TARGET = "the device"`,
+`perform` with verbs output/preset and `ARG_MAX` (L296, see the stale note below); device asks `_ask_devices`,
+`_slow_asks`, `_dev_run`, `_dev_heads`, `DEVICE_GRACE`, `DEVICE_HOLD`, `state: opening`, identity changes, door asks
+(L349–419); the VMS heartbeat fields `command_counts`, `commands_reanswered`, `commands_in_flight`, `devices_slow`,
+`command_road`/`command_request`/`command_wait` and the vms spec metrics built from them (`event_to_device_seconds`,
+…; L324, L456 last sentences); `COMMANDS_BEAT` env (L423, L802); the POST example L460–465 (as a VMS body for
+`requests.schema` of vms.subsystem.yaml).
+
+DROP → link (platform mechanism, now taught in М10A 14 Шаг 14):
+- L165–197 the `requests()` listing — the platform's `Worker.requests` (and stale: `float(...)` not `finite`,
+  `self.MAX_VALID` not `self.most_valid()`, `mine = {… self.rows}` is the VMS's `held_rows` now).
+- L199 «Не единица»; L201–203 `valid_until` required and near (keep one VMS sentence: vms spec `valid_for: 30`,
+  `most_valid: 600`); L205 «Отказ — это тоже ответ»; L207 «Что сделано с устройством — событие» (platform
+  `observe(unit, "command")`; keep the timeline example sentence); L209 the worker does not delete, the console clears.
+- L211–237 the reaper — whole. Also STALE: `_end_command`, `COMMAND_REAP_AFTER`, `COMMAND_MAX_VALID`, the
+  `action == "record"`/`backfill` listing, `vms_requests_expired_total` — now `requests._end`, `REAP_AFTER`,
+  `MOST_VALID`, `requests.elsewhere: [record]` in rec.subsystem.yaml, `w2c_requests_expired_total{sub}`.
+- L239 a begun command is its holder's / not known — whole (`_holder_still_there`); STALE `jobs.unknown`,
+  `vms_requests_unknown_total` → `requests.unknown`, `w2c_requests_unknown_total`.
+- L241–292 at most once: mark before the call, the `take_epoch` listing, `_mark` listing, create-only on box and
+  cluster, `CANNOT_MARK` — whole (keep «для двери „возможно, дважды“ хуже, чем „возможно, ни разу“» as the VMS
+  example). STALE: L257 `self.may_write(unit)` → `self.may_act(unit)`; L292 «под подтверждённой арендой (`may_write`)»
+  → `may_act`; cluster create-only is a store row only when the spec says `objects: {rows: [commands/*]}`.
+- L294 a mark that does not parse (`mark_of`, `PARSE_ERRORS`) — platform; one line + test name at most.
+- L298 three details (mark only when the call is made; mark read not in try; marks swept every 30 s, listed first).
+- L300–314 the answer in the mark: `_confirm`, `_answered_before`, `_marks_owed`, `MARKS_OWED_PER_LOOK` — whole
+  (keep the VMS heartbeat word `commands_reanswered` and the test names as VMS tests).
+- L316 four outcomes — platform `Worker.commands` (keep: the VMS says them as `command_counts`).
+- L318 idempotency key → М10A 15 (`POST /<sub>/requests`, `<sub>/idem/`), not 14.
+- L320 rows leave as fast as performed: `FETCHED_BYTES`, `fetched_said`, `CLEAR_EVERY` — platform. STALE:
+  `_clear_loop` → `host.requests_loop`.
+- L322 limit by count: `said_id`, `FETCHED_COUNT` — platform. STALE: `config.said_id` → `requests.said_id`,
+  `jobs.clear_requests` → `requests.clear_requests`.
+- L328–347 nothing long on the loop: own thread, `PERFORM_GRACE`, `PERFORM_TIMEOUT`, one call per target,
+  `REQUESTS_HOLD`, `COMMANDS_PER_LOOK`, `_slow`, the waiting-together listing — platform. STALE: listing uses
+  `dev_id`, code says `target_id`; `HUNG_DEVICES` → platform `HUNG_TARGETS` (200).
+- L421 a worker that may no longer act does not act — platform.
+- L423 looked at four times a second — the mechanism (`between`/`beat_once`/`Worker.requests` on the beat) is the
+  platform's (М10A 08 «Рантайм воркера» + 14); keep `COMMANDS_BEAT=0.25`. STALE: «к Nomad … `GET /v1/vars?prefix=
+  vms/requests/`» — no Nomad: the cluster store is configstore; `may_write` → `may_act`.
+- L425–442 a unit the lease step let go is not taken back on a beat (`lost_to_epoch` in `Worker.requests`) — the
+  beat half is platform (w2cplatform/worker.py: set by `lease_pass`, read by `requests`); the pass half
+  (`refresh` clearing `lost_to_epoch`, `_actuate` NotReadThisPass) is in vms/worker.py — keep that half.
+- L444 a row read once, another holder's never again — platform (`_requests_read`); keep the recorder sentence
+  (`RecWorker.requests`, `test_backfill_bounds.py`). STALE: «в М11 это HTTP к Nomad» → configstore.
+- L446–456 the road measured where it ends (`_measure`, `wait`/`road`/`request_road`, `SKEW_SLACK`, buckets) —
+  platform. STALE listing: `by = "auto" if … else "operator"` / `self.road[by]` → code now
+  `by = stamp.split("/", 1)[0] if "/" in stamp else "operator"`, `self.road.setdefault(by, self._histogram())`.
+  Keep the VMS metric names.
+- L458 `finite` in `two_clocks` — platform.
+
+## М10B_ServerVMS/04-vmsworker-holding-the-camera.md — outside Шаг 3а
+- L642 «Данные идут, действия ждут»: `may_record` → `may_write`, `requests` asks strict `may_write` → `may_act`
+  (renames; the command half is platform, М10A 14).
+- L645 «И беда одной команды» — the requests half (`take_epoch` refusal inside `Worker.requests`) is platform →
+  link; L646 the `valid_until`-not-a-time half is platform, the recorder's range half stays.
+- L765–779 between passes / `beat_once` and L804 a store silent on a beat (`_beat_failed`) — the platform worker's
+  runtime (М10A 08 «Рантайм воркера», agent w), not 14; keep the VMS `beat()` override (bus + requests) and
+  `COMMANDS_BEAT`.
+- L4 «Вы напишете» lists `pump_once`, `heartbeat_once`, `lease_pass`, `fence`, `run` as the VMS's — platform runtime
+  now (agent w's list).
+- L72 «Его токен — `vms/epoch/*` и `vms/slots/*`, и больше ничего» — untrue: `vms` worker role =
+  `acl_worker_role()` = epoch, slots, holds + `vms/devices/*` (`worker: {writes: [devices]}`).

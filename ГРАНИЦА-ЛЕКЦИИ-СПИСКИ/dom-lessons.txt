@@ -1,0 +1,319 @@
+М12 LESSON LINES MADE UNTRUE BY THE DOMAIN SPLIT / NO-HOOKS / SECRETS CHANGE
+Worktree: server-vms-course/.claude/worktrees/agent-ab17edfa71b82a8a9 (read-only review, 2026-10-05)
+Format: <file>:<line> — what is untrue «quoted words» — what is true now
+Paths are relative to the course root; code paths relative to Source/.
+Method: every line read against the change list. Where a name had to be checked, it was checked against
+Source/ in this worktree. Test names cited in the lessons were checked against Source/tests: only one is missing (lessons 16 and 17).
+Note (updated at the end of WP3/WP4): Source/ now carries change items 6-8 in full — the agent carries through
+DOMAIN_URL/RELAY_URL (DOMAIN_CONFIG_URL only for the holder's own agent, no RELAY_CONFIG_URL), the signer writes
+issuing_key_secret/token_key_secret/backup_key_secret, the books write token_secret, the relay keeps answers in memory.
+
+======================================================================================================
+М12A vs М12B (assignment of every current М12 file)
+======================================================================================================
+М12A_Domain (the platform's domain)
+  01-what-a-cluster-cannot-know.md                         -> М12A 01
+  02-shadow-mode-the-domain-that-writes-nothing.md         -> М12A 02
+  03-the-api-and-what-it-refuses.md                        -> М12A 03
+  04-who-may-call-it.md                                    -> М12A 04
+  05-packaging-updates-and-the-licence.md                  -> М12A 05
+  06-secure-introduction-a-box-joins-the-domain.md         -> М12A 06
+  07-lifetimes-rotation-and-revocation-that-works-offline.md -> М12A 07
+  08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md -> М12A 08
+        NOTE: stays in М12A, but its code is VMS: vms/domainpart/cloud.py (render_three_ways, the arithmetic),
+        and its test is tests/domainvms/test_lesson8_cloud.py.
+  09-an-edit-for-a-cluster-that-is-off.md                  -> М12A 09
+  10-a-cluster-of-one.md                                   -> М12A 10   (DeviceCluster lives in vms/domainpart/device.py)
+  11-hundreds-of-small-members.md                          -> М12A 11
+  12-shared-settings-without-a-database.md                 -> М12A 12   (scenarios are vms/domainpart/scenario.py)
+  14-alarms-from-every-member.md                           -> М12A 13
+  15-a-domain-holder-on-one-node.md                        -> М12A 14
+  NEW «Секреты домена»                                     -> М12A 15
+  where-the-database-lives.md                              -> М12A
+  README.md, module-design.md                              -> split between both (the decisions/services/trust parts to
+                                                              М12A; the second-part rows for lessons 13/16/17 to М12B)
+М12B_DomainVMS (the VMS on the domain)
+  NEW «VMS на домене: вклад подсистемы»                    -> М12B 01
+  13-a-stream-from-another-cluster.md                      -> М12B 02
+  16-a-camera-nobody-can-reach.md                          -> М12B 03
+  17-a-chain-site-relay-centre.md                          -> М12B 04
+Renumbering effect on cross-references: every «урок 13» -> М12B 02, «урок 14» -> М12A 13, «урок 15» -> М12A 14,
+«урок 16» -> М12B 03, «урок 17» -> М12B 04 (not listed line by line below. Those lines are not untrue yet: the split has not been made in the texts).
+
+======================================================================================================
+М12_DomainVMS/README.md
+======================================================================================================
+М12_DomainVMS/README.md:4 — «Ядро домена уезжает в библиотеку платформы с крючком для подсистемы, ключи VMS — под domain/vms/…» (future tense, with a hook) — done, and without a hook: core in w2cplatform/domain + w2cplatform/trust, VMS in vms/domainpart; the platform knows a subsystem only by the `domain:` section of its spec (vms.subsystem.yaml: ref, view, books, kept, tables, tokens); VMS keys are already under domain/vms/….
+М12_DomainVMS/README.md:6 — «закрытые ключи подписывающего — в строке domain/signer, и запечатывание (SECRETS_KEY) их не касается» — the signer row is sealed under the platform ring: issuing_key_secret, issuing_cert, token_key_secret, previous, backup_key_secret/backup_key_rev.
+М12_DomainVMS/README.md:6 — «Политика отчёта члена даёт каждому члену чтение всего domain/* у держателя — любая камера читает ключ подписывающего и хеши аварийного доступа» — the member role / member-report policy is gone; a member reads nothing of the holder's store, only GET /api/carry/<cluster> (signed with its member key), getting public rows + its own, each secret sealed to its key.
+М12_DomainVMS/README.md:6 — «Ретранслятор копирует своим камерам всё подряд» — the relay keeps members' answers in memory (relay.RelayDoor, RELAY_PORT 8446) and gives each member only its own, by its signature; no relay/<path> copies in the relay's store.
+М12_DomainVMS/README.md:6 — «Смена ключа токенов не сохраняется и после перезапуска откатывается» — rotation persists: old token keys in `previous` of domain/signer (Signer.rotate_tokens).
+М12_DomainVMS/README.md:6 — «хеш аварийного доступа в поставке курса записать и сменить нечем: DomainPublisher.publish_break_glass есть, но зовут его только тесты» — writer/rotator exists: `python3 -m w2cplatform.domain.breakglass <cluster>` and `PUT /api/break-glass/<cluster>`; field pwhash_secret, sealed.
+М12_DomainVMS/README.md:69 — «Source/domain/ — семнадцать уроков одним запускаемым пакетом, построенным на cluster/ из М11, и его 194 тестам» — package domain/ is gone: w2cplatform/domain + w2cplatform/trust (platform) and vms/domainpart (VMS), on w2cplatform/cluster/; tests are tests/domain/, tests/domainvms/ and tests/test_domain_platform.py (the 194 count no longer describes one package; not re-counted).
+
+======================================================================================================
+М12_DomainVMS/01-what-a-cluster-cannot-know.md
+======================================================================================================
+М12_DomainVMS/01-what-a-cluster-cannot-know.md:13 — «на подделках из Source/domain/» — the code is w2cplatform/domain/ (federation.py, placement.py); the test path tests/domain/test_lesson1_directory_and_placement.py is still right.
+М12_DomainVMS/01-what-a-cluster-cannot-know.md:79 — `camera: str  # the DOMAIN's name for it` in class Answer — the field is `unit: str` (Answer.camera -> Answer.unit).
+М12_DomainVMS/01-what-a-cluster-cannot-know.md:164 — «p.place(CameraSite(8, "vlan:b"), …)» — the class is UnitSite (w2cplatform/domain/placement.py).
+
+======================================================================================================
+М12_DomainVMS/02-shadow-mode-the-domain-that-writes-nothing.md
+======================================================================================================
+М12_DomainVMS/02-shadow-mode-the-domain-that-writes-nothing.md:13 — «domain/shadow.py берёт представление каталога» — w2cplatform/domain/shadow.py (it reads `<sub>/epoch/*` per loaded spec; for the VMS that is still vms/epoch/*).
+
+======================================================================================================
+М12_DomainVMS/03-the-api-and-what-it-refuses.md
+======================================================================================================
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:73 — «/api/cameras и DomainDirectory.where падали» — route is /api/vms/cameras (generic /api/<sub>/<rows>).
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:77 — «Они показываются в /api/cameras (why)» — /api/vms/cameras.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:79 — «ломало поиск GET /api/cameras?q=» — GET /api/vms/cameras?q=.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:81 — «GET /api/cameras — 500 всем» — GET /api/vms/cameras.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:85 — «Тело PUT /api/cameras/…» — PUT /api/vms/cameras/<ref>.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:87 — «domain.steps.Steps … Его же используют цикл подписывающего и проход по книгам» — module is w2cplatform.domain.steps.Steps; the books' pass that uses it is no longer the signer's but the VMS worker's (vms/domainpart/books.py, `python3 -m vms.domainpart`).
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:110 — «def update_camera(self, camera, fields, idempotency_key, token=None)» — ConsoleAPI.update_unit(self, ref, fields, idempotency_key, token=None).
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:118 — «self.consoles(ans.cluster).update_camera(camera, fields, subject)» — ClusterConsole.update_unit(…) (create_camera -> create_unit likewise).
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:133 — «python3 -m domain.console — версия на стандартной библиотеке» — python3 -m w2cplatform.domain.console.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:136 — «GET /api/cameras?q=&page=&size=&cluster=  PUT /api/cameras/7» — GET /api/vms/cameras?…, PUT /api/vms/cameras/<ref>; the door also has /api/vms/crossings, /api/members, /api/topology, PUT /api/break-glass/<cluster>.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:140 — «каждое тело — PUT /api/cameras/…, PUT /api/topology, POST /api/members» — PUT /api/vms/cameras/… (plus PUT /api/break-glass/<cluster>).
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:142 — «/healthz с другого адреса — 200 с резерва, /api/cameras — 503» — /api/vms/cameras.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:152 — «domain/gateway.py — контракт этой точки» — vms/domainpart/gateway.py.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:178 — «domain/view … камеры с кластером… и — из урока 13 — какой кластер пишет какую чужую камеру (ReadView.publish)» — domain/view carries `units` and `tables: {"vms/crossings": …}` (a table the VMS spec declares); there is no crossings key of its own.
+
+======================================================================================================
+М12_DomainVMS/04-who-may-call-it.md
+======================================================================================================
+М12_DomainVMS/04-who-may-call-it.md:55 — «domain/tokens.py — это и есть такой токен» — w2cplatform/trust/tokens.py.
+М12_DomainVMS/04-who-may-call-it.md:59 — payload shown «{'exp':…, 'iat':…, 'iss':'acme', 'jti':…, 'sub':'alice'}» — every token now carries `kind` (a person's: "kind": "person"); a token without kind is refused by every door.
+М12_DomainVMS/04-who-may-call-it.md:68 — «Локальный пользователь хранит хеш scrypt» (in identity/users/<id>) — the hash is in `pwhash_secret`, sealed under the platform ring (SECRETS_KEY); the published identity/rev-N object carries hashes sealed under the BACKUP key.
+М12_DomainVMS/04-who-may-call-it.md:83 — «команда python3 -m domain.grants» — python3 -m w2cplatform.domain.grants.
+М12_DomainVMS/04-who-may-call-it.md:166 — «Удалить domain/* не может никто, кроме агента» — two roles may delete domain/*: `domain` (holder) and `domainagent` (storemachine.DOMAIN_ROLES; DOMAIN_WRITER="agent" is gone).
+М12_DomainVMS/04-who-may-call-it.md:172 — «на которые отвечает domain/access.py» — w2cplatform/domain/access.py.
+М12_DomainVMS/04-who-may-call-it.md:207 — table row «stream | приёмник … | книги основных и ретранслятора» (who issues) — stream is a VMS-declared kind (vms.subsystem.yaml domain.tokens.stream: lifetime 86400, claims [aud, ref]); the signer issues it on the VMS worker's request over SIGNER_TOKENS_UNIX (tokendoor.py, trust.tokens.DeclaredIssuer).
+М12_DomainVMS/04-who-may-call-it.md:208 — table row «ask | дверь запросов приёмника | книга запросов» — ask is VMS-declared (claims [aud, ask, by, acts, up], 86400), issued the same way by the signer on the worker's ask; only `person` is the platform's own kind.
+М12_DomainVMS/04-who-may-call-it.md:210 — «Токен, выпущенный до этого поля, говорит вид своей формой: ask называет цель, aud — приёмник… (kind_of)» — shape inference is removed: kind_of only reads `kind`; a token without kind is no token of any door.
+М12_DomainVMS/04-who-may-call-it.md:232 — «python3 -m domain.grants domain <кто>» — python3 -m w2cplatform.domain.grants domain <subject>.
+М12_DomainVMS/04-who-may-call-it.md:234 — «Команда python3 -m domain.grants переписывает строку» — python3 -m w2cplatform.domain.grants.
+М12_DomainVMS/04-who-may-call-it.md:238 — «Цикл signer_service раз в 5 с публикует набор идентичностей, чистит список отзыва и делает проход по книгам (domain/books.py)… ключи потока … перевыпускаются только здесь… domain.steps.Steps (signer_steps)… Books.pass_once» — the signer loop publishes identities and prunes revocations only. The books' pass is the VMS worker `python3 -m vms.domainpart` on the holder (vms/domainpart/books.py, worker.py), with its own slot row domain/vms/worker and heartbeat domain/vms/heartbeat. Stream tokens are issued by the signer when that worker asks over SIGNER_TOKENS_UNIX. Steps is w2cplatform.domain.steps.
+М12_DomainVMS/04-who-may-call-it.md:242 — «Ворота загружают domain.access … образ М11 плюс domain/ и python3-cryptography» — the module is w2cplatform.domain.access; there is no domain/ package to add to the image (w2cplatform/domain, w2cplatform/trust; and vms/domainpart where the VMS worker runs).
+М12_DomainVMS/04-who-may-call-it.md:257 — «домен ставит пароль и публикует его хеш (DomainPublisher.publish_break_glass), агент несёт хеш домой, как права (domain/break_glass)» — the row is domain/break_glass/<c> {pwhash_secret, sealed under the holder's ring}. It is written and rotated by `python3 -m w2cplatform.domain.breakglass <cluster>` / `PUT /api/break-glass/<cluster>`. The agent carries it through GET /api/carry/<cluster>, sealed to the member's key, and the member keeps it sealed with its own ring.
+
+======================================================================================================
+М12_DomainVMS/05-packaging-updates-and-the-licence.md
+======================================================================================================
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:35 — «Четыре процесса, которые добавил этот модуль, — подписывающий, консоль, шлюз живого видео, агент» — there is a fifth at the holder: the VMS domain worker `python3 -m vms.domainpart` (books, own slot, heartbeat, door with GET /metrics and GET /catalog).
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:40 — row «domain-agent | DOMAIN_NOMAD_ADDR — где домен» — a member's agent is given DOMAIN_URL (the holder's door) or RELAY_URL (+RELAY_OBJECTS_URL); DOMAIN_CONFIG_URL only for the holder's own agent; CLUSTER names it (no NOMAD_REGION fallback).
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:73 — «def may_add_camera(self, n)» — may_add_unit(self, current_count).
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:75 — «def recording_allowed():  # True» — work_allowed().
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:81 — output «'valid: 50 camera(s) left'» (and :82 grace) — the message is '<status>: N unit(s) left'; the licence field is `units`, not `cameras`.
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:83 — «'entitlement degraded: recording continues, adding cameras does not'  recording: True» — 'entitlement degraded: work continues, adding units does not'; the check is work_allowed().
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:86 — «recording_allowed() намеренно константа» — work_allowed().
+М12_DomainVMS/05-packaging-updates-and-the-licence.md:110 — «may_add_camera ложно при действующей лицензии» — may_add_unit.
+
+======================================================================================================
+М12_DomainVMS/06-secure-introduction-a-box-joins-the-domain.md
+======================================================================================================
+М12_DomainVMS/06-secure-introduction-a-box-joins-the-domain.md:56 — «domain/enroll.py содержит все четыре» — w2cplatform/trust/enroll.py.
+М12_DomainVMS/06-secure-introduction-a-box-joins-the-domain.md:96 — «domain/members у держателя домена (…; domain/members.py)» — module w2cplatform/domain/members.py (the key domain/members is unchanged; its rows now also carry `key` and `seal`).
+
+======================================================================================================
+М12_DomainVMS/07-lifetimes-rotation-and-revocation-that-works-offline.md
+======================================================================================================
+М12_DomainVMS/07-lifetimes-rotation-and-revocation-that-works-offline.md:44 — «Это LIFETIMES из domain/signer.py» — w2cplatform/trust/signer.py.
+
+======================================================================================================
+М12_DomainVMS/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md
+======================================================================================================
+М12_DomainVMS/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md:15 — «tests/domain/test_lesson8_cloud.py считает числа» — tests/domainvms/test_lesson8_cloud.py.
+М12_DomainVMS/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md:38 — «s3+https:// (cluster/s3.py М11)» — w2cplatform/cluster/s3.py.
+М12_DomainVMS/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md:42 — «число, которое печатает domain/cloud.py» — vms/domainpart/cloud.py.
+М12_DomainVMS/08-a-cluster-you-rent-and-a-worker-that-does-not-know-where-it-is.md:66 — «render_three_ways() (domain/cloud.py)» — vms/domainpart/cloud.py.
+
+======================================================================================================
+М12_DomainVMS/09-an-edit-for-a-cluster-that-is-off.md
+======================================================================================================
+М12_DomainVMS/09-an-edit-for-a-cluster-that-is-off.md:44 — «def update_camera(self, camera, fields, idempotency_key, token=None)» — ConsoleAPI.update_unit(self, ref, …).
+М12_DomainVMS/09-an-edit-for-a-cluster-that-is-off.md:71 — «Правка лежит у держателя, едет в каждой его резервной копии (урок 15) и в книгах ретранслятора (урок 17)» — the relay keeps no copies in its store any more (relay.RelayDoor holds members' answers in memory, each member gets only its own); the backup part still holds.
+
+======================================================================================================
+М12_DomainVMS/10-a-cluster-of-one.md
+======================================================================================================
+М12_DomainVMS/10-a-cluster-of-one.md:123 — «она приходит в тот же update_camera, с именем субъекта» — DeviceCluster.update_unit (vms/domainpart/device.py; the ClusterConsole protocol is update_unit/create_unit).
+М12_DomainVMS/10-a-cluster-of-one.md:131 — «отчёт (domain/uplink.py)» — w2cplatform/domain/uplink.py.
+
+======================================================================================================
+М12_DomainVMS/11-hundreds-of-small-members.md
+======================================================================================================
+М12_DomainVMS/11-hundreds-of-small-members.md:40 — «domain/scale.py оборачивает два хранилища» — w2cplatform/domain/scale.py.
+М12_DomainVMS/11-hundreds-of-small-members.md:140 — «self.consoles(ans.cluster).update_camera(camera, fields, subject)» — update_unit(ref, fields, subject).
+
+======================================================================================================
+М12_DomainVMS/12-shared-settings-without-a-database.md
+======================================================================================================
+М12_DomainVMS/12-shared-settings-without-a-database.md:127 — «Из этого же документа домен строит и право спросить: … строка в книге запросов камеры-триггера» — the platform's domain does not build it: the VMS worker (`python3 -m vms.domainpart`, vms/domainpart/scenario.py + books.py) writes the asks book domain/vms/asks/<member>; the ask token is VMS-declared and issued by the signer on that worker's request.
+
+======================================================================================================
+М12_DomainVMS/13-a-stream-from-another-cluster.md  (-> М12B 02)
+======================================================================================================
+М12_DomainVMS/13-a-stream-from-another-cluster.md:25 — «Всё, в tests/domain/test_lesson13_crossing.py» — tests/domainvms/test_lesson13_crossing.py.
+М12_DomainVMS/13-a-stream-from-another-cluster.md:72 — «Для каждого кластера записи домен публикует книгу» — the VMS domain worker (vms/domainpart/crossing.py Crossings.publish, run by `python3 -m vms.domainpart`) writes it; the platform only carries it.
+М12_DomainVMS/13-a-stream-from-another-cluster.md:87 — «Книга пишется под domain/sources/<cluster> … агент кластера записи несёт её в domain/sources … Агент научился ради этого одной общей вещи: списку строк по кластерам» — key is domain/vms/sources/<cluster> at the holder, domain/vms/sources at the member. The agent carries it because vms.subsystem.yaml declares it in `domain.books` (w2cplatform.domain.declared), through GET /api/carry/<cluster>, without reading it.
+М12_DomainVMS/13-a-stream-from-another-cluster.md:136 — «Книги домен собирает из чужих объектов…» — the books are assembled by the VMS worker (vms/domainpart), not by the platform's domain.
+М12_DomainVMS/13-a-stream-from-another-cluster.md:140 — «он кладёт в domain/primaries/<кластер камеры> одну запись, и агент камеры несёт её домой, в domain/primaries» — domain/vms/primaries/<member> -> domain/vms/primaries; written by the VMS worker.
+М12_DomainVMS/13-a-stream-from-another-cluster.md:171 — «Разрешайте по собственному domain/sources кластера» — domain/vms/sources.
+М12_DomainVMS/13-a-stream-from-another-cluster.md:176 — «Нужна книга основных от домена (domain/primaries)» — domain/vms/primaries (from the VMS domain worker).
+
+======================================================================================================
+М12_DomainVMS/14-alarms-from-every-member.md  (-> М12A 13)
+======================================================================================================
+М12_DomainVMS/14-alarms-from-every-member.md:109 — `json.dumps({"cluster": …, "ingest": …, "ts": now, "cameras": cams})` in publish_polled — the witness object rec/polled/<ingest> is {ts, cluster, ingest, units: {ref: age}} (`units`, not `cameras`; vms/domainpart/ingest.py).
+М12_DomainVMS/14-alarms-from-every-member.md:114 — «в отчёте (rec/polled в uplink.OBJECTS)» — the platform has no hard-coded list: the objects a member reports come from the specs (rec.subsystem.yaml `reports: [ingest, polled/]`), and the witness is declared (`witness: polled`), read via w2cplatform.domain.declared (DomainAlarms reads declared.witnesses()).
+
+======================================================================================================
+М12_DomainVMS/15-a-domain-holder-on-one-node.md  (-> М12A 14)
+======================================================================================================
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:69 — «export() — это каждый элемент под EXPORTED, то есть всё, что домен решил» + list L70-78 (no users, no break-glass) — the holder's backup also carries identity/users/ and domain/break_glass/, their secrets sealed under the backup key (= HMAC(root key, rev)). Signer keys are still never in it (L86 holds). The VMS kept rows are domain/vms/crossings and domain/vms/roads.
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:105 — «книга запросов, которую домен строит из сценариев (урок 16, шаг 8), опустела бы» — the asks book is built by the VMS worker (`python3 -m vms.domainpart`) at the holder, as domain/vms/asks/<member>.
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:211 — «Оба ключа подписывающего — корень CA и ключ токенов — лежат в domain/signer в Variables держателя, то есть на флеше камеры, открытым текстом (урок 4)» — they are sealed under the platform ring (issuing_key_secret, token_key_secret; also backup_key_secret, previous). They are not plaintext on flash, though a thief who also takes the ring file can still open them.
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:261 — «Книги выпускают заново токены потоков, подписанные не текущим ключом, на первом же проходе … (kid_of)» — the books are the VMS worker's. It re-asks the signer over SIGNER_TOKENS_UNIX, comparing kid_of(entry) with DeclaredIssuer.kid. The token sits in the book entry as token_secret, sealed.
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:289 — «Резервная копия не несёт domain/topology и domain/roads» — domain/vms/roads (domain/topology unchanged).
+
+======================================================================================================
+М12_DomainVMS/16-a-camera-nobody-can-reach.md  (-> М12B 03)
+======================================================================================================
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:13 — «tests/domain/test_lesson16_nobody_reaches.py … tests/domain/test_lesson16_card.py» — tests/domainvms/ (both; test_lesson16_break.py too).
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:51 — «решает его домен (Crossings._road)» — the decision is the VMS worker's (vms/domainpart/crossing.py, run by `python3 -m vms.domainpart`), not the platform's domain.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:53 — «Домен переводит камеру на толкание и помнит это (domain/roads)» — kept row domain/vms/roads, written by the VMS worker.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:59 — «домен добавляет в запись о камере адреса приёмника … и ключ потока» — the VMS worker writes domain/vms/primaries/<member>; the token comes from the signer on that worker's request.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:64 — «token = self.issuer.issue(home, self.token_lifetime, now=now, aud=audience(on), ref=ref, kind="stream")» — the issuer is a DeclaredIssuer (via the signer's token door): issue("stream", home, now=now, aud=…, ref=…); kind and lifetime (86400) come from vms.subsystem.yaml domain.tokens.stream, and only declared claims are allowed.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:65 — «return {"urls": urls, "token": token, "until": …}» — the book entry's field is token_secret, sealed (and sealed again to the member's key on carry).
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:68 — «домен выпускает новый ключ, только когда старый прожил половину срока» — the VMS worker asks the signer for a new one at half-life; the platform domain issues nothing for books.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:334 — «у неё теперь есть минимальный GET /metrics (ingest.stream_metrics)… Если у консоли есть viewer, /metrics спрашивает view на домене» — /metrics is NOT on the domain console any more. It is on the VMS domain worker's door (`python3 -m vms.domainpart`, GET /metrics). The test is renamed: test_lesson17_chain.py::test_what_the_ingests_and_the_forwarder_did_not_hand_on_is_on_the_vms_domain_workers_metrics (the cited …_on_the_domain_consoles_metrics does not exist).
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:437 — «книга запросов (domain/asks): … домен кладёт … токен подписывающего … (publish_asks)» — domain/vms/asks/<member> -> domain/vms/asks, written by the VMS worker. The `ask` token kind is VMS-declared and issued by the signer on the worker's request.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:463 — «Домен даёт ей книгу опроса (domain/poll, Crossings.publish_polls) … нет в domain/crossings» — domain/vms/poll and domain/vms/crossings, from the VMS worker.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:474 — «Форму консоль домена строит из GET /api/catalog» — /api/catalog is not on the domain console; it is GET /catalog on the VMS domain worker's door.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:478 — «Книги строит проход домена по книгам (domain/books.py)… Проход выпускает токены, поэтому идёт там, где ключ, — в процессе подписывающего, если ему дан CLUSTERS» — the pass is `python3 -m vms.domainpart` (vms/domainpart/books.py + worker.py, own slot domain/vms/worker). It holds no key: tokens come from the signer over SIGNER_TOKENS_UNIX (tokendoor.py). The signer process no longer runs the books.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:480 — «записи книг и сценарии видны в garbled на /healthz консоли домена» and «одна порванная запись domain/asks» — garbled book entries/scenarios are said in the VMS worker's heartbeat (domain/vms/heartbeat, GARBLED_SHOWN); the key is domain/vms/asks.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:482 — «проход домена строит книги, агенты несут их домой» — the VMS worker's pass builds them; agents carry them through GET /api/carry/<cluster>.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:618 — «Книги строит проход домена в процессе подписывающего» — the VMS worker `python3 -m vms.domainpart` builds them; the signer only issues the declared tokens it asks for.
+
+======================================================================================================
+М12_DomainVMS/17-a-chain-site-relay-centre.md  (-> М12B 04)
+======================================================================================================
+М12_DomainVMS/17-a-chain-site-relay-centre.md:25 — «Всё, в tests/domain/test_lesson17_chain.py» — tests/domainvms/test_lesson17_chain.py.
+М12_DomainVMS/17-a-chain-site-relay-centre.md:85 — «вышестоящей книги (domain/upstream): домен … кладёт … ключ потока — токен подписывающего … (publish_upstream)» — domain/vms/upstream/<relay> -> domain/vms/upstream, written by the VMS worker (vms/domainpart/chain.py); token issued by the signer on its request (kind stream, declared).
+М12_DomainVMS/17-a-chain-site-relay-centre.md:131 — «консоль домена говорит их на своём /metrics (ingest.stream_metrics, урок 16)» and test «…_is_on_the_domain_consoles_metrics» — on the VMS domain worker's door GET /metrics; the test is …_is_on_the_vms_domain_workers_metrics.
+М12_DomainVMS/17-a-chain-site-relay-centre.md:143 — «Агент ретранслятора … переносит в хранилище своего кластера, под relay/, всё, что домен оставил для этой камеры … (chain.relay). Агент камеры читает это вместо домена (Relay)» — no relay/<path> copies in the relay's store (relay_down no longer writes it). The relay asks the holder's door for each member (?for=<member>; the answer is sealed to that member's key) and keeps it in memory (w2cplatform/domain/relay.py, RelayDoor, RELAY_PORT 8446). The camera's agent asks RelayDoor by RELAY_URL with its member-key signature and gets only its own.
+М12_DomainVMS/17-a-chain-site-relay-centre.md:147 — «Причина видна рядом с каждым его членом: /api/cameras → why» — /api/vms/cameras.
+М12_DomainVMS/17-a-chain-site-relay-centre.md:153 — «(relay/domain/seen: {n, age}, chain.say_seen)» — the relay/ prefix copies are gone from the relay's store and say_seen is in w2cplatform/domain/relay.py. VERIFY: where the relay's age mark now travels (presumably with the RelayDoor answer); the change list does not name it.
+М12_DomainVMS/17-a-chain-site-relay-centre.md:192 — «как пауза долгого опроса вычислителя (domain/chain.py)» — vms/domainpart/chain.py (retry_wait).
+М12_DomainVMS/17-a-chain-site-relay-centre.md:211 — «domain/topology (domain/topology.py)» — module w2cplatform/domain/topology.py (key domain/topology unchanged).
+
+======================================================================================================
+М12_DomainVMS/module-design.md
+======================================================================================================
+М12_DomainVMS/module-design.md:42 — row «Ключ подписывающего | Nomad Variable в raft держателя домена — программный ключ» — software key still, but sealed under the platform ring in domain/signer (issuing_key_secret, token_key_secret, backup_key_secret, previous).
+М12_DomainVMS/module-design.md:56 — «кластеры держат публичный ключ и никогда хеш пароля» — every member keeps its break-glass hash (domain/break_glass, pwhash_secret), sealed with its own ring after it arrives sealed to its member key.
+М12_DomainVMS/module-design.md:68 — «Сегодня в коде наоборот: domain/ импортирует vms и сам публикует книги VMS, а крючка для подсистемы нет. Это меняется следующим заходом» — done: domain/ no longer exists; the platform domain imports no vms and publishes no books; vms/domainpart writes them; no hook (spec `domain:` section).
+М12_DomainVMS/module-design.md:75 — «VMS — крючком … регистрирует крючок … маршруты /api/cameras, /api/recordings … остаются на своих путях … (DOMAIN_PARTS=vms.domainpart)» — no hooks. The platform reads the spec's `domain:` section. Routes are generic: /api/vms/cameras, PUT /api/vms/cameras/<ref>, /api/vms/crossings. /api/catalog and /metrics moved to the VMS worker's door. DOMAIN_PARTS does not exist in the code.
+М12_DomainVMS/module-design.md:78 — «Ретранслятор держит перенесённое в памяти … хеши своих камер он при этом видит открыто, как и в продукте» — the course's relay asks ?for=<member> and gets an answer sealed to that member's key; it holds it in memory without opening it (carry.py).
+М12_DomainVMS/module-design.md:79 — «Права демона хранилища (storemachine.Rights) и права внутри процесса … считает одна функция» — the one evaluator is w2cplatform/rights.py.
+М12_DomainVMS/module-design.md:83 — «Это проверено по коду 4 октября, и до следующего захода так и остаётся:» — the whole «Что сегодня неверно» list below (L85-L90) is fixed in code.
+М12_DomainVMS/module-design.md:85 — «Строка domain/signer держит ca_key и token_key в hex (domain/signer.py, _persist) … В книгах (domain/primaries/, sources/, poll/, upstream/, asks/) лежат открыто суточные токены» — the row holds issuing_key_secret/issuing_cert/token_key_secret/previous/backup_key_*, sealed (w2cplatform/trust/signer.py). Book entries carry token_secret, sealed, under domain/vms/<book>/.
+М12_DomainVMS/module-design.md:86 — «Домен не пользуется SECRETS_KEY, ни одно его поле не кончается на _secret … identity/users/<id>.pwhash … domain/break_glass/<cluster>.pwhash» — sealed under SECRETS_KEY: pwhash_secret in both. `w2cctl secrets status|seal` covers domain/ and identity/.
+М12_DomainVMS/module-design.md:87 — «Политика отчёта члена (deploy/domain/member-report-policy.hcl) даёт каждому члену чтение domain/* … Агент держателя пишет и читает весь domain/*» — the member role/member-report policy is gone and members read nothing of the holder's store. Role domainagent writes domain/* with ! denials on holder-only rows (!domain/signer*, !domain/members, !domain/grants/*, !domain/pending/*, !domain/backup/*, !domain/break_glass/*, !domain/ldevid/*, per-member books, kept rows) and reads domain/* minus !domain/signer*. (deploy/domain/member-report-policy.hcl and signer-policy.hcl still exist in Source/ but are stale.)
+М12_DomainVMS/module-design.md:88 — «chain.relay_down переносит строки каждого члена в relay/, а читает relay/* любая камера» — relay_down no longer writes the store; RelayDoor gives each member only its own answer, in memory.
+М12_DomainVMS/module-design.md:89 — «TokenIssuer.rotate меняет ключ в памяти; перезапуск поднимает старый» — rotation persists (Signer.rotate_tokens, `previous` in domain/signer).
+М12_DomainVMS/module-design.md:90 — «DomainPublisher.publish_break_glass есть, но зовут его только тесты: ни команды, ни двери» — `python3 -m w2cplatform.domain.breakglass <cluster>` and PUT /api/break-glass/<cluster> write and rotate it.
+М12_DomainVMS/module-design.md:95 — «Это следующий заход, не текущий… Порядок такой: основание платформы … → переезд ядра и крючок VMS → секреты и права …» — done (without a hook); only the lesson rewrite/renumbering remains.
+М12_DomainVMS/module-design.md:173 — heading «Службы домена: контроллера нет, четыре процесса, один ключ» — five processes at the holder now: signer, console, agent, gateway, plus the VMS domain worker (`python3 -m vms.domainpart`).
+М12_DomainVMS/module-design.md:523 — «domain/pending.py» — w2cplatform/domain/pending.py.
+М12_DomainVMS/module-design.md:524 — «domain/device.py — DeviceCluster… domain/uplink.py» — vms/domainpart/device.py; w2cplatform/domain/uplink.py.
+М12_DomainVMS/module-design.md:525 — «domain/scale.py — Meter» — w2cplatform/domain/scale.py.
+М12_DomainVMS/module-design.md:526 — «domain/shared.py» — w2cplatform/domain/shared.py.
+М12_DomainVMS/module-design.md:527 — «domain/crossing.py … | test_lesson13_crossing.py» — vms/domainpart/crossing.py; test in tests/domainvms/.
+М12_DomainVMS/module-design.md:528 — «domain/alarms.py … ingest.py (publish_polled)» — w2cplatform/domain/alarms.py (Card(sub, …), DomainAlarms(ref_of=…)); ingest.py is vms/domainpart/ingest.py.
+М12_DomainVMS/module-design.md:529 — «domain/term.py … domain/signer.py — DomainRoot» — w2cplatform/domain/term.py; w2cplatform/trust/signer.py.
+М12_DomainVMS/module-design.md:530 — «domain/ingest.py … scenario.py … books.py — проход домена по книгам … | test_lesson16_nobody_reaches.py, test_two_servers.py, test_lesson16_card.py» — vms/domainpart/ingest.py, scenario.py, books.py (the VMS worker's pass, not the domain's); tests in tests/domainvms/.
+М12_DomainVMS/module-design.md:531 — «domain/chain.py — Forwarder … publish_upstream; domain/topology.py …; relay, Relay, bundle, BundleView | test_lesson17_chain.py» — vms/domainpart/chain.py (Forwarder, upstream book); w2cplatform/domain/topology.py; w2cplatform/domain/relay.py (relay, bundle, BundleView, RelayDoor); test in tests/domainvms/.
+М12_DomainVMS/module-design.md:533 — «агент несёт строки по кластерам (domain/sources, domain/mirrors)» — domain/vms/sources (… every book a spec declares); domain/mirrors no longer exists.
+М12_DomainVMS/module-design.md:539 — the whole paragraph: «Source/domain/ … поверх cluster/ из М11 … ClusterController М11 размещает на ClusterWorker … tokens.py / signer.py … enroll.py … gateway.py … cloud.py … 194» — package split into w2cplatform/domain, w2cplatform/trust (tokens, signer, enroll, documents, memberkey), vms/domainpart (crossing, ingest, scenario, chain, books, device, gateway, cloud, keys, worker). It sits on w2cplatform/cluster/. The real clusters in its tests are vms.controller.VmsController on vms.worker.VmsWorker. Tests are tests/domain, tests/domainvms and tests/test_domain_platform.py.
+М12_DomainVMS/module-design.md:557 — «Сделано, в Source/tests/domain/: … 92 на уроки 9–17 … 10 на два сервера (test_two_servers.py)» — lessons 8, 13, 16, 17 and two_servers are in tests/domainvms/; the platform domain on testsub is tests/test_domain_platform.py.
+
+======================================================================================================
+М12_DomainVMS/where-the-database-lives.md
+======================================================================================================
+(none — the body is historical; the seventh-revision section names no domain/ package, key, command or secret that the change contradicts.)
+
+======================================================================================================
+М10A_Platform/18-Secrets.md  (domain secrets / agent)
+======================================================================================================
+М10A_Platform/18-Secrets.md:164 — «Поэтому ключ — файл, и дают его только двум процессам» (table: консоль, держатель камеры) — the platform ring also seals the domain's secrets. The domain signer seals domain/signer and identity/users; the holder's door/CLI seals domain/break_glass. Every member's agent seals its member key seed (domain/member-key seed_secret) and keeps carried secrets sealed with it.
+М10A_Platform/18-Secrets.md:171 — «Контроллер, ресурс, автоматизация, агент домена и любая резервная копия читают строку и получают шифртекст. На коробке файл смонтирован … только в юниты этих процессов» — the domain agent (and the signer) now need the ring (SECRETS_KEY) mounted. The agent still gets ciphertext of camera rows.
+М10A_Platform/18-Secrets.md:185 — «процессы, которым он нужен, — консоль, держатель, регистратор» — plus the domain signer/door and the domain agent.
+М10A_Platform/18-Secrets.md:197 — «домен хранит … у держателя, в каждой резервной копии, в книгах ретранслятора» — the relay keeps no copies in its store (RelayDoor, in memory, each member its own).
+
+======================================================================================================
+GLOSSARY.md  (domain secrets / agent rights)
+======================================================================================================
+GLOSSARY.md:113 — «Секрет — Поле единицы, чьё имя кончается на _secret … ровно две законные точки касания … строка хранит секрет открытым текстом» — `*_secret` now also marks domain and identity rows (issuing_key_secret, token_key_secret, backup_key_secret, pwhash_secret, book entries' token_secret, member-key seed_secret). All are sealed under the ring, and `w2cctl secrets status|seal` covers domain/ and identity/.
+
+======================================================================================================
+М11_Cluster (only lines naming domain/… or python3 -m domain.*)
+======================================================================================================
+М11_Cluster/01-when-one-box-isnt-enough.md:90 — «Код — Source/tests/domain/test_two_servers.py (М12)» — tests/domainvms/test_two_servers.py.
+М11_Cluster/05-rights-by-who-is-calling.md:95 — row «domainagent | domain/*, relay/* … | ключей домена domain/signer* (запрет)» — domainagent writes domain/* with denials on every holder-only row (!domain/signer*, !domain/members, !domain/grants/*, !domain/pending/*, !domain/backup/*, !domain/break_glass/*, !domain/ldevid/*, per-member books, kept rows) and reads domain/* minus !domain/signer*. There are no relay/* store copies any more.
+М11_Cluster/05-rights-by-who-is-calling.md:110 — «у агента домена и у отчёта члена стоит запрет !domain/signer*, хотя domain/* они читают. Полное сужение … — работа раунда, который делит М12» — done. The member-report role is gone and members read nothing of the holder's store (GET /api/carry/<cluster>). The agent carries the full denial list. One rights evaluator: w2cplatform/rights.py.
+М11_Cluster/05-rights-by-who-is-calling.md:135 — «Запрет в файле, который генерирует курс, один — !domain/signer* у агента домена и у отчёта члена (шаг 2)» — the generated file has many denials (the domainagent list above) and no member-report role.
+М11_Cluster/10-the-controller.md:259 — «as М12's domain/steps.py says it» — w2cplatform/domain/steps.py.
+М11_Cluster/orchestrator-as-a-delivery-form.md:63 — «[render_three_ways()](../Source/domain/cloud.py)» — ../Source/vms/domainpart/cloud.py.
+
+======================================================================================================
+COUNT PER FILE
+======================================================================================================
+README.md 7 · 01 3 · 02 1 · 03 14 · 04 14 · 05 8 · 06 2 · 07 1 · 08 4 · 09 2 · 10 2 · 11 2 · 12 1 · 13 7 · 14 2 · 15 5 ·
+16 15 · 17 8 · module-design.md 27 · where-the-database-lives.md 0 · М10A/18-Secrets.md 4 · GLOSSARY.md 1 · М11 6
+Total 136.
+
+======================================================================================================
+WP4 — the domain's deploy without Nomad (deploy/domain: systemd units + configstore rights; added 2026-10-05)
+======================================================================================================
+What is true now (Source/deploy/domain): Containerfile(.md) and systemd/ only — w2c-domain.service (`w2c-run.sh signer`),
+w2c-domain-console.service (`w2c-run.sh domainconsole`, port 8444), w2c-domainagent.service (`w2c-run.sh domainagent`),
+vms-domainpart.service (`w2c-run.sh vms domainpart`, port 8096), w2c-domain.tmpfiles (/run/w2c-signer 2750 w2c:vms-vmsdomain),
+domain.env.example (the domain's lines of /etc/w2c/w2c.env), README.md. Every *.nomad.hcl, *-policy.hcl, federation.hcl and
+verify-bench.sh of deploy/domain is gone. Rights: deploy/cluster/configstore-rights.json (roles domain, domainagent, vmsdomain).
+Env: CLUSTERS accepts a bare name = this server's own cluster (the unit's PLATFORM_STORE + the platform's OBJECTS); the agent
+reads OBJECTS (was OBJECTS_URL), the signer reads OBJECTS (was OBJECT_STORE_URL); SIGNER_TOKENS_UNIX=/run/w2c-signer/tokens.sock;
+SIGNER_UNIX=/run/w2c-domain/signer.sock; DOMAIN_CONSOLE_UNIX=/run/w2c-domain-console/console.sock.
+М12_DomainVMS/01-what-a-cluster-cannot-know.md:13 — «federation.hcl» — no federation file; the members are configstore clusters named in CLUSTERS / the domain's member list.
+М12_DomainVMS/01-what-a-cluster-cannot-know.md:52 — «federation.hcl» — same.
+М12_DomainVMS/01-what-a-cluster-cannot-know.md:201 — «*-policy.hcl» — the one writer of domain/placement/* is said by the configstore rights file (w2cplatform/domain/rights.py).
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:133 — «console.nomad.hcl» — systemd/w2c-domain-console.service; one per holder server, not `count = 2`.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:144 — «console.nomad.hcl / signer.nomad.hcl» — the units name the sockets in their own RuntimeDirectory (0700): /run/w2c-domain-console/console.sock, /run/w2c-domain/signer.sock; CONSOLE_MONITORS=127.0.0.1 (+ the site's scrapers); test test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_address_not_a_network.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:146 — «gateway.nomad.hcl» — no domain gateway unit; the live gateway is the cluster's `vms gateway`.
+М12_DomainVMS/04-who-may-call-it.md:68 — «*-policy.hcl» — identity/users/* is written by the `domain` role only (configstore rights), pwhash_secret sealed.
+М12_DomainVMS/04-who-may-call-it.md:77 — «agent.nomad.hcl» — systemd/w2c-domainagent.service; the agent carries through DOMAIN_URL (GET /api/carry/<cluster>), never the holder's store.
+М12_DomainVMS/04-who-may-call-it.md:242 — «console.nomad.hcl» — the cluster console is a systemd unit (deploy/cluster); the Containerfile is for a site that runs containers (quadlet).
+М12_DomainVMS/04-who-may-call-it.md:261 — «console.nomad.hcl» — same as 03:144.
+М12_DomainVMS/README.md:71 — «deploy/domain/verify-bench.sh» — gone (Nomad-based); the domain's bench checks are not scripted yet.
+М12_DomainVMS/module-design.md:87 — «deploy/domain/member-report-policy.hcl» — gone; a member reads nothing of the holder's store (carry door, sealed to its key).
+М12_DomainVMS/module-design.md:557 — «verify-bench» — same as README:71.
+Test renames: test_the_domains_jobs_name_stores_that_open -> test_the_domains_units_name_stores_that_open;
+test_what_the_doors_open_in_code_the_jobs_turn_on_... -> ..._the_units_turn_on_...; new test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket;
+new tests/test_domain_secrets.py::test_what_a_returning_holder_stranded_names_a_secret_and_never_copies_it.
+
+======================================================================================================
+Spec additions after WP4 (architect via «Консоль», 2026-10-05): domain.keys / display.keys and domain.shared
+======================================================================================================
+What is true now: `domain.keys: [{id, keys, prefix}]` + `display.keys: {<id>: {title, about, absent}}` (the domain card's
+«Ключи»; /spec carries `domain.keys` and `domain.shared`). `domain.shared: [fields]` — the fields whose domain-wide value
+the domain holds; the document is `settings.shared.<sub>.<field>` (was `settings.defaults.<field>`, flat, any field;
+the folder tree was `settings.folders`). The platform resolves (`shared.resolve`; `SharedView.effective` uses it) and
+serves at the cluster console's `GET /domain/shared/<sub>[?unit=<id>]`; an edit with an undeclared field is a 409.
+vms: shared [folders, alarms, events_retention_days]. The `from` labels are "unit" / "unit + domain rev N" (not "camera").
+М12_DomainVMS/12-shared-settings-without-a-database.md:89-96 — «def effective(self, row: dict) … (row[k], "camera") … elif k in defaults» — effective(row, spec) → shared.resolve(spec, settings, label, row); a domain value applies only to a field the spec lists in domain.shared and that inherits; the label is "unit".
+М12_DomainVMS/12-shared-settings-without-a-database.md:99 — «(30, "camera")» — (30, "unit").
+М12_DomainVMS/12-shared-settings-without-a-database.md:106 — «(["io.input", "tamper"], "camera + domain rev 1")» — "unit + domain rev 1".
+М12_DomainVMS/12 (whole lesson) — the document's defaults live under settings.shared.vms.*, and the platform serves them at GET /domain/shared/vms; a step on «what a subsystem declares» (domain.shared) is missing.
