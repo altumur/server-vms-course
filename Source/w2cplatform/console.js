@@ -1671,7 +1671,7 @@
     }
     // The domain's keys: what the holder keeps under domain/, by family — the module names the platform's; a
     // subsystem's are its spec's part of the domain (domain.keys, their words display.keys); a key no family claims
-    // is under «other keys». Read only. Interim, until the specs carry them: opts.keyFamilies, in the same form.
+    // is under «other keys». Read only.
     const KEY_FAMILIES = [
       { id: "members", keys: ["domain/members"], title: W.kfMembers, about: W.kfMembersAbout, absent: W.kfMembersAbsent },
       { id: "published", prefix: "domain/members/", title: W.kfPublished, about: W.kfPublishedAbout },
@@ -1684,7 +1684,7 @@
     const keyFamilies = () => {
       const fromSpecs = st.subs.flatMap(s => ((s.spec.domain || {}).keys || []).map(f => ({ ...f, ...(((display(s).keys || {})[f.id]) || {}) })));
       const own = KEY_FAMILIES.filter(f => f.id !== "view"), view = KEY_FAMILIES.filter(f => f.id === "view");
-      return [...own, ...fromSpecs, ...(opts.keyFamilies || []), ...view];
+      return [...own, ...fromSpecs, ...view];
     };
     const pretty = v => { if (typeof v !== "string") return JSON.stringify(v, null, 2); const t = v.trim(); if (t.startsWith("{") || t.startsWith("[")) { try { return JSON.stringify(JSON.parse(t), null, 2); } catch (e) { /* as it is */ } } return v; };
     async function domKeys(box) {
