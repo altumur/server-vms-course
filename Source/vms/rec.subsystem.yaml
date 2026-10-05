@@ -298,10 +298,12 @@ display:
     keep.lost: сохранённое не удалось скопировать
 # The recorders on the domain: a member reports, beside its heartbeats and snapshot, where its ingest takes streams
 # (`rec/ingest`) and when each camera last polled it (`rec/polled/<ingest>`) — the domain's witness that a camera is
-# alive while its agent is silent.
+# alive while its agent is silent. The witness names each camera it heard of by whose it is, `cam` — fixed, as the
+# platform requires of the field a witness names by: a camera that is a member is its own cluster, and the ingest names
+# it by the member it is (its stream token's subject), so the domain matches a silent member by its own name.
 domain:
   reports: [ingest, polled/]
-  witness: polled
+  witness: {report: polled, member_field: cam}
   # What the domain's door would let through in a member's recording (ADR-0031). The course's door edits the units of
   # its directory alone (`PUT /domain/<sub>/<rows>/<ref>`) and a recording has no `ref`: declared, as the product's.
   edit: [enabled, retention_days]

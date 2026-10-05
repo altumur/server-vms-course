@@ -108,9 +108,9 @@ def test_the_door_gives_out_the_platforms_families_and_what_a_spec_declares_and_
     from w2cplatform.cluster.objectstore import ClusterObjectStore
     root = tempfile.mkdtemp(prefix="specs-")
     with open(os.path.join(root, "doorsub.subsystem.yaml"), "w") as f:
-        f.write("name: doorsub\nunit: {rows: items, id: name, fields: {name: {type: string}}}\n"
-                "placement: {capacity: {from: capacity, default: 2}}\nobjects: {door: [taken/*]}\n"
-                "domain: {reports: [counts/], witness: seen}\n")
+        f.write("name: doorsub\nunit: {rows: items, id: name, fields: {name: {type: string}, of: {type: string, "
+                "fixed: true}}}\nplacement: {capacity: {from: capacity, default: 2}}\nobjects: {door: [taken/*]}\n"
+                "domain: {reports: [counts/], witness: {report: seen, member_field: of}}\n")
     catalog.load_dir(root)
     box = Box()
     s = _servers(box)

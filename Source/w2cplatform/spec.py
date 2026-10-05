@@ -711,8 +711,11 @@ EXCLUSIVE_WITH = ("domain/users",)
 #             phase, age): fields of the snapshot too, for the same reason
 #   reports   objects of this subsystem a member reports to the domain beside its heartbeats and snapshot, which every
 #             subsystem's member reports (`<sub>/<name>`, a prefix when it ends in `/`)
-#   witness   an object family `<sub>/<witness>/*` — `{ts, cluster, units: {<ref>: seconds since}}` — saying when a
-#             member's unit was last heard of by another process than its agent: the domain's word "alive, not reporting"
+#   witness   `{report, member_field}`: an object family `<sub>/<report>/*` — `{ts, cluster, units: {<name>: seconds
+#             since}}` — saying when a member's unit was last heard of by another process than its agent: the domain's
+#             word "alive, not reporting". `member_field` is the field of the unit, `fixed: true` in `fields:`, that
+#             carries the member's name: the witness names what it heard of by it, and the domain matches a silent
+#             member by its own name — no word of the subsystem's, no name of one turned into another (ADR-0010)
 #   books     rows the subsystem writes at the holder for each member, `domain/<sub>/<book>/<member>`, which that
 #             member's agent carries home as `domain/<sub>/<book>` without reading them; a `*_secret` field in a book
 #             (at the top of the row, or of a JSON object that is one of its values) travels sealed
@@ -739,19 +742,24 @@ EXCLUSIVE_WITH = ("domain/users",)
 #             a field that `inherit`s — the domain's value is the middle link of its chain (the unit's, the
 #             domain's, the spec's), `merge: union` adding to the unit's own — or the field the page groups units by
 #             (`display.tree.group_by`) — the domain's value is the groups it offers, never a unit's value. The
-#             platform resolves them and serves them at one door, `GET /domain/shared/<sub>`
+#             platform resolves them and serves them at one door, `GET /domain/shared/<sub>`. An entry may also be a
+#             DOCUMENT the domain holds whole, no unit's field: `{name, type: json, schema}` — its value is checked by
+#             its schema where it is signed (ADR-0010, ADR-0032: the signer's `shared` is one operation over whatever
+#             the specs declare, by their schemas, and knows no field by its meaning)
 @dataclass
 class DomainSection:
     ref: str = ""
     view: tuple = ()
     reports: tuple = ()
-    witness: str = ""
+    witness: str = ""             # `witness.report`: the object family `<sub>/<report>/*`
+    member_field: str = ""        # `witness.member_field`: the unit's fixed field that carries the member's name
     books: tuple = ()
     kept: tuple = ()
     tables: tuple = ()
     tokens: dict = field(default_factory=dict)
     keys: tuple = ()
     shared: tuple = ()
+    documents: dict = field(default_factory=dict)   # {<name>: Field} — the `shared` entries that are documents (json)
     names: dict = field(default_factory=dict)       # {<kept family>/: {exclusive_with, grant?}}
     edit: tuple = ()
 
@@ -782,14 +790,12 @@ class DomainSection:
                 raise ValueError(f"{where}.{key} names one thing twice")
             return tuple(v)
         sec = cls(ref=str(d.get("ref") or ""), view=names("view"), reports=names("reports", tail=True),
-                  witness=str(d.get("witness") or ""), books=names("books"), kept=names("kept", tail=True),
-                  tables=names("tables"))
+                  books=names("books"), kept=names("kept", tail=True), tables=names("tables"))
+        sec.witness, sec.member_field = cls._witness(spec, d.get("witness"), where)
         for f in ([sec.ref] if sec.ref else []) + list(sec.view):
             if f not in spec.snapshot and f != "id":
                 raise ValueError(f"{where}: {f!r} is not in the snapshot — the domain reads a unit from the snapshot "
                                  f"and nothing else")
-        if sec.witness and not _DOMAIN_NAME.match(sec.witness):
-            raise ValueError(f"{where}.witness: {sec.witness!r} is not a name")
         both = set(sec.books) & {k.rstrip("/") for k in sec.kept}
         if both:
             raise ValueError(f"{where}: {sorted(both)} both a book and a kept row — one writer's rows, one shape")
@@ -816,7 +822,7 @@ class DomainSection:
                 raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
             sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
         sec.keys = cls._families(spec, d.get("keys"), where)
-        sec.shared = names("shared")
+        sec.shared, sec.documents = cls._shared(d.get("shared"), where)
         sec.edit = names("edit")
         for f in sec.edit:
             if f not in spec.fields:
@@ -826,6 +832,11 @@ class DomainSection:
                                  f"through the domain, which keeps, backs up and relays its edits")
         grouped = ((spec.display or {}).get("tree") or {}).get("group_by") if isinstance(spec.display, dict) else None
         for f in sec.shared:
+            if f in sec.documents:
+                if f in spec.fields:
+                    raise ValueError(f"{where}.shared: {f!r} is a field of the unit — a document the domain holds "
+                                     f"whole is no unit's: name it otherwise, or share the field by its name")
+                continue
             fld = spec.fields.get(f)
             if fld is None:
                 raise ValueError(f"{where}.shared: {f!r} is not a field of the unit")
@@ -835,6 +846,53 @@ class DomainSection:
                 raise ValueError(f"{where}.shared: {f!r} neither inherits nor is the field the page groups by "
                                  f"(display.tree.group_by) — a domain value it would have nowhere to go")
         return sec
+
+    @staticmethod
+    def _witness(spec: "SubsystemSpec", raw, where: str) -> tuple[str, str]:
+        """`witness: {report, member_field}` — `(report, member_field)`, or `("", "")` when the spec says none. The
+        field is the unit's, declared `fixed: true`: a name that could be changed would move what was heard of to
+        another member. A field that is not declared so, and the spec does not load (ADR-0010)."""
+        if raw is None:
+            return "", ""
+        shape = "{report: <the object family>, member_field: <the unit's fixed field that carries the member's name>}"
+        if not isinstance(raw, dict) or set(raw) != {"report", "member_field"}:
+            raise ValueError(f"{where}.witness is {shape}, not {raw!r}")
+        report, member = raw["report"], raw["member_field"]
+        if not isinstance(report, str) or not _DOMAIN_NAME.match(report):
+            raise ValueError(f"{where}.witness.report: {report!r} is not a name")
+        f = spec.fields.get(member) if isinstance(member, str) else None
+        if f is None or not f.fixed:
+            raise ValueError(f"{where}.witness.member_field: {member!r} is not a field of the unit declared "
+                             f"`fixed: true` — the witness names a member by it, and a name that changes names another")
+        return report, member
+
+    @staticmethod
+    def _shared(raw, where: str) -> tuple[tuple, dict]:
+        """`shared: [<field>, {name, type: json, schema}, …]` — the names in order, and the documents among them as
+        fields of type json with their schemas (checked as schemas here, `schema.load`)."""
+        from . import schema as _schema
+        v = raw or []
+        if not isinstance(v, list):
+            raise ValueError(f"{where}.shared is a list of the unit's fields and of {{name, type: json, schema}}")
+        out, docs = [], {}
+        for n in v:
+            if isinstance(n, dict):
+                if set(n) != {"name", "type", "schema"} or n.get("type") != "json":
+                    raise ValueError(f"{where}.shared: {n!r} is not {{name, type: json, schema}} — a document the "
+                                     f"domain holds is JSON, and what it may be is its schema")
+                name = n["name"]
+                if not isinstance(name, str) or not _DOMAIN_NAME.match(name) or name.endswith("_secret"):
+                    raise ValueError(f"{where}.shared: {name!r} is not a name, or is a secret — the shared document is "
+                                     f"signed, not sealed")
+                docs[name] = Field(name, "json", schema=_schema.load(n["schema"], f"{where}.shared.{name}: schema"))
+                out.append(name)
+            elif isinstance(n, str) and _DOMAIN_NAME.match(n):
+                out.append(n)
+            else:
+                raise ValueError(f"{where}.shared: {n!r} is not a name (lower case, digits, - and _)")
+        if len(set(out)) != len(out):
+            raise ValueError(f"{where}.shared names one thing twice")
+        return tuple(out), docs
 
     @staticmethod
     def _names(spec: "SubsystemSpec", raw, kept: tuple, where: str) -> dict:

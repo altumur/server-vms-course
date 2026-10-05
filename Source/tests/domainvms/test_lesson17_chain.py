@@ -473,7 +473,8 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     from w2cplatform.domain.relay import Relay
     from vms.domainpart.ingest import Asker
     from vms.domainpart.scenario import Scenarios
-    from w2cplatform.domain.shared import SharedSettings, SharedView
+    from w2cplatform.domain.shared import SharedView
+    from tests.domain.conftest import SharedDoor
 
     wall = Clock()
     fed = Federation()
@@ -500,9 +501,8 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     relay_agent.sync()
     relay = Ingest("east", RELAY_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
     relay.announce(east.objects)
-    SharedSettings(north.vars, north.objects, signer.tokens, wall=wall).edit(lambda s: s.update(scenarios=[
-        {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}]),
-        base_rev=0, by="anna")
+    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
+        {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
 
     def domain_pass():
@@ -549,7 +549,8 @@ def _two_relays(wall):
     from w2cplatform.domain.relay import Relay
     from vms.domainpart.ingest import Asker
     from vms.domainpart.scenario import Scenarios
-    from w2cplatform.domain.shared import SharedSettings, SharedView
+    from w2cplatform.domain.shared import SharedView
+    from tests.domain.conftest import SharedDoor
 
     fed = Federation()
     north, _ = make_cluster("north", domain=True)
@@ -582,10 +583,9 @@ def _two_relays(wall):
         through.door.agent = relays[-1]                                # what the camera asks: what this relay keeps
     for o in relays:
         o.sync()
-    SharedSettings(north.vars, north.objects, signer.tokens, wall=wall).edit(lambda s: s.update(scenarios=[
+    SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
         {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
-        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}]),
-        base_rev=0, by="anna")
+        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}])
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, centre="north"), north.objects)
 
     def domain_pass():
@@ -797,10 +797,11 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
     roads = json.loads(books[home][SERIAL])["roads"]
     assert roads and all(r["token_secret"] for r in roads)                     # issued anew
     assert {f"{UPSTREAM_PATH}/east/{SERIAL}", f"{ASKS_PATH}/{home}/{SERIAL}"} <= BOOKS.bad
-    settings = {"scenarios": [7, {"when": [], "then": {}},
-                              {"when": {"camera": "SN7002", "kind": "motion"}, "then": {"camera": SERIAL, "preset": 3}}]}
+    # a document from before the schema, or one the store tore: read past, each bad scenario counted where it stands
+    settings = {"shared": {"auto": {"scenarios": [7, {"when": [], "then": {}},
+                {"when": {"camera": "SN7002", "kind": "motion"}, "then": {"camera": SERIAL, "preset": 3}}]}}}
     assert [(p["trigger"], p["target"]) for p in pairs(settings)] == [("SN7002", SERIAL)]
-    assert {"settings/scenarios/0", "settings/scenarios/1"} <= SCENARIOS.bad
+    assert {"settings/shared/auto/scenarios/0", "settings/shared/auto/scenarios/1"} <= SCENARIOS.bad
     from vms.domainpart.worker import GARBLED_SHOWN               # said in the VMS's domain worker's heartbeat
     assert {"book_entry", "scenario"} <= set(GARBLED_SHOWN)
 

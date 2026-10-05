@@ -46,7 +46,23 @@ domain:
   tokens:
     tally: {lifetime: 600, claims: [counter]}
   edit: [start, labels]                # what the domain's door lets into an edit of a member's counter
-  shared: [step, marks]                # the fields whose domain-wide value the domain holds
+  # the fields whose domain-wide value the domain holds, and a document it holds whole — no counter's field: the
+  # rounds the site counts in, what each may be its schema's
+  shared:
+    - step
+    - marks
+    - name: rounds
+      type: json
+      schema:
+        type: array
+        maxItems: 16
+        items:
+          type: object
+          required: [counter, every]
+          additionalProperties: false
+          properties:
+            counter: {type: string, minLength: 1}
+            every:   {type: integer, minimum: 1}
   # its key families, for a page that lists the domain's keys (their words below, display.keys)
   keys:
     - {id: tallies, keys: [domain/testsub/tallies], prefix: domain/testsub/tallies/}
