@@ -66,6 +66,7 @@ def handler(issuer):
     """The door's handler over `issuer` (a `DeclaredIssuer`): for the signer's unix socket."""
     from http.server import BaseHTTPRequestHandler
 
+    from w2cplatform.canonical import parse_json
     from w2cplatform.console import Deadlined, read_body
     from w2cplatform.rows import PARSE_ERRORS
 
@@ -94,7 +95,12 @@ def handler(issuer):
             if not read_body(self, self.MAX_BODY):
                 return
             try:
-                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400` are
+                # 400 with the shared table's `fault` (the architect, 2026-10-06)
+                body = parse_json(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            except PARSE_ERRORS as e:
+                return self._send(400, {"detail": f"the body is {{sub, claims}}: {e}", "fault": getattr(e, "fault", "") or "not_json"})
+            try:
                 if not isinstance(body, dict) or not isinstance(body.get("sub"), str) or \
                         not isinstance(body.get("claims", {}), dict):
                     raise TypeError("{sub: <string>, claims: {...}}")

@@ -581,10 +581,13 @@ class Holder:
                 if not read_body(self, self.MAX_BODY):
                     return None
                 try:
-                    body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-                    if not isinstance(body, dict):
-                        raise TypeError("not an object")
-                except PARSE_ERRORS:
+                    # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400`
+                    # are 400 with the shared table's `fault` (the architect, 2026-10-06)
+                    body = parse_json(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                except PARSE_ERRORS as e:
+                    self._send(400, {"detail": "the body is a JSON object", "fault": getattr(e, "fault", "") or "not_json"})
+                    return None
+                if not isinstance(body, dict):
                     self._send(400, {"detail": "the body is a JSON object"})
                     return None
                 return body

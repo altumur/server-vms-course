@@ -1793,8 +1793,10 @@ class SubsystemSpec:
         out = {"id": str(row["id"]), "revision": str(row.get("revision", 1))}
         for n, f in self.fields.items():
             v = row.get(n, f.default_value())
-            if f.inherits and v is None:
-                continue                                 # not set is ABSENT — never a stored "None"
+            if v is None and (f.inherits or f.type == "json"):
+                # not set is ABSENT — never a stored "None"; and a json field's `null` is no field, its default given
+                # (none declared: absent — never the text `null`; the architect, 2026-10-06), as a table row's is
+                continue
             out[n] = f.to_item(v)
         return out
 
