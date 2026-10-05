@@ -82,9 +82,13 @@ def test_the_units_run_the_entrypoints_the_package_has():
 
 def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
-    The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
+    The controller writes its journal into the events archive (`host.controller_loop`, by `RESOURCE_ROOT`), so the
+    archive is mounted for it, as a client of it (`w2c-events`) — unmounted, its lines lay in the container's layer;
+    footage is mounted nowhere — it is behind the host's obsd."""
     vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
-    assert EVENTS not in vols("w2c-controller@.container")
+    groups = lambda n: (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"].get("GroupAdd", []))
+    assert vols("w2c-controller@.container")[EVENTS] == f"{EVENTS}:z" and "2102" in groups("w2c-controller@.container")
+    assert "RESOURCE_ROOT=" in open(os.path.join(DEPLOY, "w2c.env.example")).read()     # …which the unit's env file says
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
@@ -384,8 +388,9 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
     `Group=2100`) — the resource, the console and every subsystem's controller (ADR 0014, ADR 0023: a platform process
     never runs as a subsystem's user) — and they are the units of the box that name a user: the VMS's processes are
     still root in their containers. Every unit opens the platform's two file stores as a member of `w2c-store`
-    (`GroupAdd=2103`); `w2c-events` (2102) is joined by the resource, which deletes there, and by the subsystems'
-    clients that write buckets — not by the console, whose marks go into an archive its own user owns; every unit
+    (`GroupAdd=2103`); `w2c-events` (2102) is joined by the resource, which deletes there, by the controller, whose
+    journal goes into `audit/`, a directory the clients share, and by the subsystems' clients that write buckets — not
+    by the console, whose marks go into an archive its own user owns; every unit
     writes with the umask 0007 (`PodmanArgs=--umask=0007`: Quadlet has no key for it, and systemd's `UMask=` would be
     podman's, not the container's) — so what each makes is its group's."""
     writers = set()
@@ -398,13 +403,13 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
         assert vols.get(CONFIG) == f"{CONFIG}:z" and vols.get(OBJECTS) == f"{OBJECTS}:z" and W2C_STORE in groups, n
         assert "--umask=0007" in _list(c.get("PodmanArgs")), n
         platform = n in ("w2c-resource.container", "console.container", "w2c-controller@.container")
-        assert (EVENTS in vols and (not platform or n == "w2c-resource.container")) == (W2C_EVENTS in groups), n
+        assert (EVENTS in vols and n != "console.container") == (W2C_EVENTS in groups), n
         if EVENTS in vols:
             writers.add(n)
         assert ("User" in c) == platform, n
         if platform:
             assert (c["User"], c["Group"]) == (W2C, W2C), n
-    assert writers == {"w2c-resource.container", "console.container", "vmsworker@.container", "recworker@.container",
+    assert writers == {"w2c-resource.container", "console.container", "w2c-controller@.container", "vmsworker@.container", "recworker@.container",
                        "detworker@.container", "detjobworker@.container", "surveyworker@.container",
                        "autoworker@.container", "liveworker@.container"}, writers
     r = unit("w2c-resource.container")["Container"]
