@@ -97,6 +97,15 @@ class TooLong(Fault):
     fault = "too_long"          # past the schema's `maxLength` of the written text, or `JSON_CEILING` in bytes
 
 
+class BadUrl(Fault):
+    fault = "bad_url"           # a url field's value refused by address: a login in it, no host or one nobody can tell
+                                # (ADR 0053), a port that is no number, a scheme the field is not reached by, a `#`
+
+
+# The closed dictionary of `fault`: a 400's body says one of these, or none, and the reason in `detail`.
+FAULTS = (NotJson.fault, NotNumber.fault, TooLong.fault, BadUrl.fault)
+
+
 def _no_constant(name: str):
     raise NotJson(f"{name} is no JSON")
 

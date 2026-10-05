@@ -742,6 +742,13 @@ def _piece_two_specs():
         assert st == 400 and "one of plain, loud" in json.dumps(why), (st, why)
         assert _http(base, "POST", "/testsub2/tallies", {"name": "t1", "of": "c1", "mode": "loud"})[0] in (200, 201)
         assert _http(base, "POST", "/testsub2/shelves", {"name": "s1", "kind": "nowhere"})[0] == 400    # a table's too
+        # a url refused by address — a unit's field or a table's — is `fault: bad_url` (`canonical.FAULTS`); a feed whose
+        # host nobody can tell is no tally's (`cut_at: host`, ADR 0053)
+        for path, body in (("/testsub2/shelves", {"name": "s9", "feed": "https://u:pw@shelf.example/s9"}),
+                           ("/testsub2/tallies", {"name": "t9", "of": "c1", "feed": "https://feed_9.example/t9"}),
+                           ("/testsub2/tallies", {"name": "t9", "of": "c1", "feed": "ftp://feed.example/t9"})):
+            st, why = _http(base, "POST", path, body)
+            assert st == 400 and why.get("fault") == "bad_url" and why.get("detail"), (path, st, why)
         assert _http(base, "POST", "/testsub2/shelves", {"name": "s1", "zone": "a", "server": "srv-1"})[0] in (200, 201)
         objects = ctls["testsub2"].objects
         now = ctls["testsub2"].wall()

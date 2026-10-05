@@ -174,7 +174,7 @@ def test_how_long_data_goes_on_past_an_unconfirmed_lease_is_the_specs_and_typed(
 
 
 # A url field the way a subsystem says how its addresses carry a login.
-TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
+TARGET = {"type": "url", "required": True, "schemes": {"https": {}, "sftp": {}},
           "credentials": {"login": "account_name", "secret": "pass_secret"},
           "secret_in": [{"param": ["pwd", "token*", "*key", "=auth", "user", "*name"], "login": ["user", "*name"]},
                         {"regex": r"(?:^|/)~(?P<login>[^:/]+):(?P<secret>[^/]+)", "in": "path"},
@@ -244,11 +244,13 @@ def test_how_an_address_carries_a_login_is_the_specs_beside_the_platforms_few_co
 def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
     """`schemes`, `credentials`, `secret_in` belong to a url field; `credentials` names a string field and a `*_secret`
     one of the row; `secret_in` is a list of the three kinds, a regex names what it finds and where it reads."""
-    _refused(lambda: _spec(unit={"rows": "i", "fields": {"n": {"type": "string", "schemes": ["https"]}}}),
+    _refused(lambda: _spec(unit={"rows": "i", "fields": {"n": {"type": "string", "schemes": {"https": {}}}}}),
              "belong to a url field")
     _refused(lambda: _target_spec({**TARGET, "credentials": {"login": "pass_secret"}}), "credentials.login")
     _refused(lambda: _target_spec({**TARGET, "credentials": {"secret": "account_name"}}), "credentials.secret")
-    _refused(lambda: _target_spec({**TARGET, "schemes": ["HTTPS"]}), "`schemes` is a list of schemes")
+    _refused(lambda: _target_spec({**TARGET, "schemes": {"HTTPS": {}}}), "not a scheme in lower case")
+    _refused(lambda: _target_spec({**TARGET, "schemes": ["https", "sftp"]}), "`schemes` is a map")   # the list it was (ADR 0003)
+    _refused(lambda: _target_spec({**TARGET, "schemes": {"https": {"port": "none"}}}), "is not a word of the dictionary")
     for bad, words in (({"param": "pwd"}, "`param` is a list of names"),
                        ({"param": ["*pwd*"]}, "a name, `=name`, `name*` or `*name`"),
                        ({"param": ["=pwd*"]}, "a name, `=name`"),

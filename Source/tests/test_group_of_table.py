@@ -1,11 +1,11 @@
 """One table of sources and their groups (`testdata/group_of.tsv`): the group a camera's source puts it in is the HOST it
-names (`placement.group_by: {field: source, cut_at: host, schemes: …}`; «Архитектор», 2026-10-06) — the platform's rule
-(`w2cplatform.spec.url_host`), read with the vms spec's declaration of how `driverpack://` and `ipint://` write their host.
+names (`placement.group_by: {field: source, cut_at: host}`; ADR 0053) — the platform's rule (`w2cplatform.spec.url_host`),
+read by the source field's `schemes`, the vms spec's declaration of how `driverpack://` and `ipint://` write an address.
 The product's `deviceOf` (vmsworker/vms/gate.go) answers the same rows; «Паритет» replaces the file with the table
 shared with the product, and this test reads that one as it reads this.
 
-Columns: the source; its group, or `(none)`; `refused` when a write of it is refused — by the field (`refusal`: its
-`secret_in` and address rules) or because no host can be told in it (`SubsystemSpec.group_refusal`, ADR 0053). A readable
+Columns: the source; its group, or `(none)`; `refused` when a write of it is refused (`SubsystemSpec.refuse`: its
+`secret_in`, its address, a host nobody can tell — `group_refusal`, ADR 0053). A readable
 host is a group all the same: refusing a login is the field's, grouping is `group_by`'s, and a row written before a rule
 refused its source is still on the host it names. The only rows without a group and not refused are the `none` ones (a
 file). A note may follow."""
@@ -21,7 +21,8 @@ from tests.productdir import SOURCE
 TABLE = os.path.join(SOURCE, "tests", "testdata", "group_of.tsv")
 VMS = os.path.join(SOURCE, "vms", "vms.subsystem.yaml")
 TESTSUB2 = os.path.join(SOURCE, "tests", "testdata", "testsub2.subsystem.yaml")
-SCHEMES = {"ipint": {"fragment": "none"}, "driverpack": {"host": "path", "none": ["file"]}}
+SCHEMES = {"driverpack": {"host": "path", "none": ["file"]}, "ipint": {"fragment": "none"}, "rtsp": {}, "rtsps": {},
+           "http": {}, "https": {}, "onvif": {}}
 
 
 def _rows():
@@ -38,7 +39,7 @@ def _rows():
 def _wrong(spec, refusals: bool) -> list[str]:
     """Each row's group; that a host nobody can tell is refused exactly where the table has no group and a refusal; and —
     `refusals` — that a write of the source is refused exactly where the table says."""
-    source = spec.fields[spec.group_by]
+    from w2cplatform.spec import Refused
     wrong = []
     for i, raw, group, refused in _rows():
         got = spec.group_of(raw)
@@ -47,7 +48,11 @@ def _wrong(spec, refusals: bool) -> list[str]:
         no_host = spec.group_refusal(raw)
         if (no_host is not None) != (refused and not group):
             wrong.append(f"line {i}: {raw}: no host to tell is {'' if no_host else 'not '}refused: {no_host!r}")
-        why = source.refusal(raw) or no_host
+        try:
+            spec.refuse({spec.group_by: raw})
+            why = None
+        except Refused as e:
+            why = str(e)
         if refusals and (why is not None) != refused:
             wrong.append(f"line {i}: {raw} is {'' if refused else 'not '}refused by the table, and a write says {why!r}")
     return wrong
@@ -58,7 +63,7 @@ def test_every_source_of_the_table_is_in_the_group_the_table_says_and_refused_wh
     worker's `request_group` ask), and whether the source field refuses it — the two answered apart."""
     from w2cplatform.spec import SubsystemSpec
     spec = SubsystemSpec.load(VMS)
-    assert (spec.group_by, spec.group_cut, spec.group_schemes) == ("source", "host", SCHEMES)
+    assert (spec.group_by, spec.group_cut, spec.fields["source"].schemes) == ("source", "host", SCHEMES)
     wrong = _wrong(spec, refusals=True)
     assert not wrong, f"{len(wrong)} rows of {os.path.basename(TABLE)} go another way:\n  " + "\n  ".join(wrong)
     rows = list(_rows())
@@ -67,18 +72,18 @@ def test_every_source_of_the_table_is_in_the_group_the_table_says_and_refused_wh
 
 def test_the_same_rows_through_a_spec_that_is_not_the_vms_give_the_same_groups():
     """The rule is the platform's and the words are the spec's: testsub2 — a subsystem of the platform's tests — with its
-    `feed` taking the table's schemes and its `group_by` declaring them as the vms spec does, groups every row alike."""
+    `feed` declaring the table's schemes as the vms spec's source does, groups every row alike."""
     from w2cplatform.spec import SubsystemSpec
     with open(TESTSUB2, encoding="utf-8") as f:
         d = yaml.safe_load(f)
     d = copy.deepcopy(d)
-    d["unit"]["fields"]["feed"]["schemes"] = ["driverpack", "ipint", "rtsp", "rtsps", "http", "https", "onvif"]
-    d["placement"]["group_by"] = {"field": "feed", "cut_at": "host", "schemes": copy.deepcopy(SCHEMES)}
+    d["unit"]["fields"]["feed"]["schemes"] = copy.deepcopy(SCHEMES)
+    assert d["placement"]["group_by"] == {"field": "feed", "cut_at": "host"}
     spec = SubsystemSpec.from_dict(d)
     wrong = _wrong(spec, refusals=False)
     assert not wrong, f"{len(wrong)} rows go another way through testsub2:\n  " + "\n  ".join(wrong)
     # …and without the declaration the vendor is the host, a file is a host named `file`, and '#' ends the host
-    d["placement"]["group_by"] = {"field": "feed", "cut_at": "host"}
+    d["unit"]["fields"]["feed"]["schemes"] = {k: {} for k in SCHEMES}
     plain = SubsystemSpec.from_dict(d)
     assert plain.group_of("driverpack://acme/10.0.0.50/ch/17") == "acme"
     assert plain.group_of("driverpack://file/clips/a.mp4") == "file"

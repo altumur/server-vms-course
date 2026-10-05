@@ -1,5 +1,6 @@
 # group_of.tsv — a camera's source and the group the platform puts it in (ADR 0053: `placement.group_by: {field: source,
-# cut_at: host, schemes: …}` of vms.subsystem.yaml; `w2cplatform.spec.url_host`), read by tests/test_group_of_table.py.
+# cut_at: host}` of vms.subsystem.yaml, read by the source field's `schemes`; `w2cplatform.spec.url_host`), read by
+# tests/test_group_of_table.py.
 # The group is the HOST the source names, in one spelling: neither the scheme nor the port is part of it; lower case, no
 # trailing dot; an IP as written once (IPv6 unbracketed, RFC 5952, no zone; IPv4-mapped as IPv4); a percent-escape in a
 # host is not decoded. (none): no group. With the grouping declared, the only sources without a group that are taken
@@ -56,6 +57,8 @@ rtsp://cam:hunter2/ch/1	(none)	refused	a password where the port goes: the addre
 rtsp://nvr50/ch/%zz	(none)	refused	a broken escape: the address does not parse
 rtsp:///ch/1	(none)	refused	no authority
 nvr50	(none)	refused	not an address
+file:///media/a.mp4	(none)	refused	no host: a file is a camera only by its scheme's `none` (driverpack://file/…)
+/media/a.mp4	(none)	refused	…nor a bare path
 # driverpack://<vendor>/<address>/…: the host is the path's first segment, and the vendor no part of it
 driverpack://acme/10.0.0.50/ch/17	10.0.0.50
 driverpack://acme/10.0.0.50/ch/18	10.0.0.50		another channel of one NVR

@@ -1293,8 +1293,16 @@ def test_every_spelling_of_a_devices_host_is_its_group_and_a_host_nobody_can_rea
             assert _call(base, "PUT", "/cameras/3", {"source": unread}, token="three")[0] in (400, 403), unread
             code, body = _call(base, "PUT", "/cameras/3", {"source": unread}, token="admin")
             assert code == 400 and "source names no host that can be told" in body["detail"], (unread, code, body)
-            assert unread not in json.dumps(body)
+            assert body["fault"] == "bad_url" and unread not in json.dumps(body)
             assert _call(base, "POST", "/cameras", {"source": unread}, token="admin")[0] == 400, unread
+        # every refusal of a url by address is `fault: bad_url` at the door, the reason in `detail` (the closed dictionary,
+        # `canonical.FAULTS`): a login, no host — a file is a camera only through `driverpack://file/…` (`none`) —, a port
+        # that is no number, a scheme the source is not reached by
+        for bad in ("rtsp://admin:hunter2@nvr50/ch/1", "file:///media/a.mp4", "/media/a.mp4", "rtsp://nvr50:pw/ch/1",
+                    "ftp://nvr50/a", "rtsp://nvr50/ch/1#x"):
+            code, body = _call(base, "POST", "/cameras", {"source": bad}, token="admin")
+            assert code == 400 and body.get("fault") == "bad_url" and body["detail"], (bad, code, body)
+            assert "hunter2" not in json.dumps(body)
         assert box.vars.get("vms/cameras/3")[0]["source"] == "driverpack://file/3.mp4"   # nothing written
         code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50/ch/2"}, token="admin")
         assert code == 400 and "vms 2 has that source already" in body["detail"], (code, body)          # one address

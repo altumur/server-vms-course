@@ -17,7 +17,7 @@ The catalogue is deliberately short and CLOSED. `labels-subset`: a unit's
 registers another: a spec naming a rule that is not here does not load. What
 a subsystem needs beyond them it DECLARES — `affinity` (a row of its table
 binds a unit to a place, or takes none), `near.prefer`, a field's `ref`,
-`must_match` and `unique`, `group_by.cut_at` and `group_by.schemes` — and the
+`must_match` and `unique`, a url field's `schemes`, `group_by.cut_at` — and the
 platform reads the declaration; no code of a subsystem's is called here (the boundary's step 6).
 
 What is NOT in a spec: anything about what a unit does. That is the worker,
@@ -97,7 +97,7 @@ from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMM
 from .events import OWN_OF_TREES, Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
-from .canonical import canonical_json, number_text, parse_json
+from .canonical import BadUrl, canonical_json, number_text, parse_json
 from .rows import PARSE_ERRORS, Table, finite
 from .variables import Conflict, Garbled, Variables
 
@@ -123,6 +123,13 @@ class Moved(Exception):
 
 class Refused(Exception):
     pass
+
+
+class AddressRefused(Refused):
+    """A url field's value refused by address — a login in it, no host or one nobody can tell (ADR 0053), a port that is
+    no number, a scheme the field is not reached by, a `#`: 400 with `fault: bad_url` at every door (`canonical.BadUrl`,
+    the closed dictionary `canonical.FAULTS`), the reason in `detail`."""
+    fault = BadUrl.fault
 
 
 class Exists(Refused):
@@ -297,10 +304,11 @@ class Field:
     # load with its default among them.
     enum: tuple = ()
     # A `url` field's own words (the boundary's step 4, the keys agreed with the product): `schemes` — what it may be
-    # reached by (none said: any); `credentials` — `{login: <field>, secret: <a *_secret field>}`, where a login and a
+    # reached by, and how each writes its address (`{<scheme>: {host?, fragment?, none?}}`, `{}` by RFC 3986; ADR 0053;
+    # none said: any, each by RFC 3986); `credentials` — `{login: <field>, secret: <a *_secret field>}`, where a login and a
     # password go instead, named by every refusal; `rules` — its `secret_in` read (`secrets.SecretRules`): how its
     # addresses carry a login besides what RFC 3986 says. None for a field that is no url.
-    schemes: tuple = ()
+    schemes: dict = field(default_factory=dict)
     credentials: dict = field(default_factory=dict)
     rules: object = None
     # WHAT A FIELD POINTS AT, AND WHAT IS ONE PER CLUSTER (the boundary's step 6: what a subsystem's refusal of a row said
@@ -482,10 +490,10 @@ def _url_words(fields: dict, name: str, f: dict) -> None:
         if said:
             raise ValueError(f"field {name}: {', '.join(said)} belong to a url field, and {name} is {fld.type}")
         return
-    schemes = f.get("schemes") or []
-    if not isinstance(schemes, list) or not all(isinstance(x, str) and re.fullmatch(r"[a-z][a-z0-9+.\-]*", x)
-                                                for x in schemes):
-        raise ValueError(f"field {name}: `schemes` is a list of schemes (`https`, `ftp`), not {schemes!r}")
+    schemes = f.get("schemes", {})
+    why = schemes_fault(schemes)
+    if why:
+        raise ValueError(f"field {name}: `schemes` {why}")
     cred = f.get("credentials") or {}
     if not isinstance(cred, dict) or set(cred) - {"login", "secret"}:
         raise ValueError(f"field {name}: `credentials` is {{login: <field>, secret: <a *_secret field>}}, not {cred!r}")
@@ -494,7 +502,7 @@ def _url_words(fields: dict, name: str, f: dict) -> None:
         raise ValueError(f"field {name}: credentials.login names no string field of the row that is no secret: {login!r}")
     if secret is not None and (secret not in fields or not is_secret_field(secret)):
         raise ValueError(f"field {name}: credentials.secret names no `*_secret` field of the row: {secret!r}")
-    fld.schemes = tuple(schemes)
+    fld.schemes = {k: dict(v) for k, v in schemes.items()}
     fld.credentials = {k: v for k, v in (("login", login), ("secret", secret)) if v}
     # …and with none of its own, the loaded specs' together (`catalog.secret_rules`, read when it is asked): a url field
     # that says nothing of how its addresses carry a login is asked every way any subsystem here says one is carried
@@ -1023,7 +1031,6 @@ class SubsystemSpec:
     # names the device, so the answer is on the screen rather than in a session count on a camera.
     group_by: str = ""
     group_cut: str = ""           # `group_by.cut_at`: `host`, or the segment the url field's spelling is cut before
-    group_schemes: dict = field(default_factory=dict)   # `group_by.schemes`: {<scheme>: {host, fragment, none}}
     # `near: {…, prefer: {<their field>[.<field of the row it refs>]: <value or values>}}` — when `near` finds SEVERAL
     # units of the followed subsystem (two of theirs about one of mine), the one to stand beside: the one whose row says
     # so — read through their field's `ref` when the key has a dot (`home.kind`: the `kind` of the row their `home`
@@ -1249,8 +1256,6 @@ class SubsystemSpec:
                    group_by=str((pl.get("group_by") or {}).get("field", "") if isinstance(pl.get("group_by"), dict)
                                 else pl.get("group_by", "") or ""),
                    group_cut=str((pl.get("group_by") or {}).get("cut_at", "") or "") if isinstance(pl.get("group_by"), dict) else "",
-                   group_schemes=dict(pl["group_by"]["schemes"]) if isinstance(pl.get("group_by"), dict)
-                   and isinstance(pl["group_by"].get("schemes"), dict) else {},
                    place_by=str(pl.get("place_by", "server") or "server"),
                    offers=pl.get("offers", False),
                    home=str(pl.get("home", "") or ""),
@@ -1590,20 +1595,14 @@ class SubsystemSpec:
             raise ValueError(f"spec {self.name}: placement.servers is one of {', '.join(SERVERS)}, not {self.servers!r}")
         g = pl.get("group_by")
         if isinstance(g, dict):
-            if set(g) - {"field", "cut_at", "schemes"} or self.group_by not in self.fields:
+            if set(g) - {"field", "cut_at"} or self.group_by not in self.fields:
                 raise ValueError(f"spec {self.name}: placement.group_by is a field, or {{field: <a field>, cut_at: "
-                                 f"host | <a segment of its path>, schemes?}}, not {g!r}")
+                                 f"host | <a segment of its path>}}, not {g!r} — how a scheme writes its host is the "
+                                 f"url field's `schemes`")
             if self.group_cut and (self.fields[self.group_by].type != "url" or "/" in self.group_cut):
                 raise ValueError(f"spec {self.name}: group_by.cut_at reads a url field — its host (`host`) or its path "
                                  f"up to a segment — {self.group_by} is {self.fields[self.group_by].type}, the segment "
                                  f"{self.group_cut!r}")
-            if "schemes" in g:
-                if self.group_cut != "host":
-                    raise ValueError(f"spec {self.name}: group_by.schemes says how a scheme writes its host, and only "
-                                     f"`cut_at: host` reads a host — not `cut_at: {self.group_cut or '(none)'}`")
-                why = group_schemes_fault(g["schemes"])
-                if why:
-                    raise ValueError(f"spec {self.name}: group_by.schemes: {why}")
         near = pl.get("near")
         prefer = near.get("prefer") if isinstance(near, dict) else None
         if prefer is not None:
@@ -1648,14 +1647,14 @@ class SubsystemSpec:
     # -- what a unit is called outside its routes, and what it is about ----------------------------------
     # `<name>/<id>` (`doors.unit_ref`): the one way a unit is named to the gate, the index and a grant.
     # The group a value of the `group_by` field is in: the value itself; or its host (`cut_at: host` — `url_host`, by the
-    # spec's `schemes`); or its spelling up to the segment (`cut_at: <segment>` — `url_cut`). "" — no value, or no host
+    # field's `schemes`); or its spelling up to the segment (`cut_at: <segment>` — `url_cut`). "" — no value, or no host
     # — is no group: a unit with it groups with nothing. The controller's `group_value` and the worker's `request_group`
     # both ask here, so the group a request was stamped with is the one its holder performs it in.
     def group_of(self, value) -> str:
         v = str(value or "")
         if not v or not self.group_cut:
             return v
-        return url_host(v, self.group_schemes) if self.group_cut == "host" else url_cut(v, self.group_cut)
+        return url_host(v, self.fields[self.group_by].schemes) if self.group_cut == "host" else url_cut(v, self.group_cut)
 
     # …and why a value of the `group_by` field may not be stored, None when it may (ADR 0053): with `cut_at: host`
     # declared there is no unit without a group but the ones `schemes.<s>.none` says — a host nobody can tell
@@ -1663,7 +1662,7 @@ class SubsystemSpec:
     # whose it is, and a "no group" there would let one unit's rights reach another's host. Refused at write, 400, in
     # words that never repeat the value (`refuse`).
     def group_refusal(self, value) -> str | None:
-        if self.group_cut != "host" or not value or host_of_url(str(value), self.group_schemes) is not None:
+        if self.group_cut != "host" or not value or host_of_url(str(value), self.fields[self.group_by].schemes) is not None:
             return None
         return (f"{self.group_by} names no host that can be told: its host is neither a host name (letters, digits, "
                 f"'-' and '.', no escapes) nor an IP address in its usual form, or it does not parse — units are "
@@ -1879,14 +1878,19 @@ class SubsystemSpec:
                 if value not in f.enum:
                     raise Refused(f"{name} is one of {', '.join(map(str, f.enum))}, not {str(fields[name])[:60]!r}")
             if f.type == "url" and fields.get(name):
+                # The address as RFC 3986 reads it BY THIS FIELD'S SCHEME (`schemes`, `rfc_spelling`): a scheme with no
+                # fragment (`fragment: none`) has its `#` read as a character here as in its group (`url_host`) — one
+                # reading of one address, whichever rule asks.
+                written = str(fields[name])
+                rfc = rfc_spelling(written, f.schemes)
                 # …and a url `urlsplit` cannot read, or whose port is no port, is a 400 with the words (the product
                 # team's sibling of the tenth pass): `rtsp://[10.0.0.5/x` raised `ValueError` out of here — a 500 — and
                 # `…:8²/…` was taken, to stand in every reader of the row.
                 try:
-                    u = urlsplit(str(fields[name]))
+                    u = urlsplit(rfc)
                     u.port
                 except ValueError:                       # its words quote the port it could not read: a password
-                    raise Refused(f"{name} is not an address: {NOT_AN_ADDRESS}") from None   # (the twelfth review, major 16)
+                    raise AddressRefused(f"{name} is not an address: {NOT_AN_ADDRESS}") from None   # (the twelfth review, major 16)
                 # …A LOGIN NOR A CREDENTIAL ANYWHERE IN IT — the platform's one rule (`secrets.address_refusal`), the one a
                 # volume's url and the domain's door ask. This was a copy of it, and the copy fell behind (the thirteenth
                 # review, blocker 6): it read the `@` of the netloc and the path only, and `…/relay?src=rtsp%3A%2F%2Fadmin
@@ -1898,24 +1902,25 @@ class SubsystemSpec:
                 # spec's to say; the words name the fields its spec gives a login and a password (`Field.refusal`).
                 why = f.refusal(fields[name])
                 if why:
-                    raise Refused(why)
-                # …and reached by what the spec says it is reached by (`schemes`); said in words, the scheme is no secret.
+                    raise AddressRefused(why)
+                # …and reached by what the spec says it is reached by (the keys of `schemes`); said in words, the scheme
+                # is no secret.
                 scheme = u.scheme.lower()
                 if f.schemes and scheme not in f.schemes:
-                    raise Refused(f"{name} is reached by {', '.join(f.schemes)}, not by "
+                    raise AddressRefused(f"{name} is reached by {', '.join(f.schemes)}, not by "
                                   f"{repr(scheme) if scheme else 'an address with no scheme'}")
                 # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/dev7#@nvr50/ch/1` is
                 # device `dev7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
                 # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
-                if "#" in str(fields[name]):
-                    raise Refused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
+                if "#" in rfc:
+                    raise AddressRefused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
                                   f"and maybe another to the driver")
             # …AND THE HOST OF ITS GROUP CAN BE TOLD (`cut_at: host`, ADR 0053): asked of any type the field is, by
             # `group_refusal` — no unit without a group but those the spec's `none` says
             if name == self.group_by and fields.get(name):
                 why = self.group_refusal(fields[name])
                 if why:
-                    raise Refused(why)
+                    raise AddressRefused(why)
 
     # A value against its field's schema: `Refused` in the schema's words, where it failed (`schema.check`).
     @staticmethod
@@ -1954,7 +1959,7 @@ def _labels_subset(row: dict, worker_labels: set[str]) -> bool:
 # `register_constraint`, code under a name — and nobody went through it; the three doors beside it (an admit, a near
 # rank, a refusal of a row) were each one subsystem's code run inside this controller. What a subsystem needs beyond
 # the catalogue it DECLARES, and the controller reads the declaration: `affinity`, `near.prefer`, a field's `ref`,
-# `must_match` and `unique`, `group_by.cut_at` and `group_by.schemes`.
+# `must_match` and `unique`, a url field's `schemes`, `group_by.cut_at`.
 CONSTRAINTS = {"none": lambda row, labels: True, "labels-subset": _labels_subset}
 TIE_BREAKS = ("most-free-capacity",)
 REQUIRES = ("none", "resource")       # `resource`: a worker is eligible only while its server's resource answers
@@ -2055,8 +2060,10 @@ def url_cut(v, segment: str) -> str:
 # A readable host is grouped even where the value is refused for another reason (`secret_in`): refusing a login is the
 # field's, grouping is this — a row written before a rule refused its address still has the host it names.
 #
-# HOW A SCHEME WRITES ITS HOST when it does not follow RFC 3986 the spec DECLARES, per scheme (`group_by.schemes`), in a
-# closed dictionary — nothing of any scheme is known here:
+# HOW A SCHEME WRITES ITS ADDRESS when it does not follow RFC 3986 the spec DECLARES, per scheme, on the url field
+# (`fields.<f>.schemes: {<scheme>: {…}}`, the keys the schemes the field is reached by, `{}` one read by RFC 3986), in a
+# closed dictionary — nothing of any scheme is known here. The field's refusal and its group read the address by the
+# same words («Архитектор», ADR 0053: two parses of one address with two sets of options are two truths):
 #   host: authority | path   where the host stands: the authority (RFC 3986, the default), or the first segment of the
 #                            path, written as an authority is — `[login[:password]@]host[:port]` — the authority being
 #                            then a name the group does not hold (`x://a/h/1` and `x://b/h/2` are one host, `h`). A path
@@ -2076,15 +2083,17 @@ _LOGIN_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 _REG_NAME_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$&'()*+,;=%")
 
 
-def group_schemes_fault(schemes) -> str:
-    """Why `group_by.schemes` is not a declaration of the closed dictionary — "" when it is."""
-    if not isinstance(schemes, dict) or not schemes:
-        return f"{{<scheme>: {{host?, fragment?, none?}}, …}}, not {schemes!r}"
+def schemes_fault(schemes) -> str:
+    """Why a url field's `schemes` is not a map of schemes to words of the closed dictionary — "" when it is. The list
+    it was (`[https, ftp]`) is refused: one form (ADR 0003)."""
+    if not isinstance(schemes, dict):
+        return (f"is a map {{<scheme>: {{host?, fragment?, none?}}, …}} — `{{}}` for a scheme read by RFC 3986 — not "
+                f"{schemes!r}")
     for name, opts in schemes.items():
         if not isinstance(name, str) or not _SCHEME_NAME.fullmatch(name):
             return f"{name!r} is not a scheme in lower case (RFC 3986: a letter, then letters, digits, `+`, `-`, `.`)"
-        if not isinstance(opts, dict) or not opts:
-            return f"{name}: a scheme says at least one of host, fragment, none — not {opts!r}"
+        if not isinstance(opts, dict):
+            return f"{name}: a scheme says {{host?, fragment?, none?}} — `{{}}` for RFC 3986 — not {opts!r}"
         for k, v in opts.items():
             if k in GROUP_SCHEME_WORDS:
                 if v not in GROUP_SCHEME_WORDS[k]:
@@ -2097,6 +2106,14 @@ def group_schemes_fault(schemes) -> str:
                 return (f"{name}: {k!r} is not a word of the dictionary — host ({' | '.join(GROUP_SCHEME_WORDS['host'])}), "
                         f"fragment ({' | '.join(GROUP_SCHEME_WORDS['fragment'])}), none: [<authority>]")
     return ""
+
+
+def rfc_spelling(v: str, schemes: dict | None = None) -> str:
+    """`v` as RFC 3986 reads it by its scheme's words: a scheme with no fragment (`fragment: none`) has its `#` escaped,
+    a character of the address like another; any other address is itself."""
+    scheme, sep, _ = v.partition("://")
+    opts = ((schemes or {}).get(scheme.lower()) or {}) if sep else {}
+    return v.replace("#", "%23") if opts.get("fragment") == "none" else v
 
 
 def _digits(p: str) -> bool:

@@ -27,7 +27,8 @@ OPERATORS = {"metrics.agg", "metrics.type"}
 
 # A field's own words, of a unit's row and of a table's alike.
 FIELD = ("type", "default", "required", "inherit", "merge", "bound_to", "fixed", "enum", "schema", "ref", "must_match",
-         "unique", "schemes", "credentials.login", "credentials.secret", "secret_in.param", "secret_in.login",
+         "unique", "schemes.*.host", "schemes.*.fragment", "schemes.*.none", "credentials.login", "credentials.secret",
+         "secret_in.param", "secret_in.login",
          "secret_in.regex", "secret_in.in", "secret_in.schemes", "secret_in.decoded", "secret_in.nested")
 TABLE_FIELD = tuple(k for k in FIELD if k not in ("inherit", "merge", "fixed", "unique"))   # a row written whole
 # What the platform reads, key by key (`spec.py`, `metrics.py`, `tables.py`, `holds.py`, `door.py`): asserted below to be
@@ -44,8 +45,7 @@ IMPLEMENTED = {
     "placement.capacity.from", "placement.capacity.default", "placement.headroom.from", "placement.constraint",
     "placement.requires", "placement.servers", "placement.tie_break", "placement.near.sub", "placement.near.by",
     "placement.near.of", "placement.near.prefer", "placement.spread_by", "placement.group_by.field",
-    "placement.group_by.cut_at", "placement.group_by.schemes.*.host", "placement.group_by.schemes.*.fragment",
-    "placement.group_by.schemes.*.none", "placement.place_by", "placement.places.table", "placement.places.where",
+    "placement.group_by.cut_at", "placement.place_by", "placement.places.table", "placement.places.where",
     "placement.places.server_field", "placement.places.lease",
     "placement.offers", "placement.home", "placement.retire_when.field", "placement.retire_when.in",
     "placement.rebalance.dead_band", "placement.affinity.field", "placement.affinity.table",
