@@ -2035,7 +2035,7 @@ class CardRecorder(RecWorker):
         now, reach, short = self.wall() if now is None else now, self.ring.reach(), {}
         for row in self.rows:
             uid = str(row["id"])
-            if not self._offline_backup(row) or uid not in {str(u) for u in self.reconciler.actual}:
+            if not self._offline_backup(row) or uid not in {str(u) for u in self.reconciler.running()}:
                 self.prebuffer_short.pop(uid, None)
                 self._short_now.pop(uid, None)
                 continue
@@ -2335,9 +2335,8 @@ class CardRecorder(RecWorker):
                 self.card_fault, self.card_error, self.card_since = "would not open", "", self.wall()
                 # Its recordings waited for a card, not for a backoff: the ring holds the seconds since the card went
                 # for only so long, and a start put off by what failed while there was no card would outlast it.
-                for uid in list(self.reconciler.failures):
-                    if uid not in self.reconciler.actual:
-                        self.reconciler.failures.pop(uid, None)
+                running = self.reconciler.running()
+                self.reconciler.reset_backoff(*[r["id"] for r in self.rows if r["id"] not in running])
                 log.info("%s: the card %s is open; the card records", self.name, hide_in_url(vol.url))
             except OSError as e:
                 # A card is a directory, never an address (`volumes.refuse`); a row declared before that rule is said as a
@@ -2377,9 +2376,9 @@ class CardRecorder(RecWorker):
         self.card_failures += 1
         log.warning("%s: the card %s refused a write: %s; closing it, trying again in %.0f s (the ring and the pusher "
                     "work; what the ring lets go of meanwhile is lost to the card)", self.name, hide_in_url(vol.url), err, self.CARD_RETRY)
-        for uid in list(self.reconciler.actual):
+        for uid in list(self.reconciler.running()):
             self.actuator("stop", {"id": uid})
-            self.reconciler.lost(uid, self.now())
+            self.reconciler.forget(uid)
         self._close_store(quiet=True)
         self.card_fault, self.card_error, self.card_since = "refused a write", str(err), self.wall()
         self.card_refusal = str(err)
@@ -2421,7 +2420,7 @@ class CardRecorder(RecWorker):
         out = super().status_extra(cam)
         out["via"] = "ring"
         out.update(self.actuator.stats(cam["id"]))
-        if self.card is None and self.card_error and cam["id"] not in self.reconciler.actual:
+        if self.card is None and self.card_error and cam["id"] not in self.reconciler.running():
             out["why"] = f"the card {self.card_fault}: {self.card_error}"
         if str(cam["id"]) in self.not_ours:
             out["why"] = self.not_ours[str(cam["id"])]
@@ -2483,8 +2482,8 @@ class CardRecorder(RecWorker):
             card["stalled_s"] = round(self.card.stalled_for(), 1)
             stuck = {"writer": {"state": "stuck", "outstanding": getattr(self.actuator, "queued", 0),
                                 "still": card["stalled_s"]}}
-        # `archive` empty: a worker's is its events tree, and under `rec/` the console reads it as the box's own volume
-        # and offers to declare it (`volumes.suggest`) — a camera has no volume of the engine to offer.
+        # `archive` empty: a worker's is its events tree, and under `rec/` it is read as the box's own volume, one a
+        # page may offer to declare — a camera has no volume of the engine to offer.
         stream = self._stream()                              # the pusher's word on the stream (`stream_said`)
         return {**VmsWorker.heartbeat_extra(self), "archive": "", "volume": self.volume,
                 "volume_error": self.volume_error if self.card is None else f"the card {error}" if error else "",

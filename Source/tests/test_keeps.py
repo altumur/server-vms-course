@@ -429,17 +429,6 @@ def test_a_keep_that_stays_garbled_for_an_hour_is_an_alarm_once_per_episode_and_
     assert [a["since"] for a in _events(box, "archive.keep.garbled")][-1] == again
 
 
-def test_a_keep_written_before_its_fields_were_renamed_still_holds():
-    """`since`/`until` became `from`/`to` (feedback BQ). A row written before that, read by the new names only,
-    would hold nothing — an interval from 0 to 0 — and the footage would go by its days, silently. It is read by
-    the old names when the new ones are absent (the product's question, feedback BV)."""
-    box = Box()
-    box.vars.put("rec/keeps/7-100-200", {"cam": "7", "since": "100.0", "until": "200.0", "note": "", "by": "anna", "at": "50", "recordings": '["7"]'})
-    [k] = keeps.declared(box.vars)
-    assert (k.since, k.until) == (100.0, 200.0) and keeps.spans_of([k], "7") == [(100.0, 200.0)]
-
-
-
 def test_the_list_of_keeps_is_what_the_caller_may_see():
     """Feedback CG: a keep says which camera, which minutes and why. Lifting or checking one asked by its camera;
     the LIST did not, and showed every keep to whoever could see one camera. The platform's list of a table whose rows

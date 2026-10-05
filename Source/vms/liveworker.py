@@ -4,13 +4,15 @@ store, a heartbeat with capacity and headroom, count = N by demand) whose
 unit is a camera's live FAN-OUT: one subscription to the worker's RTP tee,
 N browsers behind it over WebRTC. Capacity is counted in viewers.
 
-    live/streams/<cam>      the unit — created by the console on the first viewer, deleted by the gateway
-                            a grace period after the last one leaves (demand-created placement)
+    live/streams/<cam>      the unit — created by its first viewer (`POST /live/streams` at the platform's console, a
+                            `view` of the camera), deleted by the gateway a grace period after the last one leaves
+                            (demand-created placement)
     live/workers/<g>        the assignment, written by the live controller (the platform's SpecController
                             run from live.subsystem.yaml)
     live/<g>/heartbeat      capacity, headroom (viewers it could still take), url, per-stream status
 
-    POST   /whep/<cam>            WHEP: an SDP offer in, 201 + the SDP answer out, Location: /whep/session/<id>
+    POST   /whep/<cam>            WHEP, from the page itself with the door token `GET /live/where/<cam>` gave: an SDP
+                                  offer in, 201 + the SDP answer out, Location: /whep/session/<id>
     DELETE /whep/session/<id>     the viewer hangs up
     GET    /metrics               live_sessions, live_streams_up, live_headroom
 
@@ -70,7 +72,7 @@ class Upstream:
         self.cam, self.server, self.url, self.epoch = cam, server, url, epoch
         self.peers: dict[str, object] = {}
         self.idle_since: float | None = None      # wall time the last viewer left; None while watched
-        # "" while the stream is one a browser can play, otherwise the sentence the console shows beside
+        # "" while the stream is one a browser can play, otherwise the sentence the page shows beside
         # it. Filled from the caps the peer's parser negotiated, so it is empty until something flowed.
         self.codec: str = ""
 
@@ -83,7 +85,8 @@ class Upstream:
 
 
 class LiveWorker(Worker):
-    """`name` is a slot (`g-1`); `url` is where the console proxies WHEP to; `capacity` is viewers."""
+    """`name` is a slot (`g-1`); `url` is where a page offers WHEP (the door `GET /live/where/<cam>` hands out);
+    `capacity` is viewers."""
 
     def __init__(self, name: str | None, vars_: Variables, objects, ctl: SpecController | None = None, url: str = "",
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
@@ -191,8 +194,7 @@ class LiveWorker(Worker):
     # outlived its controller. It stood for ever, and every next viewer of that camera was told 503 "retry" (the
     # review's second pass, major). A row seen unplaced for its own `grace` — by this gateway's wall clock from
     # the pass that first saw it — is deleted by whichever gateway sees it so, with the token that deletes idle
-    # fan-outs already; the next viewer makes a fresh row, with labels the console now checks against the
-    # gateways that are there (`LiveFront.offer`).
+    # fan-outs already; the next viewer makes a fresh row.
     def _orphans(self, now: float, wanted: set) -> list[str]:
         out = []
         unplaced = {str(r["id"]): r for r in self.ctl.units() if str(r["id"]) not in wanted and self.ctl.placement(r["id"]) is None}
@@ -429,7 +431,7 @@ class LiveWorker(Worker):
         return H
 
     # Bounded like every door (`w2cplatform.console.door_server`; the review's sixth pass): so many connections at
-    # once and so many to one address — the console's, which carries every viewer's offer here.
+    # once and so many to one address — a page's, which brings its viewer's offer here itself.
     def serve(self, host: str = "127.0.0.1", port: int = 8082) -> ThreadingHTTPServer:
         srv = door_server((host, port), self.handler())
         threading.Thread(target=srv.serve_forever, daemon=True).start()

@@ -1,15 +1,16 @@
-"""The console's side of a subsystem whose work ENDS.
+"""The VMS's housekeeping for a subsystem whose work ENDS — the `vms jobs` process (`python3 -m vms jobs`).
 
 A worker is the only participant that can know a job is finished: the plan and
-the progress are files on the server it ran on, and its ACL —
-`[<name>/epoch/*, <name>/slots/*]` — forbids it to write the row. A controller
-could write it (its grant is `<name>/*`), but then one row has two writers and
-they collide exactly when the operator edits a job the controller is finishing.
+the progress are files on the server it ran on, and its grant — its epochs, its
+slot, its hold (`acl_worker_role`) — forbids it to write the row. The controller
+must not either: its grant is placement and the assignments (`acl_controller`),
+and a second writer of the row would collide exactly when the operator edits a
+job that is finishing.
 
-So the console does it, in a pass of its own beside the blob sweep: it reads the
-heartbeats it already reads, and moves the row's `state` when the worker holding
-the job says the work is over. One writer per row, and the operator sees `done`
-in the row they created.
+So `vms jobs` does it, with the console's grant of the families it touches, in a
+pass of its own: it reads the workers' heartbeats and moves the row's `state` when
+the worker holding the job says the work is over. One writer per row, and the
+operator sees `done` in the row they created.
 
 Why the state must be DURABLE and not simply read off the heartbeat, when the
 placement predicate lands (Lesson 21): un-placing a finished job makes its worker
@@ -29,7 +30,7 @@ from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import GARBLED_ROW, Refused, SpecController, take_written
 
 TERMINAL = ("done", "failed")
-# What a job's row may say, and what the worker's phase is allowed to move it to. The console mirrors the
+# What a job's row may say, and what the worker's phase is allowed to move it to. The reaper mirrors the
 # phase into the row not because the row is a better heartbeat — it is a worse one — but because the row is
 # what SURVIVES the job being un-placed, and what the operator opened. `waiting`, `following` and `unsupported` are the
 # worker's news and stay in the heartbeat: nothing downstream acts on them.
@@ -97,12 +98,12 @@ def recording_cam(vars_, name: str) -> str:
 #
 # WHEN AN END TAKES EFFECT, said as it is (the eleventh review: the tenth's wording "an `until` this console writes is
 # noted at once" was untrue for the console's DOOR — `until = now + 1` through it ended the recording 23 s later; only
-# the loop's own writes were noted). Every row this PROCESS writes — the loop's, and the door's through any controller
-# of the process — is read at the loop's next turn (`spec.take_written`): an end given at any console's door takes
-# effect within a turn, two seconds, since every console runs this loop and the first to end a row deletes it for all.
-# What another console's loop remembers of the row: an end made LATER is seen before anything is ended (the row is
-# read); one made EARLIER is seen within a turn when the end it remembers is `NEAR`, else within `REREAD` — by then the
-# console that wrote it has ended the row.
+# the loop's own writes were noted). Every row this PROCESS writes, through any controller of it, is read at the loop's
+# next turn (`spec.take_written`). The console's door is another process since the boundary's step 6 — the platform's
+# console — and what it writes is no note here: an end given there to a row whose end this loop has not seen takes
+# effect at the next whole read, within `REREAD`; one that moves a remembered end is seen before anything is ended
+# when it moves it LATER (the row is read), within a turn when the end it moves EARLIER is `NEAR`, else within
+# `REREAD`.
 class Remembered:
     REREAD = 30.0
     NEAR = 10.0                                         # seconds before a remembered end its row is read every turn
@@ -142,12 +143,12 @@ class Remembered:
 
 
 # "Record this camera for ten minutes" — a request turned into a row, by the one token that may write
-# rows: the CONSOLE's. Run in the console process's loop, beside the reaper that clears requests.
+# rows: the console's grant, which `vms jobs` holds. Run in its request loop, beside the reaper.
 #
 # The division is the same as everywhere and it is the reason this function is here rather than in the
 # recorder or in the controller. A worker writes no configuration, and a recording IS configuration — it
 # has an id, a retention, a home and a placement. The controller writes placement and not rows. What is
-# left is the console, which is the operator's agent, and a scenario asking for ten minutes of a camera is
+# left is the console's grant — the operator's agent — and a scenario asking for ten minutes of a camera is
 # the operator asking through something they wrote.
 #
 # The row is named `<cam>-auto`, which is the naming rule the page already uses one field over: a camera
@@ -238,7 +239,7 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
 def expire(ctl, now: float, mem: Remembered | None = None) -> int:
     gone = 0
     sub = ctl.spec.name
-    written = take_written(sub) if mem is not None else set()    # what this process wrote since the last turn (the door)
+    written = take_written(sub) if mem is not None else set()    # what this process wrote since the last turn
     if mem is None or mem.due(f"{sub}#until", now):
         rows = ctl.units()
         if mem is not None:
@@ -246,9 +247,9 @@ def expire(ctl, now: float, mem: Remembered | None = None) -> int:
             mem.deadlines[sub] = {}
     else:
         # Read again: a row whose remembered end has come; a row this process wrote since the last turn — an `until` given
-        # through the console's door, the loop's memory never heard of it (the eleventh review: it ended up to `REREAD`
-        # late); and a row whose remembered end is NEAR (`Remembered.NEAR`) — another console that shortened it is seen
-        # in a turn, not in `REREAD`.
+        # through another controller of this process, the loop's memory never heard of it (the eleventh review: it ended
+        # up to `REREAD` late); and a row whose remembered end is NEAR (`Remembered.NEAR`) — the console's door, another
+        # process, that shortened it is seen in a turn, not in `REREAD`.
         mine = mem.deadlines.get(sub, {})
         due = sorted(set(u for u, until in mine.items() if until - now <= mem.NEAR) | written)
         rows = []
@@ -274,7 +275,7 @@ def expire(ctl, now: float, mem: Remembered | None = None) -> int:
 expire_recordings = expire                              # the name the recorder's callers know it by
 
 
-# What automation asks the DETECTORS for: `det/requests/<id>`, turned into rows by the console, beside
+# What automation asks the DETECTORS for: `det/requests/<id>`, turned into rows by `vms jobs`, beside
 # `record_on_request` and for its reasons — a worker writes no configuration, and both answers are
 # configuration. The recorder's family has two kinds of asking, and so does this one:
 #
@@ -505,6 +506,23 @@ def forget_finished(ctl, now: float) -> int:
 # then runs over footage we own, with `vms/scan.py` unchanged.
 #
 # The request id is the range, so a job asking every thirty seconds writes one row, not a queue.
+#
+# FILED AS THE PLATFORM'S REQUEST FAMILY FILES ONE (М10A 14): the unit as `rec/<recording>`, and a deadline —
+# `valid_until`, the spec's `most_valid` away (the family's `MOST_VALID` where it says none). A recorder that has not
+# begun it by then answers it expired and the reaper ends the row; a job still fetching asks again on its next turn,
+# and the recorder goes on from the first moment its volume does not show (`RecWorker.requests`).
+def _ask_recorder(rec_ctl, unit: str, cam: str, t0: float, t1: float, now: float, by: str) -> bool:
+    from w2cplatform.doors import unit_ref
+    from w2cplatform.requests import MOST_VALID
+    key = rec_ctl.sub.request_key(f"{unit}-{int(t0)}-{int(t1)}")
+    if rec_ctl.vars.get(key)[0]:
+        return False                                    # already asked; the recorder says when it is fetched
+    most = float(rec_ctl.spec.requests.get("most_valid") or MOST_VALID)
+    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": str(t0), "to": str(t1),
+                           "at": str(now), "by": by, "valid_until": str(now + most)})
+    return True
+
+
 def ask_for_footage(job_ctl, rec_ctl) -> int:
     asked = 0
     for st in job_ctl.read_model():
@@ -514,13 +532,9 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
         unit, t0, t1 = str(st.get("rec", "")), number(f"{hk}.from", st.get("from", 0), float, None), number(f"{hk}.to", st.get("to", 0), float, None)
         if not unit or t0 is None or t1 is None or t1 <= t0:          # an end that is a word: not a range to ask for
             continue
-        rid = f"{unit}-{int(t0)}-{int(t1)}"
-        key = rec_ctl.sub.request_key(rid)
-        it, _ = rec_ctl.vars.get(key)
-        if it:
-            continue                                        # already asked; the recorder clears it when it is fetched
-        rec_ctl.vars.put(key, {"unit": unit, "cam": str(st.get("cam", unit)), "from": str(t0), "to": str(t1),
-                               "at": str(job_ctl.wall()), "by": f"{job_ctl.spec.name}/{st.get('id')}"})
+        if not _ask_recorder(rec_ctl, unit, str(st.get("cam", unit)), t0, t1, job_ctl.wall(),
+                             f"{job_ctl.spec.name}/{st.get('id')}"):
+            continue
         asked += 1
         log.info("%s %s: asking the recorder for %s [%.0f, %.0f)", job_ctl.spec.name, st.get("id"), unit, t0, t1)
     return asked
@@ -592,7 +606,7 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
 # The fourth way to use a device archive: watch everything, keep what a model liked.
 #
 # The survey reports the stretches; this turns them into the request the recorder already understands. The
-# same division as everywhere here — the worker knows and may not write, the console writes — and the same
+# same division as everywhere here — the worker knows and may not write, `vms jobs` writes — and the same
 # reason the request's id is the range: a pass every thirty seconds must write one row, not a queue.
 #
 # What lands in `rec/<cam>/` this way is ordinary footage with the ordinary retention, and that is the
@@ -608,12 +622,8 @@ def keep_what_fired(survey_ctl, rec_ctl) -> int:
             unit = next((str(r["id"]) for r in rec_ctl.units() if str(r.get("cam", r["id"])) == cam), None)
             if unit is None:
                 continue                                # nothing on this server records that camera: nowhere to put it
-            rid = f"{unit}-{int(t0)}-{int(t1)}"
-            key = rec_ctl.sub.request_key(rid)
-            if rec_ctl.vars.get(key)[0]:
-                continue                                # already asked; the recorder clears it when it is fetched
-            rec_ctl.vars.put(key, {"unit": unit, "cam": cam, "from": str(t0), "to": str(t1),
-                                   "at": str(survey_ctl.wall()), "by": f"{survey_ctl.spec.name}/{cam}"})
+            if not _ask_recorder(rec_ctl, unit, cam, t0, t1, survey_ctl.wall(), f"{survey_ctl.spec.name}/{cam}"):
+                continue
             asked += 1
             log.info("%s: keeping %s [%.0f, %.0f) — a model liked it", survey_ctl.spec.name, unit, t0, t1)
     return asked

@@ -570,7 +570,9 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     act = FakeActuator()
     r = recorder(box, actuator=act, acl=False)
-    r.reconciler.actual = {"7": {"revision": 1}}
+    from w2cplatform.reconcile import Reconciler, Want
+    r.reconciler = Reconciler(lambda k, w: True, lambda k: None)      # running, as far as the loop knows
+    r.reconciler.once({"7": Want(1)})
     r.rows = [{"id": "7", "cam": "7", "name": "7", "enabled": True, "revision": 1}]
     t0 = box.wall()
     act.offered_bytes["7"] = 1000; r.writer_pass()
@@ -583,7 +585,7 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
     box.wall.advance(15)                                                         # …and the recorder goes silent too
     text = spec_metrics(rec)
     assert 'rec_last_frame_age_seconds{unit="7"} 55.0' in text and 'rec_last_frame_age_seconds{unit="8"}' not in text
-    r.reconciler.actual = {}; r.writer_pass()
+    r.reconciler.clear(); r.writer_pass()
     assert r.fed == {}                                                           # stopped: nothing is said about it
 
 

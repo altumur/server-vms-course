@@ -96,7 +96,7 @@ def _reads_per_pass(n: int) -> dict:
     for r in (r1, r2):
         r.reconcile_once()
         r.heartbeat_once()
-    assert len(r1.reconciler.actual) == n and len(r2.reconciler.actual) == n // 2
+    assert len(r1.reconciler.running()) == n and len(r2.reconciler.running()) == n // 2
     out = {}
     for label, v, o, step in (("pass", v1, o1, r1.reconcile_once), ("heartbeat", v1, o1, r1.heartbeat_once),
                               ("backfill", v1, o1, lambda: r1.backfill(budget=1, force=True)),

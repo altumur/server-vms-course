@@ -40,7 +40,7 @@ def safe_segment(name: str) -> bool:
 # scanned recording 9's camera. And a name that is all digits sorts by its number (`spec._unit_key`): `"7²".isdigit()`
 # is true and `int("7²")` raises — every `GET` of that subsystem's list went unanswered. So a unit's name also may not
 # hold `,`, nor a digit that is not ASCII 0–9 (superscripts, Arabic-Indic, full width: `isdigit` says yes to all).
-# A request's id is not a unit's: a heartbeat says it by its digest when it holds a comma (`config.said_id`).
+# A request's id is not a unit's: a heartbeat says it by its digest when it holds a comma (`requests.said_id`).
 LIST_SEPARATOR = ","
 
 

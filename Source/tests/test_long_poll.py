@@ -955,9 +955,9 @@ def test_at_sixteen_commands_a_second_with_ids_of_two_hundred_characters_the_row
     """The review's eighth pass, minor — a run: the answers a heartbeat carried were bounded in BYTES, `FETCHED_BYTES /
     (len(id) + 1)`: forty ids of 200 characters every ten seconds, four commands a second cleared, and above that the
     rows grew without a bound (30 a second: 1108 standing in 90 s). An id is said by its digest when it is long
-    (`config.said_id`, matched the same way by `clear_requests`), every answer costs at most 21 bytes, and a heartbeat
+    (`requests.said_id`, matched the same way by `clear_requests`), every answer costs at most 21 bytes, and a heartbeat
     carries `FETCHED_COUNT` — the burst the beat allows for the ten seconds between two heartbeats."""
-    from vms.config import said_id
+    from w2cplatform.requests import said_id
     assert said_id("c-00001") == "c-00001" and said_id("x" * 41).startswith("#") and len(said_id("x" * 200)) == 21
     assert said_id("a,b").startswith("#") and said_id('a"b').startswith("#") and said_id("a\nb").startswith("#")
     box = Box()

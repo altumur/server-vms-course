@@ -594,7 +594,7 @@ def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
     text = spec_metrics(auto)
     _prometheus_strict(text)
     assert 'auto_wants_folded{worker="7\\"x\\nnew"} 70' in text
-    r = type("R", (), {"keep_state": {bad: {"missing": 5}}, "reconciler": type("C", (), {"actual": {}})(), "backfilled": 0,
+    r = type("R", (), {"keep_state": {bad: {"missing": 5}}, "reconciler": type("C", (), {"running": lambda self: {}})(), "backfilled": 0,
                        "dropped_seconds": 0.0, "volume_wait": ""})()
     from vms.recworker import RecWorker
     _prometheus_strict(RecWorker.metrics_text(r))

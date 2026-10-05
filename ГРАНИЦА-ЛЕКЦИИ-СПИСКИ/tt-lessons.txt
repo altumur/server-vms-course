@@ -1,0 +1,8 @@
+# tt — requests.ttl strict (the architect, 2026-10-05, ADR 0012). Lesson lines now untrue or incomplete.
+
+М10A_Platform/09-SubsystemSpec.md:874 — `valid_for` reads as an optional default — now REQUIRED in a spec without `requests.free: true`; a spec without it does not load ("requests.valid_for is required without `free: true`").
+М10A_Platform/09-SubsystemSpec.md:875 — `ttl` reads as optional, "через сколько строка без срока уходит" — now REQUIRED with `free: true` (and with `per_person`); `ttl: 0` = no limit, said explicitly; read by both the ledger (console) and the reaper, no fallback number.
+М10A_Platform/14-Resource.md:973 — "`ttl` — сколько стоит строка без срока" — add: required with `free`/`per_person`; `0` = no age limit; any other positive number of seconds.
+М10A_Platform/14-Resource.md:1063 — "В семействе с `ttl` строка без срока кончается, когда ей больше `ttl`" — with `ttl: 0` no row is ended by age, an action row included (it no longer falls to the `most_valid` turn, which is for a family with no `ttl` declared, i.e. a `valid_for` family).
+М10A_Platform/15-SpecConsole.md:934 — "но не дольше `ttl`" — true for a positive `ttl`; with `ttl: 0` an id stays while its row stands (or `settle`); the ledger had an implicit 86400 when `ttl` was not declared — now `ttl` is required with `per_person`, no default.
+М10A_Platform/15-SpecConsole.md:1550 — "но не позже `ttl`" — same: not with `ttl: 0`.

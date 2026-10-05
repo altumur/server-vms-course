@@ -1,4 +1,4 @@
-# /etc/containers/systemd/console.container — the console: the page and
+# /etc/containers/systemd/w2c-console.container — the console: the page and
 # the API, its own process on this box (a system job on every server in М11,
 # nothing in front). Its token writes the operator's rows only — vms/cameras/*,
 # vms/next_id, vms/retention/*, vms/idem/* — and never placement; a camera
@@ -9,11 +9,11 @@
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # console.container — the console: the page and the API as its own process, with the operator's token
+# # w2c-console.container — the console: the page and the API as its own process, with the operator's token
 # and
 # never placement
 #
-# **Role.** The Quadlet unit for `console` at `/etc/containers/systemd/console.container`. It runs
+# **Role.** The Quadlet unit for `console` at `/etc/containers/systemd/w2c-console.container`. It runs
 # `python3 -m w2cplatform console` (the boundary's step 6: it was `python3 -m vms console`, with the VMS's media
 # routes): `SpecConsole` over every spec the image carries, the VMS's at `/` (`CONSOLE_ROOT=vms`), on
 # `0.0.0.0:8080`. Its own process (a system job on every server in М11, nothing in front) with its own token
