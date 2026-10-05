@@ -428,7 +428,8 @@ def test_a_table_or_rows_named_like_a_route_of_the_console_is_refused_at_load_an
     code += src[start:src.index("            def _answered(self, method):", start)]
     said = set(re.findall(r'(?<!endswith\()"/([a-z][a-z.]*)', code))           # `"/spec"`, `"/where/"`, `"/domain/shared/"`
     said |= set(re.findall(r'segs\[1\] == "([a-z]+)"', src))                  # `place_path`: `/where/<table>/<name>`
-    said |= {r.strip("/") for r in (*console.Mount.MOUNT_ROUTES, *console.RESERVE_ROUTES, *console.MONITOR_ROUTES)}
+    said |= {r.strip("/").split("/")[0] for r in (*console.Mount.MOUNT_ROUTES, *console.RESERVE_ROUTES, *console.MONITOR_ROUTES,
+                                                  *console.MODULE_ROUTES)}   # `/session/break-glass`, `/platform/console.js`
     assert said == set(spec_mod.CONSOLE_ROUTES), (sorted(said - spec_mod.CONSOLE_ROUTES), sorted(spec_mod.CONSOLE_ROUTES - said))
 
 

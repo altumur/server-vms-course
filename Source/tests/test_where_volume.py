@@ -4,7 +4,7 @@ The console carries no bytes: no `/timeline`, no `/whep` of its own. The scale i
 recording's own (`GET /rec/where/<recording>`), and, for what it left on a volume another recorder holds now, that
 volume's: `GET /rec/where/volumes/<volume>?unit=rec/<recording>` → the recorder holding the volume and its door, with a
 token for THAT recorder and that recording. A volume nobody holds is said as `X-Unreachable: <volume>@<server>`, and
-the page names it. `_timeline` below is what the page does (`loadTimeline` in `console.html`)."""
+the page names it. `_timeline` below is what the page does (`loadTimeline` in `vms/shell.html`)."""
 import json
 import urllib.error
 import urllib.parse

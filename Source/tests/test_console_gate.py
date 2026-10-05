@@ -402,7 +402,7 @@ def test_the_emergency_door_closes_after_a_handful_of_wrong_passwords():
     box = Box()
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
     try:
-        glass = lambda pw: _call(base, "POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": pw}})[0]
+        glass = lambda pw: _call(base, "POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": pw})[0]
         assert glass("open-sesame") == 200                                                        # the account works
         assert [glass("wrong") for _ in range(5)] == [403] * 5
         assert glass("wrong") == 429 and glass("open-sesame") == 429                              # closed, to the right password too
@@ -454,8 +454,8 @@ def test_an_emergency_attempt_is_reserved_before_its_password_and_counted_by_the
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
 
     def glass(pw, xff):
-        req = urllib.request.Request(base + "/session", method="POST", headers={"Content-Type": "application/json", "X-Forwarded-For": xff},
-                                     data=json.dumps({"glass": {"who": "carol", "why": "uplink down", "password": pw}}).encode())
+        req = urllib.request.Request(base + "/session/break-glass", method="POST", headers={"Content-Type": "application/json", "X-Forwarded-For": xff},
+                                     data=json.dumps({"who": "carol", "why": "uplink down", "password": pw}).encode())
         try:
             with urllib.request.urlopen(req) as r:
                 return r.status
@@ -1692,7 +1692,7 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
     res = serve_resource(platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
     doors = {"holder": f"http://127.0.0.1:{holder.server_address[1]}", "gateway": g.url,
              "recorder": f"http://127.0.0.1:{rec_door.server_address[1]}", "resource": f"http://127.0.0.1:{res.server_address[1]}"}
-    entry = json.dumps({"glass": {"who": "carol", "why": "the domain is down", "password": "open-sesame"}}).encode()
+    entry = json.dumps({"who": "carol", "why": "the domain is down", "password": "open-sesame"}).encode()
     try:
         for name, url in doors.items():
             for path in ("/session", "/session/break-glass"):
@@ -1703,7 +1703,7 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
         for bad in (b"[1]", b'{"token": ["a", "b"]}', b'{"token": 7}', b"[" * 8000 + b"]" * 8000, b"{not json"):
             code, body, _ = _raw_call(base + "/session", "POST", bad, {"Content-Type": "application/json"})
             assert code == 400, (bad[:20], code, body[:200])
-        code, _, hdrs = _raw_call(base + "/session", "POST", entry, {"Content-Type": "application/json"})
+        code, _, hdrs = _raw_call(base + "/session/break-glass", "POST", entry, {"Content-Type": "application/json"})
         assert code == 200 and hdrs["Set-Cookie"].startswith(GLASS_COOKIE + "="), (code, hdrs)   # the console's door
         sid = hdrs["Set-Cookie"].split(";", 1)[0].split("=", 1)[1]
         assert _call(base, "GET", "/cameras", token=None)[0] == 401

@@ -138,10 +138,10 @@ def test_a_browser_is_handed_a_cookie_for_a_token_the_console_checked():
             return e.code, json.loads(e.read() or b"{}"), e.headers.get("Set-Cookie", "")
 
     try:
-        assert raw("GET", "/session")[1] == {"gated": False, "user": "operator", "login": None}    # no domain: nobody to be
+        assert raw("GET", "/session")[1] == {"open": True, "login_url": None}                     # no domain: nobody to be
         vars_.put(KEYS_PATH, signer.keyset().to_items())
         vars_.put(GRANTS_PATH, grants_to_items([Grant("alice", "admin", None, clk() + 86400)]))
-        assert raw("GET", "/session")[1] == {"gated": True, "user": None, "login": None}           # gated, and not known
+        assert raw("GET", "/session")[1] == {"open": False, "login_url": None}                    # gated, and not known
         assert raw("POST", "/session", {"token": "not-a-token"})[0] == 401
 
         token = signer.issue("alice", 900, now=clk(), kind="person")
@@ -160,7 +160,7 @@ def test_a_browser_is_handed_a_cookie_for_a_token_the_console_checked():
                    {"Authorization": f"Bearer {token}", "Origin": "http://evil.example"})[0] == 201   # a bearer is not a browser being steered
 
         clk.advance(1000)                                                                            # the token ended: the cookie is nobody's
-        assert raw("GET", "/session", headers=me)[1]["user"] is None and raw("GET", "/cameras", headers=me)[0] == 401
+        assert raw("GET", "/session", headers=me)[1].get("user") is None and raw("GET", "/cameras", headers=me)[0] == 401
         code, body, cookie = raw("DELETE", "/session", headers=me)
         assert code == 200 and cookie.startswith("w2c_token=; ") and "Max-Age=0" in cookie
     finally:
@@ -202,13 +202,13 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
         return [(e["kind"], e["user"]) for e in EventIndex(archive, "srv-1", wall=clk).query(0, clk() + 1, subsystem="audit", cls="alarm")["events"]]
 
     try:
-        assert raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "x"}})[1]["gated"] is False   # open: nothing to break into
+        assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "x"})[0] == 400   # open: nothing to break into
         vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
-        assert raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "x"}})[0] == 403   # no account for this cluster
+        assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "x"})[0] == 403   # no account for this cluster
         vars_.put(BREAK_GLASS_PATH, home.get(f"{BREAK_GLASS_PATH}/south")[0])            # what the agent carried home
-        assert raw("POST", "/session", {"glass": {"who": "", "why": "", "password": "glass-for-south"}})[0] == 400      # who and why are said
-        assert raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "wrong"}})[0] == 401
-        code, body, cookie = raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "glass-for-south"}})
+        assert raw("POST", "/session/break-glass", {"who": "", "why": "", "password": "glass-for-south"})[0] == 400      # who and why are said
+        assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "wrong"})[0] == 401
+        code, body, cookie = raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "glass-for-south"})
         assert code == 200 and body["user"] == "break-glass(carol)" and body["until"] == clk() + 900
         assert cookie.startswith("w2c_glass=") and "HttpOnly" in cookie and "SameSite=Strict" in cookie
         me = {"Cookie": cookie.split(";")[0]}
@@ -220,7 +220,7 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
         assert raw("GET", "/cameras", {"Cookie": "w2c_glass=guessed"})[0] == 401                                      # a session is this process's, not a guess
         clk.advance(901)
         assert raw("GET", "/cameras", headers=me)[0] == 401                                                          # fifteen minutes, like a token
-        code, body, cookie = raw("POST", "/session", {"glass": {"who": "carol", "why": "still down", "password": "glass-for-south"}})
+        code, body, cookie = raw("POST", "/session/break-glass", {"who": "carol", "why": "still down", "password": "glass-for-south"})
         me = {"Cookie": cookie.split(";")[0]}
         assert raw("DELETE", "/session", headers=me)[0] == 200 and raw("GET", "/cameras", headers=me)[0] == 401     # closed: gone from memory
     finally:

@@ -50,7 +50,9 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break_glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
 MEMBER_MARK = DOMAIN_MARKS[0]         # the one a door that verifies no token reads (`Gate.gated`; the review's ninth pass)
 RANK = {"view": 0, "edit": 1, "admin": 2}
-OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz", "/session")   # the page, what monitoring reads, and the door in
+MODULE_ROUTES = ("/platform/console.js", "/platform/console.css")       # the console module every page is built from
+# the page and its module, what monitoring reads, and the door in
+OPEN_ROUTES = ("/", "/index.html", *MODULE_ROUTES, "/metrics", "/healthz", "/session", "/session/break-glass")
 COOKIE = "w2c_token"
 GLASS_COOKIE = "w2c_glass"            # an emergency session: this console's own, in its memory, never a token
 log = logging.getLogger("w2cplatform.access")

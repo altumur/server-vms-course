@@ -301,16 +301,16 @@ def test_the_catalogue_says_what_each_unit_raises_and_can_do():
 
 
 def test_the_pages_scenario_form_takes_its_subsystem_from_the_spec_and_names_none_of_its_own():
-    """The page is the platform's (`w2cplatform/console.html`), and its scenario form said `vms` itself: the units
-    from `catalog.vms`, the trigger `vms|<unit>|<kind>`, the action `{sub: 'vms', …}` — a page over another root
+    """The page (`vms/shell.html`; the platform's until the boundary's step 3), and its scenario form said `vms` itself:
+    the units from `catalog.vms`, the trigger `vms|<unit>|<kind>`, the action `{sub: 'vms', …}` — a page over another root
     subsystem would have offered nothing and filed actions for a subsystem it does not show (the course's decision on
     the platform's names). Now the form takes the root console's `spec.name`, and the catalogue it builds from the
     routes the specs declare keys the units by that same name — no `/auto/catalog`, a route of the VMS's on the
     platform's console until the boundary's step 6."""
     import os
     import re
-    page = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "w2cplatform",
-                             "console.html"), encoding="utf-8").read()
+    page = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms",
+                             "shell.html"), encoding="utf-8").read()
     form = page.split("// -- automation:", 1)[1].split("// -- the administrator's knob", 1)[0]
     assert "catalog[spec.name]" in form and "sub: spec.name" in form and "${spec.name}|${current}|" in form
     assert "[spec.name]: units" in form and "/auto/catalog" not in page

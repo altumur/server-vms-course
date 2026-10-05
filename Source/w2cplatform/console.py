@@ -3,16 +3,21 @@ already says what its units are, which fields the operator owns and what
 leaves the cluster; that is everything a console needs to list, edit and
 show them. So the console is one class, run from the same spec:
 
-    GET  /                       the page (console.html): the unit list, the edit form built from the spec's fields,
-                                 and — where a spec about the unit declares a door with spans — a timeline and a player
+    GET  /                       the page: the subsystem's own (`shell.html` beside its spec), else the platform's
+                                 (console.html) — the console module and its mount, which shows any spec
+    GET  /platform/console.js[?v=1], /platform/console.css   the console module every page is built from, and its look;
+                                 open (it draws the login); another version is 404
+    GET/POST/DELETE /session, POST /session/break-glass   the door in (`session`): {open, login_url, user?, until?, via?}
     GET  /spec                   what the page reads first: name, rows, id rule, fields, door, metric names
     GET  /<rows>                 {rows: the read model from every worker's heartbeat, configured: the units}
-    GET  /where/<id>             the stored placement (why) and the assignments' answer (where, one scan)
+    GET  /where/<id>             the stored placement (why, its worker and server) and the assignments' answer (where, one
+                                 scan), and the holder's door for the spec's `door: {routes}`
     GET  /where/<table>/<place>?unit=<sub>/<id>   who holds a place of the spec's `placement.places` now, and its door
                                  for that unit — or 404 and `X-Unreachable: <place>@<server>` when nobody does
     GET  /resources              the platform's resources: usage, units, live | silent
     GET  /unplaceable            units nothing live can serve, with the labels that say why
-    GET  /servers                every server as placement sees it: its labels, its resource (the fact), its workers, placeable or why not
+    GET  /servers                every server as placement sees it: its labels, its resource (the fact, its address, its disk),
+                                 its workers, placeable or why not, its decommission
     GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
                                  units by cluster, with its age; 404 anywhere else — a cluster does not know the others
     GET  /domain/shared/<sub>[?unit=<id>]   the fields a spec shares with the domain (`domain.shared`), resolved from
@@ -51,7 +56,8 @@ rule in this file.
 #
 # **Role in the module.** Lesson 6, the other half of `spec.py`. A subsystem's YAML already says what its
 # units are, which fields the operator owns and what leaves the cluster; that is everything a console needs
-# to list, edit and show them, so the console is one class run from the same spec. It serves `console.html`,
+# to list, edit and show them, so the console is one class run from the same spec. It serves the page (`page_of`), the
+# console module (`/platform/console.js`),
 # `/spec` (what the page reads first), the rows with the read model, `/where`, `/resources`, `/unplaceable`,
 # `/events` (if a `MergedIndex` — anything with `query(t0, t1, kind, subsystem, unit, current_epochs)` — is behind it), `/metrics`, and the writes — POST/PUT/DELETE on the rows and
 # POST `/marks` — with idempotency keys stored in Variables so a retry answered by another console instance
@@ -63,7 +69,10 @@ rule in this file.
 # process.
 #
 # ## Module-level names
-# - `PAGE` — absolute path of `console.html` beside this file; served at `/`.
+# - `PAGE` — absolute path of `console.html` beside this file: the platform's own page, the console module and its mount
+#   and nothing else; served at `/` for a subsystem with no page of its own. `SHELL` — a subsystem's own page, the file
+#   of that name beside its spec (`page_of`); `MODULE`, `MODULE_CSS`, `MODULE_VERSION` — the console module every page is
+#   built from, served at `/platform/console.js` and `/platform/console.css` (`send_module`).
 #
 # ### `__init__(self, ctl, marks_root=None, index=None, worst_failover=0.0, wall=None,
 # lost_after=45.0)` `ctl` is the subsystem's `SpecController` holding the console's token;
@@ -77,7 +86,7 @@ rule in this file.
 # - `test_the_console_over_http` walks the whole surface: POST twice with one key is one camera; the
 #   console's controller cannot `place` (`Forbidden`); PUT `{"worker": "w-9"}` is 400; `/cameras` rows show
 #   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
-#   the page mentions `/spec`, `/timeline/`, `<video>` and never the word camera outside its comment;
+#   a subsystem's own page reads `/spec` and the holders' doors;
 #   what the holders serve is read at the doors `/where` hands out, never here; PUT `{"enabled": false}` bumps
 #   revision to 2; DELETE marks the row and the placement waits for `unplace_deleted`.
 # - Idempotency covers POST always, PUT optionally, DELETE never; the page sends a fresh key with every
@@ -151,7 +160,7 @@ def blobs_slots() -> threading.BoundedSemaphore:
     if not _blobs:
         _blobs.append(threading.BoundedSemaphore(max(1, int(os.environ.get("BLOBS_AT_ONCE", BLOBS_AT_ONCE)))))
     return _blobs[0]
-from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate, caller_addr, is_local, may_on,
+from .access import (COOKIE, GLASS_COOKIE, MODULE_ROUTES, OPEN_ROUTES, UNIX_PEER, Denied, Gate, caller_addr, is_local, may_on,
                      session_cookie, token_of)
 from .journal import AUDIT, Journal
 from .resource import resources_seen
@@ -167,18 +176,48 @@ from .variables import Conflict, Forbidden
 log = logging.getLogger(__name__)
 
 PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.html")
+MODULE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.js")
+MODULE_CSS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.css")
+MODULE_VERSION = "1"                   # the contract's version (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §3): `?v=` names it
+SHELL = "shell.html"
 
 
-# The page's Content-Security-Policy: the one script the browser may run is the page's own, named by its
-# hash, and nothing else — not a `<script>` an event's note smuggled into the list, not an `onclick=` in a
-# camera's name. The page escapes what it draws (`esc`/`h` in `console.html`); this is the second wall, for
-# the place the escaping missed. The script is inline, so `'self'` would refuse it: the hash is the policy.
+# THE PAGE AT `/` (the boundary's step 3): a subsystem's own page when it has one — `shell.html` beside its spec, the
+# page that mounts the platform's console module and adds what is its own — else the platform's page, the module and
+# its mount and nothing else, which shows any spec. A spec built in code (`from_dict`) has no file, so no page of its own.
+def page_of(spec) -> str:
+    from . import catalog
+    f = catalog.file_of(spec.name)
+    own = os.path.join(os.path.dirname(f), SHELL) if f else None
+    return own if own and os.path.isfile(own) else PAGE
+
+
+# `GET /platform/console.js` and `/platform/console.css`: the module and its look, open — the module draws the login.
+# `?v=` asks for a version; another than this platform's is 404, saying which one it serves (no older one is kept: the
+# owner's rule, while the system runs on one machine).
+def send_module(h, path: str, q: dict) -> None:
+    if q.get("v") not in (None, MODULE_VERSION):
+        return h._send(404, {"detail": f"no console module of version {q['v'][:20]}; this platform serves {MODULE_VERSION}",
+                             "error": "no such version"})
+    raw = open(MODULE if path.endswith(".js") else MODULE_CSS, "rb").read()
+    h.send_response(200)
+    h.send_header("Content-Type", "text/javascript; charset=utf-8" if path.endswith(".js") else "text/css; charset=utf-8")
+    h.send_header("Content-Length", str(len(raw)))
+    h.end_headers()
+    h.wfile.write(raw)
+
+
+# The page's Content-Security-Policy: the scripts the browser may run are the page's own, each inline one named by
+# its hash, and — for a page that loads the console module (`<script src="/platform/…">`) — this origin's files; nothing
+# else — not a `<script>` an event's note smuggled into the list, not an `onclick=` in a unit's name. The page and the
+# module escape what they draw; this is the second wall, for the place the escaping missed.
 def page_csp(path: str = PAGE) -> str:
     import base64, hashlib, re
     page = open(path, encoding="utf-8").read()
     scripts = [m.group(1) for m in re.finditer(r"<script>(.*?)</script>", page, re.S)]
     hashes = " ".join("'sha256-" + base64.b64encode(hashlib.sha256(s.encode("utf-8")).digest()).decode() + "'" for s in scripts)
-    return f"script-src {hashes}; object-src 'none'; base-uri 'none'"
+    own = "'self' " if re.search(r"<script src=\"/", page) else ""
+    return f"script-src {own}{hashes}; object-src 'none'; base-uri 'none'"
 
 
 # A file, whole or by `Range` — what a `<video>` element asks for. Parses `bytes=a-b`, replies 206 with
@@ -489,7 +528,7 @@ MONITOR_PER_ADDRESS = 2       # …of which one address holds this many: a scrap
 CONSOLE_BOX_RESERVE = 4       # …and for the caller on the box, through the unix socket (`CONSOLE_BOX_RESERVE`)
 CONSOLE_HEADER_TIMEOUT = 5.0  # seconds a request's line and headers may take, whole (`CONSOLE_HEADER_TIMEOUT`)
 RESERVE_HEADERS = 2.0         # …on a connection of the reserve or the monitors' lane
-RESERVE_ROUTES = ("/session", "/healthz")
+RESERVE_ROUTES = ("/session", "/session/break-glass", "/healthz")
 MONITOR_ROUTES = ("/metrics", "/healthz")
 
 
@@ -1459,6 +1498,7 @@ class SpecConsole:
                 "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
                             **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
                             **({"fixed": True} if f.fixed else {}),
+                            **({"bound_to": list(f.bound_to)} if f.bound_to else {}),   # a secret asked anew when they change
                             **({"enum": list(f.enum)} if f.enum else {})} for f in s.fields.values()],
                 **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
                 # the page's words and what it shows under a server, as the spec wrote them; the gauges it reads on
@@ -1736,11 +1776,16 @@ class SpecConsole:
             node = sorted({l for row in s["workers"] for l in str(row["labels"]).split(",") if l})
             s["labels_node"] = node
             s["labels"], s["labels_source"] = (sorted(rows[server]), "console") if server in rows else (node, "node")
-            if ctl.labels_unread(server):                # its row is there and did not read: nothing moves off it (the tenth pass)
-                s["labels_unread"] = True
+            if ctl.labels_unread(server):                # its row is there and did not read: nothing moves off it (the tenth pass);
+                s["labels_source"] = "unknown"           # …"unknown", the product's word, which the console module shows
             s["draining"] = server == drains
             s["resource"] = ctl.resource_state(server, self.lost_after)
             s["resource_heard_at"] = float(res[server]["ts"]) if server in res else None
+            # …and what the resource says of itself: its address, and the disk under it (`space: {total, free}`, bytes)
+            s["resource_url"] = str(res[server].get("url") or "") if server in res else ""
+            sp = res[server].get("space") if server in res else None
+            s["space"] = ({"total": number(f"{server}#space.total", sp.get("total"), int, 0),
+                           "free": number(f"{server}#space.free", sp.get("free"), int, 0)} if isinstance(sp, dict) else None)
             # The operator's decommission (`platform/decommission/<server>`) and what this subsystem's controller did
             # about it (`<sub>/decommissioned/<server>`); whether it may be asked now, and why not — the sign that the
             # server answers — or the warning that its resource was never heard; and the places its workers held, which
@@ -2257,7 +2302,7 @@ class SpecConsole:
     # - `_body()` — the JSON request body, `{}` if empty.
     # - `_uid()` — the id segment (`path_id`: the one after the family, the one the gate checked) through `spec.parse_id`.
     # - `do_GET` — routes, in order:
-    #   - `GET /` or `/index.html` — `console.html`.
+    #   - `GET /` or `/index.html` — the page (`page_of`), with its CSP; `/platform/console.js|css` — the module (`send_module`).
     #   - `GET /spec` — `describe()`.
     #         - `GET /<rows>` — `{rows: ctl.read_model(lost_after), configured: ctl.units()}`: the
     #       heartbeats' view over the configured rows.
@@ -2532,47 +2577,56 @@ class SpecConsole:
         log.error("%s: a write failed: %s", self.spec.name, e)
         return 500, {"detail": no_paths(e), "error": "the write failed"}
 
-    # THE DOOR IN: `/session`. The gate asks for a token; this is how a person's BROWSER comes to carry one.
+    # THE DOOR IN: `/session`. The gate asks for a token; this is how a person's BROWSER comes to carry one. The shapes
+    # are the product's (`w2cplatform/access.go`, `Gate.session`), which the platform's console module reads (the
+    # boundary's step 3):
     #
-    #   GET     is this console gated, who am I here, and where does one log in (`LOGIN_URL` — the domain's
-    #           signer; a console issues no tokens and keeps no passwords, М12 Lesson 4)
-    #   POST    `{token}` — checked exactly as the gate would check it, and set as a cookie the page's script
-    #           cannot read (`access.session_cookie`), for as long as the token lives
-    #   DELETE  the cookie goes
+    #   GET     `{open, login_url, user?, until?, via?}` — whether this console asks at all (`open`: it does not), who
+    #           the caller is here, and the login door (`LOGIN_URL` is the domain's signer, its door `/login`; a console
+    #           issues no tokens and keeps no passwords, М12 Lesson 4)
+    #   POST    `{token}` — checked exactly as the gate would check it, and set as a cookie the page's script cannot
+    #           read (`access.session_cookie`), for as long as the token lives: `{user, until}`
+    #   DELETE  the cookie goes, and an emergency session with it: `{out: true}`
+    #   POST /session/break-glass `{who, why, password}` — the emergency entry (`Gate.open_glass`): a session in this
+    #           process's memory, carried by a cookie of its own: `{user, until}`
     #
-    # The password never comes here. The page sends it to the domain's login door and brings back only the
-    # token: N consoles that never see a password are N places it cannot be taken from.
-    def session(self, h, method: str) -> None:
+    # The password never comes here. The page sends it to the domain's login door and brings back only the token: N
+    # consoles that never see a password are N places it cannot be taken from. An open console has nothing to log in
+    # to, nor to break into: 400.
+    def session(self, h, method: str, path: str = "/session") -> None:
         try:
             access = self.gate.access()
         except Denied as e:
             return h._send(e.status, {"detail": e.why, "error": "denied"})
-        login = os.environ.get("LOGIN_URL") or None
-        if method == "DELETE":
+        signer = os.environ.get("LOGIN_URL") or ""
+        login = signer.rstrip("/") + "/login" if signer else None
+        if method == "DELETE" and path == "/session":
             self.gate.close_glass(h.headers)
             h._extra_headers = (("Set-Cookie", session_cookie("", 0)), ("Set-Cookie", session_cookie("", 0).replace(COOKIE, GLASS_COOKIE, 1)))
-            return h._send(200, {"gated": access is not None, "user": None})
+            return h._send(200, {"out": True})
+        if (method, path) not in (("GET", "/session"), ("POST", "/session"), ("POST", "/session/break-glass")):
+            return h._send(404, {"detail": "GET, POST or DELETE /session; POST /session/break-glass", "error": "no such path"})
         if access is None:
-            return h._send(200, {"gated": False, "user": h.headers.get("X-User", "operator"), "login": None})
+            if method == "GET":
+                return h._send(200, {"open": True, "login_url": login})
+            return h._send(400, {"detail": "this console is open: there is nothing to log in to, nor to break into",
+                                 "error": "open"})
         secure = (h.headers.get("X-Forwarded-Proto", "") == "https")
         # The door in is anybody's, so its body is whatever anybody sends (the review's ninth pass, minor: a body that
         # is a list, a token that is not a string, brackets past the parser's depth were 500): an object holding a
-        # string token, or an emergency entry — else 400, and nothing is asked of the gate.
+        # string token, or the emergency entry's three strings — else 400, and nothing is asked of the gate.
         from .rows import PARSE_ERRORS
         try:
             body = h._body() if method == "POST" else {}
         except (*PARSE_ERRORS, OSError):
             body = None
-        if not isinstance(body, dict) or not isinstance(body.get("token", ""), (str, type(None))):
-            return h._send(400, {"detail": "the door in takes {\"token\": \"…\"} or {\"glass\": {\"who\", \"why\", "
-                                           "\"password\"}}", "error": "not a session request"})
-        if method == "POST" and isinstance(body.get("glass"), dict):
-            # The emergency entry (`Gate.open_glass`): who, why and the one local password. What comes back is
-            # a session in this process's memory, carried by a cookie of its own.
-            g = body["glass"]
+        if path == "/session/break-glass":
+            if not isinstance(body, dict) or not all(isinstance(body.get(k, ""), str) for k in ("who", "why", "password")):
+                return h._send(400, {"detail": "the emergency entry takes {\"who\", \"why\", \"password\"}, strings",
+                                     "error": "not a session request"})
             peer = str(getattr(h, "client_address", ("?",))[0])
             try:
-                sid, payload = self.gate.open_glass(str(g.get("who", "")), str(g.get("why", "")), str(g.get("password", "")),
+                sid, payload = self.gate.open_glass(body.get("who", ""), body.get("why", ""), body.get("password", ""),
                                                     addr=caller_addr(h.headers, peer), local=is_local(peer))
             except Denied as e:
                 if e.retry_after is not None:                            # the emergency door's pace: when the next turn is
@@ -2580,7 +2634,10 @@ class SpecConsole:
                 return h._send(e.status, {"detail": e.why, "error": "denied",
                                           **({"retry_after": round(e.retry_after, 1)} if e.retry_after is not None else {})})
             h._extra_headers = (("Set-Cookie", session_cookie(sid, float(payload.get("exp", 0)) - self.wall(), secure).replace(COOKIE, GLASS_COOKIE, 1)),)
-            return h._send(200, {"gated": True, "user": f"break-glass({payload.get('who')})", "until": payload.get("exp"), "login": login})
+            return h._send(200, {"user": f"break-glass({payload.get('who')})", "until": payload.get("exp")})
+        if not isinstance(body, dict) or not isinstance(body.get("token", ""), (str, type(None))):
+            return h._send(400, {"detail": "the door in takes {\"token\": \"…\"}; the emergency entry is POST "
+                                           "/session/break-glass", "error": "not a session request"})
         token = (body.get("token") if method == "POST" else token_of(h.headers)) or ""
         try:
             payload = access.who(token) if token else (self.gate.payload(h.headers, access) if method == "GET" else None)
@@ -2589,11 +2646,15 @@ class SpecConsole:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
             payload = None                               # a cookie that has expired: not logged in, and not an error
         if payload is None:
-            return h._send(200 if method == "GET" else 400, {"gated": True, "user": None, "login": login})
+            if method == "GET":
+                return h._send(200, {"open": False, "login_url": login})
+            return h._send(400, {"detail": "the door in takes {\"token\": \"…\"}", "error": "not a session request"})
+        user = f"break-glass({payload.get('who')})" if payload.get("via") == "break-glass" else payload.get("sub")
         if method == "POST":
             h._extra_headers = (("Set-Cookie", session_cookie(token, float(payload.get("exp", 0)) - self.wall(), secure)),)
-        user = f"break-glass({payload.get('who')})" if payload.get("via") == "break-glass" else payload.get("sub")
-        return h._send(200, {"gated": True, "user": user, "until": payload.get("exp"), "login": login})
+            return h._send(200, {"user": user, "until": payload.get("exp")})
+        return h._send(200, {"open": False, "login_url": login, "user": user, "until": payload.get("exp"),
+                             "via": str(payload.get("via") or "")})
 
     # THE BODY, READ ONCE, BOUNDED, AFTER THE CALLER IS KNOWN (the review's fifth pass, major). `Content-Length` is
     # checked before a byte is read: past `MAX_BODY` (a blob's bytes: `MAX_BLOB`) it is 413, and the connection is
@@ -3013,10 +3074,10 @@ class SpecConsole:
         prefix already removed; `h` is the handler (its `_send`, `_body`, `headers`, `rfile`)."""
         con, ctl, spec = self, self.ctl, self.spec
         rows_path = "/" + spec.rows
-        if path == "/session":                           # the door in: anybody's, so its body is a token or a password
+        if path in ("/session", "/session/break-glass"):  # the door in: anybody's, so its body is a token or a password
             if not self.read_body(h, SESSION_BODY):
                 return
-            return self.session(h, method)
+            return self.session(h, method, path)
         try:
             self.route_id(method, path)                  # `/<rows>/1/2`: no such route — said before the gate reads an id
         except NoSuchRoute as e:
@@ -3069,7 +3130,10 @@ class SpecConsole:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
         if method == "GET":
             if path in ("/", "/index.html"):
-                return send_file(h, PAGE, "text/html; charset=utf-8", headers=(("Content-Security-Policy", page_csp()),))
+                page = page_of(spec)
+                return send_file(h, page, "text/html; charset=utf-8", headers=(("Content-Security-Policy", page_csp(page)),))
+            if path in MODULE_ROUTES:
+                return send_module(h, path, q)
             if path == "/healthz":                      # alive: what the reserve and the monitors' lane answer besides
                 return h._send(200, {"ok": True})        # (it was named there, and was a 404: the seventh pass's sweep)
             if path == "/spec":
@@ -3091,6 +3155,7 @@ class SpecConsole:
                     return h._send(400, {"detail": str(e), "error": "not an id"})
                 pl = ctl.placement(uid)
                 return h._send(200 if pl else 404, {"worker": pl.worker if pl else None,
+                                                    "server": ctl.server_of(pl.worker) if pl else None,
                                                     "reason": pl.reason if pl else ctl.unplaced_reason(uid),   # nowhere, and why (DQ)
                                                     "directory": con.where(uid), "scans": con.scans,
                                                     **con.door_of(h, uid)})

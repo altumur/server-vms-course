@@ -63,8 +63,9 @@ Environment=CONSOLE_PORT=8080
 # flooded (`w2cplatform/console.py`, `Bounds`) — is whoever came through this socket, and who may is the mode of
 # the directory (0700 root, `vms.tmpfiles`) and of the socket (0660): no caller on the network, no proxy, and no
 # process of the box that is not root. On the box: `curl --unix-socket /run/vms-console/console.sock
-# http://console/session -d '{"glass": {…}}'`; from the operator's machine: `ssh -L 8080:/run/vms-console/console.sock
-# root@box`, and a browser at http://localhost:8080. A TCP peer of 127.0.0.1 is the network's, like any other.
+# http://console/session/break-glass -d '{"who": …, "why": …, "password": …}'`; from the operator's machine:
+# `ssh -L 8080:/run/vms-console/console.sock root@box`, and a browser at http://localhost:8080. A TCP peer of
+# 127.0.0.1 is the network's, like any other.
 Environment=CONSOLE_UNIX=/run/vms-console/console.sock
 Volume=/run/vms-console:/run/vms-console:z
 # Who scrapes `/metrics` (the review's seventh pass): addresses or networks, comma-separated. They get four

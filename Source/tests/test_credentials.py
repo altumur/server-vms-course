@@ -781,11 +781,11 @@ def test_a_closed_consoles_gate_never_quotes_a_source_it_refuses():
 def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_mask():
     """The thirteenth review, minor: the page drew `cred_secret` as `type="text"` — the password on the screen while it
     is typed, where `access_secret` beside it was a password field. Every `*_secret` of a spec is a password field now
-    (`input` in `console.html`); and the edit form leaves it empty, its placeholder saying whether one is set — filled
+    (`input` in the VMS's page, `vms/shell.html`); and the edit form leaves it empty, its placeholder saying whether one is set — filled
     with the row's `***` it saved `***` as the camera's password on the next Save."""
     import os
     import re
-    page = open(os.path.join(os.path.dirname(__file__), "..", "w2cplatform", "console.html"), encoding="utf-8").read()
+    page = open(os.path.join(os.path.dirname(__file__), "..", "vms", "shell.html"), encoding="utf-8").read()
     body = page[page.index("function input(f, adding)"):]
     body = body[:body.index("\n}\n")]
     first = body.index("if (f.name.endsWith('_secret'))")

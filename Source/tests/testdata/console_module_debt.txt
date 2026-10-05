@@ -1,0 +1,31 @@
+# console_module_debt.txt — the lines the course's copy of the platform's console module differs from the product's
+# by (test_console_module.py): a change the course leads with, until the product takes it. It only shrinks.
+#   <file> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>
+console.js | + | 007f2f2b | // [course leads] a group the domain's shared settings offer (/domain/shared/<sub>)
+console.js | + | 5be0eee5 | sharedGroup: "From the domain's shared settings (rev {r}): it is there with no unit in it",
+console.js | + | 396a9e7c | // [course leads] группа из общих настроек домена (/domain/shared/<sub>)
+console.js | + | f9772290 | sharedGroup: "Из общих настроек домена (rev {r}): есть и без единиц",
+console.js | + | 72b78f06 | shared: {},   // [course leads] the groups each subsystem shares with the domain: {sub: {groups, rev
+console.js | + | bd95ff00 | // [course leads] the spec as /spec gave it, a copy — for the page's own reading of it (its places' 
+console.js | + | 2b8b575b | C.spec = name => { const s = st.subs.find(x => x.name === name); return s ? JSON.parse(JSON.stringif
+console.js | - | b6e5092f | const extraGroups = sub => ((shell.groupValues || {})[sub.name] || []).flatMap(fn => { try { return 
+console.js | + | 358d2413 | // [course leads] …and groups with no unit in them yet: those the domain offers for a group_by field
+console.js | + | 1ad83783 | // (domain.shared), read by the module at /domain/shared/<sub> — no page passes them any more (addGr
+console.js | + | 1dc15ba7 | const extraGroups = sub => ((st.shared[sub.name] || {}).groups || []).map(String).filter(Boolean);
+console.js | + | 515ea77c | const sharedHint = (sub, value) => { const s = st.shared[sub.name], sep = (display(sub).tree || {}).
+console.js | + | a321bae7 | return s && (s.groups || []).some(v => String(v) === value || (sep && String(v).startsWith(value + s
+console.js | - | fcc53f8e | // Groups that are there with no unit in them yet (a site's folders, say): fn() → [values], for a su
+console.js | - | 1e74028c | // group_by field; they stand in the tree and in the choice of groups like any other.
+console.js | - | fed2f042 | C.addGroupValues = (sub, fn) => { (shell.groupValues = shell.groupValues || {})[sub] = (shell.groupV
+console.js | - | e2cfde68 | <p class="sub">${h(W.unitsIn)}: ${inIt.length} · ${h(W.groupHelp)}</p>
+console.js | + | a9ab277f | <p class="sub">${h(W.unitsIn)}: ${inIt.length} · ${h(W.groupHelp)}</p>${sharedHint(sub, value)}
+console.js | + | 0efa2c60 | // [course leads] the groups a spec shares with the domain: its group_by field among domain.shared
+console.js | + | aa2a1c67 | const shared = {};
+console.js | + | 07142cd3 | for (const sub of st.subs) {
+console.js | + | a646746e | const g = (display(sub).tree || {}).group_by; if (!g || !((sub.spec.domain || {}).shared || []).incl
+console.js | + | 5cfa4571 | try { const d = await getJSON("/domain/shared/" + encodeURIComponent(sub.name)), f = (d.fields || {}
+console.js | + | f77dfb81 | catch (e) { /* no domain here: no shared groups */ }
+console.js | + | c2b7df62 | }
+console.js | + | f7794004 | st.shared = shared;
+console.js | - | e372698b | const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st
+console.js | + | 5a9267f0 | const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st

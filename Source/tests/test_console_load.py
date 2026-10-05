@@ -236,7 +236,7 @@ def test_a_flood_from_one_address_keeps_neither_the_emergency_entry_at_the_box_n
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
     port, who, stop, others = srv.server_address[1], {}, threading.Event(), []
     srv.peer_of = lambda request, ca: (who.get(ca[1], str(ca[0])), False)
-    glass = {"glass": {"who": "anna", "why": "the domain is down", "password": "open-sesame"}}
+    glass = {"who": "anna", "why": "the domain is down", "password": "open-sesame"}
     get = lambda path, token="": (f"GET {path} HTTP/1.1\r\nHost: x\r\n" + (f"Authorization: Bearer {token}\r\n" if token else "")
                                   + "\r\n").encode()
 
@@ -274,7 +274,7 @@ def test_a_flood_from_one_address_keeps_neither_the_emergency_entry_at_the_box_n
         assert srv.bounds.by_addr[("common", "203.0.113.9")] == wc.CONSOLE_PER_ADDRESS     # its share, and not one more
         assert srv.refused > 40                                       # the rest: 503 on the spot, no thread
         # the emergency entry from the box, through the unix socket — and then work under it, on any route
-        code, _, headers = _unix(sock, "POST", "/session", glass)
+        code, _, headers = _unix(sock, "POST", "/session/break-glass", glass)
         assert code == 200 and "w2c_glass=" in headers.get("Set-Cookie", ""), (code, headers)
         cookie = headers["Set-Cookie"].split(";", 1)[0]
         assert _unix(sock, "GET", "/cameras", headers={"Cookie": cookie})[0] == 200
@@ -292,10 +292,10 @@ def test_a_flood_from_one_address_keeps_neither_the_emergency_entry_at_the_box_n
         busy = _ask(_as(who, "192.0.2.9", port), get("/cameras", "admin"))
         assert busy.startswith(b"HTTP/1.0 503") and b"/session" in busy                              # …nor on the reserve
         body = json.dumps(glass).encode()
-        door_in = _ask(_as(who, "192.0.2.8", port), b"POST /session HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
+        door_in = _ask(_as(who, "192.0.2.8", port), b"POST /session/break-glass HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
                        + f"Content-Length: {len(body)}\r\n\r\n".encode() + body)
         assert door_in.startswith(b"HTTP/1.0 200") and b"w2c_glass=" in door_in                      # the door in, from the network
-        code, _, headers = _unix(sock, "POST", "/session", glass)                                    # the box: its own lane
+        code, _, headers = _unix(sock, "POST", "/session/break-glass", glass)                                    # the box: its own lane
         assert code == 200
         assert _unix(sock, "GET", "/cameras", headers={"Cookie": headers["Set-Cookie"].split(";", 1)[0]})[0] == 200
         assert _unix(sock, "GET", "/metrics")[0] == 200
@@ -356,8 +356,8 @@ def test_four_or_eight_addresses_flooding_keep_neither_an_honest_door_in_nor_a_l
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
     port, who = srv.server_address[1], {}
     srv.peer_of = lambda request, ca: (who.get(ca[1], str(ca[0])), False)
-    glass = json.dumps({"glass": {"who": "anna", "why": "the domain is down", "password": "open-sesame"}}).encode()
-    door_in = (b"POST /session HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
+    glass = json.dumps({"who": "anna", "why": "the domain is down", "password": "open-sesame"}).encode()
+    door_in = (b"POST /session/break-glass HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
                + f"Content-Length: {len(glass)}\r\n\r\n".encode() + glass)
     get = lambda path, token="": (f"GET {path} HTTP/1.1\r\nHost: x\r\n" + (f"Authorization: Bearer {token}\r\n" if token else "")
                                   + "\r\n").encode()

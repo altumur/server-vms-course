@@ -1,0 +1,1190 @@
+<!doctype html>
+<!-- The console's one page, for ANY subsystem. No framework, no build step.
+     It reads /spec first — the subsystem's name, what its rows are called,
+     how a unit is identified, which fields the operator owns and whether
+     there is media — and builds the list, the add form and the edit form
+     from that. Nothing on this page names a camera: the VMS is the spec that
+     says `rows: cameras`, `media: true`; live and det are other specs and the
+     same page. With media the page adds the timeline, the player, the
+     events — as ticks on the timeline and as a list under it, from every
+     subsystem, coloured by subsystem, each click seeking the player; as a
+     live feed beside the live picture, polled while watching; and as a
+     Mark button, the operator's own event — /timeline/<id>, /events?unit=,
+     each span's `media` route, /marks (one box: a list; a cluster: {segments,
+     unreachable, note}, each span naming its server; the events reply's
+     `state` names a resource that did not answer). -->
+<!--
+NOTES — what this page is, its regions and its state (each script function is described where it is defined)
+
+# console.html — the console's one page, for any subsystem: built from /spec, no framework, no build step
+
+**Role in the module.** Lesson 6. Served by `console.py` at `/`. The page reads `/spec` first — the
+subsystem's name, what its rows are called, how a unit is identified, which fields the operator owns and
+which doors its holders open — and builds the unit list, the add form and the edit form from that. Nothing on this
+page names a subsystem's things: each is a spec (`rows`, `about`, `door`) and the same page
+(`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http` asserts the word "camera"
+does not appear outside the leading comment). Where a spec about this unit declares a door with the spans route
+(`SPANS`) the page adds the scale and the player: the door is asked for at `/<sub>/where/<id>` (its url and a token),
+its spans read raw from `<url>/<SPANS>/<id>` and played piece by piece from `<url>/segment/<id>/e<epoch>/<fromMs>-<toMs>`;
+and, for a subsystem with places (`places: {table}`), each place's holder is asked too —
+`/<sub>/where/<table>/<place>?unit=<sub>/<id>` — and its door's spans merged without doubling; a place nobody holds is
+named in `#note` from `X-Unreachable` (`<place>@<server>`). Plus the platform's `/events?unit=<sub>/<id>`. The console
+itself carries no bytes: no route of its own for spans or for an offer. Writes go through the console with a fresh `Idempotency-Key` per attempt
+so a retried click is one unit; refusals are shown as the server's `detail`.
+
+## `<style>`
+Light/dark palette via CSS variables (`−−media` blue for recorded spans, `−−events` amber for events-only
+spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red for the status dot). A two-column grid: a
+280 px `aside` and `main`. `#edit` and `#media` start hidden; `li.stale` is muted; `.span.fenced` is faded;
+`.span.playing` outlined.
+
+## DOM regions
+- `aside`
+  - `#rows` — heading: the rows name from the spec plus a count.
+        - `#units` — the unit list (`li` per unit: a phase dot, the label, `#id`, and on the right `worker ·
+      server · age s` or `unplaced`).
+        - `#addbox` / `#addlabel` — a collapsible "Add" section containing form `#add` with `#addfields`
+      (inputs generated from the spec), a submit button, `#addnote` (how the id is made) and `#adderr`.
+  - `#status` — "N workers live · M <running gauge>" from `/metrics`.
+  - `#policy` — the administrator's knob from `/servers`' `policy`: a select, servers `shared` | `distinct`,
+    `PUT /policy` on change, with one line saying what the choice means.
+  - `#servers` — one line per server from `/servers`: its resource (`live`, `silent`, `unknown` —
+    the fact), its workers with load/capacity, and *not placeable: …* in red when the controller would not
+    place there now; what the server reaches (`labels`, and whether they were set here or are the node's), with
+    *edit* — `PUT /servers/<name>/labels` after naming the cameras that will move (`GET …/labels?labels=`) — and
+    *back to the node's* (`DELETE`); a worker that is silent and whose process still runs there in red (*hung*: the
+    controller frees nothing under it); *decommission* — the machine is gone for good (`POST
+    /servers/<name>/decommission`, refused in words while the server answers) — and *bring back* (`DELETE`); then
+    what this process fronts, from `/mounts`.
+- `main`
+  - `#title` — the selected unit's label, or "Pick one".
+  - `#meta` — phase · worker · server · epoch · placement reason · the holder's `why` and `warning` · "last known
+    state" when stale.
+        - `#recbox` — the unit's recordings, from `/rec/recordings` when the console mounts `rec`: one line per
+    recording of this camera with the recorder's word on it (phase, worker, server) and *stop*, and
+    `#recadd` — an archive to write to (empty: this box's disks) and days to keep.
+  - `#media` (only when a holder's door says spans: `media`) — a legend (recorded / fenced), `#timeline` (spans
+      and ticks), `#axis` with `#t0`, `#t1` and the `#last24` / `#all` window buttons, `#note` (the
+      cluster's `note`, e.g. unreachable servers), `#player` (`<video controls>`), `#playing` caption,
+      `#livefeed` (the events arriving while watching live, newest first), `#evhead` (the events heading,
+      the merge's `state` in `#evstate`, a subsystem filter `#evfilter`, the Mark form `#mark`), `#evlegend`
+      (one swatch per subsystem seen), `#events` (the list: time, kind, subsystem, server, epoch, fields).
+        - form `#edit` — `#editfields` (inputs from the spec minus `enabled` and the id field), Save,
+      `#toggle` (Enable/Disable, shown only if the spec has a bool `enabled`), `#del`, a reminder that
+      worker/epoch/revision/phase are the controller's, and `#editerr`.
+
+## State variables
+- `spec` — the `/spec` reply; the page's only knowledge of the subsystem.
+- `units` — the merged list from `/<rows>` (configured rows overlaid by heartbeat rows).
+- `current` — the selected unit id.
+- `window_` — `[from, to]` for the timeline, or `null` for everything.
+- `spans` — the timeline's spans as normalised objects `{start, end, epoch, fenced, events, media, server,
+  recorder}`.
+- `queue` — indexes into `spans` still to play.
+- `events` — the last `/events` reply's rows for the current unit and window; `evfilter` — the subsystem
+  shown, or "" for all; `palette` — subsystem → colour, assigned in order of first sight.
+- `live` — `{pc, session, timer, since, seen}` while watching: the feed polls `/events?from=since` every 3 s.
+
+### Form and button handlers
+- `#add` submit — `POST /<rows>` with the form fields; on success reset, reload, select the new id; on
+  refusal show `refused: …` in `#adderr`.
+- `#edit` submit — `PUT /<rows>/<current>` with the edit fields; reload and reselect; errors to `#editerr`.
+- `#toggle` click — `PUT /<rows>/<current>` with `{enabled: !current.enabled}`.
+- `#del` click — confirm (mentioning, if media, that the recordings' footage stays in its volumes), then
+  `DELETE /<rows>/<current>`; clears the selection and the timeline, reloads.
+- `#player.onended` — `next()`.
+- `#last24` click — window = last 24 h and reload the timeline; `#all` — no window.
+- `#events li` click — `seek(t)`: play the span holding `t` and jump the player to the offset.
+- `#mark` submit — `POST /marks {unit: <spec.name>/<current>, note}`: the operator's own event, then reload the events.
+- `#evfilter` change — redraw the ticks and the list for one subsystem.
+
+### Boot
+`loadSpec().then(() => { loadUnits(); setInterval(loadUnits + loadDets + loadResources, 10000);
+setInterval(loadEvents, 5000) })` — the events refresh on their own, the way the resource's database tails.
+
+## Routes the page uses
+- `GET /spec`, `GET /<rows>`, `GET /metrics`, `GET /where/<id>` — the platform console.
+- `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
+- the holders' doors, only when one says spans (`media`; the boundary's step 6: the bytes do not go through the console): `GET
+  <base>/where/<id>` → `door: {url, token, expires, routes}` for the unit and for every unit of a mounted subsystem
+  ABOUT it whose spec declares `door: {routes}`; then `<url>/<route>/<id>` at the holder, the token as a header (a
+  media element's `src`: `?t=`).
+- `GET /events?from&to&unit=<spec.name>/<id>` — the resources' event databases, merged by the console, tolerated when absent;
+  `POST /marks` — the operator's event; `GET /servers`, `GET /mounts` — the servers as placement sees them, and what this process fronts.
+- `POST /servers/<name>/decommission {why}` — a machine gone for good (on the Mount, as `/drain`): 409 while the server
+  answers, the sign named; the controllers release its slots and move their units. `DELETE` — withdrawn, or it is back.
+
+## Notes
+- The page never sends `worker`, `epoch`, `revision`, `phase` or `id` — the inputs are generated only from
+  `spec.fields`, and the server would refuse them anyway (`PLATFORM_FIELDS`).
+- The list's colour is the heartbeat's phase (`running` green, `failed` red, anything else grey), and a
+  stale worker's rows are muted with "last known state" in the meta line: the read model survives a
+  controller outage and degrades honestly on a worker outage.
+-->
+<meta charset="utf-8">
+<title>console</title>
+<style>
+  :root { --bg:#fff; --fg:#1b1b1b; --muted:#6b6b6b; --line:#d8d8d8; --media:#3b7dd8; --events:#c58a1a; --fenced:#b0b0b0; --live:#2a9d5c; --stale:#c0392b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#151515; --fg:#e8e8e8; --muted:#9a9a9a; --line:#333; --fenced:#555; } }
+  body { margin:0; font:14px/1.45 system-ui, sans-serif; color:var(--fg); background:var(--bg); display:grid; grid-template-columns: 280px 1fr; min-height:100vh; }
+  aside { border-right:1px solid var(--line); padding:12px; overflow:auto; }
+  main { padding:12px 16px; min-width:0; }
+  h1 { font-size:15px; margin:0 0 8px; }
+  ul { list-style:none; margin:0; padding:0; }
+  li { padding:6px 8px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; gap:8px; }
+  li:hover, li.on { background:color-mix(in srgb, var(--fg) 8%, transparent); }
+  li.stale { color:var(--muted); }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--fenced); margin-right:6px; vertical-align:middle; }
+  .running .dot { background:var(--live); } .failed .dot { background:var(--stale); }
+  small { color:var(--muted); }
+  #meta { color:var(--muted); margin:4px 0 10px; }
+  #timeline { position:relative; height:64px; border:1px solid var(--line); border-radius:6px; margin:8px 0; overflow:hidden; }
+  .span { position:absolute; top:12px; height:26px; border-radius:3px; background:var(--media); cursor:pointer; min-width:2px; }
+  .span.events-only { background:var(--events); top:20px; height:12px; }
+  .span.fenced { opacity:.45; }
+  .span.playing { outline:2px solid var(--fg); }
+  .tick { position:absolute; bottom:4px; width:2px; height:10px; background:var(--events); cursor:pointer; }
+  .tick.fenced { opacity:.4; }
+  #events { max-height:32vh; overflow:auto; margin-top:6px; }
+  #events li { cursor:pointer; font-size:13px; padding:3px 6px; }
+  #events li.fenced { color:var(--muted); }
+  .sw { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+  #evstate { font-size:12px; color:var(--muted); } #evstate.bad { color:var(--stale); }
+  #livefeed { display:none; margin-top:6px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; max-height:18vh; overflow:auto; }
+  #livefeed .ev { padding:2px 0; } #livefeed .ev:first-child { font-weight:600; }
+  select { font:inherit; padding:3px 6px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--fg); }
+  #servers { font-size:12px; margin-top:8px; }
+  #servers .srv { padding:4px 0; border-top:1px solid var(--line); }
+  #servers .srv small { color:var(--muted); display:block; }
+  #servers .bad, #archlist .bad { color:var(--stale); }
+  #mounts { color:var(--muted); font-size:12px; margin-top:6px; }
+  #policy { font-size:12px; margin-top:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  #policy select { font-size:12px; }
+  #axis { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; }
+  video { width:100%; max-height:60vh; background:#000; border-radius:6px; margin-top:8px; }
+  #note { color:var(--stale); }
+  button { font:inherit; padding:4px 10px; border:1px solid var(--line); background:transparent; color:var(--fg); border-radius:6px; cursor:pointer; }
+  .legend span { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:middle; }
+  form { display:grid; gap:6px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
+  form label { display:grid; gap:2px; font-size:12px; color:var(--muted); }
+  input[type=text], input[type=number], input[type=password] { font:inherit; padding:4px 6px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--fg); }
+  .row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .err { color:var(--stale); font-size:12px; white-space:pre-wrap; }
+  details summary { cursor:pointer; color:var(--muted); font-size:13px; }
+  #edit, #media { display:none; }
+  #status { color:var(--muted); font-size:12px; margin-top:12px; }
+</style>
+<div id="gate" style="display:none; position:fixed; inset:0; z-index:10; background:var(--bg, #111); padding:15vh 0 0; text-align:center;">
+  <form id="signin" style="display:inline-block; text-align:left; min-width:260px;">
+    <h1>Sign in</h1>
+    <p id="gatenote" style="color:var(--muted); font-size:13px;"></p>
+    <div id="byname"><input id="su" placeholder="user" autocomplete="username"><br><input id="sp" type="password" placeholder="password" autocomplete="current-password"></div>
+    <details id="bytoken"><summary>I have a token</summary><textarea id="st" rows="4" style="width:100%" placeholder="the domain's token"></textarea></details>
+    <details id="byglass"><summary>Emergency access (the domain is away)</summary><input id="gw" placeholder="who you are"><br><input id="gy" placeholder="why"><br><input id="gp" type="password" placeholder="emergency password"><br><small>every use is an alarm</small></details>
+    <button>Sign in</button> <span id="gateerr" class="err"></span>
+  </form>
+</div>
+<aside>
+  <div id="whoami" style="font-size:12px; color:var(--muted);"></div>
+  <h1 id="rows">…</h1>
+  <ul id="units"></ul>
+  <details id="addbox"><summary id="addlabel">Add</summary>
+    <form id="add">
+      <div id="addfields"></div>
+      <div class="row"><button type="submit">Add</button><small id="addnote">the controller numbers it and places it on the next pass</small></div>
+      <div class="err" id="adderr"></div>
+    </form>
+  </details>
+  <div id="status"></div>
+  <div id="policy"></div>
+  <div id="servers"></div>
+  <div id="archbox" style="display:none">
+    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Archives</strong><span id="archstate"></span></div>
+    <ul id="archlist"></ul>
+    <details id="archaddbox"><summary>Declare an archive</summary>
+      <form id="archadd">
+        <div class="row">
+          <label>name <input type="text" name="name" placeholder="cold | s3-main" required style="width:9em"></label>
+          <label>kind <select name="kind"><option value="local">local</option><option value="network">network</option></select></label>
+        </div>
+        <div class="row">
+          <label>path or url <input type="text" name="url" placeholder="/data/archive/cold" required style="width:16em"></label>
+        </div>
+        <div class="row">
+          <label>server <input type="text" name="server" placeholder="local only" style="width:8em"></label>
+          <label>capacity <input type="number" name="quota_gb" min="1" required style="width:6em"> GB</label>
+          <label>key id <input name="access_key" placeholder="network only" style="width:8em"></label>
+          <label>key <input type="password" name="access_secret" placeholder="network only" style="width:8em"></label>
+          <button type="submit">Declare</button>
+        </div>
+        <div class="row">
+          <label title="A smaller capacity for a volume that exists erases its oldest footage: the recorder does it only with this"><input type="checkbox" name="shrink"> smaller than it is: erase its oldest footage</label>
+        </div>
+        <div class="err" id="archerr"></div>
+      </form>
+    </details>
+  </div>
+  <div id="mounts"></div>
+</aside>
+<main>
+  <h1 id="title">Pick one</h1>
+  <div id="meta"></div>
+  <div id="media">
+    <div class="legend"><small><span style="background:var(--media)"></span>recorded (the recorder's footage, by epoch) <span style="background:var(--fenced)"></span>fenced — an older epoch; ticks are events, from every subsystem</small></div>
+    <div id="timeline"></div>
+    <div id="axis"><span id="t0"></span><button id="last24">last 24 h</button><button id="all">everything</button><button id="live">Live</button><span id="t1"></span></div>
+    <div id="note"></div>
+    <video id="player" controls></video>
+    <div id="playing"><small></small></div>
+    <div id="livefeed"></div>
+    <div class="row" id="evhead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+      <strong>Events</strong><span id="evstate"></span>
+      <select id="evfilter"><option value="">every subsystem</option></select>
+      <form id="mark" style="margin:0;padding:0;border:0;display:flex;gap:6px;align-items:center">
+        <input type="text" name="note" placeholder="what you saw" style="width:14em"><button type="submit">Mark</button>
+      </form>
+      <small>observations from every subsystem, each under its own epoch; a mark is yours — click one to play it</small>
+    </div>
+    <div class="legend" id="evlegend"><small></small></div>
+    <ul id="events"></ul>
+  </div>
+  <div id="recbox" style="display:none">
+    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Recording</strong><span id="recstate"></span>
+      <small>the rec subsystem, when the console mounts it: a recording is a unit placed where its archive is, fed by the worker's fan-out — one row per archive this unit is written to</small>
+    </div>
+    <ul id="reclist"></ul>
+    <form id="recadd" style="margin-top:6px;padding-top:0;border-top:0">
+      <div class="row">
+        <label>archive <input type="text" name="archive" list="archives" placeholder="this box's disks" style="width:10em"></label>
+        <datalist id="archives"></datalist>
+        <label>keep <input type="number" name="retention_days" value="30" min="1" style="width:4em"> days</label>
+        <button type="submit">Record</button>
+        <div class="err" id="recerr"></div>
+      </div>
+    </form>
+  </div>
+  <div id="dets" style="display:none">
+    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Detectors</strong><small>models on this unit — the det subsystem, when the console mounts it: placed on GPU-labelled workers, its events on the timeline</small></div>
+    <ul id="detlist"></ul>
+    <form id="detadd" style="margin-top:6px;padding-top:0;border-top:0">
+      <div class="row">
+        <label>kind <input type="text" name="kind" placeholder="motion | linecross | lpr" required style="width:12em"></label>
+        <label>params <input type="text" name="params" placeholder="line=10,20;30,40"></label>
+        <button type="submit">Add detector</button>
+        <div class="err" id="deterr"></div>
+      </div>
+    </form>
+  </div>
+  <div id="autos" style="display:none">
+    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Automation</strong><small>scenarios this unit triggers or is asked by — the auto subsystem, when the console mounts it: what a unit cannot do, its evaluator says</small></div>
+    <ul id="autolist"></ul>
+    <form id="autoadd" style="margin-top:6px;padding-top:0;border-top:0">
+      <div class="row">
+        <label>when it raises <select name="when" id="autowhen"></select></label>
+        <label>then <select name="target" id="autotarget"></select></label>
+        <select name="action" id="autoaction"></select>
+        <span id="autoarg"></span>
+        <label>name <input type="text" name="name" required style="width:10em"></label>
+        <button type="submit">Add scenario</button>
+        <div class="err" id="autoerr"></div>
+      </div>
+    </form>
+  </div>
+  <form id="edit">
+    <div class="row"><strong>Edit</strong><small>every save is a new revision; the worker restarts what it runs for this unit</small></div>
+    <div class="row" id="editfields"></div>
+    <div class="row">
+      <button type="submit">Save</button>
+      <button type="button" id="toggle" style="display:none"></button>
+      <button type="button" id="del">Delete</button>
+      <small>what you cannot set here — worker, epoch, revision, phase — is the controller's, and it refuses</small>
+    </div>
+    <div class="err" id="editerr"></div>
+  </form>
+</main>
+<script>
+// Helpers: query selector; a UTC `YYYY-MM-DD HH:MM:SSZ` formatter; the rows path `/<spec.rows>`; a unit's
+// display label (`name` if it has one, else singular rows name + id for numeric ids, else the id); whether
+// the spec has a bool field named `enabled`.
+const $ = s => document.querySelector(s);
+const fmt = t => new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 19) + 'Z';
+let spec = null, media = false, units = [], current = null, window_ = null, spans = [], queue = [], events = [], groups = [], evfilter = '';
+// Colours per subsystem, assigned in order of first sight — the page does not know which subsystems exist.
+const PALETTE = ['#c58a1a', '#8e44ad', '#2a9d5c', '#d35400', '#16a085', '#7f8c8d'];
+const palette = {};
+const subColor = sub => palette[sub] || (palette[sub] = PALETTE[Object.keys(palette).length % PALETTE.length]);
+const ROWS = () => '/' + spec.rows;
+const SPANS = 'timeline';                                          // the route of a door that says what it holds
+const REF = () => spec.name + '/' + current;   // the current unit as the platform names one: <sub>/<id>
+const label = u => u.name || (spec.id === 'numeric' ? spec.rows.replace(/s$/, '') + ' ' + u.id : String(u.id));
+const hasEnabled = () => spec.fields.some(f => f.name === 'enabled' && f.type === 'bool');
+// What the page draws, it draws through `h`: a tagged template whose every `${…}` is escaped — a unit's name,
+// an event's note, a volume's url are TEXT, whatever characters they hold. A fragment that IS markup (one `h`
+// inside another, a list of them joined) is a `Raw` and goes in as it is; `raw(s)` says so for a joined list.
+// A `<script>` in a mark's note or an `onerror=` in a name draws as the characters it is made of (the
+// review's second pass, blocker 2) — and the page's Content-Security-Policy, set by the console, is the wall
+// behind this one.
+class Raw { constructor(s) { this.s = s; } toString() { return this.s; } }
+const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const esc = v => v instanceof Raw ? v.s : String(v ?? '').replace(/[&<>"']/g, c => ESC[c]);
+const h = (strs, ...vals) => new Raw(strs.reduce((out, part, i) => out + esc(vals[i - 1]) + part));
+const raw = s => new Raw(String(s));
+
+// -- the spec: the page's only knowledge of the subsystem ------------------------------------
+// `GET /spec`. Sets the document title, the rows heading, the add note (numbered by the controller vs.
+// named by its `<id field>`), shows `#media` if `media` — this unit's door, or the door of a subsystem about it, says
+// spans (`door.routes` has `SPANS`) — and renders the add form (every field but
+// `enabled`) and the edit form (every field but `enabled` and the id field) with `input()`. Shows `#toggle`
+// if `hasEnabled()`.
+async function loadSpec() {
+  spec = await (await fetch('/spec')).json();
+  document.title = spec.name + ' console';
+  $('#rows').textContent = spec.rows; $('#addlabel').textContent = 'Add';
+  $('#title').textContent = 'Pick one';
+  $('#addnote').textContent = spec.id === 'numeric' ? 'the controller numbers it and places it on the next pass'
+                                                    : `named by its ${spec.id}; placed on the controller's next pass`;
+  media = !!(spec.door && spec.door.routes.includes(SPANS)) || (await subsAbout()).some(([, s]) => s.door.routes.includes(SPANS));
+  $('#media').style.display = media ? 'block' : 'none';
+  $('#live').style.display = media ? '' : 'none';
+  $('#addfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled').map(f => input(f, true)).join('');
+  $('#editfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled' && f.name !== spec.id).map(f => input(f, false)).join('');
+  $('#toggle').style.display = hasEnabled() ? '' : 'none';
+}
+// One labelled input per spec field by type: checkbox for bool (checked by default value), number for
+// int/float (`step="any"` for float; default as value when adding), password for a `*_secret` (the thirteenth
+// review, minor: `cred_secret` was typed in the clear, on the screen, as `access_secret` beside it never was),
+// text otherwise (placeholder `a, b` for lists, or the default when adding); `required` only on the add form.
+function input(f, adding) {
+  const attrs = `name="${f.name}"${f.required && adding ? ' required' : ''}`;
+  if (f.name.endsWith('_secret')) return `<label>${f.name} <input type="password" ${attrs} autocomplete="new-password"></label>`;
+  if (f.type === 'bool') return `<label>${f.name} <input type="checkbox" ${attrs} ${f.default ? 'checked' : ''}></label>`;
+  if (f.type === 'int' || f.type === 'float') return `<label>${f.name} <input type="number" ${attrs} ${f.type === 'float' ? 'step="any"' : ''} ${adding && f.default != null ? `value="${f.default}"` : ''} style="width:6em"></label>`;
+  const ph = f.type === 'list' ? 'a, b' : (adding && f.default ? String(f.default) : '');
+  return `<label>${f.name}${f.type === 'list' ? ' (comma-separated)' : ''} <input type="text" ${attrs} placeholder="${ph}"></label>`;
+}
+
+// -- the list: the read model (every worker's heartbeat) over the configured rows ----------------
+// `GET /<rows>`: starts from `configured` (each marked `phase: silent, worker_state: stale`) and overlays
+// `rows` — the heartbeat's word wins over the row's. Sorts by id, rebuilds `#units` with class = phase,
+// `stale` and `on`, and wires each `li` to `select`. Then fetches `/metrics` and writes the status line
+// from `_workers_live` and `_<running gauge>`. Runs at load and every 10 s.
+async function loadUnits() {
+  const d = await (await fetch(ROWS())).json();
+  const byId = {};
+  for (const c of d.configured || []) byId[c.id] = { ...c, phase: 'silent', worker_state: 'stale' };
+  for (const r of d.rows || []) byId[r.id] = { ...byId[r.id], ...r };   // the heartbeat's word wins over the row's
+  units = Object.values(byId).sort((a, b) => (typeof a.id === 'number' ? a.id - b.id : String(a.id).localeCompare(String(b.id))));
+  $('#rows').textContent = `${spec.rows}${units.length ? ' (' + units.length + ')' : ''}`;
+  const ul = $('#units'); ul.innerHTML = '';
+  for (const c of units) {
+    const li = document.createElement('li'); li.dataset.id = String(c.id);
+    li.className = `${c.phase || 'silent'} ${c.worker_state === 'stale' ? 'stale' : ''} ${current === c.id ? 'on' : ''}`;
+    li.innerHTML = h`<span><span class="dot"></span>${label(c)} <small>#${c.id}</small></span>` +
+                   h`<small>${c.worker ? c.worker + (c.server ? ' · ' + c.server : '') : 'unplaced'}${c.age != null ? ' · ' + c.age + ' s' : ''}</small>`;
+    li.onclick = () => select(c.id);
+    ul.appendChild(li);
+  }
+  try { const m = await (await fetch('/metrics')).text(); const live = /_workers_live (\d+)/.exec(m);
+        const name = spec.metrics.running, run = name && new RegExp(`_${name} (\\d+)`).exec(m);   // a spec may declare none
+        $('#status').textContent = `${live ? live[1] : '?'} workers live` + (name ? ` · ${run ? run[1] : '?'} ${name.replace(/_/g, ' ')}` : ''); } catch (_) {}
+}
+
+// Marks the unit current, clears the play queue, sets `#title`, fetches `/where/<id>` for the placement
+// reason, composes `#meta`, highlights the `li`, fills the edit form, and — if media — loads the timeline.
+async function select(id) {
+  stopLive();
+  current = id; queue = [];
+  const c = units.find(x => x.id === id) || {};
+  $('#title').textContent = label(c);
+  let why = '';
+  try { const w = await (await fetch(`/where/${encodeURIComponent(id)}`)).json(); why = w.reason || ''; } catch (_) {}
+  $('#meta').textContent = [c.phase, c.worker && `on ${c.worker}`, c.server, c.epoch ? `epoch ${c.epoch}` : null, why,
+                            c.why, c.warning,   // the holder's word on this unit: why it is not running, what to check
+                            c.worker_state === 'stale' ? 'last known state' : null].filter(Boolean).join(' · ');
+  for (const li of $('#units').children) li.classList.toggle('on', li.dataset.id === String(id));
+  fillEdit(c);
+  // Watching and recording are offered for a unit that PUBLISHES A STREAM, and the test is the stream
+  // itself: the holder puts an address in its status, or it does not. Not a field of the row and not a
+  // word this page knows — some units of some subsystems have no picture (a door controller is held,
+  // takes an epoch and writes events like anything else), and the honest way to find out is to look for
+  // the address a viewer would dial.
+  const streams = !!c.live_url;
+  $('#live').style.display = media && streams ? '' : 'none';
+  $('#media').style.display = media && streams ? 'block' : 'none';
+  loadDets(); loadAutos(); loadRec(streams);
+  if (media && streams) await loadTimeline();
+}
+
+// -- the holders' doors (the boundary's step 6: what a unit's holder serves, it serves the page itself) ----
+// `GET <base>/where/<id>` hands out the door with the place: `{url, token, expires, routes}`, or null while nobody
+// holds the unit. A read goes to `<url>/<route>/<id>` with the token as a header; a media element's `src` carries it
+// as `?t=`. A token lives two minutes: a door is asked for again when its token is about to end.
+let fronted = null;                                                   // `/mounts`: what this process fronts, with each spec
+async function subsAbout() {
+  if (!fronted) { try { fronted = (await (await fetch('/mounts')).json()).mounts || {}; } catch (_) { fronted = {}; } }
+  return Object.entries(fronted).filter(([, s]) => s.about && s.about.sub === spec.name && s.door);
+}
+// `whereAt(url)`: the answer of a `/where` — a unit's, or a PLACE's (`<base>/where/<table>/<place>?unit=<sub>/<id>`: who
+// holds that place now and its door for the unit) — with the `X-Unreachable` a place nobody holds is said by.
+async function whereAt(url) {
+  try { const r = await fetch(url); return { ...(await r.json()), missing: r.headers.get('X-Unreachable') }; } catch (_) { return {}; }
+}
+const whereOf = (base, id) => `${base}/where/${encodeURIComponent(id)}`;
+async function doorOf(base, id) { return (await whereAt(whereOf(base, id))).door || null; }
+const bearer = d => d && d.token ? { Authorization: `Bearer ${d.token}` } : {};
+async function freshDoor(m) {                                         // a span's door, asked again near its token's end
+  if (m.door.expires && Date.now() / 1000 > m.door.expires - 15) m.door = (await whereAt(m.where || whereOf(m.base, m.id))).door || m.door;
+  return m.door;
+}
+
+// -- media: only when the spec says so — the spans every holder's door says for this unit ---------------------
+// For the unit itself (its holder, when its spec declares a door with spans) and for every row of a mounted
+// subsystem about it whose spec does: `<door>/<route>/<id>?from&to` — and of such a row, every place of its
+// subsystem, at the door of whoever holds the place now. Accepts a plain list, showing the notes in `#note`. Normalises spans; tries `GET
+// /events?from&to&unit=<spec.name>/<current>` and ignores a failure (503 without an index). Computes the visible range:
+// the window if set, else from the earliest span/event (or now − 1 h) to the latest (or now). Draws each
+// span as a `div.span` positioned by percentage — `events-only` when it has no media, `fenced` when fenced
+// — with a tooltip naming times, epoch, server, event count and "not recorded"; clicking a span with media
+// plays from it. Draws each event as a `div.tick` with a tooltip (time, kind, subsystem, note). Labels the
+// axis.
+async function loadTimeline() {
+  const now = Date.now() / 1000;
+  const [from, to] = window_ || [0, 1e12];
+  const raw = [], notes = new Set(), asks = [], places = [], asked = new Set();
+  const gone = missing => notes.add(`not answering: ${missing} — what it holds is missing from this picture`);
+  // A door's spans are raw (`[{start_ms, end_ms, epoch, source?, fenced?, yields?}]`, the product's): each is played
+  // through the same door's `segment` route, piece by piece. A 401 is the door's word that its token will not do —
+  // ended, another holder — and the door is asked for again, once. `where` is the `/where` the door was handed out
+  // at: the unit's own, or a place's.
+  const ask = async (base, id, where) => {
+    const w = await whereAt(where);
+    if (w.missing) gone(w.missing);                                   // a place nobody holds: `<place>@<server>`
+    let door = w.door;
+    if (!door || !door.routes.includes(SPANS) || asked.has(`${base}|${id}|${w.worker}`)) return;
+    asked.add(`${base}|${id}|${w.worker}`);                          // one holder's door once, whichever way it was found
+    let d, r;
+    try {
+      for (let again = 0; ; again++) {
+        r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
+        if (r.status !== 401 || again) break;
+        door = (await whereAt(where)).door || door;
+      }
+      if (!r.ok) throw new Error(r.status); d = await r.json();
+    } catch (_) { notes.add(`the door of ${base || ''}/${id} did not answer`); return; }
+    const missing = r.headers.get('X-Unreachable');
+    if (missing) gone(missing);
+    (Array.isArray(d) ? d : []).forEach(x => raw.push({ start: x.start_ms / 1000, end: x.end_ms / 1000, epoch: x.epoch,
+      fenced: !!x.fenced, yields: !!x.yields, m: { base, id, door, where, source: x.source || '' } }));
+  };
+  if (spec.door && spec.door.routes.includes(SPANS)) asks.push(ask('', current, whereOf('', current)));
+  for (const [name, s] of await subsAbout()) {
+    if (!s.door.routes.includes(SPANS)) continue;
+    let rows = [], held = [];
+    try { rows = (await (await fetch(`/${name}/${s.rows}`)).json()).configured || []; } catch (_) {}
+    rows = rows.filter(r => String(r[s.about.field]) === String(current));
+    rows.forEach(r => asks.push(ask(`/${name}`, r.id, whereOf(`/${name}`, r.id))));
+    // WHAT A UNIT LEFT IN A PLACE ANOTHER WORKER HOLDS NOW (the architect's decision after step 7): the console carries
+    // no bytes, so each place of the subsystem (`places: {table}` in its spec, the rows of that table) is asked who
+    // holds it — `/<sub>/where/<table>/<place>?unit=<sub>/<id>` — and that holder's door says what it holds of the unit.
+    if (s.places && rows.length) {
+      try { held = (await (await fetch(`/${name}/${s.places.table}`)).json())[s.places.table] || []; } catch (_) {}
+      for (const r of rows) for (const p of held)
+        places.push([`/${name}`, r.id, `/${name}/where/${s.places.table}/${encodeURIComponent(p.name)}?unit=${encodeURIComponent(`${name}/${r.id}`)}`]);
+    }
+  }
+  await Promise.all(asks);                                            // the units' own doors first: what they say stands
+  await Promise.all(places.map(([base, id, where]) => ask(base, id, where)));
+  // Merged without doubling: a moment two doors both say (a door that reads every place, a place asked twice) is one
+  // span — the first said, the unit's own door's before a place's.
+  const said = new Set();
+  raw.splice(0, raw.length, ...raw.filter(s => { const k = `${s.m.base}|${s.m.id}|${s.start}|${s.end}|${s.epoch}|${s.m.source}`;
+                                                  return !said.has(k) && said.add(k); }));
+  // A span its door says YIELDS (`yields: true` — what a holder knows OF and does not hold) is drawn only where no
+  // other span is: cut by every one of them.
+  const solid = raw.filter(s => !s.yields);
+  const holes = (a, b) => { const out = []; let at = a;
+    for (const o of solid.filter(o => o.end > a && o.start < b).sort((x, y) => x.start - y.start)) {
+      if (o.start > at) out.push([at, Math.min(o.start, b)]); at = Math.max(at, o.end); }
+    if (at < b) out.push([at, b]); return out; };
+  raw.splice(0, raw.length, ...solid, ...raw.filter(s => s.yields).flatMap(s => holes(s.start, s.end).map(([a, b]) => ({ ...s, start: a, end: b }))));
+  raw.sort((a, b) => a.start - b.start);
+  $('#note').textContent = [...notes].join('; ');
+  spans = raw.map(s => ({ start: s.start, end: s.end, epoch: s.epoch, fenced: !!s.fenced, events: s.events || 0,
+                          media: s.m, server: s.server || null, recorder: s.recorder || null }));
+  await fetchEvents(from, to);
+  const lo = window_ ? from : Math.min(...spans.map(s => s.start), ...events.map(e => e.t), now - 3600);
+  const hi = window_ ? to : Math.max(...spans.map(s => s.end), ...events.map(e => e.t), now);
+  const tl = $('#timeline'); tl.innerHTML = '';
+  const x = t => 100 * (t - lo) / Math.max(1, hi - lo);
+  spans.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = `span ${s.media ? '' : 'events-only'} ${s.fenced ? 'fenced' : ''}`;
+    el.style.left = x(s.start) + '%'; el.style.width = Math.max(0.2, x(s.end) - x(s.start)) + '%';
+    el.title = `${fmt(s.start)} – ${fmt(s.end)} · epoch ${s.epoch}${s.fenced ? ' (fenced)' : ''}${s.server ? ' · ' + s.server : ''}${s.events ? ' · ' + s.events + ' events' : ''}${s.media ? '' : ' · not recorded'}`;
+    if (s.media) el.onclick = () => play(i);
+    tl.appendChild(el);
+  });
+  tl.dataset.lo = lo; tl.dataset.hi = hi;
+  drawEvents();
+  $('#t0').textContent = fmt(lo); $('#t1').textContent = fmt(hi);
+}
+
+// -- events: the resources' databases, merged by the console; the page only draws --------------------
+// `GET /events?from&to&unit=<spec.name>/<current>`: keeps the rows in `events`, shows the merge's `state` (red unless
+// exactly "live" — a resource that did not answer is named, and the list is honest about being short),
+// and rebuilds the subsystem filter and the legend from the subsystems seen.
+async function fetchEvents(from, to) {
+  events = []; groups = [];
+  try {
+    const r = await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent(REF())}`);
+    if (r.ok) {
+      const d = await r.json(); events = d.events || []; groups = d.aggregated ? (d.groups || []) : [];
+      // Past the console's norm the answer is counts, not lines (М10A, урок 15). Say WHY the list
+      // changed shape: a screen that silently starts showing something else is a screen nobody trusts.
+      const norm = d.aggregated ? ` · ${d.rate_per_minute}/min over ${d.per_minute} — counts, not lines` : '';
+      const cut = d.truncated ? ' · window did not fit' : '';
+      $('#evstate').textContent = (d.state || '') + norm + cut;
+      $('#evstate').className = (d.state === 'live' && !d.aggregated && !d.truncated) ? '' : 'bad';
+    }
+    else { $('#evstate').textContent = `no events: ${r.status}`; $('#evstate').className = 'bad'; }
+  } catch (_) { $('#evstate').textContent = 'no events'; $('#evstate').className = 'bad'; }
+  const subs = [...new Set([...events, ...groups].map(e => e.subsystem))].sort();
+  const sel = $('#evfilter'); const keep = evfilter;
+  sel.innerHTML = '<option value="">every subsystem</option>' + subs.map(s => h`<option value="${s}">${s}</option>`).join('');
+  sel.value = subs.includes(keep) ? keep : ''; evfilter = sel.value;
+  const count = s => groups.length ? groups.filter(g => g.subsystem === s).reduce((n, g) => n + g.count, 0)
+                                   : events.filter(e => e.subsystem === s).length;
+  $('#evlegend small').innerHTML = subs.map(s => h`<span class="sw" style="background:${subColor(s)}"></span>${s} (${count(s)})`).join(' ');
+}
+// Re-fetches the events for the current window and redraws ticks and list — every 5 s while a unit is
+// selected, so a detector's line crossed a moment ago is on the timeline within one tail of the resource.
+async function loadEvents() {
+  if (!current || !media) return;
+  const [from, to] = window_ || [0, 1e12];
+  await fetchEvents(from, to);
+  drawEvents();
+}
+// The ticks (one per event, coloured by subsystem, faded when fenced, click to seek) and the list under
+// the timeline: time · kind · subsystem · server · epoch (fenced) · the event's own fields (a mark's note
+// and user, a detection's score…). Filtered by `evfilter`.
+function drawEvents() {
+  const tl = $('#timeline'); const lo = Number(tl.dataset.lo), hi = Number(tl.dataset.hi);
+  const x = t => 100 * (t - lo) / Math.max(1, hi - lo);
+  for (const el of [...tl.querySelectorAll('.tick')]) el.remove();
+  const shown = events.filter(e => !evfilter || e.subsystem === evfilter);
+  for (const e of shown) {
+    const el = document.createElement('div'); el.className = `tick ${e.fenced ? 'fenced' : ''}`; el.style.left = x(e.t) + '%';
+    el.style.background = subColor(e.subsystem);
+    el.title = `${fmt(e.t)} · ${e.kind} (${e.subsystem})${e.note ? ': ' + e.note : ''}`;
+    el.onclick = () => seek(e.t);
+    tl.appendChild(el);
+  }
+  const ul = $('#events'); ul.innerHTML = '';
+  // Aggregated: one line per (subsystem, unit, kind, class) with how many and between when and when —
+  // the counts the console sent instead of a flood nobody would read. Alarms come first, as they arrive.
+  if (groups.length) {
+    for (const g of groups.filter(g => !evfilter || g.subsystem === evfilter)) {
+      const li = document.createElement('li');
+      li.innerHTML = h`<span><span class="sw" style="background:${subColor(g.subsystem)}"></span>` +
+                     h`<strong>${g.count}×</strong> ${g.kind} <small>${g.unit}</small>` +
+                     (g.class === 'alarm' ? ' <strong>alarm</strong>' : '') + `</span>` +
+                     h`<small>${fmt(g.since)} – ${fmt(g.until)}</small>`;
+      li.onclick = () => seek(g.since);
+      ul.appendChild(li);
+    }
+    return;
+  }
+  for (const e of [...shown].reverse()) {
+    const li = document.createElement('li'); li.className = e.fenced ? 'fenced' : '';
+    const extra = Object.entries(e).filter(([k]) => !['subsystem', 'unit', 'of', 'epoch', 't', 'kind', 'server', 'bucket', 'fenced'].includes(k))
+                        .map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' ');
+    li.innerHTML = h`<span><span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t)} <strong>${e.kind}</strong> <small>${e.unit}</small></span>` +
+                   h`<small>${e.server || ''} · epoch ${e.epoch}${e.fenced ? ' (fenced)' : ''}${extra ? ' · ' + extra : ''}</small>`;
+    li.onclick = () => seek(e.t);
+    ul.appendChild(li);
+  }
+}
+// Play the recorded span that holds `t` and jump the player to the offset; an event on a span that was
+// watched but not recorded has nothing to play, and the caption says so.
+function seek(t) {
+  const i = spans.findIndex(s => s.media && s.start <= t && t < s.end);
+  if (i < 0) { $('#playing small').textContent = `${fmt(t)} · not recorded at that moment`; return; }
+  play(i, t);
+  const v = $('#player');
+  v.addEventListener('loadedmetadata', () => { v.currentTime = Math.max(0, t - (playing ? playing.from : spans[i].start)); }, { once: true });
+}
+$('#evfilter').onchange = e => { evfilter = e.target.value; drawEvents(); };
+$('#mark').onsubmit = async e => {
+  e.preventDefault();
+  const note = e.target.elements.note.value;
+  try { await send('POST', '/marks', { unit: REF(), note }); e.target.reset(); setTimeout(loadEvents, 3500); }   // the resource's next tail
+  catch (err) { $('#evstate').textContent = 'mark refused: ' + err.message; $('#evstate').className = 'bad'; }
+};
+
+// -- writes: through the controller, with an Idempotency-Key per attempt, so a retried click is one unit
+// A fresh UUID (or a random string) per request: the `Idempotency-Key`.
+const key = () => (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+// Reads the form into a body by spec type: bools always sent as checked/unchecked; an empty input is
+// omitted (the spec's default on create, unchanged on edit); lists split on commas and trimmed; ints/floats
+// parsed.
+const fields = form => {
+  const out = {};
+  for (const f of spec.fields) {
+    const el = form.elements[f.name]; if (!el) continue;
+    if (f.type === 'bool') { out[f.name] = el.checked; continue; }
+    const v = el.value;
+    if (v === '') continue;                                              // unset: the spec's default on create, unchanged on edit
+    out[f.name] = f.type === 'list' ? v.split(',').map(x => x.trim()).filter(Boolean)
+                : f.type === 'int' ? parseInt(v, 10) : f.type === 'float' ? Number(v) : v;
+  }
+  return out;
+};
+// `fetch` with `Content-Type: application/json` and a new `Idempotency-Key`; parses the reply; throws
+// `detail
+// || error || status` when not OK. Every write below uses it.
+async function send(method, path, body) {
+  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key() }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const text = await r.text();
+  let d = {}; try { d = JSON.parse(text); } catch (_) {}
+  if (!r.ok) throw new Error(d.detail || d.error || `${r.status}`);
+  return d;
+}
+$('#add').onsubmit = async e => {
+  e.preventDefault(); $('#adderr').textContent = '';
+  try { const c = await send('POST', ROWS(), fields(e.target)); e.target.reset(); await loadUnits(); select(c.id); }
+  catch (err) { $('#adderr').textContent = 'refused: ' + err.message; }
+};
+$('#edit').onsubmit = async e => {
+  e.preventDefault(); $('#editerr').textContent = '';
+  try { await send('PUT', `${ROWS()}/${encodeURIComponent(current)}`, fields(e.target)); await loadUnits(); select(current); }
+  catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
+};
+$('#toggle').onclick = async () => {
+  const c = units.find(x => x.id === current); if (!c) return;
+  try { await send('PUT', `${ROWS()}/${encodeURIComponent(current)}`, { enabled: !c.enabled }); await loadUnits(); select(current); }
+  catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
+};
+$('#del').onclick = async () => {
+  const c = units.find(x => x.id === current); if (!c) return;
+  if (!confirm(`Delete ${label(c)}?${media ? ' Its recordings are not deleted with it: their footage stays in its volumes until the ring overwrites it.' : ''}`)) return;
+  try { await send('DELETE', `${ROWS()}/${encodeURIComponent(current)}`); current = null; $('#edit').style.display = 'none'; $('#title').textContent = 'Pick one'; $('#meta').textContent = ''; $('#timeline').innerHTML = ''; await loadUnits(); }
+  catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
+};
+// Shows `#edit` and fills each spec field from the unit: checkbox for bool, comma-joined for list, value
+// otherwise — but a `*_secret` stays EMPTY, saying in its placeholder whether one is set: the row reads `***`, and a
+// form filled with it saved `***` as the password on the next Save (empty is "unchanged", `fields`).
+// Sets the toggle text to Enable/Disable from `c.enabled`.
+function fillEdit(c) {
+  const f = $('#edit'); f.style.display = 'grid';
+  for (const fd of spec.fields) {
+    const el = f.elements[fd.name]; if (!el) continue;
+    if (fd.name.endsWith('_secret')) { el.value = ''; el.placeholder = c[fd.name] ? 'set: type to replace' : 'not set'; }
+    else if (fd.type === 'bool') el.checked = !!c[fd.name];
+    else if (fd.type === 'list') el.value = (c[fd.name] || []).join(', ');
+    else el.value = c[fd.name] ?? '';
+  }
+  if (hasEnabled()) $('#toggle').textContent = c.enabled === false ? 'Enable' : 'Disable';
+}
+
+// What to play a piece by: the door's `segment` route, the piece's epoch and bounds in its path (milliseconds), the
+// stream it is of in its name — the span's `source`, when it says one (the product's) — and the token in the query: a
+// media element sets no header.
+async function segmentURL(s, p) {
+  const d = await freshDoor(s.media);
+  const tail = s.media.source ? '.' + s.media.source : '';
+  return `${d.url}/segment/${encodeURIComponent(s.media.id)}/e${s.epoch}/${Math.round(p.from * 1000)}-${Math.round(p.to * 1000)}${tail}.mp4` +
+         (d.token ? '?t=' + encodeURIComponent(d.token) : '');
+}
+
+// One piece at a time, the next when this one ends — a span cut into pieces of at most ten minutes, each an
+// interval the subsystem turns into an MP4. Gapless playback through MSE is the gateway's job (М12); the console
+// plays what the archive hands it. Queue every piece of every span from index `i` onward that has media —
+// each moment once: a fenced span (an older epoch) is played only when it is the one clicked, and minutes two
+// spans share (two volumes, a keep's copy) are queued from the first of them. An export takes each moment from
+// the epoch that owns it whichever span asked.
+const PIECE = 60;                                                    // the product's pieces: a minute each
+let playing = null;                                                   // the piece on the player now: {i, from, to}
+function play(i, at) {
+  queue = [];
+  let until = -Infinity;                                              // the end of what is queued already
+  spans.forEach((s, j) => {
+    if (j < i || !s.media || (s.fenced && j !== i)) return;
+    for (let a = Math.max(s.start, until); a < s.end; a += PIECE) {
+      const p = { i: j, from: a, to: Math.min(a + PIECE, s.end) };
+      if (at === undefined || p.to > at) queue.push(p);              // a seek starts at the piece holding the moment
+    }
+    until = Math.max(until, s.end);
+  });
+  next();
+}
+// Pop the next index, outline that span as playing, write the caption (times, epoch, "from <recorder>"), set
+// the video source to `segmentURL` and play. One segment at a time, the next when this one ends; gapless
+// MSE playback of fragmented MP4 is the gateway's job (М12) — the console plays what the archive hands it.
+async function next() {
+  if (!queue.length) return;
+  stopLive();
+  const p = playing = queue.shift(); const i = p.i; const s = spans[i];
+  [...$('#timeline').children].forEach((el, j) => el.classList.toggle('playing', j === i));
+  $('#playing small').textContent = `${fmt(p.from)} – ${fmt(p.to)} · epoch ${s.epoch}${s.recorder ? ' · from ' + s.recorder : s.server ? ' · from ' + s.server : ''}`;
+  const v = $('#player'); v.src = await segmentURL(s, p); v.play().catch(() => {});
+}
+$('#player').onended = next;
+
+// -- watching now: WebRTC at the door of the subsystem about this unit whose spec says it opens a stream. The page
+// creates the stream's row (its first viewer; somebody watching already is "exists"), waits for its place and door
+// (`/<sub>/where/<id>`), and makes its offer at the door itself, with the token; the answer comes from there and so
+// does the picture. The console carries none of it (the boundary's step 6). Not placed yet — retry a few times.
+let live = null;                                                      // {pc, session, timer, since, seen} while watching
+async function startLive() {
+  stopLive();
+  const pc = new RTCPeerConnection();
+  pc.addTransceiver('video', { direction: 'recvonly' });
+  pc.ontrack = e => { const v = $('#player'); v.src = ''; v.srcObject = e.streams[0]; v.play().catch(() => {}); };
+  await pc.setLocalDescription(await pc.createOffer());
+  const OFFER = 'whep';                                             // the route of a door that takes an offer
+  const [name, s] = (await subsAbout()).find(([, s]) => s.door.routes.includes(OFFER)) || [];
+  if (!name) { $('#playing small').textContent = 'nothing here opens a stream'; pc.close(); return; }
+  try { await send('POST', `/${name}/${s.rows}`, { [s.about.field]: current }); } catch (_) {}   // 409 "exists": watched already — the door says the rest
+  let r = null, door = null, tries = 0, refused = 0;
+  for (;;) {
+    door = await doorOf(`/${name}`, current);
+    if (door) r = await fetch(`${door.url}/${OFFER}/${encodeURIComponent(current)}`,
+                              { method: 'POST', headers: { 'Content-Type': 'application/sdp', ...bearer(door) }, body: pc.localDescription.sdp });
+    if (r && r.status === 401 && !refused++) continue;               // its token would not do: the door again, once
+    if ((r && ![404, 503].includes(r.status)) || ++tries > 8) break;
+    $('#playing small').textContent = 'waiting for its place…';
+    await new Promise(res => setTimeout(res, 1500));                    // the controller's next pass, the holder's next look
+  }
+  if (!r || r.status !== 201) { let d = {}; try { d = await r.json(); } catch (_) {} $('#playing small').textContent = 'refused: ' + (d.detail || d.error || (r ? r.status : 'nobody holds it')); pc.close(); return; }
+  await pc.setRemoteDescription({ type: 'answer', sdp: await r.text() });
+  live = { pc, session: door.url + r.headers.get('Location'), door, base: `/${name}`, id: current, since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
+  [...$('#timeline').children].forEach(el => el.classList.remove('playing'));
+  $('#playing small').textContent = `watching · via ${door.url}`;
+  const feed = $('#livefeed'); feed.style.display = 'block'; feed.innerHTML = '<small>live events — what every subsystem observes on this unit while you watch</small>';
+  live.timer = setInterval(pollLive, 3000); pollLive();
+}
+// The live feed: while watching, `GET /events?from=<since>&unit=<spec.name>/<current>` every 3 s (the resource's tail
+// interval) and prepend what is new — a detector's crossing, a mark, the worker's `silent` — newest first,
+// the last 30 kept. The picture comes from the gateway; the events come from the resource; the page joins
+// them by time and nothing else.
+async function pollLive() {
+  if (!live) return;
+  let d;
+  try { const r = await fetch(`/events?from=${live.since}&to=1e12&unit=${encodeURIComponent(REF())}`); if (!r.ok) return; d = await r.json(); } catch (_) { return; }
+  const feed = $('#livefeed');
+  for (const e of (d.events || []).sort((a, b) => a.t - b.t)) {
+    const k = `${e.server}|${e.bucket}|${e.t}|${e.kind}`; if (live.seen.has(k)) continue; live.seen.add(k);
+    const el = document.createElement('div'); el.className = 'ev';
+    el.innerHTML = h`<span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t).slice(11)} <strong>${e.kind}</strong> <small>${e.subsystem}${e.note ? ' · ' + e.note : ''}${e.score != null ? ' · ' + e.score : ''}${e.fenced ? ' · fenced' : ''}</small>`;
+    feed.insertBefore(el, feed.children[1] || null);
+    while (feed.children.length > 31) feed.removeChild(feed.lastChild);
+    live.since = Math.max(live.since, e.t - 1);
+  }
+  if (d.state && d.state !== 'live') feed.firstChild.textContent = `live events — ${d.state}`;
+}
+function stopLive() {
+  if (!live) return;
+  const hangUp = live;                                                // the viewer hangs up, at the door, with a token that holds
+  freshDoor({ door: hangUp.door, base: hangUp.base, id: hangUp.id }).then(d => fetch(hangUp.session, { method: 'DELETE', headers: bearer(d) })).catch(() => {});
+  clearInterval(live.timer);
+  live.pc.close(); live = null;
+  const v = $('#player'); v.srcObject = null;
+  $('#livefeed').style.display = 'none';
+}
+$('#live').onclick = () => { if (current) startLive(); };
+
+// -- recording: the `rec` subsystem, mounted by the console at /rec. A recording is a unit of its OWN —
+// `rec/recordings/<name>` — with its own epoch, its own tree and its own retention, and this unit may
+// have several: one per archive it is written to. The name is composed HERE and nowhere else: this
+// unit's id when no archive is named (so an installation with one archive keeps `rec/recordings/7`),
+// `7-cloud` when the operator picks the archive `cloud`. Placement is the rec controller's pass — on a
+// recorder, where that archive is — and the row's phase (running / waiting / pending) is the recorder's
+// word from its heartbeat. No recording: the unit is held (live, detectors, events) and not recorded.
+let rec = null;                                                       // the /rec/spec reply, or false when the console mounts no rec
+// -- the archives: `/rec/volumes`, the administrator's list of places footage may go, and who is
+// writing into each. A declaration is not a place until a recorder takes it, so every line says both:
+// what was declared, and whether anybody is serving it. `served 1/2 · 0 spare` is the state that needs a
+// person — an archive was declared and no process is free to take it — and the console says so rather
+// than starting one, because starting processes is the scheduler's.
+const GB = 1024 * 1024 * 1024;
+let archives = null;                                                  // the declared volume names, for the Record form
+async function loadArchives() {
+  let d;
+  try { d = await (await fetch('/rec/volumes')).json(); } catch (_) { archives = []; return; }
+  archives = (d.volumes || []).map(v => v.name);
+  $('#archives').innerHTML = archives.map(a => h`<option value="${a}"></option>`).join('');
+  $('#archbox').style.display = 'block';
+  // `how` is the command, written out by the console in the words of whatever started it — systemd on a
+  // box, the scheduler on a cluster. Not a button: a console that could run it would be a console with a
+  // token to its orchestrator, and starting processes is the one thing this side never does.
+  $('#archstate').innerHTML = (d.needed ? '<small class="err">' : '<small>') + h`served ${d.serving}/${d.wanted} · ${d.spare} spare` +
+                              (d.needed ? h` — ${d.needed} more recorder(s) needed: <code>${d.how}</code>` : '') + '</small>';
+  const ul = $('#archlist'); ul.innerHTML = '';
+  for (const v of d.volumes || []) {
+    const li = document.createElement('li'); li.className = v.served_by ? 'running' : '';
+    // The size the ring HAS, from the recorder holding it, beside the size declared — they differ while a smaller
+    // quota waits for its confirmation (`shrink_pending`, the recorder's `quota_note`), and the page used to show the
+    // wish as if it were the disk.
+    // A card (`kind: edge`) is no ring of the engine: its recorder says what the card holds of its budget, or why it is not open.
+    const has = v.card ? (v.card.state === 'recording' ? h` (${(v.card.bytes / GB).toFixed(1)} GB on the card, ${v.card.segments} segments)`
+                                                  : h` (the card is ${v.card.state}${v.card.error ? ': ' + v.card.error : ''})`)
+      : v.size_bytes && Math.round(v.size_bytes / GB) !== Math.round(v.quota_bytes / GB)
+      ? h` (the ring is ${Math.round(v.size_bytes / GB)} GB)` : '';
+    li.innerHTML = h`<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB${has} · ${v.url}</small></span>` +
+                   h`<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? raw(' · <span class="bad">' + esc(v.writing) + '</span>') : ''}` +
+                   h`${v.shrink_pending ? raw(' · <span class="bad">' + esc('not shrunk: ' + (v.quota_note || 'waiting for its confirmation')) + '</span>') : ''}` +
+                   h` <a href="#" data-act="del">delete</a></small>`;
+    li.querySelector('[data-act=del]').onclick = async e => {
+      e.preventDefault();
+      if (!confirm(`Stop using ${v.name}? The footage already written stays where it is — this removes the declaration, not the archive.`)) return;
+      try { await send('DELETE', `/rec/volumes/${encodeURIComponent(v.name)}`); } catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
+      loadArchives();
+    };
+    ul.appendChild(li);
+  }
+  for (const s of d.suggested || []) {                                // a disk nobody declared yet: one button, pre-filled
+    const li = document.createElement('li');
+    li.innerHTML = h`<span>${s.name} <small>${s.why}</small></span><small>${Math.round(s.quota_bytes / GB)} GB <a href="#" data-act="dec">declare</a></small>`;
+    li.querySelector('[data-act=dec]').onclick = async e => {
+      e.preventDefault();
+      try { await send('POST', '/rec/volumes', { name: s.name, kind: 'local', url: s.url, server: s.server, quota_bytes: s.quota_bytes }); }
+      catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
+      loadArchives();
+    };
+    ul.appendChild(li);
+  }
+}
+$('#archadd').onsubmit = async e => {
+  e.preventDefault(); $('#archerr').textContent = '';
+  const f = Object.fromEntries(new FormData(e.target));
+  const body = { name: f.name, kind: f.kind, url: f.url, quota_bytes: Math.round(parseFloat(f.quota_gb) * GB) };
+  if (f.server) body.server = f.server;
+  if (f.access_key) body.access_key = f.access_key;
+  if (f.access_secret) body.access_secret = f.access_secret;
+  if (f.shrink) body.shrink_confirmed = body.quota_bytes;            // the operator's second word: the same number
+  try {
+    const r = await send('POST', '/rec/volumes', body); e.target.reset(); loadArchives();
+    if (r && r.warning) $('#archerr').textContent = r.warning;       // a smaller size, not confirmed: said, not done
+  } catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
+};
+async function loadRec(streams = true) {
+  if (rec === null) { try { const r = await fetch('/rec/spec'); rec = r.ok ? await r.json() : false; } catch (_) { rec = false; } }
+  $('#recbox').style.display = rec && current != null && streams ? 'block' : 'none';
+  if (!rec || current == null || !streams) return;
+  loadArchives();
+  const d = await (await fetch('/rec/recordings')).json();
+  const byId = {};                                                    // this unit's recordings: configured rows first, the placed ones over them
+  for (const u of d.configured || []) if (String(u.cam) === String(current)) byId[u.id] = { ...u, phase: 'silent' };
+  for (const r of d.rows || []) if (String(r.cam) === String(current)) byId[r.id] = { ...byId[r.id], ...r };
+  const list = Object.values(byId);
+  $('#recstate').textContent = list.length ? '' : 'not recorded — watched: live, detectors and events only';
+  const ul = $('#reclist'); ul.innerHTML = '';
+  for (const r of list) {
+    const li = document.createElement('li'); li.className = r.phase === 'running' ? 'running' : '';
+    li.innerHTML = h`<span><span class="dot"></span>${r.id} <small>${r.home ? 'archive ' + r.home : 'wherever there is room'}</small></span>` +
+                   h`<small>${r.phase || 'placed'}${r.why ? ' · ' + r.why : ''}${r.worker ? ' · ' + r.worker + (r.server ? ' on ' + r.server : '') : ' · unplaced'}` +
+                   h`${r.via ? ' · via ' + r.via : ''} · keep ${r.retention_days} days <a href="#" data-act="del">stop</a></small>`;
+    li.querySelector('[data-act=del]').onclick = async e => {
+      e.preventDefault();
+      if (!confirm(`Stop recording ${r.id}? The footage stays in its volume until the ring overwrites it.`)) return;
+      try { await send('DELETE', `/rec/recordings/${encodeURIComponent(r.id)}`); } catch (err) { $('#recerr').textContent = 'refused: ' + err.message; }
+      loadRec();
+    };
+    ul.appendChild(li);
+  }
+}
+$('#recadd').onsubmit = async e => {
+  e.preventDefault(); $('#recerr').textContent = '';
+  const f = Object.fromEntries(new FormData(e.target));
+  const archive = (f.archive || '').trim();
+  // The whole naming rule, in one visible line: the unit's id when there is one archive, id-archive when
+  // there are more. Not a default inside the spec, where nobody would read it and everybody would depend
+  // on it — the operator sees the name that appears in the list a second later.
+  const name = archive ? `${current}-${archive}` : String(current);
+  try {
+    await send('POST', '/rec/recordings', { name, cam: String(current), home: archive,
+                                            retention_days: parseInt(f.retention_days, 10) || 30 });
+    e.target.reset(); loadRec();
+  } catch (err) { $('#recerr').textContent = 'refused: ' + err.message; }
+};
+
+// -- detectors: the `det` subsystem, mounted by the console at /det. A det unit is one model on this unit,
+// named `<cam>-<kind>` here, created with the console's token; placement is the det controller's pass,
+// and the row's phase (running / waiting / pending / unsupported) is the worker's word from its heartbeat.
+let dets = null;                                                      // the /det/spec reply, or null when the console mounts no det
+async function loadDets() {
+  if (dets === null) { try { const r = await fetch('/det/spec'); dets = r.ok ? await r.json() : false; } catch (_) { dets = false; } }
+  $('#dets').style.display = dets && current != null ? 'block' : 'none';
+  if (!dets || current == null) return;
+  const d = await (await fetch('/det/units')).json();
+  const byId = {};
+  for (const u of d.configured || []) if (String(u.cam) === String(current)) byId[u.id] = { ...u, phase: 'silent' };
+  for (const r of d.rows || []) if (String(r.cam) === String(current)) byId[r.id] = { ...byId[r.id], ...r };
+  const ul = $('#detlist'); ul.innerHTML = '';
+  for (const u of Object.values(byId)) {
+    const li = document.createElement('li'); li.className = u.phase === 'running' ? 'running' : (u.phase === 'unsupported' ? 'failed' : '');
+    li.innerHTML = h`<span><span class="dot"></span>${u.kind} <small>${u.id}${u.params ? ' · ' + u.params : ''}</small></span>` +
+                   h`<small>${u.phase}${u.why ? ' · ' + u.why : ''}${u.worker ? ' · ' + u.worker : ' · unplaced'}${u.events != null ? ' · ' + u.events + ' events' : ''}` +
+                   h` <a href="#" data-act="toggle">${u.enabled === false ? 'enable' : 'disable'}</a> <a href="#" data-act="del">delete</a></small>`;
+    li.querySelector('[data-act=toggle]').onclick = async e => { e.preventDefault(); try { await send('PUT', `/det/units/${u.id}`, { enabled: u.enabled === false }); } catch (err) { $('#deterr').textContent = 'refused: ' + err.message; } loadDets(); };
+    li.querySelector('[data-act=del]').onclick = async e => { e.preventDefault(); try { await send('DELETE', `/det/units/${u.id}`); } catch (err) { $('#deterr').textContent = 'refused: ' + err.message; } loadDets(); };
+    ul.appendChild(li);
+  }
+}
+$('#detadd').onsubmit = async e => {
+  e.preventDefault(); $('#deterr').textContent = '';
+  const f = Object.fromEntries(new FormData(e.target));
+  try { await send('POST', '/det/units', { name: `${current}-${f.kind}`, cam: String(current), kind: f.kind, params: f.params || '' }); e.target.reset(); loadDets(); }
+  catch (err) { $('#deterr').textContent = 'refused: ' + err.message; }
+};
+// -- automation: the `auto` subsystem, mounted at /auto. The form is built from the routes the specs declare
+// (`autoCatalog`: the page's units; the catalogue route of one subsystem's on the platform's console is gone — the
+// boundary's step 6). What a unit can do and raise the page does not know: every unit is `can: null` and gets a free
+// field — "unknown" is offered as unknown — and the evaluator says what a scenario cannot do, in its status
+// (`refused`). The form is rebuilt when the unit changes or a scenario is added — never on the
+// ten-second refresh, which would redraw a select under the operator's cursor.
+// The units the form offers are the PAGE's subsystem's — `spec.name`, the root console's, whose unit is `current` —
+// and the catalogue keys them by that name: the platform's page names no subsystem of its own (it said `vms`).
+let autos = null, catalog = null, autoFor = null;                    // /auto/spec, `autoCatalog`, the unit the form was built for
+const held = () => catalog[spec.name] || {};                          // the catalogue's units of the page's subsystem
+async function loadAutos(rebuild) {
+  if (autos === null) { try { const r = await fetch('/auto/spec'); autos = r.ok ? await r.json() : false; } catch (_) { autos = false; } }
+  $('#autos').style.display = autos && current != null ? 'block' : 'none';
+  if (!autos || current == null) return;
+  if (rebuild || autoFor !== String(current)) {
+    try { catalog = await autoCatalog(); } catch (_) { return; }
+    autoFor = String(current); buildAutoForm();
+  }
+  const d = await (await fetch('/auto/scenarios')).json();
+  const mine = sc => (sc.when || []).some(t => String(t.unit) === String(current) || (catalog.det[t.unit] || {}).cam === String(current))
+                  || (sc.then || []).some(a => String(a.unit || a.cam) === String(current));
+  const byId = {};
+  for (const sc of d.configured || []) if (mine(sc)) byId[sc.id] = { ...sc, phase: 'silent' };
+  for (const r of d.rows || []) if (byId[r.id]) byId[r.id] = { ...byId[r.id], ...r };
+  const ul = $('#autolist'); ul.innerHTML = '';
+  for (const sc of Object.values(byId)) {
+    const li = document.createElement('li'); li.className = sc.unfit ? 'failed' : (sc.phase === 'running' ? 'running' : '');
+    const when = (sc.when || []).map(t => `${t.sub}${t.unit ? ' ' + t.unit : ''} ${t.kind}`).join(' + ');
+    const then = (sc.then || []).map(a => `${a.sub}.${a.action} ${a.unit || a.cam}${a.port ? ' port ' + a.port : ''}${a.n ? ' #' + a.n : ''}`).join(', ');
+    const said = sc.unfit ? ' · does not fit: ' + sc.unfit.join('; ') : (sc.unchecked ? ' · not checked: ' + sc.unchecked.join('; ') : '');
+    li.innerHTML = h`<span><span class="dot"></span>${sc.id} <small>${when} → ${then}</small></span>` +
+                   h`<small>${sc.phase}${said} <a href="#" data-act="del">delete</a></small>`;
+    li.querySelector('[data-act=del]').onclick = async e => { e.preventDefault(); try { await send('DELETE', `/auto/scenarios/${sc.id}`); } catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; } loadAutos(); };
+    ul.appendChild(li);
+  }
+}
+async function autoCatalog() {
+  const rows = await (await fetch(ROWS())).json(), units = {};
+  for (const u of rows.configured || []) units[String(u.id)] = { name: u.name || String(u.id), can: null };
+  return { [spec.name]: units, det: {}, holder_events: Object.keys((spec.display || {}).kinds || {}) };
+}
+function opt(value, text) { const o = document.createElement('option'); o.value = value; o.textContent = text; return o; }
+function buildAutoForm() {
+  const me = held()[String(current)] || {}, when = $('#autowhen'), target = $('#autotarget');
+  when.innerHTML = '';
+  for (const k of (me.can ? me.can.events : catalog.holder_events)) when.appendChild(opt(`${spec.name}|${current}|${k}`, k));
+  for (const [n, det] of Object.entries(catalog.det)) if (det.cam === String(current)) for (const k of det.raises) when.appendChild(opt(`det|${n}|${k}`, `${k} (detector ${n})`));
+  target.innerHTML = '';
+  for (const [u, c] of Object.entries(held())) target.appendChild(opt(u, `${c.name} (${u})`));
+  target.value = String(current); target.onchange = buildAutoAction; buildAutoAction();
+}
+function buildAutoAction() {
+  const t = held()[$('#autotarget').value] || {}, can = t.can, action = $('#autoaction');
+  action.innerHTML = '';
+  if (!can || can.relays) action.appendChild(opt('output', 'pulse a relay'));
+  if (!can || can.ptz) action.appendChild(opt('preset', 'go to a preset'));
+  action.appendChild(opt('record', 'record 10 minutes'));
+  // The two actions that ask a model (`.detect`, `.scan`): the models the catalogue says this unit runs, else the course's three.
+  const cam = $('#autotarget').value, kinds = [...new Set(Object.values(catalog.det).filter(d => d.cam === cam).flatMap(d => d.raises))];
+  for (const k of (kinds.length ? kinds : ['motion', 'linecross', 'lpr'])) {
+    action.appendChild(opt(`detect:${k}`, `detect ${k} 10 minutes`));
+    action.appendChild(opt(`scan:${k}`, `scan ${k} in the archive, a minute either side`));
+  }
+  action.onchange = buildAutoArg; buildAutoArg();
+}
+function buildAutoArg() {
+  const can = (held()[$('#autotarget').value] || {}).can, a = $('#autoaction').value, box = $('#autoarg');
+  const upto = a === 'output' ? (can && can.relays) : a === 'preset' ? (can && can.presets) : 0;
+  box.innerHTML = (a === 'record' || a.includes(':')) ? '' : upto
+    ? h`<select name="arg">${raw(Array.from({ length: upto }, (_, i) => h`<option>${i + 1}</option>`).join(''))}</select>`
+    : `<input type="number" name="arg" min="1" value="1" style="width:4em">`;
+}
+$('#autoadd').onsubmit = async e => {
+  e.preventDefault(); $('#autoerr').textContent = '';
+  const f = Object.fromEntries(new FormData(e.target)), [sub, unit, kind] = f.when.split('|');
+  const [verb, model] = f.action.split(':');
+  const then = f.action === 'record' ? { sub: 'rec', action: 'record', cam: f.target, minutes: 10 }
+             : verb === 'detect' ? { sub: 'det', action: 'detect', cam: f.target, kind: model, minutes: 10 }
+             : verb === 'scan' ? { sub: 'det', action: 'scan', cam: f.target, kind: model, before: 60, after: 60 }
+             : { sub: spec.name, action: f.action, unit: f.target, [f.action === 'output' ? 'port' : 'n']: parseInt(f.arg, 10) };
+  try { await send('POST', '/auto/scenarios', { name: f.name, when: [{ sub, unit, kind }], then: [then] }); e.target.reset(); loadAutos(true); }
+  catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; }
+};
+// -- the administrator's knob: servers shared or distinct ----------------------------------------------
+// `PUT /policy {servers}` — one row, `<sub>/policy`, read by the controller on its next pass. `shared`: every
+// worker is a place to put units, two on one server included, and a dead server's slot is the scheduler's
+// to reschedule onto a neighbour. `distinct`: one worker per server carries units, a second one idles by
+// policy, and a server whose worker and resource both fall silent is gone — the controller moves its units.
+const POLICY_HELP = { shared: 'every worker carries units, two on one server included; a dead server\'s worker is rescheduled onto a neighbour by the scheduler',
+                      distinct: 'one worker per server carries units; a dead server\'s units are moved by the controller once its worker and its resource are both silent' };
+function renderPolicy(p) {
+  const box = $('#policy'); if (!p.servers) { box.innerHTML = ''; return; }
+  if (!box.querySelector('select')) {
+    box.innerHTML = h`<span>servers</span><select id="servers-policy"><option value="shared">shared</option><option value="distinct">distinct</option></select><small id="policy-help"></small>`;
+    box.querySelector('select').onchange = async e => {
+      try { await send('PUT', '/policy', { servers: e.target.value }); } catch (err) { $('#policy-help').textContent = 'refused: ' + err.message; return; }
+      loadResources();
+    };
+  }
+  box.querySelector('select').value = p.servers;
+  $('#policy-help').textContent = POLICY_HELP[p.servers] || '';
+}
+
+// -- the servers, as placement sees them -------------------------------------------------------------
+// `GET /servers` → one block per server: `resource` (the fact: the resource job's heartbeat — live / silent /
+// unknown), the workers with load/capacity, and
+// `placeable` with `why` when the controller would not place there now. Then `GET /mounts`: what this
+// process fronts.
+async function loadResources() {
+  const box = $('#servers'); box.innerHTML = '';
+  try {
+    const d = await (await fetch('/servers')).json();
+    const sv = d.servers || {};
+    renderPolicy(d.policy || {});
+    for (const [name, s] of Object.entries(sv)) {
+      const el = document.createElement('div'); el.className = 'srv';
+      const ws = raw(s.workers.map(w => h`${w.worker} ${w.load}/${w.capacity}${w.state === 'stale' ? ' (stale)' : ''}${w.idle_by_policy ? ' (idle by policy)' : ''}${w.released ? ' (released)' : ''}` +
+                     (w.hung ? h` · <span class="bad">hung: ${w.hung_why || 'its process runs, and it neither renews nor speaks'}</span>` : '') +
+                     (w.slot_garbled ? h` · <span class="bad">its slot row does not parse</span>` : '')).join(', ') || 'no workers');
+      const off = s.decommission, done = s.decommissioned;
+      const lab = (s.labels || []).join(', ') || 'nothing', node = (s.labels_node || []).join(', ') || 'nothing';
+      el.innerHTML = h`<strong>${name}</strong> <small>resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
+                     h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`) +
+                     h`<small>reaches ${lab} (${s.labels_source === 'console' ? 'set here; the node says ' + node : 'the node\'s'}) <a href="#" class="lab-edit">edit</a>` +
+                     (s.labels_unread ? h` · <span class="bad">its row here could not be read: nothing is moved off it until it is written again</span>` : '') +
+                     (s.labels_source === 'console' ? h` · <a href="#" class="lab-node">back to the node's</a>` : '') + raw('</small>') +
+                     (off ? h`<small class="bad">decommissioned by ${off.by || '?'}${off.why ? ': ' + off.why : ''}${done ? '' : ' — waiting: ' + (s.decommission_refusal || 'the next pass')} · <a href="#" class="recom">bring back</a></small>` +
+                            ((s.lost || []).length ? h`<small class="bad">still held: ${s.lost.map(l => l.place + ' (' + l.worker + ')').join(', ')} — withdraw a volume that went with the server</small>` : '')
+                          : s.decommissionable ? h`<small><a href="#" class="decom">decommission</a>${s.decommission_warning ? ' · ' + s.decommission_warning : ''}</small>`
+                          : h`<small>decommission: not now — ${s.decommission_refusal || ''}</small>`);
+      el.querySelector('.lab-edit').onclick = e => { e.preventDefault(); editLabels(name, s.labels || []); };
+      if (el.querySelector('.decom')) el.querySelector('.decom').onclick = e => { e.preventDefault(); decommission(name, true); };
+      if (el.querySelector('.recom')) el.querySelector('.recom').onclick = e => { e.preventDefault(); decommission(name, false); };
+      if (el.querySelector('.lab-node')) el.querySelector('.lab-node').onclick = e => { e.preventDefault(); editLabels(name, null); };
+      box.appendChild(el);
+    }
+    if (!Object.keys(sv).length) box.textContent = 'no servers yet';
+  } catch (_) {}
+  // The domain, when this cluster hosts it (М12 Lesson 3): its members and what it cannot see, above this
+  // cluster's servers — one tree for the site. Read only; a stale view says the domain is silent.
+  try {
+    const r = await fetch('/domain');
+    if (r.ok) {
+      const d = await r.json();
+      const el = document.createElement('div'); el.className = 'srv';
+      const per = {}; for (const c of d.units || []) per[c.cluster] = (per[c.cluster] || 0) + 1;
+      const ms = raw(Object.entries(d.members || {}).map(([n, m]) => h`${n}: ${m.state === 'ok' ? (per[n] || 0) + ' units' : raw('<span class="bad">' + esc(m.state) + '</span>')}`).join(' · '));
+      el.innerHTML = h`<strong>domain</strong> <small>${d.complete ? 'every member answered' : raw('<span class="bad">incomplete</span>')} · as of ${Math.round(d.age)} s ago</small>` +
+                     (d.silent ? h`<small class="bad">the domain is silent — this is what it knew ${Math.round(d.age)} s ago</small>` : '') +
+                     h`<small>${ms}</small>` + (d.causes || []).map(c => h`<small class="bad">${c}</small>`).join('');
+      box.prepend(el);
+    }
+  } catch (_) {}
+  try { const m = await (await fetch('/mounts')).json(); const names = Object.keys(m.mounts || {}); $('#mounts').textContent = names.length ? `fronts ${m.root} at / and ${names.map(n => n + ' at /' + n + '/').join(', ')}` : ''; } catch (_) {}
+}
+// -- what a server reaches, from here (feedback DQ) ----------------------------------------------------
+// `PUT /servers/<name>/labels {labels}` — the administrator's word over the node's `meta.labels`; `DELETE` — back to
+// the node's (`have` null). First `GET …/labels?labels=…`: the units that would move, named in the confirmation —
+// the controller moves them on its next pass, ten a pass, or lists them unplaceable when no server reaches them.
+async function editLabels(name, have) {
+  let want = null;
+  if (have !== null) {
+    const typed = prompt(`What ${name} reaches — labels, comma-separated (empty: nothing):`, have.join(','));
+    if (typed === null) return;
+    want = typed.split(',').map(x => x.trim()).filter(Boolean);
+  }
+  const q = want === null ? '' : '?labels=' + encodeURIComponent(want.join(','));
+  try {
+    // the answer read first: a refusal (a label that is not one, a server nobody knows) is said, nothing is written
+    const r = await fetch(`/servers/${encodeURIComponent(name)}/labels${q}`);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || d.error || `${r.status}`);
+    const moves = d.would_move || [];
+    if (moves.length && !confirm(`${moves.length} unit(s) on ${name} will move or wait unplaced: ${moves.join(', ')}. Go on?`)) return;
+    if (want === null) await send('DELETE', `/servers/${encodeURIComponent(name)}/labels`);
+    else await send('PUT', `/servers/${encodeURIComponent(name)}/labels`, { labels: want });
+  } catch (err) { alert('refused: ' + err.message); }
+  loadResources();
+}
+// -- a machine that will never come back, from here --------------------------------------------------------
+// `POST /servers/<name>/decommission {why}` — the operator operates servers, not workers: they took the machine out and
+// switched it off, and the console checks what it can — while its resource answers, 409 in words, nothing written.
+// The controller frees its workers' slots on its next pass and moves their units; `DELETE` brings the machine back.
+async function decommission(name, gone) {
+  try {
+    if (!gone) {
+      if (!confirm(`Bring ${name} back? Its workers are placed on again.`)) return;
+      await send('DELETE', `/servers/${encodeURIComponent(name)}/decommission`);
+    } else {
+      const why = prompt(`Decommission ${name}? Only once it is out of service and switched off: what ran on it moves to the servers that are here, and nothing is placed on it until it is brought back. Why:`, '');
+      if (why === null) return;
+      const d = await send('POST', `/servers/${encodeURIComponent(name)}/decommission`, { why });
+      if ((d.holds || []).length) alert(d.note);
+    }
+  } catch (err) { alert('refused: ' + err.message); }
+  loadResources();
+}
+window.addEventListener('beforeunload', stopLive);
+$('#last24').onclick = () => { window_ = [Date.now() / 1000 - 86400, Date.now() / 1000]; if (current) loadTimeline(); };
+$('#all').onclick = () => { window_ = null; if (current) loadTimeline(); };
+// -- who is looking: `/session` ---------------------------------------------------------------
+// A console in a domain asks who is calling (the gate). The page asks the console first: is it gated, and am
+// I known? If not, it shows the form. The PASSWORD goes to the domain's login door (`login_url`, another origin)
+// and never to this console; what comes back is a token, which this console checks and keeps in a cookie the
+// script cannot read. With no login door configured, or to use a token somebody handed over, the token can
+// be pasted.
+let booted = false;
+function boot() {
+  if (booted) return; booted = true;
+  loadSpec().then(() => { loadUnits(); loadResources(); loadArchives(); setInterval(() => { loadUnits(); loadDets(); loadAutos(); loadRec(); loadResources(); loadArchives(); }, 10000); setInterval(loadEvents, 5000); });
+}
+async function session() {
+  let s;
+  try { const r = await fetch('/session'); if (!r.ok) { $('#gate').style.display = 'block'; $('#gatenote').textContent = (await r.json()).detail || 'this console cannot check who is calling'; $('#signin').querySelector('button').disabled = true; return; } s = await r.json(); }
+  catch (_) { boot(); return; }                                  // an older console: no such route, and no gate
+  if (s.open) { boot(); return; }
+  if (s.user) {
+    $('#gate').style.display = 'none';
+    $('#whoami').innerHTML = h`${s.user} · <a href="#" id="signout">sign out</a>`;
+    $('#signout').onclick = async e => { e.preventDefault(); await fetch('/session', { method: 'DELETE' }); location.reload(); };
+    if (s.until) setTimeout(session, Math.max(1000, (s.until - Date.now() / 1000) * 1000 + 500));   // the token ends: ask again
+    boot(); return;
+  }
+  $('#gate').style.display = 'block';
+  $('#byname').style.display = s.login_url ? 'block' : 'none';
+  $('#bytoken').open = !s.login_url;
+  $('#gatenote').textContent = s.login_url ? 'your password goes to the domain, not to this console' : 'this console has no login door configured: paste a token';
+  $('#signin').onsubmit = async e => {
+    e.preventDefault(); $('#gateerr').textContent = '';
+    try {
+      if ($('#byglass').open) {
+        const r = await fetch('/session/break-glass', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: $('#gw').value, why: $('#gy').value, password: $('#gp').value }) });
+        $('#gp').value = '';
+        if (!r.ok) throw new Error((await r.json()).detail || 'refused');
+        session(); return;
+      }
+      let token = $('#st').value.trim();
+      if (!token) {
+        const r = await fetch(s.login_url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('#su').value, password: $('#sp').value }) });
+        if (!r.ok) throw new Error('bad credentials');
+        token = (await r.json()).token;
+      }
+      $('#sp').value = '';
+      const r = await fetch('/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+      if (!r.ok) throw new Error((await r.json()).detail || 'the token was refused');
+      $('#st').value = ''; session();
+    } catch (err) { $('#gateerr').textContent = err.message; }
+  };
+}
+session();
+</script>

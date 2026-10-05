@@ -287,7 +287,7 @@ def test_a_torn_server_row_after_a_controller_restart_moves_nothing_and_takes_no
     assert fresh.where(new) == "w-2"                                  # not onto the server nobody can say the reach of
     con_ctl, rec, m, srv, base = _console(box)
     try:
-        assert _call(base, "GET", "/servers")[1]["servers"]["srv-a"].get("labels_unread") is True
+        assert _call(base, "GET", "/servers")[1]["servers"]["srv-a"]["labels_source"] == "unknown"
     finally:
         srv.shutdown()
     box.vars.put("vms/servers/srv-a", {"labels": "vlan:a"})            # mended: read again, nothing to move

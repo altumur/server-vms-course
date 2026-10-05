@@ -6,7 +6,8 @@ stateless shards writing bulk data; nothing here knows what a camera is.
     epoch.py       the fencing-token issuer and the lease, generic
     contract.py    what a subsystem gives the platform: a controller and its workers
     spec.py        the controller as data: SubsystemSpec from <sub>.subsystem.yaml, SpecController
-    console.py     the console as data: SpecConsole over the same spec; console.html, the one page
+    console.py     the console as data: SpecConsole over the same spec; console.js, the module every page is
+                   built from, and console.html, the platform's page — the module and its mount
     events.py, eventdatabase.py, resource.py   buckets, the event index each resource reads its own by, the resource job
     longpoll.py    a reader of the events asks a resource to hold a request until a line it watches is written
 
@@ -25,7 +26,7 @@ and changes nothing above this line.
 # here would host any fleet of stateless shards writing bulk data — and gives a one-line map of the modules:
 # `variables.py` (config store with ModifyIndex and check-and-set), `objects.py` (object store), `epoch.py`
 # (fencing token and lease), `contract.py` (Controller and Worker bases), `spec.py` (the controller as
-# data), `console.py` and `console.html` (the console as data), and `events.py` / `eventdatabase.py` /
+# data), `console.py`, `console.js` and `console.html` (the console as data), and `events.py` / `eventdatabase.py` /
 # `resource.py` (buckets, the index over them, the resource job).
 #
 # The docstring also fixes the boundary the next module (М11) uses: М11 replaces `variables.py` with

@@ -186,6 +186,7 @@ BY_MEANING = {
 # What is blanked before a line is read: words that look like the product's and are not.
 NOT_THE_PRODUCT = _regs(
     r"overflow(-[xy])?\s*:\s*auto\b", r"margin(-[a-z]+)?\s*:[^;}\"]*\bauto\b", r"\b(width|height)\s*:\s*auto\b",   # CSS
+    r"\bflex(-basis)?\s*:[^;}\"]*\bauto\b",                                            # …and the console module's (console.css)
     r"\bgrid-template-columns\s*:[^;}\"]*", r"\bdevice-(width|height|pixel-ratio)\b",   # the browser's screen
     r"\(device, inode\)", r"\bdevice and inode\b",                                     # a file's identity: `st_dev`
 )

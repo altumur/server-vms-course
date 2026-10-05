@@ -182,7 +182,8 @@ TREE_WORDS = ("nested_by", "group_title", "group_hint", "filter", "no_group", "c
 # — a table `marks` was never written over HTTP: `POST /marks` is the operator's mark. Refused at load; a closed set, held
 # to the dispatch by `test_spec_declarations.py`.
 CONSOLE_ROUTES = frozenset({"session", "healthz", "index.html", "spec", "where", "resources", "servers", "domain",
-                            "policy", "unplaceable", "events", "metrics", "marks", "requests", "mounts", "drain", "schema"})
+                            "policy", "unplaceable", "events", "metrics", "marks", "requests", "mounts", "drain", "schema",
+                            "platform"})   # `/platform/console.js`: the console module every page is built from
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
                     "mended; the other units are judged", "unit's row")
 # What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
@@ -1543,7 +1544,7 @@ class SubsystemSpec:
         from . import catalog
         with open(path) as f:
             spec = cls.from_dict(yaml.safe_load(f))
-        catalog.register(spec)                  # a spec this process loaded is one it knows (`catalog.py`)
+        catalog.register(spec, path)            # a spec this process loaded is one it knows (`catalog.py`)
         return spec
 
     # `Subsystem(name)` — the key layout from `contract.py`.

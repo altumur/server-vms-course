@@ -17,8 +17,10 @@ is nobody's catalogue.
 # of its spec, and the platform's code asks the catalogue for it. Step 5: the platform's own entry point loads a
 # directory of specs and runs its processes for each (`host.py`).
 #
-# - `register(spec)` — a spec this process loaded. A second spec of one name replaces the first (a test that loads a
-#   changed copy); `version` moves, so what was derived from the old one is derived again.
+# - `register(spec, path)` — a spec this process loaded, and the file it was loaded from. A second spec of one name
+#   replaces the first (a test that loads a changed copy); `version` moves, so what was derived from the old one is
+#   derived again. `file_of(name)` — the file the name was last loaded from (a copy registered without one keeps it):
+#   what lies beside it is the subsystem's (its page, `console.page_of`).
 # - `load_dir(path)` — every `*.subsystem.yaml` of a directory, in name order; refused when there is none: a process
 #   told to run from an empty directory runs nothing, and says so at its start rather than idling.
 # - `specs()` / `spec(name)` — what is loaded; with nothing loaded, the directory `SPEC_DIR` names first.
@@ -38,14 +40,17 @@ SPEC_DIR = "SPEC_DIR"
 
 _lock = threading.Lock()
 _loaded: dict = {}               # name -> SubsystemSpec
+_files: dict = {}                # name -> the file it was loaded from
 version = 0                      # moves with every register: what is derived from the catalogue is derived again
 _derived: dict = {}              # (what, version) -> the value derived
 
 
-def register(spec) -> None:
+def register(spec, path: str | None = None) -> None:
     global version
     with _lock:
         _loaded[spec.name] = spec
+        if path:                 # a copy built in code (a test's changed spec) is still the subsystem whose file it names
+            _files[spec.name] = os.path.abspath(path)
         version += 1
         _derived.clear()
 
@@ -57,6 +62,11 @@ def load_dir(path: str) -> list:
         raise ValueError(f"{SPEC_DIR}={path}: no <sub>.subsystem.yaml there — the platform runs from the specs it is "
                          f"given and from nothing else")
     return [SubsystemSpec.load(f) for f in files]
+
+
+def file_of(name: str) -> str | None:
+    with _lock:
+        return _files.get(name)
 
 
 def specs(env: dict | None = None) -> list:
