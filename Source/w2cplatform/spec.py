@@ -1761,10 +1761,14 @@ class SubsystemSpec:
                     doc = parse_json(raw) if isinstance(raw, (str, bytes)) else raw
                     text = canonical_json(doc)
                 except PARSE_ERRORS as e:                # nested past JSON's depth too: 400, not 500 (the tenth round)
-                    raise Refused(f"{name} is not JSON: {e}")
+                    r = Refused(f"{name} is not JSON: {e}")
+                    r.fault = getattr(e, "fault", "not_json")
+                    raise r from None
                 size = len(text.encode())                # the BYTES of the text stored, as the product counts
                 if size > JSON_CEILING:                  # (`ж` is two: characters let 4008 bytes through, «Паритет»)
-                    raise Refused(f"{name} is {size} bytes of JSON; the ceiling is {JSON_CEILING}")
+                    r = Refused(f"{name} is {size} bytes of JSON; the ceiling is {JSON_CEILING}")
+                    r.fault = "too_long"
+                    raise r
                 if f.schema is not None:
                     self._schema_refusal(name, f, doc)
             elif f.schema is not None and name in fields and fields[name] is not None:
