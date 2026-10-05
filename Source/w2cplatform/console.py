@@ -134,6 +134,7 @@ from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_M
                        DecommissionRefused, SchemaTooNew, builds, contenders, is_live, label_set, name_conflict,
                        parse_heartbeat, read_slot, schema_version)
 from .epoch import current_epoch
+from .canonical import canonical_json, exact_int, field_text, number_text, parse_json
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence, unit_id
 from .events import ALARM, CONSOLE_MARKS, OF, EventLog
@@ -1114,7 +1115,7 @@ class SendMixin:
 
     def _body(self):
         n = int(self.headers.get("Content-Length", 0))
-        return json.loads(self.rfile.read(n) or b"{}")
+        return json.loads(self.rfile.read(n) or b"{}", parse_int=exact_int)   # its digits, `-0` too (`canonical.py`)
 
 
 # A REQUEST'S BODY IS A JSON OBJECT, OR A REFUSAL (the review's tenth round, the routes that failed whole). A body that
@@ -1125,7 +1126,8 @@ def object_body(h) -> dict:
     try:
         # A subsystem's route is handed a length and a stream (`headers`, `rfile`), not always this console's handler.
         reader = getattr(h, "_body", None)
-        body = reader() if reader is not None else json.loads(h.rfile.read(int(h.headers.get("Content-Length", 0) or 0)) or b"{}")
+        body = reader() if reader is not None else json.loads(h.rfile.read(int(h.headers.get("Content-Length", 0) or 0)) or b"{}",
+                                                              parse_int=exact_int)
     except PARSE_ERRORS as e:
         raise Refused(f"the body is not JSON that can be read ({type(e).__name__})") from None
     if not isinstance(body, dict):
@@ -1304,7 +1306,7 @@ class IdempotencyKeys:
                 return wrong                                             # somebody else's key, or another body under it: not this reply
             if items.get("state") == "done":
                 self._seen.pop(path, None)
-                return int(items["status"]), json.loads(items["body"])
+                return int(items["status"]), parse_json(items["body"])
             # A claim that has stood still for `PENDING_TTL` is nobody's: its console crashed between the claim
             # and the reply, or its write raised. It used to stand for the key's whole day, answering every
             # correct retry with 409 (the platform review; feedback BG). The next request takes it over, by
@@ -1378,7 +1380,7 @@ class IdempotencyKeys:
         path = self._path(key)
         tag, rev = self._mine.get(path, {}), self._rev.get(path, 0)
         try:
-            self.vars.put(path, {"state": "done", "status": resp[0], "body": json.dumps(hide_in_reply(resp[1])), "at": self.wall(),
+            self.vars.put(path, {"state": "done", "status": resp[0], "body": canonical_json(hide_in_reply(resp[1])), "at": self.wall(),
                                  **tag}, cas=rev)
         except Conflict:
             raise ClaimLost(f"the claim on {key} was taken over by another console before the reply was kept") from None
@@ -2888,9 +2890,17 @@ class SpecConsole:
         uid = str(row["id"])
         if "key" in req:
             from .tables import KEY_TEMPLATE
+
+            def filled(m) -> str:                          # a field's text in the name is its text in the row
+                v = {**body, "unit": uid}[m.group(1)]
+                if v is None:
+                    raise KeyError(m.group(1))             # `null` is no value: the name is not filled in
+                if not m.group(2):
+                    return field_text(v)
+                # `:int` — an integer in exactly its digits (through a float, 12345678901234567890 was …7168)
+                return str(v) if isinstance(v, int) and not isinstance(v, bool) else str(int(float(v)))
             try:
-                rid = KEY_TEMPLATE.sub(lambda m: str(int(float(({**body, "unit": uid})[m.group(1)]))) if m.group(2)
-                                       else str(({**body, "unit": uid})[m.group(1)]), req["key"])
+                rid = KEY_TEMPLATE.sub(filled, req["key"])
             except (KeyError, *PARSE_ERRORS, OverflowError):
                 return 400, {"detail": f"a request is named {req['key']}, and the body does not fill it in", "error": "bad id"}
         else:
@@ -2899,24 +2909,39 @@ class SpecConsole:
         if "/" in rid or rid in (".", "..") or len(rid) > 200 or unnamable(rid):
             return 400, {"detail": "a request's id is a name, not a path, and holds no quote, bar or control character",
                          "error": "bad id"}
-        out = {k: (json.dumps(v) if isinstance(v, (dict, list)) else str(v)) for k, v in body.items()
-               if k not in ("unit", "id", "valid_until")}
+        # A ROW'S VALUE IS ITS JSON TEXT, ONE FORM FOR THE COURSE AND THE PRODUCT (the architect, 2026-10-05, ADR 0012;
+        # «Паритет»'s `testdata/requests_body.tsv`): a string as it is, `true`/`false`, a whole number as its digits, any
+        # other the shortest decimal — `str()` wrote Python's `True` and `5.0`, and a holder in Go read another value
+        # than the one in Python. `null` is no value: the field is absent, not the word `None`. The text is what the
+        # schema's `maxLength` bounds — a number's too, as the holder reads it (`port: 1e40` is 41 characters).
+        try:
+            out = {k: t for k, v in body.items() if k not in ("unit", "id", "valid_until")
+                   and (t := field_text(v)) is not None}
+        except PARSE_ERRORS:                                # `NaN`, `Infinity`: Python reads them, JSON has none
+            return 400, {"detail": "a request's values are JSON, and NaN and the infinities are not", "error": "bad body"}
+        props = (req["schema"].get("properties") or {}) if isinstance(req.get("schema"), dict) else {}
+        for k, t in out.items():
+            most = props[k].get("maxLength") if isinstance(props.get(k), dict) else None
+            if isinstance(most, int) and len(t) > most:
+                return 400, {"detail": f"the request's {k} is at most {most} characters as written, not {len(t)}",
+                             "error": "refused"}
         out.update(unit=uid)
         if "valid_for" in req:
             # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity`
-            # reached the row as `nan`/`inf`, and a holder performed such a request hours late.
+            # reached the row as `nan`/`inf`, and a holder performed such a request hours late. How far one may be is
+            # declared (`most_valid`, required with `valid_for`): no bound is assumed, neither 600 nor none (ADR 0012).
             try:
                 until = finite(body.get("valid_until") or now + req["valid_for"])
             except (TypeError, ValueError):
                 return 400, {"detail": f"`valid_until` is a time in seconds, not {body.get('valid_until')!r}", "error": "bad deadline"}
-            if until - now > req.get("most_valid", float("inf")):
+            if until - now > req["most_valid"]:
                 return 400, {"detail": f"a request's `valid_until` is at most {req['most_valid']:.0f} s away", "error": "too far"}
-            out["valid_until"] = str(until)
+            out["valid_until"] = number_text(until)
         stamp = set(req.get("stamp") or ())
         if "by" in stamp:
             out["by"] = user
         if "at" in stamp:
-            out["at"] = str(now)
+            out["at"] = number_text(now)
         if "group" in stamp and spec.group_by:               # what the rights were asked on: the holder performs it there only
             out["group"] = ctl.group_value(row)
         if "about" in stamp and spec.about_field and row.get(spec.about_field) not in (None, ""):
@@ -2939,7 +2964,7 @@ class SpecConsole:
             for _ in range(50):
                 try:
                     it, idx = ctl.vars.get(ledger)
-                    held = [(str(r), finite(at)) for r, at in json.loads((it or {}).get("asks", "[]"))]
+                    held = [(str(r), finite(at)) for r, at in parse_json((it or {}).get("asks", "[]"))]
                 except PARSE_ERRORS as e:                 # `Garbled` too: a row the store holds and cannot read
                     return self._ledger_garbled(name, user, e)
                 self._ledger_read(name)
@@ -2951,7 +2976,7 @@ class SpecConsole:
                                                f"person files at once — wait for some to be answered", "error": "too many"}
                     held.append((rid, now))
                 try:
-                    ctl.vars.put(ledger, {"asks": json.dumps(held), "by": user, "at": str(now)}, cas=idx)
+                    ctl.vars.put(ledger, {"asks": canonical_json(held), "by": user, "at": number_text(now)}, cas=idx)
                     break
                 except Conflict:
                     continue                                  # another request of this person's got there first
