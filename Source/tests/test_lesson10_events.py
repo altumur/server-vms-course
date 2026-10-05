@@ -79,9 +79,10 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         assert [(e["subsystem"], e["kind"], e["server"], e["fenced"]) for e in ev] == [
             ("det", "linecross", "srv-1", False), ("console", "mark", "srv-1", False), ("vms", "silent", "srv-1", False)]
         assert ev[0]["unit"] == "det/1-linecross" and ev[0]["of"] == "vms/1" and ev[0]["pass"] == 3 and ev[0]["epoch"] == 1 and ev[1]["user"] == "murat"
-        # the page shows all of it: the events under the timeline, the live feed beside the picture, the Mark button
+        # the page shows all of it: the events under the timeline, the live feed beside the picture, the Mark button —
+        # the VMS's page over the platform's console module, which draws the servers and the journal
         page = urllib.request.urlopen(base + "/").read().decode()
-        assert 'id="events"' in page and 'id="livefeed"' in page and "/marks" in page and "/servers" in page
+        assert 'id="events"' in page and 'id="livefeed"' in page and "/marks" in page and "/platform/console.js" in page
         # the same answer under the mount: /det/events fences by det's epochs too
         assert call(base, "GET", "/det/events?unit=vms/1&subsystem=det")[1]["events"][0]["kind"] == "linecross"
         # an open bucket keeps growing: the next event is in the next answer — the file is looked at, not remembered

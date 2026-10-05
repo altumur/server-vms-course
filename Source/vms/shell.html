@@ -1,1190 +1,1038 @@
 <!doctype html>
-<!-- The console's one page, for ANY subsystem. No framework, no build step.
-     It reads /spec first — the subsystem's name, what its rows are called,
-     how a unit is identified, which fields the operator owns and whether
-     there is media — and builds the list, the add form and the edit form
-     from that. Nothing on this page names a camera: the VMS is the spec that
-     says `rows: cameras`, `media: true`; live and det are other specs and the
-     same page. With media the page adds the timeline, the player, the
-     events — as ticks on the timeline and as a list under it, from every
-     subsystem, coloured by subsystem, each click seeking the player; as a
-     live feed beside the live picture, polled while watching; and as a
-     Mark button, the operator's own event — /timeline/<id>, /events?unit=,
-     each span's `media` route, /marks (one box: a list; a cluster: {segments,
-     unreachable, note}, each span naming its server; the events reply's
-     `state` names a resource that did not answer). -->
+<!-- The VMS's console page: a SHELL over the platform's console module (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md), served at `/`
+     when the console's root is the VMS (`page_of`: the `shell.html` beside the VMS's spec).
+     Everything the platform knows — the frame, the tree, the cards of units, servers, workers, the domain, people,
+     the journal, the session — and the console's look (/platform/console.css) are the module's; the VMS's words come
+     from its specs (`display`). This page adds what a camera is: its icons and its tag (the address), its source read
+     for a person, its tabs (video, archive), its notes and its events in words, the volumes under the servers, the
+     scenarios, the domain's cameras and archives. Its writes go through the module's `api()` (one Idempotency-Key a
+     submission); the bytes — the timeline, the pieces, the live picture — through the holders' doors, never the
+     console. Its markup carries no handler in an attribute: the console's Content-Security-Policy runs the page's own
+     script by its hash and this origin's files, and nothing else. -->
 <!--
-NOTES — what this page is, its regions and its state (each script function is described where it is defined)
+NOTES — what this page is, its parts and its state (each function is described where it is defined)
 
-# console.html — the console's one page, for any subsystem: built from /spec, no framework, no build step
+# vms/shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
 
-**Role in the module.** Lesson 6. Served by `console.py` at `/`. The page reads `/spec` first — the
-subsystem's name, what its rows are called, how a unit is identified, which fields the operator owns and
-which doors its holders open — and builds the unit list, the add form and the edit form from that. Nothing on this
-page names a subsystem's things: each is a spec (`rows`, `about`, `door`) and the same page
-(`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http` asserts the word "camera"
-does not appear outside the leading comment). Where a spec about this unit declares a door with the spans route
-(`SPANS`) the page adds the scale and the player: the door is asked for at `/<sub>/where/<id>` (its url and a token),
-its spans read raw from `<url>/<SPANS>/<id>` and played piece by piece from `<url>/segment/<id>/e<epoch>/<fromMs>-<toMs>`;
-and, for a subsystem with places (`places: {table}`), each place's holder is asked too —
-`/<sub>/where/<table>/<place>?unit=<sub>/<id>` — and its door's spans merged without doubling; a place nobody holds is
-named in `#note` from `X-Unreachable` (`<place>@<server>`). Plus the platform's `/events?unit=<sub>/<id>`. The console
-itself carries no bytes: no route of its own for spans or for an offer. Writes go through the console with a fresh `Idempotency-Key` per attempt
-so a retried click is one unit; refusals are shown as the server's `detail`.
+**Role.** The page at `/` of a console whose root is `vms` (`w2cplatform/console.py`: `page_of` — a subsystem's own
+page lies beside its spec, `SHELL`). It mounts the module (`PlatformConsole.mount(#app, {lang, subsystems: [vms, rec,
+live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
+their specs with `pc.spec(name)`. No platform section is drawn here: no login, no tree of servers, no domain card, no
+journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: `tests/console/shell-*.test.js`.
 
-## `<style>`
-Light/dark palette via CSS variables (`−−media` blue for recorded spans, `−−events` amber for events-only
-spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red for the status dot). A two-column grid: a
-280 px `aside` and `main`. `#edit` and `#media` start hidden; `li.stale` is muted; `.span.fenced` is faded;
-`.span.playing` outlined.
+## The core: copied with a check
+`whereAt`, `doorOf`, `doorFetch`, `yieldCut`, `loadTimeline`, `segmentURL`, `play`, `playNext`, `negotiateLive`,
+`stopLive` are the product's (`vmsworker/vms/shell.html` on its `main`), between the two «core» lines below;
+`tests/test_shell_core.py` compares each with the product's, and what differs is `tests/testdata/shell_core_debt.txt`
+— only shrinking. The course leads where it differs: the places a recording may lie on are the rows of the table the
+rec spec names (`places.table`), read at `/rec/<table>` — never a table named in the page.
 
-## DOM regions
-- `aside`
-  - `#rows` — heading: the rows name from the spec plus a count.
-        - `#units` — the unit list (`li` per unit: a phase dot, the label, `#id`, and on the right `worker ·
-      server · age s` or `unplaced`).
-        - `#addbox` / `#addlabel` — a collapsible "Add" section containing form `#add` with `#addfields`
-      (inputs generated from the spec), a submit button, `#addnote` (how the id is made) and `#adderr`.
-  - `#status` — "N workers live · M <running gauge>" from `/metrics`.
-  - `#policy` — the administrator's knob from `/servers`' `policy`: a select, servers `shared` | `distinct`,
-    `PUT /policy` on change, with one line saying what the choice means.
-  - `#servers` — one line per server from `/servers`: its resource (`live`, `silent`, `unknown` —
-    the fact), its workers with load/capacity, and *not placeable: …* in red when the controller would not
-    place there now; what the server reaches (`labels`, and whether they were set here or are the node's), with
-    *edit* — `PUT /servers/<name>/labels` after naming the cameras that will move (`GET …/labels?labels=`) — and
-    *back to the node's* (`DELETE`); a worker that is silent and whose process still runs there in red (*hung*: the
-    controller frees nothing under it); *decommission* — the machine is gone for good (`POST
-    /servers/<name>/decommission`, refused in words while the server answers) — and *bring back* (`DELETE`); then
-    what this process fronts, from `/mounts`.
-- `main`
-  - `#title` — the selected unit's label, or "Pick one".
-  - `#meta` — phase · worker · server · epoch · placement reason · the holder's `why` and `warning` · "last known
-    state" when stale.
-        - `#recbox` — the unit's recordings, from `/rec/recordings` when the console mounts `rec`: one line per
-    recording of this camera with the recorder's word on it (phase, worker, server) and *stop*, and
-    `#recadd` — an archive to write to (empty: this box's disks) and days to keep.
-  - `#media` (only when a holder's door says spans: `media`) — a legend (recorded / fenced), `#timeline` (spans
-      and ticks), `#axis` with `#t0`, `#t1` and the `#last24` / `#all` window buttons, `#note` (the
-      cluster's `note`, e.g. unreachable servers), `#player` (`<video controls>`), `#playing` caption,
-      `#livefeed` (the events arriving while watching live, newest first), `#evhead` (the events heading,
-      the merge's `state` in `#evstate`, a subsystem filter `#evfilter`, the Mark form `#mark`), `#evlegend`
-      (one swatch per subsystem seen), `#events` (the list: time, kind, subsystem, server, epoch, fields).
-        - form `#edit` — `#editfields` (inputs from the spec minus `enabled` and the id field), Save,
-      `#toggle` (Enable/Disable, shown only if the spec has a bool `enabled`), `#del`, a reminder that
-      worker/epoch/revision/phase are the controller's, and `#editerr`.
+## What the page adds (all through the module's calls)
+- `addIcons` — camera, volume (storage); `addDecor("unit")` — a camera's icon and its address as a tag;
+  `addFieldEditor("unit", "source")` — the source and what it says (address, vendor, channel), sent by the form.
+- `addNote("unit")` — «открытие не завершается» (the device has not opened: `device_state: opening`), «сбой
+  устройства» (`phase: failed`, the holder's `why`); `addEventNote` — the VMS's events in words (volumes, cards, the
+  footage), everywhere the module lists events.
+- `addTab("unit")` «Видео» — the live picture (WHEP at the gateway's door), the timeline of every recording of the
+  camera and every place a recording may have left footage on, the events on it, the operator's mark, «Закрепить»
+  (what is only in a backup: `POST /rec/requests` for the primary recording), «Удержать показанное».
+  «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a backup) and
+  its keeps (`/rec/keeps`: make, lift).
+- Volumes (`/rec/<places table>`): `addTreeNodes("server")` (a server's own), `addTreeNodes("servers")` («Сетевые
+  архивы»), `addCard("vol"|"netvols")`, `addBlock("server", {covers: "rec/volumes"})` «Архивы сервера»; declaring
+  (`POST`, a smaller quota only with `shrink_confirmed`) and withdrawing (`DELETE`).
+- «Камеру в архив» — `addAction("server")`, `addMenu("server"|"vol")`: a recording of a camera on a volume of the
+  server (`POST /rec/recordings {name, cam, home}`).
+- `addSection` «Сценарии» (after units) — the auto subsystem's scenarios: the list and the editor, the actions the
+  auto spec's `then` accepts (`RACTIONS`, held to the spec by `tests/test_auto_spec.py`), the last firings.
+- The domain through the VMS's eyes, from the holder's `/domain` view (`units`, `tables`): `addTreeNodes("member")`
+  — a member's cameras and archives (a member of one camera stands in the tree as its camera: `replaces`),
+  `addCard("dc"|"da")`, `addBlock("member")`, `addBlock("domain")` «Пересечения» (`vms/crossings`).
+- `addMenu("unit")` — «Смотреть видео», «Архив».
 
-## State variables
-- `spec` — the `/spec` reply; the page's only knowledge of the subsystem.
-- `units` — the merged list from `/<rows>` (configured rows overlaid by heartbeat rows).
-- `current` — the selected unit id.
-- `window_` — `[from, to]` for the timeline, or `null` for everything.
-- `spans` — the timeline's spans as normalised objects `{start, end, epoch, fenced, events, media, server,
-  recorder}`.
-- `queue` — indexes into `spans` still to play.
-- `events` — the last `/events` reply's rows for the current unit and window; `evfilter` — the subsystem
-  shown, or "" for all; `palette` — subsystem → colour, assigned in order of first sight.
-- `live` — `{pc, session, timer, since, seen}` while watching: the feed polls `/events?from=since` every 3 s.
-
-### Form and button handlers
-- `#add` submit — `POST /<rows>` with the form fields; on success reset, reload, select the new id; on
-  refusal show `refused: …` in `#adderr`.
-- `#edit` submit — `PUT /<rows>/<current>` with the edit fields; reload and reselect; errors to `#editerr`.
-- `#toggle` click — `PUT /<rows>/<current>` with `{enabled: !current.enabled}`.
-- `#del` click — confirm (mentioning, if media, that the recordings' footage stays in its volumes), then
-  `DELETE /<rows>/<current>`; clears the selection and the timeline, reloads.
-- `#player.onended` — `next()`.
-- `#last24` click — window = last 24 h and reload the timeline; `#all` — no window.
-- `#events li` click — `seek(t)`: play the span holding `t` and jump the player to the offset.
-- `#mark` submit — `POST /marks {unit: <spec.name>/<current>, note}`: the operator's own event, then reload the events.
-- `#evfilter` change — redraw the ticks and the list for one subsystem.
-
-### Boot
-`loadSpec().then(() => { loadUnits(); setInterval(loadUnits + loadDets + loadResources, 10000);
-setInterval(loadEvents, 5000) })` — the events refresh on their own, the way the resource's database tails.
-
-## Routes the page uses
-- `GET /spec`, `GET /<rows>`, `GET /metrics`, `GET /where/<id>` — the platform console.
-- `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
-- the holders' doors, only when one says spans (`media`; the boundary's step 6: the bytes do not go through the console): `GET
-  <base>/where/<id>` → `door: {url, token, expires, routes}` for the unit and for every unit of a mounted subsystem
-  ABOUT it whose spec declares `door: {routes}`; then `<url>/<route>/<id>` at the holder, the token as a header (a
-  media element's `src`: `?t=`).
-- `GET /events?from&to&unit=<spec.name>/<id>` — the resources' event databases, merged by the console, tolerated when absent;
-  `POST /marks` — the operator's event; `GET /servers`, `GET /mounts` — the servers as placement sees them, and what this process fronts.
-- `POST /servers/<name>/decommission {why}` — a machine gone for good (on the Mount, as `/drain`): 409 while the server
-  answers, the sign named; the controllers release its slots and move their units. `DELETE` — withdrawn, or it is back.
-
-## Notes
-- The page never sends `worker`, `epoch`, `revision`, `phase` or `id` — the inputs are generated only from
-  `spec.fields`, and the server would refuse them anyway (`PLATFORM_FIELDS`).
-- The list's colour is the heartbeat's phase (`running` green, `failed` red, anything else grey), and a
-  stale worker's rows are muted with "last known state" in the meta line: the read model survives a
-  controller outage and degrades honestly on a worker outage.
+## Routes the page itself uses
+`/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/live/streams`, `/auto/scenarios`,
+`/events`, `/marks` (writes through `pc.api`); the holders' doors from `/rec/where/<recording>`,
+`/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`. Everything else is the module's.
 -->
 <meta charset="utf-8">
-<title>console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VMS</title>
+<link rel="stylesheet" href="/platform/console.css?v=1">
 <style>
-  :root { --bg:#fff; --fg:#1b1b1b; --muted:#6b6b6b; --line:#d8d8d8; --media:#3b7dd8; --events:#c58a1a; --fenced:#b0b0b0; --live:#2a9d5c; --stale:#c0392b; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#151515; --fg:#e8e8e8; --muted:#9a9a9a; --line:#333; --fenced:#555; } }
-  body { margin:0; font:14px/1.45 system-ui, sans-serif; color:var(--fg); background:var(--bg); display:grid; grid-template-columns: 280px 1fr; min-height:100vh; }
-  aside { border-right:1px solid var(--line); padding:12px; overflow:auto; }
-  main { padding:12px 16px; min-width:0; }
-  h1 { font-size:15px; margin:0 0 8px; }
-  ul { list-style:none; margin:0; padding:0; }
-  li { padding:6px 8px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; gap:8px; }
-  li:hover, li.on { background:color-mix(in srgb, var(--fg) 8%, transparent); }
-  li.stale { color:var(--muted); }
-  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--fenced); margin-right:6px; vertical-align:middle; }
-  .running .dot { background:var(--live); } .failed .dot { background:var(--stale); }
-  small { color:var(--muted); }
-  #meta { color:var(--muted); margin:4px 0 10px; }
-  #timeline { position:relative; height:64px; border:1px solid var(--line); border-radius:6px; margin:8px 0; overflow:hidden; }
-  .span { position:absolute; top:12px; height:26px; border-radius:3px; background:var(--media); cursor:pointer; min-width:2px; }
-  .span.events-only { background:var(--events); top:20px; height:12px; }
-  .span.fenced { opacity:.45; }
-  .span.playing { outline:2px solid var(--fg); }
-  .tick { position:absolute; bottom:4px; width:2px; height:10px; background:var(--events); cursor:pointer; }
-  .tick.fenced { opacity:.4; }
-  #events { max-height:32vh; overflow:auto; margin-top:6px; }
-  #events li { cursor:pointer; font-size:13px; padding:3px 6px; }
-  #events li.fenced { color:var(--muted); }
-  .sw { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; vertical-align:middle; }
-  #evstate { font-size:12px; color:var(--muted); } #evstate.bad { color:var(--stale); }
-  #livefeed { display:none; margin-top:6px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; max-height:18vh; overflow:auto; }
-  #livefeed .ev { padding:2px 0; } #livefeed .ev:first-child { font-weight:600; }
-  select { font:inherit; padding:3px 6px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--fg); }
-  #servers { font-size:12px; margin-top:8px; }
-  #servers .srv { padding:4px 0; border-top:1px solid var(--line); }
-  #servers .srv small { color:var(--muted); display:block; }
-  #servers .bad, #archlist .bad { color:var(--stale); }
-  #mounts { color:var(--muted); font-size:12px; margin-top:6px; }
-  #policy { font-size:12px; margin-top:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-  #policy select { font-size:12px; }
-  #axis { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; }
-  video { width:100%; max-height:60vh; background:#000; border-radius:6px; margin-top:8px; }
-  #note { color:var(--stale); }
-  button { font:inherit; padding:4px 10px; border:1px solid var(--line); background:transparent; color:var(--fg); border-radius:6px; cursor:pointer; }
-  .legend span { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:middle; }
-  form { display:grid; gap:6px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
-  form label { display:grid; gap:2px; font-size:12px; color:var(--muted); }
-  input[type=text], input[type=number], input[type=password] { font:inherit; padding:4px 6px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--fg); }
-  .row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-  .err { color:var(--stale); font-size:12px; white-space:pre-wrap; }
-  details summary { cursor:pointer; color:var(--muted); font-size:13px; }
-  #edit, #media { display:none; }
-  #status { color:var(--muted); font-size:12px; margin-top:12px; }
+/* The VMS's own styles — its icons' colours, the player, the timeline, the scenarios; the console's look is the
+   module's (/platform/console.css). */
+.ici-camera{color:#4ea3e8}.ici-storage{color:#6a9cbc}.ici-bolt{color:#e8b84a}
+/* What is not there is shown, not hidden: a card switched off says why. */
+.card.is-off{opacity:.62}.card.is-off .cb code{background:var(--p2);border:1px solid var(--ln);border-radius:4px;padding:1px 5px;font-size:12px}
+.vid{position:relative;display:grid;place-items:center;aspect-ratio:16/9;background:#05080d;border:1px solid var(--ln);border-radius:8px;overflow:hidden}
+.vid video{width:100%;height:100%;display:block;background:#000}
+.vrow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.vax{display:flex;justify-content:space-between;margin-top:4px}
+.tl{position:relative;height:64px;border:1px solid var(--ln);border-radius:6px;background:var(--p2);overflow:hidden}
+.tl .span{position:absolute;top:12px;height:26px;border-radius:3px;background:var(--bl);cursor:pointer;min-width:2px}
+.tl .span.events-only{background:#c58a1a;top:20px;height:12px;cursor:default}
+.tl .span.fenced{opacity:.45}
+/* What is only in a backup (the camera's card, another server's disk) and not in the primary: hatched. What was
+   backfilled from it is the primary's now, written by another than its recorder: a colour of its own. */
+.tl .span.backup{background:repeating-linear-gradient(135deg,#c58a1a 0 4px,transparent 4px 8px);border:1px solid #c58a1a}
+.tl .span.backfill{background:#2a9d5c}
+.tl .span.playing{outline:2px solid var(--tx);outline-offset:-1px}
+.tl .tick{position:absolute;bottom:4px;width:2px;height:12px;background:#c58a1a;cursor:pointer}
+.tl .tick.fenced{opacity:.4}
+.evlist{list-style:none;margin:0;padding:0;max-height:34vh;overflow:auto}
+.evlist li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px}
+.evlist li:hover{background:var(--p2)}
+.evlist li.fenced{color:var(--mu)}
+.evlist li small{color:var(--mu);font-size:11px;white-space:nowrap}
+.swatch{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.livefeed{margin-top:8px;padding:8px 10px;border:1px solid var(--ln);border-radius:8px;background:var(--p2);font-size:13px;max-height:20vh;overflow:auto}
+.livefeed .ev{padding:2px 0}
+.livefeed .ev:first-child{font-weight:600;color:var(--mu)}
+.sub.bad{color:var(--rd)}
+.btn.on{border-color:#3f6fac;background:#1a2d4d;color:#fff}
+.vms-rules{display:grid;grid-template-columns:260px 1fr;gap:12px}
+.vms-rules-list .n{display:flex;gap:6px;padding:6px 8px;border-radius:7px;cursor:pointer}
+.vms-rules-list .n:hover{background:var(--p2)}.vms-rules-list .n.on{background:#1a2d4d}
 </style>
-<div id="gate" style="display:none; position:fixed; inset:0; z-index:10; background:var(--bg, #111); padding:15vh 0 0; text-align:center;">
-  <form id="signin" style="display:inline-block; text-align:left; min-width:260px;">
-    <h1>Sign in</h1>
-    <p id="gatenote" style="color:var(--muted); font-size:13px;"></p>
-    <div id="byname"><input id="su" placeholder="user" autocomplete="username"><br><input id="sp" type="password" placeholder="password" autocomplete="current-password"></div>
-    <details id="bytoken"><summary>I have a token</summary><textarea id="st" rows="4" style="width:100%" placeholder="the domain's token"></textarea></details>
-    <details id="byglass"><summary>Emergency access (the domain is away)</summary><input id="gw" placeholder="who you are"><br><input id="gy" placeholder="why"><br><input id="gp" type="password" placeholder="emergency password"><br><small>every use is an alarm</small></details>
-    <button>Sign in</button> <span id="gateerr" class="err"></span>
-  </form>
-</div>
-<aside>
-  <div id="whoami" style="font-size:12px; color:var(--muted);"></div>
-  <h1 id="rows">…</h1>
-  <ul id="units"></ul>
-  <details id="addbox"><summary id="addlabel">Add</summary>
-    <form id="add">
-      <div id="addfields"></div>
-      <div class="row"><button type="submit">Add</button><small id="addnote">the controller numbers it and places it on the next pass</small></div>
-      <div class="err" id="adderr"></div>
-    </form>
-  </details>
-  <div id="status"></div>
-  <div id="policy"></div>
-  <div id="servers"></div>
-  <div id="archbox" style="display:none">
-    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Archives</strong><span id="archstate"></span></div>
-    <ul id="archlist"></ul>
-    <details id="archaddbox"><summary>Declare an archive</summary>
-      <form id="archadd">
-        <div class="row">
-          <label>name <input type="text" name="name" placeholder="cold | s3-main" required style="width:9em"></label>
-          <label>kind <select name="kind"><option value="local">local</option><option value="network">network</option></select></label>
-        </div>
-        <div class="row">
-          <label>path or url <input type="text" name="url" placeholder="/data/archive/cold" required style="width:16em"></label>
-        </div>
-        <div class="row">
-          <label>server <input type="text" name="server" placeholder="local only" style="width:8em"></label>
-          <label>capacity <input type="number" name="quota_gb" min="1" required style="width:6em"> GB</label>
-          <label>key id <input name="access_key" placeholder="network only" style="width:8em"></label>
-          <label>key <input type="password" name="access_secret" placeholder="network only" style="width:8em"></label>
-          <button type="submit">Declare</button>
-        </div>
-        <div class="row">
-          <label title="A smaller capacity for a volume that exists erases its oldest footage: the recorder does it only with this"><input type="checkbox" name="shrink"> smaller than it is: erase its oldest footage</label>
-        </div>
-        <div class="err" id="archerr"></div>
-      </form>
-    </details>
-  </div>
-  <div id="mounts"></div>
-</aside>
-<main>
-  <h1 id="title">Pick one</h1>
-  <div id="meta"></div>
-  <div id="media">
-    <div class="legend"><small><span style="background:var(--media)"></span>recorded (the recorder's footage, by epoch) <span style="background:var(--fenced)"></span>fenced — an older epoch; ticks are events, from every subsystem</small></div>
-    <div id="timeline"></div>
-    <div id="axis"><span id="t0"></span><button id="last24">last 24 h</button><button id="all">everything</button><button id="live">Live</button><span id="t1"></span></div>
-    <div id="note"></div>
-    <video id="player" controls></video>
-    <div id="playing"><small></small></div>
-    <div id="livefeed"></div>
-    <div class="row" id="evhead" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
-      <strong>Events</strong><span id="evstate"></span>
-      <select id="evfilter"><option value="">every subsystem</option></select>
-      <form id="mark" style="margin:0;padding:0;border:0;display:flex;gap:6px;align-items:center">
-        <input type="text" name="note" placeholder="what you saw" style="width:14em"><button type="submit">Mark</button>
-      </form>
-      <small>observations from every subsystem, each under its own epoch; a mark is yours — click one to play it</small>
-    </div>
-    <div class="legend" id="evlegend"><small></small></div>
-    <ul id="events"></ul>
-  </div>
-  <div id="recbox" style="display:none">
-    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Recording</strong><span id="recstate"></span>
-      <small>the rec subsystem, when the console mounts it: a recording is a unit placed where its archive is, fed by the worker's fan-out — one row per archive this unit is written to</small>
-    </div>
-    <ul id="reclist"></ul>
-    <form id="recadd" style="margin-top:6px;padding-top:0;border-top:0">
-      <div class="row">
-        <label>archive <input type="text" name="archive" list="archives" placeholder="this box's disks" style="width:10em"></label>
-        <datalist id="archives"></datalist>
-        <label>keep <input type="number" name="retention_days" value="30" min="1" style="width:4em"> days</label>
-        <button type="submit">Record</button>
-        <div class="err" id="recerr"></div>
-      </div>
-    </form>
-  </div>
-  <div id="dets" style="display:none">
-    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Detectors</strong><small>models on this unit — the det subsystem, when the console mounts it: placed on GPU-labelled workers, its events on the timeline</small></div>
-    <ul id="detlist"></ul>
-    <form id="detadd" style="margin-top:6px;padding-top:0;border-top:0">
-      <div class="row">
-        <label>kind <input type="text" name="kind" placeholder="motion | linecross | lpr" required style="width:12em"></label>
-        <label>params <input type="text" name="params" placeholder="line=10,20;30,40"></label>
-        <button type="submit">Add detector</button>
-        <div class="err" id="deterr"></div>
-      </div>
-    </form>
-  </div>
-  <div id="autos" style="display:none">
-    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Automation</strong><small>scenarios this unit triggers or is asked by — the auto subsystem, when the console mounts it: what a unit cannot do, its evaluator says</small></div>
-    <ul id="autolist"></ul>
-    <form id="autoadd" style="margin-top:6px;padding-top:0;border-top:0">
-      <div class="row">
-        <label>when it raises <select name="when" id="autowhen"></select></label>
-        <label>then <select name="target" id="autotarget"></select></label>
-        <select name="action" id="autoaction"></select>
-        <span id="autoarg"></span>
-        <label>name <input type="text" name="name" required style="width:10em"></label>
-        <button type="submit">Add scenario</button>
-        <div class="err" id="autoerr"></div>
-      </div>
-    </form>
-  </div>
-  <form id="edit">
-    <div class="row"><strong>Edit</strong><small>every save is a new revision; the worker restarts what it runs for this unit</small></div>
-    <div class="row" id="editfields"></div>
-    <div class="row">
-      <button type="submit">Save</button>
-      <button type="button" id="toggle" style="display:none"></button>
-      <button type="button" id="del">Delete</button>
-      <small>what you cannot set here — worker, epoch, revision, phase — is the controller's, and it refuses</small>
-    </div>
-    <div class="err" id="editerr"></div>
-  </form>
-</main>
+<div id="app"></div>
+<script src="/platform/console.js?v=1"></script>
 <script>
-// Helpers: query selector; a UTC `YYYY-MM-DD HH:MM:SSZ` formatter; the rows path `/<spec.rows>`; a unit's
-// display label (`name` if it has one, else singular rows name + id for numeric ids, else the id); whether
-// the spec has a bool field named `enabled`.
-const $ = s => document.querySelector(s);
-const fmt = t => new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 19) + 'Z';
-let spec = null, media = false, units = [], current = null, window_ = null, spans = [], queue = [], events = [], groups = [], evfilter = '';
-// Colours per subsystem, assigned in order of first sight — the page does not know which subsystems exist.
-const PALETTE = ['#c58a1a', '#8e44ad', '#2a9d5c', '#d35400', '#16a085', '#7f8c8d'];
-const palette = {};
-const subColor = sub => palette[sub] || (palette[sub] = PALETTE[Object.keys(palette).length % PALETTE.length]);
-const ROWS = () => '/' + spec.rows;
-const SPANS = 'timeline';                                          // the route of a door that says what it holds
-const REF = () => spec.name + '/' + current;   // the current unit as the platform names one: <sub>/<id>
-const label = u => u.name || (spec.id === 'numeric' ? spec.rows.replace(/s$/, '') + ' ' + u.id : String(u.id));
-const hasEnabled = () => spec.fields.some(f => f.name === 'enabled' && f.type === 'bool');
-// What the page draws, it draws through `h`: a tagged template whose every `${…}` is escaped — a unit's name,
-// an event's note, a volume's url are TEXT, whatever characters they hold. A fragment that IS markup (one `h`
-// inside another, a list of them joined) is a `Raw` and goes in as it is; `raw(s)` says so for a joined list.
-// A `<script>` in a mark's note or an `onerror=` in a name draws as the characters it is made of (the
-// review's second pass, blocker 2) — and the page's Content-Security-Policy, set by the console, is the wall
-// behind this one.
-class Raw { constructor(s) { this.s = s; } toString() { return this.s; } }
-const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-const esc = v => v instanceof Raw ? v.s : String(v ?? '').replace(/[&<>"']/g, c => ESC[c]);
-const h = (strs, ...vals) => new Raw(strs.reduce((out, part, i) => out + esc(vals[i - 1]) + part));
-const raw = s => new Raw(String(s));
+"use strict";
+// The VMS's words (display) and what its subsystems are about (about) the module reads from each one's spec.
+const SUBS=["vms","rec","live"];
+const pc=PlatformConsole.mount(document.getElementById("app"),{lang:"ru",subsystems:SUBS});
+window.platformConsole=pc;
+// ── Helpers ───────────────────────────────────────────────────────────────────────────────────────────────────
+// Everything the page draws from data goes through esc: a camera's name, an event's note, a volume's url are TEXT.
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const escHtml=esc;
+const $=q=>document.querySelector(q);
+const card=(title,body,act="")=>`<div class="card"><div class="ch">${title}${act}</div><div class="cb">${body}</div></div>`;
+const fldRo=(label,value)=>`<div><label>${esc(label)}</label><input type="text" value="${esc(value??"")}" readonly disabled></div>`;
+const getJSON=async path=>{const r=await fetch(path);if(!r.ok)throw new Error(path+": "+r.status);return r.json()};
+// A click (a change, for a field) on the page's own markup is wired here, never in an attribute: the console's CSP
+// runs no inline handler. `data-act` names the handler; the element and its dataset are what it gets.
+function wire(host,acts){
+  host.querySelectorAll("[data-act]").forEach(el=>{const f=acts[el.dataset.act];if(!f)return;
+    if(/^(SELECT|INPUT|TEXTAREA)$/.test(el.tagName))el.onchange=e=>f(el,e);
+    else el.onclick=e=>{e.preventDefault();e.stopPropagation();f(el,e)}});
+}
+function gbytes(n){return n?(n/1073741824).toFixed(1)+" ГБ":"—"}
+function fmtDayTime(t){return t?new Date(t*1000).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}):"—"}
+function durRu(sec){sec=Math.round(+sec||0);const m=Math.floor(sec/60),s2=sec%60;return m?`${m} мин${s2?" "+s2+" с":""}`:`${s2} с`}
+const fmtT=t=>new Date(t*1000).toLocaleString("ru-RU",{hour12:false}).replace(",","");
+const fmtHMS=t=>new Date(t*1000).toLocaleTimeString("ru-RU",{hour12:false});
+// The units as the module last read them (refresh): the cameras, their recordings; and the domain's view.
+let UNITS={},domView=null;
+pc.on("refresh",d=>{if(d&&d.units)UNITS=d.units;if(d&&"domain" in d)domView=d.domain});
+const camById=id=>(UNITS.vms||[]).find(u=>String(u.id)===String(id))||null;
+const camName=id=>{const c=camById(id);return c?(c.name||"камера "+c.id):"камера "+id};
+const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
+const camOf=ref=>String(ref).replace(/^unit:vms\//,"");
+const isCam=ref=>String(ref).startsWith("unit:vms/");
+const goTab=t=>setTimeout(()=>{const x=document.querySelector(`.pc-tabs [data-tab="${t}"]`);if(x)x.click()},60);
 
-// -- the spec: the page's only knowledge of the subsystem ------------------------------------
-// `GET /spec`. Sets the document title, the rows heading, the add note (numbered by the controller vs.
-// named by its `<id field>`), shows `#media` if `media` — this unit's door, or the door of a subsystem about it, says
-// spans (`door.routes` has `SPANS`) — and renders the add form (every field but
-// `enabled`) and the edit form (every field but `enabled` and the id field) with `input()`. Shows `#toggle`
-// if `hasEnabled()`.
-async function loadSpec() {
-  spec = await (await fetch('/spec')).json();
-  document.title = spec.name + ' console';
-  $('#rows').textContent = spec.rows; $('#addlabel').textContent = 'Add';
-  $('#title').textContent = 'Pick one';
-  $('#addnote').textContent = spec.id === 'numeric' ? 'the controller numbers it and places it on the next pass'
-                                                    : `named by its ${spec.id}; placed on the controller's next pass`;
-  media = !!(spec.door && spec.door.routes.includes(SPANS)) || (await subsAbout()).some(([, s]) => s.door.routes.includes(SPANS));
-  $('#media').style.display = media ? 'block' : 'none';
-  $('#live').style.display = media ? '' : 'none';
-  $('#addfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled').map(f => input(f, true)).join('');
-  $('#editfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled' && f.name !== spec.id).map(f => input(f, false)).join('');
-  $('#toggle').style.display = hasEnabled() ? '' : 'none';
-}
-// One labelled input per spec field by type: checkbox for bool (checked by default value), number for
-// int/float (`step="any"` for float; default as value when adding), password for a `*_secret` (the thirteenth
-// review, minor: `cred_secret` was typed in the clear, on the screen, as `access_secret` beside it never was),
-// text otherwise (placeholder `a, b` for lists, or the default when adding); `required` only on the add form.
-function input(f, adding) {
-  const attrs = `name="${f.name}"${f.required && adding ? ' required' : ''}`;
-  if (f.name.endsWith('_secret')) return `<label>${f.name} <input type="password" ${attrs} autocomplete="new-password"></label>`;
-  if (f.type === 'bool') return `<label>${f.name} <input type="checkbox" ${attrs} ${f.default ? 'checked' : ''}></label>`;
-  if (f.type === 'int' || f.type === 'float') return `<label>${f.name} <input type="number" ${attrs} ${f.type === 'float' ? 'step="any"' : ''} ${adding && f.default != null ? `value="${f.default}"` : ''} style="width:6em"></label>`;
-  const ph = f.type === 'list' ? 'a, b' : (adding && f.default ? String(f.default) : '');
-  return `<label>${f.name}${f.type === 'list' ? ' (comma-separated)' : ''} <input type="text" ${attrs} placeholder="${ph}"></label>`;
-}
-
-// -- the list: the read model (every worker's heartbeat) over the configured rows ----------------
-// `GET /<rows>`: starts from `configured` (each marked `phase: silent, worker_state: stale`) and overlays
-// `rows` — the heartbeat's word wins over the row's. Sorts by id, rebuilds `#units` with class = phase,
-// `stale` and `on`, and wires each `li` to `select`. Then fetches `/metrics` and writes the status line
-// from `_workers_live` and `_<running gauge>`. Runs at load and every 10 s.
-async function loadUnits() {
-  const d = await (await fetch(ROWS())).json();
-  const byId = {};
-  for (const c of d.configured || []) byId[c.id] = { ...c, phase: 'silent', worker_state: 'stale' };
-  for (const r of d.rows || []) byId[r.id] = { ...byId[r.id], ...r };   // the heartbeat's word wins over the row's
-  units = Object.values(byId).sort((a, b) => (typeof a.id === 'number' ? a.id - b.id : String(a.id).localeCompare(String(b.id))));
-  $('#rows').textContent = `${spec.rows}${units.length ? ' (' + units.length + ')' : ''}`;
-  const ul = $('#units'); ul.innerHTML = '';
-  for (const c of units) {
-    const li = document.createElement('li'); li.dataset.id = String(c.id);
-    li.className = `${c.phase || 'silent'} ${c.worker_state === 'stale' ? 'stale' : ''} ${current === c.id ? 'on' : ''}`;
-    li.innerHTML = h`<span><span class="dot"></span>${label(c)} <small>#${c.id}</small></span>` +
-                   h`<small>${c.worker ? c.worker + (c.server ? ' · ' + c.server : '') : 'unplaced'}${c.age != null ? ' · ' + c.age + ' s' : ''}</small>`;
-    li.onclick = () => select(c.id);
-    ul.appendChild(li);
-  }
-  try { const m = await (await fetch('/metrics')).text(); const live = /_workers_live (\d+)/.exec(m);
-        const name = spec.metrics.running, run = name && new RegExp(`_${name} (\\d+)`).exec(m);   // a spec may declare none
-        $('#status').textContent = `${live ? live[1] : '?'} workers live` + (name ? ` · ${run ? run[1] : '?'} ${name.replace(/_/g, ' ')}` : ''); } catch (_) {}
-}
-
-// Marks the unit current, clears the play queue, sets `#title`, fetches `/where/<id>` for the placement
-// reason, composes `#meta`, highlights the `li`, fills the edit form, and — if media — loads the timeline.
-async function select(id) {
-  stopLive();
-  current = id; queue = [];
-  const c = units.find(x => x.id === id) || {};
-  $('#title').textContent = label(c);
-  let why = '';
-  try { const w = await (await fetch(`/where/${encodeURIComponent(id)}`)).json(); why = w.reason || ''; } catch (_) {}
-  $('#meta').textContent = [c.phase, c.worker && `on ${c.worker}`, c.server, c.epoch ? `epoch ${c.epoch}` : null, why,
-                            c.why, c.warning,   // the holder's word on this unit: why it is not running, what to check
-                            c.worker_state === 'stale' ? 'last known state' : null].filter(Boolean).join(' · ');
-  for (const li of $('#units').children) li.classList.toggle('on', li.dataset.id === String(id));
-  fillEdit(c);
-  // Watching and recording are offered for a unit that PUBLISHES A STREAM, and the test is the stream
-  // itself: the holder puts an address in its status, or it does not. Not a field of the row and not a
-  // word this page knows — some units of some subsystems have no picture (a door controller is held,
-  // takes an epoch and writes events like anything else), and the honest way to find out is to look for
-  // the address a viewer would dial.
-  const streams = !!c.live_url;
-  $('#live').style.display = media && streams ? '' : 'none';
-  $('#media').style.display = media && streams ? 'block' : 'none';
-  loadDets(); loadAutos(); loadRec(streams);
-  if (media && streams) await loadTimeline();
-}
-
-// -- the holders' doors (the boundary's step 6: what a unit's holder serves, it serves the page itself) ----
-// `GET <base>/where/<id>` hands out the door with the place: `{url, token, expires, routes}`, or null while nobody
-// holds the unit. A read goes to `<url>/<route>/<id>` with the token as a header; a media element's `src` carries it
-// as `?t=`. A token lives two minutes: a door is asked for again when its token is about to end.
-let fronted = null;                                                   // `/mounts`: what this process fronts, with each spec
-async function subsAbout() {
-  if (!fronted) { try { fronted = (await (await fetch('/mounts')).json()).mounts || {}; } catch (_) { fronted = {}; } }
-  return Object.entries(fronted).filter(([, s]) => s.about && s.about.sub === spec.name && s.door);
-}
-// `whereAt(url)`: the answer of a `/where` — a unit's, or a PLACE's (`<base>/where/<table>/<place>?unit=<sub>/<id>`: who
-// holds that place now and its door for the unit) — with the `X-Unreachable` a place nobody holds is said by.
-async function whereAt(url) {
-  try { const r = await fetch(url); return { ...(await r.json()), missing: r.headers.get('X-Unreachable') }; } catch (_) { return {}; }
-}
-const whereOf = (base, id) => `${base}/where/${encodeURIComponent(id)}`;
-async function doorOf(base, id) { return (await whereAt(whereOf(base, id))).door || null; }
-const bearer = d => d && d.token ? { Authorization: `Bearer ${d.token}` } : {};
-async function freshDoor(m) {                                         // a span's door, asked again near its token's end
-  if (m.door.expires && Date.now() / 1000 > m.door.expires - 15) m.door = (await whereAt(m.where || whereOf(m.base, m.id))).door || m.door;
-  return m.door;
-}
-
-// -- media: only when the spec says so — the spans every holder's door says for this unit ---------------------
-// For the unit itself (its holder, when its spec declares a door with spans) and for every row of a mounted
-// subsystem about it whose spec does: `<door>/<route>/<id>?from&to` — and of such a row, every place of its
-// subsystem, at the door of whoever holds the place now. Accepts a plain list, showing the notes in `#note`. Normalises spans; tries `GET
-// /events?from&to&unit=<spec.name>/<current>` and ignores a failure (503 without an index). Computes the visible range:
-// the window if set, else from the earliest span/event (or now − 1 h) to the latest (or now). Draws each
-// span as a `div.span` positioned by percentage — `events-only` when it has no media, `fenced` when fenced
-// — with a tooltip naming times, epoch, server, event count and "not recorded"; clicking a span with media
-// plays from it. Draws each event as a `div.tick` with a tooltip (time, kind, subsystem, note). Labels the
-// axis.
-async function loadTimeline() {
-  const now = Date.now() / 1000;
-  const [from, to] = window_ || [0, 1e12];
-  const raw = [], notes = new Set(), asks = [], places = [], asked = new Set();
-  const gone = missing => notes.add(`not answering: ${missing} — what it holds is missing from this picture`);
-  // A door's spans are raw (`[{start_ms, end_ms, epoch, source?, fenced?, yields?}]`, the product's): each is played
-  // through the same door's `segment` route, piece by piece. A 401 is the door's word that its token will not do —
-  // ended, another holder — and the door is asked for again, once. `where` is the `/where` the door was handed out
-  // at: the unit's own, or a place's.
-  const ask = async (base, id, where) => {
-    const w = await whereAt(where);
-    if (w.missing) gone(w.missing);                                   // a place nobody holds: `<place>@<server>`
-    let door = w.door;
-    if (!door || !door.routes.includes(SPANS) || asked.has(`${base}|${id}|${w.worker}`)) return;
-    asked.add(`${base}|${id}|${w.worker}`);                          // one holder's door once, whichever way it was found
-    let d, r;
-    try {
-      for (let again = 0; ; again++) {
-        r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
-        if (r.status !== 401 || again) break;
-        door = (await whereAt(where)).door || door;
-      }
-      if (!r.ok) throw new Error(r.status); d = await r.json();
-    } catch (_) { notes.add(`the door of ${base || ''}/${id} did not answer`); return; }
-    const missing = r.headers.get('X-Unreachable');
-    if (missing) gone(missing);
-    (Array.isArray(d) ? d : []).forEach(x => raw.push({ start: x.start_ms / 1000, end: x.end_ms / 1000, epoch: x.epoch,
-      fenced: !!x.fenced, yields: !!x.yields, m: { base, id, door, where, source: x.source || '' } }));
-  };
-  if (spec.door && spec.door.routes.includes(SPANS)) asks.push(ask('', current, whereOf('', current)));
-  for (const [name, s] of await subsAbout()) {
-    if (!s.door.routes.includes(SPANS)) continue;
-    let rows = [], held = [];
-    try { rows = (await (await fetch(`/${name}/${s.rows}`)).json()).configured || []; } catch (_) {}
-    rows = rows.filter(r => String(r[s.about.field]) === String(current));
-    rows.forEach(r => asks.push(ask(`/${name}`, r.id, whereOf(`/${name}`, r.id))));
-    // WHAT A UNIT LEFT IN A PLACE ANOTHER WORKER HOLDS NOW (the architect's decision after step 7): the console carries
-    // no bytes, so each place of the subsystem (`places: {table}` in its spec, the rows of that table) is asked who
-    // holds it — `/<sub>/where/<table>/<place>?unit=<sub>/<id>` — and that holder's door says what it holds of the unit.
-    if (s.places && rows.length) {
-      try { held = (await (await fetch(`/${name}/${s.places.table}`)).json())[s.places.table] || []; } catch (_) {}
-      for (const r of rows) for (const p of held)
-        places.push([`/${name}`, r.id, `/${name}/where/${s.places.table}/${encodeURIComponent(p.name)}?unit=${encodeURIComponent(`${name}/${r.id}`)}`]);
-    }
-  }
-  await Promise.all(asks);                                            // the units' own doors first: what they say stands
-  await Promise.all(places.map(([base, id, where]) => ask(base, id, where)));
-  // Merged without doubling: a moment two doors both say (a door that reads every place, a place asked twice) is one
-  // span — the first said, the unit's own door's before a place's.
-  const said = new Set();
-  raw.splice(0, raw.length, ...raw.filter(s => { const k = `${s.m.base}|${s.m.id}|${s.start}|${s.end}|${s.epoch}|${s.m.source}`;
-                                                  return !said.has(k) && said.add(k); }));
-  // A span its door says YIELDS (`yields: true` — what a holder knows OF and does not hold) is drawn only where no
-  // other span is: cut by every one of them.
-  const solid = raw.filter(s => !s.yields);
-  const holes = (a, b) => { const out = []; let at = a;
-    for (const o of solid.filter(o => o.end > a && o.start < b).sort((x, y) => x.start - y.start)) {
-      if (o.start > at) out.push([at, Math.min(o.start, b)]); at = Math.max(at, o.end); }
-    if (at < b) out.push([at, b]); return out; };
-  raw.splice(0, raw.length, ...solid, ...raw.filter(s => s.yields).flatMap(s => holes(s.start, s.end).map(([a, b]) => ({ ...s, start: a, end: b }))));
-  raw.sort((a, b) => a.start - b.start);
-  $('#note').textContent = [...notes].join('; ');
-  spans = raw.map(s => ({ start: s.start, end: s.end, epoch: s.epoch, fenced: !!s.fenced, events: s.events || 0,
-                          media: s.m, server: s.server || null, recorder: s.recorder || null }));
-  await fetchEvents(from, to);
-  const lo = window_ ? from : Math.min(...spans.map(s => s.start), ...events.map(e => e.t), now - 3600);
-  const hi = window_ ? to : Math.max(...spans.map(s => s.end), ...events.map(e => e.t), now);
-  const tl = $('#timeline'); tl.innerHTML = '';
-  const x = t => 100 * (t - lo) / Math.max(1, hi - lo);
-  spans.forEach((s, i) => {
-    const el = document.createElement('div');
-    el.className = `span ${s.media ? '' : 'events-only'} ${s.fenced ? 'fenced' : ''}`;
-    el.style.left = x(s.start) + '%'; el.style.width = Math.max(0.2, x(s.end) - x(s.start)) + '%';
-    el.title = `${fmt(s.start)} – ${fmt(s.end)} · epoch ${s.epoch}${s.fenced ? ' (fenced)' : ''}${s.server ? ' · ' + s.server : ''}${s.events ? ' · ' + s.events + ' events' : ''}${s.media ? '' : ' · not recorded'}`;
-    if (s.media) el.onclick = () => play(i);
-    tl.appendChild(el);
-  });
-  tl.dataset.lo = lo; tl.dataset.hi = hi;
-  drawEvents();
-  $('#t0').textContent = fmt(lo); $('#t1').textContent = fmt(hi);
-}
-
-// -- events: the resources' databases, merged by the console; the page only draws --------------------
-// `GET /events?from&to&unit=<spec.name>/<current>`: keeps the rows in `events`, shows the merge's `state` (red unless
-// exactly "live" — a resource that did not answer is named, and the list is honest about being short),
-// and rebuilds the subsystem filter and the legend from the subsystems seen.
-async function fetchEvents(from, to) {
-  events = []; groups = [];
-  try {
-    const r = await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent(REF())}`);
-    if (r.ok) {
-      const d = await r.json(); events = d.events || []; groups = d.aggregated ? (d.groups || []) : [];
-      // Past the console's norm the answer is counts, not lines (М10A, урок 15). Say WHY the list
-      // changed shape: a screen that silently starts showing something else is a screen nobody trusts.
-      const norm = d.aggregated ? ` · ${d.rate_per_minute}/min over ${d.per_minute} — counts, not lines` : '';
-      const cut = d.truncated ? ' · window did not fit' : '';
-      $('#evstate').textContent = (d.state || '') + norm + cut;
-      $('#evstate').className = (d.state === 'live' && !d.aggregated && !d.truncated) ? '' : 'bad';
-    }
-    else { $('#evstate').textContent = `no events: ${r.status}`; $('#evstate').className = 'bad'; }
-  } catch (_) { $('#evstate').textContent = 'no events'; $('#evstate').className = 'bad'; }
-  const subs = [...new Set([...events, ...groups].map(e => e.subsystem))].sort();
-  const sel = $('#evfilter'); const keep = evfilter;
-  sel.innerHTML = '<option value="">every subsystem</option>' + subs.map(s => h`<option value="${s}">${s}</option>`).join('');
-  sel.value = subs.includes(keep) ? keep : ''; evfilter = sel.value;
-  const count = s => groups.length ? groups.filter(g => g.subsystem === s).reduce((n, g) => n + g.count, 0)
-                                   : events.filter(e => e.subsystem === s).length;
-  $('#evlegend small').innerHTML = subs.map(s => h`<span class="sw" style="background:${subColor(s)}"></span>${s} (${count(s)})`).join(' ');
-}
-// Re-fetches the events for the current window and redraws ticks and list — every 5 s while a unit is
-// selected, so a detector's line crossed a moment ago is on the timeline within one tail of the resource.
-async function loadEvents() {
-  if (!current || !media) return;
-  const [from, to] = window_ || [0, 1e12];
-  await fetchEvents(from, to);
-  drawEvents();
-}
-// The ticks (one per event, coloured by subsystem, faded when fenced, click to seek) and the list under
-// the timeline: time · kind · subsystem · server · epoch (fenced) · the event's own fields (a mark's note
-// and user, a detection's score…). Filtered by `evfilter`.
-function drawEvents() {
-  const tl = $('#timeline'); const lo = Number(tl.dataset.lo), hi = Number(tl.dataset.hi);
-  const x = t => 100 * (t - lo) / Math.max(1, hi - lo);
-  for (const el of [...tl.querySelectorAll('.tick')]) el.remove();
-  const shown = events.filter(e => !evfilter || e.subsystem === evfilter);
-  for (const e of shown) {
-    const el = document.createElement('div'); el.className = `tick ${e.fenced ? 'fenced' : ''}`; el.style.left = x(e.t) + '%';
-    el.style.background = subColor(e.subsystem);
-    el.title = `${fmt(e.t)} · ${e.kind} (${e.subsystem})${e.note ? ': ' + e.note : ''}`;
-    el.onclick = () => seek(e.t);
-    tl.appendChild(el);
-  }
-  const ul = $('#events'); ul.innerHTML = '';
-  // Aggregated: one line per (subsystem, unit, kind, class) with how many and between when and when —
-  // the counts the console sent instead of a flood nobody would read. Alarms come first, as they arrive.
-  if (groups.length) {
-    for (const g of groups.filter(g => !evfilter || g.subsystem === evfilter)) {
-      const li = document.createElement('li');
-      li.innerHTML = h`<span><span class="sw" style="background:${subColor(g.subsystem)}"></span>` +
-                     h`<strong>${g.count}×</strong> ${g.kind} <small>${g.unit}</small>` +
-                     (g.class === 'alarm' ? ' <strong>alarm</strong>' : '') + `</span>` +
-                     h`<small>${fmt(g.since)} – ${fmt(g.until)}</small>`;
-      li.onclick = () => seek(g.since);
-      ul.appendChild(li);
-    }
-    return;
-  }
-  for (const e of [...shown].reverse()) {
-    const li = document.createElement('li'); li.className = e.fenced ? 'fenced' : '';
-    const extra = Object.entries(e).filter(([k]) => !['subsystem', 'unit', 'of', 'epoch', 't', 'kind', 'server', 'bucket', 'fenced'].includes(k))
-                        .map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' ');
-    li.innerHTML = h`<span><span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t)} <strong>${e.kind}</strong> <small>${e.unit}</small></span>` +
-                   h`<small>${e.server || ''} · epoch ${e.epoch}${e.fenced ? ' (fenced)' : ''}${extra ? ' · ' + extra : ''}</small>`;
-    li.onclick = () => seek(e.t);
-    ul.appendChild(li);
-  }
-}
-// Play the recorded span that holds `t` and jump the player to the offset; an event on a span that was
-// watched but not recorded has nothing to play, and the caption says so.
-function seek(t) {
-  const i = spans.findIndex(s => s.media && s.start <= t && t < s.end);
-  if (i < 0) { $('#playing small').textContent = `${fmt(t)} · not recorded at that moment`; return; }
-  play(i, t);
-  const v = $('#player');
-  v.addEventListener('loadedmetadata', () => { v.currentTime = Math.max(0, t - (playing ? playing.from : spans[i].start)); }, { once: true });
-}
-$('#evfilter').onchange = e => { evfilter = e.target.value; drawEvents(); };
-$('#mark').onsubmit = async e => {
-  e.preventDefault();
-  const note = e.target.elements.note.value;
-  try { await send('POST', '/marks', { unit: REF(), note }); e.target.reset(); setTimeout(loadEvents, 3500); }   // the resource's next tail
-  catch (err) { $('#evstate').textContent = 'mark refused: ' + err.message; $('#evstate').className = 'bad'; }
-};
-
-// -- writes: through the controller, with an Idempotency-Key per attempt, so a retried click is one unit
-// A fresh UUID (or a random string) per request: the `Idempotency-Key`.
-const key = () => (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
-// Reads the form into a body by spec type: bools always sent as checked/unchecked; an empty input is
-// omitted (the spec's default on create, unchanged on edit); lists split on commas and trimmed; ints/floats
-// parsed.
-const fields = form => {
-  const out = {};
-  for (const f of spec.fields) {
-    const el = form.elements[f.name]; if (!el) continue;
-    if (f.type === 'bool') { out[f.name] = el.checked; continue; }
-    const v = el.value;
-    if (v === '') continue;                                              // unset: the spec's default on create, unchanged on edit
-    out[f.name] = f.type === 'list' ? v.split(',').map(x => x.trim()).filter(Boolean)
-                : f.type === 'int' ? parseInt(v, 10) : f.type === 'float' ? Number(v) : v;
-  }
+// ── A camera: its icons, its address, its notes, its events ───────────────────────────────────────────────────
+pc.addIcons({
+  camera:`<path fill="currentColor" d="M1.4 3.6h7.6c.9 0 1.6.7 1.6 1.6v5.6c0 .9-.7 1.6-1.6 1.6H1.4C.5 12.4 0 11.7 0 10.8V5.2c0-.9.5-1.6 1.4-1.6z"/><path fill="currentColor" opacity=".75" d="M10.6 5.6 14.6 3.5c.55-.28 1.2.12 1.2.75v7.5c0 .63-.65 1.03-1.2.75l-4-2.1V5.6z"/>`,
+  storage:`<path fill="currentColor" d="M2 2.4h12c.6 0 1 .4 1 1v2.2H1V3.4c0-.6.4-1 1-1zm-1 4.4h14v2.4H1zm0 3.6h14V12.6c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1zm3 1.1c0 .4.3.7.7.7s.7-.3.7-.7-.3-.7-.7-.7-.7.3-.7.7z"/>`
+});
+// The camera's source, read for a person: driverpack://<vendor>/<address>/ch/<channel>, or any other URL's host — the
+// one thing about a camera that does not follow from the spec's types (a field editor; the module's form sends it).
+function parseSource(src){
+  const out={host:"",vendor:"",channel:""};
+  if(!src)return out;
+  try{const u=new URL(src),parts=u.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+    if(u.protocol==="driverpack:"){out.vendor=decodeURIComponent(u.hostname);out.host=parts[0]||"";out.channel=parts[1]==="ch"?parts[2]||"":""}
+    else out.host=u.hostname+(u.port?":"+u.port:"")}
+  catch(e){out.host=String(src)}
   return out;
-};
-// `fetch` with `Content-Type: application/json` and a new `Idempotency-Key`; parses the reply; throws
-// `detail
-// || error || status` when not OK. Every write below uses it.
-async function send(method, path, body) {
-  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key() }, body: body === undefined ? undefined : JSON.stringify(body) });
-  const text = await r.text();
-  let d = {}; try { d = JSON.parse(text); } catch (_) {}
-  if (!r.ok) throw new Error(d.detail || d.error || `${r.status}`);
-  return d;
 }
-$('#add').onsubmit = async e => {
-  e.preventDefault(); $('#adderr').textContent = '';
-  try { const c = await send('POST', ROWS(), fields(e.target)); e.target.reset(); await loadUnits(); select(c.id); }
-  catch (err) { $('#adderr').textContent = 'refused: ' + err.message; }
-};
-$('#edit').onsubmit = async e => {
-  e.preventDefault(); $('#editerr').textContent = '';
-  try { await send('PUT', `${ROWS()}/${encodeURIComponent(current)}`, fields(e.target)); await loadUnits(); select(current); }
-  catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
-};
-$('#toggle').onclick = async () => {
-  const c = units.find(x => x.id === current); if (!c) return;
-  try { await send('PUT', `${ROWS()}/${encodeURIComponent(current)}`, { enabled: !c.enabled }); await loadUnits(); select(current); }
-  catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
-};
-$('#del').onclick = async () => {
-  const c = units.find(x => x.id === current); if (!c) return;
-  if (!confirm(`Delete ${label(c)}?${media ? ' Its recordings are not deleted with it: their footage stays in its volumes until the ring overwrites it.' : ''}`)) return;
-  try { await send('DELETE', `${ROWS()}/${encodeURIComponent(current)}`); current = null; $('#edit').style.display = 'none'; $('#title').textContent = 'Pick one'; $('#meta').textContent = ''; $('#timeline').innerHTML = ''; await loadUnits(); }
-  catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
-};
-// Shows `#edit` and fills each spec field from the unit: checkbox for bool, comma-joined for list, value
-// otherwise — but a `*_secret` stays EMPTY, saying in its placeholder whether one is set: the row reads `***`, and a
-// form filled with it saved `***` as the password on the next Save (empty is "unchanged", `fields`).
-// Sets the toggle text to Enable/Disable from `c.enabled`.
-function fillEdit(c) {
-  const f = $('#edit'); f.style.display = 'grid';
-  for (const fd of spec.fields) {
-    const el = f.elements[fd.name]; if (!el) continue;
-    if (fd.name.endsWith('_secret')) { el.value = ''; el.placeholder = c[fd.name] ? 'set: type to replace' : 'not set'; }
-    else if (fd.type === 'bool') el.checked = !!c[fd.name];
-    else if (fd.type === 'list') el.value = (c[fd.name] || []).join(', ');
-    else el.value = c[fd.name] ?? '';
-  }
-  if (hasEnabled()) $('#toggle').textContent = c.enabled === false ? 'Enable' : 'Disable';
+pc.addDecor("unit",(ref,u)=>isCam(ref)?{icon:"camera",badge:u?parseSource(u.source).host:""}:{});
+pc.addFieldEditor("unit","source",(host,ref,obj,value,set)=>{
+  host.innerHTML=`<div class="g"><div><label>Источник</label><input class="vms-src" value="${esc(value)}" autocomplete="off"></div><span class="vms-src-parts" style="display:contents"></span></div>`;
+  const inp=host.querySelector(".vms-src"),parts=host.querySelector(".vms-src-parts");
+  const show=v=>{const s2=parseSource(v);parts.innerHTML=fldRo("Адрес",s2.host)+fldRo("Производитель",s2.vendor)+fldRo("Канал",s2.channel)};
+  show(value);
+  if(!pc.may("edit",ref))inp.disabled=true;
+  inp.oninput=()=>{set(inp.value);show(inp.value)};
+});
+// What the driver host does with a camera, said aloud when it goes wrong: a device that has not opened (its open has
+// not come back — the address, the network, the credentials), a camera its worker could not run (its words).
+pc.addNote("unit",(ref,u)=>{
+  if(!isCam(ref)||!u)return"";
+  if(u.device_state==="opening")return"Устройство ещё открывается — если это не проходит, открытие не завершается: проверьте адрес, сеть и учётные данные камеры.";
+  if(u.phase==="failed")return`Хост драйверов: сбой устройства${u.why?" — "+u.why:""}.`;
+  return"";
+});
+// The VMS's events in words in the module's journal and everywhere it lists events (the platform's it says itself).
+let inNote=false;
+pc.addEventNote(e=>{if(inNote||!/^(camera\.|card\.|volume\.|archive\.)/.test(e.kind||""))return"";inNote=true;try{return evNoteRu(e)}finally{inNote=false}});
+function evNoteRu(e){
+  const k=e.kind||"";
+  if(k==="volume.missing")return[`том ${e.volume??"?"}`,e.server?"на "+e.server:"",e.recorder?"держал "+e.recorder:"",e.detail||"","записи ушли на другие тома"].filter(Boolean).join(" · ");
+  if(k==="archive.volume.shrunk")return`том ${e.volume??"?"}${e.was!=null?": "+gbytes(+e.was)+" → "+gbytes(+e.quota_bytes):""} — самое старое отдано первым`;
+  if(k==="archive.footage.dropped")return`том ${e.volume??"?"} · потеряно ${durRu(e.seconds)}: писатель взял кадры и не успел записать, когда том отдали`;
+  if(k==="camera.footage.lost")return`потеряно ${durRu(e.lost_s)} записи на карте камеры${e.why?" · "+e.why:""}`;
+  if(k==="camera.uplink.short")return`канал камеры не успевает: отстаёт на ${durRu(e.behind_s)}`;
+  if(k==="card.prebuffer.short")return`кольцо карты держит ${durRu(e.reach_s)}, а обрыв замечают за ${durRu(e.need_s)}: начало обрыва не попадёт в запись`;
+  if(k==="card.failing")return`карта камеры: ${e.state||"?"}${e.error?" · "+e.error:""}`;
+  if(k==="archive.backfill.refused")return`дозапись не принята${e.error?": "+e.error:""}`;
+  return pc.eventNote(e);   // the platform's own events the module describes
 }
+// An event's words: its subsystem's display.kinds, any of the VMS's (a line about the camera from a subsystem about
+// it), then the platform's own (the module's).
+const evKindRu=e=>(pc.display(e.subsystem).kinds||{})[e.kind]||SUBS.map(n=>(pc.display(n).kinds||{})[e.kind]).find(Boolean)||pc.kindWord(e)||"";
 
-// What to play a piece by: the door's `segment` route, the piece's epoch and bounds in its path (milliseconds), the
-// stream it is of in its name — the span's `source`, when it says one (the product's) — and the token in the query: a
-// media element sets no header.
-async function segmentURL(s, p) {
-  const d = await freshDoor(s.media);
-  const tail = s.media.source ? '.' + s.media.source : '';
-  return `${d.url}/segment/${encodeURIComponent(s.media.id)}/e${s.epoch}/${Math.round(p.from * 1000)}-${Math.round(p.to * 1000)}${tail}.mp4` +
-         (d.token ? '?t=' + encodeURIComponent(d.token) : '');
+// ── «Видео»: the live picture, the recorded spans and the events on one timeline ─────────────────────────────────
+// Where the bytes come from — the holders' doors and nothing else (the owner's decision: bytes go past the console).
+// A camera's recordings each have the door of the recorder holding them (/rec/where/<recording>), and every place they
+// may have lain on the door of its holder (/rec/where/<table>/<place>?unit=rec/<recording>); its live stream, the door
+// of its gateway (/live/where/<camera>). A door is {url, token, expires}: Bearer for fetch and WHEP, ?t= for the
+// player; asked again before its token runs out, and once at once on a 401.
+const DOORS={};
+const V={spans:[],events:[],groups:[],queue:[],evfilter:"",live:null,connecting:false,lo:0,hi:0,note:"",evstate:"",
+         aggregated:false,rate:0,norm:0,truncated:false,cam:null};
+const VOL_BACKUP="backup";
+const PALETTE=["#c58a1a","#8e44ad","#2a9d5c","#d35400","#16a085","#7f8c8d"];
+const palette={};
+const subColor=s=>palette[s]||(palette[s]=PALETTE[Object.keys(palette).length%PALETTE.length]);
+const WINDOWS=[["1h","Час",3600],["6h","6 часов",21600],["24h","Сутки",86400],["all","Всё",0]];
+let winKey="1h",KEEP_ON=false;
+function winRange(){
+  const now=Date.now()/1000,w=WINDOWS.find(x=>x[0]===winKey);
+  if(!w||!w[2])return[0,1e12];
+  return[now-w[2],now+60];
 }
-
-// One piece at a time, the next when this one ends — a span cut into pieces of at most ten minutes, each an
-// interval the subsystem turns into an MP4. Gapless playback through MSE is the gateway's job (М12); the console
-// plays what the archive hands it. Queue every piece of every span from index `i` onward that has media —
-// each moment once: a fenced span (an older epoch) is played only when it is the one clicked, and minutes two
-// spans share (two volumes, a keep's copy) are queued from the first of them. An export takes each moment from
-// the epoch that owns it whichever span asked.
-const PIECE = 60;                                                    // the product's pieces: a minute each
-let playing = null;                                                   // the piece on the player now: {i, from, to}
-function play(i, at) {
-  queue = [];
-  let until = -Infinity;                                              // the end of what is queued already
-  spans.forEach((s, j) => {
-    if (j < i || !s.media || (s.fenced && j !== i)) return;
-    for (let a = Math.max(s.start, until); a < s.end; a += PIECE) {
-      const p = { i: j, from: a, to: Math.min(a + PIECE, s.end) };
-      if (at === undefined || p.to > at) queue.push(p);              // a seek starts at the piece holding the moment
+// A span is played in pieces the page cuts (60 s, as the product's console cuts): /segment/<recording>/e<epoch>/
+// <fromMs>-<toMs>[.<source>].mp4 at the door the span came from, the token as ?t= — a media element sets no header.
+// Every moment once (М10B, lesson 24): the spans overlap — two epochs over the same minutes, two volumes, a keep's copy
+// — so a fenced span (an epoch another took over) is played only when it is the one clicked, and `until` remembers the
+// end of what is queued: the next span is queued from there, not from its start. From a moment `t`, the pieces that end
+// after it, the first entered at `t` (`off`: its scale starts at zero).
+const PIECE=60;
+function piecesFrom(i,t){
+  const out=[];let until=-Infinity;
+  V.spans.forEach((s,j)=>{
+    if(j<i||!s.media||(s.fenced&&j!==i))return;
+    for(let a=Math.max(s.start,until);a<s.end;a+=PIECE){
+      const p={i:j,start:a,end:Math.min(s.end,a+PIECE),off:0};
+      if(t&&p.end<=t)continue;
+      if(t&&!out.length&&t>p.start)p.off=t-p.start;
+      out.push(p);
     }
-    until = Math.max(until, s.end);
+    until=Math.max(until,s.end);
   });
-  next();
+  return out;
 }
-// Pop the next index, outline that span as playing, write the caption (times, epoch, "from <recorder>"), set
-// the video source to `segmentURL` and play. One segment at a time, the next when this one ends; gapless
-// MSE playback of fragmented MP4 is the gateway's job (М12) — the console plays what the archive hands it.
-async function next() {
-  if (!queue.length) return;
-  stopLive();
-  const p = playing = queue.shift(); const i = p.i; const s = spans[i];
-  [...$('#timeline').children].forEach((el, j) => el.classList.toggle('playing', j === i));
-  $('#playing small').textContent = `${fmt(p.from)} – ${fmt(p.to)} · epoch ${s.epoch}${s.recorder ? ' · from ' + s.recorder : s.server ? ' · from ' + s.server : ''}`;
-  const v = $('#player'); v.src = await segmentURL(s, p); v.play().catch(() => {});
-}
-$('#player').onended = next;
+function setCap(text){const el=$("#playing");if(el)el.textContent=text}
+// An event stands on the timeline where it HAPPENED (`occurred`), not where it was written (`t`).
+function evAt(e){return e.occurred||e.t}
+function evLate(e){return e.occurred&&e.t-e.occurred>2?` записано в ${fmtT(e.t)} · `:""}
 
-// -- watching now: WebRTC at the door of the subsystem about this unit whose spec says it opens a stream. The page
-// creates the stream's row (its first viewer; somebody watching already is "exists"), waits for its place and door
-// (`/<sub>/where/<id>`), and makes its offer at the door itself, with the token; the answer comes from there and so
-// does the picture. The console carries none of it (the boundary's step 6). Not placed yet — retry a few times.
-let live = null;                                                      // {pc, session, timer, since, seen} while watching
-async function startLive() {
-  stopLive();
-  const pc = new RTCPeerConnection();
-  pc.addTransceiver('video', { direction: 'recvonly' });
-  pc.ontrack = e => { const v = $('#player'); v.src = ''; v.srcObject = e.streams[0]; v.play().catch(() => {}); };
-  await pc.setLocalDescription(await pc.createOffer());
-  const OFFER = 'whep';                                             // the route of a door that takes an offer
-  const [name, s] = (await subsAbout()).find(([, s]) => s.door.routes.includes(OFFER)) || [];
-  if (!name) { $('#playing small').textContent = 'nothing here opens a stream'; pc.close(); return; }
-  try { await send('POST', `/${name}/${s.rows}`, { [s.about.field]: current }); } catch (_) {}   // 409 "exists": watched already — the door says the rest
-  let r = null, door = null, tries = 0, refused = 0;
-  for (;;) {
-    door = await doorOf(`/${name}`, current);
-    if (door) r = await fetch(`${door.url}/${OFFER}/${encodeURIComponent(current)}`,
-                              { method: 'POST', headers: { 'Content-Type': 'application/sdp', ...bearer(door) }, body: pc.localDescription.sdp });
-    if (r && r.status === 401 && !refused++) continue;               // its token would not do: the door again, once
-    if ((r && ![404, 503].includes(r.status)) || ++tries > 8) break;
-    $('#playing small').textContent = 'waiting for its place…';
-    await new Promise(res => setTimeout(res, 1500));                    // the controller's next pass, the holder's next look
-  }
-  if (!r || r.status !== 201) { let d = {}; try { d = await r.json(); } catch (_) {} $('#playing small').textContent = 'refused: ' + (d.detail || d.error || (r ? r.status : 'nobody holds it')); pc.close(); return; }
-  await pc.setRemoteDescription({ type: 'answer', sdp: await r.text() });
-  live = { pc, session: door.url + r.headers.get('Location'), door, base: `/${name}`, id: current, since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
-  [...$('#timeline').children].forEach(el => el.classList.remove('playing'));
-  $('#playing small').textContent = `watching · via ${door.url}`;
-  const feed = $('#livefeed'); feed.style.display = 'block'; feed.innerHTML = '<small>live events — what every subsystem observes on this unit while you watch</small>';
-  live.timer = setInterval(pollLive, 3000); pollLive();
+// ── core: COPY WITH A CHECK — the product's vms/shell.html (main), function by function; test_shell_core.py ──────
+async function whereAt(url){
+  try{const r=await fetch(url);let d={};try{d=await r.json()}catch(e){}
+    return{status:r.status,door:d&&d.door&&d.door.url?d.door:null,missing:r.headers.get("X-Unreachable")||(d&&d.unreachable)||"",error:d&&d.error||""}}
+  catch(e){return{status:0,door:null,missing:"",error:String(e)}}
 }
-// The live feed: while watching, `GET /events?from=<since>&unit=<spec.name>/<current>` every 3 s (the resource's tail
-// interval) and prepend what is new — a detector's crossing, a mark, the worker's `silent` — newest first,
-// the last 30 kept. The picture comes from the gateway; the events come from the resource; the page joins
-// them by time and nothing else.
-async function pollLive() {
-  if (!live) return;
-  let d;
-  try { const r = await fetch(`/events?from=${live.since}&to=1e12&unit=${encodeURIComponent(REF())}`); if (!r.ok) return; d = await r.json(); } catch (_) { return; }
-  const feed = $('#livefeed');
-  for (const e of (d.events || []).sort((a, b) => a.t - b.t)) {
-    const k = `${e.server}|${e.bucket}|${e.t}|${e.kind}`; if (live.seen.has(k)) continue; live.seen.add(k);
-    const el = document.createElement('div'); el.className = 'ev';
-    el.innerHTML = h`<span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t).slice(11)} <strong>${e.kind}</strong> <small>${e.subsystem}${e.note ? ' · ' + e.note : ''}${e.score != null ? ' · ' + e.score : ''}${e.fenced ? ' · fenced' : ''}</small>`;
-    feed.insertBefore(el, feed.children[1] || null);
-    while (feed.children.length > 31) feed.removeChild(feed.lastChild);
-    live.since = Math.max(live.since, e.t - 1);
-  }
-  if (d.state && d.state !== 'live') feed.firstChild.textContent = `live events — ${d.state}`;
+async function doorOf(where,fresh){
+  const d=DOORS[where];
+  if(!fresh&&d&&d.expires-Date.now()/1000>20)return d;
+  const w=await whereAt(where);
+  DOORS[where]=w.door?{url:String(w.door.url).replace(/\/+$/,""),token:w.door.token||"",expires:+w.door.expires||0}:null;
+  return DOORS[where];
 }
-function stopLive() {
-  if (!live) return;
-  const hangUp = live;                                                // the viewer hangs up, at the door, with a token that holds
-  freshDoor({ door: hangUp.door, base: hangUp.base, id: hangUp.id }).then(d => fetch(hangUp.session, { method: 'DELETE', headers: bearer(d) })).catch(() => {});
-  clearInterval(live.timer);
-  live.pc.close(); live = null;
-  const v = $('#player'); v.srcObject = null;
-  $('#livefeed').style.display = 'none';
+async function doorFetch(where,path,init={}){
+  let d=await doorOf(where);if(!d)return null;
+  const go=()=>fetch(d.url+path,{...init,headers:{...(init.headers||{}),Authorization:"Bearer "+d.token}});
+  let r=await go();
+  if(r.status===401){d=await doorOf(where,true);if(!d)return null;r=await go()}   // its token would not do: where again, once
+  return r;
 }
-$('#live').onclick = () => { if (current) startLive(); };
-
-// -- recording: the `rec` subsystem, mounted by the console at /rec. A recording is a unit of its OWN —
-// `rec/recordings/<name>` — with its own epoch, its own tree and its own retention, and this unit may
-// have several: one per archive it is written to. The name is composed HERE and nowhere else: this
-// unit's id when no archive is named (so an installation with one archive keeps `rec/recordings/7`),
-// `7-cloud` when the operator picks the archive `cloud`. Placement is the rec controller's pass — on a
-// recorder, where that archive is — and the row's phase (running / waiting / pending) is the recorder's
-// word from its heartbeat. No recording: the unit is held (live, detectors, events) and not recorded.
-let rec = null;                                                       // the /rec/spec reply, or false when the console mounts no rec
-// -- the archives: `/rec/volumes`, the administrator's list of places footage may go, and who is
-// writing into each. A declaration is not a place until a recorder takes it, so every line says both:
-// what was declared, and whether anybody is serving it. `served 1/2 · 0 spare` is the state that needs a
-// person — an archive was declared and no process is free to take it — and the console says so rather
-// than starting one, because starting processes is the scheduler's.
-const GB = 1024 * 1024 * 1024;
-let archives = null;                                                  // the declared volume names, for the Record form
-async function loadArchives() {
-  let d;
-  try { d = await (await fetch('/rec/volumes')).json(); } catch (_) { archives = []; return; }
-  archives = (d.volumes || []).map(v => v.name);
-  $('#archives').innerHTML = archives.map(a => h`<option value="${a}"></option>`).join('');
-  $('#archbox').style.display = 'block';
-  // `how` is the command, written out by the console in the words of whatever started it — systemd on a
-  // box, the scheduler on a cluster. Not a button: a console that could run it would be a console with a
-  // token to its orchestrator, and starting processes is the one thing this side never does.
-  $('#archstate').innerHTML = (d.needed ? '<small class="err">' : '<small>') + h`served ${d.serving}/${d.wanted} · ${d.spare} spare` +
-                              (d.needed ? h` — ${d.needed} more recorder(s) needed: <code>${d.how}</code>` : '') + '</small>';
-  const ul = $('#archlist'); ul.innerHTML = '';
-  for (const v of d.volumes || []) {
-    const li = document.createElement('li'); li.className = v.served_by ? 'running' : '';
-    // The size the ring HAS, from the recorder holding it, beside the size declared — they differ while a smaller
-    // quota waits for its confirmation (`shrink_pending`, the recorder's `quota_note`), and the page used to show the
-    // wish as if it were the disk.
-    // A card (`kind: edge`) is no ring of the engine: its recorder says what the card holds of its budget, or why it is not open.
-    const has = v.card ? (v.card.state === 'recording' ? h` (${(v.card.bytes / GB).toFixed(1)} GB on the card, ${v.card.segments} segments)`
-                                                  : h` (the card is ${v.card.state}${v.card.error ? ': ' + v.card.error : ''})`)
-      : v.size_bytes && Math.round(v.size_bytes / GB) !== Math.round(v.quota_bytes / GB)
-      ? h` (the ring is ${Math.round(v.size_bytes / GB)} GB)` : '';
-    li.innerHTML = h`<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB${has} · ${v.url}</small></span>` +
-                   h`<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? raw(' · <span class="bad">' + esc(v.writing) + '</span>') : ''}` +
-                   h`${v.shrink_pending ? raw(' · <span class="bad">' + esc('not shrunk: ' + (v.quota_note || 'waiting for its confirmation')) + '</span>') : ''}` +
-                   h` <a href="#" data-act="del">delete</a></small>`;
-    li.querySelector('[data-act=del]').onclick = async e => {
-      e.preventDefault();
-      if (!confirm(`Stop using ${v.name}? The footage already written stays where it is — this removes the declaration, not the archive.`)) return;
-      try { await send('DELETE', `/rec/volumes/${encodeURIComponent(v.name)}`); } catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
-      loadArchives();
-    };
-    ul.appendChild(li);
-  }
-  for (const s of d.suggested || []) {                                // a disk nobody declared yet: one button, pre-filled
-    const li = document.createElement('li');
-    li.innerHTML = h`<span>${s.name} <small>${s.why}</small></span><small>${Math.round(s.quota_bytes / GB)} GB <a href="#" data-act="dec">declare</a></small>`;
-    li.querySelector('[data-act=dec]').onclick = async e => {
-      e.preventDefault();
-      try { await send('POST', '/rec/volumes', { name: s.name, kind: 'local', url: s.url, server: s.server, quota_bytes: s.quota_bytes }); }
-      catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
-      loadArchives();
-    };
-    ul.appendChild(li);
-  }
+function yieldCut(spans){
+  const solid=spans.filter(s=>!s.yields);
+  const holes=(a,b)=>{const out=[];let at=a;
+    for(const o of solid.filter(o=>o.end>a&&o.start<b).sort((x,y)=>x.start-y.start)){if(o.start>at)out.push([at,Math.min(o.start,b)]);at=Math.max(at,o.end)}
+    if(at<b)out.push([at,b]);return out};
+  return[...solid,...spans.filter(s=>s.yields).flatMap(s=>holes(s.start,s.end).map(([a,b])=>({...s,start:a,end:b})))];
 }
-$('#archadd').onsubmit = async e => {
-  e.preventDefault(); $('#archerr').textContent = '';
-  const f = Object.fromEntries(new FormData(e.target));
-  const body = { name: f.name, kind: f.kind, url: f.url, quota_bytes: Math.round(parseFloat(f.quota_gb) * GB) };
-  if (f.server) body.server = f.server;
-  if (f.access_key) body.access_key = f.access_key;
-  if (f.access_secret) body.access_secret = f.access_secret;
-  if (f.shrink) body.shrink_confirmed = body.quota_bytes;            // the operator's second word: the same number
-  try {
-    const r = await send('POST', '/rec/volumes', body); e.target.reset(); loadArchives();
-    if (r && r.warning) $('#archerr').textContent = r.warning;       // a smaller size, not confirmed: said, not done
-  } catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
-};
-async function loadRec(streams = true) {
-  if (rec === null) { try { const r = await fetch('/rec/spec'); rec = r.ok ? await r.json() : false; } catch (_) { rec = false; } }
-  $('#recbox').style.display = rec && current != null && streams ? 'block' : 'none';
-  if (!rec || current == null || !streams) return;
-  loadArchives();
-  const d = await (await fetch('/rec/recordings')).json();
-  const byId = {};                                                    // this unit's recordings: configured rows first, the placed ones over them
-  for (const u of d.configured || []) if (String(u.cam) === String(current)) byId[u.id] = { ...u, phase: 'silent' };
-  for (const r of d.rows || []) if (String(r.cam) === String(current)) byId[r.id] = { ...byId[r.id], ...r };
-  const list = Object.values(byId);
-  $('#recstate').textContent = list.length ? '' : 'not recorded — watched: live, detectors and events only';
-  const ul = $('#reclist'); ul.innerHTML = '';
-  for (const r of list) {
-    const li = document.createElement('li'); li.className = r.phase === 'running' ? 'running' : '';
-    li.innerHTML = h`<span><span class="dot"></span>${r.id} <small>${r.home ? 'archive ' + r.home : 'wherever there is room'}</small></span>` +
-                   h`<small>${r.phase || 'placed'}${r.why ? ' · ' + r.why : ''}${r.worker ? ' · ' + r.worker + (r.server ? ' on ' + r.server : '') : ' · unplaced'}` +
-                   h`${r.via ? ' · via ' + r.via : ''} · keep ${r.retention_days} days <a href="#" data-act="del">stop</a></small>`;
-    li.querySelector('[data-act=del]').onclick = async e => {
-      e.preventDefault();
-      if (!confirm(`Stop recording ${r.id}? The footage stays in its volume until the ring overwrites it.`)) return;
-      try { await send('DELETE', `/rec/recordings/${encodeURIComponent(r.id)}`); } catch (err) { $('#recerr').textContent = 'refused: ' + err.message; }
-      loadRec();
-    };
-    ul.appendChild(li);
-  }
-}
-$('#recadd').onsubmit = async e => {
-  e.preventDefault(); $('#recerr').textContent = '';
-  const f = Object.fromEntries(new FormData(e.target));
-  const archive = (f.archive || '').trim();
-  // The whole naming rule, in one visible line: the unit's id when there is one archive, id-archive when
-  // there are more. Not a default inside the spec, where nobody would read it and everybody would depend
-  // on it — the operator sees the name that appears in the list a second later.
-  const name = archive ? `${current}-${archive}` : String(current);
-  try {
-    await send('POST', '/rec/recordings', { name, cam: String(current), home: archive,
-                                            retention_days: parseInt(f.retention_days, 10) || 30 });
-    e.target.reset(); loadRec();
-  } catch (err) { $('#recerr').textContent = 'refused: ' + err.message; }
-};
-
-// -- detectors: the `det` subsystem, mounted by the console at /det. A det unit is one model on this unit,
-// named `<cam>-<kind>` here, created with the console's token; placement is the det controller's pass,
-// and the row's phase (running / waiting / pending / unsupported) is the worker's word from its heartbeat.
-let dets = null;                                                      // the /det/spec reply, or null when the console mounts no det
-async function loadDets() {
-  if (dets === null) { try { const r = await fetch('/det/spec'); dets = r.ok ? await r.json() : false; } catch (_) { dets = false; } }
-  $('#dets').style.display = dets && current != null ? 'block' : 'none';
-  if (!dets || current == null) return;
-  const d = await (await fetch('/det/units')).json();
-  const byId = {};
-  for (const u of d.configured || []) if (String(u.cam) === String(current)) byId[u.id] = { ...u, phase: 'silent' };
-  for (const r of d.rows || []) if (String(r.cam) === String(current)) byId[r.id] = { ...byId[r.id], ...r };
-  const ul = $('#detlist'); ul.innerHTML = '';
-  for (const u of Object.values(byId)) {
-    const li = document.createElement('li'); li.className = u.phase === 'running' ? 'running' : (u.phase === 'unsupported' ? 'failed' : '');
-    li.innerHTML = h`<span><span class="dot"></span>${u.kind} <small>${u.id}${u.params ? ' · ' + u.params : ''}</small></span>` +
-                   h`<small>${u.phase}${u.why ? ' · ' + u.why : ''}${u.worker ? ' · ' + u.worker : ' · unplaced'}${u.events != null ? ' · ' + u.events + ' events' : ''}` +
-                   h` <a href="#" data-act="toggle">${u.enabled === false ? 'enable' : 'disable'}</a> <a href="#" data-act="del">delete</a></small>`;
-    li.querySelector('[data-act=toggle]').onclick = async e => { e.preventDefault(); try { await send('PUT', `/det/units/${u.id}`, { enabled: u.enabled === false }); } catch (err) { $('#deterr').textContent = 'refused: ' + err.message; } loadDets(); };
-    li.querySelector('[data-act=del]').onclick = async e => { e.preventDefault(); try { await send('DELETE', `/det/units/${u.id}`); } catch (err) { $('#deterr').textContent = 'refused: ' + err.message; } loadDets(); };
-    ul.appendChild(li);
-  }
-}
-$('#detadd').onsubmit = async e => {
-  e.preventDefault(); $('#deterr').textContent = '';
-  const f = Object.fromEntries(new FormData(e.target));
-  try { await send('POST', '/det/units', { name: `${current}-${f.kind}`, cam: String(current), kind: f.kind, params: f.params || '' }); e.target.reset(); loadDets(); }
-  catch (err) { $('#deterr').textContent = 'refused: ' + err.message; }
-};
-// -- automation: the `auto` subsystem, mounted at /auto. The form is built from the routes the specs declare
-// (`autoCatalog`: the page's units; the catalogue route of one subsystem's on the platform's console is gone — the
-// boundary's step 6). What a unit can do and raise the page does not know: every unit is `can: null` and gets a free
-// field — "unknown" is offered as unknown — and the evaluator says what a scenario cannot do, in its status
-// (`refused`). The form is rebuilt when the unit changes or a scenario is added — never on the
-// ten-second refresh, which would redraw a select under the operator's cursor.
-// The units the form offers are the PAGE's subsystem's — `spec.name`, the root console's, whose unit is `current` —
-// and the catalogue keys them by that name: the platform's page names no subsystem of its own (it said `vms`).
-let autos = null, catalog = null, autoFor = null;                    // /auto/spec, `autoCatalog`, the unit the form was built for
-const held = () => catalog[spec.name] || {};                          // the catalogue's units of the page's subsystem
-async function loadAutos(rebuild) {
-  if (autos === null) { try { const r = await fetch('/auto/spec'); autos = r.ok ? await r.json() : false; } catch (_) { autos = false; } }
-  $('#autos').style.display = autos && current != null ? 'block' : 'none';
-  if (!autos || current == null) return;
-  if (rebuild || autoFor !== String(current)) {
-    try { catalog = await autoCatalog(); } catch (_) { return; }
-    autoFor = String(current); buildAutoForm();
-  }
-  const d = await (await fetch('/auto/scenarios')).json();
-  const mine = sc => (sc.when || []).some(t => String(t.unit) === String(current) || (catalog.det[t.unit] || {}).cam === String(current))
-                  || (sc.then || []).some(a => String(a.unit || a.cam) === String(current));
-  const byId = {};
-  for (const sc of d.configured || []) if (mine(sc)) byId[sc.id] = { ...sc, phase: 'silent' };
-  for (const r of d.rows || []) if (byId[r.id]) byId[r.id] = { ...byId[r.id], ...r };
-  const ul = $('#autolist'); ul.innerHTML = '';
-  for (const sc of Object.values(byId)) {
-    const li = document.createElement('li'); li.className = sc.unfit ? 'failed' : (sc.phase === 'running' ? 'running' : '');
-    const when = (sc.when || []).map(t => `${t.sub}${t.unit ? ' ' + t.unit : ''} ${t.kind}`).join(' + ');
-    const then = (sc.then || []).map(a => `${a.sub}.${a.action} ${a.unit || a.cam}${a.port ? ' port ' + a.port : ''}${a.n ? ' #' + a.n : ''}`).join(', ');
-    const said = sc.unfit ? ' · does not fit: ' + sc.unfit.join('; ') : (sc.unchecked ? ' · not checked: ' + sc.unchecked.join('; ') : '');
-    li.innerHTML = h`<span><span class="dot"></span>${sc.id} <small>${when} → ${then}</small></span>` +
-                   h`<small>${sc.phase}${said} <a href="#" data-act="del">delete</a></small>`;
-    li.querySelector('[data-act=del]').onclick = async e => { e.preventDefault(); try { await send('DELETE', `/auto/scenarios/${sc.id}`); } catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; } loadAutos(); };
-    ul.appendChild(li);
-  }
-}
-async function autoCatalog() {
-  const rows = await (await fetch(ROWS())).json(), units = {};
-  for (const u of rows.configured || []) units[String(u.id)] = { name: u.name || String(u.id), can: null };
-  return { [spec.name]: units, det: {}, holder_events: Object.keys((spec.display || {}).kinds || {}) };
-}
-function opt(value, text) { const o = document.createElement('option'); o.value = value; o.textContent = text; return o; }
-function buildAutoForm() {
-  const me = held()[String(current)] || {}, when = $('#autowhen'), target = $('#autotarget');
-  when.innerHTML = '';
-  for (const k of (me.can ? me.can.events : catalog.holder_events)) when.appendChild(opt(`${spec.name}|${current}|${k}`, k));
-  for (const [n, det] of Object.entries(catalog.det)) if (det.cam === String(current)) for (const k of det.raises) when.appendChild(opt(`det|${n}|${k}`, `${k} (detector ${n})`));
-  target.innerHTML = '';
-  for (const [u, c] of Object.entries(held())) target.appendChild(opt(u, `${c.name} (${u})`));
-  target.value = String(current); target.onchange = buildAutoAction; buildAutoAction();
-}
-function buildAutoAction() {
-  const t = held()[$('#autotarget').value] || {}, can = t.can, action = $('#autoaction');
-  action.innerHTML = '';
-  if (!can || can.relays) action.appendChild(opt('output', 'pulse a relay'));
-  if (!can || can.ptz) action.appendChild(opt('preset', 'go to a preset'));
-  action.appendChild(opt('record', 'record 10 minutes'));
-  // The two actions that ask a model (`.detect`, `.scan`): the models the catalogue says this unit runs, else the course's three.
-  const cam = $('#autotarget').value, kinds = [...new Set(Object.values(catalog.det).filter(d => d.cam === cam).flatMap(d => d.raises))];
-  for (const k of (kinds.length ? kinds : ['motion', 'linecross', 'lpr'])) {
-    action.appendChild(opt(`detect:${k}`, `detect ${k} 10 minutes`));
-    action.appendChild(opt(`scan:${k}`, `scan ${k} in the archive, a minute either side`));
-  }
-  action.onchange = buildAutoArg; buildAutoArg();
-}
-function buildAutoArg() {
-  const can = (held()[$('#autotarget').value] || {}).can, a = $('#autoaction').value, box = $('#autoarg');
-  const upto = a === 'output' ? (can && can.relays) : a === 'preset' ? (can && can.presets) : 0;
-  box.innerHTML = (a === 'record' || a.includes(':')) ? '' : upto
-    ? h`<select name="arg">${raw(Array.from({ length: upto }, (_, i) => h`<option>${i + 1}</option>`).join(''))}</select>`
-    : `<input type="number" name="arg" min="1" value="1" style="width:4em">`;
-}
-$('#autoadd').onsubmit = async e => {
-  e.preventDefault(); $('#autoerr').textContent = '';
-  const f = Object.fromEntries(new FormData(e.target)), [sub, unit, kind] = f.when.split('|');
-  const [verb, model] = f.action.split(':');
-  const then = f.action === 'record' ? { sub: 'rec', action: 'record', cam: f.target, minutes: 10 }
-             : verb === 'detect' ? { sub: 'det', action: 'detect', cam: f.target, kind: model, minutes: 10 }
-             : verb === 'scan' ? { sub: 'det', action: 'scan', cam: f.target, kind: model, before: 60, after: 60 }
-             : { sub: spec.name, action: f.action, unit: f.target, [f.action === 'output' ? 'port' : 'n']: parseInt(f.arg, 10) };
-  try { await send('POST', '/auto/scenarios', { name: f.name, when: [{ sub, unit, kind }], then: [then] }); e.target.reset(); loadAutos(true); }
-  catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; }
-};
-// -- the administrator's knob: servers shared or distinct ----------------------------------------------
-// `PUT /policy {servers}` — one row, `<sub>/policy`, read by the controller on its next pass. `shared`: every
-// worker is a place to put units, two on one server included, and a dead server's slot is the scheduler's
-// to reschedule onto a neighbour. `distinct`: one worker per server carries units, a second one idles by
-// policy, and a server whose worker and resource both fall silent is gone — the controller moves its units.
-const POLICY_HELP = { shared: 'every worker carries units, two on one server included; a dead server\'s worker is rescheduled onto a neighbour by the scheduler',
-                      distinct: 'one worker per server carries units; a dead server\'s units are moved by the controller once its worker and its resource are both silent' };
-function renderPolicy(p) {
-  const box = $('#policy'); if (!p.servers) { box.innerHTML = ''; return; }
-  if (!box.querySelector('select')) {
-    box.innerHTML = h`<span>servers</span><select id="servers-policy"><option value="shared">shared</option><option value="distinct">distinct</option></select><small id="policy-help"></small>`;
-    box.querySelector('select').onchange = async e => {
-      try { await send('PUT', '/policy', { servers: e.target.value }); } catch (err) { $('#policy-help').textContent = 'refused: ' + err.message; return; }
-      loadResources();
-    };
-  }
-  box.querySelector('select').value = p.servers;
-  $('#policy-help').textContent = POLICY_HELP[p.servers] || '';
-}
-
-// -- the servers, as placement sees them -------------------------------------------------------------
-// `GET /servers` → one block per server: `resource` (the fact: the resource job's heartbeat — live / silent /
-// unknown), the workers with load/capacity, and
-// `placeable` with `why` when the controller would not place there now. Then `GET /mounts`: what this
-// process fronts.
-async function loadResources() {
-  const box = $('#servers'); box.innerHTML = '';
-  try {
-    const d = await (await fetch('/servers')).json();
-    const sv = d.servers || {};
-    renderPolicy(d.policy || {});
-    for (const [name, s] of Object.entries(sv)) {
-      const el = document.createElement('div'); el.className = 'srv';
-      const ws = raw(s.workers.map(w => h`${w.worker} ${w.load}/${w.capacity}${w.state === 'stale' ? ' (stale)' : ''}${w.idle_by_policy ? ' (idle by policy)' : ''}${w.released ? ' (released)' : ''}` +
-                     (w.hung ? h` · <span class="bad">hung: ${w.hung_why || 'its process runs, and it neither renews nor speaks'}</span>` : '') +
-                     (w.slot_garbled ? h` · <span class="bad">its slot row does not parse</span>` : '')).join(', ') || 'no workers');
-      const off = s.decommission, done = s.decommissioned;
-      const lab = (s.labels || []).join(', ') || 'nothing', node = (s.labels_node || []).join(', ') || 'nothing';
-      el.innerHTML = h`<strong>${name}</strong> <small>resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
-                     h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`) +
-                     h`<small>reaches ${lab} (${s.labels_source === 'console' ? 'set here; the node says ' + node : 'the node\'s'}) <a href="#" class="lab-edit">edit</a>` +
-                     (s.labels_unread ? h` · <span class="bad">its row here could not be read: nothing is moved off it until it is written again</span>` : '') +
-                     (s.labels_source === 'console' ? h` · <a href="#" class="lab-node">back to the node's</a>` : '') + raw('</small>') +
-                     (off ? h`<small class="bad">decommissioned by ${off.by || '?'}${off.why ? ': ' + off.why : ''}${done ? '' : ' — waiting: ' + (s.decommission_refusal || 'the next pass')} · <a href="#" class="recom">bring back</a></small>` +
-                            ((s.lost || []).length ? h`<small class="bad">still held: ${s.lost.map(l => l.place + ' (' + l.worker + ')').join(', ')} — withdraw a volume that went with the server</small>` : '')
-                          : s.decommissionable ? h`<small><a href="#" class="decom">decommission</a>${s.decommission_warning ? ' · ' + s.decommission_warning : ''}</small>`
-                          : h`<small>decommission: not now — ${s.decommission_refusal || ''}</small>`);
-      el.querySelector('.lab-edit').onclick = e => { e.preventDefault(); editLabels(name, s.labels || []); };
-      if (el.querySelector('.decom')) el.querySelector('.decom').onclick = e => { e.preventDefault(); decommission(name, true); };
-      if (el.querySelector('.recom')) el.querySelector('.recom').onclick = e => { e.preventDefault(); decommission(name, false); };
-      if (el.querySelector('.lab-node')) el.querySelector('.lab-node').onclick = e => { e.preventDefault(); editLabels(name, null); };
-      box.appendChild(el);
-    }
-    if (!Object.keys(sv).length) box.textContent = 'no servers yet';
-  } catch (_) {}
-  // The domain, when this cluster hosts it (М12 Lesson 3): its members and what it cannot see, above this
-  // cluster's servers — one tree for the site. Read only; a stale view says the domain is silent.
-  try {
-    const r = await fetch('/domain');
-    if (r.ok) {
-      const d = await r.json();
-      const el = document.createElement('div'); el.className = 'srv';
-      const per = {}; for (const c of d.units || []) per[c.cluster] = (per[c.cluster] || 0) + 1;
-      const ms = raw(Object.entries(d.members || {}).map(([n, m]) => h`${n}: ${m.state === 'ok' ? (per[n] || 0) + ' units' : raw('<span class="bad">' + esc(m.state) + '</span>')}`).join(' · '));
-      el.innerHTML = h`<strong>domain</strong> <small>${d.complete ? 'every member answered' : raw('<span class="bad">incomplete</span>')} · as of ${Math.round(d.age)} s ago</small>` +
-                     (d.silent ? h`<small class="bad">the domain is silent — this is what it knew ${Math.round(d.age)} s ago</small>` : '') +
-                     h`<small>${ms}</small>` + (d.causes || []).map(c => h`<small class="bad">${c}</small>`).join('');
-      box.prepend(el);
-    }
-  } catch (_) {}
-  try { const m = await (await fetch('/mounts')).json(); const names = Object.keys(m.mounts || {}); $('#mounts').textContent = names.length ? `fronts ${m.root} at / and ${names.map(n => n + ' at /' + n + '/').join(', ')}` : ''; } catch (_) {}
-}
-// -- what a server reaches, from here (feedback DQ) ----------------------------------------------------
-// `PUT /servers/<name>/labels {labels}` — the administrator's word over the node's `meta.labels`; `DELETE` — back to
-// the node's (`have` null). First `GET …/labels?labels=…`: the units that would move, named in the confirmation —
-// the controller moves them on its next pass, ten a pass, or lists them unplaceable when no server reaches them.
-async function editLabels(name, have) {
-  let want = null;
-  if (have !== null) {
-    const typed = prompt(`What ${name} reaches — labels, comma-separated (empty: nothing):`, have.join(','));
-    if (typed === null) return;
-    want = typed.split(',').map(x => x.trim()).filter(Boolean);
-  }
-  const q = want === null ? '' : '?labels=' + encodeURIComponent(want.join(','));
-  try {
-    // the answer read first: a refusal (a label that is not one, a server nobody knows) is said, nothing is written
-    const r = await fetch(`/servers/${encodeURIComponent(name)}/labels${q}`);
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.detail || d.error || `${r.status}`);
-    const moves = d.would_move || [];
-    if (moves.length && !confirm(`${moves.length} unit(s) on ${name} will move or wait unplaced: ${moves.join(', ')}. Go on?`)) return;
-    if (want === null) await send('DELETE', `/servers/${encodeURIComponent(name)}/labels`);
-    else await send('PUT', `/servers/${encodeURIComponent(name)}/labels`, { labels: want });
-  } catch (err) { alert('refused: ' + err.message); }
-  loadResources();
-}
-// -- a machine that will never come back, from here --------------------------------------------------------
-// `POST /servers/<name>/decommission {why}` — the operator operates servers, not workers: they took the machine out and
-// switched it off, and the console checks what it can — while its resource answers, 409 in words, nothing written.
-// The controller frees its workers' slots on its next pass and moves their units; `DELETE` brings the machine back.
-async function decommission(name, gone) {
-  try {
-    if (!gone) {
-      if (!confirm(`Bring ${name} back? Its workers are placed on again.`)) return;
-      await send('DELETE', `/servers/${encodeURIComponent(name)}/decommission`);
-    } else {
-      const why = prompt(`Decommission ${name}? Only once it is out of service and switched off: what ran on it moves to the servers that are here, and nothing is placed on it until it is brought back. Why:`, '');
-      if (why === null) return;
-      const d = await send('POST', `/servers/${encodeURIComponent(name)}/decommission`, { why });
-      if ((d.holds || []).length) alert(d.note);
-    }
-  } catch (err) { alert('refused: ' + err.message); }
-  loadResources();
-}
-window.addEventListener('beforeunload', stopLive);
-$('#last24').onclick = () => { window_ = [Date.now() / 1000 - 86400, Date.now() / 1000]; if (current) loadTimeline(); };
-$('#all').onclick = () => { window_ = null; if (current) loadTimeline(); };
-// -- who is looking: `/session` ---------------------------------------------------------------
-// A console in a domain asks who is calling (the gate). The page asks the console first: is it gated, and am
-// I known? If not, it shows the form. The PASSWORD goes to the domain's login door (`login_url`, another origin)
-// and never to this console; what comes back is a token, which this console checks and keeps in a cookie the
-// script cannot read. With no login door configured, or to use a token somebody handed over, the token can
-// be pasted.
-let booted = false;
-function boot() {
-  if (booted) return; booted = true;
-  loadSpec().then(() => { loadUnits(); loadResources(); loadArchives(); setInterval(() => { loadUnits(); loadDets(); loadAutos(); loadRec(); loadResources(); loadArchives(); }, 10000); setInterval(loadEvents, 5000); });
-}
-async function session() {
-  let s;
-  try { const r = await fetch('/session'); if (!r.ok) { $('#gate').style.display = 'block'; $('#gatenote').textContent = (await r.json()).detail || 'this console cannot check who is calling'; $('#signin').querySelector('button').disabled = true; return; } s = await r.json(); }
-  catch (_) { boot(); return; }                                  // an older console: no such route, and no gate
-  if (s.open) { boot(); return; }
-  if (s.user) {
-    $('#gate').style.display = 'none';
-    $('#whoami').innerHTML = h`${s.user} · <a href="#" id="signout">sign out</a>`;
-    $('#signout').onclick = async e => { e.preventDefault(); await fetch('/session', { method: 'DELETE' }); location.reload(); };
-    if (s.until) setTimeout(session, Math.max(1000, (s.until - Date.now() / 1000) * 1000 + 500));   // the token ends: ask again
-    boot(); return;
-  }
-  $('#gate').style.display = 'block';
-  $('#byname').style.display = s.login_url ? 'block' : 'none';
-  $('#bytoken').open = !s.login_url;
-  $('#gatenote').textContent = s.login_url ? 'your password goes to the domain, not to this console' : 'this console has no login door configured: paste a token';
-  $('#signin').onsubmit = async e => {
-    e.preventDefault(); $('#gateerr').textContent = '';
-    try {
-      if ($('#byglass').open) {
-        const r = await fetch('/session/break-glass', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: $('#gw').value, why: $('#gy').value, password: $('#gp').value }) });
-        $('#gp').value = '';
-        if (!r.ok) throw new Error((await r.json()).detail || 'refused');
-        session(); return;
-      }
-      let token = $('#st').value.trim();
-      if (!token) {
-        const r = await fetch(s.login_url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('#su').value, password: $('#sp').value }) });
-        if (!r.ok) throw new Error('bad credentials');
-        token = (await r.json()).token;
-      }
-      $('#sp').value = '';
-      const r = await fetch('/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
-      if (!r.ok) throw new Error((await r.json()).detail || 'the token was refused');
-      $('#st').value = ''; session();
-    } catch (err) { $('#gateerr').textContent = err.message; }
+async function loadTimeline(id){
+  const [from,to]=winRange();
+  // The camera's footage is its recordings' — each through its own recorder's door, and through the door of every
+  // volume it may have lain on (a recording moves; what it left behind stays on the old volume, read where it lies).
+  // The raw ranges {start_ms, end_ms, epoch, source, yields} are merged without twins by (recording, start, end,
+  // epoch, source), the recording's own door first; a volume nobody holds is named, not dropped silently.
+  const recs=recsOfCam(id);
+  // the places a recording may lie on: the rows of the table rec's spec names (spec.places), not a name written here
+  const T=((pc.spec("rec")||{}).places||{}).table||"";
+  let places=[];
+  if(T){try{const d=await (await fetch(`/rec/${encodeURIComponent(T)}`)).json();places=d[T]||[]}catch(e){places=[]}}
+  const asks=[],missing=new Set(),seen=new Set(),spans=[];
+  // a recording on a backup volume: what it has yields to the primary's, and its remainder is «only in the backup»
+  const backupRec=rec=>{const v=places.find(x=>x.name===rec.home);return!!v&&v.kind===VOL_BACKUP};
+  const take=(rec,where,list)=>{const bk=backupRec(rec);for(const x of list||[]){
+    const k=[rec.id,x.start_ms,x.end_ms,x.epoch,x.source||""].join("|");if(seen.has(k))continue;seen.add(k);
+    spans.push({start:x.start_ms/1000,end:x.end_ms/1000,epoch:x.epoch,fenced:!!x.fenced,events:0,source:x.source||"",recording:rec.id,where,media:true,yields:!!x.yields||bk,backupOnly:bk})}};
+  const ask=async(rec,where,place)=>{
+    const w=await whereAt(where);
+    if(!w.door){if(place&&w.status===404&&w.missing)missing.add(w.missing);return null}   // «no such place»: nothing to say
+    try{const r=await doorFetch(where,`/timeline/${encodeURIComponent(rec.id)}?from=${from}&to=${to}`);
+      if(!r||!r.ok){missing.add(place||rec.id);return null}
+      const m=r.headers.get("X-Unreachable");if(m)missing.add(m);
+      return await r.json()}
+    catch(e){missing.add(place||rec.id);return null}
   };
+  // the recordings' own doors first (theirs win a twin), then the volumes'
+  const own=await Promise.all(recs.map(rec=>ask(rec,"/rec/where/"+encodeURIComponent(rec.id),"")));
+  recs.forEach((rec,i)=>take(rec,"/rec/where/"+encodeURIComponent(rec.id),own[i]));
+  for(const rec of recs)for(const v of places)asks.push((async()=>{const where=`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(v.name)}?unit=${encodeURIComponent("rec/"+rec.id)}`;take(rec,where,await ask(rec,where,v.name))})());
+  await Promise.all(asks);
+  // Лента строится по дверям; недоступное названо: его архив не утрачен, а лента без него неполная — это
+  // единственный сбой, который оператор иначе не увидел бы.
+  const unr=[...missing];
+  V.note=unr.length?`Недоступн${unr.length>1?"ы":"о"}: ${unr.join(", ")} — ${unr.length>1?"их архивы недоступны":"его архив недоступен"}, а не утрачен${unr.length>1?"ы":""}; лента может быть неполной.`:"";
+  V.spans=yieldCut(spans).sort((a,b)=>a.start-b.start);
+  V.cam=id;
+  await fetchEvents(id,from,to);
+  const now=Date.now()/1000;
+  const fin=winKey==="all";
+  V.lo=fin?Math.min(...V.spans.map(s=>s.start),...V.events.map(e=>e.t),now-3600):from;
+  V.hi=fin?Math.max(...V.spans.map(s=>s.end),...V.events.map(e=>e.t),now):to;
+  drawTimeline();
 }
-session();
+async function segmentURL(s,p){
+  const d=await doorOf(s.where);if(!d)return"";
+  return `${d.url}/segment/${encodeURIComponent(s.recording)}/e${s.epoch}/${Math.round(p.start*1000)}-${Math.round(p.end*1000)}${s.source?"."+s.source:""}.mp4?t=${encodeURIComponent(d.token)}`;
+}
+function play(i){V.queue=piecesFrom(i,0);playNext()}
+async function playNext(){
+  if(!V.queue.length)return;
+  stopLive(true);
+  const p=V.queue.shift(),s=V.spans[p.i];
+  [...$("#timeline").children].forEach((el,j)=>el.classList.toggle("playing",j===p.i));
+  const cap=$("#playing");
+  if(cap)cap.textContent=`${fmtT(p.start)} – ${fmtT(p.end)} · эпоха ${s.epoch}`+(s.server?" · с "+s.server:"")+
+    (s.backupOnly?" · из резервного архива":"")+(s.source==="backfill"?" · дозаписано из резервного":"");
+  const v=$("#player");v.srcObject=null;v.crossOrigin="anonymous";
+  v.src=await segmentURL(s,p);
+  if(p.off)v.addEventListener("loadedmetadata",()=>{v.currentTime=p.off},{once:true});
+  v.play().catch(()=>{});
+}
+async function negotiateLive(id){
+  let pc;
+  try{pc=new RTCPeerConnection()}catch(e){setCap("браузер не умеет WebRTC");return}
+  pc.addTransceiver("video",{direction:"recvonly"});
+  pc.ontrack=e=>{const v=$("#player");if(!v)return;v.src="";v.srcObject=e.streams[0];v.play().catch(()=>{})};
+  // Шлюз сам кладёт трубку, когда камера переехала на другой воркер или её поток оборвался: старое
+  // соединение уже ничего не покажет. Зритель возвращается сам — после случайной паузы, чтобы пятьдесят
+  // зрителей одной камеры не пришли в один миг.
+  // «disconnected» браузер держит около полминуты, прежде чем признать «failed»; шлюз, положивший трубку,
+  // не вернётся, поэтому пяти секунд без связи достаточно.
+  pc.onconnectionstatechange=()=>{
+    if(!V.live||V.live.pc!==pc)return;
+    const st=pc.connectionState;
+    if(st!=="failed"&&st!=="closed"&&st!=="disconnected")return;
+    const again=()=>{
+      if(!V.live||V.live.pc!==pc||pc.connectionState==="connected")return;
+      setCap("живое: связь со шлюзом потеряна, переподключаюсь…");
+      startLive(id);
+    };
+    setTimeout(again,(st==="disconnected"?5000:1000)+Math.random()*3000);
+  };
+  const offer=await pc.createOffer();
+  await pc.setLocalDescription({type:"offer",sdp:h265Dynamic(offer.sdp)});
+  // The first viewer makes the stream (POST /live/streams {cam}; «exists» — somebody watches already), then the
+  // offer goes to its gateway's door: 404/503 — not placed yet, again in 1.5 s, up to 8 times; 401 — where again, once.
+  try{await window.platformConsole.api("POST","/live/streams",{cam:String(id)})}
+  catch(e){if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+e.message);pc.close();return}}
+  const where="/live/where/"+encodeURIComponent(id);
+  let r=null,tries=0;
+  for(;;){
+    try{r=await doorFetch(where,`/whep/${encodeURIComponent(id)}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp})}
+    catch(e){r=null}
+    if(r&&![404,503].includes(r.status))break;
+    if(++tries>8)break;
+    setCap(`живое: ждём шлюз… (${tries})`);
+    await new Promise(res=>setTimeout(res,1500));
+  }
+  if(!r){setCap("живое: шлюз не взял поток");pc.close();return}
+  if(r.status!==201){
+    let d={};try{d=await r.json()}catch(e){}
+    setCap("живое отклонено: "+(d.detail||d.error||r.status));
+    pc.close();return;
+  }
+  await pc.setRemoteDescription({type:"answer",sdp:await r.text()});
+  const session=r.headers.get("Location")||"";
+  V.live={pc,session,where,since:Date.now()/1000-30,seen:new Set(),timer:null};
+  [...($("#timeline")?.children||[])].forEach(el=>el.classList.remove("playing"));
+  let via="";
+  try{via=new URLSearchParams(session.split("?")[1]).get("gateway")||""}catch(e){}
+  setCap("живое"+(via?" · через "+via:""));
+  const btn=$("#liveBtn");if(btn){btn.textContent="Остановить";btn.classList.add("on")}
+  const feed=$("#livefeed");
+  if(feed){feed.style.display="block";feed.innerHTML='<small class="sub">события, пока вы смотрите — что видят подсистемы на этом объекте</small>'}
+  V.live.timer=setInterval(()=>pollLive(id),3000);pollLive(id);
+}
+function stopLive(keepUi){
+  if(!V.live)return;
+  // the hang-up at the door: DELETE <door.url><Location>, with a token that holds (asked again near its end)
+  if(V.live.session)doorFetch(V.live.where,"/"+V.live.session.replace(/^https?:\/\/[^/]+/,"").replace(/^\/+/,""),{method:"DELETE"}).catch(()=>{});
+  clearInterval(V.live.timer);
+  try{V.live.pc.close()}catch(e){}
+  V.live=null;
+  const v=$("#player");if(v)v.srcObject=null;
+  if(!keepUi){
+    const feed=$("#livefeed");if(feed)feed.style.display="none";
+    const btn=$("#liveBtn");if(btn){btn.textContent="Живое видео";btn.classList.remove("on")}
+  }
+}
+// ── end of core ──────────────────────────────────────────────────────────────────────────────────────────────────
+
+function videoCardHtml(c){
+  return card("Просмотр",`<div class="vid"><video id="player" controls playsinline></video></div>
+    <div class="vrow"><button type="button" class="btn s ${V.live?"on":""}" id="liveBtn" data-act="live">${V.live?"Остановить":"Живое видео"}</button>
+      <span class="sub" id="playing" style="flex:1;min-width:120px">${esc(V.live?"живое":"выберите фрагмент на шкале")}</span><span class="sub" id="tlnote"></span></div>
+    <div id="livefeed" class="livefeed" style="display:${V.live?"block":"none"}"></div>`,
+    `<span class="sub" style="font-weight:400">${esc(c.liveUrl||"")}</span>`)
+  +card("Шкала времени",`<div class="vrow" style="margin:0 0 8px">
+      ${WINDOWS.map(([k,l])=>`<button type="button" class="btn s tl-win ${winKey===k?"on":""}" data-act="win" data-win="${k}">${l}</button>`).join("")}
+      <span style="flex:1"></span><select id="evfilter" data-act="evfilter" style="width:auto;min-width:150px"></select><span class="sub" id="evstate"></span></div>
+    <div class="tl" id="timeline"></div>
+    <div class="vax"><span class="sub" id="t0"></span><span class="sub" id="t1"></span></div>
+    <div id="devline" class="vrow" style="display:none"></div>
+    <form id="markForm" class="vrow"><input name="note" placeholder="Отметка оператора: что вы видите" autocomplete="off">
+      <button class="btn s" type="submit">Отметить</button>
+      ${KEEP_ON?`<button class="btn s" type="button" data-act="keepShown" title="Не дать показанному отрезку уйти по сроку хранения">Удержать показанное</button>`:""}</form>`)
+  +card("События",`<ul class="evlist" id="events"></ul>`,`<span class="sub" style="font-weight:400" id="evcount"></span>`);
+}
+function setWin(k,id){winKey=k;loadTimeline(id);
+  [...document.querySelectorAll(".tl-win")].forEach(b=>b.classList.toggle("on",b.dataset.win===k))}
+// What a repaint must not cut: not «is it playing» but «is it busy» — a browser may refuse autoplay without a gesture,
+// and a pause is no reason to take the chosen piece from under the operator.
+function playingNow(){
+  if(V.live||V.connecting)return true;
+  const v=$("#player");
+  return!!(v&&(v.srcObject||v.currentSrc||v.src));
+}
+function drawTimeline(){
+  const tl=$("#timeline");if(!tl)return;
+  tl.innerHTML="";
+  const x=t=>100*(t-V.lo)/Math.max(1,V.hi-V.lo);
+  V.spans.forEach((s,i)=>{
+    const el=document.createElement("div");
+    el.className=`span ${s.media?"":"events-only"} ${s.fenced?"fenced":""} ${/^[a-z]+$/.test(s.source)?s.source:""} ${s.backupOnly?"backup":""}`;
+    el.style.left=x(s.start)+"%";el.style.width=Math.max(0.3,x(s.end)-x(s.start))+"%";
+    el.title=`${fmtT(s.start)} – ${fmtT(s.end)} · эпоха ${s.epoch}`+(s.fenced?" (отгорожена)":"")+
+      (s.backupOnly?" · только в резервном архиве — в основном этого нет":"")+
+      (s.source==="backfill"?" · дозаписано из резервного архива: теперь в основном":"")+(s.media?"":" · не записывалось");
+    if(s.media)el.onclick=()=>play(i);
+    tl.appendChild(el);
+  });
+  const note=$("#tlnote");if(note)note.textContent=V.note;
+  $("#t0").textContent=fmtT(V.lo);$("#t1").textContent=fmtT(V.hi);
+  drawDeviceLine();
+  drawEvents();
+}
+// What is only in a backup, and «Закрепить»: the operator sees not a setting but the minutes the primary lacks. The
+// pieces glue into ranges, a range is one request of the camera's primary recording (`POST /rec/requests {unit:
+// rec/<recording>, from, to}`, the rec spec's `requests`): its recorder fetches the range from the backup into it.
+function deviceRanges(){
+  const out=[];
+  V.spans.filter(s=>s.backupOnly).sort((a,b)=>a.start-b.start).forEach(s=>{
+    const last=out[out.length-1];
+    if(last&&s.start<=last.end+3)last.end=Math.max(last.end,s.end);else out.push({start:s.start,end:s.end});
+  });
+  return out;
+}
+const primariesOf=cam=>recsOfCam(cam).filter(r=>{const v=vols.find(x=>x.name===r.home);return!v||(v.kind!==VOL_BACKUP&&v.kind!=="edge")});
+function drawDeviceLine(){
+  const el=$("#devline");if(!el)return;
+  const rs=deviceRanges();
+  if(!rs.length){el.style.display="none";el.innerHTML="";return}
+  const mins=Math.round(rs.reduce((n,r)=>n+(r.end-r.start),0)/60),can=primariesOf(V.cam).length>0;
+  el.style.display="flex";
+  el.innerHTML=`<span class="bd">только в резервном</span><span class="sub" style="flex:1;min-width:160px">${mins||"<1"} мин в ${rs.length} ${rs.length===1?"интервале":"интервалах"} есть в резервном архиве и нет в основном${can?" — их можно проиграть, а «Закрепить» перенесёт их в основную запись.":": основной записи у камеры нет, переносить некуда."}</span>`+
+    (can?`<button type="button" class="btn s" data-act="pin">Закрепить</button>`:"");
+  wire(el,{pin:()=>pinBackup()});
+}
+async function pinBackup(){
+  const rs=deviceRanges(),to=primariesOf(V.cam);let ok=0,why="";
+  for(const rec of to)for(const r of rs){
+    try{await pc.api("POST","/rec/requests",{unit:"rec/"+rec.id,from:Math.floor(r.start),to:Math.ceil(r.end)});ok++}catch(e){why=e.message||String(e)}
+  }
+  pc.toast(ok?`Заявок на дозапись: ${ok}. Регистратор заберёт их из резервного архива.`:`Не получилось: ${why}`);
+}
+async function fetchEvents(id,from,to){
+  V.events=[];V.groups=[];V.evstate="";V.aggregated=false;V.truncated=false;V.rate=0;V.norm=0;
+  try{
+    const r=await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent("vms/"+id)}`);
+    // Past the console's norm the answer is `groups`, not `events` — read both, and say why the list changed shape.
+    if(r.ok){const d=await r.json();
+      V.events=d.events||[];V.groups=d.groups||[];V.evstate=d.state||"";
+      V.aggregated=!!d.aggregated;V.truncated=!!d.truncated;V.rate=+d.rate_per_minute||0;V.norm=+d.per_minute||0}
+    else V.evstate="события недоступны: "+r.status;
+  }catch(e){V.evstate="события недоступны"}
+  const subs=[...new Set(V.events.map(e=>e.subsystem))].sort();
+  const sel=$("#evfilter");
+  if(sel){
+    const keep=V.evfilter;
+    sel.innerHTML=`<option value="">все подсистемы</option>`+subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
+    sel.value=subs.includes(keep)?keep:"";V.evfilter=sel.value;
+  }
+  const st=$("#evstate");
+  if(st){st.textContent=V.evstate&&V.evstate!=="live"?V.evstate:"";st.className="sub"+(V.evstate&&V.evstate!=="live"?" bad":"")}
+}
+function drawEvents(){
+  const tl=$("#timeline");if(!tl)return;
+  const x=t=>100*(t-V.lo)/Math.max(1,V.hi-V.lo);
+  [...tl.querySelectorAll(".tick")].forEach(el=>el.remove());
+  const shown=V.events.filter(e=>!V.evfilter||e.subsystem===V.evfilter);
+  shown.forEach(e=>{
+    const el=document.createElement("div");
+    el.className=`tick ${e.fenced?"fenced":""}`;el.style.left=x(evAt(e))+"%";
+    el.style.background=subColor(e.subsystem);
+    el.title=`${fmtT(evAt(e))} · ${evKindRu(e)} (${e.subsystem})`+(e.note?": "+e.note:"")+evLate(e);
+    el.onclick=()=>seek(evAt(e));
+    tl.appendChild(el);
+  });
+  const ul=$("#events");
+  if(ul&&V.aggregated){
+    const g=V.groups.filter(x=>!V.evfilter||x.subsystem===V.evfilter);
+    ul.innerHTML=`<li class="sub">${esc(V.rate)}/мин при нормативе ${esc(V.norm)} — счёт, а не строки</li>`+
+      g.map(x=>`<li class="${x.class==="alarm"?"fenced":""}" data-t="${Number(x.since)||0}">
+        <span><span class="swatch" style="background:${subColor(x.subsystem)}"></span><strong title="${esc(x.kind)}">${esc(evKindRu(x))}</strong> <small>${esc(x.subsystem)}/${esc(x.unit??"")}</small>${x.class==="alarm"?"<small> · тревога</small>":""}</span>
+        <small>${esc(x.count)} × · ${fmtHMS(x.since)}–${fmtHMS(x.until)}</small></li>`).join("");
+    const cnt=$("#evcount");if(cnt)cnt.textContent=g.reduce((n,x)=>n+(+x.count||0),0);
+  }else if(ul){
+    ul.innerHTML=(V.truncated?`<li class="sub">окно обрезано: показан его конец</li>`:"")+([...shown].reverse().slice(0,200).map(e=>{
+      const extra=Object.entries(e).filter(([k])=>!["subsystem","unit","of","epoch","t","kind","server","bucket","fenced","epoch_is","class","occurred"].includes(k))
+        .map(([k,v])=>`${k}=${typeof v==="object"?JSON.stringify(v):v}`).join(" ");
+      const note=evKindRu(e)!==e.kind?evNoteRu(e):"";
+      return`<li class="${e.fenced?"fenced":""}" data-t="${Number(evAt(e))||0}">
+        <span><span class="swatch" style="background:${subColor(e.subsystem)}"></span>${fmtT(evAt(e))} <strong title="${esc(e.kind)}">${esc(evKindRu(e))}</strong> <small>${esc(evLate(e))}${esc(e.unit??"")}${e.of&&e.of!==e.unit?" · о "+esc(e.of):""}</small>${e.class==="alarm"?"<small> · тревога</small>":""}${note?`<small> · ${esc(note)}</small>`:""}</span>
+        <small>${esc(e.server||"")} · эпоха ${esc(e.epoch)}${e.fenced?" (отгорожена)":""}${extra?" · "+esc(extra):""}</small></li>`;
+    }).join("")||(V.truncated?"":`<li class="sub">За окно событий нет</li>`));
+    const cnt=$("#evcount");if(cnt)cnt.textContent=shown.length?shown.length:"";
+  }
+  if(ul)ul.querySelectorAll("li[data-t]").forEach(li=>{li.onclick=()=>seek(+li.dataset.t)});
+}
+function seek(t){
+  const i=V.spans.findIndex(s=>s.media&&s.start<=t&&t<s.end);
+  if(i<0){setCap(`${fmtT(t)} · в этот момент не записывалось`);return}
+  V.queue=piecesFrom(i,t);playNext();
+}
+async function addMark(e,id){
+  e.preventDefault();
+  const note=e.target.elements.note.value.trim();
+  if(!note)return false;
+  try{await pc.api("POST","/marks",{unit:"vms/"+id,note});e.target.reset();pc.toast("Отметка записана");
+    setTimeout(()=>{if(pc.selected()==="unit:vms/"+id)loadTimeline(id)},3500)}
+  catch(err){pc.toast("Отказано: "+err.message)}
+  return false;
+}
+// ── Живое видео через WHEP ───────────────────────────────────────────────────────────────────────────────────────
+// The browser makes the offer; the first viewer makes the stream's row (`live/streams/<camera>`), the controller places
+// it on a gateway, and the offer goes to that gateway's door. RTP goes gateway → browser: neither the console nor a
+// worker carries media.
+async function toggleLive(id){if(V.live){stopLive();return}await startLive(id)}
+async function startLive(id){
+  stopLive(true);
+  V.connecting=true;                       // the poll does not repaint while the offer is under way
+  try{await negotiateLive(id)}finally{V.connecting=false}
+}
+// H.265 in the browser's offer: Chrome numbers it below 96, and GStreamer's packer takes only 96–127. The gateway
+// answers with the offer's numbers, so H.265's (and their rtx, apt=) move to free ones in 96–127 here.
+function h265Dynamic(sdp){
+  const used=new Set([...sdp.matchAll(/a=rtpmap:(\d+) /g)].map(m=>+m[1]));
+  const free=[];for(let n=96;n<=127;n++)if(!used.has(n))free.push(n);
+  const map={};
+  for(const m of sdp.matchAll(/a=rtpmap:(\d+) H265\/90000/g)){const pt=+m[1];if(pt<96&&free.length)map[pt]=free.shift()}
+  for(const [from,to] of Object.entries(map)){
+    sdp=sdp.replace(new RegExp("a=(rtpmap|fmtp|rtcp-fb):"+from+" ","g"),(m,k)=>"a="+k+":"+to+" ")
+      .replace(new RegExp("apt="+from+"(\\r|;|$)","gm"),"apt="+to+"$1")
+      .replace(/^(m=video \d+ [A-Z\/]+)((?: \d+)+)/m,(m,h,l)=>h+l.split(" ").map(x=>x===from?String(to):x).join(" "));
+  }
+  return sdp;
+}
+// While watching: the camera's events every 3 s, newest first, the last 30 kept.
+async function pollLive(id){
+  if(!V.live)return;
+  let d;
+  try{const r=await fetch(`/events?from=${V.live.since}&to=1e12&unit=${encodeURIComponent("vms/"+id)}`);if(!r.ok)return;d=await r.json()}catch(e){return}
+  if(!V.live)return;                       // the viewer hung up while it was asked
+  const feed=$("#livefeed");if(!feed)return;
+  (d.events||[]).sort((a,b)=>a.t-b.t).forEach(e=>{
+    const k=`${e.server}|${e.bucket}|${e.t}|${e.kind}`;
+    if(V.live.seen.has(k))return;
+    V.live.seen.add(k);
+    const el=document.createElement("div");el.className="ev";
+    el.innerHTML=`<span class="swatch" style="background:${subColor(e.subsystem)}"></span>${fmtHMS(e.t)} <strong title="${esc(e.kind)}">${esc(evKindRu(e))}</strong> <small>${esc(e.subsystem)}${e.note?" · "+esc(e.note):""}${e.score!=null?" · "+esc(e.score):""}${e.fenced?" · отгорожено":""}</small>`;
+    feed.insertBefore(el,feed.children[1]||null);
+    while(feed.children.length>31)feed.removeChild(feed.lastChild);
+    V.live.since=Math.max(V.live.since,e.t-1);
+  });
+  if(d.state&&d.state!=="live"&&feed.firstChild)feed.firstChild.textContent=`события, пока вы смотрите — ${d.state}`;
+}
+pc.addTab("unit",{id:"vid",label:"Видео",
+  busy:()=>playingNow(),
+  render:(host,ref,obj)=>{
+    if(!isCam(ref))return;
+    stopLive(true);
+    const id=camOf(ref);
+    host.innerHTML=videoCardHtml({id,liveUrl:(obj&&obj.live_url)||""});
+    wire(host,{live:()=>toggleLive(id),win:el=>setWin(el.dataset.win,id),evfilter:el=>{V.evfilter=el.value;drawEvents()},keepShown:()=>keepShown(id)});
+    host.querySelector("#markForm").onsubmit=e=>addMark(e,id);
+    host.querySelector("#player").onended=()=>playNext();
+    loadTimeline(id);
+  }});
+pc.on("select",()=>stopLive());
+window.addEventListener("beforeunload",()=>stopLive(true));
+
+// ── «Архив»: the camera's recordings and its keeps ───────────────────────────────────────────────────────────────
+// A recording is a unit of rec (`rec/recordings/<name>`): a camera may have several, one per volume; `cam` says whose
+// footage it holds and `home` the volume it lies on. The volumes are the rows of the table rec's spec names as its
+// places (`places.table`); a keep is a row of `rec/keeps` — a range that must not go by the retention.
+let recOn=null,vols=[],recs=[],keeps=[],T_PLACES="";
+const VOL_NET="network";
+const VOL_KIND={local:"локальный",network:"сетевой",backup:"резервный",edge:"карта камеры",incidents:"инциденты"};
+function volKind(v,short){const k=VOL_KIND[v.kind]||v.kind||"—";return short||v.kind===VOL_NET?k:k+", "+(v.server||"—")}
+async function loadRec(){
+  await pc.ready;
+  const spec=pc.spec("rec");
+  if(!spec){recOn=false;return}
+  T_PLACES=(spec.places||{}).table||"";
+  try{
+    const [r,v,k]=await Promise.all([getJSON("/rec/recordings"),T_PLACES?getJSON("/rec/"+encodeURIComponent(T_PLACES)):{},getJSON("/rec/keeps").catch(()=>({}))]);
+    const byId={};(r.rows||[]).forEach(x=>{byId[String(x.id)]=x});
+    recs=(r.configured||[]).map(c=>({...c,id:String(c.id),row:byId[String(c.id)]||null}));
+    vols=((v||{})[T_PLACES]||[]).filter(x=>!x.garbled).map(x=>({...x,quota_bytes:+x.quota_bytes||0,enabled:String(x.enabled)!=="false"}));
+    keeps=(k||{}).keeps||[];
+    recOn=true;
+  }catch(e){if(recOn===null)recOn=false}
+}
+const volByName=n=>vols.find(v=>v.name===n)||null;
+const serverVolumes=server=>vols.filter(v=>v.kind!==VOL_NET&&v.server===server);
+const networkVolumes=()=>vols.filter(v=>v.kind===VOL_NET);
+const camRecs=cam=>recs.filter(r=>String(r.cam)===String(cam));
+const volRecs=name=>recs.filter(r=>r.home===name);
+// A recording's state in one word: three different «not writing».
+function recState(r){
+  if(r.enabled===false)return{label:"Выключена",bad:true};
+  const w=r.row;
+  if(!w)return{label:"Не размещена",bad:true};
+  if(w.worker_state==="stale")return{label:"Регистратор молчит",bad:true};
+  if(w.phase==="running")return{label:"Пишет",bad:false};
+  if(w.phase==="standby")return{label:"Ждёт: основная запись идёт",bad:false};
+  if(w.phase==="waiting")return{label:"Ждёт том",bad:true};
+  if(w.phase==="failed")return{label:"Ошибка",bad:true};
+  return{label:w.phase||"—",bad:false};
+}
+// A volume is a PLACE when a recorder holds it (`held_by`): declared and served are different things, both shown.
+function volState(v){
+  if(!v.enabled)return{label:"Выключен",bad:true};
+  if(v.held_by)return{label:"Обслуживается: "+v.held_by,bad:false};
+  return{label:"Никто не обслуживает",bad:true};
+}
+const offCard=(title,why,body)=>`<div class="card is-off"><div class="ch">${title}<span class="sub" style="font-weight:400">${esc(why)}</span></div><div class="cb"><p class="sub">${body||""}</p></div></div>`;
+const homeOptions=cur=>`<option value="" ${cur?"":"selected"}>любой свободный том</option>`+vols.filter(x=>x.enabled).map(x=>`<option value="${esc(x.name)}" ${x.name===cur?"selected":""}>${esc(x.name)} · ${esc(volKind(x))}</option>`).join("");
+function whenSelectHtml(r){
+  const v=volByName(r.home);
+  if(!v||v.kind!==VOL_BACKUP)return"";
+  const cur=r.when||"always";
+  return`<div><label>Когда писать</label><select data-act="when" data-rec="${esc(r.id)}">
+      <option value="always" ${cur==="always"?"selected":""}>всегда — основная закрывает из неё любую дыру</option>
+      <option value="offline" ${cur==="offline"?"selected":""}>только пока основная не пишется</option></select></div>`;
+}
+function camRecCardHtml(cam){
+  if(recOn===false)return offCard("Архив","подсистема записи не подключена","Консоль не монтирует <code>rec</code>: записывать некуда и нечем.");
+  const list=camRecs(cam);
+  const body=list.map(r=>{
+    const st=recState(r),w=r.row||{},v=volByName(r.home);
+    return`<div class="it" style="align-items:flex-start"><span>${pc.icon("storage")}</span>
+      <span><b>${esc(r.id)}</b><small>${r.home?`том «${esc(r.home)}»${v?" · "+esc(volKind(v)):""}`:"том не выбран — пишется туда, где есть место"}</small>
+        ${w.why?`<small style="color:var(--rd)">${esc(w.why)}</small>`:""}</span>
+      <span class="bd ${st.bad?"off":""}">${esc(st.label)}</span>
+      <button type="button" class="btn s" data-act="toggle" data-rec="${esc(r.id)}" data-on="${r.enabled===false?"1":""}">${r.enabled===false?"Включить":"Выключить"}</button>
+      <button type="button" class="btn s" data-act="del" data-rec="${esc(r.id)}">Удалить</button></div>
+    <div class="g" style="margin:0 0 10px">
+      <div><label>Архив</label><select data-act="home" data-rec="${esc(r.id)}">${homeOptions(r.home)}</select></div>
+      ${whenSelectHtml(r)}
+      <div><label>Срок хранения, дн</label><input type="number" min="1" value="${esc(r.retention_days)}" data-act="days" data-rec="${esc(r.id)}"></div>
+      ${fldRo("Регистратор · сервер",w.worker?`${w.worker} · ${w.server||"—"}`:"—")}</div>`;
+  }).join("")||`<p class="sub">Камера не записывается. Запись — отдельный объект: камера может работать и раздавать живое видео, не записываясь.</p>`;
+  return card("Запись камеры",body,`<button type="button" class="btn s" data-act="addRec">＋ Запись</button>`)+keepCardHtml(cam);
+}
+const camKeeps=cam=>keeps.filter(k=>String(k.cam)===String(cam)).sort((a,b)=>b.from-a.from);
+function keepCardHtml(cam){
+  const list=camKeeps(cam),guard=vols.some(v=>v.kind==="incidents"&&v.enabled);
+  const warn=guard?"":`<p class="sub" style="color:var(--rd)">Тома вида «инциденты» нет: удержанное держится, только пока его хранит архив записи.</p>`;
+  const body=list.map(k=>`<div class="it" style="align-items:flex-start"><span>${pc.icon("storage")}</span>
+    <span><b>${fmtDayTime(k.from)} — ${fmtDayTime(k.to)}</b> <small>${Math.round((k.to-k.from)/60)} мин</small>${k.note?`<small>${esc(k.note)}</small>`:""}
+      <small>${k.by?`поставил ${esc(k.by)} · `:""}${k.at?fmtDayTime(k.at):""}</small></span>
+    <button type="button" class="btn s" data-act="lift" data-keep="${esc(k.name)}">Снять</button></div>`).join("")
+    ||`<p class="sub">Ничего не удержано. Удержанный отрезок не уходит по сроку хранения записи и копируется в архив инцидентов.</p>`;
+  return card("Удержание",warn+body,`<button type="button" class="btn s" data-act="addKeep">＋ Удержать</button>`);
+}
+let ARCH=null;   // {host, ref}: the archive tab shown now, repainted after a write
+function paintArch(){
+  if(!ARCH||!ARCH.host.isConnected)return;
+  const cam=camOf(ARCH.ref);
+  ARCH.host.innerHTML=camRecCardHtml(cam);
+  const r=el=>el.dataset.rec;
+  wire(ARCH.host,{addRec:()=>addToArchive({cam}),addKeep:()=>openKeep(cam),
+    toggle:el=>recWrite(r(el),{enabled:!!el.dataset.on},el.dataset.on?"Запись включена":"Запись выключена"),
+    del:el=>delRec(r(el)),
+    home:el=>recWrite(r(el),{home:el.value},el.value?`Запись переедет в «${el.value}»`:"Архив не задан — пишется туда, где есть место"),
+    when:el=>recWrite(r(el),{when:el.value},el.value==="offline"?"Резервная запись пишет, только пока основная не пишется":"Резервная запись пишет всегда"),
+    days:el=>{const n=parseInt(el.value,10);if(!n||n<1){pc.toast("Срок хранения — целое число дней");return}recWrite(r(el),{retention_days:n},"Срок хранения изменён")},
+    lift:el=>liftKeep(el.dataset.keep)});
+}
+async function reloadRec(){
+  await loadRec();KEEP_ON=!!recOn;
+  paintArch();
+  const cur=pc.selected()||"";
+  if(/^(vol|netvols):?/.test(cur))pc.select(cur);
+  pc.refresh();
+}
+// A switch is an ACTION, not a field of a draft: pressed — written (as on the volume and the scenario).
+async function recWrite(id,body,said){
+  try{await pc.api("PUT","/rec/recordings/"+encodeURIComponent(id),body);await reloadRec();pc.toast(said)}
+  catch(e){pc.toast("Отказано: "+e.message)}
+}
+function delRec(id){
+  if(!pc.confirm(`Удалить запись «${id}»?`,"Видео, которое уже записано, остаётся в томе до истечения срока хранения."))return;
+  (async()=>{try{await pc.api("DELETE","/rec/recordings/"+encodeURIComponent(id));await reloadRec();pc.toast("Запись удалена")}catch(e){pc.toast("Отказано: "+e.message)}})();
+}
+function toLocalInput(t){const d=new Date(t*1000),z=n=>String(n).padStart(2,"0");
+  return`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`}
+function fromLocalInput(v){const t=new Date(String(v).trim().replace(" ","T")).getTime();return isNaN(t)?NaN:t/1000}
+// A keep's range by default is what the timeline shows («Удержать показанное»), else the last hour.
+async function openKeep(cam,from,to){
+  const now=Date.now()/1000;
+  if(!(from>0))from=now-3600;
+  if(!(to>from))to=now;
+  const v=await pc.dialog("Удержать отрезок: "+camName(cam),[{name:"from",label:"С (ГГГГ-ММ-ДД ЧЧ:ММ)",value:toLocalInput(from)},{name:"to",label:"По",value:toLocalInput(Math.min(to,now))},
+    {name:"note",label:"Зачем",help:"что произошло: для тех, кто будет разбирать"}],"Удержать");
+  if(!v)return;
+  const f=fromLocalInput(v.from),t=fromLocalInput(v.to);
+  if(!(t>f)){pc.toast("Конец отрезка должен быть позже начала");return}
+  try{await pc.api("POST","/rec/keeps",{cam:String(cam),from:Math.floor(f),to:Math.ceil(t),...(v.note.trim()?{note:v.note.trim()}:{})});await reloadRec();pc.toast("Отрезок удержан")}
+  catch(e){pc.toast("Отказано: "+e.message)}
+}
+function keepShown(cam){const now=Date.now()/1000,w=WINDOWS.find(x=>x[0]===winKey);openKeep(cam,w&&w[2]?now-w[2]:V.lo||now-3600,now)}
+function liftKeep(name){
+  const k=keeps.find(x=>x.name===name);
+  if(!pc.confirm("Снять удержание?",(k?`${fmtDayTime(k.from)} — ${fmtDayTime(k.to)}. `:"")+"Отрезок снова подчиняется сроку хранения записи."))return;
+  (async()=>{try{await pc.api("DELETE","/rec/keeps/"+encodeURIComponent(name));await reloadRec();pc.toast("Удержание снято")}catch(e){pc.toast("Отказано: "+e.message)}})();
+}
+pc.addTab("unit",{id:"rec",label:"Архив",
+  render:async(host,ref)=>{
+    if(!isCam(ref))return;
+    ARCH={host,ref};
+    await loadRec();KEEP_ON=!!recOn;
+    if(ARCH.host===host)paintArch();
+  }});
+loadRec().then(()=>{KEEP_ON=!!recOn});
+
+// ── «Камеру в архив»: a recording of a camera on a volume ───────────────────────────────────────────────────────
+// opt: cam — the camera chosen already (from its archive tab), server — the server whose volumes it may go to (from
+// the server), home — the volume (from its card). The name is the camera's id, or <id>-<volume> when that is taken:
+// a camera's recordings are one per volume, and the name is their key (their epoch, their streams).
+async function addToArchive(opt){
+  opt=opt||{};
+  if(recOn===false){pc.toast("Консоль не монтирует rec");return}
+  const homes=vols.filter(v=>v.enabled&&(!opt.server||v.server===opt.server||v.kind===VOL_NET)&&(!opt.home||v.name===opt.home));
+  // a camera the server (the volume) writes already is not offered again: one camera, one recording a place
+  const here=opt.home?[opt.home]:opt.server?serverVolumes(opt.server).map(v=>v.name):[];
+  const cams=(UNITS.vms||[]).filter(c=>opt.cam!=null?String(c.id)===String(opt.cam):!recs.some(r=>String(r.cam)===String(c.id)&&here.includes(r.home)));
+  if(!cams.length){pc.toast("Камер, которых этот архив ещё не пишет, нет");return}
+  const v=await pc.dialog(opt.server?"Камеру в архив сервера "+opt.server:"Новая запись камеры",[
+    {name:"cam",label:"Камера",options:cams.map(c=>[String(c.id),(c.name||"камера "+c.id)+" · "+c.id])},
+    {name:"home",label:"Архив",options:(opt.home||opt.server?[]:[["","любой свободный том"]]).concat(homes.map(x=>[x.name,x.name+" · "+volKind(x)]))},
+    {name:"days",label:"Срок хранения, дн",value:"30"}],"Создать");
+  if(!v)return;
+  const days=parseInt(v.days,10);
+  if(!(days>=1)){pc.toast("Срок хранения — целое число дней, не меньше 1");return}
+  const taken=new Set(recs.map(r=>r.id));
+  const name=!taken.has(v.cam)?v.cam:v.home?`${v.cam}-${v.home}`:v.cam;
+  if(taken.has(name)){pc.toast(`Запись «${name}» уже есть`);return}
+  try{await pc.api("POST","/rec/recordings",{name,cam:v.cam,retention_days:days,...(v.home?{home:v.home}:{})});await reloadRec();pc.toast("Запись создана")}
+  catch(e){pc.toast("Отказано: "+e.message)}
+}
+
+// ── Volumes: under each server its own, the network ones apart; their cards; declaring and withdrawing ──────────
+let CARD_HOST=null;
+function volCardHtml(v){
+  const st=volState(v),list=volRecs(v.name),net=v.kind===VOL_NET;
+  return`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify(net?[["Сетевые архивы","netvols"]]:v.server?[[v.server,"server:"+v.server]]:[]))}"></span>${esc(v.name)}</h1>
+    <p class="sub pc-hdsub">том · ${esc(volKind(v))}</p>
+    ${card("Архив",`<span class="bd ${st.bad?"off":""}">${esc(st.label)}</span>
+      <div class="g" style="margin-top:10px">${fldRo("Вид",volKind(v))}${fldRo(net?"Адрес":"Путь",v.url||"—")}${fldRo("Сервер",net?"любой в кластере":(v.server||"—"))}${fldRo("Квота",gbytes(v.quota_bytes))}${v.access_key?fldRo("Ключ доступа (ID)",v.access_key):""}</div>
+      <p class="sub">Квота задана, а не измерена: два тома на одном разделе без квот оба считают чужое место своим. Меньшая квота у тома, который уже есть, стирает самое старое — регистратор делает это, только когда её подтвердили.</p>
+      <div class="vrow"><button type="button" class="btn s" data-act="redeclare">Изменить объявление</button><button type="button" class="btn s" data-act="withdraw">Отозвать объявление</button></div>`)}
+    ${card("Записи в этом архиве",list.map(r=>{const s2=recState(r);
+      return`<div class="it" data-act="openRec" data-cam="${esc(r.cam)}"><span>${pc.icon("camera")}</span><span>${esc(camName(r.cam))}<small>запись «${esc(r.id)}» · ${esc(r.retention_days)} дн.</small></span><span class="bd ${s2.bad?"off":""}">${esc(s2.label)}</span></div>`}).join("")||`<p class="sub">В этот архив пока ничего не пишется</p>`,
+      `<span class="sub" style="font-weight:400">${list.length}</span> <button type="button" class="btn s" data-act="addCam">＋ Камеру в этот архив</button>`)}`;
+}
+function volumeCard(host,name){
+  const v=volByName(name);
+  if(!v){host.innerHTML=`<h1>Тома «${esc(name)}» нет</h1>`;return}
+  host.innerHTML=volCardHtml(v);
+  wire(host,{withdraw:()=>delVolume(v.name),redeclare:()=>openVolume(v.kind,v.server,v),addCam:()=>addToArchive({home:v.name,server:v.server}),
+    openRec:el=>{pc.select("unit:vms/"+el.dataset.cam);goTab("rec")}});
+}
+function netVolumesCard(host){
+  const list=networkVolumes();
+  host.innerHTML=`<h1>Сетевые архивы</h1><p class="sub pc-hdsub">адреса, которые может обслужить любой сервер кластера</p>`+
+    card("Сетевые архивы",list.map(v=>{const st=volState(v);
+      return`<div class="it" data-act="vol" data-vol="${esc(v.name)}"><span>${pc.icon("storage")}</span><span>${esc(v.name)}<small>${esc(v.url||"—")} · ${gbytes(v.quota_bytes)} · записей: ${volRecs(v.name).length}</small></span><span class="bd ${st.bad?"off":""}">${esc(st.label)}</span></div>`}).join("")||`<p class="sub">Сетевых архивов не объявлено</p>`,
+      `<button type="button" class="btn s" data-act="add">＋ Сетевой архив</button>`)+
+    card("Как выбирается место",`<p class="sub">Объявление тома не запускает процесс: контроллер размещает записи по местам, которые существуют, а место существует, потому что его кто-то держит.</p>`);
+  wire(host,{vol:el=>pc.select("vol:"+el.dataset.vol),add:()=>openVolume(VOL_NET)});
+}
+// Declaring a volume: the row written whole (`POST /rec/<table>`). A smaller quota for a volume that is there erases
+// its oldest footage — the recorder applies it only with `shrink_confirmed` equal to it, the operator's second word.
+async function openVolume(kind,server,was){
+  const net=kind===VOL_NET;
+  const v=await pc.dialog(was?"Объявление тома "+was.name:net?"Новый сетевой архив":"Новый архив на сервере",[
+    {name:"name",label:"Имя",value:was?was.name:net?"nas":(server||"local")},
+    {name:"kind",label:"Вид",options:(net?[VOL_NET]:["local","backup","incidents"]).concat(was&&!["local","backup","incidents",VOL_NET].includes(was.kind)?[was.kind]:[]).map(k=>[k,VOL_KIND[k]||k])},
+    {name:"url",label:net?"Адрес":"Путь",value:was?was.url||"":net?"s3://bucket/vms":"file:///var/lib/vms/archive"},
+    {name:"quota",label:"Квота, ГБ",value:was?String(Math.round(was.quota_bytes/1073741824*100)/100):"100"},
+    ...(net?[{name:"access_key",label:"Ключ доступа (ID)",value:was?was.access_key||"":""},{name:"access_secret",label:"Секрет ключа",type:"password",help:"пусто — оставить текущий; при смене адреса впишите заново"}]
+          :[{name:"server",label:"Сервер",value:was?was.server||"":server||""}])],was?"Записать":"Объявить");
+  if(!v)return;
+  const body={name:v.name.trim(),kind:v.kind,url:v.url.trim(),quota_bytes:Math.round((parseFloat(v.quota)||0)*1073741824)};
+  if(!net)body.server=(v.server||"").trim();
+  if(v.access_key&&v.access_key.trim())body.access_key=v.access_key.trim();
+  if(v.access_secret)body.access_secret=v.access_secret;
+  const old=volByName(body.name);
+  if(old&&old.quota_bytes&&body.quota_bytes<old.quota_bytes){
+    if(!pc.confirm(`Уменьшить том «${body.name}» с ${gbytes(old.quota_bytes)} до ${gbytes(body.quota_bytes)}?`,"Самое старое будет стёрто, чтобы уместиться: стёртое не вернуть."))return;
+    body.shrink_confirmed=body.quota_bytes;
+  }
+  try{await pc.api("POST","/rec/"+encodeURIComponent(T_PLACES),body);await reloadRec();pc.select("vol:"+body.name);pc.toast(body.shrink_confirmed?"Квота тома уменьшена":"Архив объявлен")}
+  catch(e){pc.toast("Отказано: "+e.message)}
+}
+function delVolume(name){
+  const list=volRecs(name);
+  if(!pc.confirm(`Отозвать объявление тома «${name}»?`,(list.length?`Записей, выбравших этот том: ${list.length} — они уедут туда, где есть место. `:"")+"Записанное видео не удаляется: отозвать объявление — не то же самое, что стереть архив."))return;
+  (async()=>{try{await pc.api("DELETE","/rec/"+encodeURIComponent(T_PLACES)+"/"+encodeURIComponent(name));
+    if(pc.selected()==="vol:"+name)pc.select("netvols");await reloadRec();pc.toast("Объявление отозвано")}catch(e){pc.toast("Отказано: "+e.message)}})();
+}
+pc.addTreeNodes("server",ref=>recOn?serverVolumes(ref.slice(7)).map(v=>({ref:"vol:"+v.name,label:v.name,icon:"storage",badge:volKind(v,true),off:!v.enabled})):[]);
+pc.addTreeNodes("servers",()=>recOn?[{ref:"netvols",label:"Сетевые архивы",icon:"storage",count:networkVolumes().length,
+  kids:networkVolumes().map(v=>({ref:"vol:"+v.name,label:v.name,icon:"storage",badge:volKind(v,true),off:!v.enabled}))}]:[]);
+pc.addCard("vol",(host,ref)=>{CARD_HOST=host;volumeCard(host,ref.slice(4))});
+pc.addCard("netvols",host=>{CARD_HOST=host;netVolumesCard(host)});
+// The server's archives: a block of its overview, with «＋ Камеру в архив» and «＋ Архив».
+pc.addBlock("server",{id:"vols",covers:"rec/volumes",render:(host,ref)=>{
+  const name=ref.slice(7);
+  if(!recOn){host.innerHTML=offCard("Архивы сервера","подсистема записи не подключена","Консоль не монтирует <code>rec</code>.");return}
+  host.innerHTML=card("Архивы сервера",serverVolumes(name).map(v=>{const st2=volState(v);
+    return`<div class="it" data-act="vol" data-vol="${esc(v.name)}"><span>${pc.icon("storage")}</span><span>${esc(v.name)}<small>${esc(volKind(v,true))} · ${esc(v.url||"—")} · ${gbytes(v.quota_bytes)} · записей: ${volRecs(v.name).length}</small></span><span class="bd ${st2.bad?"off":""}">${esc(st2.label)}</span></div>`}).join("")
+    ||`<p class="sub">На этом сервере нет объявленных архивов</p>`,
+    `<button type="button" class="btn s" data-act="arc">＋ Камеру в архив</button> <button type="button" class="btn s" data-act="add">＋ Архив</button>`);
+  wire(host,{vol:el=>pc.select("vol:"+el.dataset.vol),arc:()=>addToArchive({server:name}),add:()=>openVolume("local",name)});
+}});
+pc.addAction("server",ref=>recOn&&serverVolumes(ref.slice(7)).length?[{label:"＋ Камеру в архив",run:()=>addToArchive({server:ref.slice(7)})}]:[]);
+pc.addMenu("server",ref=>recOn&&serverVolumes(ref.slice(7)).length?[{label:"Добавить камеру в архив",run:()=>addToArchive({server:ref.slice(7)})}]:[]);
+pc.addMenu("vol",ref=>{const v=volByName(ref.slice(4));return v&&v.enabled?[{label:"Добавить камеру в этот архив",run:()=>addToArchive({home:v.name,server:v.server})}]:[]});
+
+// ── «Сценарии»: the auto subsystem's scenarios, a section of the page ───────────────────────────────────────────
+// A scenario is a unit of auto: «when this happened (and that, within N seconds) — ask for this». Its evaluator reads
+// the same events this page shows and files a REQUEST, performed by whoever holds the unit. The catalogue of actions
+// is the auto spec's `then` (each of its `anyOf`, with its required fields): the operator cannot ask for what no
+// executor is written for — `tests/test_auto_spec.py` holds the two together. A detector's actions are offered when
+// the console mounts det.
+const RACTIONS=[
+  {sub:"vms",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
+  {sub:"vms",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №"}]},
+  {sub:"rec",action:"record",label:"Записывать",fields:[{id:"cam",label:"Камера"},{id:"minutes",label:"Минут"},{id:"archive",label:"Архив",opt:true}]},
+  {sub:"det",action:"detect",label:"Искать детектором",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"minutes",label:"Минут"}]},
+  {sub:"det",action:"scan",label:"Искать в архиве",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"before",label:"Секунд до",opt:true},{id:"after",label:"Секунд после",opt:true},{id:"rec",label:"Запись",opt:true}]}];
+let RSEL=null,ruleDraft=null,ruleFires={},autos=[],autoOff=false,detOn=false,RULES_HOST=null;
+const actionsOn=()=>RACTIONS.filter(a=>a.sub!=="det"||detOn);
+const actionKind=a=>RACTIONS.find(k=>k.sub===a.sub&&k.action===a.action)||{sub:a.sub,action:a.action,label:(a.sub||"?")+"."+(a.action||"?"),fields:[]};
+// The events a trigger may name: the words the VMS's spec has for its kinds (display.kinds), and any other typed in.
+const triggerKinds=()=>Object.entries(pc.display("vms").kinds||{});
+async function loadAuto(){
+  try{
+    const d=await getJSON("/auto/scenarios");
+    // A scenario exists while its row does; a holder that has not noticed a deletion yet speaks of it last.
+    const seen={};(d.rows||[]).forEach(r=>{seen[String(r.id)]=r});
+    autos=(d.configured||[]).map(c=>{const r=seen[String(c.id)]||null;
+      return{...c,id:String(c.id),worker:r?r.worker:null,phase:r?r.phase:"silent",why:r?r.why:"",unfit:r&&r.unfit||null}})
+      .sort((a,b)=>a.id.localeCompare(b.id));
+    autoOff=false;
+  }catch(e){autos=[];autoOff=true}
+  try{detOn=(await fetch("/det/spec")).ok}catch(e){detOn=false}
+}
+// The last firings: the evaluator writes `fired` into the scenario's bucket — «why did the door open at 14:02».
+async function loadFires(id){
+  const to=Date.now()/1000,from=to-86400;
+  try{const d=await getJSON(`/events?subsystem=auto&unit=${encodeURIComponent("auto/"+id)}&from=${from}&to=${to}&limit=50`);
+    ruleFires[id]=(d.events||[]).filter(e=>e.kind==="fired").sort((a,b)=>b.t-a.t).slice(0,10)}
+  catch(e){ruleFires[id]=[]}
+  renderRules();
+}
+const jsonList=v=>{try{const x=typeof v==="string"?JSON.parse(v):v;return Array.isArray(x)?x:[]}catch(e){return[]}};
+function ruleOf(r){return{id:r.id,name:r.name||r.id,enabled:r.enabled!==false,rate_per_minute:+r.rate_per_minute||0,within:+r.within||0,
+  valid_for:+r.valid_for||0,when:jsonList(r.when),then:jsonList(r.then)}}
+const curRule=()=>ruleDraft||(autos.find(r=>r.id===RSEL)?ruleOf(autos.find(r=>r.id===RSEL)):null);
+const editRule=()=>(ruleDraft=ruleDraft||JSON.parse(JSON.stringify(curRule())));
+// The same refusals as the server's, in its words: a screen that takes what the subsystem will refuse lies twice.
+function ruleProblem(r){
+  if(!r.name)return"У сценария должно быть имя: по нему его находят в списке и в журнале";
+  if(!r.when.length||r.when.length>4)return"«если» — от одного до четырёх событий";
+  if(r.when.some(t=>!t.sub||!t.kind))return"у события должны быть подсистема и вид";
+  if(!r.then.length||r.then.length>4)return"«то» — от одного до четырёх действий";
+  for(const a of r.then){const k=actionKind(a),miss=k.fields.filter(f=>!f.opt).find(f=>!String(a[f.id]??"").trim());if(miss)return`«${k.label}»: не заполнено поле «${miss.label}»`}
+  if(r.within<0||r.within>3600)return"«в пределах» — от 0 до 3600 секунд";
+  if(r.rate_per_minute&&(r.rate_per_minute<1||r.rate_per_minute>600))return"не чаще — от 1 до 600 в минуту (0 — по умолчанию)";
+  if(r.valid_for&&(r.valid_for<5||r.valid_for>600))return"заявка действительна — от 5 до 600 секунд (0 — по умолчанию)";
+  return"";
+}
+const parseMatch=s=>Object.fromEntries(String(s||"").split(",").map(x=>x.split("=").map(y=>y.trim())).filter(x=>x[0]&&x[1]!==undefined&&x[1]!==""));
+const matchText=m=>Object.entries(m||{}).map(([k,v])=>`${k}=${v}`).join(", ");
+function rulesListHtml(){
+  if(autoOff)return`<div class="n"><span class="nm sub">Подсистема автоматизации не смонтирована</span></div>`;
+  return autos.map(r=>{const on=r.enabled!==false,st=!on?"выключен":r.phase==="running"?"следит":r.phase==="refused"?"отказан":"размещается";
+    return`<div class="n ${RSEL===r.id?"on":""}" data-act="pick" data-id="${esc(r.id)}">${pc.icon("bolt")}<span class="nm">${esc(r.name||r.id)}</span><span class="n-meta"><span class="tag" title="${esc(r.why||r.worker||"")}">${esc(st)}</span></span></div>`}).join("")+
+    `<div class="n" data-act="new"><span class="nm">＋ Сценарий</span></div>`;
+}
+function ruleCardHtml(r){
+  const kinds=triggerKinds(),fires=ruleFires[r.id]||[],row=autos.find(x=>x.id===r.id);
+  const when=r.when.map((t,i)=>`<div class="g" style="grid-template-columns:44px 90px 1.4fr 1fr 1fr auto;align-items:end;margin-bottom:8px">
+      <div><label>&nbsp;</label><div class="sub" style="padding:8px 0">${i?"и":"Если"}</div></div>
+      <div><label>Подсистема</label><input type="text" value="${esc(t.sub)}" data-act="tf" data-i="${i}" data-f="sub"></div>
+      <div><label>Событие</label><input type="text" list="vms-kinds" value="${esc(t.kind)}" data-act="tf" data-i="${i}" data-f="kind"></div>
+      <div><label>Единица</label><input type="text" placeholder="любая" value="${esc(t.unit??"")}" data-act="tf" data-i="${i}" data-f="unit"></div>
+      <div><label>Уточнения</label><input type="text" placeholder="port=1, value=closed" value="${esc(matchText(t.match))}" data-act="tf" data-i="${i}" data-f="match"></div>
+      <div><label>&nbsp;</label><button type="button" class="btn s" title="Убрать" data-act="tdel" data-i="${i}">✕</button></div></div>`).join("")+
+    `<datalist id="vms-kinds">${kinds.map(([k,w])=>`<option value="${esc(k)}">${esc(w)}</option>`).join("")}</datalist>
+    <div class="vrow"><button type="button" class="btn s" data-act="tadd">Добавить событие</button>
+      <span class="sub">в пределах <input type="number" min="0" max="3600" style="width:80px" value="${esc(r.within)}" data-act="rf" data-f="within"> с</span></div>`;
+  const acts=actionsOn();
+  const then=r.then.map((a,i)=>{const k=actionKind(a),ki=acts.indexOf(k);
+    return`<div class="g" style="grid-template-columns:44px 1.4fr repeat(4,1fr) auto;align-items:end;margin-bottom:8px">
+      <div><label>&nbsp;</label><div class="sub" style="padding:8px 0">${i+1}</div></div>
+      <div><label>Действие</label><select data-act="akind" data-i="${i}">${acts.map((x,j)=>`<option value="${j}" ${j===ki?"selected":""}>${esc(x.label)}</option>`).join("")}${ki<0?`<option value="" selected>${esc(k.label)}</option>`:""}</select></div>
+      ${k.fields.map(f=>`<div><label>${esc(f.label)}${f.opt?" <span class='sub'>необяз.</span>":""}</label><input type="text" value="${esc(a[f.id]??"")}" data-act="af" data-i="${i}" data-f="${esc(f.id)}"></div>`).join("")}
+      <div><label>&nbsp;</label><button type="button" class="btn s" title="Убрать" data-act="adel" data-i="${i}">✕</button></div></div>`}).join("")+
+    `<div class="vrow"><button type="button" class="btn s" data-act="aadd">Добавить действие</button>
+      <span class="sub">заявка действительна <input type="number" min="0" max="600" style="width:80px" value="${esc(r.valid_for)}" data-act="rf" data-f="valid_for"> с · не чаще <input type="number" min="0" max="600" style="width:80px" value="${esc(r.rate_per_minute)}" data-act="rf" data-f="rate_per_minute"> в минуту (0 — по умолчанию)</span></div>
+    <p class="sub">Действия — то, под что написан исполнитель: сценарий подаёт заявку, а выполняет её тот, кто держит единицу.</p>`;
+  const bad=ruleProblem(r);
+  return`<h1>${esc(r.name||"Новый сценарий")}</h1>
+    ${row&&row.unfit?`<div class="nt err">Вычислитель отказал: ${esc(row.unfit.join("; "))}</div>`:""}
+    ${card("Сценарий",`<div class="g"><div><label>Имя</label><input type="text" value="${esc(r.name)}" data-act="rf" data-f="name" ${r.id?"readonly disabled":""}></div>
+      <div><label>Включён</label><select data-act="rf" data-f="enabled"><option value="1" ${r.enabled?"selected":""}>да</option><option value="0" ${r.enabled?"":"selected"}>нет</option></select></div></div>`)}
+    ${card("Если",when)}${card("То",then)}
+    ${bad?`<div class="nt err">${esc(bad)}</div>`:""}
+    <div class="vrow"><button type="button" class="btn pri s" data-act="save" ${ruleDraft?"":"disabled"}>Сохранить</button>${ruleDraft?`<button type="button" class="btn s" data-act="undo">Отменить</button>`:""}${r.id?`<button type="button" class="btn s" data-act="del">Удалить</button>`:""}</div>
+    ${r.id?card("Последние срабатывания",fires.length?`<table><tr><th>Время</th><th>Действий</th></tr>${fires.map(e=>`<tr><td>${esc(fmtT(e.t))}</td><td>${esc(e.actions??"—")}</td></tr>`).join("")}</table>`:`<p class="sub">Ещё не срабатывал.</p>`):""}`;
+}
+function renderRules(){
+  if(!RULES_HOST||!RULES_HOST.isConnected)return;
+  const r=curRule();
+  RULES_HOST.innerHTML=`<div class="vms-rules"><aside class="vms-rules-list">${rulesListHtml()}</aside><section class="vms-rules-card">${autoOff
+    ?offCard("Сценарии","подсистема не смонтирована","Консоль запущена без auto: сценарии писать некуда.")
+    :r?ruleCardHtml(r):card("Выберите сценарий",`<p class="sub">Сценарий — «когда случилось это — попросить сделать то». Вычислитель читает тот же журнал, что раздел «Журнал», и подаёт заявку тому, кто держит устройство: консоль ничего не выполняет сама.</p>`)}</section></div>`;
+  if(r&&r.id&&!(r.id in ruleFires))loadFires(r.id);
+  const num=v=>parseInt(v,10)||0,i=el=>+el.dataset.i;
+  wire(RULES_HOST,{
+    pick:el=>{RSEL=el.dataset.id;ruleDraft=null;renderRules()},
+    new:()=>{RSEL=null;const a=actionsOn()[0];ruleDraft={id:"",name:"",enabled:true,rate_per_minute:0,within:0,valid_for:0,when:[{sub:"vms",kind:(triggerKinds()[0]||["silent"])[0]}],then:[{sub:a.sub,action:a.action}]};renderRules()},
+    rf:(el)=>{const d=editRule(),f=el.dataset.f;d[f]=f==="enabled"?el.value==="1":f==="name"?el.value.trim():num(el.value);renderRules()},
+    tf:(el)=>{const t=editRule().when[i(el)],f=el.dataset.f,v=el.value.trim();if(f==="match"){const m=parseMatch(v);if(Object.keys(m).length)t.match=m;else delete t.match}else if(v)t[f]=v;else delete t[f];renderRules()},
+    tadd:()=>{editRule().when.push({sub:"vms",kind:""});renderRules()},
+    tdel:el=>{editRule().when.splice(i(el),1);renderRules()},
+    akind:el=>{const k=actionsOn()[+el.value];if(k)editRule().then[i(el)]={sub:k.sub,action:k.action};renderRules()},
+    af:el=>{const a=editRule().then[i(el)];if(el.value.trim())a[el.dataset.f]=el.value.trim();else delete a[el.dataset.f];renderRules()},
+    aadd:()=>{const k=actionsOn()[0];editRule().then.push({sub:k.sub,action:k.action});renderRules()},
+    adel:el=>{editRule().then.splice(i(el),1);renderRules()},
+    save:()=>saveRule(),undo:()=>{ruleDraft=null;renderRules()},del:()=>delRule(RSEL)});
+}
+async function saveRule(){
+  const r=ruleDraft;if(!r)return;
+  const bad=ruleProblem(r);if(bad){pc.toast("Отказано: "+bad);return}
+  const body={enabled:r.enabled,when:r.when,then:r.then,within:r.within,rate_per_minute:r.rate_per_minute,valid_for:r.valid_for};
+  try{
+    if(r.id)await pc.api("PUT","/auto/scenarios/"+encodeURIComponent(r.id),body);
+    else await pc.api("POST","/auto/scenarios",{name:r.name,...body});
+    RSEL=r.id||r.name;ruleDraft=null;await loadAuto();renderRules();pc.toast("Сохранено");
+  }catch(e){pc.toast("Отказано: "+e.message)}
+}
+function delRule(id){
+  if(!id||!pc.confirm(`Удалить сценарий «${id}»?`,"Уже поданные заявки этим не отменяются: их выполнит или отвергнет тот, кому они адресованы."))return;
+  (async()=>{try{await pc.api("DELETE","/auto/scenarios/"+encodeURIComponent(id));RSEL=null;ruleDraft=null;await loadAuto();renderRules();pc.toast("Сценарий удалён")}
+    catch(e){pc.toast("Отказано: "+e.message)}})();
+}
+pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",render:host=>{RULES_HOST=host;loadAuto().then(renderRules)}});
+
+// ── The domain, as the VMS sees it ───────────────────────────────────────────────────────────────────────────────
+// The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` — every member's units with
+// their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`vms/crossings`:
+// for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
+// keys); this is the rest: a member's cameras and archives in the tree, their cards, the crossings. Read only: the
+// domain's edits go through its own door, not this console.
+const DOM_CAM={live:["идёт",""],stale:["воркер молчит — последнее известное","wait"],configured:["настроена, никто не держит","wait"],unreachable:["кластер молчит — последнее известное","off"]};
+const domUnits=(sub,cluster)=>((domView&&domView.units)||[]).filter(u=>u.sub===sub&&(cluster==null||u.cluster===cluster));
+const domKey=u=>u.cluster+"/"+u.unit;
+const domFind=(sub,key)=>domUnits(sub).find(u=>domKey(u)===key)||null;
+const crossings=()=>((domView&&domView.tables)||{})["vms/crossings"]||{};
+const domDot=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return[st[1]==="off"?"var(--rd)":st[1]==="wait"?"#f0c36a":"var(--gn)",st[0]]};
+const domBadge=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return`<span class="bd ${st[1]}">${esc(st[0])}</span>`};
+// a member's cameras, then its archives (the recordings it writes); a member of one camera stands as its camera, its
+// archives under it, open from the first look (the product's camera server)
+pc.addTreeNodes("member",ref=>{
+  const name=ref.slice(7),cams=domUnits("vms",name),arcs=domUnits("rec",name);
+  const arc=u=>({ref:"da:"+domKey(u),label:"Архив · "+(u.name||u.unit),icon:"storage",dot:domDot(u),title:"Запись кластера "+u.cluster});
+  const cam=u=>({ref:"dc:"+domKey(u),label:u.name||u.ref||u.unit,icon:"camera",dot:domDot(u),tags:[{text:u.ref||"id "+u.unit,title:"Имя камеры в домене"}]});
+  if(cams.length===1)return[{...cam(cams[0]),replaces:true,title:"Сервер-камера "+name,open:arcs.length>0,kids:arcs.map(arc)}];
+  return cams.map(cam).concat(arcs.map(u=>({...arc(u),after:true})));
+});
+function domCamCard(host,key){
+  const u=domFind("vms",key);
+  if(!u){host.innerHTML=`<h1>Нет такой камеры</h1>`;return}
+  const by=u.ref?crossings()[u.ref]:"";
+  host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>${esc(u.name||u.ref||u.unit)}</h1>
+    <p class="sub pc-hdsub">камера ${esc(u.ref||"—")} кластера ${esc(u.cluster)}</p>`+
+    card("Камера",`${domBadge(u)} <span class="sub" style="margin-left:8px">${esc(u.phase||"")} · ${esc(u.as_of||"")}</span>
+      <div class="g" style="margin-top:10px">${fldRo("Имя в домене (ref)",u.ref||"—")}${fldRo("Номер в кластере",u.unit)}${fldRo("Воркер",u.worker||"—")}${fldRo("Сервер",u.server||"—")}${fldRo("Пишет кластер",by||"—")}</div>`)+
+    card("Записи кластера",domUnits("rec",u.cluster).map(a=>`<div class="it" data-act="arc" data-key="${esc(domKey(a))}"><span>${pc.icon("storage")}</span><span>${esc(a.name||a.unit)}<small>${esc(a.worker||"—")} · ${esc(a.server||"—")}</small></span>${domBadge(a)}</div>`).join("")||`<p class="sub">Кластер не пишет ни одной записи — по последнему ответу.</p>`);
+  wire(host,{arc:el=>pc.select("da:"+el.dataset.key)});
+}
+function domArcCard(host,key){
+  const u=domFind("rec",key);
+  if(!u){host.innerHTML=`<h1>Нет такого архива</h1>`;return}
+  host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>Архив · ${esc(u.name||u.unit)}</h1>
+    <p class="sub pc-hdsub">запись ${esc(u.unit)} кластера ${esc(u.cluster)}</p>`+
+    card("Запись",`${domBadge(u)} <span class="sub" style="margin-left:8px">${esc(u.phase||"")} · ${esc(u.as_of||"")}</span>
+      <div class="g" style="margin-top:10px">${fldRo("Запись",u.unit)}${fldRo("Регистратор",u.worker||"—")}${fldRo("Сервер",u.server||"—")}</div>
+      <p class="sub">Срок, том и включение записи задаются в самом кластере — на его консоли.</p>`);
+}
+pc.addCard("dc",(host,ref)=>domCamCard(host,ref.slice(3)));
+pc.addCard("da",(host,ref)=>domArcCard(host,ref.slice(3)));
+// the member's VMS part only: its cameras and its archives; the cluster itself — networks, leaving — is the module's
+pc.addBlock("member",{id:"vms",render:(host,ref)=>{
+  const name=ref.slice(7),row=u=>`<div class="it" data-act="go" data-ref="${esc(u.sub==="vms"?"dc:":"da:")}${esc(domKey(u))}"><span>${pc.icon(u.sub==="vms"?"camera":"storage")}</span><span>${esc(u.name||u.ref||u.unit)}<small>${esc(u.ref||u.unit)} · ${esc(u.worker||"—")}${u.sub==="vms"&&u.ref&&crossings()[u.ref]?" · пишет кластер "+esc(crossings()[u.ref]):""}</small></span>${domBadge(u)}</div>`;
+  host.innerHTML=card("Камеры",domUnits("vms",name).map(row).join("")||`<p class="sub">Камер нет — по последнему ответу кластера.</p>`)+
+    card("Архивы",domUnits("rec",name).map(row).join("")||`<p class="sub">Записей нет — по последнему ответу кластера.</p>`);
+  wire(host,{go:el=>pc.select(el.dataset.ref)});
+}});
+// on the domain's overview: the crossings — a camera of one cluster recorded by another
+pc.addBlock("domain",{id:"vms",render:host=>{
+  const x=Object.entries(crossings());
+  if(!domView){host.innerHTML="";return}
+  const nameOf=ref=>{const u=domUnits("vms").find(c=>c.ref===ref);return u?(u.name||ref)+" · "+u.cluster:ref};
+  host.innerHTML=card("Пересечения",x.length?`<table><tr><th>Камера</th><th>Пишет кластер</th></tr>${x.map(([ref,cl])=>`<tr><td>${esc(nameOf(ref))}</td><td>${esc(cl)}</td></tr>`).join("")}</table>`
+    :`<p class="sub">Пересечений нет: каждую камеру пишет её собственный кластер.</p>`);
+}});
+
+// The camera's menu: watch it, its archive (the tabs above).
+pc.addMenu("unit",ref=>isCam(ref)?[{label:"Смотреть видео",run:()=>{pc.select(ref);goTab("vid")}},...(recOn?[{label:"Архив",run:()=>{pc.select(ref);goTab("rec")}}]:[])]:[]);
 </script>

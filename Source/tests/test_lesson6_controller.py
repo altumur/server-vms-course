@@ -200,7 +200,7 @@ def test_the_console_over_http():
         # place (`/rec/where/<name>`) — raw, in milliseconds, and a piece of one epoch as an MP4, from the same door; the
         # console carries none of it
         page = urllib.request.urlopen(f"http://127.0.0.1:{port}/").read().decode()
-        assert "/spec" in page and "/where/" in page and "<video" in page and "camera" not in page.rsplit("-->", 1)[1].lower()   # the page (after its comments) is the spec's, not the VMS's
+        assert "/platform/console.js" in page and "/rec/where/" in page and "<video" in page   # the VMS's page over the console module: the doors its own
         st = store()
         t = box.wall() - 3600
         footage(st, "1", 1, t, t + 600)
