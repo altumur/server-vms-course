@@ -828,7 +828,7 @@ clothes — it goes, or a spec that has nothing to do with the product shows wha
 | `…ref`, `must_match`, `unique` | на какую строку указывает значение, что в ней должно совпасть, единственность (`true`, у адреса — `canonical`) | контроллер (`refuse_refs`), консоль (запись строки таблицы) |
 | `…schema` | JSON Schema значения | контроллер, консоль |
 | `…bound_to` | у `*_secret`: адрес, к которому секрет ключ | контроллер (`update`), консоль (таблицы) |
-| `…schemes`, `credentials: {login, secret}`, `secret_in` | только у `url`: схемы, куда класть логин и пароль, как адреса подсистемы несут учётные данные — `{param, login}`, `{regex, in, schemes, decoded}`, `{nested}` (шаг 11) | контроллер (`refuse`), каталог (`secret_rules` — прятать адреса везде) |
+| `…schemes`, `credentials: {login, secret}`, `secret_in` | только у `url`: `schemes` — карта схем, которыми поле достижимо, и как каждая пишет адрес (`{<схема>: {host?, fragment?, none?}}`, `{}` — по RFC 3986; ниже, ADR 0053); куда класть логин и пароль; как адреса подсистемы несут учётные данные — `{param, login}`, `{regex, in, schemes, decoded}`, `{nested}` (шаг 11) | контроллер (`refuse`, `group_of`), каталог (`secret_rules` — прятать адреса везде) |
 | `derived: [{row, items, on_delete}]` | вторая строка рядом с единицей под чужие права (шаг 4) | контроллер; права консоли |
 
 **`placement`** — где единице работать (урок 11)
@@ -841,16 +841,16 @@ clothes — it goes, or a spec that has nothing to do with the product shows wha
 | `requires` | `none` или `resource`: воркер годится, пока ресурс его сервера не молчит (`REQUIRES`; другое слово — отказ) | контроллер, консоль |
 | `servers` | умолчание ручки `policy`: `shared` или `distinct` (`SERVERS`; другое слово — отказ) | контроллер |
 | `near: {sub, by, of, prefer}` | рядом с держателем единицы подсистемы `sub`; `by` — **моё** поле (по умолчанию мой id), `of` — **их** поле статуса (по умолчанию их id); `prefer` — кого из нескольких (шаг 6) | контроллер |
-| `spread_by`, `group_by` (поле или `{field, cut_at, schemes}`) | разные серверы для одного значения; один воркер для одной группы — значения поля, **хоста** адреса (`cut_at: host`, ниже) или адреса до сегмента пути (`cut_at: <сегмент>`); `schemes` — как схема пишет свой хост | контроллер (`group_value`); консоль (`rights.reach`); воркер (`request_group`) |
+| `spread_by`, `group_by` (поле или `{field, cut_at}`) | разные серверы для одного значения; один воркер для одной группы — значения поля, **хоста** адреса (`cut_at: host`, ниже; хост читается по `schemes` поля) или адреса до сегмента пути (`cut_at: <сегмент>`) | контроллер (`group_value`); консоль (`rights.reach`); воркер (`request_group`) |
 | `place_by`, `places: {table, where, server_field, lease}` | в чём считаются места (поле heartbeat'а, по умолчанию `server`); строки какой таблицы — места; поле строки с сервером места (без него место за именем не следует — ждёт); `lease: strict` — место, чья строка не называет сервер этого воркера (место любой коробки, место другого сервера, место воркера без сервера), отпускается, как только удержание прошло конец аренды неподтверждённым, что бы ни разрешал `lease.unconfirmed_max`; нестрогое держится по этому потолку (ADR 0029) | контроллер, консоль (`<name>_workers_needed`, `/where/<table>/<place>`), воркер (`hold_follows_name` по `server_field`); `lease` — база воркера (`Worker.may_write_place`, `_strict_place_pass`; подсистема лишь закрывает своего писателя в `leave_place`) |
 | `offers` | `true` — контроллер предлагает слот запасному за каждого недостающего воркера | контроллер, консоль (метрики запасных) |
 | `home` | поле с сервером-домом, или `near` | контроллер |
 | `affinity: {field, table, server_field, strict}` | строка таблицы, названная полем единицы, привязывает её к месту | контроллер, консоль (`held_by` у таблицы) |
 | `retire_when: {field, in}`, `rebalance: {dead_band}` | какое значение какого поля значит «работа кончилась»; мёртвая зона перебалансировки | контроллер |
 
-**Группа — хост адреса.** `group_by: {field: <поле-адрес>, cut_at: host}` — группа единицы есть **хост**, который называет её адрес, и ничего больше. Ни схема, ни порт, ни логин, ни путь в группу не входят: `x://H:8/a/17` и `y://h./b/18` — одна группа `h`. Хост пишется одним написанием: строчными буквами, без точки корня на конце; IP — так, как его пишет `ipaddress`: IPv6 без скобок и со свёрнутыми нулями (RFC 5952, `[0:0::1]` — это `::1`), без зоны (`%25eth0`), IPv4-mapped — как IPv4. Хост читается **как написан**: процент-экран в нём не снимается (`h%2Ecorp` один читатель раскодирует, а следующий нет), и то, что не имя из меток RFC 1123 и не IP, — **не группа**: пустая строка, с которой не группируется никто, как и у единицы без адреса. Имя не разрешается: `h.corp` и адрес, в который оно разрешается, — два хоста, потому что спрошенная сеть — не правило. Отказ значению (`secret_in`, шаг 11) и группа — разные вопросы: строка, записанная до того, как правило стало отказывать её адресу, всё ещё стоит на своём хосте.
+**Группа — хост адреса.** `group_by: {field: <поле-адрес>, cut_at: host}` — группа единицы есть **хост**, который называет её адрес, и ничего больше (ADR 0053). Ни схема, ни порт, ни логин, ни путь в группу не входят: `x://H:8/a/17` и `y://h./b/18` — одна группа `h`. Хост пишется одним написанием: строчными буквами, без точки корня на конце; IP — так, как его пишет `ipaddress`: IPv6 без скобок и со свёрнутыми нулями (RFC 5952, `[0:0::1]` — это `::1`), без зоны (`%25eth0`), IPv4-mapped — как IPv4. Хост читается **как написан**: процент-экран в нём не снимается (`h%2Ecorp` один читатель раскодирует, а следующий нет). Имя не разрешается: `h.corp` и адрес, в который оно разрешается, — два хоста, потому что спрошенная сеть — не правило. Отказ логину в адресе (`secret_in`, шаг 11) и группа — разные вопросы: строка, записанная до того, как правило стало отказывать её адресу, всё ещё стоит на своём хосте.
 
-Не каждая схема пишет хост по RFC 3986, и это подсистема **объявляет**, а платформа читает — закрытым словарём на схему, `group_by.schemes`:
+Не каждая схема пишет адрес по RFC 3986, и это подсистема **объявляет** у самого поля-адреса, а платформа читает — `fields.<поле>.schemes`, карта схем, которыми поле достижимо, в закрытый словарь (`{}` — схема по RFC 3986):
 
 ```python
 GROUP_SCHEME_WORDS = {"host": ("authority", "path"), "fragment": ("keep", "none")}
@@ -860,9 +860,11 @@ GROUP_SCHEME_WORDS = {"host": ("authority", "path"), "fragment": ("keep", "none"
 |---|---|---|
 | `host` | `authority` (по умолчанию) \| `path` | где стоит хост: в authority, или в первом сегменте пути, написанном как authority (`[логин[:пароль]@]хост[:порт]`); authority тогда — имя, которое в группу не входит, а пустой первый сегмент оставляет хостом authority |
 | `fragment` | `keep` (по умолчанию) \| `none` | `none`: у схемы нет фрагмента, `#` — обычный символ, хост — после **последнего** `@` |
-| `none` | `[<authority>, …]` | authority, которые не называют хоста: такой адрес — без группы |
+| `none` | `[<authority>, …]` | authority (в том же одном написании, что хост), которые не называют хоста: такой адрес — без группы |
 
-VMS пишет `group_by: {field: source, cut_at: host, schemes: {ipint: {fragment: none}, driverpack: {host: path, none: [file]}}}` (М10B): у `driverpack://acme/10.0.0.50/ch/17` и `driverpack://other/10.0.0.50/ch/1` хост один, `10.0.0.50`; у `driverpack://acme` без адреса — `acme`; `driverpack://file/…` — без группы. Платформа при этом не знает ни слова «канал», ни слова «регистратор»: она держит правило хоста и словарь из трёх слов, а не парсер чужих адресов. `testsub2` говорит те же три слова про свою схему `mirror` (`{host: path, fragment: none, none: [local]}`), и правило ключей (`test_spec_rule.py`) на ней и держится.
+Карта стоит у поля, а не у `group_by`, потому что адрес читают два правила — отказ значению и группа, — и два разбора одного адреса с разными словами были бы двумя правдами: отказ считал `#` началом фрагмента, а группа той же схемы — символом. Теперь одно чтение (`rfc_spelling`, `url_host`): схема, которой нет в карте, — отказ, `#` схемы с фрагментом — отказ, у схемы без фрагмента `#` — символ и там, и там. Список схем, каким `schemes` был раньше, загрузчик не берёт (ADR 0003).
+
+VMS пишет у источника `schemes: {driverpack: {host: path, none: [file]}, ipint: {fragment: none}, rtsp: {}, rtsps: {}, http: {}, https: {}, onvif: {}}` и `group_by: {field: source, cut_at: host}` (М10B): у `driverpack://acme/10.0.0.50/ch/17` и `driverpack://other/10.0.0.50/ch/1` хост один, `10.0.0.50`; у `driverpack://acme` без адреса — `acme`; `driverpack://file/…` — без группы. Платформа при этом не знает ни слова «канал», ни слова «регистратор»: она держит правило хоста и словарь из трёх слов, а не парсер чужих адресов. `testsub2` говорит те же три слова про свою схему `mirror` (`{host: path, fragment: none, none: [local]}`) — у поля единицы и у поля таблицы, — и правило ключей (`test_spec_rule.py`) на ней и держится.
 
 Отвечает на вопрос один метод спеки — его спрашивают и `group_value` контроллера, и `request_group` воркера, так что группа, которой консоль пометила запрос, — та, в которой держатель его выполняет:
 
@@ -871,12 +873,21 @@ VMS пишет `group_by: {field: source, cut_at: host, schemes: {ipint: {fragme
         v = str(value or "")
         if not v or not self.group_cut:
             return v
-        return url_host(v, self.group_schemes) if self.group_cut == "host" else url_cut(v, self.group_cut)
+        return url_host(v, self.fields[self.group_by].schemes) if self.group_cut == "host" else url_cut(v, self.group_cut)
 ```
 
-Два «нет группы» различаются, и консоли это важно: адрес, который хоста не называет (`none`, адрес без authority), — дело самой единицы, а хост, который нельзя прочесть (`010.0.0.5`, `h%2Ecorp`), — место, про которое никто не скажет, чьё оно: читатель, который раскодирует экран или прочтёт `010` восьмеричным, попадёт на чужой хост. Перевести единицу туда — грант на кластер, как в группу, где ещё никого нет (`SubsystemSpec.group_unreadable`, `SpecConsole.reach_of_change`, урок 15).
+«Нет группы» бывает одно: адрес из `none` (у VMS — файл). Всё остальное, у чего хоста не прочесть, — не имя RFC 1123 и не IP (`010.0.0.5`, `10.1`, `h%2Ecorp`), не разбирается, без authority (`file:///…`, голый путь `/media/…`), — **отказ 400 при записи** (`SubsystemSpec.group_refusal`, ADR 0053): при объявленной группировке единицы без группы не бывает, иначе умолчание ослабляло бы «одно устройство — один держатель» (ADR 0012), а читатель, который раскодирует экран или прочтёт `010` восьмеричным, попал бы на чужой хост с правами одной единицы.
 
-Загрузчик отказывает словами: `schemes` рядом с чем-то, кроме `cut_at: host`; схема не строчными буквами; схема без единого слова (`{}` или пустое значение); слово не из словаря (`port`); значение не из списка (`host: query`, `fragment: drop`); `none`, который не список authority. `cut_at` читает только поле типа `url`. Тесты: `test_spec_declarations.py::test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_declares_where_its_host_stands`, `::test_the_schemes_of_a_group_are_a_closed_dictionary_said_beside_cut_at_host_only` и таблица адресов VMS `tests/testdata/group_of.tsv` — адрес, группа, отказ (`test_group_of_table.py`), через спеку VMS и через `testsub2` с тем же объявлением.
+Отказ двери говорит причину в `detail`, а вид — словом из закрытого словаря `fault` (`canonical.FAULTS`), одного у курса и продукта:
+
+| `fault` | Когда |
+|---|---|
+| `not_json` | тело или поле — не JSON (`NaN`, `Infinity`, обрезанный текст, одинокий суррогат) |
+| `not_number` | число, которое JSON пишет, а `float` не держит (`1e400`) |
+| `too_long` | длиннее `maxLength` схемы или потолка JSON в байтах |
+| `bad_url` | значение поля-адреса отказано по адресу: логин в нём, нет хоста или он нечитаем, порт не число, схема не из `schemes`, `#` у схемы с фрагментом (`AddressRefused`) |
+
+Загрузчик отказывает словами: `schemes` списком, а не картой; схема не строчными буквами; значение схемы не словарь; слово не из словаря (`port`); значение не из списка (`host: query`, `fragment: drop`); `none`, который не список authority; `schemes` под `group_by`. `cut_at` читает только поле типа `url`. Тесты: `test_spec_declarations.py::test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_declares_where_its_host_stands`, `::test_a_url_fields_schemes_are_a_closed_dictionary_read_alike_by_its_refusal_and_its_group`, дверь — `test_boundary.py` (`fault: bad_url` у поля единицы и у поля таблицы) и `test_console_gate.py::test_every_spelling_of_a_devices_host_is_its_group_and_a_host_nobody_can_read_is_refused`, и таблица адресов VMS `tests/testdata/group_of.tsv` — адрес, группа, отказ (`test_group_of_table.py`), через спеку VMS и через `testsub2` с тем же объявлением.
 
 **`tables`** — списки администратора
 
@@ -965,7 +976,8 @@ VMS пишет `group_by: {field: source, cut_at: host, schemes: {ipint: {fragme
 
 ```python
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
-         "domain.tokens", "domain.names", "secrets.readers", "placement.group_by.schemes"}
+         "domain.tokens", "domain.names", "secrets.readers", "unit.fields.*.schemes",
+         "tables.*.fields.*.schemes"}
 OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
           …}
