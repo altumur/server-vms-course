@@ -271,7 +271,9 @@ def main() -> int:
     a = ap.parse_args()
     a.timing = ALIASES.get(a.timing, a.timing)
 
-    root = tempfile.mkdtemp(prefix="cse", dir="/tmp")      # short: a unix socket's path is at most 104 bytes
+    from tests import runroot
+    runroot.enter()                                        # the bench's dirs under a root of its own, gone at exit
+    root = tempfile.mkdtemp(prefix="cse")                  # short, under that root: a unix socket's path is at most 104 bytes
     nodes = [Node(k, root, a.timing) for k in range(3)]
     nodes[0].start()
     for n in nodes[1:]:

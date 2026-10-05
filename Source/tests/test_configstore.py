@@ -94,7 +94,7 @@ class Group:
     `-api` door, each with its journal on disk."""
 
     def __init__(self, n: int, tuning: str = "lan", index_base: int = 1000, via_follower: bool = False):
-        self.root = tempfile.mkdtemp(prefix="cs", dir="/tmp")
+        self.root = tempfile.mkdtemp(prefix="cs")
         self.tuning, self.index_base = tuning, index_base
         self.members: list[Member] = []
         for k in range(n):
@@ -407,7 +407,7 @@ def test_a_member_without_the_raft_secret_listens_on_loopback_only_and_takes_nob
     same. Such a member is a group of one: the operator's `join` is refused (409) and the group does not change, and
     a restart from a journal that names a partner is refused."""
     import subprocess
-    d = tempfile.mkdtemp(prefix="cs", dir="/tmp")
+    d = tempfile.mkdtemp(prefix="cs")
     port = _port()
     b = configstore.start_member("solo", d, f"127.0.0.1:{port}", bootstrap=True, tls_dir=None, tuning="lan")
     dm = None
@@ -581,7 +581,7 @@ def test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_ref
         ctx_b, ctx_c = tls.client_context(os.path.join(TLS, "srv-b")), tls.client_context(os.path.join(TLS, "srv-c"))
         silent.bind(("127.0.0.1", 0))
         silent.listen(4)
-        stranger_tls = tempfile.mkdtemp(prefix="cs", dir="/tmp")    # another installation: another raft secret
+        stranger_tls = tempfile.mkdtemp(prefix="cs")                # another installation: another raft secret
         dirs.append(stranger_tls)
         for f in ("ca.pem", "crl.pem"):
             shutil.copy(os.path.join(TLS, "srv-c", f), stranger_tls)
@@ -589,7 +589,7 @@ def test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_ref
             f.write("cd" * 32 + "\n")
         os.chmod(os.path.join(stranger_tls, "raft.secret"), 0o600)
         stranger = f"127.0.0.1:{_port()}"
-        dirs.append(tempfile.mkdtemp(prefix="cs", dir="/tmp"))
+        dirs.append(tempfile.mkdtemp(prefix="cs"))
         backends.append(configstore.RaftBackend("stranger", stranger, [], dirs[-1], "lan",
                                                 tls.raft_secret(stranger_tls)))
         for raft in (f"127.0.0.1:{a.api_port}", f"127.0.0.1:{silent.getsockname()[1]}", stranger):
@@ -598,7 +598,7 @@ def test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_ref
             assert (code, said["kind"]) == (409, "refused") and "raft port" in said["error"], (raft, code, said)
             assert time.monotonic() - t0 < 3 * configstore.ANSWER_WAIT, raft
         c_port = _port()
-        dirs.append(tempfile.mkdtemp(prefix="cs", dir="/tmp"))
+        dirs.append(tempfile.mkdtemp(prefix="cs"))
         backends.append(configstore.RaftBackend("srv-c", f"127.0.0.1:{c_port}", [a.raft], dirs[-1], "lan",
                                                 tls.raft_secret(os.path.join(TLS, "srv-c"))))
         code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"localhost:{c_port}"})

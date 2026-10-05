@@ -80,7 +80,8 @@ Source/
   deploy/                      Quadlet, on М9's box: Containerfile (localhost/vmsserver:latest, the image М11 builds FROM), obsd.service (the host's archive engine),
                                vmsworker@.container, recworker@.container (the only writer of footage), vmscontroller.container, reccontroller.container, console.container, w2c-resource.container,
                                liveworker@.container, livecontroller.container, detworker@.container, detcontroller.container, w2c.env.example + vms.env.example, check-quadlet.sh
-  tests/                       the suite: no GStreamer, but the archive's tests start a real obsd (OBSD_BIN)
+  tests/                       the suite: no GStreamer, but the archive's tests start a real obsd (OBSD_BIN); every runner keeps the run's
+                               temp dirs under a root of its own (/tmp/w2c-tests-<pid> on macOS), removed at exit (runroot.py)
     cluster/                   М11's suite, its own runner (python3 tests/cluster/run.py), the traced stand (stand.py, trace.py)
     domain/                    М12's suite, its own runner (python3 tests/domain/run.py)
   cluster/                     М11: the package `cluster` — what a cluster adds on top of the above (cluster/README.md)

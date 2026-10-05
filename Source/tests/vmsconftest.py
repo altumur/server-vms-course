@@ -75,7 +75,7 @@ class ObsdDaemon:
         if not binary or not os.access(binary, os.X_OK):
             raise RuntimeError(OBSD_HINT)
         self.binary = binary
-        self.dir = tempfile.mkdtemp(prefix="obsd-")              # the system's temp dir: a unix socket path is short
+        self.dir = tempfile.mkdtemp(prefix="obsd-")              # the run's root (`tests/runroot.py`): a unix socket path is short
         self.socket = os.path.join(self.dir, "run", "obsd.sock")
         if len(self.socket.encode()) > 100:
             raise RuntimeError(f"the socket path {self.socket} is longer than unix sockets allow; set TMPDIR shorter")

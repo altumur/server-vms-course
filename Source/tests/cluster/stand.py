@@ -18,6 +18,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # Source/
+if __name__ == "__main__":                     # run, it is a runner: its temp dirs under a root of its own (`tests/runroot.py`)
+    from tests import runroot
+    runroot.enter()
 
 from vms import volumes  # noqa: E402
 from vms.config import SPEC  # noqa: E402
@@ -403,6 +406,18 @@ def objects_across_servers() -> str:
     calls = [c for c in s.log.calls[mark:] if c.who.startswith(("vmsworker", "vmscontroller")) and c.kind in keep
              and (c.kind != "store" or "commands" in c.target or "commands" in str(c.body))]
     s.log.calls[mark:] = calls
+    # The heartbeat holds the box's paths, and the trace shows them under `/data`: its size is shown as that object's
+    # would be, not as long as wherever this run's temp dir happens to be (a run root's pid has 4 digits or 5).
+    hb, = [open(os.path.join(d, f), "rb").read() for d, _, fs in os.walk(os.path.join(s.root, "srv-a")) for f in fs
+           if os.path.join(d, f).endswith(os.path.join("vms", "heartbeats", "w-srv-a-1"))]
+    real, shown = len(hb), len(hb.replace(s.root.encode(), b"/data"))
+    for c in calls:
+        if isinstance(c.answer, dict):
+            if c.answer.get("bytes") == real:
+                c.answer["bytes"] = shown
+            for o in (c.answer.get("objects") or {}).values():
+                if isinstance(o, dict) and o.get("size") == real:
+                    o["size"] = shown
     return (s.log.render(since=mark)
             + f"\n# workers_seen() on srv-b = {sorted(seen)}; the mark made: {made}"
             + f"\n# srv-a down: the resource on srv-b names it missing ({ctl.objects.missing}); "

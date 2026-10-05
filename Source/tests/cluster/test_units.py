@@ -317,7 +317,7 @@ def _install_on_a_mac(*args: str, box_files=None) -> tuple[subprocess.CompletedP
     the shims' directory, launchctl's lines)`."""
     import shutil
     import sys
-    bin_ = tempfile.mkdtemp(prefix="mac-", dir="/tmp")
+    bin_ = tempfile.mkdtemp(prefix="mac-")
     home = os.path.join(bin_, "home")
     os.makedirs(home)
     log = os.path.join(bin_, "calls")
@@ -354,7 +354,7 @@ def test_on_a_mac_the_box_is_a_directory_named_to_the_installer_and_everything_g
     long_box = os.path.join(bin_, "b" * 80)
     out, home, bin_, calls = _install_on_a_mac("--box", long_box)
     assert out.returncode == 2 and "too long" in out.stderr and not os.path.exists(long_box), out.stderr
-    box = os.path.join(tempfile.mkdtemp(prefix="box-", dir="/tmp"), "box")
+    box = os.path.join(tempfile.mkdtemp(prefix="box-"), "box")
     os.makedirs(os.path.join(box, "tls"))
     for f in ("ca.pem", "server.pem", "server.key", "raft.secret"):
         shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__import__("vms").__file__)), "..", "tests", "tls",
@@ -582,7 +582,7 @@ def test_the_worker_and_the_recorder_tell_systemds_watchdog_that_their_loop_turn
         # the product's units (4 Oct): the main process may notify, and `simple` — under `notify` a spare waiting for
         # an offer, which says nothing until it is somebody, would hold `systemctl start` and the script behind it
         assert sec == 360 and u["Type"] == ["simple"] and u["NotifyAccess"] == ["main"], name
-    d = tempfile.mkdtemp(prefix="notify-", dir="/tmp")
+    d = tempfile.mkdtemp(prefix="notify-")
     path = os.path.join(d, "n.sock")
     s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     s.bind(path)
