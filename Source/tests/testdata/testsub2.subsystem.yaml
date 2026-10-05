@@ -13,6 +13,8 @@ worker: {writes: [shelves], reads: [testsub/counters], requests: [testsub]}
 objects: {rows: [marks/*], door: [tickets/*]}
 # its heartbeat's `jam` is a word a metric compares (`metrics: jam`): a number there is a garbled heartbeat
 heartbeat: {strings: [jam]}
+# a tally's count goes on ten minutes past an unconfirmed lease (a count under an old epoch is told apart by it)
+lease: {unconfirmed_max: 600}
 # the seed of its door's tokens is read by its console alone; its worker reads testsub's counters (`worker.reads`)
 secrets: {readers: {door/signer: [console]}, reads: [testsub/counters]}
 about: {sub: testsub, field: of}
@@ -84,7 +86,7 @@ placement:
   spread_by:   zone
   group_by:    {field: feed, cut_at: part}
   place_by:    shelf
-  places:      {table: shelves, where: {enabled: true}, server_field: server}
+  places:      {table: shelves, where: {enabled: true}, server_field: server, lease: strict}   # a shared shelf: strict
   offers:      true
   home:        shelf
   retire_when: {field: state, in: [done, failed]}   # two ends, and the placement's reason says which

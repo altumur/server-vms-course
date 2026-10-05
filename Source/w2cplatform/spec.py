@@ -604,6 +604,28 @@ def _heartbeat_strings(name, hb) -> tuple:
     return tuple(got)
 
 
+# `lease: {unconfirmed_max: forever | off | <seconds>}` — how long past a lease's end a holder of this subsystem may go
+# on WRITING DATA while the store is silent (`Lease.may_write`; the architect, 5 Oct: a weakening of the single writer
+# is off until the spec turns it on). `forever` — for as long as the silence lasts: what its units write carries the
+# epoch in its name, and a second writer is a duplicate, not damage; `<seconds>` — up to that long; `off` (the default)
+# — not at all: a lease not confirmed in time stops the unit — where the work is actions, done twice if done by two.
+# Typed: a number of seconds or one of the two words, nothing else (a word `"90"` lifted the ceiling unseen in the
+# product).
+LEASE_WORDS = {"forever": None, "off": 0.0}
+
+
+def _lease(name, lease) -> float | None:
+    if lease is None:
+        return 0.0
+    got = lease.get("unconfirmed_max") if isinstance(lease, dict) and set(lease) == {"unconfirmed_max"} else None
+    if isinstance(got, str) and got in LEASE_WORDS:
+        return LEASE_WORDS[got]
+    if isinstance(got, (int, float)) and not isinstance(got, bool) and math.isfinite(got) and got > 0:
+        return float(got)
+    raise ValueError(f"spec {name}: lease.unconfirmed_max is forever, off or a number of seconds — `lease:` is "
+                     f"{{unconfirmed_max: forever | off | <seconds>}}, not {lease!r}")
+
+
 # `secrets: {readers: {<row or prefix>: [<role>]}, reads: [<row or prefix>]}` — the product's key, the course checks it:
 # which roles read a secret row of this subsystem's (its console's door seed, `door/signer`), and the rows of somebody
 # else's its worker reads. The course's rights are the grants the specs make (`w2cplatform/cluster/rights.py`), so the
@@ -916,8 +938,14 @@ class SubsystemSpec:
     # none is a place ANY box may write (a share), and a hold of it under a worker's name is taken back at once only on
     # the holder's own box (`Worker.hold_follows_name`); one that names a server is a disk there, taken back at once only
     # on that server. No `server_field`: where a place is is not known, and a hold never follows the name — it waits.
-    # The table is also what `/where/<table>/<place>` asks a place's holder by (`SpecConsole.where_place`).
+    # The table is also what `/where/<table>/<place>` asks a place's holder by (`SpecConsole.where_place`). `lease:
+    # strict` — a place ANY box may write (no server named) is let go when its hold has gone unconfirmed past its
+    # end, whatever `lease.unconfirmed_max` lets the units write: two writers in one place is damage, not a duplicate
+    # (the architect, 5 Oct: it is about the place, not the unit). Said or not, `places["lease"]` is `strict` or "".
     places: dict = field(default_factory=dict)
+    # `lease: {unconfirmed_max}` (`_lease`): the ceiling a holder's data writes past an unconfirmed lease, in seconds;
+    # None — for as long as the silence lasts; 0 — none (`Worker.unconfirmed_max`, `Lease.may_write`)
+    unconfirmed_max: float | None = 0.0
     # `retire_when: {field: state, in: [done, failed]}` — a unit whose row says one of those values is
     # FINISHED, and finished work is not placed. The first subsystem to need it is `detjob`, whose unit
     # ends; everything before it ran until an operator said stop.
@@ -1111,6 +1139,7 @@ class SubsystemSpec:
                    heartbeat_strings=_heartbeat_strings(d.get("name"), d.get("heartbeat")),
                    secret_readers=_secrets(d.get("name"), d.get("secrets"))[0],
                    secret_reads=_secrets(d.get("name"), d.get("secrets"))[1],
+                   unconfirmed_max=_lease(d.get("name"), d.get("lease")),
                    slot_prefix=slot[0], slot_name_env=slot[1],
                    worker_writes=worker[0], worker_reads=worker[1], worker_requests=worker[2])
         spec._about_and_rights(d)
@@ -1428,13 +1457,16 @@ class SubsystemSpec:
         places = pl.get("places")
         if places is not None:
             from .metrics import where_of
-            if not isinstance(places, dict) or set(places) - {"table", "where", "server_field"} \
+            if not isinstance(places, dict) or set(places) - {"table", "where", "server_field", "lease"} \
+                    or places.get("lease", "strict") != "strict" \
                     or places.get("table") not in self.tables or self.place_by == "server" \
                     or not isinstance(places.get("server_field", ""), str):
-                raise ValueError(f"spec {self.name}: placement.places is {{table: <one of its tables>, where?, server_field?}}, "
-                                 f"for a subsystem placed by something other than the server (`place_by`) — not {places!r}")
+                raise ValueError(f"spec {self.name}: placement.places is {{table: <one of its tables>, where?, "
+                                 f"server_field?, lease?: strict}}, for a subsystem placed by something other than the "
+                                 f"server (`place_by`) — not {places!r}")
             self.places = {"table": str(places["table"]), "where": where_of(self.name, places.get("where"), "places"),
-                           "server_field": str(places.get("server_field") or "")}
+                           "server_field": str(places.get("server_field") or ""),
+                           "lease": str(places.get("lease") or "")}
         aff = pl.get("affinity")
         if aff is not None:
             if not isinstance(aff, dict) or set(aff) - {"field", "table", "server_field", "strict"} \

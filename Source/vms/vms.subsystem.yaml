@@ -18,6 +18,10 @@ objects: {rows: [commands/*]}
 # The fields of its holder's heartbeat that are strings and that something decides by (beside the platform's own):
 # the key its door's tokens for footage are checked with (`playback.py`). One not a string garbles the heartbeat.
 heartbeat: {strings: [playback_key]}
+# A holder records on past a lease the silent store did not confirm, for as long as the silence lasts: footage carries
+# its epoch in its name, and a second writer is a duplicate, not damage (`Lease.may_write`; the platform's default:
+# off).
+lease: {unconfirmed_max: forever}
 # Its secret rows and the roles that read them: the seed its holders' door tokens are signed with, by the console that
 # signs them (`door.py`) — never a worker, or a door could make the tokens it checks. Held to the rights file's grants
 # (`w2cplatform/cluster/rights.py`, `check_secrets`).

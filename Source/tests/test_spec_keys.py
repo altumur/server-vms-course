@@ -125,6 +125,31 @@ def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to
         _refused(lambda bad=bad: SubsystemSpec.from_dict({**two, "secrets": bad}), words)
 
 
+def test_how_long_data_goes_on_past_an_unconfirmed_lease_is_the_specs_and_typed():
+    """`lease: {unconfirmed_max: forever | off | <seconds>}` (the architect, 5 Oct; it was `UNCONFIRMED_MAX` in a
+    subsystem's environment): `forever` is no ceiling, `off` — the platform's default — none at all, a number that many
+    seconds; the worker takes it from its spec (`Worker.unconfirmed_max`, and every lease it opens). Typed: a word
+    `"90"`, a zero, a negative, a flag are refused at load with the path. And a place any box may write is let go
+    unconfirmed when the spec says so next to it (`placement.places.lease: strict`), nothing else."""
+    from tests.conftest import Box
+    from w2cplatform.worker import Worker
+    said = lambda v: _spec(lease={"unconfirmed_max": v}).unconfirmed_max     # noqa: E731
+    assert (_spec().unconfirmed_max, said("forever"), said("off"), said(90)) == (0.0, None, 0.0, 90.0)
+    for bad in ({"unconfirmed_max": "90"}, {"unconfirmed_max": 0}, {"unconfirmed_max": -5}, {"unconfirmed_max": True},
+                {"unconfirmed_max": "always"}, {}, {"unconfirmed_max": 90, "strict": True}, "forever"):
+        _refused(lambda bad=bad: _spec(lease=bad), "lease.unconfirmed_max is forever, off or a number of seconds")
+    box = Box()
+    for said, want in (("forever", None), (90, 90.0), ("off", 0.0)):
+        holder = type("Holder", (Worker,), {"spec": _spec(lease={"unconfirmed_max": said})})
+        w = holder(SubsystemSpec.from_dict(_testsub()).sub, "w-1", box.vars, box.objects, clock=box.clock,
+                   wall=box.wall)
+        assert w.unconfirmed_max == want, (said, w.unconfirmed_max)
+    assert SubsystemSpec.from_dict(_testsub2()).places["lease"] == "strict"
+    two = _testsub2()
+    two["placement"]["places"] = {**two["placement"]["places"], "lease": "loose"}
+    _refused(lambda: SubsystemSpec.from_dict(two), "lease?: strict")
+
+
 # A url field the way a subsystem says how its addresses carry a login.
 TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
           "credentials": {"login": "account_name", "secret": "pass_secret"},

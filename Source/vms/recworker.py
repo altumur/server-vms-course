@@ -1579,6 +1579,13 @@ class RecWorker(VmsWorker):
     # `placement.places.server_field` — a volume whose row names no server is one any box may serve, taken back at once
     # only on the holder's own box. A hold let go on purpose — its writer closed first (`leave_volume`, `after_stop`) — is
     # taken at once by anybody.
+    # A place any box may write is held strictly — let go when its hold goes unconfirmed, fenced before every sample —
+    # when the spec says so next to the place (`placement.places.lease: strict`; the architect, 5 Oct: it is about the
+    # place, not the unit, whatever `lease.unconfirmed_max` lets the recordings write).
+    @property
+    def places_strict(self) -> bool:
+        return (getattr(self.spec, "places", None) or {}).get("lease") == "strict"
+
     # BEFORE EVERY SAMPLE (the review's fifth pass, blocker 1): may this recorder write into `vol` this second?
     # A disk of this server always — nobody else can write there. A network volume any box may serve, pinned or not
     # (the review's seventh pass, blocker 2), only while the hold is this recorder's and was confirmed less than
@@ -1586,7 +1593,7 @@ class RecWorker(VmsWorker):
     # so writing stops ten seconds before anybody else may start. It is `Lease.may_act`, for the place — and like
     # it a check before sending: what fences the volume itself is the engine (`Archive._fenced`).
     def _may_write_volume(self, vol) -> bool:
-        if vol is None or not volumes.any_box(vol):
+        if vol is None or not volumes.any_box(vol) or not self.places_strict:
             return True
         return self.hold == vol.name and self.clock() - self._hold_confirmed < self.slot_ttl - self.lease_margin
 
@@ -1596,7 +1603,7 @@ class RecWorker(VmsWorker):
     # thread — and the engine's own lock, refreshed by a daemon that is not frozen, holds the claimant off until the
     # close has released it.
     def _may_close_volume(self, vol) -> bool:
-        if vol is None or not volumes.any_box(vol):
+        if vol is None or not volumes.any_box(vol) or not self.places_strict:
             return True
         return self.hold == vol.name and self.clock() - self._hold_confirmed < self.slot_ttl + self.HOLD_SKEW
 
@@ -2117,7 +2124,8 @@ class RecWorker(VmsWorker):
     #   a network archive         any box may serve it, and one that can reach the store will take the hold when
     #                             it lapses. Two writers in one archive is not a duplicate, it is damage — so
     #                             when the hold has gone `slot_ttl − margin` unconfirmed, it is let go, and its
-    #                             recordings stop. The one case where silence still stops a recording
+    #                             recordings stop. The one case where silence still stops a recording — said by
+    #                             the spec, next to the place: `placement.places.lease: strict` (`places_strict`)
     #
     # From that moment the fence refuses every sample (`_may_write_volume`; the review's fifth pass, blocker 1), and the
     # writer is still closed — its flush is the last minutes — while nobody else may have taken the hold: until
@@ -2132,7 +2140,8 @@ class RecWorker(VmsWorker):
                 self.unanswered += 1                 # the hold's renewal too: the loop looks again at its next turn
                 self.store_errors += 1
                 quiet = self.clock() - self._hold_confirmed
-                if self.hold is not None and self.hold in self._shared and quiet >= self.slot_ttl - self.lease_margin:
+                if self.places_strict and self.hold is not None and self.hold in self._shared \
+                        and quiet >= self.slot_ttl - self.lease_margin:
                     self.leave_volume(f"the hold on network archive {self.hold} has not been confirmed for {quiet:.0f} s "
                                       f"(the store does not answer: {e})")
                 else:

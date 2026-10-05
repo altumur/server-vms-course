@@ -498,7 +498,8 @@ def test_no_unit_starts_what_it_depends_on_and_a_refused_set_is_not_restarted():
     engine the administrator had stopped. Every unit is enabled on its own (`WantedBy=multi-user.target`, `install.sh`),
     so boot needs no `Wants=`: a role unit is ORDERED after what it uses (`After=`) and wants nothing but the network
     target. No role needs `Requisite=` either: each outlives its store (a worker records past its lease's end,
-    `UNCONFIRMED_MAX`) and the recorder its engine (`away`, then `remounted`), and `Requisite=` would stop them with it.
+    its spec's `lease.unconfirmed_max`) and the recorder its engine (`away`, then `remounted`), and `Requisite=`
+    would stop them with it.
     A spare `Requisite=`s the store's member — and a recorder's spare the engine —: up already, or it does not start.
     And the minor: a worker spare whose set its runner refuses ends 2 at every start — no restart."""
     for f in sorted(os.listdir(SYSTEMD)):

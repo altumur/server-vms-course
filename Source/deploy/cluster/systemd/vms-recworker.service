@@ -22,7 +22,6 @@ Environment=OBSD_SOCKET=/run/vms-obsd/obsd.sock
 # WHICH BOX: the machine id — the same across restarts, not the hostname, which two boxes may share (М10's eighth
 # review): a network volume's hold follows this recorder's name at once to its next process on the SAME box.
 Environment=BOX_ID=%m
-Environment=UNCONFIRMED_MAX=90
 Environment=ARCHIVE_PORT=8084
 # A network volume's `access_secret` is sealed to its row by the console; the recorder, which mounts the volume,
 # opens it with the cluster's key.

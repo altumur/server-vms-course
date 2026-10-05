@@ -21,9 +21,6 @@ Environment=WORKER_NAME=w-%l-1
 # The fan-out, OPENED: its default is loopback (М10B Lesson 4), and a recorder or a gateway on another server has to
 # reach it. Nobody is asked who they are at this door: the cluster's network keeps it closed to everybody else.
 Environment=RTSP_HOST=0.0.0.0
-# How long it goes on RECORDING past a lease's end while the store does not answer (М10A Lesson 6): longer than
-# the slot and its margin, so the recording does not stop before anybody else has been given the camera.
-Environment=UNCONFIRMED_MAX=90
 LoadCredential=platform.key:/etc/w2c/secrets/platform.key
 Environment=SECRETS_KEY=%d/platform.key
 # /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would

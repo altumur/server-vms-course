@@ -1480,8 +1480,8 @@ class Controller:
     # shortened move nor a release is made on it.
     #
     # Whatever the owner decides next changes this function, and every caller follows. What none of it covers: a worker
-    # cut off from the store together with its whole server records on to its lease's end plus `UNCONFIRMED_MAX`
-    # (М11: 90 s) — data under a stale epoch, the duplicate feedback BK chose over a hole.
+    # cut off from the store together with its whole server records on past its lease's end for as long as its spec's
+    # `lease.unconfirmed_max` says — data under a stale epoch, the duplicate feedback BK chose over a hole.
     def slot_fate(self, worker: str, slot: "Slot | None", hung_after: float | None = None) -> tuple[str, str, str]:
         """`(fate, server, why)`: fate "alive", "hung", "hung_moved", "move", "release", "wait", "unsure" or
         "unsure_moved" (see above); `slot` None: a row that does not parse — no lease to read, the heartbeat and the

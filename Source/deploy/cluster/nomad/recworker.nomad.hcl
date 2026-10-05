@@ -41,7 +41,6 @@ job "recworker" {
         LABELS          = "${meta.labels}"
         BOX_ID          = "${node.unique.id}"        # which box: the node's id, the same across restarts
         OBSD_SOCKET     = "/run/vms-obsd/obsd.sock"  # where vms-obsd.service listens
-        UNCONFIRMED_MAX = "90"
         SECRETS_KEY     = "/etc/w2c/secrets/platform.key"
         # No RESOURCE_ROOT: its events go where the node's resource keeps them, `RESOURCE_ROOT` in /etc/w2c/w2c.env
         # (`/data/platform/events`) — `meta.archive` only says where disks are, which is what the constraint asks.

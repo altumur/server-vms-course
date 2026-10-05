@@ -38,6 +38,8 @@ course-only rec.subsystem.yaml holds.since
 course-only rec.subsystem.yaml holds.table
 course-only rec.subsystem.yaml holds.unit
 course-only rec.subsystem.yaml holds.until
+course-only rec.subsystem.yaml lease
+course-only rec.subsystem.yaml lease.unconfirmed_max
 course-only rec.subsystem.yaml metrics
 course-only rec.subsystem.yaml placement.affinity
 course-only rec.subsystem.yaml placement.affinity.enabled
@@ -48,6 +50,7 @@ course-only rec.subsystem.yaml placement.affinity.strict
 course-only rec.subsystem.yaml placement.affinity.table
 course-only rec.subsystem.yaml placement.places
 course-only rec.subsystem.yaml placement.places.enabled
+course-only rec.subsystem.yaml placement.places.lease
 course-only rec.subsystem.yaml placement.places.server_field
 course-only rec.subsystem.yaml placement.places.table
 course-only rec.subsystem.yaml placement.places.where
@@ -157,6 +160,8 @@ course-only vms.subsystem.yaml domain.tokens.stream
 course-only vms.subsystem.yaml domain.tokens.stream.claims
 course-only vms.subsystem.yaml domain.tokens.stream.lifetime
 course-only vms.subsystem.yaml domain.view
+course-only vms.subsystem.yaml lease
+course-only vms.subsystem.yaml lease.unconfirmed_max
 course-only vms.subsystem.yaml metrics
 course-only vms.subsystem.yaml metrics.buckets
 course-only vms.subsystem.yaml placement.group_by

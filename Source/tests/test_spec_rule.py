@@ -34,7 +34,8 @@ TABLE_FIELD = tuple(k for k in FIELD if k not in ("inherit", "merge", "fixed", "
 # exactly the keys the loader takes (`speckeys.KEYS`) — a key added to the code and not here fails, and the other way.
 IMPLEMENTED = {
     "name", "about.sub", "about.field", "slot.prefix", "slot.name_env", "worker.writes", "worker.reads", "worker.requests",
-    "objects.rows", "objects.door", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "snapshot", "door.routes",
+    "objects.rows", "objects.door", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "lease.unconfirmed_max",
+    "snapshot", "door.routes",
     "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *{f"unit.fields.*.{k}" for k in FIELD},
     "unit.derived.row", "unit.derived.items", "unit.derived.on_delete",
@@ -43,7 +44,8 @@ IMPLEMENTED = {
     "placement.capacity.from", "placement.capacity.default", "placement.headroom.from", "placement.constraint",
     "placement.requires", "placement.servers", "placement.tie_break", "placement.near.sub", "placement.near.by",
     "placement.near.of", "placement.near.prefer", "placement.spread_by", "placement.group_by.field",
-    "placement.group_by.cut_at", "placement.place_by", "placement.places.table", "placement.places.where", "placement.places.server_field",
+    "placement.group_by.cut_at", "placement.place_by", "placement.places.table", "placement.places.where",
+    "placement.places.server_field", "placement.places.lease",
     "placement.offers", "placement.home", "placement.retire_when.field", "placement.retire_when.in",
     "placement.rebalance.dead_band", "placement.affinity.field", "placement.affinity.table",
     "placement.affinity.server_field", "placement.affinity.strict",

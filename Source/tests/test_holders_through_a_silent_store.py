@@ -4,7 +4,7 @@ platform's answers (`tests/test_store_outage.py` proves those on testsub):
     a pipeline that fell over       comes back under the epoch the holder already holds (`VmsWorker._actuate`): the
                                     platform gives no new epoch on an assignment not read, and the held lease still
                                     allows data
-    recording unconfirmed           the holder's ceiling is `UNCONFIRMED_MAX` (none on one box), its status and its
+    recording unconfirmed           the holder's ceiling is its spec's (`lease.unconfirmed_max`), its status and its
                                     metrics say how long a camera has recorded past its lease
     a relay is not data             a command waits for the store's word; a camera never started has no epoch to record under
     a recorder's place              its own disk stays, a network archive is let go; a fallen pipeline restarts on the
@@ -66,18 +66,40 @@ def test_a_holder_says_in_its_status_and_metrics_how_long_it_has_recorded_unconf
     assert w.may_act("1") and "lease" not in w.status()[0] and w.unconfirmed() == {}
 
 
-def test_the_holders_unconfirmed_max_is_the_ceiling_and_off_is_none():
-    """A cluster's store is on the network: a worker cut off from it may hold the camera's session while its
-    successor cannot connect. `UNCONFIRMED_MAX` is how long past the lease's end it records on; `off` is the old
-    behaviour — a lease not confirmed in time stops its camera."""
-    box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "60"})
-    store.down = True
-    assert _silence(box, w, 80) == [] and act.running == {1, 2}       # 25 s of lease + 55 s unconfirmed: under the ceiling
-    assert sorted(_silence(box, w, 16)) == ["1", "2"] and act.running == set() and w.writing_allowed
+def test_the_holders_unconfirmed_max_is_its_specs_and_off_stops_data_at_the_leases_end():
+    """How long a holder records on past a lease the silent store did not confirm is its spec's (`lease:
+    {unconfirmed_max}`; the architect, 5 Oct — the environment's `UNCONFIRMED_MAX` is gone): the VMS's is `forever`
+    (footage carries its epoch: a second writer is a duplicate), `<seconds>` records on up to that long past the
+    lease's end, and `off` — the platform's default — stops the camera when the lease is not confirmed in time."""
+    from vms import worker as vw
+    assert vw.SPEC.unconfirmed_max is None and _worker()[4].unconfirmed_max is None
+    real = vw.VmsWorker.spec
+    try:
+        for said in (60, "off"):
+            vw.VmsWorker.spec = _spec_with(said)
+            box, ctl, store, act, w = _worker()
+            store.down = True
+            if said == 60:
+                assert w.unconfirmed_max == 60.0
+                assert _silence(box, w, 80) == [] and act.running == {1, 2}   # 25 s of lease + 55 s unconfirmed
+                assert sorted(_silence(box, w, 16)) == ["1", "2"] and act.running == set() and w.writing_allowed
+            else:
+                assert w.unconfirmed_max == 0.0
+                assert _silence(box, w, 24) == [] and sorted(_silence(box, w, 8)) == ["1", "2"]
+    finally:
+        vw.VmsWorker.spec = real
 
-    box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "off"})
-    store.down = True
-    assert _silence(box, w, 24) == [] and sorted(_silence(box, w, 8)) == ["1", "2"]
+
+def _spec_with(unconfirmed_max):
+    """The VMS's spec, its `lease.unconfirmed_max` said otherwise."""
+    import os
+
+    import yaml
+    from tests.productdir import SOURCE
+    from w2cplatform.spec import SubsystemSpec
+    with open(os.path.join(SOURCE, "vms", "vms.subsystem.yaml"), encoding="utf-8") as f:
+        d = yaml.safe_load(f)
+    return SubsystemSpec.from_dict({**d, "lease": {"unconfirmed_max": unconfirmed_max}})
 
 
 def test_a_camera_never_started_waits_and_an_action_waits_for_the_stores_word():
@@ -114,12 +136,24 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
     """The place, while the store is silent. Not reading the list of volumes is not "nothing is declared", and
     not reading the hold is not "somebody else holds it": the recorder used to be one store error away from
     dropping its archive and every recording on it. A disk of this server stays. A network archive any box may
-    serve is let go when its hold has gone unconfirmed for its TTL — two writers in one archive is damage."""
+    serve is let go when its hold has gone unconfirmed for its TTL — two writers in one archive is damage — because
+    the spec says so next to the place (`placement.places.lease: strict`): a spec that does not keeps it too."""
     import os
+
+    import yaml
     from vms import volumes
+    from vms.recworker import RecWorker
+    from w2cplatform.spec import SubsystemSpec
+    from tests.productdir import SOURCE
     from tests.vmsconftest import Box
     from tests.test_volumes import _recorder
-    for kind, stays in (("local", True), ("network", False)):
+    with open(os.path.join(SOURCE, "vms", "rec.subsystem.yaml"), encoding="utf-8") as f:
+        d = yaml.safe_load(f)
+    places = {k: v for k, v in d["placement"]["places"].items() if k != "lease"}
+    loose = SubsystemSpec.from_dict({**d, "placement": {**d["placement"], "places": places}})
+    real = RecWorker.spec
+    for kind, stays, spec in (("local", True, real), ("network", False, real), ("network", True, loose)):
+        RecWorker.spec = spec
         box = Box()
         row = {"name": "vol", "kind": kind, "url": os.path.join(box.root, "vol"), "quota_bytes": 10 ** 9}
         volumes.write(box.vars, {**row, "server": "srv-a"} if kind == "local" else row)
@@ -131,7 +165,8 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
         assert r.hold == "vol" and r.volume == "vol" and r.store_errors >= 1      # one error: nothing is let go
         for _ in range(8):
             box.clock.advance(8); box.wall.advance(8); r.lease_pass()
-        assert (r.hold == "vol") is stays and (r.volume == "vol") is stays, kind
+        RecWorker.spec = real
+        assert (r.hold == "vol") is stays and (r.volume == "vol") is stays, (kind, spec.places)
 
 
 def test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last():
