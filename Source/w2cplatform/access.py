@@ -14,7 +14,8 @@
 #                   М10A and М10B are read and run without М12; one box is not made to carry a signer
 #   what to ask     `Access`: `who(token)` — the token's payload, or a refusal — and `may(payload, capability,
 #                   unit, labels)`. Whoever can verify a token implements it; `ACCESS_IMPL` names it
-#                   (`domain.access:cluster_access`), and it is imported only when there are keys to check by
+#                   (the platform's domain: `w2cplatform.domain.access:cluster_access`), and it is imported only
+#                   when there are keys to check by
 #   what a route    `view` to read, `edit` to act (a command, a mark, a keep), `admin` to change what the
 #   needs           cluster is (units, volumes, policy)
 #
@@ -287,7 +288,7 @@ class Gate:
                             "they are and whoever reaches it is an administrator under any name", TRUST_KEYS)
             return None
         if self._loaded is None:
-            name = os.environ.get("ACCESS_IMPL", "domain.access:cluster_access")
+            name = os.environ.get("ACCESS_IMPL", "w2cplatform.domain.access:cluster_access")
             try:
                 module, _, fn = name.partition(":")
                 self._loaded = getattr(importlib.import_module(module), fn)(self.vars, self.wall)

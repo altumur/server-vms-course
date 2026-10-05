@@ -32,7 +32,7 @@ slot: {prefix: r, name_env: RECORDER_NAME}
 # a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone.
 objects: {rows: [used/*]}
 # What a recorder reads outside its subsystem's rows: the domain's book of where each camera's primary is (М12).
-worker: {reads: [domain/primaries]}
+worker: {reads: [domain/vms/primaries]}
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -283,5 +283,11 @@ display:
     archive.shallow: архив мельче обещанного
     keep.copied: сохранённое скопировано
     keep.lost: сохранённое не удалось скопировать
+# The recorders on the domain: a member reports, beside its heartbeats and snapshot, where its ingest takes streams
+# (`rec/ingest`) and when each camera last polled it (`rec/polled/<ingest>`) — the domain's witness that a camera is
+# alive while its agent is silent.
+domain:
+  reports: [ingest, polled/]
+  witness: polled
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

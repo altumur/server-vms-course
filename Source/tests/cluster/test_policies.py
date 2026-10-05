@@ -19,6 +19,7 @@ lists do not ask for — and every read the code makes is granted.
 import json
 import os
 
+from w2cplatform.domain.rights import roles as domain_roles  # noqa: E402
 from w2cplatform import catalog
 from w2cplatform.cluster.objectstore import is_row
 from w2cplatform.cluster.rights import render, roles
@@ -56,7 +57,7 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
     `vms-<role>`, the platform's `w2c-<role>` — which is what a unit joins (`SupplementaryGroups=`)."""
     r = rights()
     for role in doc()["roles"]:
-        platform = role in ("resource", "domain", "domainagent", "member")
+        platform = role in ("resource", "domain", "domainagent")
         assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
     assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
 
@@ -69,9 +70,9 @@ def _expected_writes() -> dict[str, set[str]]:
         out[f"{s.name}worker"] = set(s.acl_worker_role()) | rows(s.sub.acl_objects_worker() + [s.sub.config(p) for p in s.object_rows])
     return {**out,
             "resource": {DOORS + "/*", *[s.sub.request_key("free-*") for s in SPECS if s.requests_free]},   # its ask to free bytes
-            "domainagent": {"domain/*", "relay/*", "!domain/signer*"},
-            "member": set(),
-            "domain": {"domain/*", "identity/*"}}
+            # the domain's roles are the platform domain's to say, from the specs (`w2cplatform/domain/rights.py`): the
+            # agent's grant on `domain/*` with a denial of every row only the holder writes; no member role
+            **{role: set(g["write"]) for role, g in domain_roles(specs=SPECS).items()}}
 
 
 def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there():
@@ -111,19 +112,22 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
     no daemon opened that socket, the first read was `StoreUnavailable`, the signer went round its restarts. The role
     is the platform's (`w2c-domain`, a group configstore is a member of): the domain's rows and the people's
     (`identity/*`) written, the holder's own cluster read. And the least of DOMAIN-PLATFORM.md's narrowing: the domain's
-    keys (`domain/signer`) are read and written by `domain` alone — the agent and a member's report read `domain/*`
-    but not them."""
+    keys (`domain/signer`) are read and written by `domain` alone — the agent reads `domain/*` but not them, and writes
+    none of what only the holder writes; a member reads nothing of the holder's store (no member role: it carries
+    through the domain's door)."""
     r = rights()
     assert r.groups["domain"] == "w2c-domain"
     for action, key in (("read", "domain/signer"), ("write", "domain/signer"), ("write", "identity/users/u1"),
-                        ("read", "identity/pointer"), ("write", "domain/sources/north"), ("read", "vms/cameras/7"),
+                        ("read", "identity/pointer"), ("write", "domain/vms/crossings"), ("read", "vms/cameras/7"),
                         ("delete", "domain/pending/north")):
         assert r.allows("domain", action, key), (action, key)
-    for role in ("domainagent", "member", "console", "vmsworker"):
+    for role in ("domainagent", "vmsdomain", "console", "vmsworker"):
         for action in ("read", "write", "delete"):
             assert not r.allows(role, action, "domain/signer"), (role, action)
-    assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants/north")
-    assert r.allows("member", "read", "domain/keys") and not r.allows("domain", "write", "vms/cameras/7")
+    assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants")
+    assert not r.allows("domainagent", "write", "domain/grants/north") and "member" not in r.roles
+    assert r.allows("vmsdomain", "write", "domain/vms/primaries/cam-SN1") and not r.allows("vmsdomain", "write", "domain/keys")
+    assert not r.allows("domain", "write", "vms/cameras/7")
 
 
 # -- what the processes DO: every scene of the stand, and the doors the scenes do not knock on ------------------------

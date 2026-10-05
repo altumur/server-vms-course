@@ -137,8 +137,8 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
     box = Box()
     ctl, rec, m, srv, base = _console(box)
     # `domain.access` sits in the same code root (`Source/domain/`) since the move: this console is one without it
-    hidden = sys.modules.get("domain.access")
-    sys.modules["domain.access"] = None
+    hidden = sys.modules.get("w2cplatform.domain.access")
+    sys.modules["w2cplatform.domain.access"] = None
     try:
         assert _call(base, "GET", "/cameras")[0] == 200
         box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # the cluster joined a domain while the console ran
@@ -153,9 +153,9 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
     finally:
         srv.shutdown()
         if hidden is None:
-            del sys.modules["domain.access"]
+            del sys.modules["w2cplatform.domain.access"]
         else:
-            sys.modules["domain.access"] = hidden
+            sys.modules["w2cplatform.domain.access"] = hidden
 
     class Away:
         def get(self, path): raise PermissionError(13, "the store does not answer")
@@ -196,7 +196,7 @@ def test_a_cluster_that_is_in_a_domain_stays_shut_without_its_keys_after_a_resta
             assert code == 503 and mark in body["detail"], (mark, code, body)
         finally:
             srv.shutdown()
-    box.vars.as_writer("agent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
+    box.vars.as_writer("domainagent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
     assert not any(box.vars.get(p)[0] for p in DOMAIN_MARKS)
     ctl, rec, m, srv, base = _console(box)
     try:

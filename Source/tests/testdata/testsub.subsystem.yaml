@@ -4,7 +4,7 @@
 # The platform knows the subsystems by their specs and by nothing else. This one has nothing to do with the
 # product: a unit is a named counter a worker keeps. If the platform's pieces come up on this file alone —
 # the controller from the spec, the contract's keys, slots, epochs, the console, the resource — they come up
-# without the product. Later steps of the boundary plan add `about:` and `domain:` sections here.
+# without the product. Later steps of the boundary plan add an `about:` section here.
 name: testsub
 unit:
   rows: counters                     # testsub/counters/<name>
@@ -13,6 +13,8 @@ unit:
     name:   {type: string, required: true}
     start:  {type: int,    default: 0}
     labels: {type: list}
+    step:   {type: int,  inherit: 1}                 # a counter's step: the counter's own, else the domain's, else 1
+    marks:  {type: list, inherit: [], merge: union}  # marks the domain adds to every counter's own
 placement:
   capacity:   {from: capacity, default: 4}
   headroom:   {from: headroom}
@@ -27,7 +29,26 @@ requests:
     properties: {unit: {type: string}, add: {type: integer}, valid_until: {type: number}}
   valid_for: 30
   most_valid: 600
-snapshot: [name]
+snapshot: [name, start]
+# testsub on the domain: a counter is found across clusters by its name; the holder keeps a book of tallies for each
+# member and a ledger for the domain as a whole, served at `/api/testsub/ledger`; a tally carries a token of its own kind.
+domain:
+  ref: name
+  view: [start]
+  books: [tallies]
+  kept: [ledger]
+  tables: [ledger]
+  tokens:
+    tally: {lifetime: 600, claims: [counter]}
+  shared: [step, marks]                # the fields whose domain-wide value the domain holds
+  # its key families, for a page that lists the domain's keys (their words below, display.keys)
+  keys:
+    - {id: tallies, keys: [domain/testsub/tallies], prefix: domain/testsub/tallies/}
+    - {id: ledger, keys: [domain/testsub/ledger]}
+display:
+  keys:
+    tallies: {title: tallies, about: "a member's tally book: domain/testsub/tallies/<member> at the holder, domain/testsub/tallies at home"}
+    ledger: {title: ledger, about: the ledger the holder keeps for the domain, absent: nothing ledgered yet}
 metrics:
   - {name: counters_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:

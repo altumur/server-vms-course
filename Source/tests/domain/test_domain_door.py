@@ -10,14 +10,14 @@ import urllib.request
 
 from w2cplatform.cluster.variables import FakeVariables
 
-from domain.api import ApiError, ConsoleAPI
-from domain.console import Console
-from domain.device import DeviceCluster
-from domain.federation import DomainDirectory
-from domain.grants import DOMAIN_GRANTS, Grant, LastAdmin, domain_may, set_domain_grants
-from domain.members import Members
-from domain.readview import ReadView
-from domain.term import move_domain
+from w2cplatform.domain.api import ApiError, ConsoleAPI
+from w2cplatform.domain.console import Console
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import DomainDirectory
+from w2cplatform.domain.grants import DOMAIN_GRANTS, Grant, LastAdmin, domain_may, set_domain_grants
+from w2cplatform.domain.members import Members
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.domain.term import move_domain
 from tests.domain.conftest import Clock
 from tests.domain.test_lesson15_root import DOMAIN, _objects, _site
 
@@ -74,7 +74,7 @@ def test_the_door_asks_for_view_to_look_and_admin_to_change():
             return e.code
     try:
         assert call("/healthz") == 200
-        assert call("/api/members") == 401 and call("/api/cameras") == 401
+        assert call("/api/members") == 401 and call("/api/vms/cameras") == 401
         assert call("/api/members", "vera") == 403
         assert call("/api/members", "boris") == 200 and call("/api/members", "anna") == 200
         assert call("/api/members", "boris", {"name": "cam-SN3"}) == 403
@@ -96,14 +96,14 @@ def test_the_domains_administrators_do_not_move_with_the_holder():
 
 def test_a_name_that_does_not_exist_costs_as_much_as_a_wrong_password():
     """Feedback BZ: the login door must not tell a stranger which names are real. Both refusals run scrypt once."""
-    import domain.identity as ident
+    import w2cplatform.domain.identity as ident
     calls = []
     real = ident._hash
     ident._hash = lambda pw, salt=None: (calls.append(1), real(pw, salt))[1]
     try:
         import tempfile
         from w2cplatform.cluster.objectstore import FsObjectStore
-        from domain.signer import Signer
+        from w2cplatform.trust.signer import Signer
         users = ident.IdentityStore(Signer("acme", FakeVariables(), now=Clock()), FakeVariables(),
                                     FsObjectStore(tempfile.mkdtemp()), now=Clock())
         users.create_local("alice", "secret", ["operator"])
@@ -124,7 +124,7 @@ def test_a_devices_password_is_not_the_domains_to_carry():
     books — and a password there would be in the clear past the cluster's key. Refused before anything is kept."""
     api = ConsoleAPI(None, None)
     try:
-        api.update_camera(7, {"name": "gate", "cred_secret": "Hunter2"}, "k1")
+        api.update_unit(7, {"name": "gate", "cred_secret": "Hunter2"}, "k1")
         raise AssertionError("refused")
     except ApiError as e:
         assert e.status == 400 and "cred_secret" in e.detail and "Hunter2" not in e.detail
@@ -135,9 +135,9 @@ def test_a_user_deleted_takes_every_grant_naming_them_and_the_last_admin_stays()
     """Feedback CG: grants name a subject, not a record — left behind, they go to the next user of that name."""
     import tempfile
     from w2cplatform.cluster.objectstore import FsObjectStore
-    from domain.agent import DomainPublisher, GRANTS_PATH
-    from domain.identity import IdentityStore
-    from domain.signer import Signer
+    from w2cplatform.domain.agent import DomainPublisher, GRANTS_PATH
+    from w2cplatform.domain.identity import IdentityStore
+    from w2cplatform.trust.signer import Signer
     v = FakeVariables()
     users = IdentityStore(Signer("acme", FakeVariables(), now=Clock()), v, FsObjectStore(tempfile.mkdtemp()), now=Clock())
     for u in ("anna", "bob"):
@@ -173,7 +173,7 @@ def test_an_address_inside_a_list_or_an_object_is_refused_at_the_door_and_on_the
     for value in nested:
         wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
         try:
-            api.update_camera(CAM, {"source": value}, idempotency_key="n", token="anna")
+            api.update_unit(CAM, {"source": value}, idempotency_key="n", token="anna")
             raise AssertionError(f"the door kept {value!r}")
         except ApiError as e:
             assert e.status == 400 and e.detail.startswith("source") and not leaks(e.detail), e.detail
@@ -187,7 +187,7 @@ def test_an_address_inside_a_list_or_an_object_is_refused_at_the_door_and_on_the
             assert e.status == 400 and not leaks(e.detail), e.detail
         assert not leaks(d.row())
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
-    assert api.update_camera(CAM, {"labels": ["rtsp://10.0.0.5/s", "yard"]}, idempotency_key="ok", token="anna")
+    assert api.update_unit(CAM, {"labels": ["rtsp://10.0.0.5/s", "yard"]}, idempotency_key="ok", token="anna")
 
 
 def test_what_a_member_answers_is_masked_before_the_domain_hands_it_on_or_keeps_it():
@@ -201,10 +201,10 @@ def test_what_a_member_answers_is_masked_before_the_domain_hands_it_on_or_keeps_
            "extra": [{"relay": "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam"}], "cred_username": "admin"}
 
     class Member:
-        def update_camera(self, camera, fields, subject):
+        def update_unit(self, camera, fields, subject):
             return dict(row, **fields)
 
-        def create_camera(self, fields, subject):
+        def create_unit(self, fields, subject):
             return dict(row, **fields)
 
     class Directory:
@@ -212,8 +212,8 @@ def test_what_a_member_answers_is_masked_before_the_domain_hands_it_on_or_keeps_
             return SimpleNamespace(found=True, cluster="room-a", worker="w-1", complete=True)
 
     api = ConsoleAPI(Directory(), lambda name: Member())
-    for resp in (api.update_camera(7, {"name": "gate2"}, "k1"), api.update_camera(7, {"name": "gate2"}, "k1"),
-                 api.create_camera({"name": "yard"}, "room-a", "k2"), api.create_camera({"name": "yard"}, "room-a", "k2")):
+    for resp in (api.update_unit(7, {"name": "gate2"}, "k1"), api.update_unit(7, {"name": "gate2"}, "k1"),
+                 api.create_unit({"name": "yard"}, "room-a", "k2"), api.create_unit({"name": "yard"}, "room-a", "k2")):
         assert not leaks(resp), resp
         assert resp["result"]["cred_secret"] == "***" and resp["result"]["cred_username"] == "admin"
     assert not leaks(api._seen)

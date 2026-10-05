@@ -13,20 +13,20 @@ import urllib.request
 
 from w2cplatform.cluster.variables import Conflict, FakeVariables
 
-from domain.agent import ClusterTrust, DomainAgent, DomainPublisher
-from domain.api import ApiError, ConsoleAPI
-from domain.books import Books
-from domain.chain import Relay
-from domain.console import Console
-from domain.crossing import Crossings
-from domain.device import DeviceCluster
-from domain.federation import DomainDirectory, Federation
-from domain.ingest import CameraPusher, Ingest
-from domain.placement import CameraSite, ClusterPlacer
-from domain.readview import ReadView
-from domain.signer import Signer
-from domain.topology import Topology
-from domain.uplink import member_copy
+from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
+from w2cplatform.domain.api import ApiError, ConsoleAPI
+from vms.domainpart.books import Books
+from w2cplatform.domain.relay import Relay
+from w2cplatform.domain.console import Console
+from vms.domainpart.crossing import Crossings
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import DomainDirectory, Federation
+from vms.domainpart.ingest import CameraPusher, Ingest
+from w2cplatform.domain.placement import UnitSite, ClusterPlacer
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.trust.signer import Signer
+from w2cplatform.domain.topology import Topology
+from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster
 
 
@@ -46,10 +46,10 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
     for a in agents:
         a.sync()
     placer = ClusterPlacer(fed, clock=wall)
-    assert placer.place(CameraSite(1, "vlan:b")).cluster == "south"
+    assert placer.place(UnitSite(1, "vlan:b")).cluster == "south"
     seen["south"] = ["vlan:b", "vlan:c"]
     assert agents[1].say_reaches() and not agents[1].say_reaches()   # written when it changes, and only then
-    assert placer.place(CameraSite(2, "vlan:c")).cluster == "south"
+    assert placer.place(UnitSite(2, "vlan:c")).cluster == "south"
 
     cam = DeviceCluster("SN8001", FakeVariables(), wall=wall)
     cam.boot()
@@ -105,7 +105,7 @@ def test_the_passes_follow_the_topology_without_a_restart():
     topo = Topology(north.vars)
     relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
                          relay_members=lambda: topo.relayed_by("east"), bundle_members=lambda: topo.relayed_by("east"))
-    through = Relay(east.vars, east.objects)
+    through = Relay(relay, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects(), seen_store=cam.local_objects())
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, topology=topo), north.objects)
@@ -177,7 +177,7 @@ def test_a_member_placed_behind_a_relay_is_read_by_whichever_road_is_newer():
     """AM, 2. The topology describes a road; it does not forbid another. A camera placed behind east that still
     reports straight to the domain is not made silent — the domain reads the newer of its own report and east's
     bundle, by the camera's own report number."""
-    from domain.chain import bundle
+    from w2cplatform.domain.relay import bundle
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     east, _ = make_cluster("east")
@@ -191,8 +191,11 @@ def test_a_member_placed_behind_a_relay_is_read_by_whichever_road_is_newer():
     assert [r["ref"] for r in view.list()["rows"] if r["cluster"] == cam.name] == ["SN8003"]
 
     wall.advance(30)
-    through = Relay(east.vars, east.objects)                           # now it reports through east, and renames itself
-    cam.local_console().update_camera(1, {"name": "through-east"}, None)
+    relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
+                        relay_members=[cam.name])
+    relay.sync()                                                       # east keeps what the domain answers for it
+    through = Relay(relay, east.objects)                               # now it reports through east, and renames itself
+    cam.local_console().update_unit(1, {"name": "through-east"}, None)
     DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                 published=cam.local_objects()).sync()
     bundle("east", [cam.name], east.objects, north.objects)
@@ -204,10 +207,10 @@ def test_books_behind_a_relay_are_as_old_as_the_relay_says_on_the_cameras_own_cl
     """AM, 3. The relay says how long ago it last reached the domain — an age, on its own clock — on every pass,
     the failed ones included. The camera sets its mark to its OWN clock minus that age: two clocks are never
     compared, and a camera whose clock runs five minutes ahead still judges its books by their true age."""
-    from domain.chain import say_seen
+    from w2cplatform.domain.relay import say_seen
     relay_clock, cam_clock = Clock(10_000.0), Clock(10_300.0)       # the camera runs five minutes ahead
-    relay_vars, relay_objects = FakeVariables(), __import__("domain.device", fromlist=["Ram"]).Ram()
-    agent = DomainAgent("cam-SN8004", Relay(relay_vars, relay_objects).vars, FakeVariables(), now=cam_clock)
+    relay_vars, relay_objects = FakeVariables(), __import__("vms.domainpart.device", fromlist=["Ram"]).Ram()
+    agent = DomainAgent("cam-SN8004", Relay(None, relay_objects).vars, FakeVariables(), now=cam_clock)
     last = relay_clock()
     say_seen(relay_objects, last, relay_clock())                     # the relay reached the domain just now
     assert agent._relay_mark() == cam_clock()
@@ -223,7 +226,7 @@ def test_the_sites_names_are_the_source_and_interfaces_only_a_fallback_without_t
     names — is the source; the interfaces are a fallback, without host routes and tunnel or container links."""
     import os
     import subprocess
-    from domain import agent as agent_module
+    from w2cplatform.domain import agent as agent_module
     fake = json.dumps([
         {"ifname": "lo", "addr_info": [{"local": "127.0.0.1", "prefixlen": 8}]},
         {"ifname": "eth0", "addr_info": [{"local": "10.1.0.5", "prefixlen": 24}]},
@@ -248,7 +251,7 @@ def test_a_camera_whose_clock_stepped_back_is_not_frozen_on_its_stale_road():
     clock steps back a thousand seconds. Compared by the camera's clock alone, the stale direct report would stay
     "newer" for ever and the camera would freeze on it until silent. A road that has gone silent on the DOMAIN's
     clock gives way to the one that is alive, whatever the camera's clock says."""
-    from domain.chain import bundle
+    from w2cplatform.domain.relay import bundle
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     east, _ = make_cluster("east")
@@ -259,8 +262,11 @@ def test_a_camera_whose_clock_stepped_back_is_not_frozen_on_its_stale_road():
     fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
     view = ReadView(fed, wall=wall); view.refresh()                    # the domain has seen the direct report
     behind = lambda: wall() - 1000                                     # the camera's clock, a thousand seconds back
-    cam.local_console().update_camera(1, {"name": "clock-stepped-back"}, None)
-    through = Relay(east.vars, east.objects)
+    cam.local_console().update_unit(1, {"name": "clock-stepped-back"}, None)
+    relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
+                        relay_members=[cam.name])
+    relay.sync()
+    through = Relay(relay, east.objects)
     relay_agent = DomainAgent(cam.name, through.vars, cam.flash, now=behind, domain_objects=through.objects,
                               published=cam.local_objects())
     for _ in range(4):                                                 # a minute of passes through east
@@ -296,7 +302,7 @@ def test_pull_or_push_is_decided_by_the_networks_both_sides_say_they_see():
 
     def book():
         cam.publish(); cam_agent.sync(); room_agent.sync(); view.refresh(); crossings.publish()
-        return json.loads(north.vars.get("domain/sources/south")[0]["SN8010"])
+        return json.loads(north.vars.get("domain/vms/sources/south")[0]["SN8010"])
 
     e = book()
     assert (e["push"], e["live_url"]) == (True, "ingest://south/SN8010") and "sees none" in e["road"]
@@ -339,7 +345,7 @@ def test_a_recorder_that_cannot_pull_has_the_camera_push_and_the_domain_remember
 
     def book():
         cam.publish(); cam_agent.sync(); room_agent.sync(); view.refresh(); crossings.publish()
-        return json.loads(north.vars.get("domain/sources/south")[0]["SN8011"])
+        return json.loads(north.vars.get("domain/vms/sources/south")[0]["SN8011"])
 
     assert book()["push"] is False                                     # the networks say: pull
     recorder(unreachable=True)
@@ -373,5 +379,5 @@ def test_a_camera_without_the_platform_is_always_pulled_whatever_the_networks():
     crossings = Crossings(north.vars, view, wall)
     crossings.record("DOOR8", on="south")
     crossings.publish()
-    e = json.loads(north.vars.get("domain/sources/south")[0]["DOOR8"])
+    e = json.loads(north.vars.get("domain/vms/sources/south")[0]["DOOR8"])
     assert (e["push"], e["live_url"]) == (False, "rtsp://10.9.0.8/live") and "not a member camera" in e["road"]

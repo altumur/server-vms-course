@@ -359,9 +359,9 @@ def _camera_cluster():
     def carry(should=True, written=True, seen=True, starting=False):   # what the camera's agent does on a pass
         book = {"SN1": json.dumps({"cluster": "room", "recording": "SN1", "should": should, "written": written,
                                    "starting": starting}, sort_keys=True)}
-        have, idx = box.vars.get("domain/primaries")
+        have, idx = box.vars.get("domain/vms/primaries")
         if have != book:
-            box.vars.put("domain/primaries", book, cas=idx)
+            box.vars.put("domain/vms/primaries", book, cas=idx)
         if seen:
             box.objects.put("domain/seen", json.dumps({"ts": box.wall()}).encode())
     return box, card, next(r for r in card.rows if r["id"] == "1-card"), carry
@@ -417,12 +417,12 @@ def test_the_book_is_written_to_flash_when_it_changes_and_its_freshness_is_not()
     recording does, and freshness goes to the object store — RAM on a camera."""
     box, card, row, carry = _camera_cluster()
     carry()
-    _, idx = box.vars.get("domain/primaries")
+    _, idx = box.vars.get("domain/vms/primaries")
     for _ in range(20):
         box.wall.advance(5); carry()
-    assert box.vars.get("domain/primaries")[1] == idx         # twenty passes, no write
+    assert box.vars.get("domain/vms/primaries")[1] == idx         # twenty passes, no write
     carry(written=False)
-    assert box.vars.get("domain/primaries")[1] != idx         # the room stopped: one write
+    assert box.vars.get("domain/vms/primaries")[1] != idx         # the room stopped: one write
 
 
 def test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits():

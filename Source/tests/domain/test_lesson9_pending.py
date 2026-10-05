@@ -11,11 +11,11 @@ the field still holds the value the edit was based on. The owner never changes; 
 """
 import json
 
-from domain.agent import DomainAgent
-from domain.api import ApiError, ConsoleAPI
-from domain.federation import DomainDirectory
-from domain.pending import PendingEdits
-from domain.readview import ReadView
+from w2cplatform.domain.agent import DomainAgent
+from w2cplatform.domain.api import ApiError, ConsoleAPI
+from w2cplatform.domain.federation import DomainDirectory
+from w2cplatform.domain.pending import PendingEdits
+from w2cplatform.domain.readview import ReadView
 from tests.domain.conftest import Clock, make_domain
 
 CAM = "4471"                                                     # the domain's name for the camera — its ref
@@ -40,7 +40,7 @@ class Member:
         row = self.rows.get(str(ref))
         return (row["id"], row) if row else None
 
-    def update_camera(self, camera, fields, subject):
+    def update_unit(self, camera, fields, subject):
         if self.allowed is not None and subject not in self.allowed:
             raise ApiError(403, f"{subject} has no grant on camera {camera}")
         row = next(r for r in self.rows.values() if r["id"] == camera)
@@ -48,7 +48,7 @@ class Member:
         self.edits.append((camera, dict(fields), subject))
         return {"revision": len(self.edits) + 1}
 
-    def create_camera(self, fields, subject):
+    def create_unit(self, fields, subject):
         raise AssertionError("not in this lesson")
 
 
@@ -78,7 +78,7 @@ def test_an_edit_for_a_camera_that_is_off_is_kept_not_refused():
     is also useless — the operator must remember to come back. The domain keeps the edit instead, and says
     it is waiting: accepted is not applied, and the response must not look like the one that was."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    r = api.update_camera(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
+    r = api.update_unit(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
     assert r["pending"] is True and r["cluster"] == "cam-4471"
     entry = pending.of("cam-4471")[CAM]
     assert entry["fields"]["events_retention_days"] == {"old": 30, "new": 7}   # the value it was based on, and the wanted one
@@ -91,7 +91,7 @@ def test_the_camera_that_comes_back_takes_the_edit_from_its_own_agent():
     has one writer, and the edit is that operator's. Then the domain reads the outcome and clears what
     landed."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    api.update_camera(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
+    api.update_unit(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
 
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "events_retention_days": 30}})
     links["cam-4471"].up = True
@@ -110,7 +110,7 @@ def test_a_field_changed_on_the_camera_meanwhile_is_a_conflict_not_an_overwrite(
     never touched. So the comparison is per field: a field that still holds the value the edit was based
     on takes the new one, and a field that moved underneath it is a conflict, shown, not decided."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    api.update_camera(CAM, {"name": "main-gate", "events_retention_days": 7}, idempotency_key="k1", token="anna")
+    api.update_unit(CAM, {"name": "main-gate", "events_retention_days": 7}, idempotency_key="k1", token="anna")
 
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate-B", "events_retention_days": 30}})   # renamed on site
     links["cam-4471"].up = True
@@ -126,14 +126,14 @@ def test_a_person_resolving_a_conflict_edits_against_what_the_camera_now_holds()
     """"Apply again" means apply against what is THERE now. A second edit to a conflicted field takes the
     camera's current value as the one it is based on — otherwise it would conflict again for ever."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    api.update_camera(CAM, {"name": "main-gate"}, idempotency_key="k1", token="anna")
+    api.update_unit(CAM, {"name": "main-gate"}, idempotency_key="k1", token="anna")
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate-B", "events_retention_days": 30}})
     links["cam-4471"].up = True
     _agent(fed, member, wall).sync()
     pending.collect(fed)
 
     links["cam-4471"].up = False
-    api.update_camera(CAM, {"name": "main-gate"}, idempotency_key="k2", token="anna")   # "apply again"
+    api.update_unit(CAM, {"name": "main-gate"}, idempotency_key="k2", token="anna")   # "apply again"
     assert pending.of("cam-4471")[CAM]["fields"]["name"] == {"old": "gate-B", "new": "main-gate"}
     links["cam-4471"].up = True
     _agent(fed, member, wall).sync()
@@ -146,8 +146,8 @@ def test_edits_made_while_it_is_off_merge_per_field():
     since nothing new arrives from it — and remembering the value in between, which may already have landed
     (see the next test but one)."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    api.update_camera(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
-    api.update_camera(CAM, {"events_retention_days": 14, "name": "main-gate"}, idempotency_key="k2", token="anna")
+    api.update_unit(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
+    api.update_unit(CAM, {"events_retention_days": 14, "name": "main-gate"}, idempotency_key="k2", token="anna")
     fields = pending.of("cam-4471")[CAM]["fields"]
     assert fields["events_retention_days"] == {"old": 30, "new": 14, "via": [7]}   # the first edit's base, the last edit's value,
                                                                                    # and the value in between — it may already have landed
@@ -159,7 +159,7 @@ def test_the_grant_is_checked_when_it_is_applied_not_when_it_was_accepted():
     cluster's console checks the grant at the moment it applies, against its own grants — the same check
     as a live edit — and a refused edit is kept and said, not dropped and not forced."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    api.update_camera(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
+    api.update_unit(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "events_retention_days": 30}}, allowed={"boris"})
     links["cam-4471"].up = True
     _agent(fed, member, wall).sync()
@@ -175,7 +175,7 @@ def test_carrying_it_home_twice_applies_it_once():
     before the domain has cleared it. The per-field comparison makes that harmless: the second time the
     field already holds the wanted value, and nothing is written."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    api.update_camera(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
+    api.update_unit(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "events_retention_days": 30}})
     links["cam-4471"].up = True
     agent = _agent(fed, member, wall)
@@ -189,7 +189,7 @@ def test_without_a_place_to_keep_edits_the_api_still_says_503():
     wall, fed, links, pending, _ = _domain_with_a_camera_that_went_off()
     api = ConsoleAPI(DomainDirectory(fed), lambda name: None)
     try:
-        api.update_camera(CAM, {"events_retention_days": 7}, idempotency_key="k1")
+        api.update_unit(CAM, {"events_retention_days": 7}, idempotency_key="k1")
         raise AssertionError("must refuse")
     except ApiError as e:
         assert e.status == 503
@@ -205,14 +205,14 @@ def test_an_edit_made_before_the_last_one_was_confirmed_is_not_a_conflict():
     And the report about the first edit, read after the second was made, must clear nothing: it names the
     edit it was about (`rev`), and it was not about this one."""
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off()
-    api.update_camera(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
+    api.update_unit(CAM, {"events_retention_days": 7}, idempotency_key="k1", token="anna")
     member = Member({CAM: {"id": 1, "ref": CAM, "name": "gate", "events_retention_days": 30}})
     agent = _agent(fed, member, wall)
     links["cam-4471"].up = True
     agent.sync()                                                   # the camera took 7, and said so in its own Variables
     links["cam-4471"].up = False                                   # …and went off before the domain read it
 
-    api.update_camera(CAM, {"events_retention_days": 14}, idempotency_key="k2", token="anna")
+    api.update_unit(CAM, {"events_retention_days": 14}, idempotency_key="k2", token="anna")
     links["cam-4471"].up = True
     pending.collect(fed)                                           # the report is about the FIRST edit
     assert "events_retention_days" in pending.of("cam-4471")[CAM]["fields"], "a report about an older edit cleared a newer one"
@@ -248,13 +248,13 @@ def test_an_address_with_a_password_is_refused_and_never_kept_carried_or_reporte
     camera's own console refuses it (`Device._update`), the outcome says so without the value, and the domain's next
     write of the row (`_dump`) keeps the address hidden; no key of the holder's store — the row, the outcomes carried
     up, what a backup copies — holds the password."""
-    from domain.device import DeviceCluster
-    from domain.pending import PENDING_PATH
+    from vms.domainpart.device import DeviceCluster
+    from w2cplatform.domain.pending import PENDING_PATH
     from w2cplatform.cluster.variables import FakeVariables
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
     for i, src in enumerate(LOGINS):
-        for call in (lambda: api.update_camera(CAM, {"source": src}, idempotency_key=f"u{i}", token="anna"),
-                     lambda: api.create_camera({"name": "n", "source": src}, cluster="cam-4471", idempotency_key=f"c{i}",
+        for call in (lambda: api.update_unit(CAM, {"source": src}, idempotency_key=f"u{i}", token="anna"),
+                     lambda: api.create_unit({"name": "n", "source": src}, cluster="cam-4471", idempotency_key=f"c{i}",
                                                token="anna")):
             try:
                 call()

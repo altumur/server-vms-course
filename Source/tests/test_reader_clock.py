@@ -223,7 +223,7 @@ def test_an_ingest_takes_what_a_recorder_wrote_only_while_it_hears_it():
     """М12's ingest drops every frame not newer than what the cluster's recorder `written_through` says
     (`ingest.written_from_heartbeats`), and read that recorder fresh by `now - hb.ts`: a dead recorder an hour ahead
     said its `written_through` for that hour, one 100 s behind was never heard. By the ingest's own clock now."""
-    from domain.ingest import written_from_heartbeats
+    from vms.domainpart.ingest import written_from_heartbeats
     box = Box()
 
     def beat(name, skew, through):

@@ -1,18 +1,17 @@
-# deploy/domain/Containerfile — `vms/domainvms:latest`: М11's image plus the `domain` package and what it signs with.
+# deploy/domain/Containerfile — `vms/domainvms:latest`: М11's image plus what the domain signs with.
 #
 # Build order: М10's image, then М11's, then this one, from the code root `Source/`:
 #   podman build -t vms/domainvms:latest -f deploy/domain/Containerfile .
 #
 # Everything the domain runs is in it — the agent, the signer, the domain's console, the gateway — AND it is
 # the image a CLUSTER's own console runs from once that cluster is in a domain: the console's gate
-# (w2cplatform/access.py) loads `domain.access` to check a token, and М11's image has neither that module nor
-# the library it verifies a signature with.
+# (w2cplatform/access.py) loads the platform's `w2cplatform.domain.access` to check a token, and М11's image has not
+# the library it verifies a signature with. The domain's code is the platform's (`w2cplatform/domain`, `trust`), already
+# in the image; the VMS's part on the domain is `vms/domainpart`, in it too.
 FROM localhost/clustervms:latest
 RUN apt-get update && apt-get install -y --no-install-recommends python3-cryptography && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY domain domain
-ENV ACCESS_IMPL=domain.access:cluster_access
 # The specs of the subsystems the domain relays edits of: how an address carries a login is theirs to say
 # (`w2cplatform/catalog.py`), and the domain's door refuses by them.
 ENV SPEC_DIR=/app/vms
-CMD ["python3", "-m", "domain.agent"]
+CMD ["python3", "-m", "w2cplatform.domain.agent"]

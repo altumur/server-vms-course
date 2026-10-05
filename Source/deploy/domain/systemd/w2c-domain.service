@@ -1,0 +1,41 @@
+# /etc/systemd/system/w2c-domain.service — the domain's signer and its doors, on the server that holds the domain
+# (`w2c-run.sh signer` → `python3 -m w2cplatform.domain.signer_service`): the people's door in (/login), the members'
+# carry door (/api/carry/<member> — each member's own rows, signed by its key, secrets sealed to it), and on a socket of
+# the holder's own the tokens a subsystem's books carry (`tokendoor.py`). Its keys and the people's and the emergency
+# hashes are sealed under the ring (the key below).
+[Unit]
+Description=w2c domain — the signer and its doors (this server holds the domain)
+After=network-online.target configstore.service w2c-resource.service
+Wants=network-online.target
+
+[Service]
+User=w2c
+Group=w2c
+SupplementaryGroups=w2c-domain w2c-store w2c-secrets
+Environment=PLATFORM_STORE=configstore:///run/configstore/domain.sock
+Environment=SIGNER_PORT=8445
+# The box's own door to the door in (`curl --unix-socket`, past a flood), and the monitors' lane for /healthz.
+Environment=SIGNER_UNIX=/run/w2c-domain/signer.sock
+Environment=CONSOLE_MONITORS=127.0.0.1
+RuntimeDirectory=w2c-domain
+RuntimeDirectoryMode=0700
+# The tokens' socket: in `/run/w2c-signer` (2750 w2c:vms-vmsdomain, `w2c-domain.tmpfiles`) — the socket takes the
+# directory's group, so the books' worker opens it and no other process of the box does.
+Environment=SIGNER_TOKENS_UNIX=/run/w2c-signer/tokens.sock
+LoadCredential=platform.key:/etc/w2c/secrets/platform.key
+Environment=SECRETS_KEY=%d/platform.key
+# /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says (the cluster's units' rule) —
+# the site's lines (CLUSTER, DOMAIN_URL, CLUSTERS, OBJECTS…) are there, `domain.env.example`; the sockets are the unit's.
+UMask=0007
+ExecStart=/opt/w2c/bin/w2c-run.sh signer
+ReadWritePaths=/data/platform/objects /run/w2c-signer
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

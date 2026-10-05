@@ -8,14 +8,14 @@ certificate. The holder keeps what signs every minute; a theft is answered by a 
 """
 from w2cplatform.cluster.variables import FakeVariables
 
-from domain.agent import LDEVID_PATH, ROOT_PATH, ClusterTrust, DomainAgent, DomainPublisher
-from domain.device import DeviceCluster
-from domain.federation import Federation
-from domain.members import Members
-from domain.shared import SharedSettings, SharedView, sign
-from domain.signer import DomainRoot, Signer, TrustBundle, VerifyError, _key_bytes
-from domain.term import BACKUP, carry_holder, find_holder, install, move_domain, read_holder
-from domain.tokens import KeySet, TokenError, verify
+from w2cplatform.domain.agent import LDEVID_PATH, ROOT_PATH, ClusterTrust, DomainAgent, DomainPublisher
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import Federation
+from w2cplatform.domain.members import Members
+from w2cplatform.domain.shared import SharedSettings, SharedView, sign
+from w2cplatform.trust.signer import DomainRoot, Signer, TrustBundle, VerifyError, _key_bytes
+from w2cplatform.domain.term import BACKUP, carry_holder, find_holder, install, move_domain, read_holder
+from w2cplatform.trust.tokens import KeySet, TokenError, verify
 from tests.domain.conftest import Clock
 
 from cryptography import x509
@@ -78,7 +78,7 @@ def test_the_recovery_file_is_the_root_and_the_holder_holds_none_of_it():
     trust = ClusterTrust(devices["cam-SN2"].flash)
     assert trust.root() == root.public_bytes and trust.keyset().rev == 1
     assert agents["cam-SN2"].keys == "rev 1"
-    tok = holder.signer.tokens.issue("anna", 900, now=wall())
+    tok = holder.signer.tokens.issue("anna", 900, now=wall(), kind="person")
     assert verify(tok, trust.keyset(), now=wall())["sub"] == "anna"
     assert read_holder(devices["cam-SN2"].flash, trust.keyset(), wall())["kid"] == "root"
 
@@ -119,7 +119,7 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     for a in agents.values():
         a.sync()
-    stolen_token = holder.signer.tokens.issue("mallory", 900, now=wall(), role="admin")
+    stolen_token = holder.signer.tokens.issue("mallory", 900, now=wall(), role="admin", kind="person")
     old_ca = holder.signer.root.cert
     devices["cam-SN0"].power_off()
 
@@ -135,7 +135,7 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
         verify(stolen_token, keys, now=wall()); raise AssertionError("the stolen key must be refused")
     except TokenError:
         pass
-    assert verify(new.signer.tokens.issue("anna", 900, now=wall()), keys, now=wall())["sub"] == "anna"
+    assert verify(new.signer.tokens.issue("anna", 900, now=wall(), kind="person"), keys, now=wall())["sub"] == "anna"
     assert read_holder(devices["cam-SN2"].flash, keys, wall())["holder"] == "cam-SN1"
     assert SharedView(devices["cam-SN2"].flash, devices["cam-SN2"].disk, wall).settings() == {"retention_days": 30}
 
@@ -160,7 +160,7 @@ def test_a_planned_move_gives_the_new_holder_keys_of_its_own_and_the_old_ones_li
     fed, devices, root, holder, agents, _ = _site(wall)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     agents["cam-SN1"].sync()
-    old_token = holder.signer.tokens.issue("anna", 900, now=wall())
+    old_token = holder.signer.tokens.issue("anna", 900, now=wall(), kind="person")
     new, report = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
     assert not report["reissued"] and new.signer.tokens.kid != holder.signer.tokens.kid
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall)
@@ -171,7 +171,7 @@ def test_a_planned_move_gives_the_new_holder_keys_of_its_own_and_the_old_ones_li
     assert "token_key" not in stored and "deposed by term 2" in stored["forgotten"]
     wall.advance(3601)
     try:
-        verify(holder.signer.tokens.issue("anna", 900, now=wall()), ClusterTrust(devices["cam-SN2"].flash).keyset(),
+        verify(holder.signer.tokens.issue("anna", 900, now=wall(), kind="person"), ClusterTrust(devices["cam-SN2"].flash).keyset(),
                now=wall())
         raise AssertionError("an hour on, the old holder's key is retired")
     except TokenError:
@@ -219,7 +219,7 @@ def test_a_member_that_pinned_another_root_is_named_and_not_accepted():
     becomes its root. SN9's first pass reached an impostor with a root of its own; afterwards its agent reaches
     the real domain, refuses every key set the real root signed — and still reports. The domain shows which root
     each member pinned, and an admin cannot accept SN9: it would be listed and take nothing this domain signs."""
-    from domain.api import ApiError
+    from w2cplatform.domain.api import ApiError
     wall = Clock()
     fed, devices, root, holder, agents, _ = _site(wall)
     impostor_fed, x0 = Federation(), DeviceCluster("X0", FakeVariables(), wall=wall)

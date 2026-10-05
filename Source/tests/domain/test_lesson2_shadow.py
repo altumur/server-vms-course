@@ -1,6 +1,6 @@
 """Lesson 2 — shadow mode: the taxonomy, slow versus stuck, the one number,
 and the report built from what real clusters publish."""
-from domain.shadow import Shadow, WorkerReport, exit_criterion, reports_from
+from w2cplatform.domain.shadow import Shadow, WorkerReport, exit_criterion, reports_from
 from tests.domain.conftest import Clock, Running, make_domain
 
 
@@ -47,7 +47,7 @@ def test_the_report_from_what_clusters_publish():
     assert down == [] and sorted(r.cluster for r in reports) == ["north", "south"] and epochs[("north", "1")] == 1
     placed = {"1": "north", "2": "north"}                                       # the domain's placements, by its refs
     r = Shadow().compare(placed, epochs, reports, now=wall())
-    assert r.count("unmanaged") == 1 and r.findings[-1].where == "south/w-0" and r.findings[-1].camera == "3"   # south runs a camera the domain never placed
+    assert r.count("unmanaged") == 1 and r.findings[-1].where == "south/w-0" and r.findings[-1].unit == "3"   # south runs a camera the domain never placed
     links["south"].up = False
     reports, epochs, down = reports_from(fed)
     assert down == ["south"] and all(r.cluster == "north" for r in reports)       # a silent cluster is named, not counted as clean

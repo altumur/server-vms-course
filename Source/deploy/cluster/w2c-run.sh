@@ -5,6 +5,8 @@
 #   w2c-run.sh configstore                  this server's member of the store's raft group, a socket per role
 #   w2c-run.sh controller <sub>|console|resource      the platform's processes: python3 -m w2cplatform.cluster <verb>
 #   w2c-run.sh rights [--check FILE]        print (or check) the rights file generated from the specs
+#   w2c-run.sh signer|domainconsole|domainagent   the domain's processes: python3 -m w2cplatform.domain.<module>
+#                                           (`signer_service`, `console`, `agent`; `deploy/domain/systemd`)
 #   w2c-run.sh <package> <verb>             a subsystem's own process: python3 -m <package> <verb> — a package of the
 #                                           installed tree with an entry point (the VMS's: `vms worker|recorder|jobs`)
 #   w2c-run.sh spares <role>...             a box on macOS: `w2c-spares.sh` with the box's two files read (a Linux
@@ -98,7 +100,7 @@ export PYTHONPATH="$W2C_HOME/Source${PYTHONPATH:+:$PYTHONPATH}"
 export SPEC_DIR="${SPEC_DIR:-$W2C_HOME/Source/vms}"
 PYTHON="${PYTHON:-python3}"
 
-program="${1:?w2c-run.sh configstore | controller <sub> | console | resource | rights | spares | <package> <verb>}"
+program="${1:?w2c-run.sh configstore | controller <sub> | console | resource | rights | signer | domainconsole | domainagent | spares | <package> <verb>}"
 shift
 case "$program" in
     configstore)
@@ -122,6 +124,12 @@ case "$program" in
             -tuning "${CONFIGSTORE_TUNING:-lan}" $start "$@" ;;
     controller|console|resource|rights)
         exec "$PYTHON" -m w2cplatform.cluster "$program" "$@" ;;
+    signer)
+        exec "$PYTHON" -m w2cplatform.domain.signer_service "$@" ;;
+    domainconsole)
+        exec "$PYTHON" -m w2cplatform.domain.console "$@" ;;
+    domainagent)
+        exec "$PYTHON" -m w2cplatform.domain.agent "$@" ;;
     spares)
         exec sh "$W2C_HOME/bin/w2c-spares.sh" "$@" ;;
     *)

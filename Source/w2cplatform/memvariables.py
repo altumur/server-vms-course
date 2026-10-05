@@ -84,11 +84,10 @@ class MemVariables:
         return MemVariables(self._s, writer, {**self.acl, writer: allowed}, max_bytes=self.max_bytes)
 
     def _refuse(self, path: str) -> None:
-        if self.writer is None or not self.acl:
-            return
-        allowed = self.acl.get(self.writer, [])
-        if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
-            raise Forbidden(f"{self.writer} may not write {path}")
+        from .rights import refusal                  # the platform's one evaluator: `!` denials first (`rights.py`)
+        why = refusal(self.writer, self.acl, path)
+        if why:
+            raise Forbidden(why)
 
     # `(items, index)`, or `(None, 0)` for a path never written. The items are a COPY: a caller that
     # mutated what it read would be editing the store without an index, which is the one thing CAS exists
