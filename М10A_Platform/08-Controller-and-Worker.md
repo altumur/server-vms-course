@@ -428,14 +428,17 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
         …
         if self.assigned_now is not NEVER_READ and (self.assigned_now is None or str(unit) not in self.assigned_now):
             raise NotReadThisPass(…)
+        if str(unit) in self.lost_to_epoch:
+            raise NotReadThisPass(…)
         epoch, _ = next_epoch(self.vars, self.sub.epoch_key(unit))
         self.epochs[unit] = epoch
         self.leases[unit] = Lease(self.vars, self.sub.epoch_key(unit), epoch, self.lease_ttl, self.lease_margin, self.clock,
                                   self.unconfirmed_max)
+        self.abouts[str(unit)] = self._read_about(str(unit))
         return epoch
 ```
 
-Три отказа сначала: имя отдано и другого нет (шаг 8, ниже), шаг пережил своего подменщика, единицы нет в назначении, прочитанном последним, — все три разобраны в уроке 7, шаг 7. Потом четыре строки, соединяющие два механизма урока 6: взять номер и **тут же** завести на него аренду. Раздельно их не берут нигде — эпоха без аренды была бы правом без срока.
+Четыре отказа сначала: имя отдано и другого нет (шаг 8, ниже), шаг пережил своего подменщика, единицы нет в назначении, прочитанном последним, — эти три разобраны в уроке 7, шаг 7; четвёртый — единица, которую шаг аренд отпустил после этого чтения (`lost_to_epoch`, шаг 9). Отказы стоят в самом взятии эпохи, а не у тех, кто её просит: проход подсистемы, взгляд на просьбы и любой будущий вызов получают один ответ. Потом строки, соединяющие два механизма урока 6: взять номер и **тут же** завести на него аренду. Раздельно их не берут нигде — эпоха без аренды была бы правом без срока. Последняя перед `return` запоминает, о чём единица, — `of` всех её строк и меток (урок 12).
 
 Слово STARTS в docstring выделено не зря. Эпоха берётся, когда воркер **начинает** держать единицу, а не когда перезапускает уже идущую. Разница проявится в М10B: правка камеры перезапускает конвейер, сохраняя эпоху (тот же писатель, тот же каталог), а настоящий старт берёт следующую (новый писатель — новый каталог).
 
@@ -716,7 +719,7 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
     #   stop_all_units()     stop everything local: an orderly stop
     #   fence_units()        …and when the instance is fenced (default: `stop_all_units`)
     #   forget_units()       forget what it held when it rejoins under another name
-    #   perform(target, row, it), held_rows(), request_target(row)   a subsystem whose units take requests (below)
+    #   held_rows(), request_target(row), perform(target, row, it)   a subsystem whose units take requests (below)
 ```
 
 Обязателен один `reconcile_once`; у остальных есть умолчание, которое не делает ничего или делает самое малое. Рядом ещё несколько крючков того же рода: `before_stop_all` и `after_stop` (последние слова при аккуратной остановке и то, что отпускается после слота), `unit_word` (как лог называет единицу — в М10B «camera 7»), `class_of` (какие виды событий единицы — тревоги; по умолчанию все — наблюдения, ниже), `pending_writes` (шаг 8), `wants` и `early_pass` (длинный опрос и досрочный проход, шаг 8), `may_stand_in_hold` и `note_hold_confirmed` («подменщик» и место). И одно число: `capacity` — сколько единиц воркер возьмёт, если подсистема знает это лучше спецификации (ниже). Крючок — это вопрос «что значит моя единица», а не «когда продлевать»: на второй база отвечает одна.
@@ -727,7 +730,6 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
     def lease_pass(self) -> list[str]:
         """Renew the slot and every lease. Another holder on my slot: the instance
         fences. A lost lease: that one unit stops and gives its epoch up."""
-        self._life()
         if self.writing_allowed and self.waiting_for_offer():
             self._seek_slot()                         # a spare with no offer yet: nobody, holding nothing — not a fence
             return []
@@ -753,6 +755,7 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
             self.stop_unit(unit)
             self.release(unit)
             self.lost_to_epoch.add(unit)
+        self._strict_place_pass()
         return lost
 ```
 
@@ -764,7 +767,7 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 
 *Молчащее хранилище — не потеря* (обратная связь BK). Аренда, истёкшая, пока хранилище молчало, в `lost` не попадает: `renew` отвечает `may_write()` (урок 6, шаг 8а), данные идут, действия ждут — просьбы спрашивают строгий `may_act`. Хранилище вернулось: эпоха та же — в логе «the store confirms epoch N of … again; nothing was stopped» (для этого и запомнены `waiting`); эпоха другая — единица останавливается, как при любом переназначении.
 
-*Отпущенное назад не берут без назначения.* Шаг аренд нашёл эпоху новее и отпустил единицу; следующий взгляд на просьбы, через четверть секунды, видит её без аренды и взял бы следующую эпоху CAS-ом — отсекая нового держателя, к которому единица честно уехала, такт за тактом (найдено гонкой рядом с набором тестов М12, воспроизведено запуском). Поэтому отпущенная единица запоминается (`lost_to_epoch`), и `requests` её не берёт: своя ли она ещё, говорит только проход, прочитавший назначение. Забывает её само чтение назначения базы, `Worker.assignment()`, когда оно ответило, — и забывает только то, что шаг аренд отпустил **до** чтения: отпущенное, пока чтение шло, остаётся до следующего.
+*Отпущенное назад не берут без назначения.* Шаг аренд нашёл эпоху новее и отпустил единицу; следующий взгляд на просьбы, через четверть секунды, видит её без аренды и взял бы следующую эпоху CAS-ом — отсекая нового держателя, к которому единица честно уехала, такт за тактом (найдено гонкой рядом с набором тестов М12, воспроизведено запуском). Поэтому отпущенная единица запоминается (`lost_to_epoch`), и `take_epoch` ей отказывает (`NotReadThisPass`, шаг 8), кто бы ни просил: взгляд на просьбы, ворота подсистемы, любой проход. `requests` на этот отказ только пропускает просьбу — исполнит тот, кто держит единицу сейчас. Своя ли она ещё, говорит только проход, прочитавший назначение. Забывает её само чтение назначения базы, `Worker.assignment()`, когда оно ответило, — и забывает только то, что шаг аренд отпустил **до** чтения: отпущенное, пока чтение шло, остаётся до следующего.
 
 ```python
         lost_before = set(self.lost_to_epoch)
@@ -779,13 +782,12 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
         return a
 ```
 
-Правило стоит в чтении, а не в проходе подсистемы: какую бы работу проход ни делал и где бы ни упал, единица возвращается в оборот ровно тогда, когда назначение ответило. Тесты: `test_worker_life.py::test_a_unit_the_lease_step_let_go_is_forgotten_by_the_assignment_read_that_answers` (на воркере `testsub`: чтение, которое не ответило, не забывает ничего; ответившее — забывает); на держателе камер М10B — `test_long_poll.py::test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_only_by_the_pass_that_reads_the_assignment` и `…::test_a_camera_the_lease_step_let_go_is_not_taken_back_by_a_pass_whose_assignment_did_not_read`.
+Правило стоит в эпохе и в чтении, а не в проходе подсистемы и не в просьбах: кто бы ни просил эпоху, какую бы работу проход ни делал и где бы ни упал, единица возвращается в оборот ровно тогда, когда назначение ответило. Тесты: `test_worker_life.py::test_a_unit_the_lease_step_let_go_is_forgotten_by_the_assignment_read_that_answers` (на воркере `testsub`: чтение, которое не ответило, не забывает ничего; ответившее — забывает); `test_holder_requests.py::test_a_unit_the_lease_step_let_go_is_not_taken_back_by_a_request_before_the_assignment_is_read_again` (там же: просьба на отпущенную единицу ждёт чтения назначения); на держателе камер М10B — `test_long_poll.py::test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_only_by_the_pass_that_reads_the_assignment` и `…::test_a_camera_the_lease_step_let_go_is_not_taken_back_by_a_pass_whose_assignment_did_not_read`.
 
 **Ограда и возвращение.**
 
 ```python
     def fence(self, why: str) -> None:
-        self._life()
         if not self.writing_allowed:
             return
         log.error("%s: FENCED (%s). Stopping every unit.", self.name, why)
@@ -793,11 +795,10 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
         self.fence_units()
 ```
 
-Идемпотентно: второй вызов выходит сразу, и лог не шумит в ту минуту, когда его будут читать. Сначала флаг, потом работа: параллельный шаг, случись он, уже видит запрет. `writing_allowed` — флаг на весь экземпляр, и его спрашивают все, кто начинает что-то под именем: подсистема перед стартом единицы, `observe` перед строкой события, `requests` перед просьбой, «подменщик» перед продлением (`may_stand_in`). Heartbeat говорит `fenced: true`, пока имя ещё его (огороженный за схему), и не говорит ничего, когда имя чужое (шаг 8).
+Идемпотентно: второй вызов выходит сразу, и лог не шумит в ту минуту, когда его будут читать. Сначала флаг, потом работа: параллельный шаг, случись он, уже видит запрет. `writing_allowed` — флаг на весь экземпляр, и его спрашивают все, кто начинает что-то под именем: подсистема перед стартом единицы, `observe` перед строкой события, `requests` перед просьбой, «подменщик» перед продлением (`may_stand_in`). Флаг, как и всё состояние жизненного цикла — что отпустил шаг аренд, счётчики, состояние просьб, — база заводит один раз, при создании воркера (`_life` из `__init__`), и ни один шаг не спрашивает, заведено ли оно: подсистема копии не держит и наличие не проверяет. Heartbeat говорит `fenced: true`, пока имя ещё его (огороженный за схему), и не говорит ничего, когда имя чужое (шаг 8).
 
 ```python
     def rejoin(self) -> str | None:
-        self._life()
         if self.writing_allowed:
             return self.name
         try:
@@ -826,7 +827,6 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 ```python
     def run(self, poll: float = 2.0, stop=None, beat: float = 0.0) -> None:
         """One box: the loop as a process. systemd or launchd restarts it."""
-        self._life()
         stop = stop or threading.Event()
         lease_every = self.LEASE_EVERY or max(1.0, (self.lease_ttl - self.lease_margin) / 3)
         stand_in = self.start_stand_in()
@@ -903,7 +903,6 @@ Heartbeat цикла собирает база:
 
 ```python
     def heartbeat_once(self) -> None:
-        self._life()
         self.heartbeat(self.status(), **{**self.platform_fields(), **self.heartbeat_fields()})
 
     def platform_fields(self) -> dict:
@@ -912,10 +911,10 @@ Heartbeat цикла собирает база:
                 **({"capacity": cap, "headroom": self.headroom()} if cap is not None else {}),
                 "conflicts": self.conflicts(), "started": self.started_wall, **self.previous_said(),
                 **({"fenced": True} if not self.writing_allowed else {}),
-                **({"fetched": self.fetched_said()} if self.fetched else {})}
+                **self.requests_fields()}
 ```
 
-Поля, которые платформа читает по именам — где воркер, что он достаёт и сколько ещё возьмёт (размещение, урок 11), огорожен ли, сколько конфликтов эпох, на какие просьбы ответил, когда стартовал этот экземпляр (`started`) и что оставил под этим именем предыдущий (`previous_hb`, `previous_instance`, `previous_server`: из них контроллер меряет переключение, шаг 4), — кладёт база; подсистема добавляет своё (`heartbeat_fields`). Два словаря сливаются в один, и на ключе, который говорят оба, остаётся слово подсистемы. Воркеру никто не звонит: он рассказывает о себе периодически, и все, кому нужно, читают один объект.
+Поля, которые платформа читает по именам — где воркер, что он достаёт и сколько ещё возьмёт (размещение, урок 11), огорожен ли, сколько конфликтов эпох, на какие просьбы ответил и что насчитало семейство просьб (`requests_fields`: `fetched`, `command_counts`, `commands_reanswered`, `commands_in_flight`, путь до вызова гистограммами `command_road`, `command_request`, `command_wait` — каждое, только когда есть что сказать; урок 14), когда стартовал этот экземпляр (`started`) и что оставил под этим именем предыдущий (`previous_hb`, `previous_instance`, `previous_server`: из них контроллер меряет переключение, шаг 4), — кладёт база; подсистема добавляет своё (`heartbeat_fields`). Два словаря сливаются в один, и на ключе, который говорят оба, остаётся слово подсистемы. Воркеру никто не звонит: он рассказывает о себе периодически, и все, кому нужно, читают один объект.
 
 **Ёмкость говорится, только когда она известна.** `capacity_said()` — число, которое поставила подсистема (`capacity`), иначе умолчание спецификации (`placement.capacity.default`), иначе ничего. Сказанное число контроллер читает как слово воркера (`capacity_of`), и сказанный ноль значил бы «не клади на меня ничего»; поэтому воркер, который своей ёмкости не знает, её не говорит, и действует запасное значение контроллера (урок 11). Тесты: `test_worker_life.py::test_a_worker_whose_subsystem_sets_no_capacity_says_the_specs_default_and_is_placed_by_it`, `test_worker_life.py::test_every_workers_failover_is_measured_from_the_heartbeat_its_name_left`.
 
@@ -927,7 +926,7 @@ Heartbeat цикла собирает база:
         from .rows import number
         refuse_own_of(self.sub.name, str(unit), fields)   # at once: a line the suppressor swallows is refused as well
         epoch = self.epochs.get(str(unit))
-        if epoch is None or not self.resource_root or not self.__dict__.get("writing_allowed", True):
+        if epoch is None or not self.resource_root or not self.writing_allowed:
             return None
         t = self.wall()
         occurred = number(f"{self.sub.name}/{unit}#occurred", fields.pop("occurred", None), default=None)
@@ -1028,7 +1027,7 @@ def test_controller_and_worker_bases_speak_only_the_contract():
 | Heartbeat перестаёт уходить, когда падает работа или шаг аренд | Шаги цикла в одном `try`. У каждого — свой, и упавший считается в `pass_failures`. |
 | Огороженный экземпляр так и висит с `fenced: true` до ручного перезапуска | Нет `rejoin` в начале прохода: супервизор не перезапускает процесс, который не упал. |
 | Аренды теряются при паузе хранилища, которую они должны пережить | Шаг аренд отсчитывается от конца прошлого шага или ждёт полный период после неотвеченного продления. От начала — и сразу после неотвеченного (`again`). |
-| Единица, отпущенная шагом аренд, тут же снова взята, и новый держатель отсечён | Взгляд на просьбы взял эпоху единице из `lost_to_epoch`, или `lost_to_epoch` стирают не там. Отпущенное назад берёт только проход, прочитавший назначение: стирает его чтение назначения базы, которое ответило, и только отпущенное до чтения. |
+| Единица, отпущенная шагом аренд, тут же снова взята, и новый держатель отсечён | `take_epoch` не отказывает единице из `lost_to_epoch`, или `lost_to_epoch` стирают не там. Отпущенное назад берёт только проход, прочитавший назначение: стирает его чтение назначения базы, которое ответило, и только отпущенное до чтения. |
 | Контроллер после остановки воркера ничего не перераспределяет | Процесс выходит без `release_slot`: аккуратная остановка обязана сказать о себе, иначе она выглядит как падение. |
 
 ## Итог

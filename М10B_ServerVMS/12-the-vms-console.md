@@ -192,7 +192,7 @@ function evNoteRu(e){
 }
 ```
 
-Вид события («часы камеры скакнули вперёд») — из `display.kinds` спеки. Описание — суммы, причины, тома — из полей события, и это логика страницы: `volume.missing`, `archive.volume.shrunk`, `archive.footage.dropped`, `camera.footage.lost`, `camera.uplink.short`, `card.prebuffer.short`, `card.failing`, `archive.backfill.refused`. `inNote` — защита от петли: неописанное событие страница отдаёт обратно модулю, а модуль снова зовёт страницу.
+Вид события («часы камеры скакнули вперёд») — из `display.kinds` спеки. Описание — суммы, причины, тома — из полей события, и это логика страницы: `volume.missing`, `archive.volume.shrunk`, `archive.footage.dropped`, `camera.footage.lost`, `camera.uplink.short`, `card.prebuffer.short`, `card.failing`, `archive.backfill.refused`. `inNote` — защита от петли: неописанное событие страница отдаёт обратно модулю, а модуль снова зовёт страницу. Виды семейства просьб, `command` и `command.failed`, страница не описывает и `display.kinds` спеки не называет: это слова модуля, как `server.*` и `worker.*`, — исход по `outcome`, `action`, кто просил, «поздно», ответ цели из `reply` (контракт модуля, §5; ADR 0013).
 
 ## Шаг 5 — Двери: ядро, скопированное со сверкой
 
