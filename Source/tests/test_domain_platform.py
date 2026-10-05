@@ -223,3 +223,43 @@ def test_a_domain_section_that_names_what_is_not_there_is_refused_when_the_spec_
             raise AssertionError(f"taken: {bad}")
         except ValueError:
             pass
+
+
+def test_the_key_families_are_read_passed_through_spec_and_their_words_must_name_one():
+    """`domain.keys` — the subsystem's key families of the domain, for a page's «keys» tab: the composition only, every
+    key under the subsystem's own prefix; the words are `display.keys`, merged by id on the page. The reader takes it,
+    a key falls into its family by an exact key or a prefix, `/spec` carries it as written — and a family with words in
+    it, a key outside `domain/<sub>/`, a family with no key, or words for a family nobody declared are refused."""
+    import yaml
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.spec import SpecController, SubsystemSpec
+    from w2cplatform.variables import FileVariables
+    s = spec()
+    assert [f["id"] for f in s.domain.keys] == ["tallies", "ledger"]
+    assert s.domain.family_of("domain/testsub/tallies") == s.domain.family_of("domain/testsub/tallies/south") == "tallies"
+    assert s.domain.family_of("domain/testsub/ledger") == "ledger" and s.domain.family_of("domain/testsub/x") is None
+    root = tempfile.mkdtemp(prefix="keys-")
+    ctl = SpecController(s, FileVariables(os.path.join(root, "config"), volatile=True),
+                         FsObjectStore(os.path.join(root, "objects")), wall=Clock())
+    got = SpecConsole(ctl, wall=Clock()).describe()
+    assert got["domain"] == {"keys": [{"id": "tallies", "keys": ["domain/testsub/tallies"], "prefix": "domain/testsub/tallies/"},
+                                      {"id": "ledger", "keys": ["domain/testsub/ledger"]}]}
+    assert got["display"]["keys"]["ledger"] == {"title": "ledger", "about": "the ledger the holder keeps for the domain",
+                                                "absent": "nothing ledgered yet"}
+    base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
+    for bad in ([{"id": "a", "keys": ["domain/testsub/a"], "title": "A"}],          # words belong in display.keys
+                [{"id": "a", "keys": ["domain/members"]}],                           # the platform's own family
+                [{"id": "a", "prefix": "domain/other/"}], [{"id": "a"}],
+                [{"id": "a", "keys": ["domain/testsub/a"]}, {"id": "a", "keys": ["domain/testsub/b"]}]):
+        try:
+            SubsystemSpec.from_dict({**base, "domain": {**base["domain"], "keys": bad}})
+            raise AssertionError(f"taken: {bad}")
+        except ValueError:
+            pass
+    for words in ({"nobody": {"title": "x"}}, {"ledger": {"title": "x", "colour": "red"}}):
+        try:
+            SubsystemSpec.from_dict({**base, "display": {"keys": words}})
+            raise AssertionError(f"taken: {words}")
+        except ValueError:
+            pass

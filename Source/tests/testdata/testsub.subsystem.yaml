@@ -29,5 +29,13 @@ domain:
   tables: [ledger]
   tokens:
     tally: {lifetime: 600, claims: [counter]}
+  # its key families, for a page that lists the domain's keys (their words below, display.keys)
+  keys:
+    - {id: tallies, keys: [domain/testsub/tallies], prefix: domain/testsub/tallies/}
+    - {id: ledger, keys: [domain/testsub/ledger]}
+display:
+  keys:
+    tallies: {title: tallies, about: "a member's tally book: domain/testsub/tallies/<member> at the holder, domain/testsub/tallies at home"}
+    ledger: {title: ledger, about: the ledger the holder keeps for the domain, absent: nothing ledgered yet}
 console:
   running: counters_running

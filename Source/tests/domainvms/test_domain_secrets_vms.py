@@ -178,3 +178,24 @@ def test_a_members_agent_neither_reads_nor_writes_the_signers_key():
         raise AssertionError("the box let the agent write the signer's key")
     except Forbidden:
         pass
+
+
+def test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_declares():
+    """The domain card's «keys» tab lists the VMS's rows by the families `vms.subsystem.yaml` declares (`domain.keys`,
+    the product's `KEY_FAMILIES` mapped to `domain/vms/…`). Every `domain/vms/…` key a pass wrote — at the holder, in the
+    recording member, in the camera — falls into one; so does every path the worker's code names (each book at the
+    holder and carried home, each kept row, the worker's slot); and every family has its words."""
+    from vms.config import SPEC
+    from vms.domainpart import chain, crossing, ingest, keys, worker
+    wall = Clock(1000.0)
+    fed, a, b, cam, door, member_keys, rings, pusher, q, signer = _site(wall)
+    written = [k for store in (b.vars, a.vars, cam.flash) for k in store.list(SPEC.domain_prefix)]
+    assert written
+    named = [getattr(m, n) for m in (keys, worker, crossing, chain, ingest) for n in dir(m)
+             if (n.endswith("_PATH") or n in ("CROSSINGS", "ROADS", "SLOT")) and isinstance(getattr(m, n), str)
+             and getattr(m, n).startswith(SPEC.domain_prefix)]
+    named += [f"{SPEC.domain_prefix}{book}/srv-a" for book in SPEC.domain.books]
+    assert keys.UPSTREAM_PATH in named and keys.ASKS_PATH in named and worker.SLOT in named
+    stray = sorted({k for k in written + named if SPEC.domain.family_of(k) is None})
+    assert not stray, f"keys in no declared family: {stray}"
+    assert sorted(SPEC.display["keys"]) == sorted(f["id"] for f in SPEC.domain.keys)

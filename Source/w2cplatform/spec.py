@@ -539,7 +539,7 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
 # `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`units_running` by
 # default; `cameras_running` for the VMS).
 _DOMAIN_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
-_DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens")
+_DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens", "keys")
 _RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
 
 
@@ -563,6 +563,11 @@ _RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
 #   tables    the kept rows the domain's door serves read-only at `/api/<sub>/<table>`
 #   tokens    the kinds of token the books carry: `{<kind>: {lifetime: <seconds>, claims: [<name>, ...]}}`; the domain's
 #             signer issues them, of those claims only, when the subsystem's worker asks (`trust.tokens.DeclaredIssuer`)
+#   keys      the subsystem's key families, for a page that lists the domain's keys (the domain card's «Ключи»):
+#             `[{id, keys: [<exact key>], prefix: "domain/<sub>/…/"}]` — the composition only, every key under the
+#             subsystem's own prefix; the words are `display.keys: {<id>: {title, about, absent}}`, merged by id on the
+#             page. The platform's own families (members, reaches, topology, pending, outcomes, view) the page names
+#             itself; a key in no family is «other». The platform acts on none of it: it passes it through `/spec`
 @dataclass
 class DomainSection:
     ref: str = ""
@@ -573,6 +578,14 @@ class DomainSection:
     kept: tuple = ()
     tables: tuple = ()
     tokens: dict = field(default_factory=dict)
+    keys: tuple = ()
+
+    def family_of(self, key: str) -> str | None:
+        """The id of the first declared family `key` falls into — an exact key, or under a prefix — or None."""
+        for f in self.keys:
+            if key in f["keys"] or (f["prefix"] and key.startswith(f["prefix"])):
+                return f["id"]
+        return None
 
     @classmethod
     def read(cls, spec: "SubsystemSpec", d) -> "DomainSection | None":
@@ -624,7 +637,37 @@ class DomainSection:
                                                        for c in claims):
                 raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
             sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
+        sec.keys = cls._families(spec, d.get("keys"), where)
         return sec
+
+    @staticmethod
+    def _families(spec: "SubsystemSpec", raw, where: str) -> tuple:
+        own = spec.domain_prefix
+        shape = f"{{id, keys: [<key>], prefix: '{own}…/'}} — the family's keys; its words are display.keys.<id>"
+        if raw is None:
+            return ()
+        if not isinstance(raw, list):
+            raise ValueError(f"{where}.keys is a list of {shape}")
+        out, seen = [], set()
+        for f in raw:
+            if not isinstance(f, dict) or set(f) - {"id", "keys", "prefix"} or not isinstance(f.get("id"), str) \
+                    or not _DOMAIN_NAME.match(f["id"]):
+                raise ValueError(f"{where}.keys: {f!r} is not {shape}")
+            if f["id"] in seen:
+                raise ValueError(f"{where}.keys names the family {f['id']!r} twice")
+            seen.add(f["id"])
+            exact, prefix = f.get("keys") or [], f.get("prefix") or ""
+            if not isinstance(exact, list) or not all(isinstance(k, str) and k.startswith(own) and len(k) > len(own)
+                                                      and not k.endswith("/") for k in exact):
+                raise ValueError(f"{where}.keys.{f['id']}.keys are keys under {own!r}, not {exact!r} — the platform's "
+                                 f"own families are the page's")
+            if prefix and (not isinstance(prefix, str) or not prefix.startswith(own) or not prefix.endswith("/")
+                           or len(prefix) <= len(own)):
+                raise ValueError(f"{where}.keys.{f['id']}.prefix is a prefix under {own!r} ending in '/', not {prefix!r}")
+            if not exact and not prefix:
+                raise ValueError(f"{where}.keys.{f['id']} names no key: give keys, a prefix, or both")
+            out.append({"id": f["id"], "keys": tuple(exact), "prefix": prefix})
+        return tuple(out)
 
 
 @dataclass
@@ -912,6 +955,11 @@ class SubsystemSpec:
         spec._placement_words(pl)
         spec._page_words(d)
         spec.domain = DomainSection.read(spec, d.get("domain"))
+        words = set((spec.display.get("keys") or {}) if isinstance(spec.display, dict) else {})
+        stray = words - {f["id"] for f in (spec.domain.keys if spec.domain else ())}
+        if stray:
+            raise ValueError(f"spec {spec.name}: display.keys gives words to {sorted(stray)}, which domain.keys does not "
+                             f"declare — words for a family nobody composed")
         if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
             raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
         if spec.offers and d.get("slot") is not None and spec.offers != spec.slot_prefix:
@@ -1077,9 +1125,13 @@ class SubsystemSpec:
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
         disp = d.get("display")
         if disp is not None:
-            if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree"}:
-                raise ValueError(f"spec {self.name}: `display:` is {{unit, units, field_help, kinds, actions, tree}} — words "
-                                 f"for a page, no logic — not {disp!r}")
+            if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree", "keys"}:
+                raise ValueError(f"spec {self.name}: `display:` is {{unit, units, field_help, kinds, actions, tree, keys}} — "
+                                 f"words for a page, no logic — not {disp!r}")
+            for fid, w in (disp.get("keys") or {}).items():
+                if not isinstance(w, dict) or set(w) - {"title", "about", "absent"} or not isinstance(w.get("title"), str) \
+                        or not all(isinstance(v, str) for v in w.values()):
+                    raise ValueError(f"spec {self.name}: display.keys.{fid} is {{title, about, absent}} — words, not {w!r}")
             tree = disp.get("tree") or {}
             if not isinstance(tree, dict) or set(tree) - {"group_by", "nested_by", "columns"} \
                     or (tree.get("group_by") and tree["group_by"] not in self.fields):

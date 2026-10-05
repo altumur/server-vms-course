@@ -1437,6 +1437,9 @@ class SpecConsole:
                 **({"display": s.display} if s.display else {}),
                 **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
                 **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
+                # the subsystem's key families of the domain (`domain.keys`; their words are `display.keys`)
+                **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
+                                        for f in s.domain.keys]}} if s.domain and s.domain.keys else {}),
                 "running_gauge": f"{s.name}_{s.running_gauge}", "workers_gauge": f"{s.name}_workers_live",
                 "metrics": {"prefix": s.name, "running": s.running_gauge}}
 

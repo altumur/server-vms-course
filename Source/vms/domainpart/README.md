@@ -43,8 +43,13 @@ python3 -m w2cplatform.domain.signer_service ; python3 -m w2cplatform.domain.age
 
 ## What the VMS declares (`vms.subsystem.yaml`, `domain:`)
 
-`ref: ref` (a camera is found across clusters by its `ref`), `view: [name]`, `books: [sources, primaries, poll, upstream, asks]`, `kept: [crossings, roads]`, `tables: [crossings]`, `tokens: {stream: {lifetime: 86400, claims: [aud, ref]}, ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}}`; `rec.subsystem.yaml`: `reports: [ingest, polled/]`, `witness: polled`. The platform moves these rows and issues these tokens without reading them; what they mean is this package's.
+`ref: ref` (a camera is found across clusters by its `ref`), `view: [name]`, `books: [sources, primaries, poll, upstream, asks]`, `kept: [crossings, roads]`, `tables: [crossings]`, `tokens: {stream: {lifetime: 86400, claims: [aud, ref]}, ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}}`, `keys:` — the key families of `domain/vms/…` (roads, crossings, sources, primaries, polls, upstream, asks, worker; their words in `display.keys`); `rec.subsystem.yaml`: `reports: [ingest, polled/]`, `witness: polled`. The platform moves these rows and issues these tokens without reading them; what they mean is this package's.
 
 ## What the product page shows (for «Консоль»)
 
 The platform's domain page draws members, units and causes from `domain/view`. What is the VMS's to show — domain cameras with their `ref` and name, crossings (which cluster records which camera of another: `domain/view` → `tables["vms/crossings"]`, or `GET /api/vms/crossings`), scenarios between cameras and the catalogue of what one camera may ask another (`GET /catalog` on the VMS domain worker's door, `DOMAINPART_PORT`), the streams' numbers (`GET /metrics` there) — is the product page's, not a platform `domain/page.html`.
+
+The domain card's «Ключи» tab: the families are the spec's now — `/spec` → `domain.keys` (`[{id, keys, prefix}]`) and
+`display.keys` (`{<id>: {title, about, absent}}`), merged by id; the product page's `KEY_FAMILIES` constant gives way to
+them. The course's VMS has no rows for the product's issued stream keys (a book's entry carries its token sealed,
+`token_secret`), its ask lifts (in the relay's memory) or a receivers' book; scenarios are the platform's `domain/shared`.
