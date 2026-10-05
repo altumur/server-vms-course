@@ -212,6 +212,9 @@ requests:
   ttl: 86400
   stamp: [by, at, about]
   journal: archive.backfill.asked
+  # A scenario's `record` (`vms/autoworker.py`) is turned into a recording by the VMS's jobs (`jobs.record_on_request`),
+  # not performed by a recorder: the platform's reaper leaves it to them.
+  elsewhere: [record]
 snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's

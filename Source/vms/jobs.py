@@ -24,6 +24,7 @@ import json
 import logging
 import time
 
+from w2cplatform.requests import count_expired
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import GARBLED_ROW, Refused, SpecController, take_written
 
@@ -40,34 +41,9 @@ MIRRORED = ("fetching", "running") + TERMINAL
 FINISHED_RETENTION_SECONDS = 3 * 86400.0
 log = logging.getLogger("vms.jobs")
 
-# Requests that reached the console after their `valid_until` — dropped, and COUNTED, per family. A line in
-# a log is read by nobody; this number climbing says the requests' loop is running late, which is how it was
-# found (the review's second pass: a thirty-second request read every thirty seconds). One tally per process, said
-# by `metrics_lines` below.
-expired: dict[str, int] = {"rec": 0, "det": 0}
-
-
-def _expired(sub: str) -> None:
-    expired[sub] = expired.get(sub, 0) + 1
-
-
-# …and the commands the reaper ended NOT KNOWING whether the device acted (the review's thirteenth pass, minor): the
-# holder that began one (its mark, no outcome) is gone, and what its call did nobody can say. Not "expired" — that is a
-# command never begun — counted apart: `vms_requests_unknown_total`.
-unknown: dict[str, int] = {}
-
-
-# The two counters above as `/metrics` lines — the request loops' process's own numbers (the boundary's step 6: they
-# were lines of the console's `/metrics` while the loops ran inside the console's process). `vms_requests_expired_total`:
-# the requests of automation dropped as too old — a scenario said `fired` and nothing happened; climbing, the loop is
-# late (the review's second pass). `sub="vms"`: commands the reaper ended because no holder did. `…_unknown_total`: the
-# commands ended whose holder began them and went without saying how (the thirteenth pass).
-def metrics_lines() -> list[str]:
-    from w2cplatform.console import label
-    return (["# TYPE vms_requests_expired_total counter"]
-            + [f'vms_requests_expired_total{{sub="{label(s)}"}} {n}' for s, n in sorted(expired.items())]
-            + ["# TYPE vms_requests_unknown_total counter"]
-            + [f'vms_requests_unknown_total{{sub="{label(s)}"}} {n}' for s, n in sorted(unknown.items())])
+# What expired before it was turned into work is counted with the platform's request family (`requests.count_expired`,
+# `w2c_requests_expired_total` on this process's `/metrics`): a scenario said `fired` and nothing happened; climbing,
+# the loop is late (the review's second pass).
 
 
 # ONE REQUEST ROW THAT DOES NOT PARSE IS THAT REQUEST'S (the review's seventh pass, M2). `valid_until: "soon"` in one
@@ -131,6 +107,7 @@ class Remembered:
     REREAD = 30.0
     NEAR = 10.0                                         # seconds before a remembered end its row is read every turn
     RETRY_MAX = 300.0
+    RETRY_FIRST = 2.0                                   # the first pause after a store that failed a request
 
     def __init__(self):
         self.seen: set[str] = set()
@@ -150,7 +127,7 @@ class Remembered:
         return key in self.retry_at and now < self.retry_at[key][0]
 
     def failed(self, key: str, now: float) -> None:
-        pause = min(self.RETRY_MAX, 2 * self.retry_at[key][1]) if key in self.retry_at else CLEAR_EVERY
+        pause = min(self.RETRY_MAX, 2 * self.retry_at[key][1]) if key in self.retry_at else self.RETRY_FIRST
         self.retry_at[key] = (now + pause, pause)
 
     def listed(self, prefix: str, keys) -> None:
@@ -204,7 +181,7 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
             continue
         if until and now > until:
             rec_ctl.vars.delete(key)                        # asked for too late to mean what it meant
-            _expired(rec_ctl.spec.name)
+            count_expired(rec_ctl.spec.name)
             log.warning("%s: %s expired before it was turned into a recording", rec_ctl.spec.name, rid)
             continue
         cam = str(it.get("cam") or it.get("unit") or "")
@@ -346,7 +323,7 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float, mem: Remembered | N
             continue
         if until and now > until:
             det_ctl.vars.delete(key)                        # asked for too late to mean what it meant
-            _expired(det_ctl.spec.name)
+            count_expired(det_ctl.spec.name)
             log.warning("%s: %s expired before it was turned into work", det_ctl.spec.name, rid)
             continue
         cam, kind = str(it.get("cam") or ""), str(it.get("kind") or "")
@@ -446,156 +423,6 @@ def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: floa
                     **{k: v for k, v in same.items() if k in ("params", "mask", "labels")}})
     log.info("%s: scanning %s [%.0f, %.0f) with %s — a scenario asked", job_ctl.spec.name, rec, t0, t1, kind)
     return 1
-
-
-# The other half of `<name>/requests/<id>`: the worker fetched it and said so in its heartbeat; the row goes.
-#
-# Same division as `reap` below, and for the same reason — a worker writes no configuration. Here it is
-# cheaper still, because a request has no state to move: once the work named in it is done the row has
-# nothing left to say, and a store that keeps every range anyone ever asked for is a store that grows
-# without anybody deciding it should.
-#
-# …AND AN ASK NOBODY ANSWERED HAS AN END TOO (the review's sixth pass, minor). A backfill carries no `valid_until` —
-# footage fetched an hour late is still the footage — so a range no recorder could ever fetch (its recording gone,
-# its source never holding it) stood for good, and with it one of the places its person may ask from
-# (`vms/console.py`, `BACKFILLS_OPEN`). A backfill that has stood for `BACKFILL_TTL` is ended here and counted with
-# the requests that expired (`vms_requests_expired_total`); a job still waiting for that footage asks again
-# (`ask_for_footage`), a person sees the hole still there and may. A person's list of asks (`asks-…`) that nobody
-# has touched for that long holds nothing live, and goes with them.
-BACKFILL_TTL = 86400.0
-
-# …AND THE ANSWERED ROWS GO IN A SHORT CYCLE (the review's seventh pass, M6). Clearing ran once every thirty seconds,
-# beside the reaper, and a holder may answer sixteen commands a second: at three a second the standing rows grew
-# without a bound. The answered rows are cleared every `CLEAR_EVERY` now (`__main__._clear_loop`, `sweep=False`): a
-# listing of the family and the heartbeats of its workers — no row read, and nothing at all read beyond the listing
-# while the family is empty. The day-old backfills, which need their rows read, stay on the thirty-second cycle.
-CLEAR_EVERY = 2.0
-
-# …AND A COMMAND NOBODY HOLDS THE CAMERA FOR HAS AN END (the product's cross-check, 4 Oct: its command for a camera with
-# no holder hung for ever, until its reaper closed it). A command (`action`: `output`, `preset`, a scenario's) is ended
-# by its HOLDER at its `valid_until` (`VmsWorker.requests`: `expired`, in its heartbeat) — and a camera that is placed
-# nowhere, or whose holder is gone, has none: the row stood for good, unanswered and uncounted, and its caller never
-# learned how it ended. A command still standing `COMMAND_REAP_AFTER` past its deadline is ended here, on the reaper's
-# thirty seconds, and counted with the requests that expired (`vms_requests_expired_total`) — so every command has an
-# outcome at most `valid_until` + a minute + a turn after it was filed. A minute: a holder expires its own rows at the
-# deadline and says so within a heartbeat (ten seconds), and two consoles' clocks may differ by a few. A row whose
-# holder DID answer it (its mark says how: `VmsWorker._confirm`) and whose answer never reached a heartbeat is cleared
-# and not counted again. A deadline that is not a time is the holder's refusal when there is one; with none, the row
-# ends once its filing is older than the longest a command may wait (`COMMAND_MAX_VALID`, the holder's `MAX_VALID`).
-# A `record` is the console's own to end (`record_on_request`, every two seconds), and a backfill has its day.
-COMMAND_REAP_AFTER = 60.0
-COMMAND_MAX_VALID = 600.0
-
-
-# One standing command, looked at by the reaper: True when it was ended here.
-def _end_command(ctl, key: str, it: dict, idx, now: float) -> bool:
-    try:
-        until = finite(it.get("valid_until") or 0)
-    except (TypeError, ValueError):
-        until = 0.0
-    if not until:
-        try:
-            until = finite(it.get("at")) + COMMAND_MAX_VALID
-        except (TypeError, ValueError):
-            return False                                    # not known when it was filed either: not known to be over
-    if now - until < COMMAND_REAP_AFTER:
-        return False                                        # its holder's to end, if it has one
-    rid = key.rsplit("/", 1)[1]
-    try:
-        mark = ctl.objects.get(f"{ctl.sub.name}/commands/{rid}")     # the holder's mark (`VmsWorker.command_key`)
-    except Exception as e:                                  # noqa: BLE001 — the thirteenth pass: one mark unread ended the walk
-        # Whether its holder began it cannot be read: not known is not "never begun" — the row stands for the next turn,
-        # and the rows after it are looked at (it raised out of the sweep, and no command after it was ended)
-        log.warning("%s: whether command %s was begun cannot be read (%s): left for the next turn", ctl.spec.name, rid, e)
-        return False
-    try:
-        said = json.loads(mark) if mark else None
-    except PARSE_ERRORS:
-        said = {}
-    # BEGUN AND NOT ANSWERED (the review's thirteenth pass, minor): a holder whose call into the device hangs past the
-    # deadline and the minute was reaped "ended unperformed" while it was still performing — the device may yet act,
-    # and its answer came to a row that was gone. A mark with no outcome whose holder still holds the name it marked
-    # under is that holder's to answer: left standing. Only once the holder is gone — the name another instance's, or
-    # let go — is the row ended, as NOT KNOWN (`unknown`), not as a command never begun.
-    begun = mark is not None and not (isinstance(said, dict) and said.get("outcome"))
-    if begun and _holder_still_there(ctl, said):
-        return False
-    try:
-        ctl.vars.delete(key, cas=idx)                       # by CAS: a row filed again under the same id is a new one
-    except Exception:                                       # noqa: BLE001 — changed meanwhile, or the store: the next pass
-        return False
-    if isinstance(said, dict) and said.get("outcome"):
-        log.info("%s: command %s was answered (%s) and its answer never reached a heartbeat: its row is cleared",
-                 ctl.spec.name, rid, said.get("outcome"))
-        return True
-    if begun:
-        unknown[ctl.spec.name] = unknown.get(ctl.spec.name, 0) + 1
-        log.warning("%s: command %s for %s ended %.0f s past its deadline NOT KNOWN: its holder began it and is gone "
-                    "without saying how it went — whether the device acted is not known", ctl.spec.name, rid,
-                    it.get("unit", "?"), now - until)
-        return True
-    _expired(ctl.spec.name)
-    log.warning("%s: command %s for %s ended unperformed %.0f s past its deadline — no worker held its camera to perform "
-                "it", ctl.spec.name, rid, it.get("unit", "?"), now - until)
-    return True
-
-
-# Whether the instance that marked a command still holds the name it marked under — its slot row, read now. A mark or
-# a row that does not say, a store that does not answer: "still there" — nothing is ended on what cannot be read.
-def _holder_still_there(ctl, said) -> bool:
-    if not isinstance(said, dict) or not said.get("slot") or not said.get("instance"):
-        return True
-    try:
-        items, _ = ctl.vars.get(ctl.sub.slot_key(str(said["slot"])))
-    except Exception:                                       # noqa: BLE001 — not readable here (М11's console rights)
-        return True
-    if not isinstance(items, dict):
-        return False                                        # no row at all: the name is nobody's
-    return items.get("holder") == said["instance"] and items.get("released") != "true"
-
-
-def clear_requests(ctl, sweep: bool = True) -> int:
-    from w2cplatform.console import heartbeats
-    keys = ctl.vars.list(ctl.sub.requests_prefix())
-    if not keys:
-        return 0
-    fetched: set[str] = set()
-    for _, hb in heartbeats(ctl.objects, ctl.spec.name + "/").items():
-        fetched |= {r for r in str(hb.extra.get("fetched", "")).split(",") if r}
-    gone, now = 0, ctl.wall()
-    from .config import said_id
-    for key in keys:
-        rid = key.rsplit("/", 1)[1]
-        if rid in fetched or said_id(rid) in fetched:       # a long id is said by its digest (the eighth pass)
-            ctl.vars.delete(key)
-            gone += 1
-            continue
-        if not sweep:
-            continue                                        # the short cycle: answered rows only, nothing read
-        it, idx = ctl.vars.get(key)
-        if not it:
-            continue
-        action = str(it.get("action") or "")
-        if action == "record":
-            continue                                        # the console's own turn ends it (`record_on_request`)
-        if action and action != "backfill":
-            _end_command(ctl, key, it, idx, now)            # a command: its holder ends it — or, with none, this
-            continue
-        if not (("from" in it and "to" in it) or "asks" in it):
-            continue
-        try:
-            old = now - finite(it.get("at", now) or now) > BACKFILL_TTL
-        except (TypeError, ValueError):
-            old = False                                     # `nan` too: not known to be old (the seventh pass)
-        if old:
-            try:
-                ctl.vars.delete(key, cas=idx)               # by CAS: asked again this instant, it is a new ask
-            except Exception:                               # noqa: BLE001 — changed meanwhile, or the store: the next pass
-                continue
-            if "asks" not in it:
-                _expired(ctl.spec.name)
-                log.warning("%s: backfill %s stood for a day unanswered and was ended", ctl.spec.name, key.rsplit("/", 1)[1])
-    return gone
 
 
 # One pass: `{done: n, failed: n}` — how many rows this pass moved.

@@ -355,6 +355,7 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     wait), one a holder answered whose answer never reached a heartbeat (cleared, not counted twice), a scenario's row
     with an action nobody serves, in another family; a `record` and a young backfill are not this pass's."""
     from vms import jobs
+    from w2cplatform import requests
     from vms.__main__ import _reap_turn
     from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import SpecConsole
@@ -381,29 +382,30 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     def standing(c, spec):
         return sorted(k.rsplit("/", 1)[1] for k in c.vars.list(spec.sub.requests_prefix()))
 
-    was = dict(jobs.expired)
-    box.wall.advance(until - now + jobs.COMMAND_REAP_AFTER - 5)           # past its deadline: a holder's still, if one comes
-    _reap_turn([], [rec, con])
+    was = dict(requests.expired)
+    box.wall.advance(until - now + requests.REAP_AFTER - 5)           # past its deadline: a holder's still, if one comes
+    requests.turn([rec, con], sweep=True)
     assert standing(con, SPEC) == ["answered", "no-deadline", "open-gate"]
     box.wall.advance(10)                                                  # a minute past it: nobody will
-    _reap_turn([], [rec, con])
+    requests.turn([rec, con], sweep=True)
     assert standing(con, SPEC) == ["no-deadline"]                         # its filing is not ten minutes old yet
     assert standing(rec, REC_SPEC) == ["7-1-2", "s-1"]
-    assert jobs.expired.get("vms", 0) == was.get("vms", 0) + 1           # the answered one is not counted again
-    assert jobs.expired.get("rec", 0) == was.get("rec", 0) + 1
-    box.wall.advance(jobs.COMMAND_MAX_VALID)
-    _reap_turn([], [rec, con])
-    assert standing(con, SPEC) == [] and jobs.expired["vms"] == was.get("vms", 0) + 2
-    text = "\n".join(jobs.metrics_lines())                               # the request loops' process's own numbers
-    assert f'vms_requests_expired_total{{sub="vms"}} {jobs.expired["vms"]}' in text, text
+    assert requests.expired.get("vms", 0) == was.get("vms", 0) + 1           # the answered one is not counted again
+    assert requests.expired.get("rec", 0) == was.get("rec", 0) + 1
+    box.wall.advance(requests.MOST_VALID)
+    requests.turn([rec, con], sweep=True)
+    assert standing(con, SPEC) == [] and requests.expired.get("vms", 0) == was.get("vms", 0) + 2
+    text = "\n".join(requests.metrics_lines())                               # the request loops' process's own numbers
+    assert f'w2c_requests_expired_total{{sub="vms"}} {requests.expired.get("vms", 0)}' in text, text
 
 
 def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_holder_went_is_not_known():
     """The review's thirteenth pass, minor: a holder's call into the device hung past the deadline and the minute, and
     the reaper ended the command "unperformed" while it was being performed. A mark with no outcome whose holder still
     holds the name it marked under is left to that holder; once the name is another instance's, the command is ended
-    as NOT KNOWN — `vms_requests_unknown_total`, not `vms_requests_expired_total`."""
+    as NOT KNOWN — `w2c_requests_unknown_total`, not `w2c_requests_expired_total`."""
     from vms import jobs
+    from w2cplatform import requests
     from vms.__main__ import _reap_turn
     from w2cplatform.metrics import text as spec_metrics
     box = Box(); ctl, con = _ctl(box)
@@ -414,17 +416,17 @@ def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_ho
     box.vars.put("vms/slots/w-1", Slot("w-1", "box-a:1:aaaaaa", now + 45, False, 1).to_items())
     box.objects.put("vms/commands/slow", json.dumps({"instance": "box-a:1:aaaaaa", "slot": "w-1", "unit": str(gate),
                                                      "at": now}).encode())                 # begun: the call has not returned
-    was, unknown = dict(jobs.expired), dict(jobs.unknown)
-    box.wall.advance(30 + jobs.COMMAND_REAP_AFTER + 5)
-    _reap_turn([], [con])
+    was, unknown = dict(requests.expired), dict(requests.unknown)
+    box.wall.advance(30 + requests.REAP_AFTER + 5)
+    requests.turn([con], sweep=True)
     assert box.vars.get(SPEC.sub.request_key("slow"))[0] is not None                     # its holder's to answer
-    assert jobs.expired.get("vms", 0) == was.get("vms", 0) and jobs.unknown.get("vms", 0) == unknown.get("vms", 0)
+    assert requests.expired.get("vms", 0) == was.get("vms", 0) and requests.unknown.get("vms", 0) == unknown.get("vms", 0)
     box.vars.put("vms/slots/w-1", Slot("w-1", "box-a:2:bbbbbb", box.wall() + 45, False, 2).to_items())   # it went
-    _reap_turn([], [con])
+    requests.turn([con], sweep=True)
     assert box.vars.get(SPEC.sub.request_key("slow"))[0] is None
-    assert jobs.expired.get("vms", 0) == was.get("vms", 0) and jobs.unknown["vms"] == unknown.get("vms", 0) + 1
-    text = "\n".join(jobs.metrics_lines())
-    assert f'vms_requests_unknown_total{{sub="vms"}} {jobs.unknown["vms"]}' in text, text
+    assert requests.expired.get("vms", 0) == was.get("vms", 0) and requests.unknown.get("vms", 0) == unknown.get("vms", 0) + 1
+    text = "\n".join(requests.metrics_lines())
+    assert f'w2c_requests_unknown_total{{sub="vms"}} {requests.unknown.get("vms", 0)}' in text, text
 
 
 def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_mark_is_made_once():

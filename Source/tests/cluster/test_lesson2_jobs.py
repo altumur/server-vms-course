@@ -61,7 +61,7 @@ def test_two_processes_with_one_name_resolve_at_the_cas():
     b = c.worker("srv-a")                                                     # the same unit's name, a second process
     assert b.name == a.name == "w-srv-a-1" and b.instance != a.instance
     assert ctl.slots()["w-srv-a-1"].holder == b.instance and ctl.slots()["w-srv-a-1"].gen == 2
-    assert a.lease_pass() and not a.recording_allowed and "slot w-srv-a-1" in a.fenced_reason
+    assert a.lease_pass() and not a.writing_allowed and "slot w-srv-a-1" in a.fenced_reason
     assert b.reconcile_once() == [("start", 1), ("start", 2)] and b.lease_pass() == []
 
 
@@ -131,26 +131,27 @@ def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_
     """The thirteenth review, major 20 (`m11_console_turn`): the reaper (`vms/jobs.py`, `clear_requests`) reads a
     holder's mark (`vms/commands/<id>`, a create-only row of the store here) to tell a command its holder began from
     one nobody performed — and the console's rights did not grant that read: `Forbidden: console may not read
-    objects/vms/commands/x1` on every turn, the command stood, `vms_requests_expired_total` did not move, and the
+    objects/vms/commands/x1` on every turn, the command stood, `w2c_requests_expired_total` did not move, and the
     exception left the rows after it unlooked at. Through the console's own socket, under the committed rights: a
     command past its deadline that nobody held is ended and counted; one its holder answered (a mark with an outcome) is
     cleared and not counted; one its holder began (a mark, no outcome) stays its holder's while that holder holds its
-    name, and once it went is ended as not known (`jobs.unknown`; the thirteenth review, minor — the console reads the
+    name, and once it went is ended as not known (`requests.unknown`; the thirteenth review, minor — the console reads the
     slot row for that, under its rights too)."""
     import json
     from vms import jobs
+    from w2cplatform import requests
     c = Cluster(); c.resources_up()
     con, w = c.console(), c.worker("srv-a")
-    late = c.wall() - jobs.COMMAND_REAP_AFTER - 60
+    late = c.wall() - requests.REAP_AFTER - 60
     for rid in ("x1", "x2", "x3"):
         con.vars.put(f"vms/requests/{rid}", {"action": "output", "unit": "1", "valid_until": late, "at": late - 30}, cas=0)
     assert w._mark("x1", "1", late - 20) and w._mark("x3", "1", late - 20)            # the holder's marks, by its socket
     w.objects.put("vms/commands/x3", json.dumps({"instance": w.instance, "outcome": "performed"}).encode())
-    before, unknown = jobs.expired.get("vms", 0), jobs.unknown.get("vms", 0)
-    jobs.clear_requests(con)
+    before, unknown = requests.expired.get("vms", 0), requests.unknown.get("vms", 0)
+    requests.clear_requests(con)
     assert con.vars.list("vms/requests/") == ["vms/requests/x1"], con.vars.list("vms/requests/")
-    assert jobs.expired.get("vms", 0) - before == 1
+    assert requests.expired.get("vms", 0) - before == 1
     w.release_slot()                                                                   # the holder went
-    jobs.clear_requests(con)
+    requests.clear_requests(con)
     assert con.vars.list("vms/requests/") == [], con.vars.list("vms/requests/")
-    assert jobs.expired.get("vms", 0) - before == 1 and jobs.unknown.get("vms", 0) - unknown == 1
+    assert requests.expired.get("vms", 0) - before == 1 and requests.unknown.get("vms", 0) - unknown == 1

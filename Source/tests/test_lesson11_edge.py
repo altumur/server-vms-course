@@ -462,7 +462,7 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     rec.move(held[0], "r-2", "operator asked")
     r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.archive + "-2"})
     r2.lease_pass(); r2.reconcile_once()
-    assert r1.lease_pass() == [held[0]] and r1.recording_allowed        # released, not fenced — and no ValueError
+    assert r1.lease_pass() == [held[0]] and r1.writing_allowed        # released, not fenced — and no ValueError
     assert held[0] not in r1.reconciler.actual
 
 
@@ -855,7 +855,7 @@ def test_a_request_is_fetched_outside_the_window_and_the_budget():
     hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key("r-1")))
     assert "1-a" in hb.extra["fetched"]                                     # the worker says so; the console removes the row
 
-    from vms.jobs import clear_requests
+    from w2cplatform.requests import clear_requests
     assert clear_requests(con_rec) == 1 and box.vars.list(REC_SPEC.sub.requests_prefix()) == []
 
 

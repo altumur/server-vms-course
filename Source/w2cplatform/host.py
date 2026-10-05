@@ -122,6 +122,20 @@ def sweep_loop(controllers, every: float = 60.0) -> None:
         stop.wait(every)
 
 
+# The request family's rows, cleared by the console (`requests.py`): the answered ones every `CLEAR_EVERY` — a listing and
+# the heartbeats, no row read — and every `SWEEP_EVERY` the reaper's look at every standing row.
+def requests_loop(controllers, clear: float | None = None, sweep: float | None = None) -> None:
+    from . import requests
+    clear, sweep = clear or requests.CLEAR_EVERY, sweep or requests.SWEEP_EVERY
+    swept = -1e18
+    while not stop.is_set():
+        due = time.monotonic() - swept >= sweep
+        if due:
+            swept = time.monotonic()
+        requests.turn(controllers, sweep=due)
+        stop.wait(clear)
+
+
 def every(turn, seconds: float) -> None:
     """`turn()` every `seconds` until `stop`: what a console's housekeeping loop is (each turn says its own failures)."""
     while not stop.is_set():
@@ -250,6 +264,7 @@ def console(env: dict) -> None:
     log.info("console of %s on %s, with %s", m.root.spec.name, srv.server_address,
              ", ".join(m.mounts) or "nothing else")
     threading.Thread(target=sweep_loop, args=(list(ctls.values()),), daemon=True).start()
+    threading.Thread(target=requests_loop, args=(list(ctls.values()),), daemon=True).start()
     stop.wait()
     srv.shutdown()
 

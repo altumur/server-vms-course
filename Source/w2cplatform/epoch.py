@@ -19,7 +19,7 @@ platform only promises that it comes from one issuer and increases.
 # renewal and stops. This file has the issuer (`next_epoch`), the reader (`current_epoch`) and the lease
 # that a holder keeps on its epoch (`Lease`). The subsystem decides the key (`Subsystem.epoch_key(unit)`
 # gives `<name>/epoch/<unit>`); the platform promises only that numbers come from one issuer, in order.
-# `contract.Worker.take_epoch` and `renew_leases` are the callers; `vms.archive` puts the epoch in every
+# `worker.Worker.take_epoch` and `renew_leases` are the callers; `vms.archive` puts the epoch in every
 # segment and bucket path so a stale writer's output is identifiable afterwards.
 #
 # ## Module-level names

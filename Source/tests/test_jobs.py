@@ -116,8 +116,11 @@ def test_the_jobs_process_actually_runs_the_reaper():
     assert "_reap_loop" in console, "the jobs process does not start the reaper — no job will ever close"
     assert "job_ctl" in console and "DETJOB_SPEC" in console
     loop = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
-    for called in ("ask_for_footage", "clear_requests", "keep_what_fired", "reap", "forget_finished"):
+    for called in ("ask_for_footage", "keep_what_fired", "reap", "forget_finished"):
         assert f"{called}(" in loop, f"{called} is written, tested and never called"
+    # …and the request rows are the platform's to clear, in the console's housekeeping (the boundary's step 7)
+    import w2cplatform.host as h
+    assert "requests_loop" in inspect.getsource(h.console) and "requests.turn(" in inspect.getsource(h.requests_loop)
     assert "_requests_loop" in console, "the jobs process does not start the requests' loop — no scenario's request becomes a row"
     loop = (inspect.getsource(m._requests_loop) + inspect.getsource(m._requests_turn))
     for called in ("record_on_request", "expire_recordings"):     # the two ends of a timed recording: their own, short loop
@@ -161,7 +164,7 @@ def test_a_backfill_request_is_a_row_and_not_a_202():
 
 def test_a_request_the_recorder_fetched_is_cleared():
     from vms.config import REC_SPEC
-    from vms.jobs import clear_requests
+    from w2cplatform.requests import clear_requests
     from w2cplatform.spec import SpecController
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
@@ -182,21 +185,22 @@ def test_a_backfill_nobody_answered_for_a_day_is_ended_and_a_record_request_is_n
     requests that expired; a younger one stays, a `record` — which has a `valid_until` of its own — is not touched,
     and a person's list of asks nobody has touched for a day goes too."""
     from vms import jobs
+    from w2cplatform import requests
     from vms.config import REC_SPEC
     from w2cplatform.spec import SpecController
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     now = box.wall()
-    old, young = str(now - jobs.BACKFILL_TTL - 60), str(now - 3600)
+    old, young = str(now - REC_SPEC.requests["ttl"] - 60), str(now - 3600)
     key = REC_SPEC.sub.request_key
     rec.vars.put(key("7-100-200"), {"unit": "7", "cam": "7", "from": "100", "to": "200", "at": old, "by": "anna"})
     rec.vars.put(key("7-300-400"), {"unit": "7", "cam": "7", "from": "300", "to": "400", "at": young, "by": "anna"})
     rec.vars.put(key("s-1"), {"action": "record", "cam": "7", "minutes": "10", "at": old})
     rec.vars.put(key("asks-0123"), {"asks": "[]", "by": "boris", "at": old})
-    was = jobs.expired.get("rec", 0)
-    assert jobs.clear_requests(rec) == 0                              # nothing was fetched…
+    was = requests.expired.get("rec", 0)
+    assert requests.clear_requests(rec) == 0                              # nothing was fetched…
     assert sorted(k.rsplit("/", 1)[1] for k in rec.vars.list(REC_SPEC.sub.requests_prefix())) == ["7-300-400", "s-1"]
-    assert jobs.expired["rec"] == was + 1                             # …one ask ended, and counted; the list is not a request
+    assert requests.expired.get("rec", 0) == was + 1                             # …one ask ended, and counted; the list is not a request
 
 
 # -- fetching: the job that cannot run because the footage is still on the device -------------------

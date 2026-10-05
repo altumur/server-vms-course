@@ -577,7 +577,7 @@ def a_reassignment_is_not_a_zombie() -> str:
     lost = a.lease_pass()
     a.reconcile_once()
     return (s.log.render(since=mark)
-            + f"\n# a.lease_pass() lost {lost}; a.recording_allowed = {a.recording_allowed}; running {sorted(a.actuator.running)}\n")
+            + f"\n# a.lease_pass() lost {lost}; a.writing_allowed = {a.writing_allowed}; running {sorted(a.actuator.running)}\n")
 
 
 def _labelled_workers(s):

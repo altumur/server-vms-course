@@ -54,7 +54,7 @@ def test_a_store_that_does_not_answer_is_not_an_empty_assignment():
     store.down = True
     box.clock.advance(16); box.wall.advance(16)
     assert w.reconcile_once() == []                                   # nothing stopped: the last assignment stands
-    assert w.lease_pass() == [] and w.recording_allowed               # the slot: not confirmed, and still mine
+    assert w.lease_pass() == [] and w.writing_allowed               # the slot: not confirmed, and still mine
     assert act.running == {1, 2} and act.epochs == {1: 1, 2: 1} and w.store_errors == 2
     act.dead.append(1)                                                # a pipeline falls over while the store is away
     w.pump_once()                                                     # noticed: the pump is local (the requests are not, and wait)
@@ -75,7 +75,7 @@ def test_a_lease_that_ran_out_with_nobody_asking_stops_that_camera_and_it_comes_
     store.down = True
     box.clock.advance(36); box.wall.advance(36)
     assert sorted(w.lease_pass()) == ["1", "2"]
-    assert act.running == set() and w.epochs == {} and w.recording_allowed and w.fenced_reason is None
+    assert act.running == set() and w.epochs == {} and w.writing_allowed and w.fenced_reason is None
     store.down = False
     box.clock.advance(60); box.wall.advance(60)                       # past any backoff
     w.reconcile_once()
@@ -90,7 +90,7 @@ def test_a_camera_in_two_assignments_costs_one_pipeline_not_fifty():
     box, ctl, store, act, w = _worker()
     next_epoch(box.vars, "vms/epoch/1")                               # somebody else started camera 1
     assert w.lease_pass() == ["1"]
-    assert w.recording_allowed and act.running == {2} and "1" not in w.epochs
+    assert w.writing_allowed and act.running == {2} and "1" not in w.epochs
     assert w.conflicts() == 0 and w.lease_pass() == []                # camera 2 is untouched; nothing left to lose
 
 
@@ -107,8 +107,8 @@ def test_only_a_slot_row_naming_another_holder_fences_and_a_fence_is_not_for_eve
     assert "w-1" in ctl.publish_names()["names_given"]                # and the controller gives its name (the 13th pass)
     b = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     assert b.name == "w-1"
-    assert a.lease_pass() == ["1"] and not a.recording_allowed and "slot w-1" in a.fenced_reason
-    assert a.rejoin() == "w-2" and a.recording_allowed and a.was_fenced and a.fenced_reason is None
+    assert a.lease_pass() == ["1"] and not a.writing_allowed and "slot w-1" in a.fenced_reason
+    assert a.rejoin() == "w-2" and a.writing_allowed and a.was_fenced and a.fenced_reason is None
     assert a.epochs == {} and a.rows == [] and a.reconciler.actual == {}
     ctl.assign("w-2", ["1"])
     assert a.reconcile_once() == [("start", 1)]                       # whatever ITS slot's assignment says, from nothing
@@ -190,7 +190,7 @@ def test_a_camera_given_to_somebody_else_during_the_silence_stops_at_the_stores_
     _silence(box, w, 120)
     next_epoch(box.vars, "vms/epoch/1")                               # another worker reached the store and started camera 1
     store.down = False
-    assert w.lease_pass() == ["1"] and act.running == {2} and w.recording_allowed
+    assert w.lease_pass() == ["1"] and act.running == {2} and w.writing_allowed
 
 
 def test_the_ceiling_and_off():
@@ -200,7 +200,7 @@ def test_the_ceiling_and_off():
     box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "60"})
     store.down = True
     assert _silence(box, w, 80) == [] and act.running == {1, 2}       # 25 s of lease + 55 s unconfirmed: under the ceiling
-    assert sorted(_silence(box, w, 16)) == ["1", "2"] and act.running == set() and w.recording_allowed
+    assert sorted(_silence(box, w, 16)) == ["1", "2"] and act.running == set() and w.writing_allowed
 
     box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "off"})
     store.down = True

@@ -572,7 +572,8 @@ def test_the_worker_and_the_recorder_tell_systemds_watchdog_that_their_loop_turn
     import socket
     import threading
     from w2cplatform.runtime import notify
-    from w2cplatform.contract import HUNG_MOVE_AFTER, Worker
+    from w2cplatform.contract import HUNG_MOVE_AFTER
+    from w2cplatform.worker import Worker
     from tests.cluster.conftest import Cluster
     for name in ("vms-vmsworker", "vms-recworker", "vms-vmsworker-spare@", "vms-recworker-spare@"):
         u = unit(os.path.join(SYSTEMD, f"{name}.service"))

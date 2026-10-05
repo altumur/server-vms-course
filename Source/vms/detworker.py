@@ -21,7 +21,7 @@ import time
 
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
-from w2cplatform.contract import Worker
+from w2cplatform.worker import Worker
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 from w2cplatform.variables import Variables
 
@@ -186,29 +186,11 @@ class DetWorker(Worker):
         self.heartbeat(list(self.status_by_unit.values()), server=self.server, instance=self.instance, labels=",".join(self.labels),
                        capacity=self.capacity, headroom=self.headroom(), conflicts=self.conflicts(), events=self.events_written)
 
-    def run(self, poll: float = 2.0, stop=None) -> None:
-        import threading
-        stop = stop or threading.Event()
-        stand_in = self.start_stand_in()               # renews for a step that hangs, for a while (feedback DD)
-        while not stop.is_set():
-            try:
-                with self.guarded("pass"):
-                    self.reconcile_once()
-            except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
-                log.exception("detector pass failed")
-            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
-                with self.guarded("lease"):
-                    self.keep_slot(lambda: [self._stop(u) for u in list(self.running)])   # the slot row too, not only the leases
-                    self.renew_leases()
-            except Exception:                            # noqa: BLE001
-                log.exception("detector lease renewal failed")
-            try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
-                with self.guarded("heartbeat"):
-                    self.heartbeat_once()
-            except Exception:                            # noqa: BLE001
-                log.exception("detector heartbeat failed")
-            stop.wait(poll)
-        stand_in.set()
+    # The loop is the platform's (`Worker.run`: the pass, the lease step, the heartbeat, each in a try of its own, the
+    # stand-in for a step that hangs, an orderly stop); what it stops is its models.
+    def stop_unit(self, unit) -> None:
+        self._stop(unit)
+
+    def stop_all_units(self) -> None:
         for unit in list(self.running):
             self._stop(unit)
-        self.release_slot()

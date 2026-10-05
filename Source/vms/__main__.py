@@ -339,26 +339,26 @@ def gateway() -> None:
 # alone). `python3 -m vms jobs`: what turns a request into work and work into a closed row — the reaper's turn, the
 # answered requests cleared, what automation asked for turned into rows — with the token that writes configuration
 # (the console's grant of the families it touches: a worker writes none, a controller writes placement), and its own
-# numbers on `/metrics` (`jobs.metrics_lines`: what the request loops expired, `vms_requests_expired_total`), at
+# numbers on `/metrics` (`requests.metrics_lines`: what the request loops expired, `w2c_requests_expired_total`), at
 # `JOBS_HOST:JOBS_PORT`.
 # (The blob sweep is the platform console's own, `host.sweep_loop`: `<sub>/blobs/*` is the console's to write, Lesson 27,
 # so it is the console's to collect.)
 # The reaper's pass: a job's row follows the worker that finished it. The worker
 # cannot write the row (its ACL forbids configuration) and the controller must not (one row, one writer),
 # so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
-def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
-    host.every(lambda: _reap_turn(controllers, requests, rec_ctl, det_ctl, survey_ctl), every)
+def _reap_loop(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
+    host.every(lambda: _reap_turn(controllers, rec_ctl, det_ctl, survey_ctl), every)
 
 
 # One turn of it, in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): `scan_what_arrived`
 # read every detector again for every span a recorder closed, `keep_what_fired` every recording for every hit, and
 # `reap` and `forget_finished` each every job — some 55 000 reads a turn at a thousand of each. Each key is read once a
 # turn now; what a step writes, the next reads back from the store.
-def _reap_turn(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, now=None) -> None:
+def _reap_turn(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, now=None) -> None:
     import time
     from w2cplatform.contract import one_pass
-    from .jobs import ask_for_footage, clear_requests, forget_finished, keep_what_fired, reap, scan_what_arrived
-    every_ctl = [c for c in (*controllers, *requests, rec_ctl, det_ctl, survey_ctl) if c is not None]
+    from .jobs import ask_for_footage, forget_finished, keep_what_fired, reap, scan_what_arrived
+    every_ctl = [c for c in (*controllers, rec_ctl, det_ctl, survey_ctl) if c is not None]
     with one_pass(*every_ctl):
         for c in controllers:
             try:
@@ -394,33 +394,10 @@ def _reap_turn(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
                     logging.info("%s: asked the recorder to keep %d stretch(es)", survey_ctl.spec.name, kept)
             except Exception:                         # noqa: BLE001
                 logging.exception("keeping what fired failed in %s — those minutes stay on the device", survey_ctl.spec.name)
-        for c in requests:                            # the same division, one row simpler: fetched, so gone
-            try:
-                gone = clear_requests(c)              # …and the day-old backfills; the answered ones go in `_clear_loop` too
-                if gone:
-                    logging.info("%s: %d request(s) fetched and cleared", c.spec.name, gone)
-            except Exception:                         # noqa: BLE001
-                logging.exception("clearing requests failed in %s — they will be asked for again", c.spec.name)
 
 
-# The answered requests, cleared in a short cycle of their own (the review's seventh pass, M6): every `CLEAR_EVERY`, the
-# rows the workers' heartbeats say they answered — no row is read for it (`clear_requests(sweep=False)`). On the reaper's
-# thirty seconds they piled up behind a holder that answers up to sixteen a second, and a holder started again found
-# them standing. Apart from `_requests_loop` because that one is automation's way in, and a failure here is not its.
-def _clear_loop(requests, every: float | None = None) -> None:
-    from .jobs import CLEAR_EVERY
-    host.every(lambda: _clear_turn(requests), CLEAR_EVERY if every is None else every)
-
-
-def _clear_turn(requests) -> None:
-    from .jobs import clear_requests
-    for c in requests:
-        try:
-            gone = clear_requests(c, sweep=False)
-            if gone:
-                logging.debug("%s: %d answered request(s) cleared", c.spec.name, gone)
-        except Exception:                             # noqa: BLE001
-            logging.exception("clearing answered requests failed in %s — the reaper's pass clears them", c.spec.name)
+# (The answered requests, and the ones nobody answered, are cleared by the platform's console — `w2cplatform/requests.py`,
+# its housekeeping in `host.console`: the request family is the platform's, the boundary's step 7.)
 
 
 # The console's third loop: what AUTOMATION asked for, turned into rows — and a short loop, apart from the
@@ -429,7 +406,7 @@ def _clear_turn(requests) -> None:
 # in six reached them after its `valid_until` and was dropped with a warning nobody reads, while the scenario
 # had already written `fired`. Two seconds is the evaluator's own pass, so neither side waits on the other;
 # what it costs is a listing of two request families and a pass over the rows with an `until`. The drops that
-# still happen are on `/metrics` (`jobs.expired`, `vms_requests_expired_total`).
+# still happen are on `/metrics` (`requests.expired`, `w2c_requests_expired_total`).
 #
 # Turning a request into a recording or a detector is a write to CONFIGURATION, and of the three processes only
 # this one holds the token for it — a worker writes none, and the controller writes placement. Both ends of
@@ -491,7 +468,7 @@ def jobs() -> None:
     from w2cplatform.console import Deadlined, SendMixin, door_server
     from w2cplatform.spec import SpecController
     from .config import DET_SPEC, DETJOB_SPEC, REC_SPEC, SPEC, SURVEY_SPEC
-    from .jobs import metrics_lines
+    from w2cplatform.requests import metrics_lines
     families = (SPEC, REC_SPEC, DET_SPEC, DETJOB_SPEC, SURVEY_SPEC)
     vars_, objects = _stores("console", [a for s in families for a in s.acl_console()])   # the console's grant of them
     ctl = VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")))
@@ -509,11 +486,7 @@ def jobs() -> None:
     srv = door_server((os.environ.get("JOBS_HOST", "127.0.0.1"), int(os.environ.get("JOBS_PORT", "8095"))), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     logging.info("the VMS's jobs; their numbers on %s/metrics", srv.server_address)
-    # `[rec_ctl, ctl]`: two families of requests to clear now — footage a person asked for, and commands
-    # somebody sent a device (a relay, a preset). Same division as everywhere: the worker performs and
-    # says so in its heartbeat, the controller removes the row, because a worker writes no configuration.
-    threading.Thread(target=_reap_loop, args=([job_ctl], [rec_ctl, ctl], rec_ctl, det_ctl, survey_ctl), daemon=True).start()
-    threading.Thread(target=_clear_loop, args=([rec_ctl, ctl],), daemon=True).start()   # answered requests: every 2 s
+    threading.Thread(target=_reap_loop, args=([job_ctl], rec_ctl, det_ctl, survey_ctl), daemon=True).start()
     threading.Thread(target=_requests_loop, args=(rec_ctl, det_ctl, job_ctl), daemon=True).start()   # a request lives 30 s: looked at every 2
     stop.wait()
     srv.shutdown()

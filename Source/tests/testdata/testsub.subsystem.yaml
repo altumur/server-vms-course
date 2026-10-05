@@ -18,6 +18,15 @@ placement:
   headroom:   {from: headroom}
   constraint: labels-subset
   tie_break:  most-free-capacity
+# A request to a counter's holder: add to it (the platform's request family, `w2cplatform/worker.py`, `requests.py`).
+requests:
+  schema:
+    type: object
+    required: [unit, add]
+    additionalProperties: false
+    properties: {unit: {type: string}, add: {type: integer}, valid_until: {type: number}}
+  valid_for: 30
+  most_valid: 600
 snapshot: [name]
 console:
   running: counters_running

@@ -16,7 +16,8 @@ import math
 import threading
 import urllib.request
 
-from w2cplatform.contract import OFFER_GRACE, Slot, Worker, label_set
+from w2cplatform.contract import OFFER_GRACE, Slot, label_set
+from w2cplatform.worker import Worker
 from w2cplatform import runtime
 from vms.config import SPEC
 from vms.controller import VmsController
@@ -255,7 +256,7 @@ def test_a_spare_waiting_for_an_offer_runs_its_loop_holding_nothing_and_takes_on
     assert spare.name is None and spare.seeking is not None
     for _ in range(3):
         spare.reconcile_once(); spare.lease_pass(); spare.heartbeat_once()
-    assert spare.recording_allowed and spare.pass_failures == 0 and box.vars.list("vms/slots/") == ["vms/slots/w-1"]
+    assert spare.writing_allowed and spare.pass_failures == 0 and box.vars.list("vms/slots/") == ["vms/slots/w-1"]
     assert box.objects.list("vms/heartbeats/") == ["vms/heartbeats/w-1"]
     _cameras(box, 3)
     _ctl(box).pass_once()                                                 # w-1 takes two, one is short: an offer

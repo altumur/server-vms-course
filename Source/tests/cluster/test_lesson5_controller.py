@@ -2,6 +2,7 @@
 the directory in one scan, two controllers agreeing, the snapshot that
 leaves the cluster, and the console over real HTTP."""
 import json
+from w2cplatform import requests
 import threading
 import urllib.request
 from vms.controller import VmsController
@@ -336,7 +337,7 @@ def test_the_vms_jobs_keep_a_requests_until_on_a_cluster_as_on_a_box():
     c.vars.put("rec/requests/f1-0", {"action": "record", "cam": "1", "minutes": "10", "valid_until": str(now + 30)})
     mem = Remembered()
     m._requests_turn(rec, None, None, mem, now=now)
-    m._reap_turn([], [rec, con], rec, now=now)
+    requests.turn([rec, con], sweep=True)
     assert rec.unit("1-auto")["until"] == now + 600 and c.vars.get("rec/requests/f1-0")[0] is None
     m._requests_turn(rec, None, None, mem, now=now + 300)
     assert "1-auto" in [str(u["id"]) for u in rec.units()]                  # not yet

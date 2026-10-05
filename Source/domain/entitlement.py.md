@@ -21,8 +21,8 @@ Verify, refuse a licence naming another domain, store `{"blob": <text>}` at `dom
 `none` (nothing installed), `valid` (`now ≤ valid_until`), `grace` (within `GRACE` after), `degraded` (beyond). "Recording is allowed in all four."
 ### `may_add_camera(self, current_count) -> (bool, str)`
 `none`/`degraded` → `(False, "entitlement <st>: recording continues, adding cameras does not")`; at or over `cameras` → `(False, "licensed for N cameras, M configured")`; else `(True, "<st>: K camera(s) left")`. Grace still allows adding.
-### `recording_allowed()` (static) → `True`. The comment: "by construction. There is no code path that returns False." The README calls this the Lesson 5 deliverable in one line.
+### `writing_allowed()` (static) → `True`. The comment: "by construction. There is no code path that returns False." The README calls this the Lesson 5 deliverable in one line.
 
 ## Notes
-- The test walks the sequence the lesson asks for: none → install → valid (99 of 100 may be added, 100 may not) → a month later `grace` (still adding) → `GRACE` later `degraded` (not adding) — `recording_allowed()` true throughout.
+- The test walks the sequence the lesson asks for: none → install → valid (99 of 100 may be added, 100 may not) → a month later `grace` (still adding) → `GRACE` later `degraded` (not adding) — `writing_allowed()` true throughout.
 - Nothing here talks to a licence server; "unreachable for a month" is modelled purely as the clock passing `valid_until`.

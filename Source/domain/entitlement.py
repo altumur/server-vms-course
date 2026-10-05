@@ -82,5 +82,5 @@ class EntitlementCache:
         return True, f"{st}: {lic.cameras - current_count} camera(s) left"
 
     @staticmethod
-    def recording_allowed() -> bool:
+    def writing_allowed() -> bool:
         return True       # by construction. There is no code path that returns False.

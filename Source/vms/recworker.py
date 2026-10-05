@@ -309,6 +309,7 @@ class RecWorker(VmsWorker):
     worker's fan-out, writing into the volume it holds."""
 
     SUB = REC
+    spec = REC_SPEC                 # its requests are backfills and the resource's asks to free bytes (`requests`, below)
     ROWS = "recordings"
     # How long a volume that refused writes is left alone before this recorder tries it again. Opening it
     # may well succeed — the directories are there — and the first write fail again, so without a pause a
@@ -2138,7 +2139,7 @@ class RecWorker(VmsWorker):
     # was frozen — gives the writer up instead (`_close_store`).
     def lease_pass(self) -> list[str]:
         lost = super().lease_pass()
-        if self.recording_allowed and not self.waiting_for_offer():   # a fenced instance, or one nobody yet, decides nothing about volumes
+        if self.writing_allowed and not self.waiting_for_offer():   # a fenced instance, or one nobody yet, decides nothing about volumes
             try:
                 self.volume_pass()
             except OSError as e:

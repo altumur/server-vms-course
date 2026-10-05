@@ -15,6 +15,7 @@ at all changes when a wait fails, is refused, is switched off, or is answered a 
 run the REAL loops in threads, over a resource asked over HTTP, with `poll` left at 2 s.
 """
 import json
+from w2cplatform import requests
 import os
 import tempfile
 import threading
@@ -24,7 +25,8 @@ import urllib.error
 import urllib.request
 
 from w2cplatform import longpoll
-from w2cplatform.contract import Heartbeat, Subsystem, Worker, requests_acl
+from w2cplatform.contract import Heartbeat, Subsystem, requests_acl
+from w2cplatform.worker import Worker
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import ALARM, EventLog
 from vms.config import AUTO_SPEC
@@ -688,7 +690,7 @@ def test_a_store_that_does_not_answer_on_a_beat_is_waited_out_and_said_once():
         def emit(self, record): said.append(record.getMessage())
 
     handler = Catch()
-    logging.getLogger("vmsworker").addHandler(handler)
+    logging.getLogger("w2cplatform.worker").addHandler(handler)        # the beat is the platform's loop (`Worker.beat_once`)
     try:
         real = holder.vars.list
         away = {"on": True}
@@ -707,7 +709,7 @@ def test_a_store_that_does_not_answer_on_a_beat_is_waited_out_and_said_once():
         holder.beat_once(); holder.beat_once()
         assert holder.store_errors == 2                              # another outage: counted again, once
     finally:
-        logging.getLogger("vmsworker").removeHandler(handler)
+        logging.getLogger("w2cplatform.worker").removeHandler(handler)
 
 
 # -- the road, measured where it ends -------------------------------------------------------------------------
@@ -883,7 +885,7 @@ def _commands_at(box, holder, cid, con, rate: float, seconds: float, beat: float
     """`rate` commands a second for `seconds`, by the box's clocks: the holder looks every `beat`, heartbeats every
     ten seconds (and renews its leases), the console clears every `CLEAR_EVERY` — as the processes do. Returns the standing rows after each
     beat, and the next request number."""
-    from vms.jobs import CLEAR_EVERY, clear_requests
+    from w2cplatform.requests import CLEAR_EVERY, clear_requests
     standing, owed, n, t = [], 0.0, start, 0.0
     last_hb = last_clear = -1e9
     while t < seconds:
@@ -913,8 +915,9 @@ def test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares
     second, then the holder dies and is replaced: the rows stay bounded, and not one command is declared failed."""
     import inspect
     import vms.__main__ as m
-    from vms.jobs import clear_requests
-    assert "_clear_loop" in inspect.getsource(m.jobs) and "clear_requests(" in inspect.getsource(m._clear_turn)
+    from w2cplatform.requests import clear_requests
+    import w2cplatform.host as h
+    assert "requests_loop" in inspect.getsource(h.console) and "requests.turn(" in inspect.getsource(h.requests_loop)
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
@@ -1054,14 +1057,14 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
     box = _real_box()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
     cams = [con.create_camera({"name": f"d{i}", "source": f"driverpack://acme/10.0.{i // 250}.{i % 250}/ch/1"})["id"]
-            for i in range(VmsWorker.HUNG_DEVICES + 1)]                # the last one: the fast command's, not in the burst
+            for i in range(VmsWorker.HUNG_TARGETS + 1)]                # the last one: the fast command's, not in the burst
     box.objects.put(VMS.sub.heartbeat_key("w-1"), Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 250,
                                                                                     "headroom": 250}).to_bytes())
     box.objects.put("platform/resources/srv-a/heartbeat",
                     json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
     VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     gate = threading.Event()
-    hung = {f"acme/10.0.{i // 250}.{i % 250}" for i in range(0, VmsWorker.HUNG_DEVICES, 2)}
+    hung = {f"acme/10.0.{i // 250}.{i % 250}" for i in range(0, VmsWorker.HUNG_TARGETS, 2)}
     called: dict[str, float] = {}
 
     def device(key):

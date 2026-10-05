@@ -913,7 +913,7 @@ def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_netwo
         assert a2.hold == "net" and a2.store is not None and a2.store.writer is not None   # at once
         assert a2.our_coverage("1") == [(t - 60, t)]                   # one writer wrote it, and all of it is there
         a.lease_pass()                                                 # its name is the other instance's: fenced
-        assert not a.recording_allowed
+        assert not a.writing_allowed
         assert a.rejoin() is None and a.seeking == "r-1"               # …and nobody: no other number (the owner's 4 Oct)
     finally:
         da.stop(); db.stop()

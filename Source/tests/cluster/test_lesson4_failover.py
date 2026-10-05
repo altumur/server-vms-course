@@ -276,7 +276,7 @@ def test_the_old_instance_wakes_up_and_the_archive_is_intact():
     ctl.pass_once(1); b.reconcile_once(); b.heartbeat_once()
     c.servers["srv-a"].down = False
     lost = a.lease_pass()                                                  # kill -CONT, or the network back
-    assert sorted(lost) == ["1", "2", "3"] and act_a.running == set() and a.recording_allowed
+    assert sorted(lost) == ["1", "2", "3"] and act_a.running == set() and a.writing_allowed
     assert a.reconcile_once() == [] and a.assignment().units == [] and a.name == "w-srv-a-1"
     assert act_a.epochs == {1: 1, 2: 1, 3: 1} and b.actuator.epochs == {1: 2, 2: 2, 3: 2}
 
@@ -292,7 +292,7 @@ def test_two_processes_with_one_name_the_old_one_is_nobody():
     c.wall.advance(5)
     b = c.worker("srv-a"); b.reconcile_once()
     a.lease_pass()
-    assert not a.recording_allowed and act_a.running == set() and "slot w-srv-a-1" in a.fenced_reason
+    assert not a.writing_allowed and act_a.running == set() and "slot w-srv-a-1" in a.fenced_reason
     assert a.renew_leases() == ["1", "2", "3"] and a.conflicts() == 3      # the resource-level token agrees, per camera
     b.heartbeat_once()
     theirs = ctl.workers_seen()["w-srv-a-1"].extra
@@ -315,7 +315,7 @@ def test_the_reassignment_window_is_the_same_window_with_a_different_verdict():
     c, ctl, a, act_a, b = _recording()
     ctl.move(2, "w-srv-b-1", "operator: srv-b sees that VLAN")
     assert b.reconcile_once() == [("start", 2)] and b.actuator.epochs[2] == 2   # the destination takes the next epoch
-    assert a.lease_pass() == ["2"] and a.recording_allowed and act_a.running == {1, 3}
+    assert a.lease_pass() == ["2"] and a.writing_allowed and act_a.running == {1, 3}
     assert a.reconcile_once() == [] and ctl.where(2) == "w-srv-b-1"
 
 

@@ -35,7 +35,7 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # a lease, a heartbeat with server, labels and capacity
 #
 # **Role in the module.** Lesson 4. One process, N pipelines, its own loop. `VmsWorker` extends
-# `w2cplatform.contract.Worker` (see `contract.py` for `claim_slot`, `renew_slot`, `release_slot`,
+# `w2cplatform.worker.Worker` (see `contract.py` for `claim_slot`, `renew_slot`, `release_slot`,
 # `take_epoch`, `renew_leases`, `heartbeat`) and is the thing that knows what a camera is. It reads its
 # assignment `vms/workers/<me>` and the camera rows it names, runs М9's `Reconciler` over them
 # (`reconciler.py`) with an actuator that builds `driverpacksrc ! tee ! …` (`gstvms/actuator.py`;
@@ -63,7 +63,7 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # construction *is* the claim, and `self.name` is set afterwards. Then: `resource_root` from the argument or
 # `$RESOURCE_ROOT`, else `<PLATFORM_DIR>/events` (`runtime.events_root`: `/data/platform/events`); `capacity` from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I,
 # measured on ITS server"; the actuator (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self,
-# self._actuate)`; `recording_allowed = True`; `server` from the argument, `SERVER_NAME`, else the hostname;
+# self._actuate)`; `writing_allowed = True`; `server` from the argument, `SERVER_NAME`, else the hostname;
 # `labels` (`LABELS`), `alloc` (`INSTANCE_ID`); the two start clocks. Finally it reads the previous
 # heartbeat object of this slot name: if one exists and was written by a different instance, `previous_hb`
 # is its `ts` and `previous_instance` its instance — the controller's `failover_seconds` computes `started −
@@ -98,7 +98,8 @@ from urllib.parse import parse_qs, urlsplit
 
 from w2cplatform import runtime
 from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced, SendMixin, door_server, start_stream
-from w2cplatform.contract import NotReadThisPass, SchemaTooNew, Subsystem, Worker, check_schema
+from w2cplatform.contract import NotReadThisPass, SchemaTooNew, Subsystem, check_schema
+from w2cplatform.worker import Worker
 from w2cplatform.objects import ObjectStore
 from w2cplatform.rows import PARSE_ERRORS, finite, number
 from w2cplatform.variables import Variables
@@ -111,13 +112,6 @@ from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
-
-# The group a camera is in, as the platform reads it from the spec (`group_by: {field: source, cut_at: ch}`): what a
-# command's `group` was stamped with when the console asked for its rights (`SpecController.group_value`).
-def SPEC_GROUP(row: dict) -> str:
-    from w2cplatform.spec import url_cut
-    v = str(row.get(SPEC.group_by) or "")
-    return url_cut(v, SPEC.group_cut) if v and SPEC.group_cut else v
 
 # `UNCONFIRMED_MAX`: how long a holder goes on RECORDING past a lease's end while the store is silent.
 #
@@ -524,7 +518,7 @@ def labels_from_environment(env: dict) -> list[str]:
 #
 # State beyond the base class: `resource_root` (this server's resource), `bucket_seconds`, `observed` (every
 # `(cid, t, kind)` this instance wrote), `capacity`, `actuator`, `rows` (the assignment's camera rows,
-# refreshed each pass), `assignment_rev`, `reconciler`, `recording_allowed` / `fenced_reason` (the
+# refreshed each pass), `assignment_rev`, `reconciler`, `writing_allowed` / `fenced_reason` (the
 # instance-wide fence), `server`, `labels`, `alloc`, `started_at` (monotonic) and `_started_wall`, `passes`,
 # `previous_hb` / `previous_instance` (what failover is measured from).
 class VmsWorker(Worker):
@@ -536,6 +530,8 @@ class VmsWorker(Worker):
     recorder (`recorder.py`) is this class over another subsystem's rows."""
 
     SUB = VMS                       # the subsystem whose assignment and rows this worker runs
+    spec = SPEC                     # …its spec: what the platform serves its requests by (`requests:`, `group_by`)
+    REQUEST_TARGET = "the device"   # what a request's refusal calls what was called
     ROWS = "cameras"                # <sub>/<ROWS>/<id>
     SLOT_PREFIX, NAME_ENV = SPEC.slot_prefix, SPEC.slot_name_env   # `slot:` in vms.subsystem.yaml
     parse_row = staticmethod(row)
@@ -551,8 +547,6 @@ class VmsWorker(Worker):
         self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
         self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
-        self.epoch_errors: dict[str, str] = {}                # camera -> why its epoch could not be taken (a garbled row)
-        self.lost_to_epoch: set[str] = set()                  # cameras the lease step let go since the last assignment read (`requests`)
         self.row_errors: dict[str, str] = {}                  # camera -> why its own row is not followed (it does not parse)
         self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
         # …or, started as a spare (`SPARE_FOR`), an offer of its set — none: nobody, waiting (`Worker.claim_at_start`)
@@ -575,27 +569,6 @@ class VmsWorker(Worker):
         # the stream before it is a file, and the only one holding the epoch that makes the file writable.
         self.suppressor = Suppressor(SPEC.suppress)
         self.observed: list[tuple[int, float, str]] = []
-        # Request ids this worker has served — performed, refused or expired, all three being answers.
-        # The heartbeat carries them and the console's `clear_requests` removes the rows: a worker
-        # writes no configuration, so it cannot delete what it has done, only say that it did it.
-        self.fetched: list[str] = []
-        # What became of the commands this worker was asked to perform, counted since it started: done, refused
-        # by the device, or arrived after their moment. The last is the one to watch — a share of `expired` that
-        # grows is the road from an event to this worker getting longer than the requests live (М10B Lesson 25).
-        self.commands = {"performed": 0, "refused": 0, "expired": 0, "unknown": 0}
-        # The road to the device, counted since this process started, over `ROAD_BUCKETS` (`_measure`): from the
-        # request's `at` — the event's moment — to the call (`road`: two clocks), from the row's filing to the call
-        # (`request_road`: two clocks), each by who asked; and from this worker's first sight of the row to the call
-        # (`wait`: one clock, its own).
-        self.road = {"auto": self._histogram(), "operator": self._histogram()}           # the event's moment -> the call
-        self.request_road = {"auto": self._histogram(), "operator": self._histogram()}   # the row's filing -> the call
-        self.wait = {"buckets": [0] * len(self.ROAD_BUCKETS), "sum": 0.0, "count": 0}
-        self._first_seen: dict[str, float] = {}          # request -> when a pass of this worker first saw its row, by the clock
-        self._requests_read: dict[str, tuple] = {}       # request -> (the unit it names, its fields if ours): read once (M5)
-        self._marks_looked: set[str] = set()             # requests whose mark was read at their first sight (`_confirm`)
-        self._appeared: dict[str, float] = {}            # request -> the wall time of the last listing that did not have it
-        self._listed: tuple[float, set] | None = None    # (when, which requests) of the previous listing
-        self._slow: set[int] = set()                     # devices whose last COMMAND did not answer inside `PERFORM_GRACE`
         self._slow_asks: set[int] = set()                # devices whose question did not answer inside `DEVICE_GRACE` (`_ask_devices`)
         self._dev_calls: dict[tuple, dict] = {}          # (question, device) -> its one call not collected yet (`_ask_devices`)
         self._dev_lock = threading.Lock()                # …asked from the loop's thread and from the playback door's
@@ -610,10 +583,6 @@ class VmsWorker(Worker):
         self._said_coverage_at: dict[tuple, float] = {}  # …and when it said it (`wall`)
         self._said_status: dict[tuple, object] = {}      # ("channels" | "in_use", device) -> what the device said last
         self._heard: dict | None = None                  # the heartbeat's one round of answers, while it is being written
-        self.reanswered = 0                              # requests answered before by this slot, said again (`_answered_before`)
-        self._beat_failed = False                        # the look at the requests between passes is failing: said once (`beat_once`)
-        self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
-        self._marks_owed: dict[str, bytes] = {}          # request -> its answered mark, not yet taken by the store (`_confirm`)
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
         self.actuator = actuator or FakeActuator()
         self.rows: list[dict] = []
@@ -628,18 +597,10 @@ class VmsWorker(Worker):
         self.events_refused = 0                           # lines a device posted that could not be written (`drain_bus`)
         self.assignment_rev = 0
         self.reconciler = Reconciler(self, self._actuate)
-        self.recording_allowed = True
-        self.fenced_reason: str | None = None
-        self.was_fenced: str | None = None               # why it was fenced last, once it has rejoined
-        self.conflicts_carried = 0                       # epoch conflicts it met as a zombie, under the name it lost (`rejoin`)
-        self._performing: dict[int, dict] = {}           # device -> the one command in flight into it
-        self.store_errors = 0                            # passes and renewals the store did not answer
-        self.pass_failures = 0                           # parts of the loop that raised, since the process started
         self.labels = labels_from_environment(env)
         self.alloc = runtime.instance(env) or ""          # published as `alloc` for the readers that already know that name
         self.started_at = clock()
         self._started_wall = self.wall()
-        self.passes = 0
         # the previous instance of this slot, if it left a heartbeat: what failover is measured from
         self.previous_hb, self.previous_instance = 0.0, ""
         # …and the server it ran on: `started − previous_hb` is one clock only when that is this server (the review's
@@ -1075,7 +1036,7 @@ class VmsWorker(Worker):
 
     # -- the gate ---------------------------------------------------------------
     # The gate between the reconciler and the real actuator. For `start`/`restart`: refuse if the instance
-    # is fenced (`recording_allowed` false); on `start`, or if no epoch is held for the unit,
+    # is fenced (`writing_allowed` false); on `start`, or if no epoch is held for the unit,
     # `take_epoch(unit)` — a new epoch for a new writer — else reuse the held epoch (an edit's restart keeps
     # epoch 1); refuse if `may_act(unit)` is false (no lease, or a lost one); then call the actuator with
     # `epoch` added to the row — the number in the name of every stream a recorder writes (`<rec>/e<epoch>`) and
@@ -1085,7 +1046,7 @@ class VmsWorker(Worker):
     def _actuate(self, verb: str, cam: dict) -> bool:
         unit = str(cam["id"])
         if verb in ("start", "restart"):
-            if not self.recording_allowed:
+            if not self.writing_allowed:
                 return False
             if verb == "start" or unit not in self.epochs:
                 try:
@@ -1185,152 +1146,6 @@ class VmsWorker(Worker):
             log.info("%s: %s camera %s", self.name, verb, cid)
         return actions
 
-    # Renew the slot and every lease, and decide what a lost lease means. First `renew_slot()`: if the slot
-    # is held by another instance now, `fence("slot w-N is held by another instance now")` and return every
-    # held unit — the zombie is fenced at the slot *before* any epoch is looked at
-    # (`test_the_zombie_is_fenced_at_the_slot_first`: the replacement's `slot.gen == 2`). Then
-    # `renew_leases()`; each lost unit's pipeline is stopped, it is dropped from `reconciler.actual` and
-    # released, and the rest go on recording (`test_a_reassignment_is_not_a_zombie`: released, not fenced,
-    # `recording_allowed` still true). Returns the lost units. `test_the_zombie_on_one_box`: A's `lease_pass`
-    # returns `["1"]`, A is fenced with "slot w-1" in the reason, its epoch lease also reports a conflict, and
-    # it may start nothing (`("failed", 1)`); B is fine.
-    #
-    # Since feedback BC, three rules, and the second replaces "a lost lease on a camera still mine: I am the
-    # zombie, fence the instance":
-    #
-    #   the slot says who I am    only a slot row READ, naming another holder, fences the instance. A store that
-    #                             did not answer is not that row: "still me", counted (`store_errors`). The slot
-    #                             is a name; the right to write is the leases', and they run out by themselves
-    #   a lease is one camera's   lost however it was lost — the camera went to another worker, it is in two
-    #                             assignments for the seconds a controller takes to mend that, or the store did
-    #                             not confirm the lease in time — ONE pipeline stops and its epoch is given up.
-    #                             If the camera is still mine the reconciler starts it again, with its backoff,
-    #                             under a new epoch. The slot was renewed a line above: there is no other
-    #                             instance of me, and fifty cameras are not stopped for one
-    #   a fence is not for ever   `rejoin`, below
-    #
-    # And since feedback BK the second rule has an exception, which is the whole of that decision: a lease that
-    # ran out while the store was SILENT is not lost. The pipeline goes on under the epoch it has — DATA, which
-    # a stale epoch cannot harm — and ACTIONS wait (`requests` asks the strict `may_act`). When the store
-    # answers again: the same epoch, and nothing was stopped; another, and the camera stops as it always did.
-    # `UNCONFIRMED_MAX` is the ceiling on that, in seconds past the lease's end; unset is none, `off` is the old
-    # behaviour.
-    def lease_pass(self) -> list[str]:
-        """Renew the slot and every lease. Another holder on my slot: the instance
-        fences. A lost lease: that one camera stops and gives its epoch up."""
-        if self.recording_allowed and self.waiting_for_offer():
-            self._seek_slot()                         # a spare with no offer yet: nobody, holding nothing — not a fence
-            return []
-        try:
-            mine = self.renew_slot()
-        except OSError as e:
-            self.unanswered += 1
-            self.store_errors += 1
-            log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
-            mine = True
-        except SchemaTooNew as e:
-            # The store was raised past this build while it ran (the review's second pass, m4): the rows it
-            # would read next are not what it thinks they are. Fenced, as a build older than the store does
-            # not start — and it stays fenced (`rejoin` checks the same thing) until somebody restarts it new.
-            self.schema_seen = None                   # what it read is not the store's layout any more (`rejoin`)
-            self.fence(str(e))
-            # Fenced with its slot in hand, it renews nothing: the row lapses and another process takes the name. From
-            # the lease step that reads another holder there it is nobody, and says nothing under the name (the
-            # review's sixth pass, beside `rejoin`) — until then the name is its own, and its heartbeat says `fenced`.
-            self.name_taken()
-            return list(self.epochs)
-        if not mine:
-            # NOBODY FROM THIS LINE (the review's sixth pass), as `keep_slot` makes every other worker: the name is the
-            # other instance's, and so are its assignment and its heartbeat. It was fenced and kept the name — and a
-            # heartbeat `fenced: true` went out over the legitimate one until `rejoin` took another slot, for as long
-            # as that claim failed.
-            self.give_up_name()
-            self.fence(f"slot {self.name} is held by another instance now")
-            return list(self.epochs)
-        waiting = {u: l.epoch for u, l in self.leases.items() if l.unconfirmed() > 0}
-        lost = self.renew_leases()
-        for unit, epoch in waiting.items():
-            lease = self.leases.get(unit)
-            if unit not in lost and lease is not None and lease.silent_since is None:
-                log.warning("%s: the store confirms epoch %d of camera %s again; nothing was stopped", self.name, epoch, unit)
-        for unit in lost:
-            lease = self.leases.get(unit)
-            why = ("a newer epoch was issued for it" if lease is not None and lease.fenced
-                   else f"unconfirmed for longer than UNCONFIRMED_MAX ({lease.unconfirmed_max:g} s)"
-                   if lease is not None and lease.silent_since is not None and lease.unconfirmed_max
-                   else "the store did not confirm the lease in time")
-            log.warning("%s: camera %s stopped: %s", self.name, unit, why)
-            # `lost` names units the way the lease does — as text. The reconciler keys by the row's id,
-            # which the spec parsed (a number for cameras, a name for recordings): match it, never cast.
-            uid = next((k for k in self.reconciler.actual if str(k) == unit), unit)
-            self.actuator("stop", {"id": uid})
-            self.reconciler.actual.pop(uid, None)
-            self.release(unit)
-            self.lost_to_epoch.add(unit)
-        return lost
-
-    # A fenced instance used to stay fenced: alive, renewing nothing, heartbeating `fenced: true` — which
-    # placement does not read — and recording nothing until somebody restarted it by hand; a supervisor does not
-    # restart a process that has not died (the product's Go worker, feedback BC). Fenced, it is nobody: the
-    # slot it had belongs to the instance that took it. So on its next pass it takes a FREE slot and starts
-    # from nothing — no epochs, no rows, whatever that slot's assignment says. Returns the new name, or None
-    # while there is no slot to take.
-    def rejoin(self) -> str | None:
-        if self.recording_allowed:
-            return self.name
-        # A store raised past this build: nobody to rejoin as (the review's second pass, m4). With the version it last
-        # read whole (the review's fourth pass): `rejoin` asked bare, and a row that does not parse is "never read" to a
-        # bare check — a worker fenced for any other reason never came back while one field was garbled, though
-        # `renew_slot` keeps running on the same row with what it read. A worker fenced FOR the schema has no version
-        # to keep (`lease_pass` forgets it): a garbled row is not proof the store came back to its layout.
-        try:
-            self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))
-        except SchemaTooNew:
-            return None
-        except OSError:
-            return None                               # not known: a fenced instance can wait a pass
-        was = self.name
-        # What the epochs said of the zombie goes with it to its next name. The leases that counted the conflicts are
-        # let go on the next line, and under the name it lost it says nothing now — the number `vms_epoch_conflicts`
-        # is there to show (М11 Lesson 9) would be shown by nobody (the sixth pass, the follow-up).
-        self.conflicts_carried += super().conflicts()
-        self.release_all()
-        self.rows, self.assignment_rev = [], 0
-        self.reconciler.clear()
-        # The claim can fail — the store blinks, every candidate is taken under it — and it used to leave the instance
-        # with no slot and the OLD name: an `OSError` went out of here, `renew_slot` with no slot said "still me", and
-        # the heartbeat went on under a name another instance holds (the review's sixth pass; the fifth's blocker 3,
-        # on this path). The name is given up first and the claim is `keep_slot`'s (`_seek_slot`): nobody until it
-        # has a slot, and every pass tries again.
-        self.give_up_name()
-        if not self._seek_slot():
-            return None
-        name = self.name
-        log.warning("%s: was fenced as %s (%s); rejoined as %s", self.instance, was, self.fenced_reason, name)
-        self.recording_allowed, self.was_fenced, self.fenced_reason = True, self.fenced_reason, None
-        return name
-
-    def conflicts(self) -> int:
-        return super().conflicts() + self.conflicts_carried
-
-    # A fenced instance is nobody: the stand-in renews nothing for it — not the slot row that may still name it (a store
-    # raised past this build fences it with its slot in hand), not its leases (feedback DD).
-    def may_stand_in(self) -> bool:
-        return self.recording_allowed
-
-    # Once: log at error, set `recording_allowed = False` and `fenced_reason`, `actuator.stop_all()`,
-    # `reconciler.clear()` — the pipelines were stopped underneath the loop. Idempotent (a second call
-    # returns immediately). After this `_actuate` refuses every start and `observe` writes nothing; the heartbeat
-    # says `fenced: true` while the name is still this instance's (a store raised past its build), and nothing at
-    # all once the name is another's (`lease_pass` gives it up before it calls this: `seeking`).
-    def fence(self, why: str) -> None:
-        if not self.recording_allowed:
-            return
-        log.error("%s: FENCED (%s). Stopping every pipeline.", self.name, why)
-        self.recording_allowed, self.fenced_reason = False, why
-        self.actuator.stop_all()
-        self.reconciler.clear()
-
     # An event: written by this worker, now (`wall()`), into the camera's bucket on this server's resource
     # under the epoch this worker holds for it — recording or not. `None` if no epoch is held for the camera
     # (not mine to observe) or the instance is fenced. Records `(cid, t, kind)` in `observed` and returns
@@ -1345,7 +1160,7 @@ class VmsWorker(Worker):
         recording or not. A camera it holds no epoch for is not its to
         observe. Nothing else is told."""
         epoch = self.epochs.get(str(cid))
-        if epoch is None or not self.recording_allowed:
+        if epoch is None or not self.writing_allowed:
             return None
         t = self.wall()
         # `t` is when the bus was drained; `occurred` is when the DEVICE says it happened, where the path that
@@ -1402,7 +1217,7 @@ class VmsWorker(Worker):
     # the run that observed them, and moving them forward would put a predecessor's storm in a successor's
     # bucket. Being fenced drops them for the same reason, one that this whole file already obeys.
     def flush_suppressed(self) -> int:
-        if not self.recording_allowed:
+        if not self.writing_allowed:
             return 0
         written = 0
         for unit, t, kind, fields in self.suppressor.flush(self.wall()):
@@ -1421,11 +1236,49 @@ class VmsWorker(Worker):
         """The bus, drained: what elements posted becomes events — if I still
         hold the epoch — and what died becomes `lost` and a `silent` event."""
         self.drain_bus()
-        try:
-            self.serve_requests()                       # …and what somebody asked this device to DO
-        except OSError as e:                            # the requests are rows in the store: no store, none this pass
-            self.store_errors += 1
-            log.warning("%s: the store did not answer for the requests (%s)", self.name, e)
+        super().pump_once()                             # …and what somebody asked this device to DO (the platform's requests)
+
+    # …and on every beat between passes (`Worker.beat_once`): the bus too, then the requests.
+    def beat(self) -> None:
+        self.drain_bus()
+        super().beat()
+
+    # -- the platform's life cycle, in the holder's words (`w2cplatform/worker.py`) ------------------------------------
+    # A lost lease stops ONE pipeline: `lost` names units the way the lease does — as text — and the reconciler keys by
+    # the row's id, which the spec parsed (a number for cameras, a name for recordings): matched, never cast.
+    def stop_unit(self, unit) -> None:
+        uid = next((k for k in self.reconciler.actual if str(k) == str(unit)), unit)
+        self.actuator("stop", {"id": uid})
+        self.reconciler.actual.pop(uid, None)
+
+    def stop_all_units(self) -> None:
+        self.actuator.stop_all()                    # with GStreamer, EOS lets the last access units reach each sink
+
+    def fence_units(self) -> None:
+        self.actuator.stop_all()
+        self.reconciler.clear()                     # the pipelines were stopped underneath the loop
+
+    def forget_units(self) -> None:
+        self.rows, self.assignment_rev = [], 0
+        self.reconciler.clear()
+
+    def unit_word(self, unit) -> str:
+        return f"camera {unit}"
+
+    # A command goes into the DEVICE that carries the camera — one session per device, one call into it at a time — and
+    # is performed only by the holder of a camera it holds.
+    def held_rows(self) -> dict[str, dict]:
+        return {str(r["id"]): r for r in self.rows}
+
+    def request_target(self, row: dict):
+        return self.device_of_row(row)
+
+    def request_targets(self) -> list:
+        return list(self.devices.values())
+
+    def moved_refusal(self, unit: str) -> str:
+        return (f"camera {unit} was moved to another device after this command was given: it was not performed — give it "
+                f"again if it is still wanted")
 
     # The bus alone — on the pass, and on every beat between passes (`beat_once`): a device's event waited for the
     # pass, up to `poll` seconds, before it was a line any scenario could see — the part of the road from an event to
@@ -1452,497 +1305,6 @@ class VmsWorker(Worker):
             self.reconciler.lost(cid, self.now())
             self.observe(cid, "silent")                 # the event with no picture behind it, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
-
-    # Where the requests are served: here, on the loop's thread — a pulse and a preset take a moment. A recorder's
-    # request is an hour off a camera's card and takes minutes: it serves them on its backfill thread
-    # (`RecWorker.serve_requests`), so the leases and the heartbeat are not kept waiting (the review's second pass).
-    def serve_requests(self) -> None:
-        self.requests()
-
-    # -- commands: `<sub>/requests/<id>`, done by whoever holds the device ------------------------------
-    # The other half of what a device is. Until now a holder only OBSERVED: one connection, a fan-out,
-    # events. A device also acts — a relay to pulse, a preset to go to — and the command has to travel the
-    # same connection, because there is only one: a second process opening the device to click a relay is
-    # the thing this subsystem is built not to do.
-    #
-    # So a command is a ROW, in the family the platform already has for "bounded work somebody asked for",
-    # and the worker holding the unit performs it. Not a unit of its own: a pulse has no duration to hold,
-    # no epoch to fence, nothing to reconcile — it happens and it is over. `RecWorker.requests` is the
-    # same method for the same reason, one subsystem over.
-    #
-    # `valid_until` is the one field a recording's request does not need. Footage fetched an hour late is
-    # still the footage; a door opened an hour late is an incident. A request that arrives after its
-    # moment is EXPIRED, reported as such and cleared — never performed, never silently dropped.
-    #
-    # NOTHING LONG WHERE THE LEASES ARE RENEWED (feedback BE). `perform` is a call into a driver, and a driver's
-    # call has no timeout of ours: a camera whose network went away with its session still held kept this
-    # method — and with it the loop, the slot, the leases and the heartbeat of every camera of this worker —
-    # for as long as the vendor's SDK cared to wait. So the call is made on a thread of its own:
-    #
-    #   PERFORM_GRACE     the loop waits this long for it: a device that answers at once is answered at once
-    #   PERFORM_TIMEOUT   after this the request is answered `the device did not answer`, and cleared
-    #   one at a time     while a call into a device has not returned, no second call is made into it — the next
-    #                     requests wait their turn, or expire by their own `valid_until`
-    #
-    # And a worker that may no longer write for the unit does not act on it either: a fenced instance, or one
-    # whose lease on the unit is lost, leaves the request for whoever holds the device now.
-    #
-    # A COMMAND HAS A DEADLINE, AND IT IS NEAR (feedback BI). `valid_until` was optional: a row without one
-    # waited for its device for ever, and was performed the day the device came back. Without it a command is
-    # refused; with one more than `MAX_VALID` away it is refused too — "open the door some time in the next
-    # week" is not a command.
-    #
-    # AT MOST ONCE (the platform review, "a command with no fence check"). The answer to a request is said in
-    # the heartbeat, seconds after the device was called. A worker that died in between left a request that
-    # looked untouched, and whoever took the device next performed it again: a door pulsed twice, the second
-    # time a minute later, with nobody at it. So before the device is called the worker says it is about to —
-    # a MARK, `<subsystem>/commands/<id>` in the object store, the one place a worker may write besides its
-    # own rows. A request that carries another instance's mark is not performed: it is answered `unknown: an
-    # earlier instance … began it`, and a person decides. For a door, "perhaps twice" is worse than "perhaps
-    # not at all".
-    #
-    # The mark is written only when the call is about to be made — the device is open and free — so a request
-    # that waits for its device carries none. Marks of requests that no longer exist are cleared every
-    # `MARK_SWEEP` seconds, by whichever worker gets there.
-    #
-    # And the mark is written CREATE-ONLY, and the unit is under a lease first (the review's second pass). Two
-    # holders of one device in the same second — the seconds a controller takes to mend a double assignment —
-    # both read "no mark" and both wrote one; now the store says which of them made it, and the other answers
-    # `unknown`. A unit held with no lease (`live: on-demand`: the device is on the line, nothing recorded) took
-    # no epoch and so had no fence: it takes one here, before its first command, so that a second holder fences
-    # the first the way it would for a stream.
-    #
-    # LOOKED AT FOUR TIMES A SECOND (2 October 2026). A request used to wait for this worker's pass — two seconds
-    # at worst, one on average, of a road whose whole length a person at a door feels. Between passes the loop now
-    # looks at the request rows every `COMMANDS_BEAT` (`run`, `beat_once`): this same method, with every rule
-    # above — the lease, the deadline, the mark, one call at a time. Nobody tells the worker anything: the row is
-    # the request and the look is the worker's own, the same on a box and in a cluster. What it costs is one
-    # listing of `<sub>/requests/` per worker per beat, and a read of each row ONCE, when it first appears (the
-    # review's seventh pass, M5): every row of the cluster was read on every beat — another holder's, one answered
-    # already — and twenty holders over two hundred standing rows were 16 000 reads of the store a second. The unit a
-    # row names is remembered by its key (`_requests_read`), and the checks that need no row — answered, in flight —
-    # come before any read. A request row is written once (the console files it create-only; a scenario's id is its
-    # event's, the same row each time), so what was read is what stands.
-    #
-    # AND THE ROAD IS MEASURED HERE, where it ends (`_measure`). Two kinds of histogram, because there are two clocks:
-    #
-    #   wait   from this worker's first sight of the row to the call into the device — its own monotonic clock,
-    #          so the number is this link's and nobody's skew
-    #   road   from the request's `at` — the moment of the event that caused it, by the clock of whoever wrote
-    #          the event — to the call, by this worker's wall clock. The whole road, and only as true as the two
-    #          clocks agree: a negative one is counted (`skewed`) and taken as zero
-    #
-    # The evaluator's buckets (`AutoWorker.LATENCY_BUCKETS`), and three finer ones under a second: the road is a
-    # fraction of a second now, and a histogram whose first bucket is one second would not show it.
-    #
-    # WHAT THE NUMBERS MEAN, SAID PRECISELY (the review's seventh pass, minor). `vms_request_to_device_seconds` was the
-    # holder's first sight of the row, not its filing — and after a restart every standing row was "first seen" at
-    # its call, a zero. And the road mixed automation's requests with an operator's clicks, whose `at` is the click.
-    # Now three histograms, two of them split by who asked (`by`: `auto` for a scenario's row, `operator` for the rest):
-    #
-    #   road      from the event (`at`) to the call                            two clocks: the event's writer's, ours
-    #   request   from the row's filing (`filed`; an operator's row: `at`) to the call   two clocks: the filer's, ours
-    #   wait      from this worker's first sight of the row to the call        one clock, its own
-    #
-    # and a clock skew is counted in both directions where it can be seen. AHEAD: the writer's moment is after ours —
-    # a road below zero, taken as zero. BEHIND: the row says it was filed before this worker's previous listing of
-    # the requests, which did not have it — by more than `SKEW_SLACK`; only a request can be caught so (an event
-    # happened before anybody filed for it, and nothing here bounds how long before).
-    #
-    # HUNG DEVICES DO NOT HOLD THE LOOP (the review's seventh pass, M7). The loop waited `PERFORM_GRACE` for every call,
-    # and `budget` counted only what was answered — so a hung device cost a fifth of a second and nothing of the budget:
-    # 100 of 200 devices hung for 30 s held the loop's thread 24.7 s, a fast command waited 7 s and the lease went
-    # 13.9 s unrenewed; about 120 hung was past the lease. Three bounds now, the design number being a holder that keeps
-    # its leases with every one of its devices hung (`HUNG_DEVICES`, 200):
-    #
-    #   REQUESTS_HOLD       the most one `requests` call holds the loop's thread, reading and waiting together; what
-    #                       is left is the next look's, a beat away. The calls a look began are waited for TOGETHER,
-    #                       `PERFORM_GRACE` at most: one fifth of a second however many of them hang
-    #   budget              requests acted on per look — a call STARTED counts, answered or not; refusals, expiries too
-    #   a slow device       one whose last call did not answer inside `PERFORM_GRACE` is not waited for at all: its
-    #                       answer is collected by the next look (`_performed`), and a quick answer clears the name
-    #
-    # The budget is `COMMANDS_PER_LOOK`: every device of a holder of the design's size, commanded at once, is called in
-    # one look — the design's burst (`COMMANDS_BURST`) many times over. What bounds a look on a slow store is
-    # `REQUESTS_HOLD`, which cuts it first; the rest is a beat away. The sustained rate (`COMMANDS_SUSTAINED`) is what
-    # the rows must not pile up at — the answers leave in the heartbeat (`FETCHED_BYTES`) and the console clears them
-    # every `jobs.CLEAR_EVERY` (`clear_requests`).
-    PERFORM_GRACE, PERFORM_TIMEOUT = 0.2, 10.0
-    MAX_VALID, MARK_SWEEP = 600.0, 30.0
-    ROAD_BUCKETS = (0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0)
-    COMMANDS_SUSTAINED, COMMANDS_BURST = 2.0, 16    # commands a second per holder: the design numbers of 2 October 2026
-    HUNG_DEVICES = 200                              # devices hung at once a holder keeps its leases through (the test's)
-    COMMANDS_PER_LOOK = HUNG_DEVICES                # every device of such a holder, commanded at once, called in one look
-    REQUESTS_HOLD = 0.5                             # seconds one `requests` call may hold the loop's thread
-    FETCHED_BYTES = 8192                            # the answered ids one heartbeat carries, oldest first
-    FETCHED_COUNT = COMMANDS_BURST * 10             # …at most so many: the burst, for the ten seconds between two heartbeats
-    SKEW_SLACK = 1.0                                # a filing this much before our previous listing: the writer's clock is behind
-
-    @staticmethod
-    def _histogram() -> dict:
-        return {"buckets": [0] * len(VmsWorker.ROAD_BUCKETS), "sum": 0.0, "count": 0, "ahead": 0, "behind": 0}
-
-    def _measure(self, rid: str, it: dict) -> None:
-        def count(h: dict, seconds: float) -> None:
-            h["sum"] += seconds
-            h["count"] += 1
-            for i, le in enumerate(self.ROAD_BUCKETS):
-                if seconds <= le:
-                    h["buckets"][i] += 1
-
-        def two_clocks(h: dict, since, behind_of: float | None = None) -> None:
-            # `finite`, not `float`: a moment of 400 digits — a JSON integer, from a hand-edited row — raised
-            # `OverflowError` out of `requests` past a `(TypeError, ValueError)` (the review's tenth pass, a sibling)
-            try:
-                at = finite(since)
-            except (TypeError, ValueError):
-                return                                   # a row that does not say when (a word, `nan`, `10**400`): not counted here
-            seconds = self.wall() - at
-            if seconds < 0:
-                h["ahead"] += 1                          # the writer's clock is ahead of this one: said, not hidden
-            elif behind_of is not None and at < behind_of - self.SKEW_SLACK:
-                h["behind"] += 1                         # filed "before" a listing that did not have it: its clock is behind
-            count(h, max(0.0, seconds))
-
-        count(self.wait, max(0.0, self.clock() - self._first_seen.pop(rid, self.clock())))
-        by = "auto" if str(it.get("by", "")).startswith("auto/") else "operator"
-        two_clocks(self.road[by], it.get("at"))
-        filed = it.get("filed") if it.get("filed") not in (None, "") else (it.get("at") if by == "operator" else None)
-        two_clocks(self.request_road[by], filed, self._appeared.pop(rid, None))
-
-    def command_key(self, rid: str) -> str:
-        return f"{self.SUB.name}/commands/{rid}"
-
-    def began_by(self, rid: str) -> str | None:
-        """The instance that said it was about to perform this request, or None."""
-        mark = self.mark_of(rid)
-        return None if mark is None else (str(mark.get("instance", "")) or "?")
-
-    def mark_of(self, rid: str) -> dict | None:
-        """The mark of this request as it stands, or None. Raises if the store does not answer."""
-        raw = self.objects.get(self.command_key(rid))
-        if raw is None:
-            return None
-        try:
-            mark = json.loads(raw)
-        except PARSE_ERRORS:                             # nested past JSON's depth too: `RecursionError` left `requests()` on
-            return {"instance": "?"}                     # every pass and no command was performed (the eleventh review) —
-                                                         # a mark that does not parse is still a mark, that command's
-        return mark if isinstance(mark, dict) else {"instance": "?"}
-
-    def sweep_marks(self) -> int:
-        if self.clock() - self._marks_swept < self.MARK_SWEEP:
-            return 0
-        self._marks_swept = self.clock()
-        prefix = f"{self.SUB.name}/commands/"
-        marks = self.objects.list(prefix)                # the marks FIRST: a mark is written after its request,
-        if not marks:                                    # so a mark listed here whose row is gone below is over
-            return 0
-        rows = {k.rsplit("/", 1)[1] for k in self.vars.list(self.SUB.requests_prefix())}
-        gone = [k for k in marks if k.rsplit("/", 1)[1] not in rows]
-        for k in gone:
-            self.objects.delete(k)
-        return len(gone)
-
-    def requests(self, budget: int = COMMANDS_PER_LOOK, now: float | None = None) -> list[dict]:
-        now = self.wall() if now is None else now
-        held_from = time.monotonic()                     # the waits below are real seconds: so is their bound
-        mine = {str(r["id"]): r for r in self.rows}
-        done: list[dict] = self._performed()             # what calls already in flight have come to
-        base, again, from_calls, begun = len(done), 0, 0, []   # what this look acted on: answers given, calls begun
-        self.sweep_marks()
-        listed_at = self.wall()
-        keys = sorted(self.vars.list(self.SUB.requests_prefix()))
-        # An answered request is remembered for as long as its ROW stands — the heartbeat carries it until the
-        # controller clears the row — and not after: `fetched` grew by one id per command for the life of the
-        # process (the review's third pass, minor). A retry after the row is gone is the console's to recognise,
-        # by its key (`vms/console.py`).
-        present = {k.rsplit("/", 1)[1] for k in keys}
-        self.fetched = [r for r in self.fetched if r in present]
-        self._first_seen = {r: t for r, t in self._first_seen.items() if r in present}
-        self._requests_read = {r: v for r, v in self._requests_read.items() if r in present}
-        self._marks_looked &= present
-        if self._marks_owed:
-            self._confirm_owed(present)                  # answers the store did not take the first time (`_confirm`)
-        # When each row first appeared, as "after our previous listing" — what a filing that says otherwise is checked
-        # against (`_measure`, `behind`). The first listing of a process knows of no before.
-        self._appeared = {r: t for r, t in self._appeared.items() if r in present}
-        if self._listed is not None:
-            for r in present - self._listed[1]:
-                self._appeared.setdefault(r, self._listed[0])
-        self._listed = (listed_at, present)
-        answered = set(self.fetched)
-        in_flight = {c["rid"] for c in self._performing.values()}
-        self._slow &= {id(d) for d in self.devices.values()}
-        for key in keys:
-            if len(done) - base - again - from_calls + len(begun) >= budget:
-                break                                    # this look has acted on its share: the rest is the next look's
-            if time.monotonic() - held_from >= self.REQUESTS_HOLD:
-                break                                    # …or held the loop as long as one look may
-            rid = key.rsplit("/", 1)[1]
-            if rid in answered or rid in in_flight:
-                continue                                 # one we have answered, or one in flight: not even read
-            got = self._requests_read.get(rid)           # (the unit it names, its fields if the unit is ours)
-            if got is None or (got[0] in mine and got[1] is None):
-                it, _ = self.vars.get(key)
-                if not it:
-                    continue
-                unit_of = str(it.get("unit", ""))
-                got = self._requests_read[rid] = (unit_of, it if unit_of in mine else None)
-            row = mine.get(got[0])
-            if row is None:
-                continue                                 # another worker's device: its row was read once, when it appeared
-            it = got[1]
-            self._first_seen.setdefault(rid, self.clock())   # what `wait` is measured from (`_measure`)
-            unit = str(row["id"])
-            if not self.recording_allowed or (unit in self.leases and not self.may_act(unit)):
-                continue                                 # not mine to act on now: fenced, or the lease is lost
-            # ANSWERED BEFORE, BY THIS NAME (the review's seventh pass, M6). A holder started again on standing rows
-            # it had performed under its previous instance found that instance's mark on each, and answered
-            # `unknown` with a `command.failed` — a scenario may fire on that — or `expired`; 53 and 16 of 69 in the
-            # review's run. The answer is in the mark now (`_confirm`): a mark that says how the call went is that
-            # call's answer, said again so the row is cleared, and nothing else — no event, no counter of outcomes.
-            # Looked at once per row, at its first sight, before the deadline: performed is not expired.
-            unmarked = False                             # read just now, and no mark: not read again before the call
-            if rid not in self._marks_looked:
-                mark = self.mark_of(rid)                 # raises if the store does not answer: not known is not "nobody"
-                self._marks_looked.add(rid)
-                unmarked = mark is None
-                if mark is not None and mark.get("outcome"):
-                    self._answered_before(rid, row, mark, done)
-                    again += 1                           # a read, not a call: not of the budget
-                    continue
-            # ONE ROW'S TROUBLE IS THAT ROW'S (the review's sixth pass). Two things here were read or taken bare, and
-            # either raised out of `requests` — out of every `pump_once`, for as long as the row stood — so no command
-            # to ANY device of this holder was performed behind it: a `valid_until` that is not a number (which never
-            # reaches the check that expires it), and, below, the epoch of a unit held without a lease, when its row
-            # `<sub>/epoch/<unit>` does not parse. Each is a refusal now, answered like the others here.
-            #
-            # …and `nan`, `inf` are not a time either (the review's seventh pass, M3): `float("nan")` passed all three
-            # checks below — every comparison with it is false — and a holder that came up three hours later performed
-            # the command. `finite` refuses them with the words.
-            try:
-                until = finite(it.get("valid_until", 0) or 0)
-            except (TypeError, ValueError):
-                self._refused(rid, row, it, f"`valid_until` is not a time: {it.get('valid_until')!r}", done)
-                continue
-            if not until:
-                self._refused(rid, row, it, "a command carries a deadline (`valid_until`): without one it would wait "
-                                            "for its device for ever", done)
-                continue
-            if until - now > self.MAX_VALID:
-                self._refused(rid, row, it, f"`valid_until` is more than {self.MAX_VALID:.0f} s away: that is not a command", done)
-                continue
-            if now > until:
-                self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
-                done.append({"request": rid, "unit": row["id"], "expired": True})
-                self.commands["expired"] += 1
-                log.warning("%s: request %s expired unperformed (%.0fs late)", self.name, rid, now - until)
-                continue
-            # RIGHTS ARE THE DEVICE'S THE COMMAND WAS FILED FOR (the review's eighth pass, minor). The console asks for them on
-            # every camera of the device (`rights.reach.requests` in the spec) and writes the group it asked them on into
-            # the row (`group`: the source up to `/ch/`, `placement.group_by`); a command waits up to `MAX_VALID`, and a
-            # camera moved onto a recorder's channel meanwhile would have the recorder pulse a relay nobody with a right
-            # on it chose. Performed only in the group it was filed for. A row with no `group` — a scenario's (asked again
-            # when its camera moves: the spec's `rights.names`) — is performed as before.
-            filed_for = str(it.get("group") or "")
-            if filed_for and filed_for != SPEC_GROUP(row):
-                self._refused(rid, row, it, f"camera {unit} was moved to another device after this command was given: it "
-                                            f"was not performed — give it again if it is still wanted", done)
-                continue
-            dev = self.device_of_row(row)
-            if dev is None:
-                continue                                 # the device is not open yet: ask again next pass
-            if id(dev) in self._performing:
-                # A call this look began into the same device, not yet back: waited for — inside its own
-                # `PERFORM_GRACE` and the look's `REQUESTS_HOLD` — so that two commands to a device that answers at once
-                # go in one look, as they always did; a device that does not answer is not waited for twice.
-                ahead = self._performing[id(dev)]
-                if id(dev) not in self._slow and any(c is ahead for c, _ in begun):
-                    left = min(ahead["t0"] + self.PERFORM_GRACE, held_from + self.REQUESTS_HOLD) - time.monotonic()
-                    if left > 0:
-                        ahead["returned"].wait(left)
-                    if ahead["returned"].is_set():
-                        got_back = self._performed()
-                        from_calls += len(got_back)
-                        done += got_back
-                    elif time.monotonic() - ahead["t0"] >= self.PERFORM_GRACE:
-                        self._slow.add(id(dev))
-                if id(dev) in self._performing:
-                    continue                             # a call into this device has not returned: wait your turn
-            if unit not in self.leases and unit in self.lost_to_epoch:
-                # LET GO SINCE THE ASSIGNMENT WAS READ: NOT TAKEN BACK BETWEEN PASSES (found by the flaky
-                # `test_a_fenced_holder_on_a_beat_does_not_act`, run beside the М12 suite). The lease step found a
-                # newer epoch — the camera's new holder took it — and let the camera go; a beat 0.25 s later, on rows
-                # read at the last pass, found it held without a lease and took the next epoch by CAS: the new holder
-                # fenced by one that had not read its assignment since, the command performed by the old one, and the
-                # two taking it from each other beat by beat until the old one's pass. Whether the camera is still mine
-                # is the pass's to say, after the assignment is read (`reconcile_once`); until then, whoever holds it acts.
-                continue
-            if unit not in self.leases:
-                try:
-                    self.take_epoch(unit)                # a device commanded is a unit fenced: its epoch, before the first command
-                except OSError:
-                    raise                                # the store did not answer: not known, for every request — `pump_once` says so
-                except NotReadThisPass:
-                    continue                             # not known to be mine since the assignment was read: the pass says, as above
-                except Exception as e:                   # noqa: BLE001 — a garbled epoch row, or no slot: this command's refusal
-                    self.epoch_errors[unit] = str(e)     # …and in the unit's status, as a start refused for it is (`_actuate`)
-                    self._refused(rid, row, it, f"its unit's epoch could not be taken: {e}", done)
-                    log.error("%s: request %s not performed: the epoch of %s could not be taken (%s)", self.name, rid, unit, e)
-                    continue
-                self.epoch_errors.pop(unit, None)
-            if not self.may_act(unit):
-                continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
-            mark = None if unmarked else self.mark_of(rid)   # raises if the store does not answer: not known is not "nobody"
-            if mark is not None and mark.get("outcome"):
-                self._answered_before(rid, row, mark, done)      # answered meanwhile — by another holder of the device
-                again += 1
-                continue
-            before = None if mark is None else (str(mark.get("instance", "")) or "?")
-            made = self._mark(rid, unit, now) if before is None else False
-            if made is None:
-                self._refused(rid, row, it, self.CANNOT_MARK, done)
-                continue
-            if before is None and not made:
-                before = self.began_by(rid) or "?"       # somebody made the mark between our read and our write
-            if before is not None:
-                why = f"unknown: an earlier instance ({before}) began it, and whether the device acted is not known"
-                self.fetched.append(rid)
-                done.append({"request": rid, "unit": row["id"], "error": why})
-                self.commands["unknown"] += 1
-                self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
-                log.warning("%s: request %s not performed — %s", self.name, rid, why)
-                continue
-            call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False,
-                    "t0": time.monotonic()}
-
-            def run(call=call, dev=dev):
-                t0 = time.monotonic()
-                try:
-                    call["out"] = self.perform(dev, call["row"], call["it"])
-                except Exception as e:                   # noqa: BLE001 — the device's word, whatever it is
-                    call["error"] = str(e)
-                call["took"] = time.monotonic() - t0
-                call["returned"].set()
-
-            self._performing[id(dev)] = call
-            in_flight.add(rid)
-            self._measure(rid, it)                       # the road ends here: the call into the device
-            threading.Thread(target=run, daemon=True).start()
-            begun.append((call, id(dev)))
-        # The calls this look began, waited for TOGETHER — a device that answers at once is answered in this look — for
-        # `PERFORM_GRACE` at most, and never past what is left of `REQUESTS_HOLD`. One after another, each hung device
-        # was a fifth of a second of the loop's; now a look waits one fifth however many hang. A device that did not
-        # answer last time is not waited for at all, and a call that outlasts a whole `PERFORM_GRACE` names its device
-        # so; its answer, whenever it comes, is collected by a later look (`_performed`).
-        if begun:
-            deadline = min(time.monotonic() + self.PERFORM_GRACE, held_from + self.REQUESTS_HOLD)
-            for call, dev_id in begun:
-                if dev_id not in self._slow and deadline > time.monotonic():
-                    call["returned"].wait(max(0.0, deadline - time.monotonic()))
-            for call, dev_id in begun:
-                if not call["returned"].is_set() and time.monotonic() - call["t0"] >= self.PERFORM_GRACE:
-                    self._slow.add(dev_id)
-            done += self._performed()
-        return done
-
-    # A request this holder's slot had answered before — its mark says how the call went (`_confirm`) — answered again,
-    # so that the row is cleared: into `fetched`, and nowhere else. No event (it was written when the call came back),
-    # no outcome counted twice; `reanswered` says how many, in the heartbeat.
-    def _answered_before(self, rid: str, row: dict, mark: dict, done: list) -> None:
-        self.fetched.append(rid)
-        self.reanswered += 1
-        done.append({"request": rid, "unit": row["id"], "answered": str(mark.get("outcome")),
-                     "by": str(mark.get("slot") or mark.get("instance") or "?")})
-        log.info("%s: request %s was answered before (%s, by %s): said again, not performed", self.name, rid,
-                 mark.get("outcome"), mark.get("slot") or mark.get("instance"))
-
-    # The answer, written into the mark once the device has said it — the mark is this holder's to write (the one place
-    # a worker writes besides its own rows), and it is what an instance started after this one reads instead of
-    # "an earlier instance began it" (`requests`). A call that did not answer leaves its mark as it was: whether the
-    # device acted is not known, and `unknown` is then the truth. A store that does not take the write costs the
-    # same: the next instance says `unknown`, as it did before; the answer already given stands.
-    #
-    # …AND AN ANSWER THE STORE DID NOT TAKE IS OWED, NOT DROPPED (the review's eighth pass, minor; 5 of 5): one failed write
-    # and a restart in the ten seconds after was a false `command.failed` — the next instance found the bare mark and
-    # said `unknown`. The mark is kept (`_marks_owed`) and written again at every look until the store takes it, or the
-    # request's row is gone (`requests`); what stays open is a restart while the store is still not taking it.
-    MARKS_OWED_PER_LOOK = 16
-
-    def _confirm(self, rid: str, row: dict, outcome: str, it: dict) -> None:
-        mark = json.dumps({"instance": self.instance, "slot": self.name, "unit": str(row["id"]), "outcome": outcome,
-                           "action": str(it.get("action", "")), "at": self.wall()}).encode()
-        try:
-            self.objects.put(self.command_key(rid), mark)
-            self._marks_owed.pop(rid, None)
-        except Exception as e:                           # noqa: BLE001
-            self.store_errors += 1
-            self._marks_owed[rid] = mark
-            log.warning("%s: the answer to request %s could not be written into its mark (%s); written again at the next "
-                        "look", self.name, rid, e)
-
-    def _confirm_owed(self, present: set) -> int:
-        self._marks_owed = {r: m for r, m in self._marks_owed.items() if r in present}   # a row gone: its mark is swept
-        wrote = 0
-        for rid, mark in list(self._marks_owed.items())[:self.MARKS_OWED_PER_LOOK]:
-            try:
-                self.objects.put(self.command_key(rid), mark)
-            except Exception:                            # noqa: BLE001 — still not taking it: the next look
-                self.store_errors += 1
-                break
-            del self._marks_owed[rid]
-            wrote += 1
-        return wrote
-
-    # The mark, create-only: `True` when this instance made it, `False` when somebody else did — the store says so
-    # (`put_new`: a directory's `link`, М11's Variables by CAS on index 0). A store WITHOUT create-only answers
-    # `None`, and the command is refused (the review's third pass). Reading the mark back after a last-writer-wins
-    # write was the old fallback, and it is no fence: A puts, A reads its own name, B puts, B reads its own name —
-    # two holders in the same two seconds both pulse the door. For a door, "not performed, and a person is told
-    # why" is better than "perhaps twice".
-    CANNOT_MARK = ("this object store cannot write a command's mark create-only (no `put_new`): two holders of the "
-                   "device could both perform it, so neither does")
-
-    def _mark(self, rid: str, unit: str, now: float) -> bool | None:
-        put_new = getattr(self.objects, "put_new", None)
-        if put_new is None:
-            return None
-        return bool(put_new(self.command_key(rid), json.dumps({"instance": self.instance, "slot": self.name, "unit": unit,
-                                                               "at": now}).encode()))
-
-    # What the calls in flight have come to: performed, refused by the device, or — after `PERFORM_TIMEOUT` —
-    # not answered. A call that timed out is answered ONCE and stays in flight until the driver returns: the
-    # device is busy for as long as the driver says it is, whatever we told the requester.
-    def _performed(self) -> list[dict]:
-        done = []
-        for key, call in list(self._performing.items()):
-            rid, row, it = call["rid"], call["row"], call["it"]
-            if call["returned"].is_set():
-                del self._performing[key]
-                if call.get("took", 0.0) <= self.PERFORM_GRACE:
-                    self._slow.discard(key)              # it answered at once: the questions' slowness is theirs (`_collect`)
-                if call["answered"]:
-                    continue                             # it came back after we had said it did not answer
-                if "error" in call:
-                    self._refused(rid, row, it, call["error"], done)
-                    self._confirm(rid, row, "refused", it)
-                else:
-                    self.fetched.append(rid)
-                    done.append({"request": rid, "unit": row["id"], **call["out"]})
-                    self.commands["performed"] += 1
-                    self._confirm(rid, row, "performed", it)
-                    self.observe(row["id"], "command", **call["out"])    # what was done to a device is an event about it
-            elif not call["answered"] and self.clock() - call["at"] >= self.PERFORM_TIMEOUT:
-                call["answered"] = True
-                self._refused(rid, row, it, "the device did not answer", done)
-        return done
-
-    def _refused(self, rid: str, row: dict, it: dict, why: str, done: list) -> None:
-        self.fetched.append(rid)                         # a refusal is an answer: do not ask for ever
-        done.append({"request": rid, "unit": row["id"], "error": why})
-        self.commands["refused"] += 1
-        self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
 
     # One command against an open device. Two verbs, because two are what an operator points at; a third
     # belongs here and not in a new place. Unknown verbs raise, which the caller turns into a refusal
@@ -2570,7 +1932,7 @@ class VmsWorker(Worker):
     def _heartbeat_now(self) -> None:
         self.heartbeat(self.status(), server=self.server, instance=self.instance, alloc=self.alloc,
                        labels=",".join(self.labels), assignment_rev=self.assignment_rev,
-                       fenced=not self.recording_allowed, conflicts=self.conflicts(), passes=self.passes,
+                       fenced=not self.writing_allowed, conflicts=self.conflicts(), passes=self.passes,
                        store_errors=self.store_errors + sum(l.store_errors for l in self.leases.values()),
                        pass_failures=self.pass_failures,
                        unconfirmed=len(self.unconfirmed()),          # units recording past their lease, the store silent
@@ -2582,32 +1944,6 @@ class VmsWorker(Worker):
                        # `archive`: the resource tree its events go to — `$RESOURCE_ROOT`, else the events root. A
                        # recorder says its own volume there instead (`RecWorker.heartbeat_extra`).
                        **{"archive": self.resource_root, **self.heartbeat_extra()})
-
-    # What a subclass adds to the heartbeat. `fetched` for everyone — the requests this worker has
-    # answered, which is how the rows get cleared — and a subsystem with one more fact about itself says
-    # it by extending this, not by rewriting the heartbeat.
-    #
-    # EVERY ANSWER, OLDEST FIRST, UNDER A CEILING (the review's seventh pass, M6). It was the last 32 ids, once every ten
-    # seconds: about three answers a second could be cleared, while the beat lets a holder answer sixteen. At three
-    # commands a second the standing rows went 45 → 174 and on without a bound. Now as many as fit in `FETCHED_BYTES`
-    # (a heartbeat is one object under the store's ceiling), oldest first: what is cleared leaves `fetched` with its
-    # row, and the next heartbeat carries the next ones — a cursor that is the list itself.
-    #
-    # …AND BY COUNT, NOT BY THE LENGTH OF A NAME (the review's eighth pass, minor; a run): the ceiling was bytes, so a
-    # heartbeat cleared `FETCHED_BYTES / (len(id) + 1)` — forty ids of an operator's 200 characters, four commands a
-    # second, and the rows grew past it (30 a second: 1108 standing in 90 s). A long id, or one with a comma or a control
-    # character in it, is said by its digest (`config.said_id`, which the console's `clear_requests` matches the same
-    # way): every answer costs at most 41 bytes, and a heartbeat carries `FETCHED_COUNT` of them — 16 a second cleared,
-    # the burst the beat allows, whatever the names. Faster than that for long is past the design (2 a second).
-    def fetched_said(self) -> str:
-        out, size = [], 0
-        for rid in self.fetched[:self.FETCHED_COUNT]:
-            said = said_id(rid)
-            size += len(said) + 1
-            if size > self.FETCHED_BYTES:
-                break
-            out.append(said)
-        return ",".join(out)
 
     def heartbeat_extra(self) -> dict:
         return {"fetched": self.fetched_said(),
@@ -2904,150 +2240,3 @@ class VmsWorker(Worker):
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         log.info("%s: playback door on %s:%d", self.name, host, self.playback_port)
         return srv
-
-    # The loop as a process. Every `poll` seconds: `reconcile_once`, `pump_once`, `lease_pass` every `max(1,
-    # (lease_ttl − lease_margin)/3)` s (≈8.3 s by default, well inside the 25 s the lease allows),
-    # `heartbeat_once` every 10 s; any exception is logged and the loop continues. Each of those is a `guarded`
-    # step, and the stand-in (`Worker.start_stand_in`) renews the slot and leases for one that hangs. On `stop`:
-    # `actuator.stop_all()` (with GStreamer, EOS lets the last access units reach each sink —
-    # `vmsworker@.container` gives it `StopTimeout=20`), a last heartbeat, then `release_slot()` — "an
-    # orderly stop says so; a crash says nothing", which is what lets the controller tell scale-in
-    # (redistribute) from a crash (leave it to the scheduler).
-    #
-    # `beat` is `COMMANDS_BEAT`, in seconds: between two passes the loop looks at its request rows that often
-    # (`between`). 0 — only on the pass, which is what a caller that does not say gets, and what the loop always did;
-    # the process says a quarter of a second (`commands_beat`).
-    def run(self, poll: float = 2.0, stop=None, beat: float = 0.0) -> None:
-        """One box: the loop as a process. systemd or launchd restarts it."""
-        import threading
-        stop = stop or threading.Event()
-        lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)
-        # Said out loud rather than left to the clock: the first heartbeat goes NOW. `time.monotonic()`
-        # counts from boot, so `clock() - 0 >= 10` happens to be true here on the first pass — and Go's
-        # monotonic counts from process start, where it is false, which left a Go worker invisible to the
-        # controller for ten seconds. The two loops now do the same thing for a reason instead of by luck.
-        # Every step below is `guarded`, and the stand-in renews for one that hangs (feedback DD): a pass, a pump, a
-        # recorder's call into obsd. It ends with the loop.
-        stand_in = self.start_stand_in()
-        with self.guarded("heartbeat"):
-            self.heartbeat_once()
-        last_lease, last_hb, again = 0.0, self.clock(), False
-        while not stop.is_set():
-            # The WORK, and whatever it raises stays in here. Two tries, not one: what is LOCAL — draining the
-            # pipelines' buses, the devices' events — does not wait for the pass over the store to succeed
-            # (feedback BC). They shared a `try`, so a store that was away skipped the pump on every pass: a
-            # device's alarms piled up in memory, a pipeline that fell over was not noticed.
-            try:
-                with self.guarded("pass"):
-                    if not self.recording_allowed:
-                        self.rejoin()                      # a fence is not for ever: a free slot, from nothing
-                    self.reconcile_once()
-            except Exception:                              # noqa: BLE001
-                self.pass_failures += 1                    # …and counted: a loop that raises every pass is alive and says so
-                log.exception("%s: pass failed; will retry", self.name)
-            try:
-                with self.guarded("pump"):
-                    self.pump_once()
-            except Exception:                              # noqa: BLE001
-                self.pass_failures += 1
-                log.exception("%s: pump failed; will retry", self.name)
-            # STAYING ALIVE, in a try of its own and never inside the one above. These two used to share
-            # it, so anything the work raised skipped them — every pass, for as long as it kept raising.
-            # A recorder whose archive went away stopped renewing its leases (fenced at 30 s) and stopped
-            # heartbeating (called dead at 45 s), and an outage it could have waited out ended the recording
-            # instead. A pass that failed is a pass to retry; the process that ran it still holds
-            # its units, and saying so is not something a failure elsewhere gets to switch off.
-            #
-            # …and the two in a try EACH (the review's seventh pass, part 2, blocker 1). The comment above promised it
-            # and the code had one `try` for both: one volume row with a word for its size raised out of the
-            # recorder's lease step, and the heartbeat after it never went — every recorder of the cluster dead to the
-            # controller at 45 s, the holds of network volumes unconfirmed, the engine's fence refusing every frame. A
-            # lease step that raised is retried on the next turn (`last_lease` stays); the heartbeat goes regardless.
-            #
-            # THE NEXT STEP FROM THE START OF THIS ONE, AND AT ONCE AFTER ONE THE STORE DID NOT ANSWER (the raft
-            # prototype's finding, `_notes-ru/raft-prototype.md`). `last_lease` was taken after the step: a step that
-            # waited out a store electing a leader for 9.6 s pushed the next one 9.6 s later, and a renewal that failed
-            # waited a whole period more — `2T + P` without a confirmation, past the 25 s window at a pause of ten
-            # seconds (29.7 s measured). From the step's start, and the next look after a step with a renewal unanswered
-            # (`Worker.unanswered`): `T + P + poll`, inside the window up to a pause of ~13 s. `tests/test_lease_step.py`.
-            try:
-                if again or self.clock() - last_lease >= lease_every:
-                    unanswered, started = self.unanswered, self.clock()
-                    with self.guarded("lease"):
-                        self.lease_pass()
-                    last_lease, again = started, self.unanswered > unanswered
-            except Exception:                              # noqa: BLE001
-                self.pass_failures += 1
-                log.exception("%s: the lease step failed; will retry, and the heartbeat goes all the same", self.name)
-            try:
-                if self.clock() - last_hb >= 10.0:
-                    with self.guarded("heartbeat"):
-                        self.heartbeat_once()
-                    last_hb = self.clock()
-            except Exception:                              # noqa: BLE001
-                log.exception("%s: heartbeat failed; will retry", self.name)
-            self.between(poll, stop, beat)                 # `stop.wait(poll)`, with a look at the requests every `beat`
-        stand_in.set()
-        self.before_stop_all()
-        self.actuator.stop_all()
-        self.heartbeat_once()
-        self.release_slot()                           # an orderly stop says so; a crash says nothing
-        self.after_stop()
-
-    # BETWEEN TWO PASSES: THE REQUESTS, EVERY BEAT (2 October 2026). The wait between passes is `poll` seconds, and a
-    # command filed a moment after a pass waited all of it: the second half of the road from an event to a device,
-    # a second on average. The loop now wakes every `beat` seconds inside that wait and does what `pump_once` does —
-    # `beat_once`: the bus drained (a device's event is a line within a beat, not at the next pass) and the look at the
-    # request rows. Not a pass: the assignment is not read again, nothing is reconciled. And not a new way in: the
-    # same `drain_bus`, the same `requests`, the same rows, the same rules.
-    #
-    # The lease step and the heartbeat stay where they were — once per turn of the loop, by the clock: a beat brings
-    # neither forward. A beat that hangs on the store is a `guarded` step like any other, and the stand-in renews
-    # for it.
-    #
-    # By the real clock, not `self.clock`: `stop.wait` waits real seconds, and the beats divide THAT wait.
-    def between(self, poll: float, stop, beat: float) -> None:
-        # At the end of every turn, whatever its steps did — a step that RAISED is a loop that turns, and says so; one
-        # that HANGS keeps the loop from coming here, and after `WatchdogSec` systemd starts the unit again.
-        runtime.notify()
-        if beat <= 0 or beat >= poll:
-            stop.wait(poll)
-            return
-        end = time.monotonic() + poll
-        while not stop.wait(max(0.0, min(beat, end - time.monotonic()))):
-            if end - time.monotonic() <= 0.001:
-                return                                # the pass is due, and it looks at the requests itself
-            self.beat_once()
-
-    # One look at the requests between passes. A store that does not answer is waited out as on a pass — and said
-    # ONCE per outage, counted once: four warnings a second for as long as the store is away would be the log, and
-    # the pass says it every two seconds anyway (`pump_once`).
-    def beat_once(self) -> None:
-        try:
-            with self.guarded("beat"):
-                self.drain_bus()
-                self.serve_requests()
-        except Exception as e:                        # noqa: BLE001 — a beat that raised is a beat to make again
-            if not self._beat_failed:
-                self._beat_failed = True
-                if isinstance(e, OSError):
-                    self.store_errors += 1
-                    log.warning("%s: the store did not answer for the requests between passes (%s); "
-                                "looking again every beat, saying so once", self.name, e)
-                else:
-                    self.pass_failures += 1
-                    log.exception("%s: the look at the requests between passes failed; will retry", self.name)
-            return
-        if self._beat_failed:
-            self._beat_failed = False
-            log.warning("%s: the requests are read between passes again", self.name)
-
-    # What a subsystem's worker does before its pipelines are stopped on an ORDERLY stop: nothing here. A recorder
-    # writes the rings it holds through a break first (`RecWorker.before_stop_all`).
-    def before_stop_all(self) -> None:
-        pass
-
-    # What a subsystem's worker lets go of on an ORDERLY stop, after the slot: nothing here. A recorder: its
-    # place (`RecWorker.after_stop`).
-    def after_stop(self) -> None:
-        pass

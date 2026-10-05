@@ -1969,7 +1969,9 @@ class SpecConsole:
                   *[f'{p}_resource_retain_failures_total{{server="{label(s)}"}} {rn(s, "retain_failed", hb.get("retain_failed", 0), int)}' for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_mirror_too_big_total counter",
                   *[f'{p}_resource_mirror_too_big_total{{server="{label(s)}"}} {rn(s, "mirror.too_big", said(hb, "mirror").get("too_big"), int)}' for s, hb in sorted(res.items())]]
-        return lines
+        # …and the request rows this process's housekeeping ended unanswered (`requests.py`): expired, or not known
+        from . import requests
+        return lines + requests.metrics_lines()
 
     # WHAT A HOST'S SPARES SCRIPT READS (the М11 rework; the product's names): `<p>_workers_needed{labels}` — the empty
     # set's row always — `<p>_units_short{labels}`, `<p>_spare_offers{labels}` from the controller's pass report

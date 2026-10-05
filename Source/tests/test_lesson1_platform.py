@@ -1,7 +1,8 @@
 """Lesson 1 — the subsystem contract, and the platform that knows nothing."""
 import os
 import threading
-from w2cplatform.contract import Assignment, Controller, Heartbeat, Subsystem, Worker
+from w2cplatform.contract import Assignment, Controller, Heartbeat, Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, current_epoch, next_epoch
 from w2cplatform.spec import SpecController, SubsystemSpec
 from w2cplatform.variables import Conflict, FileVariables, Forbidden
@@ -472,10 +473,10 @@ def test_a_build_the_store_outgrew_while_it_ran_fences_and_does_not_rejoin():
         w.renew_slot(); raise AssertionError("the slot was renewed against a store this build does not understand")
     except SchemaTooNew:
         pass
-    assert w.lease_pass() == [] and not w.recording_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason
-    assert w.rejoin() is None and not w.recording_allowed             # nobody to rejoin as while the store is ahead
+    assert w.lease_pass() == [] and not w.writing_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason
+    assert w.rejoin() is None and not w.writing_allowed             # nobody to rejoin as while the store is ahead
     box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA)}, cas=box.vars.get(SCHEMA_KEY)[1])    # the operator rolled it back
-    assert w.rejoin() is not None and w.recording_allowed
+    assert w.rejoin() is not None and w.writing_allowed
 
 
 def test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_starts_nobody_new():
@@ -487,9 +488,9 @@ def test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_start
     from vms.worker import FakeActuator, VmsWorker
     box = Box()
     w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
-    assert w.lease_pass() == [] and w.recording_allowed
+    assert w.lease_pass() == [] and w.writing_allowed
     box.vars.put(SCHEMA_KEY, {"version": "one"}, cas=0)                              # a hand edit
-    assert w.renew_slot() and w.lease_pass() == [] and w.recording_allowed           # running: what it read stands
+    assert w.renew_slot() and w.lease_pass() == [] and w.writing_allowed           # running: what it read stands
     try:
         VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
         raise AssertionError("a new process started on a schema it cannot read")
@@ -512,18 +513,18 @@ def test_a_worker_fenced_for_its_slot_rejoins_over_a_garbled_schema_row_and_one_
     from vms.worker import FakeActuator, VmsWorker
     box = Box()
     w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
-    assert w.name == "w-1" and w.lease_pass() == [] and w.recording_allowed
+    assert w.name == "w-1" and w.lease_pass() == [] and w.writing_allowed
     box.vars.put(w.sub.slot_key("w-1"), Slot("w-1", "somebody-else", box.wall() + 60, False, 9).to_items(),
                  cas=box.vars.get(w.sub.slot_key("w-1"))[1])                # another instance took the slot
     w.lease_pass()
-    assert not w.recording_allowed and "held by another instance" in w.fenced_reason
+    assert not w.writing_allowed and "held by another instance" in w.fenced_reason
     box.vars.put(SCHEMA_KEY, {"version": "one"}, cas=0)                     # …and a hand edit garbled the schema
-    assert w.rejoin() == "w-2" and w.recording_allowed                       # what it read stands: it comes back
+    assert w.rejoin() == "w-2" and w.writing_allowed                       # what it read stands: it comes back
 
     box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA + 1)}, cas=box.vars.get(SCHEMA_KEY)[1])
     w.lease_pass()
-    assert not w.recording_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason
+    assert not w.writing_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason
     box.vars.put(SCHEMA_KEY, {"version": "two"}, cas=box.vars.get(SCHEMA_KEY)[1])   # garbled again, over the newer one
-    assert w.rejoin() is None and not w.recording_allowed
+    assert w.rejoin() is None and not w.writing_allowed
     box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA)}, cas=box.vars.get(SCHEMA_KEY)[1])
-    assert w.rejoin() is not None and w.recording_allowed
+    assert w.rejoin() is not None and w.writing_allowed

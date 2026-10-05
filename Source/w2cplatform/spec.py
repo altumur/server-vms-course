@@ -682,7 +682,9 @@ class SubsystemSpec:
     # `POST /requests` of this subsystem (`SpecConsole._request_route`; the boundary's step 6: it was a subsystem's
     # route, `extra`): the body's shape, how long a request is worth doing (`valid_until`), how many one person may
     # have unanswered, how it is named (a template of its fields, or the `Idempotency-Key`), what the console stamps
-    # on it (`by`, `at`, its unit's `group`, the field its unit is `about`), the journal's line.
+    # on it (`by`, `at`, its unit's `group`, the field its unit is `about`), the journal's line; `elsewhere` — the
+    # actions of this family another process turns into work (not the unit's holder): the reaper leaves them to it
+    # (`requests.clear_requests`). The holder performs the rest (`Worker.requests`), and `most_valid` bounds its wait.
     requests: dict = field(default_factory=dict)
     running_gauge: str = "units_running"     # the console's gauge for units in phase "running" (console: {running: …})
     # `events: {older_epochs: fenced | earlier-run}` — what it MEANS that a unit's events were written
@@ -961,9 +963,11 @@ class SubsystemSpec:
         self.door_routes = parse_routes(f"spec {self.name}", d.get("door"))
         req = d.get("requests")
         if req is not None:
-            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal"}
+            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
+                     "elsewhere"}
             if not isinstance(req, dict) or set(req) - known or not isinstance(req.get("free", False), bool) \
-                    or set(req.get("stamp") or []) - {"by", "at", "group", "about"}:
+                    or set(req.get("stamp") or []) - {"by", "at", "group", "about"} \
+                    or not isinstance(req.get("elsewhere", []), list):
                 raise ValueError(f"spec {self.name}: `requests:` is {{{', '.join(sorted(known))}}}, not {req!r}")
             from . import schema as _schema
             self.requests_free = req.get("free", False)
