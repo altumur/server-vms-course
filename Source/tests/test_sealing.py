@@ -448,3 +448,40 @@ def test_a_rotated_key_reseals_what_the_old_one_sealed_so_the_old_line_can_go():
         only_k2.open("cred_secret", before["cred_secret"], "vms/cameras/1"); raise AssertionError("k1 opened without its key")
     except Sealed:
         pass
+
+
+def test_a_secret_of_any_subsystem_is_in_one_row_of_the_store_and_in_no_reply():
+    """The platform's rule on a spec that has nothing to do with the product (testsub2's `feed_secret`, bound to its
+    address): a create's reply, its retry answered from the store (the Idempotency-Key copy), an update's reply and the
+    listing hand back `***`; and after them the whole store holds the secret in ONE place — the unit's own row."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.secrets import SECRET_MASK
+    from w2cplatform.spec import SpecController, SubsystemSpec
+    from tests.test_boundary import TESTSUB
+    secret = "Hunter2-in-one-row-only"
+    box = Box()
+    spec = SubsystemSpec.load(os.path.join(os.path.dirname(TESTSUB), "testsub2.subsystem.yaml"))
+    ctl = SpecController(spec, box.vars.as_writer("console", spec.acl_console()), box.objects, wall=box.wall)
+    srv = SpecConsole(ctl, wall=box.wall).serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def call(method, path, body=None, key=None):
+        req = urllib.request.Request(base + path, method=method, data=json.dumps(body).encode() if body is not None else None,
+                                     headers={"Idempotency-Key": key} if key else {})
+        return urllib.request.urlopen(req).read().decode()
+    try:
+        made = call("POST", "/tallies", {"name": "t1", "of": "c1", "feed": "https://feed.example/t1", "feed_user": "u",
+                                         "feed_secret": secret}, key="k1")
+        assert secret not in made and json.loads(made)["feed_secret"] == SECRET_MASK
+        assert secret not in call("POST", "/tallies", {"name": "t1", "of": "c1", "feed": "https://feed.example/t1",
+                                                       "feed_user": "u", "feed_secret": secret}, key="k1")   # the retry
+        assert secret not in call("PUT", "/tallies/t1", {"feed_secret": secret + "-2"}, key="k2")
+        assert secret not in call("GET", "/tallies")
+    finally:
+        srv.shutdown()
+    assert ctl.unit("t1")["feed_secret"] == secret + "-2"
+    for path in box.vars.list(""):
+        items, _ = box.vars.get(path)
+        for k, v in (items or {}).items():
+            if secret in str(v):
+                assert (path, k) == ("testsub2/tallies/t1", "feed_secret"), f"the secret is also stored at {path}[{k}]"

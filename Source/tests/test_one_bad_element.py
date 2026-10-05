@@ -385,9 +385,10 @@ def test_a_frontier_or_a_waiting_file_that_does_not_read_is_not_there():
     """A survey's `frontier.json` that is a list (`TypeError`), a number past a float, or nested past JSON's depth raised
     out of `Frontier.read` — out of the survey's and the evaluator's pass, every pass; a scan's `waiting.json` the same.
     Each is a file that is not there: the row decides where to begin."""
-    from vms.scan import Frontier, ScanLog
+    from w2cplatform.events import Frontier
+    from vms.scan import SURVEY, ScanLog
     box = Box()
-    fr = Frontier(box.archive, "7-lpr")
+    fr = Frontier(box.archive, SURVEY, "7-lpr")
     for raw in ("[1]", '{"watched_through": %s}' % ("9" * 400), DEEP, '{"watched_through": NaN}'):
         os.makedirs(os.path.dirname(fr.path), exist_ok=True)
         with open(fr.path, "w") as f:

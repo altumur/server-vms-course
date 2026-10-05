@@ -158,7 +158,7 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
 
 def test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days():
     box = Box()
-    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75", "min_days": "3"}, cas=0)
+    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"}, cas=0)
     flaky = Flaky(box.vars)
 
     # the watermark: never read -> "unknown", and nothing freed; read once -> the last settings stand

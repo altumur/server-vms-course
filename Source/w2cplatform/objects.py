@@ -8,11 +8,11 @@ whole or not at all."""
 #
 # **Role in the module.** Lesson 1's second store. Where `variables.py` holds small rows that must be
 # consistent and CAS-able, the object store holds things that are large or written often and are never
-# queried by key: worker heartbeats (`<sub>/<worker>/heartbeat`), resource heartbeats
+# queried by key: worker heartbeats (`<sub>/heartbeats/<worker>`), resource heartbeats
 # (`platform/resources/<server>/heartbeat`) and the controller's snapshot, one object per worker under
 # `<sub>/snapshot/`. Every one of them is sharded by the writer it describes, and that is why each stays
-# small however large the cluster gets: a store may declare a ceiling (`limits.py`; Nomad Variables had 64 KiB on
-# the object, which is where the sharding came from), and a shard fits whatever ceiling a store declares. Its one
+# small however large the cluster gets: a store may declare a ceiling (`limits.py`), and a shard fits whatever
+# ceiling a store declares. Its one
 # promise is that an object appears whole or not at all. The `ObjectStore` Protocol is the interface
 # `Controller`, `Worker`, `Resource` and `SpecController` type against; `FsObjectStore` is the one-box
 # implementation, and М11 keeps it on every server: `ClusterObjectStore` (`w2cplatform/cluster/objectstore.py`) writes into
@@ -24,12 +24,12 @@ whole or not at all."""
 # ## Notes
 # - The walk in `list` is O(files under root), fine for heartbeats on one box; М11 walks one directory per server
 #   and its resource answers the union (`GET /v1/objects?scope=cluster`).
-# - `delete` exists, and exactly one caller uses it: the blob sweep (Lesson 29). Everything else in the
-#   platform still relies on objects NEVER going away — a stale heartbeat simply ages and readers filter by
+# - `delete` exists, and two callers use it: the blob sweep (Lesson 29), and a worker's sweep of its own marks
+#   before a request it answered (`Worker.sweep_marks`, once the answer is past every reader). Everything else in
+#   the platform relies on objects NEVER going away — a stale heartbeat simply ages and readers filter by
 #   `ts`, and a worker restarting reads the heartbeat its previous instance left to measure its own
 #   failover. That is not an accident waiting to be tidied up: sweep the heartbeats and the measurement
-#   goes with them. The rule is therefore not "nothing deletes" any more but the narrower and truer one:
-#   an object is deleted only by a caller that can prove nothing refers to it, and only the blob sweep can.
+#   goes with them. The rule is "an object is deleted only by a caller that can prove nothing refers to it".
 # ================================================================================================
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ class ObjectStore(Protocol):
     # Removes one object; `True` if it was there. A capability of the STORE — a store can either delete or
     # it cannot — and deliberately not "delete, but only under `blobs/`": that would be policy welded into
     # the seam, and policy lives with the caller that has it (`SpecController.sweep_blobs`) and with the
-    # scheduler's ACL, which is the only place that can actually enforce it.
+    # store's rights, which are the only place that can actually enforce it.
     def delete(self, key: str) -> bool: ...
 
 
@@ -164,8 +164,8 @@ class FsObjectStore:
         return st.st_mtime, st.st_size
 
     # Walks the whole tree, skips `.tmp` files (an in-flight `put`), and returns the sorted keys (paths
-    # relative to `root`) that start with `prefix`. `Controller.workers_seen` lists `<sub>/` and keeps keys
-    # ending in `/heartbeat`; `resource.resources_seen` does the same under `platform/resources/`.
+    # relative to `root`) that start with `prefix`. `Controller.workers_seen` lists `<sub>/heartbeats/`;
+    # `resource.resources_seen` lists `platform/resources/` and keeps the keys ending in `/heartbeat`.
     def list(self, prefix: str) -> list[str]:
         out = []
         for d, _, files in os.walk(self.root):

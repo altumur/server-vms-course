@@ -104,7 +104,7 @@ placement:
   requires:   resource
   servers:    shared                               # two evaluators on one box are two places to evaluate
   tie_break:  most-free-capacity
-  offers:     a                                    # an evaluator short on a label set is offered to a spare (`auto_workers_needed`)
+  offers:     true                                 # an evaluator short on a label set is offered to a spare (`auto_workers_needed`)
   rebalance:  {dead_band: 0.10}
 # What leaves the cluster: that a scenario exists and whether it is on. Not its triggers or its actions —
 # М12's directory has never wanted to know which relay a site pulses, and a `then` carrying a preset number
@@ -124,6 +124,7 @@ snapshot: [name, enabled]
 # Each evaluator's last pass and what it counted since it started, from its heartbeat (the boundary's step 6: it was
 # `vms/console.py`'s `auto_metrics`). `auto_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
 metrics:
+  - {name: scenarios_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: pass_seconds, from: heartbeat.pass_seconds}
   - {name: queries_per_pass, from: heartbeat.queries}
   - {name: cursor_lag_seconds, from: heartbeat.lag_seconds}

@@ -202,13 +202,13 @@ def test_a_subsystem_without_blobs_has_no_blob_gauges():
     assert "vms_blobs_total" not in text and "vms_blobs_marked" not in text
 
 
-def test_the_decision_is_cleared_before_anything_is_deleted():
+def test_the_decision_to_delete_is_written_by_cas_before_anything_is_deleted():
     """The ordering argument, exercised where it actually lives: INSIDE one pass.
 
-    The sweeper reads the list, checks, clears the row by CAS, and only then removes
-    the bytes. If somebody re-uploads a marked blob after that read, the CAS fails —
-    and because the clear comes FIRST, nothing has been deleted when it does. Delete
-    first and the same interleaving destroys bytes a row is already naming.
+    The sweeper reads the list, checks, writes its decision on the row by CAS (`state: deleting`, the doomed
+    digests), and only then removes the bytes. If somebody re-uploads a marked blob after that read, the CAS fails —
+    and because the decision is written FIRST, nothing has been deleted when it does. Delete first and the same
+    interleaving destroys bytes a row is already naming.
 
     The interleaving is made deterministic by acting from inside `blobs_referenced`,
     which the sweeper calls after reading the row and before writing it."""

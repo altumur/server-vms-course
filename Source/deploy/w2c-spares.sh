@@ -4,7 +4,7 @@
 #   w2c-spares.sh [role ...]        roles as arguments, else $SPARES_ROLES (spaces or commas), else recworker
 #
 #   role         the console's number                                   this server's ceiling
-#   recworker    rec_recorders_needed           on /rec/metrics         MAX_RECORDERS  (8)
+#   recworker    rec_workers_needed{labels=""}  on /rec/metrics         MAX_RECORDERS  (8)
 #   vmsworker    vms_workers_needed{labels}     on /metrics             MAX_WORKERS    (4)
 #   liveworker   live_workers_needed{labels}    on /live/metrics        MAX_GATEWAYS   (4)
 #   autoworker   auto_workers_needed{labels}    on /auto/metrics        MAX_EVALUATORS (4)
@@ -162,7 +162,8 @@ for role in $roles; do
         continue                                    # the console being down is not a reason to start anything
     }
     if [ "$role" = recworker ]; then
-        wanted=$(printf '%s\n' "$text" | sed -n 's/^rec_recorders_needed \([0-9][0-9]*\)$/\1 /p')
+        # its places nobody holds (`placement.places`): no offer and no labels — a spare takes a free place itself
+        wanted=$(printf '%s\n' "$text" | sed -n 's/^rec_workers_needed{labels=""} \([0-9][0-9]*\)$/\1 /p')
         spare=""
         labels=""
     else

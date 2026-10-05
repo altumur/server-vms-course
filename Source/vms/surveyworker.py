@@ -39,7 +39,9 @@ from w2cplatform.variables import Variables
 
 from .config import SURVEY_SPEC
 from .detworker import FakeModel
-from .scan import SURVEY, Frontier, device_recordings, hit_spans
+from w2cplatform.events import Frontier
+
+from .scan import SURVEY, device_recordings, hit_spans
 from w2cplatform.rows import PARSE_ERRORS
 
 SURVEY_SUB = SURVEY_SPEC.sub
@@ -126,7 +128,7 @@ class SurveyWorker(Worker):
                                                          why="nobody holds this camera, or its device has no archive")
                 continue
             index_url, play_url, oldest, newest = dev
-            front = Frontier(self.resource_root, unit)
+            front = Frontier(self.resource_root, SURVEY, unit)
             at = front.read()
             if at is None:
                 # The first time. `earliest` means thirty days of backlog on the day somebody enables it,

@@ -361,7 +361,8 @@ def _redundant_spec():
     d = yaml.safe_load(open(path, encoding="utf-8"))
     d["placement"]["spread_by"] = "cam"                                     # the line under test
     d["placement"].update({"requires": "none", "servers": "shared", "near": "vms"})
-    d["placement"].pop("place_by", None); d["placement"].pop("home", None)
+    for k in ("place_by", "home", "places"):                                # placed by server: no places of its own
+        d["placement"].pop(k, None)
     return SubsystemSpec.from_dict(d)
 
 

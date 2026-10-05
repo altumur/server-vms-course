@@ -6,14 +6,15 @@ IS, in two shapes, and the console reads the store and the heartbeats it already
     count: table <t>     rows of one of the spec's tables
         where: {f: v}       …whose field `f` is `v` (or one of a list)
         unheld: true        …that no live hold names (`<sub>/holds/<row>`: a place nobody takes)
-        minus: placeless    …less the live workers that hold no place (they would take one): never below 0
         unless: {table, where}  …0 while the other table has such a row
     from: heartbeat.<path> | status.<path>
         path                a dot path into the heartbeat's `extra`, or into each `status` entry; a segment `<name>`
                             is every key of the map there, and the key is the label `name`
         agg                 value (the number; the default) | flag (1 or 0: said and not false, or `equals`) |
                             age (seconds since the unix time said) | label (1, the value as the label `label`) |
-                            count (status: entries per worker by the value, the label named as the field) |
+                            count (status: entries per worker by the value, the label named as the field; with
+                            `equals`, ONE line — the entries that say it, over every worker: a subsystem's running
+                            gauge, `console: {running: <its name>}`) |
                             sum, max (over every worker, by the wildcard labels) | histogram (`{buckets, count, sum}`
                             over the edges `buckets`)
         default             what is printed where nothing is said (else no line); for `label`, the label then
@@ -34,6 +35,8 @@ from .rows import FIELDS, PARSE_ERRORS, finite, number
 
 AGGS = ("value", "flag", "age", "label", "count", "sum", "max", "histogram")
 TYPES = ("gauge", "counter", "histogram")
+KEYS = {"name", "type", "labels", "count", "where", "unheld", "unless", "from", "agg", "default", "live", "when", "equals",
+        "label", "buckets"}
 NAME = re.compile(r"[a-z][a-z0-9_]*")
 
 
@@ -66,6 +69,9 @@ def parse(name: str, raw, tables: tuple) -> list[dict]:
                 or ("count" in m) == ("from" in m):
             raise ValueError(f"spec {name}: a metric is {{name: <a_name>, count: table <t> | from: heartbeat.<path> | "
                              f"status.<path>, …}}, not {m!r}")
+        unknown = sorted(set(m) - KEYS)
+        if unknown:
+            raise ValueError(f"spec {name}: metric {m['name']}: {unknown[0]} is no key of a metric ({', '.join(sorted(KEYS))})")
         typ = str(m.get("type", "histogram" if m.get("agg") == "histogram" else "gauge"))
         if typ not in TYPES:
             raise ValueError(f"spec {name}: metric {m['name']}: type is one of {', '.join(TYPES)}, not {typ!r}")
@@ -77,11 +83,9 @@ def parse(name: str, raw, tables: tuple) -> list[dict]:
             unless = m.get("unless")
             if unless is not None and (not isinstance(unless, dict) or unless.get("table") not in tables):
                 raise ValueError(f"spec {name}: metric {m['name']}: unless is {{table: <one of its tables>, where}}, not {unless!r}")
-            if m.get("minus") not in (None, "placeless"):
-                raise ValueError(f"spec {name}: metric {m['name']}: minus is `placeless`, not {m['minus']!r}")
             e.update(count=words[1], where=_where(name, m.get("where"), m["name"]), unheld=m.get("unheld") is True,
-                     minus=m.get("minus"), unless=({"table": unless["table"], "where": _where(name, unless.get("where"), m["name"])}
-                                                   if unless else None))
+                     unless=({"table": unless["table"], "where": _where(name, unless.get("where"), m["name"])}
+                             if unless else None))
         else:
             src, _, path = str(m["from"]).partition(".")
             agg = str(m.get("agg", "value"))
@@ -161,6 +165,11 @@ def lines(spec, ctl, hbs: dict, live: dict, now: float) -> list[str]:
             for w, labels, v in per:
                 _one(m, say, {"worker": w, **labels}, v, now, key(w, ".".join(m["path"])))
             continue
+        if m["agg"] == "count" and m["equals"] is not None:    # one line: the entries that say it, over every worker
+            say(m, {}, sum(1 for hb in workers.values() for st in hb.status
+                           if isinstance(st, dict) and "id" in st and (not m["when"] or m["when"] in st)
+                           and _said(st.get(m["path"][0]), m["equals"])))
+            continue
         for w, hb in sorted(workers.items()):                   # status: each entry that names its unit
             entries = [st for st in hb.status if isinstance(st, dict) and "id" in st and (not m["when"] or m["when"] in st)]
             if m["agg"] == "count":
@@ -239,16 +248,22 @@ def _one(m, say, labels: dict, v, now: float, key: str) -> None:
             say(m, labels, _as_said(v, n))
 
 
+# A row of a table that says every `where` field's value (one of them; words compared as words). Read here and by the
+# console's count of the places a worker of the subsystem would hold (`placement.places`).
+def matches(it: dict, where: dict) -> bool:
+    return all(str(it.get(k, "")).lower() in [x.lower() for x in vals] for k, vals in where.items())
+
+
+def where_of(name: str, w, what: str) -> dict:
+    return _where(name, w, what)
+
+
 def _count(m, ctl, live: dict) -> int:
     rows = ctl.table_rows(m["count"])
-    match = lambda it, where: all(str(it.get(k, "")).lower() in [x.lower() for x in vals] for k, vals in where.items())
-    if m["unless"] is not None and any(match(it, m["unless"]["where"]) for it in ctl.table_rows(m["unless"]["table"]).values()):
+    if m["unless"] is not None and any(matches(it, m["unless"]["where"]) for it in ctl.table_rows(m["unless"]["table"]).values()):
         return 0
-    names = [n for n, it in rows.items() if match(it, m["where"])]
+    names = [n for n, it in rows.items() if matches(it, m["where"])]
     if m["unheld"]:
         held = ctl.live_holds()
         names = [n for n in names if n not in held]
-    n = len(names)
-    if m["minus"] == "placeless":
-        n -= len(ctl.placeless_live(live))
-    return max(0, n)
+    return len(names)

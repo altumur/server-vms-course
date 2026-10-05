@@ -90,7 +90,7 @@ from urllib.parse import urlsplit
 from .doors import numeric, unnamable
 from .secrets import NOT_AN_ADDRESS, SecretRules, address_refusal, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES,
+from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES, SCHEMA_KEY,
                        OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
                        label_set, one_pass, read_slot, slot_number, stored)
 from .events import Suppress
@@ -156,9 +156,12 @@ UNIT_NAMES = Table("unit_name", "it is served as it stands, a name with a comma 
 SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of it — if none were read, it takes no unit "
                       "that needs a label — and nothing moves off it", "server's labels")
 # A unit whose filters raise while `/unplaceable` or `/drain` judges it (`_unplaceable`, `_would_strand`; the review's tenth
-# pass, the walks the other steps had guarded already): a field that reads and does not compare, an `admit` that trips
-# on it. Nobody can say a worker would take it, and nothing will: it is listed as one nothing can serve, and the other
-# units are judged as before.
+# pass, the walks the other steps had guarded already): a field that reads and does not compare, a filter of the spec's
+# (`affinity`, `home`, `near`) that trips on it. Nobody can say a worker would take it, and nothing will: it is listed as
+# one nothing can serve, and the other units are judged as before.
+# What a spec's `requests:` says (`SubsystemSpec._page_words`).
+REQUEST_KEYS = ("free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
+                "elsewhere")
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
                     "mended; the other units are judged", "unit's row")
 # What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
@@ -260,6 +263,10 @@ class Field:
     # elsewhere would take its history with it (the review's fourth pass, when the rule was written into this
     # controller under one subsystem's field name; the boundary's step 2 made it the spec's word).
     fixed: bool = False
+    # `enum: [a, b]` — the values the field may hold (the product's `FieldSpec.Enum`): anything else is refused on create
+    # and update (400, the values named), and `/spec` carries the list for the page's form. A scalar field's, checked at
+    # load with its default among them.
+    enum: tuple = ()
     # A `url` field's own words (the boundary's step 4, the keys agreed with the product): `schemes` — what it may be
     # reached by (none said: any); `credentials` — `{login: <field>, secret: <a *_secret field>}`, where a login and a
     # password go instead, named by every refusal; `rules` — its `secret_in` read (`secrets.SecretRules`): how its
@@ -342,6 +349,13 @@ def read_fields(where: str, raw: dict) -> dict:
         if "fixed" in f and not isinstance(f["fixed"], bool):
             raise ValueError(f"field {n}: `fixed` is true or false, not {f['fixed']!r}")
     for n, f in raw.items():
+        if "enum" in f:
+            vals = f["enum"]
+            if fields[n].type in ("list", "json", "blob") or not isinstance(vals, list) or not vals \
+                    or not all(isinstance(x, (str, int, float, bool)) for x in vals):
+                raise ValueError(f"field {n}: `enum` is a list of the values a {fields[n].type} field may hold, not "
+                                 f"{vals!r}")
+            fields[n].enum = tuple(fields[n].parse(x) if fields[n].type != "string" else str(x) for x in vals)
         _url_words(fields, n, f)
         _ref_words(fields, n, f)
         if "schema" in f:
@@ -361,6 +375,8 @@ def read_fields(where: str, raw: dict) -> dict:
             raise ValueError(f"field {f.name}: merge is override or union, not {f.merge!r}")
         if f.default is not None:
             f.default = f.parse(f.default) if f.type != "string" else str(f.default)
+            if f.enum and f.default not in f.enum:
+                raise ValueError(f"field {f.name}: its default {f.default!r} is none of its `enum` {list(f.enum)}")
         if f.inherits and f.inherit is not None:
             f.inherit = Field(f.name, f.type).parse(f.inherit) if f.type != "string" else str(f.inherit)
     return fields
@@ -632,11 +648,20 @@ class SubsystemSpec:
     # drained on its own, and two copies on two disks of one server survive nothing the operator was buying
     # insurance against.
     place_by: str = "server"
-    # `offers: <prefix>` — this subsystem's controller offers a slot to a SPARE for every worker it is short of
-    # (`SpecController.offer_spares`), named `<prefix>-<n>` like the slots its workers make (`w`, `g`, `a`), and its
-    # console publishes `<name>_workers_needed` and the rest. "" (the default): no offers, no numbers — a recorder is
-    # placed by volume and counted by `rec_recorders_needed`; nobody starts spares for the others.
-    offers: str = ""
+    # `offers: true` — this subsystem's controller offers a slot to a SPARE for every worker it is short of
+    # (`SpecController.offer_spares`), named `<slot.prefix>-<n>` like the slots its workers make, and its console
+    # publishes `<name>_workers_needed` and the rest. False (the default): no offers.
+    offers: bool = False
+    # `places: {table, where, server_field}` — for a subsystem placed by something other than the server (`place_by`): the
+    # rows of one of its tables a worker would hold, one each (`<name>/holds/<row>`). Its console publishes
+    # `<name>_workers_needed` from them: the rows that say `where` and no live hold names, less the live workers that
+    # hold no place (they would take one) — what a host's spares script starts processes for; a place nobody CAN take
+    # does not become takeable by starting processes, and one spare running proves the shortage is not of processes.
+    # The number was one subsystem's metric with an operator of its own (`minus: placeless`); now it is the platform's
+    # for any `place_by`. `server_field`: the field of the row naming the server the place is on — a row that names
+    # none is a place ANY box may write (a share), and a hold of it under a worker's name is taken back at once only on
+    # the holder's own box (`Worker.hold_follows_name`); one that names a server is a disk there.
+    places: dict = field(default_factory=dict)
     # `retire_when: {field: state, in: [done, failed]}` — a unit whose row says one of those values is
     # FINISHED, and finished work is not placed. The first subsystem to need it is `detjob`, whose unit
     # ends; everything before it ran until an operator said stop.
@@ -688,7 +713,7 @@ class SubsystemSpec:
     # actions of this family another process turns into work (not the unit's holder): the reaper leaves them to it
     # (`requests.clear_requests`). The holder performs the rest (`Worker.requests`), and `most_valid` bounds its wait.
     requests: dict = field(default_factory=dict)
-    running_gauge: str = "units_running"     # the console's gauge for units in phase "running" (console: {running: …})
+    running_gauge: str = ""                  # `console: {running: <a metric of its own>}`: the gauge the page reads
     # `events: {older_epochs: fenced | earlier-run}` — what it MEANS that a unit's events were written
     # under an epoch that is not the current one.
     #
@@ -742,7 +767,7 @@ class SubsystemSpec:
     # `metrics: [...]` — the subsystem's own numbers on `/metrics`, declared (`metrics.py`; the boundary's step 6 — it
     # was a function of the subsystem's the console called, `metrics_extra`).
     metrics: list = field(default_factory=list)
-    # `display: {unit, units, field_help, kinds, actions, tree: {group_by, nested_by, columns}}` — what a page calls
+    # `display: {unit, units, field_help, kinds, actions, tree: {group_by, nested_by, columns, children}}` — what a page calls
     # things; a dictionary the platform hands to `/spec` and reads none of (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8).
     display: dict = field(default_factory=dict)
     # `servers: {show: [{table, by, title, columns}]}` — rows of this subsystem's tables a page shows under the server
@@ -799,7 +824,7 @@ class SubsystemSpec:
                                 else pl.get("group_by", "") or ""),
                    group_cut=str((pl.get("group_by") or {}).get("cut_at", "") or "") if isinstance(pl.get("group_by"), dict) else "",
                    place_by=str(pl.get("place_by", "server") or "server"),
-                   offers=str(pl.get("offers", "") or ""),
+                   offers=pl.get("offers", False),
                    home=str(pl.get("home", "") or ""),
                    retire_field=str((pl.get("retire_when") or {}).get("field", "") or ""),
                    retire_values=tuple(str(v) for v in ((pl.get("retire_when") or {}).get("in") or [])),
@@ -807,7 +832,7 @@ class SubsystemSpec:
                    snapshot=(list(declared) if declared is not None else
                              [n for n, f in fields.items() if not is_secret_field(n) and f.type != "blob"]),
                    tables=_table_names(d),
-                   running_gauge=str((d.get("console", {}) or {}).get("running", "units_running")),
+                   running_gauge=str((d.get("console", {}) or {}).get("running", "") or ""),
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}),
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
@@ -816,11 +841,9 @@ class SubsystemSpec:
         spec._about_and_rights(d)
         spec._placement_words(pl)
         spec._page_words(d)
-        if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
-            raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
-        if spec.offers and d.get("slot") is not None and spec.offers != spec.slot_prefix:
-            raise ValueError(f"spec {spec.name}: placement.offers {spec.offers!r} is the prefix of the slots offered, "
-                             f"and its slots are {spec.slot_prefix!r} (`slot.prefix`) — an offer nobody's name fits")
+        if not isinstance(spec.offers, bool):
+            raise ValueError(f"spec {spec.name}: placement.offers is true or false — the slots offered are named by "
+                             f"`slot.prefix` — not {spec.offers!r}")
         # A secret in the snapshot is a secret leaving the cluster: `vms/snapshot/*` is what М12's directory
         # reads. Refused at LOAD time, not watched for at review time — and only when it is named, because
         # the default ("every field") is a convenience and not a decision.
@@ -960,13 +983,17 @@ class SubsystemSpec:
     def _page_words(self, d: dict) -> None:
         from . import holds, metrics
         self.metrics = metrics.parse(self.name, d.get("metrics"), self.tables)
+        # The running gauge is declared once, as a metric (`{name, from: status.phase, agg: count, equals: running}`);
+        # `console.running` only names it (the architect's edge 3: it was declared twice, and the console counted it).
+        if self.running_gauge and self.running_gauge not in {m["name"] for m in self.metrics}:
+            raise ValueError(f"spec {self.name}: console.running names one of its metrics, and {self.running_gauge!r} "
+                             f"is none — declare it under `metrics:`")
         self.holds = holds.parse(self.name, d.get("holds"), tables=self.tables)
         from .door import parse_routes
         self.door_routes = parse_routes(f"spec {self.name}", d.get("door"))
         req = d.get("requests")
         if req is not None:
-            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
-                     "elsewhere"}
+            known = set(REQUEST_KEYS)
             if not isinstance(req, dict) or set(req) - known or not isinstance(req.get("free", False), bool) \
                     or set(req.get("stamp") or []) - {"by", "at", "group", "about"} \
                     or not isinstance(req.get("elsewhere", []), list):
@@ -987,9 +1014,13 @@ class SubsystemSpec:
                 raise ValueError(f"spec {self.name}: `display:` is {{unit, units, field_help, kinds, actions, tree}} — words "
                                  f"for a page, no logic — not {disp!r}")
             tree = disp.get("tree") or {}
-            if not isinstance(tree, dict) or set(tree) - {"group_by", "nested_by", "columns"} \
-                    or (tree.get("group_by") and tree["group_by"] not in self.fields):
-                raise ValueError(f"spec {self.name}: display.tree is {{group_by: <a field>, nested_by, columns}}, not {tree!r}")
+            # `children: false` — the page draws no child units under a unit in the tree (the product's word; the page's
+            # behaviour, passed through `/spec` untouched)
+            if not isinstance(tree, dict) or set(tree) - {"group_by", "nested_by", "columns", "children"} \
+                    or (tree.get("group_by") and tree["group_by"] not in self.fields) \
+                    or not isinstance(tree.get("children", True), bool):
+                raise ValueError(f"spec {self.name}: display.tree is {{group_by: <a field>, nested_by, columns, children: "
+                                 f"true|false}}, not {tree!r}")
             for c in tree.get("columns") or []:
                 if not isinstance(c, dict) or (c.get("field") not in self.fields and c.get("field") not in self.STATUS_COLUMNS):
                     raise ValueError(f"spec {self.name}: display.tree.columns names a field of the row or of the unit's "
@@ -1036,6 +1067,16 @@ class SubsystemSpec:
                     raise ValueError(f"spec {self.name}: near.prefer is {{<their field>[.<field>]: <values>, …}}, not "
                                      f"{prefer!r}")
                 self.near_prefer[k] = tuple(str(x).lower() if isinstance(x, bool) else str(x) for x in vals)
+        places = pl.get("places")
+        if places is not None:
+            from .metrics import where_of
+            if not isinstance(places, dict) or set(places) - {"table", "where", "server_field"} \
+                    or places.get("table") not in self.tables or self.place_by == "server" \
+                    or not isinstance(places.get("server_field", ""), str):
+                raise ValueError(f"spec {self.name}: placement.places is {{table: <one of its tables>, where?, server_field?}}, "
+                                 f"for a subsystem placed by something other than the server (`place_by`) — not {places!r}")
+            self.places = {"table": str(places["table"]), "where": where_of(self.name, places.get("where"), "places"),
+                           "server_field": str(places.get("server_field") or "")}
         aff = pl.get("affinity")
         if aff is not None:
             if not isinstance(aff, dict) or set(aff) - {"field", "table", "server_field", "strict"} \
@@ -1130,7 +1171,8 @@ class SubsystemSpec:
                f"{self.name}/requests/*",                                                     # bounded work an operator asked a worker for, outside its ordinary pass
                f"{self.name}/servers/*",                                                      # what a server reaches, as the administrator says it (feedback DQ)
                DRAIN_KEY,                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
-               DECOMMISSION + "*"]                                                            # "this machine is gone for good": the operator's, every subsystem reads it
+               DECOMMISSION + "*",                                                            # "this machine is gone for good": the operator's, every subsystem reads it
+               SCHEMA_KEY]                                                                    # `PUT /schema`: the operator raises the layout once every machine is new
         for d in self.derived:
             out.append(f"{self.name}/{d.row.split('/')[0]}/*")
         out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `rec/volumes/*`
@@ -1250,6 +1292,13 @@ class SubsystemSpec:
                 except PARSE_ERRORS:
                     raise Refused(f"{name} is {f.type}, not {str(fields[name])[:60]!r}") from None
                 self._schema_refusal(name, f, value)
+            if f.enum and fields.get(name) is not None:
+                try:
+                    value = f.parse(fields[name]) if f.type != "string" else str(fields[name])
+                except PARSE_ERRORS:
+                    value = None
+                if value not in f.enum:
+                    raise Refused(f"{name} is one of {', '.join(map(str, f.enum))}, not {str(fields[name])[:60]!r}")
             if f.type == "url" and fields.get(name):
                 # …and a url `urlsplit` cannot read, or whose port is no port, is a 400 with the words (the product
                 # team's sibling of the tenth pass): `rtsp://[10.0.0.5/x` raised `ValueError` out of here — a 500 — and
@@ -1474,8 +1523,8 @@ def _next_rev(it) -> int:
         return 1
 
 
-# The only writer of `<name>/*`, from a spec. Holds nothing; two instances are harmless; never on the
-# recovery path. The VMS is one spec; live and det are others — same code.
+# What of `pieces` (a unit alone, or a group whole) does not fit `room` (each worker's free places) — used by the
+# count of spares (`offer_spares`).
 def _pack(pieces: list[int], room: list[int]) -> list[int]:
     """The pieces that do not fit: each — the largest first — onto the worker with the least room that takes it whole."""
     room, left = sorted(room), []
@@ -1503,8 +1552,8 @@ def _bins(pieces: list[int], per: int) -> list[int]:
 
 class SpecController(Controller):
     """The only writer of <name>/*, from a spec. Holds nothing; two instances
-    are harmless; never on the recovery path. The VMS is one spec; live and
-    det are others — same code."""
+    are harmless; never on the recovery path. Every subsystem is a spec — the
+    same code."""
 
     # `capacity` is only the number for a worker whose heartbeat says nothing (the spec's `capacity.default` when not given).
     # `cluster` is the name the snapshot carries (`$CLUSTER`, else `room-a` — М11's default, its env example's and
@@ -1756,8 +1805,9 @@ class SpecController(Controller):
             return str(hb.extra[self.spec.place_by])
         return str(hb.extra.get("server", "?"))
 
-    # Sum of `extra[headroom_from]` over workers seen in the last 45 s — what the autoscaler reads via
-    # `/metrics`. Stale until the workers heartbeat again after a placement.
+    # Sum of `extra[headroom_from]` over workers seen in the last 45 s — `<name>_headroom` on `/metrics`, what the
+    # service manager's operator watches beside the spares the controller offers (`offer_spares`). Stale until the
+    # workers heartbeat again after a placement.
     def headroom(self) -> int:
         return sum(self._number(w, hb, self.spec.headroom_from, int) or 0 for w, hb in self.workers_seen().items())
 
@@ -2406,7 +2456,7 @@ class SpecController(Controller):
         return out
 
     # `eligible`, or `[]` when this unit's filters raise on its row — one unit's trouble, counted once a spell
-    # (`UNIT_JUDGED`), not the end of the walk: a field that read and then raised in a comparison or in an `admit` took
+    # (`UNIT_JUDGED`), not the end of the walk: a field that read and then raised in a comparison or in a filter took
     # `/unplaceable` and `/drain` down for every unit (the review's tenth pass).
     def _eligible_or_none(self, row: dict, pool: list[str], walk: str) -> list[str]:
         key = f"{self.row_key(row['id'])}#{walk}"
@@ -3005,7 +3055,7 @@ class SpecController(Controller):
                     self.last_leaving_waiting += 1
                     continue                            # its filters cannot be read: it waits where it is, the others move
                 # THE GROUP GOES WHOLE, OR STAYS WHOLE (the review's twelfth pass, blocker 7; `ensure_reach`'s rule). The
-                # first channel of a recorder went where IT fitted, the next ones were pinned to that worker
+                # first unit of a group went where IT fitted, the next ones were pinned to that worker
                 # (`eligible`) — and with no room or no reach for them there they stayed on the leaving worker: a drained,
                 # released, decommissioned or dead slot, a recorder split, and the channels left behind written by
                 # nobody, every counter at 0. Now the units of the group on the leaving worker go together onto a worker
@@ -3141,11 +3191,16 @@ class SpecController(Controller):
         waiting: dict[str, int] = {"": 0}
         pieces: dict[str, list[int]] = {}
         groups: dict[tuple, list[dict]] = {}
+        # …AND WHAT A LIVE WORKER HOLDS AND NO LONGER REACHES (the product's r30, defect B): `ensure_reach` moves such a unit
+        # — its group WHOLE — off a worker whose labels stopped covering it, and waits when nothing live can take it; the
+        # count did not see it at all (the worker is live, not leaving): short 0, no offer, the units on a worker that
+        # no longer reaches them. Each such unit is waiting here, and with it every unit of its group on that worker.
+        off = self._off_reach(pool)
         for row in self.units():
             if self.retired(row):
                 continue
             pl = self.placement(row["id"])
-            short = pl is None or pl.worker in leaving
+            short = pl is None or pl.worker in leaving or str(row["id"]) in off
             waiting.setdefault(key(row), 0)                            # every set a unit asks for, 0 too: a row a scrape sees fall
             if not short:
                 continue
@@ -3235,6 +3290,23 @@ class SpecController(Controller):
         self._said_withheld(out["spares_withheld"])
         return out
 
+    # The ids of the units placed on a live worker of `pool` that no longer passes the constraint — by the test
+    # `ensure_reach` moves by: the server's row read, a label it lost that is a label — each with its group on that worker.
+    def _off_reach(self, pool: list[str]) -> set[str]:
+        if self.spec.constraint == "none" or self.server_labels() is None:
+            return set()
+        rule, live, unread, out = CONSTRAINTS[self.spec.constraint], set(pool), set(self._server_rows_unread), set()
+        for row in self.units():
+            pl = self.placement(row["id"])
+            if pl is None or pl.worker not in live or self.retired(row) or str(row["id"]) in out:
+                continue
+            server = self.server_of(pl.worker)
+            has = self.labels_of(pl.worker)
+            if server in unread or rule(row, has) or self._why_off(row, server, has) is None:
+                continue
+            out |= {str(m["id"]) for m in self._reach_group(row, pl.worker)}
+        return out
+
     # The servers a spare could run on, and what each reaches: `{server: labels}` — labels None where nobody has said
     # them yet (no row, no worker there ever). Not drained, not decommissioned, its resource not silent (one never heard
     # is a bench's, or a box before its resource starts; one whose door this process cannot reach is there: either may
@@ -3276,7 +3348,7 @@ class SpecController(Controller):
     # One offer for `labels`, created under the next number nobody has (`cas=0`); one made under us: the next number.
     def _offer(self, names: list, labels: str, now: float) -> bool:
         for _ in range(10):
-            name = f"{self.spec.offers}-{max([slot_number(n) for n in names] + [0]) + 1}"
+            name = f"{self.spec.slot_prefix}-{max([slot_number(n) for n in names] + [0]) + 1}"
             names.append(name)
             try:
                 self.vars.put(self.sub.slot_key(name), {"holder": "", "until": "0", "released": "false", "gen": "0",
@@ -3576,7 +3648,7 @@ class SpecController(Controller):
                 break
             # A unit goes with its group, inside the budget, onto a worker that takes every unit of it and has room for
             # them all — else the next unit is looked at (the product's cross-check of the eleventh review: this moved
-            # `cands[0]` alone, the first channel of a recorder onto another worker, and asked no filter at all).
+            # `cands[0]` alone, the first unit of a group onto another worker, and asked no filter at all).
             group = None
             for unit in sorted(self.assignment(hi).units, key=_unit_key):
                 row = self.parsed_unit(self.spec.parse_id(unit)) if self.spec.group_by else None
@@ -3660,7 +3732,7 @@ class SpecController(Controller):
         return {r[n] for r in self.units() for n in names if is_digest(r.get(n) or "")}
 
     # -- the sweep: collecting blobs nothing names any more ------------------------------------------
-    # Nothing else in the platform deletes an object, and this is the one thing that has to. A blob key is
+    # Besides a worker's marks (`Worker.sweep_marks`) nothing else in the platform deletes an object, and this has to. A blob key is
     # the digest of its bytes, so every edit of a `blob` field makes a NEW permanent object: unlike a
     # heartbeat, whose key is reused by the next instance of the slot, blobs grow with the number of edits
     # over the system's lifetime and nothing ever reclaims them.
@@ -3674,7 +3746,7 @@ class SpecController(Controller):
     #
     #   mark   nothing is deleted. The digests that no row names are written to `<name>/sweep` with the
     #          time. A blob created after this moment is not on the list, which is where the grace period
-    #          comes from — no timestamps on objects required, and `variables://` has none to offer.
+    #          comes from — no timestamps on objects required, and not every store has them to offer.
     #   sweep  one pass later, and only after `grace`: the marked digests are checked AGAIN, the decision is
     #          written by CAS on the index just read — the doomed digests, `state: deleting` — and only then
     #          are the objects removed, each one read back from the row the moment before.
@@ -3838,8 +3910,7 @@ class SpecController(Controller):
         for key in self.objects.list(prefix):
             shards.setdefault(key[len(prefix):], {"cluster": self.cluster, "worker": None, "ts": self.wall(),
                                                   self.spec.rows: []})
-        # A cluster with no units at all — a camera's cluster before its camera, a recording cluster before
-        # its first recording — would publish NOTHING, and "published that there are none" would read as
+        # A cluster with no units at all — a subsystem's before its first unit — would publish NOTHING, and "published that there are none" would read as
         # "never published" (feedback AA). М12's member that has not published does not report (Lesson 10),
         # so such a cluster stayed "never reported" for ever. An empty `unplaced` shard is the statement.
         if not shards:

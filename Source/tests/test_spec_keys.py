@@ -53,7 +53,8 @@ def test_a_slot_is_named_by_the_spec_and_a_worker_started_under_its_variable_tak
     assert runtime.slot({"SLOT_INDEX": "2"}, spec.slot_name_env, spec.slot_prefix) == "k-2"
     _refused(lambda: _spec(slot={"prefix": "K-9"}), "slot.prefix")
     _refused(lambda: _spec(slot={"name_env": "lower"}), "slot.name_env")
-    _refused(lambda: _spec(slot={"prefix": "k"}, placement={**CAP, "offers": "w"}), "an offer nobody's name fits")
+    _refused(lambda: _spec(slot={"prefix": "k"}, placement={**CAP, "offers": "w"}), "placement.offers is true or false")
+    assert _spec(slot={"prefix": "k"}, placement={**CAP, "offers": True}).offers is True     # offered as `k-<n>`
 
 
 def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
@@ -165,7 +166,7 @@ def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
     spec = SubsystemSpec.from_dict(_testsub())
     assert spec.acl_console() == ["testsub/counters/*", "testsub/next_id", "testsub/idem/*", "testsub/policy",
                                   "testsub/sweep", "testsub/requests/*", "testsub/servers/*", "platform/drain",
-                                  "platform/decommission/*"]
+                                  "platform/decommission/*", "platform/schema"]
     assert spec.acl_controller() == ["testsub/workers/*", "testsub/placement/*", "testsub/slots/*",
                                      "testsub/decommissioned/*"]
     assert spec.acl_worker_role() == spec.sub.acl_worker() == ["testsub/epoch/*", "testsub/slots/*", "testsub/holds/*"]

@@ -174,16 +174,19 @@ def test_of_several_followed_units_the_one_the_spec_prefers_is_stood_beside():
 
 def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_the_store_and_the_heartbeats():
     """`metrics:` (it was a function of the subsystem's the console called, `metrics_extra`): a count of a table's rows
-    — matching, unheld, less the workers holding no place, nothing while another table has a row — and a field of the
-    heartbeats or of each status entry: its value, a flag, an age, a label, a count by value, a sum or max over the
-    workers by a wildcard's keys, a histogram. A word where a number goes is 0, never the page's end. And `/spec`
-    carries `display`, `servers.show` and the gauges' names, which the platform reads none of."""
+    — matching, unheld, nothing while another table has a row — and a field of the heartbeats or of each status entry:
+    its value, a flag, an age, a label, a count by value (or, with `equals`, one line: the running gauge, which
+    `console.running` only names), a sum or max over the workers by a wildcard's keys, a histogram. A word where a number
+    goes is 0, never the page's end. The places a worker holds (`placement.places`) make the platform's
+    `<sub>_workers_needed` for a subsystem placed by its rows. And `/spec` carries `display`, `servers.show` and the
+    gauges' names, which the platform reads none of."""
     from w2cplatform.console import SpecConsole
     from w2cplatform.metrics import text
     vars_, objects, wall = _box()
-    spec = SubsystemSpec.from_dict({**BIN, "metrics": [
+    spec = SubsystemSpec.from_dict({**BIN, "placement": {**BIN["placement"], "places": {"table": "bays", "where": {"enabled": True}}},
+        "console": {"running": "units_running"}, "metrics": [
+        {"name": "units_running", "from": "status.phase", "agg": "count", "equals": "running", "live": True},
         {"name": "bays_open", "count": "table bays", "where": {"enabled": True}, "unheld": True},
-        {"name": "bays_wanted", "count": "table bays", "where": {"enabled": True}, "unheld": True, "minus": "placeless"},
         {"name": "unguarded", "count": "table bays", "unless": {"table": "bays", "where": {"kind": "guard"}}},
         {"name": "jam", "from": "heartbeat.jam", "agg": "flag", "default": 0},
         {"name": "away_seconds", "from": "heartbeat.away_since", "agg": "age", "default": 0},
@@ -206,7 +209,7 @@ def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_
     objects.put(spec.sub.heartbeat_key("w-2"), Heartbeat("w-2", wall(), [], {"server": "s2", "bay": "b1", "belt": {"state": "slow"},
                                                                           "moves": {"done": 5}}).to_bytes())
     lines = text(ctl).splitlines()
-    for want in ("bin_bays_open 2", "bin_bays_wanted 1", "bin_unguarded 3",
+    for want in ("bin_units_running 1", "bin_bays_open 2", "bin_unguarded 3",
                  'bin_jam{worker="w-1"} 1', 'bin_jam{worker="w-2"} 0',
                  'bin_away_seconds{worker="w-1"} 30.0', 'bin_away_seconds{worker="w-2"} 0',
                  'bin_belt{worker="w-1",state="ok"} 1', 'bin_belt{worker="w-2",state="slow"} 1',
@@ -221,6 +224,14 @@ def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_
     got = SpecConsole(ctl, wall=wall).describe()
     assert got["display"]["unit"] == "ящик" and got["servers"] == {"show": [{"table": "bays", "by": "server", "title": "места"}]}
     assert got["running_gauge"] == "bin_units_running" and got["workers_gauge"] == "bin_workers_live"
+    page = SpecConsole(ctl, wall=wall).metrics_text().splitlines()
+    assert 'bin_workers_needed{labels=""} 1' in page and page.count("bin_units_running 1") == 1   # two bays free, w-1 takes one
+    assert SubsystemSpec.from_dict(BIN).running_gauge == "" and SpecConsole(SpecController(SubsystemSpec.from_dict(BIN), vars_,
+                                                                                        objects, wall=wall)).describe()["running_gauge"] is None
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "console": {"running": "nope"}}), "console.running names one of its metrics")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "count": "table bays", "minus": "placeless"}]}),
+             "minus is no key of a metric")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "placement": {**CAP, "places": {"table": "bays"}}}), "placement.places is")
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "count": "table nope"}]}), "count is `table")
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "display": {"logic": "if"}}), "words for a page, no logic")
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "servers": {"show": [{"table": "nope", "by": "server"}]}}), "`servers:` is")

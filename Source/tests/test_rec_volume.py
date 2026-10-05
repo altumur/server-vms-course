@@ -1399,9 +1399,10 @@ def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
     an allocation's id gets a host only from it; and the hostname is what is left when nothing is said."""
     import os
     import socket
-    from vms.recworker import box_instance, host_of
-    assert host_of(box_instance({"BOX_ID": "4f1c0ad2e9"})) == "4f1c0ad2e9"
+    from vms.recworker import box_instance
     from w2cplatform import runtime
+    host_of = runtime.box_of
+    assert host_of(box_instance({"BOX_ID": "4f1c0ad2e9"})) == "4f1c0ad2e9"
     assert host_of(box_instance({})) == runtime.box({})              # nothing said: the machine's id, else the hostname
     assert runtime.box({}) in (socket.gethostname(), *(open(p).read().strip() for p in runtime.MACHINE_ID_FILES
                                                        if os.path.exists(p)))

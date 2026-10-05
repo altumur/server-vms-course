@@ -56,12 +56,6 @@ from .worker import FakeActuator, VmsWorker
 from .writerwatch import WriterWatch
 
 
-# The host in an instance's name, `host:pid:rnd` (`Worker.instance`'s default) — None for an instance named otherwise:
-# an allocation's id says nothing about where it runs. What a network volume's hold follows the name by
-# (`RecWorker.hold_follows_name`). The runtime's now (`runtime.box_of`): a slot taken by name at a start asks the same
-# question (`Worker._may_take_by_name`, the owner's decision of 4 Oct).
-host_of = runtime.box_of
-
 
 # …AND THE HOST IS THE BOX, NOT ITS NAME (the review's eighth pass, minor). It was `socket.gethostname()`: two boxes named
 # alike — `localhost`, `fedora`, two clones of one VM — were "the same host", and the second instance took the first's
@@ -394,7 +388,7 @@ class RecWorker(VmsWorker):
                  stitch: float = 2.0, block: int | None = None, read: int | None = None):
         env = dict(os.environ if env is None else env)
         events_root = runtime.events_root(env, resource_root)    # the platform's events archive (WP-E): /data/platform/events
-        instance = instance or box_instance(env)          # the box it runs on, by `BOX_ID` (`hold_follows_name`)
+        instance = instance or box_instance(env)          # the box it runs on, by `BOX_ID` (`Worker.hold_follows_name`)
         super().__init__(name, vars_, objects, actuator or FakeActuator(), lease_ttl, lease_margin, clock, wall, server, capacity, instance,
                          slot_ttl, resource_root=events_root, env=env)
         # The host's ObjectStorage daemon, and this process's one session with it. Every volume this recorder
@@ -1580,19 +1574,10 @@ class RecWorker(VmsWorker):
     # WAITING `slot_ttl + HOLD_SKEW`, so a claimant on another host waits it, the same name included.
     #
     # On the holder's own host it does not have to (the seventh pass: the sixth made every restart of a recorder wait
-    # fifty seconds with nothing recorded — feedback CF undone). The row's `holder` is `host:pid:rnd`: the same host is
-    # the same daemon, and that daemon lets one writer at a time hold the volume — the new instance's mount is
-    # `ALREADY_LOCKED` while the old one's writer is attached, frozen or not, and picks it up (`reattached`) once it is
-    # detached. An instance named otherwise — `NOMAD_ALLOC_ID`, `INSTANCE_ID` — says no host: it waits, the safe side,
-    # unless the runtime said the box (`BOX_ID`, `box_instance`). The host is the box's id where one is said — two boxes
-    # named alike are two hosts (the eighth pass).
-    # A hold let go on purpose — its writer closed first (`leave_volume`, `after_stop`) — is taken at once by anybody.
-    def hold_follows_name(self, place: str, holder: str = "") -> bool:
-        if place not in self._shared:
-            return True
-        here = host_of(self.instance)
-        return here is not None and here == host_of(holder)
-
+    # fifty seconds with nothing recorded — feedback CF undone): the platform's `Worker.hold_follows_name`, by the spec's
+    # `placement.places.server_field` — a volume whose row names no server is one any box may serve, taken back at once
+    # only on the holder's own box. A hold let go on purpose — its writer closed first (`leave_volume`, `after_stop`) — is
+    # taken at once by anybody.
     # BEFORE EVERY SAMPLE (the review's fifth pass, blocker 1): may this recorder write into `vol` this second?
     # A disk of this server always — nobody else can write there. A network volume any box may serve, pinned or not
     # (the review's seventh pass, blocker 2), only while the hold is this recorder's and was confirmed less than

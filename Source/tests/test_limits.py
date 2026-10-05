@@ -1,6 +1,6 @@
 """The ceiling a store declares, and what the platform does when a write is over it.
 
-Before this, the 64 KiB of a Nomad Variable lived in prose. `FsObjectStore`
+Before this, a store's ceiling lived in prose. `FsObjectStore`
 accepted anything, so a write that production would reject was green here, and
 the platform found its ceiling the way you find a ceiling in the dark — the
 snapshot (Lesson 25) was found by arithmetic on paper, not by a failing test.
@@ -77,7 +77,7 @@ def test_a_row_that_does_not_fit_is_a_413_to_the_person_who_typed_it():
 
 
 def test_the_size_a_store_charges_is_keys_and_values():
-    """How Nomad measures a Variable, and therefore how the platform must: every
+    """How the cluster's store weighs a row (`storemachine.MAX_VALUE`), and therefore how the platform must: every
     key and every value in the path, together — not the JSON around them."""
     assert items_bytes({"a": "xx", "bb": "y"}) == 1 + 2 + 2 + 1
     row = SPEC.items({"id": 1, "name": "gate", "source": "driverpack://file/g.mp4", "revision": 1})

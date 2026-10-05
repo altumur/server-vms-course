@@ -76,3 +76,20 @@ def test_a_step_that_fails_every_pass_is_said_once_and_again_when_it_works():
     finally:
         logging.getLogger("w2cplatform.host").removeHandler(lines)
     assert lines.lines == ["a: publishing failed", "b: publishing failed", "a placement: publish works again"], lines.lines
+
+
+def test_the_console_raises_the_schema_through_its_own_grants_on_a_box_and_in_a_cluster():
+    """`PUT /schema` writes `platform/schema` through the CONSOLE's store handle — opened as `console` with the specs'
+    `acl_console` (`host.build_console`) — and the cluster's rights file is generated from the same lists. It was granted
+    neither: on an unrestricted test store it passed, a deployed console got 403. Run here under the console's real
+    grants, on a box and in the generated rights."""
+    from w2cplatform.cluster import rights
+    from w2cplatform.contract import SCHEMA, SCHEMA_KEY
+    from w2cplatform.spec import SubsystemSpec
+    env = {"SPEC_DIR": TESTDATA, "PLATFORM_DIR": tempfile.mkdtemp(prefix="host-"), "CONSOLE_ROOT": "testsub"}
+    m, ctls = host.build_console(env)
+    status, body = m.schema_route("PUT", {"version": str(SCHEMA)}, user="anna")
+    assert status == 200, (status, body)
+    assert ctls["testsub"].vars.get(SCHEMA_KEY)[0]["version"] == str(SCHEMA)
+    spec = SubsystemSpec.load(os.path.join(TESTDATA, "testsub.subsystem.yaml"))
+    assert SCHEMA_KEY in rights.roles([spec], "probe")["console"]["write"]

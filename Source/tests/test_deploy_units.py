@@ -706,7 +706,7 @@ def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_star
     """No `vms_server_labels` row with `source="console"` for this server: the host's `$LABELS`. A console that does
     not answer, and one whose controller's pass is stale (the page carries no `vms_workers_needed`): nothing started,
     and the script ends 0 — the console being away is not a reason to start anything. Roles from `SPARES_ROLES`; a
-    recorder by `rec_recorders_needed` on `/rec/metrics`, with no `SPARE_FOR` (it takes a free volume, no offer)."""
+    recorder by `rec_workers_needed{labels=""}` on `/rec/metrics`, with no `SPARE_FOR` (it takes a free volume, no offer)."""
     no_row = NEEDED.replace('server="srv-a"', 'server="srv-c"')
     out, calls = _spares("vmsworker", pages={"/metrics": no_row}, env={"LABELS": "vlan:x"})
     assert [c for c in calls if c.startswith("systemctl start")] == \
@@ -716,7 +716,7 @@ def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_star
     assert out.returncode == 0 and calls == [] and "no answer" in out.stderr, out.stderr
     out, calls = _spares("vmsworker", pages={"/metrics": "vms_units_unplaced 3\n"})
     assert out.returncode == 0 and calls == [] and "nothing started" in out.stdout, out.stdout
-    out, calls = _spares(pages={"/rec/metrics": "rec_recorders_needed 1\n", "/live/metrics": 'live_workers_needed{labels=""} 1\n'},
+    out, calls = _spares(pages={"/rec/metrics": 'rec_workers_needed{labels=""} 1\n', "/live/metrics": 'live_workers_needed{labels=""} 1\n'},
                          env={"SPARES_ROLES": "recworker,liveworker"})
     assert [c for c in calls if c.startswith("systemctl start")] == [
         "systemctl start vms-recworker-spare@1", "systemctl start vms-liveworker-spare@1"], calls
@@ -728,7 +728,7 @@ def test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one
     loopback; a camera of the dead server with a sealed password did not start on the spare started for it. Now a
     spare is its role's TEMPLATE (`vms-<role>-spare@.service`, the regular unit's twin) or nothing: a server without
     the template starts nothing for that role and says why, and the script calls no `systemd-run` at all."""
-    out, calls = _spares("vmsworker", "recworker", pages={"/metrics": NEEDED, "/rec/metrics": "rec_recorders_needed 1\n"},
+    out, calls = _spares("vmsworker", "recworker", pages={"/metrics": NEEDED, "/rec/metrics": 'rec_workers_needed{labels=""} 1\n'},
                          templates=("recworker",))
     assert out.returncode == 0, out.stderr
     assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-recworker-spare@1"], calls

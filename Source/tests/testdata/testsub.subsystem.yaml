@@ -28,5 +28,7 @@ requests:
   valid_for: 30
   most_valid: 600
 snapshot: [name]
+metrics:
+  - {name: counters_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: counters_running

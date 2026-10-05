@@ -32,7 +32,9 @@ from .doors import parse_ref
 from .events import tree_owner
 from .rows import PARSE_ERRORS, Table, finite
 
-HOLDS = Table("hold", "holds its unit as far as its stretch reads, until it is mended")
+# A row of a spec's `holds:` table that does not read — `holding`, apart from the place a worker holds (`contract.HOLDS`,
+# `hold`): two meanings, two names in a heartbeat's and a resource's counts.
+HOLDS = Table("holding", "holds its unit as far as its stretch reads, until it is mended")
 UNITS = Table("unit_row", "its unit is held by every hold that reads, as a unit of nobody's, until it is mended",
               "unit's row")
 

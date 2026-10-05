@@ -381,8 +381,9 @@ async function loadUnits() {
     li.onclick = () => select(c.id);
     ul.appendChild(li);
   }
-  try { const m = await (await fetch('/metrics')).text(); const live = /_workers_live (\d+)/.exec(m); const run = new RegExp(`_${spec.metrics.running} (\\d+)`).exec(m);
-        $('#status').textContent = `${live ? live[1] : '?'} workers live · ${run ? run[1] : '?'} ${spec.metrics.running.replace(/_/g, ' ')}`; } catch (_) {}
+  try { const m = await (await fetch('/metrics')).text(); const live = /_workers_live (\d+)/.exec(m);
+        const name = spec.metrics.running, run = name && new RegExp(`_${name} (\\d+)`).exec(m);   // a spec may declare none
+        $('#status').textContent = `${live ? live[1] : '?'} workers live` + (name ? ` · ${run ? run[1] : '?'} ${name.replace(/_/g, ' ')}` : ''); } catch (_) {}
 }
 
 // Marks the unit current, clears the play queue, sets `#title`, fetches `/where/<id>` for the placement

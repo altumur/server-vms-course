@@ -13,12 +13,13 @@
 # **Role.** The Quadlet unit at `/etc/containers/systemd/w2c-resource.container`, from which Quadlet
 # generates `w2c-resource.service` — the product's name (its `w2c-resource.service`; the course's unit was
 # `resource.container`): the resource is the PLATFORM's process, not the VMS's, and the platform's names are
-# w2c. `python3 -m vms resource` builds the platform's `Resource` over
-# `/data/platform/events` — the event trees, and the VMS's keeps for their retention — serves the platform's HTTP on
+# w2c. `python3 -m w2cplatform resource` (`host.resource`) builds the platform's `Resource` over
+# `/data/platform/events` — the event trees, kept by each subsystem's days less what a spec's `holds:` keeps (the
+# specs of the image's `SPEC_DIR`) — serves the platform's HTTP on
 # `127.0.0.1:8090` (`/buckets`, `/events`, `/mirrored`, `PUT /mirror`), heartbeats `platform/resources/<server>/heartbeat` every
 # ten seconds (how the console finds it), runs the policy pass every 600 s, and keeps an `EventIndex`
 # over the tree — rebuilt on every start, tailed every three seconds — which is what the console's
-# `/events` asks. Footage is not its business: it is in volumes, behind the host's obsd. Checked by
+# `/events` asks. What a subsystem keeps in storage of its own is not its business. Checked by
 # `tests/test_deploy_units.py` (`/data/platform/objects` read-write, for the heartbeat; `User=2100`).
 #
 # - `Description=w2c resource — the policy pass, the heartbeat, the event index`
@@ -53,19 +54,22 @@ After=network.target
 
 [Container]
 Image=localhost/vmsserver:latest
-# the `resource` verb of `vms/__main__.py`: the platform's Resource with the VMS registered on it, served,
-# heartbeating, its event index answering /events.
+# the platform's `resource` verb (`w2cplatform/host.py`): the platform's Resource over the specs, served,
+# heartbeating, its event index answering /events — no subsystem's code in it.
 Exec=python3 -m w2cplatform resource
 # the platform's user and its primary group, by number: the container has no /etc/passwd of the host's.
 User=2100
 Group=2100
 Environment=RESOURCE_HOST=127.0.0.1
 Environment=RESOURCE_PORT=8090
-# `PLATFORM_DIR` (to read the camera rows and write the heartbeat) and `RESOURCE_ROOT` from the platform's file.
+# `PLATFORM_DIR` (to read the rows the specs name and write the heartbeat) and `RESOURCE_ROOT` from the platform's
+# file; the deployment's file as every unit reads it.
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
-# read-write: the heartbeat is an object under `platform/resources/<server>/`. Of the rows it reads the camera rows,
-# `vms/retention/<cam>`, `platform/mirror`, and writes one, `platform/doors/<server>` (where it answers).
+# read-write: the heartbeat is an object under `platform/resources/<server>/`. Of the rows it reads each
+# subsystem's `<sub>/retention[/<unit>]`, the rows a spec's `holds:` names, the rows of units ABOUT another (whose
+# their buckets are), `platform/mirror`, and writes `platform/doors/<server>` (where it answers) and a subsystem's
+# request to free bytes (`requests: {free: true}`).
 # The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
 # `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
 Volume=/data/platform/config:/data/platform/config:z

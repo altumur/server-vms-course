@@ -5,7 +5,7 @@ On a cluster without an orchestrator (the owner's decision of 3 October) the sto
 server's `configstore` daemon, a member of a raft group over the servers, reached through the unix socket of the
 process's role (`w2cplatform/configstorevars.py` the handle, `configstore.py` the daemon, `storemachine.py` what
 they agree on). Nothing here speaks to it: a process opens `PLATFORM_STORE` with `open_vars`, and the platform knows
-the scheme. Nomad's Variables, which this module spoke to before, went with the orchestrator.
+the scheme.
 
 `FakeVariables` stays, and so do the names М12 imports from here (`Variables`, `Conflict`, `Forbidden`): it is the
 same contract in memory, one log for every writer, a version that only grows, `cas` and its 409, an optional ACL by
