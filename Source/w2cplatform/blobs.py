@@ -34,7 +34,7 @@ start.
 
 What nobody names any more is collected: `SpecController.sweep_blobs` marks the
 digests no row names, and deletes them a pass and a grace later, after checking
-again — the one caller in the platform that deletes an object (Lesson 29).
+again — the one caller in the platform that deletes an object (Lesson 20).
 
 The spelling is `sha256-<hex>` — a dash, not a colon, because this string is
 also a key, and a key becomes a path on a filesystem, and a colon is not a path
