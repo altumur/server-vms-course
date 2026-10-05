@@ -186,7 +186,7 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
 
 **Heartbeat, который не разбирается, — беда одного воркера, не прохода.** Объект обрывается на полуслове — питание, зомби, писавший в тот же файл до BD, — и `Heartbeat.from_bytes` поднимал `ValueError` посреди `workers_seen`: ни одного воркера контроллер не видел, пока кто-нибудь не удалит объект (ревью платформы, M6; второе ревью). `parse_heartbeat` пропускает такой объект, считает его (`contract.GARBLED[sub]` → `<sub>_heartbeats_garbled` в `/metrics`) и пишет в лог один раз на ключ, пока тот не станет читаться; то же у `builds`, у `heartbeats` консоли и у `resources_seen` ресурса. Тест: `test_placement_decides.py::test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs`.
 
-**Живость — по смене, на часах контроллера, а не по часам воркера** (тринадцатое ревью, блокер 4; решение владельца 4 октября). Первая версия сравнивала `now - hb.ts`: часы контроллера с часами воркера, и при перекосе в минуту живой воркер «молчал», а мёртвый был «жив». Второе ревью (M9) поставило порог — `is_live`: heartbeat из будущего дальше `FUTURE_TOLERANCE` (5 с) живым не считался. Тринадцатое показало, что порог — тот же суд по чужим часам: сервер, чьи часы на 50 с позади, был мёртв, пока работал, и его единицы уезжали. Теперь контроллер помнит, когда **сам** впервые увидел heartbeat таким, какой он сейчас (`self.eyes`, урок 7, шаг 7, «Чьи часы»): метка — `ts` и контрольная сумма байтов (`Heartbeat.token`), не время. Изменился в последние `max_age` секунд по часам контроллера — воркер есть. Того, чего контроллер ещё не видел, он считает только что записанным: новый контроллер выжидает окно, прежде чем назвать кого-то молчащим. `max_age=1e12` по-прежнему значит «перечислить всех, кого видели».
+**Живость — по смене, на часах контроллера, а не по часам воркера** (тринадцатое ревью, блокер 4; ADR 0049). Первая версия сравнивала `now - hb.ts`: часы контроллера с часами воркера, и при перекосе в минуту живой воркер «молчал», а мёртвый был «жив». Второе ревью (M9) поставило порог — `is_live`: heartbeat из будущего дальше `FUTURE_TOLERANCE` (5 с) живым не считался. Тринадцатое показало, что порог — тот же суд по чужим часам: сервер, чьи часы на 50 с позади, был мёртв, пока работал, и его единицы уезжали. Теперь контроллер помнит, когда **сам** впервые увидел heartbeat таким, какой он сейчас (`self.eyes`, урок 7, шаг 7, «Чьи часы»): метка — `ts` и контрольная сумма байтов (`Heartbeat.token`), не время. Изменился в последние `max_age` секунд по часам контроллера — воркер есть. Того, чего контроллер ещё не видел, он считает только что записанным: новый контроллер выжидает окно, прежде чем назвать кого-то молчащим. `max_age=1e12` по-прежнему значит «перечислить всех, кого видели».
 
 **Перекос — число и тревога, не решение.** Время писателя теперь читается для сдвига часов — там, где перемена замечена (первый взгляд не в счёт: это может быть метка давно умершего): `<sub>_heartbeat_skew_seconds_max` видит часы, ушедшие **вперёд**, `<sub>_heartbeat_skew_seconds_min` — отставшие. Дальше `SKEW_ALARM` — тревога `clock.skew` раз за эпизод (`Controller.say_skews`), в отчёте прохода `clock_skew`. Ничего не переносится. `is_live` остался для тех, у кого нет глаз (разовый взгляд: скан, предложение томов). Тест: `test_review_remainder.py::test_a_writers_clock_ahead_or_behind_neither_holds_nor_drops_it_and_the_skew_is_said`, `test_review_remainder.py::test_a_clock_running_behind_is_a_number_too`.
 
@@ -353,7 +353,7 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 
 Ветка `wait`/`unsure` — ради единиц сервера, о котором ресурс ничего не сказал или не смог сказать: они ждут, и это должно быть видно. Такой слот с единицами попадает в `unjudged` со своим `why`. `_said_unjudged` говорит тревогу `worker.unjudged` один раз за эпизод, а «can be judged again» — в лог. Отчёт прохода несёт `workers_unjudged` и `units_unjudged`, консоль — `<p>_workers_unjudged` и `<p>_units_unjudged` на `/metrics`. Тут же второе число: перенос зависшего воркера по пределу — не только тревога в журнале, отчёт считает его с тех пор, как хранилище новое (`workers_hung_moved_total`, на `/metrics` — `<p>_workers_hung_moved_total`), по одному на эпизод (двенадцатое ревью, minor). Тесты: `tests/test_slot_fate.py::test_a_controller_started_after_a_server_died_moves_its_units` (вторая половина: тревога одна на два прохода), `tests/test_slot_fate.py::test_the_decommission_door_reads_its_body_as_every_door_and_a_refusal_is_journalled` (счётчик).
 
-**`unsure` после предела зависания — уже не «судить нельзя», а перенос** (решение владельца о «середине» для `hung`, применённое к `unsure`; урок 7, шаг 7): иначе слот в `unsure` оставался бы в `unjudged` вечно — тревога есть, единицы не исполняет никто. Через `hung_move_after` после конца слота `slot_fate` отвечает `unsure_moved`. Такой слот в `unjudged` не попадает, его единицы уносит `redistribute`, а тревогу говорит отдельная функция, один раз за эпизод, как `_said_hung` для `hung_moved`:
+**`unsure` после предела зависания — уже не «судить нельзя», а перенос** (ADR 0042: «средний путь» для `hung`, применённый к `unsure`; урок 7, шаг 7): иначе слот в `unsure` оставался бы в `unjudged` вечно — тревога есть, единицы не исполняет никто. Через `hung_move_after` после конца слота `slot_fate` отвечает `unsure_moved`. Такой слот в `unjudged` не попадает, его единицы уносит `redistribute`, а тревогу говорит отдельная функция, один раз за эпизод, как `_said_hung` для `hung_moved`:
 
 ```python
     def _said_unsure_moved(self, moved: dict) -> list:
@@ -611,7 +611,7 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 
 `_seek_slot` ловит любое исключение захвата, а не только `OSError` и `RuntimeError`: что бы ни случилось, экземпляр остаётся никем и пробует на следующем шаге. И сначала сверяет схему — на хранилище новее своей сборки имён не берут. Тест: `test_slot_fence.py::test_a_fenced_worker_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds` — на воркере `testsub`, который идёт этим путём базы: хранилище моргает на захвате, все кандидаты заняты, имя держит живой — и всё это время никто; оборот настоящего `run` с аккуратной остановкой: чужой heartbeat цел, чужая строка слота не отпущена; отпустил — `rejoin` берёт своё имя с его назначением. То же на воркерах М10B (держатель камер, регистратор, регистратор на камере) — `tests/test_vms_worker_loops.py`.
 
-**«Другой слот» — только у процесса без имени** (решение владельца 4 октября; продукт — `RejoinSlot`). Процесс, которому имя дал юнит (`given`: `WORKER_NAME`, `<ROLE>_NAME`, `SLOT_INDEX` — урок 7, шаг 5), в `_seek_slot` просит только это имя, и только свободным или истёкшим (`steal=False`). Возьми он любой свободный — отсечённый `w-srv-a-1` стал бы `w-2`, вторым воркером на сервере, о котором юнит не знает, а контроллер давал бы ему единицы. Пока имя держит живой экземпляр, захват отвечает `_NameTaken`, и процесс остаётся никем — с тем же списком огороженного, что выше, — и говорит об этом сам:
+**«Другой слот» — только у процесса без имени** (ADR 0043; продукт — `RejoinSlot`). Процесс, которому имя дал юнит (`given`: `WORKER_NAME`, `<ROLE>_NAME`, `SLOT_INDEX` — урок 7, шаг 5), в `_seek_slot` просит только это имя, и только свободным или истёкшим (`steal=False`). Возьми он любой свободный — отсечённый `w-srv-a-1` стал бы `w-2`, вторым воркером на сервере, о котором юнит не знает, а контроллер давал бы ему единицы. Пока имя держит живой экземпляр, захват отвечает `_NameTaken`, и процесс остаётся никем — с тем же списком огороженного, что выше, — и говорит об этом сам:
 
 ```python
     def _name_taken_by(self, e: "_NameTaken") -> None:
@@ -663,6 +663,11 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
             extra.setdefault("present", True)     # registered with its server's resource (`present`)
             if getattr(self, "_presence_unsaid", None):
                 extra.setdefault("presence_unsaid", self._presence_unsaid)   # …but its name is not beside its lock
+        # A worker that names no server of its own, of a subsystem whose places say their server: none of them is its
+        # own, so every one is let go when its hold goes unconfirmed (`held_strictly`, ADR 0029). Said, for the person
+        # reading the heartbeat; the platform decides nothing by it, and `/metrics` does not count it.
+        if not self.server and self.spec.places.get("server_field"):
+            extra.setdefault("server_unsaid", SERVER_UNSAID)
         extra.setdefault("schema", SCHEMA)
         extra.setdefault("build", BUILD)
         # …and `pending_writes`: what a drain waits for besides the units (`SpecConsole.drain_state`, `safe`)
@@ -686,6 +691,8 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 
 **Имя рядом с блокировкой пишется с каждым heartbeat'ом, и неудача говорится в нём же.** Первые строки — регистрация у ресурса сервера (урок 7, шаг 7): воркер, взявший блокировку (`present`), с каждым heartbeat'ом снова пишет своё имя рядом с ней (`_say_present`) и говорит `present: True`. Раньше неудача этой записи — ENOSPC на дереве ресурса — была только строкой лога: `.json` оставался без имени, ресурс читал воркера как «не числится», и слот освобождался под процессом, который ещё писал (двенадцатое ревью, блокер 3, воспроизведено пробой ревьюера). Теперь heartbeat несёт `presence_unsaid` с причиной, лог говорит это один раз за эпизод, а следующий heartbeat пробует записать снова; контроллер судит такого воркера как `unsure` и считает в отчёте прохода (`workers_presence_unsaid`). Тест: `tests/test_slot_fate.py::test_a_worker_that_cannot_write_its_name_beside_its_lock_says_so_and_tries_again`.
 
+**Воркер без своего сервера говорит это в heartbeat'е.** Если у воркера нет `Worker.server`, а спека называет `placement.places.server_field`, ни одно место не его, и каждое отпускается, как только удержание не подтвердилось (урок 7). Heartbeat несёт `server_unsaid` — текст `worker.SERVER_UNSAID`, один с продуктом; иначе поля нет. Это слово человеку: платформа по нему ничего не решает, и на `/metrics` его нет. Тест: `test_base_worker.py::test_a_worker_without_its_server_says_so_in_its_heartbeat`.
+
 **Запись heartbeat'а — под `_heartbeat_lock`, и написанное запоминается.** `_last_heartbeat` — статус, поля и `ts` последнего heartbeat'а цикла, `_heartbeat_at` — когда он написан по монотонным часам. Из них подменщик за висящий шаг повторяет сказанное (`_stand_in_heartbeat`, выше); замок не даёт ему положить старый статус поверх свежего, который цикл пишет в ту же секунду. Тест: `test_stand_in.py::test_the_stand_in_says_no_heartbeat_over_a_fresh_one_nor_under_a_name_another_instance_took`.
 
 ```python
@@ -694,6 +701,8 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 ```
 
 Две строки, и они — объявление границы. (`now` необязателен: цикл базы зовёт проход без него, тест может дать свой.) **Что делать с единицей работы, база не знает.** Она знает, как получить право на неё, как его подтвердить, как его потерять и как о себе отчитаться — и, в шаге 9, как жить процессу, который всё это делает. Что именно значит «гнать конвейер» или «считать секунды», начинается в наследнике: в тесте границы это десяток строк `CounterWorker` поверх той же базы (урок 1; с просьбами — шаг 9), а настоящие подсистемы — в М10B.
+
+Шаг остаётся абстрактным, но с одной общей частью платформа воркеру помогает. Воркер, чьи единицы — набор долгих конвейеров (запущен, перезапущен, когда сдвинулась ревизия строки, остановлен, когда строка ушла), зовёт из своего `reconcile_once` помощник сверки `w2cplatform/reconcile.py` (ADR 0033): `Reconciler(start, stop, backoff).once(desired)` делает то, что идёт, равным тому, что назначено, а неудавшийся старт ждёт задержку, которая удваивается до потолка и разбросана дрожанием, — единицы, упавшие вместе, вместе и не повторяют. Об эпохах, арендах и хранилище помощник не знает ничего: эпоху берёт и аренду проверяет `start` воркера. Так сверяют свои счётчики воркеры тестовых подсистем — `CounterWorker` у `testsub` (`tests/conftest.py`) и `TallyWorker` у `testsub2` (`tests/test_reconcile.py`). Воркеру, чья работа не набор конвейеров, помощник не нужен.
 
 ## Шаг 9 — Рантайм воркера: цикл, шаг аренд, ограда и возвращение
 
@@ -914,7 +923,9 @@ Heartbeat цикла собирает база:
 
 ```python
     def observe(self, unit, kind: str, **fields) -> str | None:
+        from .events import refuse_own_of
         from .rows import number
+        refuse_own_of(self.sub.name, str(unit), fields)   # at once: a line the suppressor swallows is refused as well
         epoch = self.epochs.get(str(unit))
         if epoch is None or not self.resource_root or not self.__dict__.get("writing_allowed", True):
             return None
@@ -927,7 +938,7 @@ Heartbeat цикла собирает база:
         return self._write_lines(unit, epoch, lines, self.class_of(unit, kind))
 ```
 
-Под эпохой, которую воркер держит, в бакет единицы в дереве ресурса своего сервера (`resource_root` — его ставит база, шаг 7; бакеты — урок 12). Единица без эпохи — не его, огороженный не говорит ничего, и больше никому не сообщается: ни строки в хранилище, ни сообщения контроллеру. Три вещи по пути — тоже платформы. Повторы гасит правило спецификации, `events.suppress` (`suppressor`: вид, окно и поля, которые говорят «это то же самое»): повтор внутри окна не пишется, а когда окно закрылось — одна сводка с числом повторов; окна, о которых никто больше не напомнит, закрывает `flush_suppressed` на каждой прокачке. `occurred` — когда это случилось по часам источника — читается через `rows.number` (слово, `nan`, `inf` теряют только этот момент), ложится на записанную строку и в «то же самое» не входит. Класс строки — `class_of`: наблюдение, если подсистема не сказала, какие её виды — тревоги. Тесты: `test_worker_life.py::test_a_worker_that_names_no_resource_tree_writes_its_events_where_the_runtime_says`, `test_worker_life.py::test_the_specs_suppressed_repeats_are_the_platforms_observe`.
+Под эпохой, которую воркер держит, в бакет единицы в дереве ресурса своего сервера (`resource_root` — его ставит база, шаг 7; бакеты — урок 12). Единица без эпохи — не его, огороженный не говорит ничего, и больше никому не сообщается: ни строки в хранилище, ни сообщения контроллеру. Первым делом — отказ строке, которая называет своё `of`, даже пустое (`events.refuse_own_of`): о чём единица, база читает из её строки по `about` спеки и ставит сама (урок 12), и отказ звучит сразу, даже для строки, которую подавитель проглотил бы. Три вещи по пути — тоже платформы. Повторы гасит правило спецификации, `events.suppress` (`suppressor`: вид, окно и поля, которые говорят «это то же самое»): повтор внутри окна не пишется, а когда окно закрылось — одна сводка с числом повторов; окна, о которых никто больше не напомнит, закрывает `flush_suppressed` на каждой прокачке. `occurred` — когда это случилось по часам источника — читается через `rows.number` (слово, `nan`, `inf` теряют только этот момент), ложится на записанную строку и в «то же самое» не входит. Класс строки — `class_of`: наблюдение, если подсистема не сказала, какие её виды — тревоги. Тесты: `test_worker_life.py::test_a_worker_that_names_no_resource_tree_writes_its_events_where_the_runtime_says`, `test_worker_life.py::test_the_specs_suppressed_repeats_are_the_platforms_observe`.
 
 Всё это вместе проверяет тест границы на `testsub`. Подсистема в нём — семнадцать строк:
 
@@ -972,7 +983,7 @@ def test_controller_and_worker_bases_speak_only_the_contract():
     box = Box()
     sub = Subsystem("thing")
     ctl = Controller(sub, box.vars, box.objects, wall=box.wall)
-    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall)
+    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=spec_named("thing"))
     assert ctl.workers_seen() == {}                            # nobody has heartbeaten
     w.heartbeat([{"id": 1, "phase": "running"}], server="srv-1")
     seen = ctl.workers_seen()
@@ -994,6 +1005,8 @@ def test_controller_and_worker_bases_speak_only_the_contract():
 Часы уходят на сто секунд. Воркер молчит. `workers_seen()` пуст — **никто ничего не удалял**, изменилось только время.
 
 И последнее, ради чего этот тест существует: подсистема называется `thing`, единицы — `"1"`, `"2"`, `"3"`, а в теле нет ни одного слова, которое сообщало бы, чем эта система занимается. Всё, что выше, — механика, и она закончена.
+
+Спека у воркера есть и здесь — без неё база не запускается (ADR 0013), — но самая короткая: `spec_named("thing")` из `tests/conftest.py`, единица с именем и ни одного ключа, который прочёл бы механизм.
 
 **Результат:** `Controller` в `contract.py`, `Worker` и его рантайм в `worker.py`; оба теста зелёные; и объяснение своими словами, почему `write` принимает функцию, а не значение, что означает `None` из неё и почему потерянная аренда останавливает одну единицу, а чужая строка слота — весь экземпляр.
 

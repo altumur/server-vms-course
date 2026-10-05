@@ -30,8 +30,8 @@ null	(absent)	a null is no field at all: a holder tells an empty string from not
 1e3	1000	no exponent: a whole value in digits
 1E+3	1000	an exponent spelt otherwise
 1e-7	0.0000001	json.dumps says 1e-07
--0	-0	an integer in exactly the digits it came with
--0.0	-0	a negative zero, as the product's float formatting says it
+-0	0	zero has no sign: equal values, one text
+-0.0	0	a negative zero is zero
 12345678901234567890	12345678901234567890	past 2^53: never through a float
 99999999999999999999999999999999	99999999999999999999999999999999	32 digits: as long as maxLength lets
 -99999999999999999999999999999999	(refused)	33 characters as written: past maxLength, a number's text too
@@ -43,7 +43,7 @@ null	(absent)	a null is no field at all: a holder tells an empty string from not
 "é ü"	é ü	UTF-8 as it is
 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	(refused)	a string past maxLength: the schema says so
 {"b": 2, "a": [1]}	{"a":[1],"b":2}	a map: compact, keys sorted
-[1.50, 1e3, -0]	[1.5,1000,-0]	numbers inside JSON by the same rule
+[1.50, 1e3, -0]	[1.5,1000,0]	numbers inside JSON by the same rule
 [12345678901234567890]	[12345678901234567890]	an integer inside JSON in exactly its digits
 {"s": "<&>/"}	{"s":"<&>/"}	no HTML escape, no escaped slash
 {"e": "\b\f\n\u0001"}	{"e":"\b\f\n\u0001"}	control characters as JSON writes them

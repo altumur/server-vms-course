@@ -165,7 +165,7 @@
       alarmTimesTip: "how many times in the day",
       waitsPub: "waits for publication", appliedW: "applied", refusedStatus: "refused {s}", takenAt: "taken", noEdits: "no edits",
       debugBadge: "debug: no sign-in", debugTip: "The door let you in without a password: a request from this machine, W2C_DEBUG_PERSON is set (a stand only, ADR-0050). Your rights are this person's.",
-      n: { performed: "performed", refusedW: "refused", expired: "expired: nobody performed it in time", unknownOutcome: "whether it was performed is unknown", byW: "by", asPerson: "as", on: "on", silent: "silent", unitsN: "units", noTwoWriters: "not moved, so that there are never two writers", movedAfter: "moved after",
+      n: { late: "late: after the deadline", performed: "performed", refusedW: "refused", expired: "expired: nobody performed it in time", unknownOutcome: "whether it was performed is unknown", byW: "by", asPerson: "as", on: "on", silent: "silent", unitsN: "units", noTwoWriters: "not moved, so that there are never two writers", movedAfter: "moved after",
         holds: "held by", leaseUntil: "lease until", pastLimit: "past the limit of", server: "server", lost: "lost",
         nameHeld: "the name is held by", waits: "this process waits for its name", namedAgain: "has its name again", after: "after", nameless: "without a name",
         refused: "refused", min: "min", s: "s" },
@@ -316,7 +316,7 @@
       alarmTimesTip: "сколько раз за сутки",
       waitsPub: "ждёт публикации", appliedW: "применена", refusedStatus: "отказ {s}", takenAt: "принята", noEdits: "правок нет",
       debugBadge: "отладка: вход без пароля", debugTip: "Дверь впустила без пароля: запрос с этой машины, задан W2C_DEBUG_PERSON (только стенд, ADR-0050). Права — этого человека.",
-      n: { performed: "выполнена", refusedW: "отказ", expired: "истекла: никто не выполнил вовремя", unknownOutcome: "неизвестно, выполнена ли", byW: "кто:", asPerson: "как", on: "на", silent: "молчит", unitsN: "единиц", noTwoWriters: "не переносятся, чтобы не было двух писателей", movedAfter: "перенесены через",
+      n: { late: "поздно: после срока", performed: "выполнена", refusedW: "отказ", expired: "истекла: никто не выполнил вовремя", unknownOutcome: "неизвестно, выполнена ли", byW: "кто:", asPerson: "как", on: "на", silent: "молчит", unitsN: "единиц", noTwoWriters: "не переносятся, чтобы не было двух писателей", movedAfter: "перенесены через",
         holds: "держит", leaseUntil: "аренда до", pastLimit: "дальше предела", server: "сервер", lost: "утрачены",
         nameHeld: "имя держит", waits: "этот процесс ждёт своё имя", namedAgain: "снова с именем", after: "после", nameless: "без имени",
         refused: "отказал", min: "мин", s: "с" },
@@ -444,12 +444,13 @@
         return j([e.worker ?? "?", e.holder ? n.holds + " " + e.holder : "", e.until ? n.leaseUntil + " " + fmt(e.until) : "",
           e.limit_s != null ? n.pastLimit + " " + dur(e.limit_s) : "", e.units != null ? n.unitsN + ": " + e.units : ""]);
       // a command a worker performed for a person (the platform's family of requests, ADR-0013): the action, its outcome
-      // (performed | refused: why | expired | unknown), who asked
+      // (performed | refused: why | expired | unknown; late: after the deadline), who asked
       if (k === "command" || k === "command.failed") {
         const o = String(e.outcome || ""), why = e.why || e.error || "";
         const said = o === "performed" ? n.performed : o.startsWith("refused") ? n.refusedW + ": " + (o.slice(7).replace(/^:\s*/, "") || why || "?")
           : o === "expired" ? n.expired : o === "unknown" ? n.unknownOutcome : k === "command.failed" ? why : "";
-        return j([e.action, said, e.by ? n.byW + " " + e.by : ""]);
+        // late: the device answered after the deadline, when the request had been answered «did not answer» already
+        return j([e.action, e.late ? (said ? said + " " : "") + n.late : said, e.by ? n.byW + " " + e.by : ""]);
       }
       if (k === "session.debug_open") return e.person ? n.asPerson + " " + e.person : "";
       if (k === "worker.name_taken") return j([`${e.worker ?? "?"}: ${n.nameHeld} ${e.holder ?? "?"}${e.holder_box ? " (" + e.holder_box + ")" : ""}`, n.waits + (e.box ? " (" + e.box + ")" : "")]);

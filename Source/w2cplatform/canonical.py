@@ -8,9 +8,10 @@ reader in Go and one in Python disagreed on what a row said. Every JSON value a 
                        `number_text`, a key that is one as its text; `NaN` and the infinities raise `ValueError`
     number_text(x)     an integer as its digits, exactly (JSON carries `10**30` as it is; never through a float); a
                        whole-valued float as integer digits (`5.0` → `5`, `1e20` → `100000000000000000000`); any other
-                       in the shortest decimal that reads back as the same float, no exponent (`1e-07` → `0.0000001`)
+                       in the shortest decimal that reads back as the same float, no exponent (`1e-07` → `0.0000001`);
+                       zero has no sign (`-0.0` and `-0` → `0`: equal values, one text — the architect, 2026-10-06)
     parse_json(text)   `json.loads`, refusing what is not JSON though Python reads it (`NaN`, `Infinity`, `1e999`);
-                       an integer exactly (`exact_int`: `-0` stays `-0`, as the product's `DecodeExact` keeps it)
+                       an integer exactly (`exact_int`)
     field_text(v)      a value as one field of a row: a string as it is (the schema tells a word from a number), the
                        rest `canonical_json` (`true`, `5`, `{"a":1}`); `None` is no text — the field is absent
 
@@ -32,6 +33,8 @@ def number_text(x) -> str:
         return str(x)
     if not math.isfinite(x):
         raise ValueError(f"{x!r} is no JSON number")
+    if x == 0:
+        return "0"                                  # `-0.0` is `0`: equal values write one text
     return format(decimal.Decimal(repr(x)).normalize(_CONTEXT), "f")
 
 
@@ -81,8 +84,8 @@ def _no_constant(name: str):
 
 
 def exact_int(text: str):
-    """An integer literal as its value — `-0`, which `int()` makes `0`, as `-0.0`: written back as `-0`, its digits."""
-    return -0.0 if text == "-0" else int(text)
+    """An integer literal as its value, exactly — never through a float."""
+    return int(text)
 
 
 def _finite_float(text: str) -> float:
