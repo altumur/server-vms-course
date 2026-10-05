@@ -91,7 +91,7 @@ class LiveWorker(Worker):
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  peer_factory=None, env: dict | None = None, resource_root: str | None = None):
         env = dict(os.environ if env is None else env)
-        super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
+        super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
         self.server = runtime.server(env, server)   # before the claim: a process on a decommissioned server gets no slot
         self.claim_at_start(name if name is not None else runtime.slot(env, LIVE_SPEC.slot_name_env, LIVE_SPEC.slot_prefix), env)   # a spare: an offer
@@ -100,10 +100,6 @@ class LiveWorker(Worker):
         self.owners: dict[str, str | None] = {}         # who opened each session (the door token's name): its own to hang up
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "100"))
         self.labels = runtime.labels(env)
-        # Its server's events archive — where its journal goes (`Worker.journal`: `worker.name_taken`, an alarm). It had
-        # none, and those lines went to its log alone while every other worker's reached the archive (the product's
-        # cross-check, 4 Oct: its gateway had the same gap). A gateway writes no events of its own beside them.
-        self.resource_root = runtime.events_root(env, resource_root)
         self.peer_factory = peer_factory or FakePeer
         self.upstreams: dict[str, Upstream] = {}
         self.sessions: dict[str, tuple[str, object]] = {}          # session id -> (cam, peer)

@@ -37,7 +37,9 @@ log = logging.getLogger(__name__)
 
 # Runs its assignment and reports. Reads `<name>/workers/<me>` and the units it names; writes its heartbeat
 # object and, when it starts a unit, that unit's epoch by CAS. Never writes configuration. A fresh worker
-# rediscovers everything from the store. Subsystems subclass it and implement `reconcile_once`.
+# rediscovers everything from the store. Subsystems subclass it and implement `reconcile_once`; the loop is this
+# class's (`run`), and so are the fields of the heartbeat the platform reads, the events' line (`observe`, through
+# the spec's `events.suppress`) and the resource tree they go to (`resource_root`).
 class Worker:
     """Runs its assignment and reports. Reads <name>/workers/<me> and the
     units it names; writes its heartbeat object and, when it starts a unit,
@@ -46,10 +48,16 @@ class Worker:
 
     def __init__(self, sub: Subsystem, name: str | None, vars_: Variables, objects: ObjectStore,
                  lease_ttl: float = 30.0, lease_margin: float = 5.0, clock=time.monotonic, wall=time.time,
-                 instance: str | None = None, slot_ttl: float = 45.0):
+                 instance: str | None = None, slot_ttl: float = 45.0, resource_root: str | None = None,
+                 env: dict | None = None):
         self.sub, self.vars, self.objects = sub, vars_, objects
+        # This server's resource tree — where `observe` and the journal write (`runtime.events_root`: the caller's,
+        # else `RESOURCE_ROOT`, else the platform's events root). Set here, before the claim, so no subsystem has to
+        # remember it: one that forgot had `observe` write nothing, silently, and a journal opened on no tree.
+        self.resource_root = runtime.events_root(os.environ if env is None else env, resource_root)
         self.schema_seen = check_schema(vars_)    # a build older than the store does not run at all; kept for `renew_slot`
         self.clock, self.wall = clock, wall
+        self.started_wall = wall()                # this instance's start, by this box's wall clock: `started` in the heartbeat
         self.lease_ttl, self.lease_margin = lease_ttl, lease_margin
         # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_write`).
         # 0: not at all — every subsystem's default. A subsystem whose units write data sets it: `None` is
@@ -417,7 +425,7 @@ class Worker:
     def journal(self) -> Journal:
         j = self.__dict__.get("_journal")
         if j is None:
-            j = self.__dict__["_journal"] = Journal(getattr(self, "resource_root", None), f"{self.sub.name}worker", self.wall)
+            j = self.__dict__["_journal"] = Journal(self.resource_root, f"{self.sub.name}worker", self.wall)
         return j
 
     @journal.setter
@@ -731,10 +739,16 @@ class Worker:
     # a pass, and what the row decides is carried out.
     #
     # What it answered is kept (`assigned_now`) for `take_epoch`; a read that did not answer clears it.
+    #
+    # …AND WHAT THE LEASE STEP LET GO BEFORE IT IS FORGOTTEN BY IT (`lost_to_epoch`; the review's thirteenth pass, major 6,
+    # where only one subsystem's refresh did it): a unit let go is not taken back between passes, and the read that
+    # answered is what says whether it is still this worker's. Cleared at the read — not when the caller's pass ran
+    # through — and only what was let go BEFORE the read: what the lease step lets go meanwhile stays.
     def assignment(self) -> Assignment:
         if self.seeking is not None:
             return Assignment(self.name, [])      # the row under that name is the other instance's now (`keep_slot`)
         key = self.sub.assignment(self.name)
+        lost_before = set(self.lost_to_epoch)
         try:
             items, _ = stored(self.vars, key, ASSIGNMENTS)  # one the store cannot read: no unit, counted (the eleventh review)
         except OSError:
@@ -742,6 +756,7 @@ class Worker:
             raise
         a = read_assignment(key, self.name, items)
         self.assigned_now = frozenset(str(u) for u in a.units)
+        self.lost_to_epoch -= lost_before
         return a
 
     # Called when the worker starts a unit: `next_epoch` on `<name>/epoch/<unit>`, record it in `epochs`,
@@ -1150,9 +1165,9 @@ class Worker:
     def conflicts(self) -> int:
         return sum(l.conflicts for l in self.leases.values()) + self.__dict__.get("conflicts_carried", 0)
 
-    # Writes `Heartbeat(name, wall(), status, extra)` to `<name>/<name>/heartbeat` in the object store. The
-    # subsystem passes `server`, `labels`, `capacity`, `headroom`, `conflicts`, `started`, `previous_hb`, etc. as
-    # `extra`.
+    # Writes `Heartbeat(name, wall(), status, extra)` to `<name>/heartbeats/<worker>` in the object store. The loop's
+    # heartbeat (`heartbeat_once`) passes the platform's fields (`platform_fields`: `server`, `labels`, `capacity`,
+    # `headroom`, `conflicts`, `started`, `previous_*`, …) and the subsystem's (`heartbeat_fields`) as `extra`.
     #
     # -- registered with its server: the process lives (the owner's decision, 3 Oct, on the review's eleventh pass) ---
     # Whether a worker that neither renews nor speaks is dead or hung is a fact about its SERVER, and the server's
@@ -1274,7 +1289,8 @@ class Worker:
 
     # what a subsystem implements
     # Abstract: what a subsystem implements (one subsystem's is М9 Lesson 6's loop).
-    def reconcile_once(self, now: float) -> list:
+    # `now` is optional: the loop (`run`) calls it with none, a test may pass its own.
+    def reconcile_once(self, now: float | None = None) -> list:
         raise NotImplementedError
 
     # ================================================================================================================
@@ -1306,6 +1322,7 @@ class Worker:
         self.passes = 0
         self.lost_to_epoch: set[str] = set()      # units the lease step let go since the last assignment read (`requests`)
         self.epoch_errors: dict[str, str] = {}    # unit -> why its epoch could not be taken (a garbled row)
+        self.pass_refused = False                 # a resource did not answer this pass: early passes back off (`run`)
         self._requests_state()
 
     # -- staying itself: the slot, the leases, the fence -------------------------------------------------------
@@ -1434,20 +1451,72 @@ class Worker:
     def status(self) -> list[dict]:
         return []
 
+    # What this worker can carry: the number its subsystem set (`capacity`), else its spec's `placement.capacity.default`,
+    # else None — it says nothing, and the controller's fallback applies. It said 0 when its subsystem set none: the
+    # controller takes a said number as the worker's word (`capacity_of`), and nothing was ever placed on it.
+    def capacity_said(self) -> int | None:
+        cap = getattr(self, "capacity", None)
+        if cap is None and self.spec is not None:
+            cap = self.spec.capacity_default
+        return cap
+
     def headroom(self) -> int:
-        return max(0, int(getattr(self, "capacity", 0) or 0) - len(self.assignment().units))
+        return max(0, int(self.capacity_said() or 0) - len(self.assignment().units))
 
     # The heartbeat: `status()` and the fields the platform reads by name — where it runs, what it can carry, whether
-    # it is fenced, what it answered (`fetched`) — and what the subsystem adds (`heartbeat_fields`).
+    # it is fenced, what it answered (`fetched`), when this instance started and what the instance before it under this
+    # name last said (`previous_*`: what `SpecController.failover_seconds` measures) — and what the subsystem adds
+    # (`heartbeat_fields`).
     def heartbeat_once(self) -> None:
         self._life()
-        self.heartbeat(self.status(), **self.platform_fields(), **self.heartbeat_fields())
+        self.heartbeat(self.status(), **{**self.platform_fields(), **self.heartbeat_fields()})
 
     def platform_fields(self) -> dict:
+        cap = self.capacity_said()
         return {"server": self.server, "instance": self.instance, "labels": ",".join(getattr(self, "labels", None) or []),
-                "capacity": getattr(self, "capacity", 0), "headroom": self.headroom(), "conflicts": self.conflicts(),
+                **({"capacity": cap, "headroom": self.headroom()} if cap is not None else {}),
+                "conflicts": self.conflicts(), "started": self.started_wall, **self.previous_said(),
                 **({"fenced": True} if not self.writing_allowed else {}),
                 **({"fetched": self.fetched_said()} if self.fetched else {})}
+
+    # THE INSTANCE BEFORE THIS ONE UNDER ITS NAME: the heartbeat it left — its `ts`, its instance, its server — read once
+    # per name this instance holds, before this instance's first heartbeat under it writes over it. What failover is
+    # measured from (`SpecController.failover_seconds`, on one clock when the server is the same); it was one
+    # subsystem's constructor, and every other subsystem's failover went unmeasured. A heartbeat that does not parse,
+    # or cannot be read (a resource door restarting), is no failover to measure — said, and that is all it costs.
+    def previous_said(self) -> dict:
+        name = None if self.seeking is not None else self.name
+        if not name:
+            return {}
+        seen = self.__dict__.get("_previous")
+        if seen is None or seen[0] != name:
+            prev = {"previous_hb": 0.0, "previous_instance": "", "previous_server": ""}
+            try:
+                raw = self.objects.get(self.sub.heartbeat_key(name)) if self.objects is not None else None
+            except OSError as e:
+                raw = None
+                log.warning("%s: its previous heartbeat could not be read (%s): this start's failover is not measured",
+                            name, e)
+            if raw:
+                from .contract import parse_heartbeat
+                old = parse_heartbeat(self.sub.heartbeat_key(name), raw)
+                if old is not None and old.extra.get("instance") != self.instance:   # its own: no instance before it
+                    prev = {"previous_hb": old.ts, "previous_instance": str(old.extra.get("instance", "")),
+                            "previous_server": str(old.extra.get("server", ""))}
+            seen = self.__dict__["_previous"] = (name, prev)
+        return dict(seen[1])
+
+    @property
+    def previous_hb(self) -> float:
+        return float(self.previous_said().get("previous_hb", 0.0))
+
+    @property
+    def previous_instance(self) -> str:
+        return str(self.previous_said().get("previous_instance", ""))
+
+    @property
+    def previous_server(self) -> str:
+        return str(self.previous_said().get("previous_server", ""))
 
     def heartbeat_fields(self) -> dict:
         return {}
@@ -1464,6 +1533,13 @@ class Worker:
     #
     # THE NEXT LEASE STEP FROM THE START OF THIS ONE, AND AT ONCE AFTER ONE THE STORE DID NOT ANSWER (the raft
     # prototype's finding): `T + P + poll` without a confirmation, inside the window up to a pause of ~13 s.
+    #
+    # AN EARLY PASS (`longpoll.py`, for a worker that asked for it — `poll_events`): a wait cut short by a resource's
+    # answer is followed by `early_pass(touched)` — what the answers said changed, `(subsystem, kind, unit)` — and the
+    # ordinary pass over everything still comes at least every `poll`, woken or not. After every pass the wake is told
+    # how long it took and whether a resource refused (`pass_refused`; `Wake.pace`): the long poll speeds the road up
+    # and is never what loads the resources. The heartbeat stays by its clock: an early pass does not add one. (One
+    # subsystem's worker had this loop as a copy of its own; there is one loop.)
     def run(self, poll: float = 2.0, stop=None, beat: float = 0.0) -> None:
         """One box: the loop as a process. systemd or launchd restarts it."""
         self._life()
@@ -1473,15 +1549,25 @@ class Worker:
         with self.guarded("heartbeat"):
             self.heartbeat_once()
         last_lease, last_hb, again = 0.0, self.clock(), False
+        last_full, woken, touched = -1e18, False, None
         while not stop.is_set():
+            full = not woken or touched is None or self.clock() - last_full >= poll
+            began = self.clock()
             try:
                 with self.guarded("pass"):
                     if not self.writing_allowed:
                         self.rejoin()                      # a fence is not for ever: a free slot, from nothing
-                    self.reconcile_once()
+                    if full:
+                        self.reconcile_once()
+                    else:
+                        self.early_pass(touched)
+                if full:
+                    last_full = began
             except Exception:                              # noqa: BLE001
                 self.pass_failures += 1                    # …and counted: a loop that raises every pass is alive and says so
                 log.exception("%s: pass failed; will retry", self.name)
+            if self.wake is not None:                      # the next early pass no sooner than the load allows
+                self.wake.pace(self.clock() - began, self.pass_refused)
             try:
                 with self.guarded("pump"):
                     self.pump_once()
@@ -1504,16 +1590,29 @@ class Worker:
                     last_hb = self.clock()
             except Exception:                              # noqa: BLE001
                 log.exception("%s: heartbeat failed; will retry", self.name)
-            self.between(poll, stop, beat)                 # `stop.wait(poll)`, with a look at the requests every `beat`
+            woken = self.between(poll, stop, beat)         # `stop.wait(poll)`, with a look at the requests every `beat`
+            touched = self.long_poll.take_touched() if woken and self.long_poll is not None else None
         stand_in.set()
+        self.stop_polling()                           # no request is held at a resource for a loop that ended
         self.before_stop_all()
         self.stop_all_units()
         self.heartbeat_once()
         self.release_slot()                           # an orderly stop says so; a crash says nothing
         self.after_stop()
 
-    # What a pass does beside the reconcile: the request rows, when the subsystem's units take requests.
+    # A pass begun early, at a resource's answer: the ordinary pass unless the subsystem's worker can look at less —
+    # `touched` is what the answers said changed.
+    def early_pass(self, touched: set) -> None:
+        self.reconcile_once()
+
+    # What a pass does beside the reconcile: the summaries of suppressed repeats whose window closed, and the request
+    # rows, when the subsystem's units take requests.
+    #
+    # A REQUEST LOOK THAT RAISES SOMETHING ELSE IS ONE LOOK'S TROUBLE (found on a cluster's request marks): a store that
+    # refuses a write it does not take — a mark the cluster's object store will not create — raised `ValueError` past
+    # the `OSError` here, out of the pump. Counted and said once a spell; the next look tries again.
     def pump_once(self) -> None:
+        self.flush_suppressed()
         if not self.serves_requests():
             return
         try:
@@ -1521,25 +1620,36 @@ class Worker:
         except OSError as e:                          # the requests are rows in the store: no store, none this pass
             self.store_errors += 1
             log.warning("%s: the store did not answer for the requests (%s)", self.name, e)
+            return
+        except Exception as e:                        # noqa: BLE001 — not the store's silence: this look's, counted
+            self.pass_failures += 1
+            if not self.__dict__.get("_requests_failing"):
+                self.__dict__["_requests_failing"] = True
+                log.exception("%s: the look at the requests failed (%s); looking again every pass, saying so once",
+                              self.name, e)
+            return
+        if self.__dict__.pop("_requests_failing", False):
+            log.warning("%s: the requests are looked at again", self.name)
 
     # BETWEEN TWO PASSES (2 October 2026): the loop wakes every `beat` seconds inside the wait and looks at the request
     # rows (`beat_once`) — not a pass: the assignment is not read again, nothing is reconciled. The lease step and the
     # heartbeat stay once per turn, by the clock. By the real clock: `stop.wait` waits real seconds. And at the end of
     # every turn the supervisor is told the loop turns (`runtime.notify`, systemd's watchdog): a step that HANGS keeps
     # the loop from coming here, and after `WatchdogSec` systemd starts the unit again.
-    def between(self, poll: float, stop, beat: float) -> None:
+    # True when the wait was cut short by a resource's answer (`wait_next`): the pass that follows is an early one.
+    def between(self, poll: float, stop, beat: float) -> bool:
         runtime.notify()
         if self.wake is not None:
-            self.wait_next(poll, stop)                # `stop.wait(poll)` — or sooner, when an event it watches was written
-            return
+            return self.wait_next(poll, stop)         # `stop.wait(poll)` — or sooner, when an event it watches was written
         if beat <= 0 or beat >= poll:
             stop.wait(poll)
-            return
+            return False
         end = time.monotonic() + poll
         while not stop.wait(max(0.0, min(beat, end - time.monotonic()))):
             if end - time.monotonic() <= 0.001:
-                return                                # the pass is due, and it looks at the requests itself
+                return False                          # the pass is due, and it looks at the requests itself
             self.beat_once()
+        return False
 
     # One look between passes. A store that does not answer is waited out as on a pass — and said ONCE per outage.
     def beat_once(self) -> None:
@@ -1674,15 +1784,78 @@ class Worker:
         v = str(row.get(self.spec.group_by) or "")
         return url_cut(v, self.spec.group_cut) if v and self.spec.group_cut else v
 
-    # An event about a unit, under the epoch this worker holds for it: the platform's line. A subsystem with events of its
-    # own writes them its way.
+    # AN EVENT ABOUT A UNIT, under the epoch this worker holds for it, into the unit's bucket on this server's resource:
+    # the platform's line. `None` when no epoch is held for it (not this worker's to speak of), the instance is fenced,
+    # or the line was a repeat the spec's `events.suppress` swallows. Nothing else is told — no store write, no controller.
+    #
+    #   `occurred`     when the thing happened by the SOURCE's clock, where the caller knows it: kept out of the
+    #                  suppressor's identity (a repeat is the same thing whatever that clock said) and put on the line
+    #                  written; through `rows.number` — `nan`, `inf` or 400 digits drop the moment alone, counted
+    #   suppression    the LAST thing before the write: whether this worker may speak of the unit does not change because
+    #                  the same thing happened twice. The suppressor hands back this line, nothing, or the summary of a
+    #                  window that just closed and then this line; the answer is the path of the LAST one written
+    #   the class      `class_of` — `observation` unless the subsystem's worker says which kinds are alarms
+    #
+    # The suppressor is the spec's (`events.suppress`), and it was one subsystem's worker's: the key was loaded and checked
+    # for every spec and applied for one. Its counters live in this process alone — the only one that sees the line before
+    # it is a file, and the only one holding the epoch that makes the file writable.
+    BUCKET_SECONDS = 600
+
     def observe(self, unit, kind: str, **fields) -> str | None:
-        from .events import OBSERVATION, EventLog
+        from .rows import number
         epoch = self.epochs.get(str(unit))
-        root = getattr(self, "resource_root", None)
-        if epoch is None or not root or not self.__dict__.get("writing_allowed", True):
+        if epoch is None or not self.resource_root or not self.__dict__.get("writing_allowed", True):
             return None
-        return EventLog(root, self.sub.name, str(unit), epoch).append(self.wall(), kind, OBSERVATION, **fields)
+        t = self.wall()
+        occurred = number(f"{self.sub.name}/{unit}#occurred", fields.pop("occurred", None), default=None)
+        lines = self.suppressor.lines(t, str(unit), kind, fields)
+        if lines and occurred is not None:            # the observation is the last line; a summary before it has its own times
+            lt, lk, lf = lines[-1]
+            lines[-1] = (lt, lk, {**lf, "occurred": occurred})
+        return self._write_lines(unit, epoch, lines, self.class_of(unit, kind))
+
+    # The spec's suppressor, made at its first use (a subsystem may set `spec` after the base is built).
+    @property
+    def suppressor(self):
+        from .events import Suppressor
+        s = self.__dict__.get("_suppressor")
+        if s is None:
+            s = self.__dict__["_suppressor"] = Suppressor(self.spec.suppress if self.spec is not None else {})
+        return s
+
+    @suppressor.setter
+    def suppressor(self, s) -> None:
+        self.__dict__["_suppressor"] = s
+
+    # The traffic class of one line: `observation`; a subsystem's worker that knows which of a unit's kinds are alarms
+    # says so (the platform fixes the two words, `events.py`).
+    def class_of(self, unit, kind: str) -> str:
+        from .events import OBSERVATION
+        return OBSERVATION
+
+    def _write_lines(self, unit, epoch: int, lines, cls: str) -> str | None:
+        from .events import EventLog
+        log_ = EventLog(self.resource_root, self.sub.name, str(unit), epoch, getattr(self, "bucket_seconds", self.BUCKET_SECONDS))
+        path = None
+        for t, kind, fields in lines:
+            path = log_.append(t, kind, cls, **fields)
+        return path
+
+    # WINDOWS THAT CLOSED WITH NOBODY LEFT TO CLOSE THEM — the storm stopped, so no observation came to carry the summary
+    # out. Once a pass (`pump_once`), and wherever a subsystem drains its lines: without it a burst that ENDS is a burst
+    # nobody ever counted. A summary goes under the epoch its window was opened under; a unit let go since, or a fenced
+    # instance, drops it — a predecessor's storm is not written into a successor's bucket.
+    def flush_suppressed(self) -> int:
+        if not self.__dict__.get("writing_allowed", True) or not self.resource_root:
+            return 0
+        written = 0
+        for unit, t, kind, fields in self.suppressor.flush(self.wall()):
+            epoch = self.epochs.get(str(unit))
+            if epoch is None:
+                continue
+            self._write_lines(unit, epoch, [(t, kind, fields)], self.class_of(unit, kind))
+            written += 1
+        return written
 
     def most_valid(self) -> float:
         return float((self.spec.requests or {}).get("most_valid") or self.MAX_VALID) if self.spec is not None else self.MAX_VALID
@@ -1722,7 +1895,7 @@ class Worker:
         two_clocks(self.request_road.setdefault(by, self._histogram()), filed, self._appeared.pop(rid, None))
 
     def command_key(self, rid: str) -> str:
-        return f"{self.sub.name}/commands/{rid}"
+        return self.sub.command_key(rid)
 
     def began_by(self, rid: str) -> str | None:
         """The instance that said it was about to perform this request, or None."""
@@ -1744,7 +1917,7 @@ class Worker:
         if self.clock() - self._marks_swept < self.MARK_SWEEP:
             return 0
         self._marks_swept = self.clock()
-        prefix = f"{self.sub.name}/commands/"
+        prefix = self.sub.command_key("")
         marks = self.objects.list(prefix)                # the marks FIRST: a mark is written after its request,
         if not marks:                                    # so a mark listed here whose row is gone below is over
             return 0

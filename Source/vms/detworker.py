@@ -56,13 +56,12 @@ class DetWorker(Worker):
                  clock=time.monotonic, wall=time.time, server: str | None = None, resource_root: str | None = None,
                  env: dict | None = None):
         env = dict(os.environ if env is None else env)
-        super().__init__(DET, None, vars_, objects, clock=clock, wall=wall)
+        super().__init__(DET, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, DET_SPEC.slot_name_env, DET_SPEC.slot_prefix))
         self.models = models if models is not None else {"motion": FakeModel, "linecross": FakeModel, "lpr": FakeModel}
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "8"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.resource_root = runtime.events_root(env, resource_root)   # this server's resource: where the buckets go
         self.running: dict[str, object] = {}                                     # unit -> model
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0
@@ -137,7 +136,7 @@ class DetWorker(Worker):
                 self._stop(unit)
                 self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "failed",
                                              "why": f"the model failed: {e}"}
-        self._flush_suppressed(now)
+        self.flush_suppressed(now)
         for unit in list(self.running):
             if unit not in wanted:
                 self._stop(unit); self.status_by_unit.pop(unit, None); self.release(unit)
@@ -150,7 +149,7 @@ class DetWorker(Worker):
     # `observation` (det.subsystem.yaml, `alarms`). The platform fixes the two words; which kinds are which is on
     # the row, because it is about what the operator set the model up for.
     @staticmethod
-    def class_of(row: dict, kind: str) -> str:
+    def row_class(row: dict, kind: str) -> str:
         names = [str(n).strip() for n in (row.get("alarms") or []) if str(n).strip()]
         return ALARM if kind in names else OBSERVATION
 
@@ -159,20 +158,24 @@ class DetWorker(Worker):
     def _write(self, unit: str, row: dict, lines) -> None:
         log_ = EventLog(self.resource_root, DET.name, unit, self.epochs[unit], of=DET_SPEC.of_row(row))   # about its camera
         for t, kind, fields in lines:
-            log_.append(t, kind, self.class_of(row, kind), **fields)
+            log_.append(t, kind, self.row_class(row, kind), **fields)
             self.status_by_unit[unit]["events"] = self.status_by_unit[unit].get("events", 0) + 1; self.events_written += 1
 
-    # Windows that closed with no observation left to carry the summary out: the scene went still. Once a pass,
-    # as the VMS worker does — without it a storm that ENDS is a storm nobody counted. A unit whose epoch this
-    # worker gave up drops its summary rather than writing it under an epoch that is not its own any more.
-    def _flush_suppressed(self, now: float) -> None:
-        for unit, t, kind, fields in self.suppressor.flush(now):
+    # Windows that closed with no observation left to carry the summary out: the scene went still. Once a pass —
+    # the platform's rule (`Worker.flush_suppressed`), written the detector's way: about its camera (`of`), its class
+    # by the row. A unit whose epoch this worker gave up drops its summary rather than writing it under an epoch that
+    # is not its own any more.
+    def flush_suppressed(self, now: float | None = None) -> int:
+        written = 0
+        for unit, t, kind, fields in self.suppressor.flush(self.wall() if now is None else now):
             try:                                            # a row garbled under a running detector: its summary waits (the seventh pass)
                 row = self.unit_row(unit) if unit in self.epochs and unit in self.status_by_unit else None
             except PARSE_ERRORS:                            # `1e999` in an int field too (the tenth round's sweep)
                 continue
             if row is not None and self.may_act(unit):
                 self._write(unit, row, [(t, kind, fields)])
+                written += 1
+        return written
 
     def _stop(self, unit: str) -> None:
         m = self.running.pop(unit, None)

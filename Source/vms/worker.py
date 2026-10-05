@@ -24,7 +24,7 @@ What the environment hands a process, on a box or in an allocation:
     INSTANCE_ID                   -> the instance; CAPACITY -> the worker's own number, from М9 Lesson 7's probe
 
 Not one of those names an orchestrator, and that is deliberate: a Quadlet, a
-Nomad jobspec and a Kubernetes manifest each map their own names into these
+systemd unit or a container's environment each map their own names into these
 five (`w2cplatform/runtime.py`), and the loop never learns which did.
 """
 # ================================================================================================
@@ -59,15 +59,14 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # clock=time.monotonic, wall=time.time, server=None, capacity=None, instance=None, slot_ttl=45.0,
 # resource_root=None, bucket_seconds=600, env=None)` `env` defaults to `os.environ` (tests pass a dict).
 # `instance` defaults to `INSTANCE_ID`, else the base class's `box:pid:6hex` (`runtime.instance_on_box`). Calls
-# `Worker.__init__` with `name=None` and then `claim_slot(prefer=name or slot_from_environment(env))` — so
-# construction *is* the claim, and `self.name` is set afterwards. Then: `resource_root` from the argument or
-# `$RESOURCE_ROOT`, else `<PLATFORM_DIR>/events` (`runtime.events_root`: `/data/platform/events`); `capacity` from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I,
-# measured on ITS server"; the actuator (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self,
-# self._actuate)`; `writing_allowed = True`; `server` from the argument, `SERVER_NAME`, else the hostname;
-# `labels` (`LABELS`), `alloc` (`INSTANCE_ID`); the two start clocks. Finally it reads the previous
-# heartbeat object of this slot name: if one exists and was written by a different instance, `previous_hb`
-# is its `ts` and `previous_instance` its instance — the controller's `failover_seconds` computes `started −
-# previous_hb` from these, measured from what the workers wrote.
+# `Worker.__init__` with `name=None` (and the resource tree: the argument, `$RESOURCE_ROOT`, else
+# `<PLATFORM_DIR>/events` — `runtime.events_root`, the platform's) and then `claim_slot(prefer=name or
+# slot_from_environment(env))` — so construction *is* the claim, and `self.name` is set afterwards. Then: `capacity`
+# from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I, measured on ITS server"; the actuator
+# (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self, self._actuate)`; `writing_allowed = True`;
+# `server` from the argument, `SERVER_NAME`, else the hostname; `labels` (`LABELS`), `alloc` (`INSTANCE_ID`). The
+# previous instance's heartbeat under this slot name — what the controller's `failover_seconds` measures from — is
+# the platform's to read (`Worker.previous_said`), before the first heartbeat.
 # `test_a_replacement_without_a_name_inherits_the_lapsed_slot`: two nameless workers get `w-1`, `w-2`; 46 s of wall
 # clock after `w-1` went silent a nameless worker makes `w-3` (within the margin what `w-1` started may still write);
 # at 91 s a third nameless worker gets `w-1` back and starts its two cameras with epoch 2.
@@ -101,10 +100,10 @@ from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced,
 from w2cplatform.contract import NotReadThisPass, SchemaTooNew, Subsystem, check_schema
 from w2cplatform.worker import Worker
 from w2cplatform.objects import ObjectStore
-from w2cplatform.rows import PARSE_ERRORS, finite, number
+from w2cplatform.rows import PARSE_ERRORS, finite
 from w2cplatform.variables import Variables
 
-from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
+from w2cplatform.events import ALARM, OBSERVATION
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_key, channel_of, describe, device_of,
@@ -510,19 +509,17 @@ def labels_from_environment(env: dict) -> list[str]:
     return out
 
 
-# `name` is a slot. Given (systemd's `%i`, Nomad's alloc index) it is claimed by that name — taken outright,
-# even from a holder that has not lapsed, because the scheduler is the authority on which process is
+# `name` is a slot. Given (systemd's `%i`, `SLOT_INDEX` — `runtime.slot`) it is claimed by that name — taken outright,
+# even from a holder of this box that has not lapsed, because the unit is the authority on which process is
 # current; `None` means the environment's, and failing that "whichever slot is free" — a lapsed one first,
 # so a replacement inherits its assignment. "A worker on a cluster is a worker on a box whose stores happen
 # to be raft: same class, same heartbeat." It is also the `Store` of its own `Reconciler` (`desired()`).
 #
-# State beyond the base class: `resource_root` (this server's resource), `bucket_seconds`, `observed` (every
-# `(cid, t, kind)` this instance wrote), `capacity`, `actuator`, `rows` (the assignment's camera rows,
-# refreshed each pass), `assignment_rev`, `reconciler`, `writing_allowed` / `fenced_reason` (the
-# instance-wide fence), `server`, `labels`, `alloc`, `started_at` (monotonic) and `_started_wall`, `passes`,
-# `previous_hb` / `previous_instance` (what failover is measured from).
+# State beyond the base class: `bucket_seconds`, `observed` (every `(cid, t, kind)` this instance wrote),
+# `capacity`, `actuator`, `rows` (the assignment's camera rows, refreshed each pass), `assignment_rev`,
+# `reconciler`, `server`, `labels`, `alloc`, `started_at` (monotonic).
 class VmsWorker(Worker):
-    """`name` is a slot. Given (systemd's %i, Nomad's alloc index) it is
+    """`name` is a slot. Given (systemd's %i, `SLOT_INDEX`) it is
     claimed by that name; None means the environment's, and failing that
     "whichever slot is free" — a lapsed one first, so a replacement
     inherits its assignment. A worker on a cluster is a worker on a box
@@ -543,7 +540,8 @@ class VmsWorker(Worker):
                  device_factory=None):
         env = dict(os.environ if env is None else env)
         instance = instance or runtime.instance_on_box(env)   # the box in it: whose a name is (`Worker._may_take_by_name`)
-        super().__init__(self.SUB, None, vars_, objects, lease_ttl, lease_margin, clock, wall, instance, slot_ttl)
+        super().__init__(self.SUB, None, vars_, objects, lease_ttl, lease_margin, clock, wall, instance, slot_ttl,
+                         resource_root, env)
         self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
         self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
@@ -551,7 +549,6 @@ class VmsWorker(Worker):
         self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
         # …or, started as a spare (`SPARE_FOR`), an offer of its set — none: nobody, waiting (`Worker.claim_at_start`)
         self.claim_at_start(name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX), env)
-        self.resource_root = runtime.events_root(env, resource_root)   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
         # THIS instance's two doors. Defaults are what they always were, so a box with one worker is
         # unchanged; `auto` asks the OS, which is what makes a SECOND worker on the same box possible at
@@ -564,10 +561,6 @@ class VmsWorker(Worker):
         self.playback_port = port_of(env.get("PLAYBACK_PORT"), PLAYBACK_PORT)
         self.rtp_base = int(env.get("RTP_BASE") or LIVE_PORT_BASE)                 # the live branch's ports: `live_port`, per cluster on a shared bench
         self.bucket_seconds = bucket_seconds
-        # What this subsystem declared about repeats (`events.suppress`), held for as long as this worker
-        # holds its units. The counters live HERE and nowhere else: this process is the only one that sees
-        # the stream before it is a file, and the only one holding the epoch that makes the file writable.
-        self.suppressor = Suppressor(SPEC.suppress)
         self.observed: list[tuple[int, float, str]] = []
         self._slow_asks: set[int] = set()                # devices whose question did not answer inside `DEVICE_GRACE` (`_ask_devices`)
         self._dev_calls: dict[tuple, dict] = {}          # (question, device) -> its one call not collected yet (`_ask_devices`)
@@ -600,32 +593,6 @@ class VmsWorker(Worker):
         self.labels = labels_from_environment(env)
         self.alloc = runtime.instance(env) or ""          # published as `alloc` for the readers that already know that name
         self.started_at = clock()
-        self._started_wall = self.wall()
-        # the previous instance of this slot, if it left a heartbeat: what failover is measured from
-        self.previous_hb, self.previous_instance = 0.0, ""
-        # …and the server it ran on: `started − previous_hb` is one clock only when that is this server (the review's
-        # ninth pass; the controller's `failover_seconds` subtracts nothing else)
-        self.previous_server = ""
-        # A heartbeat that does not parse is one object's trouble (the review's second pass, M6) — here too: read
-        # bare, it raised out of the constructor, and the process went into a restart loop over the very object its
-        # first heartbeat would have replaced. Unparsed, there is no failover to measure; that is all it costs.
-        #
-        # …and one that cannot be READ is the same (the twelfth review, major 11). In a cluster the objects are read
-        # through this server's resource door (`cluster://`): while the resource restarted, every worker of the server
-        # raised `ObjectsUnavailable` here and went round systemd's restarts, its cameras unheld — for a number that is
-        # only ever a measurement. Not read, it is not measured; the worker starts, and says so. A spare has no name yet.
-        try:
-            raw = objects.get(self.sub.heartbeat_key(self.name)) if self.name else None
-        except OSError as e:
-            raw = None
-            log.warning("%s: its previous heartbeat could not be read (%s): this restart's failover is not measured; "
-                        "the worker starts all the same", self.name, e)
-        if raw:
-            from w2cplatform.contract import parse_heartbeat
-            old = parse_heartbeat(self.sub.heartbeat_key(self.name), raw)
-            if old is not None and old.extra.get("instance") != self.instance:
-                self.previous_hb, self.previous_instance = old.ts, old.extra.get("instance", "")
-                self.previous_server = str(old.extra.get("server", ""))
 
     # -- the store, as the reconciler sees it ------------------------------------
     # The reconciler's store: `self.rows`.
@@ -678,13 +645,7 @@ class VmsWorker(Worker):
     def refresh(self) -> None:
         """Read the assignment and the rows it names. A fresh worker knows
         nothing and reads everything; nothing about what is running is stored."""
-        lost_before = set(self.lost_to_epoch)
-        a = self.assignment()
-        # The assignment read now: what the lease step let go before this read is the pass's to judge again (the review's
-        # thirteenth pass, major 6) — cleared HERE, at the read, and not when the whole refresh ran through: a refresh
-        # that failed after a good read left the units let go fenced for no reason, and one that failed AT the read, or
-        # before it, keeps them so (`_actuate`). What the lease step lets go while this runs is not cleared with them.
-        self.lost_to_epoch -= lost_before
+        a = self.assignment()                         # …which forgets what the lease step let go before it (`lost_to_epoch`)
         self.assignment_rev = a.rev
         rows, errors = [], {}
         for unit in a.units:
@@ -1146,44 +1107,21 @@ class VmsWorker(Worker):
             log.info("%s: %s camera %s", self.name, verb, cid)
         return actions
 
-    # An event: written by this worker, now (`wall()`), into the camera's bucket on this server's resource
-    # under the epoch this worker holds for it — recording or not. `None` if no epoch is held for the camera
-    # (not mine to observe) or the instance is fenced. Records `(cid, t, kind)` in `observed` and returns
-    # the bucket path from `event_log(resource_root, cid, epoch, bucket_seconds).append(...)`. Nothing else
-    # is told — no store write, no controller. `test_the_worker_observes_what_it_holds_recording_or_not`:
-    # before the first reconcile `observe(1, ...)` is `None`; after it the line lands in
-    # `<archive>/vms/1/e1/…`; camera 2 (not assigned) is `None`; after `fence` a post is dropped;
-    # `vms/events` in the store stays empty.
+    # An event: the platform's line (`Worker.observe`: under the epoch this worker holds for the camera, into its bucket on
+    # this server's resource, through the spec's `events.suppress`, `occurred` kept out of a repeat's identity), with
+    # `(cid, t, kind)` kept in `observed` for the tests and diagnostics — a repeat the suppressor swallows too.
+    # `test_the_worker_observes_what_it_holds_recording_or_not`: before the first reconcile `observe(1, ...)` is `None`;
+    # after it the line lands in `<resource root>/vms/1/e1/…`; camera 2 (not assigned) is `None`; after `fence` a post is
+    # dropped; `vms/events` in the store stays empty.
     def observe(self, cid: int, kind: str, **fields) -> str | None:
         """An event: written by this worker, now, into the camera's bucket on
         this server's resource, under the epoch this worker holds for it —
         recording or not. A camera it holds no epoch for is not its to
         observe. Nothing else is told."""
-        epoch = self.epochs.get(str(cid))
-        if epoch is None or not self.writing_allowed:
+        if self.epochs.get(str(cid)) is None or not self.writing_allowed:
             return None
-        t = self.wall()
-        # `t` is when the bus was drained; `occurred` is when the DEVICE says it happened, where the path that
-        # posted the line knows it (the review's second pass, M11) — a driver that reads the device's clock passes
-        # it in the fields; one that does not passes nothing, and no second time is invented. It is kept out of
-        # the suppressor's identity: a repeat is the same thing, whatever the device's clock said each time.
-        #
-        # …through `rows.number` (the review's tenth pass): `float` let `nan` and `inf` through as a time, and a driver's
-        # integer of 400 digits raised `OverflowError` past `(TypeError, ValueError)` — out of `drain_bus`, and every line
-        # the bus had handed over after it, any camera's, and every dead camera's `lost` with it, was gone. Now the
-        # moment alone is dropped, and counted once a spell per camera (the heartbeat's `fields_garbled`).
-        occurred = number(f"{self.SUB.name}/{cid}#occurred", fields.pop("occurred", None), default=None)
-        self.observed.append((cid, t, kind))
-        # Suppression stands between the observation and the file, and it is the LAST thing before the
-        # write for a reason: everything above this line — the epoch, the fence, `observed` — is about
-        # whether this worker may speak about this unit at all, and that answer does not change because
-        # the same thing happened twice. What comes back is what belongs in the log: usually this line,
-        # sometimes nothing, sometimes the summary of a window that just closed and then this line.
-        lines = self.suppressor.lines(t, str(cid), kind, fields)
-        if lines and occurred is not None:                      # the observation itself is the last line; a summary before it has its own times
-            lt, lk, lf = lines[-1]
-            lines[-1] = (lt, lk, {**lf, "occurred": occurred})
-        return self._write(cid, epoch, lines, self.class_of(cid, kind))
+        self.observed.append((cid, self.wall(), kind))
+        return super().observe(cid, kind, **fields)
 
     # The traffic class of one line: `alarm` when this DEVICE lists this kind among its alarms, else
     # `observation`. The platform fixes the two words and refuses anything else (`events.py`); which of a
@@ -1197,36 +1135,6 @@ class VmsWorker(Worker):
         alarms = (row or {}).get("alarms") or ""
         names = alarms if isinstance(alarms, (list, tuple)) else str(alarms).split(",")
         return ALARM if kind in [str(n).strip() for n in names if str(n).strip()] else OBSERVATION
-
-    # Writes the lines a suppressor handed back, and answers with the path of the LAST one — the caller
-    # asked "where did my observation go", and the summary that may precede it is not its answer. `None`
-    # when nothing was written, which is what a suppressed repeat is.
-    def _write(self, cid: int, epoch: int, lines, cls: str = OBSERVATION) -> str | None:
-        log_ = EventLog(self.resource_root, self.SUB.name, str(cid), epoch, self.bucket_seconds)
-        path = None
-        for t, kind, fields in lines:
-            path = log_.append(t, kind, cls, **fields)
-        return path
-
-    # Windows that closed with nobody left to close them — the storm stopped, so no observation came to
-    # carry the summary out. Called once a pass: without it a burst that ENDS is a burst nobody ever
-    # counted, and the log says the quiet minute and the swallowed thousand with the same silence.
-    #
-    # A summary needs the epoch its window was opened under, and this worker may have lost the unit since.
-    # Then the line is dropped rather than written under a fresh epoch: the events it counted belong to
-    # the run that observed them, and moving them forward would put a predecessor's storm in a successor's
-    # bucket. Being fenced drops them for the same reason, one that this whole file already obeys.
-    def flush_suppressed(self) -> int:
-        if not self.writing_allowed:
-            return 0
-        written = 0
-        for unit, t, kind, fields in self.suppressor.flush(self.wall()):
-            epoch = self.epochs.get(str(unit))
-            if epoch is None:
-                continue
-            self._write(int(unit), epoch, [(t, kind, fields)], self.class_of(int(unit), kind))
-            written += 1
-        return written
 
     # The bus, drained: `actuator.pump()` gives `(dead, posted)`; every posted `(cid, kind, fields)` becomes
     # `observe(...)` — a line only if I still hold the epoch; every dead camera becomes
@@ -1906,12 +1814,11 @@ class VmsWorker(Worker):
         Not CPU — a worker at 40 % CPU with no assignment left is full."""
         return max(0, self.capacity - len(self.rows))
 
-    # `Worker.heartbeat(status, …)` to the object `vms/<name>/heartbeat` with the extras the platform reads
-    # by name: `server`, `instance`, `alloc`, `labels` (comma-joined), `assignment_rev`, `fenced`,
-    # `conflicts`, `passes`, `capacity`, `headroom`, `started`, `previous_hb`, `previous_instance`, `archive`
-    # (the resource root it records into — `$RESOURCE_ROOT`, else the server's events root, `runtime.events_root`). The
-    # controller's `capacity_of`, `labels_of`, `server_of`, `headroom`, `failover_seconds` and the console's
-    # metrics all read from here.
+    # The platform's heartbeat (`Worker.platform_fields`: `server`, `instance`, `labels`, `capacity`, `headroom`,
+    # `conflicts`, `started`, `previous_*`, `fenced` while fenced, `fetched`) to the object `vms/heartbeats/<name>`, with
+    # the holder's own beside it (`heartbeat_fields`): `alloc`, `assignment_rev`, `passes`, the counters, `devices` and
+    # `heartbeat_extra`. The controller's `capacity_of`, `labels_of`, `server_of`, `headroom`, `failover_seconds` and the
+    # console's metrics all read from here.
     #
     # The devices are asked ONCE for the whole heartbeat, in one round (`_ask_devices`, the scaling pass): every device's
     # `channels` and `in_use`, every camera's `coverage` — one fifth of a second at most however many hang, where it was
@@ -1925,25 +1832,17 @@ class VmsWorker(Worker):
                 asks.append((("coverage", id(dev), str(cam["id"])), dev, lambda dev=dev, cid=cam["id"]: dev.coverage(cid)))
         self._heard = self._ask_devices(asks)
         try:
-            self._heartbeat_now()
+            super().heartbeat_once()
         finally:
             self._heard = None
 
-    def _heartbeat_now(self) -> None:
-        self.heartbeat(self.status(), server=self.server, instance=self.instance, alloc=self.alloc,
-                       labels=",".join(self.labels), assignment_rev=self.assignment_rev,
-                       fenced=not self.writing_allowed, conflicts=self.conflicts(), passes=self.passes,
-                       store_errors=self.store_errors + sum(l.store_errors for l in self.leases.values()),
-                       pass_failures=self.pass_failures,
-                       unconfirmed=len(self.unconfirmed()),          # units recording past their lease, the store silent
-                       **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
-                       capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
-                       previous_hb=self.previous_hb, previous_instance=self.previous_instance,
-                       previous_server=self.previous_server,
-                       devices=self.device_status(),
-                       # `archive`: the resource tree its events go to — `$RESOURCE_ROOT`, else the events root. A
-                       # recorder says its own volume there instead (`RecWorker.heartbeat_extra`).
-                       **{"archive": self.resource_root, **self.heartbeat_extra()})
+    def heartbeat_fields(self) -> dict:
+        return {"alloc": self.alloc, "assignment_rev": self.assignment_rev, "passes": self.passes,
+                "store_errors": self.store_errors + sum(l.store_errors for l in self.leases.values()),
+                "pass_failures": self.pass_failures,
+                "unconfirmed": len(self.unconfirmed()),       # units recording past their lease, the store silent
+                **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
+                "devices": self.device_status(), **self.heartbeat_extra()}
 
     def heartbeat_extra(self) -> dict:
         return {"fetched": self.fetched_said(),
@@ -1951,7 +1850,7 @@ class VmsWorker(Worker):
                 **({"commands_reanswered": self.reanswered} if self.reanswered else {}),
                 # What the beat waits on, said (the review's eighth pass, minor): devices whose last call did not answer
                 # inside `PERFORM_GRACE` (`_slow`) and calls into devices not back yet — on `/metrics` as `vms_devices_slow`
-                # and `vms_commands_in_flight` (`vms/console.py`, `beat_lines`).
+                # and `vms_commands_in_flight` (metrics vms.subsystem.yaml declares, `metrics:`).
                 **({"devices_slow": len(self._slow | self._slow_asks)} if self._slow or self._slow_asks else {}),
                 # The playback door's reads a device has not come back from (`_door_read`; the thirteenth review).
                 **({"door_reads_stuck": stuck} if (stuck := self.door_reads_stuck()) else {}),
