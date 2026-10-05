@@ -4,7 +4,7 @@
 // (и сетевые) и только камеры, которых там ещё нет; имя — номер камеры, а если оно занято, <номер>-<том>; негодный
 // срок не уходит. Двери домена (/domain/crossings) курс не отдаёт — страница туда не ходит.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-aadd-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));

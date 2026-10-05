@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- The VMS's console page: a SHELL over the platform's console module (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md), served at `/`
-     when the console's root is the VMS (`page_of`: the `shell.html` beside the VMS's spec).
+     when the console's root is the VMS (`page_of`: the `vms.shell.html` beside `vms.subsystem.yaml`).
      Everything the platform knows — the frame, the tree, the cards of units, servers, workers, the domain, people,
      the journal, the session — and the console's look (/platform/console.css) are the module's; the VMS's words come
      from its specs (`display`). This page adds what a camera is: its icons and its tag (the address), its source read
@@ -12,20 +12,20 @@
 <!--
 NOTES — what this page is, its parts and its state (each function is described where it is defined)
 
-# vms/shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
+# vms/vms.shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
 
 **Role.** The page at `/` of a console whose root is `vms` (`w2cplatform/console.py`: `page_of` — a subsystem's own
-page lies beside its spec, `SHELL`). It mounts the module (`PlatformConsole.mount(#app, {lang, subsystems: [vms, rec,
-live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
+page is `<sub>.shell.html` beside its spec, `SHELL`, served by the console's root alone). It mounts the module
+(`PlatformConsole.mount(#app, {lang, subsystems: [vms, rec, live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
 their specs with `pc.spec(name)`. No platform section is drawn here: no login, no tree of servers, no domain card, no
 journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: `tests/console/shell-*.test.js`.
 
 ## The core: copied with a check
 `whereAt`, `doorOf`, `doorFetch`, `yieldCut`, `loadTimeline`, `segmentURL`, `play`, `playNext`, `negotiateLive`,
-`stopLive` are the product's (`vmsworker/vms/shell.html` on its `main`), between the two «core» lines below;
+`stopLive` are the product's (`vmsworker/vms/vms.shell.html` on its `main`), between the two «core» lines below;
 `tests/test_shell_core.py` compares each with the product's, and what differs is `tests/testdata/shell_core_debt.txt`
-— only shrinking. The course leads where it differs: the places a recording may lie on are the rows of the table the
-rec spec names (`places.table`), read at `/rec/<table>` — never a table named in the page.
+— only shrinking, and empty now. The places a recording may lie on are the rows of the table the rec spec names
+(`places.table`), read at `/rec/<table>` — never a table named in the page, here and in the product.
 
 ## What the page adds (all through the module's calls)
 - `addIcons` — camera, volume (storage); `addDecor("unit")` — a camera's icon and its address as a tag;
@@ -231,7 +231,7 @@ function setCap(text){const el=$("#playing");if(el)el.textContent=text}
 function evAt(e){return e.occurred||e.t}
 function evLate(e){return e.occurred&&e.t-e.occurred>2?` записано в ${fmtT(e.t)} · `:""}
 
-// ── core: COPY WITH A CHECK — the product's vms/shell.html (main), function by function; test_shell_core.py ──────
+// ── core: COPY WITH A CHECK — the product's vms/vms.shell.html (main), function by function; test_shell_core.py ──
 async function whereAt(url){
   try{const r=await fetch(url);let d={};try{d=await r.json()}catch(e){}
     return{status:r.status,door:d&&d.door&&d.door.url?d.door:null,missing:r.headers.get("X-Unreachable")||(d&&d.unreachable)||"",error:d&&d.error||""}}

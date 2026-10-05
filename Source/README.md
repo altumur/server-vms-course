@@ -33,8 +33,8 @@ Source/
                                runs — `controller_loop`, `placement_pass`, `step` (said once a spell), `sweep_loop`, `run_resource`
     console.js, console.css    Lesson 16 the console module every page is built from (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, version 1, the product's file):
                                the tree, the forms, servers, the domain, rights, the journal — from /spec and the platform's doors
-    console.html               Lesson 16 the platform's page: the module and its mount, nothing else — `/` for a subsystem with no page
-                               of its own (`shell.html` beside its spec)
+    console.html               Lesson 16 the platform's page: the module and its mount, nothing else — `/` for a root subsystem with no page
+                               of its own (`<sub>.shell.html` beside its spec); only the console's root serves a page
   vms/                         the VMS — the first subsystem
     reconciler.py              Lesson 4  М9 Lesson 6's loop, copied unchanged: the contract
     obsd.py                    М10B L6  the client (the VMS's: the platform knows no archive engine) of ObjectStorage's daemon: frames over a unix socket, Session/Volume/Writer/Reader, SMPL samples,
@@ -60,7 +60,7 @@ Source/
                                VMS's specs and nothing of the VMS's own — no media route: /where/<id> hands out the holder's door with a token, and the page reads
                                the footage from the recorder (/timeline, /segment) and the stream from the gateway (/whep) itself; the first viewer asks for a
                                fan-out with POST /live/streams
-    shell.html                 Lesson 12 the VMS's page, `/` when CONSOLE_ROOT=vms (it lies beside the specs): a shell over the platform's console module —
+    vms.shell.html             Lesson 12 the VMS's page, `/` when CONSOLE_ROOT=vms (beside vms.subsystem.yaml): a shell over the platform's console module —
                                the camera's video (live at the gateway's door, the timeline from the recorders' and the places' doors) and archive, the volumes,
                                the scenarios, the domain's cameras; its core (the doors, the timeline, the pieces, WHEP) the product's, checked by
                                tests/test_shell_core.py; jsdom tests tests/console/shell-*.test.js

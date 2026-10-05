@@ -7,7 +7,7 @@
 // дверь шлюза (404/503 — повтор, 401 — where заново), трубка — DELETE на двери со свежим токеном. Отметка через
 // console.api; опрос не трогает плеер; выбор другого объекта кладёт трубку. (По образцу продуктового shell-video.)
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-vid-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`).replace('{lang:"ru",','{lang:"ru",poll_s:0.4,'));

@@ -6,13 +6,14 @@ where that is not said, or the place is not this worker's server's, the safe rea
 by the log itself, whoever opened it; a mark of the console alone names what it marks."""
 import logging
 import os
+import tempfile
 
 from tests.conftest import Box, testsub, testsub2
 from w2cplatform import runtime
 from w2cplatform.contract import Heartbeat
 from w2cplatform.events import CONSOLE_MARKS, OF, OWN_OF_TREES, EventLog, read_bucket
 from w2cplatform.journal import Journal
-from w2cplatform.spec import SubsystemSpec
+from w2cplatform.spec import RESERVED_NAMES, SubsystemSpec
 from w2cplatform.worker import SERVER_UNSAID, Worker
 
 TESTSUB2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml")
@@ -20,8 +21,11 @@ SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _testsub2_without(key: str) -> SubsystemSpec:
-    """testsub2 with one key of its `placement.places` taken out: the spec that does not say it."""
-    spec = SubsystemSpec.load(TESTSUB2)
+    """testsub2 with one key of its `placement.places` taken out: the spec that does not say it. A copy of its own, put in
+    no catalogue (`conftest._read`): a loaded testsub2 changes the derived rules of every test after it in the run."""
+    import yaml
+    with open(TESTSUB2, encoding="utf-8") as f:
+        spec = SubsystemSpec.from_dict(yaml.safe_load(f))
     assert key in spec.places, key
     spec.places = {k: v for k, v in spec.places.items() if k != key}
     return spec
@@ -127,6 +131,72 @@ def test_through_a_silence_a_place_is_kept_or_let_go_by_where_its_row_says_it_is
         assert w.hold is None, (name, w.hold)
 
 
+class _Blind:
+    """The store, answering everything but the read of one row (`key`) while `blind`: a renewal of the hold goes through
+    and the read of where the place is fails."""
+    def __init__(self, vars, key: str):
+        self.vars, self.key, self.blind = vars, key, False
+
+    def __getattr__(self, name):
+        return getattr(self.vars, name)
+
+    def get(self, key, *a, **kw):
+        if self.blind and key == self.key:
+            raise OSError("the store does not answer for this row")
+        return self.vars.get(key, *a, **kw)
+
+
+def test_where_a_place_is_is_read_again_at_every_renewal():
+    """The mark «a place of this server» is read again at every renewal of the hold that succeeds, not only at the take
+    (ADR 0029, More Information; the product's `TestWhereAPlaceIsIsReadAgainAtEveryRenewal`): a row read that names
+    this worker's server sets it, a row read that names another server — the administrator gave the place away
+    mid-hold — or none takes it away, and the next silence lets the place go by its strict lease. A read that fails
+    changes nothing, either way: a place whose row the take could not read stays strict until a renewal reads it, and a
+    place of this server stays its own through a renewal that could not read its row."""
+    spec, box = testsub2(), Box()
+    key = spec.sub.config("shelves", "s-1")
+    box.vars.put(key, {"name": "s-1", "server": "srv-a"})
+    blind = _Blind(box.vars, key)
+    w = Worker(spec.sub, None, blind, box.objects, clock=box.clock, wall=box.wall, instance="box-a:1:w", spec=spec)
+    w.server = "srv-a"
+    assert w.claim_slot(prefer="t-1") == "t-1"
+    blind.blind = True                           # the take cannot read where the place is: strict
+    assert w.claim_hold(["s-1"]) == "s-1" and w.held_strictly("s-1")
+    blind.blind = False
+    assert w.renew_hold() and not w.held_strictly("s-1")          # the renewal reads it: this server's own
+    box.vars.put(key, {"name": "s-1", "server": "srv-b"})          # the administrator gives it to another server
+    assert not w.held_strictly("s-1")                               # (nobody has read that yet)
+    assert w.renew_hold() and w.held_strictly("s-1")              # the next renewal has
+    box.vars.put(key, {"name": "s-1", "server": "srv-a"})          # given back, and the renewal cannot read it: still strict
+    blind.blind = True
+    assert w.renew_hold() and w.held_strictly("s-1")
+    blind.blind = False
+    assert w.renew_hold() and not w.held_strictly("s-1")
+    box.vars.put(key, {"name": "s-1", "server": "srv-b"})          # given away, and the renewal cannot read it: still ours
+    blind.blind = True
+    assert w.renew_hold() and not w.held_strictly("s-1")
+    blind.blind = False
+    assert w.renew_hold() and w.held_strictly("s-1")              # read at last: another server's
+    w.vars = _Silent()
+    _tick(box, 10 * w.slot_ttl)                  # a silence inside the units' ceiling: another server's place is let go
+    w.lease_pass()
+    assert w.hold is None and not w.may_write_place("s-1"), w.hold
+
+    # …and this server's own place, whose last renewal could not read the row, goes through the same silence
+    box2 = Box()
+    box2.vars.put(key, {"name": "s-1", "server": "srv-a"})
+    blind2 = _Blind(box2.vars, key)
+    own = Worker(spec.sub, None, blind2, box2.objects, clock=box2.clock, wall=box2.wall, instance="box-a:1:w", spec=spec)
+    own.server = "srv-a"
+    assert own.claim_slot(prefer="t-1") == "t-1" and own.claim_hold(["s-1"]) == "s-1"
+    blind2.blind = True
+    assert own.renew_hold() and not own.held_strictly("s-1")
+    own.vars = _Silent()
+    _tick(box2, 10 * own.slot_ttl)
+    own.lease_pass()
+    assert own.hold == "s-1" and own.may_write_place("s-1"), own.hold
+
+
 def test_the_base_writes_of_and_a_line_that_says_its_own_is_refused():
     """What a unit is about is the platform's to write: the worker that takes the unit's epoch reads it from the row by
     the spec's `about` and stamps it on every line of the unit, so a line the subsystem writes without a word of it
@@ -211,10 +281,26 @@ def test_only_the_base_says_what_a_log_is_about():
                             setters.append(f"{os.path.relpath(p, SOURCE)}:{n}")
     assert len(setters) == 1 and setters[0].startswith(os.path.join("w2cplatform", "worker.py")), setters
     for tree in OWN_OF_TREES:
-        try:
-            SubsystemSpec.from_dict({"name": tree, "unit": {"rows": "marks", "id": "name",
-                                                            "fields": {"name": {"type": "string"}}}})
-        except ValueError as e:
-            assert "a tree of the platform's own events" in str(e), str(e)
-        else:
-            raise AssertionError(f"a subsystem took the platform's tree {tree}")
+        assert tree in RESERVED_NAMES, tree
+        _refused(lambda: SubsystemSpec.from_dict({"name": tree, "unit": {"rows": "marks", "id": "name",
+                                                                         "fields": {"name": {"type": "string"}}}}),
+                 "a name of the platform's own")
+
+
+def test_a_spec_named_as_one_of_the_platforms_own_names_does_not_load():
+    """The platform's trees and spaces — `console` (its marks), `audit` (its journal), `platform` (its keys) and `domain`
+    (the domain's space) — are one reserved set (ADR 0029, More Information): a spec of such a name is refused at load,
+    from its file as from a dict (the strict loader, ADR 0012). Any other name loads."""
+    assert RESERVED_NAMES == {"console", "audit", "platform", "domain"}, RESERVED_NAMES
+    with open(TESTSUB2, encoding="utf-8") as f:
+        text = f.read()
+    assert text.count("\nname: testsub2\n") == 1
+    d = tempfile.mkdtemp(prefix="reserved-")
+    for name in sorted(RESERVED_NAMES):
+        path = os.path.join(d, f"{name}.subsystem.yaml")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text.replace("\nname: testsub2\n", f"\nname: {name}\n", 1))
+        _refused(lambda: SubsystemSpec.load(path), f"`{name}` is a name of the platform's own")
+    import yaml
+    other = yaml.safe_load(text.replace("\nname: testsub2\n", "\nname: testsub3\n", 1))
+    assert SubsystemSpec.from_dict(other).name == "testsub3"     # (from a dict: nobody's catalogue, the run's specs stay)

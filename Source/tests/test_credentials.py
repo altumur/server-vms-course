@@ -782,12 +782,12 @@ def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_
     """The thirteenth review, minor: the page drew `cred_secret` as `type="text"` — the password on the screen while it
     is typed, where `access_secret` beside it was a password field. A camera's fields are the platform's console module's
     general form now (`fieldInput` in `w2cplatform/console.js`: a secret is a password field, empty, «задан» when one
-    is set — `tests/console/module-form.test.js`), and the VMS's page (`vms/shell.html`) draws no field of a spec
+    is set — `tests/console/module-form.test.js`), and the VMS's page (`vms/vms.shell.html`) draws no field of a spec
     itself; the one secret it asks — a network volume's `access_secret`, in its declaring dialog — is a password field
     with no value: filled with the row's `***` it would save `***` as the bucket's key."""
     import os
     import re
-    page = open(os.path.join(os.path.dirname(__file__), "..", "vms", "shell.html"), encoding="utf-8").read()
+    page = open(os.path.join(os.path.dirname(__file__), "..", "vms", "vms.shell.html"), encoding="utf-8").read()
     assert "function input(" not in page and "fillEdit" not in page and "cred_secret" not in page
     asked = re.findall(r"\{name:\"(\w+_secret)\"[^}]*\}", page)
     assert asked == ["access_secret"], asked

@@ -3,7 +3,7 @@
 // (held_by: объявлен и обслуживается — разные вещи), записи в нём; объявить (POST /rec/<таблица>, строка целиком),
 // меньшая квота — только после подтверждения и с shrink_confirmed, равным ей; отозвать (DELETE) после подтверждения.
 const fs=require("fs"),path=require("path");
-const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","shell.html"),"utf8");
+const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"shell-vol-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`));

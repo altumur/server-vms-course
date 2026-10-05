@@ -103,6 +103,11 @@ PLATFORM_FIELDS = ("worker", "placement", "epoch", "revision", "observed_revisio
 # The most a single `json` field may be. Not the row's ceiling (Lesson 19) — this one keeps ONE field
 # from eating it, because a field that can hold a document will be given one.
 JSON_CEILING = 4000
+# THE PLATFORM'S OWN NAMES (ADR 0029, More Information; the strict loader, ADR 0012): a spec's name is the prefix of
+# its keys, its trees and its space on the domain, so a subsystem named as one of the platform's own would write there.
+# The console's marks and the journal are the trees whose lines say their own `of` (`events.refuse_own_of`);
+# `platform/` is the platform's keys (its resources, its servers), `domain/` the domain's space. Refused at load.
+RESERVED_NAMES = frozenset((*OWN_OF_TREES, "platform", "domain"))
 
 
 # A write the spec does not allow: a platform field, an unknown field, a missing required field, an id for a
@@ -1092,11 +1097,9 @@ class SubsystemSpec:
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
     @classmethod
     def from_dict(cls, d: dict) -> "SubsystemSpec":
-        # The console's marks and the journal are the platform's trees: the logs whose lines say their own `of`
-        # (`events.refuse_own_of`). A subsystem of such a name would write there and say what its units are about itself.
-        if d.get("name") in OWN_OF_TREES:
-            raise ValueError(f"spec {d['name']}: `{d['name']}` is a tree of the platform's own events, not a "
-                             f"subsystem's name")
+        if d.get("name") in RESERVED_NAMES:
+            raise ValueError(f"spec {d['name']}: `{d['name']}` is a name of the platform's own (one of "
+                             f"{', '.join(sorted(RESERVED_NAMES))}), not a subsystem's")
         unit, pl = d.get("unit", {}), d.get("placement", {})
         fields = read_fields(f"spec {d.get('name')}", unit.get("fields") or {})
         derived = [Derived(x["row"], dict(x.get("items", {})), x.get("on_delete")) for x in unit.get("derived", [])]
