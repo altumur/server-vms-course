@@ -162,9 +162,9 @@ def test_a_member_carries_home_the_books_its_spec_declares_and_nothing_it_does_n
 
 
 def test_the_signer_issues_only_the_kinds_of_token_a_spec_declares_with_their_claims():
-    """`domain.tokens: {tally: {lifetime: 600, claims: [counter]}}` — a tally token says its kind, lives 600 s and names a
-    counter; a person's token, an undeclared kind or a claim the spec did not name is refused, and the door that takes
-    tallies takes no other kind."""
+    """`domain.tokens: {tally: {lifetime: 600, claims: [counter], grant: view}}` — a tally token says its kind, lives
+    600 s and names a counter; a person's token, an undeclared kind or a claim the spec did not name is refused, and the
+    door that takes tallies takes no other kind."""
     from w2cplatform.domain.declared import token_kinds
     from w2cplatform.trust.tokens import DeclaredIssuer, TokenIssuer, Undeclared, WrongKind, verify
     spec()
@@ -188,17 +188,27 @@ def test_the_signer_issues_only_the_kinds_of_token_a_spec_declares_with_their_cl
 
 
 def test_the_holder_backs_up_what_a_spec_keeps_and_a_move_restores_it():
-    """`domain.kept: [ledger]` — the holder's backup carries `domain/testsub/ledger` with what the domain decided; the
-    member chosen to keep it carries it home; a move from the signer's backup restores it on the new holder."""
+    """`domain.kept: [ledger, badges/]` — the holder's backup carries `domain/testsub/ledger` with what the domain
+    decided, and every row of the family `badges/` (`domain/testsub/badges/<name>`); the member chosen to keep it
+    carries it home; a move from the signer's backup restores them on the new holder. The agent writes none of them:
+    the family is denied to it row by row, as a kept row is by name."""
     from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+    from w2cplatform.domain.rights import agent_denials, roles
     from w2cplatform.domain.term import BACKUP, DomainHolder, exported, move_domain
+    from w2cplatform.rights import allowed
     from w2cplatform.trust.signer import Signer
     fed, wall = site()
     north, south = fed.clusters["north"], fed.clusters["south"]
-    assert "domain/testsub/ledger" in exported()
+    assert "domain/testsub/ledger" in exported() and "domain/testsub/badges/" in exported()
+    assert "!domain/testsub/badges/*" in agent_denials([spec()])
+    agent = roles(specs=[spec()])["domainagent"]["write"]
+    assert allowed(agent, "domain/keys") and not allowed(agent, "domain/testsub/badges/gold")
+    assert not allowed(agent, "domain/testsub/ledger")
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     north.vars.put("domain/testsub/ledger", {"s1": "seen"})
+    north.vars.put("domain/testsub/badges/gold", {"since": "1"})
+    north.vars.put("domain/testsub/badges/silver", {"since": "2"})
     holder = DomainHolder(fed, "north", signer, 1, wall, objects=north.objects)
     holder.claim()
     holder.backup(["south"], north.objects)
@@ -207,17 +217,33 @@ def test_the_holder_backs_up_what_a_spec_keeps_and_a_move_restores_it():
     assert south.vars.get(BACKUP)[0] and south.objects.get(BACKUP)
     new, report = move_domain(fed, "south", signer.backup(), "acme", lambda n: fed.clusters[n].objects, wall)
     assert new.term == 2 and south.vars.get("domain/testsub/ledger")[0] == {"s1": "seen"}, report["sentence"]
+    assert sorted(south.vars.list("domain/testsub/badges/")) == ["domain/testsub/badges/gold", "domain/testsub/badges/silver"]
+    assert south.vars.get("domain/testsub/badges/silver")[0] == {"since": "2"}
 
 
 def test_a_domain_section_that_names_what_is_not_there_is_refused_when_the_spec_loads():
     """The section is read at load, and refused whole for a field the snapshot does not carry, a table that is not
-    kept, a kind the platform owns, a claim the token itself writes, or a key it does not know."""
+    kept, a kind the platform owns, a claim the token itself writes, or a key it does not know — and for a family served
+    as a table, a name rule on a row not kept or holding it apart from itself, a grant that is not one of the platform's,
+    an edit of what is no field of the unit or of a spec outside the directory."""
     import yaml
     from w2cplatform.spec import SubsystemSpec
     base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
     for bad in ({"ref": "labels"}, {"view": ["labels"]}, {"kept": ["a"], "tables": ["b"]},
                 {"tokens": {"person": {"lifetime": 1}}}, {"tokens": {"t": {"lifetime": 1, "claims": ["exp"]}}},
-                {"tokens": {"t": {"lifetime": 0}}}, {"books": ["a"], "kept": ["a"]}, {"carried": ["x"]}):
+                {"tokens": {"t": {"lifetime": 0}}}, {"books": ["a"], "kept": ["a"]}, {"carried": ["x"]},
+                # a family (`x/`) is no table and no book's twin, and its name is a name
+                {"kept": ["a/"], "tables": ["a"]}, {"books": ["a"], "kept": ["a/"]}, {"kept": ["a/b"]},
+                # names: of a kept row only, by one rule, held apart from a prefix that is not itself
+                {"kept": ["a/"], "names": {"b/": {"exclusive_with": "identity/users"}}},
+                {"kept": ["a/"], "names": {"a/": {"exclusive_with": "Identity Users"}}},
+                {"kept": ["a/"], "names": {"a/": {"exclusive_with": "domain/testsub/a"}}},
+                {"kept": ["a/"], "names": {"a/": {"exclusive_with": "identity/users", "unique": True}}},
+                {"kept": ["a/"], "names": ["a/"]},
+                # a grant is one of the platform's, and the platform's to write
+                {"tokens": {"t": {"lifetime": 1, "grant": "root"}}}, {"tokens": {"t": {"lifetime": 1, "claims": ["grant"]}}},
+                # an edit names fields of the unit, of a spec in the directory
+                {"ref": "name", "edit": ["nope"]}, {"edit": ["start"]}):
         try:
             SubsystemSpec.from_dict({**base, "domain": bad})
             raise AssertionError(f"taken: {bad}")
@@ -333,4 +359,161 @@ def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared
             raise AssertionError(f"taken: {bad}")
         except ValueError:
             pass
+
+
+def test_the_spec_reads_a_kept_family_the_names_held_apart_a_tokens_grant_and_the_fields_an_edit_carries():
+    """ADR-0031's three declarations, as testsub writes them: `kept: [ledger, badges/]` (a family by its `/`),
+    `names: {badges/: {exclusive_with: identity/users}, ledger: …}`, `tokens.tally.grant: view`, `edit: [start, labels]`."""
+    d = spec().domain
+    assert d.kept == ("ledger", "badges/") and d.tables == ("ledger",)
+    assert d.names == {"badges/": {"exclusive_with": "identity/users"}, "ledger": {"exclusive_with": "identity/users"}}
+    assert d.tokens["tally"] == {"lifetime": 600.0, "claims": ("counter",), "grant": "view"}
+    assert d.edit == ("start", "labels")
+
+
+def test_a_name_held_apart_from_the_people_is_refused_on_the_write_of_either_side():
+    """`names.badges/.exclusive_with: identity/users` — the platform asks it of every write through its guard: a badge
+    under a person's name is refused naming the person's row, a person under a badge's name naming the badge's, and the
+    same for a name in the kept row `ledger`. A person deleted (the platform's tombstone, never refused) frees the name.
+    The stores the platform's processes open are guarded (`runtime.federation_from_env`),
+    and a subsystem's worker on the domain may read the people's rows the check asks."""
+    from w2cplatform.domain.declared import Guarded, NameTaken, guarded
+    from w2cplatform.domain.identity import IdentityStore
+    from w2cplatform.domain.rights import roles
+    from w2cplatform.trust.signer import Signer
+    fed, wall = site()
+    north = fed.clusters["north"]
+    store = guarded(north.vars)
+    assert guarded(store) is store
+    ids = IdentityStore(Signer("acme", north.vars, now=wall), north.vars, north.objects, now=wall)
+    ids.create_local("anna", "a long password 1", ["admin"])
+
+    def refused(write, names):
+        try:
+            write()
+        except NameTaken as e:
+            assert names in str(e), e
+            return
+        raise AssertionError(f"taken, though it meets {names}")
+    refused(lambda: store.put("domain/testsub/badges/anna", {"since": "1"}), "identity/users/anna")
+    store.put("domain/testsub/badges/bob", {"since": "1"})
+    refused(lambda: ids.create_local("bob", "a long password 2", []), "domain/testsub/badges/bob")
+    refused(lambda: store.put("domain/testsub/ledger", {"s1": "seen", "anna": "x"}), "identity/users/anna")
+    store.put("domain/testsub/ledger", {"carol": "seen"})
+    refused(lambda: ids.create_local("carol", "a long password 3", []), "a name in domain/testsub/ledger")
+    assert north.vars.get("domain/testsub/badges/anna")[0] is None and ids.get("bob") is None and ids.get("carol") is None
+    ids.delete("anna")
+    store.put("domain/testsub/badges/anna", {"since": "2"})                 # the person is gone: the name is free
+    store.put("domain/testsub/elsewhere/anna", {"x": "1"})                  # no rule names that row: not asked
+    root = tempfile.mkdtemp(prefix="guard-")
+    saved = {k: os.environ.get(k) for k in ("CLUSTERS", "DOMAIN_HOLDER")}
+    os.environ.update({"CLUSTERS": f"north=file://{root}/config|{root}/objects", "DOMAIN_HOLDER": "north"})
+    try:
+        from w2cplatform.domain.runtime import federation_from_env
+        opened = federation_from_env().domain_holder.vars
+    finally:
+        for k, v in saved.items():
+            os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
+    assert isinstance(opened, Guarded)
+    opened.put("identity/users/dora", {"id": "dora", "kind": "local"})
+    refused(lambda: opened.put("domain/testsub/badges/dora", {"since": "1"}), "identity/users/dora")
+    assert "identity/users/*" in roles(specs=[spec()])["testsubdomain"]["read"]
+
+
+def test_a_token_carries_its_kinds_grant_and_one_above_it_is_refused_where_it_would_be_signed():
+    """`tokens.tally.grant: view` — a tally token carries `grant: view`, or a lower one asked by name; `edit` above it,
+    a word that is no grant, or a grant on a kind that declares none, is refused by the signer — through its door too:
+    `GET /kinds` says the grant, `POST /tokens/tally` with a grant above it is a 400 and signs nothing."""
+    import http.client
+    import threading
+    from http.server import ThreadingHTTPServer
+    from w2cplatform.domain import tokendoor
+    from w2cplatform.domain.declared import token_kinds
+    from w2cplatform.trust.tokens import DeclaredIssuer, TokenIssuer, Undeclared, verify
+    spec()
+    t = TokenIssuer("acme")
+    issuer = DeclaredIssuer(t, token_kinds())
+    p = verify(issuer.issue("tally", "south", now=1000.0, counter="s1"), t.keyset(), now=1000.0, kind="tally")
+    assert p["grant"] == "view"
+    p = verify(issuer.issue("tally", "south", now=1000.0, counter="s1", grant="view"), t.keyset(), now=1000.0, kind="tally")
+    assert p["grant"] == "view"
+    plain = DeclaredIssuer(t, {"plain": {"lifetime": 60.0, "claims": ()}})
+    assert "grant" not in verify(plain.issue("plain", "south", now=1000.0), t.keyset(), now=1000.0, kind="plain")
+    for bad in (lambda: issuer.issue("tally", "south", counter="s1", grant="edit"),
+                lambda: issuer.issue("tally", "south", counter="s1", grant="admin"),
+                lambda: issuer.issue("tally", "south", counter="s1", grant="root"),
+                lambda: plain.issue("plain", "south", grant="view")):
+        try:
+            bad()
+            raise AssertionError("a token above its kind's grant was signed")
+        except Undeclared as e:
+            assert "grant" in str(e), e
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), tokendoor.handler(issuer))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+
+    def call(method, target, raw, headers, timeout):
+        c = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=timeout)
+        c.request(method, target, raw, headers)
+        r = c.getresponse()
+        return r.status, r.read()
+    try:
+        door = tokendoor.TokenDoor("(test)", transport=call)
+        assert json.loads(call("GET", "/kinds", None, {}, 5)[1])["tally"]["grant"] == "view"
+        assert verify(door.issue("tally", "south", counter="s1"), t.keyset(), kind="tally")["grant"] == "view"
+        try:
+            door.issue("tally", "south", counter="s1", grant="edit")
+            raise AssertionError("the door signed a token above its kind's grant")
+        except tokendoor.DoorRefused as e:
+            assert "400" in str(e) and "at most 'view'" in str(e), e
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_through():
+    """`edit: [start, labels]` — an edit of a member's counter through the domain's door (`PUT /api/testsub/counters/
+    <ref>`) reaches the member with those fields; one with any other (`step` here) is a 400 naming it and the list, and
+    the member is not asked. An edit that names no subsystem has no list to be held to: the member's console decides."""
+    import urllib.error
+    import urllib.request
+    from w2cplatform.domain.api import ApiError, ConsoleAPI
+    from w2cplatform.domain.console import Console
+    from w2cplatform.domain.federation import DomainDirectory
+    from w2cplatform.domain.readview import ReadView
+    fed, wall = site()
+    asked = []
+
+    class Member:
+        def update_unit(self, unit, fields, subject):
+            asked.append((unit, dict(fields)))
+            return {"revision": 2}
+    api = ConsoleAPI(DomainDirectory(fed), lambda c: Member())
+    assert api.update_unit("s1", {"start": 9, "labels": ["a"]}, "k-1", sub="testsub")["cluster"] == "south"
+    try:
+        api.update_unit("s1", {"start": 9, "step": 2}, "k-2", sub="testsub")
+        raise AssertionError("an undeclared field went through the domain")
+    except ApiError as e:
+        assert e.status == 400 and e.detail.startswith("step:") and "domain.edit" in e.detail, e
+    api.update_unit("s1", {"step": 2}, "k-3")
+    assert asked == [("s1", {"start": 9, "labels": ["a"]}), ("s1", {"step": 2})]
+    view = ReadView(fed, wall=wall)
+    view.refresh()
+    con = Console(DomainDirectory(fed), view, api, refresh_interval=60)
+    srv = con.serve(port=0)
+
+    def put(path, body, key):
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}{path}", json.dumps(body).encode(),
+                                     {"Content-Type": "application/json", "Idempotency-Key": key}, method="PUT")
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read())
+    try:
+        st, body = put("/api/testsub/counters/n1", {"labels": ["b"], "name": "renamed"}, "k-4")
+        assert st == 400 and body["detail"].startswith("name:"), body
+        assert put("/api/testsub/counters/n1", {"labels": ["b"]}, "k-5")[0] == 200
+        assert asked[-1] == ("n1", {"labels": ["b"]}) and len(asked) == 3
+    finally:
+        con.stop(srv)
 

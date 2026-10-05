@@ -11,7 +11,8 @@
                   never the signer's row
     <sub>domain   a subsystem's worker on the domain, on the holder (`domain.books` of its spec): its own prefix
                   `domain/<sub>/*`; reads what its books are made of — the key set, the topology, the members, the
-                  shared settings' pointer, the units of every subsystem and the platform's rows
+                  shared settings' pointer, the units of every subsystem and the platform's rows — and the name spaces
+                  its spec holds its rows apart from (`domain.names`), which the platform asks on each of its writes
 
 There is no `member` role any more: a member reads NOTHING of the holder's store; what it carries comes through the
 domain's door (`carry.py`).
@@ -27,7 +28,8 @@ def agent_denials(specs=None) -> list[str]:
            "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break_glass/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
-        out += [f"!{s.domain_prefix}{k}" for k in s.domain.kept]          # what a subsystem keeps for the domain
+        # what a subsystem keeps for the domain: a row, or every row of a family (`kept: [x/]`)
+        out += [f"!{s.domain_prefix}{k}{'*' if k.endswith('/') else ''}" for k in s.domain.kept]
         if s.domain.books or s.domain.kept:
             out += [f"!{s.domain_prefix}worker", f"!{s.domain_prefix}heartbeat"]   # its worker's slot on the holder
     return out
@@ -56,7 +58,9 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
     for s in on:
         if not (s.domain.books or s.domain.kept):
             continue
+        # …and the name spaces its rows are held apart from (`domain.names`): the platform asks them on its writes
+        apart = [f"{r['exclusive_with']}/*" for r in s.domain.names.values()]
         out[f"{s.name}domain"] = role(f"{s.name}domain", [f"{s.domain_prefix}*"],
                                       [schema, f"{s.domain_prefix}*", "domain/keys", "domain/topology", "domain/members",
-                                       "domain/shared", "platform/*", *units])
+                                       "domain/shared", "platform/*", *units, *apart])
     return out

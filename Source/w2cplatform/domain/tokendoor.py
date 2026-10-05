@@ -7,8 +7,9 @@ person's token. The door is a unix socket on the holder (`SIGNER_TOKENS_UNIX`, m
 not the signer's network door: who may ask for a token is who may open that file.
 
     GET  /kid               {"kid"} — the key that signs now (a book re-issues a token another key signed)
-    GET  /kinds             {kind: {lifetime, claims}} — what the loaded specs declare
-    POST /tokens/<kind>     {"sub", "claims": {...}} -> {"token"}; 400 for an undeclared kind or claim
+    GET  /kinds             {kind: {lifetime, claims[, grant]}} — what the loaded specs declare
+    POST /tokens/<kind>     {"sub", "claims": {...}} -> {"token"}; 400 for an undeclared kind or claim, or a `grant`
+                            above the kind's (`domain.tokens.<kind>.grant`, ADR-0031)
 
 `TokenDoor` is the worker's handle on it, with the same face as `DeclaredIssuer`: `kid`, `lifetime(kind)`,
 `issue(kind, subject, **claims)`.
@@ -83,7 +84,8 @@ def handler(issuer):
             if self.path == "/kid":
                 return self._send(200, {"kid": issuer.kid})
             if self.path == "/kinds":
-                return self._send(200, {k: {"lifetime": v["lifetime"], "claims": list(v.get("claims") or ())}
+                return self._send(200, {k: {"lifetime": v["lifetime"], "claims": list(v.get("claims") or ()),
+                                            **({"grant": v["grant"]} if v.get("grant") else {})}
                                         for k, v in issuer.kinds.items()})
             self._send(404, {"detail": "no such route"})
 

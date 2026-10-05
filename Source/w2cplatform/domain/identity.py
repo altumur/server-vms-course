@@ -83,8 +83,12 @@ class IdentityStore:
     def __init__(self, signer: Signer, vars_: Variables, objects, publish_floor: float = 60.0, now=time.time, journal=None,
                  sealer=None):
         """`sealer`: the platform's ring on the holder — a user's hash is sealed with it in the row (`pwhash_secret`),
-        and opened only here, to check a password. With none it lies in the clear, as every secret does then."""
-        self.signer, self.vars, self.objects, self.now = signer, vars_, objects, now
+        and opened only here, to check a password. With none it lies in the clear, as every secret does then.
+
+        The store is asked through `declared.guarded`: a person is not made under a name a spec holds apart from the
+        people (`domain.names.<kept>.exclusive_with: identity/users` — ADR-0031), refused `declared.NameTaken`."""
+        from .declared import guarded
+        self.signer, self.vars, self.objects, self.now = signer, guarded(vars_), objects, now
         self.sealer = sealer if sealer is not None else getattr(signer, "sealer", None)
         self.floor, self._last_publish, self._dirty = publish_floor, -1e9, False
         self.published_rev, self.publishes = 0, 0

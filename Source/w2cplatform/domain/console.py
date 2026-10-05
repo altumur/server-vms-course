@@ -5,7 +5,7 @@ The domain holder runs it pointed at every cluster. Every route but `/healthz` i
     GET  /api/<sub>/<rows>?q=&page=&size=&cluster=   the read model of a subsystem of the directory (`<rows>`: its
                                                 spec's name for its units), with each row's age and its cluster's state
     PUT  /api/<sub>/<rows>/<ref>                proxied to the owning cluster's console; Idempotency-Key required;
-                                                refuses placement fields
+                                                refuses placement fields, and any field but its spec's `domain.edit`
     GET  /api/<sub>/<table>                     a row a spec keeps at the holder and serves (`domain.tables`), as kept
     GET  /api/causes                            silence grouped by failure domain: one server, one cause
     GET  /api/where/<ref>                       the directory of directories, incompleteness included
@@ -242,7 +242,7 @@ class Console:
                 if fields is None:
                     return
                 try:
-                    resp = console.api.update_unit(ref, fields, key, self._token())
+                    resp = console.api.update_unit(ref, fields, key, self._token(), sub=target[1])
                     self._send(202 if resp.get("pending") else 200, resp)    # kept for a cluster that is off: accepted, not applied
                 except ApiError as e:
                     self._send(e.status, {"detail": e.detail})

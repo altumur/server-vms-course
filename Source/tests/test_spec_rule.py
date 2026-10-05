@@ -66,8 +66,8 @@ IMPLEMENTED = {
     "display.form.title", "display.form.state", "display.form.placement", "display.form.fields",
     "display.form.status.field", "display.form.status.since", "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness", "domain.books", "domain.kept", "domain.tables",
-    "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys", "domain.keys.prefix",
-    "domain.shared",
+    "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.tokens.*.grant", "domain.keys.id", "domain.keys.keys",
+    "domain.keys.prefix", "domain.shared", "domain.names.*.exclusive_with", "domain.edit",
     *{f"metrics.{k}" for k in metrics.KEYS}, *{f"metrics.agg={a}" for a in metrics.AGGS},
     *{f"metrics.type={t}" for t in metrics.TYPES}, "metrics.unless.table", "metrics.unless.where",
 }

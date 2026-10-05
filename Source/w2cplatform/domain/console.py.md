@@ -4,7 +4,7 @@
 
 ## Routes
 - `GET /api/<sub>/<rows>?q=&page=&size=&cluster=` — the read view of a subsystem of the directory (`route` → `("rows", sub, rows)`).
-- `PUT /api/<sub>/<rows>/<ref>` — `api.update_unit`; `Idempotency-Key` required; 202 when the edit was kept for a cluster that is off.
+- `PUT /api/<sub>/<rows>/<ref>` — `api.update_unit(…, sub=<sub>)`, held to `<sub>`'s `domain.edit`; `Idempotency-Key` required; 202 when the edit was kept for a cluster that is off.
 - `GET /api/<sub>/<table>` — a row a spec keeps at the holder and serves (`domain.tables`), as kept.
 - `GET /api/causes`, `GET /api/where/<ref>`, `GET|POST /api/members`, `DELETE /api/members/<name>`, `GET|PUT /api/topology`, `GET /healthz`.
 - With `viewer`, every `GET /api/*` asks for a token and a `view` on the domain; members and topology need an `admin` on the domain.

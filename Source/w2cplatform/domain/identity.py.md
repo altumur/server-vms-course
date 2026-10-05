@@ -26,7 +26,7 @@ Re-derives with the stored salt and compares in constant time.
 ## `class IdentityStore`
 
 ### `__init__(self, signer, vars_, objects, publish_floor=60.0, now=time.time)`
-`signer` issues tokens (`signer.tokens`); `vars_` is the domain holder's Variables (records and the pointer); `objects` the object store (the published set and prefs); `publish_floor` is the minimum seconds between publishes — the stated RPO; `_dirty` marks unpublished changes; `published_rev`, `publishes` are counters.
+`signer` issues tokens (`signer.tokens`); `vars_` is the domain holder's Variables (records and the pointer), held behind `declared.guarded` — a person is not made under a name a spec holds apart from the people (`domain.names.<kept>.exclusive_with: identity/users`, ADR-0031): `create_local`/`create_federated` raise `declared.NameTaken` naming the row it would meet; `objects` the object store (the published set and prefs); `publish_floor` is the minimum seconds between publishes — the stated RPO; `_dirty` marks unpublished changes; `published_rev`, `publishes` are counters.
 
 ### `_path(self, uid)` — `identity/users/<uid>`.
 ### `get(self, uid) -> User | None` — reads the record (a tombstone comes back as a `User` of kind `deleted`).
