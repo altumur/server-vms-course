@@ -28,6 +28,10 @@ platform's module. `/api/*` is the processes' (`signer_service.py`: carry, membe
                                                 domain only (`topology.py`)
     PUT  /domain/break-glass/<cluster>          {password} — that cluster's emergency password set or rotated: its
                                                 hash, sealed (`breakglass.py`); an admin of the domain only
+    GET  /domain/shared                         the shared settings: the document as signed, who holds it, what each
+                                                spec declares shared (`{doc, delivery, declared}`), read with no key
+    PUT  /domain/shared                         {base_rev, shared} — handed to the signer as it came (ADR-0032: the
+                                                keys' process checks and signs, `signer_service.edit_shared`)
     GET  /healthz
 
 What a subsystem computes or streams on the domain — a catalogue of what one unit may ask another, its own numbers — is
@@ -68,7 +72,7 @@ HOLDER_PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page.htm
 class Console:
     def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
                  publish_to=None, pending=None, topology=None, admin=None, members=None, viewer=None, holder_vars=None,
-                 sealer=None, url: str | None = None):
+                 sealer=None, url: str | None = None, signer_url: str | None = None):
         """`publish_to`: the domain holder's object store — each pass leaves the view there as `domain/view`,
         for that cluster's own console to draw (feedback X). `holder_vars`: the holder's store, where the tables the
         specs serve are kept (`domain.tables`). `url`: where this door is, said in the view for a cluster console to
@@ -82,6 +86,9 @@ class Console:
         # `view` on the domain; not given, reading stays open as the earlier lessons left it.
         self.viewer = viewer
         self.url = url
+        # `signer_url`: the signer's door, where the operations that need the domain's keys are performed whole
+        # (ADR-0032) — a person's edit of the shared settings is handed there as it came; this process has no key
+        self.signer_url = signer_url
         self._stop = threading.Event()
 
     # Each step of the pass in a try of its own, and what one raises SAID (М10's seventh review, part 2): one `try` with
@@ -164,6 +171,21 @@ class Console:
                 if refused:
                     out["outcomes"][name] = refused
         return out
+
+    def shared_view(self) -> dict:
+        """`GET /domain/shared`: the document the signer signed last (read from the store, no key), which members hold
+        it, and what each spec declares shared with the field's type — `{doc, delivery, declared}`."""
+        from .shared import SharedSettings
+        doc, _ = SharedSettings(self.view.fed.domain_holder.vars, self.view.fed.domain_holder.objects, None).current()
+        shown = {k: v for k, v in doc.items() if k != "settings"}
+        shown["shared"] = (doc.get("settings") or {}).get("shared") or {}
+        try:
+            delivery = SharedSettings(self.view.fed.domain_holder.vars, None, None).delivery(self.view.fed)
+        except Exception as e:                                   # noqa: BLE001 — the document is shown all the same
+            delivery = {"sentence": f"who holds it is not known: {e}"}
+        declared_ = {s.name: [{"name": f, "type": s.fields[f].type} for f in s.domain.shared]
+                     for s in declared.specs() if s.domain.shared}
+        return {"doc": shown, "delivery": delivery, "declared": declared_}
 
     def view_doc(self) -> tuple[int, dict]:
         """`GET /domain`: the view this console's last pass left, with its age; composed now when it leaves none."""
@@ -265,6 +287,8 @@ class Console:
                         return self._send(200, dict(items or {}))
                     if u.path == "/domain":
                         return self._send(*console.view_doc())
+                    if u.path == "/domain/shared":
+                        return self._send(200, console.shared_view())
                     if u.path == "/domain/keys":
                         from .keysview import keys
                         return self._send(200, keys(console.holder_vars, console.publish_to, console.view.wall()))
@@ -297,6 +321,8 @@ class Console:
 
             def do_PUT(self):
                 u = urlsplit(self.path)
+                if u.path == "/domain/shared":
+                    return self._to_signer("PUT", "/api/shared")
                 if u.path == "/domain/topology" and console.topology is not None:
                     return self._topology()
                 if u.path.startswith("/domain/break-glass/") and console.holder_vars is not None:
@@ -353,6 +379,35 @@ class Console:
                     self._send(200, console.members.read())
                 except ApiError as e:
                     self._send(e.status, {"detail": e.detail})
+
+            # A PERSON'S EDIT THAT NEEDS THE DOMAIN'S KEYS GOES TO THE PROCESS THAT HAS THEM (ADR-0032): the body as it
+            # came, the person's token with it; the signer checks and signs, this door answers what it said. No key here,
+            # and no «sign this» to ask for.
+            def _to_signer(self, method: str, route: str):
+                import urllib.error
+                import urllib.request
+                if not console.signer_url:
+                    return self._send(503, {"detail": "this console knows no signer (SIGNER_HOST, SIGNER_PORT): the "
+                                                      "domain's keys are the signer's, and so is this edit"})
+                if not read_body(self, self.MAX_BODY):
+                    return
+                raw = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+                headers = {"Content-Type": "application/json", "X-Operator": "domain-console"}
+                if self._token():
+                    headers["Authorization"] = f"Bearer {self._token()}"
+                req = urllib.request.Request(console.signer_url.rstrip("/") + route, data=raw or b"{}", headers=headers,
+                                             method=method)
+                try:
+                    with urllib.request.urlopen(req, timeout=10.0) as r:
+                        status, out = r.status, r.read()
+                except urllib.error.HTTPError as e:
+                    status, out = e.code, e.read()
+                except (OSError, ValueError) as e:
+                    return self._send(502, {"detail": f"the signer did not answer: {e}"})
+                try:
+                    return self._send(status, json.loads(out or b"{}"))
+                except ValueError:
+                    return self._send(502, {"detail": "the signer's answer does not parse"})
 
             def _break_glass(self, cluster: str):
                 from .breakglass import set_password
@@ -483,7 +538,8 @@ def main() -> None:
                       sealer=__import__("w2cplatform.sealing", fromlist=["Sealer"]).Sealer.from_env(os.environ),
                       pending=pending, topology=topology, admin=admin, members=members, viewer=viewer,
                       url=os.environ.get("CONSOLE_URL") or f"http://{os.environ.get('CONSOLE_HOST', '127.0.0.1')}:"
-                                                           f"{os.environ.get('CONSOLE_PORT', '8443')}")
+                                                           f"{os.environ.get('CONSOLE_PORT', '8443')}",
+                      signer_url=f"http://{os.environ.get('SIGNER_HOST', '127.0.0.1')}:{os.environ.get('SIGNER_PORT', '8445')}")
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

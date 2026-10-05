@@ -10,6 +10,8 @@ over mTLS, which need the bench.
     POST /revoke         {"token"}                    -> revokes that token's jti
     GET  /keys           the key set (what agents copy)
     GET  /api/carry/<c>  what member <c> carries home, to the member alone, its secrets sealed to its key (`carry.py`)
+    PUT  /api/shared     {base_rev, shared} — a person's edit of the shared settings, checked and signed here (ADR-0032,
+                         `edit_shared`): the domain's console, which has no key, hands it on as it came
     GET  /healthz        alive — what a monitor asks
 
 Its keys, the people's hashes and the emergency hashes lie sealed under the platform's ring (`SECRETS_KEY`); at its
@@ -156,6 +158,21 @@ def main() -> None:
                 return self._send(401, {"detail": f"token refused: {e}"})
             self._send(404, {"detail": "no such route"})
 
+        def do_PUT(self):
+            if self.path != "/api/shared":
+                return self._send(404, {"detail": "no such route"})
+            if not read_body(self, self.MAX_BODY):
+                return
+            try:
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                if not isinstance(body, dict):
+                    raise TypeError("not an object")
+            except PARSE_ERRORS:
+                return self._send(400, {"detail": "the body is a JSON object"})
+            auth = self.headers.get("Authorization", "")
+            self._send(*edit_shared(vars_, objects, signer.tokens, signer.tokens.keyset(), set(revoked.entries),
+                                    auth[7:] if auth.startswith("Bearer ") else None, body, time.time()))
+
         def log_message(self, *a):
             pass
 
@@ -179,6 +196,60 @@ def main() -> None:
         loop.run(*signer_steps(ids, revoked))
         stop.wait(5)
     srv.shutdown()
+
+
+# THE SHARED SETTINGS ARE SIGNED WHERE THE KEY IS, AND CHECKED THERE (ADR-0032: the key's process performs the operation
+# whole; a «sign me this» door would sign anything for whoever reaches it). `PUT /api/shared {base_rev, shared: {<sub>:
+# {<field>: value | null}}}` is a person's edit with its intent: the signer checks the person (a token of the domain, an
+# `admin` on it), the revision the edit was made against and the specs' declarations (`SharedSettings.edit`:
+# `domain.shared`), builds the document itself and signs it. The domain's console, which has no key, hands the person's
+# edit on here as it came (`console.Console`, `PUT /domain/shared`). Returns `(status, body)`.
+def edit_shared(vars_, objects, issuer, keyset, revoked, token: str | None, body: dict, now: float) -> tuple[int, dict]:
+    from w2cplatform.trust.tokens import PERSON
+    from w2cplatform.variables import Conflict
+
+    from .api import ApiError
+    from .grants import domain_may
+    from .shared import SharedSettings
+    from .term import HOLDER
+    if not token:
+        return 401, {"detail": "an edit of the shared settings names its person: a token of the domain"}
+    try:
+        who = verify(token, keyset, revoked, now=now, kind=PERSON)["sub"]
+    except TokenError as e:
+        return 401, {"detail": f"token refused: {e}"}
+    if not domain_may(vars_, who, "admin", now):
+        return 403, {"detail": f"{who} is not an admin of the domain: the shared settings are the domain's"}
+    shared, base = body.get("shared"), body.get("base_rev")
+    if not isinstance(shared, dict) or not all(isinstance(v, dict) for v in shared.values()) or \
+            isinstance(base, bool) or not isinstance(base, int):
+        return 400, {"detail": "the edit is {base_rev: <the revision it was made against>, shared: {<sub>: {<field>: "
+                               "value or null}}}"}
+
+    def mutate(settings: dict) -> None:
+        held = settings.setdefault("shared", {})
+        for sub, values in shared.items():
+            mine = held.setdefault(sub, {})
+            for f, v in values.items():
+                if v is None:
+                    mine.pop(f, None)                        # null takes the domain's value away
+                else:
+                    mine[f] = v
+            if not mine:
+                held.pop(sub)
+
+    def term() -> int:
+        try:
+            return int(json.loads((vars_.get(HOLDER)[0] or {})["doc"]).get("term", 1))
+        except (KeyError, *PARSE_ERRORS):
+            return 1
+    try:
+        rev = SharedSettings(vars_, objects, issuer, wall=lambda: now, term=term).edit(mutate, base, by=who)
+    except Conflict as e:
+        return 409, {"detail": str(e)}
+    except ApiError as e:
+        return e.status, {"detail": e.detail}
+    return 200, {"rev": rev, "by": who}
 
 
 # THE SIGNER'S LOOP, STEP BY STEP (the review's eighth pass, major). It was two `try` blocks with `except Exception: pass`

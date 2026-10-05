@@ -382,6 +382,91 @@ def _shared_site():
     return shared, agent, ctl, SpecConsole(ctl, wall=wall)
 
 
+def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_which_checks_and_signs_it():
+    """ADR-0032: the signer performs the edit whole — a person of the domain with `admin` on it, the revision the edit
+    was made against, the specs' declarations — and signs the document itself; the domain's console has no key, serves
+    `GET /domain/shared` (`{doc, delivery, declared}`) from the store and hands `PUT /domain/shared` to the signer as it
+    came. A stale revision, a field nobody declared, no token or no `admin` is refused and nothing is signed; there is
+    no route that signs what it is given."""
+    import threading
+    import urllib.error
+    import urllib.request
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from w2cplatform.domain.agent import DomainPublisher
+    from w2cplatform.domain.api import ConsoleAPI
+    from w2cplatform.domain.console import Console
+    from w2cplatform.domain.federation import DomainDirectory
+    from w2cplatform.domain.grants import Grant, set_domain_grants
+    from w2cplatform.domain.readview import ReadView
+    from w2cplatform.domain.shared import POINTER
+    from w2cplatform.domain.signer_service import edit_shared
+    from w2cplatform.trust.signer import Signer
+    from w2cplatform.trust.tokens import PERSON
+    fed, wall = site()
+    north = fed.clusters["north"]
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    set_domain_grants(north.vars, [Grant("anna", "admin", None, 0), Grant("vera", "view", None, 0)], wall())
+    anna, vera = (signer.tokens.issue(n, 900, now=wall(), kind=PERSON) for n in ("anna", "vera"))
+
+    def edit(token, body):
+        return edit_shared(north.vars, north.objects, signer.tokens, signer.tokens.keyset(), set(), token, body, wall())
+    assert edit(None, {"base_rev": 0, "shared": {"testsub": {"step": 2}}})[0] == 401
+    assert edit(vera, {"base_rev": 0, "shared": {"testsub": {"step": 2}}})[0] == 403
+    assert edit(anna, {"base_rev": 0, "shared": {"testsub": {"start": 2}}})[0] == 409          # not declared shared
+    assert edit(anna, {"base_rev": 0, "shared": "step=2"})[0] == 400
+    assert north.vars.get(POINTER)[0] is None                                                  # nothing signed
+    assert edit(anna, {"base_rev": 0, "shared": {"testsub": {"step": 2, "marks": ["a"]}}}) == (200, {"rev": 1, "by": "anna"})
+    assert edit(anna, {"base_rev": 0, "shared": {"testsub": {"step": 3}}})[0] == 409           # made against rev 0
+    assert int(north.vars.get(POINTER)[0]["rev"]) == 1
+
+    class SignerDoor(BaseHTTPRequestHandler):                     # the signer's PUT /api/shared, as its door runs it
+        def do_PUT(self):
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+            st, out = (edit(self.headers.get("Authorization", "")[7:] or None, json.loads(raw))
+                       if self.path == "/api/shared" else (404, {"detail": "no such route"}))
+            body = json.dumps(out).encode()
+            self.send_response(st); self.send_header("Content-Length", str(len(body))); self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *a):
+            pass
+    sdoor = ThreadingHTTPServer(("127.0.0.1", 0), SignerDoor)
+    threading.Thread(target=sdoor.serve_forever, daemon=True).start()
+    view = ReadView(fed, wall=wall)
+    view.refresh()
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda c: None), refresh_interval=60,
+                  holder_vars=north.vars, signer_url=f"http://127.0.0.1:{sdoor.server_address[1]}")
+    assert not any(hasattr(con, k) for k in ("signer", "issuer", "tokens", "sealer_key"))   # nothing to sign with
+    door = con.serve(port=0)
+
+    def call(method, path, body=None, token=None):
+        req = urllib.request.Request(f"http://127.0.0.1:{door.server_address[1]}{path}", method=method,
+                                     data=json.dumps(body).encode() if body is not None else None,
+                                     headers={"Content-Type": "application/json",
+                                              **({"Authorization": f"Bearer {token}"} if token else {})})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+    try:
+        st, sh = call("GET", "/domain/shared")
+        assert st == 200 and sh["doc"]["rev"] == 1 and sh["doc"]["shared"] == {"testsub": {"step": 2, "marks": ["a"]}}
+        assert sh["declared"]["testsub"] == [{"name": "step", "type": "int"}, {"name": "marks", "type": "list"}]
+        assert "south" in sh["delivery"]["behind"]
+        assert call("PUT", "/domain/shared", {"base_rev": 1, "shared": {"testsub": {"marks": None}}}, anna) == \
+            (200, {"rev": 2, "by": "anna"})
+        assert call("PUT", "/domain/shared", {"base_rev": 1, "shared": {"testsub": {"step": 9}}}, anna)[0] == 409
+        assert call("PUT", "/domain/shared", {"base_rev": 2, "shared": {"testsub": {"step": 9}}}, vera)[0] == 403
+        assert call("GET", "/domain/shared")[1]["doc"]["shared"] == {"testsub": {"step": 2}}
+        assert call("PUT", "/domain/sign", {"doc": {}}, anna)[0] == 404 and call("POST", "/domain/shared", {}, anna)[0] == 404
+    finally:
+        con.stop(door)
+        sdoor.shutdown()
+        sdoor.server_close()
+
+
 def test_a_shared_field_takes_the_domains_value_where_the_unit_set_none_and_a_union_adds_to_its_own():
     """`domain.shared: [step, marks]` — the domain holds a value for each; the platform resolves them (no subsystem's
     route): a counter that set no step takes the domain's, one that did keeps its own, and nobody above means the
