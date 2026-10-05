@@ -15,15 +15,15 @@
 
 Этот урок отвечает на оба и ни на один больше. Подсистемы `detjob` здесь ещё нет — она в уроке 21. Сначала шов чтения: он самостоятелен, тестируется без размещения, и в нём прячутся два правила, которые легко не заметить и дорого потом чинить.
 
-> **Проверка без железа.** Почти всё — чистые функции над `Span`: `plan`, `remaining`, `covered` проверяются без движка и без сети. Одному тесту нужен живой `obsd`: `recording_spans` спрашивает настоящую дверь архива, поднятую над настоящим томом (`store`, `footage`, `door` из `tests/conftest.py`). GStreamer не нужен.
+> **Проверка без железа.** Почти всё — чистые функции над `Span`: `plan`, `remaining`, `covered` проверяются без движка и без сети. Одному тесту нужен живой `obsd`: `recording_spans` спрашивает настоящую дверь архива, поднятую над настоящим томом (`store`, `footage`, `door` из `tests/vmsconftest.py`). GStreamer не нужен.
 
 ## Что нужно знать заранее
 
 - **[Урок 7](07-volume-block-sequence-stream.md)** — том, последовательность, поток: эпоха — часть имени потока `<запись>/e<эпоха>`, дозаписанное лежит в `…/backfill`.
 - **[Урок 8](08-visibility-retention-timeline.md)** — видимость (читатель видит только закрытые блоки), таймлайн и отсечённые (`fenced`) эпохи.
-- **[Урок 10](10-recworker.md)** — дверь архива регистратора: `/timeline/<запись>` и `/samples/<запись>`.
+- **[Урок 10](10-recworker.md)** — дверь архива регистратора, дверь между процессами: `/spans/<запись>` и `/samples/<запись>`; её адрес — поле `url` в heartbeat'е регистратора.
 - **М10B, урок 14** — детекторы: единица, модель, события в бакеты под эпохой.
-- **М10A, урок 20** — ACL хранилища и права воркера. Понадобится в шаге 6, и не как формальность.
+- **[М10A, урок 5](../М10A_Platform/05-Subsystem.md)** и **[урок 20](../М10A_Platform/20-ObjectACL-and-Sweep.md)** — права воркера и ACL хранилища. Понадобятся в шаге 6, и не как формальность.
 
 ## Чему вы научитесь
 
@@ -40,28 +40,27 @@
 
 ```python
 # What was recorded of `unit` in `[t0, t1)`, as the volumes' index has it: asked of the archive door of every
-# live recorder (`/timeline/<unit>`), since each serves the one volume it holds and a recording's life may have
+# live recorder (`/spans/<unit>`), since each serves the one volume it holds and a recording's life may have
 # been written into several. `None` when no door answered at all — "nobody could say" is not "nothing recorded".
-def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0) -> list[Span] | None:
-    seen = recording_read(objects, unit, t0, t1, now, timeout=timeout)
+def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0, eyes=None) -> list[Span] | None:
+    seen = recording_read(objects, unit, t0, t1, now, timeout=timeout, eyes=eyes)
     return seen.spans if seen.answered else None
 
 
-def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, timeout: float = 5.0) -> Read:
+def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, timeout: float = 5.0, eyes=None) -> Read:
     import json as _json
     import urllib.request
-    from w2cplatform.console import heartbeats
-    from w2cplatform.contract import is_live
+    from w2cplatform.console import heard_live, heartbeats
     out, answered, silent, read, garbled = set(), False, [], set(), []
     every = heartbeats(objects, "rec/")
     for w, hb in sorted(every.items()):
-        url = str(hb.extra.get("archive_url") or "")
-        if not url or not is_live("rec", hb.ts, now, 45.0):   # whose clock: `is_live` (the review's second pass, M9)
+        url = str(hb.extra.get("url") or "")
+        if not url or not heard_live("rec", w, hb, now, 45.0, eyes):   # whose clock: the reader's (M9, r29-writers2)
             continue
         try:
-            with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
+            with urllib.request.urlopen(f"{url.rstrip('/')}/spans/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
                 spans, whole = door_spans(f"rec/doors/{w}#{unit}", _json.loads(answer(r)))
-        except (OSError, *PARSE_ERRORS, RecursionError):
+        except (OSError, *PARSE_ERRORS):
             silent.append(w)
             continue
         answered = True
@@ -74,13 +73,13 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
     unread = []
     if vars_ is not None:
         from . import volumes
-        from .console import unserved_volumes          # the timeline's rule, read and not copied
+        from .footage import unserved_volumes          # the timeline's rule, read and not copied
         off = {v.name for v in volumes.declared(vars_) if not v.enabled}
 
         def held_it(recorder: str) -> bool:
             hb = every.get(recorder)
             return hb is not None and any(str(st.get("id")) == str(unit) for st in hb.status if isinstance(st, dict))
-        unread = [g["volume"] for g in unserved_volumes(objects, now)
+        unread = [g["volume"] for g in unserved_volumes(objects, now, eyes=eyes)
                   if g["volume"] not in read and g["volume"] not in off and held_it(g["recorder"])]
     return Read(sorted(out, key=lambda s: (s.start, s.epoch)), answered, silent, unread, garbled)
 ```
@@ -89,7 +88,7 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
 
 **Время.** Запись за прошлый март лежит в том томе, куда её писали тогда. Текущая эпоха регистратора сдвигалась с тех пор десятки раз и ничего не говорит о том, кто выиграл гонку тогда. Спросить `current_epoch` у Variables значит применить сегодняшний ответ к прошлогоднему вопросу. А кто выиграл, уже записано — в именах потоков: `7/e1` и `7/e2` лежат рядом, и эпоха у каждого своя (урок 7).
 
-**Место.** Индекс тома прочитать может только тот, кто этот том смонтировал. Поэтому вопрос идёт к двери регистратора, который держит том (урок 10). Одной двери мало: запись за свою жизнь могла переехать, и её минуты лежат в двух томах у двух регистраторов. Функция спрашивает каждую живую дверь и складывает ответы в множество — одна и та же строка индекса от двух дверей не удвоится.
+**Место.** Индекс тома прочитать может только тот, кто этот том смонтировал. Поэтому вопрос идёт к двери регистратора, который держит том (урок 10), по адресу из его heartbeat'а (`url`). Живой ли регистратор, решают часы читателя, а не его: `heard_live` с `eyes` воркера смотрит, менялся ли heartbeat за последние 45 секунд по часам того, кто спрашивает; регистратор с отставшими на сто секунд часами иначе был бы дверью, которую никто не спросил. Одной двери мало: запись за свою жизнь могла переехать, и её минуты лежат в двух томах у двух регистраторов. Функция спрашивает каждую живую дверь и складывает ответы в множество — одна и та же строка индекса от двух дверей не удвоится.
 
 **Ответ одной двери — не полнота.** `recording_spans` склеивал ответы дверей, которые ответили, и молча пропускал не ответившие: запись переехала с тома A на B, дверь A не ответила — задача кончалась `done`, и половина интервала не сканировалась никогда (третье ревью). Теперь `recording_read` возвращает спаны, двери, которые **не ответили** (`silent`), и тома, которые **никто не прочитал** (`unread`) — не все объявленные, а те, что сейчас никто не обслуживает (`unserved_volumes`, правило таймлайна) и чей регистратор в последнем heartbeat'е называл **эту** запись (после четвёртого ревью: один объявленный том без регистратора держал в `waiting` все сканы кластера); задача сканирует, что пришло, но остаётся `waiting` с названием недостающего, а не `done` (урок 21). Тесты: `test_scan.py`, `test_detjob_worker.py`.
 
@@ -115,7 +114,7 @@ def door_spans(key: str, body) -> tuple[list[dict], bool]:
     return out, whole
 ```
 
-Ответ, который не `{spans: [...]}`, — это `ValueError`, и дверь попадает в `silent`, как не ответившая. Спан, который не разбирается, пропускается и считается один раз на дверь и запись (`DOOR_SPANS`, на `/metrics` — таблица `door_span`), а дверь называется в `Read.garbled`. Чтение тогда неполное (`Read.partial`), и том такой двери не считается прочитанным, так что скан не кончается `done` без минут, которых не прочёл. Тем же разборщиком читают двери копировщик удержаний (`RecWorker._door_timeline`) и таймлайн с экспортом камеры (`console.door_timeline`). Тест: `test_row_reader.py::test_a_door_that_answers_a_span_another_build_writes_costs_that_span_and_not_the_scan`.
+Ответ, который не `{spans: [...]}`, — это `ValueError`, и дверь попадает в `silent`, как не ответившая. Спан, который не разбирается, пропускается и считается один раз на дверь и запись (`DOOR_SPANS`, на `/metrics` — таблица `door_span`), а дверь называется в `Read.garbled`. Чтение тогда неполное (`Read.partial`), и том такой двери не считается прочитанным, так что скан не кончается `done` без минут, которых не прочёл. Тем же разборщиком читают двери копировщик удержаний (`RecWorker._door_timeline`) и дверь записи, которая отдаёт странице шкалу и куски (`footage.door_timeline`, урок 24). Тест: `test_row_reader.py::test_a_door_that_answers_a_span_another_build_writes_costs_that_span_and_not_the_scan`.
 
 **Молчание.** `None` и `[]` — разные ответы. `[]`: двери ответили, и записи в этом интервале нет. `None`: не ответил никто, и сказать нельзя ничего. Скан, принявший второе за первое, закончил бы задачу, которую не читал, — и доложил бы «ноль событий». Тест — `test_what_was_recorded_is_asked_of_the_recorders_doors_and_nobody_answering_is_not_nothing`: без регистраторов `None`, с дверью над томом — спан записи `7`, а про запись `8`, которой нет, — пустой список.
 
@@ -257,12 +256,13 @@ class ScanLog:
 Второе, и оно важнее: **место.** Естественное желание — держать прогресс в строке задачи, рядом с `from` и `to`. Воркеру это запрещено:
 
 ```python
-    # `[<name>/epoch/*, <name>/slots/*]` — a worker writes only epochs and its slot, never configuration.
+    # `[<name>/epoch/*, <name>/slots/*, <name>/holds/*]` — what every worker writes: epochs, its slot and the
+    # place it took; never configuration. …
     def acl_worker(self) -> list[str]:
-        return [f"{self.name}/epoch/*", f"{self.name}/slots/*"]
+        return [f"{self.name}/epoch/*", f"{self.name}/slots/*", f"{self.name}/holds/*"]
 ```
 
-Воркер пишет эпохи и свой слот. Конфигурацию — никогда. Правило из М10A, урок 20, и оно не про этот случай — оно про все случаи сразу, поэтому ответило раньше, чем возник вопрос. На ресурсе, в собственном дереве задачи `detjob/<job>/`, рядом с её событиями, воркер писать вправе: это его данные, а не чьи-то настройки.
+Воркер пишет эпохи, свой слот и захват места. Конфигурацию — никогда. Это правило платформы (`w2cplatform/contract.py`, [М10A, урок 5](../М10A_Platform/05-Subsystem.md)), и оно не про этот случай — оно про все случаи сразу, поэтому ответило раньше, чем возник вопрос. Спека может добавить к трём префиксам ровно две вещи, и обе вслух: строки своих таблиц, которые воркер находит (`worker: {writes: [...]}`), и заявки другим подсистемам (`worker: {requests: [...]}`) — `SubsystemSpec.acl_worker_role`, [М10A, урок 9](../М10A_Platform/09-SubsystemSpec.md). В `detjob.subsystem.yaml` раздела `worker:` нет: строку задачи его воркер не пишет. (Докстрока `ScanLog` называет два префикса из трёх; вывод от этого не меняется.) На ресурсе, в собственном дереве задачи `detjob/<job>/` (`unit_dir` платформы), рядом с её событиями, воркер писать вправе: это его данные, а не чьи-то настройки.
 
 Тест — `test_the_log_is_on_the_disk_not_in_the_process`: строку, записанную одним объектом `ScanLog`, читает другой, который этот скан никогда не запускал.
 
@@ -334,7 +334,7 @@ def written_through(spans: list[Span]) -> float:
 - **Вычитали сделанное по ключу.** У записи, которая ещё пишется, спан растёт, ключ меняется, и всё прочитанное читается снова.
 - **Вычитали по потоку без границ — «поток уже читали».** Спан вырос, и прирост не читается никогда.
 - **Возобновление по `done_through`.** Упавший отрезок пропадает, и задача заканчивается успехом.
-- **Прогресс в строке задачи.** Воркер не имеет права её писать; заработает это, только если расширить ACL — то есть заплатить за удобство доступом воркера к конфигурации.
+- **Прогресс в строке задачи.** Воркер не имеет права её писать; заработает это, только если объявить таблицу задач в `worker.writes` — то есть заплатить за удобство доступом воркера к конфигурации.
 - **Тест на границу, который не проверяет границу.** Случай из истории этого файла. Тест на склейку соседних отрезков клал мешающий спан в **другую** запись, а план строится по спанам одной. Посторонних границ в нём не оказывалось вовсе, тест проходил при любой реализации склейки, включая полностью удалённую. Настоящий случай — зомби под **младшей** эпохой, написавший внутри интервала выжившего: тогда границы появляются, а победитель остаётся тем же по обе стороны. Так устроен `test_adjacent_stretches_of_one_span_are_one_stretch`. Проверять надо снятием: удалите склейку и убедитесь, что тест падает. Если не падает — он проверяет что-то другое, как бы он ни назывался.
 
 ## Итог
@@ -353,7 +353,7 @@ def written_through(spans: list[Span]) -> float:
 4. **Сломайте `remaining`.** Верните вычитание по ключу — множество `{d["key"] for d in log.read()}` и условие `s.key() not in` него — и запустите `test_a_scan_into_the_future_follows_the_recording_and_ends_when_the_footage_does`. Сколько событий окажется лишними и откуда они?
 5. **Смените эпоху посреди скана.** Отрезок 10:00–10:10 потока `7/e1` записан в лог. Потом появляется `7/e2` над 10:05–10:15. Что вернёт `remaining`? Правильно ли это и почему?
 6. **Отключите двери.** Пусть `recording_spans` возвращает `[]` вместо `None`, когда никто не ответил. Что скажет задача и что увидит оператор?
-7. **Примерьте ACL.** Допустим, вы всё-таки хотите `done_through` в строке задачи. Какую строку `acl_worker` придётся расширить и что после этого сможет воркер, чего не мог? Сформулируйте, что вы покупаете и чем платите.
+7. **Примерьте ACL.** Допустим, вы всё-таки хотите `done_through` в строке задачи. Что придётся объявить в `detjob.subsystem.yaml` (`worker: {writes: [jobs]}`) и что после этого сможет воркер, чего не мог? Сформулируйте, что вы покупаете и чем платите.
 
 ## Что дальше
 
