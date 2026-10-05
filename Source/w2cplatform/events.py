@@ -172,6 +172,12 @@ ALARM = "alarm"
 OBSERVATION = "observation"
 CLASSES = (ALARM, OBSERVATION)
 
+# THE REQUESTS FAMILY'S TWO KINDS (ADR 0013): what a holder did to a unit on somebody's request, and what it did not do.
+# Written by the base worker for every subsystem whose units take requests (`Worker._performed`, `Worker._refused`), with
+# the unit's `of` like any line of it; a subsystem's spec does not name them in `display.kinds` — the console module has
+# their words, as it has `server.*` and `worker.*` (the module's contract, §5).
+COMMAND, COMMAND_FAILED = "command", "command.failed"
+
 # WHERE AN ALARM LIES: a tree of its own, `<subsystem>.alarms/<unit>/e<epoch>/…`, beside `<subsystem>/<unit>/…`
 # (the platform review, "a retention of its own for the class `alarm`"; agreed with the product, whose format
 # this is too — feedback BO).
