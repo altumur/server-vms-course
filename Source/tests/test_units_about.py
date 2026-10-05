@@ -25,10 +25,11 @@ from w2cplatform.access import Denied
 from w2cplatform.console import Mount, SpecConsole
 from w2cplatform.doors import parse_ref, ref_fault, unit_ref
 from w2cplatform.eventdatabase import EventIndex, MergedIndex
-from w2cplatform.events import EventLog, read_bucket
+from w2cplatform.events import CONSOLE_MARKS, EventLog, read_bucket
 from w2cplatform.objects import FsObjectStore
 from w2cplatform.spec import Refused, SpecController, SubsystemSpec
 from w2cplatform.variables import FileVariables
+from tests.conftest import stamped
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TESTSUB = os.path.join(HERE, "testdata", "testsub.subsystem.yaml")
@@ -158,17 +159,26 @@ def test_a_fixed_field_does_not_change_and_a_deleted_name_comes_back_only_with_t
 # -- the line and the index -------------------------------------------------------------------------------------------
 
 def test_a_line_says_what_its_unit_is_about_as_a_reference_or_not_at_all():
-    """`of` is the index's second column: the log's (`EventLog(of=)`) unless the line names its own, a reference either
-    way — a bare id or a number there is refused where the line is written — and an empty one is not written."""
+    """`of` is the index's second column: the log's, stamped by the base (`Worker.event_log`), and a line of a
+    subsystem's that names its own — an empty one too — is refused. A mark of the console names what it marks
+    (`CONSOLE_MARKS`): a reference — a bare id or a number there is refused where the line is written — and an empty
+    one is not written."""
     root = tempfile.mkdtemp(prefix="of-")
-    p = EventLog(root, "tally", "t1", 1, of="testsub/c1").append(10.0, "seen")
-    q = EventLog(root, "tally", "t1", 1, of="testsub/c1").append(11.0, "seen", of="testsub/c9")
-    r = EventLog(root, "tally", "t2", 1).append(12.0, "seen", of="")
-    assert [e.get("of") for e in read_bucket(p)] == ["testsub/c1", "testsub/c9"] and p == q
-    assert "of" not in read_bucket(r)[0]
+    p = stamped(EventLog(root, "tally", "t1", 1), "testsub/c1").append(10.0, "seen")
+    r = EventLog(root, "tally", "t2", 1).append(12.0, "seen")
+    assert [e.get("of") for e in read_bucket(p)] == ["testsub/c1"] and "of" not in read_bucket(r)[0]
+    for own in ("testsub/c9", ""):
+        try:
+            stamped(EventLog(root, "tally", "t1", 1), "testsub/c1").append(11.0, "seen", of=own)
+            raise AssertionError(f"took of={own!r}")
+        except ValueError as e:
+            assert "platform's to write" in str(e)
+    marks = EventLog(root, CONSOLE_MARKS, "c-1", 1)
+    assert read_bucket(marks.append(12.0, "mark", of="testsub/c1"))[-1]["of"] == "testsub/c1"
+    assert "of" not in read_bucket(marks.append(12.5, "mark", of=""))[-1]
     for bad in ("c1", 7, "testsub/a/b"):
         try:
-            EventLog(root, "tally", "t1", 1).append(13.0, "seen", of=bad); raise AssertionError(f"took of={bad!r}")
+            marks.append(13.0, "mark", of=bad); raise AssertionError(f"took of={bad!r}")
         except ValueError as e:
             assert "<sub>/<id>" in str(e)
 
@@ -180,8 +190,8 @@ def test_a_query_for_a_unit_answers_its_own_lines_and_those_of_every_unit_about_
     root = tempfile.mkdtemp(prefix="index-")
     EventLog(root, "testsub", "c1", 1).append(100.0, "counted", n=1)
     EventLog(root, "testsub", "c2", 1).append(101.0, "counted", n=2)
-    EventLog(root, "tally", "lobby", 1, of="testsub/c1").append(102.0, "tallied")
-    EventLog(root, "tally", "other", 1, of="testsub/c2").append(103.0, "tallied")
+    stamped(EventLog(root, "tally", "lobby", 1), "testsub/c1").append(102.0, "tallied")
+    stamped(EventLog(root, "tally", "other", 1), "testsub/c2").append(103.0, "tallied")
     db = EventIndex(root, "srv-1", wall=Clock(200.0))
     rows = db.query(0, 1e12, unit="testsub/c1")["events"]
     assert [(e["unit"], e["of"], e["kind"]) for e in rows] == [("testsub/c1", "", "counted"), ("tally/lobby", "testsub/c1", "tallied")]
@@ -245,7 +255,7 @@ def test_events_and_marks_name_a_unit_as_sub_slash_id_and_a_bare_id_is_400():
         assert _http(base, "POST", "/counters", {"name": "c1"})[0] == 201     # through the door: a journal line
         tally.create({"name": "lobby", "counter": "c1"})
         EventLog(tree, "testsub", "c1", 1).append(con.wall() - 30, "counted")
-        EventLog(tree, "tally", "lobby", 1, of="testsub/c1").append(con.wall() - 20, "tallied")
+        stamped(EventLog(tree, "tally", "lobby", 1), "testsub/c1").append(con.wall() - 20, "tallied")
         st, out = _http(base, "POST", "/marks", {"unit": "testsub/c1", "note": "look"})
         assert st == 201, out
         st, out = _http(base, "GET", "/events?unit=testsub/c1")
@@ -280,8 +290,8 @@ def test_a_grant_on_a_unit_takes_in_the_units_about_it_and_the_labels_are_the_ab
         ctl.create({"name": "c1", "labels": ["floor-1"]}); ctl.create({"name": "c2", "labels": ["floor-2"]})
         tally.create({"name": "lobby", "counter": "c1", "labels": ["floor-2"]})
         tally.create({"name": "yard", "counter": "c2", "labels": ["floor-1"]})
-        EventLog(tree, "tally", "lobby", 1, of="testsub/c1").append(con.wall() - 20, "tallied")
-        EventLog(tree, "tally", "yard", 1, of="testsub/c2").append(con.wall() - 10, "tallied")
+        stamped(EventLog(tree, "tally", "lobby", 1), "testsub/c1").append(con.wall() - 20, "tallied")
+        stamped(EventLog(tree, "tally", "yard", 1), "testsub/c2").append(con.wall() - 10, "tallied")
         # ann holds c1: the tally about c1 is hers to see and to change; the one about c2 is not
         listed = _http(base, "GET", "/tally/tallies", token="ann")[1]
         assert [r["id"] for r in listed["configured"]] == ["lobby"]
@@ -326,7 +336,7 @@ def test_the_resources_door_takes_a_unit_as_sub_slash_id_and_refuses_a_bare_one(
     root, vars_, objects, wall = _box()
     tree = os.path.join(root, "events")
     EventLog(tree, "testsub", "c1", 1).append(wall() - 10, "counted")
-    EventLog(tree, "tally", "lobby", 1, of="testsub/c1").append(wall() - 5, "tallied")
+    stamped(EventLog(tree, "tally", "lobby", 1), "testsub/c1").append(wall() - 5, "tallied")
     res = Resource(tree, "srv-1", "", vars_, objects, wall=wall)
     res.index = EventIndex(tree, "srv-1", wall=wall)
     srv = serve_resource(res, "127.0.0.1", 0)

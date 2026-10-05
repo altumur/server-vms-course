@@ -77,6 +77,13 @@ class Served:
         self.close()
 
 
+def stamped(log, of: str):
+    """`log` with what its unit is about set as the base worker sets it (`Worker.event_log`, `EventLog._of`): the lines a
+    test lays out for a query, as the worker holding the unit would have written them. A line does not say its own."""
+    log._of = of
+    return log
+
+
 def as_kept(step):
     """A long step of a resource's pass, as the one step a test may give it since the boundary's step 6 took the
     subsystems' hooks out of the resource: `Resource.kept` — called once a pass, handed the pulse (`progressed`), and

@@ -132,7 +132,7 @@ from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_M
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence, unit_id
-from .events import ALARM, CONSOLE, OF, EventLog
+from .events import ALARM, CONSOLE_MARKS, OF, EventLog
 
 
 # The default flow one operator is expected to read, in events a minute. Past it a timeline of separate
@@ -1413,7 +1413,7 @@ class SpecConsole:
         # is one person's; and it is a number rather than a constant because a control room with four
         # screens and a guard with a phone are not the same reader.
         self.per_minute = float(os.environ.get("EVENTS_PER_MINUTE", per_minute) or PER_MINUTE)
-        self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
+        self.marks = EventLog(marks_root, CONSOLE_MARKS, self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
         self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
         from .door import Signer
         # signs the holders' door tokens with the key in the store (`door/signer`, sealed with the cluster's key ring);
@@ -3201,7 +3201,7 @@ class SpecConsole:
                         # read by name; a subsystem whose rows the console may not read at all is said (`epochs_unread`),
                         # its events as their resource marked them. The journal and the console's marks are written
                         # by one writer under epoch 1 and have no epoch rows: not asked.
-                        seen_subs, refused = {s for s, _ in cur} | {AUDIT, CONSOLE}, set()
+                        seen_subs, refused = {s for s, _ in cur} | {AUDIT, CONSOLE_MARKS}, set()
                         other = [e for e in rep["events"] if e.get("subsystem") not in seen_subs]
                         if other:
                             refence(other, con.epochs_of({(e["subsystem"], unit_id(e)) for e in other}, refused),

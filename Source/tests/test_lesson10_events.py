@@ -1199,9 +1199,10 @@ def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_
     its name is not its camera. Once its lines have said camera 7, a timeline for camera 9 does not read its buckets."""
     from vms.config import DET_SPEC
     from w2cplatform.events import EventLog
+    from tests.conftest import stamped
     box = Box()
     now = box.wall()
-    EventLog(box.resource_root, "det", "7-motion", 1, 600, of=DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
+    stamped(EventLog(box.resource_root, "det", "7-motion", 1, 600), DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
     db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     assert [(e["unit"], e["of"]) for e in db.query(now - 600, now, unit="vms/7")["events"]] == [("det/7-motion", "vms/7")]
     assert db._may_be_about("srv-1", "det", "7-motion", "vms/9") is False and db.query(now - 600, now, unit="vms/9")["events"] == []
