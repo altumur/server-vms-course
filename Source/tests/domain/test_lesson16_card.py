@@ -869,7 +869,7 @@ def _camera_process(wall, vars_, objects, root, flash, dial):
     ring = CamRing(clock=wall, steady=wall)
     act = CardActuator(ring, threaded=False, serial=SERIAL)            # whose line: said before the card opens (13th review)
     rec = CardRecorder("r-cam", vars_, objects, ring, act, clock=wall, wall=wall, server="cam-1",
-                       archive_root=os.path.join(root, "archive"), env={})
+                       resource_root=os.path.join(root, "archive"), env={})
     rec.lease_pass(); rec.heartbeat_once()
     SpecController(REC_SPEC, vars_, objects, wall=wall).ensure_placed()
     rec.reconcile_once(); rec.heartbeat_once()

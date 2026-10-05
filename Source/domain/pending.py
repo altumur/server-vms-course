@@ -22,7 +22,7 @@ from __future__ import annotations
 import json
 import time
 
-from cluster.variables import Conflict, Variables
+from w2cplatform.cluster.variables import Conflict, Variables
 
 from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.secrets import hide_in_reply

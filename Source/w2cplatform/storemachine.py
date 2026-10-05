@@ -61,7 +61,7 @@ the group, and what a test stand applies in one process — the same code, so th
 # box's rows are measured at the import (`configstore.import_rows`), all of them before the first write.
 #
 # ## The rights file — who may do what, by the socket the caller came through
-# `/etc/w2c/configstore-rights.json` (generated from the spec by `python3 -m cluster rights`, М11), in the product's
+# `/etc/w2c/configstore-rights.json` (generated from the specs by `python3 -m w2cplatform.cluster rights`), in the product's
 # format (its configstore round 2):
 #     {"roles": {"testsubworker": {"group": "testsub-worker", "read": ["testsub/*"],
 #                                  "write": ["testsub/epoch/*", "testsub/slots/*"], "delete": []}, …}}

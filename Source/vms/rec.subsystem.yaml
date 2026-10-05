@@ -31,6 +31,8 @@ slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
 # a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone.
 objects: {rows: [used/*]}
+# What a recorder reads outside its subsystem's rows: the domain's book of where each camera's primary is (М12).
+worker: {reads: [domain/primaries]}
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).

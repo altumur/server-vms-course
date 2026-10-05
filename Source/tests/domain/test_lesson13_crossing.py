@@ -5,7 +5,7 @@ does and changed only in where it finds the camera: not in its own cluster's hea
 contain it, but in a source book the domain publishes for its cluster and the cluster's agent carries home
 — so the recording goes on with the domain switched off. Data crosses between clusters; work does not.
 """
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from domain.agent import DomainAgent
 from domain.api import ApiError

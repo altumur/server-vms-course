@@ -1,6 +1,6 @@
 # objectstore.py — the cluster's object store: files on every server (`cluster://`), the create-only keys in the store, and the other adapters
 
-**Role in the module.** Lesson 1, and Lesson 6's objects step. `w2cplatform.objects.ObjectStore` (see `../../../Source/w2cplatform/objects.py`) is three calls — `put`, `get`, `list` — holding worker heartbeats (`vms/heartbeats/<w>`), resource heartbeats (`platform/resources/<server>/heartbeat`), the controllers' snapshot shards and pass reports, and the blobs a row names by digest. The docstring's design decision (the owner's, 3 October: the cluster without an orchestrator): every object has ONE writer and almost every one is written again within a pass, so no consensus is needed to hold it — each server keeps its own objects as files, and its resource answers for them over HTTP (`w2cplatform/resource.py`, `/v1/objects`). `ClusterObjectStore` writes here and reads everywhere. What a subsystem's spec names a row (`objects: {rows: […]}`, read through `w2cplatform.catalog.object_rows`: a worker's mark before it acts, created once across the cluster; a volume's mark of where it was opened) is a row in the replicated store through `VariablesObjectStore`; a blob is copied by the resource to the next live peers (`Resource.mirror_blobs`) and deleted by the sweep on every server that answers. No ceiling: the 64 KiB went with the Variables. `vms/` and `w2cplatform/` never know which adapter they hold; `s3+http://…` stays for a rented cluster (М12 Lesson 8). Footage never goes to any of these. Used by `__main__` (via `open_store(OBJECTS)`) and by the tests.
+**Role in the module.** Lesson 1, and Lesson 6's objects step. `w2cplatform.objects.ObjectStore` (see `../../../Source/w2cplatform/objects.py`) is three calls — `put`, `get`, `list` — holding worker heartbeats (`<sub>/heartbeats/<w>`), resource heartbeats (`platform/resources/<server>/heartbeat`), the controllers' snapshot shards and pass reports, and the blobs a row names by digest. The docstring's design decision (the owner's, 3 October: the cluster without an orchestrator): every object has ONE writer and almost every one is written again within a pass, so no consensus is needed to hold it — each server keeps its own objects as files, and its resource answers for them over HTTP (`w2cplatform/resource.py`, `/v1/objects`). `ClusterObjectStore` writes here and reads everywhere. What a subsystem's spec names a row (`objects: {rows: […]}`, read through `w2cplatform.catalog.object_rows`: a worker's mark before it acts, created once across the cluster; a place's mark of where it was opened) is a row in the replicated store through `VariablesObjectStore`; a blob is copied by the resource to the next live peers (`Resource.mirror_blobs`) and deleted by the sweep on every server that answers. No ceiling: the 64 KiB went with the Variables. A subsystem and the platform never know which adapter they hold; `s3+http://…` stays for a rented cluster (М12 Lesson 8). A subsystem's bulk data never goes to any of these. Used by `__main__` (via `open_store(OBJECTS)`) and by the tests.
 
 ## `class ObjectStore(Protocol)`
 The contract restated locally: `put(key, data: bytes)`, `get(key) -> bytes | None`, `list(prefix) -> list[str]`. Keys are the platform's slash-separated names, never absolute.
@@ -36,7 +36,7 @@ The file's bytes, or `None` if absent.
 Walks the tree, skips `.tmp` leftovers, returns sorted relative keys starting with `prefix`.
 
 ## `row_patterns()`, `is_row(key)`, `_may_hold_rows(prefix)`
-The keys that are rows of the store, as globs over segments (`*` one segment, a last `*` the rest): each loaded spec's `objects.rows` under its name (`catalog.object_rows`; the boundary's step 4 — it was the constant `CREATE_ONLY = ("*/commands/*",)` here). The VMS's spec says `commands/*`, the recorder's `used/*`. A directory's `link` is create-only on one server, and two holders of one thing are on two. `_may_hold_rows` tells whether a listing of a prefix must ask the store too (`vms/` yes, `vms/heartbeats/` no).
+The keys that are rows of the store, as globs over segments (`*` one segment, a last `*` the rest): each loaded spec's `objects.rows` under its name (`catalog.object_rows`; the boundary's step 4 — it was the constant `CREATE_ONLY = ("*/commands/*",)` here). One spec says `commands/*`, another `used/*`. A directory's `link` is create-only on one server, and two holders of one thing are on two. `_may_hold_rows` tells whether a listing of a prefix must ask the store too (`<sub>/` yes, `<sub>/heartbeats/` no).
 
 ## `class ObjectsUnavailable(OSError)`
 The resource on THIS server did not answer: nothing of the cluster can be read from here. An `OSError`, read by every caller as "the store did not answer" — a controller that took a silent door for an empty listing would call every other server's worker dead.
@@ -66,7 +66,7 @@ A create-only key from the rows. A blob from the local file when it hashes to it
 A create-only row by the store; a blob by `DELETE /v1/objects/<key>?scope=cluster` — here and on every server that answers (the sweep); anything else, this server's file.
 
 ## `class VariablesObjectStore`
-NARROWED on the cluster to the create-only keys (`ClusterObjectStore` routes them here); the class still holds any key, which the module's stand uses. Objects as Variables: key `vms/w-1/heartbeat` becomes the Variable `objects/vms/w-1/heartbeat` with a single item `{data: <utf-8 text>}`. The store is whatever `Variables` the caller holds, so the rights come with its door: on the cluster only the create-only rows are here, and the rights file grants them to the role that makes them (`objects/vms/commands/*` to `vmsworker`, `deploy/cluster/configstore-rights.json`).
+NARROWED on the cluster to the create-only keys (`ClusterObjectStore` routes them here); the class still holds any key, which the module's stand uses. Objects as Variables: key `<sub>/w-1/heartbeat` becomes the Variable `objects/<sub>/w-1/heartbeat` with a single item `{data: <utf-8 text>}`. The store is whatever `Variables` the caller holds, so the rights come with its door: on the cluster only the create-only rows are here, and the rights file grants them to the role that makes them (`objects/<sub>/commands/*` to `<sub>worker`, `deploy/cluster/configstore-rights.json`).
 
 ### `__init__(self, vars_, prefix="objects")`
 `vars_` is any `Variables` (the process's `ConfigstoreVariables`, `FakeVariables` in older tests); `prefix` is stripped of slashes.
@@ -75,13 +75,13 @@ NARROWED on the cluster to the create-only keys (`ClusterObjectStore` routes the
 `<prefix>/<key>`; refuses `..` and a leading slash with `ValueError`, so no key can escape the prefix the policy was written for.
 
 ### `put(self, key, data)`
-`vars.put(path, {"data": data.decode()})` **without** CAS — the comment: the last heartbeat wins, as it should. Objects here are always whole replacements, never read-modify-write. `Forbidden` from the token propagates (the Lesson 1 test proves a worker token cannot write `objects/vms/w-2/heartbeat` without `objects/*`).
+`vars.put(path, {"data": data.decode()})` **without** CAS — the comment: the last heartbeat wins, as it should. Objects here are always whole replacements, never read-modify-write. `Forbidden` from the token propagates (the Lesson 1 test proves a worker token cannot write `objects/<sub>/w-2/heartbeat` without `objects/*`).
 
 ### `get(self, key) -> bytes | None`
 Reads the Variable and re-encodes `items["data"]`; `None` if the Variable is missing or has no `data` item.
 
 ### `list(self, prefix) -> list[str]`
-`vars.list("objects/" + prefix)` with the store prefix stripped back off, sorted — so `objects.list("vms/")` returns `["vms/w-1/heartbeat"]` while `vars.list("objects/")` returns `["objects/vms/w-1/heartbeat"]` (the test asserts both).
+`vars.list("objects/" + prefix)` with the store prefix stripped back off, sorted — so `objects.list("<sub>/")` returns `["<sub>/w-1/heartbeat"]` while `vars.list("objects/")` returns `["objects/<sub>/w-1/heartbeat"]` (the test asserts both).
 
 ### `delete(self, key)`
 Deletes the Variable; beyond the Protocol, for a bench to purge a stale heartbeat.

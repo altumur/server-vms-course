@@ -18,7 +18,7 @@ events — and what it last said is what a reader that heard it remembers.
 
 A PROCESS is named the way its unit names it: `WORKER_NAME=w-%l-1` — `w-srv-a-1` on srv-a, `r-srv-a-1` for the
 recorder; a spare has no name until it takes an offer. There are no allocations. It is built by the entry point's own
-`make_worker`/`make_recorder` (`cluster/__main__.py`) and so REGISTERS with its server's resource as a unit's does
+`make_worker`/`make_recorder` (`vms/__main__.py`) and so REGISTERS with its server's resource as a unit's does
 (`Worker.present`: a lock in that server's tree while the object lives) — `absent()` is its process ending.
 """
 from __future__ import annotations
@@ -32,9 +32,9 @@ import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # Source/
 
-from cluster.objectstore import ClusterObjectStore, ObjectsUnavailable  # noqa: E402
-from cluster.recworker import ClusterRecorder  # noqa: E402
-from cluster.worker import ClusterWorker  # noqa: E402
+from w2cplatform.cluster.objectstore import ClusterObjectStore, ObjectsUnavailable  # noqa: E402
+from vms.recworker import RecWorker  # noqa: E402
+from vms.worker import VmsWorker  # noqa: E402
 from vms.worker import FakeActuator  # noqa: E402
 from w2cplatform.configstorevars import ConfigstoreVariables  # noqa: E402
 from w2cplatform.storemachine import ADMIN, Rights, StoreMachine, local_transport  # noqa: E402
@@ -237,10 +237,10 @@ class Cluster:
         """`w2c-resource` on `name`: its own socket, its server's objects, its peers the stand's — and its door said
         in the store, as its first heartbeat would say it (the heartbeat itself is `resources_up`'s: a resource that
         never heartbeat is "unknown", which is not "silent")."""
-        from cluster.resource import cluster_resource
+        from w2cplatform.resource import platform_resource
         srv = self.servers[name]
         v = self.store.door("resource", f"resource on {name}")
-        srv.res = cluster_resource(srv.resource, name, srv.door, v, self.objects_on(name, v, f"resource on {name}"),
+        srv.res = platform_resource(srv.resource, name, srv.door, v, self.objects_on(name, v, f"resource on {name}"),
                                    wall=self.wall, peers=StandPeers(self))
         srv.res.clock = self.clock                                      # its doors and its peers' rests by the stand's clock
         srv.res.space_probe = lambda path: (4 * 10**12, 3 * 10**12)     # a 4 TB disk, 1 TB used — the same on every run
@@ -277,7 +277,7 @@ class Cluster:
         return env
 
     def worker(self, server: str, capacity: int = 50, actuator=None, name: str | None = None, spare_for=None,
-               instance: str | None = None, **kw) -> ClusterWorker:
+               instance: str | None = None, **kw) -> VmsWorker:
         """`vms-vmsworker` on `server` — `w-<server>-1`, or a spare for `spare_for` (`vms-vmsworker-spare-<n>`)."""
         name = None if spare_for is not None else (name or f"w-{server}-1")
         env = self.env(server, name, **({"SPARE_FOR": spare_for} if spare_for is not None else {}))
@@ -285,18 +285,18 @@ class Cluster:
             env["INSTANCE_ID"] = instance
         who = f"vmsworker {name or 'spare'} on {server}"
         v = self.door("vmsworker", who)
-        from cluster.__main__ import make_worker
+        from vms.__main__ import make_worker
         return make_worker(v, self.objects_on(server, v, who), actuator or FakeActuator(), env=env,
                            clock=self.clock, wall=self.wall, capacity=capacity, **kw)
 
     def recorder(self, server: str, capacity: int = 50, actuator=None, name: str | None = None,
-                 **kw) -> ClusterRecorder:
+                 **kw) -> RecWorker:
         """`vms-recworker` on `server` — `r-<server>-1`: its events on THAT server's resource, its footage in that
         server's own volume, through the (one, test) daemon."""
         name = name or f"r-{server}-1"
         who = f"recworker {name} on {server}"
         v = self.door("recworker", who)
-        from cluster.__main__ import make_recorder
+        from vms.__main__ import make_recorder
         return make_recorder(v, self.objects_on(server, v, who), actuator or FakeActuator(),
                              env=self.env(server, name), **self.rec_kw(server, name),
                              clock=self.clock, wall=self.wall, capacity=capacity, **kw)
@@ -307,10 +307,10 @@ class Cluster:
 
     def controller(self, server: str = "srv-a", who: str | None = None, role: str = "vmscontroller", **kw):
         """`vms-vmscontroller` on `server` (a unit on every server, safe at two)."""
-        from cluster.controller import ClusterController
+        from vms.controller import VmsController
         who = who or f"{role} on {server}"
         v = self.door(role, who)
-        ctl = ClusterController(v, self.objects_on(server, v, who), wall=self.wall, **kw)
+        ctl = VmsController(v, self.objects_on(server, v, who), wall=self.wall, **kw)
         self.wall.watchers.append(ctl)                         # it looks before the clock moves (`Clock`)
         return ctl
 

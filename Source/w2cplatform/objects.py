@@ -15,7 +15,7 @@ whole or not at all."""
 # the object, which is where the sharding came from), and a shard fits whatever ceiling a store declares. Its one
 # promise is that an object appears whole or not at all. The `ObjectStore` Protocol is the interface
 # `Controller`, `Worker`, `Resource` and `SpecController` type against; `FsObjectStore` is the one-box
-# implementation, and М11 keeps it on every server: `ClusterObjectStore` (`cluster/objectstore.py`) writes into
+# implementation, and М11 keeps it on every server: `ClusterObjectStore` (`w2cplatform/cluster/objectstore.py`) writes into
 # this server's directory and reads the others' through their resources (`resource.py`, `/v1/objects`).
 #
 # ## Module-level names

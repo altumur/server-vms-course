@@ -6,7 +6,7 @@ import json
 import os
 import threading
 
-from cluster.variables import Conflict, FakeVariables, Forbidden
+from w2cplatform.cluster.variables import Conflict, FakeVariables, Forbidden
 from w2cplatform.contract import Controller, Subsystem, Worker
 from w2cplatform.epoch import next_epoch
 from tests.cluster.conftest import Cluster

@@ -27,8 +27,8 @@ import json
 import time
 from dataclasses import dataclass, field
 
-from cluster.objectstore import ObjectStore
-from cluster.variables import Variables
+from w2cplatform.cluster.objectstore import ObjectStore
+from w2cplatform.cluster.variables import Variables
 from w2cplatform.rows import Table, finite
 
 SNAPSHOT = "vms/snapshot/"           # a PREFIX: one object per worker, the shape the heartbeats already have

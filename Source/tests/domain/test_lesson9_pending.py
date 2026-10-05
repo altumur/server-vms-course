@@ -250,7 +250,7 @@ def test_an_address_with_a_password_is_refused_and_never_kept_carried_or_reporte
     up, what a backup copies — holds the password."""
     from domain.device import DeviceCluster
     from domain.pending import PENDING_PATH
-    from cluster.variables import FakeVariables
+    from w2cplatform.cluster.variables import FakeVariables
     wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
     for i, src in enumerate(LOGINS):
         for call in (lambda: api.update_camera(CAM, {"source": src}, idempotency_key=f"u{i}", token="anna"),

@@ -6,7 +6,7 @@ tenth of them off. These tests are the measurement — calls counted, link time 
 — and the three changes it forced: one read of the snapshot per member, "where" from memory, and a pass
 that neither waits for silent members in turn nor keeps asking them every five seconds.
 """
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from domain.api import ConsoleAPI
 from domain.device import DeviceCluster

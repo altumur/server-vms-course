@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- ~/Library/LaunchAgents/com.w2c.vms.jobs.plist — the VMS's housekeeping (М11, a macOS server; the systemd unit's
+     twin, deploy/cluster/systemd/vms-jobs.service). __BOX__/w2c.env and __BOX__/vms.env are read by w2c-run.sh under
+     what this file says (`W2C_BOX`). The unit's environment, name for name (`tests/cluster/test_units.py`). -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.w2c.vms.jobs</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__BOX__/bin/w2c-run.sh</string>
+		<string>vms</string>
+		<string>jobs</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>W2C_BOX</key>
+		<string>__BOX__</string>
+		<key>PLATFORM_STORE</key>
+		<string>configstore://__BOX__/state/run/configstore/console.sock</string>
+		<key>JOBS_HOST</key>
+		<string>0.0.0.0</string>
+		<key>JOBS_PORT</key>
+		<string>8095</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>2</integer>
+	<key>StandardErrorPath</key>
+	<string>__BOX__/state/logs/com.w2c.vms.jobs.log</string>
+	<key>StandardOutPath</key>
+	<string>__BOX__/state/logs/com.w2c.vms.jobs.log</string>
+</dict>
+</plist>

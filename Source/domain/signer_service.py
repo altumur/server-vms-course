@@ -26,7 +26,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from cluster.objectstore import open_store
+from w2cplatform.cluster.objectstore import open_store
 
 from .agent import KEYS_PATH, DomainPublisher
 from .identity import AuthError, IdentityStore

@@ -30,7 +30,7 @@ Environment=SECRETS_KEY=%d/platform.key
 UMask=0007
 Type=simple
 NotifyAccess=main
-ExecStart=/opt/w2c/bin/w2c-run.sh recorder
+ExecStart=/opt/w2c/bin/w2c-run.sh vms recorder
 Restart=always
 RestartSec=2
 TimeoutStopSec=40

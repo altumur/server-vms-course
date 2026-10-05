@@ -22,7 +22,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 
-from cluster.variables import Conflict, Variables
+from w2cplatform.cluster.variables import Conflict, Variables
 
 from .federation import Cluster, Federation
 

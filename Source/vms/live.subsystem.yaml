@@ -9,6 +9,7 @@ name: live
 # The slot a worker of this subsystem makes, `g-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: g, name_env: GATEWAY_NAME}
+worker: {writes: [streams]}   # a gateway deletes the fan-out it holds once nobody has watched it for `grace`
 about: {sub: vms, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:
   rows: streams                      # live/streams/<cam>

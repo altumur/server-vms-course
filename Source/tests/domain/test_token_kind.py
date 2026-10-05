@@ -5,7 +5,7 @@ centre. Read by signature alone, a stream token off a camera's flash passed a co
 `cam-SN5001` — and a user of that name, granted anything, would have been impersonated."""
 import time
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from domain.access import ClusterAccess
 from domain.agent import GRANTS_PATH, KEYS_PATH

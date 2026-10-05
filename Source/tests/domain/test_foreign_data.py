@@ -8,7 +8,7 @@ import logging
 import threading
 import time
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from domain.agent import ClusterTrust, DomainAgent, DomainPublisher, KEYS_PATH, REVOKED_PATH, run
 from domain.books import Books

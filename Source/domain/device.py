@@ -31,7 +31,7 @@ import json
 import threading
 import time
 
-from cluster.variables import Conflict, Variables
+from w2cplatform.cluster.variables import Conflict, Variables
 from w2cplatform.epoch import next_epoch
 
 from .agent import ClusterTrust

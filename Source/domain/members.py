@@ -31,7 +31,7 @@ from __future__ import annotations
 import json
 import time
 
-from cluster.variables import Conflict
+from w2cplatform.cluster.variables import Conflict
 from w2cplatform.rows import PARSE_ERRORS
 
 MEMBERS = "domain/members"

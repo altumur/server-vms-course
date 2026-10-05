@@ -27,7 +27,7 @@ worth naming — and which one an install has is now a fact the code can read
 rather than a fact the operator is supposed to remember.
 
 М11's objects left Variables: `cluster://` is a directory on every server
-(`cluster/objectstore.py`), and it declares no ceiling. A row in the store
+(`w2cplatform/cluster/objectstore.py`), and it declares no ceiling. A row in the store
 still has one if its backend says so, and so does any object store a test or
 an install declares — which is why the snapshot stays sharded and the capped
 stores stay in the tests: a declared ceiling is a clause of the contract, not

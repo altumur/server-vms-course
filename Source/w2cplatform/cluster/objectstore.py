@@ -22,10 +22,10 @@ server, and two holders of one thing sit on two. And a blob is copied by the res
 to the next live peers on the events mirror's ring (`Resource.mirror_blobs`),
 and deleted by the sweep on every server that answers.
 
-`vms/`, `w2cplatform/` and the domain do not know which store they hold. The
+A subsystem, the platform and the domain do not know which store they hold. The
 other adapters stay for what they are for: `s3+http://…` (`s3.py`) for a
 rented cluster (М12 Lesson 8), `http://` for a plain object endpoint, a
-directory for the tests. Footage never goes to any of these.
+directory for the tests. A subsystem's bulk data never goes to any of these.
 """
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ class FsObjectStore:
         os.replace(p + ".tmp", p)                  # an object appears whole or not at all
 
     # Create-only, as М10's `FsObjectStore.put_new` does it: `link` onto a name that is taken fails. Without it a
-    # worker on a bench store refuses device commands (`VmsWorker._mark`; the platform review's third pass).
+    # worker on a bench store refuses its actions (`Worker` marks an action before it acts; the platform review's third pass).
     def put_new(self, key: str, data: bytes) -> bool:
         import tempfile
         from w2cplatform.events import durable_dir, durably
@@ -147,7 +147,7 @@ ROWS_PREFIX = "objects"
 
 class VariablesObjectStore:
     """Objects as rows: `<prefix>/<key>` -> {data: <utf-8 text>}. Keys are the
-    platform's (`vms/commands/r-7`); the store is whatever Variables the caller
+    platform's (`<sub>/commands/r-7`); the store is whatever Variables the caller
     holds, with the rights that come with its door.
 
     Its job on the cluster is NARROWED to the keys the specs name rows
@@ -180,7 +180,7 @@ class VariablesObjectStore:
 
     # Creates the object only if there is none; `True` when THIS call made it. A Variable written with `cas=0`
     # succeeds only where no Variable is — raft's create-only, and the one a worker's command mark needs: two
-    # holders of one device in the same two seconds must not both believe they were first (the platform review's
+    # holders of one thing in the same two seconds must not both believe they were first (the platform review's
     # third pass). The heartbeat's `put` stays last-writer-wins, as it should; this is the other promise, asked
     # for by name. Raft has it on disk before it answers — nothing to fsync here.
     def put_new(self, key: str, data: bytes) -> bool:

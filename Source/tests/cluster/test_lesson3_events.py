@@ -6,7 +6,7 @@ none; unavailable — by name — when the resource is, never lost; a detector's
 event about camera 7 found by a field, not by living in camera 7's bucket."""
 import os
 from w2cplatform.eventdatabase import EventIndex, MergedIndex
-from cluster.resource import peers_of, resources_seen
+from w2cplatform.resource import peers_of, resources_seen
 from vms.archive import event_log
 from w2cplatform.events import EventLog, buckets_under, subsystems_under
 from tests.cluster.conftest import Cluster, host
@@ -96,8 +96,8 @@ def test_a_dead_resource_makes_the_answer_incomplete_by_name_not_wrong():
 
 
 def test_the_resource_policy_retains_each_subsystems_buckets_by_its_own_row():
-    from cluster.controller import ClusterController
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall); srv = c.servers["srv-a"]
+    from vms.controller import VmsController
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall); srv = c.servers["srv-a"]
     ctl.create_camera({"source": "driverpack://file/7.mp4", "events_retention_days": 30})       # the camera's events: the VMS row's knob
     assert c.vars.get("vms/retention/1")[0] == {"days": "30"}                     # the VMS's policy for its unit, as a row the platform reads
     assert c.vars.get("rec/recordings/1")[0] is None                              # no recording: the camera is watched, its footage nobody's

@@ -10,10 +10,10 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # Source/
 
-from cluster.controller import ClusterController  # noqa: E402
-from cluster.objectstore import FsObjectStore  # noqa: E402
-from cluster.variables import FakeVariables  # noqa: E402
-from cluster.worker import ClusterWorker  # noqa: E402
+from vms.controller import VmsController  # noqa: E402
+from w2cplatform.cluster.objectstore import FsObjectStore  # noqa: E402
+from w2cplatform.cluster.variables import FakeVariables  # noqa: E402
+from vms.worker import VmsWorker  # noqa: E402
 from domain.federation import Cluster, Federation, Unreachable  # noqa: E402
 from vms.worker import FakeActuator  # noqa: E402
 
@@ -88,17 +88,17 @@ class Running:
 
     def __init__(self, cluster: Cluster, wall: Clock, workers=(("w-0", "srv-1"),), capacity: int = 50):
         self.c, self.wall = cluster, wall
-        self.ctl = ClusterController(cluster.vars, cluster.objects, capacity=capacity, wall=wall, cluster=cluster.name)
-        self.workers: dict[str, ClusterWorker] = {}
+        self.ctl = VmsController(cluster.vars, cluster.objects, capacity=capacity, wall=wall, cluster=cluster.name)
+        self.workers: dict[str, VmsWorker] = {}
         self.alloc = 0
         for name, server in workers:
             self.add_worker(name, server, capacity)
 
-    def add_worker(self, name: str, server: str, capacity: int = 50) -> ClusterWorker:
+    def add_worker(self, name: str, server: str, capacity: int = 50) -> VmsWorker:
         self.alloc += 1
         env = {"SLOT_INDEX": name.split("-")[1], "SERVER_NAME": server, "INSTANCE_ID": f"{self.c.name}-alloc-{self.alloc}",
                "LABELS": ",".join(sorted(self.c.reaches))}
-        w = ClusterWorker(self.c.vars, self.c.objects, FakeActuator(), env=env, clock=self.wall, wall=self.wall, capacity=capacity)
+        w = VmsWorker(None, self.c.vars, self.c.objects, FakeActuator(), env=env, clock=self.wall, wall=self.wall, capacity=capacity)
         w.heartbeat_once()
         self.workers[name] = w
         return w

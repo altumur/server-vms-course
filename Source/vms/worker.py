@@ -3007,6 +3007,9 @@ class VmsWorker(Worker):
     #
     # By the real clock, not `self.clock`: `stop.wait` waits real seconds, and the beats divide THAT wait.
     def between(self, poll: float, stop, beat: float) -> None:
+        # At the end of every turn, whatever its steps did — a step that RAISED is a loop that turns, and says so; one
+        # that HANGS keeps the loop from coming here, and after `WatchdogSec` systemd starts the unit again.
+        runtime.notify()
         if beat <= 0 or beat >= poll:
             stop.wait(poll)
             return

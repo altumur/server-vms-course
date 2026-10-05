@@ -9,7 +9,7 @@ import json
 import urllib.error
 import urllib.request
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from domain.agent import DomainAgent
 from domain.api import ConsoleAPI

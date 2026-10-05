@@ -16,7 +16,7 @@ import logging
 import threading
 import time
 
-from cluster.variables import Variables
+from w2cplatform.cluster.variables import Variables
 from w2cplatform.rows import PARSE_ERRORS
 
 from .federation import Unreachable
@@ -447,7 +447,7 @@ def main() -> None:
     # report in the domain holder's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own
     # `OBJECTS_URL`. The same one connection, opened from here, carrying both ways.
     report = os.environ.get("REPORT") == "1"
-    from cluster.objectstore import open_store
+    from w2cplatform.cluster.objectstore import open_store
     own_vars = open_vars(store_url(os.environ, "configstore:///run/configstore/domainagent.sock"))   # its cluster's store, by its role's socket
     # Lesson 17. RELAY_CONFIG_URL / RELAY_OBJECTS_URL: this member can reach only its relay — the relay is
     # its road to the domain both ways (`chain.Relay`). RELAY_MEMBERS: this is such a relay, relaying for them.

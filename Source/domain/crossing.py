@@ -44,7 +44,7 @@ import json
 import time
 from dataclasses import dataclass
 
-from cluster.variables import Conflict
+from w2cplatform.cluster.variables import Conflict
 from vms.archive import subtract
 
 from .agent import POLL_PATH, PRIMARIES_PATH, SOURCES_PATH

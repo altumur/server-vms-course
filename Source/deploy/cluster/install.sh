@@ -51,7 +51,7 @@ else
   OS=other
 fi
 
-UNITS="configstore w2c-resource vms-console vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker"
+UNITS="configstore w2c-resource vms-console vms-jobs vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker"
 # A spare is its role's unit but the name (the twelfth review, blocker 6): installed with the spares, never enabled —
 # `w2c-spares.sh` starts `vms-<role>-spare@<n>`.
 SPARE_UNITS="vms-vmsworker-spare@ vms-recworker-spare@"
@@ -98,7 +98,7 @@ cp "$HERE/w2c-run.sh" "$W2C_HOME/bin/w2c-run.sh"; chmod 0755 "$W2C_HOME/bin/w2c-
 
 # -- the rights, checked against the spec ---------------------------------------------------------------------------
 W2C_HOME="$W2C_HOME" "$W2C_HOME/bin/w2c-run.sh" rights --check "$HERE/configstore-rights.json" \
-  || { echo "deploy/cluster/configstore-rights.json is not what the spec generates: python3 -m cluster rights > it, commit, again" >&2; exit 1; }
+  || { echo "deploy/cluster/configstore-rights.json is not what the spec generates: SPEC_DIR=Source/vms python3 -m w2cplatform.cluster rights > it, commit, again" >&2; exit 1; }
 
 if [ "$OS" = macos ]; then
   # -- macOS: the box's files, its plists ---------------------------------------------------------------------------

@@ -1,0 +1,33 @@
+# /etc/systemd/system/vms-jobs.service — the VMS's housekeeping, on every server: a request turned into work (a
+# scenario's recording, a detector with an end), the work into a closed row (a finished job, an answered request, a
+# recording whose minutes are over). It ran inside the cluster's console until the boundary's step 7; the console is the
+# platform's, run from the specs alone. Safe on every server: every write of its turns is a CAS, so two of them end a
+# recording once. The console's grant of the families it touches — its role's socket, `console`.
+[Unit]
+Description=VMS jobs — requests turned into rows, finished work closed
+After=network-online.target configstore.service w2c-resource.service
+# Ordered after the store's member, never starting it (the product's r28-ops2).
+Wants=network-online.target
+
+[Service]
+User=vms
+Group=vms
+# Its store socket's group (the console's role: it writes configuration, as only the console's token does); the
+# objects (the heartbeats it reads).
+SupplementaryGroups=vms-console w2c-store
+Environment=PLATFORM_STORE=configstore:///run/configstore/console.sock
+Environment=JOBS_HOST=0.0.0.0
+Environment=JOBS_PORT=8095
+UMask=0007
+ExecStart=/opt/w2c/bin/w2c-run.sh vms jobs
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/data/platform/objects
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

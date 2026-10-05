@@ -604,7 +604,7 @@ def _piece_host():
     root = tempfile.mkdtemp(prefix="testsub-host-")
     env = {"SPEC_DIR": os.path.dirname(TESTSUB), "PLATFORM_DIR": root}
     assert host.main(["controller", "testsub"], {"PLATFORM_DIR": root}) == 2          # no SPEC_DIR: nothing runs
-    vars_, objects = host.box_stores(env)
+    vars_, objects = host.stores(env)
     ws = [_counter_worker(Subsystem("testsub"), vars_, objects, time.monotonic, time.time, f"I{i}", f"srv-{i}")
           for i in (1, 2)]
     for w in ws:

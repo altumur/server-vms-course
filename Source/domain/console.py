@@ -264,7 +264,7 @@ class Console:
                     self._send(e.status, {"detail": e.detail})
 
             def _topology(self):
-                from cluster.variables import Conflict
+                from w2cplatform.cluster.variables import Conflict
                 if not read_body(self, self.MAX_BODY):
                     return
                 body = self._body()

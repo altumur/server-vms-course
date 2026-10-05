@@ -15,6 +15,9 @@ slot: {prefix: w, name_env: WORKER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
 # a holder's mark before it acts on a device (`VmsWorker`, `put_new`): created ONCE across every server.
 objects: {rows: [commands/*]}
+# What the holder writes beside its claims: what a device it holds turned out to be (`vms/devices/<device>`, М10B Lesson
+# 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
+worker: {writes: [devices]}
 unit:
   # the row directory `vms/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
   # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.

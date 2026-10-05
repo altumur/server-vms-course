@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import os
 
-from cluster.objectstore import open_store
+from w2cplatform.cluster.objectstore import open_store
 from w2cplatform.variables import open_vars
 
 from .federation import Cluster, Federation

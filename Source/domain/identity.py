@@ -22,7 +22,7 @@ import secrets
 import time
 from dataclasses import dataclass, field
 
-from cluster.variables import Conflict, Variables
+from w2cplatform.cluster.variables import Conflict, Variables
 from w2cplatform.rows import Table
 
 from .signer import Signer

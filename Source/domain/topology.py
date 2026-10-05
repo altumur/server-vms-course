@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 
-from cluster.variables import Conflict
+from w2cplatform.cluster.variables import Conflict
 
 TOPOLOGY = "domain/topology"
 

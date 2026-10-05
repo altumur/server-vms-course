@@ -145,3 +145,23 @@ def instance_on_box(env: dict, given: str | None = None) -> str:
     if given:
         return f"{said}:{os.getpid()}:{given}" if said else given
     return f"{box(env)}:{os.getpid()}:{uuid.uuid4().hex[:6]}"
+
+
+# THE WATCHDOG (the twelfth review, major 14): a hung process gives its supervisor time to see it (`WatchdogSec`) before
+# its units move — `KeepAlive`/`Restart=always` see a process that ENDED, never one that stopped turning. `sd_notify`
+# without libsystemd: one datagram to the socket systemd names in `$NOTIFY_SOCKET` (`@` — the abstract namespace).
+# Nothing to say to (launchd, a bench, a test without one): False, and nothing else happens. A socket that refuses is
+# the same: the supervisor's business, never a reason for the loop to stop. A worker's loop says it at every turn.
+def notify(state: bytes = b"WATCHDOG=1", env: dict | None = None) -> bool:
+    path = (os.environ if env is None else env).get("NOTIFY_SOCKET", "")
+    if not path:
+        return False
+    if path.startswith("@"):
+        path = "\0" + path[1:]
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as s:
+            s.connect(path)
+            s.send(state)
+        return True
+    except OSError:
+        return False

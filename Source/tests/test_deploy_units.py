@@ -404,14 +404,15 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
 
 def test_every_process_that_registers_with_the_resource_mounts_the_events_archive():
     """The twelfth review, major 5: a process that holds a slot registers with its server's resource
-    (`vms/__main__._present`: a lock and its name in `<events archive>/.workers`), and the live gateway's container
+    (`vms/__main__._present`, `make_worker`, `make_recorder`: a lock and its name in `<events archive>/.workers`), and the live gateway's container
     did not mount the events archive — its registration went into the container's own layer, the resource never saw it,
     and a hung gateway was "not listed", its slot released: two gateways. Every entry point that calls `_present`, read
     from `vms/__main__.py`, against the container that runs it: the archive mounted, its group joined."""
     import ast
     src = ast.parse(open(os.path.join(HERE, "vms", "__main__.py"), encoding="utf-8").read())
     registers = {f.name for f in src.body if isinstance(f, ast.FunctionDef)
-                 and any(isinstance(n, ast.Call) and getattr(n.func, "id", "") == "_present" for n in ast.walk(f))}
+                 and any(isinstance(n, ast.Call) and getattr(n.func, "id", "") in ("_present", "make_worker", "make_recorder")
+                         for n in ast.walk(f))}
     assert {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker"} <= registers, registers
     ran = set()
     for n in sorted(os.listdir(DEPLOY)):

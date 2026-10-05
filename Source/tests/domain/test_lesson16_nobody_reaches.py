@@ -5,7 +5,7 @@ reaches out — its agent for books and reports (Lesson 10), a long poll to the 
 work, a push for media — and recording, live view and backfill all work. The stream token is the domain
 signer's; the ingest checks it with the key set its own agent carried.
 """
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from domain.agent import ClusterTrust, DomainAgent, DomainPublisher
 from domain.crossing import Crossings, resolve

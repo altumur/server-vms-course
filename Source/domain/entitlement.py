@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
-from cluster.variables import Variables
+from w2cplatform.cluster.variables import Variables
 
 GRACE = 30 * 86400.0      # the number the datasheet states
 

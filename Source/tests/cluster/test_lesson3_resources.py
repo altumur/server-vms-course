@@ -7,7 +7,7 @@ import json
 import os
 
 from vms.footage import footage_routes
-from cluster.controller import ClusterController
+from vms.controller import VmsController
 
 from w2cplatform.spec import SpecController
 from vms.config import REC_SPEC
@@ -30,7 +30,7 @@ def test_an_edit_during_the_failover_is_simply_there():
     """The RPO inside the cluster is zero: the console's write went into the replicated store (raft, under the
     configstore), and the new process of the unit — systemd starts it again two seconds later — reads it there.
     """
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     ctl.create_camera({"source": "driverpack://file/1.mp4", "name": "before"})
     a = c.worker("srv-a"); a.heartbeat_once(); ctl.ensure_placed(); a.reconcile_once()
     c.wall.advance(2)                                                      # w-srv-a-1 died; systemd starts its unit again
@@ -41,7 +41,7 @@ def test_an_edit_during_the_failover_is_simply_there():
 
 
 def test_a_timeline_spans_two_volumes_and_names_the_one_nobody_serves():
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     t = c.wall()
     c.vars.put("rec/epoch/7", {"epoch": "4"})                                       # the recording's writer is e4 now
     a = _recorder_with_footage(c, "srv-a", "7", 3, ((t - 1200, t - 900), (t - 600, t - 450)))   # before the failure, on A
@@ -95,7 +95,7 @@ def test_a_recordings_timeline_is_named_and_answered_by_its_own_recorder():
     camera 7, each in its own volume, each served by its own recorder. The page reads each at its holder's door since
     the boundary's step 6 (`/door/timeline/<recording>`; it was the console's `/timeline/<cam>`, which turned the
     camera into its recordings). A route that parsed a recording's id as a number would answer 500 to `7-backup`."""
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     rec = SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall)
     rec.create({"name": "7-main", "cam": "7"}); rec.create({"name": "7-backup", "cam": "7"})
     t = c.wall()

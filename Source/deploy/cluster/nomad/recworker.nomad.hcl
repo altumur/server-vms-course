@@ -31,7 +31,7 @@ job "recworker" {
       kill_timeout = "40s"                           # the pipelines stop, the writer closes after its flush, then the hold goes
       config {
         command = "/opt/w2c/bin/w2c-run.sh"
-        args    = ["recorder"]
+        args    = ["vms", "recorder"]
       }
       env {
         PLATFORM_STORE  = "configstore:///run/configstore/recworker.sock"

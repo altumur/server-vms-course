@@ -300,13 +300,13 @@ DEVICES = "devices"
 HOLDER_EVENTS = ("command", "command.failed", "silent")
 
 
-# The holder's token: the platform's grant for any worker, plus the one row it writes that is not a claim about
-# itself — what a device turned out to be. Derived here, once, so the process (`__main__.worker`) and a cluster's
-# policy file (М11, `test_policies`) cannot say different things.
-WORKER_ACL = SPEC.sub.acl_worker() + [SPEC.sub.config(DEVICES, "*")]
+# The holder's token, from the spec (`worker: {writes: [devices]}`): the platform's grant for any worker, plus the one
+# row it writes that is not a claim about itself — what a device turned out to be. The process (`__main__.worker`) and a
+# cluster's rights file (`w2cplatform/cluster/rights.py`) read the same declaration.
+WORKER_ACL = SPEC.acl_worker_role()
 # …and the same for objects: its heartbeat, and the marks it leaves before it calls a device (`vms/commands/<id>`,
 # written and — when the request is gone — removed; `VmsWorker.requests`).
-WORKER_OBJECTS = SPEC.sub.acl_objects_worker() + [f"{SPEC.name}/commands/*"]
+WORKER_OBJECTS = SPEC.sub.acl_objects_worker() + [f"{SPEC.name}/{p}" for p in SPEC.object_rows]
 
 
 def describe(caps: dict | None) -> dict | None:
