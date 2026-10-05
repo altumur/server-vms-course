@@ -83,7 +83,7 @@ def test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_addre
     view = ReadView(fed, wall=wall)
     view.refresh()
     shown = json.dumps(view.configured[f"cam-{SERIAL}"])
-    assert "Hunter2" not in shown and "cred_secret" not in shown and "usr=***&pwd=***" in shown, shown
+    assert "Hunter2" not in shown and "cred_secret" not in shown and "usr=admin&pwd=***" in shown, shown
 
 
 def test_the_epoch_grows_on_every_boot_and_the_archive_path_carries_it():

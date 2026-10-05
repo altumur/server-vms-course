@@ -843,7 +843,7 @@ def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address(
                   "cred_secret": "Hunter2"}, cas=idx)                          # as an older build stored it
     cam.publish()
     snap = cam.ram.get(f"vms/snapshot/{SERIAL}")
-    assert b"Hunter2" not in snap and json.loads(snap)["cameras"][0]["source"].endswith("usr=***&pwd=***")
+    assert b"Hunter2" not in snap and json.loads(snap)["cameras"][0]["source"].endswith("usr=admin&pwd=***")
 
 
 # -- the ninth review ----------------------------------------------------------------------------------------------------

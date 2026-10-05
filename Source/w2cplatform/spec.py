@@ -88,7 +88,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 from .doors import numeric, unnamable
-from .secrets import NOT_AN_ADDRESS, SecretRules, address_refusal, hide_in_url, is_secret_field
+from .secrets import NOT_AN_ADDRESS, SecretRules, address_fault, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES, SCHEMA_KEY,
                        OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
@@ -162,6 +162,8 @@ SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of
 # What a spec's `requests:` says (`SubsystemSpec._page_words`).
 REQUEST_KEYS = ("free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
                 "elsewhere")
+# What a spec's `display:` says: words for a page (`SubsystemSpec._page_words`, `_card_words`).
+DISPLAY_KEYS = ("unit", "units", "field_help", "kinds", "actions", "tree", "keys", "general", "fields", "options", "form")
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
                     "mended; the other units are judged", "unit's row")
 # What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
@@ -288,6 +290,26 @@ class Field:
     # decision 3): checked at the door on the value as it parses — a `json` field's document, an `int`'s number — for
     # every writer, in the schema's words. What a value may MEAN beyond its shape is the subsystem's worker's to say.
     schema: object = None
+
+    # Why a url field may not store `value` as typed, None when it may: a login or a credential anywhere in it, by the
+    # platform's one rule (`secrets.address_fault`) and THIS field's `secret_in`; the words name the field its
+    # `credentials` gives what was found — a password the secret's, a login with no password the login's — and never
+    # the value.
+    def refusal(self, value) -> str | None:
+        got = address_fault(str(value), self.rules)
+        if not got:
+            return None
+        why, kinds = got
+        login, secret = self.credentials.get("login"), self.credentials.get("secret")
+        if "secret" in kinds and secret:
+            instead = (f"Put the login in {login} and the password or token in {secret}" if "login" in kinds and login
+                       else f"Put the password or token in {secret}")
+        elif "secret" not in kinds and login:
+            instead = f"Put the login in {login}"
+        else:
+            instead = "A login and a password go in fields of their own"
+        return (f"{self.name} may not be stored as typed: {why}. {instead} — an address is shown on every page and in "
+                f"what leaves the cluster; a secret has a field of its own, sealed")
 
     # Convert an item string or JSON value to the typed value; `None` gives the default. Bools accept a real
     # bool or the string `"true"`; lists accept a list or a comma-separated string.
@@ -510,12 +532,10 @@ def _slot(name, slot) -> tuple[str, str]:
 
 
 # `objects: {rows: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a segment `*`.
-# `objects.door` — the product's files a resource's door gives the other servers — is accepted and not read: the course
-# keeps no such file (its objects are rows of the store, or the resource's buckets), and a product spec loads as it is.
 def _object_rows(name, objects) -> tuple:
     if objects is None:
         return ()
-    if not isinstance(objects, dict) or set(objects) - {"rows", "door"} or not isinstance(objects.get("rows", []), list):
+    if not isinstance(objects, dict) or set(objects) - {"rows"} or not isinstance(objects.get("rows", []), list):
         raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …]}}, not {objects!r}")
     out = []
     for p in objects.get("rows") or []:
@@ -554,8 +574,8 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
 # The parsed YAML. Fields: `name`; `rows` (`"units"`; the VMS says `cameras`); `id` (`"numeric"` or a field
 # name); `fields`; `derived`; `capacity_from` / `capacity_default` (heartbeat key for a worker's capacity,
 # and the number for a worker that said nothing); `headroom_from`; `constraint`; `tie_break` (only
-# `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`units_running` by
-# default; `cameras_running` for the VMS).
+# `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`console.running`: the name
+# of one of its own `metrics`, the gauge of units running; empty when the spec says none).
 _DOMAIN_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
 _DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens", "keys", "shared")
 _RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
@@ -827,13 +847,10 @@ class SubsystemSpec:
     retire_values: tuple = ()
     dead_band: float = 0.10
     snapshot: list[str] = field(default_factory=list)
-    # `tables: [volumes]` — row families this subsystem's CONSOLE owns besides its units. Not units: nothing
-    # is placed on them, they have no epoch and no worker; they are the administrator's lists, like `policy`
-    # but plural and named. `rec` declares `volumes`, the archives an operator may write recordings into.
-    #
-    # The platform learns the NAME and nothing else: the ACL gains `<name>/<table>/*`, and what a row of
-    # that table means, which fields it has and which routes serve it are the subsystem's, in its own
-    # console code. That is the line: a generic grant is a platform matter, a volume is not.
+    # `tables:` — row families this subsystem's CONSOLE owns besides its units, by name, from either form below. Not
+    # units: nothing is placed on them, they have no epoch and no worker; they are the administrator's lists, like
+    # `policy` but plural and named. Each gains the console's token `<name>/<table>/*`; a name may not be one of the
+    # platform's own families (`servers`, `policy`, `slots`, … — refused at load).
     tables: tuple[str, ...] = ()
     # `tables: {<name>: {key, fields, schema, stamp, journal}}` — the tables whose rows the console SERVES (`tables.py`;
     # the boundary's step 6: they were a subsystem's routes on the platform's console). A table named in the list form
@@ -918,8 +935,9 @@ class SubsystemSpec:
     # `metrics: [...]` — the subsystem's own numbers on `/metrics`, declared (`metrics.py`; the boundary's step 6 — it
     # was a function of the subsystem's the console called, `metrics_extra`).
     metrics: list = field(default_factory=list)
-    # `display: {unit, units, field_help, kinds, actions, tree: {group_by, nested_by, columns, children}}` — what a page calls
-    # things; a dictionary the platform hands to `/spec` and reads none of (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8).
+    # `display: {unit, units, field_help, kinds, actions, tree: {group_by, nested_by, columns, children}, keys, general,
+    # fields, options, form}` — what a page calls things; a dictionary the platform hands to `/spec` and reads none of
+    # (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8).
     display: dict = field(default_factory=dict)
     # `servers: {show: [{table, by, title, columns}]}` — rows of this subsystem's tables a page shows under the server
     # their `by` field names (a disk under its server). Handed to `/spec`; it was a field the console's `/servers` read
@@ -1076,8 +1094,11 @@ class SubsystemSpec:
             raise ValueError(f"spec {spec.name}: home: near needs a near to follow")
         if spec.home and spec.home != "near" and spec.home not in fields:
             raise ValueError(f"spec {spec.name}: home names no field: {spec.home!r}")
-        # …and, the last thing asked, the capacity of a worker that said nothing: the spec's to say (`_capacity`).
+        # …the capacity of a worker that said nothing: the spec's to say (`_capacity`).
         spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
+        # …and, the last thing asked, a key nobody above read: refused, named where it stands (`speckeys.py`).
+        from .speckeys import refuse_unknown
+        refuse_unknown(spec.name, d)
         return spec
 
     # `about:` and `rights:` as written, checked at load: `about` names another subsystem by a name and a field of this
@@ -1177,9 +1198,10 @@ class SubsystemSpec:
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
         disp = d.get("display")
         if disp is not None:
-            if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree", "keys"}:
-                raise ValueError(f"spec {self.name}: `display:` is {{unit, units, field_help, kinds, actions, tree, keys}} — "
-                                 f"words for a page, no logic — not {disp!r}")
+            if not isinstance(disp, dict) or set(disp) - set(DISPLAY_KEYS):
+                raise ValueError(f"spec {self.name}: `display:` is {{{', '.join(DISPLAY_KEYS)}}} — words for a page, no "
+                                 f"logic — not {disp!r}")
+            self._card_words(disp)
             for fid, w in (disp.get("keys") or {}).items():
                 if not isinstance(w, dict) or set(w) - {"title", "about", "absent"} or not isinstance(w.get("title"), str) \
                         or not all(isinstance(v, str) for v in w.values()):
@@ -1207,6 +1229,32 @@ class SubsystemSpec:
                                  f"field naming the server>, title, columns}}]}}, not {servers!r}")
             self.servers_show = show
 
+    # A UNIT'S CARD, IN WORDS (the product's; the page module draws the card from them, the platform reads none): `general`
+    # — what the card's first tab is called; `fields` — a field's label (`id` and the unit's status words too); `options`
+    # — the word for each value of a field with an `enum`; `form` — the card's blocks in order, `{title, state?,
+    # placement?, fields, note?}`: `state` puts the unit's state in the block, `placement` where it runs. Each names
+    # fields of the row, checked here: a word for a field that is not there is a word for nothing.
+    def _card_words(self, disp: dict) -> None:
+        named = set(self.fields) | {"id", *self.STATUS_COLUMNS}
+        fields, options, form = disp.get("fields") or {}, disp.get("options") or {}, disp.get("form") or []
+        if not isinstance(disp.get("general", ""), str):
+            raise ValueError(f"spec {self.name}: display.general is a word, not {disp['general']!r}")
+        if not isinstance(fields, dict) or not all(k in named and isinstance(v, str) for k, v in fields.items()):
+            raise ValueError(f"spec {self.name}: display.fields is {{<a field of the row>: <its label>}}, not {fields!r}")
+        for k, words in (options.items() if isinstance(options, dict) else [(None, None)]):
+            f = self.fields.get(k)
+            if f is None or not f.enum or not isinstance(words, dict) or \
+                    not all(isinstance(w, str) and str(v) in map(str, f.enum) for v, w in words.items()):
+                raise ValueError(f"spec {self.name}: display.options is {{<a field with an enum>: {{<one of its values>: "
+                                 f"<its word>}}}}, not {options!r}")
+        if not isinstance(form, list) or not all(
+                isinstance(b, dict) and not set(b) - {"title", "state", "placement", "fields", "note"}
+                and isinstance(b.get("title"), str) and isinstance(b.get("note", ""), str)
+                and isinstance(b.get("state", False), bool) and isinstance(b.get("placement", False), bool)
+                and isinstance(b.get("fields"), list) and all(x in named for x in b["fields"]) for b in form):
+            raise ValueError(f"spec {self.name}: display.form is [{{title, state?, placement?, fields: [<a field of the "
+                             f"row>], note?}}], not {form!r}")
+
     # The placement's words that are a vocabulary or a declaration, checked at load (the boundary's step 6): the
     # constraint and the tie-break are names from the closed catalogue; `group_by` is a field, or `{field, cut_at}` over
     # a url field; `near.prefer` one key `<their field>[.<field>]` and a value or a list of them; `affinity` names a
@@ -1217,6 +1265,11 @@ class SubsystemSpec:
                              f"{self.constraint!r} — the catalogue is closed; declare what else a unit needs")
         if self.tie_break not in TIE_BREAKS:
             raise ValueError(f"spec {self.name}: placement.tie_break is one of {', '.join(TIE_BREAKS)}, not {self.tie_break!r}")
+        # …and the two words read by equality further on: a typo was `none` or `shared` without a word said
+        if self.requires not in REQUIRES:
+            raise ValueError(f"spec {self.name}: placement.requires is one of {', '.join(REQUIRES)}, not {self.requires!r}")
+        if self.servers not in SERVERS:
+            raise ValueError(f"spec {self.name}: placement.servers is one of {', '.join(SERVERS)}, not {self.servers!r}")
         g = pl.get("group_by")
         if isinstance(g, dict):
             if set(g) - {"field", "cut_at"} or self.group_by not in self.fields:
@@ -1487,16 +1540,10 @@ class SubsystemSpec:
                 # scheme that names its host there (the tenth round), a credential pair (the eleventh review, blocker 4).
                 # The words name the parameter, never its value.
                 # By THIS field's rules (`secret_in`, the boundary's step 4): how its addresses carry a login is its
-                # spec's to say; the words name the fields its spec gives a login and a password (`credentials`).
-                why = address_refusal(str(fields[name]), f.rules)
+                # spec's to say; the words name the fields its spec gives a login and a password (`Field.refusal`).
+                why = f.refusal(fields[name])
                 if why:
-                    cred = f.credentials
-                    instead = (f"Put the login in {cred['login']} and the password or token in {cred['secret']}"
-                               if "login" in cred and "secret" in cred else
-                               f"Put the password or token in {cred['secret']}" if "secret" in cred else
-                               "A login and a password go in fields of their own")
-                    raise Refused(f"{name} may not be stored as typed: {why}. {instead} — an address is shown on every "
-                                  f"page and in what leaves the cluster; a secret has a field of its own, sealed")
+                    raise Refused(why)
                 # …and reached by what the spec says it is reached by (`schemes`); said in words, the scheme is no secret.
                 scheme = u.scheme.lower()
                 if f.schemes and scheme not in f.schemes:
@@ -1549,6 +1596,8 @@ def _labels_subset(row: dict, worker_labels: set[str]) -> bool:
 # `must_match` and `unique`, `group_by.cut_at`.
 CONSTRAINTS = {"none": lambda row, labels: True, "labels-subset": _labels_subset}
 TIE_BREAKS = ("most-free-capacity",)
+REQUIRES = ("none", "resource")       # `resource`: a worker is eligible only while its server's resource answers
+SERVERS = ("shared", "distinct")      # `distinct`: one worker per place (`place_by`) carries units
 
 
 # A URL IN ITS ONE SPELLING (RFC 3986 §6.2.2, the syntax-based normalisation; the owner's decision on the boundary's
