@@ -104,3 +104,57 @@ def test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_be
             os.environ.pop("W2C_PRODUCT_DIR", None)
         else:
             os.environ["W2C_PRODUCT_DIR"] = was
+
+
+LOG_MASK = os.path.join(SOURCE, "tests", "testdata", "log_mask.tsv")
+
+
+def test_free_text_is_said_with_every_credential_in_it_hidden_as_its_table_says():
+    """`secrets.mask_text` — a log line, an error a driver said, a request it logged, a JSON document: no field of any
+    spec's (the product's decision, 5 Oct: a function of the platform's own, with its own table). Each row of
+    `testdata/log_mask.tsv`, by the platform's own names of a credential alone: `masked` is what is said of `raw`,
+    and no row that hides a value shows `hunter2`."""
+    from w2cplatform.secrets import NO_RULES, mask_text
+    wrong, n = [], 0
+    with open(LOG_MASK, encoding="utf-8") as f:
+        for i, line in enumerate(f.read().split("\n"), 1):
+            if not line or line.startswith("#"):
+                continue
+            cols = line.split("\t")
+            assert len(cols) == 3, f"line {i}: a row is raw, masked, note: {line!r}"
+            raw, masked, _ = cols
+            n += 1
+            got = mask_text(raw, NO_RULES)
+            if got != masked:
+                wrong.append(f"line {i}: {raw}\n    said as {got}\n    the table: {masked}")
+            if "***" in masked and "hunter2" in masked.lower():
+                wrong.append(f"line {i}: the table's own mask shows the password: {masked}")
+    assert not wrong, f"{len(wrong)} rows of log_mask.tsv go another way:\n  " + "\n  ".join(wrong)
+    assert n >= 20, f"the table is too short: {n} rows"
+
+
+def test_the_platforms_log_lines_go_through_the_mask():
+    """`secrets.mask_logs` puts `MaskedLog` on a logger's handlers (the platform's entry points do it for the root's): a
+    record whose message holds a credential is said masked, its arguments folded in; any other is left as it was."""
+    import io
+    import logging
+
+    from w2cplatform.secrets import mask_logs
+    out = io.StringIO()
+    logger = logging.getLogger("fx-mask-probe")
+    logger.propagate = False
+    h = logging.StreamHandler(out)
+    logger.addHandler(h)
+    logger.setLevel(logging.INFO)
+    try:
+        mask_logs(logger)
+        mask_logs(logger)                                # once is enough: no second filter
+        assert len(h.filters) == 1
+        logger.info("opening %s failed", "rtsp://admin:hunter2@cam/live?token=hunter2")
+        logger.info("Authorization: Basic %s", "YWRtaW46aHVudGVyMg==")
+        logger.info("nothing to hide: %d", 7)
+        said = out.getvalue()
+        assert "hunter2" not in said and "YWRtaW46" not in said, said
+        assert "rtsp://admin:***@cam/live?token=***" in said and "nothing to hide: 7" in said, said
+    finally:
+        logger.removeHandler(h)

@@ -1,0 +1,34 @@
+# log_mask.tsv — free text said with every credential in it hidden: the platform's `secrets.mask_text`, outside any
+# spec (the product's decision, 5 Oct). A log line, an error a driver said, a request it logged, a JSON document. Seeded
+# from the free-text rows of the product's draft of secret_in.tsv (wt-boundary-4b), then the course's own.
+#
+# Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
+#   raw     the text as written
+#   masked  what is said of it: every password, token or key masked as *** where it stands; a login left as written
+#   note    why the row is here
+# The reader masks by the platform's own names of a credential alone (`secrets.COMMON_RULES`), no spec's.
+host k=v;apikey=zz:80:admin:	host k=v;apikey=***	a connect string: the value runs to the end — more masked, never less
+?pwd=&channel=1	?pwd=&channel=1	an empty value stays empty: not set is no secret
+?p%77d=hunter2&channel=1	?p%77d=***&channel=1	
+?p%2577d=hunter2&channel=1	?p%2577d=***&channel=1	
+/proxy?src=rtsp%3A%2F%2Fadmin%3Ahunter2%40cam&x=1	/proxy?src=***&x=1	
+/x?q=a%3Db&title=Gate%20%231	/x?q=a%3Db&title=Gate%20%231	
+{"url":"http://127.0.0.1:8091","cov":{"from":1}}	{"url":"http://127.0.0.1:8091","cov":{"from":1}}	an address in a JSON text ends at its quote
+{"url":"http://127.0.0.1","cov":{"from":1}}	{"url":"http://127.0.0.1","cov":{"from":1}}	
+dial rtsp://cam:554: connection refused	dial rtsp://cam:554: connection refused	a port followed by what closes a sentence is a number
+at rtsp://cam:554, again	at rtsp://cam:554, again	
+a \"rtsp://cam:554\" b	a \"rtsp://cam:554\" b	
+rtsp://[fe80::1]:554/live and ipint://h/Virtual/V	rtsp://[fe80::1]:554/live and ipint://h/Virtual/V	
+Authorization: Basic YWRtaW46aHVudGVyMnh5eg==	Authorization: Basic ***	a driver's RTSP client logs its request
+DESCRIBE rtsp://10.0.0.9:554/user=admin&password=hunter2xyz&channel=1&stream=0.sdp RTSP/1.0	DESCRIBE rtsp://10.0.0.9:554/user=admin&password=***&channel=1&stream=0.sdp RTSP/1.0	
+proxy-authorization: bearer abc.def	proxy-authorization: bearer ***	
+Authorization: Digest username="admin", response="5ccc"	Authorization: Digest username="admin", response="5ccc"	Digest's hash is left
+{"source":"driverpack://acme/u:hunter2xyz@10.0.0.5/ch/1"}	{"source":"driverpack://acme/u:***@10.0.0.5/ch/1"}	
+{"password":"hunter2xyz","user":"admin"}	{"password":"***","user":"admin"}	a JSON member named as a credential; a login's is left
+{"token": "", "x": 1}	{"token": "", "x": 1}	an empty value stays empty
+opening rtsp://admin:hunter2xyz@10.0.0.5/live failed: 401	opening rtsp://admin:***@10.0.0.5/live failed: 401	a log line: the userinfo's login said, its password not
+ffmpeg -i rtsp://10.0.0.5/live?token=hunter2xyz -c copy out.mp4	ffmpeg -i rtsp://10.0.0.5/live?token=*** -c copy out.mp4	a command line a driver logged
+Authorization: Bearer hunter2xyz	Authorization: Bearer ***	Bearer, in its own case
+dsn=host=db user=app password=hunter2xyz sslmode=require	dsn=host=db user=app password=*** sslmode=require	a connection string's pairs, space-separated
+gpio_pin=4 hotkey=2 token_bucket=5	gpio_pin=4 hotkey=2 token_bucket=5	names of their own: no credential's word, whole or last
+pin=1234 hot_key=hunter2xyz	pin=*** hot_key=***	=pin the whole name, key the last word

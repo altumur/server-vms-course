@@ -713,7 +713,8 @@ def test_the_products_second_secrets_pass_finds_nothing_in_the_course():
     assert hide_in_url(R28_FORMS[0]) == "http://h:1984/api/stream.mp4?src=***"
     assert hide_in_url(R28_FORMS[1]) == "http://h:1984/api/stream.mp4?src=***"
     assert hide_in_url("rtsp://10.0.0.5:554/live?x=y@b") == "rtsp://10.0.0.5:554/live?x=\u2026@b"
-    assert hide_in_url("rtsp://a:Hunter2@10.0.0.5:554/live?x=y@b") == "rtsp://\u2026@10.0.0.5:554/live?x=\u2026@b"
+    # …a userinfo's login is said, its password not
+    assert hide_in_url("rtsp://a:Hunter2@10.0.0.5:554/live?x=y@b") == "rtsp://a:***@10.0.0.5:554/live?x=\u2026@b"
     assert "pass" in address_refusal("rtsp://10.0.0.5/live?pass%3DHunter2=1")
     for n in ("psk", "wpa_psk", "WPA-PSK", "privkey", "private_key", "auth", "Authorization"):
         assert is_credential_param(n), n
@@ -794,19 +795,20 @@ def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_
 def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_from_the_spec():
     """The boundary's step 4: the name lists, the XMeye chain, a password's name segment, DriverPack's host in the path
     and go2rtc's `?src=` were `secrets.py`'s own; they are the `secret_in` of `source` in `vms.subsystem.yaml` now, with
-    `schemes` and `credentials`. Without those rules the platform refuses only an `@` and a port that is no number — the
+    `schemes` and `credentials`. Without those rules the platform refuses an `@`, a port that is no number and its few
+    common names of a credential (`COMMON_RULES`: `pwd`, `token`…), and no vendor's spelling — the
     forms below stand; with them every one is refused, its password hidden, and the refusal names `cred_secret` — and
     `cred_username` beside it where a login was found too."""
     from w2cplatform.secrets import NO_RULES, address_refusal, hide_in_url
     source = SPEC.fields["source"]
     assert source.credentials == {"login": "cred_username", "secret": "cred_secret"} and "driverpack" in source.schemes
-    spelt = ["http://10.0.0.5/cgi-bin/snapshot.cgi?usr=admin&pwd=Hunter2",
+    spelt = ["http://10.0.0.5/cgi-bin/snapshot.cgi?usr=admin&loginpas=Hunter2",
              "rtsp://10.0.0.9:554/channel=1_user=admin_password=Hunter2_stream=0.sdp",
              "http://10.0.0.5/user/admin/password/Hunter2/snap.jpg",
              "driverpack://acme/admin:Hunter2/ch/1", "driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1",
              "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"]
     for src in spelt:
-        assert address_refusal(src, NO_RULES) is None, src                  # the platform's own reading: no list
+        assert address_refusal(src, NO_RULES) is None, src                  # the platform's own names: no vendor's
         assert address_refusal(src, source.rules) and not _leaks(hide_in_url(src, source.rules)), src
         try:
             SPEC.refuse({"source": src})

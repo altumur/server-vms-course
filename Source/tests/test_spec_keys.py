@@ -140,15 +140,21 @@ def _target_spec(target=None):
         "account_name": {"type": "string"}, "pass_secret": {"type": "string", "bound_to": ["target"]}}})
 
 
-def test_how_an_address_carries_a_login_is_the_specs_and_the_platform_keeps_no_list_of_its_own():
+def test_how_an_address_carries_a_login_is_the_specs_beside_the_platforms_few_common_names():
     """The forms a credential takes in an address — the names of its parameters, a login spelt in the path, a parameter
-    holding another address — were lists in `secrets.py`. They are a url field's `secret_in` now: with no rules the
-    platform refuses only what RFC 3986 says is a login (an `@`, a port that is no number); with the field's rules it
-    refuses what they find and hides the passwords — a login is said as written —, and the refusal names the field of
-    `credentials` for what it found (a password the secret's, a login alone the login's), never the value. A regex reads
-    the part it names of an address of the schemes it names, its escapes undone; its `name` is what the refusal says."""
-    for plain in ("https://h/x?pwd=Hunter2", "https://h/~me:Hunter2/x", "https://h/x?via=https%3A%2F%2Fh2%2F%3Fpwd%3DHunter2"):
+    holding another address — were lists in `secrets.py`. They are a url field's `secret_in` now, beside a few names
+    every system spells a credential by (`COMMON_RULES`, the product's decision of 5 Oct: `pwd`, `token`, `key` as the
+    last word, `=auth`, `=pin`…): with no rules the platform refuses what RFC 3986 says is a login (an `@`, a port that
+    is no number) and those names; with the field's rules it refuses what they find and hides the passwords — a login is
+    said as written, a userinfo's too (`me:***@`) —, and the refusal names the field of `credentials` for what it found
+    (a password the secret's, a login alone the login's), never the value. A regex reads the part it names of an address
+    of the schemes it names, its escapes undone; its `name` is what the refusal says."""
+    for plain in ("https://h/~me:Hunter2/x", "https://h/x?via=https%3A%2F%2Fh2%2F%3Fpwd%3DHunter2",
+                  "https://h/x?gpio_pin=4&hotkey=2&p=1"):
         assert address_refusal(plain, NO_RULES) is None and hide_in_url(plain, NO_RULES) == plain
+    for common in ("pwd", "hot_key", "pin", "access_token", "auth"):
+        assert hide_in_url(f"https://h/x?{common}=Hunter2", NO_RULES) == f"https://h/x?{common}=***", common
+    assert hide_in_url("https://me:Hunter2@h/x", NO_RULES) == "https://me:***@h/x"
     assert address_refusal("https://me:Hunter2@h/x", NO_RULES) and address_refusal("https://h:Hunter2/x", NO_RULES)
     rules = _target_spec().fields["target"].rules
     assert is_credential_param("pwd", rules) and is_credential_param("token_bucket", rules)     # `token*`: a word begins it

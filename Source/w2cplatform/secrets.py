@@ -37,9 +37,17 @@ Everything between those two points renders it as `***`."""
 # after the `://`, or escaped in the host), a port that is no number, `name=value` pairs in the query and in a path
 # segment (`;`, `&`), an address escaped whole into a path segment. Which NAMES of a pair carry a credential, which
 # other spellings of a login the things a subsystem opens accept, and which pair holds another address, are the
-# subsystem's: its url field says them (`secret_in`, `SecretRules`), and the platform keeps none of its own. A url
-# field is refused by its own rules (`SubsystemSpec.refuse`); everything else — a page, a reply, a log line, a door
-# that is no spec's field — by the rules of every spec this process loaded (`catalog.secret_rules`).
+# subsystem's: its url field says them (`secret_in`, `SecretRules`) — beside a few names every system spells a
+# password, a token or a key by, the platform's own (`COMMON_RULES`), read in every address whatever its field says. A
+# url field is refused by its own rules (`SubsystemSpec.refuse`); everything else — a page, a reply, a door that is no
+# spec's field — by the rules of every spec this process loaded (`catalog.secret_rules`). A login in an address's
+# userinfo is said as written, its password as `***` (`admin:***@`): a login identifies, it does not authenticate.
+#
+# ## Free text: `mask_text`
+# A log line, an error a driver said, a JSON document, a request it logged — no field of any spec's: every address in
+# it said as a page says one, a credential's pair outside an address, an `Authorization:` header's credential, a JSON
+# member named as a credential (`mask_text`; its own table, `tests/testdata/log_mask.tsv`). The platform's log lines go
+# through it (`mask_logs`, installed by the platform's entry points).
 #
 # ## Module-level names
 # - `SECRET_MASK` — `"***"`. What a masked value reads as.
@@ -54,16 +62,21 @@ Everything between those two points renders it as `***`."""
 #   carried in an address: refused where a url field is written (`SubsystemSpec.refuse`), hidden wherever a stored one
 #   is said. `is_login_param(name, rules)` — a pair that carries a login: refused, never hidden (a login identifies, it
 #   does not authenticate). `said_name(name)` — a parameter's name as a refusal may say it (one that hides a pair,
-#   `pass%3D…`, by that pair's name). `hide_logins(s)` — whatever stands before an `@`, as `…`.
+#   `pass%3D…`, by that pair's name). `hide_logins(s)` — a userinfo's password as `***`, its login as written; whatever
+#   else stands before an `@`, as `…`. `COMMON_RULES` — the platform's own names of a credential, read beside every
+#   spec's (`_rules`).
 # - `address_refusal(value, rules)` — why an address may not be stored, in words that never repeat it, an address
 #   inside one too; `address_fault(value, rules)` — the same and what it carries (`login`, `secret`), which a refusal
 #   names the field of; `NOT_AN_ADDRESS` — the words for one `urlsplit` cannot read; `refusal_within(value)` — the
 #   same asked of every string inside a list or an object.
 # - `hide_in_reply(value)` — `hide_in_url` over every string of a reply: the idempotency copy's floor.
+# - `mask_text(text, rules)` — free text said with every credential in it hidden; `mask_logs()` — a filter that says
+#   every log line so.
 # ================================================================================================
 from __future__ import annotations
 
 import functools
+import logging
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -222,12 +235,27 @@ def _pattern(entry: dict, keys: set, where: str) -> Pattern:
 
 NO_RULES = SecretRules()
 
+# THE PLATFORM'S OWN NAMES OF A CREDENTIAL (the product's decision, the architect's word, 5 Oct): what every system
+# spells a password, a token or a key by — read in every address beside whatever its field's `secret_in` says, which
+# adds the spellings of what its subsystem opens (a vendor's `loginpas`, a stream's key run into one word) and never
+# takes these away. Written as `secret_in` writes them: `key` the whole name or its last word (`hot_key`, `streamKey` —
+# not `hotkey`, `monkey`); `=auth`, `=pin` the whole name only (`enable_auth`, `gpio_pin` name a thing, not a secret).
+# No single letter: `p` is a profile as often as a password.
+COMMON_RULES = SecretRules(secret=Names.parse(
+    ["password", "passwd", "pass", "pwd", "secret", "token", "key", "credential", "credentials", "psk", "privkey",
+     "apikey", "=auth", "=pin"], "param", "the platform's names of a credential"))
+
+
+@functools.lru_cache(maxsize=64)
+def _with_common(rules: SecretRules) -> SecretRules:
+    return rules | COMMON_RULES
+
 
 def _rules(rules: SecretRules | None) -> SecretRules:
-    if rules is not None:
-        return rules
-    from .catalog import secret_rules
-    return secret_rules()
+    if rules is None:
+        from .catalog import secret_rules
+        rules = secret_rules()
+    return _with_common(rules)
 
 
 # Copies of `rows` with every secret field masked. Empty stays empty. An address keeps its host and path and loses
@@ -276,21 +304,32 @@ _HIDDEN_PAIR = re.compile(r"[=&;]")
 
 
 def is_credential_param(name: str, rules: SecretRules | None = None) -> bool:
-    return _says(name, _rules(rules).secret)
+    return _kind(name, _rules(rules)) == "secret"
 
 
 # …and a login's (`login:`): refused, as a credential is, and said as written — a login identifies, and the page that
 # shows the address shows whose it is.
 def is_login_param(name: str, rules: SecretRules | None = None) -> bool:
-    rules = _rules(rules)
-    return not _says(name, rules.secret) and _says(name, rules.login)
+    return _kind(name, _rules(rules)) == "login"
 
 
-def _says(name: str, names: Names) -> bool:
+# What a pair's name says it holds: `"secret"`, `"login"` or None. A name a login's list says WHOLE is a login, though a
+# credential's word ends it (`accessKeyId` — the id of a key is not the key; the product's decision): a word matched
+# whole says more than a last word. Of a name that hides pairs, the most a pair of them holds.
+def _kind(name: str, rules: SecretRules) -> str | None:
     text = _unquoted(str(name))
-    if _HIDDEN_PAIR.search(text):
-        return any(names.says(_name_words(part.split("=", 1)[0])) for part in re.split(r"[&;]", text))
-    return names.says(_name_words(text))
+    parts = [p.split("=", 1)[0] for p in re.split(r"[&;]", text)] if _HIDDEN_PAIR.search(text) else [text]
+    kinds = {_word_kind(_name_words(p), rules) for p in parts}
+    return "secret" if "secret" in kinds else "login" if "login" in kinds else None
+
+
+def _word_kind(words: list[str], rules: SecretRules) -> str | None:
+    if not words:
+        return None
+    bare = "".join(words)
+    if bare in rules.login.names | rules.login.whole and bare not in rules.secret.names | rules.secret.whole:
+        return "login"
+    return "secret" if rules.secret.says(words) else "login" if rules.login.says(words) else None
 
 
 def said_name(name: str) -> str:
@@ -419,7 +458,7 @@ def _hides(value: str, rules: SecretRules) -> bool:
         return False
     text = _unquoted(value)
     return bool(re.search(r"[&;]", text)) and "://" not in text and any(
-        "=" in part and _says(part.split("=", 1)[0], rules.secret) for part in re.split(r"[&;]", text))
+        "=" in part and _kind(part.split("=", 1)[0], rules) == "secret" for part in re.split(r"[&;]", text))
 
 
 def login_params(url: str, rules: SecretRules | None = None) -> list[str]:
@@ -429,8 +468,9 @@ def login_params(url: str, rules: SecretRules | None = None) -> list[str]:
     return [said_name(name) for name, a, b in _pairs(s) if is_login_param(name, rules) and not _hides(s[a:b], rules)]
 
 
-# …and a stored one is never said (a row kept from before the refusal; one another build wrote): whatever stands before
-# an `@` — a userinfo, or one in a path —, a port that is no number (`admin:Hunter2%40h`: a password before an escaped
+# …and a stored one is never said (a row kept from before the refusal; one another build wrote): a userinfo's password —
+# its login said as written, `admin:***@` (the product's decision: a login identifies) —, whatever else stands before an
+# `@` (one in a path, after a pair's `=`), a port that is no number (`admin:Hunter2%40h`: a password before an escaped
 # `@`, or an unescaped `/`, `?`, `#` in it — the twelfth review, major 16), the value of every credential pair
 # (`_pairs`), and what a spec's `regex` finds. Only a string with `://` in it is an address; anything else comes back
 # as it was.
@@ -448,9 +488,55 @@ USERINFO = re.compile(r"(?<![^/@&;=])[^/@&;=]*@")
 _AUTHORITY_LOGIN = re.compile(r"(?<=://)[^/@]*@")
 
 
+# THE USERINFO OF AN ADDRESS: from its `://` to the last `@` before any `=`, `&`, `;` or another `://` — a password
+# with a `/`, `?`, `#` or `@` in it runs to there (`admin:pa/ss?x@host`), and an `@` in a pair's value is no
+# address's (`?mail=a@b`). Its login is what stands before the first `:`; the rest is the password, said `***`.
+# One scan of the string, whatever its length (a value of 100 000 `@`s is a test of its own).
+_USERINFO_MARKS = re.compile(r"://|[=&;@:]")
+
+
+def _userinfo(s: str) -> list[tuple[int, int, int]]:
+    """`(start, colon or -1, at)` of every address's userinfo in `s`."""
+    out, lo, colon, at = [], -1, -1, -1
+    for m in _USERINFO_MARKS.finditer(s):
+        mark = m.group()
+        if mark == "://" or mark in "=&;":
+            if lo >= 0 and at >= 0:
+                out.append((lo, colon if 0 <= colon < at else -1, at))
+            lo, colon, at = (m.end() if mark == "://" else -1), -1, -1
+        elif lo < 0:
+            continue
+        elif mark == "@":
+            at = m.start()
+        elif colon < 0:
+            colon = m.start()
+    if lo >= 0 and at >= 0:
+        out.append((lo, colon if 0 <= colon < at else -1, at))
+    return out
+
+
 def hide_logins(s: str) -> str:
-    """Whatever stands before an `@` in `s`, as `…`."""
-    return USERINFO.sub("…@", _AUTHORITY_LOGIN.sub("…@", s))
+    """A userinfo's password in `s` as `***`, its login as written; whatever else stands before an `@`, as `…`."""
+    import bisect
+    users = _userinfo(s)
+    edits = [(colon + 1, at, SECRET_MASK) for _, colon, at in users if colon >= 0]
+    taken = [(colon + 1 if colon >= 0 else at, at) for _, colon, at in users]      # in order, apart
+    starts = [a for a, _ in taken]
+    runs: dict[int, int] = {}                                       # an `@` -> the earliest run up to it
+    for rx in (_AUTHORITY_LOGIN, USERINFO):
+        for m in rx.finditer(s):
+            at = m.end() - 1
+            k = bisect.bisect_right(starts, at) - 1                 # a userinfo this run reaches into: it is said
+            if k < 0 or taken[k][1] < m.start():
+                runs[at] = min(runs.get(at, at), m.start())
+    edits += [(a, at, "…") for at, a in runs.items()]
+    out, i = [], 0
+    for a, b, word in sorted(set(edits)):
+        if a < i:
+            continue
+        out += [s[i:a], word]
+        i = b
+    return "".join(out) + s[i:]
 
 
 # WHERE AN ADDRESS NAMES ITS HOST: its authority. A host a subsystem's addresses carry somewhere else — in the path —
@@ -463,6 +549,7 @@ def _host(s: str) -> tuple[int, int]:
 # The span of a host's port when it is no port: not digits — or digits followed, past the host, by an `@`
 # (`s3://KEY:12/34…@host`: the `/` cut a secret that begins with digits, and its head stood where a port does).
 def _port_span(s: str, lo: int, hi: int) -> tuple[int, int] | None:
+    lo += s[lo:hi].rfind("@") + 1                         # the host is what follows its userinfo (`admin:***@`)
     host = s[lo:hi]
     colon = host.rfind(":")
     if colon < 0 or (host.startswith("[") and colon < host.find("]")):
@@ -679,3 +766,72 @@ def hide_in_reply(value):
     if isinstance(value, list):
         return [hide_in_reply(v) for v in value]
     return hide_in_url(value)
+
+
+# FREE TEXT — NO FIELD OF ANY SPEC'S (the product's decision: a function of the platform's own, outside the spec, with
+# its own table, `tests/testdata/log_mask.tsv`): a log line, an error a driver said, a request it logged, a JSON
+# document. Every address in it is said as a page says one (`hide_in_url`) — an address ends where a word, a quote or a
+# sentence does (`dial tcp://h:554: connection refused`); outside the addresses, a pair whose name is a credential's has
+# its value hidden to the next `&`, `;`, space or quote — a connect string's value runs to its end, more hidden, never
+# less —, and so has a pair whose value is an address escaped whole that may not be stored; the credential of an
+# `Authorization:` header (Basic, Bearer — a Digest's hash is left); a JSON member named as a credential. Empty stays
+# empty.
+_ADDRESS = re.compile(r"[A-Za-z][A-Za-z0-9+.\-]*://[^\s\"'<>\\]*")
+_ADDRESS_END = ".,;:!?)]}"
+_AUTH_HEADER = re.compile(r"(?i)(\b(?:proxy-)?authorization\s*:\s*(?:basic|bearer)\s+)[^\s,;\"'\\]+")
+_JSON_MEMBER = re.compile(r'"([A-Za-z0-9_.\-]+)"(\s*:\s*)"((?:[^"\\]|\\.)*)"')
+_TEXT_PAIR = re.compile(r"([A-Za-z0-9_.%\-]+)=([^&;\s\"'\\]*)")
+
+
+def mask_text(text, rules: SecretRules | None = None):
+    """`text` with every credential in it hidden (`hide_in_url` for its addresses); anything but a string as it was."""
+    if not isinstance(text, str) or not text:
+        return text
+    rules = _rules(rules)
+    out, i = [], 0
+    for m in _ADDRESS.finditer(text):
+        a, b = m.span()
+        while b > a and text[b - 1] in _ADDRESS_END:
+            b -= 1
+        if a < i:
+            continue
+        out += [_mask_plain(text[i:a], rules), hide_in_url(text[a:b], rules)]
+        i = b
+    return "".join(out) + _mask_plain(text[i:], rules)
+
+
+def _mask_plain(s: str, rules: SecretRules) -> str:
+    if not s:
+        return s
+    s = _AUTH_HEADER.sub(lambda m: m.group(1) + SECRET_MASK, s)
+    s = _JSON_MEMBER.sub(lambda m: f'"{m.group(1)}"{m.group(2)}"{SECRET_MASK}"'
+                         if m.group(3) and is_credential_param(m.group(1), rules) else m.group(0), s)
+
+    def pair(m):
+        name, value = m.group(1), m.group(2)
+        hidden = value and (is_credential_param(name, rules)
+                            or (_escaped_whole(value) and address_refusal(value, rules)))
+        return f"{name}={SECRET_MASK}" if hidden else m.group(0)
+    return _TEXT_PAIR.sub(pair, s)
+
+
+class MaskedLog(logging.Filter):
+    """A handler's filter that says every record's message as `mask_text` does: a log line holds no credential."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            said = record.getMessage()
+        except Exception:                                # noqa: BLE001 — a record that cannot be said is said as it is
+            return True
+        masked = mask_text(said)
+        if masked != said:
+            record.msg, record.args = masked, None
+        return True
+
+
+def mask_logs(logger: logging.Logger | None = None) -> None:
+    """Every handler of `logger` (the root's by default) says its records through `mask_text`: called by the platform's
+    entry points after the logging is set up — a driver's error, a request it logged, an address in a refusal."""
+    for h in (logger or logging.getLogger()).handlers:
+        if not any(isinstance(f, MaskedLog) for f in h.filters):
+            h.addFilter(MaskedLog())

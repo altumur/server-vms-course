@@ -64,16 +64,17 @@ unit:
     #
     # `schemes` — what a camera is reached by; `credentials` — where the login and the password go instead.
     # `secret_in` (the form the architect approved for the course and the product alike):
-    # - `param`: the names a camera gives a credential parameter (the eleventh review, blocker 4: `?usr=admin&pwd=…`),
-    #   read as words — `pwd` the whole name or its last word (`X-Amz-Signature`), `pwd*` a word beginning
-    #   with it (`pwd_md5`, `passwordHash`), `*pwd` a last word ending with it (`userpwd`, `clientsecret`). `p`, `code`,
-    #   `pin` are not here: too many cameras mean something else by them (a profile, a codec), and a list that refuses
-    #   those refuses cameras, not passwords. A word that only begins a name (`token_bucket`, `authmode`, `passage`) is
-    #   no credential (the thirteenth review, minor). `=auth` — the whole name only: as the last word of a longer one
-    #   (`rtsp_auth`, `enable_auth`, `basic_auth`, `x-auth`) it says how the camera authenticates, not with what; a Wi-Fi
-    #   key (`psk`, `wpa_psk`) and a private key (`privkey`) are credentials (the product's r28-secrets2).
-    #   `login`: the names it gives a login (`?usr=admin`, `user_id`, Foscam's `loginuse`) — refused as well, the
-    #   refusal naming `cred_username`, and shown as written: a login identifies, it does not authenticate;
+    # - `param`: the names a camera gives a credential parameter (the eleventh review, blocker 4: `?usr=admin&pwd=…`)
+    #   beside the platform's own, which every address is read by (`secrets.COMMON_RULES`: password, passwd, pass, pwd,
+    #   secret, token, `key` as the last word, credential(s), psk, privkey, apikey, `=auth`, `=pin`) — the vendors'
+    #   spellings (Foscam's `loginpas`, `adminpass`, an RTMP `streamkey` run into one word, `oauth`), read as words:
+    #   `pwd` the whole name or its last word (`X-Amz-Signature`), `pwd*` a word beginning with it (`pwd_md5`,
+    #   `passwordHash`), `*pwd` a last word ending with it (`userpwd`, `clientsecret`). `p` and `code` are not here: too
+    #   many cameras mean something else by them (a profile, a codec). A word that only begins a name (`token_bucket`,
+    #   `authmode`, `passage`) is no credential (the thirteenth review, minor).
+    #   `login`: the names it gives a login (`?usr=admin`, `user_id`, Foscam's `loginuse`, `uname`, an access key's id
+    #   `accessKeyId` — the id of a key is not the key, a name said whole wins over its last word) — refused as well,
+    #   the refusal naming `cred_username`, and shown as written: a login identifies, it does not authenticate;
     # - the XMeye/Xiongmai chain in the path, `/user=admin_password=…_channel=1_stream=0.sdp` (the twelfth review,
     #   blocker 8): a password ends at the last `_` before the next `name=`, `Hun_ter2_channel=1` is `Hun_ter2` — and the
     #   same chain in the query, where it is one pair named by its login (`?user=admin_password=…`), and a login's value
@@ -99,12 +100,11 @@ unit:
       unique: canonical
       credentials: {login: cred_username, secret: cred_secret}
       secret_in:
-        - param: [loginpas, loginpass, key, keyid, apikey, authkey, accesskey, secretkey, sig, signature, sid, session,
-                  sessionid, pw, psd, pass, password, passwd, pwd, psw, userpass, passcode, passphrase, secret, token,
-                  "=auth", authorization, cred, creds, credential, credentials, psk, privkey, privatekey,
-                  "password*", "passwd*", "pwd*", "psw*", "secret*",
+        - param: [loginpas, loginpass, "*adminpass", "*streamkey", oauth, keyid, authkey, accesskey, secretkey, sig,
+                  signature, sid, session, sessionid, pw, psd, psw, userpass, passcode, passphrase, authorization, cred,
+                  creds, privatekey, "password*", "passwd*", "pwd*", "psw*", "secret*",
                   "*password", "*passwd", "*pwd", "*secret", "*token"]
-          login: [user, usr, username, userid, login, loginuse, account]
+          login: [user, usr, username, uname, userid, login, loginuse, account, accesskeyid]
         - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'
           in: path
         - regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'

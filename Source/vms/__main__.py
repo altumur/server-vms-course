@@ -94,11 +94,13 @@ import threading
 
 from w2cplatform import host, runtime
 from w2cplatform.host import stop
+from w2cplatform.secrets import mask_logs
 
 from .controller import VmsController
 from .worker import FakeActuator, VmsWorker, commands_beat
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
+mask_logs()                        # the platform's mask on every log line (`w2cplatform.secrets.mask_text`)
 
 
 # The store seam: a process is told two URLs and nothing else (`host.stores`). On a box the store is `file://` —

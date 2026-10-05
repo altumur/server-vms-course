@@ -1391,7 +1391,7 @@ def test_a_fragment_or_a_login_in_a_source_names_no_other_device_and_a_labels_ch
                 assert "hunter2" not in json.dumps(body), body
         assert box.vars.get("vms/cameras/3")[0]["source"] == "driverpack://file/3.mp4"
         assert "hunter2" not in (source_refusal("driverpack://acme/u:hunter2@10.0.0.5:8²/ch/1") or "")
-        assert shown_source("rtsp://u:hunter2@cam/x") == "rtsp://…@cam/x"
+        assert shown_source("rtsp://u:hunter2@cam/x") == "rtsp://u:***@cam/x"
         # the labels of camera 1 move channel 2 too: `admin` on camera 1 is not enough, on the cluster it is
         assert _call(base, "PUT", "/cameras/1", {"labels": ["vlan:b"]}, token="one")[0] == 403
         assert _call(base, "PUT", "/cameras/1", {"labels": ["vlan:b"]}, token="admin")[0] == 200
