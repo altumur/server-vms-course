@@ -243,8 +243,8 @@ def test_the_key_families_are_read_passed_through_spec_and_their_words_must_name
     ctl = SpecController(s, FileVariables(os.path.join(root, "config"), volatile=True),
                          FsObjectStore(os.path.join(root, "objects")), wall=Clock())
     got = SpecConsole(ctl, wall=Clock()).describe()
-    assert got["domain"] == {"keys": [{"id": "tallies", "keys": ["domain/testsub/tallies"], "prefix": "domain/testsub/tallies/"},
-                                      {"id": "ledger", "keys": ["domain/testsub/ledger"]}]}
+    assert got["domain"]["keys"] == [{"id": "tallies", "keys": ["domain/testsub/tallies"], "prefix": "domain/testsub/tallies/"},
+                                     {"id": "ledger", "keys": ["domain/testsub/ledger"]}]
     assert got["display"]["keys"]["ledger"] == {"title": "ledger", "about": "the ledger the holder keeps for the domain",
                                                 "absent": "nothing ledgered yet"}
     base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
@@ -263,3 +263,74 @@ def test_the_key_families_are_read_passed_through_spec_and_their_words_must_name
             raise AssertionError(f"taken: {words}")
         except ValueError:
             pass
+
+
+def _shared_site():
+    """testsub's site with the shared document: north holds it, south's agent carried it, south's console reads it."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+    from w2cplatform.domain.shared import SharedSettings
+    from w2cplatform.spec import SpecController
+    from w2cplatform.trust.signer import Signer
+    fed, wall = site()
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    shared = SharedSettings(north.vars, north.objects, signer.tokens, wall=wall)
+    agent = DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects, cluster_objects=south.objects)
+    ctl = SpecController(spec(), south.vars, south.objects, wall=wall, cluster="south")
+    return shared, agent, ctl, SpecConsole(ctl, wall=wall)
+
+
+def test_a_shared_field_takes_the_domains_value_where_the_unit_set_none_and_a_union_adds_to_its_own():
+    """`domain.shared: [step, marks]` — the domain holds a value for each; the platform resolves them (no subsystem's
+    route): a counter that set no step takes the domain's, one that did keeps its own, and nobody above means the
+    spec's `inherit`; `marks` merges by union — the domain's AND the counter's own. Served at the cluster console's
+    one door, `GET /domain/shared/testsub`, from the copy this cluster's agent carried and verified."""
+    shared, agent, ctl, con = _shared_site()
+    ctl.create({"name": "s2", "step": 3, "marks": ["mine"]})
+    assert con.shared_route("testsub", {})[1]["fields"]["step"] == {"value": 1, "from": "spec", "inherit": 1}
+    shared.edit(lambda s: s.setdefault("shared", {}).setdefault("testsub", {}).update(step=5, marks=["site"]), base_rev=0)
+    assert agent.sync() and agent.shared == "took rev 1"
+    st, body = con.shared_route("testsub", {})
+    assert st == 200 and body["rev"] == 1
+    assert body["fields"]["step"] == {"value": 5, "from": "domain rev 1", "inherit": 1}
+    assert body["fields"]["marks"] == {"value": ["site"], "from": "domain rev 1", "inherit": [], "merge": "union"}
+    s1 = con.shared_route("testsub", {"unit": "s1"})[1]["fields"]
+    s2 = con.shared_route("testsub", {"unit": "s2"})[1]["fields"]
+    assert (s1["step"]["value"], s1["step"]["from"]) == (5, "domain rev 1")
+    assert (s2["step"]["value"], s2["step"]["from"]) == (3, "unit")
+    assert (s2["marks"]["value"], s2["marks"]["from"]) == (["mine", "site"], "unit + domain rev 1")
+    assert con.shared_route("testsub", {"unit": "nobody"})[0] == 404
+
+
+def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared_one_is_refused():
+    """The door answers the fields `domain.shared` names and nothing else — not `start`, not `labels`, whatever the
+    document holds; a subsystem that shares nothing is a 404; and the document never takes a field nobody declared,
+    or a subsystem not on the domain: the edit is refused whole, nothing written. The spec refuses a shared field that
+    is not one of the unit's, is a secret, or neither inherits nor is the field the page groups by."""
+    import yaml
+    from w2cplatform.domain.api import ApiError
+    from w2cplatform.spec import SubsystemSpec
+    shared, agent, ctl, con = _shared_site()
+    shared.edit(lambda s: s.setdefault("shared", {}).setdefault("testsub", {}).update(step=2), base_rev=0)
+    for bad in ({"testsub": {"start": 9}}, {"testsub": {"labels": ["x"]}}, {"nobody": {"step": 1}}):
+        try:
+            shared.edit(lambda s, bad=bad: s.update(shared=bad), base_rev=1)
+            raise AssertionError(f"taken: {bad}")
+        except ApiError as e:
+            assert e.status == 409, e
+    assert shared.current()[0]["rev"] == 1
+    agent.sync()
+    st, body = con.shared_route("testsub", {})
+    assert st == 200 and sorted(body["fields"]) == ["marks", "step"]
+    assert con.shared_route("nobody", {})[0] == 404
+    assert con.describe()["domain"]["shared"] == ["step", "marks"]
+    base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
+    for bad in (["nope"], ["start"], ["labels"]):
+        try:
+            SubsystemSpec.from_dict({**base, "domain": {**base["domain"], "shared": bad}})
+            raise AssertionError(f"taken: {bad}")
+        except ValueError:
+            pass
+

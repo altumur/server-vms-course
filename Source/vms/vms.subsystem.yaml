@@ -356,6 +356,10 @@ domain:
   # `<book>/<member>` at the holder and `<book>` in the member that carried it home. The product's issued stream keys
   # are no rows here (a book's entry carries its token sealed, `token_secret`); its asks carried up wait in the relay's
   # memory; scenarios are the platform's shared document (`domain/shared`).
+  # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
+  # them at GET /domain/shared/vms): the folders the page offers, and two that inherit — the site's alarm kinds
+  # (added to the camera's own) and the events' retention.
+  shared: [folders, alarms, events_retention_days]
   keys:
     - {id: roads, keys: [domain/vms/roads]}
     - {id: crossings, keys: [domain/vms/crossings]}

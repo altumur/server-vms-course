@@ -13,6 +13,9 @@ show them. So the console is one class, run from the same spec:
     GET  /servers                every server as placement sees it: its archive (the label), its resource (the fact), its workers, placeable or why not
     GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
                                  units by cluster, with its age; 404 anywhere else — a cluster does not know the others
+    GET  /domain/shared/<sub>[?unit=<id>]   the fields a spec shares with the domain (`domain.shared`), resolved from
+                                 this cluster's verified copy of the shared document: value and where it came from, the
+                                 groups the domain offers for the field the page groups by; nothing undeclared
     GET/PUT /policy              the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
     GET/PUT/DELETE /servers/<server>/labels   what a server reaches, the administrator's word over its node's (<sub>/servers/<server>)
     GET  /events?from&to&unit&kind&subsystem   the resources' event indexes, merged (MergedIndex), fenced by every subsystem's epochs
@@ -1425,6 +1428,24 @@ class SpecConsole:
     # -- what the page reads first ------------------------------------------------------------
     # `/spec`'s body: `{name, rows, id, fields: [{name, type, default, required}], door?, metrics: {prefix,
     # running}}` — the page's only knowledge of the subsystem. What a holder serves a page is `door: {routes}`.
+    def shared_route(self, sub: str, q: dict) -> tuple[int, dict]:
+        """`GET /domain/shared/<sub>`: what the domain holds for a subsystem's shared fields, resolved by the platform
+        (`domain/shared.py`: `inherit` and `merge` applied) from the copy this cluster's agent took and verified — for a
+        unit of this console's own subsystem with `?unit=<id>`."""
+        from w2cplatform.domain import declared
+        from w2cplatform.domain.shared import SharedView, door
+        s = declared.spec(sub)
+        if s is None or not s.domain.shared:
+            return 404, {"error": "no such shared settings", "detail": f"{sub!r} shares no field with the domain"}
+        row = None
+        if q.get("unit"):
+            if sub != self.spec.name:
+                return 400, {"error": "not this console's", "detail": f"a unit of {sub} is resolved by its own console"}
+            row = next((r for r in self.ctl.units() if str(r.get("id")) == str(q["unit"])), None)
+            if row is None:
+                return 404, {"error": "no such unit", "detail": f"{sub} has no unit {q['unit']!r}"}
+        return 200, door(s, SharedView(self.ctl.vars, self.ctl.objects, self.wall).document(), row)
+
     def describe(self) -> dict:
         s = self.spec
         return {"name": s.name, "rows": s.rows, "id": s.id,
@@ -1439,7 +1460,8 @@ class SpecConsole:
                 **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
                 # the subsystem's key families of the domain (`domain.keys`; their words are `display.keys`)
                 **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
-                                        for f in s.domain.keys]}} if s.domain and s.domain.keys else {}),
+                                        for f in s.domain.keys], "shared": list(s.domain.shared)}}
+                   if s.domain and (s.domain.keys or s.domain.shared) else {}),
                 "running_gauge": f"{s.name}_{s.running_gauge}", "workers_gauge": f"{s.name}_workers_live",
                 "metrics": {"prefix": s.name, "running": s.running_gauge}}
 
@@ -2921,6 +2943,8 @@ class SpecConsole:
                 return h._send(*con.server_labels_route(h, "GET", path, q))
             if path == "/domain":
                 return h._send(*domain_view(ctl.objects, con.wall(), con.lost_after))
+            if path.startswith("/domain/shared/"):
+                return h._send(*con.shared_route(path[len("/domain/shared/"):], q))
             if path == "/policy":
                 return h._send(200, {**ctl.policy(), "choices": ctl.POLICY_CHOICES})
             if path == "/unplaceable":

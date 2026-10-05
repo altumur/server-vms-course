@@ -13,6 +13,8 @@ unit:
     name:   {type: string, required: true}
     start:  {type: int,    default: 0}
     labels: {type: list}
+    step:   {type: int,  inherit: 1}                 # a counter's step: the counter's own, else the domain's, else 1
+    marks:  {type: list, inherit: [], merge: union}  # marks the domain adds to every counter's own
 placement:
   capacity:   {from: capacity, default: 4}
   headroom:   {from: headroom}
@@ -29,6 +31,7 @@ domain:
   tables: [ledger]
   tokens:
     tally: {lifetime: 600, claims: [counter]}
+  shared: [step, marks]                # the fields whose domain-wide value the domain holds
   # its key families, for a page that lists the domain's keys (their words below, display.keys)
   keys:
     - {id: tallies, keys: [domain/testsub/tallies], prefix: domain/testsub/tallies/}

@@ -40,7 +40,7 @@ def _site(wall, n=3):
 
 
 def _retention(days):
-    return lambda s: s.setdefault("defaults", {}).update(events_retention_days=days)
+    return lambda s: s.setdefault("shared", {}).setdefault("vms", {}).update(events_retention_days=days)
 
 
 def test_published_once_carried_by_every_agent_and_the_console_says_where():
@@ -60,7 +60,7 @@ def test_published_once_carried_by_every_agent_and_the_console_says_where():
     devices[2].boot()
     agents[2].sync()
     assert shared.delivery(fed)["holding"] == ["cam-SN0", "cam-SN1", "cam-SN2"]
-    assert SharedView(devices[2].flash, devices[2].disk, wall).settings()["defaults"]["events_retention_days"] == 14 and rev == 1
+    assert SharedView(devices[2].flash, devices[2].disk, wall).settings()["shared"]["vms"]["events_retention_days"] == 14 and rev == 1
 
 
 def test_a_document_not_signed_by_the_domain_is_refused_and_the_old_one_kept():
@@ -74,7 +74,7 @@ def test_a_document_not_signed_by_the_domain_is_refused_and_the_old_one_kept():
     for a in agents:
         a.sync()
 
-    forged = sign({"rev": 2, "term": 1, "settings": {"defaults": {"events_retention_days": 1}}}, TokenIssuer("acme"))
+    forged = sign({"rev": 2, "term": 1, "settings": {"shared": {"vms": {"events_retention_days": 1}}}}, TokenIssuer("acme"))
     raw = json.dumps(forged, sort_keys=True).encode()
     north.objects.put("shared/rev-2", raw)
     import hashlib
@@ -82,7 +82,7 @@ def test_a_document_not_signed_by_the_domain_is_refused_and_the_old_one_kept():
     north.vars.put(POINTER, {"object": "shared/rev-2", "rev": 2, "term": 1, "sha256": hashlib.sha256(raw).hexdigest()}, cas=idx)
     agents[0].sync()
     assert agents[0].shared.startswith("refused") and "does not trust" in agents[0].shared
-    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["defaults"]["events_retention_days"] == 14
+    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["shared"]["vms"]["events_retention_days"] == 14
     assert "cam-SN0" in shared.delivery(fed)["refused"]
 
 
@@ -100,7 +100,7 @@ def test_an_older_document_never_replaces_a_newer_one():
     north.vars.put(POINTER, ptr_rev1, cas=idx)           # the domain, restored from before rev 2
     agents[0].sync()
     assert agents[0].shared == "holding newer"
-    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["defaults"]["events_retention_days"] == 30
+    assert SharedView(devices[0].flash, devices[0].disk, wall).settings()["shared"]["vms"]["events_retention_days"] == 30
 
 
 def test_a_default_is_resolved_when_read_and_never_written_into_a_row():
@@ -134,7 +134,7 @@ def test_a_field_with_a_default_can_never_inherit_and_one_that_inherits_is_left_
     assert row["events_retention_days"] is None and "events_retention_days" not in SPEC.items(row)
     assert view.effective(row, SPEC)["events_retention_days"] == (365, "spec")               # nobody above said anything
 
-    shared.edit(lambda s: s.setdefault("defaults", {}).update(events_retention_days=14, alarms=["io.input"]), base_rev=0)
+    shared.edit(lambda s: s.setdefault("shared", {}).setdefault("vms", {}).update(events_retention_days=14, alarms=["io.input"]), base_rev=0)
     agents[0].sync()
     eff = view.effective(row, SPEC)
     assert eff["events_retention_days"] == (14, "domain rev 1")
@@ -162,7 +162,7 @@ def test_two_editors_of_the_shared_settings_are_told_not_overwritten():
         raise AssertionError("boris must be told")
     except Conflict:
         pass
-    assert shared.current()[0]["settings"]["defaults"]["events_retention_days"] == 14
+    assert shared.current()[0]["settings"]["shared"]["vms"]["events_retention_days"] == 14
 
 
 def test_a_five_hundred_camera_tree_does_not_fit_a_variable_and_does_not_need_to():
@@ -173,14 +173,14 @@ def test_a_five_hundred_camera_tree_does_not_fit_a_variable_and_does_not_need_to
     fed, north, _, signer, shared, devices, agents = _site(wall, n=1)
 
     def big(s):
-        s["folders"] = [f"Site-{i // 100:02d}/Building-{i // 20 % 5}/Floor-{i // 5 % 4}/Zone-{i:03d}" for i in range(500)]
+        s.setdefault("shared", {}).setdefault("vms", {})["folders"] = [f"Site-{i // 100:02d}/Building-{i // 20 % 5}/Floor-{i // 5 % 4}/Zone-{i:03d}" for i in range(500)]
         s["scenarios"] = [{"when": {"camera": f"SN{i}", "kind": "motion"}, "then": {"camera": f"SN{i + 1}", "action": "preset", "arg": 3}}
                           for i in range(500)]
     shared.edit(big, base_rev=0)
     assert items_bytes(shared.current()[0]["settings"]) > 65536
     assert items_bytes(north.vars.get(POINTER)[0]) < 200
     agents[0].sync()
-    assert len(SharedView(devices[0].flash, devices[0].disk, wall).settings()["folders"]) == 500
+    assert len(SharedView(devices[0].flash, devices[0].disk, wall).settings()["shared"]["vms"]["folders"]) == 500
 
 
 def test_with_the_domain_gone_a_camera_that_reboots_still_has_its_defaults():

@@ -539,7 +539,7 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
 # `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`units_running` by
 # default; `cameras_running` for the VMS).
 _DOMAIN_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
-_DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens", "keys")
+_DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens", "keys", "shared")
 _RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
 
 
@@ -568,6 +568,11 @@ _RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
 #             subsystem's own prefix; the words are `display.keys: {<id>: {title, about, absent}}`, merged by id on the
 #             page. The platform's own families (members, reaches, topology, pending, outcomes, view) the page names
 #             itself; a key in no family is «other». The platform acts on none of it: it passes it through `/spec`
+#   shared    the unit's fields whose domain-wide value the domain holds (the shared document, `domain/shared.py`):
+#             a field that `inherit`s — the domain's value is the middle link of its chain (the unit's, the
+#             domain's, the spec's), `merge: union` adding to the unit's own — or the field the page groups units by
+#             (`display.tree.group_by`) — the domain's value is the groups it offers, never a unit's value. The
+#             platform resolves them and serves them at one door, `GET /domain/shared/<sub>`
 @dataclass
 class DomainSection:
     ref: str = ""
@@ -579,6 +584,7 @@ class DomainSection:
     tables: tuple = ()
     tokens: dict = field(default_factory=dict)
     keys: tuple = ()
+    shared: tuple = ()
 
     def family_of(self, key: str) -> str | None:
         """The id of the first declared family `key` falls into — an exact key, or under a prefix — or None."""
@@ -638,6 +644,17 @@ class DomainSection:
                 raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
             sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
         sec.keys = cls._families(spec, d.get("keys"), where)
+        sec.shared = names("shared")
+        grouped = ((spec.display or {}).get("tree") or {}).get("group_by") if isinstance(spec.display, dict) else None
+        for f in sec.shared:
+            fld = spec.fields.get(f)
+            if fld is None:
+                raise ValueError(f"{where}.shared: {f!r} is not a field of the unit")
+            if f.endswith("_secret"):
+                raise ValueError(f"{where}.shared: {f!r} is a secret — the shared document is signed, not sealed")
+            if not fld.inherits and f != grouped:
+                raise ValueError(f"{where}.shared: {f!r} neither inherits nor is the field the page groups by "
+                                 f"(display.tree.group_by) — a domain value it would have nowhere to go")
         return sec
 
     @staticmethod

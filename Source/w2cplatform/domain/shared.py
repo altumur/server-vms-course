@@ -20,6 +20,10 @@ READ — on every member, when the domain may be gone:
     defaults        a shared setting is a DEFAULT, resolved when it is read. It is never copied into rows:
                     that would make the agent a writer of rows, and a change of default a write to five
                     hundred units, each of which might be off
+    declared        a subsystem's fields the domain holds a value for are its spec's `domain.shared`; their values
+                    are `settings.shared.<sub>.<field>`, and nothing else is taken there. The platform resolves
+                    them (`resolve`: the unit's, the domain's, the spec's `inherit`; `merge: union` adds) and
+                    serves them at one door, `GET /domain/shared/<sub>` (`door`), on the cluster's console
 
     domain/shared            in the domain holder's Variables: {object, rev, term, sha256} — the pointer, and the CAS
     shared/rev-<n>           in the domain holder's objects: the signed document
@@ -69,6 +73,10 @@ class SharedSettings:
             raise Conflict(f"shared settings are at rev {doc['rev']}; the edit was made against rev {base_rev}")
         settings = json.loads(json.dumps(doc.get("settings", {})))
         mutate(settings)
+        undeclared = undeclared_shared(settings)
+        if undeclared:
+            from .api import ApiError
+            raise ApiError(409, "; ".join(undeclared))
         if check is not None:
             reasons = check(settings)
             if reasons:
@@ -152,6 +160,69 @@ def carry(domain_vars, domain_objects, member_vars, member_objects, keys: KeySet
     return f"took rev {ptr['rev']}"
 
 
+def undeclared_shared(settings: dict) -> list[str]:
+    """What `settings.shared` holds that no spec declares (`domain.shared`): a subsystem not on the domain, a field it
+    does not share. Each a reason to refuse the edit — the document carries the declared fields and nothing else."""
+    from . import declared
+    out = []
+    shared = settings.get("shared") or {}
+    if not isinstance(shared, dict):
+        return ["settings.shared is {<sub>: {<field>: value}}"]
+    for sub, values in shared.items():
+        s = declared.spec(sub)
+        if s is None or not isinstance(values, dict):
+            out.append(f"shared settings for {sub!r}: no subsystem on the domain by that name")
+            continue
+        stray = sorted(set(values) - set(s.domain.shared))
+        if stray:
+            out.append(f"shared settings for {sub!r}: {stray} are not in its domain.shared {list(s.domain.shared)}")
+    return out
+
+
+def resolve(spec, settings: dict, label: str | None, row: dict | None = None) -> dict[str, tuple[object, str]]:
+    """`{field: (value, from)}` — a unit's value where it set one; for a field its spec shares and that inherits, the
+    domain's value where the unit set none (`merge: union`: the unit's AND the domain's), else the spec's `inherit`.
+    A shared field the page groups by is never a unit's value from the domain: what the domain holds there are the
+    groups it offers (`door`). `row` None: what a unit that set nothing would get."""
+    row = row or {}
+    shared = set(spec.domain.shared) if spec.domain else set()
+    domain = ((settings.get("shared") or {}).get(spec.name) or {}) if label else {}
+    out = {}
+    for k in set(row) | {n for n, f in spec.fields.items() if f.inherits}:
+        f = spec.fields.get(k)
+        mine = row.get(k)
+        held = k in shared and k in domain and f is not None and f.inherits
+        if held and f.merge == "union" and mine is not None:
+            out[k] = (sorted(set(mine) | set(domain[k])), f"unit + {label}")
+        elif mine is not None:
+            out[k] = (mine, "unit")
+        elif held:
+            out[k] = (domain[k], label)
+        elif f is not None and f.inherits and f.inherit is not None:
+            out[k] = (f.inherit, "spec")
+    return out
+
+
+def door(spec, doc: dict | None, row: dict | None = None) -> dict:
+    """`GET /domain/shared/<sub>`: the fields its spec shares and nothing else — each inheriting one resolved (for a
+    unit, `?unit=<id>`, or for one that set nothing), with where the value came from, its `inherit` and `merge`; the
+    field the page groups by as the groups the domain offers (`groups`)."""
+    settings = (doc or {}).get("settings", {})
+    label = f"domain rev {doc['rev']}" if doc else None
+    resolved = resolve(spec, settings, label, row)
+    domain = (settings.get("shared") or {}).get(spec.name) or {}
+    fields = {}
+    for name in spec.domain.shared if spec.domain else ():
+        f = spec.fields[name]
+        if f.inherits:
+            value, came = resolved.get(name, (None, None))
+            fields[name] = {"value": value, "from": came, "inherit": f.inherit,
+                            **({"merge": f.merge} if f.merge != "override" else {})}
+        else:
+            fields[name] = {"groups": domain.get(name) or [], "from": label if name in domain else None}
+    return {"sub": spec.name, "rev": doc["rev"] if doc else 0, "fields": fields}
+
+
 class SharedView:
     """What a member's console reads: the document its agent took, checked again on the way in — a copy on
     flash is still only data — and the defaults resolved against a row."""
@@ -173,29 +244,14 @@ class SharedView:
         doc = self.document()
         return doc["settings"] if doc else {}
 
-    # A field the unit set is the unit's. A field it did not set takes the domain's default, and says
+    # A field the unit set is the unit's. A field it did not set takes the domain's value, and says
     # so: the console shows WHERE a value came from, because "why does this unit keep 14 days" must have
     # an answer that is not "somebody, somewhere".
     #
-    # The chain has three links (feedback AT): the unit's value, the domain's default, the spec's `inherit` —
-    # the last one resolved here, at the moment of use, and never written. It only works for a field the spec
-    # lets be NOT SET: a field with a `default` is filled in when the row is created and supplied again when it
-    # is read, and then the domain's default never applies. And a list the spec merges by `union` (the alarm
-    # kinds) is the site's AND the unit's, not one of them. `spec`: the unit's subsystem.
+    # The chain has three links (feedback AT): the unit's value, the domain's, the spec's `inherit` — the last one
+    # resolved here, at the moment of use, and never written. It only works for a field the spec lets be NOT SET
+    # (`inherit`, never a `default`) and shares (`domain.shared`). A list the spec merges by `union` (the alarm
+    # kinds) is the site's AND the unit's, not one of them. `spec`: the unit's subsystem (`resolve`).
     def effective(self, row: dict, spec) -> dict[str, tuple[object, str]]:
         doc = self.document()
-        defaults = (doc or {}).get("settings", {}).get("defaults", {})
-        domain = f"domain rev {doc['rev']}" if doc else None
-        out = {}
-        for k in set(defaults) | set(row) | {n for n, f in spec.fields.items() if f.inherits}:
-            f = spec.fields.get(k)
-            mine = row.get(k)
-            if f is not None and f.inherits and f.merge == "union" and mine is not None and k in defaults:
-                out[k] = (sorted(set(mine) | set(defaults[k])), f"unit + {domain}")
-            elif mine is not None:
-                out[k] = (mine, "unit")
-            elif k in defaults:
-                out[k] = (defaults[k], domain)
-            elif f is not None and f.inherits and f.inherit is not None:
-                out[k] = (f.inherit, "spec")
-        return out
+        return resolve(spec, (doc or {}).get("settings", {}), f"domain rev {doc['rev']}" if doc else None, row)

@@ -11,11 +11,19 @@ Ed25519 over canonical JSON without `kid`/`sig`, by the signer's token key. `ver
 ### `carry(domain_vars, domain_objects, member_vars, member_objects, keys, now, src=POINTER, dst=POINTER, obj=OBJECT, refused=REFUSED) -> str`
 The agent's side. Nothing published → nothing. Member already at or past `(term, rev)` → nothing ("up to date" / "holding newer"). Otherwise fetch, check checksum, signature (against the MEMBER's keys) and that the object's `(term, rev)` matches the pointer; failure writes `refused` with the reason and keeps the old copy; success writes the object, then the member's pointer.
 
+### `undeclared_shared(settings) -> [reasons]`
+What `settings.shared` holds that no spec declares: a subsystem not on the domain, a field outside its `domain.shared`.
+### `resolve(spec, settings, label, row=None) -> {field: (value, from)}`
+The chain for a unit: its own value; for a field the spec shares and that inherits, the domain's `settings.shared.<sub>.<field>` (`merge: union` — the unit's and the domain's); else the spec's `inherit`. The shared field the page groups by never becomes a unit's value.
+### `door(spec, doc, row=None) -> {sub, rev, fields}`
+`GET /domain/shared/<sub>` on the cluster console (`SpecConsole.shared_route`): the declared fields only — an inheriting one as `{value, from, inherit, merge?}`, the grouping one as `{groups, from}`.
+
 ## `class SharedSettings`
-The domain's side. `current()` → the document and the pointer's index. `edit(mutate, base_rev, by=None)` → a `Conflict` if the editor's `base_rev` is stale; else signs rev+1 with the current `term()`, puts `shared/rev-<n>`, then the pointer by CAS. `delivery(fed)` → per member `holding` / `behind` / `refused` / `silent`, from each member's copy of the pointer, and a sentence naming the silent and the refusing.
+The domain's side. `current()` → the document and the pointer's index. `edit(mutate, base_rev, by=None, check=None)` → a 409 (`ApiError`) for anything `undeclared_shared` names; a `Conflict` if the editor's `base_rev` is stale; else signs rev+1 with the current `term()`, puts `shared/rev-<n>`, then the pointer by CAS. `delivery(fed)` → per member `holding` / `behind` / `refused` / `silent`, from each member's copy of the pointer, and a sentence naming the silent and the refusing.
 
 ## `class SharedView`
-A member's console side. `document()` re-verifies the stored copy against the member's own keys; `settings()`; `effective(row, spec)` → `{field: (value, "unit" | "domain rev N" | "spec")}` — defaults resolved at read time, never written into rows.
+A member's console side. `document()` re-verifies the stored copy against the member's own keys; `settings()`; `effective(row, spec)` → `resolve` over the verified copy: `{field: (value, "unit" | "domain rev N" | "unit + domain rev N" | "spec")}` — resolved at read time, never written into rows.
 
 ## Notes
+- The document: `{shared: {<sub>: {<field>: value}}, scenarios: […]}` — a subsystem's fields only as its spec's `domain.shared` declares them (`tests/test_domain_platform.py`: inherit, union, only declared fields).
 - `test_a_document_not_signed_by_the_domain_is_refused_and_the_old_one_kept` forges a document with a matching checksum; `test_a_default_is_resolved_when_read_and_never_written_into_a_row` checks no row revision moves.
