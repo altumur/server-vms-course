@@ -17,8 +17,8 @@ The catalogue is deliberately short and CLOSED. `labels-subset`: a unit's
 registers another: a spec naming a rule that is not here does not load. What
 a subsystem needs beyond them it DECLARES — `affinity` (a row of its table
 binds a unit to a place, or takes none), `near.prefer`, a field's `ref`,
-`must_match` and `unique`, `group_by.cut_at` — and the platform reads the
-declaration; no code of a subsystem's is called here (the boundary's step 6).
+`must_match` and `unique`, `group_by.cut_at` and `group_by.schemes` — and the
+platform reads the declaration; no code of a subsystem's is called here (the boundary's step 6).
 
 What is NOT in a spec: anything about what a unit does. That is the worker,
 and the worker is the subsystem.
@@ -77,6 +77,7 @@ and the worker is the subsystem.
 # ================================================================================================
 from __future__ import annotations
 
+import ipaddress
 import logging
 import math
 import os
@@ -950,18 +951,21 @@ class SubsystemSpec:
     # opens four sessions to a box that licenses two; the subsystem then fails in the device's words
     # ("too many sessions"), which is the hardest kind of failure to trace back to a placement decision.
     #
-    # What the value is: the field of this name, or — `group_by: {field: <a url field>, cut_at: <segment>}` — that
-    # address in its one spelling up to the segment (`url_cut`): `…/<host>/ch/17` and `…/<host>/ch/18` are one group
-    # by `cut_at: ch`. It was a subsystem's code overriding `group_value`, which parsed the address in its own words
-    # (the boundary's step 6); the platform reads the address by RFC 3986 and nothing else, and two spellings of one
-    # place are two groups — one spelling is the operator's rule, and its worker says a twin it finds.
+    # What the value is: the field of this name, or — `group_by: {field: <a url field>, cut_at: host}` — the HOST that
+    # address names, in its one spelling (`url_host`): `x://H:8/a/17` and `y://h./b/18` are one group, whatever the
+    # scheme, the port or the path; and how a scheme writes its host when it does not follow RFC 3986 the spec declares
+    # (`schemes`, the closed dictionary `GROUP_SCHEME_WORDS`; «Архитектор», 2026-10-06). Or — `cut_at: <segment>` — the
+    # address in its one spelling up to that segment of its path (`url_cut`). It was a subsystem's code overriding
+    # `group_value`, which parsed the address in its own words (the boundary's step 6); the platform reads the address by
+    # RFC 3986 and the declaration, and nothing else.
     #
     # Where it hurts, and it does: the worker holding the group is not chosen for its room. A group that
     # outgrows its worker becomes unplaceable rather than spilling over, because spilling over is the
     # thing being prevented. The operator raises that worker's capacity or moves the group — `/unplaceable`
     # names the device, so the answer is on the screen rather than in a session count on a camera.
     group_by: str = ""
-    group_cut: str = ""           # `group_by.cut_at`: the group is the url field's spelling up to this segment
+    group_cut: str = ""           # `group_by.cut_at`: `host`, or the segment the url field's spelling is cut before
+    group_schemes: dict = field(default_factory=dict)   # `group_by.schemes`: {<scheme>: {host, fragment, none}}
     # `near: {…, prefer: {<their field>[.<field of the row it refs>]: <value or values>}}` — when `near` finds SEVERAL
     # units of the followed subsystem (two of theirs about one of mine), the one to stand beside: the one whose row says
     # so — read through their field's `ref` when the key has a dot (`home.kind`: the `kind` of the row their `home`
@@ -1187,6 +1191,8 @@ class SubsystemSpec:
                    group_by=str((pl.get("group_by") or {}).get("field", "") if isinstance(pl.get("group_by"), dict)
                                 else pl.get("group_by", "") or ""),
                    group_cut=str((pl.get("group_by") or {}).get("cut_at", "") or "") if isinstance(pl.get("group_by"), dict) else "",
+                   group_schemes=dict(pl["group_by"]["schemes"]) if isinstance(pl.get("group_by"), dict)
+                   and isinstance(pl["group_by"].get("schemes"), dict) else {},
                    place_by=str(pl.get("place_by", "server") or "server"),
                    offers=pl.get("offers", False),
                    home=str(pl.get("home", "") or ""),
@@ -1511,7 +1517,7 @@ class SubsystemSpec:
 
     # The placement's words that are a vocabulary or a declaration, checked at load (the boundary's step 6): the
     # constraint and the tie-break are names from the closed catalogue; `group_by` is a field, or `{field, cut_at}` over
-    # a url field; `near.prefer` one key `<their field>[.<field>]` and a value or a list of them; `affinity` names a
+    # a url field, with `schemes` beside `cut_at: host` only and in the words of `GROUP_SCHEME_WORDS`; `near.prefer` one key `<their field>[.<field>]` and a value or a list of them; `affinity` names a
     # field of the row and a table of this spec, and `strict` is `{<field of the table's row>: <value or values>}`.
     def _placement_words(self, pl: dict) -> None:
         if self.constraint not in CONSTRAINTS:
@@ -1526,12 +1532,20 @@ class SubsystemSpec:
             raise ValueError(f"spec {self.name}: placement.servers is one of {', '.join(SERVERS)}, not {self.servers!r}")
         g = pl.get("group_by")
         if isinstance(g, dict):
-            if set(g) - {"field", "cut_at"} or self.group_by not in self.fields:
+            if set(g) - {"field", "cut_at", "schemes"} or self.group_by not in self.fields:
                 raise ValueError(f"spec {self.name}: placement.group_by is a field, or {{field: <a field>, cut_at: "
-                                 f"<a segment of its path>}}, not {g!r}")
+                                 f"host | <a segment of its path>, schemes?}}, not {g!r}")
             if self.group_cut and (self.fields[self.group_by].type != "url" or "/" in self.group_cut):
-                raise ValueError(f"spec {self.name}: group_by.cut_at cuts a url field's path at a segment — "
-                                 f"{self.group_by} is {self.fields[self.group_by].type}, the segment {self.group_cut!r}")
+                raise ValueError(f"spec {self.name}: group_by.cut_at reads a url field — its host (`host`) or its path "
+                                 f"up to a segment — {self.group_by} is {self.fields[self.group_by].type}, the segment "
+                                 f"{self.group_cut!r}")
+            if "schemes" in g:
+                if self.group_cut != "host":
+                    raise ValueError(f"spec {self.name}: group_by.schemes says how a scheme writes its host, and only "
+                                     f"`cut_at: host` reads a host — not `cut_at: {self.group_cut or '(none)'}`")
+                why = group_schemes_fault(g["schemes"])
+                if why:
+                    raise ValueError(f"spec {self.name}: group_by.schemes: {why}")
         near = pl.get("near")
         prefer = near.get("prefer") if isinstance(near, dict) else None
         if prefer is not None:
@@ -1575,6 +1589,22 @@ class SubsystemSpec:
 
     # -- what a unit is called outside its routes, and what it is about ----------------------------------
     # `<name>/<id>` (`doors.unit_ref`): the one way a unit is named to the gate, the index and a grant.
+    # The group a value of the `group_by` field is in: the value itself; or its host (`cut_at: host` — `url_host`, by the
+    # spec's `schemes`); or its spelling up to the segment (`cut_at: <segment>` — `url_cut`). "" — no value, or no host
+    # — is no group: a unit with it groups with nothing. The controller's `group_value` and the worker's `request_group`
+    # both ask here, so the group a request was stamped with is the one its holder performs it in.
+    def group_of(self, value) -> str:
+        v = str(value or "")
+        if not v or not self.group_cut:
+            return v
+        return url_host(v, self.group_schemes) if self.group_cut == "host" else url_cut(v, self.group_cut)
+
+    # …and a value whose host cannot be told (`cut_at: host`, `host_of_url` None): no group, like a value naming no host,
+    # and unlike it a place nobody can say whose it is — a reader that decodes `h%2Ecorp` or reads `010.0.0.5` as octal
+    # reaches another unit's host. The console asks the cluster's grant to move a unit there (`reach_of_change`).
+    def group_unreadable(self, value) -> bool:
+        return self.group_cut == "host" and bool(value) and host_of_url(str(value), self.group_schemes) is None
+
     def ref(self, uid) -> str:
         from .doors import unit_ref
         return unit_ref(self.name, uid)
@@ -1850,7 +1880,7 @@ def _labels_subset(row: dict, worker_labels: set[str]) -> bool:
 # `register_constraint`, code under a name — and nobody went through it; the three doors beside it (an admit, a near
 # rank, a refusal of a row) were each one subsystem's code run inside this controller. What a subsystem needs beyond
 # the catalogue it DECLARES, and the controller reads the declaration: `affinity`, `near.prefer`, a field's `ref`,
-# `must_match` and `unique`, `group_by.cut_at`.
+# `must_match` and `unique`, `group_by.cut_at` and `group_by.schemes`.
 CONSTRAINTS = {"none": lambda row, labels: True, "labels-subset": _labels_subset}
 TIE_BREAKS = ("most-free-capacity",)
 REQUIRES = ("none", "resource")       # `resource`: a worker is eligible only while its server's resource answers
@@ -1858,7 +1888,7 @@ SERVERS = ("shared", "distinct")      # `distinct`: one worker per place (`place
 
 
 # A URL IN ITS ONE SPELLING (RFC 3986 §6.2.2, the syntax-based normalisation; the owner's decision on the boundary's
-# step 6): what `unique: canonical` compares and `group_by.cut_at` groups by. The scheme and the host in lower case;
+# step 6): what `unique: canonical` compares and `group_by.cut_at: <segment>` groups by. The scheme and the host in lower case;
 # a percent-encoding in upper case, and one that encodes an unreserved character decoded; the dot segments of the path
 # removed; an empty port gone. Nothing a SCHEME means (§6.2.3): a default port written out, or two segments a
 # subsystem reads as one number, are two spellings here — one spelling is the rule, and a twin that only the subsystem
@@ -1933,6 +1963,197 @@ def url_cut(v, segment: str) -> str:
     # as an address may be said (`hide_in_url`): a group is a key in rows and replies, and a login a row stored before
     # the refusals carried is not repeated in it
     return hide_in_url(f"{u.scheme}://{u.netloc}" + "/".join(segs[:segs.index(segment, 1)]))
+
+
+# THE HOST AN ADDRESS NAMES, IN ITS ONE SPELLING (`group_by: {field, cut_at: host}`; «Архитектор», 2026-10-06): what the
+# units whose addresses name one host have in common, whatever else differs. Neither the scheme nor the port is part of
+# it — `x://h/1` and `y://h:8/2` are one host, and a port nobody here knows the default of cannot be told from no port
+# — and neither is a login. One spelling: lower case and no trailing dot (the root's); an IP address as `ipaddress`
+# writes it — an IPv6 one unbracketed, its zero runs folded (RFC 5952), its zone dropped, an IPv4-mapped one as the IPv4
+# address it is. The host is judged AS WRITTEN: a percent-escape in it is not decoded (`h%2Ecorp` is decoded by one
+# reader and not by the next), and a host that is neither a name of RFC 1123 labels nor an IP literal is NO group — "",
+# which groups with nothing — as is an address that does not parse (a control character, a broken escape, a port that
+# is not a number, a login in characters a login is not written in). A name does not resolve: `h.corp` and the address
+# it resolves to are two hosts, for an asked network is no rule.
+#
+# Grouping by the host may still be refused as a VALUE (`secret_in`): refusing is the field's, grouping is this — a row
+# written before a rule refused its address still has the host it names.
+#
+# HOW A SCHEME WRITES ITS HOST when it does not follow RFC 3986 the spec DECLARES, per scheme (`group_by.schemes`), in a
+# closed dictionary — nothing of any scheme is known here:
+#   host: authority | path   where the host stands: the authority (RFC 3986, the default), or the first segment of the
+#                            path, written as an authority is — `[login[:password]@]host[:port]` — the authority being
+#                            then a name the group does not hold (`x://a/h/1` and `x://b/h/2` are one host, `h`). A path
+#                            whose first segment is empty (`x://a`, `x://a/`) leaves the host in the authority. In that
+#                            segment a login is set aside wherever its `@` stands — escaped (`%40`), or past a password
+#                            holding a `/` — for a row written before the refusal of its login (`secret_in`); the host is
+#                            the one WRITTEN in the path, never one only decoding makes.
+#   fragment: keep | none    `none`: the scheme has no fragment, `#` is a character like another (`x://a#@h/` is on `h`,
+#                            the host after the LAST `@`, as RFC 3986 cuts a login).
+#   none: [<authority>, …]   authorities that name no host: `x://local/…` groups with nothing.
+GROUP_SCHEME_WORDS = {"host": ("authority", "path"), "fragment": ("keep", "none")}
+_SCHEME_NAME = re.compile(r"[a-z][a-z0-9+.\-]*")
+_HOST_LABEL = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?")
+_BROKEN_ESCAPE = re.compile(r"%(?![0-9A-Fa-f]{2})")
+_LOGIN_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._:~!$&'()*+,;=%@#")
+_REG_NAME_CHARS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$&'()*+,;=%")
+
+
+def group_schemes_fault(schemes) -> str:
+    """Why `group_by.schemes` is not a declaration of the closed dictionary — "" when it is."""
+    if not isinstance(schemes, dict) or not schemes:
+        return f"{{<scheme>: {{host?, fragment?, none?}}, …}}, not {schemes!r}"
+    for name, opts in schemes.items():
+        if not isinstance(name, str) or not _SCHEME_NAME.fullmatch(name):
+            return f"{name!r} is not a scheme in lower case (RFC 3986: a letter, then letters, digits, `+`, `-`, `.`)"
+        if not isinstance(opts, dict) or not opts:
+            return f"{name}: a scheme says at least one of host, fragment, none — not {opts!r}"
+        for k, v in opts.items():
+            if k in GROUP_SCHEME_WORDS:
+                if v not in GROUP_SCHEME_WORDS[k]:
+                    return f"{name}.{k} is one of {', '.join(GROUP_SCHEME_WORDS[k])}, not {v!r}"
+            elif k == "none":
+                if not isinstance(v, list) or not v or not all(
+                        isinstance(a, str) and a and not set(a) & set("/?#@ ") for a in v):
+                    return f"{name}.none is a list of authorities (no `/`, `?`, `#`, `@`), not {v!r}"
+            else:
+                return (f"{name}: {k!r} is not a word of the dictionary — host ({' | '.join(GROUP_SCHEME_WORDS['host'])}), "
+                        f"fragment ({' | '.join(GROUP_SCHEME_WORDS['fragment'])}), none: [<authority>]")
+    return ""
+
+
+def _digits(p: str) -> bool:
+    return p.isascii() and p.isdigit()
+
+
+def _unescaped(s: str) -> str:
+    """`s` percent-decoded until nothing more decodes (`%2540` is `%40` once and `@` twice); a stray `%` stays."""
+    for _ in range(8):
+        d = re.sub(r"%([0-9A-Fa-f]{2})", lambda m: chr(int(m.group(1), 16)), s)
+        if d == s:
+            break
+        s = d
+    return s
+
+
+def _split_port(a: str) -> tuple[str, str | None] | None:
+    """An authority's host and port as written (`None` for no port) — after the `]` of an IPv6 literal, else after its
+    last `:`; `None` when something other than a port follows the `]`."""
+    if a.startswith("["):
+        rb = a.find("]")
+        if rb < 0:
+            return a, None
+        after = a[rb + 1:]
+        if not after:
+            return a, None
+        return (a[:rb + 1], after[1:]) if after.startswith(":") else None
+    c = a.rfind(":")
+    return (a, None) if c < 0 else (a[:c], a[c + 1:])
+
+
+def host_spelling(h: str) -> str:
+    """A host as written, in its one spelling — "" when it is neither an IP literal (an IPv6 address in brackets, a zone
+    after `%25` of unreserved characters, RFC 6874; an IPv4 address in dotted decimal, four parts, no leading zeros) nor a
+    host name of RFC 1123 labels (letters, digits, `-`; 1 to 63 of them, not starting or ending with `-`; at most 253 in
+    all; one trailing dot). A name whose last label is all digits must be the IPv4 address it looks like: `010.0.0.5`,
+    `10.1` and `0x0a.0.0.1` are addresses to a reader that takes them for other addresses (RFC 1123 2.1)."""
+    if not h.isascii():
+        return ""
+    if h.startswith("["):
+        if not h.endswith("]"):
+            return ""
+        addr, zoned, zone = h[1:-1].partition("%")
+        if zoned and not (zone.startswith("25") and zone[2:] and all(c in _UNRESERVED for c in zone[2:])):
+            return ""
+        try:
+            a = ipaddress.IPv6Address(addr)
+        except ValueError:
+            return ""
+        return str(a.ipv4_mapped or a)
+    name = h[:-1] if h.endswith(".") else h
+    if not 0 < len(name) <= 253 or not all(_HOST_LABEL.fullmatch(lb) for lb in name.split(".")):
+        return ""
+    if _digits(name.rsplit(".", 1)[-1]):
+        try:
+            return str(ipaddress.IPv4Address(name))
+        except ValueError:
+            return ""
+    return name.lower()
+
+
+def _authority_host(a: str, *, host: bool = True) -> str | None:
+    """The host of an authority in its one spelling ("" when it is no host), or — `host=False` — whether the authority
+    parses at all ("ok" or ""): a login in a login's characters and escapes, a port of digits, a name in a name's."""
+    login, at, hostport = a.rpartition("@")
+    if at and (not set(login) <= _LOGIN_CHARS or _BROKEN_ESCAPE.search(login)):
+        return ""
+    split = _split_port(hostport)
+    if split is None or (split[1] and not _digits(split[1])) or not split[0]:
+        return ""
+    if host:
+        return host_spelling(split[0])
+    h = split[0]
+    ok = h.startswith("[") or (set(h) <= _REG_NAME_CHARS and not _BROKEN_ESCAPE.search(h))
+    return "ok" if ok else ""
+
+
+def _host_in_path(path: str) -> str:
+    """The host written in the first segment of `path` (`host: path`), in its one spelling, or ""."""
+    seg = path[1:].split("/", 1)[0]
+    rest, plain = path[1 + len(seg):], _unescaped(seg)
+    port = (_split_port(plain) or (plain, None))[1]
+    login = "@" in plain or (port is not None and (port != "" and not _digits(port) or "@" in _unescaped(rest)))
+    if not login:
+        written = _split_port(seg)
+        return host_spelling(written[0]) if written else ""
+    # a login in the segment — its `@` escaped, or past a password holding a `/` — or a password where the port goes:
+    # the host is after the last `@`, before a port of digits
+    if "@" in plain:
+        hp = plain[plain.rfind("@") + 1:]
+    elif "@" in _unescaped(rest):
+        hp = _unescaped(rest)
+        hp = hp[hp.rfind("@") + 1:].split("/", 1)[0]
+    else:
+        hp = plain
+    split = _split_port(hp)
+    if split is None or not split[0] or split[0] not in path:      # only decoding made it: no host written there
+        return ""
+    return host_spelling(split[0])
+
+
+def url_host(v, schemes: dict | None = None) -> str:
+    """The host the address `v` names, in its one spelling, by the spec's `schemes` — "" when it names none."""
+    return host_of_url(v, schemes) or ""
+
+
+def host_of_url(v, schemes: dict | None = None) -> str | None:
+    """`url_host`, saying why there is none: "" when `v` names no host — it is no address with an authority, or the spec
+    says its authority names none (`none`) — and None when the host it names cannot be told: the address does not parse,
+    or its host is neither a name nor an IP. A unit moved onto such a host is moved where nobody can say whose it is."""
+    s = "" if v is None else str(v)
+    if any(ord(c) < 0x20 or ord(c) == 0x7F for c in s):
+        return None
+    scheme, sep, rest = s.partition("://")
+    if not sep or not _SCHEME_NAME.fullmatch(scheme.lower()):
+        return ""
+    opts = (schemes or {}).get(scheme.lower()) or {}
+    if opts.get("fragment", "keep") == "keep":
+        rest, _, fragment = rest.partition("#")
+        if _BROKEN_ESCAPE.search(fragment):
+            return None
+    cut = min([i for i in (rest.find("/"), rest.find("?")) if i >= 0], default=len(rest))
+    authority, path = rest[:cut], rest[cut:].partition("?")[0]
+    if not authority:
+        return ""
+    if _BROKEN_ESCAPE.search(path):
+        return None
+    if authority.lower() in {a.lower() for a in opts.get("none") or ()}:
+        return ""
+    if opts.get("host", "authority") == "path" and path[1:].split("/", 1)[0]:
+        host = _host_in_path(path) if _authority_host(authority, host=False) else ""
+    else:
+        host = _authority_host(authority)
+    return host or None
 
 
 # THE ROWS THIS PROCESS WROTE, FOR A READER IN THE SAME PROCESS THAT REMEMBERS BETWEEN ITS TURNS (the eleventh review: the
@@ -2692,11 +2913,10 @@ class SpecController(Controller):
                 found.append(pl.worker)
         return sorted(found)[0] if found else None
 
-    # What `group_by` names, for this row: the field, or the address in it up to `cut_at` (`url_cut`). Nobody overrides
-    # it any more (the boundary's step 6).
+    # What `group_by` names, for this row (`SubsystemSpec.group_of`): the field, or the host of the address in it, or
+    # that address up to `cut_at`. "" is no group. Nobody overrides it any more (the boundary's step 6).
     def group_value(self, row: dict) -> str:
-        v = str(row.get(self.spec.group_by, "") or "")
-        return url_cut(v, self.spec.group_cut) if v and self.spec.group_cut else v
+        return self.spec.group_of(row.get(self.spec.group_by, ""))
 
     # `affinity` (see the spec): may this unit go to this worker. The table's rows are read once a pass (`_per_pass`);
     # a row that does not parse binds nothing and refuses nothing here — what places a unit is not a row nobody can read.

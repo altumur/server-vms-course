@@ -36,7 +36,7 @@ unit:
     feed:
       type: url
       unique: canonical
-      schemes: [https, sftp]
+      schemes: [https, sftp, mirror]       # mirror://<hub>/<host>/…: a copy kept on a hub
       credentials: {login: feed_user, secret: feed_secret}
       secret_in:
         - {param: [token*, "*key", =who], login: [=who]}
@@ -95,7 +95,9 @@ placement:
   tie_break:   most-free-capacity
   near:        {sub: testsub, by: of, of: name, prefer: {start: [0, 1]}}
   spread_by:   zone
-  group_by:    {field: feed, cut_at: part}
+  # tallies whose feeds name one host go to one worker: the host in the path for a mirror (the hub is no part of it),
+  # `#` a character there, and `mirror://local/…` — the shelf's own copy — no host at all
+  group_by:    {field: feed, cut_at: host, schemes: {mirror: {host: path, fragment: none, none: [local]}}}
   place_by:    shelf
   places:      {table: shelves, where: {enabled: true}, server_field: server, lease: strict}   # a shared shelf: strict
   offers:      true

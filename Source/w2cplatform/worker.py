@@ -1977,9 +1977,7 @@ class Worker:
     def request_group(self, row: dict) -> str:
         if not self.spec.group_by:
             return ""
-        from .spec import url_cut
-        v = str(row.get(self.spec.group_by) or "")
-        return url_cut(v, self.spec.group_cut) if v and self.spec.group_cut else v
+        return self.spec.group_of(row.get(self.spec.group_by))
 
     # AN EVENT ABOUT A UNIT, under the epoch this worker holds for it, into the unit's bucket on this server's resource:
     # the platform's line. `None` when no epoch is held for it (not this worker's to speak of), the instance is fenced,

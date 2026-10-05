@@ -1025,9 +1025,9 @@ def test_a_command_is_performed_only_on_the_device_it_was_given_for():
     holder.reconcile_once()
     until = str(box.wall() + 300)
     box.vars.put("vms/requests/moved", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until,
-                                        "group": "driverpack://acme/10.0.0.91"})
+                                        "group": "10.0.0.91"})
     box.vars.put("vms/requests/here", {"unit": str(cid), "action": "output", "port": "2", "valid_until": until,
-                                       "group": "driverpack://acme/10.0.0.90"})
+                                       "group": "10.0.0.90"})
     box.vars.put("vms/requests/old", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until})
     done = []
     for _ in range(3):

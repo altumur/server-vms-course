@@ -1253,19 +1253,21 @@ def test_a_command_to_a_device_is_asked_of_every_camera_of_the_device_by_hand_an
         srv.shutdown()
 
 
-def test_another_spelling_of_a_device_is_a_group_of_its_own_and_moving_into_it_is_the_clusters():
+def test_every_spelling_of_a_devices_host_is_its_group_and_a_host_nobody_can_read_is_the_clusters():
     """The review's eighth pass, major — a run: with `admin` on a file camera of her own, a user set its `source` to
     `driverpack://ACME/10.0.0.50/ch/2` (or `:80`, `10.0.0.50.`) — channel 2 of a recorder whose cameras were not hers:
     200, and then her `output` to port 1 was 202, the recorder pulsed. `device_of` took the address as typed. The VMS's
     reading is canonical — an address in the form the resolver dials (`012.0.0.50` is `10.0.0.50`), no default port, no
     credentials — and the holder dials by it. Since the boundary's step 6 the rights are the platform's, by the spec's
-    group (`rights.reach.group`): the source in its RFC 3986 spelling up to `/ch/` (`ACME` is `acme`; `:80` in the
-    path is no port to it). A spelling the platform does not read as the recorder's is a group nobody's camera is in,
-    and moving into it is the cluster's grant: `admin` on camera 3 alone is refused every one of them. Moved there by
-    the cluster's administrator, camera 3 is that group's only camera, and a command on it asks for camera 3 alone —
-    one spelling is the operator's rule (the owner's decision on step 6). "One channel, one camera" is the platform's
-    for one spelling (`unique: canonical`) and the holder's for the twins only the VMS reads as one (`…/ch/02` beside
-    `…/ch/2`: «device busy», the next test). A command carries the group its rights were asked on (`group`)."""
+    group (`rights.reach.group`): the HOST the source names (`cut_at: host`, «Архитектор» 2026-10-06), in one spelling
+    — `ACME` and `acme` are one vendor and the vendor is no part of it, `:80` is no part of it, nor the root's dot — so
+    every one of those spellings is the recorder's group, and `admin` on camera 3 alone is refused each. A host the
+    platform cannot read (`012.0.0.50`, `nvr%2Ecorp`) is no group and nobody's: moving into it is the cluster's grant
+    too. Moved by the cluster's administrator onto the recorder, camera 3 is one of its cameras and a command on it asks
+    for all three; moved onto the unreadable host, it is in no group and a command asks for camera 3 alone — the
+    operator's rule (the owner's decision on step 6). "One channel, one camera" is the platform's for one spelling
+    (`unique: canonical`) and the holder's for the twins only the VMS reads as one (`…/ch/02` beside `…/ch/2`: «device
+    busy», the next test). A command carries the group its rights were asked on (`group`)."""
     from vms.config import channel_key, device_of
     nvr = "driverpack://acme/10.0.0.50/ch/"
     for spelt in ("driverpack://ACME/10.0.0.50/ch/2", "DRIVERPACK://acme/10.0.0.50:80/ch/2", "driverpack://acme/10.0.0.50./ch/2",
@@ -1285,16 +1287,21 @@ def test_another_spelling_of_a_device_is_a_group_of_its_own_and_moving_into_it_i
             assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201   # hers
         for spelt in ("driverpack://ACME/10.0.0.50/ch/2", "driverpack://acme/10.0.0.50:80/ch/9",
-                      "driverpack://acme/10.0.0.50./ch/9", "driverpack://acme/012.0.0.50/ch/9"):
-            assert _call(base, "PUT", "/cameras/3", {"source": spelt}, token="three")[0] == 403, spelt   # the recorder's
+                      "driverpack://other/10.0.0.50./ch/9", "driverpack://acme/012.0.0.50/ch/9",
+                      "driverpack://acme/nvr%2Ecorp/ch/9"):
+            assert _call(base, "PUT", "/cameras/3", {"source": spelt}, token="three")[0] == 403, spelt   # not hers alone
         code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50/ch/2"}, token="admin")
         assert code == 400 and "vms 2 has that source already" in body["detail"], (code, body)          # one address
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50:80/ch/9"}, token="admin")[0] == 200
-        for cmd in ({"unit": "vms/3", "action": "output", "port": 1}, {"unit": "vms/3", "action": "preset", "n": 2}):
-            assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 202, cmd   # its group is camera 3's alone
-            assert _call(base, "POST", "/requests", {**cmd, "unit": "vms/1"}, token="guard")[0] == 403, cmd
+        cmds = ({"unit": "vms/3", "action": "output", "port": 1}, {"unit": "vms/3", "action": "preset", "n": 2})
+        for cmd in cmds:
+            assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 403, cmd   # on the recorder: all three
         assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1, "id": "r-1"}, token="admin")[0] == 202
-        assert box.vars.get("vms/requests/r-1")[0]["group"] == "driverpack://acme/10.0.0.50"   # what the rights were asked on
+        assert box.vars.get("vms/requests/r-1")[0]["group"] == "10.0.0.50"               # what the rights were asked on
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/012.0.0.50/ch/9"}, token="admin")[0] == 200
+        for cmd in cmds:
+            assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 202, cmd   # in no group: camera 3's alone
+            assert _call(base, "POST", "/requests", {**cmd, "unit": "vms/1"}, token="guard")[0] == 403, cmd
         for bad in ('r"2', "r|2", "r\n2"):                                               # a name's rule (`doors.unnamable`)
             assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1, "id": bad}, token="admin")[0] == 400
     finally:
@@ -1304,7 +1311,7 @@ def test_another_spelling_of_a_device_is_a_group_of_its_own_and_moving_into_it_i
 def test_two_spellings_of_one_channel_are_one_camera_to_its_holder_which_says_device_busy():
     """The owner's decision on the boundary's step 6: the platform canonicalises an address by RFC 3986 and does not know
     that `…/ch/02` is `…/ch/2` — that is how the VMS reads its addresses. Both are one group (`group_by: {field: source,
-    cut_at: ch}`), so one worker holds both, and that worker opens the first by id and says «device busy» of the other in
+    cut_at: host}`: one host), so one worker holds both, and that worker opens the first by id and says «device busy» of the other in
     its heartbeat (`VmsWorker.held_back`), never dialling it: two pipelines on one channel would be camera 2's picture
     in camera 1's archive (the review's sixth pass). Deleted, the first gives the channel to the second."""
     from vms.worker import FakeActuator, VmsWorker
@@ -1574,9 +1581,10 @@ def test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios
             assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
         for f in ("3", "4"):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{f}.mp4"}, token="admin")[0] == 201
-        # a source of its own nobody's camera is at: the cluster's to open (`rights.reach.group`, step 6), as before
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="mover")[0] == 403
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="admin")[0] == 200   # no scenario yet
+        # a host nobody's camera is at: the cluster's to open (`rights.reach.group`, step 6), as before; a file is on no
+        # host (`schemes: {driverpack: {none: [file]}}`), and moving a file camera onto another file is the camera's alone
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.77/ch/1"}, token="mover")[0] == 403
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="mover")[0] == 200   # no scenario yet
         gate = {"name": "gate", "when": [{"sub": "vms", "kind": "motion", "unit": "4"}],
                 "then": [{"sub": "vms", "action": "output", "unit": "3", "port": 1}]}
         assert _call(base, "POST", "/auto/scenarios", gate, token="admin")[0] == 201

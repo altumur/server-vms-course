@@ -1,0 +1,72 @@
+# group_of.tsv — a camera's source and the group the platform puts it in (`placement.group_by: {field: source, cut_at:
+# host, schemes: …}` of vms.subsystem.yaml; `w2cplatform.spec.url_host`), read by tests/test_group_of_table.py.
+# The group is the HOST the source names, in one spelling: neither the scheme nor the port is part of it; lower case, no
+# trailing dot; an IP as written once (IPv6 unbracketed, RFC 5952, no zone; IPv4-mapped as IPv4); a percent-escape in a
+# host is not decoded. (none): no group — not a host, or not an address. «Паритет» replaces this file with the table
+# shared with the product.
+#
+# Columns, tab-separated: the source; its group, or (none); `refused` when the source field refuses it as a value
+# (`refusal`: its `secret_in` and address rules) and the group is there all the same — refusing is the field's, grouping is group_by's;
+# a note.
+#
+# one host, whatever the scheme and the port
+rtsp://nvr50/ch/1	nvr50
+onvif://nvr50/onvif/device_service	nvr50		two schemes, one host: one group
+rtsp://nvr50:554/ch/2	nvr50		the port is not part of the host
+http://nvr50:8080/snap.jpg	nvr50
+ipint://nvr50/Acme/N8	nvr50		the product's scheme, one host with the rest
+rtsp://nvr50	nvr50		an address with no path at all
+rtsp://nvr50?channel=1	nvr50		…and with a query only
+rtsp://nvr50:/ch/1	nvr50		an empty port is no port
+# one spelling
+rtsp://NVR50/ch/1	nvr50		a host in another case
+RTSP://Nvr50/ch/1	nvr50		…and the scheme
+rtsp://nvr50./ch/1	nvr50		the root's trailing dot
+http://Cam.Example.COM.:80	cam.example.com
+rtsp://10.0.0.50/ch/1	10.0.0.50
+rtsp://10.0.0.50./ch/1	10.0.0.50		an address with the root's dot is the address
+rtsp://[::1]/ch/1	::1		IPv6 unbracketed
+rtsp://[0:0::1]:554/ch/1	::1		…its zero runs folded (RFC 5952)
+rtsp://[2001:DB8:0:0::1]/x	2001:db8::1
+rtsp://[::ffff:10.0.0.50]/x	10.0.0.50		IPv4-mapped is the IPv4 address
+rtsp://[fe80::1%25eth0]/x	fe80::1		a zone (RFC 6874) is not the host
+# a login is not the host
+rtsp://admin:hunter2@nvr50/ch/1	nvr50	refused	a password in the source: refused, and on nvr50 all the same
+ipint://cam7#@nvr50/Acme/N8	nvr50	refused	ipint has no fragment: '#' is a character, the host after the last '@'
+ipint://admin:pa@ss@nvr50/Acme/N8	nvr50	refused	…the LAST '@'
+rtsp://cam7#@nvr50/ch/1	cam7	refused	rtsp has a fragment: the host is before the '#'
+# no host: no group
+rtsp://nvr%2Ecorp/ch/1	(none)		a percent-escape is not decoded: decoded by one reader, not by the next
+rtsp://nvr%2ecorp/ch/1	(none)
+rtsp://nvr_50/ch/1	(none)		an underscore is no host name's
+rtsp://nvr 50/ch/1	(none)		a space
+rtsp://-nvr/ch/1	(none)		a label starting with '-'
+rtsp://nvr..corp/ch/1	(none)		an empty label
+rtsp://nvré/ch/1	(none)		non-ASCII
+rtsp://010.0.0.50/ch/1	(none)		a leading zero: octal to inet_aton
+rtsp://10.1/ch/1	(none)		a short form: 10.0.0.1 to inet_aton
+rtsp://256.0.0.1/ch/1	(none)		ends in a number and is no IPv4 address
+rtsp://[10.0.0.1]/ch/1	(none)	refused	brackets hold IPv6 only
+rtsp://[fe80::1%eth0]/ch/1	(none)		a zone is introduced by %25
+rtsp://[::1/ch/1	(none)	refused	no closing bracket
+rtsp://cam:hunter2/ch/1	(none)	refused	a password where the port goes: the address does not parse
+rtsp://nvr50/ch/%zz	(none)		a broken escape: the address does not parse
+rtsp:///ch/1	(none)		no authority
+nvr50	(none)		not an address
+# driverpack://<vendor>/<address>/…: the host is the path's first segment, and the vendor no part of it
+driverpack://acme/10.0.0.50/ch/17	10.0.0.50
+driverpack://acme/10.0.0.50/ch/18	10.0.0.50		another channel of one NVR
+driverpack://other/10.0.0.50/ch/1	10.0.0.50		another vendor, one address: one group
+driverpack://acme/10.0.0.50:8080/ch/1	10.0.0.50		the port is not part of it here either
+driverpack://acme/NVR-1./ch/1	nvr-1		one spelling
+driverpack://acme/[fe80::1%25eth0]/ch/1	fe80::1
+driverpack://acme	acme		no address: the vendor's, the authority is the host
+driverpack://acme/	acme		an empty first segment: the same
+driverpack://file/clips/a.mp4	(none)		a file, no device (`none: [file]`)
+driverpack://file	(none)
+driverpack://acme/nvr%2Ecorp/ch/1	(none)		a percent-escape in the host is not decoded here either
+driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1	10.0.0.5	refused	a login written before the rule: its host is still read
+driverpack://acme/admin:Hunter2@10.0.0.5/ch/1	10.0.0.5	refused
+driverpack://acme/admin:pa/ss@10.0.0.5/ch/1	10.0.0.5	refused	a password with a '/': the host after the path's last '@'
+driverpack://acme/10.0.0.5:hunter2/ch/1	10.0.0.5	refused	a password where the port goes
+driverpack://acme/admin:X%40nvr%2Ecorp/ch/1	(none)	refused	a host only decoding makes is none

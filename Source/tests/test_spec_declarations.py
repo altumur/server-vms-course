@@ -10,8 +10,10 @@
                                       field refs — says so (it was a near-rank hook)
     fields.<f>.ref + must_match       what a field points at must agree with the row (it was a refusal hook)
     fields.<f>.unique                 one value per cluster; `canonical` — one address in its RFC 3986 spelling
-    placement.group_by.cut_at         a group is an address up to a segment of its path (it was an override of
-                                      `group_value`)
+    placement.group_by.cut_at         a group is the host an address names (`host`), or the address up to a segment of
+                                      its path (it was an override of `group_value`)
+    placement.group_by.schemes        where a scheme writes its host, in a closed dictionary: `host: authority | path`,
+                                      `fragment: keep | none`, `none: [<authority>]`
     tables: {<t>: {key, fields, …}}   a table the console serves — written, listed, deleted, journalled (it was a
                                       subsystem's routes on the console)
     requests: {schema, key, …}        `POST /requests`, a row for a worker to answer (it was a subsystem's route)
@@ -31,7 +33,7 @@ import tempfile
 from w2cplatform import catalog
 from w2cplatform.console import Heartbeat
 from w2cplatform.objects import FsObjectStore
-from w2cplatform.spec import Refused, SpecController, SubsystemSpec, canonical_url, url_cut
+from w2cplatform.spec import Refused, SpecController, SubsystemSpec, canonical_url, url_cut, url_host
 from w2cplatform.variables import FileVariables
 
 CAP = {"capacity": {"from": "capacity", "default": 4}}
@@ -90,7 +92,7 @@ def test_the_catalogue_is_closed_and_nothing_registers_a_rule():
     _refused(lambda: SubsystemSpec.from_dict({**base, "unit": {**base["unit"], "fields": {"name": {"type": "string", "unique": "canonical"}}},
                                               "placement": CAP}), "`unique` is true, or `canonical` for a url field")
     _refused(lambda: SubsystemSpec.from_dict({**base, "placement": {**CAP, "group_by": {"field": "name", "cut_at": "x"}}}),
-             "cut_at cuts a url field's path")
+             "group_by.cut_at reads a url field")
 
 
 def test_an_address_has_one_spelling_by_rfc_3986_and_nothing_a_scheme_means():
@@ -103,6 +105,65 @@ def test_an_address_has_one_spelling_by_rfc_3986_and_nothing_a_scheme_means():
     assert canonical_url("not an address") == "not an address"
     assert url_cut("x://H/a/b/part/7?q=1", "part") == "x://h/a/b" == url_cut("x://h/a/b/part/8", "part")
     assert url_cut("x://h/a/b", "part") == "x://h/a/b"                    # no such segment: its own group
+
+
+def test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_declares_where_its_host_stands():
+    """`cut_at: host`: neither the scheme, the port, a login nor the path is part of the group; the host in lower case
+    without the root's dot, an IP as `ipaddress` writes it (IPv6 unbracketed and folded, no zone; IPv4-mapped as IPv4).
+    A host as written: an escape is not decoded, and what is neither a name of RFC 1123 labels nor an IP — or an address
+    that does not parse — is no group (""). `schemes` says where a scheme writes its host: the path's first segment
+    (`host: path`, the authority then a name the group does not hold; an empty segment leaves it the authority), no
+    fragment (`fragment: none`: `#` is a character, the host after the last `@`), authorities naming none (`none`)."""
+    assert url_host("x://H.:8/a/1") == url_host("y://h/b/2") == url_host("x://u:p@h") == "h"
+    assert url_host("x://[0:0::1]:9/") == url_host("x://[::1]") == "::1"
+    assert url_host("x://[::FFFF:10.0.0.5]/") == url_host("x://10.0.0.5./") == "10.0.0.5"
+    assert url_host("x://[fe80::1%25en0]/") == "fe80::1"
+    for none in ("x://h%2Ecorp/", "x://h_1/", "x://010.0.0.5/", "x://[fe80::1%en0]/", "x://h:pw/", "x://h/%zz",
+                 "x:///a", "h", "", "x://a b/"):
+        assert url_host(none) == "", none
+    assert url_host("x://a#@h/") == "a" and url_host("x://a#@h/", {"x": {"fragment": "none"}}) == "h"
+    hub = {"m": {"host": "path", "none": ["local"]}}
+    assert url_host("m://hub1/H.Example/a", hub) == url_host("m://hub2/h.example:21/b", hub) == "h.example"
+    assert url_host("m://hub1", hub) == url_host("m://hub1/", hub) == "hub1"           # no host in the path: the authority
+    assert url_host("m://local/x", hub) == url_host("m://LOCAL", hub) == ""
+    assert url_host("m://hub/a:b%40h/x", hub) == url_host("m://hub/a:b/c@h/x", hub) == "h"   # a login set aside
+    assert url_host("m://hub/a:b%40h%2Ecorp/x", hub) == ""                     # a host only decoding makes is none
+    # testsub2: a tally's feed by its host — a mirror's in its path, and the shelf's own copy (`local`) none
+    spec = SubsystemSpec.load(os.path.join(os.path.dirname(__file__), "testdata", "testsub2.subsystem.yaml"))
+    assert spec.group_of("https://Feed.Example/t1") == spec.group_of("sftp://feed.example:22/t2") == "feed.example"
+    assert spec.group_of("mirror://hub/feed.example/t3#x@y") == "feed.example"
+    assert spec.group_of("mirror://local/t4") == "" == spec.group_of("")
+    # no group either way, and only one of them a host nobody can tell: the console asks the cluster's grant for it
+    assert spec.group_unreadable("https://feed_1.example/t5") and spec.group_unreadable("mirror://hub/h%2Ecorp/t6")
+    assert not spec.group_unreadable("mirror://local/t4") and not spec.group_unreadable("")
+
+
+def test_the_schemes_of_a_group_are_a_closed_dictionary_said_beside_cut_at_host_only():
+    """`group_by.schemes` loads only beside `cut_at: host`, each scheme in lower case with at least one word, each word of
+    the dictionary with one of its values; anything else is refused at load, in words."""
+    base = {"name": "probe", "unit": {"rows": "items", "id": "name",
+                                      "fields": {"name": {"type": "string"}, "addr": {"type": "url"}}}}
+
+    def spec(**g):
+        return SubsystemSpec.from_dict({**base, "placement": {**CAP, "group_by": {"field": "addr", **g}}})
+
+    ok = spec(cut_at="host", schemes={"m": {"host": "path", "fragment": "none", "none": ["local"]}, "y": {"host": "authority"}})
+    assert ok.group_cut == "host" and ok.group_of("m://a/b/c") == "b" and spec(cut_at="host").group_of("m://a/b") == "a"
+    _refused(lambda: spec(cut_at="part", schemes={"m": {"fragment": "none"}}), "only `cut_at: host` reads a host")
+    _refused(lambda: spec(schemes={"m": {"fragment": "none"}}), "only `cut_at: host` reads a host")
+    _refused(lambda: spec(cut_at="host", schemes={"m": {"port": "none"}}), "'port' is not a word of the dictionary")
+    _refused(lambda: spec(cut_at="host", schemes={"m": {"host": "query"}}), "m.host is one of authority, path")
+    _refused(lambda: spec(cut_at="host", schemes={"m": {"fragment": "drop"}}), "m.fragment is one of keep, none")
+    _refused(lambda: spec(cut_at="host", schemes={"m": {}}), "a scheme says at least one of")
+    _refused(lambda: spec(cut_at="host", schemes={"m": None}), "a scheme says at least one of")
+    _refused(lambda: spec(cut_at="host", schemes={}), "{<scheme>: {host?, fragment?, none?}")
+    _refused(lambda: spec(cut_at="host", schemes={"M": {"fragment": "none"}}), "not a scheme in lower case")
+    _refused(lambda: spec(cut_at="host", schemes={"m": {"none": "local"}}), "m.none is a list of authorities")
+    _refused(lambda: spec(cut_at="host", schemes={"m": {"none": ["a/b"]}}), "m.none is a list of authorities")
+    _refused(lambda: spec(cut_at="host", schemes={"m": {"none": [False]}}), "m.none is a list of authorities")
+    _refused(lambda: spec(cut_at="host", port=1), "placement.group_by is a field, or")
+    _refused(lambda: SubsystemSpec.from_dict({**base, "placement": {**CAP, "group_by": {"field": "name", "cut_at": "host"}}}),
+             "group_by.cut_at reads a url field")
 
 
 def test_a_row_points_only_at_what_agrees_with_it_and_a_unique_value_is_one_units():
