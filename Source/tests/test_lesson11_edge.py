@@ -291,8 +291,9 @@ def test_a_units_name_holds_no_quote_no_bar_and_no_control_character():
     assert status == 400 and "may not hold" in body["detail"], body
     assert rec.create({"name": "7 · ворота", "cam": "7"})["id"] == "7 · ворота"   # a space, a dot, letters: a name
     from vms import keeps                                              # a keep's id is its camera's: the same rule
+    from w2cplatform.memvariables import MemVariables
     try:
-        keeps.refuse({"cam": '7"x', "from": 1, "to": 2})
+        keeps.write(MemVariables(), {"cam": '7"x', "from": 1, "to": 2})
         assert False, "a keep of a camera named with a quote was accepted"
     except Refused:
         pass
@@ -824,13 +825,13 @@ def test_a_request_is_fetched_outside_the_window_and_the_budget():
     the device's uplink with live. A range a PERSON asked for is different work:
     they are looking at that gap now, and "tonight" is not a useful answer."""
     box, ctl, con, con_vars = _box()
-    w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000000.0, 5)}))
+    w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 2e9, 5)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
 
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
     con_rec.create({"name": "1", "cam": "1"})
-    now = 1000000.0
+    now = box.wall()                                                       # the loop judges a range by its clock
     r = _rec(box, window=(22, 6), keep_days=1.0, settle=1000.0)
     r.backfill_budget = 0                                                  # the ordinary pass fetches nothing at all
 

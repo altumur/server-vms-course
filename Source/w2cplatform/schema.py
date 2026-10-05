@@ -91,6 +91,8 @@ def _type_of(v) -> str:
     if isinstance(v, int):
         return "integer"
     if isinstance(v, float):
+        if not math.isfinite(v):
+            return "non-finite"                            # `NaN`, `Infinity`: JSON has neither, Python's reader takes both
         return "integer" if v.is_integer() else "number"
     if isinstance(v, str):
         return "string"
@@ -115,6 +117,18 @@ def _same(a, b) -> bool:
     if isinstance(a, bool) or isinstance(b, bool):
         return a is b if isinstance(a, bool) and isinstance(b, bool) else False
     return a == b
+
+
+# What a `not` refuses, said by what it names: a key it may not have, a form it may not take, a value it may not be.
+def _what_not(at: str, sub, v) -> str:
+    if isinstance(sub, dict):
+        if set(sub) == {"required"}:
+            return f"{at} may not have {', '.join(repr(k) for k in sub['required'])}"
+        if set(sub) == {"pattern"}:
+            return f"{at} may not match {sub['pattern']!r}"
+        if set(sub) <= {"const", "enum"}:
+            return f"{at} may not be {_shown(v)}"
+    return f"{at} is what it may not be"
 
 
 def check(schema, v, where: str = "") -> None:
@@ -210,7 +224,7 @@ def check(schema, v, where: str = "") -> None:
         except Invalid:
             pass
         else:
-            raise Invalid(f"{at} is what it may not be")
+            raise Invalid(_what_not(at, schema["not"], v))
     if "if" in schema:
         try:
             check(schema["if"], v, where)

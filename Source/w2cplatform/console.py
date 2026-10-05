@@ -2150,7 +2150,7 @@ class SpecConsole:
         if self.NO_UNIT and path.startswith(self.NO_UNIT):
             return None, None
         segs = path.split("/")
-        if len(segs) < 3 or segs[1] not in (self.spec.rows, *self.UNIT_ROUTES, *self.ID_ROUTES):
+        if len(segs) < 3 or segs[1] not in (self.spec.rows, *self.UNIT_ROUTES, *self.ID_ROUTES, *self.spec.table_specs):
             return None, None
         if len(segs) > 3 and not (method == "PUT" and segs[1] == self.spec.rows and len(segs) == 4 and segs[3]):
             raise NoSuchRoute(f"{path}: one id after /{segs[1]}/, and nothing after it")
@@ -2265,11 +2265,14 @@ class SpecConsole:
             return None
 
     def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list, str | None]:
-        cap = "view" if method == "GET" or (self.VIEW_POSTS and path.startswith(self.VIEW_POSTS)) else \
-              "edit" if path.startswith(self.EDIT_ROUTES) else "admin"
+        head = path.strip("/").split("/")[0]
+        caps = self.spec.route_caps                       # `rights.routes`: a family's writes that need less than admin
+        cap = "view" if method == "GET" or (self.VIEW_POSTS and path.startswith(self.VIEW_POSTS)) \
+            or head in caps.get("view", ()) else \
+              "edit" if path.startswith(self.EDIT_ROUTES) or head in caps.get("edit", ()) else "admin"
         family, pid = self.route_id(method, path)
         if pid and family in (self.spec.rows, *self.UNIT_ROUTES):
-            if self.CLUSTER_ROWS and family == self.spec.rows and method != "GET":
+            if (self.CLUSTER_ROWS or self.spec.cluster_rows) and family == self.spec.rows and method != "GET":
                 return cap, None, [], None
             return (cap, *self.target_in(self, pid))
         if named is None:
@@ -2526,11 +2529,13 @@ class SpecConsole:
         asked = set() if asked is None else asked
         sent = self._sent(h) if body and method != "DELETE" else None
         refs = self._table_targets(method, path, sent if body else None)
-        if body and self.moved_units is not None and isinstance(sent, dict):
+        if body and (self.spec.reach or self.moved_units is not None) and isinstance(sent, dict):
             old, written = self._row_written(method, path)
             if written and old is not None and method == "PUT":
                 try:
-                    refs |= {str(u) for u in (self.moved_units(old, {**old, **sent}) or ())}
+                    refs |= self.reach_of_change(old, {**old, **sent})
+                    if self.moved_units is not None:
+                        refs |= {str(u) for u in (self.moved_units(old, {**old, **sent}) or ())}
                 except Exception:                        # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
                     refs.add("*")
         self._admit_each(h, self.needs(method, path)[0], refs, asked)
@@ -2549,6 +2554,248 @@ class SpecConsole:
                 continue
             self.gate.admit(h.headers, cap, unit, labels, of)
             asked.add((cap, unit))
+
+    # -- what the spec declares, served (the boundary's step 6) --------------------------------------------------------
+    # A subsystem's tables and its requests were its own routes on this console (`extra`: `/volumes`, `/keeps`,
+    # `/requests`, `/backfill`); they are its spec's declarations now (`tables:`, `requests:`), and this console serves
+    # them. True: the request was one of them, and its reply is sent.
+    def _declared(self, h, method: str, path: str, q: dict) -> bool:
+        segs = path.strip("/").split("/")
+        if segs and segs[0] in self.spec.table_specs and len(segs) <= 2:
+            self._table_route(h, method, segs[0], segs[1] if len(segs) == 2 and segs[1] else None)
+            return True
+        if path.rstrip("/") == "/requests" and method == "POST" and self.spec.requests:
+            self._request_route(h)
+            return True
+        return False
+
+    # `/<table>[/<name>]` (`tables.py`): the list as this caller may see it, one row, a row written whole, a row deleted.
+    def _table_route(self, h, method: str, table: str, name: str | None) -> None:
+        ctl, user = self.ctl, h.headers.get("X-User", "operator")
+        t = self.spec.table_specs[table]
+        if method == "GET":
+            rows = ctl.table_rows_shown(table)
+            sees = self._visible(h)
+            if sees is not None and table in self.spec.unit_of:   # gated: the rows whose unit this caller may see
+                keep = []
+                for r in rows:
+                    ref, _ = self.spec.table_unit(table, r)
+                    if r.get("garbled") or not ref or sees(*self.target(ref)):
+                        keep.append(r)
+                rows = keep
+            if table == self.spec.affinity.get("table"):              # a table of places: who holds each, now
+                held = ctl.live_holds()
+                rows = [{**r, "held_by": held.get(r["name"])} for r in rows]
+            if name is not None:
+                one = next((r for r in rows if r["name"] == name), None)
+                return h._send(200 if one else 404, one or {"detail": f"no {table} row {name}", "error": "no such row"})
+            return h._send(200, {table: rows})
+        if method == "POST" and name is None:
+            try:
+                body, said = object_body(h), {}
+                rid, items = ctl.write_table_row(table, body, user, said)
+            except Refused as e:
+                return h._send(400, {"detail": str(e), "error": "refused"})
+            except TooLarge as e:
+                return h._send(413, {"detail": str(e), "error": str(e)})
+            except Forbidden as e:
+                return h._send(403, {"detail": str(e), "error": str(e)})
+            except (Conflict, OSError) as e:
+                log.warning("%s: a row of %s was not written: %s", self.spec.name, table, e)
+                return h._send(503, {"detail": "the store did not take it: try again", "error": "store unavailable"})
+            from .tables import shown
+            changed = {"changed": ",".join(said["changed"]), "was": said["was"]} if said else {}
+            self.journal.say(t.journal.get("written", f"{table}.written"), sub=self.spec.name, target=rid, user=user,
+                             table=table, fields=",".join(sorted(str(k) for k in body)), **changed)
+            return h._send(201, {"row": {**shown(items, t.fields), "name": rid}})
+        if method == "DELETE" and name is not None:
+            try:
+                gone = ctl.delete_table_row(table, name)
+            except (Forbidden, OSError) as e:
+                return h._send(503 if isinstance(e, OSError) else 403, {"detail": str(e), "error": "not deleted"})
+            if not gone:
+                return h._send(404, {"detail": f"no {table} row {name}", "error": "no such row"})
+            self.journal.say(t.journal.get("deleted", f"{table}.deleted"), sub=self.spec.name, target=name, user=user,
+                             table=table)
+            return h._send(200, {"deleted": name})
+        return h._send(405, {"detail": f"/{table} takes GET, POST and DELETE of one row", "error": "method"})
+
+    # `POST /requests` (`requests:` in the spec): a request filed as a row of this subsystem's family, for whoever holds
+    # its unit to perform and answer in its heartbeat. A request is not idempotent by nature — the same relay pulsed
+    # twice IS two pulses — so its NAME makes a retry the same request: the spec's `key` (a template of its fields), the
+    # body's `id`, or the `Idempotency-Key`, written create-only; and the key is kept where every key is (`_idem`), so a
+    # retry after the row was answered and cleared is answered the same. What only the holder can judge — that a range
+    # is longer than it fetches, that an argument is past what its unit has — is the holder's, said in its heartbeat.
+    def _request_route(self, h) -> None:
+        key = self._idem(h)
+        if key is None:
+            return
+        try:
+            resp = self._file_request(h, key)
+        except Exception as e:                                       # noqa: BLE001
+            return h._send(*self._failed(key, e))
+        if resp[0] == 202:
+            self._remember(key, resp)
+        else:
+            self.seen.release(key)                                  # a refusal is not a request: the key is not spent
+        return h._send(*resp)
+
+    def _file_request(self, h, key: str) -> tuple:
+        import hashlib
+        ctl, spec, req = self.ctl, self.spec, self.spec.requests
+        user, now = h.headers.get("X-User", "operator"), self.wall()
+        try:
+            body = object_body(h)
+        except Refused as e:
+            return 400, {"detail": str(e), "error": "bad body"}
+        if "schema" in req:
+            from .schema import Invalid, check
+            try:
+                check(req["schema"], body, "the request")
+            except Invalid as e:
+                return 400, {"detail": str(e), "error": "refused"}
+            except RecursionError:
+                return 400, {"detail": "the request is nested past what is read", "error": "refused"}
+        ref = str(body.get("unit", ""))
+        got = parse_ref(ref)
+        if got is None or got[0] != spec.name:
+            return 400, {"detail": f"a request names its unit as {spec.name}/<id>, not {ref[:80]!r}", "error": "bad unit"}
+        try:
+            row = ctl.unit(spec.parse_id(got[1]))
+        except (ValueError, *PARSE_ERRORS):
+            row = None
+        if row is None:
+            return 404, {"detail": f"no unit {ref}", "error": "no such unit"}
+        uid = str(row["id"])
+        if "key" in req:
+            from .tables import KEY_TEMPLATE
+            try:
+                rid = KEY_TEMPLATE.sub(lambda m: str(int(float(({**body, "unit": uid})[m.group(1)]))) if m.group(2)
+                                       else str(({**body, "unit": uid})[m.group(1)]), req["key"])
+            except (KeyError, *PARSE_ERRORS, OverflowError):
+                return 400, {"detail": f"a request is named {req['key']}, and the body does not fill it in", "error": "bad id"}
+        else:
+            rid = str(body.get("id") or key)
+        from .doors import unnamable
+        if "/" in rid or rid in (".", "..") or len(rid) > 200 or unnamable(rid):
+            return 400, {"detail": "a request's id is a name, not a path, and holds no quote, bar or control character",
+                         "error": "bad id"}
+        out = {k: (json.dumps(v) if isinstance(v, (dict, list)) else str(v)) for k, v in body.items()
+               if k not in ("unit", "id", "valid_until")}
+        out.update(unit=uid)
+        if "valid_for" in req:
+            # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity`
+            # reached the row as `nan`/`inf`, and a holder performed such a request hours late.
+            try:
+                until = finite(body.get("valid_until") or now + req["valid_for"])
+            except (TypeError, ValueError):
+                return 400, {"detail": f"`valid_until` is a time in seconds, not {body.get('valid_until')!r}", "error": "bad deadline"}
+            if until - now > req.get("most_valid", float("inf")):
+                return 400, {"detail": f"a request's `valid_until` is at most {req['most_valid']:.0f} s away", "error": "too far"}
+            out["valid_until"] = str(until)
+        stamp = set(req.get("stamp") or ())
+        if "by" in stamp:
+            out["by"] = user
+        if "at" in stamp:
+            out["at"] = str(now)
+        if "group" in stamp and spec.group_by:               # what the rights were asked on: the holder performs it there only
+            out["group"] = ctl.group_value(row)
+        if "about" in stamp and spec.about_field and row.get(spec.about_field) not in (None, ""):
+            out[spec.about_field] = str(row[spec.about_field])
+        if "per_person" in req:
+            # ONE PERSON'S OPEN REQUESTS, COUNTED BY CAS, NOT BY LOOKING (the review's sixth pass, minor; a run: forty
+            # POSTs at once left fifteen rows). A person's open requests are ONE row — `<sub>/requests/asks-<sha256 of
+            # the person, 16 hex>`, the list of their ids — changed by CAS; an id stays in it while its row stands, and
+            # for `settle` seconds after it was added, row or no row (the list is written before the request is), and
+            # never past `ttl`. The same request again is the same id, and is not counted twice.
+            ledger = spec.sub.request_key("asks-" + hashlib.sha256(user.encode()).hexdigest()[:16])
+            settle, ttl = req.get("settle", 60.0), req.get("ttl", 86400.0)
+            for _ in range(50):
+                it, idx = ctl.vars.get(ledger)
+                try:
+                    held = [(str(r), float(at)) for r, at in json.loads((it or {}).get("asks", "[]"))]
+                except PARSE_ERRORS:
+                    held = []
+                held = [(r, at) for r, at in held if now - at <= ttl
+                        and (now - at < settle or ctl.vars.get(spec.sub.request_key(r))[0])]
+                if rid not in [r for r, _ in held]:
+                    if len(held) >= req["per_person"]:
+                        return 429, {"detail": f"{user} has {len(held)} requests nobody has answered yet, as many as one "
+                                               f"person files at once — wait for some to be answered", "error": "too many"}
+                    held.append((rid, now))
+                try:
+                    ctl.vars.put(ledger, {"asks": json.dumps(held), "by": user, "at": str(now)}, cas=idx)
+                    break
+                except Conflict:
+                    continue                                  # another request of this person's got there first
+            else:
+                return 503, {"detail": "this person's list of requests would not settle — retry", "error": "busy"}
+        try:
+            ctl.vars.put(spec.sub.request_key(rid), out, cas=0)
+        except Conflict:
+            out = ctl.vars.get(spec.sub.request_key(rid))[0] or out   # the same request, filed already: its row is the answer
+        if req.get("journal"):
+            self.journal.say(str(req["journal"]), user=user, target=ref, request=rid,
+                             **{k: v for k, v in out.items() if k in ("from", "to", "action")})
+        return 202, {"queued": {"id": rid, **out},
+                     "detail": "whoever holds the unit answers it on its next look at the requests, in its heartbeat"
+                               + ("; after valid_until it expires unperformed" if "valid_for" in req else "")}
+
+    # -- what a change reaches (`rights.reach`, `rights.names`; the boundary's step 6) ---------------------------------
+    # It was the subsystem's code, set on this console by its wiring (`moved_units`, `body_units`). A change of a field
+    # `reach.group` names reaches every OTHER unit of the group the unit leaves and of the group it joins — one
+    # connection is one group (`placement.group_by`), and moving a unit within a group shows that unit another's input;
+    # a group no other unit is in yet is nobody's to open but the cluster's (`"*"`: a name nobody can say whose it is, a
+    # host nobody holds); and moved to another group, every unit named by a row that names it (`rights.names` of any
+    # subsystem served here — a scenario that commands it answers for every unit it reaches). A change of a field
+    # `reach.cluster` names is the cluster's. A request whose action `reach.requests` names reaches every unit of its
+    # unit's group: what it does is done to the one connection.
+    def reach_of_change(self, old: dict, new: dict) -> set:
+        ctl, reach, out = self.ctl, self.spec.reach, set()
+        norm = lambda v: ",".join(sorted(str(x) for x in v)) if isinstance(v, (list, tuple)) else str(v or "")
+        if any(norm(old.get(f)) != norm(new.get(f)) for f in reach.get("cluster", ()) if f in new):
+            out.add("*")
+        if not any(f in new and norm(old.get(f)) != norm(new.get(f)) for f in reach.get("group", ())):
+            return out
+        g_old, g_new, me = ctl.group_value(old), ctl.group_value(new), str(old.get("id"))
+        members = lambda g: {self.spec.ref(u["id"]) for u in ctl.units() if g and str(u["id"]) != me and ctl.group_value(u) == g}
+        out |= members(g_old) | members(g_new)
+        if g_new != g_old:
+            if g_new and not members(g_new):
+                out.add("*")
+            out |= self.named_with(self.spec.ref(me))
+        return out
+
+    def reach_of_request(self, path: str, body) -> set:
+        acts = self.spec.reach.get("requests", ())
+        if path.rstrip("/") != "/requests" or not isinstance(body, dict) or str(body.get("action", "")) not in acts:
+            return set()
+        got = parse_ref(str(body.get("unit", "")))
+        row = self.row_of(got[1]) if got is not None and got[0] == self.spec.name else None
+        if row is None:
+            return set()
+        g = self.ctl.group_value(row)
+        return {self.spec.ref(row["id"])} | ({self.spec.ref(u["id"]) for u in self.ctl.units() if self.ctl.group_value(u) == g}
+                                              if g else set())
+
+    # Every unit named — `rights.names` — by a row of a subsystem served here that names `ref`: what a row naming the
+    # unit answers for when the unit moves. A row nobody can read names anybody: `"*"`.
+    def named_with(self, ref: str) -> set:
+        out = set()
+        for con in self.units.values():
+            if not con.spec.names:
+                continue
+            for row in con.ctl.units():
+                named = names_in(con.spec, row)
+                if ref in named or "*" in named:
+                    out |= named
+        return out
+
+    def _sent_reach(self, h, path: str) -> set:
+        try:
+            return self.reach_of_request(path, self._sent(h))
+        except Exception:                                # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
+            return {"*"}
 
     # `PUT /<rows>/<id>/<field>`: the bytes of a blob. Reached only by a caller already admitted on the unit (`dispatch`).
     # What is not a blob field of this spec, or names no unit, is 404 without its body; `BLOBS_AT_ONCE` of them are
@@ -2599,7 +2846,9 @@ class SpecConsole:
         # the path names, the cameras the row reaches as it is. Only a route whose unit is IN the body (`EDIT_ROUTES`:
         # a mark, a command, a keep) waits for it — and is first asked for any grant at all, so a stranger's body is
         # not read. After the body: that unit, and the row as it will be.
-        in_body = method in ("POST", "PUT") and path.startswith(self.EDIT_ROUTES)
+        # …and a write to a row of a table whose rows say whose they are (`rights.unit_of`): its unit is in the body too
+        in_body = method in ("POST", "PUT") and (path.startswith(self.EDIT_ROUTES)
+                                                 or path.strip("/").split("/")[0] in self.spec.unit_of)
         asked: set = set()
         if path not in OPEN_ROUTES:                     # the gate: open while this cluster has no key set, shut when it cannot check
             try:
@@ -2631,6 +2880,8 @@ class SpecConsole:
                     if need[:2] not in asked and not (need[1] is None and self._table_targets(method, path, self._sent(h))):
                         self.gate.admit(h.headers, *need)
                         asked.add(need[:2])
+                    if self.spec.reach.get("requests"):
+                        self._admit_each(h, need[0], self._sent_reach(h, path), asked)
                     if self.body_units is not None:
                         self.admit_body_units(h, path, need[0], asked)
                 self.admit_rows(h, method, path, asked)
@@ -2769,11 +3020,15 @@ class SpecConsole:
                     return h._send(400, {"error": str(e)})
             if path == "/metrics":
                 return h._send(200, con.metrics_text(), raw=True)
+            if self._declared(h, "GET", path, q):
+                return
             if self._extra(h, "GET", path, q):
                 return
             return h._send(404, {"detail": "no such route", "error": "no such path"})
         if method == "POST":
             if path not in (rows_path, "/marks"):
+                if self._declared(h, "POST", path, q):
+                    return
                 if self._extra(h, "POST", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
@@ -2803,6 +3058,8 @@ class SpecConsole:
                                 policy=json.dumps(body, sort_keys=True))
                 return h._send(200, out)
             if not path.startswith(rows_path + "/"):
+                if self._declared(h, "PUT", path, q):
+                    return
                 if self._extra(h, "PUT", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
@@ -2817,6 +3074,8 @@ class SpecConsole:
             return h._send(*resp)
         if method == "DELETE":
             if not path.startswith(rows_path + "/"):
+                if self._declared(h, "DELETE", path, q):
+                    return
                 if self._extra(h, "DELETE", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
@@ -2829,6 +3088,36 @@ class SpecConsole:
     # Starts the server in a daemon thread and returns it (tests use `port=0` and read `server_address`).
     def serve(self, host: str = "127.0.0.1", port: int = 8080) -> ThreadingHTTPServer:
         return open_doors(host, port, self.handler())
+
+
+# The units a row names inside its json fields, as its spec's `rights.names` says (`{field, unit, sub | of}`): `<sub>/<id>`
+# each — the subsystem from the entry's own key (`sub`) or said once (`of`). An entry of a field that names nothing by any
+# of the declarations — a trigger on any unit — names anybody: `"*"`; and so does a field nobody can read.
+def names_in(spec, row: dict) -> set:
+    out: set = set()
+    by_field: dict = {}
+    for e in spec.names:
+        by_field.setdefault(e["field"], []).append(e)
+    for fld, entries in by_field.items():
+        v = row.get(fld)
+        try:
+            v = json.loads(v) if isinstance(v, (str, bytes)) else v
+        except PARSE_ERRORS:
+            return {"*"}
+        if v is None:
+            continue
+        if not isinstance(v, list):
+            return {"*"}
+        for x in v:
+            if not isinstance(x, dict):
+                continue
+            found = set()
+            for e in entries:
+                u = x.get(e["unit"])
+                if u not in (None, ""):
+                    found.add(f"{x.get(e['sub']) if 'sub' in e else e['of']}/{u}")
+            out |= found or {"*"}
+    return out
 
 
 class Mount:

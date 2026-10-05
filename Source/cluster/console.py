@@ -29,7 +29,7 @@ from w2cplatform.console import Mount, SpecConsole, heartbeats   # noqa: F401
 from w2cplatform.eventdatabase import MergedIndex          # noqa: F401  (re-exported: the console's view of the event indexes)
 from w2cplatform.spec import SpecController
 
-from vms.console import rec_routes, vms_routes, wire_vms
+from vms.console import vms_routes, wire_vms
 
 from .controller import ClusterController
 
@@ -54,7 +54,7 @@ def make_console(ctl: ClusterController, worst_failover: float = 0.0, index=None
     root = SpecConsole(ctl, marks_root=archive_root, index=index, worst_failover=worst_failover, extra=cluster_routes(ctl, rec_ctl), media=True)
     m = Mount(root)
     if rec_ctl is not None:
-        m.mount("rec", SpecConsole(rec_ctl, wall=ctl.wall, index=index, extra=rec_routes(rec_ctl)))   # its numbers: its spec's `metrics:`
+        m.mount("rec", SpecConsole(rec_ctl, wall=ctl.wall, index=index))   # its tables, requests and numbers: its spec's
     return wire_vms(m, ctl, index)
 
 

@@ -127,31 +127,29 @@ def test_the_console_process_actually_runs_the_reaper():
 def test_a_backfill_request_is_a_row_and_not_a_202():
     """It used to answer 202 and store nothing. The text was true about what the
     recorder would do and false about anything having been asked — a lie that
-    survives right up until somebody checks whether the range arrived."""
+    survives right up until somebody checks whether the range arrived. A backfill is
+    the spec's request since the boundary's step 6 (`requests:`, `POST /requests` of
+    the recorder's console; it was the VMS's route `/backfill`): a row, named by its
+    recording and range."""
     import json
-    import time                                                     # the route has no controller: its clock is the real one
     from vms.config import REC_SPEC
-    from vms.console import vms_routes
-    from w2cplatform.spec import SpecController
+    from w2cplatform.console import SpecConsole
+    from tests.conftest import Served
 
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     rec.create({"name": "7", "cam": "7"})
-    routes = vms_routes(True, None, None, rec)
-    t0, t1 = int(time.time()) - 200, int(time.time()) - 100          # minutes that were recorded: not 1970 (the seventh pass)
+    t0, t1 = int(box.wall()) - 200, int(box.wall()) - 100            # minutes that were recorded: not 1970 (the seventh pass)
     rid = f"7-{t0}-{t1}"
+    ask = {"unit": "rec/7", "from": t0, "to": t1}
+    with Served(SpecConsole(rec, wall=box.wall)) as call:
+        status, body = call("POST", "/requests", ask, headers={"X-User": "anna"})
+        assert status == 202 and body["queued"]["id"] == rid, body
+        it, _ = box.vars.get(REC_SPEC.sub.request_key(rid))
+        assert it and it["unit"] == "7" and it["cam"] == "7" and float(it["from"]) == t0 and it["by"] == "anna"
 
-    class H:                                                        # the handler surface the route uses
-        headers = {"Content-Length": "48", "X-User": "anna"}
-        rfile = type("R", (), {"read": staticmethod(lambda n: json.dumps({"unit": "vms/7", "from": t0, "to": t1}).encode())})()
-
-    status, body = routes(H(), "POST", "/backfill", {})
-    assert status == 202 and body["queued"]["id"] == rid
-    it, _ = box.vars.get(REC_SPEC.sub.request_key(rid))
-    assert it and it["unit"] == "7" and float(it["from"]) == t0 and it["by"] == "anna"
-
-    status2, body2 = routes(H(), "POST", "/backfill", {})            # a retry is the same row, not a second fetch
-    assert status2 == 202 and body2["queued"]["id"] == rid
+        status2, body2 = call("POST", "/requests", ask, headers={"X-User": "anna"})   # a retry is the same row, not a second fetch
+        assert status2 == 202 and body2["queued"]["id"] == rid
     rows = [k.rsplit("/", 1)[1] for k in box.vars.list(REC_SPEC.sub.requests_prefix())]
     assert [r for r in rows if not r.startswith("asks-")] == [rid]
     # …and beside it anna's own list of what she has asked for (the review's sixth pass): one id, counted once

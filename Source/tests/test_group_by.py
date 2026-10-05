@@ -392,34 +392,33 @@ def test_a_device_that_cannot_do_it_answers_and_is_not_asked_for_ever():
 
 
 def test_the_console_files_a_command_and_refuses_the_ones_it_cannot():
-    """The door an operator uses, and a `curl` away: `POST /requests`. The
-    console does not open devices — it writes a row for the one process that
-    has this device open."""
-    from vms.console import vms_routes
+    """The door an operator uses, and a `curl` away: `POST /requests` — the spec's `requests:`, served by the platform's
+    console since the boundary's step 6 (it was the VMS's route). The console does not open devices — it writes a row
+    for the one process that has this device open, stamped with the group its rights were asked on."""
+    from w2cplatform.console import SpecConsole
+    from tests.conftest import Served
 
     box = Box(); ctl, con = _ctl(box)
     door = con.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
-    route = vms_routes(None, None, con, None)
+    with Served(SpecConsole(con, wall=box.wall)) as call:
+        status, body = call("POST", "/requests", {"unit": f"vms/{door}", "action": "output", "port": 2,
+                                                  "state": "pulse", "pulse_ms": 500})
+        assert status == 202 and float(body["queued"]["valid_until"]) == box.wall() + 30   # thirty seconds by default
+        assert body["queued"]["group"] == "driverpack://acme/10.0.0.90"                     # what its rights were asked on
+        assert box.vars.list(SPEC.sub.requests_prefix())
 
-    status, body = route(_Body(json.dumps({"unit": f"vms/{door}", "action": "output", "port": 2,
-                                           "state": "pulse", "pulse_ms": 500}).encode()),
-                         "POST", "/requests", {})
-    assert status == 202 and float(body["queued"]["valid_until"]) == box.wall() + 30   # thirty seconds by default
-    assert box.vars.list(SPEC.sub.requests_prefix())
+        for bad, why in (({"unit": "vms/999", "action": "output"}, "no such unit"),
+                         ({"unit": f"vms/{door}", "action": "reboot"}, "refused"),
+                         ({"unit": str(door), "action": "output"}, "denied")):     # a bare id: whose camera would the gate ask?
+            st, b = call("POST", "/requests", bad)
+            assert st in (400, 404) and b["error"] == why, (bad, st, b)
 
-    for bad, why in (({"unit": "vms/999", "action": "output"}, "no such unit"),
-                     ({"unit": f"vms/{door}", "action": "reboot"}, "unknown action"),
-                     ({"unit": door, "action": "output"}, "bad unit")):            # a bare id: whose camera would it be?
-        st, b = route(_Body(json.dumps(bad).encode(), key="bad"), "POST", "/requests", {})
-        assert st in (400, 404) and b["error"] == why
-
-    # an argument longer than a word: 400 at the door, the field named and not its value, no row written (the product's
-    # cross-check of the eleventh review; the holder refuses such a row too, `VmsWorker.perform`)
-    rows = len(box.vars.list(SPEC.sub.requests_prefix()))
-    st, b = route(_Body(json.dumps({"unit": f"vms/{door}", "action": "output", "port": 1, "state": "x" * 5000}).encode(), key="long"),
-                  "POST", "/requests", {})
-    assert st == 400 and b["error"] == "too long" and "`state`" in b["detail"] and "xxxx" not in json.dumps(b)
-    assert len(box.vars.list(SPEC.sub.requests_prefix())) == rows
+        # an argument longer than a word: 400 at the door, the field named and not its value, no row written (the
+        # product's cross-check of the eleventh review; the holder refuses such a row too, `VmsWorker.perform`)
+        rows = len(box.vars.list(SPEC.sub.requests_prefix()))
+        st, b = call("POST", "/requests", {"unit": f"vms/{door}", "action": "output", "port": 1, "state": "x" * 5000})
+        assert st == 400 and "the request.state is at most 32 characters" in b["detail"] and "xxxx" not in json.dumps(b)
+        assert len(box.vars.list(SPEC.sub.requests_prefix())) == rows
 
 
 def test_two_workers_on_one_box_open_their_own_doors():

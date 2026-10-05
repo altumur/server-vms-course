@@ -107,6 +107,17 @@ placement:
 # What leaves the cluster: that a scenario exists and whether it is on. Not its triggers or its actions —
 # М12's directory has never wanted to know which relay a site pulses, and a `then` carrying a preset number
 # for somebody else's camera is nobody's business up there.
+# Whose a scenario is (the boundary's step 6: it was the VMS's wiring of the console, `CLUSTER_ROWS` and
+# `scenario_cams`): a write to one is the whole cluster's business — its labels say where its evaluator runs, not whose
+# it is (the review's fifth pass); and the units it names — every trigger's, every action's — are what a camera it
+# commands answers for when it is moved to another device (the eighth pass: the scenario's port, chosen by somebody
+# with no right on the new device). A trigger on any unit names anybody.
+rights:
+  cluster_rows: true
+  names:
+    - {field: when, unit: unit, sub: sub}
+    - {field: then, unit: unit, sub: sub}
+    - {field: then, unit: cam, of: vms}
 snapshot: [name, enabled]
 # Each evaluator's last pass and what it counted since it started, from its heartbeat (the boundary's step 6: it was
 # `vms/console.py`'s `auto_metrics`). `auto_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).

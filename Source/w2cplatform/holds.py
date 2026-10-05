@@ -105,6 +105,8 @@ def kept(vars_, specs, progressed=None):
             whole = a == _bound(items, h["since"], -1.0) and b == _bound(items, h["until"], -1.0)
             if not whole:                                      # held as far as it reads — and counted, once a spell
                 HOLDS.garbled(path, ValueError(f"{h['since']}/{h['until']} do not both read as unix seconds"))
+            if not a < b and whole:
+                continue                                       # both read, and the stretch is empty: it holds nothing
             if not a < b:
                 a, b, whole = 0.0, math.inf, False             # the two that parse contradict each other: not known which
             if h["longest"] is not None and whole:

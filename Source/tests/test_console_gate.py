@@ -327,7 +327,7 @@ def test_what_a_route_needs_and_where_a_token_is_read_from():
     ref = f"vms/{cam}"                                                  # a unit as the platform names one (the boundary's step 2)
     assert root.needs("GET", "/cameras") == ("view", None, [], None) and root.needs("GET", f"/cameras/{cam}") == ("view", ref, ["ground"], None)
     assert root.needs("POST", "/cameras") == ("admin", None, [], None) and root.needs("DELETE", f"/cameras/{cam}")[0] == "admin"
-    assert root.needs("POST", "/requests")[0] == "edit" and root.needs("POST", "/backfill")[0] == "edit" and root.needs("POST", "/marks")[0] == "edit"
+    assert root.needs("POST", "/requests")[0] == "edit" and recs.needs("POST", "/requests")[0] == "edit" and root.needs("POST", "/marks")[0] == "edit"
     assert root.needs("POST", f"/whep/{cam}") == ("view", ref, ["ground"], None)          # a live stream: `view` on that camera
     assert root.needs("GET", f"/timeline/{cam}")[1] == ref
     # a recording is about its camera (`about`): asked with it, and the labels are the camera's
@@ -805,8 +805,9 @@ def test_a_camera_without_a_recording_does_not_read_another_cameras_tree_by_its_
     """The review's fourth pass, major: a camera with no recording of its own falls back to the tree named after it —
     and a recording NAMED «1» that records camera 2 made `/timeline/1` and `/export/1` serve camera 2's frames to camera
     1's viewers, journalled as camera 1, and `POST /backfill` for camera 1 wrote into camera 2's tree. The fallback is
-    taken only when no recording of that name says it is another camera's — alive or deleted; a keep likewise.
-    And a backfill asks for a day at most, a keep for a week."""
+    taken only when no recording of that name says it is another camera's — alive or deleted; a keep likewise. A
+    backfill names its recording (`rec/requests`, the boundary's step 6), and the gate asks about the camera that
+    recording is ABOUT."""
     from tests.conftest import door, footage, store
     from vms import keeps
     box = Box()
@@ -824,79 +825,77 @@ def test_a_camera_without_a_recording_does_not_read_another_cameras_tree_by_its_
         assert code == 200 and not [s for s in (spans if isinstance(spans, list) else spans["segments"]) if s.get("recording")]
         assert _call(base, "GET", f"/export/1?from={t - 900}&to={t - 300}", token="guard")[0] == 404
         assert _call(base, "GET", f"/timeline/2?from={t - 1000}&to={t}", token="other")[0] == 200   # it IS camera 2's
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 900, "to": t - 300}, token="guard")[0] == 404
+        # a backfill names the recording (`rec/requests`, step 6): «1» is camera 2's, and camera 1's guard may not
+        assert _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 900, "to": t - 300}, token="guard")[0] == 403
         assert not box.vars.list("rec/requests/")
         rec.delete("1")                                                 # deleted, the tombstone still says whose it was
         assert _call(base, "GET", f"/export/1?from={t - 900}&to={t - 300}", token="guard")[0] == 404
         assert _call(base, "POST", "/rec/keeps", {"cam": "1", "from": t - 900, "to": t - 300}, token="guard")[0] == 201
         assert [k.recordings for k in keeps.declared(box.vars) if k.cam == "1"] == [()]
 
-        code, body = _call(base, "POST", "/backfill", {"unit": "vms/2", "from": t - 40 * 365 * 86400, "to": t}, token="other")
-        assert code == 400 and "86400" in body["detail"]                 # a day at most
+        # a day at most is the recorder's to say (`RecWorker._range_refusal`: `test_a_backfill_nobody_could_answer_…`), and
+        # a keep holds a week at most on the resources (`holds.longest`) — taken at the door, held as far as it may
         code, body = _call(base, "POST", "/rec/keeps", {"cam": "2", "from": t - 30 * 86400, "to": t}, token="other")
-        assert code == 400 and "7 days" in body["detail"]                # a week at most
+        assert code == 201 and REC_SPEC.holds["longest"] == 7 * 86400
     finally:
         rdoor.shutdown(); srv.shutdown()
 
 
 def test_a_backfill_is_two_finite_numbers_a_handful_at_a_time_and_a_line():
-    """The review's fifth pass, minor: `POST /backfill` with `NaN` broke the connection with no reply (`NaN` passes
-    `t1 <= t0`, and then `int()` fails); nothing bounded how many day-long asks one person filed; and an ask left no
-    line. Now: 400 for anything but two finite numbers; at most `BACKFILLS_OPEN` of one person's asks waiting for a
-    recorder (the same range again is the same ask); and `archive.backfill.asked` names who, which camera, which
-    recording and which minutes."""
-    from vms import console as vc
+    """The review's fifth pass, minor: `POST /backfill` with `NaN` broke the connection with no reply; nothing bounded how
+    many day-long asks one person filed; and an ask left no line. A backfill is the recorder's request since the
+    boundary's step 6 (`POST /rec/requests {unit: rec/<recording>, from, to}`, the spec's `requests:`): 400 for anything
+    but two finite numbers (the schema's, and `NaN` is no number); at most seven of one person's asks waiting for a
+    recorder (`per_person`; the same range again is the same ask); and `archive.backfill.asked` names who and which."""
     box = Box()
     access = Tokens({"guard": [("edit", "vms/1", ())], "admin": [("admin", None, ())]})
     ctl, rec, m, srv, base = _console(box, access)
     t = box.wall()
+    per = REC_SPEC.requests["per_person"]
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"}, token="admin")[0] == 201
         assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "1"}, token="admin")[0] == 201
-        for bad in ({"unit": "vms/1", "from": float("nan"), "to": t}, {"unit": "vms/1", "from": t - 60, "to": float("inf")},
-                    {"unit": "vms/1", "from": "soon", "to": t}):
-            assert _call(base, "POST", "/backfill", bad, token="guard")[0] == 400, bad
-        asks = [_call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 3600 * (i + 1), "to": t - 3600 * i}, token="guard")[0]
-                for i in range(vc.BACKFILLS_OPEN)]
-        assert asks == [202] * vc.BACKFILLS_OPEN
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 3600, "to": t}, token="guard")[0] == 202   # the same ask
-        code, body = _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 9e4, "to": t - 8.9e4}, token="guard")
+        for bad in ({"unit": "rec/1", "from": float("nan"), "to": t}, {"unit": "rec/1", "from": t - 60, "to": float("inf")},
+                    {"unit": "rec/1", "from": "soon", "to": t}, {"unit": "rec/1", "from": False, "to": True}):
+            assert _call(base, "POST", "/rec/requests", bad, token="guard")[0] == 400, bad
+        asks = [_call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 3600 * (i + 1), "to": t - 3600 * i},
+                      token="guard")[0] for i in range(per)]
+        assert asks == [202] * per
+        assert _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 3600, "to": t}, token="guard")[0] == 202   # the same ask
+        code, body = _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 9e4, "to": t - 8.9e4}, token="guard")
         assert code == 429 and "guard has 7" in body["detail"]
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 9e4, "to": t - 8.9e4}, token="admin")[0] == 202  # another person
+        assert _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 9e4, "to": t - 8.9e4}, token="admin")[0] == 202  # another person
+        row = box.vars.get(REC_SPEC.sub.request_key(f"1-{int(t - 3600)}-{int(t)}"))[0]
+        assert (row["unit"], row["cam"], row["by"]) == ("1", "1", "guard")                    # its recording, whose, who
         lines = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
                  if e["kind"] == "archive.backfill.asked"]
-        assert len(lines) == vc.BACKFILLS_OPEN + 2 and lines[0]["user"] == "guard" and lines[0]["target"] == "1" \
-            and lines[0]["recording"] == "1"
+        assert len(lines) == per + 2 and lines[0]["user"] == "guard" and lines[0]["target"] == "rec/1"
     finally:
         srv.shutdown()
 
 
-def test_forty_backfills_asked_at_once_are_seven_and_an_ask_nobody_can_answer_is_refused():
-    """The review's sixth pass, minor — a run: forty POSTs at once left fifteen rows where `BACKFILLS_OPEN` is seven.
-    The bound was a count of rows read before the write, and requests in flight all counted the same ones. A person's
-    open asks are one row now, changed by CAS (`rec/requests/asks-<sha256 of the person, 16 hex>`): forty at once are seven asks and
-    thirty-three refusals, never an eighth. And an ask no recorder could ever answer — a range of milliseconds, a
-    range that has not happened yet — is refused instead of holding a place for good."""
+def test_forty_backfills_asked_at_once_are_seven():
+    """The review's sixth pass, minor — a run: forty POSTs at once left fifteen rows where seven is the bound. The bound
+    was a count of rows read before the write, and requests in flight all counted the same ones. A person's open asks are
+    one row now, changed by CAS (`<sub>/requests/asks-<sha256 of the person, 16 hex>`, the platform's `per_person`):
+    forty at once are seven asks and thirty-three refusals, never an eighth; a place comes back when an ask is answered.
+    (An ask no recorder could ever answer is refused by the recorder since the boundary's step 6.)"""
     import threading
-    from vms import console as vc
     box = Box()
     access = Tokens({"guard": [("edit", "vms/1", ())], "admin": [("admin", None, ())]})
     was = os.environ.get("CONSOLE_PER_ADDRESS")
     os.environ["CONSOLE_PER_ADDRESS"] = "64"                          # forty at once from one address: the door lets them in
     ctl, rec, m, srv, base = _console(box, access)
     t = box.wall()
+    per, settle = REC_SPEC.requests["per_person"], REC_SPEC.requests["settle"]
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"}, token="admin")[0] == 201
         assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "1"}, token="admin")[0] == 201
-        for bad, why in (({"from": t - 60, "to": t - 59.5}, "at least"), ({"from": t + 3600, "to": t + 7200}, "from now"),
-                         ({"from": t - 60, "to": t + 600}, "from now")):
-            code, body = _call(base, "POST", "/backfill", {"unit": "vms/1", **bad}, token="guard")
-            assert code == 400 and why in body["detail"], (bad, body)
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 60, "to": t + 30}, token="admin")[0] == 202   # two clocks apart: taken
         codes, lock = [], threading.Lock()
 
         def ask(i):
-            code = _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 3600 * (i + 2), "to": t - 3600 * (i + 1)}, token="guard")[0]
+            code = _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 3600 * (i + 2), "to": t - 3600 * (i + 1)},
+                         token="guard")[0]
             with lock:
                 codes.append(code)
         threads = [threading.Thread(target=ask, args=(i,)) for i in range(40)]
@@ -906,13 +905,12 @@ def test_forty_backfills_asked_at_once_are_seven_and_an_ask_nobody_can_answer_is
             th.join(30)
         mine = [k for k in box.vars.list(REC_SPEC.sub.requests_prefix())
                 if (box.vars.get(k)[0] or {}).get("by") == "guard" and "from" in box.vars.get(k)[0]]
-        assert sorted(codes) == [202] * vc.BACKFILLS_OPEN + [429] * (40 - vc.BACKFILLS_OPEN), sorted(codes)
-        assert len(mine) == vc.BACKFILLS_OPEN                                              # never an eighth row
-        # a place comes back when its ask is answered: the recorder fetched one, the console cleared its row
-        box.vars.delete(mine[0])
-        box.wall.advance(vc.ASK_SETTLE + 1)
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 9e4, "to": t - 8.9e4}, token="guard")[0] == 202
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 9.9e4, "to": t - 9.8e4}, token="guard")[0] == 429
+        assert sorted(codes) == [202] * per + [429] * (40 - per), sorted(codes)
+        assert len(mine) == per                                                            # never an eighth row
+        box.vars.delete(mine[0])                                      # the recorder fetched one, its row was cleared
+        box.wall.advance(settle + 1)
+        assert _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 9e4, "to": t - 8.9e4}, token="guard")[0] == 202
+        assert _call(base, "POST", "/rec/requests", {"unit": "rec/1", "from": t - 9.9e4, "to": t - 9.8e4}, token="guard")[0] == 429
     finally:
         srv.shutdown()
         os.environ.pop("CONSOLE_PER_ADDRESS", None)
@@ -1092,7 +1090,7 @@ def test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_ca
         for i in (1, 2):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{i}.mp4"}, token="admin")[0] == 201
         code, body = _call(base, "POST", "/rec/volumes", card, token="admin")
-        assert code == 400 and "`cam`" in body["detail"]                                     # a card says whose it is
+        assert code == 400 and "needs 'cam'" in body["detail"]                               # a card says whose it is (the table's schema)
         assert _call(base, "POST", "/rec/volumes", {**card, "cam": "2"}, token="admin")[0] == 201
         disks = {"name": "disks", "kind": "local", "server": "srv-1", "url": "/data/v", "quota_bytes": 1 << 30}
         assert _call(base, "POST", "/rec/volumes", disks, token="admin")[0] == 201
@@ -1188,16 +1186,17 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
     """The sixth pass's complaint was the class, not the two fields: a field that points at another unit, volume or
     device, and a gate that asks only about the camera the row is about. Every field of every subsystem's spec is
     named here — what it points at, or that it points at nothing — so a field added to a spec fails this test until
-    somebody has said which it is; and for each one that points, the spec says it (`about`, `fixed: true`), the console
-    built by `make_console` asks what a change reaches (`moved_units`) or takes the rows as the cluster's
-    (`CLUSTER_ROWS`), or the controller refuses what it may not point at (the boundary's step 2 took the hooks that read
-    a camera out of a row — `cams_of` — and put whose a row is into the specs)."""
+    somebody has said which it is; and for each one that points, the spec says it (`about`, `fixed: true`), the
+    platform's console asks what a change reaches by the spec (`rights.reach`: by the group, or the cluster's) or takes
+    the rows as the cluster's (`rights.cluster_rows`), or the controller refuses what it may not point at (the
+    boundary's step 2 took the hooks that read a camera out of a row — `cams_of` — and put whose a row is into the
+    specs; step 6 took the console's last hooks, `moved_units` and `CLUSTER_ROWS`, into `rights:`)."""
     from vms.config import AUTO_SPEC
     from w2cplatform.spec import SpecController
     from vms.config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, SURVEY_SPEC
-    FIXED, ABOUT, MOVED, RULE, CLUSTER = "fixed: true", "about", "moved_units", "refused by the controller", "CLUSTER_ROWS"
+    FIXED, ABOUT, MOVED, RULE, CLUSTER = "fixed: true", "about", "rights.reach", "refused by the controller", "rights.cluster_rows"
     points = {
-        ("vms", "source"): (MOVED, RULE),      # a channel of a device: every camera of both devices; one channel, one camera
+        ("vms", "source"): (MOVED, RULE),      # a channel of a device: every camera of both groups; one channel, one camera
         ("vms", "ref"): (MOVED, RULE),         # the domain's name for it: the cluster's grant; one name, one camera
         ("rec", "cam"): (FIXED, ABOUT),        # whose footage
         ("rec", "home"): (RULE,),              # a volume; a camera's card holds that camera's recordings and nobody else's
@@ -1240,9 +1239,10 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
         if ABOUT in how:                                                                  # the gate reads the camera, and its labels
             assert (con.spec.about_sub, con.spec.about_field) == ("vms", field), (sub, field)
         if MOVED in how:
-            assert con.moved_units is not None, (sub, field)
+            reach = con.spec.reach
+            assert field in reach.get("group", ()) + reach.get("cluster", ()), (sub, field)
         if CLUSTER in how:
-            assert con.CLUSTER_ROWS, (sub, field)
+            assert con.spec.cluster_rows, (sub, field)
         if RULE in how:
             f = con.spec.fields[field]                                                   # declared: what it points at, or one per cluster
             assert f.must_match or f.unique or type(con.ctl) is not SpecController, (sub, field)
@@ -1282,15 +1282,19 @@ def test_a_command_to_a_device_is_asked_of_every_camera_of_the_device_by_hand_an
         srv.shutdown()
 
 
-def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of_it():
+def test_another_spelling_of_a_device_is_a_group_of_its_own_and_moving_into_it_is_the_clusters():
     """The review's eighth pass, major — a run: with `admin` on a file camera of her own, a user set its `source` to
     `driverpack://ACME/10.0.0.50/ch/2` (or `:80`, `10.0.0.50.`) — channel 2 of a recorder whose cameras were not hers:
-    200, and then her `output` to port 1 was 202, the recorder pulsed. `device_of` took the address as typed. It is
-    canonical now — scheme and host in lower case, no trailing dot, an address in the form the resolver dials (`012.0.0.50`
-    is `10.0.0.50`), no default port, no credentials — so every spelling is the recorder, for the move (`source_cams`), for the command
-    (`device_cams`); "one channel, one camera" is the platform's for one spelling (`unique: canonical`) and the holder's
-    for the twins only the VMS reads as one (`…/ch/02` beside `…/ch/2`: «device busy», the next test). A command carries
-    the device its rights were asked on (`device`)."""
+    200, and then her `output` to port 1 was 202, the recorder pulsed. `device_of` took the address as typed. The VMS's
+    reading is canonical — an address in the form the resolver dials (`012.0.0.50` is `10.0.0.50`), no default port, no
+    credentials — and the holder dials by it. Since the boundary's step 6 the rights are the platform's, by the spec's
+    group (`rights.reach.group`): the source in its RFC 3986 spelling up to `/ch/` (`ACME` is `acme`; `:80` in the
+    path is no port to it). A spelling the platform does not read as the recorder's is a group nobody's camera is in,
+    and moving into it is the cluster's grant: `admin` on camera 3 alone is refused every one of them. Moved there by
+    the cluster's administrator, camera 3 is that group's only camera, and a command on it asks for camera 3 alone —
+    one spelling is the operator's rule (the owner's decision on step 6). "One channel, one camera" is the platform's
+    for one spelling (`unique: canonical`) and the holder's for the twins only the VMS reads as one (`…/ch/02` beside
+    `…/ch/2`: «device busy», the next test). A command carries the group its rights were asked on (`group`)."""
     from vms.config import channel_key, device_of
     nvr = "driverpack://acme/10.0.0.50/ch/"
     for spelt in ("driverpack://ACME/10.0.0.50/ch/2", "DRIVERPACK://acme/10.0.0.50:80/ch/2", "driverpack://acme/10.0.0.50./ch/2",
@@ -1316,9 +1320,10 @@ def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of
         assert code == 400 and "vms 2 has that source already" in body["detail"], (code, body)          # one address
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50:80/ch/9"}, token="admin")[0] == 200
         for cmd in ({"unit": "vms/3", "action": "output", "port": 1}, {"unit": "vms/3", "action": "preset", "n": 2}):
-            assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 403, cmd   # camera 3 is the recorder's now
+            assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 202, cmd   # its group is camera 3's alone
+            assert _call(base, "POST", "/requests", {**cmd, "unit": "vms/1"}, token="guard")[0] == 403, cmd
         assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1, "id": "r-1"}, token="admin")[0] == 202
-        assert box.vars.get("vms/requests/r-1")[0]["device"] == "acme/10.0.0.50"       # what the rights were asked on
+        assert box.vars.get("vms/requests/r-1")[0]["group"] == "driverpack://acme/10.0.0.50"   # what the rights were asked on
         for bad in ('r"2', "r|2", "r\n2"):                                               # a name's rule (`doors.unnamable`)
             assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1, "id": bad}, token="admin")[0] == 400
     finally:
@@ -1388,20 +1393,20 @@ def test_a_fragment_or_a_login_in_a_source_names_no_other_device_and_a_labels_ch
         srv.shutdown()
 
 
-def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it():
+def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_second_name_is_the_clusters_to_make():
     """The same finding, the part syntax cannot say: `nvr50.local` and `10.0.0.50` are two keys and one recorder. The
-    holder learns what the device IS when it opens it (`identity` — a serial number, a MAC; `FakeDevice(identity=)`)
-    and writes it into the device's row; rights and "one channel, one camera" compare by it where it is known
-    (`config.one_device`). A spelling no holder has opened yet is a grant on the whole cluster (the ninth pass: the next
-    test). "One channel, one camera" is asked by the key alone: a serial number is not unique (the owner's decision on
-    the ninth pass), so `nvr50.local/ch/2` is not refused for camera 2's `10.0.0.50/ch/2` — whoever moves a camera there
-    is asked for every camera of both, which is the rights' part."""
+    holder learns what the device IS when it opens it (`identity`) and says a coincidence; rights compared by it in the
+    VMS's code on the console (`config.one_device`) until the boundary's step 6. The platform reads no device row: its
+    rights go by the spec's group (`rights.reach.group`: the source in its one spelling up to `/ch/`), and two names of
+    one recorder are two groups — one spelling is the operator's rule (the owner's decision on step 6). So the second
+    name is a group nobody's camera is in, and only the cluster's grant opens it: `admin` on camera 3 is refused it,
+    the cluster's administrator is not, and the holder says what it found (`warning` in the camera's status)."""
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     box = Box()
     access = Tokens({"three": [("admin", "vms/3", ())], "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
     devs = {"acme/10.0.0.50": FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042"),
-            "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["2"], relays=2, identity="ACME-SN-0042")}
+            "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["7"], relays=2, identity="ACME-SN-0042")}
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
                   archive_root=box.archive, device_factory=lambda k: devs.get(k))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -1411,17 +1416,14 @@ def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it()
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
         w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
         assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"     # the holder said what it is
-        # Both names known — rows written before holders refused a second name, or by two holders at one moment: the
-        # console compares by what the device said it is.
-        box.vars.put("vms/devices/acme/nvr50.local", {**box.vars.get("vms/devices/acme/10.0.0.50")[0]})
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="three")[0] == 403
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/7"}, token="admin")[0] == 200
-        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
-        assert _call(base, "POST", "/requests", {"unit": "vms/3", "action": "output", "port": 1}, token="three")[0] == 403
-        assert _call(base, "PUT", "/cameras/3", {"name": "now hers no more"}, token="three")[0] == 200   # nothing moved
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="three")[0] == 403
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")[0] == 403
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="admin")[0] == 200
+        for _ in range(2):
+            w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        [st] = [x for x in w.status() if str(x["id"]) == "3"]
+        assert "same serial number as acme/10.0.0.50" in st.get("warning", ""), st              # said by the holder
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="three")[0] == 403
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="admin")[0] == 400   # one address
     finally:
         srv.shutdown()
 
@@ -1449,11 +1451,14 @@ def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_th
     factory: no holder ever learns it. `admin` on camera 3 moved it onto `nvr50.local/ch/2`, the recorder another
     camera holds as `10.0.0.50`: 200, and its command pulsed the recorder's relay (202). A move to a device no holder
     has opened is now a grant on the whole cluster, whatever the spelling (`source_cams`, `Devices.known`): a DNS name,
-    leading zeros, full-width digits, an ideographic full stop, another driver's name for the address. Once a holder has
-    opened a device and said what it is, a move onto it asks for every camera of it, as before."""
+    leading zeros, full-width digits, an ideographic full stop, another driver's name for the address. Since the
+    boundary's step 6 the platform says it from the spec (`rights.reach.group`): a move into a GROUP no other camera is
+    in yet — the source up to `/ch/`, `group_by` — is the cluster's grant; into one that has cameras, it asks for every
+    camera of it. (What a holder has learned of a device is no part of it: the platform reads no device row.)"""
     from vms.worker import FakeActuator, VmsWorker
     box = Box()
-    access = Tokens({"three": [("admin", "vms/3", ())], "admin": [("admin", None, ())]})
+    access = Tokens({"three": [("admin", "vms/3", ())], "three4": [("admin", "vms/3", ()), ("admin", "vms/4", ())],
+                     "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
                   archive_root=box.archive)                           # the course's build: no device factory
@@ -1471,10 +1476,13 @@ def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_th
             assert code == 403, (spelt, code, body)
         assert box.vars.get("vms/cameras/3")[0]["source"] == "driverpack://file/3.mp4"
         assert _call(base, "PUT", "/cameras/3", {"name": "still hers"}, token="three")[0] == 200   # nothing moved
-        # A device a holder has opened and said what it is: the move asks for its cameras — here none — and no more.
+        # A group with a camera in it: the move asks for that camera — and, the camera's too, no more.
         _opened(box, "acme/10.0.0.70")
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/1"}, token="three")[0] == 200
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/4"}, token="three")[0] == 200   # within it
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/1"}, token="three")[0] == 403   # nobody's in it yet
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.70/ch/2"}, token="admin")[0] == 201   # camera 4
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/1"}, token="three")[0] == 403   # camera 4's
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/1"}, token="three4")[0] == 200
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/4"}, token="three4")[0] == 200   # within it
         # …and the cluster's administrator may point a camera anywhere, as before
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="admin")[0] == 200
     finally:
@@ -1528,8 +1536,8 @@ def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidenc
     one — and the eighth pass refused the second clone for good, its status pointing at the first clone's address. Both
     open and record now; the coincidence is said (`describe_devices`): in the log once, in the status of the camera
     (`warning`), in the holder's device list (`same_serial_as`), counted on `/metrics`. "One channel, one camera" asks
-    by the key, so a clone's channel 1 is not the other clone's (`refuse_camera`); rights take the two for one device,
-    which asks for more (`one_device`). The other row gone, the warning goes."""
+    by the key, so a clone's channel 1 is not the other clone's; rights go by the spec's group (`rights.reach.group`,
+    step 6), which knows no serial number. The other row gone, the warning goes."""
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     box = Box()
     access = Tokens({"guard": [("edit", "vms/1", ())], "admin": [("admin", None, ())]})
@@ -1562,8 +1570,9 @@ def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidenc
         w.heartbeat_once()
         text = m_text(base)
         assert 'vms_device_identity_coincidences{worker="w-1"} 1' in text, text
-        # rights take the two for one device: the guard of camera 1 does not pulse what may be camera 2's relay
-        assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1}, token="guard")[0] == 403
+        # rights are the platform's, by the spec's group (one address, one group; the boundary's step 6): two clones at
+        # two addresses are two devices to it, and the holder is the one that says they may be one
+        assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1}, token="guard")[0] == 202
         box.vars.delete("vms/devices/acme/10.0.0.50")                  # the operator: the other row is stale
         w.heartbeat_once(); w.reconcile_once()
         assert not w.coincidences and "warning" not in [x for x in w.status() if str(x["id"]) == "2"][0]
@@ -1582,7 +1591,8 @@ def test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios
     not rewritten when its camera moves. `output` on a camera that was its device's only channel, the camera then
     moved onto a recorder's channel: the scenario pulsed the RECORDER's relay — a port chosen by somebody with no right
     on it. Whoever moves a camera to another device answers for every scenario that commands it: `admin` on every
-    camera such a scenario reaches (`source_cams`, `scenario_cams`). A move inside one device asks for nothing more."""
+    unit such a scenario names (the specs' `rights.reach.group` and the scenario's `rights.names`, read by the platform
+    since the boundary's step 6). A move inside one device asks for nothing more."""
     nvr = "driverpack://acme/10.0.0.50/ch/"
     box = Box()
     access = Tokens({"mover": [("admin", f"vms/{c}", ()) for c in ("1", "2", "3")],
@@ -1593,8 +1603,9 @@ def test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios
             assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
         for f in ("3", "4"):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{f}.mp4"}, token="admin")[0] == 201
-        _opened(box, "acme/10.0.0.50", "file/3b.mp4")                  # devices a holder has opened (the ninth pass)
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="mover")[0] == 200   # no scenario yet
+        # a source of its own nobody's camera is at: the cluster's to open (`rights.reach.group`, step 6), as before
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="mover")[0] == 403
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="admin")[0] == 200   # no scenario yet
         gate = {"name": "gate", "when": [{"sub": "vms", "kind": "motion", "unit": "4"}],
                 "then": [{"sub": "vms", "action": "output", "unit": "3", "port": 1}]}
         assert _call(base, "POST", "/auto/scenarios", gate, token="admin")[0] == 201
@@ -1605,43 +1616,30 @@ def test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios
         srv.shutdown()
 
 
-def test_a_backfill_of_a_time_nothing_could_hold_is_refused():
-    """The review's seventh pass, minor: `{"from": 0, "to": 600}` — 1970 — and even `false`/`true` were rows, each
-    holding one of its person's seven places for a day. A range that ends before anything the recording shows (its
-    `retention_days`) or the device holds (the coverage its holder announces) is 400; true and false are not seconds."""
+def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartbeat():
+    """The reviews' fourth, sixth and seventh passes: a range of thirty-one years, of milliseconds, one that has not
+    happened yet, `{"from": 0, "to": 600}` — 1970 — each held one of its person's seven places for a day. The console's
+    route refused them; since the boundary's step 6 the platform files a backfill by its shape alone (`requests:`), and
+    the recorder judges what only it can — a day at most, a second at least, not in the future, not before anything the
+    recording shows (its `retention_days`) — and refuses it in words: in its heartbeat (`requests_refused`), on the
+    recording's events (`archive.backfill.refused`), the row closed (`fetched`)."""
+    from tests.conftest import recorder
     box = Box()
-    access = Tokens({"guard": [("edit", "vms/1", ())], "admin": [("admin", None, ())]})
-    ctl, rec, m, srv, base = _console(box, access)
+    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    rec.create({"name": "1", "cam": "1", "retention_days": 2})
+    r = recorder(box)
+    r.lease_pass()
+    r.rows = [rec.unit("1")]
     t = box.wall()
-    try:
-        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"}, token="admin")[0] == 201
-        assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "1", "retention_days": 2}, token="admin")[0] == 201
-        for bad in ({"unit": "vms/1", "from": 0, "to": 600}, {"unit": "vms/1", "from": False, "to": True},
-                    {"unit": "vms/1", "from": t - 3 * 86400, "to": t - 2 * 86400 - 60}):
-            code, body = _call(base, "POST", "/backfill", bad, token="guard")
-            assert code == 400, (bad, code, body)
-        assert "before anything the recording shows" in body["detail"]
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 2 * 86400 - 60, "to": t - 2 * 86400 + 600},
-                     token="guard")[0] == 202                          # reaching into what it shows: an ask
-        assert not [k for k in box.vars.list("rec/requests/") if "-0-600" in k]
-    finally:
-        srv.shutdown()
-
-    # …and before anything the DEVICE holds: the coverage its holder announces
-    from tests.test_console_load import _holder
-    from vms.worker import FakeDevice
-    box = Box()
-    t = box.wall()
-    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (t - 3600.0, t)})
-    w, door = _holder(box, dev)
-    ctl, rec, m, srv, base = _console(box, access)
-    try:
-        assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "1"}, token="admin")[0] == 201
-        code, body = _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 7200, "to": t - 3700}, token="guard")
-        assert code == 400 and "before anything the device holds" in body["detail"], (code, body)
-        assert _call(base, "POST", "/backfill", {"unit": "vms/1", "from": t - 4000, "to": t - 3000}, token="guard")[0] == 202
-    finally:
-        srv.shutdown(); door.shutdown()
+    cases = {"day": (t - 40 * 365 * 86400, t, "at most 86400 s"), "ms": (t - 60, t - 59.5, "at least 1 s"),
+             "future": (t + 3600, t + 7200, "from now"), "1970": (0.5, 600, "before anything the recording shows"),
+             "old": (t - 3 * 86400, t - 2 * 86400 - 60, "before anything the recording shows")}
+    for rid, (a, b, _) in cases.items():
+        box.vars.put(REC_SPEC.sub.request_key(rid), {"unit": "1", "cam": "1", "from": str(a), "to": str(b), "by": "guard"})
+    r.requests(budget=10)
+    said = r.heartbeat_extra()
+    for rid, (_, _, why) in cases.items():
+        assert why in said["requests_refused"][rid] and rid in said["fetched"].split(","), (rid, said["requests_refused"])
 
 
 def _raw_call(url, method="GET", body: bytes | None = None, headers=None):
@@ -1784,13 +1782,11 @@ def test_a_units_name_holds_no_comma_and_no_digit_but_ascii_and_a_stored_one_sto
     _forget_garbled()
 
 
-def test_a_device_row_nobody_holds_now_is_not_known_and_a_move_onto_it_asks_the_cluster():
+def test_a_device_nobody_holds_a_camera_of_is_the_clusters_whatever_a_row_says():
     """The review's tenth pass, major — a run: the old recorder `nvr50.local` (row `SN-OLD`, its cameras deleted) was
-    replaced, the name led to the new one, which the configuration holds by its address; `admin` on camera 3 pointed it
-    at `nvr50.local/ch/2` — 200 by the stale row — and camera 3 showed and recorded a channel of a recorder not hers. A
-    row is known only while a live holder holds its device and has heard it describe itself (`Devices.known`): a stale
-    row is the cluster's grant again; held, the move asks for its cameras as before; the holder silent past its
-    heartbeat's life, the cluster's again."""
+    replaced, the name led to the new one, and `admin` on camera 3 pointed it at `nvr50.local/ch/2` — 200 by the stale
+    row. Since the boundary's step 6 the platform reads no device row at all: a move into a group nobody's camera is in
+    is the cluster's grant, whatever any row says; into one that has cameras, it asks for each of them."""
     box = Box()
     access = Tokens({"three": [("admin", "vms/3", ()), ("admin", "vms/4", ())], "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
@@ -1800,12 +1796,12 @@ def test_a_device_row_nobody_holds_now_is_not_known_and_a_move_onto_it_asks_the_
         for f in ("3", "4"):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{f}.mp4"}, token="admin")[0] == 201
         box.vars.put("vms/devices/acme/nvr50.local", {"events": "command", "relays": "1", "identity": "SN-OLD"})   # the past
+        _opened(box, "acme/nvr50.local")                              # …and a holder saying it holds it: no matter
         code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")
         assert code == 403, (code, body)
-        _opened(box, "acme/nvr50.local")                              # a live holder holds it now and heard it
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")[0] == 200
-        box.wall.advance(120)                                         # …and then it fell silent
-        assert _call(base, "PUT", "/cameras/4", {"source": "driverpack://acme/nvr50.local/ch/5"}, token="three")[0] == 403
+        assert _call(base, "PUT", "/cameras/4", {"source": "driverpack://acme/nvr50.local/ch/5"}, token="admin")[0] == 200
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")[0] == 200   # 4 is hers
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.42/ch/7"}, token="three")[0] == 403    # 1 and 2 are not
     finally:
         srv.shutdown()
 

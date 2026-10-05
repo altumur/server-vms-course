@@ -71,13 +71,14 @@ GET /v1/list?prefix=rec/volumes/
 GET /v1/get?key=rec/volumes/disks-a
 → 200 {
   "items": {
+    "name": "disks-a",
     "kind": "local",
     "url": "/data/srv-a/disks",
     "server": "srv-a",
     "quota_bytes": "4000000000000",
-    "access_secret": "",
-    "access_key": "",
-    "enabled": "true"
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
   },
   "index": 1004
 }

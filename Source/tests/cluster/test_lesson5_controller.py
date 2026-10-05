@@ -299,9 +299,10 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
         assert call("GET", "/timeline/1", "viewer")[0] == 200
         assert call("GET", "/timeline/2", "viewer")[0] == 403                           # it was 200: any grant at all
         assert call("GET", f"/export/2?from={t - 120}&to={t - 60}", "viewer")[0] == 403    # …and the footage with it
-        assert call("POST", "/backfill", "viewer", {"unit": "vms/1", "from": t - 120, "to": t - 60})[0] == 403   # to act, `edit`
-        assert call("POST", "/backfill", "guard", {"unit": "vms/1", "from": t - 120, "to": t - 60})[0] == 202    # …on her camera
-        assert call("POST", "/backfill", "guard", {"unit": "vms/2", "from": t - 120, "to": t - 60})[0] == 403
+        ask = lambda rec: {"unit": f"rec/{rec}", "from": t - 120, "to": t - 60}          # noqa: E731 — a backfill (step 6)
+        assert call("POST", "/rec/requests", "viewer", ask(1))[0] == 403                # to act, `edit`
+        assert call("POST", "/rec/requests", "guard", ask(1))[0] == 202                 # …on her camera
+        assert call("POST", "/rec/requests", "guard", ask(2))[0] == 403
         assert call("PUT", "/rec/recordings/2", "guard", {"retention_days": 1})[0] == 403
         assert call("GET", "/rec/volumes", "admin")[0] == 200                           # the archives, as on a box
         assert "rec_recorders_needed" in call("GET", "/rec/metrics", "admin")[1]        # what `w2c-spares.sh` reads for recorders

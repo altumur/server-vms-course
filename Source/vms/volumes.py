@@ -124,138 +124,35 @@ def key(name: str) -> str:
     return f"{SUB}/{TABLE}/{name}"
 
 
-# The same door the units have (`SpecController.create`): a name is a name and not a path, because from
-# here it becomes a key, an ACL prefix, a directory under the archive root and the `home` of a row. And
-# two rules the kinds do not share: a local volume names its server, a network one names a ceiling.
-def refuse(fields: dict) -> None:
-    name = str(fields.get("name", "") or "")
-    if not name:
-        raise Refused("a volume needs a name")
-    if "/" in name or name in (".", ".."):
-        raise Refused(f"a volume name is a name, not a path: {name!r}")
-    unknown = [k for k in fields if k not in FIELDS and k != "name"]
-    if unknown:
-        raise Refused(f"a volume has no field {unknown[0]!r}")
-    # …and its key is not the mask every reply shows it as (the thirteenth round; `SubsystemSpec.refuse`'s rule): a page
-    # that sent `***` back stored it as the archive's secret, and the recorder could not open the volume
-    from w2cplatform.spec import is_mask
-    if is_mask(fields.get("access_secret")):
-        raise Refused("access_secret: a secret was sent as its mask; leave the field out to keep it")
-    kind = str(fields.get("kind", "local"))
-    if kind not in KINDS:
-        raise Refused(f"a volume is {' or '.join(KINDS)}, not {kind!r}")
-    if kind == "local" and not str(fields.get("server", "")):
-        raise Refused("a local volume is a disk on one server: name it")
-    if kind == "edge" and not str(fields.get("server", "")):
-        raise Refused("an edge volume is the card in one camera: name it")
-    # …and names the camera too — `cam`, its id among this cluster's cameras; `server` is the box the card's recorder
-    # runs on, which says nothing of whose frames it writes (the review's sixth pass, major: a recording of camera 1
-    # homed on camera 2's card was written from camera 2's ring). No other kind is a camera's.
-    if kind == "edge" and not str(fields.get("cam", "") or ""):
-        raise Refused("an edge volume is the card in one camera: say which — `cam`, the camera's id here; only that "
-                      "camera's recordings are homed on it")
-    if kind != "edge" and str(fields.get("cam", "") or ""):
-        raise Refused(f"`cam` is an edge volume's — the camera whose card it is; a {kind} volume is no camera's")
-    # A card is a directory on the camera, written by the camera's recorder without an engine (`vms/card.py`): an
-    # address — a bucket, a share — or a key to one is something no card reader can open.
-    if kind == "edge" and ("://" in str(fields.get("url", "")).replace("file://", "", 1)
-                           or fields.get("access_secret") or fields.get("access_key")):
-        raise Refused("an edge volume is the card in a camera — a directory on it, with no key: an address is a "
-                      "local or network volume")
-    if kind == "network" and str(fields.get("server", "")):
-        raise Refused("a network volume is served by whichever box takes it — leave `server` empty")
-    # EVERY declared volume has a size, local ones included, and that is what lets a disk hold more than one:
-    # the engine formats a ring of exactly that many bytes. "This whole filesystem" twice on one partition
-    # would be two rings each believing the disk is theirs. The console offers the size the box's own volume
-    # already has when it declares the first one, so the ordinary answer is a number the operator can change.
-    #
-    # The numbers are checked AS numbers here, at the door (the review's seventh pass): `"1e12"` or `"64M"` raised a bare
-    # `ValueError` out of this check — nothing was written, and the console answered with an error that was not a
-    # refusal. `shrink_confirmed` was not checked at all and raised on the way to the row.
-    for f in ("quota_bytes", "shrink_confirmed"):
-        try:
-            int(fields.get(f, 0) or 0)
-        except (ValueError, TypeError, OverflowError):   # `1e999` in a body: `int(inf)` (the tenth round)
-            raise Refused(f"`{f}` is a whole number of bytes, not {fields.get(f)!r}") from None
-    if int(fields.get("quota_bytes", 0) or 0) <= 0:
-        raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
-                      "(the console offers the size the box's own volume already has)")
-    url = str(fields.get("url", ""))
-    if not url:
-        raise Refused("a volume needs a url: the directory it is, or the address it is at")
-    # The key never goes in the address, and this is the one place that can still say so. A url is
-    # printed on the page, carried in the recorder's heartbeat as `archive`, and written into the row —
-    # so `s3://KEY:SECRET@host/bucket` is the same secret in three public places, and the `*_secret`
-    # rule cannot help because the field it guards is not the one carrying it. The secret is a VALUE
-    # among values (`access_secret`), assembled only by the process that opens the volume.
-    #
-    # The rule is the address rule (`secrets.address_refusal`), whatever the characters of the key (the twelfth review,
-    # blocker 10; a run): the `@` was looked for before the first `/` only, and AWS secret keys hold `/` —
-    # `s3://AKIA:…/x@h/bucket` was taken and printed on `/volumes`. An `@` anywhere after the `://`, a port that is no
-    # number (`KEY:SECRET` with no host, or a `?` or `#` in the secret), a credential pair in the query or the path
-    # (`…/bucket?X-Amz-Credential=…`, `?secret=…`: the eleventh review's sibling of a camera's `?pwd=`) — refused, in
-    # words that never repeat the url. A local directory has no `://`, and its name is a name.
-    from w2cplatform.secrets import address_refusal
-    why = address_refusal(url)
-    if why:
-        raise Refused(f"a volume's url names the archive, never the key to it ({why}): the credentials go in "
-                      f"`access_key` / `access_secret` — this string is printed on the page and published in heartbeats")
-
-
+# DECLARED BY THE PLATFORM'S RULES (the boundary's step 6). What a volume row may be — a name, a kind of five, a local
+# disk naming its server, a network one naming none, a card in one camera saying which and holding no key, a size, an
+# address that never carries the key to it, a key kept only for the address it was given for, an incidents volume that
+# admits nobody — is `tables.volumes` in rec.subsystem.yaml, and the platform's console writes it (`tables.write_row`).
+# The rules were here (`refuse`, `_kept_key`), called by the VMS's route on the console. This is the same write for the
+# VMS's own code that declares one (a camera declaring its card: `card.py`) — one set of rules, the spec's.
 def write(vars_, fields: dict, sealer=None) -> Volume:
-    """Create or replace a declaration. Last write wins on purpose: this is a
-    list of archives, not a unit with an epoch — nobody is writing into two
-    versions of it at once, and the hold is what makes it exclusive.
+    """Declare a volume, or declare it again — by the spec's rules. `sealer`: the key that seals `access_secret`."""
+    from w2cplatform.tables import write_row
+    from .config import REC_SPEC
+    if str(fields.get("kind", "")) == "incidents":
+        fields = {"admits": False, **fields}          # a place for what somebody kept: it admits no recording (`affinity`)
+    name, items = write_row(REC_SPEC, TABLE, vars_, fields, "", 0.0, sealer, lambda: _recordings(vars_))
+    return Volume.from_items(name, items)
 
-    `sealer`: the console's key (`w2cplatform/sealing.py`) — `access_secret` goes into the store sealed, as a
-    camera's password does (feedback CD: the product's volumes have the same field and the same rule), bound to
-    this row. The recorder that takes the volume opens it, with the same key and the same row (`RecWorker.
-    _write_into`), and hands it to the daemon among the volume's parameters — obsd takes credentials only that way."""
-    from w2cplatform.sealing import seal_items
-    refuse(fields)
-    name = str(fields["name"])
-    old, idx = vars_.get(key(name))
-    fields = _kept_key(fields, old)
-    vol = Volume.from_items(name, {k: v for k, v in fields.items() if k != "name"})
-    # The other order of `home`'s `must_match`: a card declared — or declared again as another camera's — under a name
-    # recordings are homed on already. They are that camera's, or the declaration is refused.
-    if vol.kind == "edge":
-        for path in vars_.list(f"{SUB}/recordings/"):
-            row, _ = vars_.get(path)
-            if row and row.get("deleted") != "true" and str(row.get("home") or "") == name and str(row.get("cam") or "") != vol.cam:
-                raise Refused(f"{path.rsplit('/', 1)[1]} is homed on {name} and is camera {row.get('cam')}'s: a card "
-                              f"holds its own camera's recordings — move that recording first")
-    vars_.put(key(name), seal_items(sealer, vol.to_items(), key(name)), cas=idx)
-    return vol
+
+def _recordings(vars_) -> list[dict]:
+    out = []
+    for path in vars_.list(f"{SUB}/recordings/"):
+        row, _ = vars_.get(path)
+        if row and row.get("deleted") != "true":
+            out.append({**row, "id": path.rsplit("/", 1)[1]})
+    return out
 
 
 def delete(vars_, name: str) -> None:
-    vars_.delete(key(name))
-
-
-# The key is the key to ONE address (`bound_to`, as a unit's field says it — `cred_secret: {bound_to: [source]}` — and
-# as the product's volume says it): `access_secret` to the `url`.
-BOUND_TO = {"access_secret": ("url",)}
-
-
-def _kept_key(fields: dict, old: dict | None) -> dict:
-    """A write over a declared volume (the thirteenth round; the product's rule). The key not sent — left out, empty or
-    null — is the key kept: the page does not show it, and a page that saved the form without it wiped the archive's
-    key. Unless the address changed: the old key would go to whatever host the new url names — refused, in words. A
-    card has no key (`refuse`): one declared as a card drops it."""
-    from w2cplatform.spec import unbound_secret
-    sent = fields.get("access_secret")
-    if sent is not None and sent != "":
-        return fields
-    out = {k: v for k, v in fields.items() if k != "access_secret"}
-    if not old or str(out.get("kind", "local")) == "edge":
-        return out
-    why = unbound_secret("access_secret", BOUND_TO["access_secret"], old, out)
-    if why:
-        raise Refused(why)
-    if old.get("access_secret"):
-        out["access_secret"] = old["access_secret"]            # as stored: sealed, to this row, and `seal_items` leaves it
-    return out
+    from w2cplatform.tables import delete_row
+    from .config import REC_SPEC
+    delete_row(REC_SPEC, TABLE, vars_, name)
 
 
 # A VOLUME ROW THAT DOES NOT PARSE IS THAT VOLUME'S TROUBLE (the review's seventh pass, part 2, blocker 1). `quota_bytes:

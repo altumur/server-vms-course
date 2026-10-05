@@ -709,9 +709,6 @@ def test_what_a_camera_recorder_says_of_its_card_and_its_frames():
     assert hb.extra["feed"]["frames_connected"] is True and hb.extra["feed"]["ring_samples"] == 60
     assert not hb.extra["archive"] and not {"archive_quota", "volume_quota", "writer", "archive_url"} & set(hb.extra)
     assert volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall()) == []      # nothing to "declare" on a camera
-    from vms.console import as_held
-    vol = next(v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"])
-    assert as_held(rec_ctl, vol, box.wall())["card"]["state"] == "recording"
 
 
 def test_a_camera_whose_card_does_not_open_works_without_it_says_why_and_tries_again():
@@ -1036,13 +1033,15 @@ def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_a
     assert "ZeroDivisionError" in heartbeats(box.objects, "rec/")["r-1"].extra["stream"]["error"]
     """A card is opened by the camera's recorder as files — a bucket or a share is something no card reader opens,
     and a key to one has nowhere to go. That is a `local` or `network` volume, with an engine."""
-    volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "url": "/media/sd", "quota_bytes": 1})
-    for bad in ({"url": "s3://cards/cam-7"}, {"url": "/media/sd", "access_secret": "x"}):
-        try:
-            volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "quota_bytes": 1, **bad})
+    from w2cplatform.memvariables import MemVariables
+    from w2cplatform.spec import Refused
+    volumes.write(MemVariables(), {"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "url": "/media/sd", "quota_bytes": 1})
+    for bad, words in (({"url": "s3://cards/cam-7"}, "may not match"), ({"url": "/media/sd", "access_secret": "x"}, "may not have")):
+        try:                                                               # the table's schema, in its words (step 6)
+            volumes.write(MemVariables(), {"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "quota_bytes": 1, **bad})
             raise AssertionError(f"{bad} was taken for a card")
-        except Exception as e:                                             # Refused
-            assert "card in a camera" in str(e)
+        except Refused as e:
+            assert words in str(e), e
 
 
 def test_a_recorder_of_the_engine_never_takes_a_cameras_card():

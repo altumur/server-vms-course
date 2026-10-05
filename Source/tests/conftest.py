@@ -29,6 +29,45 @@ class Box:
         self.clock, self.wall = Clock(), Clock(1_757_500_000.0)
 
 
+class Served:
+    """A console — a `SpecConsole` or a `Mount` — serving on a free port, and `call(method, path, body, headers)` →
+    `(status, reply)`: the platform's routes as a page or a `curl` reach them. A POST carries an `Idempotency-Key` of
+    its own unless one is given (`key`; `False` sends none). `with Served(con) as call: …` shuts it down after."""
+    _n = 0
+
+    def __init__(self, console):
+        self.srv = console.serve("127.0.0.1", 0)
+        self.base = f"http://127.0.0.1:{self.srv.server_address[1]}"
+
+    def __call__(self, method, path, body=None, headers=None, key=None, raw=None):
+        import urllib.error
+        import urllib.request
+        Served._n += 1
+        h = {"Content-Type": "application/json", **(headers or {})}
+        if method == "POST" and "Idempotency-Key" not in h and key is not False:   # `key=False`: sent without one
+            h["Idempotency-Key"] = key or f"served-{Served._n}"
+        data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
+        req = urllib.request.Request(self.base + path, method=method, data=data, headers=h)
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, json.loads(r.read() or b"null")
+        except urllib.error.HTTPError as e:
+            out = e.read()
+            try:
+                return e.code, json.loads(out or b"null")
+            except ValueError:
+                return e.code, out
+
+    def close(self):
+        self.srv.shutdown()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.close()
+
+
 def as_kept(step):
     """A long step of a resource's pass, as the one step a test may give it since the boundary's step 6 took the
     subsystems' hooks out of the resource: `Resource.kept` — called once a pass, handed the pulse (`progressed`), and

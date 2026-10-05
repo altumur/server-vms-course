@@ -478,6 +478,7 @@ class RecWorker(VmsWorker):
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
         self.freed: dict[str, int] = {}             # what it gave up when the resource asked, by volume (`requests`)
+        self.requests_refused: dict[str, str] = {}  # the requests it refused, and why — the last fifty (`_refuse_request`)
         self.behind_loopback: dict = {}             # camera -> the server whose fan-out is bound to loopback, and is not ours
         self.depths: dict = {}                      # recording -> days of footage it has here (`depth_pass`)
         self.shallow: dict = {}                     # recording -> when its `archive.shallow` alarm was last raised
@@ -1110,6 +1111,7 @@ class RecWorker(VmsWorker):
         return {**super().heartbeat_extra(),         # `fetched`: the same answer every worker gives
                 "volume": self.volume,
                 **({"freed": dict(self.freed)} if self.freed else {}),   # the resource's ask to free bytes, answered
+                **({"requests_refused": dict(self.requests_refused)} if self.requests_refused else {}),
                 # The box's own volume — where this recorder writes when nothing is declared. What the console
                 # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
                 "archive": hide_in_url(self.default_url),    # as a page says it (the twelfth review, major 15)
@@ -2588,6 +2590,8 @@ class RecWorker(VmsWorker):
                 continue
             unit, cam = str(it["unit"]), str(it.get("cam", it["unit"]))
             rid = key.rsplit("/", 1)[1]
+            if not self.may_write(unit):
+                continue                                     # a lease that lapsed answers nothing, a refusal neither
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
             # …and a range that does not parse is THIS request's refusal (the review's sixth pass, the class of the
@@ -2599,8 +2603,17 @@ class RecWorker(VmsWorker):
                 t0, t1 = finite(it["from"]), finite(it["to"])
             except (KeyError, TypeError, ValueError):
                 log.error("%s: request %s refused: from=%r to=%r is not a range", self.name, rid, it.get("from"), it.get("to"))
-                self.fetched.append(rid)
-                done.append({"unit": unit, "cam": cam, "request": rid, "error": "`from` and `to` are not a range"})
+                self._refuse_request(rid, unit, cam, "`from` and `to` are not a range", done)
+                continue
+            # WHAT ONLY THE RECORDER CAN JUDGE OF A RANGE, JUDGED HERE (the boundary's step 6: it was the console's route,
+            # `POST /backfill`, which refused these at the door; the platform files the row now — `requests:` in the
+            # spec — and its shape is all it asks). A range a person can mean: a day at most (the review's fourth pass,
+            # Т-B6's remainder), a second at least, not ending in the future (the sixth pass), nor before anything the
+            # recording shows (the seventh: `{"from": 0, "to": 600}` — 1970). Refused in words: said in the heartbeat
+            # (`requests_refused`) and on the recording's events (`archive.backfill.refused`), and the row closed.
+            why = self._range_refusal(unit, t0, t1, now)
+            if why:
+                self._refuse_request(rid, unit, cam, why, done)
                 continue
             ours = self.our_coverage(unit)
             if unit in self.reconciler.actual:
@@ -2644,6 +2657,34 @@ class RecWorker(VmsWorker):
             self.fetched.append(rid)                         # the heartbeat says so; the console removes the row
             done.append({**r, "request": rid})
         return done
+
+    BACKFILL_MAX, BACKFILL_MIN, BACKFILL_AHEAD = 86400.0, 1.0, 60.0
+
+    def _range_refusal(self, unit: str, t0: float, t1: float, now: float) -> str | None:
+        from .archive import visible_from
+        if t1 <= t0:
+            return "a backfill's range ends after it starts"
+        if t1 - t0 > self.BACKFILL_MAX:
+            return f"a backfill is a range of at most {self.BACKFILL_MAX:.0f} s (a day): ask for a longer hole a day at a time"
+        if t1 - t0 < self.BACKFILL_MIN:
+            return f"a backfill is at least {self.BACKFILL_MIN:.0f} s of footage"
+        if t1 > now + self.BACKFILL_AHEAD:
+            return f"a backfill is a hole in what HAS been recorded: this range ends {t1 - now:.0f} s from now"
+        floor = visible_from(self._row_of(unit), now)
+        if t1 <= floor:
+            return f"this range ends before anything the recording shows (from {floor:.0f}): nothing could fetch it"
+        return None
+
+    def _refuse_request(self, rid: str, unit: str, cam: str, why: str, done: list) -> None:
+        self.fetched.append(rid)                         # a refusal is an answer: the row is closed
+        self.requests_refused[rid] = why
+        while len(self.requests_refused) > 50:
+            self.requests_refused.pop(next(iter(self.requests_refused)))
+        done.append({"unit": unit, "cam": cam, "request": rid, "error": why})
+        try:
+            self.observe(unit, "archive.backfill.refused", request=rid, error=why)
+        except Exception:                                # noqa: BLE001 — the heartbeat says it whatever the line does
+            log.warning("%s: request %s refused (%s); its line was not written", self.name, rid, why)
 
     # The first moment of `[t0, t1)` the volume does not show — `t1` when it shows all of it.
     def _served_to(self, unit: str, ours: list[tuple[float, float]], t0: float, t1: float) -> float:

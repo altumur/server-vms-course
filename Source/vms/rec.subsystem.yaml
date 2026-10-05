@@ -115,28 +115,97 @@ placement:
   # the rows, so the spec does not guess: `home` names the volume for each recording, and an installation
   # that wants copies to survive a server adds the line — `/unplaceable` then says so out loud instead of
   # quietly putting both in one place.
-# The archives themselves, as rows the administrator writes: `rec/volumes/<name>` (`vms/volumes.py`).
-# Not units — nothing is placed on a volume, it has no epoch and no worker; it is a LIST, like `policy`,
-# and the platform learns only its name so the console's token may write it. A volume becomes a PLACE when
-# a recorder takes it (`rec/holds/<name>`), which is what lets an operator create a network archive in the
-# console and have it served without anybody editing a unit file.
+# The archives themselves, as rows the administrator writes: `rec/volumes/<name>`. Not units — nothing is placed on a
+# volume, it has no epoch and no worker; it is a LIST, like `policy`. A volume becomes a PLACE when a recorder takes it
+# (`rec/holds/<name>`), which is what lets an operator create a network archive in the console and have it served
+# without anybody editing a unit file. And what somebody said to KEEP: `rec/keeps/<id>` — a camera, an interval, a
+# note, who set it. The footage it names is COPIED into an `incidents` volume (`RecWorker.keep_pass`); the events it
+# names are left in place by the resource's retention (`holds:` below).
 #
-# And what somebody said to KEEP: `rec/keeps/<id>` (`vms/keeps.py`) — a camera, an interval, a note, who set
-# it. The footage it names is COPIED into an `incidents` volume (`RecWorker.keep_pass`); the events it names
-# are left in place by the resource's retention.
-tables: [volumes, keeps]
+# DECLARED, AND SERVED BY THE PLATFORM'S CONSOLE (the boundary's step 6: `/rec/volumes` and `/rec/keeps` were the VMS's
+# routes on it, `rec_routes`, with the rules in `vms/volumes.py` and `vms/keeps.py`): what a row is — its fields, the
+# rules between them as JSON Schema — the console writes, lists and deletes, and says in the journal who did.
+tables:
+  volumes:
+    key: name
+    fields:
+      name:             {type: string, required: true}
+      kind:             {type: string, default: local, schema: {enum: [local, network, backup, edge, incidents]}}
+      # the directory it is, or the address it is at — never the key to it: a login or a credential anywhere in it is
+      # refused (the platform's address rule; the twelfth review, blocker 10)
+      url:              {type: url, required: true, credentials: {login: access_key, secret: access_secret}}
+      server:           {type: string}               # local, edge, a backup or incidents disk: whose; network: empty
+      # its SIZE: the ring the engine formats it as — what lets one partition hold two volumes
+      quota_bytes:      {type: int, required: true, schema: {minimum: 1}}
+      access_key:       {type: string}               # a bucket's key ID — which key, not the key: shown
+      access_secret:    {type: string, bound_to: [url]}   # sealed, never shown, kept only for the address it was given for
+      enabled:          {type: bool, default: true}
+      # a quota SMALLER than the ring's erases its oldest footage: applied only when this says the same number — the
+      # operator's second word (`RecWorker._apply_quota`; the review's third pass)
+      shrink_confirmed: {type: int, default: 0, schema: {minimum: 0}}
+      cam:              {type: string}               # an edge volume is the card IN a camera: which (the sixth pass)
+      # the word the platform's placement reads (`affinity`): `false` — a place that takes no recording (an incidents
+      # volume: a place for what somebody kept, never one to record into)
+      admits:           {type: bool, default: true}
+    schema:
+      allOf:
+        - if: {properties: {kind: {const: local}}}
+          then: {required: [server]}                 # a disk on one server: name it
+        - if: {properties: {kind: {const: network}}}
+          then: {not: {required: [server]}}          # served by whichever box takes it
+        - if: {properties: {kind: {const: incidents}}}
+          then: {properties: {admits: {const: false}}, required: [admits]}
+        - if: {properties: {kind: {const: edge}}}
+          # the card in one camera — a directory on it, with no key: an address is a local or network volume
+          then:
+            required: [server, cam]
+            properties: {url: {not: {pattern: "^(?!file://)[A-Za-z][A-Za-z0-9+.-]*://"}}}
+            allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
+          else: {not: {required: [cam]}}             # `cam` is a card's: a disk or a bucket is no camera's
+    journal: {written: archive.volume.declared, deleted: archive.volume.withdrawn}
+  keeps:
+    key: "{cam}-{from:int}-{to:int}"
+    fields:
+      cam:  {type: string, required: true}           # whose: the camera `about` names (`rights.unit_of`)
+      from: {type: float, required: true, schema: {exclusiveMinimum: 0}}   # unix seconds; a keep ends after it starts —
+      to:   {type: float, required: true, schema: {exclusiveMinimum: 0}}   # the holds read one that does not as nothing
+      note: {type: string, schema: {maxLength: 500}}
+      # the camera's recordings when it was set, if whoever set it says them: a recording deleted since still has its
+      # minutes copied (`keeps.spans_of`); left out, its camera's recordings as they are when it is copied
+      recordings: {type: list}
+    stamp: [by, at]
+    journal: {written: archive.keep.made, deleted: archive.keep.lifted}
 # Whose a row of a table is: a keep is its camera's (`cam`, an id of the camera `about` names). Whoever writes one
-# needs on that camera what the route needs — on both, if a write ever moved it.
+# needs on that camera what the route needs — on both, if a write ever moved it. And a keep is set by an operator
+# (`edit`), a volume declared by an administrator (`admin`, the default).
 rights:
   unit_of: {keeps: cam}
+  routes: {edit: [keeps]}
 # What a keep HOLDS on every resource past its days (the boundary's step 6: it was the VMS's function the resource called,
 # `kept_buckets`): the events of its camera's units — the camera's own and every unit about it — for its stretch, at
 # most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).
 holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800}
-# The resource asks this subsystem to free bytes on a volume of its server by a request row (`free-<server>-<volume>`),
-# and the recorder decides (the boundary's step 6: it was a hook). The footage is in rings of a fixed size: the recorder
-# answers that it frees nothing (`RecWorker.requests`, `freed` in its heartbeat).
-requests: {free: true}
+# A REQUEST of this subsystem (the boundary's step 6: it was `POST /backfill`, the VMS's route on the console): a person
+# asks for a stretch of a recording to be fetched from the camera's device into the archive — `POST /rec/requests
+# {unit: rec/<recording>, from, to}`, named by its range (the same range again is the same request), at most seven of
+# one person's unanswered at once (counted by CAS; one counts for a minute after it was filed, row or no row, and never
+# past a day — `jobs.BACKFILL_TTL`). What only the recorder can judge — a range longer than a day, shorter than a
+# second, in the future, older than the recording shows — it refuses, in its heartbeat (`RecWorker.requests`).
+# And the resource asks it to free bytes on a volume of its server (`free-<server>-<volume>`); the recorder decides:
+# the footage is in rings of a fixed size, and it answers that it frees nothing (`freed` in its heartbeat).
+requests:
+  free: true
+  schema:
+    type: object
+    required: [unit, from, to]
+    additionalProperties: false
+    properties: {unit: {type: string}, from: {type: number}, to: {type: number}}
+  key: "{unit}-{from:int}-{to:int}"
+  per_person: 7
+  settle: 60
+  ttl: 86400
+  stamp: [by, at, about]
+  journal: archive.backfill.asked
 snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
@@ -156,6 +225,9 @@ metrics:
   - {name: recordings, from: status.phase, agg: count}
   - {name: volume_error, from: heartbeat.volume_error, agg: flag, default: 0}
   - {name: volume_wait, from: heartbeat.volume_wait, agg: flag, default: 0}
+  # A smaller quota declared without `shrink_confirmed`: the ring keeps its size until the operator's second word, and
+  # the recorder says why (`quota_note`; the review's fourth pass — the console's volumes view said it until step 6).
+  - {name: volume_shrink_pending, from: heartbeat.quota_note, agg: flag, default: 0}
   - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0}
   - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind}
   - {name: writer, from: heartbeat.writer.state, agg: label, label: state, default: ok}

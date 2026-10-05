@@ -331,6 +331,46 @@ class Field:
         return str(v)
 
 
+# The fields of a unit's row — or of a table's (`tables.py`) — as written: types, defaults, `required`, `inherit`, `fixed`,
+# `bound_to`, a url's words, `ref`/`must_match`/`unique`, `schema`; each checked at load, `where` naming whose they are.
+def read_fields(where: str, raw: dict) -> dict:
+    fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)),
+                       f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(n, f.get("bound_to")),
+                       f.get("fixed", False) is True)
+              for n, f in raw.items()}
+    for n, f in raw.items():
+        if "fixed" in f and not isinstance(f["fixed"], bool):
+            raise ValueError(f"field {n}: `fixed` is true or false, not {f['fixed']!r}")
+    for n, f in raw.items():
+        _url_words(fields, n, f)
+        _ref_words(fields, n, f)
+        if "schema" in f:
+            from . import schema as _schema
+            fields[n].schema = _schema.load(f["schema"], f"{where}: field {n}: schema")
+    for f in fields.values():
+        if f.bound_to and not is_secret_field(f.name):
+            raise ValueError(f"field {f.name}: `bound_to` is a secret's — the address it is the key to; "
+                             f"{f.name} is no `*_secret`")
+        stray = [b for b in f.bound_to if b not in fields or b == f.name or is_secret_field(b)]
+        if stray:
+            raise ValueError(f"field {f.name}: `bound_to` names no field of this unit that is an address: {stray}")
+        if f.inherits and f.default is not None:
+            raise ValueError(f"field {f.name}: `default` and `inherit` — a field is either filled in when the row "
+                             f"is created or left for somebody above to set, not both")
+        if f.merge not in ("override", "union"):
+            raise ValueError(f"field {f.name}: merge is override or union, not {f.merge!r}")
+        if f.default is not None:
+            f.default = f.parse(f.default) if f.type != "string" else str(f.default)
+        if f.inherits and f.inherit is not None:
+            f.inherit = Field(f.name, f.type).parse(f.inherit) if f.type != "string" else str(f.inherit)
+    return fields
+
+
+def _table_names(d: dict) -> tuple:
+    from .tables import parse
+    return parse(d.get("name"), d.get("tables"), lambda t, raw: read_fields(f"spec {d.get('name')}: tables.{t}", raw))[0]
+
+
 # `bound_to:` as written — a name or a list of names — as a tuple of names; anything else refused at load.
 def _bound_to(name: str, v) -> tuple:
     if v is None:
@@ -391,7 +431,9 @@ def _url_words(fields: dict, name: str, f: dict) -> None:
         raise ValueError(f"field {name}: credentials.secret names no `*_secret` field of the row: {secret!r}")
     fld.schemes = tuple(schemes)
     fld.credentials = {k: v for k, v in (("login", login), ("secret", secret)) if v}
-    fld.rules = SecretRules.parse(f["secret_in"], f"field {name}") if "secret_in" in f else SecretRules()
+    # …and with none of its own, the loaded specs' together (`catalog.secret_rules`, read when it is asked): a url field
+    # that says nothing of how its addresses carry a login is asked every way any subsystem here says one is carried
+    fld.rules = SecretRules.parse(f["secret_in"], f"field {name}") if "secret_in" in f else None
 
 
 # `fields.<name>.ref`, `must_match`, `unique` — read into the field, refused at load when they say nothing that can be
@@ -591,6 +633,33 @@ class SubsystemSpec:
     # that table means, which fields it has and which routes serve it are the subsystem's, in its own
     # console code. That is the line: a generic grant is a platform matter, a volume is not.
     tables: tuple[str, ...] = ()
+    # `tables: {<name>: {key, fields, schema, stamp, journal}}` — the tables whose rows the console SERVES (`tables.py`;
+    # the boundary's step 6: they were a subsystem's routes on the platform's console). A table named in the list form
+    # is a family the console's token may write, and nothing serves it.
+    table_specs: dict = field(default_factory=dict)
+    # `rights:` beyond `unit_of` (the boundary's step 6, §4 `rights: {routes, unit_of}`; it was a subsystem's code in
+    # the console — `EDIT_ROUTES`, `VIEW_POSTS`, `CLUSTER_ROWS`, `moved_units`, `body_units` set by a subsystem's wiring):
+    #   routes: {view: [<family>], edit: [<family>]}   a write to one of this subsystem's families (its rows, a table)
+    #                                                 that needs less than `admin`: asking to watch, a keep set
+    #   cluster_rows: true                            a write to one of its units is the whole cluster's business
+    #   reach: {group: [<field>], cluster: [<field>], requests: [<action>]}
+    #                                                 what a change reaches beyond the unit: every unit of the group a
+    #                                                 change of these fields leaves and joins (`placement.group_by` — a
+    #                                                 group no other unit is in yet is the cluster's); the cluster, for
+    #                                                 these; every unit of its unit's group, for a request of these
+    #   names: [{field, unit, sub | of}]              the units a row names inside a json field (`then[].unit` of the
+    #                                                 subsystem `sub` says) — what moving one of them to another group
+    #                                                 answers for
+    route_caps: dict = field(default_factory=dict)
+    cluster_rows: bool = False
+    reach: dict = field(default_factory=dict)
+    names: tuple = ()
+    # `requests: {schema, valid_for, most_valid, per_person, settle, ttl, key, stamp, journal, free}` — the console's
+    # `POST /requests` of this subsystem (`SpecConsole._request_route`; the boundary's step 6: it was a subsystem's
+    # route, `extra`): the body's shape, how long a request is worth doing (`valid_until`), how many one person may
+    # have unanswered, how it is named (a template of its fields, or the `Idempotency-Key`), what the console stamps
+    # on it (`by`, `at`, its unit's `group`, the field its unit is `about`), the journal's line.
+    requests: dict = field(default_factory=dict)
     running_gauge: str = "units_running"     # the console's gauge for units in phase "running" (console: {running: …})
     # `events: {older_epochs: fenced | earlier-run}` — what it MEANS that a unit's events were written
     # under an epoch that is not the current one.
@@ -661,35 +730,7 @@ class SubsystemSpec:
     @classmethod
     def from_dict(cls, d: dict) -> "SubsystemSpec":
         unit, pl = d.get("unit", {}), d.get("placement", {})
-        fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)),
-                           f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(n, f.get("bound_to")),
-                           f.get("fixed", False) is True)
-                  for n, f in (unit.get("fields") or {}).items()}
-        for n, f in (unit.get("fields") or {}).items():
-            if "fixed" in f and not isinstance(f["fixed"], bool):
-                raise ValueError(f"field {n}: `fixed` is true or false, not {f['fixed']!r}")
-        for n, f in (unit.get("fields") or {}).items():
-            _url_words(fields, n, f)
-            _ref_words(fields, n, f)
-            if "schema" in f:
-                from . import schema as _schema
-                fields[n].schema = _schema.load(f["schema"], f"spec {d.get('name')}: field {n}: schema")
-        for f in fields.values():
-            if f.bound_to and not is_secret_field(f.name):
-                raise ValueError(f"field {f.name}: `bound_to` is a secret's — the address it is the key to; "
-                                 f"{f.name} is no `*_secret`")
-            stray = [b for b in f.bound_to if b not in fields or b == f.name or is_secret_field(b)]
-            if stray:
-                raise ValueError(f"field {f.name}: `bound_to` names no field of this unit that is an address: {stray}")
-            if f.inherits and f.default is not None:
-                raise ValueError(f"field {f.name}: `default` and `inherit` — a field is either filled in when the row "
-                                 f"is created or left for somebody above to set, not both")
-            if f.merge not in ("override", "union"):
-                raise ValueError(f"field {f.name}: merge is override or union, not {f.merge!r}")
-            if f.default is not None:
-                f.default = f.parse(f.default) if f.type != "string" else str(f.default)
-            if f.inherits and f.inherit is not None:
-                f.inherit = Field(f.name, f.type).parse(f.inherit) if f.type != "string" else str(f.inherit)
+        fields = read_fields(f"spec {d.get('name')}", unit.get("fields") or {})
         derived = [Derived(x["row"], dict(x.get("items", {})), x.get("on_delete")) for x in unit.get("derived", [])]
         # `snapshot:` LEFT OUT means "every field that may go" — a convenience, not a decision.
         # `snapshot: []` means "no field of the row leaves the cluster", which is a decision. The two were
@@ -728,7 +769,7 @@ class SubsystemSpec:
                    dead_band=float((pl.get("rebalance", {}) or {}).get("dead_band", 0.10)),
                    snapshot=(list(declared) if declared is not None else
                              [n for n, f in fields.items() if not is_secret_field(n) and f.type != "blob"]),
-                   tables=tuple(str(t) for t in (d.get("tables") or [])),
+                   tables=_table_names(d),
                    running_gauge=str((d.get("console", {}) or {}).get("running", "units_running")),
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}),
@@ -832,8 +873,9 @@ class SubsystemSpec:
         rights = d.get("rights")
         if rights is None:
             return
-        if not isinstance(rights, dict) or set(rights) - {"unit_of"}:
-            raise ValueError(f"spec {self.name}: `rights:` takes `unit_of: {{<table>: <field>}}`, not {rights!r}")
+        if not isinstance(rights, dict) or set(rights) - {"unit_of", "routes", "cluster_rows", "reach", "names"}:
+            raise ValueError(f"spec {self.name}: `rights:` takes unit_of, routes, cluster_rows, reach, names — not {rights!r}")
+        self._rights_words(rights)
         unit_of = rights.get("unit_of") or {}
         if not isinstance(unit_of, dict):
             raise ValueError(f"spec {self.name}: rights.unit_of is {{<table>: <field>}}, not {unit_of!r}")
@@ -843,6 +885,34 @@ class SubsystemSpec:
             if not isinstance(fld, str) or not fld:
                 raise ValueError(f"spec {self.name}: rights.unit_of.{table} names no field")
         self.unit_of = {str(t): str(f) for t, f in unit_of.items()}
+
+    # `rights.routes`, `cluster_rows`, `reach`, `names` — read and checked at load (see the fields above).
+    def _rights_words(self, rights: dict) -> None:
+        routes = rights.get("routes") or {}
+        families = (self.rows, *self.tables)
+        if not isinstance(routes, dict) or set(routes) - {"view", "edit"} or \
+                not all(isinstance(v, list) and all(x in families for x in v) for v in routes.values()):
+            raise ValueError(f"spec {self.name}: rights.routes is {{view: [<family>], edit: [<family>]}} of its rows and "
+                             f"tables ({', '.join(families)}), not {routes!r}")
+        self.route_caps = {cap: tuple(str(x) for x in v) for cap, v in routes.items()}
+        if not isinstance(rights.get("cluster_rows", False), bool):
+            raise ValueError(f"spec {self.name}: rights.cluster_rows is true or false")
+        self.cluster_rows = rights.get("cluster_rows", False)
+        reach = rights.get("reach") or {}
+        if not isinstance(reach, dict) or set(reach) - {"group", "cluster", "requests"} or \
+                not all(isinstance(v, list) and all(isinstance(x, str) for x in v) for v in reach.values()) or \
+                not set(reach.get("group", [])) | set(reach.get("cluster", [])) <= set(self.fields):
+            raise ValueError(f"spec {self.name}: rights.reach is {{group: [<field>], cluster: [<field>], requests: "
+                             f"[<action>]}}, not {reach!r}")
+        self.reach = {k: tuple(v) for k, v in reach.items()}
+        names = rights.get("names") or []
+        if not isinstance(names, list) or not all(
+                isinstance(e, dict) and not set(e) - {"field", "unit", "sub", "of"} and e.get("field") in self.fields
+                and isinstance(e.get("unit"), str) and (isinstance(e.get("sub"), str) != isinstance(e.get("of"), str))
+                for e in names):
+            raise ValueError(f"spec {self.name}: rights.names is [{{field: <a json field>, unit: <key>, sub: <key> | of: "
+                             f"<subsystem>}}], not {names!r}")
+        self.names = tuple(dict(e) for e in names)
 
     # What a console and a page read and do not act on, checked at load (the boundary's step 6): `metrics` (`metrics.py`),
     # `display` — a dictionary of words, its tree's columns naming fields of the row or the unit's status — and
@@ -855,9 +925,20 @@ class SubsystemSpec:
         self.holds = holds.parse(self.name, d.get("holds"), tables=self.tables)
         req = d.get("requests")
         if req is not None:
-            if not isinstance(req, dict) or set(req) - {"free"} or not isinstance(req.get("free", False), bool):
-                raise ValueError(f"spec {self.name}: `requests:` is {{free: true|false}}, not {req!r}")
+            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal"}
+            if not isinstance(req, dict) or set(req) - known or not isinstance(req.get("free", False), bool) \
+                    or set(req.get("stamp") or []) - {"by", "at", "group", "about"}:
+                raise ValueError(f"spec {self.name}: `requests:` is {{{', '.join(sorted(known))}}}, not {req!r}")
+            from . import schema as _schema
             self.requests_free = req.get("free", False)
+            self.requests = {k: v for k, v in req.items() if k != "free"}
+            if "schema" in req:
+                self.requests["schema"] = _schema.load(req["schema"], f"spec {self.name}: requests.schema")
+            for k in ("valid_for", "most_valid", "per_person", "settle", "ttl"):
+                if k in req and (isinstance(req[k], bool) or not isinstance(req[k], (int, float)) or req[k] <= 0):
+                    raise ValueError(f"spec {self.name}: requests.{k} is a positive number, not {req[k]!r}")
+        from .tables import parse as _tables
+        self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
         disp = d.get("display")
         if disp is not None:
             if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree"}:
@@ -1145,8 +1226,8 @@ class SubsystemSpec:
                                if "login" in cred and "secret" in cred else
                                f"Put the password or token in {cred['secret']}" if "secret" in cred else
                                "A login and a password go in fields of their own")
-                    raise Refused(f"{name} may not be stored as typed: {why}. {instead} — a url field is in the "
-                                  f"snapshot, and the snapshot leaves the cluster")
+                    raise Refused(f"{name} may not be stored as typed: {why}. {instead} — an address is shown on every "
+                                  f"page and in what leaves the cluster; a secret has a field of its own, sealed")
                 # …and reached by what the spec says it is reached by (`schemes`); said in words, the scheme is no secret.
                 scheme = u.scheme.lower()
                 if f.schemes and scheme not in f.schemes:
@@ -1266,15 +1347,17 @@ def canonical_url(v) -> str:
 # first segment that is `segment`, and no query — what the units that differ only after it have in common. One with no
 # such segment is its whole spelling: a group of its own.
 def url_cut(v, segment: str) -> str:
-    c = canonical_url(v)
+    c = canonical_url(hide_in_url(str(v)) if v is not None else v)
     try:
         u = urlsplit(c)
     except ValueError:
         return c
     segs = u.path.split("/")
     if not u.scheme or segment not in segs[1:]:
-        return c
-    return f"{u.scheme}://{u.netloc}" + "/".join(segs[:segs.index(segment, 1)])
+        return hide_in_url(c)
+    # as an address may be said (`hide_in_url`): a group is a key in rows and replies, and a login a row stored before
+    # the refusals carried is not repeated in it
+    return hide_in_url(f"{u.scheme}://{u.netloc}" + "/".join(segs[:segs.index(segment, 1)]))
 
 
 # THE ROWS THIS PROCESS WROTE, FOR A READER IN THE SAME PROCESS THAT REMEMBERS BETWEEN ITS TURNS (the eleventh review: the
@@ -2075,6 +2158,34 @@ class SpecController(Controller):
                     out[key[len(prefix):]] = items
             return out
         return self._per_pass(prefix, read, "table", rows=True)
+
+    # -- the spec's tables (`tables.py`; the boundary's step 6) -------------------------------------------------------
+    # A row of a declared table written whole, by the console's token (`tables.write_row`: its rules, in words).
+    def write_table_row(self, table: str, body: dict, user: str = "", said: dict | None = None) -> tuple[str, dict]:
+        from .tables import write_row
+        return write_row(self.spec, table, self.vars, body, user, self.wall(), self.sealer, self.units, said)
+
+    def table_rows_shown(self, table: str) -> list[dict]:
+        """Every row of a declared table, as a page may see it — a row that does not parse said as one."""
+        from .tables import shown
+        t = self.spec.table_specs[table]
+        prefix, out = self.sub.config(table, ""), []
+        for key in sorted(self.vars.list(prefix)):
+            name = key[len(prefix):]
+            try:
+                items, _ = self.vars.get(key)
+                if items is not None and not isinstance(items, dict):
+                    raise TypeError(type(items).__name__)
+            except (Garbled, *PARSE_ERRORS):
+                out.append({"name": name, "garbled": True})
+                continue
+            if items:
+                out.append({**shown(items, t.fields), "name": name})
+        return out
+
+    def delete_table_row(self, table: str, name: str) -> bool:
+        from .tables import delete_row
+        return delete_row(self.spec, table, self.vars, name)
 
     # Every live row by one value of it — the group, the spread field — built once a pass (`_per_pass`). Asked for every
     # unit waiting to be placed, it was every row read and parsed again for each: 500 cameras waiting of 600 cost a pass

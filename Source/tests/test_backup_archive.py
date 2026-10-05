@@ -336,7 +336,8 @@ def test_a_backup_volume_is_a_box_or_an_address():
     it is an address any box may serve, like a network volume: a second storage elsewhere is as independent of the
     primary's server as a second disk is. (A camera's card is not a backup volume: it is `edge`, the camera's
     buffer — `tests/test_camera_card.py`.)"""
-    volumes.refuse({"name": "copy", "kind": "backup", "url": "s3://copies/site-1", "quota_bytes": 1})   # accepted
+    from w2cplatform.memvariables import MemVariables
+    volumes.write(MemVariables(), {"name": "copy", "kind": "backup", "url": "s3://copies/site-1", "quota_bytes": 1})   # accepted
     vols = [volumes.Volume("copy", "backup", "/data/copy", "srv-b", 1), volumes.Volume("cloud", "backup", "s3://c", "", 1)]
     assert volumes.servable(vols, "srv-b") == ["copy", "cloud"]
     assert volumes.servable(vols, "srv-a") == ["cloud"]

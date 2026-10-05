@@ -182,7 +182,7 @@ def test_a_body_that_is_no_json_object_is_refused_on_every_write_route():
         assert _raw(base, "POST", "/cameras", json.dumps({"source": "driverpack://file/1.mp4"}).encode(), "k0") == 201
         n = 0
         for method, path in (("POST", "/cameras"), ("PUT", "/cameras/1"), ("PUT", "/policy"), ("POST", "/requests"),
-                             ("POST", "/backfill"), ("POST", "/marks")):
+                             ("POST", "/rec/requests"), ("POST", "/rec/keeps"), ("POST", "/rec/volumes"), ("POST", "/marks")):
             for data in (b"{not json", BODY_DEEP.encode(), b"[1, 2]"):
                 n += 1
                 assert _raw(base, method, path, data, f"k{n}") == 400, (method, path, data[:12])

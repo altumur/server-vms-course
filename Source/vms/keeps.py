@@ -78,8 +78,11 @@ class Keep:
 def _names(raw) -> list:
     if isinstance(raw, (list, tuple)):
         return list(raw)
+    text = str(raw or "").strip()
+    if not text.startswith("["):                     # the spec's list field: its names joined by `,` (`Field.to_item`)
+        return [x for x in text.split(",") if x]
     try:
-        out = json.loads(raw or "[]")
+        out = json.loads(text)
     except PARSE_ERRORS:                             # nested past what JSON reads too: the list unread, the keep stands (the tenth round)
         return []
     return out if isinstance(out, list) else []
@@ -89,58 +92,27 @@ def key(id_: str) -> str:
     return f"{SUB}/{TABLE}/{id_}"
 
 
-def refuse(fields: dict) -> None:
-    unknown = [k for k in fields if k not in FIELDS]
-    if unknown:
-        raise Refused(f"a keep has no field {unknown[0]!r}")
-    cam = str(fields.get("cam", "") or "")
-    if not cam or not safe_segment(cam) or unnamable(cam, unit=True):     # `unnamable`: the keep's id is a label on `/metrics` (eighth pass)
-        raise Refused("a keep names a camera")
-    try:                                                       # `finite`: `to: Infinity` was a keep its own reader calls torn
-        since, until = finite(fields.get("from")), finite(fields.get("to"))
-    except (TypeError, ValueError):
-        raise Refused("a keep is an interval: `from` and `to`, unix seconds") from None
-    if not 0 < since < until:
-        raise Refused("a keep's interval ends after it starts")
-    if len(str(fields.get("note", ""))) > MAX_NOTE:
-        raise Refused(f"a note is at most {MAX_NOTE} characters")
-
-
-# The id is the interval: `<cam>-<since>-<until>`, in whole seconds. A retried POST writes the same row, and
-# two people keeping the same ten minutes keep them once.
-def write(vars_, fields: dict, recordings: list, by: str, now: float) -> Keep:
-    refuse(fields)
-    cam, since, until = str(fields["cam"]), float(fields["from"]), float(fields["to"])
-    k = Keep(f"{cam}-{int(since)}-{int(until)}", cam, since, until, str(fields.get("note", "")), by, now,
-             tuple(sorted(str(r) for r in recordings)))
-    _, idx = vars_.get(key(k.id))
-    vars_.put(key(k.id), k.to_items(), cas=idx)
-    return k
+# SET BY THE PLATFORM'S RULES (the boundary's step 6): what a keep row may be — a camera, an interval, a note of at
+# most 500 characters, named by its camera and its interval, stamped with who and when — is `tables.keeps` in
+# rec.subsystem.yaml, and the platform's console writes it (`tables.write_row`); a keep holds at most a week of events on
+# the resources (`holds.longest`). The rules were here (`refuse`), called by the VMS's route on the console. This is the
+# same write for the VMS's own code and its tests. Whose recordings it
+# holds is its camera's now, and the names of its recordings when it was set if whoever set it said them (`recordings`).
+def write(vars_, fields: dict, recordings: list | None = None, by: str = "", now: float = 0.0) -> Keep:
+    from w2cplatform.tables import write_row
+    from .config import REC_SPEC
+    if recordings and "recordings" not in fields:
+        fields = {**fields, "recordings": sorted(str(r) for r in recordings)}
+    name, items = write_row(REC_SPEC, TABLE, vars_, fields, by, now)
+    return Keep.from_items(name, items)
 
 
 def delete(vars_, id_: str) -> None:
-    vars_.delete(key(id_))
+    from w2cplatform.tables import delete_row
+    from .config import REC_SPEC
+    delete_row(REC_SPEC, TABLE, vars_, id_)
 
 
-# A KEEP WHOSE ROW DOES NOT PARSE IS THAT KEEP'S TROUBLE (the review's seventh pass, part 2). `from: "yesterday"` in
-# one keep raised out of `declared`, and `declared` is under the resource's retention of every unit on every server
-# (it was `vms/resource.kept_buckets` then: "not knowing what is kept is not nothing is", so nothing was swept and the disks
-# filled), under the incidents recorder's copying of every keep, and under each recorder's door. Now it is skipped
-# where keeps are listed, counted once until it parses again (`KEEPS`; `keeps_garbled`), logged once — and handed to
-# whoever must not read it as "no keep" through `garbled`, held AS FAR AS IT READS (`as_far_as_read`). A row that does
-# not even name a camera holds nothing — a keep without a camera is no keep of anything; it is counted and logged.
-#
-# AS FAR AS IT READS, AND NO FURTHER (the review's eighth pass, part 4). The seventh pass held such a keep's camera whole —
-# from 0 to infinity, for ANY field that did not parse — and every unit that is about no one camera (a scenario on any
-# camera, a detector without a row) was held by it whole too: with `at: "yesterday"` 10 buckets were removed where a
-# sound keep let 37 go, three such units kept 10 of 10, and the watermark freed none of it. The rule now:
-#   - only the interval can make a keep unreadable: `at` is metadata, read as not said (`Keep.from_items`);
-#   - a bound that parses is kept, one that does not is open on its side — `from` lost holds from the start of time to
-#     `to`, `to` lost holds from `from` on, both lost hold the camera whole: what the keep could have meant, no more;
-#   - it holds ITS CAMERA'S buckets (`vms`, `rec`, and the units whose row names that camera) and nothing of the units of
-#     no one camera: those were held by every keep because a sound keep is a short interval; a garbled one is not, and
-#     holding them for all time for one word is the disk filling. Counted (`KEEPS`) and in the log, as said above;
-#   - nothing is copied for it into the incidents volume until it is mended (an open interval is not a range to copy).
 KEEPS = Table("keep", "its camera is kept as far as its interval reads, units of no one camera are not held by it, and "
                       "nothing is copied for it, until it is mended")
 

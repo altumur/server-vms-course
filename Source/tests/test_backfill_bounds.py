@@ -16,7 +16,7 @@ from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import SpecController
 from tests.test_lesson11_edge import CARD, _backfilled, _box, _holder, _ours, _rec
 
-NOW = 1_000_000.0
+NOW = 1_757_500_000.0          # the box's wall: a request the loop serves is judged by it (`RecWorker._range_refusal`)
 
 
 def _until_done(fetch, passes: int = 30) -> list:

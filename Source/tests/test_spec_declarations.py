@@ -12,6 +12,11 @@
     fields.<f>.unique                 one value per cluster; `canonical` — one address in its RFC 3986 spelling
     placement.group_by.cut_at         a group is an address up to a segment of its path (it was an override of
                                       `group_value`)
+    tables: {<t>: {key, fields, …}}   a table the console serves — written, listed, deleted, journalled (it was a
+                                      subsystem's routes on the console)
+    requests: {schema, key, …}        `POST /requests`, a row for a worker to answer (it was a subsystem's route)
+    rights: {reach, names, …}         what a change or a request reaches beyond its unit (it was a subsystem's code in
+                                      the console: `moved_units`, `body_units`, `CLUSTER_ROWS`)
 
 A test of the platform alone: two subsystems invented here, `bin` and `pick`; no subsystem's package is imported.
 """
@@ -315,3 +320,130 @@ def test_a_fields_shape_is_a_json_schema_in_the_spec_and_the_door_says_where_it_
         assert "is integer, not boolean" in str(e)
     _refused(lambda: load({"type": "array", "itmes": {}}, "x"), "itmes — not a keyword the platform reads")
     _refused(lambda: load({"type": "list"}, "x"), "type 'list' is none of")
+
+
+SHED = {"name": "shed", "placement": CAP,
+        "unit": {"rows": "tools", "id": "name",
+                 "fields": {"name": {"type": "string", "required": True},
+                            "addr": {"type": "url"}, "tag": {"type": "string"}, "labels": {"type": "list"}}},
+        "tables": {"racks": {"key": "{owner}-{slot:int}",
+                             "fields": {"owner": {"type": "string", "required": True},
+                                        "slot": {"type": "int", "required": True, "schema": {"minimum": 1}},
+                                        "size": {"type": "int", "default": 1},
+                                        "note": {"type": "string", "schema": {"maxLength": 20}}},
+                             "schema": {"if": {"properties": {"size": {"minimum": 10}}}, "then": {"required": ["note"]}},
+                             "stamp": ["by", "at"],
+                             "journal": {"written": "rack.set", "deleted": "rack.gone"}}},
+        "requests": {"schema": {"type": "object", "required": ["unit", "action"], "additionalProperties": False,
+                                "properties": {"unit": {"type": "string"}, "action": {"enum": ["poke"]},
+                                               "valid_until": {"type": "number"}}},
+                     "valid_for": 20, "most_valid": 60, "stamp": ["by", "group"]},
+        "rights": {"reach": {"group": ["addr"], "cluster": ["tag"], "requests": ["poke"]}}}
+
+
+def _shed():
+    d = dict(SHED)
+    d["placement"] = {**CAP, "group_by": {"field": "addr", "cut_at": "part"}}
+    return SubsystemSpec.from_dict(d)
+
+
+def test_a_declared_table_is_written_listed_and_deleted_by_the_console_and_each_write_is_a_line():
+    """`tables: {racks: {key, fields, schema, stamp, journal}}`: `POST /racks` names the row by its key template, takes
+    the fields' types and words and the row's own schema, stamps who and when; the same key again is the same row,
+    and the journal says what that write changed and from what; `GET /racks` lists every row, one that does not parse
+    said as one; `DELETE /racks/<name>`."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.eventdatabase import EventIndex
+    from w2cplatform.variables import Garbled
+    from tests.conftest import Served
+    vars_, objects, wall = _box()
+    spec = _shed()
+    assert "shed/racks/*" in spec.acl_console()
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    marks = tempfile.mkdtemp(prefix="marks-")
+    with Served(SpecConsole(ctl, marks_root=marks, wall=wall)) as call:
+        st, made = call("POST", "/racks", {"owner": "ann", "slot": 2}, headers={"X-User": "ann"})
+        assert st == 201 and made["row"]["name"] == "ann-2" and (made["row"]["by"], made["row"]["at"]) == ("ann", wall())
+        for bad, words in (({"slot": 2}, "needs owner"), ({"owner": "ann", "slot": 0}, "slot is at least 1"),
+                           ({"owner": "ann", "slot": 3, "size": 12}, "needs 'note'"),
+                           ({"owner": "ann", "slot": "two"}, "slot is int"), ({"owner": "a/b", "slot": 1}, ""),
+                           ({"owner": "ann", "slot": 3, "colour": "red"}, "")):
+            st, body = call("POST", "/racks", bad)
+            assert st == 400 and words in body["detail"], (bad, body)
+        st, again = call("POST", "/racks", {"owner": "ann", "slot": 2, "size": 12, "note": "the big one"}, headers={"X-User": "bob"})
+        assert st == 201 and again["row"]["by"] == "bob" and again["row"]["size"] == 12
+        vars_.put("shed/racks/zed-1", {"owner": "zed", "slot": "1"})
+        real = vars_.get
+        vars_.get = lambda k, *a, **kw: (_ for _ in ()).throw(Garbled(k, "torn")) if k == "shed/racks/zed-1" else real(k, *a, **kw)
+        try:
+            st, view = call("GET", "/racks")
+        finally:
+            vars_.get = real
+        assert st == 200 and [r["name"] for r in view["racks"]] == ["ann-2", "zed-1"] and view["racks"][1] == {"name": "zed-1", "garbled": True}
+        assert call("DELETE", "/racks/ann-2")[0] == 200 and call("DELETE", "/racks/ann-2")[0] == 404
+    lines = [e for e in EventIndex(marks, "", wall=wall).query(0, wall() + 1, subsystem="audit")["events"] if e["kind"].startswith("rack.")]
+    assert [(e["kind"], e["user"]) for e in lines] == [("rack.set", "ann"), ("rack.set", "bob"), ("rack.gone", "operator")]
+    assert "changed" not in lines[0] and lines[1]["changed"] == "size,note" and lines[1]["was"] == {"size": 1}
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "tables": {"racks": {"key": "{x}", "fields": {}, "colour": 1}}}),
+             "tables.racks is {key, fields, schema, stamp, journal}")
+
+
+def test_a_request_is_a_row_named_by_its_key_stamped_with_its_group_and_held_to_its_schema_and_deadline():
+    """`requests:`: `POST /requests {unit: <sub>/<id>, …}` is a row of `<sub>/requests/` for whoever holds the unit, its
+    body held to the spec's schema, its deadline `valid_for` from now unless it says one no further than `most_valid`;
+    the `Idempotency-Key` names it, so a retry is the same row; it carries who asked and the group its rights were
+    asked on. A request for no unit is 404, a bare id 400."""
+    from w2cplatform.console import SpecConsole
+    from tests.conftest import Served
+    vars_, objects, wall = _box()
+    ctl = SpecController(_shed(), vars_, objects, wall=wall)
+    ctl.create({"name": "drill", "addr": "x://h/bench/part/3"})
+    with Served(SpecConsole(ctl, wall=wall)) as call:
+        st, body = call("POST", "/requests", {"unit": "shed/drill", "action": "poke"}, key="p-1", headers={"X-User": "ann"})
+        assert st == 202 and body["queued"]["id"] == "p-1" and float(body["queued"]["valid_until"]) == wall() + 20
+        row = vars_.get("shed/requests/p-1")[0]
+        assert (row["unit"], row["by"], row["group"]) == ("drill", "ann", "x://h/bench")
+        again = call("POST", "/requests", {"unit": "shed/drill", "action": "poke"}, key="p-1", headers={"X-User": "ann"})
+        assert again[1] == body                                                                      # a retry
+        assert call("POST", "/requests", {"unit": "shed/drill", "action": "poke"}, key="p-1")[0] == 422   # another's key
+        for bad, code, err in (({"unit": "shed/drill", "action": "spin"}, 400, "refused"),
+                               ({"unit": "shed/drill", "action": "poke", "valid_until": wall() + 61}, 400, "too far"),
+                               ({"unit": "shed/none", "action": "poke"}, 404, "no such unit"),
+                               ({"unit": "drill", "action": "poke"}, 400, "denied")):     # the gate asks first: whose?
+            st, out = call("POST", "/requests", bad)
+            assert (st, out["error"]) == (code, err), (bad, st, out)
+        assert call("POST", "/requests", {"unit": "shed/drill", "action": "poke"}, key=False)[0] == 400
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": -1}}), "requests.valid_for is a positive number")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"stamp": ["colour"]}}), "`requests:` is")
+
+
+def test_what_a_change_or_a_request_reaches_is_the_specs_group_the_cluster_or_the_units_a_row_names():
+    """`rights.reach`: a change of a `group` field reaches every other unit of the group it leaves and of the one it
+    joins — a group nobody else is in is the cluster's (`*`); a change of a `cluster` field is the cluster's; a request
+    of a `requests` action reaches every unit of its unit's group. `rights.names`: the units a row of another subsystem
+    names inside a json field answer for a unit that moves; a row that cannot be read names anybody."""
+    from w2cplatform.console import SpecConsole, names_in
+    vars_, objects, wall = _box()
+    shed = SpecController(_shed(), vars_, objects, wall=wall)
+    plan_spec = SubsystemSpec.from_dict({"name": "plan", "placement": CAP, "unit": {"rows": "plans", "id": "name", "fields": {
+        "name": {"type": "string", "required": True}, "steps": {"type": "json"}}},
+        "rights": {"cluster_rows": True, "names": [{"field": "steps", "unit": "tool", "of": "shed"}]}})
+    plan = SpecController(plan_spec, vars_, objects, wall=wall)
+    for name, addr in (("a", "x://h/bench/part/1"), ("b", "x://h/bench/part/2"), ("c", "x://h/wall/part/1")):
+        shed.create({"name": name, "addr": addr})
+    plan.create({"name": "p", "steps": [{"tool": "c"}, {"tool": "b"}]})
+    con, pcon = SpecConsole(shed, wall=wall), SpecConsole(plan, wall=wall)
+    con.units = pcon.units = {"shed": con, "plan": pcon}
+    a = shed.unit("a")
+    assert con.reach_of_change(a, {**a, "name": "a2"}) == set()                                     # nothing that reaches
+    assert con.reach_of_change(a, {**a, "addr": "x://h/bench/part/9"}) == {"shed/b"}                # its group, still
+    assert con.reach_of_change(a, {**a, "addr": "x://h/wall/part/2"}) == {"shed/b", "shed/c"}       # left and joined
+    assert con.reach_of_change(a, {**a, "addr": "x://h/attic/part/1"}) == {"shed/b", "*"}           # a group of nobody's
+    c = shed.unit("c")
+    assert con.reach_of_change(c, {**c, "addr": "x://h/bench/part/7"}) == {"shed/a", "shed/b", "shed/c"}   # p names c and b
+    assert con.reach_of_change(a, {**a, "tag": "new"}) == {"*"}
+    assert con.reach_of_request("/requests", {"unit": "shed/a", "action": "poke"}) == {"shed/a", "shed/b"}
+    assert con.reach_of_request("/requests", {"unit": "shed/a", "action": "look"}) == set()
+    assert names_in(plan_spec, {"steps": "[{\"tool\": \"c\"}]"}) == {"shed/c"}
+    assert names_in(plan_spec, {"steps": "{torn"}) == {"*"} and names_in(plan_spec, {"steps": "[{}]"}) == {"*"}
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "rights": {"reach": {"group": ["nope"]}}}), "rights.reach is")

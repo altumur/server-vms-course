@@ -287,6 +287,45 @@ placement:
 # `id`, `revision`, `worker` and `server` added by the controller. All eight operator fields here; it is the
 # copy that leaves the cluster (М12), never the rows themselves. `publish_snapshot` runs in every controller
 # pass.
+# A COMMAND to a device, filed as a row for whoever holds it — `POST /requests {unit: vms/<id>, action, …}` (the
+# boundary's step 6: it was the VMS's route on the platform's console, `vms_routes`). Not a call: the console does not
+# open devices, and the one process that has this device open is the worker that holds it (М10B, lesson 4). It writes
+# the row; the holder performs it on its next look, says so in its heartbeat, and the row is cleared. Named by its
+# `Idempotency-Key` (or the body's `id`): a retried click is the same command, not a second pulse (the platform review,
+# M17). Thirty seconds by default (`valid_for`): a door opened a minute after the button is an incident; at most ten
+# minutes — what the holder accepts (`VmsWorker.MAX_VALID`). The console stamps the group the rights were asked on
+# (`group`, the source up to `/ch/`): the holder performs it only there — a camera moved onto a recorder in the ten
+# minutes a command may wait is not the camera the person had the right to command (the review's eighth pass).
+requests:
+  schema:
+    type: object
+    required: [unit, action]
+    additionalProperties: false
+    properties:
+      unit:        {type: string}
+      id:          {type: string}
+      action:      {enum: [output, preset]}
+      # an argument is a number or a word of at most 32 characters (`config.COMMAND_ARG_MAX`; the product's cross-check
+      # of the eleventh review), at the door as at the holder
+      port:        {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
+      state:       {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
+      pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
+      n:           {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
+      valid_until: {type: number}
+  valid_for: 30
+  most_valid: 600
+  stamp: [by, at, group]
+# Who may do what to a camera beyond the camera itself (the boundary's step 6: it was the VMS's code on the console —
+# `source_cams`, `command_cams`, `scenario_cams`): its `source` or `labels` changed reach every camera of the device it
+# leaves and joins — the credentials are the device's, so `…/ch/2` under camera 1's name showed camera 2's picture (the
+# review's sixth pass), and a device nobody holds a camera of is the cluster's to point one at (the ninth pass); its
+# `ref` — the name the domain knows it by — is the cluster's to change; a relay or a preset is every camera's of the
+# device (the seventh pass: the device performs it, no channel in it).
+rights:
+  reach:
+    group: [source, labels]
+    cluster: [ref]
+    requests: [output, preset]
 snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).

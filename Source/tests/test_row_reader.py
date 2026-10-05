@@ -54,14 +54,15 @@ def test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_pa
     rec_ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     text = spec_metrics(rec_ctl)
     assert "rec_volumes_declared 2" in text and "rec_volumes_unserved 1" in text
-    # …and the console does not write such a row: the door refuses it in words (it raised a bare `ValueError`)
+    # …and the console does not write such a row: the door refuses it in words (it raised a bare `ValueError`) — the
+    # platform's table's, by the field's type, since the boundary's step 6
     from w2cplatform.spec import Refused
     for bad in ({"quota_bytes": "1e12"}, {"quota_bytes": 1 << 30, "shrink_confirmed": "yes"}):
         try:
             volumes.write(box.vars, {"name": "s3-2", "kind": "network", "url": "s3://vms/two", **bad})
             raise AssertionError(f"written: {bad}")
         except Refused as e:
-            assert "whole number of bytes" in str(e)
+            assert " is int, not " in str(e), e
     _forget_garbled()
 
 
@@ -240,8 +241,9 @@ def test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_
     """`float("nan")` passed the holder's three checks — every comparison with it is false — and a holder that came up
     three hours later performed the command; the console filed JSON `NaN` as it came. Both refuse it now."""
     from tests.test_epoch_refused import _ask, _two_doors
-    from tests.test_group_by import _Body, _ctl
-    from vms.console import vms_routes
+    from tests.test_group_by import _ctl
+    from tests.conftest import Served
+    from w2cplatform.console import SpecConsole
     box = Box()
     con, (one, two), w = _two_doors(box)
     _ask(box, con, "a-nan", one, valid_until="nan")
@@ -251,11 +253,11 @@ def test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_
     assert w.devices["acme/10.0.0.91"].did == [] and w.commands["refused"] == 2 and w.commands["performed"] == 0
     box2 = Box(); ctl, con2 = _ctl(box2)
     door = con2.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
-    route = vms_routes(None, None, con2, None)
-    for i, bad in enumerate(("NaN", "Infinity", '"soon"')):
-        payload = f'{{"unit": "vms/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
-        st, body = route(_Body(payload, key=f"k{i}"), "POST", "/requests", {})
-        assert st == 400 and body["error"] == "bad deadline", (bad, st, body)
+    with Served(SpecConsole(con2, wall=box2.wall)) as call:                  # the spec's `requests:` (step 6)
+        for i, bad in enumerate(("NaN", "Infinity", '"soon"')):
+            payload = f'{{"unit": "vms/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
+            st, body = call("POST", "/requests", raw=payload, key=f"k{i}")
+            assert st == 400 and "valid_until" in body["detail"], (bad, st, body)    # the schema's word, or the deadline's
     assert box2.vars.list("vms/requests/") == []
 
 

@@ -128,7 +128,7 @@ def test_about_names_another_subsystem_and_a_fixed_field_of_the_row_and_nothing_
     refused(lambda d: d.update(about="testsub"), "`about:` is")
     refused(lambda d: d["about"].update(sub="../x"), "`about:` is")
     refused(lambda d: d["rights"]["unit_of"].update(volumes="counter"), "not one of its tables")
-    refused(lambda d: d.update(rights={"routes": {}}), "`rights:` takes")
+    refused(lambda d: d.update(rights={"colour": {}}), "`rights:` takes")
     refused(lambda d: d["unit"]["fields"]["counter"].update(fixed="yes"), "`fixed` is true or false")
 
 

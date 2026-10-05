@@ -111,6 +111,14 @@ from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
+
+# The group a camera is in, as the platform reads it from the spec (`group_by: {field: source, cut_at: ch}`): what a
+# command's `group` was stamped with when the console asked for its rights (`SpecController.group_value`).
+def SPEC_GROUP(row: dict) -> str:
+    from w2cplatform.spec import url_cut
+    v = str(row.get(SPEC.group_by) or "")
+    return url_cut(v, SPEC.group_cut) if v and SPEC.group_cut else v
+
 # `UNCONFIRMED_MAX`: how long a holder goes on RECORDING past a lease's end while the store is silent.
 #
 #   unset      no ceiling. One box: the store is a directory on the same disk — away for one process, away for
@@ -1732,13 +1740,13 @@ class VmsWorker(Worker):
                 log.warning("%s: request %s expired unperformed (%.0fs late)", self.name, rid, now - until)
                 continue
             # RIGHTS ARE THE DEVICE'S THE COMMAND WAS FILED FOR (the review's eighth pass, minor). The console asks for them on
-            # every camera of the device (`command_cams`) and writes that device into the row (`device`); a command
-            # waits up to `MAX_VALID`, and a camera moved onto a recorder's channel meanwhile would have the recorder
-            # pulse a relay nobody with a right on it chose. Performed only on the device it was filed for. A row with
-            # no `device` — a scenario's (asked again when its camera moves: `vms/console.py`, `source_cams`) or an
-            # older console's — is performed as before.
-            filed_for = str(it.get("device") or "")
-            if filed_for and filed_for != device_of(str(row.get("source") or "")):
+            # every camera of the device (`rights.reach.requests` in the spec) and writes the group it asked them on into
+            # the row (`group`: the source up to `/ch/`, `placement.group_by`); a command waits up to `MAX_VALID`, and a
+            # camera moved onto a recorder's channel meanwhile would have the recorder pulse a relay nobody with a right
+            # on it chose. Performed only in the group it was filed for. A row with no `group` — a scenario's (asked again
+            # when its camera moves: the spec's `rights.names`) — is performed as before.
+            filed_for = str(it.get("group") or "")
+            if filed_for and filed_for != SPEC_GROUP(row):
                 self._refused(rid, row, it, f"camera {unit} was moved to another device after this command was given: it "
                                             f"was not performed — give it again if it is still wanted", done)
                 continue
