@@ -809,7 +809,9 @@ class SubsystemSpec:
     # The number was one subsystem's metric with an operator of its own (`minus: placeless`); now it is the platform's
     # for any `place_by`. `server_field`: the field of the row naming the server the place is on — a row that names
     # none is a place ANY box may write (a share), and a hold of it under a worker's name is taken back at once only on
-    # the holder's own box (`Worker.hold_follows_name`); one that names a server is a disk there.
+    # the holder's own box (`Worker.hold_follows_name`); one that names a server is a disk there, taken back at once only
+    # on that server. No `server_field`: where a place is is not known, and a hold never follows the name — it waits.
+    # The table is also what `/where/<table>/<place>` asks a place's holder by (`SpecConsole.where_place`).
     places: dict = field(default_factory=dict)
     # `retire_when: {field: state, in: [done, failed]}` — a unit whose row says one of those values is
     # FINISHED, and finished work is not placed. The first subsystem to need it is `detjob`, whose unit

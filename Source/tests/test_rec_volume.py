@@ -1416,6 +1416,8 @@ def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
     again = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})
     for r in (twin, again):
         r._shared = {"net"}
+    # the volume declared: where a place is is its row's word, and a place with no row waits (the architect's rule)
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": "s3://bucket/net", "quota_bytes": 64 << 20})
     assert host_of(a.instance) == "machine-a" and host_of(twin.instance) == "machine-b"
     assert not twin.hold_follows_name("net", a.instance)                           # waits out the hold
     assert again.hold_follows_name("net", a.instance)                              # this box: at once, as before

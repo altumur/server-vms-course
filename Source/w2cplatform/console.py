@@ -8,6 +8,8 @@ show them. So the console is one class, run from the same spec:
     GET  /spec                   what the page reads first: name, rows, id rule, fields, door, metric names
     GET  /<rows>                 {rows: the read model from every worker's heartbeat, configured: the units}
     GET  /where/<id>             the stored placement (why) and the assignments' answer (where, one scan)
+    GET  /where/<table>/<place>?unit=<sub>/<id>   who holds a place of the spec's `placement.places` now, and its door
+                                 for that unit — or 404 and `X-Unreachable: <place>@<server>` when nobody does
     GET  /resources              the platform's resources: usage, units, live | silent
     GET  /unplaceable            units nothing live can serve, with the labels that say why
     GET  /servers                every server as placement sees it: its labels, its resource (the fact), its workers, placeable or why not
@@ -1428,8 +1430,9 @@ class SpecConsole:
         return {**out, "aggregated": True, "events": [], "groups": ordered}
 
     # -- what the page reads first ------------------------------------------------------------
-    # `/spec`'s body: `{name, rows, id, fields: [{name, type, default, required}], door?, metrics: {prefix,
-    # running}}` — the page's only knowledge of the subsystem. What a holder serves a page is `door: {routes}`.
+    # `/spec`'s body: `{name, rows, id, fields: [{name, type, default, required}], door?, places?, metrics: {prefix,
+    # running}}` — the page's only knowledge of the subsystem. What a holder serves a page is `door: {routes}`; the
+    # table whose rows a place's holder is asked by, `places: {table}` (`/where/<table>/<place>`).
     def shared_route(self, sub: str, q: dict) -> tuple[int, dict]:
         """`GET /domain/shared/<sub>`: what the domain holds for a subsystem's shared fields, resolved by the platform
         (`domain/shared.py`: `inherit` and `merge` applied) from the copy this cluster's agent took and verified — for a
@@ -1461,6 +1464,7 @@ class SpecConsole:
                 **({"display": s.display} if s.display else {}),
                 **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
                 **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
+                **({"places": {"table": s.places["table"]}} if s.places else {}),   # `/where/<table>/<place>`
                 # the subsystem's key families of the domain (`domain.keys`; their words are `display.keys`)
                 **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
                                         for f in s.domain.keys], "shared": list(s.domain.shared)}}
@@ -1550,14 +1554,79 @@ class SpecConsole:
         url = str(hb.extra.get("url") or "").rstrip("/") if holds else ""
         if not url:
             return {"door": None}
-        found = (pl.worker, hb)
+        return {"door": self.door_at(h, uid, pl.worker, url)}
+
+    # The door of `holder` at `url`, opened for unit `uid`: a token for the spec's routes, this unit, this holder — or
+    # none, in the open mode. Every token handed out is a line `door.issued`.
+    def door_at(self, h, uid, holder: str, url: str, **said) -> dict:
+        routes = self.spec.door_routes
         if self.door_signer is None:
-            return {"door": {"url": url, "token": None, "expires": None, "routes": list(routes)}}
+            return {"url": url, "token": None, "expires": None, "routes": list(routes)}
         user, unit = h.headers.get("X-User", "operator"), self.spec.ref(uid)
-        token, exp = self.door_signer.issue(user, unit, found[0], routes, self.wall())
-        self.journal.say("door.issued", sub=self.spec.name, target=str(uid), user=user, holder=found[0],
-                         routes=",".join(routes), until=round(exp))
-        return {"door": {"url": url, "token": token, "expires": exp, "routes": list(routes)}}
+        token, exp = self.door_signer.issue(user, unit, holder, routes, self.wall())
+        self.journal.say("door.issued", sub=self.spec.name, target=str(uid), user=user, holder=holder,
+                         routes=",".join(routes), until=round(exp), **said)
+        return {"url": url, "token": token, "expires": exp, "routes": list(routes)}
+
+    # WHERE A PLACE IS HELD — `GET /where/<table>/<place>?unit=<sub>/<id>` (the architect's decision after step 7: the
+    # console has no byte routes of its own, and what a unit left in a place another worker holds now is read at THAT
+    # worker's door). The table is the spec's table of places (`placement.places`), the place one of its rows that says
+    # `where`; its holder is the live worker whose heartbeat names the place in the spec's `place_by` field — the one the
+    # place's live hold names, where a hold says so — and announces a door (`url`). The answer is `/where/<id>`'s: the
+    # worker and `door: {url, token, expires, routes}`, the token for the spec's routes, THAT holder and the unit named
+    # in `?unit=` (the gate asked `view` on it before this line, as on `/where/<id>`). No unit named: the holder, and no
+    # door — a token is always one unit's. Nobody holding the place: 404, `door: null`, and the place as
+    # `<place>@<server>` (its row's `server_field`) in `unreachable` and in the header `X-Unreachable` — what a page
+    # names as missing from its picture.
+    def where_place(self, h, place: str, q: dict) -> tuple:
+        from .metrics import matches
+        t = self.spec.places
+        try:
+            row = self.ctl.table_rows(t["table"]).get(place)
+        except OSError:
+            return 503, {"detail": "the store did not answer", "error": "store unavailable"}
+        if row is None or not matches(row, t["where"]):
+            return 404, {"worker": None, "place": place, "door": None, "detail": f"{place!r} is not a place of "
+                         f"{self.spec.name} (a row of {t['table']} that says {t['where'] or 'anything'})",
+                         "error": "no such place"}
+        server = str(row.get(t["server_field"]) or "") if t["server_field"] else ""
+        uid = None
+        if q.get("unit"):
+            got = parse_ref(q["unit"])
+            if got is None or got[0] != self.spec.name:
+                return 400, {"detail": f"a door of {self.spec.name} opens for a unit of {self.spec.name}, "
+                                       f"not {q['unit'][:80]!r}", "error": "not this console's"}
+            try:
+                uid = self._uid(f"/where/{got[1]}")
+            except Refused as e:
+                return 400, {"detail": str(e), "error": "not an id"}
+        found = self.place_holder(place)
+        if found is None:
+            gone = f"{place}@{server}"
+            h._extra_headers = (("X-Unreachable", gone),)
+            return 404, {"worker": None, "place": place, "server": server, "door": None, "unreachable": gone,
+                         "reason": f"nobody holds {place} now: what is there is unavailable until a worker takes it"}
+        worker, url = found
+        door = self.door_at(h, uid, worker, url, place=place) if uid is not None and self.spec.door_routes else None
+        return 200, {"worker": worker, "place": place, "server": server, "door": door}
+
+    # `(worker, door url)` of the live worker holding `place` now, or None. Several heartbeats naming one place — a
+    # holder that died and its successor, both fresh to this console for a moment — are told apart by the place's live
+    # hold (`<sub>/holds/<place>`: its holder instance); with no hold to ask, the first by name.
+    def place_holder(self, place: str):
+        try:
+            held = self.ctl.live_holds().get(place)
+        except OSError:
+            held = None
+        found = []
+        for w, hb in sorted(holders(self.ctl.objects, f"{self.spec.name}/", self.wall(), self.lost_after,
+                                    self.ctl.eyes).items()):
+            url = str(hb.extra.get("url") or "").rstrip("/")
+            inst = str(hb.extra.get("instance") or "")
+            if str(hb.extra.get(self.spec.place_by, "")) != place or not url or (held and inst and inst != held):
+                continue
+            found.append((w, url))
+        return found[0] if found else None
 
     # Every worker whose assignment lists the unit, joined with `+` — a reassignment window shows as both.
     # Compared against the placement row in `/where`.
@@ -2177,6 +2246,8 @@ class SpecConsole:
     #       heartbeats' view over the configured rows.
     #         - `GET /where/<id>` — `{worker, reason}` from the stored placement (404 with nulls if
     #       unplaced), plus `directory` (the assignments' answer) and `scans`.
+    #         - `GET /where/<table>/<place>?unit=` — `where_place`: the place's holder and its door for that unit; 404
+    #       `X-Unreachable: <place>@<server>` when nobody holds it.
     #   - `GET /resources` — every resource heartbeat with `state: live | silent` by `lost_after`.
     #   - `GET /servers` — `servers()`: per server, `resource` (`live | silent | unreachable | unknown`), `workers`,
     #     `placeable` and `why` (what of a subsystem's tables a server holds is the spec's `servers.show`, read with `/spec`).
@@ -2223,11 +2294,20 @@ class SpecConsole:
         """`(family, id)` when the path is `/<family>/<id>` of a family that takes one, else `(None, None)`.
         `NoSuchRoute` for a path with more after the id."""
         segs = path.split("/")
+        if self.place_path(method, path):
+            return None, None                            # a place names no unit: the unit it is asked for is `?unit=`
         if len(segs) < 3 or segs[1] not in (self.spec.rows, *self.UNIT_ROUTES, *self.ID_ROUTES, *self.spec.table_specs):
             return None, None
         if len(segs) > 3 and not (method == "PUT" and segs[1] == self.spec.rows and len(segs) == 4 and segs[3]):
             raise NoSuchRoute(f"{path}: one id after /{segs[1]}/, and nothing after it")
         return segs[1], path_id(path) or None
+
+    # `GET /where/<table>/<place>` — the one route with a table's row after `/where/`: the spec's table of places
+    # (`placement.places.table`) and one name in it. Anything else after `/where/<x>/` stays no route.
+    def place_path(self, method: str, path: str) -> bool:
+        segs = path.split("/")
+        return (method == "GET" and len(segs) == 4 and segs[1] == "where" and bool(self.spec.places)
+                and segs[2] == self.spec.places["table"] and bool(segs[3]))
 
     # …and an id that is no id of this subsystem — `/where/None`, `/cameras/x` where ids are numbers — is the sender's, a
     # 400 in words (the coordinator's find in the twelfth round): `parse_id` raised `ValueError` out of `dispatch`, and
@@ -2940,6 +3020,8 @@ class SpecConsole:
                     rows = [r for r in rows if str(r.get("id")) in ok]
                     configured = [r for r in configured if str(r.get("id")) in ok]
                 return h._send(200, {"rows": rows, "configured": configured})
+            if self.place_path(method, path):
+                return h._send(*con.where_place(h, path.split("/")[3], q))
             if path.startswith("/where/"):
                 try:
                     uid = self._uid(path)
