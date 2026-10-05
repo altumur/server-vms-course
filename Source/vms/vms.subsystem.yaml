@@ -331,6 +331,24 @@ rights:
 # console's `/segment`; `GET /where/<cam>` hands out the door now.
 door: {routes: [timeline, segment]}
 snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
+# The VMS on the domain (the boundary's «no hooks»; DOMAIN-PLATFORM.md): what the platform's domain reads and moves for
+# it, under `domain/vms/…`, without knowing what any of it means. A camera is found across clusters by its `ref`, and the
+# shared view shows its name. The books the VMS's domain worker writes at the holder for each member (`vms/domainpart`):
+# where a recording cluster finds cameras of others (sources), who records a camera and where it pushes (primaries), the
+# ingest a camera nobody records polls (poll), a relay's road to the centre (upstream), and whom a camera may ask to act
+# (asks) — each carried home by the member's agent as it is. Kept at the holder for the whole domain: which cluster
+# records which camera of another (crossings, served at `/api/vms/crossings`) and the cameras sent to push (roads). The
+# tokens the books carry: a stream token (to push to, poll or pull from an ingest) and a token to ask one camera of
+# another, issued by the domain's signer with these claims only.
+domain:
+  ref: ref
+  view: [name]
+  books: [sources, primaries, poll, upstream, asks]
+  kept: [crossings, roads]
+  tables: [crossings]
+  tokens:
+    stream: {lifetime: 86400, claims: [aud, ref]}
+    ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
 metrics:

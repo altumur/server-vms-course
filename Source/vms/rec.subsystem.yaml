@@ -275,5 +275,11 @@ display:
     archive.shallow: архив мельче обещанного
     keep.copied: сохранённое скопировано
     keep.lost: сохранённое не удалось скопировать
+# The recorders on the domain: a member reports, beside its heartbeats and snapshot, where its ingest takes streams
+# (`rec/ingest`) and when each camera last polled it (`rec/polled/<ingest>`) — the domain's witness that a camera is
+# alive while its agent is silent.
+domain:
+  reports: [ingest, polled/]
+  witness: polled
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

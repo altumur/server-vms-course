@@ -7,11 +7,11 @@ import time
 
 from cluster.variables import FakeVariables
 
-from domain.access import ClusterAccess
-from domain.agent import GRANTS_PATH, KEYS_PATH
-from domain.grants import ClusterAuthoriser, ClusterGrants, Grant, grants_to_items
-from domain.ingest import Ingest, Refused, audience
-from domain.tokens import TokenIssuer, WrongKind, kind_of, verify
+from w2cplatform.domain.access import ClusterAccess
+from w2cplatform.domain.agent import GRANTS_PATH, KEYS_PATH
+from w2cplatform.domain.grants import ClusterAuthoriser, ClusterGrants, Grant, grants_to_items
+from vms.domainpart.ingest import Ingest, Refused, audience
+from w2cplatform.trust.tokens import TokenIssuer, WrongKind, kind_of, verify
 from w2cplatform.access import Denied
 
 NOW = 1_000_000.0
@@ -27,7 +27,7 @@ def _tokens():
     }
 
 
-def test_every_token_says_what_it_is_for_and_old_ones_say_it_by_their_shape():
+def test_every_token_says_what_it_is_for_and_one_that_does_not_is_no_doors():
     t, tok = _tokens()
     ks = t.keyset()
     for kind in ("person", "stream", "ask"):
@@ -39,9 +39,16 @@ def test_every_token_says_what_it_is_for_and_old_ones_say_it_by_their_shape():
                 raise AssertionError(f"a {kind} token passed as {other}")
             except WrongKind:
                 pass
+    # A token that does not say its kind is read by no door: its shape is not read for one (the owner's decision, Q6).
     legacy = {"person": t.issue("bob", 900, now=NOW), "stream": t.issue("cam-1", 900, now=NOW, aud="x", ref="1"),
               "ask": t.issue("cam-2", 900, now=NOW, aud="x", ask="1")}
-    assert {k: kind_of(verify(v, ks, now=NOW)) for k, v in legacy.items()} == {"person": "person", "stream": "stream", "ask": "ask"}
+    for kind, v in legacy.items():
+        assert kind_of(verify(v, ks, now=NOW)) == ""
+        try:
+            verify(v, ks, now=NOW, kind=kind)
+            raise AssertionError(f"a token that names no kind passed as {kind}")
+        except WrongKind:
+            pass
 
 
 def test_a_camera_or_relay_token_is_not_a_person_at_the_consoles_gate_even_with_grants_under_its_name():

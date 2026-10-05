@@ -10,13 +10,14 @@ import json
 from cluster.variables import Conflict, FakeVariables
 from w2cplatform.variables import items_bytes
 
-from domain.agent import DomainAgent, DomainPublisher
-from domain.device import DeviceCluster
-from domain.federation import Federation
-from domain.uplink import member_copy
-from domain.shared import OBJECT, POINTER, SharedSettings, SharedView, sign
-from domain.signer import Signer
-from domain.tokens import TokenIssuer
+from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import Federation
+from w2cplatform.domain.uplink import member_copy
+from w2cplatform.domain.shared import OBJECT, POINTER, SharedSettings, SharedView, sign
+from w2cplatform.trust.signer import Signer
+from w2cplatform.trust.tokens import TokenIssuer
+from vms.config import SPEC
 from tests.domain.conftest import Clock, make_cluster
 
 
@@ -108,14 +109,14 @@ def test_a_default_is_resolved_when_read_and_never_written_into_a_row():
     set; the console resolves the rest against the document and says where each value came from."""
     wall = Clock()
     fed, north, _, signer, shared, devices, agents = _site(wall, n=2)
-    devices[1].update_camera(1, {"events_retention_days": 30}, None)          # set on the camera's own page
+    devices[1].update_unit(1, {"events_retention_days": 30}, None)          # set on the camera's own page
     before = [d.row()["revision"] for d in devices]
     shared.edit(_retention(14), base_rev=0)
     for a in agents:
         a.sync()
     assert [d.row()["revision"] for d in devices] == before                    # no row was touched
-    eff = [SharedView(d.flash, d.disk, wall).effective(d.row())["events_retention_days"] for d in devices]
-    assert eff == [(14, "domain rev 1"), (30, "camera")]
+    eff = [SharedView(d.flash, d.disk, wall).effective(d.row(), SPEC)["events_retention_days"] for d in devices]
+    assert eff == [(14, "domain rev 1"), (30, "unit")]
 
 
 def test_a_field_with_a_default_can_never_inherit_and_one_that_inherits_is_left_unset():
@@ -131,19 +132,19 @@ def test_a_field_with_a_default_can_never_inherit_and_one_that_inherits_is_left_
     view = SharedView(devices[0].flash, devices[0].disk, wall)
     row = SPEC.row(SPEC.items(SPEC.new_row(7, {"source": "driverpack://file/a.mp4", "alarms": "tamper"})))
     assert row["events_retention_days"] is None and "events_retention_days" not in SPEC.items(row)
-    assert view.effective(row)["events_retention_days"] == (365, "spec")               # nobody above said anything
+    assert view.effective(row, SPEC)["events_retention_days"] == (365, "spec")               # nobody above said anything
 
     shared.edit(lambda s: s.setdefault("defaults", {}).update(events_retention_days=14, alarms=["io.input"]), base_rev=0)
     agents[0].sync()
-    eff = view.effective(row)
+    eff = view.effective(row, SPEC)
     assert eff["events_retention_days"] == (14, "domain rev 1")
-    assert eff["alarms"] == (["io.input", "tamper"], "camera + domain rev 1")
+    assert eff["alarms"] == (["io.input", "tamper"], "unit + domain rev 1")
 
     old = SubsystemSpec.from_dict({"name": "vms", "unit": {"rows": "cameras", "id": "numeric", "fields": {
         "source": {"type": "url"}, "events_retention_days": {"type": "int", "default": 365}}},
         "placement": {"capacity": {"from": "capacity", "default": 50}}})
     was = old.row(old.items(old.new_row(7, {"source": "driverpack://file/a.mp4"})))
-    assert view.effective(was, old)["events_retention_days"] == (365, "camera")        # the defect: 14 never applies
+    assert view.effective(was, old)["events_retention_days"] == (365, "unit")        # the defect: 14 never applies
     try:
         SubsystemSpec.from_dict({"name": "x", "unit": {"rows": "r", "id": "numeric", "fields": {
             "days": {"type": "int", "default": 365, "inherit": 365}}}})
@@ -192,5 +193,5 @@ def test_with_the_domain_gone_a_camera_that_reboots_still_has_its_defaults():
     north_link.up = False
     assert agents[0].sync() is False
     devices[0].power_off(); devices[0].boot()
-    assert SharedView(devices[0].flash, devices[0].disk, wall).effective(devices[0].row())["events_retention_days"] == (14, "domain rev 1")
+    assert SharedView(devices[0].flash, devices[0].disk, wall).effective(devices[0].row(), SPEC)["events_retention_days"] == (14, "domain rev 1")
     assert devices[0].disk.get(OBJECT) is not None

@@ -11,18 +11,18 @@ import urllib.request
 
 from cluster.variables import FakeVariables
 
-from domain.agent import DomainAgent
-from domain.api import ConsoleAPI
-from domain.books import Books
-from domain.console import Console
-from domain.crossing import Crossings
-from domain.device import DeviceCluster
-from domain.enroll import Manufacturer, Pledge, Registrar
-from domain.federation import DomainDirectory, Federation
-from domain.members import Members, apply
-from domain.readview import ReadView
-from domain.signer import Signer
-from domain.uplink import member_copy
+from w2cplatform.domain.agent import DomainAgent
+from w2cplatform.domain.api import ConsoleAPI
+from vms.domainpart.books import Books
+from w2cplatform.domain.console import Console
+from vms.domainpart.crossing import Crossings
+from vms.domainpart.device import DeviceCluster, member_name
+from w2cplatform.trust.enroll import Manufacturer, Pledge, Registrar
+from w2cplatform.domain.federation import DomainDirectory, Federation
+from w2cplatform.domain.members import Members, apply
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.trust.signer import Signer
+from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster
 
 
@@ -49,7 +49,8 @@ def test_a_box_the_registrar_admits_is_a_member_the_next_pass_reads():
     wall = Clock(1000.0)
     fed, north, signer, members = _domain(wall)
     vendor = Manufacturer("vendor", now=wall)
-    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members)
+    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members,
+                    cluster_of=member_name)
     _enroll(reg, vendor, "SN9001")
     assert members.names() == ["cam-SN9001"] and members.read()["members"]["cam-SN9001"]["how"] == "voucher"
 
@@ -68,7 +69,8 @@ def test_a_member_that_leaves_is_dropped_whatever_report_it_left_behind():
     wall = Clock(1000.0)
     fed, north, signer, members = _domain(wall)
     vendor = Manufacturer("vendor", now=wall)
-    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members)
+    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members,
+                    cluster_of=member_name)
     _enroll(reg, vendor, "SN9002")
     cam = DeviceCluster("SN9002", FakeVariables(), wall=wall)
     cam.boot()
@@ -125,7 +127,8 @@ def test_the_first_write_carries_the_configuration_so_no_configured_member_becom
     fed.add(member_copy("cam-SN9005", north.objects, wall=wall))
     members = Members(north.vars, wall=wall, configured=lambda: ["cam-SN9005"], domain="north")
     vendor = Manufacturer("vendor", now=wall)
-    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members)
+    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members,
+                    cluster_of=member_name)
     _enroll(reg, vendor, "SN9006")
     doc = members.read()["members"]
     assert sorted(doc) == ["cam-SN9005", "cam-SN9006"] and doc["cam-SN9005"]["how"] == "configuration"
@@ -133,7 +136,7 @@ def test_the_first_write_carries_the_configuration_so_no_configured_member_becom
 
 
 def test_the_domains_own_cluster_is_neither_admitted_nor_removed():
-    from domain.api import ApiError
+    from w2cplatform.domain.api import ApiError
     wall = Clock(1000.0)
     fed, north, signer, _ = _domain(wall)
     members = Members(north.vars, wall=wall, domain="north")

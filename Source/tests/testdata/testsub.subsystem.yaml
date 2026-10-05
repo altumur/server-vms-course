@@ -4,7 +4,7 @@
 # The platform knows the subsystems by their specs and by nothing else. This one has nothing to do with the
 # product: a unit is a named counter a worker keeps. If the platform's pieces come up on this file alone —
 # the controller from the spec, the contract's keys, slots, epochs, the console, the resource — they come up
-# without the product. Later steps of the boundary plan add `about:` and `domain:` sections here.
+# without the product. Later steps of the boundary plan add an `about:` section here.
 name: testsub
 unit:
   rows: counters                     # testsub/counters/<name>
@@ -18,6 +18,16 @@ placement:
   headroom:   {from: headroom}
   constraint: labels-subset
   tie_break:  most-free-capacity
-snapshot: [name]
+snapshot: [name, start]
+# testsub on the domain: a counter is found across clusters by its name; the holder keeps a book of tallies for each
+# member and a ledger for the domain as a whole, served at `/api/testsub/ledger`; a tally carries a token of its own kind.
+domain:
+  ref: name
+  view: [start]
+  books: [tallies]
+  kept: [ledger]
+  tables: [ledger]
+  tokens:
+    tally: {lifetime: 600, claims: [counter]}
 console:
   running: counters_running

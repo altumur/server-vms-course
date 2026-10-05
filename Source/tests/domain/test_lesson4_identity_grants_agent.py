@@ -5,11 +5,11 @@ is stated then measured; break-glass is one account, audited."""
 import json
 
 from cluster.variables import Forbidden
-from domain.agent import KEYS_PATH, DomainAgent, DomainPublisher, ClusterTrust
-from domain.grants import GRANT_LIFETIME, ClusterAuthoriser, ClusterGrants, Grant, revocation_window
-from domain.identity import TOKEN_LIFETIME, AuthError, BreakGlass, IdentityStore
-from domain.signer import Signer
-from domain.tokens import Expired, Revoked, RevocationList, UnknownKey, verify
+from w2cplatform.domain.agent import KEYS_PATH, DomainAgent, DomainPublisher, ClusterTrust
+from w2cplatform.domain.grants import GRANT_LIFETIME, ClusterAuthoriser, ClusterGrants, Grant, revocation_window
+from w2cplatform.domain.identity import TOKEN_LIFETIME, AuthError, BreakGlass, IdentityStore
+from w2cplatform.trust.signer import Signer
+from w2cplatform.trust.tokens import Expired, Revoked, RevocationList, UnknownKey, verify
 from tests.domain.conftest import Clock, make_domain
 
 
@@ -74,7 +74,7 @@ def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_whe
     import urllib.error
     import urllib.request
     from cluster.objectstore import FsObjectStore
-    from domain.agent import MEMBER_PATH
+    from w2cplatform.domain.agent import MEMBER_PATH
     from vms.console import make_console
     from vms.controller import VmsController
     from w2cplatform.access import DOMAIN_MARKS
@@ -132,7 +132,7 @@ def test_revocation_travels_by_the_agent_and_rotation_overlaps():
     pub = DomainPublisher(dc.vars)
     pub.publish_keys(signer.tokens.keyset())
     agent = DomainAgent("south", dc.vars, south.vars, now=clk); agent.sync()
-    tok = signer.tokens.issue("mallory", 900, now=clk())
+    tok = signer.tokens.issue("mallory", 900, now=clk(), kind="person")
     rl = RevocationList(); rl.revoke(verify(tok, signer.tokens.keyset(), now=clk()))
     pub.publish_revoked(rl); agent.sync()
     trust = ClusterTrust(south.vars)
@@ -140,11 +140,11 @@ def test_revocation_travels_by_the_agent_and_rotation_overlaps():
         verify(tok, trust.keyset(), trust.revoked(), now=clk()); raise AssertionError()
     except Revoked:
         pass
-    old_tok = signer.tokens.issue("alice", 900, now=clk())
+    old_tok = signer.tokens.issue("alice", 900, now=clk(), kind="person")
     signer.tokens.rotate(overlap=600, now=clk()); pub.publish_keys(signer.tokens.keyset()); agent.sync()
     trust = ClusterTrust(south.vars)
     assert verify(old_tok, trust.keyset(), now=clk())["sub"] == "alice"    # the previous key is still in the set
-    new_tok = signer.tokens.issue("alice", 900, now=clk())
+    new_tok = signer.tokens.issue("alice", 900, now=clk(), kind="person")
     assert verify(new_tok, trust.keyset(), now=clk())["sub"] == "alice"
     clk.advance(700)
     try:
@@ -164,7 +164,7 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
     g = ClusterGrants("south", now=clk)
     g.renew_from_domain(ClusterTrust(south.vars).grants())                            # the console loads them from ITS cluster
     auth = ClusterAuthoriser(g, signer.tokens.keyset(), now=clk)
-    tok = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk())
+    tok = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk(), kind="person")
     assert auth.authorise(tok, "view", "vms/12") == "alice" and auth.authorise(tok, "edit", "vms/7") == "alice"
     try:
         auth.authorise(tok, "edit", "vms/12"); raise AssertionError()
@@ -182,7 +182,7 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
         assert "expired" in str(e)
     # And the other direction: a fresh token, but south's agent could not renew its grants past their expiry.
     clk.advance(GRANT_LIFETIME)
-    tok2 = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk())         # the domain is back and issues a fresh token...
+    tok2 = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk(), kind="person")         # the domain is back and issues a fresh token...
     try:
         auth.authorise(tok2, "view", "vms/12"); raise AssertionError()
     except PermissionError as e:
@@ -252,8 +252,8 @@ def test_who_changed_the_people_the_grants_and_the_members_is_a_line_in_the_hold
     import tempfile
     from w2cplatform.eventdatabase import EventIndex
     from w2cplatform.journal import Journal
-    from domain.grants import DOMAIN_GRANTS, Grant, grants_from_items, set_domain_grants
-    from domain.members import Members
+    from w2cplatform.domain.grants import DOMAIN_GRANTS, Grant, grants_from_items, set_domain_grants
+    from w2cplatform.domain.members import Members
     clk = Clock(1_757_500_000.0)
     fed, _, dc, signer = _domain(clk)
     root = tempfile.mkdtemp(prefix="holder-")

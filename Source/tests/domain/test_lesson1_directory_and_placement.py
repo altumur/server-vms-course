@@ -3,8 +3,8 @@ snapshots the clusters publish, incompleteness as a result, placement by
 reachability, CAS against two placers, a dead cluster is not a trigger."""
 import json
 import threading
-from domain.federation import DomainDirectory
-from domain.placement import CameraSite, ClusterPlacer, Refused
+from w2cplatform.domain.federation import DomainDirectory
+from w2cplatform.domain.placement import UnitSite, ClusterPlacer, Refused
 from tests.domain.conftest import Clock, Running, make_domain, snapshot
 
 
@@ -23,7 +23,7 @@ def test_where_across_three_clusters_from_what_the_clusters_publish():
     a = d.where(7)
     assert a.found and a.complete and (a.cluster, a.worker, a.server) == ("south", "w-0", "srv-9")
     assert d.where(50).cluster == "cloud" and d.where(1).cluster == "north" and d.where(2).worker in ("w-0", "w-1")
-    assert fed.clusters["south"].snapshot()["cameras"][0]["id"] == 1                  # the cluster's id; the domain never asks by it
+    assert fed.clusters["south"].snapshot()["units"][0]["id"] == 1                  # the cluster's id; the domain never asks by it
     holdings, down = d.holdings()
     assert down == [] and holdings["south"] == {"w-0": ["7"]} and holdings["cloud"] == {"w-0": ["50"]}
     # ONE OBJECT PER WORKER — the heartbeat's shape, and for the same reason: north runs two workers,
@@ -39,7 +39,7 @@ def test_where_is_answered_with_worker_and_server_and_stays_honest_about_ids():
     d = DomainDirectory(fed)
     a = d.where(7)
     assert (a.cluster, a.worker, a.server) == ("south", "w-0", "srv-9") and a.complete
-    assert "camera 7 is on w-0 (srv-9) in south" == a.sentence()
+    assert "7 is on w-0 (srv-9) in south" == a.sentence()
     none = d.where(99)
     assert not none.found and none.complete and "2 clusters searched" in none.sentence()
 
@@ -60,7 +60,7 @@ def test_two_clusters_claiming_a_camera_is_a_fault_not_a_tie():
     """Neither cluster is picked: the answer names both, is not complete, and says it is a placement failure. It used to
     raise — and a member naming another's camera then made `/api/where` and every edit of that camera a 500 (the
     review's eighth pass); the read view's `where` answers the same."""
-    from domain.readview import ReadView
+    from w2cplatform.domain.readview import ReadView
     fed, _ = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["north"], {7: ("w-0", "srv-1")}, ts=0)
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
@@ -91,17 +91,17 @@ def test_placement_is_by_reachability_then_headroom():
     fed, _ = make_domain({"north": ("vlan:a", "vlan:b"), "south": ("vlan:b",), "cloud": ("vlan:c",)}, "north")
     head = {"north": 10.0, "south": 40.0, "cloud": 99.0}      # what each cluster's console exports: vms_headroom
     p = ClusterPlacer(fed, headroom=lambda c: head[c], clock=lambda: 1234.0)
-    a = p.place(CameraSite(1, "vlan:a"))
+    a = p.place(UnitSite(1, "vlan:a"))
     assert a.cluster == "north" and "only cluster reaching vlan:a" in a.reason        # capacity elsewhere is irrelevant
-    b = p.place(CameraSite(2, "vlan:b"))
+    b = p.place(UnitSite(2, "vlan:b"))
     assert b.cluster == "south" and "most headroom" in b.reason                       # ties broken by headroom
     try:
-        p.place(CameraSite(3, "vlan:z")); raise AssertionError("must refuse")
+        p.place(UnitSite(3, "vlan:z")); raise AssertionError("must refuse")
     except Refused as e:
         assert "no cluster in the domain reaches vlan:z" in str(e)                    # never "cluster X is full"
     stored, _ = fed.domain_holder.vars.get("domain/placement/2")
     assert stored["cluster"] == "south" and stored["at"] == "1234.0" and stored["reason"]   # stored, with a reason and a time
-    assert p.place(CameraSite(2, "vlan:b")).cluster == "south"                        # placing again changes nothing
+    assert p.place(UnitSite(2, "vlan:b")).cluster == "south"                        # placing again changes nothing
 
 
 def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
@@ -110,7 +110,7 @@ def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     fed, _ = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     wall = Clock(); s = Running(fed.clusters["south"], wall, workers=(("w-0", "srv-9"), ("w-1", "srv-10")))
     p = ClusterPlacer(fed)
-    pl = p.place(CameraSite(7, "vlan:b"))
+    pl = p.place(UnitSite(7, "vlan:b"))
     assert pl.cluster == "south"
     (cid,) = s.create(7, labels=["vlan:b"])                                           # the domain console forwards the create to south, with ref 7
     where = s.ctl.placement(cid)
@@ -127,7 +127,7 @@ def test_two_placers_racing_agree_by_cas():
         head = {"north": 10.0 + seed, "south": 10.0 + (1 - seed)}      # each placer would pick a different cluster
         p = ClusterPlacer(fed, headroom=lambda c: head[c])
         for cam in range(1, 41):
-            results.append((cam, p.place(CameraSite(cam, "vlan:a")).cluster))
+            results.append((cam, p.place(UnitSite(cam, "vlan:a")).cluster))
     ts = [threading.Thread(target=race, args=(i,)) for i in range(2)]
     [t.start() for t in ts]; [t.join() for t in ts]
     by_cam = {}
@@ -140,11 +140,11 @@ def test_two_placers_racing_agree_by_cas():
 def test_a_dead_cluster_is_not_a_trigger():
     fed, links = make_domain({"north": ("vlan:a",), "south": ("vlan:b",)}, "north")
     p = ClusterPlacer(fed)
-    assert p.place(CameraSite(7, "vlan:b")).cluster == "south"
+    assert p.place(UnitSite(7, "vlan:b")).cluster == "south"
     links["south"].up = False
-    assert p.place(CameraSite(7, "vlan:b")).cluster == "south"     # already placed: untouched, not re-placed
+    assert p.place(UnitSite(7, "vlan:b")).cluster == "south"     # already placed: untouched, not re-placed
     try:
-        p.place(CameraSite(8, "vlan:b"), unreachable={"south"}); raise AssertionError("must refuse")
+        p.place(UnitSite(8, "vlan:b"), unreachable={"south"}); raise AssertionError("must refuse")
     except Refused as e:
         assert "not placing elsewhere" in str(e)                    # nothing else can see it
     try:

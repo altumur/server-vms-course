@@ -1,0 +1,23 @@
+# agent.py — the domain agent: what a cluster needs from the domain, carried into its own `domain/*`, and its report up; `python3 -m w2cplatform.domain.agent`
+
+**Role in the module.** Lesson 4, grown by every lesson after it. One small process per cluster whose only right is to write `domain/*` (and `relay/*` on a relay) in that cluster's store — the way a worker's only right is its epochs and its slot. It carries what a cluster needs from the domain and nothing else: the signer's public key set, the revocation list, the grants for THIS cluster, the edits kept for it, the holder record, the shared settings and its backup copy, and every row a subsystem's spec says a member carries (`domain.books`, `per_cluster()`), moved as they are — the agent never reads a subsystem's book. When the domain is unreachable it stops updating; the cluster's console and doors keep verifying with the keys they have, issued tokens run to expiry, grants run to theirs, nobody new logs in. Workers are not involved: nothing about a user reaches a worker.
+
+## Module-level names
+- `KEYS_PATH`, `REVOKED_PATH`, `GRANTS_PATH` — `domain/keys`, `domain/revoked`, `domain/grants` (per cluster in the holder: `domain/grants/<cluster>`).
+- `ROOT_PATH = "domain/root"` — the domain root's public key, pinned once in a member (Lesson 15).
+- `LDEVID_PATH = "domain/ldevid"`, `BREAK_GLASS_PATH = "domain/break_glass"` — per-cluster rows of the platform's own.
+- `MEMBER_PATH = "domain/member"` — written on every pass that leaves a key set: "this cluster IS a member", so a console tells "keys lost" from "never joined".
+- `DOMAIN_SEEN = "domain/seen"` — in the member's own object store: when it last reached the domain (through a relay: when the relay did). A subsystem's process judges the age of its carried books by it.
+- `PLATFORM_PER_CLUSTER`, `per_cluster()` — the per-cluster rows carried home: the platform's, then every spec's books (`declared.books()`), read from the catalogue at each pass.
+
+## `class DomainPublisher` — the signer's side: the key set, the revocation list, a cluster's break-glass hash, a cluster's grants, written into the holder's store by CAS.
+
+## `class DomainAgent`
+`sync()` is one pass: the key set (Lesson 4 as it is; Lesson 15 only one the pinned root signed, never an older revision — `_carry_keys`), the revocation list, the grants, the per-cluster rows, the kept edits applied through the cluster's own console (`pending.apply_pending`) and their outcomes, the holder record (`term.carry_holder`, never a smaller term), the shared settings and the backup (`shared.carry`), then the REPORT into the holder's object store (`uplink.report`), then, on a relay, relaying down and the bundle (`relay.py`). Each of the documents is a step of its own: one that does not parse is refused, said once, and the pass goes on (`_step`). `wake()`/`due()`/`report_now()`: an alarm reports at once, at most once a second; `alarm_waiting` for an agent in another process than the card.
+
+## `class ClusterTrust` — what a cluster's console and doors read from THEIR OWN store to check a token offline: `keyset()`, `root()`, `revoked()`, `grants()`. A row there that does not parse raises `Untrusted` (counted in `tokens.TRUST_ROWS`): the door answers 503 "nobody can be checked".
+
+## Functions
+- `local_networks()` — `REACHES`, else this host's IPv4 networks, not tunnels or host routes.
+- `main()` — the process: `CLUSTER`, its store by its role's socket (`domainagent`), the holder's (`DOMAIN_CONFIG_URL`, `DOMAIN_OBJECTS_URL`) or its relay's (`RELAY_CONFIG_URL`, `RELAY_OBJECTS_URL`), `REPORT=1` for a member the domain never reaches, `RELAY=1`/`RELAY_MEMBERS` for a relay; object stores opened by `runtime.open_objects`.
+- `run(agent, interval, stop)` — the loop: the next pass set before the pass, a pass that raises said once.

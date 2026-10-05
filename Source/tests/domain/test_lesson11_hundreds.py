@@ -8,12 +8,12 @@ that neither waits for silent members in turn nor keeps asking them every five s
 """
 from cluster.variables import FakeVariables
 
-from domain.api import ConsoleAPI
-from domain.device import DeviceCluster
-from domain.federation import DomainDirectory, Federation
-from domain.pending import PendingEdits
-from domain.readview import ReadView
-from domain.scale import Meter
+from w2cplatform.domain.api import ConsoleAPI
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import DomainDirectory, Federation
+from w2cplatform.domain.pending import PendingEdits
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.domain.scale import Meter
 from tests.domain.conftest import Clock, make_cluster
 
 N, OFF = 300, 30
@@ -147,7 +147,7 @@ def test_a_bulk_edit_answered_from_memory_keeps_what_went_silent_since_the_pass(
     api = ConsoleAPI(view, lambda name: by_name[name], pending=pending, last_known=view.last_known)
 
     devices[3].power_off()                               # after the pass, before the edit
-    results = [api.update_camera(d.serial, {"events_retention_days": 14}, idempotency_key=f"k{i}")
+    results = [api.update_unit(d.serial, {"events_retention_days": 14}, idempotency_key=f"k{i}")
                for i, d in enumerate(devices)]
     kept = [r for r in results if r.get("pending")]
     assert [r["cluster"] for r in kept] == [devices[3].name]
@@ -194,9 +194,9 @@ def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writ
     its copy is stale and says so at once, with no connection to wait on — and the pass is local calls. What
     the domain pays instead is writes: every report rewrites what changed — the heartbeat and the snapshot
     shard, both stamped with the time — and the `reported` mark."""
-    from domain.agent import DomainAgent
-    from domain.device import Ram
-    from domain.uplink import member_copy
+    from w2cplatform.domain.agent import DomainAgent
+    from vms.domainpart.device import Ram
+    from w2cplatform.domain.uplink import member_copy
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     domain_store = Ram()                                 # the domain holder's objects; a prefix listing is the server's work

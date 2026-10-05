@@ -37,7 +37,7 @@ job "domain-signer" {
       driver = "podman"
       config {
         image   = "vms/domainvms:latest"
-        args    = ["python3", "-m", "domain.signer_service"]
+        args    = ["python3", "-m", "w2cplatform.domain.signer_service"]
         # The box's own door's directory (`SIGNER_UNIX` below); this cluster's store and objects (the twelfth review,
         # major 22: `nomad://` is gone).
         volumes = ["/run/vms-console:/run/vms-console", "/run/configstore:/run/configstore", "/data/platform/objects:/data/platform/objects"]

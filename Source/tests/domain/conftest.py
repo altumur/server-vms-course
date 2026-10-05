@@ -14,7 +14,7 @@ from cluster.controller import ClusterController  # noqa: E402
 from cluster.objectstore import FsObjectStore  # noqa: E402
 from cluster.variables import FakeVariables  # noqa: E402
 from cluster.worker import ClusterWorker  # noqa: E402
-from domain.federation import Cluster, Federation, Unreachable  # noqa: E402
+from w2cplatform.domain.federation import Cluster, Federation, Unreachable  # noqa: E402
 from vms.worker import FakeActuator  # noqa: E402
 
 

@@ -137,8 +137,8 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
     box = Box()
     ctl, rec, m, srv, base = _console(box)
     # `domain.access` sits in the same code root (`Source/domain/`) since the move: this console is one without it
-    hidden = sys.modules.get("domain.access")
-    sys.modules["domain.access"] = None
+    hidden = sys.modules.get("w2cplatform.domain.access")
+    sys.modules["w2cplatform.domain.access"] = None
     try:
         assert _call(base, "GET", "/cameras")[0] == 200
         box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # the cluster joined a domain while the console ran
@@ -153,9 +153,9 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
     finally:
         srv.shutdown()
         if hidden is None:
-            del sys.modules["domain.access"]
+            del sys.modules["w2cplatform.domain.access"]
         else:
-            sys.modules["domain.access"] = hidden
+            sys.modules["w2cplatform.domain.access"] = hidden
 
     class Away:
         def get(self, path): raise PermissionError(13, "the store does not answer")

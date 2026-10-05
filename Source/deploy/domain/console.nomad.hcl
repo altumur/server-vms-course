@@ -30,7 +30,7 @@ job "console" {
       driver = "podman"
       config {
         image   = "vms/domainvms:latest"
-        args    = ["python3", "-m", "domain.console"]
+        args    = ["python3", "-m", "w2cplatform.domain.console"]
         # The directory of the box's own door (`DOMAIN_CONSOLE_UNIX` below): 0700 root on the host, made at boot by
         # `vms.tmpfiles` — the same directory the cluster's console keeps its socket in, another file in it.
         # …and this cluster's store and objects, as М11 lays them on the node: the configstore's socket of its role,

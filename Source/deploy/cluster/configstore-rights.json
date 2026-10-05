@@ -137,7 +137,7 @@
     "rec/*",
     "vms/*",
     "platform/decommission/*",
-    "domain/primaries",
+    "domain/vms/primaries",
     "objects/rec/used/*"
    ],
    "write": [

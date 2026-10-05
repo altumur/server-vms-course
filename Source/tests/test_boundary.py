@@ -10,7 +10,7 @@ all it knows is the specs, `<sub>.subsystem.yaml`. Three checks:
                 `alive`, `receive`, `recover`, `automatic`, `deliver`, `record` are not words of the product.
                 Some words are the product's by meaning and not by letters (`live`, `volume`, `rec`, `запис*`):
                 `BY_MEANING` says when.
-    3. runs     the platform's pieces — the contract, the controller, the console, the resource — come up on
+    3. runs     the platform's pieces — the contract, the controller, the console, the resource, the domain — come up on
                 `testdata/testsub.subsystem.yaml` alone, each in a process of its own where importing a
                 subsystem's package fails; and a platform entry point loads a directory of specs.
 
@@ -52,7 +52,7 @@ DEBT = os.path.join(HERE, "boundary_debt.txt")
 TESTSUB = os.path.join(HERE, "testdata", "testsub.subsystem.yaml")
 
 PLATFORM_TREE = "w2cplatform"                                  # walked whole, every subpackage
-SUBSYSTEM_PACKAGES = ("vms", "gstvms", "domain", "cluster")    # what the platform must not reach (`Source/<name>/`)
+SUBSYSTEM_PACKAGES = ("vms", "gstvms", "cluster")              # what the platform must not reach (`Source/<name>/`)
 
 # The platform's tests: what tests a mechanism of the platform. They are the platform's like its modules — scanned for
 # words and imports. Two kinds: the ones that already import no subsystem, and the ones whose subject is a platform
@@ -72,7 +72,7 @@ PLATFORM_TESTS = (
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",
     "tests/test_store_outage.py", "tests/test_sweep.py",
     "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/test_host.py", "tests/testdata/testsub.subsystem.yaml",
-    "tests/test_spec_declarations.py", "tests/test_rights.py",
+    "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
@@ -317,7 +317,7 @@ def _module_file(mod: str) -> str | None:
     return None
 
 
-# `vms.x`, `domain.access:cluster_access` — a dotted module path or a `module:function` (an entry point); not a file
+# `vms.x`, `vms.domainpart.worker:main` — a dotted module path or a `module:function` (an entry point); not a file
 # name (`vms.subsystem.yaml`) and not the bare word, which is a subsystem's NAME and a word of the dictionary.
 _BY_NAME = re.compile(r"^(%s)((\.[A-Za-z_]\w*)+(:[A-Za-z_]\w*)?|:[A-Za-z_]\w*)$(?<!\.yaml)(?<!\.yml)(?<!\.json)(?<!\.py)"
                       % "|".join(SUBSYSTEM_PACKAGES))
@@ -325,7 +325,7 @@ _BY_NAME = re.compile(r"^(%s)((\.[A-Za-z_]\w*)+(:[A-Za-z_]\w*)?|:[A-Za-z_]\w*)$(
 
 def _imports(path: str) -> list[tuple[int, str]]:
     """`(line, module)` for every import in a file — at the top, inside a function, or a module of a subsystem named
-    in a string (`"vms.x"`, `"domain.access:cluster_access"`: what `importlib` would import). Relative imports are
+    in a string (`"vms.x"`, `"vms.domainpart.worker:main"`: what `importlib` would import). Relative imports are
     resolved against the file's package."""
     src = open(path, encoding="utf-8").read()
     tree = ast.parse(src, path)
@@ -344,7 +344,7 @@ def _imports(path: str) -> list[tuple[int, str]]:
             out += [(node.lineno, f"{mod}.{a.name}") for a in node.names if _module_file(f"{mod}.{a.name}")]
         elif isinstance(node, ast.Constant) and isinstance(node.value, str) and _BY_NAME.match(node.value):
             # a module named in a string — `importlib.import_module(name)` of a default like
-            # `"domain.access:cluster_access"` — is an import that happens at run time
+            # `"vms.domainpart.worker:main"` — is an import that happens at run time
             out.append((node.lineno, node.value.partition(":")[0]))
     return out
 
@@ -414,7 +414,7 @@ def import_findings() -> list[tuple[str, int, str, str]]:
 # does not import: an import of one is `run:<piece> | run import <package>`. A piece that comes up short says why
 # (`BOUNDARY-RUN <why>`), and that is `run:<piece> | run <why>`; anything else it raises is `run broken: …` — never
 # debt to write down, a piece to mend.
-PIECES = ("contract", "controller", "console", "events", "resource", "host")
+PIECES = ("contract", "controller", "console", "events", "resource", "host", "domain")
 
 _GUARD = f"""
 import sys
@@ -619,6 +619,16 @@ def _piece_host():
     held = {u: w.name for w in ws for u in w.reconcile_once()}
     assert sorted(held) == ["c1", "c2", "c3"] and len(set(held.values())) == 2, held
     assert json_loads(objects.get("testsub/controller/pass")) is not None              # the report `/metrics` reads
+
+
+def _piece_domain():
+    """The platform's domain on testsub alone, with its `domain:` section (DOMAIN-PLATFORM.md, «no hooks»): two clusters
+    of counters, a counter found across them by the field the spec names, listed at the route its row name makes, a
+    book the spec declares carried home, only the token kinds it declares issued, and what it keeps backed up and
+    restored by a move (`tests/test_domain_platform.py`, every check of it)."""
+    import tests.test_domain_platform as d
+    for name in sorted(n for n in dir(d) if n.startswith("test_")):
+        getattr(d, name)()
 
 
 def json_loads(raw):

@@ -12,7 +12,7 @@ job "domain-agent" {
       driver = "podman"
       config {
         image   = "vms/domainvms:latest"
-        args    = ["python3", "-m", "domain.agent"]
+        args    = ["python3", "-m", "w2cplatform.domain.agent"]
         # This cluster's store, by the agent's own socket (the twelfth review, major 22: `nomad://` is gone).
         volumes = ["/run/configstore:/run/configstore"]
       }

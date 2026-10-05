@@ -13,20 +13,20 @@ import json
 
 from cluster.variables import FakeVariables
 
-from domain.agent import DomainAgent, DomainPublisher
-from domain.api import ApiError, ConsoleAPI
-from domain.device import DeviceCluster
-from domain.federation import DomainDirectory, Federation
-from domain.grants import Grant
-from domain.pending import PendingEdits
-from domain.readview import ReadView
-from domain.shared import sign
-from domain.signer import Signer
-from domain.term import (BACKUP, Deposed, DomainHolder, GuardedPending, carry_holder, find_holder, handover,
-                         move_domain, read_holder, stranded)
-from domain.tokens import TokenIssuer
-from domain.federation import Unreachable
-from domain.uplink import member_copy
+from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+from w2cplatform.domain.api import ApiError, ConsoleAPI
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import DomainDirectory, Federation
+from w2cplatform.domain.grants import Grant
+from w2cplatform.domain.pending import PendingEdits
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.domain.shared import sign
+from w2cplatform.trust.signer import Signer
+from w2cplatform.domain.term import (BACKUP, Deposed, DomainHolder, GuardedPending, carry_holder, find_holder, handover,
+                                     move_domain, read_holder, stranded)
+from w2cplatform.trust.tokens import TokenIssuer
+from w2cplatform.domain.federation import Unreachable
+from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock
 
 DOMAIN = "acme"
@@ -81,7 +81,7 @@ def _keep_an_edit_for(fed, devices, camera, holder_vars, wall, holder="cam-SN0")
     view.refresh()
     api = ConsoleAPI(DomainDirectory(dom, wall=wall), _no_door, verifier=lambda t: t,
                      pending=PendingEdits(holder_vars, wall), last_known=view.last_known)
-    return api.update_camera(camera, {"name": f"{camera}-renamed"}, idempotency_key=f"k-{camera}", token="anna")
+    return api.update_unit(camera, {"name": f"{camera}-renamed"}, idempotency_key=f"k-{camera}", token="anna")
 
 
 def _objects(devices):
@@ -119,7 +119,7 @@ def test_the_week_of_alarms_leaves_the_holder_with_its_backup():
     to the reports. The failure table promised that week outlives any card; the holder's own card is the one
     it did not. So the history goes into the backup, and a move puts it back on the new holder: as of the
     backup, which is what the backup promises about everything."""
-    from domain.alarms import AlarmHistory
+    from w2cplatform.domain.alarms import AlarmHistory
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
     history = AlarmHistory(devices["cam-SN0"].disk, wall=wall)
@@ -245,7 +245,7 @@ def test_a_planned_handover_strands_nothing():
 
     def carry_to():
         try:                                             # the moment an operator edits during the handover
-            api.update_camera("SN2", {"name": "late"}, idempotency_key="k-late", token="anna")
+            api.update_unit("SN2", {"name": "late"}, idempotency_key="k-late", token="anna")
             raise AssertionError("a frozen holder must refuse the edit")
         except ApiError as e:
             assert e.status == 503 and "handing the domain over to cam-SN1" in e.detail
@@ -302,19 +302,19 @@ def test_a_move_keeps_the_topology_the_members_and_the_roads():
     Lesson 17), every road a recorder had said it could not pull (Lesson 16 — a push became a pull again), and the
     list of members — which, if nobody had ever written it, was the configuration of the old holder's processes and
     nothing else. They travel now, and the list is written by the first backup so that there is one to carry."""
-    from domain.members import Members
+    from w2cplatform.domain.members import Members
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
     topology = {"doc": json.dumps({"rev": 1, "centre": None, "star": [], "via": {"cam-SN3": "cam-SN2"}})}
     roads = {"SN3": json.dumps({"road": "push", "why": "the recorder could not open its stream"})}
     holder.vars.put("domain/topology", topology)
-    holder.vars.put("domain/roads", roads)
+    holder.vars.put("domain/vms/roads", roads)
     assert holder.vars.get("domain/members")[0] is None                   # never written: configuration only
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
     assert Members(holder.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the backup wrote it first
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
-    assert new.vars.get("domain/topology")[0] == topology and new.vars.get("domain/roads")[0] == roads
+    assert new.vars.get("domain/topology")[0] == topology and new.vars.get("domain/vms/roads")[0] == roads
     assert Members(new.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the old holder: a member now
 
 

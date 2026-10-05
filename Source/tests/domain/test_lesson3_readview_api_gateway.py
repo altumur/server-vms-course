@@ -3,11 +3,11 @@ one cause per dead server; the API refuses placement at both levels and is
 idempotent; the gateway fans out and the worker sees one viewer."""
 import json
 import urllib.request
-from domain.api import ApiError, ConsoleAPI
-from domain.console import Console
-from domain.federation import DomainDirectory
-from domain.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
-from domain.readview import ReadView
+from w2cplatform.domain.api import ApiError, ConsoleAPI
+from w2cplatform.domain.console import Console
+from w2cplatform.domain.federation import DomainDirectory
+from vms.domainpart.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
+from w2cplatform.domain.readview import ReadView
 from tests.domain.conftest import Clock, Running, heartbeat, make_domain, snapshot
 
 
@@ -61,7 +61,7 @@ def test_a_camera_nobody_is_running_is_in_the_list_and_says_so():
     view = ReadView(fed, wall=wall)
     view.refresh()
 
-    rows = {r["ref"] or str(r["camera"]): r for r in view.list()["rows"]}
+    rows = {r["ref"] or str(r["unit"]): r for r in view.list()["rows"]}
     assert set(rows) == {"7", "9"}, "the camera nobody runs is missing from the list"
     assert rows["7"]["worker_state"] == "live" and rows["7"]["phase"] == "running"
     assert rows["9"]["worker_state"] == "configured" and rows["9"]["worker"] == ""
@@ -131,7 +131,7 @@ def test_kill_a_server_one_cause_displayed():
     view.refresh()
     causes = view.causes()
     assert len(causes) == 1 and causes[0].scope == "server" and causes[0].name == "north/srv-1"
-    assert causes[0].workers == ["w-0", "w-1"] and causes[0].cameras == 100
+    assert causes[0].workers == ["w-0", "w-1"] and causes[0].units == 100
     assert causes[0].sentence().startswith("server silent: north/srv-1 for 100 s")
     rows = view.list(size=200)["rows"]
     stale = [r for r in rows if r["worker_state"] == "stale"]
@@ -148,14 +148,14 @@ def test_unreachable_cluster_keeps_last_known_rows_and_says_so():
     page = view.list(cluster="south", size=100)
     assert page["total"] == 50 and page["clusters"]["south"] == "unreachable" and not page["complete"]
     assert page["rows"][0]["worker_state"] == "unreachable"
-    assert view.causes()[0].scope == "cluster" and view.causes()[0].cameras == 50
+    assert view.causes()[0].scope == "cluster" and view.causes()[0].units == 50
 
 
 class FakeClusterConsole:
     def __init__(self): self.edits = []; self.creates = []
-    def update_camera(self, camera, fields, subject):
+    def update_unit(self, camera, fields, subject):
         self.edits.append((camera, fields, subject)); return {"revision": len(self.edits) + 1}
-    def create_camera(self, fields, subject):
+    def create_unit(self, fields, subject):
         self.creates.append(fields); return {"id": len(self.creates), "worker": "w-0"}
 
 
@@ -164,19 +164,19 @@ def test_api_refuses_placement_at_both_levels_and_is_idempotent():
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
     consoles = {"south": FakeClusterConsole()}
     api = ConsoleAPI(DomainDirectory(fed), consoles.__getitem__)
-    r1 = api.update_camera(7, {"name": "gate"}, idempotency_key="k1")
-    r2 = api.update_camera(7, {"name": "gate"}, idempotency_key="k1")            # the same PUT, not a second edit
+    r1 = api.update_unit(7, {"name": "gate"}, idempotency_key="k1")
+    r2 = api.update_unit(7, {"name": "gate"}, idempotency_key="k1")            # the same PUT, not a second edit
     assert r1 is r2 and len(consoles["south"].edits) == 1 and r1["cluster"] == "south" and r1["worker"] == "w-0" and not r1["authenticated"]
     for bad in ({"worker": "w-1"}, {"cluster": "north"}, {"server": "srv-1"}, {"placement": {}}, {"phase": "running"}, {"epoch": 9}):
         try:
-            api.update_camera(7, bad, idempotency_key="k2"); raise AssertionError("must refuse")
+            api.update_unit(7, bad, idempotency_key="k2"); raise AssertionError("must refuse")
         except ApiError as e:
             assert e.status == 400 and "may not set" in e.detail
     try:
-        api.update_camera(99, {"name": "x"}, idempotency_key="k3"); raise AssertionError("must 404")
+        api.update_unit(99, {"name": "x"}, idempotency_key="k3"); raise AssertionError("must 404")
     except ApiError as e:
         assert e.status == 404
-    c = api.create_camera({"name": "new", "source": "driverpack://file/n.mp4", "ref": "12"}, cluster="south", idempotency_key="k4")
+    c = api.create_unit({"name": "new", "source": "driverpack://file/n.mp4", "ref": "12"}, cluster="south", idempotency_key="k4")
     assert c["cluster"] == "south" and c["result"]["worker"] == "w-0"              # the cluster chose the worker; the domain forwarded
 
 
@@ -186,7 +186,7 @@ def test_api_says_503_not_404_when_a_cluster_is_unreachable():
     links["south"].up = False
     api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
     try:
-        api.update_camera(7, {"name": "x"}, idempotency_key="k"); raise AssertionError()
+        api.update_unit(7, {"name": "x"}, idempotency_key="k"); raise AssertionError()
     except ApiError as e:
         assert e.status == 503 and "unreachable" in e.detail
 
@@ -234,14 +234,14 @@ def test_console_over_http():
     port = srv.server_address[1]
     try:
         import time; time.sleep(0.2)
-        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/cameras"))
+        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/vms/cameras"))
         assert body["total"] == 1 and body["rows"][0]["as_of"] == "as of 2 s ago"
         w = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/where/7"))
         assert w["cluster"] == "south" and w["worker"] == "w-0" and w["complete"]
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/cameras/7", data=b'{"name":"x"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/vms/cameras/7", data=b'{"name":"x"}', method="PUT",
                                      headers={"Idempotency-Key": "abc"})
         assert json.load(urllib.request.urlopen(req))["cluster"] == "south"
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/vms/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
                                      headers={"Idempotency-Key": "def"})
         try:
             urllib.request.urlopen(req); raise AssertionError()
@@ -280,9 +280,9 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
         return out, time.monotonic() - began
     try:
         assert isinstance(srv, ConsoleServer) and srv.bounds.per_address < srv.bounds.limit
-        reply, took = raw(b"PUT /api/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
+        reply, took = raw(b"PUT /api/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 413") and took < 2.0          # a hundred megabytes declared: not read, not waited for
-        reply, took = raw(b"PUT /api/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
+        reply, took = raw(b"PUT /api/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 400")
         held = [socket.create_connection(("127.0.0.1", port)) for _ in range(srv.bounds.per_address)]
         for s in held:
@@ -342,7 +342,7 @@ def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_an
             time.sleep(0.02)
         assert srv.bounds.used["common"] == srv.bounds.limit
         assert ask("192.0.2.7", "/healthz").startswith(b"HTTP/1.0 200")             # the reserve
-        busy = ask("192.0.2.7", "/api/cameras")
+        busy = ask("192.0.2.7", "/api/vms/cameras")
         assert busy.startswith(b"HTTP/1.0 503") and b"/healthz" in busy               # nothing else on it
         assert ask("192.0.2.100", "/healthz").startswith(b"HTTP/1.0 200")           # a listed monitor: its own lane
     finally:
@@ -386,7 +386,7 @@ def test_the_domains_jobs_name_stores_that_open():
     import os
     import re
     import tempfile
-    from domain.runtime import federation_from_env
+    from w2cplatform.domain.runtime import federation_from_env
     from w2cplatform.variables import open_vars
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     objects = tempfile.mkdtemp(prefix="objects-")
@@ -421,10 +421,10 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
     import shutil
     import tempfile
     import pytest
-    from domain import signer_service
-    from domain.agent import KEYS_PATH, DomainPublisher
-    from domain.identity import IdentityStore
-    from domain.signer import Signer
+    from w2cplatform.domain import signer_service
+    from w2cplatform.domain.agent import KEYS_PATH, DomainPublisher
+    from w2cplatform.domain.identity import IdentityStore
+    from w2cplatform.trust.signer import Signer
     from w2cplatform.configstore import LocalBackend, StoreDaemon
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.storemachine import Rights
@@ -446,7 +446,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
         ids = IdentityStore(signer, vars_, FsObjectStore(os.path.join(d, "objects")), publish_floor=0)
         ids.create_local("ann", "a long enough password", ["admin"])
         assert ids.login("ann", "a long enough password") and ids.publish(force=True)
-        vars_.put("domain/sources/north", {"book": "{}"})
+        vars_.put("domain/vms/sources/north", {"book": "{}"})
         assert Signer("acme", vars_).tokens.keyset().to_items() == signer.tokens.keyset().to_items()
         agent = open_vars(f"configstore://{d}/domainagent.sock")
         assert agent.get(KEYS_PATH)[0] is not None
@@ -466,11 +466,11 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     north, south = fed.clusters["north"], fed.clusters["south"]
     view = ReadView(fed, lost_after=45, wall=wall)
-    view.refresh(); view.publish(north.objects, {"SN7": "north"})
+    view.refresh(); view.publish(north.objects, {"vms/crossings": {"SN7": "north"}})
 
     st, d = domain_view(north.objects, wall())
     assert st == 200 and d["complete"] and not d["silent"] and d["age"] == 0
-    assert d["members"]["south"]["state"] == "ok" and len(d["units"]) == 200 and d["crossings"] == {"SN7": "north"}
+    assert d["members"]["south"]["state"] == "ok" and len(d["units"]) == 200 and d["tables"] == {"vms/crossings": {"SN7": "north"}}
     assert {c["cluster"] for c in d["units"] if c["worker"] == "w-0"} == {"north", "south"}
     assert domain_view(south.objects, wall())[0] == 404      # not the domain's holder: it knows only itself
 
@@ -492,7 +492,7 @@ def test_one_torn_object_of_one_cluster_freezes_neither_the_view_nor_the_directo
     cluster's copy as old as can be; the cluster's other workers, and the other cluster, are read; a status entry whose
     numbers are words is that entry's; and a step of the console's loop that raises is said in the log, once."""
     import logging
-    from domain.federation import MEMBER_OBJECTS
+    from w2cplatform.domain.federation import MEMBER_OBJECTS
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     north, south = fed.clusters["north"], fed.clusters["south"]
     snapshot(south, {151: ("w-0", "srv-9")}, ts=wall())
