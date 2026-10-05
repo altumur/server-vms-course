@@ -658,7 +658,14 @@ def box(env: dict) -> str:
         """Take one place out of a list somebody else wrote. None when they are
         all taken — a spare, not a failure."""
         with self._hold_lock:
-            return self._claim_hold(candidates, retries)
+            t0 = self.clock()
+            got = self._claim_hold(candidates, retries)
+            if got is not None:
+                self._hold_confirmed = t0                      # a new hold: its own clock, not the last one's
+                where = self._place_server(got)                # remembered for the silence (`held_strictly`)
+                if where is not None:
+                    self._place_where[got] = where
+            return got
 
     def _claim_hold(self, candidates: list[str], retries: int) -> str | None:
         for attempt in range(retries):
@@ -701,7 +708,7 @@ def box(env: dict) -> str:
   places:      {table: shelves, where: {enabled: true}, server_field: server, lease: strict}   # a shared shelf: strict
 ```
 
-Это строка `placement:` из `tests/testdata/testsub2.subsystem.yaml`: места — строки таблицы `shelves`, а `server_field` — поле строки, которое называет сервер, где место лежит (`lease: strict` — о месте, которое пишет любая коробка, при неподтверждённой аренде; весь ключ — урок 9, «Словарь спеки»). Из объявления и из строки места правило выводит три случая:
+Это строка `placement:` из `tests/testdata/testsub2.subsystem.yaml`: места — строки таблицы `shelves`, а `server_field` — поле строки, которое называет сервер, где место лежит (`lease: strict` — о месте, которое пишет любая коробка, при неподтверждённой аренде, и исполняет его сама база воркера: писать в такое место можно, пока удержание подтверждено не дольше `slot_ttl − lease_margin` назад (`may_write_place`; отсюда в захвате `_hold_confirmed` и запомненный сервер места), а прошло окно — шаг аренды спрашивает хранилище ещё раз и, не услышав «твоё», отпускает место (`_strict_place_pass`); подсистема только закрывает своего писателя в `leave_place`. Весь ключ — урок 9, «Словарь спеки»). Из объявления и из строки места правило выводит три случая:
 
 ```python
     def hold_follows_name(self, place: str, holder: str = "") -> bool:
