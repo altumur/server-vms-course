@@ -196,7 +196,7 @@ def test_a_cluster_that_is_in_a_domain_stays_shut_without_its_keys_after_a_resta
             assert code == 503 and mark in body["detail"], (mark, code, body)
         finally:
             srv.shutdown()
-    box.vars.as_writer("agent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
+    box.vars.as_writer("domainagent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
     assert not any(box.vars.get(p)[0] for p in DOMAIN_MARKS)
     ctl, rec, m, srv, base = _console(box)
     try:

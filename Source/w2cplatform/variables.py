@@ -254,12 +254,12 @@ def cas_pause(attempt: int, sleep=time.sleep) -> float:
 #                  row is a counter. Deleted, it starts again from 1, and `e1` is already the name of footage
 #                  and events somebody else wrote: two writers' files under one name, and a fencing token
 #                  that went backwards
-#   the domain     nobody but the domain's agent deletes `domain/*` (the review's third pass, Н-M2) — not a handle
-#                  with no writer either. Those rows are what makes a console ask who is calling: the key set gone
-#                  and the rows that say "a member" gone with it is a console as open as one nobody joined. The
-#                  agent itself replaces what it carries and deletes nothing; a store that cannot name its writer
-#                  (М11's, where the ACL is the server's) refuses the delete for everybody
-DOMAIN_WRITER = "agent"               # the domain agent's identity in a cluster's store (М12, `domain/agent.py`)
+#   the domain     nobody but the domain's own roles deletes `domain/*` (the review's third pass, Н-M2) — not a
+#                  handle with no writer either. Those rows are what makes a console ask who is calling: the key set
+#                  gone and the rows that say "a member" gone with it is a console as open as one nobody joined. A
+#                  store that cannot name its writer (М11's, where the ACL is the server's) refuses the delete for
+#                  everybody. The roles are the rights file's (`rights.DOMAIN_ROLES`: `domain`, `domainagent`), and
+#                  the pattern is asked by the same evaluator (`rights.allowed`), `!` denials first
 
 
 def epoch_row(path: str) -> bool:
@@ -270,12 +270,12 @@ def epoch_row(path: str) -> bool:
 def refuse_delete(path: str, writer: str | None, acl: dict) -> None:
     if epoch_row(path):
         raise Forbidden(f"{path} is an epoch: a counter nobody deletes")
-    if path.startswith("domain/") and writer != DOMAIN_WRITER:
-        raise Forbidden(f"{path} is the domain's: only its agent removes it")
-    if writer is not None and acl:
-        allowed = acl.get(writer, [])
-        if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
-            raise Forbidden(f"{writer} may not delete {path}")
+    from .rights import DOMAIN_ROLES, refusal
+    if path.startswith("domain/") and writer not in DOMAIN_ROLES:
+        raise Forbidden(f"{path} is the domain's: only its own roles remove it")
+    why = refusal(writer, acl, path, "delete")
+    if why:
+        raise Forbidden(why)
 
 
 class Corrupt(Exception):
@@ -456,10 +456,10 @@ class FileVariables:
     # way in, which is why callers such as `Assignment.from_items` and `Slot.from_items` parse ints, floats
     # and `"true"`/`"false"` back out.
     def put(self, path: str, items: dict, cas: int | None = None) -> int:
-        if self.writer is not None and self.acl:
-            allowed = self.acl.get(self.writer, [])
-            if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
-                raise Forbidden(f"{self.writer} may not write {path}")
+        from .rights import refusal                     # the platform's one evaluator: `!` denials first
+        why = refusal(self.writer, self.acl, path)
+        if why:
+            raise Forbidden(why)
         # Checked before the lock and before the write: an oversized row never half-lands, and the value
         # that is already there is still the value that is there.
         check(path, items_bytes(items), self.max_bytes)

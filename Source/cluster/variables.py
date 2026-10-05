@@ -52,10 +52,10 @@ class FakeVariables:
         return v
 
     def _acl(self, path):
-        if self.writer is not None and self.acl:
-            allowed = self.acl.get(self.writer, [])
-            if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
-                raise Forbidden(f"{self.writer} may not write {path}")
+        from w2cplatform.rights import refusal       # the platform's one evaluator: `!` denials first
+        why = refusal(self.writer, self.acl, path)
+        if why:
+            raise Forbidden(why)
 
     def get(self, path):
         safe_path(path)

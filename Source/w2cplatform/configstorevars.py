@@ -192,11 +192,10 @@ class ConfigstoreVariables:
         return got
 
     def _refuse(self, path: str) -> None:
-        if self.writer is None or not self.acl:
-            return
-        allowed = self.acl.get(self.writer, [])
-        if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
-            raise Forbidden(f"{self.writer} may not write {path}")
+        from .rights import refusal                  # the platform's one evaluator: `!` denials first (`rights.py`)
+        why = refusal(self.writer, self.acl, path)
+        if why:
+            raise Forbidden(why)
 
     # The same longest key `FileVariables` takes, refused the same way: a box's rows and a cluster's are one set.
     @staticmethod
