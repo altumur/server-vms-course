@@ -59,7 +59,7 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
         - `#recbox` — the unit's recordings, from `/rec/recordings` when the console mounts `rec`: one line per
     recording of this camera with the recorder's word on it (phase, worker, server) and *stop*, and
     `#recadd` — an archive to write to (empty: this box's disks) and days to keep.
-  - `#media` (only when `spec.media`) — a legend (recorded / fenced), `#timeline` (spans
+  - `#media` (only when a holder's door says spans: `media`) — a legend (recorded / fenced), `#timeline` (spans
       and ticks), `#axis` with `#t0`, `#t1` and the `#last24` / `#all` window buttons, `#note` (the
       cluster's `note`, e.g. unreachable servers), `#player` (`<video controls>`), `#playing` caption,
       `#livefeed` (the events arriving while watching live, newest first), `#evhead` (the events heading,
@@ -101,7 +101,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 ## Routes the page uses
 - `GET /spec`, `GET /<rows>`, `GET /metrics`, `GET /where/<id>` — the platform console.
 - `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
-- the holders' doors, only when `spec.media` (the boundary's step 6: the bytes do not go through the console): `GET
+- the holders' doors, only when one says spans (`media`; the boundary's step 6: the bytes do not go through the console): `GET
   <base>/where/<id>` → `door: {url, token, expires, routes}` for the unit and for every unit of a mounted subsystem
   ABOUT it whose spec declares `door: {routes}`; then `<url>/<route>/<id>` at the holder, the token as a header (a
   media element's `src`: `?t=`).
@@ -304,12 +304,13 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 // the spec has a bool field named `enabled`.
 const $ = s => document.querySelector(s);
 const fmt = t => new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 19) + 'Z';
-let spec = null, units = [], current = null, window_ = null, spans = [], queue = [], events = [], groups = [], evfilter = '';
+let spec = null, media = false, units = [], current = null, window_ = null, spans = [], queue = [], events = [], groups = [], evfilter = '';
 // Colours per subsystem, assigned in order of first sight — the page does not know which subsystems exist.
 const PALETTE = ['#c58a1a', '#8e44ad', '#2a9d5c', '#d35400', '#16a085', '#7f8c8d'];
 const palette = {};
 const subColor = sub => palette[sub] || (palette[sub] = PALETTE[Object.keys(palette).length % PALETTE.length]);
 const ROWS = () => '/' + spec.rows;
+const SPANS = 'timeline';                                          // the route of a door that says what it holds
 const REF = () => spec.name + '/' + current;   // the current unit as the platform names one: <sub>/<id>
 const label = u => u.name || (spec.id === 'numeric' ? spec.rows.replace(/s$/, '') + ' ' + u.id : String(u.id));
 const hasEnabled = () => spec.fields.some(f => f.name === 'enabled' && f.type === 'bool');
@@ -327,7 +328,8 @@ const raw = s => new Raw(String(s));
 
 // -- the spec: the page's only knowledge of the subsystem ------------------------------------
 // `GET /spec`. Sets the document title, the rows heading, the add note (numbered by the controller vs.
-// named by its `<id field>`), shows `#media` if `spec.media`, and renders the add form (every field but
+// named by its `<id field>`), shows `#media` if `media` — this unit's door, or the door of a subsystem about it, says
+// spans (`door.routes` has `SPANS`) — and renders the add form (every field but
 // `enabled`) and the edit form (every field but `enabled` and the id field) with `input()`. Shows `#toggle`
 // if `hasEnabled()`.
 async function loadSpec() {
@@ -337,8 +339,9 @@ async function loadSpec() {
   $('#title').textContent = 'Pick one';
   $('#addnote').textContent = spec.id === 'numeric' ? 'the controller numbers it and places it on the next pass'
                                                     : `named by its ${spec.id}; placed on the controller's next pass`;
-  $('#media').style.display = spec.media ? 'block' : 'none';
-  $('#live').style.display = spec.media ? '' : 'none';
+  media = !!(spec.door && spec.door.routes.includes(SPANS)) || (await subsAbout()).some(([, s]) => s.door.routes.includes(SPANS));
+  $('#media').style.display = media ? 'block' : 'none';
+  $('#live').style.display = media ? '' : 'none';
   $('#addfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled').map(f => input(f, true)).join('');
   $('#editfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled' && f.name !== spec.id).map(f => input(f, false)).join('');
   $('#toggle').style.display = hasEnabled() ? '' : 'none';
@@ -401,10 +404,10 @@ async function select(id) {
   // takes an epoch and writes events like anything else), and the honest way to find out is to look for
   // the address a viewer would dial.
   const streams = !!c.live_url;
-  $('#live').style.display = spec.media && streams ? '' : 'none';
-  $('#media').style.display = spec.media && streams ? 'block' : 'none';
+  $('#live').style.display = media && streams ? '' : 'none';
+  $('#media').style.display = media && streams ? 'block' : 'none';
   loadDets(); loadAutos(); loadRec(streams);
-  if (spec.media && streams) await loadTimeline();
+  if (media && streams) await loadTimeline();
 }
 
 // -- the holders' doors (the boundary's step 6: what a unit's holder serves, it serves the page itself) ----
@@ -438,7 +441,6 @@ async function freshDoor(m) {                                         // a span'
 async function loadTimeline() {
   const now = Date.now() / 1000;
   const [from, to] = window_ || [0, 1e12];
-  const SPANS = 'timeline';                                        // the route of a door that says what it holds
   const raw = [], notes = [], asks = [];
   const ask = async (base, id) => {
     const door = await doorOf(base, id);
@@ -518,7 +520,7 @@ async function fetchEvents(from, to) {
 // Re-fetches the events for the current window and redraws ticks and list — every 5 s while a unit is
 // selected, so a detector's line crossed a moment ago is on the timeline within one tail of the resource.
 async function loadEvents() {
-  if (!current || !spec.media) return;
+  if (!current || !media) return;
   const [from, to] = window_ || [0, 1e12];
   await fetchEvents(from, to);
   drawEvents();
@@ -625,7 +627,7 @@ $('#toggle').onclick = async () => {
 };
 $('#del').onclick = async () => {
   const c = units.find(x => x.id === current); if (!c) return;
-  if (!confirm(`Delete ${label(c)}?${spec.media ? ' Its recordings are not deleted with it: their footage stays in its volumes until the ring overwrites it.' : ''}`)) return;
+  if (!confirm(`Delete ${label(c)}?${media ? ' Its recordings are not deleted with it: their footage stays in its volumes until the ring overwrites it.' : ''}`)) return;
   try { await send('DELETE', `${ROWS()}/${encodeURIComponent(current)}`); current = null; $('#edit').style.display = 'none'; $('#title').textContent = 'Pick one'; $('#meta').textContent = ''; $('#timeline').innerHTML = ''; await loadUnits(); }
   catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
 };

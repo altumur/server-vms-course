@@ -2042,7 +2042,7 @@ class Worker:
         self.schema_seen = check_schema(vars_)    # a build older than the store does not run at all; kept for `renew_slot`
         self.clock, self.wall = clock, wall
         self.lease_ttl, self.lease_margin = lease_ttl, lease_margin
-        # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_record`).
+        # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_write`).
         # 0: not at all — every subsystem's default. A subsystem whose units write data sets it: `None` is
         # "for as long as the silence lasts".
         self.unconfirmed_max: float | None = 0.0
@@ -2407,7 +2407,7 @@ class Worker:
     def journal(self) -> Journal:
         j = self.__dict__.get("_journal")
         if j is None:
-            j = self.__dict__["_journal"] = Journal(getattr(self, "archive_root", None), f"{self.sub.name}worker", self.wall)
+            j = self.__dict__["_journal"] = Journal(getattr(self, "resource_root", None), f"{self.sub.name}worker", self.wall)
         return j
 
     @journal.setter
@@ -2753,14 +2753,14 @@ class Worker:
         self.epochs.clear()
 
     # The unit's lease says so, and there is one.
+    def may_act(self, unit: str) -> bool:
+        lease = self.leases.get(unit)
+        return lease is not None and lease.may_act()
+
+    # The wider question, for data: also a lease that ran out while the store was silent (`Lease.may_write`).
     def may_write(self, unit: str) -> bool:
         lease = self.leases.get(unit)
         return lease is not None and lease.may_write()
-
-    # The wider question, for data: also a lease that ran out while the store was silent (`Lease.may_record`).
-    def may_record(self, unit: str) -> bool:
-        lease = self.leases.get(unit)
-        return lease is not None and lease.may_record()
 
     # Units written past their lease's end, unconfirmed: `{unit: seconds}`.
     def unconfirmed(self) -> dict[str, float]:
@@ -2779,7 +2779,7 @@ class Worker:
     # NOBODY UNTIL IT HAS ONE (the review's fifth pass, blocker 3). The claim that follows can fail — the store blinks,
     # every candidate is taken under it — and the worker was left with no slot and the OLD name: `renew_slot` with no
     # slot said "still me", the stand-in renewed for it, the next pass read the other instance's assignment and took
-    # epochs on its units with `may_write` true, and its heartbeat went out over the legitimate one. Two processes took
+    # epochs on its units with `may_act` true, and its heartbeat went out over the legitimate one. Two processes took
     # the same units in turn, until a restart. Now a name given up is `seeking` until another is claimed, and
     # while it is the instance is fenced: `renew_slot` says no (so the stand-in renews nothing), `may_stand_in` says no,
     # `take_epoch` raises `NoSlot`, the assignment it reads is empty and no heartbeat goes out under the name. Every
@@ -3193,6 +3193,8 @@ class Worker:
         # second is for the person looking at a half-upgraded cluster.
         extra.setdefault("schema", SCHEMA)
         extra.setdefault("build", BUILD)
+        # …and `pending_writes`: what a drain waits for besides the units (`SpecConsole.drain_state`, `safe`)
+        extra.setdefault("pending_writes", self.pending_writes())
         if self.stand_in_renewals:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
         # Rows of this subsystem this process could not read, by table (`rows.Table`): `slots_garbled` (`read_slot`),
@@ -3222,6 +3224,13 @@ class Worker:
 
     def row_parsed(self, unit) -> None:
         self.__dict__.get("_rows_garbled_said", set()).discard(str(unit))
+
+    # WRITES THIS PROCESS HOLDS AND HAS NOT MADE DURABLE (§2.5 of the boundary note): a buffer on this machine's disk
+    # that would go with the machine. A drain is `safe` only when every worker of the server says 0 here. 0 by
+    # default: a worker that writes through to a store it does not hold has nothing pending; one with a buffer says
+    # how deep it is.
+    def pending_writes(self) -> int:
+        return 0
 
     # what a subsystem implements
     # Abstract: what a subsystem implements (one subsystem's is М9 Lesson 6's loop).

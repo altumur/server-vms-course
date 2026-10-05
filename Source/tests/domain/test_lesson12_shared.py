@@ -7,7 +7,7 @@ into that member's own durable store, where the member reads them with the domai
 """
 import json
 
-from cluster.variables import Conflict, FakeVariables
+from w2cplatform.cluster.variables import Conflict, FakeVariables
 from w2cplatform.variables import items_bytes
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher

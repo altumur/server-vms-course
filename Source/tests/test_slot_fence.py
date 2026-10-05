@@ -3,7 +3,7 @@
 `keep_slot` reads a slot row naming another instance, lets its units go and claims a free slot. When that claim
 failed — the store blinked, every candidate was taken under it — the worker was left with no slot and its OLD
 name: `renew_slot` with no slot said "still me", the stand-in renewed for it, the next pass read the other
-instance's assignment, took new epochs on its units with `may_write` true, and the heartbeat under that name was
+instance's assignment, took new epochs on its units with `may_act` true, and the heartbeat under that name was
 written over the legitimate one. Two processes took the same detectors in turn, until a restart.
 
 Now, while there is no slot, the instance is fenced: `renew_slot` says no, the stand-in does not stand in, no epoch
@@ -97,7 +97,7 @@ def test_a_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_
         assert w.name == was and w.renew_slot() is True and w.may_stand_in() is True, kind
         assert w.assignment().units == ["u", "v"], kind                # its own name's list, read again — as its next pass does
         w.take_epoch("v")
-        assert "v" in w.epochs and w.may_write("v"), kind
+        assert "v" in w.epochs and w.may_act("v"), kind
 
 
 def test_the_detector_and_the_gateway_with_no_slot_run_nothing_of_the_name_they_gave_up():
@@ -148,7 +148,7 @@ def _holders(box):
     return [_holder(box), recorder(box, "r-1", "srv-1"),
             CardRecorder("r-9", box.vars.as_writer("recworker-r-9", REC_ACL), box.objects, ring,
                          CardActuator(ring, threaded=False), clock=box.clock, wall=box.wall, server="cam-9",
-                         archive_root=tempfile.mkdtemp(prefix="cam-"), env={})]
+                         resource_root=tempfile.mkdtemp(prefix="cam-"), env={})]
 
 
 def _one_turn():
@@ -330,7 +330,7 @@ def test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names():
     assert w.lease_pass() == [] and w.recording_allowed and w.seeking is None
     row = Slot.from_items("w-1", box.vars.get("vms/slots/w-1")[0])      # parses again: the renewal wrote it whole
     assert row.holder == w.instance and not row.released and row.until > box.wall()
-    assert w.may_write("1") and w.renew_slot() is True
+    assert w.may_act("1") and w.renew_slot() is True
 
     try:                                                                # "somebody": whose box, the row does not say
         _holder(box, name="w-9", instance="other:9")

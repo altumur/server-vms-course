@@ -7,7 +7,7 @@ the report its agent leaves in the domain holder (step 7). What IS special is sm
 wears, and a box that is rebooted whole, which makes the order of its boot a correctness question — for the
 site that reads its door, and for the domain that reads its report.
 """
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.api import ConsoleAPI

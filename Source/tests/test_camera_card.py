@@ -636,7 +636,7 @@ def _camera(card_dir=None, when="offline", budget=64 << 20):
     ring = CamRing(clock=box.wall)
     act = CardActuator(ring, threaded=False)
     rec = CardRecorder("r-1", box.vars.as_writer("recworker-r-1", REC_ACL), box.objects, ring, act, clock=box.clock,
-                       wall=box.wall, server="srv-1", archive_root=box.archive, env={})
+                       wall=box.wall, server="srv-1", resource_root=box.archive, env={})
     rec.lease_pass(); rec.heartbeat_once()
     rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     rec_ctl.ensure_placed()
@@ -682,7 +682,7 @@ def test_a_network_volume_declared_in_the_cameras_cluster_does_not_take_the_came
     assert volumes.holders(box.vars, REC_SPEC.sub)["card"].by == "r-1"
     other = CardRecorder("r-2", box.vars.as_writer("recworker-r-2", REC_ACL), box.objects, ring,
                          CardActuator(ring, threaded=False), clock=box.clock, wall=box.wall, server="srv-1",
-                         archive_root=box.archive, env={})
+                         resource_root=box.archive, env={})
     other.lease_pass()
     assert other.hold is None and other.capacity == 0 and rec.hold == "card"
 
@@ -1075,7 +1075,7 @@ def _room_and_camera():
     ring = CamRing(clock=box.wall)
     act = CardActuator(ring, threaded=False)
     cam = CardRecorder("r-c", box.vars.as_writer("recworker-r-c", REC_ACL), box.objects, ring, act, clock=box.clock,
-                       wall=box.wall, server="cam-1", archive_root=box.archive, env={})
+                       wall=box.wall, server="cam-1", resource_root=box.archive, env={})
     cam.lease_pass(); cam.heartbeat_once()
     SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects,
                    wall=box.wall).ensure_placed()

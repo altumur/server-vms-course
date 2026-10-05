@@ -1,6 +1,6 @@
 """Volumes an operator declares, and the recorders that take them.
 
-A volume used to be deployment — a directory, an `ARCHIVE` in a unit file, one
+A volume used to be deployment — a directory, an `RESOURCE_ROOT` in a unit file, one
 instance per disk. A network archive cannot be that: it is created in the
 console, and no unit file is edited for it. So it is a row (`rec/volumes/<name>`)
 and a hold (`rec/holds/<name>`), and these tests are about the seam between the

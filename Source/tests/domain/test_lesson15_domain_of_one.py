@@ -11,7 +11,7 @@ being replaced steps down instead of splitting the site in two.
 """
 import json
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.api import ApiError, ConsoleAPI

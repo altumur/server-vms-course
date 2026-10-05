@@ -8,7 +8,7 @@ and the ingest it polls says whether it is alive; and the domain keeps what it r
 """
 import json
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent
 from vms.domainpart.ingest import POLLED

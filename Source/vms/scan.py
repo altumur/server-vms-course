@@ -240,8 +240,8 @@ class ScanLog:
     starting again; and on the resource rather than in a row, because a worker's
     ACL is `[<name>/epoch/*, <name>/slots/*]` — it may not write configuration."""
 
-    def __init__(self, archive_root: str, job):
-        self.path = os.path.join(unit_dir(archive_root, SUB, str(job)), PROGRESS)
+    def __init__(self, resource_root: str, job):
+        self.path = os.path.join(unit_dir(resource_root, SUB, str(job)), PROGRESS)
 
     def append(self, scan: Scan, events: int, at: float) -> None:
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
@@ -348,8 +348,8 @@ class Frontier:
     # `sub` because the sixth subsystem keeps the same shape of number for the same reason: how far it has
     # READ. The survey's watched-through and the evaluator's considered-through are one idea, and one idea
     # gets one file format — the default keeps every survey written before this call site unchanged.
-    def __init__(self, archive_root: str, unit, sub: str = SURVEY):
-        self.path = os.path.join(unit_dir(archive_root, sub, str(unit)), "frontier.json")
+    def __init__(self, resource_root: str, unit, sub: str = SURVEY):
+        self.path = os.path.join(unit_dir(resource_root, sub, str(unit)), "frontier.json")
 
     def read(self) -> float | None:
         try:

@@ -1193,6 +1193,7 @@ def test_a_process_reads_platform_store_and_no_other_name():
     assert store_url({"CONFIG_URL": "file:///data/c"}) is None
     assert store_url({"CONFIG_URL": "file:///data/c"}, "file:///data/platform/config") == "file:///data/platform/config"
     assert store_url({"PLATFORM_STORE": "", "CONFIG_URL": "memory://x"}, "file:///d") == "file:///d"
-    entry = os.path.join(os.path.dirname(HERE), "vms", "__main__.py")      # the process entry: the same function
-    src = open(entry, encoding="utf-8").read()
-    assert "store_url(os.environ" in src and "CONFIG_URL" not in src
+    stores = open(os.path.join(os.path.dirname(HERE), "w2cplatform", "host.py"), encoding="utf-8").read()
+    assert "store_url(env" in stores and "CONFIG_URL" not in stores          # every process's stores: the same function
+    entry = open(os.path.join(os.path.dirname(HERE), "vms", "__main__.py"), encoding="utf-8").read()
+    assert "host.stores(os.environ" in entry and "CONFIG_URL" not in entry   # …the subsystem's processes open them there

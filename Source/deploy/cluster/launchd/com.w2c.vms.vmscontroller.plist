@@ -11,6 +11,7 @@
 	<array>
 		<string>__BOX__/bin/w2c-run.sh</string>
 		<string>controller</string>
+		<string>vms</string>
 	</array>
 	<key>EnvironmentVariables</key>
 	<dict>

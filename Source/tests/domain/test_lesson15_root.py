@@ -6,7 +6,7 @@ domain itself, by a holder record with a larger term. So the key that decides wh
 holder: the root is in the recovery file, and signs the key set, the holder record and the holder's issuing
 certificate. The holder keeps what signs every minute; a theft is answered by a move that drops those keys.
 """
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import LDEVID_PATH, ROOT_PATH, ClusterTrust, DomainAgent, DomainPublisher
 from vms.domainpart.device import DeviceCluster

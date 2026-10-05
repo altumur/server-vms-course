@@ -4,7 +4,7 @@ nothing else; grants are cluster-local with expiry; the revocation window
 is stated then measured; break-glass is one account, audited."""
 import json
 
-from cluster.variables import Forbidden
+from w2cplatform.cluster.variables import Forbidden
 from w2cplatform.domain.agent import KEYS_PATH, DomainAgent, DomainPublisher, ClusterTrust
 from w2cplatform.domain.grants import GRANT_LIFETIME, ClusterAuthoriser, ClusterGrants, Grant, revocation_window
 from w2cplatform.domain.identity import TOKEN_LIFETIME, AuthError, BreakGlass, IdentityStore
@@ -73,7 +73,7 @@ def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_whe
     import tempfile
     import urllib.error
     import urllib.request
-    from cluster.objectstore import FsObjectStore
+    from w2cplatform.cluster.objectstore import FsObjectStore
     from w2cplatform.domain.agent import MEMBER_PATH
     from vms.console import make_console
     from vms.controller import VmsController
@@ -214,7 +214,7 @@ def test_identity_publishes_object_first_then_pointer_and_restores_elsewhere():
 
 
 def test_prefs_are_objects_and_a_stale_tab_is_told():
-    from cluster.variables import Conflict
+    from w2cplatform.cluster.variables import Conflict
     clk = Clock(1000.0)
     fed, _, dc, signer = _domain(clk)
     ids = IdentityStore(signer, dc.vars, dc.objects, now=clk)

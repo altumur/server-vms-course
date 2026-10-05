@@ -156,7 +156,7 @@ def test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it():
     ctl = VmsController(box.vars, box.objects, wall=box.wall)
     ctl.create_camera({"source": "driverpack://file/1.mp4"}); ctl.assign("w-1", ["1"])
     act = FakeActuator()
-    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
     w.reconcile_once()
     t = box.wall()
     act.post(1, "io.input", port="1", occurred=t - 50)                 # the device said when the contact closed

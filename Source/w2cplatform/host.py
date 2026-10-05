@@ -16,7 +16,7 @@ that builds them from a directory of specs (`python3 -m w2cplatform`, `__main__.
     CONSOLE_HOST, CONSOLE_PORT   console: what it binds (`CONSOLE_UNIX`, `DOOR_KEY`, `SECRETS_KEY`: the console's own)
 
 The loops were a subsystem's (its `__main__`: the controller's loop, the blob sweep's, the resource's; and again in
-М11's `cluster/__main__.py`), and the platform ran only as a library under its `__main__`. They are here, once; a
+М11's own entry point), and the platform ran only as a library under its `__main__`. They are here, once; a
 subsystem's process that still needs code of its own around them — a controller with a rule of its own, a console with
 routes of its own, a resource that keeps what the subsystem says (the hooks, the boundary's step 6) — runs these same
 loops over the objects it builds.
@@ -41,8 +41,8 @@ loops over the objects it builds.
 # - `every(turn, seconds)` — a turn of a console's housekeeping, run every so often, each turn in a try of its own.
 # - `run_resource(res, srv)` — a resource's life: a heartbeat at the start, the beat on its own thread, restore, and the
 #   loop — a heartbeat every 10 s, the policy pass every 600 s, what the restore left asked again.
-# - `box_stores(env, writer, acl)` — a box's two stores: the store by `PLATFORM_STORE` (else the file store under
-#   `PLATFORM_DIR`), the objects as files under it.
+# - `stores(env, writer, acl)` — a process's two stores: the store by `PLATFORM_STORE` (else the file store under
+#   `PLATFORM_DIR`), the objects by `OBJECTS` (else files under it) — a box's and a cluster's alike.
 # - `console(env)` — the console of every spec in `SPEC_DIR` (the boundary's step 6: it was a subsystem's verb, with
 #   routes of its own): `CONSOLE_ROOT` at `/`, the others mounted by name, one token — every spec's console grant — one
 #   journal, the rows sealed that were written before a key, and the blob sweep.
@@ -172,28 +172,32 @@ def run_resource(res, srv, every: float = 10.0, policy_every: float = 600.0) -> 
         srv.shutdown()
 
 
-# A box's two stores: the store by URL (`PLATFORM_STORE`; the file store under `PLATFORM_DIR` when it says none), opened
-# with the role's writer and its grant, and the objects as files under the same root.
-def box_stores(env: dict, writer: str | None = None, acl: list | None = None):
+# A process's two stores: the store by URL (`PLATFORM_STORE`; the file store under `PLATFORM_DIR` when it says none), opened
+# with the role's writer and its grant, and the objects by URL (`OBJECTS`: a cluster's `cluster://`, a rented one's
+# `s3+http://`, `cluster.objectstore.open_store`) or, when it says none, as files under the same root — a box's.
+def stores(env: dict, writer: str | None = None, acl: list | None = None):
     from .objects import FsObjectStore
     from .variables import open_vars, store_url
     root = runtime.platform_dir(env)
     url = store_url(env, "file://" + os.path.join(root, "config"))
     vars_ = open_vars(url, writer=writer, acl={writer: acl} if writer else None) if writer else open_vars(url)
+    if env.get("OBJECTS"):
+        from .cluster.objectstore import open_store
+        return vars_, open_store(env["OBJECTS"], vars_=vars_)    # the create-only keys: rows in THIS store, its rights
     return vars_, FsObjectStore(os.path.join(root, "objects"))
 
 
-def controller(name: str, env: dict) -> None:
+def controller(name: str, env: dict, journal: bool = True) -> None:
     from .spec import SpecController
     spec = catalog.spec(name, env)
-    vars_, objects = box_stores(env, f"{spec.name}controller", spec.acl_controller())
+    vars_, objects = stores(env, f"{spec.name}controller", spec.acl_controller())
     log.info("controller of %s, from %s", spec.name, env.get(catalog.SPEC_DIR))
-    controller_loop(SpecController(spec, vars_, objects), env)
+    controller_loop(SpecController(spec, vars_, objects), env, journal=journal)
 
 
 def resource(env: dict) -> None:
     from .resource import platform_resource, serve
-    vars_, objects = box_stores(env)
+    vars_, objects = stores(env)
     host, port = env.get("RESOURCE_HOST", "127.0.0.1"), int(env.get("RESOURCE_PORT", "8090"))
     res = platform_resource(runtime.events_root(env), runtime.server(env), env.get("RESOURCE_URL", f"http://{host}:{port}"),
                             vars_, objects)
@@ -205,10 +209,23 @@ def resource(env: dict) -> None:
 # `SPEC_DIR` is mounted under its name; one store token — the console grant of every spec (`acl_console`) — one journal,
 # one index (the resources', merged). Rows written before this console had a key are sealed now, not at their next write
 # (feedback CD): every spec's rows, and its tables that keep a secret. The blob sweep is the console's (the ACL says so).
-def build_console(env: dict):
-    """The console's `Mount` and its controllers, from `SPEC_DIR` and `CONSOLE_ROOT` — not served yet."""
+def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, index=None, wall=None, worst_failover: float = 0.0):
+    """The console's `Mount` over controllers already built (`{sub: SpecController}`): `root_name` at `/`, every other
+    under its name; one journal (the root's), one index — the resources', merged — for every mount."""
     from .console import Mount, SpecConsole
     from .eventdatabase import MergedIndex
+    root_ctl = ctls[root_name]
+    index = index or MergedIndex(root_ctl.objects, wall=wall or root_ctl.wall)
+    m = Mount(SpecConsole(root_ctl, marks_root=marks_root, index=index, wall=wall, worst_failover=worst_failover))
+    for n, c in ctls.items():
+        if n != root_name:
+            m.mount(n, SpecConsole(c, index=index, wall=wall))
+            m.mounts[n].journal = m.root.journal                  # one journal for the process
+    return m
+
+
+def build_console(env: dict):
+    """The console's `Mount` and its controllers, from `SPEC_DIR` and `CONSOLE_ROOT` — not served yet."""
     from .sealing import Sealer, seal_stored
     from .secrets import is_secret_field
     from .spec import SpecController
@@ -217,16 +234,9 @@ def build_console(env: dict):
     if root_name not in specs:
         raise ValueError(f"CONSOLE_ROOT={root_name!r} names no spec of {env.get(catalog.SPEC_DIR)} "
                          f"({', '.join(sorted(specs))}): the subsystem at `/` is the deployment's to say")
-    vars_, objects = box_stores(env, "console", [a for s in specs.values() for a in s.acl_console()])
+    vars_, objects = stores(env, "console", [a for s in specs.values() for a in s.acl_console()])
     ctls = {n: SpecController(s, vars_, objects) for n, s in specs.items()}
-    index = MergedIndex(objects)
-    media = any(s.door_routes for s in specs.values())              # something a holder serves a page: the player is drawn
-    root = SpecConsole(ctls[root_name], marks_root=runtime.events_root(env), media=media, index=index)
-    m = Mount(root)
-    for n, c in ctls.items():
-        if n != root_name:
-            m.mount(n, SpecConsole(c, index=index))
-            m.mounts[n].journal = root.journal                    # one journal for the process
+    m = spec_console(ctls, root_name, runtime.events_root(env))
     seal_stored(Sealer.from_env(env), vars_,
                 [s.sub.config(s.rows, "") for s in specs.values()]
                 + [s.sub.config(t, "") for s in specs.values() for t, ts in s.table_specs.items()

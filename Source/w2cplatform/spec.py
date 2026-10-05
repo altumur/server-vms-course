@@ -509,6 +509,30 @@ def _object_rows(name, objects) -> tuple:
     return tuple(out)
 
 
+# `worker: {writes: [<table>], reads: [<key>], requests: [<sub>]}` — what this subsystem's WORKER may touch beyond its
+# epochs, its slot and its place (`Subsystem.acl_worker`): rows of its own tables it writes (what it found a thing to
+# be — a discovery, not a decision), keys of the store outside its subsystem it reads, and the subsystems whose
+# request rows it files. What the role of every process is comes from the specs (§3 row 8 of the boundary note): the
+# box's tokens (`SubsystemSpec.acl_worker_role`) and the cluster's rights file (`w2cplatform/cluster/rights.py`) alike.
+def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
+    if worker is None:
+        return (), (), ()
+    if not isinstance(worker, dict) or set(worker) - {"writes", "reads", "requests"} \
+            or any(not isinstance(worker.get(k, []), list) for k in worker):
+        raise ValueError(f"spec {name}: `worker:` is {{writes: [<table>], reads: [<key>], requests: [<sub>]}}, "
+                         f"not {worker!r}")
+    word = re.compile(r"[a-z][a-z0-9_]*")
+    for k in ("writes", "requests"):
+        bad = [x for x in worker.get(k) or [] if not word.fullmatch(str(x))]
+        if bad:
+            raise ValueError(f"spec {name}: worker.{k} takes names, not {bad}")
+    bad = [x for x in worker.get("reads") or [] if not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+", str(x))]
+    if bad:
+        raise ValueError(f"spec {name}: worker.reads takes keys of the store (`<family>/<name>`), not {bad}")
+    return tuple(map(str, worker.get("writes") or ())), tuple(map(str, worker.get("reads") or ())), \
+        tuple(map(str, worker.get("requests") or ()))
+
+
 # The parsed YAML. Fields: `name`; `rows` (`"units"`; the VMS says `cameras`); `id` (`"numeric"` or a field
 # name); `fields`; `derived`; `capacity_from` / `capacity_default` (heartbeat key for a worker's capacity,
 # and the number for a worker that said nothing); `headroom_from`; `constraint`; `tie_break` (only
@@ -796,6 +820,10 @@ class SubsystemSpec:
     # (`runtime.slot`). It was each worker's class saying it.
     slot_prefix: str = "w"
     slot_name_env: str = "WORKER_NAME"
+    # `worker: {writes, reads, requests}` (`_worker`)
+    worker_writes: tuple = ()
+    worker_reads: tuple = ()
+    worker_requests: tuple = ()
     # `metrics: [...]` — the subsystem's own numbers on `/metrics`, declared (`metrics.py`; the boundary's step 6 — it
     # was a function of the subsystem's the console called, `metrics_extra`).
     metrics: list = field(default_factory=list)
@@ -853,6 +881,7 @@ class SubsystemSpec:
         declared = d.get("snapshot")
         cap = pl.get("capacity")
         slot = _slot(d.get("name"), d.get("slot"))
+        worker = _worker(d.get("name"), d.get("worker"))
         spec = cls(name=d["name"], rows=unit.get("rows", "units"), id=str(unit.get("id", "numeric")), fields=fields,
                    derived=derived,
                    headroom_from=(pl.get("headroom", {}) or {}).get("from", "headroom"),
@@ -877,7 +906,8 @@ class SubsystemSpec:
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}),
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
-                   slot_prefix=slot[0], slot_name_env=slot[1])
+                   slot_prefix=slot[0], slot_name_env=slot[1],
+                   worker_writes=worker[0], worker_reads=worker[1], worker_requests=worker[2])
         spec._about_and_rights(d)
         spec._placement_words(pl)
         spec._page_words(d)
@@ -1199,6 +1229,13 @@ class SubsystemSpec:
             out.append(f"{self.name}/{d.row.split('/')[0]}/*")
         out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `rec/volumes/*`
         return out
+
+    # What a worker of this subsystem may write: its epochs, its slot and its place, the rows of its own tables its spec
+    # says it writes (`worker.writes`), and the request rows of the subsystems it files to (`worker.requests`).
+    def acl_worker_role(self) -> list[str]:
+        from .contract import requests_acl
+        return (self.sub.acl_worker() + [self.sub.config(t, "*") for t in self.worker_writes]
+                + requests_acl(*self.worker_requests))
 
     # Placement: `<name>/workers/*`, `<name>/placement/*`, `<name>/slots/*` — never a unit's row. The
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the

@@ -76,7 +76,7 @@ class DetJobWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
-                 archive_root: str | None = None, env: dict | None = None, step: float | None = None):
+                 resource_root: str | None = None, env: dict | None = None, step: float | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(DETJOB, None, vars_, objects, clock=clock, wall=wall)
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, DETJOB_SPEC.slot_name_env, DETJOB_SPEC.slot_prefix))
@@ -84,7 +84,7 @@ class DetJobWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("SCAN_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = runtime.events_root(env, archive_root)
+        self.resource_root = runtime.events_root(env, resource_root)
         self.step = self.STEP if step is None else float(step)
         self.lag = float(env.get("VISIBLE_LAG_SECONDS", "600"))   # how far behind the visible footage runs: a block's worth
         self.wait_max = float(env.get("SCAN_WAIT_SECONDS", self.WAIT_MAX))
@@ -164,7 +164,7 @@ class DetJobWorker(Worker):
             # while a door was silent or a volume unread — it waits for them, and says which (`missing`).
             read = recording_read(self.objects, row["rec"], row["from"], max(row["to"], now) + self.lag, self.wall(),
                                   vars_=self.vars, eyes=self.eyes)   # the doors live by change (r29-writers2)
-            log_ = ScanLog(self.archive_root, job)
+            log_ = ScanLog(self.resource_root, job)
             if not read.answered:
                 self._stop(job)
                 self.status_by_unit[job] = self._status(job, row, "waiting", log=log_,
@@ -245,11 +245,11 @@ class DetJobWorker(Worker):
                     continue
             if model is None:
                 model = self.running[job] = self.models[row["kind"]](row)
-            if self.may_write(job):
+            if self.may_act(job):
                 for sc in left[:self.STRETCHES_PER_PASS]:
                     n = 0
                     for ts, kind, fields in self._stretch(model, sc):
-                        EventLog(self.archive_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
+                        EventLog(self.resource_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
                             ts, kind, cam=_cam(row["cam"]), job=job, source="archive", **fields)
                         n += 1
                     log_.append(sc, n, self.wall())         # the line AFTER the events: a crash costs one re-scan
@@ -277,9 +277,9 @@ class DetJobWorker(Worker):
             why_not = self._take_epoch(job) if job not in self.epochs else ""
             if why_not:
                 return self._status(job, row, "failed", scans=scans, log=log_, why=why_not)
-            if not self.may_write(job):
+            if not self.may_act(job):
                 return self._status(job, row, "waiting", scans=scans, log=log_, why=why + "; ".join(missing))
-            EventLog(self.archive_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
+            EventLog(self.resource_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
                 float(row["from"]), "scan.partial", cam=_cam(row["cam"]), job=job, source="archive", missing=list(missing),
                 waited=round(self.wall() - waited["since"]))
             partial = log_.wait(self.wall(), partial=missing)["partial"]

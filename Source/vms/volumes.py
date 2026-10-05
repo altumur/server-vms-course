@@ -6,7 +6,7 @@ administrator's list, and the claim that makes one of them served."""
 # # volumes.py — a volume is a PLACE, declared by the operator and served by whoever takes it
 #
 # **Role in the module.** Until now the archives a box could write into were deployment: a directory per
-# disk, an `ARCHIVE` in the unit file, an instance per volume. That works while a volume is a disk somebody
+# disk, an `RESOURCE_ROOT` in the unit file, an instance per volume. That works while a volume is a disk somebody
 # screwed into a rack. It stops working the day a volume is a bucket: the operator creates it in the
 # console, and nobody is going to edit a systemd unit for it.
 #

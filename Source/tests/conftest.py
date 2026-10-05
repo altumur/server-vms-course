@@ -243,7 +243,7 @@ def recorder(box, name: str = "r-1", server: str = "srv-1", actuator=None, acl=N
     if kw.get("obsd") is None:
         kw["obsd"] = obsd_session(f"rec-{name}")
     return RecWorker(name, vars_, box.objects, actuator or FakeActuator(), clock=box.clock, wall=box.wall, server=server,
-                     archive_root=box.archive, block=TEST_BLOCK, read=TEST_READ, **kw)
+                     resource_root=box.archive, block=TEST_BLOCK, read=TEST_READ, **kw)
 
 
 def store(name: str = "vol", quota: int = TEST_QUOTA, path: str | None = None, owner: str | None = None):

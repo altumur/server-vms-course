@@ -11,7 +11,7 @@ import json
 import urllib.error
 import urllib.request
 
-from cluster.variables import Conflict, FakeVariables
+from w2cplatform.cluster.variables import Conflict, FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
 from w2cplatform.domain.api import ApiError, ConsoleAPI

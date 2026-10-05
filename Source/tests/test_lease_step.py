@@ -67,7 +67,7 @@ def _worker(at: float, pause: float):
     box, ctl = _box_with_cameras(2)
     ctl.assign("w-1", ["1", "2"])
     store = _Pausing(box.vars, box, box.clock() + at, pause)
-    w = VmsWorker("w-1", store, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w = VmsWorker("w-1", store, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, resource_root=box.archive)
     w.reconcile_once()
     assert sorted(w.leases) == ["1", "2"]
     for stub in ("reconcile_once", "pump_once", "heartbeat_once", "beat_once"):   # only the lease step talks to the store
@@ -109,7 +109,7 @@ def _old_loop(box, w, turns: int):
 def test_the_next_lease_step_counts_from_the_start_of_the_last_and_a_step_unanswered_is_tried_again_at_the_next_look():
     """The prototype's worst case: the pause begins as a lease step does, and lasts `P = 9.6 s` — longer than a call
     waits (`D = 4.5 s`), so the step's first calls fail. Before the fix the leases went `≈ 2T + P` without a
-    confirmation — about 30 s, past the 25 s window (`may_write` false for seconds; the prototype measured 29.7). After
+    confirmation — about 30 s, past the 25 s window (`may_act` false for seconds; the prototype measured 29.7). After
     it `≈ T + P + poll` — about 22 s, inside. The same pause, the same store, the same worker; only the loop differs."""
     window, P = 25.0, 9.6
     box, w = _worker(at=20.0, pause=P)               # steps at 0, 10, 20: the pause begins with the third

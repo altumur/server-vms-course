@@ -9,7 +9,7 @@ summary object.
 """
 import json
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
 from vms.domainpart.chain import Forwarder, publish_upstream

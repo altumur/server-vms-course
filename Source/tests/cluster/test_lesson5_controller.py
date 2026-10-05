@@ -4,9 +4,9 @@ leaves the cluster, and the console over real HTTP."""
 import json
 import threading
 import urllib.request
-from cluster.console import serve
-from cluster.controller import ClusterController
-from cluster.directory import Directory
+from vms.controller import VmsController
+from w2cplatform.host import spec_console
+from w2cplatform.cluster.directory import Directory
 from tests.cluster.conftest import Cluster
 
 A, B, C = "w-srv-a-1", "w-srv-b-1", "w-srv-c-1"      # one worker's unit on each server: `WORKER_NAME=w-%l-1`
@@ -19,7 +19,7 @@ def _three_workers(c, ctl):
 
 
 def test_placement_under_label_constraints():
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=10, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, capacity=10, wall=c.wall)
     _three_workers(c, ctl)
     a = ctl.create_camera({"source": "driverpack://file/a.mp4", "labels": ["vlan:cctv-a"]})
     b = ctl.create_camera({"source": "driverpack://file/b.mp4", "labels": ["vlan:cctv-b"]})
@@ -32,7 +32,7 @@ def test_placement_under_label_constraints():
 
 
 def test_adding_a_worker_moves_nothing_even_with_constraints():
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=2, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, capacity=2, wall=c.wall)
     c.worker("srv-a", capacity=2).heartbeat_once()
     for i in range(3):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4", "labels": ["vlan:cctv-a"]})
@@ -43,31 +43,31 @@ def test_adding_a_worker_moves_nothing_even_with_constraints():
 
 
 def test_where_is_camera_7_in_one_scan():
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     _three_workers(c, ctl)
     for i in range(9):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     ctl.ensure_placed()
-    d = Directory(c.vars, ttl=5.0, clock=c.clock)
+    d = Directory(c.vars, "vms", ttl=5.0, clock=c.clock)
     assert d.where(7) == ctl.where(7) and d.scans == 1
     for i in range(1, 10):
         assert d.where(i) == ctl.where(i)
     assert d.scans == 1                                                    # nine answers, one scan
-    assert sorted(sum((d.holdings(w) for w in (A, B, C)), [])) == list(range(1, 10))
+    assert sorted(sum((d.holdings(w) for w in (A, B, C)), []), key=int) == [str(i) for i in range(1, 10)]
 
 
 def test_the_directory_reads_past_an_assignment_row_whose_rev_does_not_parse():
     """The review's sixth pass, the follow-up. The directory is one scan of every `vms/workers/*`, each row parsed
     bare: one worker's `rev` with a word in it — a hand edit — and "where is camera 7" had no answer for ANY camera.
     The row is read for the units it names (`w2cplatform.contract.read_assignment`), as the controller reads it."""
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     _three_workers(c, ctl)
     for i in range(9):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     ctl.ensure_placed()
     w = ctl.where(7)
     c.vars.put(f"vms/workers/{w}", {"units": ",".join(ctl.assignment(w).units), "rev": "seven"})
-    d = Directory(c.vars, ttl=5.0, clock=c.clock)
+    d = Directory(c.vars, "vms", ttl=5.0, clock=c.clock)
     assert [d.where(i) for i in range(1, 10)] == [ctl.where(i) for i in range(1, 10)] and d.where(7) == w
     assert ctl.pass_once()["ok"]                                             # and the controller's pass is a pass
     import sys                                                               # the count is the process's, and every heartbeat
@@ -77,9 +77,9 @@ def test_the_directory_reads_past_an_assignment_row_whose_rev_does_not_parse():
 
 def test_two_controllers_agree_under_constraints():
     c = Cluster()
-    _three_workers(c, ClusterController(c.vars, c.objects, wall=c.wall))
-    a = ClusterController(c.vars, c.objects, capacity=100, wall=c.wall)
-    b = ClusterController(c.vars, c.objects, capacity=100, wall=c.wall)
+    _three_workers(c, VmsController(c.vars, c.objects, wall=c.wall))
+    a = VmsController(c.vars, c.objects, capacity=100, wall=c.wall)
+    b = VmsController(c.vars, c.objects, capacity=100, wall=c.wall)
     for i in range(40):
         a.create_camera({"source": f"driverpack://file/{i}.mp4", "labels": ["vlan:cctv-b"] if i % 2 else []})
     ts = [threading.Thread(target=x.ensure_placed) for x in (a, b, a, b)]
@@ -101,7 +101,7 @@ def test_the_clusters_controller_loops_write_the_pass_report_its_metrics_read():
     from w2cplatform.console import SpecConsole
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=2, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, capacity=2, wall=c.wall)
     c.worker("srv-a", capacity=2).heartbeat_once()
     for i in range(3):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
@@ -125,7 +125,7 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     installed together. This is the live fact behind that: the spec says `requires: resource`, so a worker whose
     server's resource has gone silent is not placed on, its cameras are moved to servers whose resource answers, and
     the reason says so. A resource never seen is not a fact and passes."""
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=10, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, capacity=10, wall=c.wall)
     ws = _three_workers(c, ctl)
     rs = c.resources_up()
     a = ctl.create_camera({"source": "driverpack://file/a.mp4", "labels": ["vlan:cctv-a"]})["id"]   # srv-a or srv-b
@@ -143,8 +143,7 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     assert ctl.assignment(A).units == [] and ctl.placement(a).reason.startswith("resource on srv-a silent; ")
     assert ctl.placement(a).reason.endswith("; on srv-b")
     # the console shows the label beside the fact: whether each server's resource answers
-    from cluster.console import make_console
-    sv = make_console(ctl).root.servers()["servers"]
+    sv = spec_console({"vms": ctl}, "vms").root.servers()["servers"]
     assert sv["srv-a"]["resource"] == "silent" and sv["srv-a"]["placeable"] is False and sv["srv-a"]["why"] == "resource on srv-a silent"
     assert sv["srv-b"]["resource"] == "live" and sv["srv-b"]["placeable"] is True and [w["worker"] for w in sv["srv-b"]["workers"]] == [B]
     assert "archive" not in sv["srv-a"]          # what a server holds of a subsystem's tables is its spec's `servers.show` (step 6)
@@ -159,7 +158,7 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
 
 
 def test_the_snapshot_is_the_only_thing_that_leaves_the_cluster():
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall, cluster="north")
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall, cluster="north")
     ws = _three_workers(c, ctl)
     for i in range(3):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4", "name": "gate" if i == 0 else f"cam{i}"})
@@ -183,12 +182,13 @@ def test_the_snapshot_is_the_only_thing_that_leaves_the_cluster():
 
 
 def test_the_console_over_http():
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     ws = _three_workers(c, ctl)
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
     rec_con = SpecController(REC_SPEC, c.vars.as_writer("console", REC_SPEC.acl_console()), c.objects, wall=c.wall)   # the console's door to recordings
-    srv = serve(ctl, "127.0.0.1", 0, worst_failover=48.0, archive_root=c.servers["srv-a"].archive, rec_ctl=rec_con); port = srv.server_address[1]
+    srv = spec_console({"vms": ctl, "rec": rec_con}, "vms", c.servers["srv-a"].archive, worst_failover=48.0).serve("127.0.0.1", 0)
+    port = srv.server_address[1]
     base = f"http://127.0.0.1:{port}"
     def call(method, path, body=None, headers=None):
         req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method, headers=headers or {})
@@ -223,11 +223,11 @@ def test_the_console_over_http():
     st, out = call("GET", "/unplaceable"); assert json.loads(out) == []
     # srv-a's resource job, over real HTTP: the platform's routes and the event index over ITS tree
     from w2cplatform.resource import serve as serve_resource
-    from cluster.resource import cluster_resource
+    from w2cplatform.resource import platform_resource
     from tests.cluster.test_lesson3_resources import _recorder_with_footage
     t = c.wall()
     rec_a = _recorder_with_footage(c, "srv-a", "1", 1, ((t - 600, t),))                      # and srv-a's recorder, serving its volume
-    res = cluster_resource(c.servers["srv-a"].resource, "srv-a", "http://127.0.0.1:0", c.vars, c.objects, wall=c.wall)
+    res = platform_resource(c.servers["srv-a"].resource, "srv-a", "http://127.0.0.1:0", c.vars, c.objects, wall=c.wall)
     rsrv = serve_resource(res, "127.0.0.1", 0); res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"; res.heartbeat()
     # an operator's mark: the console's own bucket on srv-a's resource; the console has no index — it asks srv-a's, by HTTP, and finds the `cam` field
     st, out = call("POST", "/marks", {"unit": "vms/1", "note": "check the gate"}, {"Idempotency-Key": "m1", "X-User": "murat"})
@@ -255,13 +255,12 @@ def test_the_console_over_http():
 
 def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the_boxes_does():
     """М10's sixth review, found while sweeping every door: this module's console is built by a function of its own
-    (`cluster.console.make_console`), which wired nothing of what М10's does — `/timeline/<cam>` and `/export/<cam>`
+    (a `make_console` of the cluster's own), which wired nothing of what М10's does — `/timeline/<cam>` and `/export/<cam>`
     were not routes that name a camera, so in a cluster that asks who is calling a viewer of camera 1 was given camera
     2's timeline and footage for any grant at all; a backfill was an administrator's, not an operator's; the
     recorder's mount served neither the archives nor the number its scaling check asks for. One function wires a
-    console of the VMS, whoever builds it (`vms.console.wire_vms`) — and since the boundary's step 6 the footage is a
+    console, whoever builds it (`host.spec_console`) — and since the boundary's step 6 the footage is a
     holder's door, handed out with the unit's place to whoever may view it: `/where/<cam>`, `/rec/where/<recording>`."""
-    from cluster.console import make_console
     from w2cplatform.access import Denied
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
@@ -281,9 +280,9 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
                 return bool(mine)
             return any(rank[c] >= rank[capability] and u in (unit, None) for c, u in mine)
 
-    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     rec = SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall)
-    m = make_console(ctl, rec_ctl=rec)
+    m = spec_console({"vms": ctl, "rec": rec}, "vms")
     for con in (m.root, *m.mounts.values()):
         con.gate.impl = Tokens()
     srv = m.serve("127.0.0.1", 0)
@@ -318,13 +317,14 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
 
 
 
-def test_the_clusters_console_keeps_a_requests_until_as_the_boxs_does():
-    """The twelfth review, on the author's answer ("REREAD … any console"): in М11 no console ran the loop that turns a
+def test_the_vms_jobs_keep_a_requests_until_on_a_cluster_as_on_a_box():
+    """The twelfth review, on the author's answer ("REREAD … any console"): in М11 nothing ran the loop that turns a
     request into work and ends it at its `until` — a recording asked for ten minutes went on, and nobody in the cluster
-    kept the end. The cluster's console runs the box's turns now (`cluster.__main__.console_turn`), through its own
-    socket and its rights: a scenario's "record camera 1 for ten minutes" becomes a recording with an end, the request
-    goes, and the recording ends when its end has come."""
-    import cluster.__main__ as m
+    kept the end. The cluster's console ran the box's turns in its own process until the boundary's step 7; the console
+    is the platform's now, and the turns are the VMS's own process on every server (`python3 -m vms jobs`,
+    `vms-jobs.service`), through the console's socket and its rights: a scenario's "record camera 1 for ten minutes"
+    becomes a recording with an end, the request goes, and the recording ends when its end has come."""
+    import vms.__main__ as m
     from vms.config import REC_SPEC
     from vms.jobs import Remembered
     from w2cplatform.spec import SpecController
@@ -335,9 +335,10 @@ def test_the_clusters_console_keeps_a_requests_until_as_the_boxs_does():
     now = c.wall()
     c.vars.put("rec/requests/f1-0", {"action": "record", "cam": "1", "minutes": "10", "valid_until": str(now + 30)})
     mem = Remembered()
-    m.console_turn(con, rec, mem, now=now, reap=True)
+    m._requests_turn(rec, None, None, mem, now=now)
+    m._reap_turn([], [rec, con], rec, now=now)
     assert rec.unit("1-auto")["until"] == now + 600 and c.vars.get("rec/requests/f1-0")[0] is None
-    m.console_turn(con, rec, mem, now=now + 300)
+    m._requests_turn(rec, None, None, mem, now=now + 300)
     assert "1-auto" in [str(u["id"]) for u in rec.units()]                  # not yet
-    m.console_turn(con, rec, mem, now=now + 601)
+    m._requests_turn(rec, None, None, mem, now=now + 601)
     assert "1-auto" not in [str(u["id"]) for u in rec.units()]              # its end came: ended

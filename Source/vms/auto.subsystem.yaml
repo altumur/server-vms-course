@@ -19,6 +19,8 @@ name: auto
 # The slot a worker of this subsystem makes, `a-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: a, name_env: AUTO_NAME}
+# The one worker that files to other subsystems: their request rows, and nothing else of theirs.
+worker: {requests: [vms, rec, det]}
 unit:
   rows: scenarios                    # auto/scenarios/<name>
   id: name                           # the operator's name for it: "door-on-badge"

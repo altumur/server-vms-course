@@ -2,9 +2,10 @@
 
 The store's rights are a file the daemon reads — `deploy/cluster/configstore-rights.json`, installed as
 `/etc/w2c/configstore-rights.json` — and the daemon asks it before anything is forwarded or applied, by the socket the
-caller came through. The file is GENERATED from the spec (`python3 -m cluster rights`, `cluster/rights.py`): the
-writes from `acl_console`, `acl_controller`, `acl_worker`, `WORKER_ACL` and the create-only object rows, the reads
-from a list with the code that makes each read.
+caller came through. The file is GENERATED from the specs of the catalogue (`python3 -m w2cplatform.cluster rights`,
+`w2cplatform/cluster/rights.py`): the roles of every subsystem the catalogue holds, the writes from `acl_console`,
+`acl_controller`, `acl_worker_role` (the spec's `worker:`) and the create-only object rows, the reads from a list with the
+code that makes each read.
 
 The history this file comes from: on Nomad the policies were written by hand in `*-policy.hcl`, and inside two
 commits they stopped matching the code three times — the controller's grant named `objects/vms/snapshot` exactly when
@@ -18,12 +19,15 @@ lists do not ask for — and every read the code makes is granted.
 import json
 import os
 
-from cluster.objectstore import is_row
-from cluster.rights import render, roles
-from vms.config import REC_SPEC, SPEC, WORKER_ACL, WORKER_OBJECTS
+from w2cplatform import catalog
+from w2cplatform.cluster.objectstore import is_row
+from w2cplatform.cluster.rights import render, roles
+from vms.config import REC_SPEC, SPEC
 from w2cplatform.resource import DOORS
 from w2cplatform.storemachine import Rights
-from tests.cluster.conftest import RIGHTS
+from tests.cluster.conftest import HERE, RIGHTS
+
+SPECS = catalog.load_dir(os.path.join(HERE, "vms"))       # the catalogue the installed tree carries (`SPEC_DIR`)
 
 OBJECTS = "objects/"
 SOCKETS = "/run/configstore/"
@@ -39,11 +43,12 @@ def doc() -> dict:
 
 
 def test_the_committed_file_is_what_the_spec_generates():
-    """`deploy/cluster/configstore-rights.json` is `python3 -m cluster rights` now — a hand edit, or a spec changed without
-    regenerating it, fails here (and `install.sh` refuses to install it)."""
+    """`deploy/cluster/configstore-rights.json` is `python3 -m w2cplatform.cluster rights` now — a hand edit, or a spec
+    changed without regenerating it, fails here (and `install.sh` refuses to install it)."""
     with open(RIGHTS, encoding="utf-8") as f:
-        assert f.read() == render(), "regenerate it: python3 -m cluster rights > deploy/cluster/configstore-rights.json"
-    assert Rights.parse(doc()).roles == {r: {a: g[a] for a in ("read", "write", "delete")} for r, g in roles().items()}
+        assert f.read() == render(SPECS, "vms"), \
+            "regenerate it: SPEC_DIR=vms python3 -m w2cplatform.cluster rights > deploy/cluster/configstore-rights.json"
+    assert Rights.parse(doc()).roles == {r: {a: g[a] for a in ("read", "write", "delete")} for r, g in roles(SPECS, "vms").items()}
 
 
 def test_each_role_says_its_sockets_group_in_the_products_format():
@@ -58,17 +63,15 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
 
 def _expected_writes() -> dict[str, set[str]]:
     rows = lambda objs: {OBJECTS + p for p in objs if is_row(p)}            # noqa: E731
-    return {
-        "console": set(SPEC.acl_console()) | set(REC_SPEC.acl_console()),
-        "vmscontroller": set(SPEC.acl_controller()),
-        "reccontroller": set(REC_SPEC.acl_controller()),
-        "vmsworker": set(WORKER_ACL) | rows(WORKER_OBJECTS),
-        "recworker": set(REC_SPEC.sub.acl_worker()) | rows(REC_SPEC.sub.acl_objects_worker()),
-        "resource": {DOORS + "/*", REC_SPEC.sub.request_key("free-*")},   # its ask to free bytes (`requests: {free}`, step 6)
-        "domainagent": {"domain/*", "relay/*", "!domain/signer*"},
-        "member": set(),
-        "domain": {"domain/*", "identity/*"},
-    }
+    out = {"console": {a for s in SPECS for a in s.acl_console()}}
+    for s in SPECS:                                                           # every subsystem of the catalogue: its two roles
+        out[f"{s.name}controller"] = set(s.acl_controller())
+        out[f"{s.name}worker"] = set(s.acl_worker_role()) | rows(s.sub.acl_objects_worker() + [s.sub.config(p) for p in s.object_rows])
+    return {**out,
+            "resource": {DOORS + "/*", *[s.sub.request_key("free-*") for s in SPECS if s.requests_free]},   # its ask to free bytes
+            "domainagent": {"domain/*", "relay/*", "!domain/signer*"},
+            "member": set(),
+            "domain": {"domain/*", "identity/*"}}
 
 
 def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there():
@@ -129,8 +132,8 @@ def _doors(s) -> None:
     written from the page, a decommission, and the recorder controller's passes — none of which a scene makes."""
     import urllib.error
     import urllib.request
-    from cluster.console import serve
     from vms.worker import FakeDevice
+    from w2cplatform.host import spec_console
     from w2cplatform.spec import SpecController
     s.resources_up()
     con, ctl = s.console("srv-a", "console on srv-a (gate)"), s.controller()
@@ -143,7 +146,7 @@ def _doors(s) -> None:
     v = s.door("reccontroller", "reccontroller on srv-b")
     rc = SpecController(REC_SPEC, v, s.objects_on("srv-b", v, "reccontroller on srv-b"), wall=s.wall)
     s.wall.watchers += [rec_con, rc]                      # each judges by what it saw change: it looks as time moves
-    srv = serve(con, port=0, rec_ctl=rec_con)
+    srv = spec_console({"vms": con, "rec": rec_con}, "vms").serve("127.0.0.1", 0)
     try:
         for url in (f"http://127.0.0.1:{door.server_address[1]}/playback/1?from=0&to=1",
                     f"http://127.0.0.1:{srv.server_address[1]}/cameras"):
@@ -292,7 +295,7 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     vars_, read = FileVariables(f"{root}/vars"), []
     real = vars_.get
     vars_.get = lambda path: (read.append(path), real(path))[1]
-    w = VmsWorker("w-1", vars_, FsObjectStore(f"{root}/objects"), FakeActuator(), archive_root=f"{root}/archive")
+    w = VmsWorker("w-1", vars_, FsObjectStore(f"{root}/objects"), FakeActuator(), resource_root=f"{root}/archive")
     assert w.playback_refusal("1", "", {}, "127.0.0.1") is None        # an open cluster: the door asks nobody
     vars_.put(MEMBER_MARK, {"cluster": "acme"})                       # a member that lost its keys: it asks
     assert w.playback_refusal("1", "", {}, "127.0.0.1")[0] == 503      # …and has no key of its own yet: shut

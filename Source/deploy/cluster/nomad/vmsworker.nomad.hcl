@@ -32,7 +32,7 @@ job "vmsworker" {
       kill_timeout = "20s"                           # room to release the slot: a stop says so, a crash cannot
       config {
         command = "/opt/w2c/bin/w2c-run.sh"
-        args    = ["worker"]
+        args    = ["vms", "worker"]
       }
       env {
         PLATFORM_STORE  = "configstore:///run/configstore/vmsworker.sock"

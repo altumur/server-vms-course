@@ -46,7 +46,7 @@ Environment=BOX_ID=%m
 # Deliberately NOT set here, and that is the whole difference between a disk and a bucket:
 #
 # - A DISK is bolted to this machine, so the instance that mounts it says so, in a drop-in beside its
-#   `ARCHIVE`: `/etc/containers/systemd/recworker@vol-a.container.d/` with `Environment=VOLUME=vol-a`.
+#   `RESOURCE_ROOT`: `/etc/containers/systemd/recworker@vol-a.container.d/` with `Environment=VOLUME=vol-a`.
 #   Pinned, takes no hold, gives none up.
 # - A NETWORK ARCHIVE is created in the console (`rec/volumes/<name>`) and no unit file is edited for it.
 #   An instance with no `VOLUME` takes a declared volume it may serve, by CAS (`rec/holds/<name>`), and is
@@ -55,7 +55,7 @@ Environment=BOX_ID=%m
 #   in one pass instead of one deploy. Start one per box: `systemctl start recworker@spare-1`.
 # - With nothing declared at all, an unpinned instance is the server's own name, exactly as before any of
 #   this existed.
-# `PLATFORM_DIR`, `ARCHIVE`, `CAPACITY`, `LOG_LEVEL`, and the archive's own: `ARCHIVE_QUOTA_BYTES` (the size
+# `PLATFORM_DIR`, `RESOURCE_ROOT`, `CAPACITY`, `LOG_LEVEL`, and the archive's own: `ARCHIVE_QUOTA_BYTES` (the size
 # of the box's own volume when it is first formatted; unset: four fifths of what is free) and `OBSD_TIMEOUT`.
 # A disk declared as a volume is a path on the host, opened by the daemon: nothing to mount here for it.
 EnvironmentFile=/etc/w2c/w2c.env

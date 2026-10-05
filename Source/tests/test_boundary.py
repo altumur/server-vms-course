@@ -475,9 +475,9 @@ def _piece_contract():
     b = _counter_worker(sub, vars_, objects, clock, wall, "B", "srv-2")
     assert (a.name, b.name) == ("w-1", "w-2"), (a.name, b.name)
     Controller(sub, vars_, objects, wall=wall).assign("w-1", ["c1"])
-    assert a.reconcile_once() == ["c1"] and a.epochs == {"c1": 1} and a.may_write("c1")
+    assert a.reconcile_once() == ["c1"] and a.epochs == {"c1": 1} and a.may_act("c1")
     assert b.take_epoch("c1") == 2
-    assert a.renew_leases() == ["c1"] and not a.may_write("c1")
+    assert a.renew_leases() == ["c1"] and not a.may_act("c1")
 
 
 def _piece_controller():
@@ -502,7 +502,7 @@ def _piece_controller():
     ctl.ensure_placed()
     held = {u: w.name for w in ws for u in w.reconcile_once()}
     assert sorted(held) == ["c1", "c2", "c3"] and len(set(held.values())) == 2, held
-    assert all(w.epochs and all(w.may_write(u) for u in w.epochs) for w in ws)
+    assert all(w.epochs and all(w.may_act(u) for u in w.epochs) for w in ws)
 
 
 def _http(base: str, method: str, path: str, body=None) -> tuple[int, object]:
@@ -604,7 +604,7 @@ def _piece_host():
     root = tempfile.mkdtemp(prefix="testsub-host-")
     env = {"SPEC_DIR": os.path.dirname(TESTSUB), "PLATFORM_DIR": root}
     assert host.main(["controller", "testsub"], {"PLATFORM_DIR": root}) == 2          # no SPEC_DIR: nothing runs
-    vars_, objects = host.box_stores(env)
+    vars_, objects = host.stores(env)
     ws = [_counter_worker(Subsystem("testsub"), vars_, objects, time.monotonic, time.time, f"I{i}", f"srv-{i}")
           for i in (1, 2)]
     for w in ws:

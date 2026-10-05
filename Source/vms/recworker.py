@@ -20,7 +20,7 @@ timeline merges the two.
 
     RECORDER_NAME / SLOT_INDEX     -> the slot to claim: r-<index>
     SERVER_NAME (or the hostname)  -> `server` in the heartbeat
-    ARCHIVE                        -> this server's resource tree: where its EVENTS go (not its footage)
+    RESOURCE_ROOT                  -> this server's resource tree: where its EVENTS go (not its footage)
     OBSD_SOCKET                    -> the host's ObjectStorage daemon
     CAPACITY                       -> recordings this server's disks and NIC can take — its own number
 
@@ -388,15 +388,15 @@ class RecWorker(VmsWorker):
     def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,
                  lease_ttl: float = 30.0, lease_margin: float = 5.0, clock=time.monotonic, wall=time.time,
                  server: str | None = None, capacity: int | None = None, instance: str | None = None, slot_ttl: float = 45.0,
-                 env: dict | None = None, archive_root: str | None = None, obsd: Session | None = None,
+                 env: dict | None = None, resource_root: str | None = None, obsd: Session | None = None,
                  default_quota: int | None = None,
                  window: tuple[int, int] | None = None, keep_days: float = 30.0, settle: float = 900.0,
                  stitch: float = 2.0, block: int | None = None, read: int | None = None):
         env = dict(os.environ if env is None else env)
-        events_root = runtime.events_root(env, archive_root)    # the platform's events archive (WP-E): /data/platform/events
+        events_root = runtime.events_root(env, resource_root)    # the platform's events archive (WP-E): /data/platform/events
         instance = instance or box_instance(env)          # the box it runs on, by `BOX_ID` (`hold_follows_name`)
         super().__init__(name, vars_, objects, actuator or FakeActuator(), lease_ttl, lease_margin, clock, wall, server, capacity, instance,
-                         slot_ttl, archive_root=events_root, env=env)
+                         slot_ttl, resource_root=events_root, env=env)
         # The host's ObjectStorage daemon, and this process's one session with it. Every volume this recorder
         # opens, every writer, every reader is a handle of THIS session — a token the daemon knows it by.
         #
@@ -432,7 +432,7 @@ class RecWorker(VmsWorker):
         # volume` behaving exactly like `place_by: server`. It is the VMS's, where the VMS keeps its engine's volumes
         # (`config.OWN_VOLUME`, `/data/vms/obsd/volume`; WP-E) — never inside the resource's tree, whose walks would
         # take the ring for a subsystem, count its blocks as the tree's usage and mirror nothing of it
-        # (`ARCHIVE_VOLUME` to put it elsewhere). A caller that names its tree (a bench, a test: `archive_root`) gets
+        # (`ARCHIVE_VOLUME` to put it elsewhere). A caller that names its tree (a bench, a test: `resource_root`) gets
         # it beside that tree, as before: one directory of its own, never the box's.
         self.pinned = bool(env.get("VOLUME"))
         self.pin = str(env.get("VOLUME") or "")      # …its name, which `volume` is not while the hold is another's
@@ -440,7 +440,7 @@ class RecWorker(VmsWorker):
         self.default_volume = str(self.server or "default")
         from .config import OWN_VOLUME
         beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
-        self.default_url = env.get("ARCHIVE_VOLUME") or (f"file://{beside}" if archive_root else OWN_VOLUME)
+        self.default_url = env.get("ARCHIVE_VOLUME") or (f"file://{beside}" if resource_root else OWN_VOLUME)
         # Its size when it is new: `ARCHIVE_QUOTA_BYTES`, or — 0 — a share of the disk it will be on, which the DAEMON
         # measures when it formats it (`_share_of_space`; the review's fourth pass: measured here, it was the
         # container's own disk, not the data disk `/data/volume` is on).
@@ -1259,7 +1259,7 @@ class RecWorker(VmsWorker):
             return self._wait_for_pin(rows)
         if self.hold is None and not free:
             # Nothing declared anywhere: the box as it was before volumes were rows — one place, named after
-            # the server, beside `$ARCHIVE`. Note this is reached after letting go above, so withdrawing
+            # the server, beside `$RESOURCE_ROOT`. Note this is reached after letting go above, so withdrawing
             # the last volume does not leave a process quietly writing into it.
             err = self._write_into(self._own_volume(self.default_volume))
             self.volume, self.capacity, self.volume_error = self.default_volume, self.full_capacity, str(err or "")
@@ -1341,7 +1341,7 @@ class RecWorker(VmsWorker):
         now = self.wall()
         since, said = self._vol_unread or (now, None)
         if now - since >= self.ROW_UNREAD_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
-            EventLog(self.archive_root, REC.name, name, 0).append(now, "archive.volume.unreadable", cls=ALARM, volume=name,
+            EventLog(self.resource_root, REC.name, name, 0).append(now, "archive.volume.unreadable", cls=ALARM, volume=name,
                                                                   since=since, seconds=round(now - since))
             log.error("%s: the settings of volume %s have not been readable for %.0f minutes: this recorder goes on writing it "
                       "as it was set when last read, and a change made since — switched off, a new size — does not reach "
@@ -1392,7 +1392,7 @@ class RecWorker(VmsWorker):
                f"nothing is being recorded into it. A recorder on another server may be stuck with {name} still open: "
                f"check obsd and the recorders on the other servers. This recorder lets {name} go and tries it again in "
                f"{self.REFUSED_FOR / 60:.0f} minutes")
-        EventLog(self.archive_root, REC.name, name, 0).append(now, "archive.volume.busy", cls=ALARM, volume=name,
+        EventLog(self.resource_root, REC.name, name, 0).append(now, "archive.volume.busy", cls=ALARM, volume=name,
                                                               seconds=round(quiet), detail=self.archive_error)
         log.error("%s: %s", self.name, why)
         self.refused[name] = (now + self.REFUSED_FOR, why)
@@ -1531,7 +1531,7 @@ class RecWorker(VmsWorker):
             return
         self._missing_said[vol.name] = vol.url
         log.error("%s: %s", self.name, e.detail)
-        EventLog(self.archive_root, REC.name, vol.name, 0).append(self.wall(), "volume.missing", cls=ALARM, volume=vol.name,
+        EventLog(self.resource_root, REC.name, vol.name, 0).append(self.wall(), "volume.missing", cls=ALARM, volume=vol.name,
                                                                   url=vol.url, recorder=self.name or "", server=self.server or "",
                                                                   detail=e.detail)
 
@@ -1597,7 +1597,7 @@ class RecWorker(VmsWorker):
     # A disk of this server always — nobody else can write there. A network volume any box may serve, pinned or not
     # (the review's seventh pass, blocker 2), only while the hold is this recorder's and was confirmed less than
     # `slot_ttl − lease_margin` ago: the recorder that takes it next waits `slot_ttl + HOLD_SKEW` of an unchanged row by its own clock (`_hold_stale`),
-    # so writing stops ten seconds before anybody else may start. It is `Lease.may_write`, for the place — and like
+    # so writing stops ten seconds before anybody else may start. It is `Lease.may_act`, for the place — and like
     # it a check before sending: what fences the volume itself is the engine (`Archive._fenced`).
     def _may_write_volume(self, vol) -> bool:
         if vol is None or not volumes.any_box(vol):
@@ -1849,7 +1849,7 @@ class RecWorker(VmsWorker):
     def _unclean(self, vol, result: int, detail: str) -> None:
         from w2cplatform.events import ALARM, EventLog
         said = {0: "clean", 1: "recovered", 2: "failed"}.get(int(result), str(result))
-        EventLog(self.archive_root, REC.name, vol.name, 0).append(
+        EventLog(self.resource_root, REC.name, vol.name, 0).append(
             self.wall(), "archive.volume.recovered", cls=ALARM, volume=vol.name, result=said, detail=detail)
         log.error("%s: %s was not cleanly unmounted (%s): recovered under this recorder's hold — %s", self.name,
                   vol.name, detail, said)
@@ -1885,7 +1885,7 @@ class RecWorker(VmsWorker):
         self.resize_error = ""
         if vol.quota_bytes < was:
             from w2cplatform.events import EventLog
-            EventLog(self.archive_root, REC.name, vol.name, 0).append(
+            EventLog(self.resource_root, REC.name, vol.name, 0).append(
                 self.wall(), "archive.volume.shrunk", durable=True, volume=vol.name, was=was, quota_bytes=vol.quota_bytes)
             log.warning("%s: %s shrunk from %d to %d bytes: its oldest footage is given up first", self.name, vol.name,
                         was, vol.quota_bytes)
@@ -2004,7 +2004,7 @@ class RecWorker(VmsWorker):
             if p is None:
                 continue
             self.dropped_seconds += b - a
-            EventLog(self.archive_root, REC.name, p[0], p[1]).append(
+            EventLog(self.resource_root, REC.name, p[0], p[1]).append(
                 self.wall(), "archive.footage.dropped", cls=ALARM, volume=st.name, seconds=round(b - a, 1), since=a,
                 until=b, exact=known)
             log.error("%s: %s%.0f s of recording %s are lost (%.0f–%.0f): the writer had taken them and not yet "
@@ -2114,7 +2114,7 @@ class RecWorker(VmsWorker):
             if now - self.shallow.get(unit, -1e18) < self.SHALLOW_AGAIN or unit not in self.epochs:
                 continue
             self.shallow[unit] = now
-            EventLog(self.archive_root, REC.name, unit, self.epochs[unit], of=REC_SPEC.of_row(row)).append(
+            EventLog(self.resource_root, REC.name, unit, self.epochs[unit], of=REC_SPEC.of_row(row)).append(
                 now, "archive.shallow", cls=ALARM, cam=row.get("cam"), depth_days=depths[unit], min_depth_days=floor)
             logging.warning("%s: recording %s holds %.1f day(s) and was promised %.0f: the ring of %s has closed",
                             self.name, unit, depths[unit], floor, self.volume)
@@ -2534,7 +2534,7 @@ class RecWorker(VmsWorker):
         routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
                                 self._kept_of, self._held_since)
         keeper = DoorKeeper(self.name, self.wall)
-        page = footage_routes(self.objects, self.vars, self.wall, Journal(self.archive_root, f"door-{self.name}", self.wall),
+        page = footage_routes(self.objects, self.vars, self.wall, Journal(self.resource_root, f"door-{self.name}", self.wall),
                               keeper, self.eyes)
 
         class H(Deadlined, BaseHTTPRequestHandler):
@@ -2617,7 +2617,7 @@ class RecWorker(VmsWorker):
                 continue
             unit, cam = str(it["unit"]), str(it.get("cam", it["unit"]))
             rid = key.rsplit("/", 1)[1]
-            if not self.may_write(unit):
+            if not self.may_act(unit):
                 continue                                     # a lease that lapsed answers nothing, a refusal neither
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
@@ -2794,7 +2794,7 @@ class RecWorker(VmsWorker):
         if src["kind"] == "device":
             return self.fetch(unit, cam, src["url"], t0, t1)
         unit = str(unit)
-        if not self.may_record(unit):
+        if not self.may_write(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
 
         def read(a, b):
@@ -2813,7 +2813,7 @@ class RecWorker(VmsWorker):
     # One range from the device: its frames, landed as OURS — our epoch, our volume, the backfill stream.
     def fetch(self, unit, cam, url: str, t0: float, t1: float) -> dict:
         unit = str(unit)
-        if not self.may_record(unit):
+        if not self.may_write(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
 
         def read(a, b):
@@ -2870,7 +2870,7 @@ class RecWorker(VmsWorker):
         from vms.obsd import unix_s
         store = self.store if store is None else store
         epoch = self.epochs.get(unit)
-        if store is None or store is not self.store or epoch is None or not self.may_record(unit):
+        if store is None or store is not self.store or epoch is None or not self.may_write(unit):
             log.warning("%s: a range of %s fetched for a volume or a lease this recorder no longer holds is dropped", self.name, unit)
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "the volume or the lease changed during the fetch"}
         have = stitch(self.our_coverage(unit) + self.landing.get(unit, []), self.stitch)   # landing is ours: not twice
@@ -3056,7 +3056,7 @@ class RecWorker(VmsWorker):
                 now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
                 if now_in + 1.0 < before:
                     lost = round(before - now_in, 1)
-                    EventLog(self.archive_root, REC.name, rec, 0, of=keep_of(k)).append(
+                    EventLog(self.resource_root, REC.name, rec, 0, of=keep_of(k)).append(
                         now, "archive.keep.lost", cls=ALARM, cam=k.cam, keep=k.id, recording=rec, seconds=lost,
                         volume=self.volume)
                     logging.error("%s: %.0f s of keep %s (%s) are gone from %s: its ring took them",
@@ -3094,7 +3094,7 @@ class RecWorker(VmsWorker):
                 # Durable, with how much of the keep the volume held: what `keep_held` is restored from when this
                 # recorder starts again — in memory only, a restart forgot what had been copied, and the incidents
                 # ring taking it afterwards raised no `archive.keep.lost` (the review's third pass, a minor).
-                EventLog(self.archive_root, REC.name, rec, 0, of=keep_of(k)).append(
+                EventLog(self.resource_root, REC.name, rec, 0, of=keep_of(k)).append(
                     now, "archive.keep.copied", durable=True, cam=k.cam, keep=k.id, recording=rec, bytes=size,
                     sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1), volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
@@ -3216,7 +3216,7 @@ class RecWorker(VmsWorker):
         entry["missing_since"] = since
         if now - since >= self.KEEP_UNCOPIED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
             unit = (sorted(k.recordings) or [str(k.cam)])[0]
-            EventLog(self.archive_root, REC.name, unit, 0, of=keep_of(k)).append(
+            EventLog(self.resource_root, REC.name, unit, 0, of=keep_of(k)).append(
                 now, "archive.keep.uncopied", cls=ALARM, cam=k.cam, keep=k.id, seconds=round(missing, 1),
                 since=since, volume=self.volume)
             logging.error("%s: keep %s is %.0f s short of what it names, for %.0f s: no door that answers from here has "
@@ -3237,7 +3237,7 @@ class RecWorker(VmsWorker):
         entry["garbled_since"] = since
         if now - since >= self.KEEP_GARBLED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
             unit = (sorted(k.recordings) or [str(k.cam)])[0]
-            EventLog(self.archive_root, REC.name, unit, 0, of=keep_of(k)).append(
+            EventLog(self.resource_root, REC.name, unit, 0, of=keep_of(k)).append(
                 now, "archive.keep.garbled", cls=ALARM, cam=k.cam, keep=k.id, since=since, volume=self.volume)
             logging.error("%s: keep %s of camera %s has not been readable for %.0f min: its camera's footage is held as "
                           "far as the keep can be read, and none of it is copied for safekeeping. Mend the keep or lift "
@@ -3268,8 +3268,8 @@ class RecWorker(VmsWorker):
         for sub in (REC.name, alarm_tree(REC.name)):
             for unit in {r for k in declared for r in recordings_of(k)}:
                 try:
-                    for b in buckets_under(self.archive_root, sub, unit, 600):
-                        lines += [e for e in read_bucket(os.path.join(self.archive_root, b.path))
+                    for b in buckets_under(self.resource_root, sub, unit, 600):
+                        lines += [e for e in read_bucket(os.path.join(self.resource_root, b.path))
                                   if isinstance(e, dict) and e.get("keep") in ids and e.get("volume") == self.volume]
                 except OSError:
                     continue

@@ -14,7 +14,7 @@ on the LAN, and from the card for the rest. A viewer opens the camera where its 
 import json
 from types import SimpleNamespace
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from vms.domainpart.crossing import Crossings, plan_takeback, resolve

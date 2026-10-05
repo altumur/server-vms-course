@@ -39,12 +39,12 @@ RuntimeDirectoryPreserve=yes
 # would hold `systemctl start` (and `w2c-spares.sh` behind it) until its start timed out.
 Type=simple
 NotifyAccess=main
-ExecStart=/opt/w2c/bin/w2c-run.sh worker
+ExecStart=/opt/w2c/bin/w2c-run.sh vms worker
 Restart=always
 RestartSec=2
 # Room to release the slot: a stop says so (`release_slot`), a crash cannot.
 TimeoutStopSec=20
-# THE WATCHDOG (the twelfth review, major 14): the loop says WATCHDOG=1 at every turn (`cluster.worker.notify`); a loop
+# THE WATCHDOG (the twelfth review, major 14): the loop says WATCHDOG=1 at every turn (`runtime.notify`); a loop
 # that has not turned for six minutes is hung — past the stand-in's five (`STAND_IN_FOR`), well inside the fifteen a
 # hung worker keeps its cameras (`HUNG_MOVE_AFTER`) — and systemd kills it and starts the unit again, which claims its
 # name back. launchd has no such thing: a hung worker on macOS waits for the fifteen minutes.

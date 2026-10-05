@@ -46,7 +46,7 @@ def _footage(box, rec, epoch, a, b):
 def _worker(box, name="j-1", **kw):
     return DetJobWorker(name, box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
                         models={"lpr": Every}, clock=box.clock, wall=box.wall, server="srv-1",
-                        archive_root=box.archive, env={"LABELS": "gpu"}, step=60.0, **kw)
+                        resource_root=box.archive, env={"LABELS": "gpu"}, step=60.0, **kw)
 
 
 def _job(box, name="7-lpr-1", frm=0, to=10, rec="7", cam="7"):

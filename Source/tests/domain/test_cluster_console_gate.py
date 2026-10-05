@@ -9,8 +9,8 @@ import tempfile
 import urllib.error
 import urllib.request
 
-from cluster.objectstore import FsObjectStore
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.objectstore import FsObjectStore
+from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import GRANTS_PATH, KEYS_PATH, REVOKED_PATH
 from w2cplatform.domain.grants import Grant, grants_from_items, grants_to_items
 from w2cplatform.trust.tokens import RevocationList, TokenError, TokenIssuer, verify

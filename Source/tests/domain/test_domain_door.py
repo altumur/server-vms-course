@@ -8,7 +8,7 @@ import json
 import urllib.error
 import urllib.request
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from w2cplatform.domain.console import Console
@@ -102,7 +102,7 @@ def test_a_name_that_does_not_exist_costs_as_much_as_a_wrong_password():
     ident._hash = lambda pw, salt=None: (calls.append(1), real(pw, salt))[1]
     try:
         import tempfile
-        from cluster.objectstore import FsObjectStore
+        from w2cplatform.cluster.objectstore import FsObjectStore
         from w2cplatform.trust.signer import Signer
         users = ident.IdentityStore(Signer("acme", FakeVariables(), now=Clock()), FakeVariables(),
                                     FsObjectStore(tempfile.mkdtemp()), now=Clock())
@@ -134,7 +134,7 @@ def test_a_devices_password_is_not_the_domains_to_carry():
 def test_a_user_deleted_takes_every_grant_naming_them_and_the_last_admin_stays():
     """Feedback CG: grants name a subject, not a record — left behind, they go to the next user of that name."""
     import tempfile
-    from cluster.objectstore import FsObjectStore
+    from w2cplatform.cluster.objectstore import FsObjectStore
     from w2cplatform.domain.agent import DomainPublisher, GRANTS_PATH
     from w2cplatform.domain.identity import IdentityStore
     from w2cplatform.trust.signer import Signer

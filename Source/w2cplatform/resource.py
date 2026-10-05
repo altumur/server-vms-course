@@ -1181,7 +1181,7 @@ class Resource:
 
     # The beat's thread: `beat` every `PULSE_SECONDS` — unless the loop's own heartbeat went out meanwhile — until `stop`
     # is set. A beat that fails is one beat (the review's third pass), and the thread goes on. Started once a process
-    # (`vms/__main__.resource`, М11's `cluster/__main__.resource`); a test drives `beat` itself.
+    # (`host.run_resource`, on a box and on a cluster); a test drives `beat` itself.
     def start_beat(self, stop: threading.Event | None = None) -> threading.Thread:
         stop = stop or threading.Event()
 
@@ -1805,7 +1805,7 @@ class Resource:
     # Whether the restore is to be tried again now, its pause (`RESTORE_RETRY`, doubling) over: it never ran through with
     # somebody to ask, it left buckets with peers, or a peer did not list — or, done, a live peer holds copies of this
     # server and has not given them (looked for every `RESTORE_RETRY_MAX`: one listing of the heartbeats). The resource's
-    # loop asks this every turn (`vms/__main__.py`, М11's `cluster/__main__.py`).
+    # loop asks this every turn (`host.run_resource`).
     def restore_due(self) -> bool:
         if self.clock() < self._restore_next:
             return False

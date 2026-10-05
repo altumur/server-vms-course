@@ -232,7 +232,7 @@ def test_a_device_with_no_picture_is_a_unit_like_any_other():
     assert con.camera(cam)["kind"] == "video"              # the default keeps every older row meaning what it meant
 
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
-                  server="srv-a", env={}, archive_root=box.archive)
+                  server="srv-a", env={}, resource_root=box.archive)
     _worker(box, "w-1", "srv-a")
     ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
@@ -259,7 +259,7 @@ def _holder(box, server="srv-a", **devkw):
     """A worker with a real device open, so a command has something to reach."""
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
-                  server=server, env={}, archive_root=box.archive,
+                  server=server, env={}, resource_root=box.archive,
                   device_factory=lambda key: FakeDevice(key, channels=["1"], **devkw))
     return w
 
@@ -442,7 +442,7 @@ def test_two_workers_on_one_box_open_their_own_doors():
     doors = []
     for name in ("w-1", "w-2"):
         w = VmsWorker(name, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
-                      server="srv-a", archive_root=box.archive,
+                      server="srv-a", resource_root=box.archive,
                       env={"PLAYBACK_PORT": "auto", "RTSP_PORT": "auto"})
         srv = w.serve_playback("127.0.0.1")               # both bind: neither was told a number
         doors.append((w, srv))
@@ -461,7 +461,7 @@ def test_two_workers_on_one_box_open_their_own_doors():
 
     # the default is untouched: a box with one worker publishes exactly what it always did
     plain = VmsWorker("w-3", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
-                      server="srv-a", archive_root=box.archive, env={})
+                      server="srv-a", resource_root=box.archive, env={})
     assert (plain.rtsp_port, plain.playback_port) == (8554, 8083)
 
 
@@ -479,7 +479,7 @@ def test_two_clusters_of_one_on_one_bench_do_not_share_an_rtp_port():
     for base in ("", "21000", "22000"):                # the default, then two more clusters of one
         box = Box()
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
-                      server="srv-a", archive_root=box.archive, env={"RTP_BASE": base} if base else {})
+                      server="srv-a", resource_root=box.archive, env={"RTP_BASE": base} if base else {})
         ports.append(w.enrich({"id": 1})["live_port"])
     assert ports == [20001, 21001, 22001]
 

@@ -79,7 +79,7 @@ def _holder(box, **kw):
     real = dev.output
     dev.output = lambda *a, **k: (called.append(time.time()), real(*a, **k))[1]
     w = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                  wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=lambda key: dev, **kw)
+                  wall=box.wall, server="srv-a", env={}, resource_root=box.archive, device_factory=lambda key: dev, **kw)
     return w, cid, dev, called
 
 
@@ -91,7 +91,7 @@ def _evaluator(box, cid, index=None):
     SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", ["door"])
     return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det")),
                       box.objects, index=index or MergedIndex(box.objects, wall=box.wall), clock=box.clock, wall=box.wall,
-                      server="srv-a", archive_root=box.archive, env={})
+                      server="srv-a", resource_root=box.archive, env={})
 
 
 def _site(env: dict, poll: float = 2.0):
@@ -431,7 +431,7 @@ def test_a_flood_of_changes_is_one_early_pass_per_gap_and_the_lease_step_stays_o
         assert len(leased) >= 2 and all(1.0 <= g <= 1.0 + 2 * longpoll.WAKE_GAP + 0.3 for g in gaps), f"lease steps {gaps}"
         said = [b for b in beats if t0 <= b <= t0 + flooded]
         assert 1 <= len(said) <= 3 and all(b - a >= 2.0 for a, b in zip(said, said[1:])), f"heartbeats in the flood: {said}"
-        assert evaluator.may_write("door") and evaluator.long_poll.woken >= 5
+        assert evaluator.may_act("door") and evaluator.long_poll.woken >= 5
     finally:
         stop.set(); thread.join(timeout=10); srv.shutdown()
 
@@ -597,12 +597,12 @@ def test_a_fenced_holder_on_a_beat_does_not_act():
     one = _looping()
     try:
         holder, unit = one.holder, str(one.cid)
-        assert holder.may_write(unit)
+        assert holder.may_act(unit)
         looks: list[float] = []
         requests = holder.requests
         holder.requests = lambda *a, **k: (looks.append(time.monotonic()), requests(*a, **k))[1]
         next_epoch(one.box.vars, VMS.sub.epoch_key(unit))            # somebody else was given the device
-        assert holder.leases[unit].renew() is False and not holder.may_write(unit)   # …and this holder knows it
+        assert holder.leases[unit].renew() is False and not holder.may_act(unit)   # …and this holder knows it
         one.command("r1")
         _until(lambda: len(looks) >= 3, 1.5, "three looks at the requests")
         assert one.called == [] and one.dev.did == []
@@ -624,7 +624,7 @@ def test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_only_by_the_
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
     unit, key = str(cid), VMS.sub.epoch_key(str(cid))
-    assert holder.may_write(unit)
+    assert holder.may_act(unit)
     theirs, _ = next_epoch(box.vars, key)                            # the camera's new holder took the next epoch
     assert unit in holder.lease_pass() and unit not in holder.leases   # …and this one let the camera go
     now = box.wall()
@@ -636,7 +636,7 @@ def test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_only_by_the_
     assert holder.commands["performed"] == 0 and box.vars.get("vms/requests/r1")[0] is not None
     holder.reconcile_once()                                          # the pass: the assignment still names it here
     holder.pump_once()
-    assert current_epoch(box.vars, key) == theirs + 1 and holder.may_write(unit)
+    assert current_epoch(box.vars, key) == theirs + 1 and holder.may_act(unit)
     assert dev.did == [("output", 2, "pulse", 0)]
 
 
@@ -671,7 +671,7 @@ def test_a_camera_the_lease_step_let_go_is_not_taken_back_by_a_pass_whose_assign
         assert unit not in holder.leases and unit in holder.lost_to_epoch, fails
         box.clock.advance(30)                                         # past the reconciler's backoff for the start
         holder.reconcile_once()                                       # the assignment reads, and still names it here
-        assert current_epoch(box.vars, key) == theirs + 1 and holder.may_write(unit), fails
+        assert current_epoch(box.vars, key) == theirs + 1 and holder.may_act(unit), fails
 
 
 def test_a_store_that_does_not_answer_on_a_beat_is_waited_out_and_said_once():
@@ -779,7 +779,7 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
     # a holder started again: a standing row first seen at its call is not a road of zero — it was filed long ago
     holder.release_slot()                                            # an orderly stop; the next instance takes the name
     again = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                      wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=lambda key: dev)
+                      wall=box.wall, server="srv-a", env={}, resource_root=box.archive, device_factory=lambda key: dev)
     again.reconcile_once()
     put("d", box.wall() - 4.0, filed=box.wall() - 4.0)
     again.requests()
@@ -930,7 +930,7 @@ def test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares
     assert left > 0
     box.clock.advance(46.0); box.wall.advance(46.0)                   # past `valid_until` too: performed is not expired
     again = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                      wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=lambda key: dev)
+                      wall=box.wall, server="srv-a", env={}, resource_root=box.archive, device_factory=lambda key: dev)
     assert again.name == "w-1" and again.instance != holder.instance
     again.reconcile_once()
     for _ in range(4):
@@ -997,7 +997,7 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     assert not holder._marks_owed and json.loads(box.objects.get("vms/commands/r-1"))["outcome"] == "performed"
     holder.release_slot()
     again = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                      wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=lambda key: dev)
+                      wall=box.wall, server="srv-a", env={}, resource_root=box.archive, device_factory=lambda key: dev)
     again.reconcile_once()
     again.requests()
     assert again.reanswered == 1 and again.commands["unknown"] == 0 and len(dev.did) == 1
@@ -1077,7 +1077,7 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
         return dev
 
     holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                       wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=device,
+                       wall=box.wall, server="srv-a", env={}, resource_root=box.archive, device_factory=device,
                        lease_ttl=6.0, lease_margin=3.0)                # the lease step every second
     leased: list[float] = []
     lease_pass = holder.lease_pass
@@ -1110,7 +1110,7 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
         assert len(gaps) >= 2 and max(gaps) <= 1.0 + 3 * VmsWorker.REQUESTS_HOLD + 0.5, f"lease steps {gaps}"
         slow = {id(d) for k, d in holder.devices.items() if k in hung}
         assert holder._slow and holder._slow <= slow                 # what is not waited for is what did not answer
-        assert all(holder.may_write(str(c)) for c in cams)
+        assert all(holder.may_act(str(c)) for c in cams)
     finally:
         gate.set()
         stop.set(); thread.join(timeout=20)
@@ -1146,7 +1146,7 @@ def _hanging_holder(box, n: int, **kw):
 
     cam_of = dict(zip(keys, cams))
     holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                       wall=box.wall, server="srv-a", env={}, archive_root=box.archive,
+                       wall=box.wall, server="srv-a", env={}, resource_root=box.archive,
                        device_factory=lambda key: Hanging(key, channels=["1"], rays=1, relays=2,
                                                           coverage={str(cam_of[key]): (0.0, 60.0)}), **kw)
     return holder, cams, keys, hung, gate, hang, asked
@@ -1181,7 +1181,7 @@ def test_a_hundred_devices_of_two_hundred_that_never_answer_cost_a_pass_and_a_he
         said = lambda cov: {k: v for k, v in (cov or {}).items() if k != "said_at"}   # said last, with its age (the twelfth)
         assert all(said(st.get("coverage")) == {"from": 0.0, "to": 60.0, "fragments": 0} for st in hb.status), \
             "a camera of a hung device lost the coverage its device said last"
-        assert all(holder.may_write(str(c)) for c in cams)
+        assert all(holder.may_act(str(c)) for c in cams)
     finally:
         gate.set()
     hang.clear()
@@ -1210,7 +1210,7 @@ def test_the_lease_steps_keep_their_rhythm_while_half_the_devices_never_answer()
         time.sleep(5.0)
         gaps = [b - a for a, b in zip(leased[mark - 1:], leased[mark:])]
         assert len(gaps) >= 3 and max(gaps) <= 1.0 + 2 * VmsWorker.DEVICE_HOLD + 0.5, f"lease steps {gaps}"
-        assert holder._slow_asks and all(holder.may_write(str(c)) for c in cams)   # questions hung: not the commands' `_slow`
+        assert holder._slow_asks and all(holder.may_act(str(c)) for c in cams)   # questions hung: not the commands' `_slow`
     finally:
         gate.set()
         stop.set(); thread.join(timeout=20)
@@ -1242,7 +1242,7 @@ def test_a_device_that_refuses_to_open_or_never_opens_is_that_devices_and_the_pa
         return FakeDevice(key, channels=["1"])
 
     holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                       wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=factory)
+                       wall=box.wall, server="srv-a", env={}, resource_root=box.archive, device_factory=factory)
     try:
         t = time.monotonic()
         holder.reconcile_once()
@@ -1586,7 +1586,7 @@ def _nvr_holder(box, n: int, device, server: str = "srv-a"):
                     json.dumps({"server": server, "ts": box.wall(), "url": "http://x", "units": {}}).encode())
     VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
-                       wall=box.wall, server=server, env={}, archive_root=box.archive, device_factory=device)
+                       wall=box.wall, server=server, env={}, resource_root=box.archive, device_factory=device)
     return holder, cams
 
 
@@ -1880,7 +1880,7 @@ def test_another_serial_number_under_the_same_key_is_said_and_counted():
         assert 'vms_device_identity_changes_total{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
         nvr.identity = "SN-THIRD"                                     # and a holder started on the row of the second
         fresh = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(),
-                          clock=box.clock, wall=box.wall, server="srv-a", env={}, archive_root=box.archive,
+                          clock=box.clock, wall=box.wall, server="srv-a", env={}, resource_root=box.archive,
                           device_factory=lambda key: nvr)
         fresh.reconcile_once()
         assert fresh.identity_changes == 1

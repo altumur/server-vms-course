@@ -118,7 +118,7 @@ def test_the_image_carries_the_three_packages_and_nothing_else():
     assert 'CMD ["python3", "-m", "vms", "worker"]' in cf
     env = open(os.path.join(DEPLOY, "vms.env.example")).read()
     platform = open(os.path.join(DEPLOY, "w2c.env.example")).read()
-    assert "PLATFORM_DIR=/data/platform" in platform and f"ARCHIVE={EVENTS}" in platform   # the events archive is the platform's
+    assert "PLATFORM_DIR=/data/platform" in platform and f"RESOURCE_ROOT={EVENTS}" in platform   # the events archive is the platform's
     assert "CAPACITY=" in env
     assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
 
@@ -134,9 +134,9 @@ def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
     server's name, labels, box id — and the VMS's `vms.env`. Since the owner's decision of 4 October the course's
     box has the product's paths too, `/etc/w2c` and `/etc/vms` being links into its data partition. Every unit reads
     both, the platform's first (checked per unit above); the spares' units read them too; and each name is in its own
-    half and only there — `ARCHIVE` the platform's."""
+    half and only there — `RESOURCE_ROOT` the platform's."""
     platform, vms = _env_names("w2c.env.example"), _env_names("vms.env.example")
-    assert {"PLATFORM_DIR", "ARCHIVE", "PLATFORM_STORE", "SERVER_NAME", "LABELS", "BOX_ID"} <= platform
+    assert {"PLATFORM_DIR", "RESOURCE_ROOT", "PLATFORM_STORE", "SERVER_NAME", "LABELS", "BOX_ID"} <= platform
     assert {"CAPACITY", "MEDIA_DIR", "SHM_DIR", "OBSD_SOCKET", "ARCHIVE_VOLUME"} <= vms
     assert not platform & vms, platform & vms
     for n in os.listdir(DEPLOY):
@@ -404,14 +404,15 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
 
 def test_every_process_that_registers_with_the_resource_mounts_the_events_archive():
     """The twelfth review, major 5: a process that holds a slot registers with its server's resource
-    (`vms/__main__._present`: a lock and its name in `<events archive>/.workers`), and the live gateway's container
+    (`vms/__main__._present`, `make_worker`, `make_recorder`: a lock and its name in `<events archive>/.workers`), and the live gateway's container
     did not mount the events archive — its registration went into the container's own layer, the resource never saw it,
     and a hung gateway was "not listed", its slot released: two gateways. Every entry point that calls `_present`, read
     from `vms/__main__.py`, against the container that runs it: the archive mounted, its group joined."""
     import ast
     src = ast.parse(open(os.path.join(HERE, "vms", "__main__.py"), encoding="utf-8").read())
     registers = {f.name for f in src.body if isinstance(f, ast.FunctionDef)
-                 and any(isinstance(n, ast.Call) and getattr(n.func, "id", "") == "_present" for n in ast.walk(f))}
+                 and any(isinstance(n, ast.Call) and getattr(n.func, "id", "") in ("_present", "make_worker", "make_recorder")
+                         for n in ast.walk(f))}
     assert {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker"} <= registers, registers
     ran = set()
     for n in sorted(os.listdir(DEPLOY)):
@@ -426,8 +427,8 @@ def test_every_process_that_registers_with_the_resource_mounts_the_events_archiv
 
 
 def test_a_recorder_told_nothing_keeps_its_events_in_the_platforms_archive_and_its_volume_where_the_vms_keeps_volumes():
-    """WP-E's layout in the recorder's own defaults (the twelfth review's alignment): with no `ARCHIVE`, no
-    `archive_root` and no `ARCHIVE_VOLUME`, its events go to the platform's archive (`runtime.events_root`:
+    """WP-E's layout in the recorder's own defaults (the twelfth review's alignment): with no `RESOURCE_ROOT`, no
+    `resource_root` and no `ARCHIVE_VOLUME`, its events go to the platform's archive (`runtime.events_root`:
     `/data/platform/events`) and its own volume is the VMS's (`config.OWN_VOLUME`, `/data/vms/obsd/volume`) — it was
     `/data/archive` and `/data/volume` beside it, the layout before. A tree named by its caller keeps its volume beside."""
     import types
@@ -438,9 +439,9 @@ def test_a_recorder_told_nothing_keeps_its_events_in_the_platforms_archive_and_i
     box = Box()
     r = RecWorker("r-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
                   obsd=types.SimpleNamespace(), env={})
-    assert r.archive_root == EVENTS and r.default_url == OWN_VOLUME == "file:///data/vms/obsd/volume"
+    assert r.resource_root == EVENTS and r.default_url == OWN_VOLUME == "file:///data/vms/obsd/volume"
     named = RecWorker("r-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      obsd=types.SimpleNamespace(), env={}, archive_root=box.archive)
+                      obsd=types.SimpleNamespace(), env={}, resource_root=box.archive)
     assert named.default_url == "file://" + os.path.join(os.path.dirname(os.path.abspath(box.archive)), "volume")
 
 
@@ -449,13 +450,12 @@ def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_noth
     `/etc/vms → /data/vms/etc` — and the course's box moved off its old places by the install script, deleting
     nothing. RUN in a sandbox (`INSTALL_ROOT`) holding a box of the old layout: `/data/config/{w2c,vms}.env`,
     `/data/secrets/platform.key`, `/data/archive` with a bucket, a ring at `/data/volume`, a real `/etc/w2c` with a
-    file. After: the links, every file where the layout says, the old `ARCHIVE=/data/archive` of `vms.env` (read
-    second, so it would win) commented out and `w2c.env` given the platform's archive, the ring kept where it is
+    file. After: the links, every file where the layout says, `w2c.env` given the platform's events root, the ring kept where it is
     with `ARCHIVE_VOLUME` saying so, the key 0640 to `w2c-secrets`. Run again: nothing moves, nothing is said twice.
     And a group made with another number than the units join by stops the script before it changes anything."""
     import tempfile
     box = tempfile.mkdtemp(prefix="install-box-")
-    old = {"data/config/w2c.env": "PLATFORM_DIR=/data/platform\n", "data/config/vms.env": "ARCHIVE=/data/archive\nCAPACITY=7\n",
+    old = {"data/config/w2c.env": "PLATFORM_DIR=/data/platform\n", "data/config/vms.env": "CAPACITY=7\n",
            "data/secrets/platform.key": "k1 00\n", "data/archive/vms/7/e1/20261004T100000Z.events.jsonl": '{"t": 1}\n',
            "data/volume/ring.0": "ring", "etc/w2c/configstore-rights.json": "{}\n"}
     for path, text in old.items():
@@ -467,8 +467,8 @@ def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_noth
     assert out.returncode == 0, out.stdout + out.stderr
     assert os.readlink(at("etc/w2c")) == at("data/platform/etc") and os.readlink(at("etc/vms")) == at("data/vms/etc")
     w2c, vms = open(at("etc/w2c/w2c.env")).read(), open(at("etc/vms/vms.env")).read()
-    assert w2c.startswith("PLATFORM_DIR=/data/platform\n") and "\nARCHIVE=/data/platform/events\n" in w2c
-    assert "CAPACITY=7" in vms and not any(l.startswith("ARCHIVE=") for l in vms.splitlines())   # it would win, and say /data/archive
+    assert w2c.startswith("PLATFORM_DIR=/data/platform\n") and "\nRESOURCE_ROOT=/data/platform/events\n" in w2c
+    assert "CAPACITY=7" in vms and not any(l.startswith("RESOURCE_ROOT=") for l in vms.splitlines())   # the platform's, not the VMS's
     assert vms.count("\nARCHIVE_VOLUME=file:///data/volume\n") == 1 and open(at("data/volume/ring.0")).read() == "ring"
     assert open(at("data/platform/etc/secrets/platform.key")).read() == "k1 00\n"
     key = at("data/platform/etc/secrets/platform.key")
@@ -477,7 +477,7 @@ def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_noth
     assert os.path.exists(at("etc/w2c/configstore-rights.json"))             # the real /etc/w2c's file, moved under the link
     assert not os.path.exists(at("data/config")) and not os.path.exists(at("data/secrets"))   # emptied, so gone
     out, calls = _install_obsd(owned=True, same_unit=True, box=box)          # again: a box in order
-    assert out.returncode == 0 and "moved" not in out.stdout and "ARCHIVE" not in out.stdout, out.stdout
+    assert out.returncode == 0 and "moved" not in out.stdout and "RESOURCE_ROOT" not in out.stdout, out.stdout
     assert open(at("etc/vms/vms.env")).read() == vms and open(at("etc/w2c/w2c.env")).read() == w2c
     out, calls = _install_obsd(owned=True, numbers={**NUMBERS, "group w2c-events": "999"})
     assert out.returncode == 1 and "w2c-events has the number 999" in out.stderr, out.stderr
@@ -831,7 +831,7 @@ def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_
     env = {"SPEC_DIR": os.path.join(HERE, "vms"), "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "vms"}
     m, ctls = host.build_console(env)
     assert m.root.spec.name == "vms" and set(m.mounts) == {"rec", "live", "det", "detjob", "survey", "auto"}
-    assert m.root.media and m.root.describe()["door"] == {"routes": ["timeline", "segment"]}
+    assert m.root.describe()["door"] == {"routes": ["timeline", "segment"]}
     assert m.mounts["rec"].describe()["door"] == {"routes": ["timeline", "export"]}
     assert m.mounts["live"].describe()["door"] == {"routes": ["whep"]}
 

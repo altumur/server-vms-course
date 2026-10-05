@@ -33,7 +33,7 @@ def _box():
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     live_ctl = SpecController(LIVE_SPEC, box.vars.as_writer("livecontroller", LIVE_SPEC.acl_controller()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
     w.heartbeat_once()
     con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed()   # the console writes the row, the controller places
     w.reconcile_once(); w.heartbeat_once()
@@ -45,7 +45,7 @@ def _gateway(box, name, capacity=100, labels="", url=""):
     g = LiveWorker(name, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects,
                     ctl=SpecController(LIVE_SPEC, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects, wall=box.wall),
                     capacity=capacity, clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": labels},
-                    archive_root=box.archive)
+                    resource_root=box.archive)
     g.serve("127.0.0.1", 0); g.heartbeat_once()
     return g
 

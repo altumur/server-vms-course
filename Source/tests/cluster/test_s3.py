@@ -3,7 +3,7 @@ from the S3 "Signature Calculations" documentation. If this signature
 matches, the canonical request, the string to sign and the key derivation
 are all right; nothing else in the adapter is cryptographic."""
 import datetime as dt
-from cluster.s3 import sign
+from w2cplatform.cluster.s3 import sign
 
 ACCESS = "AKIAIOSFODNN7EXAMPLE"
 SECRET = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -37,8 +37,8 @@ def test_a_read_of_the_object_store_takes_up_to_its_ceiling_and_refuses_past_it(
     A read now takes up to `GET_MAX` and is refused past it — a `ValueError`, never half an object."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-    import cluster.objectstore as o
-    import cluster.s3 as s3
+    import w2cplatform.cluster.objectstore as o
+    import w2cplatform.cluster.s3 as s3
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
