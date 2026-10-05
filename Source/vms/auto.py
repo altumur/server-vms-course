@@ -67,7 +67,7 @@ ACTIONS = {
 # `maximum`); these say them for the code that reads a scenario, and `test_auto_spec` holds the two to one another.
 MAX_TRIGGERS = 4
 MAX_WITHIN = 3600
-MAX_VALID_FOR = 600          # what a holder accepts: `VmsWorker.MAX_VALID` (a command's deadline is near)
+MAX_VALID_FOR = 600          # what a holder accepts: the VMS spec's `requests.most_valid` (a command's deadline is near)
 MAX_ACTIONS = 4
 
 

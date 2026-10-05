@@ -1094,9 +1094,9 @@ class RecWorker(VmsWorker):
         # is a SPARE — it is running, it has taken no volume, and it is not a place to record. It reports
         # zero capacity with it, so the two halves of the same statement cannot drift apart.
         #
-        # `fetched`: the requests this recorder has closed. It cannot delete the rows — a worker writes no
-        # configuration — so it says which ones are done and the console removes them.
-        return {**super().heartbeat_extra(),         # `fetched`: the same answer every worker gives
+        # `fetched` — the requests this recorder has closed — is the base's to say (`Worker.requests_fields`): it cannot
+        # delete the rows — a worker writes no configuration — so it says which ones are done and the console removes them.
+        return {**super().heartbeat_extra(),
                 "volume": self.volume,
                 **({"freed": dict(self.freed)} if self.freed else {}),   # the resource's ask to free bytes, answered
                 **({"requests_refused": dict(self.requests_refused)} if self.requests_refused else {}),
