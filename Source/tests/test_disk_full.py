@@ -16,7 +16,7 @@ from w2cplatform.resource import SPACE_KEY, Resource, space_settings
 from w2cplatform.metrics import text as spec_metrics
 from vms.controller import VmsController
 from vms.worker import fake_samples
-from tests.conftest import Box, footage, recorder
+from tests.vmsconftest import Box, footage, recorder
 
 DAY = 86400.0
 

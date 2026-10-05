@@ -123,7 +123,7 @@ def part1(root: str, now: float, files: int) -> dict:
 
 def serve_resources(roots: dict, now: float):
     """Three resource processes over HTTP, each over its own tree, heartbeating into one object store."""
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
     from vms.archive import ArchiveResource
     from w2cplatform.resource import platform_resource
     from w2cplatform.resource import serve

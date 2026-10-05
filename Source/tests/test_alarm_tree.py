@@ -13,7 +13,7 @@ from w2cplatform.events import ALARM, EventLog, buckets_under, subsystems_under
 from w2cplatform.resource import ALARM_DAYS, Resource, retention_days
 from vms.config import SPEC
 from vms.controller import VmsController
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 DAY = 86400.0
 

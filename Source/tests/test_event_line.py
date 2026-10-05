@@ -14,7 +14,7 @@ import os
 
 from w2cplatform.eventdatabase import EventIndex, MergedIndex
 from w2cplatform.events import MAX_EVENT_LATENESS, EventLog, read_bucket
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_autoworker import DOOR, _assigned, _Log, _scenario, _worker, ev
 
 

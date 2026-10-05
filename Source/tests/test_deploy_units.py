@@ -307,7 +307,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
     from w2cplatform.resource import platform_resource
     from w2cplatform import runtime
     from w2cplatform.events import EventLog
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
     group = (set(os.getgroups()) - {os.getgid()} or {os.getgid()}).pop()   # a group this process is in, not its own if it can
     resource = (os.getuid() + 1, {group})                                    # another uid; the group its only tie
 
@@ -434,7 +434,7 @@ def test_a_recorder_told_nothing_keeps_its_events_in_the_platforms_archive_and_i
     `/data/platform/events`) and its own volume is the VMS's (`config.OWN_VOLUME`, `/data/vms/obsd/volume`) — it was
     `/data/archive` and `/data/volume` beside it, the layout before. A tree named by its caller keeps its volume beside."""
     import types
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
     from vms.config import OWN_VOLUME
     from vms.recworker import RecWorker
     from vms.worker import FakeActuator

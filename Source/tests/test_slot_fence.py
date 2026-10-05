@@ -141,7 +141,7 @@ def _holders(box):
     """The three that fence and rejoin on their own path instead of `keep_slot`: the holder, the recorder, and the
     camera's own recorder, which inherits the recorder's."""
     import tempfile
-    from tests.conftest import REC_ACL, recorder
+    from tests.vmsconftest import REC_ACL, recorder
     from tests.test_stand_in import _holder
     from vms.card import CamRing, CardActuator, CardRecorder
     ring = CamRing(clock=box.wall)

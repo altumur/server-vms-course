@@ -15,7 +15,7 @@ only the lease step talks to the store.
 import threading
 
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_lesson4_worker import _box_with_cameras
 
 T_POLL = 2.0

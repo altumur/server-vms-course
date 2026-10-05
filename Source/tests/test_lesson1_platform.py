@@ -6,7 +6,8 @@ from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, current_epoch, next_epoch
 from w2cplatform.spec import SpecController, SubsystemSpec
 from w2cplatform.variables import Conflict, FileVariables, Forbidden
-from tests.conftest import Box, Clock
+from tests.conftest import Clock
+from tests.vmsconftest import Box
 
 
 def test_the_config_store_survives_a_restart_and_refuses_a_stale_cas():
@@ -223,7 +224,7 @@ def test_a_worker_that_released_its_slot_stops_receiving_units():
     from vms.config import SPEC
     from vms.controller import VmsController
     from vms.worker import FakeActuator, VmsWorker
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
 
     box = Box()
     ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
@@ -249,7 +250,7 @@ def test_a_subscriber_is_not_handed_a_holder_that_has_gone_silent():
     from vms.config import SPEC
     from vms.controller import VmsController
     from vms.worker import FakeActuator, VmsWorker
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
 
     box = Box()
     ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)

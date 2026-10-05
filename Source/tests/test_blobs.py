@@ -20,7 +20,8 @@ from w2cplatform.console import SpecConsole
 from w2cplatform.objects import FsObjectStore
 from vms.config import DET_SPEC
 from w2cplatform.spec import Refused, SpecController, SubsystemSpec
-from tests.conftest import Box, FakeStore
+from tests.conftest import Box
+from tests.vmsconftest import FakeStore
 
 MASK = base64.b64encode(bytes(1920 * 1080 // 8))       # 345 600 bytes: the real thing, not a stand-in
 

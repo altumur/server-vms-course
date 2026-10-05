@@ -21,7 +21,7 @@ from vms.config import REC_SPEC
 from vms.worker import FakeDevice, fake_samples
 from vms.obsd import archive_ms, unix_s
 from w2cplatform.spec import SpecController
-from tests.conftest import REC_ACL, footage, recorder
+from tests.vmsconftest import REC_ACL, footage, recorder
 from tests.test_lesson11_edge import CARD, _box, _holder
 
 

@@ -1,5 +1,5 @@
 """The stand without an orchestrator: three servers, one store, a clock — no Nomad, no MinIO, no GStreamer, and one
-real obsd for the whole run, М10's (`Source/tests/conftest.py`): every server's volume is a directory of its own
+real obsd for the whole run, М10's (`Source/tests/vmsconftest.py`): every server's volume is a directory of its own
 on it, as every host's would be on its own.
 
 THE STORE is the configstore's own state machine (`w2cplatform/storemachine.py`, `StoreMachine`) — one for the whole
@@ -46,10 +46,10 @@ SERVERS = (("srv-a", "vlan:cctv-a"), ("srv-b", "vlan:cctv-a,vlan:cctv-b"), ("srv
 
 
 def _vms_conftest():
-    """М10's test helpers — the daemon, a session, footage — `tests/conftest.py`, loaded by path under a name of its own."""
+    """М10's test helpers — the daemon, a session, footage — `tests/vmsconftest.py`, loaded by path under a name of its own."""
     import importlib.util
     import vms
-    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(vms.__file__))), "tests", "conftest.py")
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(vms.__file__))), "tests", "vmsconftest.py")
     spec = importlib.util.spec_from_file_location("vmsserver_conftest", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

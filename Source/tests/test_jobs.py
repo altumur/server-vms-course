@@ -6,7 +6,7 @@ from w2cplatform.console import Heartbeat
 from w2cplatform.spec import SpecController
 from vms.config import DETJOB_SPEC
 from vms.jobs import reap
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _ctls(box):

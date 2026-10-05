@@ -17,7 +17,7 @@ from vms.controller import VmsController
 from vms.worker import FakeActuator, FakeDevice
 from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import Refused, SpecController
-from tests.conftest import footage, recorder
+from tests.vmsconftest import footage, recorder
 from tests.test_lesson11_edge import CARD, _box, _holder
 
 

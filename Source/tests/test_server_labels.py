@@ -16,7 +16,7 @@ from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import REACH_BUDGET, Refused
 from vms.config import SPEC
 from vms.controller import VmsController
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_console_gate import Tokens, _audit, _call, _console
 
 

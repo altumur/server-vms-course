@@ -211,7 +211,7 @@ def test_a_camera_never_started_waits_and_an_action_waits_for_the_stores_word():
     """Data goes on; two things do not. A camera this worker has not started has no epoch to record under — it
     waits. And a command is not data: a relay pulsed by a worker that may have been replaced is pulsed twice."""
     from vms.config import SPEC
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
     from tests.test_group_by import _ctl, _holder, _worker as _placed
     box = Box(); ctl, con = _ctl(box)
     door = con.create_camera({"name": "front door", "source": "driverpack://acme/10.0.0.90/ch/1"})["id"]
@@ -244,7 +244,7 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
     serve is let go when its hold has gone unconfirmed for its TTL — two writers in one archive is damage."""
     import os
     from vms import volumes
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
     from tests.test_volumes import _recorder
     for kind, stays in (("local", True), ("network", False)):
         box = Box()
@@ -269,7 +269,7 @@ def test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source
     says nothing: the source read last stands, and the other parts of the pass run."""
     from vms.config import live_shm
     from vms.recworker import RecWorker
-    from tests.conftest import REC_ACL, TEST_BLOCK, TEST_QUOTA, TEST_READ, obsd_session
+    from tests.vmsconftest import REC_ACL, TEST_BLOCK, TEST_QUOTA, TEST_READ, obsd_session
     from tests.test_lesson5_recorder import _box
     box, ctl, con, rec_con, rec_ctl, w = _box()
     vars_, objects = Flaky(box.vars.as_writer("recworker-r-1", REC_ACL)), Flaky(box.objects)

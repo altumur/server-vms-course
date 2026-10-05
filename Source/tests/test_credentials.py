@@ -13,7 +13,7 @@ from vms.console import serve
 from vms.controller import VmsController
 from w2cplatform.secrets import SECRET_MASK, is_secret_field, mask_secrets
 from w2cplatform.spec import Refused, SubsystemSpec
-from tests.conftest import Box, published_snapshot
+from tests.vmsconftest import Box, published_snapshot
 
 
 def test_the_rule_is_a_suffix_and_masking_is_a_copy():

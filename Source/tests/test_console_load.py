@@ -22,7 +22,7 @@ import threading
 import time
 
 from w2cplatform.access import Gate
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_console_gate import Tokens, _call, _console, _console_with_jobs
 
 

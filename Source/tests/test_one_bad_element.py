@@ -14,7 +14,7 @@ import urllib.request
 
 from w2cplatform.contract import GARBLED, Heartbeat, builds
 from vms.config import REC_SPEC
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_slot_fence import _forget_garbled
 
 DEEP = "[" * 1_000_000 + "]" * 1_000_000                            # nested past what `json.loads` reads: `RecursionError`
@@ -157,7 +157,7 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
     import urllib.error
     import urllib.request
     from w2cplatform.rows import FIELDS
-    from tests.conftest import page_door
+    from tests.vmsconftest import page_door
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(1)
     t = box.wall()
@@ -204,7 +204,7 @@ def test_a_body_that_is_no_json_object_is_refused_on_every_write_route():
         assert [r["id"] for r in ctl.units()] == [1]
     finally:
         srv.shutdown()
-    from tests.conftest import page_door
+    from tests.vmsconftest import page_door
     pd = page_door(box)
     try:
         assert _raw(pd.base, "GET", "/segment/1/e1/nan-60000.mp4", None) == 404   # a piece's bounds are digits, or no piece

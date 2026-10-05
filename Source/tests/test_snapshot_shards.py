@@ -18,7 +18,8 @@ import json
 from w2cplatform.contract import Heartbeat
 from vms.config import SPEC
 from vms.controller import VmsController
-from tests.conftest import Box, published_snapshot
+from tests.conftest import Box
+from tests.vmsconftest import published_snapshot
 
 CAP = 64 * 1024                       # a declared ceiling — 64 KiB, the one the shape was measured against
 LABELS = ["vlan:cctv-a", "site:msk-hq", "floor:3"]

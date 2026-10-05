@@ -61,7 +61,7 @@ SUBSYSTEM_PACKAGES = ("vms", "gstvms", "cluster")              # what the platfo
 # loop, a camera's three subsystems on one timeline — is the subsystem's, and is not here until it is split.
 PLATFORM_TESTS = (
     # on the platform alone
-    "tests/test_configstore.py", "tests/test_configstorevars.py", "tests/test_console_page.py",
+    "tests/conftest.py", "tests/test_configstore.py", "tests/test_configstorevars.py", "tests/test_console_page.py",
     "tests/test_memvariables.py", "tests/test_portability.py", "tests/test_resource_objects.py",
     "tests/test_store_durable.py", "tests/test_storemachine.py", "tests/test_variables_contract.py",
     # a mechanism of the platform as the subject, a subsystem brought up to drive it

@@ -5,7 +5,8 @@ import os
 from vms.controller import VmsController
 from vms.reconciler import CONVERGED, LAGGING, STALLED, Reconciler
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box, Clock, FakeStore, cam
+from tests.conftest import Clock
+from tests.vmsconftest import Box, FakeStore, cam
 
 
 # -- М9 Lesson 6's seven, unchanged in meaning ------------------------------------------

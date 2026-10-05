@@ -15,7 +15,7 @@ import threading
 
 from vms.obsd import Session
 from vms.recworker import RecWorker
-from tests.conftest import Box, obsd_session, recorder
+from tests.vmsconftest import Box, obsd_session, recorder
 
 
 class _Passes:

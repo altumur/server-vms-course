@@ -22,7 +22,7 @@ from w2cplatform import runtime
 from vms.config import SPEC
 from vms.controller import VmsController
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _ctl(box, capacity=2):

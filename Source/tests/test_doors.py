@@ -12,7 +12,7 @@ import urllib.request
 from w2cplatform.doors import byte_range, safe_rel, safe_segment
 from w2cplatform.resource import serve as serve_resource
 from w2cplatform.resource import platform_resource
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _get(url, headers=None):

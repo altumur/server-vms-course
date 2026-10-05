@@ -11,7 +11,7 @@ from vms.config import SURVEY_SPEC
 from w2cplatform.events import Frontier
 from vms.scan import SURVEY
 from vms.surveyworker import SurveyWorker, _Busy
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 T = 1_757_500_000.0
 

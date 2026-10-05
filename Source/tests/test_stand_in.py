@@ -17,7 +17,7 @@ from vms.worker import FakeActuator, VmsWorker
 from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem
 from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, next_epoch
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _holder(box, name="w-1", **kw):

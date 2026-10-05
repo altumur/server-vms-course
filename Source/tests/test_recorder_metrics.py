@@ -8,7 +8,7 @@ from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import SpecController
 from vms.config import REC_SPEC
 from w2cplatform.metrics import text as spec_metrics
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def test_a_recorders_troubles_are_numbers_not_only_a_heartbeat():
@@ -42,7 +42,7 @@ def test_a_recording_the_engine_refuses_is_counted_by_itself_and_its_last_frame_
     from vms.obsd import CODE, ObsdError
     from vms.recworker import RecSink
     from vms.worker import fake_samples
-    from tests.conftest import recorder
+    from tests.vmsconftest import recorder
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     r = recorder(box, acl=False)

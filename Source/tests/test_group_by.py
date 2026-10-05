@@ -20,7 +20,7 @@ from w2cplatform.contract import Heartbeat
 from vms.config import SPEC
 from vms.controller import VmsController
 from w2cplatform.variables import Forbidden
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _ctl(box):

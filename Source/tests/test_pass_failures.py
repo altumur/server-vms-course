@@ -17,7 +17,7 @@ from vms.controller import VmsController
 from w2cplatform.host import controller_loop, stop
 from w2cplatform.console import SpecConsole
 from w2cplatform.objects import FsObjectStore
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 class _Recorder(logging.Handler):

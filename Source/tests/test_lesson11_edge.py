@@ -24,7 +24,7 @@ from vms.config import DET_SPEC, LIVE_SPEC, REC_SPEC, SPEC, device_of, channel_o
 from vms.console import serve
 from vms.controller import VmsController
 from vms.worker import FakeActuator, FakeDevice, VmsWorker
-from tests.conftest import Box, door, footage, recorder
+from tests.vmsconftest import Box, door, footage, recorder
 
 NVR = "driverpack://acme/10.0.0.50/ch/{}"
 CARD = "driverpack://acme/10.0.0.7"
@@ -145,7 +145,7 @@ def test_the_device_says_what_it_holds_and_yields_to_our_footage():
     no recording's span is — and plays it through the same door (`/segment/<recording>/e0/<fromMs>-<toMs>.device.mp4`),
     which reads it from the camera's holder by this process's capability. The camera's holder has no door of its own."""
     from vms.footage import footage_routes
-    from tests.conftest import page_door
+    from tests.vmsconftest import page_door
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000.0, 7)}))
     con.create_camera({"name": "front", "source": CARD})
@@ -375,7 +375,7 @@ def test_two_recordings_of_one_camera_are_a_yaml_edit():
     would not pass, and until the unit-keyed tree it would not have."""
     from w2cplatform.contract import Heartbeat
     from vms.config import REC_SPEC
-    from tests.conftest import store
+    from tests.vmsconftest import store
 
     box, ctl, con, con_vars = _box()
     spec = _redundant_spec()
@@ -428,7 +428,7 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     import json
     from vms.footage import footage_routes
     from vms.recworker import archive_routes
-    from tests.conftest import store
+    from tests.vmsconftest import store
 
     box, ctl, con, con_vars = _box()
     spec = _redundant_spec()

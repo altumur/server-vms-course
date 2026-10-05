@@ -16,7 +16,7 @@ from vms import volumes
 from vms.config import REC_SPEC, SPEC
 from vms.console import serve
 from vms.controller import VmsController
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 DAY = 86400.0
 

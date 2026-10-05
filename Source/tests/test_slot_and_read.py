@@ -13,7 +13,7 @@ from vms.config import SPEC
 from vms.console import serve
 from vms.controller import VmsController
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box, door, footage, page_door, recorder, store
+from tests.vmsconftest import Box, door, footage, page_door, recorder, store
 
 
 def seg(unit: str, epoch: int, t0: float, t1: float) -> str:
@@ -96,7 +96,7 @@ def test_a_segment_is_one_epochs_stream_from_whichever_door_holds_it():
     first and covers the same minutes."""
     import urllib.request
     from vms.worker import fake_samples
-    from tests.conftest import door, footage, store
+    from tests.vmsconftest import door, footage, store
     box = Box()
     t = box.wall() - 3600
     old, new = store("a"), store("b")
@@ -705,7 +705,7 @@ def test_a_recorders_archive_door_names_a_recording_and_nothing_else():
 def test_an_export_asks_for_an_interval_and_never_a_path():
     """The console serves no file, and nothing of a unit's bytes (a recording's recorder does, at its door); the door's
     piece is an interval of one epoch in its path, never a path to a file."""
-    from tests.conftest import page_door
+    from tests.vmsconftest import page_door
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     srv = serve(ctl, box.archive, "127.0.0.1", 0)

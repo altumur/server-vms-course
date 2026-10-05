@@ -5,7 +5,7 @@ from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.events import EventLog
 from w2cplatform.spec import SubsystemSpec
 from vms.config import DET_SPEC, DETJOB_SPEC, SPEC
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _run(box, sub, unit, t, epoch):

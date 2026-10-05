@@ -22,7 +22,8 @@ from w2cplatform.resource import Resource, resources_seen, workers_here
 from vms.config import SPEC
 from vms.controller import VmsController
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box, as_kept
+from tests.conftest import as_kept
+from tests.vmsconftest import Box
 from tests.test_console_gate import _call, _console
 from tests.test_slot_fence import _forget_garbled
 

@@ -12,7 +12,7 @@ import json
 from w2cplatform.contract import Heartbeat
 from vms.config import LIVE_SPEC
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box, recorder
+from tests.vmsconftest import Box, recorder
 
 GARBLED = {"epoch": "four"}                                            # a hand edit
 

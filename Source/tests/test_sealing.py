@@ -17,7 +17,7 @@ from vms.config import SPEC
 from vms.console import serve
 from vms.controller import VmsController
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _key(*kids):

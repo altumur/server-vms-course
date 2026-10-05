@@ -16,7 +16,7 @@ from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import SpecController
 from vms import keeps, volumes
 from vms.config import REC_SPEC
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_slot_fence import _forget_garbled
 
 
@@ -495,7 +495,7 @@ def test_a_book_of_primaries_nobody_can_read_makes_the_backup_record():
     """`carried_primary` parsed the book's entry and the agent's mark bare, inside `enrich` — inside the reconciler's
     loop: every start after that backup, every stop, the gate and the writer's pass were skipped. A book nobody can read
     is a book nobody can vouch for, and then the backup records, as for one that is old."""
-    from tests.conftest import recorder
+    from tests.vmsconftest import recorder
     from vms.recworker import DOMAIN_SEEN, PRIMARIES
     box = Box()
     r = recorder(box)
@@ -804,7 +804,7 @@ def test_a_door_that_answers_a_span_another_build_writes_costs_that_span_and_not
     `garbled` and the read is partial — the job waits rather than ending `done` without those minutes; an answer that is
     not an object is the door not answering; the scan's own progress file with a torn last line is read past it."""
     from vms.scan import DOOR_SPANS, ScanLog, plan, recording_read
-    from tests.conftest import door, footage, store
+    from tests.vmsconftest import door, footage, store
     box = Box()
     t = box.wall()
     st = store("v-good")
@@ -836,7 +836,7 @@ def test_a_door_that_answers_a_span_another_build_writes_stops_no_keep_from_bein
     from tests.test_keeps import _keep, _site
     box, k = _site()
     t = box.wall()
-    from tests.conftest import footage
+    from tests.vmsconftest import footage
     footage(box.src, "7", 1, t - 1200, t - 600, step=10)
     odd = _canned(box, "r-odd", {"spans": [{"epoch": "e3", "start": t - 3000, "end": t - 2500}]})
     try:
@@ -866,7 +866,7 @@ def test_a_doors_held_since_is_laid_on_this_recorders_clock_by_the_doors_own_now
         assert k._door_timeline(url("r-old"), "7", t - 3600, t)[1] == t - 600
     finally:
         lagging.shutdown(); older.shutdown()
-    from tests.conftest import door, store
+    from tests.vmsconftest import door, store
     st = store("v-now")
     srv = door(box, st, "r-now", held={"7": t - 60})
     try:

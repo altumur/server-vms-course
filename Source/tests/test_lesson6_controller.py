@@ -8,7 +8,7 @@ import urllib.request
 from vms.console import serve
 from vms.controller import Refused, VmsController
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def test_crud_by_cas_and_what_it_refuses():
@@ -157,7 +157,7 @@ def test_the_console_over_http():
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
     w.heartbeat_once()
     from w2cplatform.events import read_bucket, subsystems_under
-    from tests.conftest import door, footage, store
+    from tests.vmsconftest import door, footage, store
     srv = serve(con, box.archive, port=0, wall=box.wall); port = srv.server_address[1]
     rec_door = None
     try:
