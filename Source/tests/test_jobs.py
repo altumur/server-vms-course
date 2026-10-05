@@ -102,22 +102,23 @@ def test_the_consoles_token_may_actually_write_that_row():
     _worker(box, "j-1", "srv-1", {"id": job, "phase": "done"})
     assert reap(ctl)["done"] == 1                                    # no Forbidden
 
-    src = inspect.getsource(__import__("vms.__main__", fromlist=["console"]).console)
-    assert "DETJOB_SPEC.acl_console()" in src, "the console process does not ask for the grant the reaper needs"
+    src = inspect.getsource(__import__("vms.__main__", fromlist=["jobs"]).jobs)   # the VMS's housekeeping (step 6)
+    assert "DETJOB_SPEC" in src and "acl_console()" in src, "the jobs process does not ask for the grant the reaper needs"
 
 
-def test_the_console_process_actually_runs_the_reaper():
+def test_the_jobs_process_actually_runs_the_reaper():
     """Twice in this project a pass was written, tested and never called. The
     source is weak evidence and this test says so — but it is the evidence that
-    catches exactly that."""
+    catches exactly that. (The VMS's console ran these loops until the boundary's
+    step 6; they are its own process now, `python3 -m vms jobs`.)"""
     import vms.__main__ as m
-    console = inspect.getsource(m.console)
-    assert "_reap_loop" in console, "the console process does not start the reaper — no job will ever close"
-    assert "job_ctl" in console and "detjob" in console
+    console = inspect.getsource(m.jobs)
+    assert "_reap_loop" in console, "the jobs process does not start the reaper — no job will ever close"
+    assert "job_ctl" in console and "DETJOB_SPEC" in console
     loop = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
     for called in ("ask_for_footage", "clear_requests", "keep_what_fired", "reap", "forget_finished"):
         assert f"{called}(" in loop, f"{called} is written, tested and never called"
-    assert "_requests_loop" in console, "the console process does not start the requests' loop — no scenario's request becomes a row"
+    assert "_requests_loop" in console, "the jobs process does not start the requests' loop — no scenario's request becomes a row"
     loop = (inspect.getsource(m._requests_loop) + inspect.getsource(m._requests_turn))
     for called in ("record_on_request", "expire_recordings"):     # the two ends of a timed recording: their own, short loop
         assert f"{called}(" in loop, f"{called} is written, tested and never called"
@@ -237,12 +238,12 @@ def test_when_the_footage_arrives_the_job_goes_back_to_running():
     reap(ctl); assert ctl.unit(job)["revision"] == rev             # and stops moving once it agrees
 
 
-def test_the_console_process_asks_for_footage_too():
+def test_the_jobs_process_asks_for_footage_too():
     import inspect
     import vms.__main__ as m
     loop = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
     assert "ask_for_footage(c, rec_ctl)" in loop, "a job stuck on the device would wait for ever"
-    assert "rec_ctl" in inspect.getsource(m.console)
+    assert "rec_ctl" in inspect.getsource(m.jobs)
 
 
 # -- footage that arrives from a device is a hole in the detections too ----------------------------
@@ -328,12 +329,12 @@ def test_another_cameras_detector_is_not_pointed_at_this_footage():
     assert scan_what_arrived(rec, det, ctl) == 0
 
 
-def test_the_console_process_queues_those_scans():
+def test_the_jobs_process_queues_those_scans():
     import inspect
     import vms.__main__ as m
     loop = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
     assert "scan_what_arrived(rec_ctl, det_ctl, c)" in loop, "backfilled footage would never be looked at"
-    assert "det_ctl" in inspect.getsource(m.console)
+    assert "det_ctl" in inspect.getsource(m.jobs)
 
 
 def test_a_request_to_record_is_kept_when_the_recording_could_not_be_made_this_pass():

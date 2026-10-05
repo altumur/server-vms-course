@@ -561,3 +561,30 @@ def test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_
         assert "door" not in plain.describe() and con.describe()["door"] == {"routes": ["read"]}
     finally:
         srv.shutdown()
+
+
+def test_the_console_is_the_platforms_built_from_a_directory_of_specs_and_the_deployment_says_what_is_at_the_root():
+    """`python3 -m w2cplatform console` (the boundary's step 6: the console was a subsystem's verb, with its own routes and
+    its own list of what it fronts): every spec of `SPEC_DIR`, the one `CONSOLE_ROOT` names at `/` and every other
+    under its name, one token with each spec's console grant, one journal. A root that names no spec is refused, in
+    words: what is at `/` is the deployment's to say."""
+    import json
+    from w2cplatform import host
+    d = tempfile.mkdtemp(prefix="specs-")
+    for spec in (BIN, PICK):                                          # JSON is YAML: the specs as the image carries them
+        with open(os.path.join(d, f"{spec['name']}.subsystem.yaml"), "w") as f:
+            json.dump(spec, f)
+    env = {"SPEC_DIR": d, "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "bin"}
+    m, ctls = host.build_console(env)
+    assert m.root.spec.name == "bin" and set(m.mounts) == {"pick"} and set(ctls) == {"bin", "pick"}
+    assert m.mounts["pick"].journal is m.root.journal
+    ctls["bin"].create({"name": "a"})                                 # the console's token writes the operator's rows
+    from w2cplatform.variables import Forbidden
+    try:
+        ctls["bin"].vars.put("bin/placement/a", {"worker": "w-1"})
+        raise AssertionError("the console's token wrote a placement")
+    except Forbidden:                                                 # …and never placement
+        pass
+    _refused(lambda: host.build_console({**env, "CONSOLE_ROOT": "nope"}), "CONSOLE_ROOT='nope' names no spec")
+    assert "console" in host.USAGE
+

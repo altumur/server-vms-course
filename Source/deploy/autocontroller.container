@@ -1,8 +1,8 @@
 # /etc/containers/systemd/autocontroller.container — the auto subsystem's
 # controller: scenarios placed on evaluators, one per box (one per cluster in
 # М11). The platform's SpecController from auto.subsystem.yaml: placing is all it does, and it writes no
-# scenario — refusing one the evaluator could not run is the console's, where the operator writes it
-# (`AutoController` in `python3 -m vms console`). No port; its token writes auto/workers/*, auto/placement/*,
+# scenario — a scenario's shape is its spec's schema, checked by the platform's console where the operator writes
+# it, and what the evaluator cannot do it says in its heartbeat (the boundary's step 6). No port; its token writes auto/workers/*, auto/placement/*,
 # auto/slots/*.
 [Unit]
 Description=VMS auto controller — the only writer of scenario placement

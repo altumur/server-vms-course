@@ -7,8 +7,9 @@ the live stream do NOT go through it (the owner's decision 1): `GET /where/<id>`
 holder with a token (`door:` in a spec, `w2cplatform/door.py`), and the page reads the holder itself — a recording's
 recorder (`vms/footage.py`), a camera's holder for the device's own archive, a gateway for the stream. The routes that
 were here — `/timeline/<cam>`, `/export/<cam>`, `/segment`, `/whep/<cam>` (`vms_routes`, `LiveFront`) — are those doors.
-Its own process (`python3 -m vms console`), with its own token: the operator's rows — cameras, next_id, retention — and
-never placement.
+The deployed console is the platform's verb, `python3 -m w2cplatform console` with `CONSOLE_ROOT=vms` (`host.py`); this
+module builds the same `Mount` for the tests and the lessons, from the VMS's specs: its own token, the operator's rows —
+cameras, next_id, retention — and never placement.
 """
 from __future__ import annotations
 

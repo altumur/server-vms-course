@@ -123,7 +123,7 @@ def test_the_console_runs_it_and_the_evaluator_may_file_it():
     import vms.__main__ as m
     loop = (inspect.getsource(m._requests_loop) + inspect.getsource(m._requests_turn))
     assert "detect_on_request(" in loop and "expire(det_ctl" in loop
-    assert "_requests_loop" in inspect.getsource(m.console)
+    assert "_requests_loop" in inspect.getsource(m.jobs)            # the VMS's housekeeping since the boundary's step 6
     assert 'requests_acl("vms", "rec", "det")' in inspect.getsource(m.autoworker)
 
 

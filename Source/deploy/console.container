@@ -2,8 +2,8 @@
 # the API, its own process on this box (a system job on every server in М11,
 # nothing in front). Its token writes the operator's rows only — vms/cameras/*,
 # vms/next_id, vms/retention/*, vms/idem/* — and never placement; a camera
-# created here is placed by the controller's next pass. It holds no footage: a
-# timeline and an export are asked of the recorders' archive doors. The archive
+# created here is placed by the controller's next pass. It holds no footage and
+# carries none: a page reads it at the holders' doors, which `/where` hands out. The archive
 # is writable because an operator's marks are the console's own buckets,
 # console/<instance>/…, on it.
 # ================================================================================================
@@ -14,11 +14,12 @@
 # never placement
 #
 # **Role.** The Quadlet unit for `console` at `/etc/containers/systemd/console.container`. It runs
-# `python3 -m vms console`: `SpecConsole` over the VMS spec with the VMS's media routes, on
+# `python3 -m w2cplatform console` (the boundary's step 6: it was `python3 -m vms console`, with the VMS's media
+# routes): `SpecConsole` over every spec the image carries, the VMS's at `/` (`CONSOLE_ROOT=vms`), on
 # `0.0.0.0:8080`. Its own process (a system job on every server in М11, nothing in front) with its own token
 # — `vms/cameras/*`, `vms/next_id`, `vms/retention/*`, `vms/idem/*` (`SPEC.acl_console()`) — and never
 # placement: a camera created here is placed by the controller's next pass. The header comment states the
-# mounts' reasoning: no footage is mounted — `/timeline` and `/export` ask the recorders' doors — and the
+# mounts' reasoning: no footage is mounted — a page reads it at the holders' doors — and the
 # archive is writable because an operator's marks are the console's own buckets, `console/<instance>/…`, on it.
 # Checked by `tests/test_deploy_units.py`.
 #
@@ -44,9 +45,10 @@ After=network.target
 
 [Container]
 Image=localhost/vmsserver:latest
-# the `console` verb: a `VmsController` opened as writer `console` with the console ACL, and
-# `vms.console.serve(...)` over `$ARCHIVE` for its marks.
-Exec=python3 -m vms console
+# the platform's `console` verb (`w2cplatform/host.py`): one token, `console`, with every spec's console grant, and the
+# console over `$ARCHIVE` for its marks; the subsystem at `/` is this deployment's word.
+Exec=python3 -m w2cplatform console
+Environment=CONSOLE_ROOT=vms
 # listen on every interface (the code's default is `127.0.0.1`); with `Network=host` this is the box's
 # :8080. Plain HTTP, and the console says so in its log at every start (`w2cplatform/console.py`, `say_where`):
 # kept because on one box the page is opened from the operator's own machine and nothing here ships a TLS
@@ -54,7 +56,7 @@ Exec=python3 -m vms console
 # limit then counts the address the proxy saw, not the proxy).
 Environment=CONSOLE_HOST=0.0.0.0
 # the port the README's `PLATFORM_DIR=… python3 -m vms controller  # the console on :8080` line refers to;
-# the page, `/spec`, `/cameras`, `/where`, `/metrics`, `/marks`, `/timeline`, `/export` all live here.
+# the page, `/spec`, `/cameras`, `/where`, `/metrics`, `/marks`, `/rec/…` all live here.
 Environment=CONSOLE_PORT=8080
 # THE BOX'S OWN DOOR (the review's sixth pass): the same console on a unix socket, beside the port. Who is "on the
 # box" — for the emergency entry's own turns (`Gate.open_glass`) and for connections of its own when the port is

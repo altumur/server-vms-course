@@ -2121,11 +2121,7 @@
 5 | tests/test_sweep.py:279 | det | af07d4ae
 5 | tests/test_sweep.py:280 | det | a28fef39
 5 | tests/test_sweep.py:281 | det | 64d56eda
-5 | tests/test_sweep.py:294 | import vms | e5d79d2e
-5 | tests/test_sweep.py:294 | vms | e5d79d2e
-5 | tests/test_sweep.py:298 | recorder | 078df357
-5 | tests/test_sweep.py:299 | det | 9e359b44
-5 | tests/test_sweep.py:299 | rec | 9e359b44
+5 | tests/test_sweep.py:297 | recorder | 078df357
 5 | tests/test_variables_contract.py:165 | vms | 9688e0db
 5 | tests/test_variables_contract.py:165 | vms | 9688e0db
 5 | tests/test_variables_contract.py:171 | vms | 6edf36d2
