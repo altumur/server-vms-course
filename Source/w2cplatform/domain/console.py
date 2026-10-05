@@ -424,15 +424,19 @@ class Console:
             # The body of a PUT or a POST, an object — or None, the 400 already sent (the ninth review's sweep): read bare,
             # a body that was not JSON, or JSON that was not an object, dropped the connection with no answer at all.
             def _body(self):
+                from w2cplatform.canonical import parse_json
                 from w2cplatform.rows import PARSE_ERRORS
                 if not read_body(self, self.MAX_BODY):
                     return None
                 try:
-                    body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-                    if not isinstance(body, dict):
-                        raise TypeError(f"the body is a JSON object, not {type(body).__name__}")
+                    # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400`
+                    # are 400 with the shared table's `fault` (the architect, 2026-10-06)
+                    body = parse_json(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
                 except PARSE_ERRORS as e:
-                    self._send(400, {"detail": f"the body does not parse: {e}"})
+                    self._send(400, {"detail": f"the body does not parse: {e}", "fault": getattr(e, "fault", "") or "not_json"})
+                    return None
+                if not isinstance(body, dict):
+                    self._send(400, {"detail": f"the body does not parse: the body is a JSON object, not {type(body).__name__}"})
                     return None
                 return body
 

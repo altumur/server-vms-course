@@ -97,6 +97,7 @@ import json
 import re
 import urllib.parse
 
+from .canonical import parse_json
 from .rights import DOMAIN_ROLES, allowed, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
 from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
@@ -336,9 +337,11 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             return 200, {"keys": {k: v for k, v in got["keys"].items() if rights.allows(role, "read", k)}}
         if method == "POST" and u.path == "/v1/write":
             try:
-                body = json.loads(raw or b"{}")
-            except ValueError:
-                return fault(400, "badrequest", "the body is not JSON")
+                # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400` are
+                # 400 with the shared table's `fault` (the architect, 2026-10-06); nested past what is read, the same
+                body = parse_json(raw or b"{}")
+            except (ValueError, RecursionError) as e:
+                return fault(400, "badrequest", "the body is not JSON", fault=getattr(e, "fault", "") or "not_json")
             if not isinstance(body, dict) or body.get("op") not in ("put", "delete"):
                 return fault(400, "badrequest", 'a write is {"op": "put"|"delete", "key", "items", "cas", "id"}')
             key = check_key(body.get("key", ""))

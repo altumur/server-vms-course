@@ -1136,6 +1136,14 @@ def object_body(h) -> dict:
     return body
 
 
+# The shared table's word for a body that does not read (`object_body`'s `Refused`, a `canonical.Fault`), beside the
+# door's own words: `{"fault": "not_json" | "not_number"}`, and nothing for a refusal of anything else (the architect,
+# 2026-10-06: every door of the platform answers such a body 400 with `fault`).
+def fault_of(e) -> dict:
+    f = getattr(e, "fault", "")
+    return {"fault": f} if f else {}
+
+
 def body_deadline(h, n: int) -> None:
     """Give a body of `n` bytes its deadline, whole: the handler's `timeout` and a second for every `BODY_RATE` bytes —
     and, read through a `DeadlineReader`, a floor on its pace past that grace (`pace`). Every door that reads a body
@@ -1256,7 +1264,7 @@ class IdempotencyKeys:
     @staticmethod
     def _said(raw: bytes) -> bytes:
         try:
-            body = json.loads(raw or b"{}")
+            body = parse_json(raw or b"{}")              # as the door reads it: `1e400`, a lone surrogate are no JSON
         except PARSE_ERRORS:
             return b"not JSON"                           # refused by whoever reads it; what it held is not kept
         return json.dumps(mask_secrets([{"": body}])[0][""], sort_keys=True).encode()
@@ -1900,7 +1908,7 @@ class SpecConsole:
                 self.journal.say("server.labels.cleared", sub=self.spec.name, server=server, user=user)
             return 200, {"server": server, "labels_source": "node", "will_move": ctl.would_move(server, None)}
         except Refused as e:
-            return 400, {"detail": str(e), "error": "refused"}
+            return 400, {"detail": str(e), "error": "refused", **fault_of(e)}
         except Forbidden as e:                           # the console's token, not the caller: the store said no
             return 403, {"detail": str(e), "error": str(e)}
         except OSError as e:
@@ -2218,7 +2226,7 @@ class SpecConsole:
         except Exists as e:
             return 409, {"detail": str(e), "error": "exists"}
         except Refused as e:
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **fault_of(e)}
         except TooLarge as e:
             return 413, {"detail": str(e), "error": str(e)}
         except ClaimLost as e:                                        # taken over while this console stood still: the
@@ -2241,7 +2249,7 @@ class SpecConsole:
                              fields=",".join(sorted(str(k) for k in body)), revision=row.get("revision"))
             return 200, mask_secrets([row])[0]
         except Refused as e:
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **fault_of(e)}
         # 413, and to the person who typed it. The store's ceiling used to be a number in a document and a
         # surprise in production; now the edit that does not fit is refused at the console, with the size
         # and the limit in the sentence, before anything is written.
@@ -2264,7 +2272,7 @@ class SpecConsole:
             d = self.ctl.put_blob(data)                       # 1. the object
             row = self.ctl.update(uid, {field: d})            # 2. the row that names it
         except Refused as e:
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **fault_of(e)}
         except TooLarge as e:
             # The blob is bigger than the STORE will hold — which is the one case where changing the store
             # is the answer, because a blob is exactly the class of data an object store exists for. The cluster's
@@ -2490,7 +2498,7 @@ class SpecConsole:
             raw = h.rfile.read(int(h.headers.get("Content-Length", 0) or 0))
             h.rfile = io.BytesIO(raw)
         try:
-            return json.loads(raw or b"{}")
+            return parse_json(raw or b"{}")              # as the route reads it (`canonical.parse_json`)
         except PARSE_ERRORS:                             # nested past what JSON reads too: no reply at all (the tenth round)
             return None
 
@@ -2589,7 +2597,7 @@ class SpecConsole:
         if key:
             self.seen.release(key)
         if isinstance(e, Refused):                       # a body that is no object (`object_body`): the sender's, 400
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **fault_of(e)}
         if isinstance(e, OSError):
             log.warning("%s: a write was not taken by the store: %s", self.spec.name, e)
             return 503, {"detail": f"the store did not answer: {no_paths(e)}", "error": "store unavailable"}
@@ -2635,14 +2643,17 @@ class SpecConsole:
         # is a list, a token that is not a string, brackets past the parser's depth were 500): an object holding a
         # string token, or the emergency entry's three strings — else 400, and nothing is asked of the gate.
         from .rows import PARSE_ERRORS
+        unread = {}                                      # the shared table's word, when the body does not read
         try:
             body = h._body() if method == "POST" else {}
-        except (*PARSE_ERRORS, OSError):
+        except OSError:
             body = None
+        except PARSE_ERRORS as e:
+            body, unread = None, {"fault": getattr(e, "fault", "") or "not_json"}
         if path == "/session/break-glass":
             if not isinstance(body, dict) or not all(isinstance(body.get(k, ""), str) for k in ("who", "why", "password")):
                 return h._send(400, {"detail": "the emergency entry takes {\"who\", \"why\", \"password\"}, strings",
-                                     "error": "not a session request"})
+                                     "error": "not a session request", **unread})
             peer = str(getattr(h, "client_address", ("?",))[0])
             try:
                 sid, payload = self.gate.open_glass(body.get("who", ""), body.get("why", ""), body.get("password", ""),
@@ -2656,7 +2667,7 @@ class SpecConsole:
             return h._send(200, {"user": f"break-glass({payload.get('who')})", "until": payload.get("exp")})
         if not isinstance(body, dict) or not isinstance(body.get("token", ""), (str, type(None))):
             return h._send(400, {"detail": "the door in takes {\"token\": \"…\"}; the emergency entry is POST "
-                                           "/session/break-glass", "error": "not a session request"})
+                                           "/session/break-glass", "error": "not a session request", **unread})
         token = (body.get("token") if method == "POST" else token_of(h.headers)) or ""
         try:
             payload = access.who(token) if token else (self.gate.payload(h.headers, access) if method == "GET" else None)
@@ -2817,7 +2828,7 @@ class SpecConsole:
                 body, said = object_body(h), {}
                 rid, items = ctl.write_table_row(table, body, user, said)
             except Refused as e:
-                return h._send(400, {"detail": str(e), "error": "refused"})
+                return h._send(400, {"detail": str(e), "error": "refused", **fault_of(e)})
             except TooLarge as e:
                 return h._send(413, {"detail": str(e), "error": str(e)})
             except Forbidden as e:
@@ -2869,7 +2880,7 @@ class SpecConsole:
         try:
             body = object_body(h)
         except Refused as e:
-            return 400, {"detail": str(e), "error": "bad body", **({"fault": e.fault} if getattr(e, "fault", "") else {})}
+            return 400, {"detail": str(e), "error": "bad body", **fault_of(e)}
         if "schema" in req:
             from .schema import Invalid, check
             try:
@@ -3159,6 +3170,14 @@ class SpecConsole:
             return self.blob_route(h, path)
         if not self.read_body(h, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
             return
+        if in_body and path not in OPEN_ROUTES:
+            # A body that does not read names no unit: it is the sender's 400 with the shared table's `fault` (the
+            # architect, 2026-10-06), not a grant on the whole cluster asked of a caller who sent `NaN` or `1e400`.
+            try:
+                parse_json(h.rfile.getvalue() or b"{}")  # `read_body` put it back as memory: read, and still there
+            except PARSE_ERRORS as e:
+                return h._send(400, {"detail": f"the body is not JSON that can be read ({type(e).__name__})",
+                                     "error": "bad body", "fault": getattr(e, "fault", "") or "not_json"})
         if path not in OPEN_ROUTES:
             try:
                 if in_body:
@@ -3346,7 +3365,7 @@ class SpecConsole:
                     body = object_body(h)
                     out = ctl.set_policy(body)
                 except (Refused, Forbidden) as e:
-                    return h._send(400 if isinstance(e, Refused) else 403, {"detail": str(e), "error": str(e)})
+                    return h._send(400 if isinstance(e, Refused) else 403, {"detail": str(e), "error": str(e), **fault_of(e)})
                 # A knob that moves every unit of the subsystem is a line with a name and the new values in it (the
                 # review's third pass, minor): the policy's values are choices, not secrets.
                 con.journal.say("policy.changed", sub=spec.name, user=h.headers.get("X-User", "operator"),
@@ -3576,7 +3595,7 @@ class Mount:
                 return 409, {"detail": refusal, "error": "server answers"}
             row = ctl.decommission(server, user, str(body.get("why") or ""))
         except Refused as e:
-            return 400, {"detail": str(e), "error": "refused"}
+            return 400, {"detail": str(e), "error": "refused", **fault_of(e)}
         except DecommissionRefused as e:                 # it began to answer between the look and the write
             return 409, {"detail": str(e), "error": "server answers"}
         except Forbidden as e:                           # the console's token, not the caller: the store said no
