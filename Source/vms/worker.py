@@ -60,8 +60,8 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # resource_root=None, bucket_seconds=600, env=None)` `env` defaults to `os.environ` (tests pass a dict).
 # `instance` defaults to `INSTANCE_ID`, else the base class's `box:pid:6hex` (`runtime.instance_on_box`). Calls
 # `Worker.__init__` with `name=None` (and the resource tree: the argument, `$RESOURCE_ROOT`, else
-# `<PLATFORM_DIR>/events` — `runtime.events_root`, the platform's) and then `claim_slot(prefer=name or
-# slot_from_environment(env))` — so construction *is* the claim, and `self.name` is set afterwards. Then: `capacity`
+# `<PLATFORM_DIR>/events` — `runtime.events_root`, the platform's) and then `claim_at_start(name, env)` (no name:
+# the runtime's, by the spec's `slot`, `Worker.given_name`) — so construction *is* the claim, and `self.name` is set afterwards. Then: `capacity`
 # from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I, measured on ITS server"; the actuator
 # (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self, self._actuate)`; `writing_allowed = True`;
 # `server` from the argument, `SERVER_NAME`, else the hostname; `labels` (`LABELS`), `alloc` (`INSTANCE_ID`). The
@@ -471,12 +471,6 @@ def live_port(cid, base: int | None = None) -> int:
         return base
 
 
-# `WORKER_NAME` if set; else `w-<SLOT_INDEX>`; else `None` — claim whatever is free, a lapsed slot
-# first. The recorder uses the same rule with `RECORDER_NAME` and `r-`.
-def slot_from_environment(env: dict, name_env: str = "WORKER_NAME", prefix: str = "w") -> str | None:
-    return runtime.slot(env, name_env, prefix)   # None: claim whatever is free — a lapsed slot first
-
-
 # `LABELS` split on commas, empties dropped — what this server can reach, as the runtime said it.
 #
 # …in the one alphabet of labels (`spec.LABEL_WORD`; the review's tenth pass): a word outside it is said at start — no
@@ -514,7 +508,6 @@ class VmsWorker(Worker):
     spec = SPEC                     # …its spec: what the platform serves its requests by (`requests:`, `group_by`)
     REQUEST_TARGET = "the device"   # what a request's refusal calls what was called
     ROWS = "cameras"                # <sub>/<ROWS>/<id>
-    SLOT_PREFIX, NAME_ENV = SPEC.slot_prefix, SPEC.slot_name_env   # `slot:` in vms.subsystem.yaml
     parse_row = staticmethod(row)
 
     def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,
@@ -531,7 +524,7 @@ class VmsWorker(Worker):
         self.row_errors: dict[str, str] = {}                  # camera -> why its own row is not followed (it does not parse)
         self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
         # …or, started as a spare (`SPARE_FOR`), an offer of its set — none: nobody, waiting (`Worker.claim_at_start`)
-        self.claim_at_start(name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX), env)
+        self.claim_at_start(name, env)                        # no name: the runtime's, by the spec's `slot`
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
         # THIS instance's two doors. Defaults are what they always were, so a box with one worker is
         # unchanged; `auto` asks the OS, which is what makes a SECOND worker on the same box possible at

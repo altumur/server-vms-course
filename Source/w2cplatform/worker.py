@@ -139,8 +139,25 @@ class Worker:
     # someone took it between read and write, move on. Sets `self.slot` and `self.name`.
     # `test_identity_by_claim_is_a_platform_piece`: two nameless workers get `w-1` and `w-2`; after `w-1`
     # lapses a third gets `w-1` back and its assignment with it; `prefer="w-7"` creates and takes `w-7`.
-    SLOT_PREFIX = "w"                             # what a slot this worker has to MAKE is called: `<prefix>-<n>`
     server: str | None = None                     # the server it runs on, when its subsystem says (`_claim_slot` asks it)
+
+    # What a slot this worker has to MAKE is called (`<prefix>-<n>`), and the variable its unit names the one it is
+    # started under beside `WORKER_NAME`: the spec's `slot: {prefix, name_env}`, read here and nowhere else. Each
+    # subsystem's class copied them (`SLOT_PREFIX`, `NAME_ENV`) and passed `runtime.slot` its own reading — a key the
+    # loader read and a subsystem carried out, and a class that forgot made `w-<n>` whatever its spec said. A worker
+    # with no spec (a bare one of a test) makes `w-<n>` and is named in `WORKER_NAME`.
+    @property
+    def slot_prefix(self) -> str:
+        return self.spec.slot_prefix if self.spec is not None else "w"
+
+    @property
+    def name_env(self) -> str:
+        return self.spec.slot_name_env if self.spec is not None else runtime.WORKER_NAME
+
+    # The name the runtime gave this process (`runtime.slot`: its spec's variable, `WORKER_NAME`, `SLOT_INDEX`), or
+    # None — "whichever is free, a lapsed one first".
+    def given_name(self, env: dict) -> str | None:
+        return runtime.slot(env, self.name_env, self.slot_prefix)
 
     # Whether a held slot's name stays its holder's — the controller's verdict, at the revision this process reads
     # (`published_names`): the rule stays in one place, and so does the judge.
@@ -207,12 +224,12 @@ class Worker:
 
     # What a process does at its start: claim, as `claim_slot` — or, started as a spare (`SPARE_FOR` in `env`), take an
     # offer of its set, and with none be nobody (`seeking`): no slot, no heartbeat, nothing assigned, nothing taken.
-    # Every lease step looks for an offer again (`_seek_slot`). Returns the name, or None while it waits.
+    # Every lease step looks for an offer again (`_seek_slot`). Returns the name, or None while it waits. `prefer` None:
+    # the name the runtime gave it (`given_name`), if any.
     def claim_at_start(self, prefer: str | None, env: dict) -> str | None:
-        from . import runtime
         spare = runtime.spare_for(env)
         if spare is None:
-            return self.claim_slot(prefer=prefer)
+            return self.claim_slot(prefer=prefer if prefer is not None else self.given_name(env))
         try:
             return self.claim_slot(spare_for=spare)
         except NoOffer as e:
@@ -299,12 +316,12 @@ class Worker:
                 # still when its holder is hung, too, and was taken past `slot_fate` with the hung worker's units.
                 free += sorted((n for n in names if n not in known and rows[n][0] and self._garbled_stale(n, rows[n][1])
                                 and not self._held(n, rows[n][1])), key=slot_number)
-                # A NEW slot is named after the kind of worker taking it (`SLOT_PREFIX`: one letter per subsystem's
+                # A NEW slot is named after the kind of worker taking it (`slot_prefix`: one letter per subsystem's
                 # worker — the letters a process given a name already had), not `w-` for
                 # everybody: a worker of one kind that had to make a slot looked like one of another in every list, every
                 # heartbeat and every log line (the product's box, feedback BU). Slots that exist keep their
                 # names; a lapsed or free one is still taken before a new one is made.
-                nxt = f"{self.SLOT_PREFIX}-{max([slot_number(n) for n in names] + [0]) + 1}"
+                nxt = f"{self.slot_prefix}-{max([slot_number(n) for n in names] + [0]) + 1}"
                 order = lapsed + free + [nxt]
             for cand in order:
                 items, idx = stored(self.vars, prefix + cand, SLOTS)
@@ -374,7 +391,7 @@ class Worker:
             return None
         here, there = runtime.box_of(self.instance), runtime.box_of(holder)
         return NameOnAnotherBox(slot, holder, there or "", socket.gethostname(), here or runtime.box(os.environ),
-                                getattr(self, "NAME_ENV", ""), held)
+                                self.name_env, held)
 
     # A slot nobody holds: released, or never held — not an offer, which is a spare's (`_claim_offer`).
     @staticmethod

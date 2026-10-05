@@ -62,7 +62,7 @@ class SurveyWorker(Worker):
     # idempotent on its own because the request's id is the range.
     HITS_REPORTED = 32
 
-    SLOT_PREFIX = SURVEY_SPEC.slot_prefix                          # a slot it has to make is `s-<n>`, like the ones it is given
+    spec = SURVEY_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
@@ -70,7 +70,7 @@ class SurveyWorker(Worker):
                  fetch=None, index=None):
         env = dict(os.environ if env is None else env)
         super().__init__(SURVEY_SUB, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
-        self.claim_slot(prefer=name if name is not None else runtime.slot(env, SURVEY_SPEC.slot_name_env, SURVEY_SPEC.slot_prefix))
+        self.claim_slot(prefer=name if name is not None else self.given_name(env))
         self.models = models if models is not None else {"motion": FakeModel, "linecross": FakeModel, "lpr": FakeModel}
         self.capacity = capacity if capacity is not None else int(env.get("SURVEY_CAPACITY", "2"))
         self.server = runtime.server(env, server)

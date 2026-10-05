@@ -377,7 +377,6 @@ class RecWorker(VmsWorker):
     # ten minutes a pass, the rest on the passes after (`requests`), the way a planned gap is (`backfill`).
     PIECE = 60.0
     RANGE_CAP = 600.0
-    SLOT_PREFIX, NAME_ENV = REC_SPEC.slot_prefix, REC_SPEC.slot_name_env   # `slot:` in rec.subsystem.yaml
     parse_row = staticmethod(rec_row)
 
     def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,

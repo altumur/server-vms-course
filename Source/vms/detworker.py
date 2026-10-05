@@ -22,7 +22,7 @@ import time
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
 from w2cplatform.worker import Worker
-from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
+from w2cplatform.events import ALARM, OBSERVATION, EventLog
 from w2cplatform.variables import Variables
 
 from .config import DET_SPEC
@@ -50,14 +50,14 @@ class DetWorker(Worker):
     """`name` is a slot (`d-1`); `models` maps a kind to a factory `(unit) -> Model`; unknown kinds are
     reported as `phase: unsupported` and run nothing."""
 
-    SLOT_PREFIX = DET_SPEC.slot_prefix                          # a slot it has to make is `d-<n>`, like the ones it is given
+    spec = DET_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None, resource_root: str | None = None,
                  env: dict | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(DET, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
-        self.claim_slot(prefer=name if name is not None else runtime.slot(env, DET_SPEC.slot_name_env, DET_SPEC.slot_prefix))
+        self.claim_slot(prefer=name if name is not None else self.given_name(env))
         self.models = models if models is not None else {"motion": FakeModel, "linecross": FakeModel, "lpr": FakeModel}
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "8"))
         self.server = runtime.server(env, server)
@@ -65,10 +65,6 @@ class DetWorker(Worker):
         self.running: dict[str, object] = {}                                     # unit -> model
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0
-        # What this subsystem declared about repeats (`events.suppress` in det.subsystem.yaml), held for as
-        # long as this worker runs the model — the VMS worker's arrangement, for its reason: the model's
-        # output is seen here before it is a file, and nowhere else (M12 of the review).
-        self.suppressor = Suppressor(DET_SPEC.suppress)
 
     # -- where the camera's RTP is: the VMS heartbeat, never a call to the worker ---------------------
     def rtp_source(self, cam: str):
