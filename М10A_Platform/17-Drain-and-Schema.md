@@ -119,7 +119,7 @@ def draining(vars_) -> str:
         return out
 
     # `eligible`, or `[]` when this unit's filters raise on its row — one unit's trouble, counted once a spell
-    # (`UNIT_JUDGED`), not the end of the walk: a field that read and then raised in a comparison or in an `admit` took
+    # (`UNIT_JUDGED`), not the end of the walk: a field that read and then raised in a comparison or in a filter took
     # `/unplaceable` and `/drain` down for every unit (the review's tenth pass).
     def _eligible_or_none(self, row: dict, pool: list[str], walk: str) -> list[str]:
         key = f"{self.row_key(row['id'])}#{walk}"
@@ -181,6 +181,7 @@ def draining(vars_) -> str:
 
 ```python
         stand_in.set()
+        self.stop_polling()                           # no request is held at a resource for a loop that ended
         self.before_stop_all()
         self.stop_all_units()
         self.heartbeat_once()
@@ -188,7 +189,7 @@ def draining(vars_) -> str:
         self.after_stop()
 ```
 
-Последние слова подсистемы (`before_stop_all`), её работа остановлена (`stop_all_units`, по `stop_unit` на единицу), последний heartbeat, слот отпущен с пометкой `released` (`release_slot`, урок 7) — это и отличает штатную остановку от аварии, — и то, что подсистема отпускает после слота (`after_stop`). Что именно «своё» на каждом шаге, решает воркер в этих двух крючках и в `stop_unit`: закрыть файл, отдать очередь. Платформа здесь знает одно — что процесс остановился штатно, и говорит это строкой слота.
+Долгий опрос ресурсов закрыт (`stop_polling`: циклу, который кончился, ничего не держат), последние слова подсистемы (`before_stop_all`), её работа остановлена (`stop_all_units`, по `stop_unit` на единицу), последний heartbeat, слот отпущен с пометкой `released` (`release_slot`, урок 7) — это и отличает штатную остановку от аварии, — и то, что подсистема отпускает после слота (`after_stop`). Что именно «своё» на каждом шаге, решает воркер в этих двух крючках и в `stop_unit`: закрыть файл, отдать очередь. Платформа здесь знает одно — что процесс остановился штатно, и говорит это строкой слота.
 
 Команда «сбрось», добавленная в осушение, дублировала бы то, что воркер делает при штатной остановке и о чём уже говорит его heartbeat. Это второй путь к тому же состоянию, и расходиться они начнут в первый же нештатный день. Правило, которое стоит унести из этого шага: прежде чем добавлять глагол, посмотрите, не является ли нужное вам уже следствием.
 
