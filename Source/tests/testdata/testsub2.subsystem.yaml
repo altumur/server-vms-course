@@ -34,7 +34,7 @@ unit:
     shelf:    {type: string, ref: testsub2/shelves, must_match: {zone: zone}}
     zone:     {type: string}
     feed:     {type: url, unique: canonical, schemes: [https, sftp], credentials: {login: feed_user, secret: feed_secret},
-               secret_in: [{param: [token*, "*key"], login: [=who]}, {nested: [via]},
+               secret_in: [{param: [token*, "*key", =who], login: [=who]}, {nested: [via]},
                            {regex: '^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$', in: fragment, schemes: [sftp], decoded: false}]}
     feed_user:   {type: string}
     feed_secret: {type: string, bound_to: [feed]}
@@ -57,7 +57,7 @@ tables:
       enabled: {type: bool, default: true}
       # where the shelf's own goods come from, and the shelf it overflows to — a table's field says what a unit's does
       feed:    {type: url, schemes: [https], credentials: {login: feed_user, secret: feed_secret},
-                secret_in: [{param: [token*], login: [=who]}, {nested: [via]},
+                secret_in: [{param: [token*, =who], login: [=who]}, {nested: [via]},
                             {regex: '^/~(?P<login>[^:/]+):(?P<secret>[^/]+)', in: path, schemes: [https], decoded: true}]}
       feed_user:   {type: string}
       feed_secret: {type: string, bound_to: [feed]}

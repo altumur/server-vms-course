@@ -1,12 +1,15 @@
-# log_mask.tsv — free text said with every credential in it hidden: the platform's `secrets.mask_text`, outside any
-# spec (the product's decision, 5 Oct). A log line, an error a driver said, a request it logged, a JSON document. Seeded
-# from the free-text rows of the product's draft of secret_in.tsv (wt-boundary-4b), then the course's own.
+# The platform's log mask (w2cplatform/secrets: Rule.MaskLog; w2cplatform.MaskText, ipint/uri.Redact): a text that
+# is no field's value — a log line, an error, a JSON document, a connect string — with an Authorization header's
+# credential, every name=value whose name is a secret's, and every address in it masked. No spec says it, and it is
+# not secret_in.tsv's: those are a url field's values. Read by vmsworker/vms/secret_in_test.go, as a process that
+# knows the product's specs masks a log line (the names a spec adds — sig, psd — included).
 #
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
 #   raw     the text as written
-#   masked  what is said of it: every password, token or key masked as *** where it stands; a login left as written
+#   masked  what a log shows of it
 #   note    why the row is here
-# The reader masks by the platform's own names of a credential alone (`secrets.COMMON_RULES`), no spec's.
+DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=hunter2xyz/a+b==;EndpointSuffix=core.windows.net	DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=***;EndpointSuffix=core.windows.net	
+BlobEndpoint=https://acc.blob.core.windows.net/;SharedAccessSignature=sv=2021-06-08&ss=b&sig=hunter2xyz	BlobEndpoint=https://acc.blob.core.windows.net/;SharedAccessSignature=***&ss=b&sig=***	
 host k=v;apikey=zz:80:admin:	host k=v;apikey=***	a connect string: the value runs to the end — more masked, never less
 ?pwd=&channel=1	?pwd=&channel=1	an empty value stays empty: not set is no secret
 ?p%77d=hunter2&channel=1	?p%77d=***&channel=1	
@@ -24,11 +27,3 @@ DESCRIBE rtsp://10.0.0.9:554/user=admin&password=hunter2xyz&channel=1&stream=0.s
 proxy-authorization: bearer abc.def	proxy-authorization: bearer ***	
 Authorization: Digest username="admin", response="5ccc"	Authorization: Digest username="admin", response="5ccc"	Digest's hash is left
 {"source":"driverpack://acme/u:hunter2xyz@10.0.0.5/ch/1"}	{"source":"driverpack://acme/u:***@10.0.0.5/ch/1"}	
-{"password":"hunter2xyz","user":"admin"}	{"password":"***","user":"admin"}	a JSON member named as a credential; a login's is left
-{"token": "", "x": 1}	{"token": "", "x": 1}	an empty value stays empty
-opening rtsp://admin:hunter2xyz@10.0.0.5/live failed: 401	opening rtsp://admin:***@10.0.0.5/live failed: 401	a log line: the userinfo's login said, its password not
-ffmpeg -i rtsp://10.0.0.5/live?token=hunter2xyz -c copy out.mp4	ffmpeg -i rtsp://10.0.0.5/live?token=*** -c copy out.mp4	a command line a driver logged
-Authorization: Bearer hunter2xyz	Authorization: Bearer ***	Bearer, in its own case
-dsn=host=db user=app password=hunter2xyz sslmode=require	dsn=host=db user=app password=*** sslmode=require	a connection string's pairs, space-separated
-gpio_pin=4 hotkey=2 token_bucket=5	gpio_pin=4 hotkey=2 token_bucket=5	names of their own: no credential's word, whole or last
-pin=1234 hot_key=hunter2xyz	pin=*** hot_key=***	=pin the whole name, key the last word

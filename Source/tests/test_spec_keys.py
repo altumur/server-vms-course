@@ -153,7 +153,7 @@ def test_how_long_data_goes_on_past_an_unconfirmed_lease_is_the_specs_and_typed(
 # A url field the way a subsystem says how its addresses carry a login.
 TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
           "credentials": {"login": "account_name", "secret": "pass_secret"},
-          "secret_in": [{"param": ["pwd", "token*", "*key", "=auth"], "login": ["user", "*name"]},
+          "secret_in": [{"param": ["pwd", "token*", "*key", "=auth", "user", "*name"], "login": ["user", "*name"]},
                         {"regex": r"(?:^|/)~(?P<login>[^:/]+):(?P<secret>[^/]+)", "in": "path"},
                         {"regex": r"^(?P<name>code)=(?P<secret>.+)$", "in": "fragment", "schemes": ["sftp"]},
                         {"nested": ["via"]}]}
@@ -226,8 +226,13 @@ def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
     _refused(lambda: _target_spec({**TARGET, "credentials": {"login": "pass_secret"}}), "credentials.login")
     _refused(lambda: _target_spec({**TARGET, "credentials": {"secret": "account_name"}}), "credentials.secret")
     _refused(lambda: _target_spec({**TARGET, "schemes": ["HTTPS"]}), "`schemes` is a list of schemes")
-    for bad, words in (({"param": "pwd"}, "`param` is a list of names"), ({"param": ["*pwd*"]}, "a name, `=name`, `name*` or `*name`"), ({"param": ["=pwd*"]}, "a name, `=name`"),
-                       ({"login": []}, "`login` is a list of names"), ({"login": ["us er"]}, "in `login` is a name"),
+    for bad, words in (({"param": "pwd"}, "`param` is a list of names"),
+                       ({"param": ["*pwd*"]}, "a name, `=name`, `name*` or `*name`"),
+                       ({"param": ["=pwd*"]}, "a name, `=name`"),
+                       ({"login": ["us"]}, "is param, regex or nested"),
+                       ({"param": ["a"], "login": []}, "`login` is a list of names"),
+                       ({"param": ["a"], "login": ["us er"]}, "in `login` is a name"),
+                       ({"param": ["a"], "login": ["b"]}, "'b' in `login` is not in `param`"),
                        ({"regex": "x(?P<secret>.)"}, "`in:` path, query, authority, fragment"),
                        ({"regex": "x(?P<secret>.)", "in": "host"}, "`in:` path, query"),
                        ({"regex": "x(?P<secret>.)", "in": "path", "schemes": "https"}, "`schemes` is a list of schemes"),

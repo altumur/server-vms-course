@@ -573,10 +573,12 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
         con.delete(made["id"])
     # the names, word by word: a credential's — and a word that only begins a name, or `pass` glued at its end, is not
     for n in ("pwd", "PassWord", "pass_word", "access_token", "authToken", "X-Amz-Signature",
-              "AWSAccessKeyId", "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
+              "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
               "Authorization", "session_id", "passcode", "loginpas"):
         assert is_credential_param(n) and not is_login_param(n), n
-    for n in ("user_id", "usr", "user", "User-Name", "loginuse", "login", "account"):     # a login's: refused, said
+    # …a login's: refused, said — an access key's id among them (the product's decision: the id of a key is no key)
+    for n in ("user_id", "usr", "user", "User-Name", "loginuse", "login", "account", "AWSAccessKeyId", "accessKeyId",
+              "uname"):
         assert is_login_param(n) and not is_credential_param(n), n
     for n in ("token_bucket", "passage", "authmode", "auth_mode", "bypass", "compass", "passthrough", "monkey", "hotkey",
               "keyframe", "key_frame_interval", "apikey_required", "sid_hint", "usrname_hint", "user_stream", "authority",
@@ -712,9 +714,10 @@ def test_the_products_second_secrets_pass_finds_nothing_in_the_course():
         assert not _leaks(mask_secrets([{"source": src}])), src
     assert hide_in_url(R28_FORMS[0]) == "http://h:1984/api/stream.mp4?src=***"
     assert hide_in_url(R28_FORMS[1]) == "http://h:1984/api/stream.mp4?src=***"
-    assert hide_in_url("rtsp://10.0.0.5:554/live?x=y@b") == "rtsp://10.0.0.5:554/live?x=\u2026@b"
+    assert hide_in_url("rtsp://10.0.0.5:554/live?x=y@b") == "rtsp://10.0.0.5:554/live?x=y@b"   # a login: said
     # …a userinfo's login is said, its password not
-    assert hide_in_url("rtsp://a:Hunter2@10.0.0.5:554/live?x=y@b") == "rtsp://a:***@10.0.0.5:554/live?x=\u2026@b"
+    # …a userinfo's password runs to the last `@`: more masked, never less (the product's reading)
+    assert hide_in_url("rtsp://a:Hunter2@10.0.0.5:554/live?x=y@b") == "rtsp://a:***@b"
     assert "pass" in address_refusal("rtsp://10.0.0.5/live?pass%3DHunter2=1")
     for n in ("psk", "wpa_psk", "WPA-PSK", "privkey", "private_key", "auth", "Authorization"):
         assert is_credential_param(n), n

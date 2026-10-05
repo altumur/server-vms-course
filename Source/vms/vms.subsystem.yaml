@@ -67,18 +67,20 @@ unit:
     # words naming `credentials`) and hides it wherever a stored one is said, by these rules.
     #
     # `schemes` — what a camera is reached by; `credentials` — where the login and the password go instead.
-    # `secret_in` (the form the architect approved for the course and the product alike):
+    # `secret_in` (the form the architect approved for the course and the product alike; the product's lines, word for
+    # word — one table of addresses for both, tests/testdata/secret_in.tsv):
     # - `param`: the names a camera gives a credential parameter (the eleventh review, blocker 4: `?usr=admin&pwd=…`)
     #   beside the platform's own, which every address is read by (`secrets.COMMON_RULES`: password, passwd, pass, pwd,
     #   secret, token, `key` as the last word, credential(s), psk, privkey, apikey, `=auth`, `=pin`) — the vendors'
-    #   spellings (Foscam's `loginpas`, `adminpass`, an RTMP `streamkey` run into one word, `oauth`), read as words:
-    #   `pwd` the whole name or its last word (`X-Amz-Signature`), `pwd*` a word beginning with it (`pwd_md5`,
-    #   `passwordHash`), `*pwd` a last word ending with it (`userpwd`, `clientsecret`). `p` and `code` are not here: too
-    #   many cameras mean something else by them (a profile, a codec). A word that only begins a name (`token_bucket`,
-    #   `authmode`, `passage`) is no credential (the thirteenth review, minor).
-    #   `login`: the names it gives a login (`?usr=admin`, `user_id`, Foscam's `loginuse`, `uname`, an access key's id
-    #   `accessKeyId` — the id of a key is not the key, a name said whole wins over its last word) — refused as well,
-    #   the refusal naming `cred_username`, and shown as written: a login identifies, it does not authenticate;
+    #   spellings (Foscam's `loginpas`, `adminpass`, an RTMP `streamkey`, `oauth`), read as words: `psd` the whole name
+    #   or its last word (`X-Amz-Signature`), `pwd*` a word beginning with it (`pwd_md5`, `passwordHash`), `*pwd` a last
+    #   word ending with it (`userpwd`, `clientsecret`); a word's trailing digits are not part of it (`apiKey2`). `p`,
+    #   `code` and `pin` as a part are not here: too many cameras mean something else by them (a profile, a codec, which
+    #   pin). A word that only begins a name (`token_bucket`, `authmode`, `passage`) is no credential.
+    #   `login`: which of an entry's names are a login's (`?usr=admin`, `user_id`, Foscam's `loginuse`, `uname`, an S3
+    #   access key's id `AWSAccessKeyId` — the id of a key is no key) — refused as well, the refusal naming
+    #   `cred_username`, and shown as written: a login identifies, it does not authenticate;
+    # - a value joined by `_` to a password's or a login's name (`?channel=1_pwd=…`, `/channel=1_user=admin`);
     # - the XMeye/Xiongmai chain in the path, `/user=admin_password=…_channel=1_stream=0.sdp` (the twelfth review,
     #   blocker 8): a password ends at the last `_` before the next `name=`, `Hun_ter2_channel=1` is `Hun_ter2` — and the
     #   same chain in the query, where it is one pair named by its login (`?user=admin_password=…`), and a login's value
@@ -104,24 +106,28 @@ unit:
       unique: canonical
       credentials: {login: cred_username, secret: cred_secret}
       secret_in:
-        - param: [loginpas, loginpass, "*adminpass", "*streamkey", oauth, keyid, authkey, accesskey, secretkey, sig,
-                  signature, sid, session, sessionid, pw, psd, psw, userpass, passcode, passphrase, authorization, cred,
-                  creds, privatekey, "password*", "passwd*", "pwd*", "psw*", "secret*",
-                  "*password", "*passwd", "*pwd", "*secret", "*token"]
-          login: [user, usr, username, uname, userid, login, loginuse, account, accesskeyid]
-        - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'
+        - param: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
+          login: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
+        - param: [loginpas, loginpass, keyid, authkey, accesskey, secretkey, sig, signature, sid, session, sessionid]
+        - param: [pw, psd, psw, userpass, passcode, passphrase, authorization, cred, creds, privatekey, adminpass, streamkey, oauth]
+        - param: ['password*', 'passwd*', 'pwd*', 'psw*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']
+        - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
           in: path
-        - regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'
+        - regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
           in: query
+        - regex: '(?i)=[^=&;/#]*_(?P<name>password|passwd|pwd|pass|psw|psd)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
+          in: [path, query]
+        - regex: '(?i)=[^=&;/#]*_(?:user|usr|username|login|loginuse|uname)=(?P<login>[^_&;/#=]*)'
+          in: [path, query]
         - regex: '(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)'
           in: path
-        - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@\d²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?=/|$)'
+        - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@0-9²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?:/|$)'
           in: path
           schemes: [driverpack]
-        - regex: '^/[^/]*?:(?P<secret>[0-9]+)(?=/[^?#]*@)'
+        - regex: '^/[^/]*?:(?P<secret>[0-9]+)/[^?#]*@'
           in: path
           schemes: [driverpack]
-        - regex: '^/(?P<login>[^/:@]*)(?::(?P<secret>[^/]*))?@'
+        - regex: '^/(?P<login>[^/:@]*)(?::(?P<secret>.*))?@'
           in: path
           schemes: [driverpack]
         - nested: [src, url]

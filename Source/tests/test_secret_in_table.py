@@ -1,8 +1,9 @@
 """One table of addresses for the course and the product (`testdata/secret_in.tsv`, the boundary's step 4, item 6): what
 the vms spec's `source` shows of each, and what refusing it says — by the platform's reading of an address and the
 field's `credentials` and `secret_in`, nothing of a camera's in the platform. The product reads the same rows the same
-way (`vmsworker/vms/secret_in_test.go`); a row one side masks and the other prints is a password in a log. The course's
-rows are its own until the product's table lands — then the file is a copy of the product's, byte for byte."""
+way (`vmsworker/vms/secret_in_test.go`); a row one side masks and the other prints is a password in a log. The file is a
+copy of the product's (its committed main, `testdata/secret_in.tsv`), byte for byte; so is the free text's,
+`testdata/log_mask.tsv`, read by the platform's `secrets.mask_text`."""
 from __future__ import annotations
 
 import os
@@ -111,10 +112,13 @@ LOG_MASK = os.path.join(SOURCE, "tests", "testdata", "log_mask.tsv")
 
 def test_free_text_is_said_with_every_credential_in_it_hidden_as_its_table_says():
     """`secrets.mask_text` — a log line, an error a driver said, a request it logged, a JSON document: no field of any
-    spec's (the product's decision, 5 Oct: a function of the platform's own, with its own table). Each row of
-    `testdata/log_mask.tsv`, by the platform's own names of a credential alone: `masked` is what is said of `raw`,
-    and no row that hides a value shows `hunter2`."""
-    from w2cplatform.secrets import NO_RULES, mask_text
+    spec's (the product's decision, 5 Oct: a function of the platform's own, with its own table — the product's file,
+    byte for byte). Each row of `testdata/log_mask.tsv`, as a process that loaded the VMS's spec masks it (the names
+    its `secret_in` adds — `sig`, `psd` — beside the platform's own): `masked` is what is said of `raw`, and no row
+    that hides a value shows `hunter2`."""
+    from w2cplatform.secrets import mask_text
+    from w2cplatform.spec import SubsystemSpec
+    rules = SubsystemSpec.load(os.path.join(SOURCE, "vms", "vms.subsystem.yaml")).fields["source"].rules
     wrong, n = [], 0
     with open(LOG_MASK, encoding="utf-8") as f:
         for i, line in enumerate(f.read().split("\n"), 1):
@@ -124,13 +128,13 @@ def test_free_text_is_said_with_every_credential_in_it_hidden_as_its_table_says(
             assert len(cols) == 3, f"line {i}: a row is raw, masked, note: {line!r}"
             raw, masked, _ = cols
             n += 1
-            got = mask_text(raw, NO_RULES)
+            got = mask_text(raw, rules)
             if got != masked:
                 wrong.append(f"line {i}: {raw}\n    said as {got}\n    the table: {masked}")
             if "***" in masked and "hunter2" in masked.lower():
                 wrong.append(f"line {i}: the table's own mask shows the password: {masked}")
     assert not wrong, f"{len(wrong)} rows of log_mask.tsv go another way:\n  " + "\n  ".join(wrong)
-    assert n >= 20, f"the table is too short: {n} rows"
+    assert n >= 19, f"the table is too short: {n} rows"
 
 
 def test_the_platforms_log_lines_go_through_the_mask():
