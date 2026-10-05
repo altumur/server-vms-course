@@ -101,6 +101,30 @@ def test_a_heartbeat_field_its_spec_says_is_a_string_and_is_not_garbles_the_hear
     _refused(lambda: _spec(heartbeat={"strings": "a"}), "`heartbeat:` is {strings:")
 
 
+def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to_it():
+    """`secrets: {readers: {<row>: [<role>]}, reads: [<row>]}` (the product's key, the course checks it): the rights file
+    is the grants the specs make, and the declaration is the promise they are held to (`cluster.rights.check_secrets`).
+    testsub2's console alone reads its door's seed, as it says. Named with a role that does not read it — or kept under
+    the subsystem's own name, where its controller and worker read every row — it is no file at all, the disagreement
+    named; a row the worker says it reads and its grants do not reach is the same; a role is one of the platform's."""
+    from w2cplatform.cluster.rights import roles
+    two = _testsub2()
+    roles([SubsystemSpec.from_dict(_testsub()), SubsystemSpec.from_dict(two)], "test")
+    for secrets, words in (({"readers": {"door/signer": ["console", "worker"]}}, "the rights let console read it"),
+                           ({"readers": {"testsub2/vault/": ["console"]}},
+                            "testsub2/vault/: the specs name console as its readers, and the rights let console, "
+                            "domain, testsub2controller, testsub2worker, testsubdomain read it"),
+                           ({"reads": ["door/signer"]}, "says its worker reads it (secrets.reads)"),
+                           ({"readers": {"door/signer": ["console"]}, "reads": ["door/signer"]},
+                            "the specs name console, testsub2worker")):
+        _refused(lambda secrets=secrets: roles([SubsystemSpec.from_dict(_testsub()),
+                                                SubsystemSpec.from_dict({**two, "secrets": secrets})], "test"), words)
+    for bad, words in (({"readers": {"door/signer": ["operator"]}}, "is a list of roles"),
+                       ({"readers": {"/door": ["console"]}}, "no key of the store"),
+                       ({"reads": "door/signer"}, "`secrets:` is {readers:"), ({}, "`secrets:` is {readers:")):
+        _refused(lambda bad=bad: SubsystemSpec.from_dict({**two, "secrets": bad}), words)
+
+
 # A url field the way a subsystem says how its addresses carry a login.
 TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
           "credentials": {"login": "account_name", "secret": "pass_secret"},
@@ -194,6 +218,7 @@ def test_a_key_the_platform_does_not_read_is_refused_at_any_level_and_named_wher
     spec writes names (a field, an event kind) or words (`display.kinds`), anything stands."""
     plain = _testsub()
     for words, add in (("`heartbeat:` is {strings:", {"heartbeat": {"strings": ["jam"], "beats": 1}}),
+                       ("`secrets:` is {readers:", {"secrets": {"writers": {"door/signer": ["console"]}}}),
                        ("`objects:` is {rows:", {"objects": {"rows": ["marks/*"], "files": ["x/*"]}})):
         _refused(lambda add=add: SubsystemSpec.from_dict({**plain, **add}), words)     # …by the section's own reader
     for where, add in (("placement.requries", {"placement": {**plain["placement"], "requries": "resource"}}),

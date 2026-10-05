@@ -18,6 +18,12 @@ objects: {rows: [commands/*]}
 # The fields of its holder's heartbeat that are strings and that something decides by (beside the platform's own):
 # the key its door's tokens for footage are checked with (`playback.py`). One not a string garbles the heartbeat.
 heartbeat: {strings: [playback_key]}
+# Its secret rows and the roles that read them: the seed its holders' door tokens are signed with, by the console that
+# signs them (`door.py`) — never a worker, or a door could make the tokens it checks. Held to the rights file's grants
+# (`w2cplatform/cluster/rights.py`, `check_secrets`).
+secrets:
+  readers:
+    door/signer: [console]
 # What the holder writes beside its claims: what a device it holds turned out to be (`vms/devices/<device>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
 worker: {writes: [devices]}

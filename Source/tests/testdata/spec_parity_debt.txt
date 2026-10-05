@@ -201,8 +201,6 @@ product-only rec.subsystem.yaml secrets.reads
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window
-product-only vms.subsystem.yaml secrets
-product-only vms.subsystem.yaml secrets.readers
 product-only vms.subsystem.yaml tables
 product-only vms.subsystem.yaml unit.fields.alarms_retention_days.default
 product-only vms.subsystem.yaml unit.fields.events_retention_days.default

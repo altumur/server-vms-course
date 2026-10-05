@@ -2,10 +2,7 @@
 # `<spec>:<key path>`. A line goes when the course reads the key or the product drops it; none is ever added.
 auto:console.running
 live:console.running
-live:secrets
 rec:console.running
 rec:objects.door
-rec:secrets
 vms:console.running
-vms:secrets
 vms:tables

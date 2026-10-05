@@ -4,7 +4,7 @@ stands (the architect, 2026-10-05: the key sets are closed — nothing is accept
 # NOTES
 # ================================================================================================
 # A key nobody reads is a promise nobody keeps: a typo (`requries: resource`) loads and places as if it were not
-# there, and another team's key (`heartbeat.strings`) loads and reads as if the platform did something with it. So the
+# there, and another team's key (one the product reads) loads and reads as if the platform did something with it. So the
 # load walks the YAML as written and refuses the first key that is not here — `SubsystemSpec.from_dict` asks it last,
 # after the readers whose own words say more about the keys they know.
 #
@@ -24,7 +24,7 @@ from .spec import TREE_WORDS
 from .tables import TABLE_KEYS
 
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
-         "domain.tokens"}
+         "domain.tokens", "secrets.readers"}
 OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
           "placement.near.prefer", "placement.affinity.strict", "rights.unit_of", "placement.places.where",
@@ -42,9 +42,8 @@ TABLE_FIELD_KEYS = tuple(k for k in FIELD_KEYS if k not in ("inherit", "merge", 
 
 KEYS = {
     "name", "about.sub", "about.field", "slot.prefix", "slot.name_env", "worker.writes", "worker.reads",
-    "worker.requests", "objects.rows", "heartbeat.strings", "snapshot", "door.routes", "console.running",
-    "events.older_epochs",
-    "events.suppress.*.window", "events.suppress.*.by",
+    "worker.requests", "objects.rows", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "snapshot",
+    "door.routes", "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *(f"unit.fields.*.{k}" for k in FIELD_KEYS),
     "unit.derived.row", "unit.derived.items", "unit.derived.on_delete",
     *(f"tables.*.{k}" for k in TABLE_KEYS if k not in ("fields", "journal")), "tables.*.journal.written",

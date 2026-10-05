@@ -584,6 +584,34 @@ def _heartbeat_strings(name, hb) -> tuple:
     return tuple(got)
 
 
+# `secrets: {readers: {<row or prefix>: [<role>]}, reads: [<row or prefix>]}` — the product's key, the course checks it:
+# which roles read a secret row of this subsystem's (its console's door seed, `door/signer`), and the rows of somebody
+# else's its worker reads. The course's rights are the grants the specs make (`w2cplatform/cluster/rights.py`), so the
+# declaration is a promise held to them: the rights file is not generated while any role reads a declared row and is
+# not named, or is named and does not read it (`cluster.rights.check_secrets`). A role is one of `SECRET_ROLES`.
+SECRET_ROLES = ("console", "controller", "worker", "domain", "domainagent", "resource")
+_SECRET_ROW = re.compile(r"[a-z0-9_][a-z0-9_.\-]*(/[a-z0-9_.\-]+)*/?")
+
+
+def _secrets(name, sec) -> tuple[dict, tuple]:
+    if sec is None:
+        return {}, ()
+    readers, reads = (sec.get("readers", {}), sec.get("reads", [])) if isinstance(sec, dict) else (None, None)
+    if not isinstance(sec, dict) or not sec or set(sec) - {"readers", "reads"} or not isinstance(readers, dict) \
+            or not isinstance(reads, list):
+        raise ValueError(f"spec {name}: `secrets:` is {{readers: {{<row or prefix>: [<role>]}}, reads: [<row or "
+                         f"prefix>]}}, not {sec!r}")
+    for row in [*readers, *reads]:
+        if not isinstance(row, str) or not _SECRET_ROW.fullmatch(row) or ".." in row:
+            raise ValueError(f"spec {name}: secrets names {row!r}, which is no key of the store nor a prefix of keys "
+                             f"(`door/signer`, `domain/<sub>/accounts/`)")
+    for row, roles in readers.items():
+        if not isinstance(roles, list) or not roles or not all(r in SECRET_ROLES for r in roles):
+            raise ValueError(f"spec {name}: secrets.readers.{row} is a list of roles — {', '.join(SECRET_ROLES)} — "
+                             f"not {roles!r}")
+    return {k: tuple(v) for k, v in readers.items()}, tuple(reads)
+
+
 # `worker: {writes: [<table>], reads: [<key>], requests: [<sub>]}` — what this subsystem's WORKER may touch beyond its
 # epochs, its slot and its place (`Subsystem.acl_worker`): rows of its own tables it writes (what it found a thing to
 # be — a discovery, not a decision), keys of the store outside its subsystem it reads, and the subsystems whose
@@ -962,6 +990,9 @@ class SubsystemSpec:
     object_rows: tuple = ()
     # `heartbeat: {strings: [...]}` (`_heartbeat_strings`): read where a heartbeat is (`catalog.heartbeat_strings`)
     heartbeat_strings: tuple = ()
+    # `secrets: {readers, reads}` (`_secrets`): held to the rights the specs make (`cluster.rights.check_secrets`)
+    secret_readers: dict = field(default_factory=dict)
+    secret_reads: tuple = ()
     # `slot: {prefix: w, name_env: WORKER_NAME}` — what a slot this subsystem's worker has to MAKE is called
     # (`<prefix>-<n>`), and the environment variable naming the slot it is started under beside `WORKER_NAME`
     # (`runtime.slot`). It was each worker's class saying it.
@@ -1055,6 +1086,8 @@ class SubsystemSpec:
                    suppress=suppress_rules(d.get("events", {}) or {}),
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
                    heartbeat_strings=_heartbeat_strings(d.get("name"), d.get("heartbeat")),
+                   secret_readers=_secrets(d.get("name"), d.get("secrets"))[0],
+                   secret_reads=_secrets(d.get("name"), d.get("secrets"))[1],
                    slot_prefix=slot[0], slot_name_env=slot[1],
                    worker_writes=worker[0], worker_reads=worker[1], worker_requests=worker[2])
         spec._about_and_rights(d)

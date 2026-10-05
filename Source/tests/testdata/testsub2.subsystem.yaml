@@ -11,6 +11,8 @@ worker: {writes: [shelves], reads: [testsub/counters], requests: [testsub]}
 objects: {rows: [marks/*]}
 # its heartbeat's `jam` is a word a metric compares (`metrics: jam`): a number there is a garbled heartbeat
 heartbeat: {strings: [jam]}
+# the seed of its door's tokens is read by its console alone; its worker reads testsub's counters (`worker.reads`)
+secrets: {readers: {door/signer: [console]}, reads: [testsub/counters]}
 about: {sub: testsub, field: of}
 unit:
   rows: tallies                       # testsub2/tallies/<name>
