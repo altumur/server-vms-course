@@ -1,0 +1,56 @@
+# dm — lines of lessons that now say something untrue or short, file:line — what — what is true now.
+# Two pieces of work: (A) ADR-0031 — the domain's checks are declarations of `domain:` (final form: grant in the subject
+# family's `names` entry, not in a token kind); (B) the domain holder's paths — every human route under /domain/*
+# (contract КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10a).
+
+## (A) М10A 09 — the dictionary (М10A_Platform/09-SubsystemSpec.md)
+
+М10A_Platform/09-SubsystemSpec.md:907 — абзац `domain` перечисляет ключи раздела; не хватает `names` и `edit`, `kept` описан только как строки, `tokens` без слов «токен прав не несёт». Предлагаемые строки словаря (таблица, как у прочих разделов; или те же слова в абзац):
+
+| Ключ | Что значит | Кто читает |
+|---|---|---|
+| `ref`, `view` | поле, которым единица названа во всём домене; поля общего вида — оба из снимка | домен (`declared.directory`, вид домена) |
+| `reports`, `witness` | объекты, которые член докладывает (`<sub>/<имя>`, префикс при `/`); семья «слышали в последний раз» | домен (`declared.reported_objects`, `witnesses`) |
+| `books` | строки на держателе для каждого члена `domain/<sub>/<книга>/<член>`, которые его агент уносит домой как `domain/<sub>/<книга>` | домен (агент, `carry.py`) |
+| `kept` | строки, которые подсистема держит на держателе для всего домена, `domain/<sub>/<имя>`; имя с `/` на конце — **семейство** строк `domain/<sub>/<имя>/<строка>`. Уходят в копию держателя и восстанавливаются переносом (`term.exported`), агенту запрещены построчно (`rights.agent_denials`: `!domain/<sub>/<имя>/*`) | домен (`declared.kept`, `term.py`, `rights.py`) |
+| `tables` | строки из `kept` (не семейства), которые дверь домена отдаёт на чтение, `GET /domain/<sub>/<таблица>` | домен (`console.py`) |
+| `names: {<семейство>/: {exclusive_with: domain/users, grant: <право>}}` | строки семейства из `kept` (со `/`) — **субъекты грантов** рядом с людьми домена. Человек не заводится под именем строки, строка не пишется под именем человека (`declared.NameTaken`); грант такому субъекту не шире `grant` (`view`, `edit`, `admin` — `access.RANK`; `declared.GrantTooWide`). `exclusive_with` — закрытое множество `{domain/users}` (люди курса лежат в `identity/users/<имя>`). Проверка — на каждой записи хранилища держателя, как его открывают процессы платформы (`declared.guarded`: `IdentityStore`, `DomainPublisher.publish_grants`, `set_domain_grants`, `runtime.federation_from_env`), — у воркера подсистемы ни строки | домен (`declared.refusal`), права (`<sub>domain` читает людей и гранты) |
+| `tokens.<вид>: {lifetime, claims}` | вид токена в книгах: срок, имена утверждений. Токен прав не несёт: что может его субъект — дело грантов | домен (`DeclaredIssuer`, дверь токенов) |
+| `edit` | поля единицы, которые дверь домена пропускает в правку строки члена (`PUT /domain/<sub>/<rows>/<ref>`); любое другое — 400 со списком, до вопроса члену и до хранения правки для молчащего кластера. Секрет — отказ при загрузке. Не сказано — в курсе пока решает консоль члена (см. отчёт: правило ADR «без `edit` — 400» ждёт `edit` в спеках продукта) | домен (`api.ConsoleAPI.update_unit`) |
+| `keys: [{id, keys, prefix}]`, `shared` | семьи ключей для страницы; поля, чьё общее на домен значение держит домен | консоль (`/spec`: `domain: {keys, shared, edit, view}`), домен (`shared.py`) |
+
+М10A_Platform/09-SubsystemSpec.md:923 — «там, где ключи — имена (поле, таблица, вид события, вид токена, семья ключей), стоит `*`» — ещё: семейство в `domain.names` (`domain.names.*.exclusive_with`, `domain.names.*.grant`).
+М10A_Platform/09-SubsystemSpec.md:926-927 — листинг `NAMED` из `speckeys.py` устарел: теперь `…, "domain.tokens", "domain.names", "secrets.readers"}`.
+М10A_Platform/09-SubsystemSpec.md:792 — «`testsub` … и ещё секция `domain`» — верно; можно добавить: в ней все формы ADR-0031 — `kept: [ledger, badges/]`, `names: {badges/: {exclusive_with: domain/users, grant: view}}`, `edit: [start, labels]` (тесты `tests/test_domain_platform.py`).
+М10A_Platform/09-SubsystemSpec.md:(таблица «Верх спеки», строка `secrets`) — роли читателей секрета (`SECRET_ROLES`): добавилась `domainpart` — воркер подсистемы на домене (роль `<sub>domain`), как у продукта.
+М10A_Platform/15-SpecConsole.md (где показан ответ `/spec` с `domain`) — поле `domain` в `/spec` и `/mounts` теперь `{keys, shared, edit, view}` и есть у каждой спеки с разделом `domain:` (было только `keys`/`shared`, и только когда они не пусты).
+
+## (A) М12 (М12_DomainVMS)
+
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:121 — «Прочитайте отказы…»: к отказам API записи добавлен третий — поле не из `domain.edit` спеки подсистемы маршрута (`PUT /domain/<sub>/<rows>/<ref>`), 400 с полями и списком, до вопроса кластеру и до хранения правки (урок 9). (Листинг 109-118 — ещё `update_camera` старой формы; отдельный долг урока.)
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:209 — итог: и в полях, которых спека не пустила в правку через домен (`domain.edit`, ADR-0031).
+М12_DomainVMS/04-who-may-call-it.md:83 — где проверяется имя пользователя: кроме `|`, `"` и управляющих символов, человека не заводят под именем строки семейства субъектов подсистемы (`domain.names.<семейство>/.exclusive_with: domain/users`) — `declared.NameTaken`; и наоборот. Грант такому субъекту не шире `grant` семейства — `declared.GrantTooWide` (ADR-0031). У VMS курса такого семейства нет (учёток RTSP нет) — пример на `testsub`.
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:69 — «`export()` — это каждый элемент под `EXPORTED`»: `EXPORTED` = свои строки платформы + `declared.kept()`; элемент `kept` с `/` — семейство, копия несёт каждую его строку, перенос восстанавливает все.
+М12_DomainVMS/16-a-camera-nobody-can-reach.md:64 — листинг выдачи токена потока — старая форма; сейчас `issuer.issue("stream", home, aud=…, ref=…)` через дверь токенов подписанта (`DeclaredIssuer`). Токен прав не несёт.
+
+## (B) Пути держателя — людские маршруты под /domain/* (М12)
+
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:136-137 — блок маршрутов консоли домена: `GET /api/cameras?…`, `PUT /api/cameras/7`, `GET /api/causes`, `GET /api/where/7` — теперь `GET /domain/vms/cameras?…`, `PUT /domain/vms/cameras/7`, `GET /domain/causes`, `GET /domain/where/7`; ещё `GET /domain` (вид домена), `GET /domain/keys`, `GET /spec`, `GET /mounts`.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:73, 77, 79, 81 — `/api/cameras` → `/domain/vms/cameras` (строки о прошлых сбоях можно оставить как историю, но маршрут сегодня — `/domain/vms/cameras`).
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:85 — «Тело `PUT /api/cameras/…`, `POST /api/members`, `PUT /api/topology`» → `PUT /domain/vms/cameras/…`, `POST /domain/members`, `PUT /domain/topology`.
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:140, 142 — `PUT /api/cameras/…`, `/api/cameras` → `/domain/vms/cameras/…`.
+М12_DomainVMS/01-what-a-cluster-cannot-know.md:107 — `/api/where/<ref>` → `/domain/where/<ref>`.
+М12_DomainVMS/06-secure-introduction-a-box-joins-the-domain.md:98 — `GET /api/members` → `GET /domain/members`.
+М12_DomainVMS/15-a-domain-holder-on-one-node.md:244 — `GET /api/members` → `GET /domain/members`.
+М12_DomainVMS/17-a-chain-site-relay-centre.md:147 — `/api/where` → `/domain/where`, `/api/cameras` → `/domain/vms/cameras`.
+М12_DomainVMS/17-a-chain-site-relay-centre.md:217 — «`GET`/`PUT /api/topology`» → `GET`/`PUT /domain/topology`.
+М12_DomainVMS/module-design.md:75 — «маршруты `/api/cameras…`» → `/domain/vms/cameras` (и прочие людские — под `/domain/*`).
+М12_DomainVMS (где урок 3 и урок 15 говорят о `GET /domain` консоли кластера) — вид домена теперь в форме продукта: `members` — СПИСОК `{name, holder, state: ok|silent|never, age, rpo, reaches, why?}` (было: словарь `{name: {state: ok|unreachable, rpo}}`), `holder`, `as_of`, `units` по подсистемам `{<sub>: [...]}` (было: список), `topology`, `member_list`, `knocking`, `url` — двери держателя. Консоль кластера отдаёт `GET /domain/keys` и пересылает прочие `/domain/X` на `/domain/X` держателя без переписывания (по `url` вида), с токеном человека, `Idempotency-Key` и `X-Operator: console`.
+М12_DomainVMS (общее) — правило: `/api/*` у держателя только процессам (`/api/carry/<член>`, `/api/member/<член>`, `/api/relay/<ретранслятор>`, `/api/holder`, `/api/backup`) и входу `/api/login`; всё людское — `/domain/*`.
+
+## (C) After the product's holder-paths window (528e308) and ADR-0032
+
+М12_DomainVMS/03-the-api-and-what-it-refuses.md (правки камеры через домен) — у VMS теперь `domain.edit: [enabled]`: дверь домена (`PUT /domain/vms/cameras/<ref>`) пропускает только «вкл/выкл»; имя, папки, метки, сроки — консоль кластера камеры; спека без `domain.edit` — 400 на любую правку через дверь. (Вызовы `ConsoleAPI.update_unit` без `sub` в коде уроков к списку не привязаны — это фасад урока; дверь всегда называет подсистему.)
+М12_DomainVMS (вид домена) — единица вида: `{sub, id, ref, cluster, worker, server, phase, age, state: live|stale|configured|silent, view: {<поле domain.view>: …}}` (рядом слова курса `unit`, `worker_state`, `as_of`); у VMS `view: [name, enabled]`. В виде ещё `pending`/`outcomes` — правки для молчащих кластеров (урок 9).
+М12_DomainVMS/12-shared-settings-without-a-database.md — правка общих настроек человеком: `PUT /domain/shared {base_rev, shared}` у консоли домена уходит в signer (`PUT /api/shared`, `signer_service.edit_shared`): signer проверяет человека (admin домена), `base_rev` и `domain.shared`, сам подписывает документ (ADR-0032; у консоли ключа нет, двери «подпиши это» нет). `GET /domain/shared` — `{doc, delivery, declared}`.
+М12_DomainVMS/15-a-domain-holder-on-one-node.md — страница держателя: модуль консоли с `sections: ["domain"]` (`w2cplatform/domain/page.html`), у двери держателя `/`, `/platform/console.js`, `/spec` (`{name: "", rows: null}`), `/mounts` (`{root: "", mounts}`).
