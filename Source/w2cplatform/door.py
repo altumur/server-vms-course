@@ -6,7 +6,7 @@ console only says where and lets in: `GET /where/<id>` answers `door: {url, toke
 the subsystem's spec declares (`door: {routes: [...]}`), and only to whoever may `view` that unit. `url` is what the
 holder says in its heartbeat (`url`); the page goes to `<url>/<route>/<id>` itself, with the token.
 
-    token       `v1.<kid>.<payload>.<signature>` — base64url; the payload `{sub, unit, holder, routes, exp}`: who it was
+    token       `door1.<kid>.<payload>.<signature>` — base64url; the payload `{sub, unit, holder, routes, exp}`: who it was
                 given to, which unit (`<sub>/<id>`), which holder, which routes, until when. Ed25519: the console
                 SIGNS and the holder only CHECKS — no holder holds what issues a token (§1.8: delegate an authority,
                 never hand out a secret)
@@ -50,7 +50,7 @@ log = logging.getLogger("w2cplatform.door")
 
 TTL = 120.0                     # seconds a token opens a door for: the page asks again before it ends
 SKEW = 5.0                      # how far apart the console's clock and the holder's may be
-VERSION = "v1"
+VERSION = "door1"               # the token's kind and its version (the product's `door1.`): another kind of token never reads as one
 SIGNER_KEY = "door/signer"      # the console's seed, sealed: `{kid, seed}` (the product's `DoorSignerKey`)
 KEYS_KEY = "door/keys"          # the public halves by kid: `{<kid>: <hex>}` (the product's `DoorKeysKey`)
 SIGNER_REREAD = 30.0            # seconds a console signs with the key it read before it reads the store again

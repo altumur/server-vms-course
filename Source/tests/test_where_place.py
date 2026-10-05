@@ -100,6 +100,12 @@ def test_a_places_holder_is_found_and_its_door_opens_for_the_unit_asked_and_that
         ring = Ring(raw)
         now = ctls["testsub2"].wall()
         assert ring.check(door["token"], unit="testsub2/t1", holder="t-1", route="read", now=now)
+        assert door["token"].startswith("door1.")                                       # the kind of token (the product's)
+        try:
+            ring.check("v1." + door["token"][len("door1."):], unit="testsub2/t1", holder="t-1", route="read", now=now)
+            raise AssertionError("another prefix opened the door")
+        except DoorRefused as e:
+            assert e.reason == "signature", e.reason
         for kw, reason in (({"holder": "t-2"}, "holder"), ({"unit": "testsub2/t9"}, "unit"), ({"route": "write"}, "route")):
             try:
                 ring.check(door["token"], **{"unit": "testsub2/t1", "holder": "t-1", "route": "read", "now": now, **kw})
