@@ -1,7 +1,7 @@
 # Урок 27 — Тома: local, network, edge, backup, incidents
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** таблицу `volumes` в `rec.subsystem.yaml` со схемой строки и объявления размещения, которые её читают (`placement.places`, `affinity`); `vms/volumes.py` — пять видов тома, `on_a_box` и `any_box`, `write` (по правилам той же таблицы), `servable`, `suggest`, `served`, `backups` и `incidents`; в `vms/recworker.py` — то, что регистратор делает с томом: `volume_pass`, `_write_into`, `_place_kind`, `leave_volume` (и `leave_place`, которым его зовёт платформа), `after_stop`; в `vms/archive.py` — `volume_params`. Захват места, строгая аренда места и возврат места за именем — платформенные (М10A, урок 7, шаг 11; ADR 0029): здесь — что они значат для тома.
+**Вы напишете:** таблицу `volumes` в `rec.subsystem.yaml` со схемой строки и объявления размещения, которые её читают (`placement.places`, `affinity`); `vms/volumes.py` — пять видов тома, `on_a_box` и `any_box`, `write` (по правилам той же таблицы), `servable`, `served`, `backups` и `incidents`; в `vms/recworker.py` — то, что регистратор делает с томом: `volume_pass`, `_write_into`, `_place_kind`, `leave_volume` (и `leave_place`, которым его зовёт платформа), `after_stop`; в `vms/archive.py` — `volume_params`. Захват места, строгая аренда места и возврат места за именем — платформенные (М10A, урок 7, шаг 11; ADR 0029): здесь — что они значат для тома.
 **Время:** ~90 минут.
 
 ## Зачем этот урок
@@ -189,26 +189,24 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 
 Тесты: `test_volumes.py::test_nothing_declared_is_the_box_as_it_always_was` и `test_rec_volume.py::test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it` — регистратор форматирует том сервера рядом с деревом ресурса (`file://<корень коробки>/volume`) и пишет в него поток `1/e<эпоха>`.
 
-### Предложение консоли
+### Первый том — из того, что коробка уже говорит
 
-Первый том оператор не должен набирать руками. Коробка уже говорит, куда пишет и какого размера её том: `archive` и `archive_quota` в heartbeat'е регистратора. Предложение из этого собирает `volumes.suggest`:
+Первый том оператор не должен набирать вслепую. Коробка уже говорит, куда пишет и какого размера её том, — в heartbeat'е регистратора:
 
 ```python
-        # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
-        # with the resource's events: declared at the partition's size, the ring would be resized past the room.
-        # Through `rows.number` (the review's seventh pass): a word in one recorder's `archive_quota` raised out of the
-        # whole page of volumes. Not said, the partition's size; neither said, 0, as before.
-        total = number(f"{sub.heartbeat_key(name)}#archive_quota", hb.extra.get("archive_quota") or None, int, None) or \
-            space_total(res, server)                     # the platform's reading of its resource (the boundary's step 5)
-        out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
-                       "why": "this box records here and the disk is not declared as a volume"}
+                # The box's own volume — where this recorder writes when nothing is declared: what a page may offer to
+                # declare, with its size.
+                "archive": hide_in_url(self.default_url),    # as a page says it (the twelfth review, major 15)
+                # …and its size: what a page offers to declare it at. The size it HAS once it was opened — read
+                # from the volume — and only before that the share of the disk it would be formatted at (…).
+                "archive_quota": self.default_size or self.default_quota,
 ```
 
-Размер раздела из heartbeat'а ресурса остался запасным ответом — для регистратора, который своего размера не сказал. Предложить весь раздел было бы ошибкой: объявление поменяло бы размер кольца, и оно выросло бы за место, которое делит с деревом событий.
+Размер — тот, который у тома **есть**, прочитанный у демона, и только до первого открытия — доля диска, под которую том будет отформатирован. Не весь раздел: объявление поменяло бы размер кольца, и оно выросло бы за место, которое делит с деревом событий. И не пересчитанный на каждом старте: число росло и сжималось бы вместе со свободным местом, и оператор, объявивший предложенное, сжал бы восьмитерабайтный том до гигабайта (третье ревью).
 
-**Предложение, а не строка.** Комментарий над `suggest`: *nothing here writes configuration on a process's behalf.* Оператор объявляет том, и с этой минуты диск — том с числом. Число можно уменьшить, а остаток отдать второму тому. Показать предложение — дело страницы, а не консоли платформы: её `/rec/volumes` — общий маршрут таблицы. Страница VMS сейчас его не показывает, и `suggest` зовут только тесты (`test_camera_card.py`: камере объявлять нечего).
+**Предложение, а не строка.** Процесс конфигурацию за оператора не пишет: регистратор только говорит, страница может предложить, а строку тома записывает человек своим токеном. С этой минуты диск — том с числом. Число можно уменьшить, а остаток отдать второму тому. Показать предложение — дело страницы, а не консоли платформы: её `/rec/volumes` — общий маршрут таблицы. Страница VMS сейчас его не показывает.
 
-И главное свойство: **объявление ничего не двигает**. Имя предложения — имя сервера, то есть то же, под которым регистратор уже пишет. Тот же владелец писателя — `rec:<имя>`. Регистратор берёт объявленную строку и продолжает писать туда же, тем же открытым томом: том по этому адресу у него уже открыт, и `volume_pass` его не перемонтирует.
+И главное свойство: **объявление ничего не двигает**. Строка с именем сервера по адресу `archive` — то же, под чем регистратор уже пишет. Тот же владелец писателя — `rec:<имя>`. Регистратор берёт объявленную строку и продолжает писать туда же, тем же открытым томом: том по этому адресу у него уже открыт, и `volume_pass` его не перемонтирует.
 
 ## Шаг 4 — Квота — размер кольца
 
@@ -483,7 +481,7 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 ### Тома, который был, нет: найти, а не сделать заново
 
-Диск не примонтировался после перезагрузки. Точка монтирования пуста или её нет вовсе, движок отвечает «тома там нет» (`VOLUME_EXISTS` — нет), и `Archive.open` делал то, что делает с любым новым томом: **форматировал** его — пустой, на том диске, куда теперь попадает путь, обычно на системном. Регистратор писал в него как ни в чём не бывало: ни ошибки, ни тревоги, недели записей не видно, системный диск заполняется (решение владельца 4 октября; в продукте то же, `r24-names`).
+Диск не примонтировался после перезагрузки. Точка монтирования пуста или её нет вовсе, движок отвечает «тома там нет» (`VOLUME_EXISTS` — нет), и `Archive.open` делал то, что делает с любым новым томом: **форматировал** его — пустой, на том диске, куда теперь попадает путь, обычно на системном. Регистратор писал в него как ни в чём не бывало: ни ошибки, ни тревоги, недели записей не видно, системный диск заполняется. Пропавший том заново не создаётся (ADR 0044; в продукте то же, `r24-names`).
 
 Теперь перед форматированием `Archive.open` спрашивает (`may_format`), можно ли:
 

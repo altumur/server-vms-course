@@ -101,7 +101,7 @@ def live_shm(cid, shm_dir: str = SHM_DIR) -> str:
 
 От операционной системы здесь зависит только путь. `/run/vms` — умолчание для Linux; на другой системе его задают переменной `SHM_DIR`. Сам `shmsink` от Linux не зависит: по замеру продукта он работает и на macOS в сборке GStreamer 1.28, а граница процессов через разделяемую память стоит около 0,1 мс на кадр (обратная связь, BJ). В курсе это не проверялось.
 
-**Обе двери по умолчанию закрыты, и дверь объявляет то, что привязала** (ревью платформы, блокер 1; шаг 0 продукта, обратная связь BP). Ниже М12 никто не спрашивает, кто пришёл: аутентификации в этом модуле нет, и это записанное решение (`module-design.md`), а не недосмотр. Между живым потоком камеры и любым человеком в сети стоял только адрес, на котором слушает дверь, — а RTSP-раздача и дверь архива устройства слушали все интерфейсы. Теперь обе привязаны к `127.0.0.1`. Открыть дверь в сеть — настройка (`RTSP_HOST`, `PLAYBACK_HOST`), и процесс пишет в лог, что дверь открыта и никого не спрашивает.
+**Обе двери по умолчанию закрыты, и дверь объявляет то, что привязала** (ревью платформы, блокер 1; шаг 0 продукта, обратная связь BP). Ниже М12A никто не спрашивает, кто пришёл: аутентификации в этом модуле нет, и это записанное решение (`module-design.md`), а не недосмотр. Между живым потоком камеры и любым человеком в сети стоял только адрес, на котором слушает дверь, — а RTSP-раздача и дверь архива устройства слушали все интерфейсы. Теперь обе привязаны к `127.0.0.1`. Открыть дверь в сеть — настройка (`RTSP_HOST`, `PLAYBACK_HOST`), и процесс пишет в лог, что дверь открыта и никого не спрашивает.
 
 Вторая половина — то, без чего первая не работает. Адрес двери **объявляется** в heartbeat'е, и объявлялось всегда имя сервера. Дверь на loopback под именем сервера недостижима везде, где имя разрешается в адрес сети: подписчик идёт туда, где никто не слушает.
 
@@ -273,7 +273,7 @@ metrics:
 
 `vms_commands_total{outcome}` — четыре исхода: `performed`, `refused`, `expired`, `unknown`; последний должен быть нулём, не ноль — держатели падают посреди команд. `vms_event_to_device_seconds{by}` — вся дорога от события-причины до вызова устройства (вторая половина дороги вычислителя сценариев, урок 25), `vms_request_to_device_seconds{by}` — от подачи строки, `vms_request_seen_to_device_seconds` — звено самого держателя, по его монотонным часам (как и почему мерится каждая — М10A, урок 14, шаг 14, «Счёт»). `vms_devices_slow`, `vms_commands_in_flight` — чего ждёт держатель; `vms_commands_reanswered_total` — ответы, сказанные повтором после перезапуска.
 
-**Двести зависших устройств.** Что вызов в устройство идёт в своём потоке, а взгляд на просьбы держит цикл не дольше `REQUESTS_HOLD`, — правило платформы (М10A, урок 14, шаг 14). Его число — `HUNG_TARGETS = 200` — взято у держателя камер: решение владельца, что держатель сохраняет аренды, даже когда зависли **все** его устройства, а двести — устройства держателя такого размера. Измерено на настоящем цикле, двести устройств, команда каждому разом, половина висит: быстрая команда, поданная последней по порядку ключей, — за 0,75–1,04 с; шаг аренд — раз в оборот цикла, наибольший промежуток около 2 с при `poll` 1 с. Почти вся цена команды на этом файловом хранилище — отметка create-only. Тест: `test_long_poll.py::test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_the_lease`.
+**Двести зависших устройств.** Что вызов в устройство идёт в своём потоке, а взгляд на просьбы держит цикл не дольше `REQUESTS_HOLD`, — правило платформы (М10A, урок 14, шаг 14). Его число — `HUNG_TARGETS = 200` — взято у держателя камер: решение владельца (ADR 0037), что держатель сохраняет аренды, даже когда зависли **все** его устройства, а двести — устройства держателя такого размера. Измерено на настоящем цикле, двести устройств, команда каждому разом, половина висит: быстрая команда, поданная последней по порядку ключей, — за 0,75–1,04 с; шаг аренд — раз в оборот цикла, наибольший промежуток около 2 с при `poll` 1 с. Почти вся цена команды на этом файловом хранилище — отметка create-only. Тест: `test_long_poll.py::test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_the_lease`.
 
 **Четыре взгляда в секунду.** Заявка, ждущая прохода держателя, ждала бы до двух секунд — половину дороги от события до устройства (урок 25, шаг 10). Поэтому между проходами держатель смотрит на строки каждые `COMMANDS_BEAT` — четверть секунды:
 
@@ -398,7 +398,7 @@ POST /vms/requests  Idempotency-Key: k-1
                 log.error("%s: a device posted an event that cannot be written (%s: %.200s); dropped — the other events "
                           "are written", self.name, type(e).__name__, e)
         for cid in dead:
-            self.reconciler.lost(cid, self.now())
+            self.reconciler.forget(cid)                 # died, not by command: started again after its delay
             self.observe(cid, "silent")                 # the event with no picture behind it, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
 ```
@@ -407,7 +407,7 @@ POST /vms/requests  Idempotency-Key: k-1
 
 Объявленное становится событиями — **через `observe`**, то есть с той же проверкой эпохи. Конвейер, объявивший что-то после того, как воркер потерял камеру, не запишет ничего.
 
-Умершее становится двумя действиями. `reconciler.lost` — забыть и оштрафовать (урок 2), чтобы перезапуск пошёл через откат, а не мгновенно. И `observe(cid, "silent")` — событие, чей комментарий стоит перечитать: **«событие, за которым по определению нет картинки».**
+Умершее становится двумя действиями. `reconciler.forget` — забыть и засчитать неудачу (урок 2, шаг 6), чтобы перезапуск пошёл через откат, а не мгновенно. И `observe(cid, "silent")` — событие, чей комментарий стоит перечитать: **«событие, за которым по определению нет картинки».**
 
 Смысл в том, что `silent` — единственное событие, которое гарантированно не попадёт ни в какую запись. Поток оборвался; последовательность, которую писал регистратор, оборвалась вместе с ним. Если бы `silent` не писался отдельной строкой, момент обрыва не остался бы нигде: на таймлайне была бы просто дыра между интервалами, и отличить «камера молчала» от «рекордер лежал» было бы нечем.
 
@@ -419,16 +419,16 @@ POST /vms/requests  Idempotency-Key: k-1
 
 ```python
     def status(self) -> list[dict]:
-        st = self.reconciler.status()
+        running, st = self.reconciler.running(), self.reconciler.status()
         out, back = [], self.held_back()
         for cam in self.rows:
             cid = cam["id"]
-            pos, lag = st.get(cid, (CONVERGED, 0))
-            phase = "running" if cid in self.reconciler.actual else ("pending" if not cam["enabled"] else
-                                                                     ("failed" if cid in self.reconciler.failures else "pending"))
+            pos = st[cid].state if cid in st else CONVERGED
+            phase = "running" if cid in running else ("pending" if not cam["enabled"] else
+                                                      ("failed" if cid in st and st[cid].failures else "pending"))
             lease = self.leases.get(str(cid))
             out.append({"id": cid, "ref": cam.get("ref", ""), "name": cam.get("name", str(cid)), "enabled": cam["enabled"], "phase": phase, "position": pos,
-                        "revision": cam["revision"], "observed_revision": self.reconciler.actual.get(cid, {}).get("revision", 0),
+                        "revision": cam["revision"], "observed_revision": running.get(cid, 0),
                         "epoch": self.epochs.get(str(cid), 0),
                         # recording under an epoch the store has not confirmed: said, not hidden
                         **({"lease": "unconfirmed", "unconfirmed_s": round(lease.unconfirmed(), 1)}
@@ -441,13 +441,13 @@ POST /vms/requests  Idempotency-Key: k-1
         return out
 ```
 
-Читающая модель, и она **вычисляется на каждом вызове**. Ни одного хранимого поля состояния — та же мысль, что `actual` в памяти и `Reconciler.status`, применённая на уровень выше.
+Читающая модель, и она **вычисляется на каждом вызове**. Ни одного хранимого поля состояния — та же мысль, что работающее в памяти цикла и `Reconciler.status`, применённая на уровень выше. Положение камеры — `state` из `Position` помощника, неудачи — его `failures` (урок 2, шаг 7).
 
 Два числа рядом стоят объяснения:
 
 ```python
 "revision": cam["revision"],
-"observed_revision": self.reconciler.actual.get(cid, {}).get("revision", 0),
+"observed_revision": running.get(cid, 0),
 ```
 
 **Что настроено и что на самом деле работает.** Оператор поправил камеру — `revision` стал 5. Конвейер ещё не перезапустился — `observed_revision` остался 4. Разница видна на экране, и она отвечает на вопрос «моя правка применилась?» без гадания.
@@ -458,9 +458,9 @@ POST /vms/requests  Idempotency-Key: k-1
 
 | Фаза | Когда |
 |---|---|
-| `running` | есть в `actual` — конвейер поднят |
+| `running` | есть в `reconciler.running()` — конвейер поднят |
 | `pending` | выключена оператором, или ждёт запуска |
-| `failed` | есть среди неудач |
+| `failed` | у цикла есть неудачи подряд (`failures` в `status()`) |
 | `held` | `live: on-demand`: устройство держится, конвейера нет (урок 15) |
 
 Заметьте вырожденность: `pending` возвращается и для выключенной камеры, и для той, которая просто ещё не поднялась. Различает их `enabled`, которое тут же рядом, и страница показывает их по-разному.
@@ -554,7 +554,7 @@ Heartbeat собирает база: `heartbeat_once` кладёт в один �
 | `was_fenced` | страница | почему он был огорожен (шаг 9) |
 | `devices` | `/devices`, страница | что держится и в каком состоянии устройство |
 | `command_counts`, `command_road`, … | метрики спеки VMS (шаг 3а) | что с командами |
-| `playback_key` | консоль, подписывающая адрес двери | ключ двери воспроизведения (урок 15) |
+| `playback_key` | регистратор, обзор карт (`playback.process_url`) | ключ двери воспроизведения: из него выводится адрес одной камеры для процесса (урок 15) |
 | `status` | `read_model`, `/cameras`, `vms_cameras_running` | что с каждой камерой |
 
 Поля, которые говорят оба словаря, остаются за подсистемой; `fetched` держатель говорит всегда, даже пустым. Поля `archive` у держателя нет: куда идут его события, говорит `server` — дерево ресурса своего сервера; свой том называет регистратор (урок 10).
@@ -569,12 +569,12 @@ Heartbeat собирает база: `heartbeat_once` кладёт в один �
     # A lost lease stops ONE pipeline: `lost` names units the way the lease does — as text — and the reconciler keys by
     # the row's id, which the spec parsed (a number for cameras, a name for recordings): matched, never cast.
     def stop_unit(self, unit) -> None:
-        uid = next((k for k in self.reconciler.actual if str(k) == str(unit)), unit)
+        uid = next((k for k in self.reconciler.running() if str(k) == str(unit)), unit)
         self.actuator("stop", {"id": uid})
-        self.reconciler.actual.pop(uid, None)
+        self.reconciler.drop(uid)                   # stopped by its lease, not failed: started again, if still mine
 ```
 
-Остановить этот конвейер и забыть его в цикле сверки — и больше ничего. Эпоху отдаёт база (`release`), она же запоминает камеру в `lost_to_epoch`. Если камера всё ещё моя, следующий проход, перечитав назначение, поднимет её под новой эпохой; если нет — она у другого воркера, и делать нечего. Ключи сравниваются как текст: аренда называет единицу строкой, а цикл — тем, что сделала из id спека (число у камер, имя у записей регистратора). Тесты держателя: «зомби на одной коробке», «зомби отсекается на слоте первым» и «переназначение — не зомби» (`test_lesson4_worker.py::test_the_zombie_on_one_box`, `::test_the_zombie_is_fenced_at_the_slot_first`, `::test_a_reassignment_is_not_a_zombie`).
+Остановить этот конвейер и забыть его в цикле сверки — `drop`, без неудачи (урок 2, шаг 6): камера не виновата в потерянной аренде, — и больше ничего. Эпоху отдаёт база (`release`), она же запоминает камеру в `lost_to_epoch`. Если камера всё ещё моя, следующий проход, перечитав назначение, поднимет её под новой эпохой; если нет — она у другого воркера, и делать нечего. Ключи сравниваются как текст: аренда называет единицу строкой, а цикл — тем, что сделала из id спека (число у камер, имя у записей регистратора). Тесты держателя: «зомби на одной коробке», «зомби отсекается на слоте первым» и «переназначение — не зомби» (`test_lesson4_worker.py::test_the_zombie_on_one_box`, `::test_the_zombie_is_fenced_at_the_slot_first`, `::test_a_reassignment_is_not_a_zombie`).
 
 **Сколько камера пишет сквозь молчание хранилища — слово её спеки.**
 
@@ -617,13 +617,14 @@ lease: {unconfirmed_max: forever}
 
     def forget_units(self) -> None:
         self.rows, self.assignment_rev = [], 0
-        self.reconciler.clear()
+        self.reconciler.clear()                     # another name, another assignment: what failed under the old one
+        self.reconciler.reset_backoff()             # …waits for nothing here
 
     def unit_word(self, unit) -> str:
         return f"camera {unit}"
 ```
 
-`fence_units` — огорожен: остановить все конвейеры и забыть их в цикле — `clear` из урока 2, «конвейеры были остановлены из-под цикла», без штрафа: камеры ни при чём. `forget_units` — возвращение под другим именем: забыть строки и версию назначения прежнего имени, чтобы первый проход нового читал своё. `stop_all_units` — аккуратная остановка (шаг 10). `unit_word` — как лог платформы называет единицу: «camera 7 stopped: a newer epoch was issued for it».
+`fence_units` — огорожен: остановить все конвейеры и забыть их в цикле — `clear` из урока 2, «конвейеры были остановлены из-под цикла», без новых неудач: камеры ни при чём. `forget_units` — возвращение под другим именем: забыть строки и версию назначения прежнего имени, чтобы первый проход нового читал своё, и сбросить неудачи (`reset_backoff`) — то, что отказывало под старым именем, здесь ничего не ждёт. `stop_all_units` — аккуратная остановка (шаг 10). `unit_word` — как лог платформы называет единицу: «camera 7 stopped: a newer epoch was issued for it».
 
 Что из этого видно со стороны VMS. Отсечённый по слоту молчит, поэтому `vms_worker_fenced{worker}` показывает только отсечённых **за схему** — хранилище подняли выше их сборки, имя ещё их, и `fenced: true` они говорят под ним. Конфликты эпох, набранные зомби, считает `vms_epoch_conflicts` — ради этого числа и существует урок 9 М11. Пока имя держит живой новый процесс, старый — никто: тревога `worker.name_taken` в журнал, метка `vms/contenders/w-1/<коробка>`, которую `/servers` показывает как `name_conflict` у строки держателя. Тесты держателя и регистраторов на тех же путях базы: `test_vms_worker_loops.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds`, `test_vms_worker_loops.py::test_the_vms_holder_and_recorders_fenced_for_the_schema_stop_speaking_when_another_instance_takes_the_name`; «зомби на одной коробке» в `test_lesson4_worker.py` проверяет, что зомби не читает даже назначение `w-1`.
 
