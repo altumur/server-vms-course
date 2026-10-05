@@ -2223,7 +2223,8 @@ def url_host(v, schemes: dict | None = None) -> str:
 def host_of_url(v, schemes: dict | None = None) -> str | None:
     """`url_host`, saying why there is none: "" when the spec says the address names none (its authority is one of the
     scheme's `none`, compared in the host's one spelling), and None when no host can be told — it is no address with an
-    authority, it does not parse, or its host is neither a name nor an IP. With `cut_at: host` declared, None is a value
+    authority, its scheme is not among `schemes` (when they are said), it does not parse, or its host is neither a name
+    nor an IP. With `cut_at: host` declared, None is a value
     the field refuses (`SubsystemSpec.group_refusal`; ADR 0053): `none` says the only addresses without a group."""
     s = "" if v is None else str(v)
     if any(ord(c) < 0x20 or ord(c) == 0x7F for c in s):
@@ -2231,7 +2232,9 @@ def host_of_url(v, schemes: dict | None = None) -> str | None:
     scheme, sep, rest = s.partition("://")
     if not sep or not _SCHEME_NAME.fullmatch(scheme.lower()):
         return None
-    opts = (schemes or {}).get(scheme.lower()) or {}
+    if schemes and scheme.lower() not in schemes:
+        return None                                      # a scheme the field is not reached by: no host is read for it
+    opts = schemes.get(scheme.lower()) or {} if schemes else {}
     if opts.get("fragment", "keep") == "keep":
         rest, _, fragment = rest.partition("#")
         if _BROKEN_ESCAPE.search(fragment):
