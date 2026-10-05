@@ -408,9 +408,10 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
 
 def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
     """The domain's units in the cluster's form (no orchestrator): each runs `w2c-run.sh <verb>`, names its role's socket
-    and joins that role's group first (the rights file's), loads the ring as a credential, and lists no
-    `EnvironmentFile=` — the site's lines are `w2c.env`'s, read under what the unit says. And the runner turns each verb
-    into the module it names (a `python3` that prints what it was given). No Nomad file is left in `deploy/domain`."""
+    and joins that role's group first (the rights file's), and lists no `EnvironmentFile=` — the site's lines are
+    `w2c.env`'s, read under what the unit says. Each loads the ring as a credential but the domain's console, which has
+    no key (ADR-0032). And the runner turns each verb into the module it names (a `python3` that prints what it was
+    given). No Nomad file is left in `deploy/domain`."""
     import json
     import os
     import subprocess
@@ -419,7 +420,7 @@ def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
     groups = {r: g["group"] for r, g in
               json.load(open(os.path.join(here, "deploy", "cluster", "configstore-rights.json")))["roles"].items()}
     want = {"w2c-domain": ("domain", "signer", "w2c", "-m w2cplatform.domain.signer_service"),
-            "w2c-domain-console": ("domain", "domainconsole", "w2c", "-m w2cplatform.domain.console"),
+            "w2c-domain-console": ("domainconsole", "domainconsole", "w2c", "-m w2cplatform.domain.console"),
             "w2c-domainagent": ("domainagent", "domainagent", "w2c", "-m w2cplatform.domain.agent"),
             "vms-domainpart": ("vmsdomain", "vms domainpart", "vms", "-m vms domainpart")}
     u = _units()
@@ -435,7 +436,10 @@ def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
         assert s["env"]["PLATFORM_STORE"] == f"configstore:///run/configstore/{role}.sock", name
         assert s["SupplementaryGroups"][0].split()[0] == groups[role], name
         assert s["User"] == [user] and s["ExecStart"] == [f"/opt/w2c/bin/w2c-run.sh {verb}"], name
-        assert s["env"]["SECRETS_KEY"] == "%d/platform.key" and s["LoadCredential"], name
+        if name == "w2c-domain-console":
+            assert "SECRETS_KEY" not in s["env"] and "LoadCredential" not in s, f"{name} has no key"
+        else:
+            assert s["env"]["SECRETS_KEY"] == "%d/platform.key" and s["LoadCredential"], name
         assert "EnvironmentFile" not in s, f"{name}: a file would override what the unit says"
         env = {"PATH": os.environ["PATH"], "W2C_ENV": os.devnull, "VMS_ENV": os.devnull, "PYTHON": py, "W2C_HOME": d}
         out = subprocess.run(["sh", os.path.join(here, "deploy", "cluster", "w2c-run.sh"), *verb.split()], env=env,

@@ -133,7 +133,7 @@ def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to
     for secrets, words in (({"readers": {"door/signer": ["console", "worker"]}}, "the rights let console read it"),
                            ({"readers": {"testsub2/vault/": ["console"]}},
                             "testsub2/vault/: the specs name console as its readers, and the rights let console, "
-                            "domain, testsub2controller, testsub2worker, testsubdomain read it"),
+                            "domain, domainconsole, testsub2controller, testsub2worker, testsubdomain read it"),
                            ({"reads": ["door/signer"]}, "says its worker reads it (secrets.reads)"),
                            ({"readers": {"door/signer": ["console"]}, "reads": ["door/signer"]},
                             "the specs name console, testsub2worker")):

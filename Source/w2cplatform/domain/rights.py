@@ -1,7 +1,10 @@
 """The domain's roles in a cluster's rights file (`storemachine.Rights`, `w2cplatform/rights.py`), from the specs.
 
-    domain        the domain's own processes on the HOLDER's store — the signer and its doors, the domain's console: every
-                  row of the domain and the people (`identity/*`); reads the cluster's units too, for its own copy
+    domain        the signer on the HOLDER's store — the one process with the domain's keys, and the holder's whole pass:
+                  every row of the domain and the people (`identity/*`); reads the cluster's units too, for its own copy
+    domainconsole the domain's console on the holder's store (ADR-0032): no key — `domain/signer*` neither read nor
+                  written, no people — and the records a person decides there with no key: admitting a member, the
+                  topology, the grants, an edit kept again; it reads the rest of the domain, and the units
     domainagent   the agent, in EVERY cluster's store (the holder's included): the rows it carries home and its own key,
                   and nothing a holder alone writes — the signer's keys, the people, the list of members, the per-member
                   rows the holder keeps for the others, a subsystem's books for the others and its kept rows — DENIED by
@@ -22,10 +25,16 @@ from __future__ import annotations
 
 from . import declared
 
+# The domain's keys (`domain/signer`, the token key and the issuing key): the signer's alone.
+SIGNER_KEYS = "!domain/signer*"
+# What the domain's console writes (ADR-0032): the list of members, the topology, the grants of every cluster and the
+# domain's own, the edits kept for members that are off — none sealed, none signed.
+CONSOLE_WRITES = ("domain/members", "domain/topology", "domain/grants/*", "domain/pending/*")
+
 
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
-    out = ["!domain/signer*", "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
+    out = [SIGNER_KEYS, "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
            "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break_glass/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
@@ -52,9 +61,13 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
     agent = ["domain/*", *agent_denials(specs)]
     out = {
         "domain": role("domain", ["domain/*", "identity/*"], [schema, "domain/*", "identity/*", "platform/*", *units]),
+        # The domain's console: the keys are not its to read, and the people's rows are opened where the ring is — the
+        # signer's; what it writes is plain and a person's (`console.Console`).
+        "domainconsole": role("domainconsole", list(CONSOLE_WRITES),
+                              [schema, "domain/*", SIGNER_KEYS, "platform/*", *units]),
         # It reads what it carries, on a member, and on the holder what the holder's own agent reads through `answer` —
         # the holder's rows for every member included; never the signer's.
-        "domainagent": role("domainagent", agent, [schema, "domain/*", "!domain/signer*"]),
+        "domainagent": role("domainagent", agent, [schema, "domain/*", SIGNER_KEYS]),
     }
     for s in on:
         if not (s.domain.books or s.domain.kept):

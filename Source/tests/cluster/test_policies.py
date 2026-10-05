@@ -59,7 +59,7 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
     role keeps the spec's name, `<sub>controller`, its group is `w2c-<sub>controller`."""
     r = rights()
     for role in doc()["roles"]:
-        platform = role in ("resource", "console", "domain", "domainagent") or role.endswith("controller")
+        platform = role in ("resource", "console", "domain", "domainconsole", "domainagent") or role.endswith("controller")
         assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
     assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
 
@@ -123,13 +123,32 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
                         ("read", "identity/pointer"), ("write", "domain/vms/crossings"), ("read", "vms/cameras/7"),
                         ("delete", "domain/pending/north")):
         assert r.allows("domain", action, key), (action, key)
-    for role in ("domainagent", "vmsdomain", "console", "vmsworker"):
+    for role in ("domainagent", "domainconsole", "vmsdomain", "console", "vmsworker"):
         for action in ("read", "write", "delete"):
             assert not r.allows(role, action, "domain/signer"), (role, action)
     assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants")
     assert not r.allows("domainagent", "write", "domain/grants/north") and "member" not in r.roles
     assert r.allows("vmsdomain", "write", "domain/vms/primaries/cam-SN1") and not r.allows("vmsdomain", "write", "domain/keys")
     assert not r.allows("domain", "write", "vms/cameras/7")
+
+
+def test_the_domains_console_has_a_role_of_its_own_with_no_key_and_no_people():
+    """ADR-0032: the domain's console is its own process with its own role — `domainconsole`, the platform's group — and
+    no part of the domain's keys, read or written; the people's rows (sealed with the ring) are the signer's too. It
+    writes what a person decides there with no key: the members, the topology, the grants, an edit kept again; and it
+    reads the rest of the domain and the units, for the views it serves."""
+    r = rights()
+    assert r.groups["domainconsole"] == "w2c-domainconsole"
+    for key in ("domain/signer", "domain/signer/backup", "identity/users/u1", "domain/shared", "domain/backup/north",
+                "domain/view", "domain/vms/crossings"):
+        assert not r.allows("domainconsole", "write", key), key
+    for key in ("domain/signer", "domain/signer/backup", "identity/users/u1"):
+        assert not r.allows("domainconsole", "read", key), key
+    for key in ("domain/members", "domain/topology", "domain/grants/north", "domain/grants/domain", "domain/pending/north"):
+        assert r.allows("domainconsole", "write", key), key
+    for key in ("domain/keys", "domain/backup/north", "domain/shared", "domain/vms/crossings", "vms/cameras/7"):
+        assert r.allows("domainconsole", "read", key), key
+    assert not r.allows("domainconsole", "delete", "domain/members")          # the store's rule: the domain's roles alone
 
 
 # -- what the processes DO: every scene of the stand, and the doors the scenes do not knock on ------------------------

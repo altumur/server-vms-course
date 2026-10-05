@@ -1,8 +1,11 @@
 # /etc/systemd/system/w2c-domain.service — the domain's signer and its doors, on the server that holds the domain
-# (`w2c-run.sh signer` → `python3 -m w2cplatform.domain.signer_service`): the people's door in (/login), the members'
+# (`w2c-run.sh signer` → `python3 -m w2cplatform.domain.signer_service`): the people's door in (/api/login), the members'
 # carry door (/api/carry/<member> — each member's own rows, signed by its key, secrets sealed to it), and on a socket of
 # the holder's own the tokens a subsystem's books carry (`tokendoor.py`). Its keys and the people's and the emergency
-# hashes are sealed under the ring (the key below).
+# hashes are sealed under the ring (the key below). The one process with the domain's keys (ADR-0032): the four
+# operations that need them (/api/shared, /api/handover, /api/people/…, the backup sealed) and the holder's whole pass —
+# the view it leaves in the objects, the week of alarms, the backup — and its own lines of the journal (`domain`). The
+# view names the domain console's address: `CONSOLE_URL` (w2c.env).
 [Unit]
 Description=w2c domain — the signer and its doors (this server holds the domain)
 After=network-online.target configstore.service w2c-resource.service
@@ -11,7 +14,7 @@ Wants=network-online.target
 [Service]
 User=w2c
 Group=w2c
-SupplementaryGroups=w2c-domain w2c-store w2c-secrets
+SupplementaryGroups=w2c-domain w2c-store w2c-secrets w2c-events
 Environment=PLATFORM_STORE=configstore:///run/configstore/domain.sock
 Environment=SIGNER_PORT=8445
 # The box's own door to the door in (`curl --unix-socket`, past a flood), and the monitors' lane for /healthz.
@@ -28,7 +31,7 @@ Environment=SECRETS_KEY=%d/platform.key
 # the site's lines (CLUSTER, DOMAIN_URL, CLUSTERS, OBJECTS…) are there, `domain.env.example`; the sockets are the unit's.
 UMask=0007
 ExecStart=/opt/w2c/bin/w2c-run.sh signer
-ReadWritePaths=/data/platform/objects /run/w2c-signer
+ReadWritePaths=/data/platform/objects /data/platform/events /run/w2c-signer
 Restart=always
 RestartSec=2
 TimeoutStopSec=20
