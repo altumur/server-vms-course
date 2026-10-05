@@ -1,7 +1,7 @@
 # Урок 21 — Платформа на коробке
 
 **Модуль:** М10A — Платформа (ServerVMS, часть первая)
-**Вы напишете:** `w2cplatform/host.py` — точку входа платформы, `python3 -m w2cplatform controller <sub> | resource | console`, и `stores`, которым каждый процесс открывает свои хранилища; в `deploy/` — юниты процессов платформы (шаблон `w2c-controller@.container`, `w2c-resource.container`, `console.container`), пользователя и каталоги платформы (`w2c.sysusers`, `w2c.tmpfiles`), её половину окружения (`w2c.env.example`), скрипт запасных `w2c-spares.sh` с его службами и таймерами; и платформенную половину `tests/test_deploy_units.py`.
+**Вы напишете:** `w2cplatform/host.py` — точку входа платформы, `python3 -m w2cplatform controller <sub> | resource | console`, и `stores`, которым каждый процесс открывает свои хранилища; в `deploy/` — юниты процессов платформы (шаблон `w2c-controller@.container`, `w2c-resource.container`, `w2c-console.container`), пользователя и каталоги платформы (`w2c.sysusers`, `w2c.tmpfiles`), её половину окружения (`w2c.env.example`), скрипт запасных `w2c-spares.sh` с его службами и таймерами; и платформенную половину `tests/test_deploy_units.py`.
 **Время:** ~80 минут.
 
 ## Зачем этот урок
@@ -133,9 +133,9 @@ Quadlet делает из каждого файла `/etc/containers/systemd/<и
 
 | Юнит | `Exec=` | Слушает | Пишет |
 |---|---|---|---|
-| `w2c-controller@.container` → `w2c-controller@vms`, `@rec`, … | `python3 -m w2cplatform controller %i` | ничего | размещение своей подсистемы и снимок |
+| `w2c-controller@.container` → `w2c-controller@vms`, `@rec`, … | `python3 -m w2cplatform controller %i` | ничего | размещение своей подсистемы и снимок; свой журнал в архиве событий |
 | `w2c-resource.container` | `python3 -m w2cplatform resource` | `127.0.0.1:8090` | heartbeat, `platform/doors/<сервер>`, архив событий |
-| `console.container` | `python3 -m w2cplatform console` | `0.0.0.0:8080` и `/run/w2c-console/console.sock` | строки оператора, отметки в архиве событий |
+| `w2c-console.container` | `python3 -m w2cplatform console` | `0.0.0.0:8080` и `/run/w2c-console/console.sock` | строки оператора, отметки в архиве событий |
 
 Шаблон контроллеров целиком:
 
@@ -155,6 +155,8 @@ Volume=/data/platform/config:/data/platform/config:z
 Volume=/data/platform/objects:/data/platform/objects:z
 GroupAdd=2103
 PodmanArgs=--umask=0007
+Volume=/data/platform/events:/data/platform/events:z
+GroupAdd=2102
 Network=host
 
 [Service]
@@ -173,13 +175,20 @@ WantedBy=multi-user.target
     assert not [n for n in os.listdir(DEPLOY) if n.endswith("controller.container")]   # no controller of a subsystem's name
 ```
 
-**Контроллер — вычисление, а не состояние.** Порта у него нет: ему никто ничего не говорит, он читает хранилище и пишет в него. Перезапускать его можно когда угодно. Два экземпляра над одним хранилищем безвредны, потому что каждая запись — CAS урока 8 (`test_lesson6_controller.py::test_two_controllers_agree_by_cas`). Перезапуск, который на секунду наложился на старый экземпляр, замка не требует. Архива событий у контроллера нет вовсе: `assert EVENTS not in vols("w2c-controller@.container")`. Ошибка в размещении не может испортить события — не потому, что код верен, а потому что их у него нет.
+**Контроллер — вычисление, а не состояние.** Порта у него нет: ему никто ничего не говорит, он читает хранилище и пишет в него. Перезапускать его можно когда угодно. Два экземпляра над одним хранилищем безвредны, потому что каждая запись — CAS урока 8 (`test_lesson6_controller.py::test_two_controllers_agree_by_cas`). Перезапуск, который на секунду наложился на старый экземпляр, замка не требует. Архив событий контроллер монтирует ради одного — своего журнала: какой слот он освободил и почему, `units.left_on_leaving` (`host.controller_loop` пишет его туда, куда указывает `RESOURCE_ROOT` из `w2c.env`). Пишет он туда как любой клиент архива, членом `w2c-events`, а не хозяином, и бакеты удаляет только ресурс. Тест держит обе половины: «ACL говорит, какие строки пишет токен, а монтирование — какие байты»:
+
+```python
+    assert vols("w2c-controller@.container")[EVENTS] == f"{EVENTS}:z" and "2102" in groups("w2c-controller@.container")
+    assert "RESOURCE_ROOT=" in open(os.path.join(DEPLOY, "w2c.env.example")).read()     # …which the unit's env file says
+```
+
+(`test_deploy_units.py::test_who_may_write_where_is_in_the_mounts_too`.)
 
 **Ресурс — процесс, а не таймер.** Шапка его юнита называет, что он заменил: *the policy pass now runs every 600 s from the process's loop, and a oneshot could not hold a heartbeat.* Разовая задача раз в десять минут давала тот же проход, но у неё не было трёх вещей: heartbeat'а (между запусками её не видно), порта (к ней нельзя обратиться) и индекса событий с его кэшем (ему негде жить). Тест держит `Restart=always` с комментарием *a process, not a timer*. Индекс при этом ничего своего не хранит (урок 13), и перезапуск теряет только кэш. `RESOURCE_HOST=127.0.0.1`: на одной коробке к ресурсу обращается только консоль. В кластере он слушает адрес сервера, потому что соседи присылают туда зеркала.
 
 **Консоль — на порту и на сокете.** `CONSOLE_HOST=0.0.0.0`, `CONSOLE_PORT=8080`: страницу открывают с машины оператора, обычным HTTP, и консоль говорит об этом в журнале при каждом старте. С прокси перед ней сюда ставят `127.0.0.1`. Второй вход — сокет `CONSOLE_UNIX=/run/w2c-console/console.sock`, дверь самой коробки: через него идут аварийный вход и собственные соединения на случай, когда порт залит. Кто «на коробке», определяет режим каталога, а не адрес: `0700 w2c` (шаг 5), то есть root и процессы платформы. Корень консоли — `Environment=CONSOLE_ROOT=vms`. Тест `test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name` собирает консоль по этому окружению и спекам образа и проверяет, что остальные спеки встали под своими именами. Ничего своего консоль не держит: ключи идемпотентности лежат в хранилище, и повтор, попавший в перезапущенный экземпляр, получает тот же ответ.
 
-Имя файла консоли на коробке — `console.container`, служба — `console.service`. В кластере тот же процесс называется `w2c-console.service`.
+Имя файла консоли на коробке — `w2c-console.container`, служба — `w2c-console.service`: то же имя, что у этого процесса в кластере (ADR 0023).
 
 **Что в этих трёх файлах называет VMS.** Три слова, и все три — развёртывания, а не кода. `Image=localhost/vmsserver:latest`: коробка ставит один образ, и в нём спеки VMS (`SPEC_DIR=/app/vms`). `CONSOLE_ROOT=vms`: что стоит на `/`, решает развёртывание. `EnvironmentFile=/etc/vms/vms.env`: каждый юнит коробки читает обе половины окружения (шаг 7). Положите в образ спеку `counter` из урока 9 — и те же три файла поднимут её: поменяются имя экземпляра и `CONSOLE_ROOT`, и ничего больше.
 
@@ -213,8 +222,8 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
     …
         assert vols.get(CONFIG) == f"{CONFIG}:z" and vols.get(OBJECTS) == f"{OBJECTS}:z" and W2C_STORE in groups, n
         assert "--umask=0007" in _list(c.get("PodmanArgs")), n
-        platform = n in ("w2c-resource.container", "console.container", "w2c-controller@.container")
-        assert (EVENTS in vols and (not platform or n == "w2c-resource.container")) == (W2C_EVENTS in groups), n
+        platform = n in ("w2c-resource.container", "w2c-console.container", "w2c-controller@.container")
+        assert (EVENTS in vols and n != "w2c-console.container") == (W2C_EVENTS in groups), n
         …
         assert ("User" in c) == platform, n
         if platform:
@@ -224,7 +233,7 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
     assert (r["User"], r["Group"]) == (W2C, W2C) and W2C_SECRETS not in _list(r.get("GroupAdd"))   # it opens no secret
 ```
 
-Три процесса платформы — `User=2100`, `Group=2100`, и это единственные контейнеры коробки, где пользователь назван: процессы подсистемы в своих контейнерах работают от root. Каждый юнит входит в `w2c-store` с маской 0007. В `w2c-events` входят ровно те, кто монтирует архив событий, кроме консоли: её отметки ложатся в архив, хозяин которого — её собственный пользователь. Ресурс не входит в `w2c-secrets`: секретов он не открывает.
+Три процесса платформы — `User=2100`, `Group=2100`, и это единственные контейнеры коробки, где пользователь назван: процессы подсистемы в своих контейнерах работают от root. Каждый юнит входит в `w2c-store` с маской 0007. В `w2c-events` входят ровно те, кто монтирует архив событий, кроме консоли: ресурс, который там удаляет, контроллер, чей журнал ложится в общий каталог `audit/`, и клиенты подсистем, пишущие бакеты. Консоль — нет: её отметки ложатся в архив, хозяин которого — её собственный пользователь. Ресурс не входит в `w2c-secrets`: секретов он не открывает.
 
 **Права проверены так, как их проверило бы ядро.** Второго uid без root в тесте нет, поэтому `test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote` проверяет режимы для процесса **другого** uid, связанного с деревом только группой. Клиент пишет бакеты под маской 0007 в дерево 2770 этой группы. Каждый созданный им каталог — группы и с `rwx` для неё (на Linux ещё и setgid), каждый файл — с `rw`. Проход хранения ресурса удаляет старый бакет. А под маской 0022 та же проверка говорит, что удалить он бы не смог: маска — половина правила.
 
@@ -307,7 +316,7 @@ Environment=SECRETS_KEY=/run/secrets/platform.key
 ```python
     keyed = {n for n in os.listdir(DEPLOY) if n.endswith(".container")
              and "SECRETS_KEY=/run/secrets/platform.key" in unit(n)["Container"].get("Environment", [])}
-    assert keyed == {"console.container", "vmsworker@.container", "recworker@.container"}, keyed
+    assert keyed == {"w2c-console.container", "vmsworker@.container", "recworker@.container"}, keyed
     for n in keyed:
         assert f"{KEY}:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
         assert W2C_SECRETS in _list(unit(n)["Container"]["GroupAdd"]), n                 # 0640, its group: the clients of the key
@@ -413,7 +422,7 @@ Polkit разрешает `w2c` ровно одно действие — `system
 
 Тесты запускают скрипт с подменёнными `curl` и `systemctl`: `test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_its_ceiling_and_stops_nothing`, `test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried`, `test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console`, `test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one`. Строки юнитов держит `test_every_spares_unit_runs_the_script_for_its_role`: каждая служба — `oneshot` от `w2c` без `SupplementaryGroups`, каждый таймер — раз в минуту.
 
-**Долг границы, записанный вслух.** Таблица ролей в самом скрипте называет роли VMS и страницы их метрик (`recworker` → `/rec/metrics`, `vmsworker` → `/metrics`, …) и префикс `NAME=vms`. Это скрипт платформы, который знает подсистему по имени, а не по спеке. Правильная форма — роли из спек каталога: страница и префикс у каждой спеки свои, `<sub>_workers_needed`. Тест границы этот файл пока не читает.
+**Долг границы, и он открыт.** Таблица ролей в самом скрипте называет роли VMS и страницы их метрик (`recworker` → `/rec/metrics`, `vmsworker` → `/metrics`, …) и префикс `NAME=vms`. Это скрипт платформы, который знает подсистему по имени, а не по спеке. Правильная форма — роли из спек каталога: страница и префикс у каждой спеки свои, `<sub>_workers_needed`. Сегодня этого нет, и тест границы долга не видит: он читает `w2cplatform/`, а скрипт лежит в `deploy/`.
 
 ## Шаг 9 — Осушение и обновление на одной коробке
 
@@ -434,12 +443,12 @@ Polkit разрешает `w2c` ровно одно действие — `system
 
 Единицы остаются на своих воркерах, и работа не останавливается. Но `GET /drain` говорит `would_strand` по каждой единице каждой подсистемы, и `safe` не наступит никогда. Контроллер один раз за серию скажет о каждой единице в журнал процесса (`journalctl -u w2c-controller@<sub>`: `… stay on … no live worker takes it`) и поднимет тревогу `units.left_on_leaving`. Новая единица, созданная в это время, неразмещаема: пул пуст. Поэтому на коробке осушение не зовут. Обновление коробки — плановый перерыв, и платформа делает его коротким и чистым.
 
-Одно открытое место: строки журнала контроллера (`Journal`) ложатся в архив событий, который назвал `RESOURCE_ROOT`. На коробке `w2c.env` его называет, а юнит контроллера архива не монтирует — и тревога остаётся в слое его контейнера, где её никто не читает. Строка `log.warning` при этом видна. Что должно быть верным — контроллер без архива не пишет журнал вовсе, как в М11, или пишет туда, где его прочтут, — решает код, а не урок.
+Тревога ложится туда же, куда весь журнал контроллера (`Journal`): в архив событий, который назвал `RESOURCE_ROOT` и который юнит контроллера монтирует (шаг 3). Её видит таймлайн консоли, а строку `log.warning` — `journalctl`.
 
 ```bash
 podman build -f deploy/Containerfile -t localhost/vmsserver:latest .    # из Source/: один образ на всю коробку
 systemctl daemon-reload                                                  # если поменялись файлы юнитов
-systemctl restart w2c-controller@vms w2c-controller@rec console w2c-resource
+systemctl restart w2c-controller@vms w2c-controller@rec w2c-console w2c-resource
 systemctl restart <юниты подсистем>                                      # урок 17 М10B
 curl localhost:8080/schema                                               # can_raise_to: что понимает каждый живой процесс
 curl -X PUT 'localhost:8080/schema?version=2'                            # только если новая сборка подняла SCHEMA
@@ -459,15 +468,15 @@ curl -X PUT 'localhost:8080/schema?version=2'                            # то�
 deploy/install-obsd.sh                                       # w2c (2100) и группы клиентов, /data/platform, /etc/w2c → /data/platform/etc
 python3 -m w2cplatform.sealing new /etc/w2c/secrets/platform.key   # из Source/, root: 0640, группа от каталога
 podman build -f deploy/Containerfile -t localhost/vmsserver:latest .
-cp deploy/w2c-controller@.container deploy/w2c-resource.container deploy/console.container /etc/containers/systemd/
+cp deploy/w2c-controller@.container deploy/w2c-resource.container deploy/w2c-console.container /etc/containers/systemd/
 systemctl daemon-reload
-systemctl start w2c-resource console w2c-controller@vms w2c-controller@rec
+systemctl start w2c-resource w2c-console w2c-controller@vms w2c-controller@rec
 ```
 
 Юниты Quadlet не включают через `systemctl enable`: их `[Install]` читает генератор Quadlet при `daemon-reload`. Экземпляр шаблона на загрузку ставят ссылкой рядом с шаблоном, `w2c-controller@vms.container` → `w2c-controller@.container` (podman-systemd.unit(5)).
 
 ```bash
-systemctl status w2c-resource console 'w2c-controller@*'    # три процесса платформы, все от w2c
+systemctl status w2c-resource w2c-console 'w2c-controller@*'    # три процесса платформы, все от w2c
 ls -l /etc/w2c                                              # ссылка в /data/platform/etc
 stat -c '%a %U:%G' /data/platform/{config,objects,events}   # 2770 w2c:w2c-store, w2c:w2c-store, w2c:w2c-events
 curl localhost:8080/schema                                  # с токеном просмотра: кто запущен, какая схема, до чего можно поднять
@@ -500,7 +509,7 @@ curl localhost:8080/schema                                  # с токеном 
 - Процессы платформы — `w2c`, никогда не пользователь подсистемы и не её группы (ADR 0023, ADR 0030). Клиенты служб платформы — по группам `w2c-events`, `w2c-store`, `w2c-secrets`, с фиксированными номерами и маской 0007.
 - Всё изменяемое — под `/data/platform`, конфигурация — `/etc/w2c`, ссылка туда, потому что обновление ОС не должно менять, членом какого хранилища является коробка. Ни один юнит не монтирует корень целиком.
 - Ключ — файл 0640 группы `w2c-secrets` в каталоге 2710: на коробке монтируется одним файлом туда, где открывают секреты; в кластере его выдаёт `LoadCredential`. Интерфейс один — `SECRETS_KEY`.
-- Запасных запускает скрипт на хосте от `w2c`: число, а не команда; молчащая консоль — ничего; свой потолок; только как юнит своей роли. Таблица ролей внутри скрипта — долг границы.
+- Запасных запускает скрипт на хосте от `w2c`: число, а не команда; молчащая консоль — ничего; свой потолок; только как юнит своей роли.
 - Осушать на коробке не к кому. Обновление — короткий плановый перерыв: процессы платформы переживают перезапуск без потерь, а схему поднимают последней.
 
 ## Упражнения
