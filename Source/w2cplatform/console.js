@@ -20,6 +20,10 @@
     en: {
       // the frame: header, rail, panel, footer, sign-in
       unsaved: "Unsaved changes of the selected object", discarded: "Cancelled",
+      newRoot: "group", newSub: "subgroup", newGroupTop: "A new group", newGroupIn: "A new group inside «{p}»", groupNameEmpty: "Give the group a name",
+      groupExists: "There is such a group already", newGroupNoteT: "The group is made — put a {u} in it, or it will not be kept", addHereT: "Add a {u} here",
+      noRows: "No rows",
+      deleted: "Deleted",
       slotTitle: "Slot", slotReleased: "released", slotHung: "hung", slotUnknown: "alive or not — unknown", leaseTill: "Lease until", leaseGarbled: "the term cannot be read",
       volumesW: "Places held", conflictHead: "Name conflict: the name is held by {h}", onMachine: "on the machine", slotNameless: "waits for its name (nameless)",
       slotRefused: "refused: the name is taken", alreadyW: "for", nameAdvice2: "Such a process takes no new number: two processes under one name would write the same. Stop the extra process or give it another name.",
@@ -142,6 +146,10 @@
     },
     ru: {
       unsaved: "Несохранённые изменения выбранного объекта", discarded: "Отменено",
+      newRoot: "группа", newSub: "подгруппа", newGroupTop: "Новая группа", newGroupIn: "Новая группа внутри «{p}»", groupNameEmpty: "Укажите имя группы",
+      groupExists: "Такая группа уже есть", newGroupNoteT: "Группа создана — добавьте в неё: {u}, иначе она не сохранится", addHereT: "Добавить сюда: {u}",
+      noRows: "Нет строк",
+      deleted: "Удалено",
       slotTitle: "Слот", slotReleased: "отпущен", slotHung: "завис", slotUnknown: "жив ли — неизвестно", leaseTill: "Аренда до", leaseGarbled: "срок нечитаем",
       volumesW: "Держит места", conflictHead: "Конфликт имени: имя держит {h}", onMachine: "на машине", slotNameless: "ждёт своё имя (без имени)",
       slotRefused: "отказал: имя занято", alreadyW: "уже", nameAdvice2: "Нового номера такой процесс не берёт: два процесса под одним именем писали бы одно и то же. Остановите лишний процесс или дайте ему другое имя.",
@@ -725,7 +733,36 @@
     // the groups below it, then its own units; its count is every unit under it. Its ref is the whole path.
     // [course leads] …and groups with no unit in them yet: those the domain offers for a group_by field the spec shares with it
     // (domain.shared), read by the module at /domain/shared/<sub> — no page passes them any more (addGroupValues is gone)
-    const extraGroups = sub => ((st.shared[sub.name] || {}).groups || []).map(String).filter(Boolean);
+    // a group made here and carried by no unit yet: kept in this browser, gone when a unit carries it (as the product
+    // console's new folder was)
+    const LG = "pc.groups";
+    const localGroups = () => { try { const o = JSON.parse(localStorage.getItem(LG) || "{}"); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; } };
+    const saveLocalGroups = o => { try { localStorage.setItem(LG, JSON.stringify(o)); } catch (e) { /* no storage */ } };
+    const localOf = sub => { const g = (display(sub).tree || {}).group_by; return g ? (localGroups()[sub.name + "/" + g] || []) : []; };
+    function pruneLocalGroups() {
+      const o = localGroups(); let changed = false;
+      for (const sub of st.subs) {
+        const tr = display(sub).tree || {}, g = tr.group_by, sep = tr.nested_by || "", key = sub.name + "/" + g; if (!g || !o[key]) continue;
+        const carried = (st.units[sub.name] || []).flatMap(u => Array.isArray(u[g]) ? u[g] : []).map(String);
+        const keep = o[key].filter(p => !carried.some(v => v === p || (sep && v.startsWith(p + sep))));
+        if (keep.length !== o[key].length) { o[key] = keep; changed = true; }
+      }
+      if (changed) saveLocalGroups(o);
+    }
+    const extraGroups = sub => [...((st.shared[sub.name] || {}).groups || []), ...localOf(sub)].map(String).filter(Boolean);
+    // a new group under parent ("" — at the top): its name asked, its path checked; it is selected, and it says how it lives
+    async function newGroup(sub, parent) {
+      const tr = display(sub).tree || {}, g = tr.group_by, sep = tr.nested_by || ""; if (!g) return;
+      const v = await C.dialog(parent ? W.newGroupIn.replace("{p}", parent) : W.newGroupTop, [{ name: "name", label: W.name }], W.create);
+      const name = v && String(v.name).trim().split(sep || "\u0000").map(x => x.trim()).filter(Boolean).join(sep); if (!name) { if (v) C.toast(W.groupNameEmpty); return; }
+      const path = parent ? parent + sep + name : name;
+      const all = new Set([...(st.units[sub.name] || []).flatMap(u => Array.isArray(u[g]) ? u[g] : []).map(String), ...extraGroups(sub)]);
+      if ([...all].some(x => x === path || (sep && x.startsWith(path + sep)))) { C.toast(W.groupExists); C.select("group:" + sub.name + "/" + g + "/" + path); return; }
+      const o = localGroups(), key = sub.name + "/" + g; o[key] = [...new Set([...(o[key] || []), path])]; saveLocalGroups(o);
+      if (parent) st.open.add("group:" + sub.name + "/" + g + "/" + parent);
+      C.select("group:" + sub.name + "/" + g + "/" + path);
+      C.toast(tr.new_group_note || W.newGroupNoteT.replace("{u}", unitWord(sub, false)));
+    }
     const sharedHint = (sub, value) => { const s = st.shared[sub.name], sep = (display(sub).tree || {}).nested_by || "";
       return s && (s.groups || []).some(v => String(v) === value || (sep && String(v).startsWith(value + sep))) ? `<p class="sub pc-shared">${h(W.sharedGroup.replace("{r}", s.rev))}</p>` : ""; };
     function groupRows(sub, units, field, sep) {
@@ -841,7 +878,24 @@
     }
     // The row's menu — the same by the right button and by «⋯»: open, the star, then what the page adds.
     function rowMenu(e, ref) {
-      openMenu(e, [{ label: W.openIt, run: () => C.select(ref) }, { label: C.isFav(ref) ? W.unstar : W.star, run: () => C.toggleFav(ref) }, ...menuOf(ref)]);
+      openMenu(e, [{ label: W.openIt, run: () => C.select(ref) }, { label: C.isFav(ref) ? W.unstar : W.star, run: () => C.toggleFav(ref) }, ...groupMenu(ref), ...menuOf(ref), ...unitDelete(ref)]);
+    }
+    function groupMenu(ref) {
+      const g = parseGroup(ref); if (!g || !C.may("edit", null)) return [];
+      const tr = display(g.sub).tree || {};
+      if (g.value === "") return [{ label: "＋ " + cap(tr.new_root || W.newRoot), run: () => newGroup(g.sub, "") }];
+      return [{ label: "＋ " + cap(tr.new_sub || W.newSub), run: () => newGroup(g.sub, g.value) },
+        { label: W.renameGroup, run: () => { C.select(ref); const b = $('.pc-main [data-a="rename"]'); if (b) b.click(); } },
+        { label: tr.add_here || W.addHereT.replace("{u}", unitWord(g.sub, false)), run: () => { st.newInto = g.value; C.select("new:" + g.sub.name); } }];
+    }
+    // a unit's «Delete» in its row's menu, as the product console had it: for whoever may administer it, with a question
+    function unitDelete(ref) {
+      const u = parseUnit(ref); if (!u || !u.row || !C.may("admin", ref)) return [];
+      return [{ label: W.del, run: async () => {
+        if (!confirm(W.deleteQ + " " + label(u.sub, u.row) + "?")) return;
+        try { await C.api("DELETE", u.sub.base + "/" + u.sub.spec.rows + "/" + encodeURIComponent(u.id)); if (st.sel === ref) st.sel = null; await load(); paintMain(); C.toast(W.deleted); }
+        catch (err) { C.toast(W.refused + ": " + err.message); }
+      } }];
     }
     // The favourites: their own panel under the tree, folded or not.
     let favOpen = keep("pc.favOpen") !== "0";
@@ -1289,11 +1343,15 @@
     // units on a server, the store's layout version (/schema) and who keeps it from rising, the drain under way.
     // «＋ <unit>»: a new unit of each subsystem the tree shows, from the head of the section and of a group (into it).
     const newBtns = group => C.may("edit", null) ? st.subs.filter(s => !aboutOf(s)).map(s => `<button type="button" class="btn s pc-hdbtn" data-new="${h(s.name)}"${group ? ` data-into="${h(group)}"` : ""}>＋ ${h(cap(unitWord(s, false)))}</button>`).join("") : "";
-    function wireNew(el) { el.querySelectorAll("[data-new]").forEach(b => { b.onclick = () => { st.newInto = b.dataset.into || ""; C.select("new:" + b.dataset.new); }; }); }
+    const groupBtns = parent => C.may("edit", null) ? st.subs.filter(s => !aboutOf(s) && (display(s).tree || {}).group_by).map(s => { const tr = display(s).tree; return `<button type="button" class="btn s pc-hdbtn" data-newgroup="${h(s.name)}" data-parent="${h(parent || "")}">＋ ${h(cap(parent ? tr.new_sub || W.newSub : tr.new_root || W.newRoot))}</button>`; }).join("") : "";
+    function wireNew(el) {
+      el.querySelectorAll("[data-new]").forEach(b => { b.onclick = () => { st.newInto = b.dataset.into || ""; C.select("new:" + b.dataset.new); }; });
+      el.querySelectorAll("[data-newgroup]").forEach(b => { b.onclick = () => { const sub = st.subs.find(x => x.name === b.dataset.newgroup); if (sub) newGroup(sub, b.dataset.parent); }; });
+    }
     function paintRoot(el) {
       const r0 = st.subs[0], tops = st.subs.filter(s => !aboutOf(s)), nServers = Object.keys(st.servers).length;
       const count = s => `${(st.units[s.name] || []).length} ${display(s).units_count || unitWord(s, true)}`;
-      el.innerHTML = `<h1>${h(cap((r0 && display(r0).section) || W.hwSection))}</h1><p class="sub pc-hdsub">${h(tops.map(count).join(" · ") + " · " + nServers + " " + W.serversInCluster)}</p>${st.section === "units" ? newBtns() : ""}`;
+      el.innerHTML = `<h1>${h(cap((r0 && display(r0).section) || W.hwSection))}</h1><p class="sub pc-hdsub">${h(tops.map(count).join(" · ") + " · " + nServers + " " + W.serversInCluster)}</p>${st.section === "units" ? groupBtns("") + newBtns() : ""}`;
       wireNew(el);
       if (st.section === "units") {
         el.insertAdjacentHTML("beforeend", card(h(W.pickTitle), (r0 && (display(r0).tree || {}).pick_note) ? `<p class="sub">${h(display(r0).tree.pick_note)}</p>` : ""));
@@ -1341,6 +1399,22 @@
         <p class="sub">${h(b ? W.backupKept.replace("{r}", b.pointer && b.pointer.rev).replace("{t}", b.pointer && b.pointer.term) : W.noBackupKept)}</p>
         ${here || !C.may("admin", "domain") ? "" : `<p class="sub">${h(W.moveHelp)}</p><div style="display:flex;justify-content:flex-end"><button type="button" class="btn s" data-a="move">${h(W.move)}</button></div>`}`);
     }
+    // A subsystem's tables under a server (the spec's servers.show: [{table, by, title, columns}]): the rows whose `by` is
+    // this server, the columns in the subsystem's words — unless the page covers that table with a block of its own
+    // (addBlock({covers: "<sub>/<table>"})). The module does not know what the rows are.
+    function serverTables(el, server) {
+      const covered = new Set(((shell.blocks || {}).server || []).map(b => b.covers).filter(Boolean));
+      for (const sub of st.subs) for (const t of ((sub.spec.servers || {}).show || [])) {
+        if (!t || !t.table || covered.has(sub.name + "/" + t.table)) continue;
+        const host = document.createElement("div"); host.className = "pc-show"; host.dataset.table = sub.name + "/" + t.table; el.appendChild(host);
+        const cols = Array.isArray(t.columns) && t.columns.length ? t.columns : ["name"];
+        const draw = rows => {
+          host.innerHTML = card(h(cap(t.title || t.table)), rows.length ? `<table><tr>${cols.map(c => `<th>${h(fieldTitle(sub, c))}</th>`).join("")}</tr>${rows.map(r => `<tr>${cols.map(c => `<td>${h(isSecret(c) ? (r[c] ? MASK : "") : Array.isArray(r[c]) ? r[c].join(", ") : r[c] ?? "")}</td>`).join("")}</tr>`).join("")}</table>` : `<p class="sub">${h(W.noRows)}</p>`, `<span class="sub" style="font-weight:400">${rows.length}</span>`);
+        };
+        draw([]);
+        getJSON(sub.base + "/" + t.table).then(d => { if (!host.isConnected) return; const all = Array.isArray(d) ? d : d && (d[t.table] || d.rows || d.configured) || []; draw(all.filter(r => String(r[t.by || "server"]) === server)); }).catch(() => {});
+      }
+    }
     const mc = (l, v) => `<div class="mc"><span>${h(l)}</span><b>${h(v)}</b></div>`;
     const gb = n => n ? (n / 1073741824).toFixed(1) + " " + W.gbW : "—";
     // A server: its resource and what it carries; drain, decommission, its labels; its workers; then the page's.
@@ -1366,6 +1440,7 @@
       paintLabels(el.querySelector(".pc-labels"), name, s);
       paintDrain(el.querySelector(".pc-drain"), name);
       paintDecom(el.querySelector(".pc-decom"), name, s);
+      serverTables(el, name);
       pageBlocks("server", el, ref, s);
       tabsOf("server", el, ref, s, { general: W.overview });
     }
@@ -1499,7 +1574,7 @@
       const under = p => all.filter(u => (u[field] || []).some(v => v === p || (sep && v.startsWith(p + sep)))).length;
       const leaf = value === "" ? cap(tr.no_group || W.noGroup) : (sep ? value.split(sep).pop() : value);
       const word = cap(display(sub).units_count || unitWord(sub, true));
-      el.innerHTML = `<h1>${h(leaf)}</h1>${newBtns(value)}
+      el.innerHTML = `<h1>${h(leaf)}</h1>${value === "" ? "" : groupBtns(value)}${newBtns(value)}
         ${card(h(value === "" ? cap(unitWord(sub, true)) + " " + (tr.no_group_suffix || W.inNoGroupSuffix) : tr.contents_title || W.groupContents), kids.map(p => `<div class="it" data-ref="group:${h(sub.name)}/${h(field)}/${h(p)}"><span>${ic("folder")}</span><span>${h(sep ? p.split(sep).pop() : p)}<small>${h(cap(tr.group_word || W.group))} · ${under(p)}</small></span></div>`).join("")
           + own.map(u => { const r = unitRef(sub, u.id); return `<div class="it" data-ref="${h(r)}"><span>${decorOf(r).iconHtml || ic("x")}</span><span>${h(label(sub, u))}<small>${h(stateOf(u)[0])}</small></span>${stateBadge(u)}${edit && (u[field] || []).includes(value) ? ` <button type="button" class="btn s" data-out="${h(u.id)}" title="${h(W.removeFrom)}">${h(W.removeShort)}</button>` : ""}</div>`; }).join("")
           || `<p class="sub">${h(W.groupEmpty)}</p>`, `<span class="sub" style="font-weight:400">${inIt.length}</span>`)}
@@ -1813,6 +1888,7 @@
         } catch (e) { st.units[sub.name] = st.units[sub.name] || []; if (sub === st.subs[0]) st.loadErr = e.message; }
       }
       try { const d = await getJSON("/servers"); st.servers = d.servers || {}; st.policy = d.policy || {}; } catch (e) { /* no servers to show */ }
+      pruneLocalGroups();
       st.unplaceable = {};
       for (const sub of st.subs) { try { const d = await getJSON(sub.base + "/unplaceable"); st.unplaceable[sub.name] = Array.isArray(d) ? d : (d && d.units) || []; } catch (e) { st.unplaceable[sub.name] = []; } }
       // [course leads] the groups a spec shares with the domain: its group_by field among domain.shared

@@ -176,7 +176,7 @@ DISPLAY_WORDS = ("unit", "units", "units_count", "section", "general")
 # group, its path's separator among them (the product's words: a group's title and hint, the row of no group…).
 TREE_KEYS = ("group_by", "columns", "children")
 TREE_WORDS = ("nested_by", "group_title", "group_hint", "filter", "no_group", "contents_title", "group_word",
-              "no_group_suffix", "pick_note")
+              "no_group_suffix", "pick_note", "new_root", "new_sub", "add_here", "new_group_note")
 # THE CONSOLE'S OWN ROUTES: the first segment of every path `SpecConsole.dispatch` and `Mount` answer themselves, before a
 # spec's rows and tables are looked at. A spec whose rows or a declared table is named so is a family no request reaches
 # — a table `marks` was never written over HTTP: `POST /marks` is the operator's mark. Refused at load; a closed set, held
