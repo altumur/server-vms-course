@@ -1,7 +1,7 @@
 # Урок 14 — Детекторы
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `vms/det.subsystem.yaml` — третью подсистему; `vms/detworker.py` — `FakeModel`, `DetWorker` (`rtp_source`, `unit_row`, `reconcile_once`, `row_class`, `_write`, `flush_suppressed`, `_stop`, `headroom`, `heartbeat_once`, `stop_unit`).
+**Вы напишете:** `vms/det.subsystem.yaml` — третью подсистему; `vms/detworker.py` — `FakeModel`, `DetWorker` (`rtp_source`, `unit_row`, `reconcile_once`, `row_class`, `_write`, `flush_suppressed`, `_stop`, `headroom`, `status`, `heartbeat_fields`, `stop_unit`).
 **Время:** ~70 минут.
 
 ## Зачем этот урок
@@ -263,12 +263,14 @@ class FakeModel:
 Сравните с воркером VMS (урок 4), где запас считается по строкам назначения. Разница осмысленна: камера, назначенная воркеру, будет поднята (пусть после откатов), а модель, которой нет, не заработает никогда.
 
 ```python
-    def heartbeat_once(self) -> None:
-        self.heartbeat(list(self.status_by_unit.values()), server=self.server, instance=self.instance, labels=",".join(self.labels),
-                       capacity=self.capacity, headroom=self.headroom(), conflicts=self.conflicts(), events=self.events_written)
+    def status(self) -> list[dict]:
+        return list(self.status_by_unit.values())
+
+    def heartbeat_fields(self) -> dict:
+        return {"events": self.events_written}
 ```
 
-Чего нет по сравнению с воркером VMS: `url` (детектор ничего не раздаёт) и полей, которые база кладёт в свой `heartbeat_once` (`platform_fields`: `started`, `previous_hb`, `fenced`, `fetched`). Детектор зовёт `heartbeat` сам, со своими полями, и время его подхвата контроллер не меряет. То, что `heartbeat` добавляет всякому воркеру — `schema`, `build`, `pending_writes`, — у него есть.
+Heartbeat пишет база (`Worker.heartbeat_once`; ADR 0013: ключи платформы исполняет платформа), как у держателя камер (урок 4, шаг 7): `status()` и поля платформы (`platform_fields`: `server`, `instance`, `labels`, `capacity` и `headroom`, `conflicts`, `started`, `previous_*`, `fenced` — пока огорожен, `fetched`), и то, что `heartbeat` добавляет всякому воркеру, — `schema`, `build`, `pending_writes`. Детектор говорит только своё: состояние каждой единицы и сколько событий записал. Чего у него нет по сравнению с воркером VMS — `url` (детектор ничего не раздаёт) и полей держателя устройств. А раз `previous_*` кладёт база, подхват детектора контроллер меряет по тем же полям, что подхват держателя (`failover_seconds`).
 
 `events=self.events_written` — счётчик за время жизни экземпляра. Растёт — модель работает; замер при фазе `running` — модель ничего не видит, и это вопрос к настройкам, а не к системе.
 

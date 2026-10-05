@@ -444,13 +444,15 @@
         return j([e.worker ?? "?", e.holder ? n.holds + " " + e.holder : "", e.until ? n.leaseUntil + " " + fmt(e.until) : "",
           e.limit_s != null ? n.pastLimit + " " + dur(e.limit_s) : "", e.units != null ? n.unitsN + ": " + e.units : ""]);
       // a command a worker performed for a person (the platform's family of requests, ADR-0013): the action, its outcome
-      // (performed | refused: why | expired | unknown; late: after the deadline), who asked
+      // (performed | refused: why | expired | unknown; late: after the deadline), the target's reply, who asked
       if (k === "command" || k === "command.failed") {
         const o = String(e.outcome || ""), why = e.why || e.error || "";
         const said = o === "performed" ? n.performed : o.startsWith("refused") ? n.refusedW + ": " + (o.slice(7).replace(/^:\s*/, "") || why || "?")
-          : o === "expired" ? n.expired : o === "unknown" ? n.unknownOutcome : k === "command.failed" ? why : "";
-        // late: the device answered after the deadline, when the request had been answered «did not answer» already
-        return j([e.action, e.late ? (said ? said + " " : "") + n.late : said, e.by ? n.byW + " " + e.by : ""]);
+          : o === "expired" ? n.expired : o === "unknown" ? n.unknownOutcome + (why ? ": " + why : "") : k === "command.failed" ? why : "";
+        // late: the target answered after the deadline, when the request had been answered «did not answer» already
+        // the target's own answer (reply) is shown as it is, «key: value», without words of the module's
+        const reply = e.reply && typeof e.reply === "object" ? Object.entries(e.reply).map(([x, v]) => x + ": " + (typeof v === "object" ? JSON.stringify(v) : v)).join(", ") : "";
+        return j([e.action, e.late ? (said ? said + " " : "") + n.late : said, reply, e.by ? n.byW + " " + e.by : ""]);
       }
       if (k === "session.debug_open") return e.person ? n.asPerson + " " + e.person : "";
       if (k === "worker.name_taken") return j([`${e.worker ?? "?"}: ${n.nameHeld} ${e.holder ?? "?"}${e.holder_box ? " (" + e.holder_box + ")" : ""}`, n.waits + (e.box ? " (" + e.box + ")" : "")]);
