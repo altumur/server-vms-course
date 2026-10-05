@@ -299,12 +299,13 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
     key = rec_ctl.sub.request_key(f"{unit}-{int(t0)}-{int(t1)}")
     if rec_ctl.vars.get(key)[0]:
         return False                                    # already asked; the recorder says when it is fetched
-    …
-    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": str(t0), "to": str(t1),
-                           "at": str(now), "by": by, "valid_until": str(now + most)})
+    most = min(FETCH_WAIT, float(rec_ctl.spec.requests.get("most_valid", FETCH_WAIT)))
+    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": number_text(t0),
+                           "to": number_text(t1), "at": number_text(now), "by": by,
+                           "valid_until": number_text(now + most)})            # numbers by the platform's one rule
 ```
 
-Единица — `rec/<запись>` (`unit_ref`, как её называет дверь консоли), и у строки есть срок. Регистратор, не начавший её к `valid_until`, отвечает «просрочена» (`expired`), и уборка кончает строку; задача, всё ещё ждущая видео, попросит снова на следующем ходу, а регистратор продолжит с первого момента, которого в томе нет (урок 16). Начатую он доводит до конца.
+Единица — `rec/<запись>` (`unit_ref`, как её называет дверь консоли), числа — по одному правилу платформы (`number_text`), и у строки есть срок: `FETCH_WAIT` (600 с) — сколько задача ждёт, пока регистратор начнёт. Семейство `rec` своего `most_valid` не объявляет (оно `free`, строки кончает `ttl`), поэтому срок — задачи; объяви спека `most_valid`, срок был бы не дальше него. Регистратор, не начавший её к `valid_until`, отвечает «просрочена» (`expired`), и уборка кончает строку; задача, всё ещё ждущая видео, попросит снова на следующем ходу, а регистратор продолжит с первого момента, которого в томе нет (урок 16). Начатую он доводит до конца.
 
 Когда видео приезжает, `plan` перестаёт быть пустым, воркер говорит `running`, жнец двигает строку обратно — и скан идёт по видео, которым мы владеем.
 
