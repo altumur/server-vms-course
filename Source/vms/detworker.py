@@ -178,9 +178,14 @@ class DetWorker(Worker):
     def headroom(self) -> int:
         return max(0, self.capacity - len(self.running))
 
-    def heartbeat_once(self) -> None:
-        self.heartbeat(list(self.status_by_unit.values()), server=self.server, instance=self.instance, labels=",".join(self.labels),
-                       capacity=self.capacity, headroom=self.headroom(), conflicts=self.conflicts(), events=self.events_written)
+    # The heartbeat is the platform's (`Worker.heartbeat_once`, ADR 0013: the platform executes its own) — where it runs,
+    # what it carries, `started`, `previous_*`, `fenced`, `fetched` — with what the detectors say of each unit and the
+    # events they wrote.
+    def status(self) -> list[dict]:
+        return list(self.status_by_unit.values())
+
+    def heartbeat_fields(self) -> dict:
+        return {"events": self.events_written}
 
     # The loop is the platform's (`Worker.run`: the pass, the lease step, the heartbeat, each in a try of its own, the
     # stand-in for a step that hangs, an orderly stop); what it stops is its models.

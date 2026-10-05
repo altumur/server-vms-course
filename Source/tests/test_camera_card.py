@@ -653,7 +653,7 @@ def test_a_camera_recorder_holds_its_card_and_never_touches_an_engine():
     not a daemon: the recorder runs with `NO_ENGINE`, which refuses every call, and the whole pass goes through."""
     box, rec, ring, act, rec_ctl = _camera(when=None)
     assert rec.session is NO_ENGINE and rec.hold == "card" and rec.volume == "card" and rec.card is not None
-    assert "1-card" in rec.reconciler.actual
+    assert "1-card" in rec.reconciler.running()
     try:
         rec.session.open_volume(params={})
         raise AssertionError("an engine answered on a camera")
@@ -675,7 +675,7 @@ def test_a_network_volume_declared_in_the_cameras_cluster_does_not_take_the_came
     volumes.write(box.vars, {"name": "nas", "kind": "network", "url": "s3://nas/cams", "quota_bytes": 1 << 30})
     for _ in range(3):
         rec.lease_pass(); rec_ctl.ensure_placed(); rec.reconcile_once(); rec.heartbeat_once()
-        assert rec.hold == "card" and rec.volume == "card" and "1-card" in rec.reconciler.actual
+        assert rec.hold == "card" and rec.volume == "card" and "1-card" in rec.reconciler.running()
     assert rec.holding["1-card"] is True                                  # still a standby: on hold, not writing
     view = {v["name"]: v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"]}
     assert view["card"]["served_by"] and view["nas"]["served_by"] is None
@@ -708,7 +708,6 @@ def test_what_a_camera_recorder_says_of_its_card_and_its_frames():
     assert hb.extra["card"]["state"] == "recording" and hb.extra["card"]["budget"] == 64 << 20
     assert hb.extra["feed"]["frames_connected"] is True and hb.extra["feed"]["ring_samples"] == 60
     assert not hb.extra["archive"] and not {"archive_quota", "volume_quota", "writer", "url"} & set(hb.extra)
-    assert volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall()) == []      # nothing to "declare" on a camera
 
 
 def test_a_camera_whose_card_does_not_open_works_without_it_says_why_and_tries_again():
@@ -719,7 +718,7 @@ def test_a_camera_whose_card_does_not_open_works_without_it_says_why_and_tries_a
     open(bad, "w").close()                                                # not a directory: will not open
     box, rec, ring, act, rec_ctl = _camera(card_dir=bad)
     assert rec.card is None and rec.capacity == 0 and rec.volume_error.startswith("the card would not open")
-    assert "1-card" not in rec.reconciler.actual
+    assert "1-card" not in rec.reconciler.running()
     from w2cplatform.console import heartbeats
     card = heartbeats(box.objects, "rec/")["r-1"].extra["card"]
     assert card["state"] == "unavailable" and card["error"] and card["tries"] == 1
@@ -735,7 +734,7 @@ def test_a_camera_whose_card_does_not_open_works_without_it_says_why_and_tries_a
     assert rec.card is None                                               # …not before the retry is due
     box.clock.advance(rec.CARD_RETRY)
     rec.lease_pass(); rec.heartbeat_once(); rec_ctl.ensure_placed(); rec.reconcile_once()
-    assert rec.card is not None and rec.capacity == rec.full_capacity and "1-card" in rec.reconciler.actual
+    assert rec.card is not None and rec.capacity == rec.full_capacity and "1-card" in rec.reconciler.running()
 
 
 def test_a_card_that_refuses_a_write_kills_the_recording_and_the_recorder_starts_it_again_after_a_backoff():
@@ -750,13 +749,13 @@ def test_a_card_that_refuses_a_write_kills_the_recording_and_the_recorder_starts
     _film(ring, box.wall(), box.wall() + 4, act=act)
     assert "Input/output error" in _status(rec)["last_error"]
     rec.pump_once()
-    assert "1-card" not in rec.reconciler.actual                          # dead, and waiting out its backoff
+    assert "1-card" not in rec.reconciler.running()                          # dead, and waiting out its backoff
     rec.card._write = real
     rec.reconcile_once()
-    assert "1-card" not in rec.reconciler.actual
+    assert "1-card" not in rec.reconciler.running()
     box.clock.advance(61)
     rec.reconcile_once()
-    assert "1-card" in rec.reconciler.actual and act.calls[-1][0] in ("start", "restart")
+    assert "1-card" in rec.reconciler.running() and act.calls[-1][0] in ("start", "restart")
     _film(ring, box.wall() + 4, box.wall() + 10, act=act)
     assert act.stats("1-card")["samples_written"] > 0 and "last_error" not in _status(rec)
 
@@ -788,7 +787,7 @@ def test_a_card_that_refuses_writes_is_said_closed_opened_again_and_written_from
     assert rec.card is None and rec.capacity == 0 and act.card is None
     assert hb.extra["card"]["state"] == "unavailable" and hb.extra["card"]["error"].startswith("refused a write: ")
     assert hb.extra["volume_error"].startswith("the card refused a write: ") and "Read-only" in hb.extra["volume_error"]
-    assert hb.extra["card"]["failures"] == 1 and "1-card" not in rec.reconciler.actual
+    assert hb.extra["card"]["failures"] == 1 and "1-card" not in rec.reconciler.running()
     assert "refused a write" in _status(rec)["why"]
     for _ in range(3):                                                    # no storm of restarts into a card that is closed
         rec.lease_pass(); rec.reconcile_once(); rec.pump_once()
@@ -796,7 +795,7 @@ def test_a_card_that_refuses_writes_is_said_closed_opened_again_and_written_from
     _film(ring, t + 14, t + 40, act=act)                                  # half a minute without a card: all in the ring
     box.clock.advance(rec.CARD_RETRY)
     rec.lease_pass(); rec.heartbeat_once(); rec_ctl.ensure_placed(); rec.reconcile_once()
-    assert rec.card is not None and rec.card_tries == 2 and "1-card" in rec.reconciler.actual
+    assert rec.card is not None and rec.card_tries == 2 and "1-card" in rec.reconciler.running()
     act.drain()
     _film(ring, t + 40, t + 44, act=act)
     rec.heartbeat_once()

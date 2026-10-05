@@ -10,7 +10,8 @@ all it knows is the specs, `<sub>.subsystem.yaml`. Three checks:
                 `alive`, `receive`, `recover`, `automatic`, `deliver`, `record` are not words of the product.
                 Some words are the product's by meaning and not by letters (`live`, `volume`, `rec`, `запис*`):
                 `BY_MEANING` says when.
-    3. runs     the platform's pieces — the contract, the controller, the console, the resource, the domain — come up on
+    3. runs     the platform's pieces — the contract, the controller, the console, the resource, the domain, the
+                reconcile helper — come up on
                 `testdata/testsub.subsystem.yaml` alone, each in a process of its own where importing a
                 subsystem's package fails; and a platform entry point loads a directory of specs.
 
@@ -75,7 +76,7 @@ PLATFORM_TESTS = (
     "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py", "tests/test_domain_secrets.py",
     "tests/test_heartbeat_owner.py", "tests/test_frontier.py", "tests/testdata/testsub2.subsystem.yaml",
     "tests/test_spec_rule.py",
-    "tests/test_where_place.py", "tests/test_place_follows.py", "tests/test_base_worker.py",
+    "tests/test_where_place.py", "tests/test_place_follows.py", "tests/test_base_worker.py", "tests/test_reconcile.py",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
@@ -418,7 +419,7 @@ def import_findings() -> list[tuple[str, int, str, str]]:
 # does not import: an import of one is `run:<piece> | run import <package>`. A piece that comes up short says why
 # (`BOUNDARY-RUN <why>`), and that is `run:<piece> | run <why>`; anything else it raises is `run broken: …` — never
 # debt to write down, a piece to mend.
-PIECES = ("contract", "controller", "console", "events", "resource", "host", "worker", "domain", "two_specs")
+PIECES = ("contract", "controller", "console", "events", "resource", "host", "worker", "domain", "two_specs", "reconcile")
 
 _GUARD = f"""
 import sys
@@ -551,6 +552,25 @@ def _piece_worker():
     assert w.rejoin() is None and not w.writing_allowed           # started under its name: it waits for that one
     vars_.put(spec.sub.slot_key("w-1"), Slot("w-1", "B", wall() + 45, True, 10).to_items())   # …which B let go
     assert w.rejoin() == "w-1" and w.writing_allowed and w.epochs == {} and w.was_fenced
+
+
+def _piece_reconcile():
+    """The reconcile helper (`w2cplatform/reconcile.py`, ADR 0033) under testsub's worker: two counters whose epochs the
+    store would not give retry apart, and start when it gives them."""
+    from tests.conftest import Box, controller, counter_worker
+    box = Box()
+    ctl = controller(box)
+    for n in ("c1", "c2"):
+        ctl.create({"name": n})
+    ctl.assign("w-1", ["c1", "c2"])
+    w = counter_worker(box, "w-1")
+    take, w.take_epoch = w.take_epoch, lambda unit: (_ for _ in ()).throw(OSError("the store does not answer"))
+    w.reconcile_once()
+    st = w.reconciler.status()
+    assert st["c1"].failures == st["c2"].failures == 1 and st["c1"].retry_at != st["c2"].retry_at, st
+    w.take_epoch = take
+    box.clock.t = max(p.retry_at for p in st.values())
+    assert w.reconcile_once() == ["c1", "c2"]
 
 
 def _piece_controller():

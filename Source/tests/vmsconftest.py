@@ -40,11 +40,6 @@ def cam(i, revision=1, enabled=True, **kw):
             "priority": 100, "revision": revision, **kw}
 
 
-class FakeStore:
-    def __init__(self, rows): self.rows = rows
-    def desired(self): return self.rows
-
-
 # -- the archive's engine: a live `obsd`, one per test run ------------------------------------------------
 #
 # The archive is ObjectStorage, and ObjectStorage is a process (`vms/obsd.py`). The tests do not

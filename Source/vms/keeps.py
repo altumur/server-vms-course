@@ -35,9 +35,9 @@ from w2cplatform.spec import Refused
 
 SUB = "rec"
 TABLE = "keeps"
-# The interval is `from` / `to` in the row and at the door — the names every archive door already uses
-# (`/timeline`, `/samples`, `/export`, a backfill), and the product's (feedback BQ). It was `since` / `until`, and `until`
-# on a recording already means something else: how long a recording made on request goes on.
+# The interval is `from` / `to` in the row and at the door — the names every archive door uses (`/timeline`,
+# `/samples`, a backfill), and the product's (feedback BQ); `until` on a recording means something else: how long a
+# recording made on request goes on.
 FIELDS = ("cam", "from", "to", "note")
 MAX_NOTE = 500
 
@@ -60,7 +60,7 @@ class Keep:
     @classmethod
     def from_items(cls, id_: str, d: dict) -> "Keep":
         # `finite`: a `nan` bound passes no comparison, so such a keep held nothing while it looked set (the seventh pass)
-        return cls(id_, str(d.get("cam", "")), finite(d.get("from", d.get("since", 0)) or 0), finite(d.get("to", d.get("until", 0)) or 0),   # `since`/`until`: rows written before the rename (feedback BV)
+        return cls(id_, str(d.get("cam", "")), finite(d.get("from", 0) or 0), finite(d.get("to", 0) or 0),
                    str(d.get("note", "")), str(d.get("by", "")), number(f"{key(id_)}#at", d.get("at") or None, float, 0.0),
                    tuple(str(r) for r in _names(d.get("recordings"))))
 
@@ -141,12 +141,12 @@ def declared(vars_, garbled: list | None = None) -> list[Keep]:
 def as_far_as_read(id_: str, items: dict) -> Keep:
     """A keep whose interval does not parse whole: its camera, from the bound that parses — or the start of time — to the
     bound that parses — or its end."""
-    def bound(names, default):
+    def bound(name, default):
         try:
-            return finite(next((items[n] for n in names if n in items), default) or 0)
+            return finite(items.get(name, default) or 0)
         except PARSE_ERRORS:
             return default
-    since, until = bound(("from", "since"), 0.0), bound(("to", "until"), math.inf)
+    since, until = bound("from", 0.0), bound("to", math.inf)
     if not since < until:
         since, until = 0.0, math.inf                    # the two that parse contradict each other: not known which is wrong
     return Keep(id_, str(items.get("cam", "")), since, until, "its row does not parse", str(items.get("by", "")), 0.0,

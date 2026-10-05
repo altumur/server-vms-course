@@ -264,27 +264,3 @@ def sample_flags(key: bool) -> int:
     sync sample; anything else depends on what came before and is not one. A seek
     that lands on a non-sync sample shows nothing until the next key frame."""
     return 2 << 24 if key else (1 << 24) | (1 << 16)
-
-
-# The archive's frames, as a browser plays them: a run of samples out of a volume (`vms/archive.py`, each an
-# Annex-B access unit with its own times) → one fragmented MP4, a fragment per group of pictures. The parameter
-# sets come from the first key frame; the size from its coded header. Nothing is decoded on the way.
-def from_samples(samples) -> bytes:
-    import io
-    first = next((s for s in samples if s.key), None)
-    if first is None:
-        raise ValueError("no key frame in this interval: nothing a player can start from")
-    sps, pps = param_sets(first.body)
-    width, height = struct.unpack("<II", first.sub[:8]) if len(first.sub) >= 8 else (0, 0)
-    out = io.BytesIO()
-    w = Writer(out, sps, pps, width, height)
-    w.start_at(0)
-    frag: list[Sample] = []
-    for s in samples[samples.index(first):]:
-        if s.key and frag:
-            w.write_fragment(frag)
-            frag = []
-        frag.append(Sample(to_avcc(s.body), max(1, int(s.end - s.begin)), s.key))
-    w.write_fragment(frag)
-    w.close()
-    return out.getvalue()

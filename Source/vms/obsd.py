@@ -4,7 +4,7 @@
 #
 # The archive is not written by the recorder. It is written by ObjectStorage — the product's storage
 # engine, a C++ library — and the library lives in a process of its own, `obsd`, which the OS supervisor
-# starts once per host (launchd, systemd, a Nomad `system` job). Every recorder and every reader on the
+# starts once per host (launchd, systemd: `obsd.service`). Every recorder and every reader on the
 # host talks to it over a unix-domain socket. Why a process and not a library (the product's reasons,
 # feedback CF): a fault in the engine takes down `obsd`, not every recorder on the box; the recorder's own
 # memory is all the recorder's; and the writer — with the volume's lock — lives in the daemon, so a
@@ -90,7 +90,8 @@ def default_socket() -> str:
 
 
 # The name a session says in HELLO when its caller names none: the PROCESS's — `python3 -m vms` is `vms`, a script
-# `run.py` is `run` — and not a subsystem's. This is the platform's library; it used to say "vms" for every caller.
+# `run.py` is `run` — and not a subsystem's. This client is the VMS's (ADR 0001: the archive's engine is the VMS's, and
+# the platform knows none); it used to say "vms" for every caller.
 def process_name() -> str:
     """This process's name, as HELLO and a session's token carry it: letters, digits, `.`, `_`, `-`."""
     import sys

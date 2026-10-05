@@ -988,42 +988,6 @@ def test_a_segment_is_cut_to_what_the_device_holds_and_the_door_streams_it_a_pie
         pd.shutdown(); play.shutdown(); srv.shutdown()
 
 
-def test_the_doors_expiry_forgives_clocks_a_little_apart_and_names_the_difference_when_they_are_not():
-    """The review's fifth pass, minor: the address's expiry is the console's clock, read by the holder's — more than
-    `TTL` apart and every address was "expired" the moment it was made, with nothing to say why. The address carries
-    when it was signed: `SKEW` apart either way is forgiven; further, the refusal names the difference as the door
-    measured it, and an address signed in the door's future is refused too (it would live longer than `TTL`)."""
-    from vms import playback as pb
-    key = pb.new_key()
-
-    def check(console_now, door_now):
-        q = {k: v[0] for k, v in __import__("urllib.parse").parse.parse_qs(
-            pb.signed_query(key, "7", 100, 200, "anna", console_now)).items()}
-        try:
-            return pb.check_signed(key, "7", q, door_now)
-        except PermissionError as e:
-            return str(e)
-    assert check(1000, 1000) == "anna"
-    assert check(1000, 1000 - pb.SKEW + 1) == "anna"                          # the console a little ahead
-    assert check(1000, 1000 + pb.TTL + pb.SKEW - 1) == "anna"                 # …or behind, or a viewer a little late
-    ahead = check(1000, 1000 - 400)
-    assert "400 s ahead" in ahead and "NTP" in ahead                          # the console 400 s ahead of the door
-    behind = check(1000, 1000 + 700)
-    assert "expired" in behind and "700 s" in behind and "NTP" in behind      # …or 700 s behind it: named, not a riddle
-    q = {k: v[0] for k, v in __import__("urllib.parse").parse.parse_qs(pb.signed_query(key, "7", 100, 200, "anna", 1000)).items()}
-    assert "did not sign" in str(_raises(lambda: pb.check_signed(key, "7", {k: v for k, v in q.items() if k != "at"}, 1000)))
-    q["at"] = "1100"
-    assert "does not match" in str(_raises(lambda: pb.check_signed(key, "7", q, 1000)))   # `at` is under the signature
-
-
-def _raises(fn):
-    try:
-        fn()
-    except Exception as e:                                                     # noqa: BLE001
-        return e
-    raise AssertionError("did not raise")
-
-
 def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
     """The review's fourth pass, blocker 4. The console checked `view` and handed the browser the holder's door as it
     is; the door asked nobody, so a viewer of camera 1 edited `1` into `2` and took camera 2's card. A page reads the
@@ -1058,7 +1022,7 @@ def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
         assert code == 401 and json.loads(body)["reason"] == "unit"   # the recording edited
         code, body = get(1, None)
         assert code == 401 and json.loads(body)["reason"] == "token"  # no token
-        assert _get(bare)[0] == 403                                   # the holder's bare address, unsigned
+        assert _get(bare)[0] == 403                                   # the holder's bare address, no capability
 
         found = holder_of(box.objects, "vms/", "2", box.wall(), field="playback_url")
         cap = process_url(found)                                     # the recorder's and the survey's address for camera 2
@@ -1138,13 +1102,13 @@ def test_a_cards_recorder_does_not_record_another_cameras_recording_even_when_th
     from vms.config import REC_SPEC
     from tests.test_camera_card import _camera, _film, _status
     box, rec, ring, act, rec_ctl = _camera(when=None)
-    assert rec.card_cam == "1" and "1-card" in rec.reconciler.actual
+    assert rec.card_cam == "1" and "1-card" in rec.reconciler.running()
     row = REC_SPEC.new_row("2-b", {"name": "2-b", "cam": "2", "home": "card"})
     box.vars.put("rec/recordings/2-b", REC_SPEC.items(row))                              # past the door
     rec_ctl.ensure_placed()
     rec.reconcile_once(); rec.heartbeat_once()
     st = _status(rec, "2-b")
-    assert st["phase"] != "running" and "2-b" not in rec.reconciler.actual
+    assert st["phase"] != "running" and "2-b" not in rec.reconciler.running()
     assert "card in camera 1" in st["why"] and "camera 2's" in st["why"]
     _film(ring, box.wall(), box.wall() + 10, act=act)
     assert act.stats("1-card")["samples_written"] == 20 and act.stats("2-b").get("samples_written", 0) == 0
@@ -1358,11 +1322,11 @@ def test_two_spellings_of_one_channel_are_one_camera_to_its_holder_which_says_de
         w.reconcile_once(); w.heartbeat_once()
         said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
         assert said["2"]["device_state"] == "busy" and "device busy: camera 1" in said["2"]["why"], said
-        assert "device_state" not in said["1"] and 1 in w.reconciler.actual and 2 not in w.reconciler.actual
+        assert "device_state" not in said["1"] and 1 in w.reconciler.running() and 2 not in w.reconciler.running()
         assert _call(base, "DELETE", "/cameras/1", token="admin")[0] == 200
         placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
         said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
-        assert said["2"].get("device_state") != "busy" and 2 in w.reconciler.actual    # the channel is the second's now
+        assert said["2"].get("device_state") != "busy" and 2 in w.reconciler.running()    # the channel is the second's now
     finally:
         srv.shutdown()
 
@@ -1438,7 +1402,7 @@ def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_secon
 def _opened(box, *keys, holder: str = "w-held") -> None:
     """Device rows as their holders write them once they have opened the devices and learned what each is (`identity`)
     — and the heartbeat of the live holder that holds them now and has heard them describe themselves (`can`): a row is
-    known only while a holder says so (`config.Devices.known`; the review's tenth pass). The holder has no room, so
+    known only while a holder says so (the review's tenth pass). The holder has no room, so
     nothing is placed on it."""
     from w2cplatform.contract import Heartbeat
     for key in keys:
@@ -1731,7 +1695,8 @@ def test_a_press_of_a_relay_and_a_move_of_a_camera_read_the_rows_of_their_device
     """The review's ninth pass, minor — a count: `one_device` read every device row there is on every command, move and
     scenario edit; rows are never removed, and with 1000 of them one press of a relay was 1009 reads of the store (in
     М11, a thousand HTTP calls to Nomad). A device's row is read when a right is asked about that device, once a
-    request (`config.Devices`), and "one channel, one camera" reads none (`refuse_camera`). Counted as here — every
+    request (`config.Devices`, until the boundary's step 6 — the platform reads none now), and "one channel, one camera"
+    reads none (`refuse_camera`). Counted as here — every
     read of the process, the gate's too — before and after: 1013 → 14 for the press, 2019 → 19 for the move; pinned with
     room, and not growing with the stale rows."""
     from w2cplatform.variables import FileVariables
@@ -1878,7 +1843,7 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
         placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
         said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
         assert all(said[c].get("device_state") == "refused" for c in made), said
-        assert not set(made) & {str(c) for c in w.reconciler.actual}             # never dialled
+        assert not set(made) & {str(c) for c in w.reconciler.running()}             # never dialled
     finally:
         srv.shutdown()
 

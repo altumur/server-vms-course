@@ -139,7 +139,7 @@ def test_a_recording_started_twice_writes_two_streams_and_overwrites_nothing():
     t = box.wall()
     r.actuator.feed("1", t - 120, t - 60)
     old = r.actuator.started["1"]["sink"]
-    r.actuator("stop", {"id": "1"}); r.reconciler.lost("1", r.now())
+    r.actuator("stop", {"id": "1"}); r.reconciler.forget("1")
     box.clock.advance(10)
     assert r.reconcile_once() == [("start", "1")] and r.actuator.started["1"]["epoch"] == 2
     r.actuator.feed("1", t - 60, t)

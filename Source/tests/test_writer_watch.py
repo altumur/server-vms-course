@@ -61,7 +61,7 @@ def test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_consol
         box.wall.advance(30); act.offered_bytes["1"] += 4 * MB
         primary.writer_pass()
     assert primary.heartbeat_extra()["writer"]["state"] == "stuck"
-    assert ("stop", "1") in act.calls and "1" not in primary.reconciler.actual   # reopened: the reconciler starts it again
+    assert ("stop", "1") in act.calls and "1" not in primary.reconciler.running()   # reopened: the reconciler starts it again
     first = primary.store
     assert primary.engine_lost
     primary.lease_pass()
@@ -95,6 +95,6 @@ def test_what_was_offered_stays_offered_when_a_recording_stops():
     primary.writer_pass()
     act.offered_bytes["1"] += 2 * MB; act.offered_bytes["2"] += 2 * MB           # four megabytes, nothing landing
     box.wall.advance(30); primary.writer_pass()
-    primary._actuate("stop", {"id": "1"}); primary.reconciler.actual.pop("1", None)   # one recording stops
+    primary._actuate("stop", {"id": "1"}); primary.reconciler.drop("1")   # one recording stops
     box.wall.advance(31)
     assert primary.writer_pass()["state"] == "stuck"                                 # the four megabytes are still owed

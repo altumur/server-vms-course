@@ -55,7 +55,7 @@ def test_the_door_to_a_devices_archive_binds_to_loopback_unless_it_is_opened():
     srv = w.serve_playback()
     try:
         assert srv.server_address[0] == "0.0.0.0"
-        assert any("asks for an address the console signed" in m for m in said)   # opened: and the process says what it asks (the fourth review: not "nobody")
+        assert any("asks for a process's capability for the camera" in m for m in said)   # opened: and the process says what it asks (the fourth review: not "nobody")
     finally:
         srv.shutdown(); logging.getLogger("vmsworker").removeHandler(handler)
 

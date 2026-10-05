@@ -238,7 +238,8 @@ class ScanLog:
     one line per stretch, appended AFTER the stretch is scanned and its events are
     written. Durable, so a worker restarting on this server resumes instead of
     starting again; and on the resource rather than in a row, because a worker's
-    ACL is `[<name>/epoch/*, <name>/slots/*]` — it may not write configuration."""
+    grant is its epochs, its slot and its hold (`acl_worker_role`) — it may not write
+    configuration."""
 
     def __init__(self, resource_root: str, job):
         self.path = os.path.join(unit_dir(resource_root, SUB, str(job)), PROGRESS)

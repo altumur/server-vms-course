@@ -1,5 +1,6 @@
 # deploy/Containerfile — localhost/vmsserver:latest
-# One image, every entrypoint: python3 -m vms worker | controller | console | resource | gateway | livecontroller | detworker | detcontroller.
+# One image, every entrypoint: python3 -m vms worker | recorder | gateway | detworker | detjobworker | surveyworker |
+# autoworker | jobs | domainpart, and the platform's python3 -m w2cplatform controller <sub> | resource | console.
 # The same image М11's jobs run (its Containerfile starts FROM this one), so a
 # Quadlet unit on the М9 box and a Nomad job on a cluster differ only in who
 # starts the process. Build from the module directory:

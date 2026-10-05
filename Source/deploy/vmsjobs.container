@@ -2,17 +2,18 @@
 # turned into work (a scenario's recording, a detector with an end), the work into
 # a closed row (a finished job, an answered request, a recording whose minutes are
 # over). Its own process since the boundary's step 6 — it ran inside the VMS's
-# console, and the console is the platform's now (`console.container`).
+# console, and the console is the platform's now (`w2c-console.container`).
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
 # # vmsjobs.container — the VMS's jobs, with the console's grant of the families they touch
 #
-# **Role.** The Quadlet unit for `python3 -m vms jobs` (`vms/__main__.py`: `_reap_loop`, `_clear_loop`,
-# `_requests_loop`). The store as writer `console` with the console grant of `vms`, `rec`, `det`, `detjob` and
+# **Role.** The Quadlet unit for `python3 -m vms jobs` (`vms/__main__.py`: `_reap_loop` and `_requests_loop`; the
+# answered requests are cleared by the platform's console). The store as writer `console` with the console grant of
+# `vms`, `rec`, `det`, `detjob` and
 # `survey` — turning a request into a recording or a detector is a write to configuration, and of the processes
 # only the console's token makes one (a worker writes none, a controller writes placement). Its own numbers on
-# `JOBS_PORT` (`/metrics`: `vms_requests_expired_total`). No events archive and no key: it writes rows, reads
+# `JOBS_PORT` (`/metrics`: `w2c_requests_expired_total`). No events archive and no key: it writes rows, reads
 # heartbeats. Checked by `tests/test_deploy_units.py`.
 # ================================================================================================
 [Unit]
@@ -22,7 +23,7 @@ After=network.target
 [Container]
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms jobs
-# its numbers, for whoever scrapes the box (`/metrics`, `vms_requests_expired_total`)
+# its numbers, for whoever scrapes the box (`/metrics`, `w2c_requests_expired_total`)
 Environment=JOBS_HOST=0.0.0.0
 Environment=JOBS_PORT=8095
 EnvironmentFile=/etc/w2c/w2c.env

@@ -46,7 +46,7 @@
 #    (and /data/volume, while a ring is there); each
 #    directory named on the command line; and every volume DECLARED for this box — the rows `rec/volumes/*` of the
 #    box's own store (`$PLATFORM_DIR/config`) that name this server and a directory. Each one found is named. A
-#    cluster whose store is not a directory (М11: Nomad variables) has no rows here to read: its paths are named on
+#    cluster whose store is not a directory (М11: the configstore, a socket per role) has no rows here to read: its paths are named on
 #    the command line, and the script says it found none.
 # 6. THE UPGRADE, and THE DAEMON STOPPED FOR IT — only for it (the fifth pass, major; the sixth, minor). A volume is
 #    handed to `vms-obsd:vms-obsd` if anything in it is not `vms-obsd`'s yet: a ring formatted by a daemon that ran as

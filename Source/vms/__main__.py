@@ -10,7 +10,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
     RESOURCE_ROOT=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
     ARCHIVE_VOLUME  MEDIA_DIR=/data/media   the recorder's own volume (`/data/vms/obsd/volume`); the holder's files
     OBSD_SOCKET=/run/vms-obsd/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
-    WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: NOMAD_ALLOC_INDEX → w-<index>;
+    WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: SLOT_INDEX → w-<index>;
                                      neither: the first free slot, a lapsed one first
     CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
     RECORDER_NAME=r-1                a recorder's slot (systemd: %i); CAPACITY here is recordings — this server's disks and NIC
@@ -21,7 +21,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
     RTSP_PORT=8554  PLAYBACK_PORT=8083   the worker's two doors, `auto` likewise: a template that fixes a
                                      number is a door only the first instance on the box can open
     GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
-    DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; NOMAD_META_labels=gpu says where it is
+    DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; LABELS=gpu says where it is
     COMMANDS_BEAT=0.25               worker: how often it looks at its request rows between passes, in seconds; 0 — only on the pass
     REACH_BUDGET=10                  controller: units it moves in one pass to a server that reaches them (`ensure_reach`);
                                      a group left for a later pass is the alarm `units.over_budget` (`spec.reach_budget`)
@@ -37,7 +37,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 # the controllers of the other subsystems `Exec=python3 -m w2cplatform controller <sub>`; the Containerfile's default
 # `CMD` is `worker`). It reads the environment, opens the two
 # file-backed stores under `$PLATFORM_DIR` with the *right token for the verb*, builds the process's object
-# from `worker.py` / `controller.py` / `console.py` / …, and runs it until SIGTERM/SIGINT. It is
+# from `worker.py` / `recworker.py` / `detworker.py` / …, and runs it until SIGTERM/SIGINT. It is
 # glue and nothing else: no logic of its own beyond wiring, and each verb's token is deliberately narrower
 # than the whole `vms/*` prefix. `tests/test_deploy_units.py` imports this module (without running it) and
 # checks that the verbs in the dispatch table are exactly the ones the units invoke.
@@ -52,12 +52,12 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 #   `MEDIA_DIR` is read by `gstvms/uri.py`, not here.
 # - `OBSD_SOCKET` — the host's ObjectStorage daemon (`vms/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
 #   recorder waits for one answer from it — shorter than a lease.
-# - `WORKER_NAME` — the slot to claim (systemd's `%i`); unset: `NOMAD_ALLOC_INDEX` → `w-<index>`; neither:
+# - `WORKER_NAME` — the slot to claim (systemd's `%i`); unset: `SLOT_INDEX` → `w-<index>`; neither:
 #   `None`, which makes `VmsWorker` claim the first free slot, a lapsed one first.
-# - `CAPACITY` (default `50`) — cameras this worker can carry; exported as `headroom`. Also passed to the
-#   controller and console as the *fallback* for a worker whose heartbeat says nothing.
+# - `CAPACITY` (default `50`) — cameras this worker can carry; exported as `headroom`. A worker whose heartbeat says
+#   nothing is placed by its spec's `placement.capacity.default`: the platform's controller reads no `CAPACITY`.
 # - `CONSOLE_HOST` (`127.0.0.1`), `CONSOLE_PORT` (`8080`) — where the console listens
-#   (`console.container` sets `0.0.0.0`).
+#   (`w2c-console.container` sets `0.0.0.0`).
 # - `RESOURCE_HOST` (`127.0.0.1`), `RESOURCE_PORT` (`8090`), `RESOURCE_URL` — the resource process's HTTP and the URL
 #   its heartbeat advertises (the console asks `/events` there).
 # - `LOG_LEVEL` (`INFO`) — `logging.basicConfig` level.
@@ -77,12 +77,13 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 # `python3 -m w2cplatform controller <sub>`, `python3 -m w2cplatform resource` and `python3 -m w2cplatform console`.
 #
 # ## Notes
-# - Three tokens, three processes: `vmsworker` (epochs, slots), `vmscontroller` (placement), `console`
-#   (the operator's rows). Together they partition `vms/*`; none of them can do another's job. The mounts in
-#   `deploy/` repeat the same split in bytes (`test_who_may_write_where_is_in_the_mounts_too`).
-# - `CAPACITY` means two different things depending on the verb: the worker's own number (what it heartbeats
-#   and places by) versus the controller's fallback for a worker that has not spoken yet
-#   (`test_capacity_is_the_workers_word_not_the_controllers`).
+# - One token per process, each from the specs: a worker's (`acl_worker_role`: its epochs, its slot, its hold, and the
+#   rows its spec's `worker.writes` names — `vms/devices/*`), the platform's controller (`acl_controller`: placement and
+#   the assignments, `w2c-controller@<sub>`), and the console's grant (`acl_console`: the operator's rows), which `jobs`
+#   holds for the families it writes. None of them can do another's job. The mounts in `deploy/` repeat the same split
+#   in bytes (`test_who_may_write_where_is_in_the_mounts_too`).
+# - `CAPACITY` is the worker's own number (what it heartbeats and is placed by); a worker that has not spoken yet is
+#   placed by its spec's default (`test_capacity_is_the_workers_word_not_the_controllers`).
 # ================================================================================================
 from __future__ import annotations
 
@@ -96,7 +97,6 @@ from w2cplatform import host, runtime
 from w2cplatform.host import stop
 from w2cplatform.secrets import mask_logs
 
-from .controller import VmsController
 from .worker import FakeActuator, VmsWorker, commands_beat
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -180,7 +180,7 @@ def worker() -> None:
 
 
 # Builds `recworker` — the fourth subsystem's worker, the only one placed on top of the archive:
-# - the slot: `RECORDER_NAME`, else `r-$NOMAD_ALLOC_INDEX`, else whichever is free; Variables as writer
+# - the slot: `RECORDER_NAME`, else `r-$SLOT_INDEX`, else whichever is free; Variables as writer
 #   `recworker` with the platform's worker grant for `rec` — epochs, its slot and its hold.
 # - its session with the host's ObjectStorage daemon (`OBSD_SOCKET`): every volume it opens is a handle of it.
 # - `gstvms.actuator.GstRecActuator()` — `rtspsrc ! h264parse ! appsink` per recording, each access unit a
@@ -345,9 +345,10 @@ def gateway() -> None:
 # `JOBS_HOST:JOBS_PORT`.
 # (The blob sweep is the platform console's own, `host.sweep_loop`: `<sub>/blobs/*` is the console's to write, Lesson 27,
 # so it is the console's to collect.)
-# The reaper's pass: a job's row follows the worker that finished it. The worker
-# cannot write the row (its ACL forbids configuration) and the controller must not (one row, one writer),
-# so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
+# The reaper's pass: a job's row follows the worker that finished it. The worker cannot write the row (its grant is
+# its epochs, its slot and its hold) and the controller must not (its grant is placement; one row, one writer), so
+# `vms jobs`, with the console's grant of the job's family, reads the heartbeats and is where the fact lands. See
+# `vms/jobs.py`.
 def _reap_loop(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
     host.every(lambda: _reap_turn(controllers, rec_ctl, det_ctl, survey_ctl), every)
 
@@ -402,7 +403,7 @@ def _reap_turn(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, now=Non
 # its housekeeping in `host.console`: the request family is the platform's, the boundary's step 7.)
 
 
-# The console's third loop: what AUTOMATION asked for, turned into rows — and a short loop, apart from the
+# The jobs' second loop: what AUTOMATION asked for, turned into rows — and a short loop, apart from the
 # reaper's (the review's second pass). A scenario's request is valid for thirty seconds (`autoworker.py`,
 # `valid_for`), and these four calls used to run at the end of the thirty-second loop above: about one firing
 # in six reached them after its `valid_until` and was dropped with a warning nobody reads, while the scenario
@@ -473,7 +474,6 @@ def jobs() -> None:
     from w2cplatform.requests import metrics_lines
     families = (SPEC, REC_SPEC, DET_SPEC, DETJOB_SPEC, SURVEY_SPEC)
     vars_, objects = _stores("console", [a for s in families for a in s.acl_console()])   # the console's grant of them
-    ctl = VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")))
     rec_ctl, det_ctl = SpecController(REC_SPEC, vars_, objects), SpecController(DET_SPEC, vars_, objects)
     job_ctl, survey_ctl = SpecController(DETJOB_SPEC, vars_, objects), SpecController(SURVEY_SPEC, vars_, objects)
 

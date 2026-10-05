@@ -57,7 +57,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
     assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
     assert "controller <sub>" in host.USAGE and "console" in host.USAGE
     for name, entry in [("vmsworker@.container", "worker"), ("w2c-resource.container", "resource"),
-                        ("console.container", "console"), ("vmsjobs.container", "jobs"),
+                        ("w2c-console.container", "console"), ("vmsjobs.container", "jobs"),
                         ("recworker@.container", "recorder"), ("liveworker@.container", "gateway"),
                         ("detworker@.container", "detworker"), ("detjobworker@.container", "detjobworker"),
                         ("surveyworker@.container", "surveyworker"), ("autoworker@.container", "autoworker"),
@@ -66,7 +66,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
         if name == "w2c-resource.container":
             assert u["Container"]["Exec"] == "python3 -m w2cplatform resource"         # the platform's own (step 6)
-        elif name == "console.container":
+        elif name == "w2c-console.container":
             assert u["Container"]["Exec"] == "python3 -m w2cplatform console"          # the platform's own (step 6)
             assert "CONSOLE_ROOT=vms" in u["Container"]["Environment"]                 # the deployment says what is at `/`
         elif name in platform:
@@ -82,9 +82,13 @@ def test_the_units_run_the_entrypoints_the_package_has():
 
 def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
-    The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
+    The controller writes its journal into the events archive (`host.controller_loop`, by `RESOURCE_ROOT`), so the
+    archive is mounted for it, as a client of it (`w2c-events`) — unmounted, its lines lay in the container's layer;
+    footage is mounted nowhere — it is behind the host's obsd."""
     vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
-    assert EVENTS not in vols("w2c-controller@.container")
+    groups = lambda n: (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"].get("GroupAdd", []))
+    assert vols("w2c-controller@.container")[EVENTS] == f"{EVENTS}:z" and "2102" in groups("w2c-controller@.container")
+    assert "RESOURCE_ROOT=" in open(os.path.join(DEPLOY, "w2c.env.example")).read()     # …which the unit's env file says
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
@@ -147,7 +151,7 @@ def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
     # the cluster's key ring: one file of the platform's, in the three units that open sealed fields and no other
     keyed = {n for n in os.listdir(DEPLOY) if n.endswith(".container")
              and "SECRETS_KEY=/run/secrets/platform.key" in unit(n)["Container"].get("Environment", [])}
-    assert keyed == {"console.container", "vmsworker@.container", "recworker@.container"}, keyed
+    assert keyed == {"w2c-console.container", "vmsworker@.container", "recworker@.container"}, keyed
     for n in keyed:
         assert f"{KEY}:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
         assert W2C_SECRETS in _list(unit(n)["Container"]["GroupAdd"]), n                 # 0640, its group: the clients of the key
@@ -174,7 +178,7 @@ def test_the_archives_engine_is_the_hosts_own_daemon():
 
 
 def test_a_session_named_by_nobody_says_its_process_name_and_not_a_subsystems():
-    """The client is the platform's library, and a session its caller did not name said `vms` in HELLO and in its
+    """The client is the VMS's (ADR 0001), and a session its caller did not name said `vms` in HELLO and in its
     token, whatever the process (the course's decision on the platform's names). Now it is the process's name:
     `python3 -m vms recorder` is `vms`, `tests/run.py` is `run`; a caller that names itself is said as it named."""
     import sys
@@ -384,8 +388,9 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
     `Group=2100`) — the resource, the console and every subsystem's controller (ADR 0014, ADR 0023: a platform process
     never runs as a subsystem's user) — and they are the units of the box that name a user: the VMS's processes are
     still root in their containers. Every unit opens the platform's two file stores as a member of `w2c-store`
-    (`GroupAdd=2103`); `w2c-events` (2102) is joined by the resource, which deletes there, and by the subsystems'
-    clients that write buckets — not by the console, whose marks go into an archive its own user owns; every unit
+    (`GroupAdd=2103`); `w2c-events` (2102) is joined by the resource, which deletes there, by the controller, whose
+    journal goes into `audit/`, a directory the clients share, and by the subsystems' clients that write buckets — not
+    by the console, whose marks go into an archive its own user owns; every unit
     writes with the umask 0007 (`PodmanArgs=--umask=0007`: Quadlet has no key for it, and systemd's `UMask=` would be
     podman's, not the container's) — so what each makes is its group's."""
     writers = set()
@@ -397,14 +402,14 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
         groups = _list(c.get("GroupAdd"))
         assert vols.get(CONFIG) == f"{CONFIG}:z" and vols.get(OBJECTS) == f"{OBJECTS}:z" and W2C_STORE in groups, n
         assert "--umask=0007" in _list(c.get("PodmanArgs")), n
-        platform = n in ("w2c-resource.container", "console.container", "w2c-controller@.container")
-        assert (EVENTS in vols and (not platform or n == "w2c-resource.container")) == (W2C_EVENTS in groups), n
+        platform = n in ("w2c-resource.container", "w2c-console.container", "w2c-controller@.container")
+        assert (EVENTS in vols and n != "w2c-console.container") == (W2C_EVENTS in groups), n
         if EVENTS in vols:
             writers.add(n)
         assert ("User" in c) == platform, n
         if platform:
             assert (c["User"], c["Group"]) == (W2C, W2C), n
-    assert writers == {"w2c-resource.container", "console.container", "vmsworker@.container", "recworker@.container",
+    assert writers == {"w2c-resource.container", "w2c-console.container", "w2c-controller@.container", "vmsworker@.container", "recworker@.container",
                        "detworker@.container", "detjobworker@.container", "surveyworker@.container",
                        "autoworker@.container", "liveworker@.container"}, writers
     r = unit("w2c-resource.container")["Container"]
@@ -831,7 +836,7 @@ def test_a_bundle_copied_to_a_server_is_given_to_the_daemons_user_who_can_then_r
 
 
 def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name():
-    """`console.container` runs the platform's console (`python3 -m w2cplatform console`; the boundary's step 6: it was
+    """`w2c-console.container` runs the platform's console (`python3 -m w2cplatform console`; the boundary's step 6: it was
     `python3 -m vms console`, with the VMS's own routes and its own list of what it fronts): over the specs the image
     carries (`SPEC_DIR=/app/vms`, here the package's directory), the VMS at `/` by the unit's `CONSOLE_ROOT`, and the
     recorder, the live gateways, the detectors, the scans, the survey and automation under their names — one token."""

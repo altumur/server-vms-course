@@ -148,6 +148,28 @@ def test_an_operators_request_is_served_off_the_loops_thread():
     assert r.fetched == ["1-x"] and r.actuator.fetched
 
 
+def test_a_request_filed_as_the_family_files_one_is_fetched_and_one_past_its_deadline_unbegun_is_answered_expired():
+    """The VMS's jobs ask the recorder as the platform's request family files a request (М10A 14): the unit as
+    `rec/<recording>`, a deadline (`jobs._ask_recorder`). The recorder reads both forms of the unit — the console's door
+    writes the id — and one not begun by its deadline is answered expired, not fetched: the asker asks again if it
+    still wants it. A deadline that is not a time is that request's refusal."""
+    box, r, con_rec = _recorder()
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    key = REC_SPEC.sub.request_key
+    con_rec.vars.put(key("1-ref"), {"unit": "rec/1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 29900),
+                                   "at": str(NOW), "by": "detjob/j", "valid_until": str(NOW + 600)})
+    _served(r, "1-ref")
+    assert r.actuator.fetched                                                       # fetched, by the reference
+    con_rec.vars.put(key("1-late"), {"unit": "rec/1", "cam": "1", "from": str(NOW - 20000), "to": str(NOW - 19900),
+                                    "at": str(NOW - 700), "by": "detjob/j", "valid_until": str(NOW - 100)})
+    con_rec.vars.put(key("1-word"), {"unit": "1", "cam": "1", "from": str(NOW - 10000), "to": str(NOW - 9900),
+                                    "at": str(NOW), "by": "detjob/j", "valid_until": "soon"})
+    asked = len(r.actuator.fetched)
+    done = {d["request"]: d for d in r.requests(now=NOW)}
+    assert done["1-late"].get("expired") and "1-late" in r.fetched and len(r.actuator.fetched) == asked
+    assert "not a time" in done["1-word"]["error"] and "1-word" in r.fetched
+
+
 def test_a_long_request_is_fetched_in_pieces_over_several_passes_and_reported_once_whole():
     """The review's third pass, blocker 6. An operator's request for a day was one fetch, one list in memory — and
     `POST /backfill` put no ceiling on it. The recorder asks the device for about a minute at a time, lands each

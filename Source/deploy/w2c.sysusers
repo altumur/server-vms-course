@@ -13,7 +13,8 @@
 # - `u w2c 2100` — the platform's user, its primary group `w2c` with the same number: the events archive
 #   (`/data/platform/events`) is its, and only the resource deletes buckets there, mirrors and restores them.
 # - `g w2c-events 2102` — the events archive's clients: every process that writes its buckets (the holder, the
-#   recorder, the detector, the scan, the survey, the evaluator, the console's marks) joins it; the tree is setgid
+#   recorder, the detector, the scan, the survey, the evaluator, the gateway, the controller's journal) joins it — not
+#   the console, whose marks go into an archive its own user owns; the tree is setgid
 #   to it, and every writer's umask is 0007 — so every bucket a client makes is a file of this group, mode 0660, in
 #   directories of this group, 2770, and the resource, a member, deletes it.
 # - `g w2c-store 2103` — the platform's file stores (`file://`): `/data/platform/config` (the rows) and
