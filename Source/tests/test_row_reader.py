@@ -142,7 +142,7 @@ def test_every_loop_heartbeats_when_its_lease_step_raises():
     sound process dead at 45 s. Each loop of each kind is run for real with a lease step that raises; a heartbeat goes
     out after it, on the same turn of the loop. The detector, scan, survey and gateway loops had them apart already —
     run here so that stays so."""
-    from tests.test_stand_in import _all_workers
+    from tests.test_vms_worker_loops import _all_workers
     box = Box()
     for w in _all_workers(box):
         kind = type(w).__name__

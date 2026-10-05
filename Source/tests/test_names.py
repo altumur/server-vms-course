@@ -1,8 +1,8 @@
 """One name, two processes: who is left without it, and how anybody finds out (the owner's decision of 4 Oct, the
 product's r24-names).
 
-A unit names its process (`WORKER_NAME=w-%l-1`, `RECORDER_NAME`, `SLOT_INDEX`), and that name is the process: two ways
-to be left without it.
+A unit names its process (`WORKER_NAME=w-%l-1`, a role's own `<ROLE>_NAME`, `SLOT_INDEX`), and that name is the
+process: two ways to be left without it.
 
 - On its own box, the unit started again while the old process still lived (it hung past its stop, or somebody started
   a second copy by hand): the new one takes the name at its START — the restart after kill -9 — and the old one is
@@ -15,26 +15,36 @@ to be left without it.
   the mark: `/servers` shows `name_conflict` on the holder's row, the controller says `worker.name_conflict` once an
   episode, and `<p>_name_conflicts` counts the names.
 
-A process that took whatever was free (no name given) rejoins as before.
+A process that took whatever was free (no name given) rejoins as before. A test of the platform alone, on testsub: the
+process is testsub's worker (`CounterWorker`), named and placed on its box as an entry point does it (`runtime`).
 """
 import json
 import urllib.request
 
+from w2cplatform import runtime
 from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, NameOnAnotherBox, Slot
 from w2cplatform.events import ALARM
-from vms.config import SPEC
-from vms.controller import VmsController
-from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
-from tests.test_slot_fate import _Said
+from tests.conftest import Box, Served, controller, controller_ctl, counter_worker, testsub
 
 NAME = "w-srv-1-1"                                         # `w-%l-1` on a server whose short hostname is srv-1
+SPEC = testsub()
+
+
+class _Said:
+    """A journal, as it is said: `(kind, class, fields)`."""
+    def __init__(self):
+        self.lines = []
+
+    def say(self, kind, cls="observation", **fields):
+        self.lines.append((kind, cls, fields))
 
 
 def _unit(box, machine="machine-a", name=NAME, server="srv-1"):
-    """`vms-vmsworker` started by its unit on `machine` (systemd's `%m` → `BOX_ID`): the name from the unit."""
+    """testsub's worker started by its unit on `machine` (systemd's `%m` → `BOX_ID`): the name from the unit, the
+    instance on that box — read from its environment as an entry point reads them (`runtime.slot`,
+    `runtime.instance_on_box`)."""
     env = {"BOX_ID": machine, **({"WORKER_NAME": name} if name else {})}
-    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server=server, env=env)
+    w = counter_worker(box, runtime.slot(env), server=server, env=env, instance=runtime.instance_on_box(env))
     w.journal = _Said()
     return w
 
@@ -56,7 +66,7 @@ def _mark(box, machine, name=NAME):
 
 
 def _ctl(box):
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = controller_ctl(box)
     ctl.journal = _Said()
     return ctl
 
@@ -143,10 +153,10 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
     box's was fenced and rejoined as `w-2`, and its restart took the name back — a ping-pong only the boxes' own logs
     saw. Now the live holder of another box keeps it: the claimant refuses in words and exits (its unit restarts it),
     leaving its mark; `/servers` shows `name_conflict` on the holder's row, the controller says `worker.name_conflict`
-    once an episode, `vms_name_conflicts` is 1. A restart on the holder's own box still takes it at once (kill -9), and
-    once the controller gives it the other box's next restart takes it and asks no more (the thirteenth pass,
-    blocker 3: by the holder's `until` alone it took a hung holder's name — and its cameras — from the other box)."""
-    from tests.test_console_gate import _call, _console
+    once an episode, `testsub_name_conflicts` is 1. A restart on the holder's own box still takes it at once (kill -9),
+    and once the controller gives it the other box's next restart takes it and asks no more (the thirteenth pass,
+    blocker 3: by the holder's `until` alone it took a hung holder's name — and its units — from the other box)."""
+    from w2cplatform.console import SpecConsole
     box = Box()
     a = _unit(box, "machine-a")
     a.heartbeat_once()
@@ -168,19 +178,16 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
     [(kind, cls, said)] = [line for line in ctl.journal.lines if line[0] == "worker.name_conflict"]
     assert cls == ALARM and said["worker"] == NAME and said["holder_box"] == "machine-a" and said["contender_box"] == "machine-b"
 
-    _, _, _, srv, base = _console(box)
-    try:
-        servers = _call(base, "GET", "/servers")[1]["servers"]
+    with Served(SpecConsole(controller(box, box.vars.as_writer("console", SPEC.acl_console())), wall=box.wall)) as call:
+        servers = call("GET", "/servers")[1]["servers"]
         row = next(w for w in servers["srv-1"]["workers"] if w["worker"] == NAME)
         conflict = row["name_conflict"]
         assert conflict["holder"] == a.instance and conflict["holder_box"] == "machine-a", conflict
         [who] = conflict["contenders"]
         assert who["box"] == "machine-b" and who["state"] == "refused" and who["server"] == "srv-1", who
-        with urllib.request.urlopen(base + "/metrics") as r:
+        with urllib.request.urlopen(call.base + "/metrics") as r:
             text = r.read().decode()
-    finally:
-        srv.shutdown()
-    assert "vms_name_conflicts 1\n" in text
+    assert "testsub_name_conflicts 1\n" in text
 
     c = _unit(box, "machine-a")                                          # its own box's restart: taken at once
     assert _holder(box) == c.instance
@@ -199,31 +206,19 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
     assert ctl.pass_once()["name_conflicts"] == 0
 
 
-def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive():
-    """The product's cross-check (4 Oct): its live gateway wrote `worker.name_taken` — the ALARM that says a process is
-    nobody because another instance holds its name — into its own log and nowhere else. The course's gateway had the
-    same gap: `LiveWorker` had no `resource_root`, so its journal (`Worker.journal`) was the log only, while its
-    container mounts the archive for its registration. Every kind of worker, told the archive the way its entry point
-    tells it (`RESOURCE_ROOT` in its environment), writes its journal there: the alarm into the alarms' tree, the line beside
-    it into the audit family's."""
+def test_a_worker_given_its_servers_resource_writes_its_journal_into_its_events_tree():
+    """The product's cross-check (4 Oct): a worker wrote `worker.name_taken` — the ALARM that says a process is nobody
+    because another instance holds its name — into its own log and nowhere else, having been given no root of its
+    server's resource. A worker told the root (`resource_root`, what its entry point reads from `RESOURCE_ROOT`) writes
+    its journal (`Worker.journal`) there: the alarm into the alarms' tree, the line beside it into the audit family's,
+    under its role. That every kind of a subsystem's worker is told it is that subsystem's to show."""
     import tempfile
     from w2cplatform.events import alarm_tree, buckets_under
-    from vms.autoworker import AutoWorker
-    from vms.detjobworker import DetJobWorker
-    from vms.detworker import DetWorker
-    from vms.liveworker import LiveWorker
-    from vms.surveyworker import SurveyWorker
     box = Box()
-    made = {"VmsWorker": lambda env: VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock,
-                                               wall=box.wall, server="srv-a", env=env)}
-    for cls in (LiveWorker, AutoWorker, DetWorker, DetJobWorker, SurveyWorker):
-        made[cls.__name__] = lambda env, cls=cls: cls(None, box.vars, box.objects, clock=box.clock, wall=box.wall,
-                                                      server="srv-a", env=env)
-    for kind, make in made.items():
-        root = tempfile.mkdtemp(prefix="events-")
-        w = make({"RESOURCE_ROOT": root})
-        role = f"{w.sub.name}worker"
-        w.journal.say("worker.name_taken", ALARM, sub=w.sub.name, worker=w.name, holder="another")
-        w.journal.say("worker.name_back", sub=w.sub.name, worker=w.name)
-        said = buckets_under(root, "audit", role, 600) + buckets_under(root, alarm_tree("audit"), role, 600)
-        assert sorted(b.subsystem for b in said) == sorted(["audit", alarm_tree("audit")]), (kind, root, said)
+    root = tempfile.mkdtemp(prefix="events-")
+    w = counter_worker(box, None, server="srv-a", resource_root=runtime.events_root({"RESOURCE_ROOT": root}, None))
+    role = f"{w.sub.name}worker"
+    w.journal.say("worker.name_taken", ALARM, sub=w.sub.name, worker=w.name, holder="another")
+    w.journal.say("worker.name_back", sub=w.sub.name, worker=w.name)
+    said = buckets_under(root, "audit", role, 600) + buckets_under(root, alarm_tree("audit"), role, 600)
+    assert sorted(b.subsystem for b in said) == sorted(["audit", alarm_tree("audit")]), (root, said)

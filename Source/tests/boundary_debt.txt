@@ -355,23 +355,6 @@
 5 | tests/test_journal.py:96 | rec | 4b7953da
 5 | tests/test_journal.py:99 | rec | 71fb098c
 5 | tests/test_journal.py:106 | cam | 4b16ef96
-5 | tests/test_lease_step.py:12 | auto | 04e95649
-5 | tests/test_lease_step.py:12 | vms | 04e95649
-5 | tests/test_lease_step.py:17 | import vms | d13b6b05
-5 | tests/test_lease_step.py:17 | vms | d13b6b05
-5 | tests/test_lease_step.py:17 | vms | d13b6b05
-5 | tests/test_lease_step.py:19 | camera | 36f49143
-5 | tests/test_lease_step.py:19 | import vms via tests.test_lesson4_worker | 36f49143
-5 | tests/test_lease_step.py:67 | camera | 843cec4d
-5 | tests/test_lease_step.py:70 | archive | 9ee25565
-5 | tests/test_lease_step.py:70 | vms | 9ee25565
-5 | tests/test_lease_step.py:98 | vms | bd6c444f
-5 | tests/test_lease_step.py:136 | auto | 7f87f94b
-5 | tests/test_lease_step.py:138 | auto | cbb853f1
-5 | tests/test_lease_step.py:138 | auto | cbb853f1
-5 | tests/test_lease_step.py:138 | import vms | cbb853f1
-5 | tests/test_lease_step.py:138 | vms | cbb853f1
-5 | tests/test_lease_step.py:141 | auto | 34f3d46e
 5 | tests/test_limits.py:14 | import vms | f1d7b073
 5 | tests/test_limits.py:14 | vms | f1d7b073
 5 | tests/test_limits.py:15 | import vms | 44e860ee
@@ -387,50 +370,6 @@
 5 | tests/test_limits.py:76 | camera | 1fb1b127
 5 | tests/test_limits.py:83 | driverpack | 6e4ec8a2
 5 | tests/test_limits.py:83 | mp4 | 6e4ec8a2
-5 | tests/test_names.py:4 | recorder | 4bdb7cf4
-5 | tests/test_names.py:25 | import vms | f1d7b073
-5 | tests/test_names.py:25 | vms | f1d7b073
-5 | tests/test_names.py:26 | import vms | 44e860ee
-5 | tests/test_names.py:26 | vms | 44e860ee
-5 | tests/test_names.py:26 | vms | 44e860ee
-5 | tests/test_names.py:27 | import vms | d13b6b05
-5 | tests/test_names.py:27 | vms | d13b6b05
-5 | tests/test_names.py:27 | vms | d13b6b05
-5 | tests/test_names.py:29 | import vms via tests.test_slot_fate | 6a6aa7e9
-5 | tests/test_names.py:35 | vms | ffb3026d
-5 | tests/test_names.py:35 | vms | ffb3026d
-5 | tests/test_names.py:37 | vms | 6c2990a6
-5 | tests/test_names.py:59 | vms | 90c2a86c
-5 | tests/test_names.py:59 | vms | 90c2a86c
-5 | tests/test_names.py:146 | vms | 1ce97b23
-5 | tests/test_names.py:148 | camera | 64a31156
-5 | tests/test_names.py:149 | import vms via tests.test_console_gate | 1fbae4b2
-5 | tests/test_names.py:183 | vms | 93e03075
-5 | tests/test_names.py:202 | archive | ae33ad02
-5 | tests/test_names.py:203 | live | 499a8c2d
-5 | tests/test_names.py:206 | archive | efc3ebdb
-5 | tests/test_names.py:206 | archive | efc3ebdb
-5 | tests/test_names.py:211 | auto | cbb853f1
-5 | tests/test_names.py:211 | auto | cbb853f1
-5 | tests/test_names.py:211 | import vms | cbb853f1
-5 | tests/test_names.py:211 | vms | cbb853f1
-5 | tests/test_names.py:212 | det | d0493278
-5 | tests/test_names.py:212 | import vms | d0493278
-5 | tests/test_names.py:212 | vms | d0493278
-5 | tests/test_names.py:213 | det | 70e101f7
-5 | tests/test_names.py:213 | det | 70e101f7
-5 | tests/test_names.py:213 | import vms | 70e101f7
-5 | tests/test_names.py:213 | vms | 70e101f7
-5 | tests/test_names.py:214 | import vms | 0b2d1354
-5 | tests/test_names.py:214 | live | 0b2d1354
-5 | tests/test_names.py:214 | vms | 0b2d1354
-5 | tests/test_names.py:215 | import vms | c35e91e5
-5 | tests/test_names.py:215 | vms | c35e91e5
-5 | tests/test_names.py:217 | vms | 954d594d
-5 | tests/test_names.py:217 | vms | 954d594d
-5 | tests/test_names.py:219 | auto | 8358cab3
-5 | tests/test_names.py:219 | det | 8358cab3
-5 | tests/test_names.py:219 | det | 8358cab3
 5 | tests/test_near_by.py:3 | det | d619ba0b
 5 | tests/test_near_by.py:3 | rec | d619ba0b
 5 | tests/test_near_by.py:3 | recorder | d619ba0b
@@ -732,75 +671,6 @@
 5 | tests/test_retire.py:102 | camera | 2980dc54
 5 | tests/test_retire.py:110 | driverpack | 3bfa6662
 5 | tests/test_retire.py:110 | mp4 | 3bfa6662
-5 | tests/test_slot_fence.py:7 | det | 79436d1b
-5 | tests/test_slot_fence.py:11 | vms | fa6daf62
-5 | tests/test_slot_fence.py:51 | auto | 1091d09b
-5 | tests/test_slot_fence.py:57 | import vms via tests.test_stand_in | e39b8316
-5 | tests/test_slot_fence.py:58 | vms | 59f676d2
-5 | tests/test_slot_fence.py:62 | det | 92d59a24
-5 | tests/test_slot_fence.py:75 | auto | fb8c7ace
-5 | tests/test_slot_fence.py:103 | det | 47bc6096
-5 | tests/test_slot_fence.py:104 | det | 3e4a3086
-5 | tests/test_slot_fence.py:105 | camera | 34e57a36
-5 | tests/test_slot_fence.py:107 | import vms via tests.test_pass_failures | af79d070
-5 | tests/test_slot_fence.py:109 | det | 37b42298
-5 | tests/test_slot_fence.py:110 | cam | a55e8ddb
-5 | tests/test_slot_fence.py:110 | det | a55e8ddb
-5 | tests/test_slot_fence.py:111 | cam | bb1f3721
-5 | tests/test_slot_fence.py:111 | det | bb1f3721
-5 | tests/test_slot_fence.py:111 | rtsp | bb1f3721
-5 | tests/test_slot_fence.py:112 | cam | 55986a22
-5 | tests/test_slot_fence.py:112 | rtsp | 55986a22
-5 | tests/test_slot_fence.py:113 | det | 98d10865
-5 | tests/test_slot_fence.py:120 | det | b56d6420
-5 | tests/test_slot_fence.py:127 | import vms via tests.test_pass_failures | af79d070
-5 | tests/test_slot_fence.py:128 | det | 4bd09fe0
-5 | tests/test_slot_fence.py:129 | det | 0a1bdcb8
-5 | tests/test_slot_fence.py:130 | det | 33272014
-5 | tests/test_slot_fence.py:131 | det | 72bc098b
-5 | tests/test_slot_fence.py:132 | det | 01e18494
-5 | tests/test_slot_fence.py:133 | det | 55cc4263
-5 | tests/test_slot_fence.py:135 | det | 36a9a9c0
-5 | tests/test_slot_fence.py:135 | det | 36a9a9c0
-5 | tests/test_slot_fence.py:138 | recorder | 4694de03
-5 | tests/test_slot_fence.py:141 | recorder | 1a4b813d
-5 | tests/test_slot_fence.py:142 | camera | 86f6f1b7
-5 | tests/test_slot_fence.py:142 | recorder | 86f6f1b7
-5 | tests/test_slot_fence.py:142 | recorder | 86f6f1b7
-5 | tests/test_slot_fence.py:144 | rec | 2d3895fe
-5 | tests/test_slot_fence.py:144 | recorder | 2d3895fe
-5 | tests/test_slot_fence.py:145 | import vms via tests.test_stand_in | 98ee670b
-5 | tests/test_slot_fence.py:146 | cam | 0fbcce5c
-5 | tests/test_slot_fence.py:146 | import vms | 0fbcce5c
-5 | tests/test_slot_fence.py:146 | recorder | 0fbcce5c
-5 | tests/test_slot_fence.py:146 | vms | 0fbcce5c
-5 | tests/test_slot_fence.py:147 | cam | 71cb4c5e
-5 | tests/test_slot_fence.py:148 | recorder | 653e22b0
-5 | tests/test_slot_fence.py:149 | rec | 9a3a4d01
-5 | tests/test_slot_fence.py:149 | rec | 9a3a4d01
-5 | tests/test_slot_fence.py:149 | recorder | 9a3a4d01
-5 | tests/test_slot_fence.py:150 | cam | cb6fb0e6
-5 | tests/test_slot_fence.py:151 | cam | f0474f48
-5 | tests/test_slot_fence.py:155 | import vms via tests.test_pass_failures | 38cf3407
-5 | tests/test_slot_fence.py:166 | device | 31db4485
-5 | tests/test_slot_fence.py:174 | recorder | 95c9fcf7
-5 | tests/test_slot_fence.py:175 | vms | 9101ea08
-5 | tests/test_slot_fence.py:182 | camera | de6b17f5
-5 | tests/test_slot_fence.py:182 | recorder | de6b17f5
-5 | tests/test_slot_fence.py:182 | recorder | de6b17f5
-5 | tests/test_slot_fence.py:226 | vms | 35ce2b3b
-5 | tests/test_slot_fence.py:246 | vms | 35ce2b3b
-5 | tests/test_slot_fence.py:257 | auto | c588b399
-5 | tests/test_slot_fence.py:281 | import vms via tests.test_stand_in | 98ee670b
-5 | tests/test_slot_fence.py:295 | vms | 3c70c959
-5 | tests/test_slot_fence.py:318 | camera | 36f49143
-5 | tests/test_slot_fence.py:318 | import vms via tests.test_lesson4_worker | 36f49143
-5 | tests/test_slot_fence.py:319 | import vms via tests.test_stand_in | 98ee670b
-5 | tests/test_slot_fence.py:320 | camera | 843cec4d
-5 | tests/test_slot_fence.py:323 | vms | c84fbf16
-5 | tests/test_slot_fence.py:329 | vms | 0913bcf9
-5 | tests/test_slot_fence.py:331 | vms | 28bcc253
-5 | tests/test_slot_fence.py:343 | vms | 1e3a4e4a
 5 | tests/test_snapshot_shards.py:19 | import vms | f1d7b073
 5 | tests/test_snapshot_shards.py:19 | vms | f1d7b073
 5 | tests/test_snapshot_shards.py:20 | import vms | 44e860ee
@@ -845,67 +715,6 @@
 5 | tests/test_snapshot_shards.py:98 | vms | 0f48904a
 5 | tests/test_snapshot_shards.py:119 | vms | ab5c6d5c
 5 | tests/test_snapshot_shards.py:125 | камер | 213e148f
-5 | tests/test_stand_in.py:3 | recorder | 3bf60111
-5 | tests/test_stand_in.py:4 | obsd | df3fa862
-5 | tests/test_stand_in.py:16 | import vms | d13b6b05
-5 | tests/test_stand_in.py:16 | vms | d13b6b05
-5 | tests/test_stand_in.py:16 | vms | d13b6b05
-5 | tests/test_stand_in.py:24 | vms | 84be7813
-5 | tests/test_stand_in.py:25 | archive | 6644dabb
-5 | tests/test_stand_in.py:38 | camera | df8b21b6
-5 | tests/test_stand_in.py:77 | import vms | f1d7b073
-5 | tests/test_stand_in.py:77 | vms | f1d7b073
-5 | tests/test_stand_in.py:78 | import vms | 44e860ee
-5 | tests/test_stand_in.py:78 | vms | 44e860ee
-5 | tests/test_stand_in.py:78 | vms | 44e860ee
-5 | tests/test_stand_in.py:81 | vms | 90c2a86c
-5 | tests/test_stand_in.py:81 | vms | 90c2a86c
-5 | tests/test_stand_in.py:95 | camera | dd7f8f49
-5 | tests/test_stand_in.py:135 | camera | fd7b1369
-5 | tests/test_stand_in.py:153 | camera | f6f51616
-5 | tests/test_stand_in.py:162 | camera | 666805af
-5 | tests/test_stand_in.py:166 | camera | 62bd14a8
-5 | tests/test_stand_in.py:187 | vms | 5eaccac6
-5 | tests/test_stand_in.py:187 | vms | 5eaccac6
-5 | tests/test_stand_in.py:199 | vms | e953d856
-5 | tests/test_stand_in.py:219 | recorder | 1a981bea
-5 | tests/test_stand_in.py:219 | volume | 1a981bea
-5 | tests/test_stand_in.py:240 | recorder | 57cab978
-5 | tests/test_stand_in.py:240 | volume | 57cab978
-5 | tests/test_stand_in.py:244 | recorder | 7dad26a1
-5 | tests/test_stand_in.py:277 | camera | 5e2868aa
-5 | tests/test_stand_in.py:282 | camera | 5e0e0837
-5 | tests/test_stand_in.py:287 | camera | ae720a4c
-5 | tests/test_stand_in.py:303 | camera | 9524345d
-5 | tests/test_stand_in.py:324 | recorder | 4da3a35c
-5 | tests/test_stand_in.py:324 | volume | 4da3a35c
-5 | tests/test_stand_in.py:370 | auto | cbb853f1
-5 | tests/test_stand_in.py:370 | auto | cbb853f1
-5 | tests/test_stand_in.py:370 | import vms | cbb853f1
-5 | tests/test_stand_in.py:370 | vms | cbb853f1
-5 | tests/test_stand_in.py:371 | import vms via tests.test_pass_failures | af79d070
-5 | tests/test_stand_in.py:372 | auto | f2bdf27b
-5 | tests/test_stand_in.py:372 | import vms | f2bdf27b
-5 | tests/test_stand_in.py:372 | vms | f2bdf27b
-5 | tests/test_stand_in.py:374 | auto | 4d30583c
-5 | tests/test_stand_in.py:374 | auto | 4d30583c
-5 | tests/test_stand_in.py:374 | auto | 4d30583c
-5 | tests/test_stand_in.py:374 | auto | 4d30583c
-5 | tests/test_stand_in.py:374 | rec | 4d30583c
-5 | tests/test_stand_in.py:374 | vms | 4d30583c
-5 | tests/test_stand_in.py:375 | archive | 09a1ea4c
-5 | tests/test_stand_in.py:376 | auto | 88424a6c
-5 | tests/test_stand_in.py:389 | det | 1afc1ba7
-5 | tests/test_stand_in.py:389 | recorder | 1afc1ba7
-5 | tests/test_stand_in.py:439 | det | b5da906e
-5 | tests/test_stand_in.py:443 | import vms via tests.test_pass_failures | af79d070
-5 | tests/test_stand_in.py:479 | recorder | 36b1e079
-5 | tests/test_stand_in.py:569 | camera | 4981fc83
-5 | tests/test_stand_in.py:570 | camera | cf15fdc9
-5 | tests/test_stand_in.py:580 | camera | ea336c12
-5 | tests/test_stand_in.py:582 | driverpack | bccb6c23
-5 | tests/test_stand_in.py:582 | mp4 | bccb6c23
-5 | tests/test_stand_in.py:584 | camera | 9d1811b8
 5 | tests/test_sweep.py:17 | det | 2d359ad0
 5 | tests/test_sweep.py:17 | import vms | 2d359ad0
 5 | tests/test_sweep.py:17 | vms | 2d359ad0
