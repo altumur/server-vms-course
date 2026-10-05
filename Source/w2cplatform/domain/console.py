@@ -9,8 +9,9 @@ platform's module. `/api/*` is the processes' (`signer_service.py`: carry, membe
     GET  /domain                                the domain's view, as the pass composed it (`ReadView.doc`): the
                                                 members (a list, the holder among them), the topology, who knocks
     GET  /domain/keys                           every key under `domain/` in the holder's stores (`keysview.py`)
-    GET  /spec, /mounts                         the specs this process loaded (`SPEC_DIR`), for the module: no root
-                                                subsystem (`{name: "domain"}`), every spec a mount, without words
+    GET  /spec, /mounts                         for the module: no root (`{name: "", rows: null}` — the page says
+                                                `sections: ["domain"]`), and every spec this process loaded
+                                                (`SPEC_DIR`) a mount, `{root: "", mounts: {<sub>: describe}}`
     GET  /domain/<sub>/<rows>?q=&page=&size=&cluster=   the read model of a subsystem of the directory (`<rows>`: its
                                                 spec's name for its units), with each row's age and its cluster's state
     PUT  /domain/<sub>/<rows>/<ref>             proxied to the owning cluster's console; Idempotency-Key required;
@@ -240,10 +241,11 @@ class Console:
                         from .keysview import keys
                         return self._send(200, keys(console.holder_vars, console.publish_to, console.view.wall()))
                     if u.path == "/spec":
-                        return self._send(200, {"name": "domain"})
+                        return self._send(200, {"name": "", "rows": None})   # no root, and no key of its own
                     if u.path == "/mounts":
                         from w2cplatform.console import describe
-                        return self._send(200, {"mounts": {s.name: describe(s) for s in declared.catalog.specs()}})
+                        return self._send(200, {"root": "", "mounts": {s.name: describe(s)
+                                                                       for s in declared.catalog.specs()}})
                     if u.path == "/domain/causes":
                         return self._send(200, [c.__dict__ | {"sentence": c.sentence()} for c in console.view.causes()])
                     if u.path == "/domain/topology" and console.topology is not None:

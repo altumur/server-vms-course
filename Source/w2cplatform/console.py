@@ -279,10 +279,12 @@ def describe(s) -> dict:
             **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
             **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
             **({"places": {"table": s.places["table"]}} if s.places else {}),   # `/where/<table>/<place>`
-            # the subsystem's key families of the domain (`domain.keys`; their words are `display.keys`)
+            # its part of the domain, as the page reads it (the contract, §10a): the key families (`domain.keys`; their
+            # words are `display.keys`), the shared fields, the fields the holder lets into an edit, the view's fields
             **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
-                                    for f in s.domain.keys], "shared": list(s.domain.shared)}}
-               if s.domain and (s.domain.keys or s.domain.shared) else {}),
+                                    for f in s.domain.keys], "shared": list(s.domain.shared),
+                           "edit": list(s.domain.edit), "view": list(s.domain.view)}}
+               if s.domain else {}),
             "running_gauge": f"{s.name}_{s.running_gauge}" if s.running_gauge else None,
             "workers_gauge": f"{s.name}_workers_live",
             "metrics": {"prefix": s.name, "running": s.running_gauge or None}}

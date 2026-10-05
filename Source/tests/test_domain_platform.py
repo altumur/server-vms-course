@@ -189,7 +189,12 @@ def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_t
         st, k = get(door, "/domain/keys")
         gold = next(v for v in k["vars"] if v["key"] == "domain/testsub/badges/gold")
         assert gold["items"] == {"since": "1", "pin_secret": "***"} and any(o["key"] == "domain/view" for o in k["objects"])
-        assert get(door, "/spec") == (200, {"name": "domain"}) and "testsub" in get(door, "/mounts")[1]["mounts"]
+        assert get(door, "/spec") == (200, {"name": "", "rows": None})
+        st, m = get(door, "/mounts")
+        assert m["root"] == "" and m["mounts"]["testsub"]["domain"] == {
+            "keys": [{"id": "tallies", "keys": ["domain/testsub/tallies"], "prefix": "domain/testsub/tallies/"},
+                     {"id": "ledger", "keys": ["domain/testsub/ledger"]}],
+            "shared": ["step", "marks"], "edit": ["start", "labels"], "view": ["start"]}
         assert get(door, "/domain/testsub/ledger") == (200, {"s1": "seen"})
         assert get(door, "/domain/members")[0] == 200 and get(door, "/domain/topology")[0] == 200
         for old in ("/api/members", "/api/topology", "/api/testsub/ledger", "/api/where/s1"):
