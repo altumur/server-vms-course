@@ -1,7 +1,7 @@
 # Урок 1 — Первая подсистема
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `vms/vms.subsystem.yaml` — восемь полей, производную строку, размещение и снимок; `vms/config.py` — раскладку ключей VMS и две конверсии; `vms/controller.py` — подкласс, который добавляет к платформе слово «камера» и больше ничего.
+**Вы напишете:** `vms/vms.subsystem.yaml` — имя и слот, поля оператора, производные строки, размещение и снимок; `vms/config.py` — раскладку ключей VMS и две конверсии; `vms/controller.py` — подкласс, который добавляет к платформе слово «камера» и больше ничего.
 **Время:** ~80 минут.
 
 ## Зачем этот урок
@@ -19,7 +19,7 @@
 ## Что нужно знать заранее
 
 - **М10A, урок 9** — `SubsystemSpec`, `Field`, `Derived`, `row`/`items`/`parse_id`.
-- **М10A, урок 9** — `PLATFORM_FIELDS` и `refuse`: почему восемь полей, а не пятнадцать.
+- **М10A, урок 9** — `PLATFORM_FIELDS` и `refuse`: почему поле оператора и поле платформы не смешиваются.
 - **М10A, уроки 10 и 11** — `SpecController` целиком: CRUD, размещение, политики, снимок.
 - **М10A, урок 5** — раскладка ключей: `config`, `assignment`, `epoch_key`, `slot_key`.
 
@@ -38,7 +38,11 @@
 ```yaml
 # The VMS, as the platform sees it. Everything the controller does for this
 # subsystem is here; the worker (vmsworker) is the part that knows what a camera is.
+…
 name: vms
+# The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; …).
+slot: {prefix: w, name_env: WORKER_NAME}
 ```
 
 Одна строка `name: vms` порождает **всю раскладку ключей**. `SubsystemSpec.sub` становится `Subsystem("vms")` из урока 5 М10A, и дальше:
@@ -52,11 +56,14 @@ name: vms
 | `vms/slots/<w>` | слот |
 | `vms/epoch/<id>` | эпоха камеры |
 | `vms/idem/<key>` | заявки идемпотентности |
-| `vms/retention/<id>` | срок хранения бакетов |
+| `vms/retention/<id>`, `vms/alarms_retention/<id>` | сроки хранения наблюдений и тревог (шаг 4) |
+| `vms/devices/<device>` | что держатель узнал об устройстве (урок 25) |
 | `vms/heartbeats/<w>` | объект: heartbeat воркера |
-| `vms/snapshot` | объект: снимок для М12 |
+| `vms/snapshot/<w>` | объекты: снимок для М12, по одному на воркера |
 
-И то же имя — префикс каждой метрики (`vms_workers_live`), и каталог подсистемы на ресурсе (`<archive>/vms/<cam>/…`), и обе ACL, вырезанные из спецификации. **Одно слово, десять следствий**, и ни одно не пришлось писать.
+И то же имя — префикс каждой метрики (`vms_workers_live`), и каталог подсистемы в дереве ресурса (`<корень ресурса>/vms/<cam>/…`), и токены всех ролей подсистемы — консоли, контроллера, воркера, — вырезанные из спецификации (М10A, урок 9). **Одно слово — вся раскладка**, и ни одного ключа не пришлось писать.
+
+Вторая строка — `slot`: как зовут воркеров этой подсистемы (`w-<n>`) и в какой переменной юнит называет имя процесса. Это тоже слово спеки, а не класса: читает его база воркера (`Worker.slot_prefix`, `Worker.name_env`; М10A, урок 7, шаг 9), и в уроке 3 класс воркера VMS не скажет о своём имени ничего.
 
 ## Шаг 2 — Единица
 
@@ -66,39 +73,55 @@ unit:
   id: numeric                        # vms/next_id
 ```
 
-`rows: cameras` — слово, которое увидит оператор. Каталог строк, путь в консоли (`GET/POST /cameras`, `PUT/DELETE /cameras/<id>`), заголовок на странице, `spec.rows` в JavaScript из урока 19 М10A.
+`rows: cameras` — имя каталога строк и пути в консоли (`GET/POST /cameras`, `PUT/DELETE /cameras/<id>`); `/spec` отдаёт его как `rows`, и модуль консоли (М10A, урок 16) строит по нему список и адреса правок.
 
-Заметьте, чего здесь нет: единственного числа. Страница получает его вычитанием `s` на конце (`spec.rows.replace(/s$/, '')`) — грубо и достаточно для «cameras → camera», «ticks → tick», «recordings → recording». Заводить поле ради английской морфологии не стали.
+Заметьте, чего здесь нет: слова, которое прочтёт человек. «Камера», «камеры», «камер» лежат в другом разделе той же спеки, `display:` (`unit: камера`, `units: камеры`, `units_count: камер`), и читает его только страница; платформа не читает из него ничего (ADR 0005). Имя каталога — для машин, слово на экране — для людей, и русской морфологии нечего делать в ключе хранилища.
 
 `id: numeric` — идентификаторы выдаёт контроллер, CAS-инкрементом на `vms/next_id`. Альтернатива — именованный идентификатор, как у детекторов (`7-motion`), где имя составляет оператор. Для камер выбрано числовое, потому что у камеры нет естественного уникального имени: два «Вход» в разных корпусах — обычное дело.
 
 Следствие числового идентификатора: `POST` с полем `id` в теле **отклоняется**. `id` входит в `PLATFORM_FIELDS`, и оператор его не отправляет никогда.
 
-## Шаг 3 — Восемь полей оператора
+## Шаг 3 — Поля оператора
 
 ```yaml
   fields:
     name:                  {type: string, default: "cam{id}"}
-    source:                {type: string, required: true}     # driverpack://file/<name> or driverpack://<vendor>/<host>
+    source:
+      type: url
+      required: true
+      schemes: [driverpack, rtsp, rtsps, http, https, onvif]
+      unique: canonical
+      credentials: {login: cred_username, secret: cred_secret}
+      secret_in: …
     enabled:               {type: bool,   default: true}
-    events_retention_days: {type: int,    default: 365}
+    events_retention_days: {type: int,    inherit: 365}       # buckets: the platform's, via the derived row below
+    alarms_retention_days: {type: int,    inherit: 1095}
     priority:              {type: int,    default: 100}
     labels:                {type: list}                       # where the camera is reachable from: "vlan:cctv-a"
     folders:               {type: list}                       # paths it is filed under: "Объект А/Подъезд,Периметр"
-    ref:                   {type: string}                     # the name a layer above knows it by (М12)
+    alarms:                {type: list,   inherit: [], merge: union}   # kinds that are alarms on THIS device: "io.input,silent"
+    ref:                   {type: string, unique: true}       # the name a layer above knows it by (М12): one camera, one name
+    cred_username:         {type: string}                     # the device login
+    cred_secret:           {type: string, bound_to: [source]} # the device password: never in the snapshot, masked on the way out
+    live:                  {type: string, default: "always", enum: [always, on-demand]}
+    kind:                  {type: string, default: "video"}   # video | io — a device without a picture is still a device
 ```
+
+Четырнадцать полей. Этот шаг разбирает восемь, с которых подсистема начинается: `name`, `source`, `enabled`, `events_retention_days`, `priority`, `labels`, `folders`, `ref`. Остальные шесть приходят каждое со своим уроком: `alarms_retention_days` — шаг 4, `alarms` — М10A, урок 12 («где живёт ответ „что здесь тревога“»), `kind` — урок 4, `live` — урок 15, `cred_username` и `cred_secret` вместе с тем, что стоит под `source`, — урок 19.
 
 Каждое поле стоит разобрать — не потому что их много, а потому что выбор *что не включить* здесь важнее.
 
-**`name` с умолчанием `"cam{id}"`.** Подстановка `{id}` происходит в `new_row` (урок 11 М10A), и ради неё умолчание хранится строкой даже там, где поле числовое. Камера, созданная без имени, называется `cam17` — не «Untitled», не пусто: имя, по которому её можно найти.
+**`name` с умолчанием `"cam{id}"`.** Подстановка `{id}` происходит в `new_row` (урок 10 М10A), и ради неё умолчание хранится строкой даже там, где поле числовое. Камера, созданная без имени, называется `cam17` — не «Untitled», не пусто: имя, по которому её можно найти.
 
-**`source` — единственное обязательное поле.** Создание без него получает `Refused("a vms unit needs a source")`. Камера без адреса — это не «недонастроенная камера», это ничто: ей нечего держать. Всё остальное имеет осмысленное умолчание, и оператор, создающий камеру, вводит один адрес.
+**`source` — единственное обязательное поле.** Создание без него получает `Refused("a vms unit needs a source")`. Камера без адреса — это не «недонастроенная камера», это ничто: ей нечего держать. Всё остальное имеет осмысленное умолчание, и оператор, создающий камеру, вводит один адрес. Что адрес — адрес по RFC 3986 (`type: url`), что две камеры не держат один адрес в одном написании (`unique: canonical`; М10A, урок 10) и что пароль в адресе — отказ, проверяет платформа по словам спеки; почему так и какими словами адрес камеры несёт логин — урок 19.
 
 **`enabled`.** Цикл сверки (урок 2) запускает только включённые строки и останавливает выключенные. `PUT {"enabled": false}` поднимает `revision`, воркер видит изменение и останавливает конвейер. Камера остаётся в списке, её записи остаются на ресурсе, соединения нет.
 
-**`events_retention_days: 365`**, и рядом в комментарии — самое интересное различение файла:
+**`events_retention_days: {inherit: 365}`**, и рядом в комментарии — самое интересное различение файла:
 
 > *bucket retention: the platform's, via the derived row below. Events are small and kept a year where footage is kept a month.*
+
+`inherit`, а не `default`, — и это не синоним. Умолчание записывается в строку при создании, и тогда общее умолчание домена (М12) не применится никогда: «поставили 365» и «не ставили» — одна и та же строка. Не заданное поле строка не несёт, производная строка (шаг 4) молчит, и значение решается там, где его читают: своё у камеры, иначе домена, иначе 365 — собственный год ресурса, то же число, сказанное дважды нарочно, потому что ресурс этого файла не читает.
 
 **Два срока хранения, и они разные на порядок.** Видео — гигабайты в час; события — байты. Хранить видео год нельзя (нет дисков), хранить события месяц незачем (места не жалко, а «когда эта камера в последний раз видела движение год назад» — вопрос, который задают). Поэтому в подсистеме `vms` живёт срок для событий, а срок для видео — в подсистеме `rec`, у записи, а не у камеры.
 
@@ -120,7 +143,7 @@ unit:
 
 И честно: в М10 это поле не читает никто, как `priority`. **В снимок оно не попало, и это измерено, а не выбрано** (в продукте попало — там нет теста, который мерил бы, во что это обходится) — снимок это объект на воркера под потолком в 64 КиБ, тест держит шард в пределах трети от него, и папки сдвинули крупнейший шард с 20.9 на 21.7 КиБ, за черту. Запас там для того, чтобы форма пережила следующее поле; тратить его на поле, которого никто не читает, ослабив тест, написанный ровно чтобы это померить, — неверный размен.
 
-**`ref`** — имя, под которым камеру знает слой выше. VMS не обязана быть источником истины об именовании в чужой системе; она обязана возить это имя туда и обратно.
+**`ref`** — имя, под которым камеру знает слой выше. VMS не обязана быть источником истины об именовании в чужой системе; она обязана возить это имя туда и обратно. `unique: true` — одно имя, одна камера: домен находит камеру по нему, и два одинаковых имени были бы одной камерой для домена и двумя для кластера.
 
 Чего в списке нет: адреса записи, кодека, битрейта, расписания. Всё это либо решает воркер, либо принадлежит другой подсистеме. **Поле в спецификации — это то, что оператор решает и контроллер хранит.**
 
@@ -135,9 +158,9 @@ unit:
 
 Первое применение `Derived` из урока 9 М10A, и оно объясняет, зачем механизм вообще существует.
 
-Ресурс (урок 16 М10A) чистит бакеты по сроку хранения. Он читает `<sub>/retention/<unit>` — и **не умеет читать строку камеры**: он не знает про подсистему `vms`, у него нет её спецификации, и поле `events_retention_days` для него ничего не значит.
+Ресурс (урок 14 М10A) чистит бакеты по сроку хранения. Он читает `<sub>/retention/<unit>` — и **не умеет читать строку камеры**: он не знает про подсистему `vms`, у него нет её спецификации, и поле `events_retention_days` для него ничего не значит.
 
-Значит, нужен перевод: из поля, которое понимает оператор, в строку, которую понимает платформа. Производная строка и есть этот перевод, выполняемый контроллером при создании и при каждой правке, которая меняет исходное поле.
+Значит, нужен перевод: из поля, которое понимает оператор, в строку, которую понимает платформа. Производная строка и есть этот перевод: его делает `SpecController` при создании и при каждой правке, которая меняет исходное поле, — в консоли, тем же токеном, которым она пишет строку камеры.
 
 `on_delete: {days: 0}` — вторая половина механизма и, пожалуй, более изящная. Удалили камеру — строка хранения становится нулём, и **следующий проход ресурса уносит её бакеты сам**. Никто не удаляет файлы руками, никто не ходит по серверам, никакой каскадной очистки: удаление строки превращается в изменение числа, и дальше работает уже написанное.
 
@@ -150,23 +173,27 @@ unit:
 
 Это ответ на вопрос «должно ли удаление камеры стирать её события сразу». Наблюдения — да: `retention/<id>` становится нулём, и следующий проход их уносит. Тревоги — нет: строка их срока остаётся как была, и они доживают своё. Удаление камеры заканчивает её наблюдения, но не запись о том, что у неё случилось. Лежат тревоги в своём дереве, `vms.alarms/<id>/…` (М10A, урок 12), поэтому у двух сроков два разных набора файлов.
 
-## Шаг 5 — Размещение пятью именами
+## Шаг 5 — Размещение именами
 
 ```yaml
 placement:
-  capacity:   {from: capacity, fallback: 50}    # the worker's word, from its heartbeat; the fallback for one that said nothing
+  capacity:   {from: capacity, default: 50}    # the worker's word, from its heartbeat; the default for one that said nothing
   headroom:   {from: headroom}                  # what the autoscaler sums
   constraint: labels-subset                     # the camera's labels ⊆ the worker's server's labels
+  group_by:   {field: source, cut_at: ch}
   requires:   resource                          # the worker's server must have a resource that answers
   tie_break:  most-free-capacity
+  offers:     true
+  near:       {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}
+  home:       near                              # …and, unlike a bare affinity, maintained: `ensure_home` follows it back
   rebalance:  {dead_band: 0.10}
 ```
 
-Шесть строк, и за каждой — механизм из М10A, выбранный **по имени**.
+Десять строк, и за каждой — механизм из М10A, выбранный **по имени** (урок 11). Шесть разберём здесь. Остальные — со своими уроками: `group_by` (каналы одного устройства — на одном воркере) — урок 4, шаг 1; `near` и `home` (камера идёт за своей записью) — урок 4, шаг 2, и урок 26; `offers` (то, чему нет места у живых, предлагается запасному) — М10A, урок 11.
 
-`capacity: {from: capacity, fallback: 50}` — ёмкость берётся из heartbeat'а воркера, поле `capacity`. Правило из урока 12 М10A: *ёмкость — слово воркера, не контроллера.* Воркер измерил её на своём железе (М9, урок 7: базовая нагрузка плюс `n × инкремент`); контроллер, сидящий на другой машине, не может знать этого числа.
+`capacity: {from: capacity, default: 50}` — ёмкость берётся из heartbeat'а воркера, поле `capacity`. Правило из урока 11 М10A: *ёмкость — слово воркера, не контроллера.* Воркер измерил её на своём железе (М9, урок 7: базовая нагрузка плюс `n × инкремент`); контроллер, сидящий на другой машине, не может знать этого числа.
 
-`fallback: 50` — для воркера, который ещё не сказал ничего. Не ноль (тогда новый воркер никогда не получит камер и никогда не измерит ёмкость) и не бесконечность (тогда на него свалят всё).
+`default: 50` — для воркера, который ещё не сказал ничего, и спека без него не загружается. Не ноль (тогда новый воркер никогда не получит камер и никогда не измерит ёмкость) и не бесконечность (тогда на него свалят всё).
 
 `constraint: labels-subset` — имя из каталога `CONSTRAINTS`. Воркер годится для камеры, если метки камеры — подмножество меток его сервера. Камера в `vlan:cctv-a` не попадёт на сервер, из которого эта сеть не видна, и причина размещения назовёт метки, которые совпали.
 
@@ -179,14 +206,19 @@ placement:
 ## Шаг 6 — Снимок и консоль
 
 ```yaml
-snapshot: [name, source, enabled, events_retention_days, priority, labels, ref]
+snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
+…
+metrics:
+  - {name: cameras_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+  …
 console:
+  …
   running: cameras_running             # vms_cameras_running: cameras held — streaming to whoever subscribes; recording is rec's gauge
 ```
 
-Снимок — это копия, **которая покидает кластер** (урок 13 М10A). Перечислены все поля оператора; контроллер добавляет `id`, `revision`, `worker` и `server`. Сами строки наружу не отдаются никогда: снимок — объект, который можно читать без прав на конфигурацию.
+Снимок — это копия, **которая покидает кластер** (урок 19 М10A). Перечислено то, что нужно слою выше, и не больше: `folders` здесь нет (замер, шаг 3), пароля устройства нет никогда (урок 19). Контроллер добавляет `id`, `revision`, `worker` и `server`. Сами строки наружу не отдаются никогда: снимок — объекты `vms/snapshot/<воркер>`, по одному на воркера, и их можно читать без прав на конфигурацию.
 
-`running: cameras_running` — имя метрики, и комментарий рядом важнее самой строки: **`vms_cameras_running` считает камеры, которые *держатся*, а не которые записываются.** Запись — метрика подсистемы `rec`. Различение, на котором стоит весь модуль, впервые появляется здесь, в имени датчика.
+`running: cameras_running` — имя метрики, которую та же спека объявила в `metrics:` (считать статусы в фазе `running` у живых воркеров; М10A, урок 15, шаг 11), и комментарий рядом важнее самой строки: **`vms_cameras_running` считает камеры, которые *держатся*, а не которые записываются.** Запись — метрика подсистемы `rec`. Различение, на котором стоит весь модуль, впервые появляется здесь, в имени датчика.
 
 ## Шаг 7 — `config.py`: раскладка и две конверсии
 
@@ -198,8 +230,9 @@ Python view of the same thing, for the worker and the tests:
     vms/cameras/<id>      the row: the spec's fields, plus revision       (the controller writes)
     vms/workers/<worker>  units, rev                                      (the controller writes)
     vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
-    vms/retention/<id>    days — derived from events_retention_days       (the controller writes; the resource reads)
+    vms/retention/<id>    days — derived from events_retention_days       (the console writes, with the row; the resource reads)
     vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
+    vms/devices/<device>  events, rays, relays, ptz, presets — what it says and does   (its holder, on a change)
     vms/next_id           n                                               (the controller)
 
 A camera row is small, rare and must be consistent: raft's shape. Nothing
@@ -207,36 +240,42 @@ here is controller-derived status — that is in the worker's heartbeat.
 """
 ```
 
-Докстрока — это карта, и на ней у каждого ключа подписан **писатель**. Четыре ключа пишет контроллер, один — воркер, и ни одного не пишут оба. Правило «один писатель на префикс» (урок 3 М10A) из соглашения превратилось в таблицу, которую можно проверить глазами.
+Докстрока — это карта, и на ней у каждого ключа подписан **писатель**. «Контроллер» здесь — класс `SpecController`, а кто им пишет, решает токен (шаг 8): строки камер, счётчик и производные строки — под токеном консоли, назначение и размещение — под токеном контроллера, эпоху и строку устройства — воркер. Ни один ключ не пишут двое. Правило «один писатель на префикс» (урок 3 М10A) из соглашения превратилось в таблицу, которую можно проверить глазами.
 
 Последняя фраза отсекает частую ошибку: *ничего здесь не является выведенным статусом — статус в heartbeat'е воркера.* Соблазн положить `phase` в строку камеры велик: тогда одно чтение даёт всё. И тогда строку камеры пишут двое.
 
 ```python
 SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vms.subsystem.yaml"))
-LIVE_SPEC = SubsystemSpec.load(...)   # the second subsystem: live fan-outs
-DET_SPEC = SubsystemSpec.load(...)    # the third: detectors
-REC_SPEC = SubsystemSpec.load(...)    # the fourth: recorders, on the archive
+LIVE_SPEC = SubsystemSpec.load(…)    # the second subsystem: live fan-outs
+DET_SPEC = SubsystemSpec.load(…)     # the third: detectors
+REC_SPEC = SubsystemSpec.load(…)     # the fourth: recorders, on the archive
+DETJOB_SPEC = SubsystemSpec.load(…)  # the fifth: archive scans, the first work that ends
+AUTO_SPEC = SubsystemSpec.load(…)    # the sixth: scenarios, the first work that READS what the others wrote
+SURVEY_SPEC = SubsystemSpec.load(…)  # the sixth: watching an archive we do not own
 ```
 
-Четыре спецификации, загруженные одинаково. Три из них появятся в уроках 10, 13 и 14 — и весь их Python будет таким же: одна строка загрузки.
+Семь спецификаций, загруженных одинаково. Шесть из них появятся в уроках 10, 13, 14, 21, 23 и 25 — и весь их Python здесь будет таким же: одна строка загрузки. Загрузка — это ещё и регистрация: `SubsystemSpec.load` кладёт спецификацию в каталог процесса (`catalog.register`; М10A, урок 9), и воркер подсистемы берёт свою оттуда. Процесс, не загрузивший спеку своей подсистемы, воркера не запустит (`NoSpec`; ADR 0013) — об этом урок 3.
 
 ```python
-LIVE_PORT_BASE = 20000       # a camera's RTP port on its worker's loopback
-SHM_DIR = "/run/vms"         # the tee's shared-memory branch: <SHM_DIR>/<cam>.shm
-RTSP_PORT = 8554             # the worker's RTSP fan-out: rtsp://<server>:8554/<cam>
+LIVE_PORT_BASE = 20000       # a camera's RTP port on its worker's loopback: the RTSP fan-out's one subscriber (gstvms/livesrv.py)
+SHM_DIR = "/run/vms"         # the tee's shared-memory branch: <SHM_DIR>/<cam>.shm — a subscriber on the SAME server reads it (shmsrc), no RTSP hop
+…
+RTSP_PORT = 8554             # the worker's RTSP fan-out: rtsp://<server>:8554/<cam> — what a recorder, a gateway, a detector subscribe to
 
 
 def live_shm(cid, shm_dir: str = SHM_DIR) -> str:
+    """The camera's shared-memory socket on its worker's server: the local fast path (shm:// scheme)."""
     return f"shm://{shm_dir}/{cid}.shm"
+…
 
-
-def live_url(server: str, cid) -> str:
+def live_url(server: str, cid, port: int = RTSP_PORT) -> str:
     """Where a camera's stream is served from: the worker's RTSP fan-out. In the
-    heartbeat, so a subscriber needs only the heartbeat — on any server."""
-    return f"rtsp://{server}:{RTSP_PORT}/{cid}"
+    heartbeat, so a subscriber needs only the heartbeat — on any server, at
+    whatever port this worker's fan-out ended up on."""
+    return f"rtsp://{server}:{port}/{cid}"
 ```
 
-Три константы и две функции, которые в этом уроке выглядят преждевременными, а в уроке 4 окажутся центром модуля. Пока достаточно прочитать докстроку `live_url`: **адрес раздачи лежит в heartbeat'е, поэтому подписчику не нужно ничего, кроме heartbeat'а — на любом сервере.**
+Три константы и две функции, которые в этом уроке выглядят преждевременными, а в уроке 4 окажутся центром модуля. Пока достаточно прочитать докстроку `live_url`: **адрес раздачи лежит в heartbeat'е, поэтому подписчику не нужно ничего, кроме heartbeat'а — на любом сервере и на каком бы порту раздача ни оказалась.**
 
 ```python
 def row(items: dict) -> dict:
@@ -249,7 +288,7 @@ def items(row_: dict) -> dict:
 
 Две конверсии: строки Variables → типизированный словарь и обратно. Обёртки в одну строку — ради симметрии и ради тестов; контроллер зовёт методы спецификации напрямую.
 
-И примечание, которое сэкономит отладку: **ни одна из функций не фильтрует маркер `deleted`.** Строка, помеченная контроллером как удалённая, конвертируется как любая другая. Проверять маркер — дело того, кто читает: `VmsWorker.refresh` проверяет, `retain` не проверяет, и обоим это правильно.
+И примечание, которое сэкономит отладку: **ни одна из функций не фильтрует маркер `deleted`.** Строка, помеченная контроллером как удалённая, конвертируется как любая другая. Проверять маркер — дело того, кто читает: `VmsWorker.refresh` проверяет его сам, прежде чем звать `row` (урок 3).
 
 ## Шаг 8 — `controller.py`: двадцать строк словаря
 
@@ -257,6 +296,7 @@ def items(row_: dict) -> dict:
 class VmsController(SpecController):
     def __init__(self, vars_: Variables, objects: ObjectStore, capacity: int = 50, wall=time.time, cluster: str | None = None):
         super().__init__(SPEC, vars_, objects, capacity, wall, cluster)
+    …
 
     # the VMS's word is "camera"
     create_camera = SpecController.create
@@ -266,7 +306,7 @@ class VmsController(SpecController):
     cameras = SpecController.units
 ```
 
-Весь контроллер VMS. Конструктор, вбивающий спецификацию, и пять псевдонимов.
+Весь контроллер VMS. Конструктор, вбивающий спецификацию, и пять псевдонимов. (Пропущенное место — комментарий о том, чего здесь больше нет: устройство для размещения — слово спеки `group_by: {field: source, cut_at: ch}`, и читает его платформа.)
 
 Псевдонимы — не сахар. Они делают читаемыми тесты и консоль: `ctl.create_camera({...})` в тесте VMS говорит то, что происходит, а `ctl.create({...})` не говорит ничего. При этом **новой функции не появилось**: `create_camera` — это буквально `SpecController.create`, тот же объект функции под другим именем.
 
@@ -284,24 +324,29 @@ server, and it is the hostname.
 
 > *Which of them a given process may actually complete is decided by the token its `vars_` carries, not by this class.*
 
-**Один класс, два процесса, разные права.** `vmscontroller` держит токен контроллера и может размещать; `console` держит токен консоли и на `place` получает `Forbidden`. Разграничение не в классе и не в наследовании — в хранилище (урок 3 М10A).
+**Один класс, разные права — и процесс контроллера его даже не знает.** Контроллер VMS как процесс — платформенный: `python3 -m w2cplatform controller vms` (юнит `w2c-controller@vms`) гонит `SpecController` прямо по `vms.subsystem.yaml` из каталога спек (М10A, урок 19), и подкласс ему не нужен. `VmsController` — словарь, которым говорят тесты VMS и её собственный код (`vms/console.py`, `vms/__main__.py`). Тот же класс под токеном контроллера размещает, под токеном консоли на `place` получает `Forbidden` (`test_lesson6_controller.py::test_the_console_over_http`). Разграничение не в классе и не в наследовании — в хранилище (урок 3 М10A).
 
 ## Результат
 
 ```python
+from vms.config import SPEC
 from vms.controller import VmsController
-from w2cplatform.variables import FileVariables
-from w2cplatform.objects import FsObjectStore
 
-ctl = VmsController(FileVariables(root, token=SPEC.acl_controller()), FsObjectStore(objs))
-c = ctl.create_camera({"source": "driverpack://file/lobby.mp4"})
-# {'id': 1, 'name': 'cam1', 'source': '…', 'enabled': True,
-#  'events_retention_days': 365, 'priority': 100, 'labels': [], 'ref': '', 'revision': 1}
-ctl.ensure_placed()
-ctl.placement(1).reason      # 'w-1 on box-a: labels reached'
+box = Box()                                                   # tests/vmsconftest.py: two stores in a temp directory
+con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+c = con.create_camera({"source": "driverpack://file/lobby.mp4"})
+# {'id': 1, 'name': 'cam1', 'source': 'driverpack://file/lobby.mp4', 'enabled': True,
+#  'events_retention_days': None, …, 'live': 'always', 'kind': 'video', 'revision': 1}
+con.place(1, workers=["w-1"])          # Forbidden — токен консоли размещение не пишет
+ctl.ensure_placed(workers=["w-1"])
+ctl.where(1)                           # 'w-1'
+ctl.placement(1).reason                # 'most free capacity (50) among 1 worker(s); …'
 ```
 
-Написано: 122 строки YAML, 100 строк `config.py` (из них 45 — комментарии и докстрока) и 91 строка `controller.py` (из них 70 — комментарии). **Собственно кода — около тридцати строк.**
+`events_retention_days: None` — то самое `inherit` шага 3: строка срока не несёт, и решает тот, кто читает.
+
+Написано: `controller.py` — 95 строк, из них кода 27, остальное — комментарии. YAML и `config.py` выросли вместе с модулем (каждое поле и каждая функция приходят со своим уроком), и большая часть их строк — тоже комментарии: что ключ значит и почему. **Собственно кода контроллера — около тридцати строк.**
 
 Прогон тестов зелёный. Теста чистоты платформы это не нарушило: в `w2cplatform/` не изменилось ничего.
 
@@ -316,18 +361,18 @@ ctl.placement(1).reason      # 'w-1 on box-a: labels reached'
 
 ## Итог
 
-- Подсистема отдаёт платформе один YAML, и одно слово `name` порождает десять ключей, префикс метрик, каталог на ресурсе и обе ACL.
-- Восемь полей оператора; обязательное — одно. Поле в спецификации — это то, что оператор решает, а контроллер хранит.
+- Подсистема отдаёт платформе один YAML, и одно слово `name` порождает всю раскладку ключей, префикс метрик, каталог на ресурсе и токены ролей; `slot` называет воркеров — тоже словом спеки, а не класса.
+- Восемь полей, с которых подсистема начинается; обязательное — одно. Поле в спецификации — это то, что оператор решает, а контроллер хранит. Срок, который может прийти сверху, — `inherit`, а не `default`.
 - Два срока хранения, разные на порядок: события живут год, видео — месяц, и живут они в разных подсистемах.
 - Производная строка переводит поле оператора в то, что понимает ресурс; `on_delete: {days: 0}` превращает удаление в число.
-- Размещение задано пятью именами из каталога: ёмкость — слово воркера, ограничение — метки, ресурс обязателен, ничья — по свободному месту, перебалансировка — только по требованию.
-- Контроллер VMS — двадцать строк: конструктор и пять псевдонимов. Права даёт токен, а не класс.
+- Размещение задано именами из каталога: ёмкость — слово воркера, ограничение — метки, ресурс обязателен, ничья — по свободному месту, перебалансировка — только по требованию.
+- Контроллер VMS — двадцать строк: конструктор и пять псевдонимов; процесс контроллера — платформенный и гонит спеку без них. Права даёт токен, а не класс.
 
 ## Упражнения
 
 1. Сделайте `name` обязательным полем. Создайте сорок камер импортом и опишите, что изменилось в работе оператора.
 2. Уберите `on_delete` из производной строки. Удалите камеру и скажите, что произойдёт с её бакетами и когда.
-3. Поставьте `fallback: 0` в ёмкости. Поднимите нового воркера и проследите, что с ним будет.
+3. Поставьте `default: 0` в ёмкости. Поднимите нового воркера и проследите, что с ним будет.
 4. Добавьте поле `codec: {type: string, default: "h264"}`. Кто должен его читать и почему это плохая идея?
 5. Замените `constraint: labels-subset` на несуществующее имя. Где именно упадёт загрузка спецификации и почему это лучше, чем падение при размещении?
 6. Перенесите `events_retention_days` в подсистему `rec`. Что сломается в проходе ресурса?

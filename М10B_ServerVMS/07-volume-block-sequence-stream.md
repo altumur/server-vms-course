@@ -1,7 +1,7 @@
 # Урок 7 — Том, блок, последовательность, поток
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** первую половину `vms/archive.py` — имена потоков (`stream_name`, `parse_stream`), `event_log`, `volume_params`, `Span`, `ArchiveError` и `classify`, `Archive` (`open`, `put`, `finish`, `resize`, `seal`, `close`, `reader`, `units`, `spans`); и путь записи регистратора — `RecSink` в `vms/recworker.py` и колбэк `appsink` в `GstRecActuator._before_play` (`gstvms/actuator.py`).
+**Вы напишете:** первую половину `vms/archive.py` — имена потоков (`stream_name`, `parse_stream`), `event_log`, `volume_params`, `Span`, `ArchiveError` и `classify`, `Archive` (`open`, `put`, `finish`, `resize`, `seal`, `close`, `reading`, `units`, `spans`); и путь записи регистратора — `RecSink` в `vms/recworker.py` и колбэк `appsink` в `GstRecActuator._before_play` (`gstvms/actuator.py`).
 **Время:** ~85 минут.
 
 ## Зачем этот урок
@@ -29,7 +29,7 @@
 
 ## Что нужно знать заранее
 
-- **Урок 6** — `obsd`, клиент `w2cplatform/obsd.py` и свойства движка: этот урок опирается на каждое.
+- **Урок 6** — `obsd`, клиент `vms/obsd.py` и свойства движка: этот урок опирается на каждое.
 - **Урок 4** — почему видео пишет не тот процесс, что держит камеру.
 - **М10A, урок 6** — эпоха: число, которое здесь попадёт в имя потока.
 - **М10A, урок 12** — `EventLog` и бакеты: дерево событий, которое остаётся на ресурсе.
@@ -51,7 +51,7 @@
 
 Комментарий в начале `vms/archive.py` начинается с отказа от файлов:
 
-> *Footage is not files. It is ObjectStorage — the product's engine — behind the host's daemon `obsd` (`w2cplatform/obsd.py`), and what a volume holds is STREAMS of samples, cut by the engine into sequences that open on a key frame, packed into blocks of a size fixed when the volume was formatted. This module is the course's vocabulary over that, and nothing more.*
+> *Footage is not files. It is ObjectStorage — the product's engine — behind the host's daemon `obsd` (`vms/obsd.py`), and what a volume holds is STREAMS of samples, cut by the engine into sequences that open on a key frame, packed into blocks of a size fixed when the volume was formatted. This module is the course's vocabulary over that, and nothing more.*
 
 И кончается тем, что в томе не лежит:
 
@@ -79,9 +79,9 @@ def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog
 Три строки теста стоит увидеть:
 
 ```python
-    assert subsystems_under(box.archive) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
+    assert subsystems_under(box.resource_root) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
     ...
-    assert subsystems_under(box.archive) == {"vms": ["7"]}         # the resource's tree holds no footage at all
+    assert subsystems_under(box.resource_root) == {"vms": ["7"]}         # the resource's tree holds no footage at all
     ...
     assert st.coverage("7") == [(t0 + 600, t0 + 1200)]             # the footage, untouched: the ring decides for it
 ```
@@ -226,10 +226,12 @@ def classify(e: Exception) -> ArchiveError:
         return ArchiveError("wrong" if e.name in WRONG else "away", str(e), e.name)
     if isinstance(e, ValueError):
         return ArchiveError("wrong", str(e))
+    if isinstance(e, PARSE_ERRORS):                # …and an answer with a field missing, `Infinity` for a handle, a map that is a
+        return ArchiveError("wrong", f"the engine answered what this build cannot read: {type(e).__name__}: {e}")   # list
     return ArchiveError("away", str(e))
 ```
 
-`wrong` — закрытый список. Всё, чего в нём нет, считается `away`. Ошибиться в эту сторону дешевле: недоступный том регистратор попробует снова на следующем проходе, а ошибочно отданный том стоит перетасовки записей.
+`wrong` — закрытый список. Ответ движка, который эта сборка не может прочесть (поля нет, вместо хэндла `Infinity`), — тоже `wrong`: сам он не исправится (`PARSE_ERRORS` — общий набор платформы, `w2cplatform/rows.py`). Всё, чего в нём нет, считается `away`. Ошибиться в эту сторону дешевле: недоступный том регистратор попробует снова на следующем проходе, а ошибочно отданный том стоит перетасовки записей.
 
 Одно исключение живёт не здесь, а в `RecWorker._write_into`, потому что требует знать вид тома:
 
@@ -244,7 +246,7 @@ def classify(e: Exception) -> ArchiveError:
 
 Движок ведёт себя так на живом демоне. `VOLUME_EXISTS` отвечает «есть» для пути под обычным файлом, и монтирование потом падает с `GENERIC_ERROR`. Путь, который нельзя создать, роняет форматирование с `IO_ERROR`. Те же слова сетевой том говорит, когда сеть лежит. Различает их не статус, а вид тома. `test_a_volume_held_and_unwritable_is_not_served` объявляет том по пути, где вместо каталога лежит файл, и регистратор отдаёт его, раз есть куда идти.
 
-Как регистратор отвечает на каждый вид — проходы, аренда тома, `REFUSED_FOR` — [урок 10](10-recworker.md).
+Как регистратор отвечает на каждый вид — проходы, холд тома, `REFUSED_FOR` — [урок 10](10-recworker.md).
 
 ## Шаг 7 — Открыть том
 
@@ -256,6 +258,8 @@ def classify(e: Exception) -> ArchiveError:
         try:
             vol = self._open_volume()
             if not vol.exists():
+                if self.may_format is not None:
+                    self.may_format()              # was in use here, and is gone: not made again, empty, in its place
                 if not self.quota and self.share is not None:
                     self.quota = self.share(self.space_where())
                 if not self.quota:
@@ -269,14 +273,14 @@ def classify(e: Exception) -> ArchiveError:
                 self.writer = self._mount_rw(vol)
                 self.reattached = self.writer.reattached
                 self._configure()
-        except (ObsdError, ValueError) as e:
+        except (ObsdError, *PARSE_ERRORS) as e:     # an answer of the engine this build cannot read: `wrong`, said (the tenth round)
             raise self._classified(e) from None
         return self
 ```
 
 **Открытие — единственная честная проверка.** Строка тома может назвать что угодно. Пока демон не открыл том, ничего о нём не известно.
 
-**Нового тома нет — его форматируют по квоте.** Квота — размер кольца, и задать его можно только сейчас. Нет квоты — нечем форматировать, и это `wrong`: исправит только человек. Блок и размер чтения берутся из `BLOCK, READ = 8 << 20, 1 << 20` — блок должен вмещать размер чтения плюс одну группу кадров (урок 6, шаг 10). Собственный том сервера без объявления квоты не имеет: его размер — доля диска, которую называет демон (`share(space_where())`, четвёртое ревью; урок 10). У тома, который уже есть, размер берётся у демона (`size()`), а не из строки. Монтирует писателя `_mount_rw`: перед ним спрашивается холд, а `VOLUME_UNCLEAN` восстанавливается только под подтверждённым холдом (урок 10, шаг 11). После монтирования `_configure` задаёт периоды сброса (шаг 9).
+**Нового тома нет — его форматируют по квоте.** Но сначала `may_format`: том, который уже был по этому адресу и пропал (диск не примонтирован), заново пустым на его месте не делают — регистратор помнит, какие тома открывал (`rec/used/*`, `RecWorker._may_format`; урок 10). Квота — размер кольца, и задать его можно только сейчас. Нет квоты — нечем форматировать, и это `wrong`: исправит только человек. Блок и размер чтения берутся из `BLOCK, READ = 8 << 20, 1 << 20` — блок должен вмещать размер чтения плюс одну группу кадров (урок 6, шаг 10). Собственный том сервера без объявления квоты не имеет: его размер — доля диска, которую называет демон (`share(space_where())`, четвёртое ревью; урок 10). У тома, который уже есть, размер берётся у демона (`size()`), а не из строки. Монтирует писателя `_mount_rw`: перед ним спрашивается холд, а `VOLUME_UNCLEAN` восстанавливается только под подтверждённым холдом (урок 10, шаг 11). После монтирования `_configure` задаёт периоды сброса (шаг 9).
 
 **Писатель монтируется под владельцем.** Регистратор передаёт `rec:<том>`, и докстрока класса объясняет зачем:
 
@@ -284,7 +288,7 @@ def classify(e: Exception) -> ArchiveError:
 
 Два флага говорят, что произошло: `formatted` — том был новым, `reattached` — демон вернул писателя, которого оставил исчезнувший процесс (шаг 12). Читателям писатель не нужен: консоль и другие открывают том с `open(write=False)`.
 
-`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`: ничего не объявлено, регистратор форматирует том своего сервера — без `ARCHIVE_VOLUME` это `volume` рядом с деревом ресурса (на коробке точка входа задаёт `file:///data/vms/obsd/volume`, урок 10), — и пишет в него поток `1/e<эпоха>`.
+`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`: ничего не объявлено, регистратор форматирует том своего сервера и пишет в него поток `1/e<эпоха>`. На коробке это том VMS `file:///data/vms/obsd/volume` (`config.OWN_VOLUME`, `ARCHIVE_VOLUME` — чтобы назвать другой), и никогда не внутри дерева ресурса: обходы ресурса приняли бы кольцо за подсистему. Тест, назвавший регистратору своё дерево, получает `volume` рядом с этим деревом (урок 10).
 
 ## Шаг 8 — Положить кадр, закончить поток, изменить размер
 
@@ -333,7 +337,7 @@ def classify(e: Exception) -> ArchiveError:
     # EVERY SAMPLE INTO A VOLUME ANY BOX MAY SERVE IS FENCED (the review's fifth pass, blocker 1). The hold was checked
     # before `VOLUME_MOUNT_RW` and never again: a box frozen whole — recorder and daemon — woke with its writer
     # mounted, and its pipelines put thirty frames into a ring another box had taken meanwhile, all `OK`. The hold's
-    # confirmation is asked on every sample now, the way a lease is (`Lease.may_write`): too old, and nothing is sent.
+    # confirmation is asked on every sample now, the way a lease is (`Lease.may_act`): too old, and nothing is sent.
     #
     # A CHECK BEFORE SENDING, NOT A TOKEN (the review's sixth pass). Nothing travels with the sample that the engine
     # could refuse it by: a process frozen between this check and the send puts that one sample into a volume another
@@ -422,7 +426,7 @@ def classify(e: Exception) -> ArchiveError:
     def reading(self):
         try:
             r = self._open_volume().mount_ro()
-        except (ObsdError, ValueError) as e:
+        except (ObsdError, *PARSE_ERRORS) as e:     # an answer of the engine this build cannot read: `wrong`, said (the tenth round)
             raise self._classified(e) from None
         try:
             yield r
@@ -454,6 +458,7 @@ def classify(e: Exception) -> ArchiveError:
 # pipeline started. A remount replaces the `Archive`; a sink that kept the old one would write into a closed
 # volume for as long as the pipeline ran, and nothing restarts a pipeline for a remount. Asked each time, the
 # next key frame after a remount opens a sequence in the new writer, and the recording goes on.
+# …
 class RecSink:
     def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None, tally=None):
         self.store_of = store if callable(store) else (lambda: store)
@@ -508,8 +513,10 @@ class RecSink:
         # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
         out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
                    sink=RecSink(lambda: self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
-                                on_wrong=self._volume_refuses))
+                                on_wrong=self._volume_refuses, tally=self._tally))
 ```
+
+`tally` — счёт ответов движка по каждой записи: `RecWorker._tally` складывает их в heartbeat и в `/metrics` (`rec_samples_refused_total{unit,status}`). Сторож писателя считает том целиком, и камера, у которой каждая группа кадров больше блока, на томе, куда остальные двадцать девять пишут, была бы не видна (урок 10).
 
 Три исхода.
 
@@ -578,16 +585,17 @@ class RecSink:
 
 `offered_bytes` считает, что дошло до приёмника. Сторож писателя сравнивает это с `totalWritten` тома и замечает писателя, который берёт меньше, чем ему дают (урок 10).
 
-При остановке и перезапуске записи актуатор закрывает открытую последовательность:
+При остановке и перезапуске записи актуатор закрывает открытую последовательность — после того, как конвейер слит и стоит в `NULL` (`gstvms/ending.py`, урок 9):
 
 ```python
-        if verb in ("stop", "restart") and cam["id"] in getattr(self, "sinks", {}):
-            # The open sequence closed: what was taken is kept — and a restart (back on hold, a new source) must not
-            # let the next frames continue it after a gap: a hole inside a sequence is drawn as footage.
-            self.sinks.pop(cam["id"]).finish()
+    def _end(self, cids) -> None:
+        items = [(cid, self.pipelines.pop(cid)) for cid in cids if cid in self.pipelines]
+        drain([(p, self._budget(cid)) for cid, p in items], self.gst, self.clock)
+        for cid, _ in items:
+            self._finish(cid)
 ```
 
-Перезапуск — тоже конец последовательности. Конвейер вернулся на удержание или сменил источник, и между последним кадром до перезапуска и первым после — промежуток. Если бы следующие кадры продолжили ту же последовательность, дыра оказалась бы внутри неё, и таймлайн нарисовал бы эту дыру как запись.
+`_finish` снимает приёмник записи и зовёт его `finish`. Порядок — сначала `NULL`, потом `finish`: ключевой кадр, дошедший до приёмника между ними, открыл бы последовательность, которую никто не закроет. Перезапуск — тоже конец последовательности. Конвейер вернулся на удержание или сменил источник, и между последним кадром до перезапуска и первым после — промежуток. Если бы следующие кадры продолжили ту же последовательность, дыра оказалась бы внутри неё, и таймлайн нарисовал бы эту дыру как запись.
 
 В тестах камеру заменяет `FakeActuator.feed`. Он шлёт в приёмник кадры `fake_samples` с ключевым каждые две секунды, считает статусы и в конце зовёт `finish`. Поэтому `r.actuator.feed("1", t - 120, t)` возвращает `{"OK": 120}`.
 
@@ -616,11 +624,11 @@ class RecSink:
 
 Сравните с регистратором, который сам пишет видео файлами-сегментами. Убийство теряет у него открытый сегмент: файл, у которого не дописан индекс. Чем длиннее сегмент, тем больше потеря, и длину сегмента приходится выбирать между потерей при убийстве и числом файлов. Здесь выбирать нечего. Последовательности держит демон, и при исчезновении сессии он их закрывает. Теряется только то, что не успело дойти до сокета, — кадры в памяти самого регистратора.
 
-`test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one` повторяет это на объявленном томе. Новый процесс сначала смотрит на тома, а потом открывает: берёт ту же аренду, называет того же владельца и получает писателя назад. Том сервера по умолчанию при этом не форматируется вовсе.
+`test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one` повторяет это на объявленном томе. Новый процесс сначала смотрит на тома, а потом открывает: берёт тот же холд, называет того же владельца и получает писателя назад. Том сервера по умолчанию при этом не форматируется вовсе.
 
-А если регистратор не вернулся? Аренда тома истекает за 45 секунд, следующий регистратор берёт том под тем же `rec:<том>` и получает писателя — отсрочка в `obsd.service` девяносто секунд, дольше аренды. Отсрочка истекла, а никто не пришёл — демон закрывает писателя чисто, и взятое остаётся на томе (`test_after_the_grace_the_volume_is_clean_for_anybody`).
+А если регистратор не вернулся? Холд тома истекает за 45 секунд (`slot_ttl`), следующий регистратор берёт том под тем же `rec:<том>` и получает писателя — отсрочка в `obsd.service` девяносто секунд, дольше холда. Отсрочка истекла, а никто не пришёл — демон закрывает писателя чисто, и взятое остаётся на томе (`test_after_the_grace_the_volume_is_clean_for_anybody`).
 
-Всё это — про том одного хоста. Сетевой том после истечения аренды может взять регистратор **другой** коробки, со своим демоном. Писатель первого хоста он не подхватит, а конец отсрочки на первом хосте — это закрытие со сбросом, уже в чужой том. От этого том ограждает сам движок (патч 07, урок 6): писатель, чей замок стал чужим, не пишет ничего, и чужой lock-файл не снимается. На движке без этого регистратор сетевой том не берёт; что он делает со своим писателем, разбирает урок 10, шаг 11.
+Всё это — про том одного хоста. Сетевой том после истечения холда может взять регистратор **другой** коробки, со своим демоном. Писатель первого хоста он не подхватит, а конец отсрочки на первом хосте — это закрытие со сбросом, уже в чужой том. От этого том ограждает сам движок (патч 07, урок 6): писатель, чей замок стал чужим, не пишет ничего, и чужой lock-файл не снимается. На движке без этого регистратор сетевой том не берёт; что он делает со своим писателем, разбирает урок 10, шаг 11.
 
 **Аккуратная остановка** — другая история, и в ней важен порядок:
 
@@ -631,7 +639,7 @@ class RecSink:
     # is the hold let go. Released together with the slot, the next recorder would find our writer still there.
 ```
 
-Сначала писатель закрывается — его сброс кладёт последние минуты на том, — и только потом аренда отпускается. `Archive.close` держит тот же порядок внутри себя: сначала писатель, потом том — и том, только если закрытие писателя вернулось (пятое ревью, Т-M1: иначе это ещё один вызов к молчащему демону на потоке аренд, а сессия всё равно оставляется). На закрытие юнит даёт `StopTimeout=40`: протокол разрешает `WRITER_CLOSE` до тридцати секунд. `test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it` проверяет порядок `["close", "release"]` и то, что следующий регистратор монтирует чистый том (`not b.store.reattached`) и видит последние минуты. Аренды томов, спейры и передача тома — [урок 10](10-recworker.md).
+Сначала писатель закрывается — его сброс кладёт последние минуты на том, — и только потом холд отпускается (`release_hold`, платформенный: [М10A, урок 7](../М10A_Platform/07-Slot-and-Runtime.md), шаг «Тот же захват, но не за имя»). `Archive.close` держит тот же порядок внутри себя: сначала писатель, потом том — и том, только если закрытие писателя вернулось (пятое ревью, Т-M1: иначе это ещё один вызов к молчащему демону на потоке аренд, а сессия всё равно оставляется). На закрытие юнит даёт `StopTimeout=40`: протокол разрешает `WRITER_CLOSE` до тридцати секунд. `test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it` проверяет порядок `["close", "release"]` и то, что следующий регистратор монтирует чистый том (`not b.store.reattached`) и видит последние минуты. Как регистратор держит том, запасные регистраторы и передача тома — [урок 10](10-recworker.md).
 
 ## Шаг 13 — Демон пропал
 
@@ -701,7 +709,7 @@ class RecSink:
 - **Слать движку остаток группы после отказа.** Каждый кадр будет отвергнут, и лог заполнится отказами без пользы.
 - **Останавливать конвейер на отвергнутом кадре.** Потеря одной группы превращается в потерю всего, что идёт следом.
 - **Время прихода вместо времени захвата.** Открытое кольцо резервной записи ляжет на полминуты позже, чем было снято.
-- **Отпустить аренду тома раньше, чем закрыт писатель.** Следующий регистратор найдёт в томе чужого писателя.
+- **Отпустить холд тома раньше, чем закрыт писатель.** Следующий регистратор найдёт в томе чужого писателя.
 - **Приёмник с томом, запомненным на старте.** После перемонтирования конвейер пишет в закрытый том, пока его не перезапустят, а перемонтирование его не перезапускает.
 - **`WRITER_STOPPED` как обычный отказ кадра.** Приёмник пропускает до ключевого, ключевой получает тот же отказ, и запись стоит, пока кто-то не перезапустит писателя.
 
@@ -723,7 +731,7 @@ class RecSink:
 2. Добавьте `"NO_SPACE"` в `WRONG`. Что станет с регистратором, если сетевое хранилище на минуту переполнится?
 3. Уберите исключение для локального диска из `_write_into` и запустите `test_a_volume_held_and_unwritable_is_not_served`. Что сломалось и почему?
 4. Монтируйте писателя с `owner=""`. Запустите `test_a_recorder_killed_and_started_again_picks_up_the_writer_it_left` и назовите вид отказа, который получил новый процесс.
-5. Сделайте `Archive.reader` ленивым: монтировать один раз и переиспользовать. Найдите тест, который это ловит.
+5. Сделайте `Archive.reading` ленивым: монтировать читателя один раз и переиспользовать. Найдите тест, который это ловит.
 6. Уберите `until_key` из колбэка `appsink`. Сколько отказов движок вернёт на одну обрезанную группу из двадцати пяти кадров?
 7. Поменяйте местами `_close_store` и `release_hold` в `after_stop`. Запустите `test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it` и опишите, что увидел следующий регистратор.
 8. Убейте регистратор, подождите дольше отсрочки демона и запустите новый. Что на томе и чем это отличается от случая внутри отсрочки?
