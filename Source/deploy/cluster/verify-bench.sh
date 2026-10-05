@@ -4,7 +4,7 @@
 #   deploy/cluster/verify-bench.sh
 #
 # 1. the store: this server's daemon answers on admin.sock, the group has three members and one leader
-# 2. the units of a server are active here (configstore, w2c-resource, vms-console, the controllers, the workers)
+# 2. the units of a server are active here (configstore, w2c-resource, w2c-console, the controllers, the workers)
 # 3. every role's socket is 0660 and owned by its role's group (the rights file's `group`)
 # 4. the rights the daemon holds are the installed file, and the file is what the spec generates
 # 5. rights by the socket: the worker's socket writes its slot and is refused a camera row and placement (403);
@@ -35,7 +35,7 @@ else
 fi
 
 # 2
-for u in configstore w2c-resource vms-console vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker vms-obsd; do
+for u in configstore w2c-resource w2c-console w2c-controller@vms w2c-controller@rec vms-vmsworker vms-recworker vms-obsd; do
   systemctl is-active --quiet "$u.service" && ok "$u active" || bad "$u not active"
 done
 

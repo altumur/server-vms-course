@@ -4,7 +4,7 @@
 
 ## The checks
 1. **The store** — `configstore status` through `admin.sock`: three members or more, one leader.
-2. **The units** — `configstore`, `w2c-resource`, `vms-console`, `vms-vmscontroller`, `vms-reccontroller`, `vms-vmsworker`, `vms-recworker`, `vms-obsd` active.
+2. **The units** — `configstore`, `w2c-resource`, `w2c-console`, `w2c-controller@vms`, `w2c-controller@rec`, `vms-vmsworker`, `vms-recworker`, `vms-obsd` active.
 3. **The sockets** — every role of `/etc/w2c/configstore-rights.json` has `/run/configstore/<role>.sock`, mode 660, owned by the role's `group`.
 4. **The rights held** — `GET /v1/rights` on `admin.sock` equals the installed file, and the file is what the spec generates (`w2c-run.sh rights --check`).
 5. **Rights by the socket**, with `curl --unix-socket`: `vmsworker.sock` writes `vms/slots/*` and is refused `vms/cameras/*` and `vms/placement/*` (403); `console.sock` writes a camera row and is refused placement; `vmscontroller.sock` places. The probe rows are removed through `admin.sock` (slots, cameras and placement are deletable; an epoch row is not, so none is written).

@@ -17,7 +17,7 @@ set -u
 SERVER="${1:?the server to pull, e.g. srv-a}"; CONSOLE="${2:?console host:port, e.g. 10.0.0.12:8080}"
 RUNS="${3:-3}"; MODE="${4:-server}"
 WORKER="w-$SERVER-1"
-UNITS="vms-vmsworker vms-recworker vms-console vms-vmscontroller vms-reccontroller w2c-resource configstore"
+UNITS="vms-vmsworker vms-recworker w2c-console w2c-controller@vms w2c-controller@rec w2c-resource configstore"
 
 held() {                      # the cameras a worker holds, live, from the console's /cameras rows
   W="$1" python3 -c '

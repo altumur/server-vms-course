@@ -1,5 +1,5 @@
 # deploy/cluster/nomad/console.nomad.hcl — the appendix «форма поставки»: the console as a Nomad SYSTEM job, one on every
-# node — any node's :8080 is the console, as with `vms-console.service`. Stateless: every instance reads the same
+# node — any node's :8080 is the console, as with `w2c-console.service`. Stateless: every instance reads the same
 # store through its node's configstore.
 #
 # THE INSTALLATION IS A VARIABLE, and М12 is why. A cluster's console asks who is calling once the store holds a
@@ -32,7 +32,7 @@ job "console" {
       driver = "raw_exec"
       # No umask of its own (the agent's 0022 is handed on): the runner sets 0007, as a unit's UMask= — what it
       # writes in the setgid events archive and objects is the group's (the thirteenth review, major 13).
-      user   = "vms"                                 # its groups are the task's: `vms-nomad.sysusers` (the socket, the key ring)
+      user   = "w2c"                                 # the platform's (ADR 0023); its groups: `vms-nomad.sysusers` (the socket, the key ring)
       config {
         command = "${var.w2c_home}/bin/w2c-run.sh"
         args    = ["console"]
@@ -44,13 +44,13 @@ job "console" {
         SECRETS_KEY    = "/etc/w2c/secrets/platform.key"
         OBJECTS        = "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
         CONSOLE_PORT   = "8080"
-        CONSOLE_UNIX   = "/run/vms-console/console.sock"
+        CONSOLE_UNIX   = "/run/w2c-console/console.sock"
         # Who scrapes /metrics with its own connections: this node's loopback and address, and what `monitors` names.
         CONSOLE_MONITORS = "127.0.0.1,${attr.unique.network.ip-address},${var.monitors}"
         CLUSTER        = "room-a"
       }
       service {
-        name = "vms-console"
+        name = "w2c-console"
         port = "console"
         tags = ["metrics"]
       }

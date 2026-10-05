@@ -1,16 +1,17 @@
 # /usr/lib/sysusers.d/w2c-cluster.conf — the users and groups of a cluster server.
 # The platform's user and the groups of its clients are the BOX's, by the same numbers (`Source/deploy/w2c.sysusers`,
 # WP-E): `install.sh` runs the box's `install-obsd.sh`, which applies that file after this one and refuses a `w2c`
-# numbered otherwise. w2c runs the resource; its events archive is setgid `w2c-events`, its objects `w2c-store`, the
-# key ring `w2c-secrets` — a unit that writes there or reads the key joins the group (`SupplementaryGroups=`).
-# configstore runs the store's member, and owns its journal alone. vms runs the subsystem's processes. Each role of
-# the store's rights file — a controller and a worker of every subsystem of the catalogue, the console, the platform's
-# own — has a group of the same name as its socket's (`vms-<role>`, the platform's `w2c-<role>`):
+# numbered otherwise. w2c runs the platform's processes — the resource, the console, every subsystem's controller (ADR
+# 0014, ADR 0023: a platform process never runs as a subsystem's user); its events archive is setgid `w2c-events`, its
+# objects `w2c-store`, the key ring `w2c-secrets` — a unit that writes there or reads the key joins the group
+# (`SupplementaryGroups=`). configstore runs the store's member, and owns its journal alone. vms runs the subsystem's
+# processes, its workers. Each role of the store's rights file — a worker of every subsystem of the catalogue, and the
+# platform's own: a controller of every subsystem, the console, the resource, the domain's — has a group of the same
+# name as its socket's (`vms-<role>` for a worker, the platform's `w2c-<role>`):
 # a unit joins its own and opens no other socket; the daemon chowns every socket to its group, so configstore is a
 # member of each. vms-obsd (М10's `obsd.sysusers`, gid 2101) is the group the archive's engine lets in.
-# w2c-spares runs `w2c-spares.sh` (`install.sh --spares`): a user in no group but its own — no socket, no key, no archive — whom
-# polkit lets `systemctl start` a spare template's instance and nothing else (`w2c-spares.rules`; the product's
-# cross-check, 4 Oct: the script ran as root).
+# `w2c-spares.sh` (`install.sh --spares`) runs as `w2c` too (ADR 0030), whom polkit lets `systemctl start` a spare
+# template's instance and nothing else (`w2c-spares.rules`; the product's cross-check, 4 Oct: the script ran as root).
 u w2c               2100  "w2c platform (the resource)"                        /data/platform -
 g w2c-events        2102  -
 g w2c-store         2103  -
@@ -20,42 +21,41 @@ m w2c w2c-store
 u configstore       2105  "w2c configstore (this server's member of the store)" /data/platform/configstore -
 g vms               -
 u vms               -     "VMS subsystem processes"                            /data/vms -
-u w2c-spares        -     "w2c spares (starts spare units, by polkit)"         -  -
 g w2c-resource      -
 g w2c-domain        -
 g w2c-domainagent   -
-g vms-console       -
-g vms-vmscontroller -
-g vms-reccontroller -
+g w2c-console       -
+g w2c-vmscontroller -
+g w2c-reccontroller -
 g vms-vmsworker     -
 g vms-recworker     -
-g vms-autocontroller -
+g w2c-autocontroller -
 g vms-autoworker -
-g vms-detcontroller -
+g w2c-detcontroller -
 g vms-detworker -
-g vms-detjobcontroller -
+g w2c-detjobcontroller -
 g vms-detjobworker -
-g vms-livecontroller -
+g w2c-livecontroller -
 g vms-liveworker -
-g vms-surveycontroller -
+g w2c-surveycontroller -
 g vms-surveyworker -
 g vms-vmsdomain   -
 m configstore w2c-resource
 m configstore w2c-domain
 m configstore w2c-domainagent
-m configstore vms-console
-m configstore vms-vmscontroller
-m configstore vms-reccontroller
+m configstore w2c-console
+m configstore w2c-vmscontroller
+m configstore w2c-reccontroller
 m configstore vms-vmsworker
 m configstore vms-recworker
-m configstore vms-autocontroller
+m configstore w2c-autocontroller
 m configstore vms-autoworker
-m configstore vms-detcontroller
+m configstore w2c-detcontroller
 m configstore vms-detworker
-m configstore vms-detjobcontroller
+m configstore w2c-detjobcontroller
 m configstore vms-detjobworker
-m configstore vms-livecontroller
+m configstore w2c-livecontroller
 m configstore vms-liveworker
-m configstore vms-surveycontroller
+m configstore w2c-surveycontroller
 m configstore vms-surveyworker
 m configstore vms-vmsdomain

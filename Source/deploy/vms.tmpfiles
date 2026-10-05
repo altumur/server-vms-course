@@ -1,10 +1,10 @@
 # /etc/tmpfiles.d/vms.conf — the directories the VMS's units mount, made at every boot whoever starts first.
 # Installed and applied by install-obsd.sh (`systemd-tmpfiles --create`), after `w2c.conf` (the platform's: its stores,
-# its secrets — `w2c.tmpfiles`).
+# its secrets, the console's door — `w2c.tmpfiles`).
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # vms.tmpfiles — /run/vms, /run/vms-obsd, /run/vms-console, /data/vms and the box's own volume
+# # vms.tmpfiles — /run/vms, /run/vms-obsd, /data/vms and the box's own volume
 #
 # **Role.** A container's `Volume=` of a host directory that does not exist does not start. /run is a tmpfs, empty
 # at every boot, and /run/vms was made only by obsd.service (then `RuntimeDirectory=obsd vms`): without the daemon —
@@ -28,13 +28,8 @@
 #   mode only; a ring formatted when the daemon ran as root is moved over once, by the install script, not at every
 #   boot — and a box whose ring is still at the old `/data/volume` keeps it there (`install-obsd.sh` says so in
 #   `vms.env`).
-# - `/run/vms-console` — the console's unix socket, the box's own door (`CONSOLE_UNIX`, `console.container`; the
-#   review's sixth pass): 0700 root, and the socket in it 0660 — who may open it is this mode, which is the point of
-#   it. A directory of its own and not one under /run/vms: that one is mounted whole into the holder's and the
-#   recorder's containers, and the console's door is not theirs to open.
 # ================================================================================================
 d /run/vms         0755 root root    -
-d /run/vms-console 0700 root root    -
 d /run/vms-obsd    0750 vms-obsd vms-obsd -
 d /data/vms              0755 root     root     -
 d /data/vms/etc          0755 root     root     -

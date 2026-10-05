@@ -14,7 +14,7 @@ User=vms
 Group=vms
 # Its store socket's group (the console's role: it writes configuration, as only the console's token does); the
 # objects (the heartbeats it reads).
-SupplementaryGroups=vms-console w2c-store
+SupplementaryGroups=w2c-console w2c-store
 Environment=PLATFORM_STORE=configstore:///run/configstore/console.sock
 Environment=JOBS_HOST=0.0.0.0
 Environment=JOBS_PORT=8095

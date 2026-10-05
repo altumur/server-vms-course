@@ -34,8 +34,8 @@
 #    under a daemon: `vms.env` is told `ARCHIVE_VOLUME=file:///data/volume`, and the box records where its footage is.
 #    A box with no env file yet gets the examples.
 # 4. `w2c.tmpfiles` → /etc/tmpfiles.d/w2c.conf (the platform's: /data/platform and its etc/, etc/secrets, config/,
-#    objects/, events/) and `vms.tmpfiles` → /etc/tmpfiles.d/vms.conf (the VMS's: /run/vms, /run/vms-obsd,
-#    /run/vms-console, /data/vms and its etc/, obsd/, obsd/volume), applied. Both here because the box has no
+#    objects/, events/, and /run/w2c-console) and `vms.tmpfiles` → /etc/tmpfiles.d/vms.conf (the VMS's: /run/vms,
+#    /run/vms-obsd, /data/vms and its etc/, obsd/, obsd/volume), applied. Both here because the box has no
 #    installer of the platform's own (the product's is its install.sh), and a unit that mounts a directory nobody
 #    made does not start. Then what is INSIDE the platform's directories, once: config/ and objects/ to the group
 #    `w2c-store`, events/ to `w2c-events` — group read-write, setgid directories — if anything there is not yet (a

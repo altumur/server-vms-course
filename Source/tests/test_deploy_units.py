@@ -48,9 +48,11 @@ def test_the_units_run_the_entrypoints_the_package_has():
                            "jobs", "domainpart"}
     # `domainpart` is the domain holder's, not a box's: its unit is `deploy/domain/systemd/vms-domainpart.service`
     assert "w2c-run.sh vms domainpart" in open(os.path.join(HERE, "deploy", "domain", "systemd", "vms-domainpart.service")).read()
-    platform = {"vmscontroller.container": "vms", "reccontroller.container": "rec", "livecontroller.container": "live", "detcontroller.container": "det",
-                "detjobcontroller.container": "detjob", "surveycontroller.container": "survey",
-                "autocontroller.container": "auto"}
+    # every subsystem's controller is an instance of the platform's one template (ADR 0023): `w2c-controller@<sub>`
+    platform = {"w2c-controller@.container": "%i"}
+    assert {f[:-len(".subsystem.yaml")] for f in os.listdir(os.path.join(HERE, "vms")) if f.endswith(".subsystem.yaml")} \
+        == {"vms", "rec", "live", "det", "detjob", "survey", "auto"}                    # the instances the image has specs for
+    assert not [n for n in os.listdir(DEPLOY) if n.endswith("controller.container")]   # no controller of a subsystem's name
     image = open(os.path.join(DEPLOY, "Containerfile")).read()
     assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
     assert "controller <sub>" in host.USAGE and "console" in host.USAGE
@@ -68,14 +70,13 @@ def test_the_units_run_the_entrypoints_the_package_has():
             assert u["Container"]["Exec"] == "python3 -m w2cplatform console"          # the platform's own (step 6)
             assert "CONSOLE_ROOT=vms" in u["Container"]["Environment"]                 # the deployment says what is at `/`
         elif name in platform:
-            assert u["Container"]["Exec"] == f"python3 -m w2cplatform controller {entry}"
-            assert os.path.exists(os.path.join(HERE, "vms", f"{entry}.subsystem.yaml"))   # what `SPEC_DIR` gives it
+            assert u["Container"]["Exec"] == f"python3 -m w2cplatform controller {entry}"   # the instance names the spec
         else:
             assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
         # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it
         assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env"]
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
-            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/vms-console:",   # sockets on a tmpfs, not state
+            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/w2c-console:",   # sockets on a tmpfs, not state
                                    f"{KEY}:")), vol                                              # the key ring: one file
 
 
@@ -83,7 +84,7 @@ def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
     The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
     vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
-    assert EVENTS not in vols("vmscontroller.container")
+    assert EVENTS not in vols("w2c-controller@.container")
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
@@ -100,7 +101,6 @@ def test_who_may_write_where_is_in_the_mounts_too():
             assert ("/run/vms-obsd" in vols(n)) == (n == "recworker@.container"), n
     rec_env = dict(e.split("=", 1) for e in unit("recworker@.container")["Container"]["Environment"])
     assert rec_env["OBSD_SOCKET"] == "/run/vms-obsd/obsd.sock" and rec_env["SECRETS_KEY"] == "/run/secrets/platform.key"   # it opens a volume's secret
-    assert EVENTS not in vols("reccontroller.container")
     assert vols("w2c-resource.container")[OBJECTS] == f"{OBJECTS}:z"                  # the heartbeat is written, and its door's row
     assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
     assert "obsd.service" in unit("recworker@.container")["Unit"]["After"]
@@ -228,7 +228,8 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     """The review's fourth pass, blocker 2. `obsd.service` ran as a user nobody created and owned a volume nobody
     handed it; /run/vms was made only by that unit, so without the daemon neither the holder nor the recorder started.
     Every user and group a unit names is in `obsd.sysusers` — the clients' group with the number the recorders join it
-    by — every host directory under /run a container mounts is in `vms.tmpfiles`, the box's own volume is the daemon's,
+    by — every host directory under /run a container mounts is in `vms.tmpfiles` (the console's in `w2c.tmpfiles`: the
+    platform's process, ADR 0014), the box's own volume is the daemon's,
     and `install-obsd.sh` installs both files, checks the number and hands an old ring over. Since the platform's names
     (3 October): the platform's directories — its stores, its secrets — are `w2c.tmpfiles`, installed beside it, and
     the daemon's user and group are the product's `vms-obsd`. Since the owner's decisions of 4 October: the platform's
@@ -240,7 +241,8 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     assert w2c == {"/data/platform": ("d", "0755", "root", "root"), "/data/platform/etc": ("d", "0755", "root", "root"),
                    "/data/platform/etc/secrets": ("d", "2710", "root", "w2c-secrets"),
                    CONFIG: ("d", "2770", "w2c", "w2c-store"), OBJECTS: ("d", "2770", "w2c", "w2c-store"),
-                   EVENTS: ("d", "2770", "w2c", "w2c-events")}, w2c
+                   EVENTS: ("d", "2770", "w2c", "w2c-events"),
+                   "/run/w2c-console": ("d", "0700", "w2c", "w2c")}, w2c     # the console's, the platform's (ADR 0014, 0023)
     assert os.path.dirname(KEY) == "/etc/w2c/secrets"                                     # = /data/platform/etc/secrets
     assert not any(p.startswith("/data/platform") for p in _tmpfiles("vms.tmpfiles"))
     users, groups, members = _sysusers()
@@ -378,12 +380,14 @@ def test_a_platform_stores_files_are_its_groups_under_the_units_umask():
 
 
 def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_group():
-    """The owner's decisions (4 October), in the unit lines. The resource runs as `w2c` (`User=2100`, `Group=2100`)
-    and is the one unit of the box that names a user: the VMS's processes are still root in their containers. Every
-    unit opens the platform's two file stores as a member of `w2c-store` (`GroupAdd=2103`); every unit that mounts the
-    events archive joins `w2c-events` (2102) — the resource, which deletes there, and the clients that write
-    buckets; every unit writes with the umask 0007 (`PodmanArgs=--umask=0007`: Quadlet has no key for it, and
-    systemd's `UMask=` would be podman's, not the container's) — so what each makes is its group's."""
+    """The owner's decisions (4 October), in the unit lines. The platform's processes run as `w2c` (`User=2100`,
+    `Group=2100`) — the resource, the console and every subsystem's controller (ADR 0014, ADR 0023: a platform process
+    never runs as a subsystem's user) — and they are the units of the box that name a user: the VMS's processes are
+    still root in their containers. Every unit opens the platform's two file stores as a member of `w2c-store`
+    (`GroupAdd=2103`); `w2c-events` (2102) is joined by the resource, which deletes there, and by the subsystems'
+    clients that write buckets — not by the console, whose marks go into an archive its own user owns; every unit
+    writes with the umask 0007 (`PodmanArgs=--umask=0007`: Quadlet has no key for it, and systemd's `UMask=` would be
+    podman's, not the container's) — so what each makes is its group's."""
     writers = set()
     for n in sorted(os.listdir(DEPLOY)):
         if not n.endswith(".container"):
@@ -393,10 +397,13 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
         groups = _list(c.get("GroupAdd"))
         assert vols.get(CONFIG) == f"{CONFIG}:z" and vols.get(OBJECTS) == f"{OBJECTS}:z" and W2C_STORE in groups, n
         assert "--umask=0007" in _list(c.get("PodmanArgs")), n
-        assert (EVENTS in vols) == (W2C_EVENTS in groups), n
+        platform = n in ("w2c-resource.container", "console.container", "w2c-controller@.container")
+        assert (EVENTS in vols and (not platform or n == "w2c-resource.container")) == (W2C_EVENTS in groups), n
         if EVENTS in vols:
             writers.add(n)
-        assert ("User" in c) == (n == "w2c-resource.container"), n
+        assert ("User" in c) == platform, n
+        if platform:
+            assert (c["User"], c["Group"]) == (W2C, W2C), n
     assert writers == {"w2c-resource.container", "console.container", "vmsworker@.container", "recworker@.container",
                        "detworker@.container", "detjobworker@.container", "surveyworker@.container",
                        "autoworker@.container", "liveworker@.container"}, writers
@@ -693,7 +700,7 @@ def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_it
 
 
 def test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried():
-    """The script runs as `w2c-spares` now, whom polkit lets `start` a spare template's instance and nothing else (the
+    """The script runs as the platform's `w2c` now (ADR 0030), whom polkit lets `start` a spare template's instance and nothing else (the
     product's cross-check, 4 Oct) — so no `reset-failed` before a start either: an instance past systemd's start limit,
     or one polkit refuses, fails its `start`. That is said, and the next number is tried, within the ceiling."""
     out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, env={"MAX_WORKERS": "2"},
@@ -772,15 +779,15 @@ def test_every_spares_unit_runs_the_script_for_its_role():
     """`w2c-spares.{service,timer}` for recorders, `w2c-spares-<role>.{service,timer}` for the camera workers, the
     gateways and the evaluators (the product's §6): each service a one-shot running `w2c-spares.sh <role>` on the host,
     each timer every minute — and the one directory it writes, where each spare's set is for its runner to read;
-    each as the spares' own user, never root."""
+    each as the platform's user, `w2c` (ADR 0030), never root."""
     for role in ("recworker", "vmsworker", "liveworker", "autoworker"):
         name = "w2c-spares" if role == "recworker" else f"w2c-spares-{role}"
         svc = unit(name + ".service")["Service"]
         assert svc["Type"] == "oneshot" and svc["ExecStart"] == f"/usr/local/bin/w2c-spares.sh {role}", svc
         assert svc["RuntimeDirectory"] == "w2c-spares" and svc["RuntimeDirectoryPreserve"] == "yes", svc
-        # not root (the product's cross-check, 4 Oct): its own user in no group but its own; its directory readable by
-        # the spares, who take one line of their file (М11's `w2c-run.sh`, `w2c-spares.rules`, `w2c-cluster.sysusers`)
-        assert svc["User"] == svc["Group"] == "w2c-spares" and "SupplementaryGroups" not in svc, svc
+        # not root (the product's cross-check, 4 Oct): the platform's user, no group in the unit; its directory readable
+        # by the spares, who take one line of their file (М11's `w2c-run.sh`, `w2c-spares.rules`)
+        assert svc["User"] == svc["Group"] == "w2c" and "SupplementaryGroups" not in svc, svc
         assert svc["RuntimeDirectoryMode"] == "0755", svc
         assert unit(name + ".timer")["Timer"]["OnUnitActiveSec"] == "1min"
     assert os.access(os.path.join(DEPLOY, "w2c-spares.sh"), os.X_OK)

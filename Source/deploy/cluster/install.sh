@@ -7,7 +7,7 @@
 #   --spares   also `w2c-spares.sh` and its timers (М10's `Source/deploy/`): every minute it reads the console's
 #              numbers and starts the spares this server can serve — never stops one (lesson 4) — each from its role's
 #              template (`vms-vmsworker-spare@.service`, `vms-recworker-spare@.service`; macOS: the role's plist).
-#              On Linux it runs as `w2c-spares` (`w2c-cluster.sysusers`), and the polkit rule `w2c-spares.rules` lets
+#              On Linux it runs as the platform's `w2c` (ADR 0030), and the polkit rule `w2c-spares.rules` lets
 #              that user `systemctl start` those templates' instances and nothing else
 #
 # Linux (systemd): /etc/w2c -> /data/platform/etc and /etc/vms -> /data/vms/etc (mutable configuration on the data
@@ -51,7 +51,9 @@ else
   OS=other
 fi
 
-UNITS="configstore w2c-resource vms-console vms-jobs vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker"
+# A subsystem's controller is an instance of the platform's template (`w2c-controller@<sub>`, ADR 0023): its file is
+# `w2c-controller@.service`, one for every subsystem.
+UNITS="configstore w2c-resource w2c-console vms-jobs w2c-controller@vms w2c-controller@rec vms-vmsworker vms-recworker"
 # A spare is its role's unit but the name (the twelfth review, blocker 6): installed with the spares, never enabled —
 # `w2c-spares.sh` starts `vms-<role>-spare@<n>`.
 SPARE_UNITS="vms-vmsworker-spare@ vms-recworker-spare@"
@@ -73,7 +75,7 @@ if [ "$OS" = macos ]; then
   [ "${#sock}" -lt 104 ] || { echo "--box $BOX is too long: $sock is ${#sock} bytes, a unix socket's path is under 104" >&2; exit 2; }
   W2C_HOME="$BOX"
   mkdir -p "$BOX/bin" "$BOX/state/configstore" "$BOX/state/objects" "$BOX/state/events" "$BOX/state/logs" \
-           "$BOX/state/run/configstore" "$BOX/state/run/vms-console" "$BOX/state/run/vms-obsd" "$BOX/state/run/vms" \
+           "$BOX/state/run/configstore" "$BOX/state/run/w2c-console" "$BOX/state/run/vms-obsd" "$BOX/state/run/vms" \
            "$BOX/state/run/w2c-spares" "$BOX/state/vms/obsd/volume"
   chmod 0700 "$BOX/state/configstore"
 elif [ "$OS" = linux ]; then
@@ -189,7 +191,9 @@ if [ "$OS" = linux ]; then
   sh "$SOURCE/deploy/install-obsd.sh"
   [ -e /etc/systemd/system/vms-obsd.service ] || ln -s obsd.service /etc/systemd/system/vms-obsd.service
   for u in $UNITS; do
-    install -m 0644 "$HERE/systemd/$u.service" "/etc/systemd/system/$u.service"
+    f="$u"
+    case "$u" in *@?*) f="${u%%@*}@" ;; esac              # an instance: its template's file
+    install -m 0644 "$HERE/systemd/$f.service" "/etc/systemd/system/$f.service"
   done
   if [ "$SPARES" = yes ]; then
     for u in $SPARE_UNITS; do

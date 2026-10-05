@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- ~/Library/LaunchAgents/com.w2c.vms.reccontroller.plist — placement of recordings, safe at several (М11, a macOS server; the
-     systemd unit's twin, deploy/cluster/systemd/). `install.sh` puts @HOST@ (this host's short name) in place: launchd has
-     no %l. __BOX__/w2c.env and __BOX__/vms.env are read by w2c-run.sh under what this file says (`W2C_BOX`). -->
+<!-- ~/Library/LaunchAgents/com.w2c.controller.rec.plist — placement of recordings, safe at several (М11, a macOS server; the
+     twin of the systemd template's instance `w2c-controller@rec`, deploy/cluster/systemd/: a platform process, ADR 0023).
+     `install.sh` puts @HOST@ (this host's short name) in place: launchd has no %l. __BOX__/w2c.env and __BOX__/vms.env
+     are read by w2c-run.sh under what this file says (`W2C_BOX`). -->
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.w2c.vms.reccontroller</string>
+	<string>com.w2c.controller.rec</string>
 	<key>ProgramArguments</key>
 	<array>
 		<string>__BOX__/bin/w2c-run.sh</string>
@@ -27,8 +28,8 @@
 	<key>ThrottleInterval</key>
 	<integer>2</integer>
 	<key>StandardErrorPath</key>
-	<string>__BOX__/state/logs/com.w2c.vms.reccontroller.log</string>
+	<string>__BOX__/state/logs/com.w2c.controller.rec.log</string>
 	<key>StandardOutPath</key>
-	<string>__BOX__/state/logs/com.w2c.vms.reccontroller.log</string>
+	<string>__BOX__/state/logs/com.w2c.controller.rec.log</string>
 </dict>
 </plist>

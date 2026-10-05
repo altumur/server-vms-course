@@ -306,7 +306,7 @@ class Cluster:
                 "default_quota": TEST_QUOTA, "block": TEST_BLOCK, "read": TEST_READ}
 
     def controller(self, server: str = "srv-a", who: str | None = None, role: str = "vmscontroller", **kw):
-        """`vms-vmscontroller` on `server` (a unit on every server, safe at two)."""
+        """`w2c-controller@vms` on `server` (a unit on every server, safe at two)."""
         from vms.controller import VmsController
         who = who or f"{role} on {server}"
         v = self.door(role, who)
@@ -315,5 +315,5 @@ class Cluster:
         return ctl
 
     def console(self, server: str = "srv-a", who: str | None = None, **kw):
-        """`vms-console` on `server`: the operator's rows and nothing else."""
+        """`w2c-console` on `server`: the operator's rows and nothing else."""
         return self.controller(server, who or f"console on {server}", role="console", **kw)

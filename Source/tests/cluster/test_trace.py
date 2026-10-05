@@ -19,7 +19,7 @@ from tests.cluster.trace import TraceLog, body_shown
 from w2cplatform.configstorevars import ConfigstoreVariables
 from w2cplatform.storemachine import Rights, StoreMachine, answer, local_transport
 
-RIGHTS = Rights.parse({"roles": {"console": {"group": "vms-console", "read": ["vms/*"], "write": ["vms/cameras/*"],
+RIGHTS = Rights.parse({"roles": {"console": {"group": "w2c-console", "read": ["vms/*"], "write": ["vms/cameras/*"],
                                              "delete": ["vms/cameras/*"]}}})
 
 

@@ -3,7 +3,7 @@
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # w2c.tmpfiles — the platform's state, its configuration and its secrets
+# # w2c.tmpfiles — the platform's state, its configuration, its secrets and the console's door
 #
 # **Role.** The platform is w2c and the VMS one of its subsystems (the product's rule, 3 October), and the box's
 # directories split the same way: what every process of the platform needs is here, what the VMS's processes need is
@@ -28,6 +28,12 @@
 #   process that writes buckets is a CLIENT, a member of `w2c-events` with the umask 0007: what it makes there is
 #   0660 in directories 2770 of the group, which the resource deletes by its retention. Only the resource deletes buckets,
 #   mirrors and restores there.
+# - `/run/w2c-console` — the console's unix socket, the box's own door (`CONSOLE_UNIX`, `console.container`; the
+#   review's sixth pass). The console is the platform's process (ADR 0014), so its directory is here. 0700 `w2c` — the
+#   console runs as the platform's user (ADR 0023) and makes its socket there — and the socket in it 0660: who may
+#   open it is this mode, which is the point of it (root, and the platform's own processes). A directory of its own and not
+#   one under /run/vms: that one is mounted whole into the holder's and the recorder's containers, and the console's
+#   door is not theirs to open.
 #
 # `d` sets the mode and the owner of the directory itself at every boot; what is inside — a box upgraded from root's
 # `/data/archive` — is handed over once, by `install-obsd.sh`, not at every boot.
@@ -38,3 +44,4 @@ d /data/platform/etc/secrets  2710 root w2c-secrets -
 d /data/platform/config       2770 w2c  w2c-store   -
 d /data/platform/objects      2770 w2c  w2c-store   -
 d /data/platform/events       2770 w2c  w2c-events  -
+d /run/w2c-console            0700 w2c  w2c         -
