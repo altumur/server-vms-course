@@ -32,7 +32,7 @@ import time
 
 from w2cplatform import runtime
 from w2cplatform.doors import unit_ref
-from w2cplatform.contract import Worker
+from w2cplatform.worker import Worker
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables

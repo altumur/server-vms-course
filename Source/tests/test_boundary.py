@@ -414,7 +414,7 @@ def import_findings() -> list[tuple[str, int, str, str]]:
 # does not import: an import of one is `run:<piece> | run import <package>`. A piece that comes up short says why
 # (`BOUNDARY-RUN <why>`), and that is `run:<piece> | run <why>`; anything else it raises is `run broken: …` — never
 # debt to write down, a piece to mend.
-PIECES = ("contract", "controller", "console", "events", "resource", "host", "domain")
+PIECES = ("contract", "controller", "console", "events", "resource", "host", "worker", "domain")
 
 _GUARD = f"""
 import sys
@@ -443,7 +443,7 @@ def _testsub_box():
 def _counter_worker(sub, vars_, objects, clock, wall, instance: str, server: str):
     """testsub's worker, a stub: it holds the counters it was given — takes each one's epoch, lets go of the ones taken
     away — and says so in its heartbeat. Everything else is the platform's `Worker`."""
-    from w2cplatform.contract import Worker
+    from w2cplatform.worker import Worker
 
     class CounterWorker(Worker):
         def reconcile_once(self, now=None):
@@ -478,6 +478,73 @@ def _piece_contract():
     assert a.reconcile_once() == ["c1"] and a.epochs == {"c1": 1} and a.may_act("c1")
     assert b.take_epoch("c1") == 2
     assert a.renew_leases() == ["c1"] and not a.may_act("c1")
+
+
+def _piece_worker():
+    """The platform's worker life cycle (`w2cplatform/worker.py`, §3 row 7) and its request family (§3 row 3) on testsub:
+    the loop holds what it was given and heartbeats; a request filed for a counter is performed once by its holder, at
+    most once, answered in the heartbeat and cleared by the console's clearing (`requests.py`); one past its deadline is
+    expired; another instance on the worker's name fences it, and it rejoins under a free one. The subsystem wrote only
+    `reconcile_once`, `status`, `held_rows` and `perform`."""
+    import threading
+    from w2cplatform import requests
+    from w2cplatform.contract import Controller, Slot
+    from w2cplatform.spec import SpecController, SubsystemSpec
+    from w2cplatform.worker import Worker
+    root, vars_, objects, clock, wall = _testsub_box()
+    spec = SubsystemSpec.load(TESTSUB)
+    assert spec.requests.get("schema") and spec.requests.get("most_valid") == 600
+
+    class CounterWorker(Worker):
+        def reconcile_once(self, now=None):
+            units = self.assignment().units
+            for u in units:
+                if u not in self.epochs:
+                    self.take_epoch(u)
+                    self.counts.setdefault(u, 0)
+            return units
+
+        def status(self):
+            return [{"id": u, "phase": "running", "count": self.counts.get(u, 0)} for u in self.assignment().units]
+
+        def held_rows(self):
+            return {u: {"id": u} for u in self.assignment().units}
+
+        def perform(self, target, row, it):
+            self.counts[str(row["id"])] += int(it["add"])
+            return {"added": int(it["add"])}
+
+    CounterWorker.spec = spec
+    w = CounterWorker(spec.sub, None, vars_, objects, clock=clock, wall=wall, instance="A")
+    w.server, w.capacity, w.counts = "srv-1", 4, {}
+    w.claim_slot()
+    Controller(spec.sub, vars_, objects, wall=wall).assign(w.name, ["c1"])
+
+    class OneTurn(threading.Event):
+        def wait(self, timeout=None):
+            self.set()
+            return True
+    w.run(poll=0, stop=OneTurn())                               # a turn of the platform's loop, and its orderly stop
+    from w2cplatform.contract import Heartbeat
+    hb = Heartbeat.from_bytes(objects.get(spec.sub.heartbeat_key("w-1")))
+    assert [s["id"] for s in hb.status] == ["c1"] and hb.extra["pending_writes"] == 0 and hb.extra["server"] == "srv-1"
+    assert vars_.get(spec.sub.slot_key("w-1"))[0]["released"] == "true"       # an orderly stop says so
+    w.claim_slot("w-1")
+    w.reconcile_once()
+    con = SpecController(spec, vars_.as_writer("console", spec.acl_console()), objects, wall=wall)
+    vars_.put(spec.sub.request_key("r1"), {"unit": "testsub/c1", "add": "3", "valid_until": str(wall() + 30), "at": str(wall())})
+    vars_.put(spec.sub.request_key("r0"), {"unit": "c1", "add": "1", "valid_until": str(wall() - 1), "at": str(wall() - 60)})
+    done = {d["request"]: d for d in w.requests()}
+    assert done["r1"]["added"] == 3 and done["r0"].get("expired") and w.counts["c1"] == 3, done
+    assert w.requests() == [] and w.counts["c1"] == 3                    # at most once: answered, not performed again
+    w.heartbeat_once()
+    assert requests.clear_requests(con, sweep=False) == 2 and vars_.list(spec.sub.requests_prefix()) == []
+    vars_.put(spec.sub.slot_key("w-1"), Slot("w-1", "B", wall() + 45, False, 9).to_items())   # another instance's now
+    w.lease_pass()
+    assert not w.writing_allowed and w.fenced_reason
+    assert w.rejoin() is None and not w.writing_allowed           # started under its name: it waits for that one
+    vars_.put(spec.sub.slot_key("w-1"), Slot("w-1", "B", wall() + 45, True, 10).to_items())   # …which B let go
+    assert w.rejoin() == "w-1" and w.writing_allowed and w.epochs == {} and w.was_fenced
 
 
 def _piece_controller():

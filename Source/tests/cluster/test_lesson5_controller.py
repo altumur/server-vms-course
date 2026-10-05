@@ -2,6 +2,7 @@
 the directory in one scan, two controllers agreeing, the snapshot that
 leaves the cluster, and the console over real HTTP."""
 import json
+from w2cplatform import requests
 import threading
 import urllib.request
 from vms.controller import VmsController
@@ -237,13 +238,13 @@ def test_the_console_over_http():
     # the page, and playback across the cluster: footage in srv-a's volume, at its recorder's door — the console hands
     # the door out with the recording's place and carries none of it (the boundary's step 6)
     assert "<video" in call("GET", "/")[1]
-    page = rec_a.archive_url + "/door"
+    page = rec_a.archive_url
     tl = json.loads(urllib.request.urlopen(f"{page}/timeline/1").read())
-    assert [(s["recorder"], s["volume"]) for s in tl] == [(rec_a.name, "srv-a")]
-    with urllib.request.urlopen(f"{page}/{tl[0]['media']}?from={t - 120}&to={t - 60}") as r:
+    assert [(s["start_ms"], s["end_ms"], s["epoch"]) for s in tl] == [((t - 600) * 1000, t * 1000, 1)]
+    with urllib.request.urlopen(f"{page}/segment/1/e1/{(t - 120) * 1000:.0f}-{(t - 60) * 1000:.0f}.mp4") as r:
         assert r.status == 200 and r.headers["Content-Type"] == "video/mp4" and r.read()[4:8] == b"ftyp"   # read to its end: the last chunk comes when its slot is free again
     try:
-        urllib.request.urlopen(f"{page}/export/1?from={t - 3000}&to={t - 2000}"); raise AssertionError("a file of nothing")
+        urllib.request.urlopen(f"{page}/segment/1/e1/{(t - 3000) * 1000:.0f}-{(t - 2000) * 1000:.0f}.mp4"); raise AssertionError("a file of nothing")
     except urllib.error.HTTPError as e:
         assert e.code == 404                                                       # nothing recorded there
     assert call("PUT", "/cameras/1", {"enabled": False})[0] == 200 and ctl.camera(1)["enabled"] is False
@@ -336,7 +337,7 @@ def test_the_vms_jobs_keep_a_requests_until_on_a_cluster_as_on_a_box():
     c.vars.put("rec/requests/f1-0", {"action": "record", "cam": "1", "minutes": "10", "valid_until": str(now + 30)})
     mem = Remembered()
     m._requests_turn(rec, None, None, mem, now=now)
-    m._reap_turn([], [rec, con], rec, now=now)
+    requests.turn([rec, con], sweep=True)
     assert rec.unit("1-auto")["until"] == now + 600 and c.vars.get("rec/requests/f1-0")[0] is None
     m._requests_turn(rec, None, None, mem, now=now + 300)
     assert "1-auto" in [str(u["id"]) for u in rec.units()]                  # not yet

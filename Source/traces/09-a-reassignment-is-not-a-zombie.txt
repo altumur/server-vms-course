@@ -164,4 +164,4 @@ GET /v1/get?key=vms/cameras/3
   "index": 1009
 }
 
-# a.lease_pass() lost ['2']; a.recording_allowed = True; running [1, 3]
+# a.lease_pass() lost ['2']; a.writing_allowed = True; running [1, 3]

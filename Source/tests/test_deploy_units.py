@@ -833,7 +833,7 @@ def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_
     env = {"SPEC_DIR": os.path.join(HERE, "vms"), "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "vms"}
     m, ctls = host.build_console(env)
     assert m.root.spec.name == "vms" and set(m.mounts) == {"rec", "live", "det", "detjob", "survey", "auto"}
-    assert m.root.describe()["door"] == {"routes": ["timeline", "segment"]}
-    assert m.mounts["rec"].describe()["door"] == {"routes": ["timeline", "export"]}
+    assert "door" not in m.root.describe()                               # no door at a camera's holder
+    assert m.mounts["rec"].describe()["door"] == {"routes": ["timeline", "segment"]}
     assert m.mounts["live"].describe()["door"] == {"routes": ["whep"]}
 

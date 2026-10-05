@@ -11,11 +11,8 @@ import urllib.request
 
 from w2cplatform.doors import byte_range, safe_rel, safe_segment
 from w2cplatform.resource import serve as serve_resource
-from vms.console import serve
-from vms.controller import VmsController
-from vms.config import SPEC
 from w2cplatform.resource import platform_resource
-from tests.conftest import Box, door, footage, store
+from tests.conftest import Box
 
 
 def _get(url, headers=None):
@@ -77,42 +74,3 @@ def test_the_resources_doors_name_nothing_outside_the_tree():
         assert _put(f"{url}/mirror/srv-2/../../x.events.jsonl", b"{}", {}) == 400
     finally:
         srv.shutdown()
-
-
-def test_a_recorders_archive_door_names_a_recording_and_nothing_else():
-    """`/timeline/<unit>` and `/samples/<unit>` take ONE name — a recording's — and the volume is asked about it;
-    nothing in the path reaches a disk."""
-    box = Box()
-    st = store()
-    footage(st, "7", 1, box.wall() - 60, box.wall())
-    d = door(box, st)
-    try:
-        assert _get(f"{d.url}/timeline/7")[0] == 200
-        assert _get(f"{d.url}/timeline/..")[0] == 404
-        assert _get(f"{d.url}/samples/a/b")[0] == 404
-        assert _get(f"{d.url}/samples/7?from=x")[0] == 400
-        assert _get(f"{d.url}/manifest/7")[0] == 404
-    finally:
-        d.shutdown()
-
-
-def test_an_export_asks_for_an_interval_and_never_a_path():
-    """The console serves no file, and nothing of a unit's bytes (the boundary's step 6: its holder does, at its door);
-    the holder's export takes an interval, never a path."""
-    from tests.conftest import page_door
-    box = Box()
-    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(ctl, box.archive, "127.0.0.1", 0)
-    pd = page_door(box)
-    url, page = f"http://127.0.0.1:{srv.server_address[1]}", pd.base + "/door"
-    try:
-        secret = os.path.join(box.root, "secret.txt")
-        with open(secret, "w") as f:
-            f.write("cred")
-        assert _get(f"{url}/segment/{secret}")[0] == 404              # no file is served by path any more
-        assert _get(f"{page}/export/{secret}?from=100&to=160")[0] == 404   # …nor at a holder's door
-        assert _get(f"{page}/export/7?from=100&to=50")[0] == 400      # an interval, ends in order
-        assert _get(f"{page}/export/7?from=0&to=99999999")[0] == 400  # and of a bounded length: an hour
-        assert _get(f"{page}/export/7?from=100&to=160")[0] == 404     # nothing recorded there: said, not an empty file
-    finally:
-        srv.shutdown(); pd.shutdown()

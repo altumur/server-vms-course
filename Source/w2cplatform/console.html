@@ -20,12 +20,13 @@ NOTES — what this page is, its regions and its state (each script function is 
 
 **Role in the module.** Lesson 6. Served by `console.py` at `/`. The page reads `/spec` first — the
 subsystem's name, what its rows are called, how a unit is identified, which fields the operator owns and
-whether there is media — and builds the unit list, the add form and the edit form from that. Nothing on this
-page names a camera: the VMS is the spec that says `rows: cameras`, `media: true`; live and det are other specs
-and the same page (`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http`
-asserts the word "camera" does not appear outside the leading comment). With media the page adds the
-timeline and the player, using the routes the subsystem registered (`/timeline/<id>`, and the `media` each span
-names — the VMS: `/export/<id>?rec=…`, an interval as an MP4) plus the platform's `/events?unit=<sub>/<id>`. Writes go through the console with a fresh `Idempotency-Key` per attempt
+which doors its holders open — and builds the unit list, the add form and the edit form from that. Nothing on this
+page names a subsystem's things: each is a spec (`rows`, `about`, `door`) and the same page
+(`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http` asserts the word "camera"
+does not appear outside the leading comment). Where a spec about this unit declares a door with the spans route
+(`SPANS`) the page adds the scale and the player: the door is asked for at `/<sub>/where/<id>` (its url and a token),
+its spans read raw from `<url>/<SPANS>/<id>` and played piece by piece from `<url>/segment/<id>/e<epoch>/<fromMs>-<toMs>`;
+plus the platform's `/events?unit=<sub>/<id>`. Writes go through the console with a fresh `Idempotency-Key` per attempt
 so a retried click is one unit; refusals are shown as the server's `detail`.
 
 ## `<style>`
@@ -442,15 +443,25 @@ async function loadTimeline() {
   const now = Date.now() / 1000;
   const [from, to] = window_ || [0, 1e12];
   const raw = [], notes = [], asks = [];
+  // A door's spans are raw (`[{start_ms, end_ms, epoch, source?, fenced?, yields?}]`, the product's): each is played
+  // through the same door's `segment` route, piece by piece. A 401 is the door's word that its token will not do —
+  // ended, another holder — and the door is asked for again, once.
   const ask = async (base, id) => {
-    const door = await doorOf(base, id);
+    let door = await doorOf(base, id);
     if (!door || !door.routes.includes(SPANS)) return;
-    let d;
-    try { const r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
-          if (!r.ok) throw new Error(r.status); d = await r.json(); }
-    catch (_) { notes.push(`the door of ${base || ''}/${id} did not answer`); return; }
-    if (!Array.isArray(d) && d.note) notes.push(d.note);
-    (Array.isArray(d) ? d : (d.segments || [])).forEach(s => raw.push({ ...s, m: s.media ? { base, id, door, path: s.media } : null }));
+    let d, r;
+    try {
+      for (let again = 0; ; again++) {
+        r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
+        if (r.status !== 401 || again) break;
+        door = (await doorOf(base, id)) || door;
+      }
+      if (!r.ok) throw new Error(r.status); d = await r.json();
+    } catch (_) { notes.push(`the door of ${base || ''}/${id} did not answer`); return; }
+    const missing = r.headers.get('X-Unreachable');
+    if (missing) notes.push(`not answering: ${missing} — what it holds is missing from this picture`);
+    (Array.isArray(d) ? d : []).forEach(x => raw.push({ start: x.start_ms / 1000, end: x.end_ms / 1000, epoch: x.epoch,
+      fenced: !!x.fenced, yields: !!x.yields, m: { base, id, door, source: x.source || '' } }));
   };
   if (spec.door && spec.door.routes.includes(SPANS)) asks.push(ask('', current));
   for (const [name, s] of await subsAbout()) {
@@ -647,11 +658,14 @@ function fillEdit(c) {
   if (hasEnabled()) $('#toggle').textContent = c.enabled === false ? 'Enable' : 'Disable';
 }
 
-// What to play a piece by: the span's `media` is a route of its holder's door, asked for the minutes of the piece,
-// the token in the query — a media element sets no header.
+// What to play a piece by: the door's `segment` route, the piece's epoch and bounds in its path (milliseconds), the
+// stream it is of in its name — the span's `source`, when it says one (the product's) — and the token in the query: a
+// media element sets no header.
 async function segmentURL(s, p) {
   const d = await freshDoor(s.media);
-  return `${d.url}/${s.media.path}?from=${p.from}&to=${p.to}${d.token ? '&t=' + encodeURIComponent(d.token) : ''}`;
+  const tail = s.media.source ? '.' + s.media.source : '';
+  return `${d.url}/segment/${encodeURIComponent(s.media.id)}/e${s.epoch}/${Math.round(p.from * 1000)}-${Math.round(p.to * 1000)}${tail}.mp4` +
+         (d.token ? '?t=' + encodeURIComponent(d.token) : '');
 }
 
 // One piece at a time, the next when this one ends — a span cut into pieces of at most ten minutes, each an
@@ -660,7 +674,7 @@ async function segmentURL(s, p) {
 // each moment once: a fenced span (an older epoch) is played only when it is the one clicked, and minutes two
 // spans share (two volumes, a keep's copy) are queued from the first of them. An export takes each moment from
 // the epoch that owns it whichever span asked.
-const PIECE = 600;
+const PIECE = 60;                                                    // the product's pieces: a minute each
 let playing = null;                                                   // the piece on the player now: {i, from, to}
 function play(i, at) {
   queue = [];
@@ -703,18 +717,19 @@ async function startLive() {
   const [name, s] = (await subsAbout()).find(([, s]) => s.door.routes.includes(OFFER)) || [];
   if (!name) { $('#playing small').textContent = 'nothing here opens a stream'; pc.close(); return; }
   try { await send('POST', `/${name}/${s.rows}`, { [s.about.field]: current }); } catch (_) {}   // "exists": watched already
-  let r = null, door = null, tries = 0;
+  let r = null, door = null, tries = 0, refused = 0;
   for (;;) {
     door = await doorOf(`/${name}`, current);
     if (door) r = await fetch(`${door.url}/${OFFER}/${encodeURIComponent(current)}`,
                               { method: 'POST', headers: { 'Content-Type': 'application/sdp', ...bearer(door) }, body: pc.localDescription.sdp });
+    if (r && r.status === 401 && !refused++) continue;               // its token would not do: the door again, once
     if ((r && ![404, 503].includes(r.status)) || ++tries > 8) break;
     $('#playing small').textContent = 'waiting for its place…';
     await new Promise(res => setTimeout(res, 1500));                    // the controller's next pass, the holder's next look
   }
   if (!r || r.status !== 201) { let d = {}; try { d = await r.json(); } catch (_) {} $('#playing small').textContent = 'refused: ' + (d.detail || d.error || (r ? r.status : 'nobody holds it')); pc.close(); return; }
   await pc.setRemoteDescription({ type: 'answer', sdp: await r.text() });
-  live = { pc, session: door.url + r.headers.get('Location'), door, since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
+  live = { pc, session: door.url + r.headers.get('Location'), door, base: `/${name}`, id: current, since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
   [...$('#timeline').children].forEach(el => el.classList.remove('playing'));
   $('#playing small').textContent = `watching · via ${door.url}`;
   const feed = $('#livefeed'); feed.style.display = 'block'; feed.innerHTML = '<small>live events — what every subsystem observes on this unit while you watch</small>';
@@ -741,7 +756,8 @@ async function pollLive() {
 }
 function stopLive() {
   if (!live) return;
-  fetch(live.session, { method: 'DELETE', headers: bearer(live.door) }).catch(() => {});   // the viewer hangs up, at the door
+  const hangUp = live;                                                // the viewer hangs up, at the door, with a token that holds
+  freshDoor({ door: hangUp.door, base: hangUp.base, id: hangUp.id }).then(d => fetch(hangUp.session, { method: 'DELETE', headers: bearer(d) })).catch(() => {});
   clearInterval(live.timer);
   live.pc.close(); live = null;
   const v = $('#player'); v.srcObject = null;

@@ -64,7 +64,7 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
 
 def _expected_writes() -> dict[str, set[str]]:
     rows = lambda objs: {OBJECTS + p for p in objs if is_row(p)}            # noqa: E731
-    out = {"console": {a for s in SPECS for a in s.acl_console()}}
+    out = {"console": {a for s in SPECS for a in s.acl_console()} | {"door/signer", "door/keys"}}   # the door key (`door.py`)
     for s in SPECS:                                                           # every subsystem of the catalogue: its two roles
         out[f"{s.name}controller"] = set(s.acl_controller())
         out[f"{s.name}worker"] = set(s.acl_worker_role()) | rows(s.sub.acl_objects_worker() + [s.sub.config(p) for p in s.object_rows])

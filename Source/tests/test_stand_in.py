@@ -14,7 +14,8 @@ import threading
 import time
 
 from vms.worker import FakeActuator, VmsWorker
-from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem, Worker
+from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, next_epoch
 from tests.conftest import Box
 
@@ -99,7 +100,7 @@ def test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go():
         spare = _holder(box, name=None, instance="spare:1")         # a nameless process takes a given slot first
         assert spare.name == "w-1"
     assert w.lease_pass() == ["1"]
-    assert not w.recording_allowed and "held by another instance" in w.fenced_reason
+    assert not w.writing_allowed and "held by another instance" in w.fenced_reason
 
 
 def test_a_slot_row_another_instance_took_is_not_written_over_by_the_stand_in():
@@ -158,7 +159,7 @@ def test_a_fenced_worker_is_not_revived_by_the_stand_in():
         w.stand_in_once()
         assert w.leases["1"].fenced and not w.may_act("1"), "the stand-in revived a fenced lease"
     assert w.lease_pass() == ["1"]
-    assert w.recording_allowed                                     # one camera given up, not the instance
+    assert w.writing_allowed                                     # one camera given up, not the instance
 
 
 def test_a_lease_the_loop_released_is_renewed_by_nobody():

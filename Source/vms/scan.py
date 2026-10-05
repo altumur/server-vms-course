@@ -113,7 +113,7 @@ def written_through(spans: list[Span]) -> float:
 
 
 # What was recorded of `unit` in `[t0, t1)`, as the volumes' index has it: asked of the archive door of every
-# live recorder (`/timeline/<unit>`), since each serves the one volume it holds and a recording's life may have
+# live recorder (`/spans/<unit>`), since each serves the one volume it holds and a recording's life may have
 # been written into several. `None` when no door answered at all — "nobody could say" is not "nothing recorded".
 def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0, eyes=None) -> list[Span] | None:
     seen = recording_read(objects, unit, t0, t1, now, timeout=timeout, eyes=eyes)
@@ -189,11 +189,11 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
     out, answered, silent, read, garbled = set(), False, [], set(), []
     every = heartbeats(objects, "rec/")
     for w, hb in sorted(every.items()):
-        url = str(hb.extra.get("archive_url") or "")
+        url = str(hb.extra.get("url") or "")
         if not url or not heard_live("rec", w, hb, now, 45.0, eyes):   # whose clock: the reader's (M9, r29-writers2)
             continue
         try:
-            with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
+            with urllib.request.urlopen(f"{url.rstrip('/')}/spans/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
                 spans, whole = door_spans(f"rec/doors/{w}#{unit}", _json.loads(answer(r)))
         except (OSError, *PARSE_ERRORS):
             silent.append(w)

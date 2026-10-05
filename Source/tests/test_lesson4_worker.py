@@ -157,7 +157,7 @@ def test_the_zombie_on_one_box():
     a.reconcile_once(); assert a_act.running == {1} and a_act.epochs[1] == 1
     b = VmsWorker("w-1", box.vars, box.objects, b_act, clock=box.clock, wall=box.wall)     # the replacement
     b.reconcile_once(); assert b_act.running == {1} and b_act.epochs[1] == 2
-    assert a.lease_pass() == ["1"] and not a.recording_allowed and a_act.running == set()   # A wakes, renews, fences
+    assert a.lease_pass() == ["1"] and not a.writing_allowed and a_act.running == set()   # A wakes, renews, fences
     assert "slot w-1" in a.fenced_reason                      # fenced at the slot first...
     assert a.renew_leases() == ["1"] and a.conflicts() == 1   # ...and the camera's epoch says the same
     # it is nobody: the name is B's, and A does not even read w-1's assignment (the review's sixth pass) — it used to
@@ -251,7 +251,7 @@ def test_a_reassignment_is_not_a_zombie():
     w1 = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall); w1.reconcile_once()
     ctl.move(1, "w-2", "operator asked")
     w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall); w2.reconcile_once()
-    assert w1.lease_pass() == ["1"] and w1.recording_allowed and w1.reconciler.actual == {}   # released, not fenced
+    assert w1.lease_pass() == ["1"] and w1.writing_allowed and w1.reconciler.actual == {}   # released, not fenced
     assert w1.reconcile_once() == []
 
 

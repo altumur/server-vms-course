@@ -32,7 +32,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from w2cplatform import runtime
 from w2cplatform.console import Deadlined, SendMixin, door_server, heartbeats, holder_of, read_body
-from w2cplatform.contract import Worker
+from w2cplatform.worker import Worker
 from w2cplatform.spec import SpecController
 from w2cplatform.variables import Variables
 
@@ -324,8 +324,8 @@ class LiveWorker(Worker):
         for sid in [s for s in self.owners if s not in self.sessions]:
             self.owners.pop(sid, None)                  # swept or hung up: nobody's to hang up any more
         self.heartbeat([up.to_status() for up in self.upstreams.values()], server=self.server, instance=self.instance,
+                       # `url`: the page's door too (the platform's word: `/live/where/<cam>` hands it out with a token)
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
-                       **({"door_url": self.url} if self.url else {}),   # the page's door (`/live/where/<cam>` hands it out)
                        sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
                        swept=self.swept, resets=self.resets, **({"refused": dict(self.refused)} if self.refused else {}))
 
@@ -338,7 +338,7 @@ class LiveWorker(Worker):
     def door_keeper(self):
         from w2cplatform.door import DoorKeeper
         if getattr(self, "_door_keeper", None) is None:
-            self._door_keeper = DoorKeeper(self.name, self.wall)
+            self._door_keeper = DoorKeeper(self.name, self.wall, self.vars)   # the ring: the store's `door/keys`
         return self._door_keeper
 
     # -- the WHEP server -------------------------------------------------------------------------------
@@ -398,7 +398,7 @@ class LiveWorker(Worker):
             # THE PAGE COMES HERE ITSELF (the boundary's step 6, the owner's decision 1: the console proxied the offer and
             # the hang-up, `LiveFront`). It comes with the door token the console gave with the stream's place (`GET
             # /live/where/<cam>`) — the console asked `view` on the camera then — for THIS gateway and this stream
-            # (`w2cplatform/door.py`): checked here by the cluster's public key, `DOOR_RING`; none, the door is open and
+            # (`w2cplatform/door.py`): checked here by the cluster's public key (`door/keys` in the store); none, the door is open and
             # says so. The token is needed to OPEN — an offer, a hang-up; a stream that is up lives by its session.
             def _admitted(self, cam):
                 return gw.door_keeper().admit(self, "whep", f"live/{cam}")
@@ -443,29 +443,11 @@ class LiveWorker(Worker):
             self.url = f"http://{host}:{srv.server_address[1]}"
         return srv
 
-    def run(self, poll: float = 2.0, stop=None) -> None:
-        """One box: the loop as a process. Nomad or systemd restarts it."""
-        stop = stop or threading.Event()
-        stand_in = self.start_stand_in()               # renews for a step that hangs, for a while (feedback DD)
-        while not stop.is_set():
-            try:
-                with self.guarded("pass"):
-                    self.reconcile_once()
-            except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
-                log.exception("gateway pass failed")
-            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
-                with self.guarded("lease"):
-                    self.keep_slot(lambda: [self._drop(c) for c in list(self.upstreams)])   # the slot row too, not only the leases
-                    self.renew_leases()
-            except Exception:                            # noqa: BLE001
-                log.exception("gateway lease renewal failed")
-            try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
-                with self.guarded("heartbeat"):
-                    self.heartbeat_once()
-            except Exception:                            # noqa: BLE001
-                log.exception("gateway heartbeat failed")
-            stop.wait(poll)
-        stand_in.set()
-        for cam in list(self.upstreams):
-            self._drop(cam)
-        self.release_slot()
+    # The loop is the platform's (`Worker.run`: the pass, the lease step, the heartbeat, each in a try of its own, the
+    # stand-in for a step that hangs, an orderly stop); what it stops is its fan-outs.
+    def stop_unit(self, unit) -> None:
+        self._drop(unit)
+
+    def stop_all_units(self) -> None:
+        for unit in list(self.upstreams):
+            self._drop(unit)

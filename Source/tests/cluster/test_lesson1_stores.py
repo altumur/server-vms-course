@@ -7,7 +7,8 @@ import os
 import threading
 
 from w2cplatform.cluster.variables import Conflict, FakeVariables, Forbidden
-from w2cplatform.contract import Controller, Subsystem, Worker
+from w2cplatform.contract import Controller, Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.epoch import next_epoch
 from tests.cluster.conftest import Cluster
 

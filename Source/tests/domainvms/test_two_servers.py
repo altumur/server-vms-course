@@ -79,7 +79,7 @@ def _office(wall):
         cov = backup_coverage or {"from": wall() - 60, "to": wall()}
         b.objects.put(Subsystem("rec").heartbeat_key("r-b"), Heartbeat("r-b", wall(), [
             {"id": f"{SERIAL}-copy", "cam": f"ref:{SERIAL}", "enabled": True, "phase": "running", "coverage": cov}],
-            {"archive_url": "http://srv-b:9100/"}).to_bytes())
+            {"url": "http://srv-b:9100/"}).to_bytes())
 
     def domain_pass(a_up=True, backup_coverage=None):
         cam.publish(); cam_agent.sync()

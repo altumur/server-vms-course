@@ -28,7 +28,7 @@ def spec():
 
 def counter_worker(sub, vars_, objects, wall, instance: str, server: str):
     """testsub's worker, a stub: it takes each counter it was given and says so in its heartbeat."""
-    from w2cplatform.contract import Worker
+    from w2cplatform.worker import Worker
 
     class CounterWorker(Worker):
         def reconcile_once(self, now=None):

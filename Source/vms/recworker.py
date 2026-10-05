@@ -310,6 +310,7 @@ class RecWorker(VmsWorker):
     worker's fan-out, writing into the volume it holds."""
 
     SUB = REC
+    spec = REC_SPEC                 # its requests are backfills and the resource's asks to free bytes (`requests`, below)
     ROWS = "recordings"
     # How long a volume that refused writes is left alone before this recorder tries it again. Opening it
     # may well succeed — the directories are there — and the first write fail again, so without a pause a
@@ -1156,11 +1157,11 @@ class RecWorker(VmsWorker):
                 # all, for as long as the reason stands (`unservable`).
                 "refused": {**{n: why for n, (_, why) in self.refused.items()}, **self.unservable},
                 "closed": ",".join(self.closed),
-                # Lesson 26: the door this recorder serves its archive at, for a primary backfilling from it.
-                **({"archive_url": self.archive_url} if self.archive_url else {}),
-                # …and the door a page reads a recording at (`door_url`, the platform's word: `/where` hands it out with a
-                # token for the spec's `door: {routes}`; `vms/footage.py`) — the same server, under `/door/`
-                **({"door_url": self.archive_url + "/door"} if self.archive_url else {}),
+                # Lesson 26: the door this recorder serves its archive at — for a primary backfilling from it, and for a
+                # page (`url`, the platform's word: `/where` hands it out with a token for the spec's `door: {routes}`;
+                # `vms/footage.py`) — the same server: `/spans/`, `/samples/` between processes, `/timeline/`, `/segment/`
+                # for a page
+                **({"url": self.archive_url} if self.archive_url else {}),
                 # Lesson 16: what a clean fetch found nowhere — ours missing it, the source missing it too.
                 # A number the operator wants on its own: "of what we lost, 519 s were not on the card either".
                 "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans)),
@@ -2139,7 +2140,7 @@ class RecWorker(VmsWorker):
     # was frozen — gives the writer up instead (`_close_store`).
     def lease_pass(self) -> list[str]:
         lost = super().lease_pass()
-        if self.recording_allowed and not self.waiting_for_offer():   # a fenced instance, or one nobody yet, decides nothing about volumes
+        if self.writing_allowed and not self.waiting_for_offer():   # a fenced instance, or one nobody yet, decides nothing about volumes
             try:
                 self.volume_pass()
             except OSError as e:
@@ -2388,7 +2389,7 @@ class RecWorker(VmsWorker):
                 continue                      # silent by what this recorder saw change — whatever its clock (13th)
             if not st.get("coverage"):
                 continue
-            url = hb.extra.get("archive_url", "")
+            url = hb.extra.get("url", "")
             if url and local_only(url, hb.extra.get("server", "?"), self.server):
                 url = ""                      # that recorder's archive door is on its own loopback: not reachable from here
             kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
@@ -2511,12 +2512,13 @@ class RecWorker(VmsWorker):
             return None
         return self._epoch_at.get(str(unit))
 
-    # This recorder's archive, served: `/timeline/<unit>` and `/samples/<unit>?from&to` over the volume THIS
+    # This recorder's archive, served: `/spans/<unit>` and `/samples/<unit>?from&to` over the volume THIS
     # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; a recording's holder
     # reads every recorder's to answer a page; any recorder may.
     #
-    # …AND A PAGE'S DOOR BESIDE IT (the boundary's step 6: the bytes do not go through the console): `/door/timeline/
-    # <recording>` and `/door/export/<recording>` (`vms/footage.py`), each opened by the token the console gave with the
+    # …AND A PAGE'S DOOR BESIDE IT (the boundary's step 6: the bytes do not go through the console): `/timeline/<recording>`
+    # and `/segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4` (`vms/footage.py`, the product's paths), each opened by the
+    # token the console gave with the
     # recording's place, for this recorder and that recording (`w2cplatform/door.py`, `DoorKeeper`); `OPTIONS` answered
     # for a page of a console's origin (`DOOR_ORIGINS`). Who read what is this recorder's journal, `audit/door-<name>`.
     #
@@ -2533,7 +2535,7 @@ class RecWorker(VmsWorker):
         from .footage import answer, footage_routes
         routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
                                 self._kept_of, self._held_since)
-        keeper = DoorKeeper(self.name, self.wall)
+        keeper = DoorKeeper(self.name, self.wall, self.vars)   # the ring is the store's `door/keys`
         page = footage_routes(self.objects, self.vars, self.wall, Journal(self.resource_root, f"door-{self.name}", self.wall),
                               keeper, self.eyes)
 
@@ -2546,11 +2548,11 @@ class RecWorker(VmsWorker):
                 pass
 
             def do_GET(self):
-                if self.path.startswith("/door/"):
+                if self.path.startswith(("/timeline/", "/segment/")):     # a page's (`door: {routes}`), with its token
                     u = urlsplit(self.path)
                     got = page(self, "GET", u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
                     return answer(self, got if got is not None else (404, {"error": "no such path"}), keeper.headers(self))
-                send_route(self, routes(self.path))
+                send_route(self, routes(self.path))                      # between processes: `/spans/`, `/samples/`
 
             def do_OPTIONS(self):
                 keeper.preflight(self)
@@ -3191,7 +3193,7 @@ class RecWorker(VmsWorker):
         from .scan import door_spans
         q = urllib.parse.urlencode({"from": t0, "to": t1})
         try:
-            with urllib.request.urlopen(f"{url}/timeline/{urllib.parse.quote(str(unit))}?{q}", timeout=10) as r:
+            with urllib.request.urlopen(f"{url}/spans/{urllib.parse.quote(str(unit))}?{q}", timeout=10) as r:
                 body = json.loads(answer(r) or b"{}")
         except RecursionError as e:
             raise ValueError(f"{url}: a timeline nested too deep to read") from e
@@ -3353,7 +3355,7 @@ class RecWorker(VmsWorker):
 # A recorder's archive door, over the volume it holds: what a primary copies from a backup, and what the console
 # draws and plays. Two reads, both from a FRESH reader — a reader sees what was closed when it mounted:
 #
-#   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
+#   GET /spans/<unit>?from&to      {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
 #   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
 #                                  owns it, from a key frame (`Archive.stream`). STREAMED, a sequence at a time
 #                                  (blocker 6: it built the whole range into one string — a day of a camera, in the
@@ -3410,7 +3412,7 @@ def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from
     def routes(path: str):
         u = urlsplit(path)
         q = {k: v[0] for k, v in parse_qs(u.query).items()}
-        for prefix in ("/timeline/", "/samples/"):
+        for prefix in ("/spans/", "/samples/"):
             if not u.path.startswith(prefix):
                 continue
             unit = u.path[len(prefix):]
@@ -3428,7 +3430,7 @@ def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from
             # and the door then refuses to play.
             shown = stitch([(visible_from(unit), float("inf"))] + [tuple(k) for k in kept(unit)], 0.0)
             try:
-                if prefix == "/timeline/":
+                if prefix == "/spans/":
                     cur = current_epoch(unit)
                     spans = []
                     for sp in store.timeline(unit, t0, t1, cur):

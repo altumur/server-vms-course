@@ -82,5 +82,5 @@ class EntitlementCache:
         return True, f"{st}: {lic.units - current_count} unit(s) left"
 
     @staticmethod
-    def work_allowed() -> bool:
+    def writing_allowed() -> bool:
         return True       # by construction. There is no code path that returns False.

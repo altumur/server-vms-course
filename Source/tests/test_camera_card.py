@@ -707,7 +707,7 @@ def test_what_a_camera_recorder_says_of_its_card_and_its_frames():
     hb = heartbeats(box.objects, "rec/")["r-1"]
     assert hb.extra["card"]["state"] == "recording" and hb.extra["card"]["budget"] == 64 << 20
     assert hb.extra["feed"]["frames_connected"] is True and hb.extra["feed"]["ring_samples"] == 60
-    assert not hb.extra["archive"] and not {"archive_quota", "volume_quota", "writer", "archive_url"} & set(hb.extra)
+    assert not hb.extra["archive"] and not {"archive_quota", "volume_quota", "writer", "url"} & set(hb.extra)
     assert volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall()) == []      # nothing to "declare" on a camera
 
 

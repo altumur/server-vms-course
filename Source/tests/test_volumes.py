@@ -136,7 +136,7 @@ def test_a_spare_picks_up_a_volume_whose_recorder_went_silent():
     assert b.volume_pass() == "s3-main" and b.hold == "s3-main"
 
     # and the old holder learns it on its next pass: it is not fenced, it is a spare now
-    assert a.volume_pass() == "" and a.hold is None and a.recording_allowed
+    assert a.volume_pass() == "" and a.hold is None and a.writing_allowed
 
 
 def test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once():
@@ -204,7 +204,7 @@ def test_a_withdrawn_volume_stops_the_recordings_and_leaves_the_process_running(
     volumes.delete(box.vars, "s3-cold")
     assert r.volume_pass() == "s3-main"                                # stopped there, took what was free
     assert r.reconciler.actual == {}                                   # and carries nothing of the old archive
-    assert r.recording_allowed and r.name == "r-1"                     # still itself: not fenced, still its slot
+    assert r.writing_allowed and r.name == "r-1"                     # still itself: not fenced, still its slot
     assert volumes.holders(box.vars, REC_SPEC.sub)["s3-cold"].released  # let go on purpose, so the row says so
 
     # and withdrawing the last one is the migration branch, not a dead process: the box's own archive
@@ -872,7 +872,7 @@ def test_one_garbled_hold_row_is_that_volumes_trouble_and_nobody_elses():
     _disk(box, "a-bad"); _disk(box, "b-good")
     box.vars.put("rec/holds/a-bad", garbled_row)
     r = _recorder(box, "r-1", "srv-a")
-    counter = type(r).heartbeat.__globals__["HOLDS_GARBLED"]              # the module the workers run on (`test_portability`)
+    counter = type(r).heartbeat.__globals__["HOLDS"].counts              # the module the workers run on (`test_portability`)
     before = counter.get("rec", 0)
     assert r.volume_pass() == "b-good" and r.store is not None           # it raised `ValueError` here
     assert box.vars.get("rec/holds/a-bad")[0] == garbled_row             # left for a person to mend

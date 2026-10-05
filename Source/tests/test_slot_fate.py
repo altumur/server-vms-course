@@ -15,7 +15,8 @@ import json
 import os
 import urllib.request
 
-from w2cplatform.contract import HUNG_MOVE_AFTER, SLOTS_GARBLED, ServerDecommissioned, Slot, Worker
+from w2cplatform.contract import HUNG_MOVE_AFTER, SLOTS_GARBLED, ServerDecommissioned, Slot
+from w2cplatform.worker import Worker
 from w2cplatform.events import ALARM
 from w2cplatform.resource import Resource, resources_seen, workers_here
 from vms.config import SPEC

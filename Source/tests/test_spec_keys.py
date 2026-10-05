@@ -68,7 +68,7 @@ def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
     assert catalog.spec("probe").object_rows == ("marks/*", "seen/*")
     _refused(lambda: _spec(objects={"rows": ["/marks"]}), "objects.rows takes key patterns")
     _refused(lambda: _spec(objects={"rows": ["ma*/x"]}), "a whole segment '*'")
-    _refused(lambda: _spec(objects={"door": ["x/*"]}), "`objects:` is {rows:")
+    _refused(lambda: _spec(objects={"files": ["x/*"]}), "`objects:` is {rows:")
     _refused(lambda: catalog.load_dir(tempfile.mkdtemp(prefix="empty-")), "no <sub>.subsystem.yaml there")
     _refused(lambda: catalog.spec("nobody"), "no subsystem 'nobody'")
 
@@ -135,3 +135,46 @@ def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
                        ({"param": ["a"], "nested": "b"}, "an entry of `secret_in` is one of")):
         _refused(lambda bad=bad: SecretRules.parse([bad], "field t"), words)
     _refused(lambda: SecretRules.parse({"param": ["a"]}, "field t"), "`secret_in` is a list")
+
+
+def test_the_products_keys_the_course_does_not_read_load_and_change_nothing():
+    """A product spec loads as it is (the coordinator's word): `objects.door` (files a resource's door hands between
+    servers), `heartbeat.strings` (what the Go heartbeat carries as a string) and `secrets` (`readers`, `reads`: who opens
+    which sealed row — in the course the rights file and the specs' `worker`/`about` say it) are accepted and not read.
+    The spec they are added to is the same spec: its rights, its words to the page, its object rows."""
+    import yaml
+    with open(os.path.join(TESTDATA, "testsub.subsystem.yaml")) as f:
+        plain = yaml.safe_load(f)
+    product = {**plain,
+               "objects": {**(plain.get("objects") or {"rows": []}), "door": ["taken/*"]},
+               "heartbeat": {"strings": ["events", "volume"]},
+               "secrets": {"readers": {"door/signer": ["console"]}, "reads": ["domain/member-key"]}}
+    a, b = SubsystemSpec.from_dict(plain), SubsystemSpec.from_dict(product)
+    assert a.acl_console() == b.acl_console() and a.acl_controller() == b.acl_controller()
+    assert a.acl_worker_role() == b.acl_worker_role() and a.object_rows == b.object_rows
+    assert a.describe() == b.describe() if hasattr(a, "describe") else True
+    assert {k: v for k, v in vars(a).items() if not callable(v)} == {k: v for k, v in vars(b).items() if not callable(v)}
+
+
+def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
+    """What each process of a subsystem may write — the console's rows, the controller's placement, the worker's claims,
+    and the three directories of objects with one writer each — is derived from the spec (`acl_*`, `Subsystem.acl_*`),
+    and the cluster's rights file is generated from the same lists (`w2cplatform/cluster/rights.py`). Here on testsub,
+    exactly: a grant dropped from a list (the controller's pass report, say) is a test that fails, not a 403 on a
+    cluster every five seconds (the review's ninth pass)."""
+    spec = SubsystemSpec.from_dict(_testsub())
+    assert spec.acl_console() == ["testsub/counters/*", "testsub/next_id", "testsub/idem/*", "testsub/policy",
+                                  "testsub/sweep", "testsub/requests/*", "testsub/servers/*", "platform/drain",
+                                  "platform/decommission/*"]
+    assert spec.acl_controller() == ["testsub/workers/*", "testsub/placement/*", "testsub/slots/*",
+                                     "testsub/decommissioned/*"]
+    assert spec.acl_worker_role() == spec.sub.acl_worker() == ["testsub/epoch/*", "testsub/slots/*", "testsub/holds/*"]
+    assert spec.sub.acl_objects_worker() == ["testsub/heartbeats/*", "testsub/contenders/*", "testsub/used/*"]
+    assert spec.sub.acl_objects_controller() == ["testsub/snapshot/*", "testsub/controller/pass"]
+    assert spec.sub.acl_objects_console() == ["testsub/blobs/*"]
+
+
+def _testsub() -> dict:
+    import yaml
+    with open(os.path.join(TESTDATA, "testsub.subsystem.yaml")) as f:
+        return yaml.safe_load(f)

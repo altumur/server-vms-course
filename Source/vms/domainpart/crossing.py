@@ -237,10 +237,11 @@ class Crossings:
     # door a backup of this cluster gives (М10B lesson 26): coverage, and the URL of its archive. Carried in the
     # PRIMARY's source book, so that the primary, back, knows where to take its hole from.
     #
-    # Its `archive_url` through the members' one reader too (the review's ninth pass, major): read bare, a list there —
-    # `hb["archive_url"].rstrip("/")` — raised out of the whole `sources` step, and a camera of another cluster added
-    # since went into no book. A url that is not a string is THAT heartbeat's trouble, counted once under
-    # `<cluster>/<key>#archive_url`: no backup archive from it, and the book is written for every camera.
+    # Its `url` (the recorder's archive door, the product's heartbeat word) through the members' one reader too (the
+    # review's ninth pass, major): read bare, a list there — `hb["url"].rstrip("/")` — raised out of the whole `sources`
+    # step, and a camera of another cluster added since went into no book. A url that is not a string is THAT
+    # heartbeat's trouble, counted once under `<cluster>/<key>#url`: no backup archive from it, and the book is written
+    # for every camera.
     def _backup_archive(self, cluster: str, recording: str, now: float, lost_after: float = 45.0) -> dict | None:
         from w2cplatform.domain.federation import MEMBER_OBJECTS
         c = self.view.fed.clusters.get(cluster)
@@ -248,9 +249,9 @@ class Crossings:
             keys = c.objects.list("rec/heartbeats/") if c is not None else []
             for key in keys:
                 hb = published(cluster, key, c.objects.get(key), a_heartbeat) or {}    # …and one recorder's heartbeat, its
-                if not hb.get("archive_url") or now - float(hb.get("ts", 0)) > lost_after:
+                if not hb.get("url") or now - float(hb.get("ts", 0)) > lost_after:
                     continue
-                url = MEMBER_OBJECTS.read(f"{cluster}/{key}#archive_url", lambda: _an_address(hb["archive_url"]))
+                url = MEMBER_OBJECTS.read(f"{cluster}/{key}#url", lambda: _an_address(hb["url"]))
                 if url is None:
                     continue
                 for st in hb.get("status", []):

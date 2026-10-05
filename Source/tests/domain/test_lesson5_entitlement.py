@@ -34,4 +34,4 @@ def test_licence_verified_cached_and_graceful():
     assert ent.status() == "grace" and ent.may_add_unit(50)[0]
     clk.advance(GRACE)
     assert ent.status() == "degraded" and not ent.may_add_unit(50)[0]
-    assert ent.work_allowed()                             # by construction, in every state
+    assert ent.writing_allowed()                             # by construction, in every state

@@ -1,14 +1,17 @@
 """The footage a page reads, served by the holder of what it is of — never by the console (the boundary's step 6).
 
-    GET /door/timeline/<recording>?from&to   on the recorder that holds the recording (`RecWorker.serve_archive`)
-    GET /door/export/<recording>?from&to     the same door: an interval as a fragmented MP4
+    GET /timeline/<recording>?from&to                          on the recorder that holds the recording, raw:
+                                                               `[{start_ms, end_ms, epoch, source?, fenced?, yields?}]`
+    GET /segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4      one piece of it as a fragmented MP4; `.backfill.mp4` the
+                                                               backfilled stream, `.device.mp4` (epoch 0) what the camera
+                                                               holds itself
 
-These were the console's routes (`vms/console.py`, `vms_routes`: `/timeline/<cam>`, `/export/<cam>?rec=`) and are the
-spec's `door: {routes: [timeline, export]}` now: the console says where the door is and lets in (`GET
-/rec/where/<recording>` → `door: {url, token, expires, routes}`, `w2cplatform/door.py`), and the bytes go holder →
-browser. What a door reads is what the console read: every recorder's archive door between processes (`/timeline/`,
-`/samples/`; `archive_routes` in `vms/recworker.py`) — a recording's minutes may be in more than one volume. The
-device's own archive is its holder's door (`VmsWorker.playback_handler`: `/door/timeline/<cam>`, `/door/segment/<cam>`).
+The product's paths (`recproc/door.go`) and the spec's `door: {routes: [timeline, segment]}`: the console says where the
+door is and lets in (`GET /rec/where/<recording>` → `door: {url, token, expires, routes}`, `w2cplatform/door.py`), the
+page goes to `<url>/<route>/<recording>`, and the bytes go holder → browser. What a door reads is every recorder's
+archive door between processes (`/spans/`, `/samples/`; `archive_routes` in `vms/recworker.py`) — a recording's minutes
+may be in more than one volume — and, for the camera's own footage, its holder's playback door by this process's
+capability. There is no door at the camera's holder for a page: the scale is built from the camera's recordings.
 """
 from __future__ import annotations
 
@@ -31,7 +34,7 @@ log = logging.getLogger("vms.footage")
 READ_NOTE_EVERY = 60.0        # the same piece of archive, by the same person: one `archive.read` a minute
 READ_NOTE_BYTES = 1 << 20     # …while what left of it is less than this: a larger part is a line every time
 EXPORT_MAX = 3600.0           # the longest interval one export answers: the page asks for minutes, a person for an hour
-SEGMENT_MAX = 3600.0          # …and one piece of a DEVICE's footage (`/door/segment/<cam>`), after it is cut to the coverage
+SEGMENT_MAX = 3600.0          # …and one piece of a DEVICE's footage (`.device.mp4`), after it is cut to the coverage
 EXPORTS_AT_ONCE = 2           # exports one door makes at a time (`EXPORTS_AT_ONCE` in its environment): each holds a minute
 EXPORT_RETRY = 5.0            # the `Retry-After` of an export refused for that
 EXPORTS_PER_USER = 1          # of those, how many one caller makes at once (`EXPORTS_PER_USER`): one person cannot take them all
@@ -76,7 +79,7 @@ def coverage_of(found) -> tuple[float, float] | None:
 def recorder_doors(objects, now: float, lost_after: float = 45.0, eyes=None) -> list:
     out = []
     for name, hb in sorted(heartbeats(objects, "rec/").items()):
-        url = str(hb.extra.get("archive_url") or "")
+        url = str(hb.extra.get("url") or "")
         if url and heard_live("rec", name, hb, now, lost_after, eyes):
             out.append((name, url.rstrip("/"), hb))
     return out
@@ -150,7 +153,7 @@ def _door(url: str, timeout: float, limit: int | None = None):
 def door_timeline(name: str, url: str, unit, t0: float, t1: float) -> tuple[list[dict], bool]:
     from w2cplatform.rows import ANSWER_MAX
     from .scan import door_spans
-    raw = _door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT, ANSWER_MAX)
+    raw = _door(f"{url}/spans/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT, ANSWER_MAX)
     try:
         return door_spans(f"rec/doors/{name}#{unit}", json.loads(raw))
     except PARSE_ERRORS as e:
@@ -158,18 +161,19 @@ def door_timeline(name: str, url: str, unit, t0: float, t1: float) -> tuple[list
 
 
 # THE ROUTES A RECORDING'S HOLDER OPENS TO A PAGE (the boundary's step 6, the owner's decision 1: the bytes do not go
-# through the console). They were the console's (`vms_routes`: `/timeline/<cam>`, `/export/<cam>?rec=`); a page goes to
-# the recorder that holds the recording now, with the door token the console gave it at `GET /rec/where/<recording>`
-# (`w2cplatform/door.py`), and the routes are the spec's `door: {routes: [timeline, export]}`:
+# through the console). A page goes to the recorder that holds the recording now, with the door token the console gave
+# it at `GET /rec/where/<recording>` (`w2cplatform/door.py`), and the routes are the spec's `door: {routes: [timeline,
+# segment]}`, in the product's paths:
 #
-#   GET /door/timeline/<recording>?from&to   the recording's spans from EVERY recorder's archive door (each holds one
-#                                            volume, and what a recording wrote over its life may be in more than
-#                                            one), fenced epochs marked; a door that did not answer named
-#   GET /door/export/<recording>?from&to     the frames of an interval as a fragmented MP4, each moment from the
-#                                            epoch that owns it whichever door holds it
+#   GET /timeline/<recording>?from&to                       the recording's spans, raw, from EVERY recorder's archive
+#                                                           door (each holds one volume, and what a recording wrote over
+#                                                           its life may be in more than one), fenced epochs marked, and
+#                                                           the camera's own footage as a span that yields
+#   GET /segment/<recording>/e<epoch>/<a>-<b>.mp4           the frames of a piece of one epoch's stream as a fragmented MP4
+#                                                           (`.backfill.mp4`: the backfilled one), each moment from the
+#                                                           door that holds it; `.device.mp4`: the camera's own bytes
 #
-# What they read is what the console read: the doors between recorders (`/timeline/`, `/samples/` — a door between
-# processes, until mutual TLS). Who read what is this recorder's journal (`audit/door-<recorder>`), with the name the
+# What they read is the doors between recorders (`/spans/`, `/samples/` — a door between processes, until mutual TLS). Who read what is this recorder's journal (`audit/door-<recorder>`), with the name the
 # token was given to. `keeper` — the platform's `DoorKeeper` — admits each request; `None` admits everybody (a test's).
 def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
     seen_reads: dict[tuple, float] = {}
@@ -204,12 +208,14 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
 
     def routes(handler, method: str, path: str, q: dict):
         """`(status, body[, headers])` or `()` (answered), or None — not a route of this door."""
-        segs = path.split("/")                           # "", "door", <route>, <recording>
-        if len(segs) != 4 or segs[1] != "door" or segs[2] not in ("timeline", "export") or not safe_segment(segs[3]):
+        segs = path.strip("/").split("/")                # <route>, <recording>[, e<epoch>, <from>-<to>.mp4]
+        if len(segs) < 2 or segs[0] not in ("timeline", "segment") or not safe_segment(segs[1]):
             return None
         if method != "GET":
             return 405, {"detail": "this door is read-only", "error": "method"}
-        route, unit = segs[2], segs[3]
+        route, unit = segs[0], segs[1]
+        if (route == "timeline") != (len(segs) == 2):
+            return 404, {"error": "no such path: /timeline/<recording> or /segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4"}
         if keeper is not None:
             admitted = keeper.admit(handler, route, f"rec/{unit}")
             if admitted is None:
@@ -219,11 +225,23 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
             who = "anybody"
         if route == "timeline":
             return timeline(unit, q)
-        return export(handler, who, unit, q)
+        piece = segment_piece(segs[2:])
+        if piece is None:
+            return 404, {"error": "no such segment: /segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4 (.backfill.mp4, "
+                                  ".device.mp4)"}
+        epoch, t0, t1, source = piece
+        if source == "device":
+            return device_piece(handler, who, unit, t0, t1)
+        return export(handler, who, unit, {"from": t0, "to": t1, "epoch": epoch, "source": source})
 
-    # A recording's timeline: from every recorder's door, a door that does not answer NAMED, not waited for; a volume
-    # nobody serves now (`unserved_volumes`) said — unavailable, not lost. Each span says whose it is and how to play
-    # it (`media`: the export of that recording, a route of this door; the page adds the minutes and its token).
+    # A recording's timeline, RAW as the product's recorder door says it — `[{start_ms, end_ms, epoch, source}]` — from
+    # every recorder's archive door (each holds one volume, and what a recording wrote over its life may be in more than
+    # one: the footage a previous recorder left on its volume is here, at the recording's door, as long as a recorder
+    # serves that volume), a span of an epoch the store has fenced since saying `fenced: true`; and what the camera
+    # itself holds of it (its card, an NVR's disks: the holder's `coverage`) as a span that YIELDS — `source: device,
+    # yields: true`, epoch 0 — which the page draws only where no recorder's span is (the owner's decision). A door that
+    # does not answer is NAMED, not waited for (`X-Unreachable`); a volume nobody serves now is named too
+    # (`X-Unavailable`: unavailable until a recorder holds it again, not lost).
     def timeline(unit: str, q: dict):
         try:                                             # a word, `nan`: 400 — it was no reply at all (the tenth round)
             t0, t1 = finite(q.get("from", 0)), finite(q.get("to", 1e12))
@@ -243,20 +261,82 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
                 unreachable.append(name)                 # spans it said that do not parse: its picture is not whole
             for sp in got:
                 fenced = bool(sp.get("fenced")) or (cur is not None and 0 < sp["epoch"] < cur)
-                ours.append({**sp, "fenced": fenced, "recording": unit, "recorder": name,
-                             "volume": hb.extra.get("volume", ""), "media": f"export/{unit}"})
-        spans = sorted(ours, key=lambda d: (d["start"], d["epoch"]))
+                ours.append({"start_ms": int(round(sp["start"] * 1000)), "end_ms": int(round(sp["end"] * 1000)),
+                             "epoch": sp["epoch"], **({"source": "backfill"} if sp["source"] == "backfill" else {}),
+                             **({"fenced": True} if fenced else {})})
+        dev = device_coverage(unit)
+        if dev is not None:
+            lo, hi = max(t0, dev[0]), min(t1, dev[1])
+            if hi > lo:
+                ours.append({"start_ms": int(round(lo * 1000)), "end_ms": int(round(hi * 1000)), "epoch": 0,
+                             "source": "device", "yields": True})
+        spans = sorted(ours, key=lambda d: (d["start_ms"], d["epoch"]))
         gone = unserved_volumes(objects, wall(), eyes=eyes)
-        if unreachable or gone:
-            notes = []
-            if unreachable:
-                notes.append("a recorder's archive door did not answer: its footage is missing from this picture")
-            if gone:
-                notes.append("footage in " + ", ".join(f"{g['volume']} (on {g['server']})" for g in gone) +
-                             " is unavailable until a recorder holds it again — not lost")
-            return 200, {"segments": spans, "unreachable": sorted(set(unreachable)), "unavailable": gone,
-                         "note": "; ".join(notes)}
-        return 200, spans
+        headers = [*([("X-Unreachable", ",".join(sorted(set(unreachable))))] if unreachable else []),
+                   *([("X-Unavailable", ",".join(f"{g['volume']}@{g['server']}" for g in gone))] if gone else [])]
+        return 200, spans, headers
+
+    # What the camera of a recording holds itself, and where to read it: `(from, to)` from its holder's `coverage`, or
+    # None — no holder serves the device's own archive, or the recording names no camera.
+    def device_holder(unit: str):
+        from w2cplatform.console import holder_of
+        try:
+            items, _ = vars_.get(f"rec/recordings/{unit}")
+        except OSError:
+            return None
+        cam = str((items or {}).get("cam") or "")
+        if not cam or (items or {}).get("deleted") == "true":
+            return None
+        return holder_of(objects, "vms/", cam, wall(), field="playback_url")
+
+    def device_coverage(unit: str):
+        return coverage_of(device_holder(unit))
+
+    # A piece of what the camera holds, through this door: cut to the coverage and held to `SEGMENT_MAX`, read from the
+    # camera's holder by this process's capability (`playback.process_url`) and passed on AS IT COMES, in chunks — the
+    # review's fifth pass, major: a day of a card read whole into one buffer — the last chunk only when the holder's
+    # answer was whole. Under the same bounds as an export (`bounded`: the door's slots, the person's share). Each read is
+    # an `archive.read` line with `source: device`.
+    def device_piece(handler, who: str, unit: str, t0: float, t1: float):
+        found = device_holder(unit)
+        cov = coverage_of(found)
+        if found is None or cov is None:
+            return 404, {"detail": f"nothing holds the camera of recording {unit} that keeps footage of its own",
+                         "error": "no device archive"}
+        lo, hi = max(t0, cov[0]), min(t1, cov[1])
+        if hi <= lo:
+            return 404, {"detail": f"the camera holds nothing of that interval (it holds {cov[0]:.0f}..{cov[1]:.0f})",
+                         "error": "nothing there"}
+        if hi - lo > SEGMENT_MAX:
+            return 400, {"detail": f"a piece of the camera's footage is at most {SEGMENT_MAX:.0f} s", "error": "range too long"}
+        return bounded(handler, who, lambda whole: _device(handler, who, unit, found, lo, hi, whole))
+
+    def _device(handler, who: str, unit: str, found, lo: float, hi: float, whole: list):
+        from .playback import process_url
+        try:
+            r = urllib.request.urlopen(f"{process_url(found)}?from={lo}&to={hi}", timeout=30.0)
+        except (OSError, ValueError, http.client.HTTPException) as e:
+            return 503, {"detail": f"the camera's holder did not give the piece: {e}", "error": "device busy"}
+        sent, broken = {"bytes": 0, "sha": hashlib.sha256()}, None
+        with r:
+            if not framed(r):
+                return 503, {"detail": "the camera's holder answered with neither chunks nor a length", "error": "device busy"}
+            out = start_chunks(handler, keeper.headers(handler) if keeper is not None else [])
+            try:
+                while True:
+                    b = r.read(1 << 16)
+                    if not b:
+                        break
+                    out(b)
+                    sent["bytes"] += len(b); sent["sha"].update(b)
+                whole.append(out.tail)
+            except (OSError, http.client.HTTPException) as e:     # the holder went, or the client: the cut is SEEN
+                broken = str(e) or type(e).__name__
+                log.warning("a piece of the camera of recording %s stopped after %d bytes: %s", unit, sent["bytes"], broken)
+        note_read(handler, who, f"rec/{unit}/device/{lo:.0f}-{hi:.0f}",
+                  {"status": 200, "bytes": sent["bytes"], "whole": broken is None,
+                   **({"sha256": sent["sha"].hexdigest()} if broken is None else {"broken": broken})})
+        return ()
 
     # AT MOST `EXPORTS_AT_ONCE` OF THEM, AND EACH A STREAM (the review's third pass, major) — on each holder now, as
     # they were on the console: an export reads a minute of the recording at a time and writes the MP4 as it is made,
@@ -273,6 +353,11 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
                                                                             ("Retry-After", str(int(EXPORT_RETRY)))]
 
     def export(handler, who: str, unit: str, q: dict):
+        return bounded(handler, who, lambda whole: _export(handler, who, unit, q, whole))
+
+    # `make(whole)` inside a slot of the door and of the caller's share; what it put in `whole` — the last chunk — is
+    # written when both are given back.
+    def bounded(handler, who: str, make):
         mine = max(1, int(os.environ.get("EXPORTS_PER_USER", EXPORTS_PER_USER)))
         with per_user_lock:
             if per_user.get(who, 0) >= mine:
@@ -283,7 +368,7 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
             if not exporting.acquire(blocking=False):
                 return busy("this door is making as many exports as it makes at once — retry")
             try:
-                return _export(handler, who, unit, q, whole)
+                return make(whole)
             finally:
                 exporting.release()
         finally:
@@ -319,7 +404,7 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
         # THE FRAMES OF A STRETCH, A MINUTE AT A TIME (the review's third pass, major), cut at a key frame the way the
         # recorder cuts what it lands. A DOOR THAT FAILS AFTER THE FIRST BYTE BREAKS THE EXPORT (the sixth pass): the
         # reply ends WITHOUT its last chunk, and the line is `broken`; before the first byte a door that does not
-        # answer is a header (`X-Archive-Unreachable`) and a file that is whole for what it says it is.
+        # answer is a header (`X-Unreachable`) and a file that is whole for what it says it is.
         def frames_of(name: str, url: str, lo: float, hi: float):
             at = lo
             while at < hi:
@@ -351,6 +436,8 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
             if not said_whole:
                 unreachable.append(name)                 # a span it said that does not parse: named, as a silent door
             for sp in got:
+                if "epoch" in q and (sp["epoch"] != q["epoch"] or sp["source"] != q.get("source", "live")):
+                    continue                             # a segment is one epoch's stream: the live one or its backfill
                 span = Span(unit, sp["epoch"], sp["start"], sp["end"], sp["bytes"], sp["source"])
                 spans.append(span)
                 where.setdefault(span, (name, url))
@@ -398,7 +485,7 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
                     for k, v in cors:
                         handler.send_header(k, v)
                     if unreachable:
-                        handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
+                        handler.send_header("X-Unreachable", ",".join(sorted(set(unreachable))))
                     if chunked:
                         handler.send_header("Transfer-Encoding", "chunked")
                     handler.send_header("Connection", "close")
@@ -434,6 +521,47 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
 
     routes.note_read = note_read
     return routes
+
+
+# A 200 of `video/mp4` begun on `handler`, its body in chunks to an HTTP/1.1 client (the connection's end to another):
+# `out(bytes)` writes one, `out.tail` is the last chunk — written only when what it carries was whole.
+def start_chunks(handler, cors=()):
+    chunked = getattr(handler, "request_version", "") == "HTTP/1.1"
+    if chunked:
+        handler.protocol_version = "HTTP/1.1"
+    handler.send_response(200)
+    handler.send_header("Content-Type", "video/mp4")
+    for k, v in cors:
+        handler.send_header(k, v)
+    if chunked:
+        handler.send_header("Transfer-Encoding", "chunked")
+    handler.send_header("Connection", "close")
+    handler.end_headers()
+    handler.close_connection = True
+
+    def out(b: bytes) -> None:
+        handler.wfile.write(b"%x\r\n%s\r\n" % (len(b), b) if chunked else b)
+    out.tail = b"0\r\n\r\n" if chunked else b""
+    return out
+
+
+# `/segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4` after the recording: `(epoch, from, to, source)` in unix seconds —
+# `source` `live`, `backfill` (`.backfill.mp4`: the backfilled stream beside the live one) or `device` (`.device.mp4`, epoch
+# 0: what the camera holds itself) — or None for anything else. The bounds are in the path, as the product's pieces are.
+def segment_piece(rest: list):
+    if len(rest) != 2 or not rest[0].startswith("e") or not rest[1].endswith(".mp4"):
+        return None
+    name, source = rest[1][:-len(".mp4")], "live"
+    for tail in ("backfill", "device"):
+        if name.endswith("." + tail):
+            name, source = name[:-len(tail) - 1], tail
+    lo, sep, hi = name.partition("-")
+    if not sep or not lo.isdigit() or not hi.isdigit() or not rest[0][1:].isdigit():
+        return None
+    epoch, a, b = int(rest[0][1:]), int(lo), int(hi)
+    if b <= a or (source == "device") != (epoch == 0):
+        return None
+    return epoch, a / 1000.0, b / 1000.0, source
 
 
 # A route's answer onto the wire, for a door that is not the console (`SendMixin` has no headers of its own): JSON,

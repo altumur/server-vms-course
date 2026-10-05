@@ -5,4 +5,4 @@
 ## Names
 - `GRACE = 30 days` — the number the datasheet states.
 - `class Licence(domain, units, features, valid_until, issued)` — `verify(blob, vendor_public)`: `<json>.<hex signature>`, Ed25519 under the vendor's key; anything else is `LicenceError`.
-- `class EntitlementCache(domain, vars, vendor_public, now)` — `install(blob)` (verified, this domain's, kept at `domain/licence`, exported in the backup); `current()`; `status()` → `none | valid | grace | degraded`; `may_add_unit(current_count)` → `(bool, why)`; `work_allowed()` → `True`, by construction.
+- `class EntitlementCache(domain, vars, vendor_public, now)` — `install(blob)` (verified, this domain's, kept at `domain/licence`, exported in the backup); `current()`; `status()` → `none | valid | grace | degraded`; `may_add_unit(current_count)` → `(bool, why)`; `writing_allowed()` → `True`, by construction.

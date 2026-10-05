@@ -134,6 +134,7 @@ def test_requests_are_looked_at_far_more_often_than_they_live():
     the drops that still happen are a number on `/metrics`, not a line in a log."""
     import vms.__main__ as m
     from vms import jobs
+    from w2cplatform import requests
     from w2cplatform.metrics import text as spec_metrics
     from vms.controller import VmsController
     from vms.config import SPEC
@@ -143,12 +144,12 @@ def test_requests_are_looked_at_far_more_often_than_they_live():
     assert "record_on_request(" not in reaper and "detect_on_request(" not in reaper   # moved, not copied
 
     box = Box(); det, job, rec = _site(box)
-    before = jobs.expired["det"]
+    before = requests.expired.get("det", 0)
     _ask(box, "f1-0", action="detect", cam="7", kind="lpr", minutes=10)
     box.wall.advance(31)
-    assert detect_on_request(det, job, rec, box.wall()) == 0 and jobs.expired["det"] == before + 1
+    assert detect_on_request(det, job, rec, box.wall()) == 0 and requests.expired.get("det", 0) == before + 1
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    assert f'vms_requests_expired_total{{sub="det"}} {before + 1}' in jobs.metrics_lines()   # the loop's process's own numbers
+    assert f'w2c_requests_expired_total{{sub="det"}} {before + 1}' in requests.metrics_lines()   # the loop's process's own numbers
 
 
 def test_firings_that_overlap_widen_one_job_instead_of_making_a_job_each():

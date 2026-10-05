@@ -494,10 +494,12 @@ def _slot(name, slot) -> tuple[str, str]:
 
 
 # `objects: {rows: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a segment `*`.
+# `objects.door` — the product's files a resource's door gives the other servers — is accepted and not read: the course
+# keeps no such file (its objects are rows of the store, or the resource's buckets), and a product spec loads as it is.
 def _object_rows(name, objects) -> tuple:
     if objects is None:
         return ()
-    if not isinstance(objects, dict) or set(objects) - {"rows"} or not isinstance(objects.get("rows", []), list):
+    if not isinstance(objects, dict) or set(objects) - {"rows", "door"} or not isinstance(objects.get("rows", []), list):
         raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …]}}, not {objects!r}")
     out = []
     for p in objects.get("rows") or []:
@@ -831,7 +833,9 @@ class SubsystemSpec:
     # `POST /requests` of this subsystem (`SpecConsole._request_route`; the boundary's step 6: it was a subsystem's
     # route, `extra`): the body's shape, how long a request is worth doing (`valid_until`), how many one person may
     # have unanswered, how it is named (a template of its fields, or the `Idempotency-Key`), what the console stamps
-    # on it (`by`, `at`, its unit's `group`, the field its unit is `about`), the journal's line.
+    # on it (`by`, `at`, its unit's `group`, the field its unit is `about`), the journal's line; `elsewhere` — the
+    # actions of this family another process turns into work (not the unit's holder): the reaper leaves them to it
+    # (`requests.clear_requests`). The holder performs the rest (`Worker.requests`), and `most_valid` bounds its wait.
     requests: dict = field(default_factory=dict)
     running_gauge: str = "units_running"     # the console's gauge for units in phase "running" (console: {running: …})
     # `events: {older_epochs: fenced | earlier-run}` — what it MEANS that a unit's events were written
@@ -903,7 +907,7 @@ class SubsystemSpec:
     requests_free: bool = False
     # `door: {routes: [<route>]}` — what a unit's holder opens to a page itself, the bytes going holder → browser and
     # never through the console (the boundary's step 6, the owner's decision 1): `/where/<id>` hands out the door —
-    # the holder's `door_url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
+    # the holder's `url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
     door_routes: tuple = ()
     # `domain: {...}` — what this subsystem gives the domain above its clusters and takes from it (`DomainSection`; the
     # boundary's «no hooks»: it was code the domain called and named — the books, the rows a member carries, the fields
@@ -1126,9 +1130,11 @@ class SubsystemSpec:
         self.door_routes = parse_routes(f"spec {self.name}", d.get("door"))
         req = d.get("requests")
         if req is not None:
-            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal"}
+            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
+                     "elsewhere"}
             if not isinstance(req, dict) or set(req) - known or not isinstance(req.get("free", False), bool) \
-                    or set(req.get("stamp") or []) - {"by", "at", "group", "about"}:
+                    or set(req.get("stamp") or []) - {"by", "at", "group", "about"} \
+                    or not isinstance(req.get("elsewhere", []), list):
                 raise ValueError(f"spec {self.name}: `requests:` is {{{', '.join(sorted(known))}}}, not {req!r}")
             from . import schema as _schema
             self.requests_free = req.get("free", False)

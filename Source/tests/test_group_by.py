@@ -272,7 +272,7 @@ def test_a_command_is_a_row_performed_by_whoever_holds_the_device():
     this subsystem is built not to do. So the command is a row, the holder
     performs it, and the row is cleared by the controller when the heartbeat
     says it was done."""
-    from vms.jobs import clear_requests
+    from w2cplatform.requests import clear_requests
 
     box = Box(); ctl, con = _ctl(box)
     door = con.create_camera({"name": "front door", "source": "driverpack://acme/10.0.0.90/ch/1",

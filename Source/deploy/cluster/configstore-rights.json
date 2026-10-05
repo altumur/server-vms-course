@@ -21,7 +21,9 @@
     "domain/break_glass",
     "domain/grants/*",
     "objects/rec/used/*",
-    "objects/vms/commands/*"
+    "objects/vms/commands/*",
+    "door/signer",
+    "door/keys"
    ],
    "write": [
     "auto/scenarios/*",
@@ -78,7 +80,9 @@
     "vms/requests/*",
     "vms/servers/*",
     "vms/retention/*",
-    "vms/alarms_retention/*"
+    "vms/alarms_retention/*",
+    "door/signer",
+    "door/keys"
    ],
    "delete": [
     "auto/scenarios/*",
@@ -135,7 +139,9 @@
     "vms/requests/*",
     "vms/servers/*",
     "vms/retention/*",
-    "vms/alarms_retention/*"
+    "vms/alarms_retention/*",
+    "door/signer",
+    "door/keys"
    ]
   },
   "autocontroller": {
@@ -165,7 +171,8 @@
     "auto/*",
     "platform/decommission/*",
     "domain/keys",
-    "domain/member"
+    "domain/member",
+    "door/keys"
    ],
    "write": [
     "auto/epoch/*",
@@ -214,7 +221,8 @@
     "vms/*",
     "platform/decommission/*",
     "domain/keys",
-    "domain/member"
+    "domain/member",
+    "door/keys"
    ],
    "write": [
     "det/epoch/*",
@@ -257,7 +265,8 @@
     "vms/*",
     "platform/decommission/*",
     "domain/keys",
-    "domain/member"
+    "domain/member",
+    "door/keys"
    ],
    "write": [
     "detjob/epoch/*",
@@ -299,7 +308,8 @@
     "vms/*",
     "platform/decommission/*",
     "domain/keys",
-    "domain/member"
+    "domain/member",
+    "door/keys"
    ],
    "write": [
     "live/epoch/*",
@@ -344,6 +354,7 @@
     "platform/decommission/*",
     "domain/keys",
     "domain/member",
+    "door/keys",
     "domain/vms/primaries",
     "objects/rec/used/*"
    ],
@@ -389,7 +400,8 @@
     "vms/*",
     "platform/decommission/*",
     "domain/keys",
-    "domain/member"
+    "domain/member",
+    "door/keys"
    ],
    "write": [
     "survey/epoch/*",
@@ -431,6 +443,7 @@
     "platform/decommission/*",
     "domain/keys",
     "domain/member",
+    "door/keys",
     "objects/vms/commands/*"
    ],
    "write": [

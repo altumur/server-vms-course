@@ -487,9 +487,9 @@ def test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_who
     assert "east/vms/heartbeats/w-1" in MEMBER_OBJECTS.bad
 
 
-def test_a_recorders_archive_url_that_is_a_list_stops_no_source_book_and_a_string_of_urls_takes_no_road_away():
+def test_a_recorders_url_that_is_a_list_stops_no_source_book_and_a_string_of_urls_takes_no_road_away():
     """Two reads of another cluster's data in the books, not through the one reader: the backup's recorder publishing
-    `archive_url` as a list raised in `.rstrip` out of the whole `sources` step — no book written for any camera;
+    its archive door's `url` as a list raised in `.rstrip` out of the whole `sources` step — no book written for any camera;
     and an ingest announcing `urls` as a STRING passed `list(...)` as its letters, and the book of primaries handed
     the camera a string for a road. Now the url is that heartbeat's trouble — no backup archive from it, counted —
     and the string is an announcement that does not parse: the road the book already held stays."""
@@ -501,11 +501,11 @@ def test_a_recorders_archive_url_that_is_a_list_stops_no_source_book_and_a_strin
     o = _office(wall)
     o.b.objects.put(Subsystem("rec").heartbeat_key("r-b"), Heartbeat("r-b", wall(), [
         {"id": f"{SN}-copy", "cam": f"ref:{SN}", "enabled": True, "phase": "running",
-         "coverage": {"from": wall() - 60, "to": wall()}}], {"archive_url": ["http://srv-b:9100/"]}).to_bytes())
+         "coverage": {"from": wall() - 60, "to": wall()}}], {"url": ["http://srv-b:9100/"]}).to_bytes())
     books = o.crossings.publish()
     entry = json.loads(books["srv-a"][SN])
     assert "backups" not in entry and json.loads(o.b.vars.get(f"{SOURCES_PATH}/srv-a")[0][SN]) == entry
-    assert any(k.endswith("#archive_url") for k in MEMBER_OBJECTS.bad)
+    assert any(k.endswith("#url") for k in MEMBER_OBJECTS.bad)
     o.a.objects.put(INGEST, json.dumps({"cluster": "srv-a", "urls": "srt://srv-a:9000", "ts": wall()}).encode())
     o.crossings.publish_primaries()
     said = json.loads(o.b.vars.get(f"{PRIMARIES_PATH}/{o.cam.name}")[0][SN])

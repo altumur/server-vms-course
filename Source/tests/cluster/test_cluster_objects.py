@@ -17,7 +17,8 @@ from w2cplatform.cluster.objectstore import ClusterObjectStore, ObjectsUnavailab
 from w2cplatform.cluster.variables import FakeVariables
 from tests.cluster.conftest import Clock
 from w2cplatform.blobs import digest
-from w2cplatform.contract import Controller, Subsystem, Worker
+from w2cplatform.contract import Controller, Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.resource import Resource, resources_seen, serve
 
 

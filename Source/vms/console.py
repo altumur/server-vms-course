@@ -5,8 +5,7 @@ Everything a page asks — the page, /spec, /cameras, /where, /marks, /metrics, 
 recorder's tables and requests under `/rec/…` — is `w2cplatform.console.SpecConsole` reading the specs. The footage and
 the live stream do NOT go through it (the owner's decision 1): `GET /where/<id>` hands out the door of the unit's
 holder with a token (`door:` in a spec, `w2cplatform/door.py`), and the page reads the holder itself — a recording's
-recorder (`vms/footage.py`), a camera's holder for the device's own archive, a gateway for the stream. The routes that
-were here — `/timeline/<cam>`, `/export/<cam>`, `/segment`, `/whep/<cam>` (`vms_routes`, `LiveFront`) — are those doors.
+recorder (`vms/footage.py`: its spans, its pieces, and what the camera holds itself), a gateway for the stream.
 The deployed console is the platform's verb, `python3 -m w2cplatform console` with `CONSOLE_ROOT=vms` (`host.py`); this
 module builds the same `Mount` for the tests and the lessons, from the VMS's specs: its own token, the operator's rows —
 cameras, next_id, retention — and never placement.
@@ -23,7 +22,7 @@ from .controller import VmsController
 
 
 # `SpecConsole`s over the VMS's specs, mounted in one process (`host.spec_console`, the platform's): the VMS at `/` (the
-# page, /cameras, /where with the holder's door), and every other subsystem the console fronts under its name —
+# page, /cameras, /where), and every other subsystem the console fronts under its name —
 # `/live/…`, `/rec/…`, `/det/…` — each with the console's token, one journal and one index for all of them. With a
 # resource root on this server, operator marks (`POST /marks`) go into the console's own event log there.
 def make_console(ctl: VmsController, resource_root: str | None, wall=None, live_ctl: SpecController | None = None,

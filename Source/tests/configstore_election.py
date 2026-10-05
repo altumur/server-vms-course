@@ -53,7 +53,8 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 
 from w2cplatform.configstore import TUNINGS  # noqa: E402
-from w2cplatform.contract import Subsystem, Worker  # noqa: E402
+from w2cplatform.contract import Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.variables import open_vars  # noqa: E402
 
 POLL = 2.0                     # `Worker.run`'s default `poll`: the lease step is LOOKED AT this often
