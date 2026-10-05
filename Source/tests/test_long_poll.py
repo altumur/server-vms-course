@@ -1016,7 +1016,7 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
 
 def test_a_command_is_performed_only_on_the_device_it_was_given_for():
     """The review's eighth pass, minor: rights on a command are asked when it is given, on every camera of the device
-    (the spec's `rights.reach.requests`, by the group), and it may wait ten minutes (`MAX_VALID`). A camera moved onto
+    (the spec's `rights.reach.requests`, by the group), and it may wait ten minutes (`requests.most_valid`). A camera moved onto
     another device meanwhile is not the camera the person had the right to command: the console writes the group its
     rights were asked on into the row (`group`, the spec's `requests.stamp`), and the holder performs it only there —
     refused, in plain words, otherwise. A row with no `group` is as before."""

@@ -20,6 +20,7 @@ import time
 from tests.conftest import Box, testsub, testsub2
 from w2cplatform.contract import Controller, Heartbeat, NotReadThisPass
 from w2cplatform.epoch import current_epoch, next_epoch
+from w2cplatform.canonical import canonical_json
 from w2cplatform.events import COMMAND, COMMAND_FAILED, read_bucket
 from w2cplatform.spec import SubsystemSpec
 from w2cplatform.worker import Worker
@@ -181,7 +182,7 @@ def test_the_base_writes_command_and_command_failed_with_the_units_of():
     Controller(testsub2().sub, box.vars, box.objects, wall=box.wall).assign("t-1", ["t1"])
     w.assignment()
     w.open = {"t1": {"id": "t1", "of": "c1", "feed": "https://feeds.example/a"}}
-    _ask(box, testsub2(), "r1", "testsub2/t1", 2)
+    _ask(box, testsub2(), "r1", "testsub2/t1", 2, by="ann")
     _ask(box, testsub2(), "r2", "t1", -1)
     _ask(box, testsub2(), "r3", "t1", 4, group="https://feeds.example/b")
     done = {d["request"]: d for d in _look(w, 3)}
@@ -192,9 +193,12 @@ def test_the_base_writes_command_and_command_failed_with_the_units_of():
     assert sorted(ln["kind"] for ln in lines) == [COMMAND, COMMAND_FAILED, COMMAND_FAILED], lines
     assert {ln.get("of") for ln in lines} == {"testsub/c1"}, lines
     performed = next(ln for ln in lines if ln["kind"] == COMMAND)
-    assert performed["added"] == 2
-    assert {ln.get("error") for ln in lines if ln["kind"] == COMMAND_FAILED} == {
-        "a tally only grows", "tally t1 went to another feed after this was asked"}
+    # the platform's fields at the top, the target's answer whole under `reply` (what the console module reads)
+    assert performed["outcome"] == "performed" and performed["by"] == "ann" and performed["reply"] == {"added": 2}, performed
+    assert "added" not in performed and "late" not in performed
+    failed = [ln for ln in lines if ln["kind"] == COMMAND_FAILED]
+    assert {ln["outcome"] for ln in failed} == {"refused"} and all("reply" not in ln for ln in failed), failed
+    assert {ln.get("error") for ln in failed} == {"a tally only grows", "tally t1 went to another feed after this was asked"}
 
 
 def test_no_spec_names_the_request_familys_kinds_among_its_own():
@@ -230,3 +234,114 @@ def test_a_target_that_hangs_holds_its_own_key_and_no_other():
     assert "box-a" in w._performing and w._slow == {"box-a"}
     hang.set()
     assert [d.get("added") for d in _look(w, 1)] == [1]
+
+
+def test_a_target_that_answers_after_the_timeout_keeps_the_request_answered_and_its_mark_says_what_was_done_late():
+    """A call not back after `PERFORM_TIMEOUT` is answered "did not answer" (the request's answer: refused, cleared by
+    the console). When the target answers after all, that answer stands and the row is not touched — but the MARK says
+    what was really done to it, `late: true` beside the outcome: the next instance says it again rather than `unknown`,
+    and `late` tells an execution past the timeout (an incident) from an ordinary one (the architect's decision)."""
+    box = Box()
+    gate = threading.Event()
+    w = _holder(box, testsub(), ["c1"], gate=gate)
+    _ask(box, testsub(), "r1", "c1", 4)
+    assert w.requests() == [] and len(w._performing) == 1
+    box.clock.advance(w.PERFORM_TIMEOUT)
+    done = w.requests()
+    assert [d.get("error") for d in done] == ["the target did not answer"] and w.fetched == ["r1"], done
+    assert "outcome" not in json.loads(box.objects.get(testsub().sub.command_key("r1")))
+    gate.set()
+    for _ in range(100):
+        if not w._performing:
+            break
+        w.requests()
+        time.sleep(0.02)
+    mark = json.loads(box.objects.get(testsub().sub.command_key("r1")))
+    assert mark["outcome"] == "performed" and mark["late"] is True and w.calls == [("c1", "c1", 4)], mark
+    assert w.fetched == ["r1"] and w.commands == {"performed": 0, "refused": 1, "expired": 0, "unknown": 0}
+    assert box.vars.get(testsub().sub.request_key("r1"))[0]["add"] == "4"          # the row as it was
+    path = w.observe("c1", "counted")
+    said = [(ln["kind"], ln.get("outcome"), ln.get("late"), ln.get("error"), ln.get("reply"))
+            for ln in read_bucket(path) if ln.get("kind") in (COMMAND, COMMAND_FAILED)]
+    assert said == [(COMMAND_FAILED, "refused", None, "the target did not answer", None),
+                    (COMMAND, "performed", True, None, {"added": 4})], said   # the incident, on the unit's line
+    # the next instance, under another name the unit moved to: the mark's answer, said again — not `unknown`
+    w2 = Holder(box, testsub())
+    w2.server = "srv-2"
+    w2.claim_slot("w-2")
+    Controller(testsub().sub, box.vars, box.objects, wall=box.wall).assign("w-2", ["c1"])
+    w2.assignment()
+    w2.open = {"c1": {"id": "c1"}}
+    again = w2.requests()
+    assert [(d.get("answered"), d.get("by")) for d in again] == [("performed", w.name)] and w2.calls == [], again
+    assert w2.commands["unknown"] == 0 and w2.reanswered == 1
+
+
+def test_a_family_that_declares_no_most_valid_refuses_every_request_it_is_handed():
+    """`most_valid` is the spec's number and nothing else (the loader requires it wherever `valid_for` is declared): a
+    family that declares none has no deadline the holder could judge near, and its requests are refused in those words
+    rather than measured against a number nobody wrote."""
+    box = Box()
+    spec = SubsystemSpec.from_dict({"name": "bare", "unit": {"rows": "bares", "id": "name",
+                                                             "fields": {"name": {"type": "string", "required": True}}},
+                                    "placement": {"capacity": {"from": "capacity", "default": 4}},
+                                    "requests": {"free": True, "ttl": 0}})
+    assert spec.requests.get("most_valid") is None
+    w = _holder(box, spec, ["b1"])
+    assert w.most_valid() is None
+    box.vars.put(spec.sub.request_key("r1"), {"unit": "b1", "add": "1", "valid_until": str(box.wall() + 30)})
+    done = w.requests()
+    assert [d.get("error") for d in done] == ["this family declares no `requests.most_valid`: no deadline can be "
+                                              "judged near"] and w.calls == [], done
+
+
+def test_the_familys_numbers_in_the_heartbeat_are_the_bases_and_the_vms_holder_says_none_of_them():
+    """What the family counts — the outcomes, the answers said again, the calls in flight, the road to the call — the base
+    says in every holder's heartbeat (`Worker.requests_fields`, in `platform_fields`), by the product's names, which the
+    spec's `metrics:` reads. A holder that adds nothing to its heartbeat says them all; the VMS holder says none of them
+    itself."""
+    import inspect
+    from vms.worker import VmsWorker
+    box = Box()
+    gate = threading.Event()
+    gate.set()
+    w = _holder(box, testsub(), ["c1", "c2"], gate=gate)
+    _ask(box, testsub(), "r1", "c1", 1)
+    assert [d.get("added") for d in _look(w, 1)] == [1]
+    gate.clear()
+    _ask(box, testsub(), "r2", "c2", 2)
+    w.requests()                                                       # c2's call hangs: in flight
+    w.reanswered = 1                                                   # an answer said again (its own test: the late mark)
+    w.heartbeat_once()
+    hb = Heartbeat.from_bytes(box.objects.get(testsub().sub.heartbeat_key(w.name)))
+    for field in ("fetched", "command_counts", "commands_reanswered", "commands_in_flight", "command_road",
+                  "command_request", "command_wait"):
+        assert field in hb.extra, (field, sorted(hb.extra))
+    assert hb.extra["commands_in_flight"] == 1 and hb.extra["command_counts"]["performed"] == 1
+    gate.set()
+    vms = inspect.getsource(VmsWorker.heartbeat_extra) + inspect.getsource(VmsWorker.heartbeat_fields)
+    for field in ("fetched", "command_counts", "commands_reanswered", "commands_in_flight", "command_road",
+                  "command_request", "command_wait"):
+        assert f'"{field}"' not in vms, field
+
+
+def test_a_mark_and_a_contenders_row_are_written_in_the_one_canonical_text():
+    """The base writes its store rows through `canonical_json` (compact, keys sorted, numbers by `number_text` — the
+    product's `CanonicalJSON`): the request's mark before the call, the answer written into it after, and the mark a
+    process leaves on a name another instance holds. A Go reader and a Python one read the same bytes."""
+    box = Box()
+    w = _holder(box, testsub(), ["c1"])
+    _ask(box, testsub(), "r1", "c1", 3)
+    raw = box.objects.get(testsub().sub.command_key("r1"))
+    assert raw is None
+    w._mark("r1", "c1", box.wall())
+    raw = box.objects.get(testsub().sub.command_key("r1")).decode()
+    assert raw == canonical_json(json.loads(raw)) and ", " not in raw, raw
+    box.objects.delete(testsub().sub.command_key("r1"))
+    assert [d.get("added") for d in _look(w, 1)] == [3]
+    raw = box.objects.get(testsub().sub.command_key("r1")).decode()
+    assert raw == canonical_json(json.loads(raw)) and json.loads(raw)["outcome"] == "performed", raw
+    w._contend("w-9", "somebody-else", "nameless")
+    key = testsub().sub.contender_key("w-9", w._box())
+    raw = box.objects.get(key).decode()
+    assert raw == canonical_json(json.loads(raw)), raw
