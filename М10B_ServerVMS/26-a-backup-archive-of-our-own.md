@@ -1,7 +1,7 @@
 # Урок 26 — Свой резервный архив
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** резервные виды тома `backup` и `edge` в `vms/volumes.py` и два правила размещения за именованными дверями платформы (`register_admit`, `register_near_rank`); сводку покрытия резервной записи в heartbeat и дверь архива регистратора как источник; второй источник дозаписи — `backup_sources`, `fetch_from` и `read_samples`: кадры из двери резервной вместо перезаписи; резервную запись `when: offline`, которая пишет только за упавшую основную; её предзапись — кольцо в памяти, выпущенное первым, с временем каждого кадра по времени съёмки; и карту камеры без движка — `vms/card.py`: кольцо камеры `CamRing`, буфер карты `CardBuffer`, `CardActuator` и `CardRecorder`.
+**Вы напишете:** резервные виды тома `backup` и `edge` в `vms/volumes.py` и два правила размещения — декларациями спек, которые исполняет платформа (`affinity` в `rec.subsystem.yaml`, `near: {…, prefer: …}` в `vms.subsystem.yaml`); сводку покрытия резервной записи в heartbeat и дверь архива регистратора как источник; второй источник дозаписи — `backup_sources`, `fetch_from` и `read_samples`: кадры из двери резервной вместо перезаписи; резервную запись `when: offline`, которая пишет только за упавшую основную; её предзапись — кольцо в памяти, выпущенное первым, с временем каждого кадра по времени съёмки; и карту камеры без движка — `vms/card.py`: кольцо камеры `CamRing`, буфер карты `CardBuffer`, `CardActuator` и `CardRecorder`.
 **Время:** ~140 минут.
 
 ## Зачем этот урок
@@ -18,13 +18,13 @@
 
 ## Что нужно знать заранее
 
-- **Урок 10** ([регистратор](10-recworker.md)) — тома (`rec/volumes/*`), их захват, `place_by: volume`, `home` как предпочтение; две записи одной камеры; дверь архива регистратора.
+- **Урок 10** ([регистратор](10-recworker.md)) — тома (`rec/volumes/*`), их захват (механизм мест платформы — [М10A, урок 7](../М10A_Platform/07-Slot-and-Runtime.md), шаг 11), `place_by: volume`, `home` как предпочтение; две записи одной камеры; дверь архива регистратора.
 - **Урок 27** ([тома](27-volumes.md)) — виды томов и что каждый значит для размещения.
 - **Урок 8** ([видимость, хранение, таймлайн](08-visibility-retention-timeline.md)) — читатель видит только закрытые блоки; `Archive.seal`.
-- **Урок 15** — держатель публикует сводку покрытия, а не индекс.
-- **Урок 16** — дозапись: наше покрытие, дыры вычитанием, бюджет, «только дыры», последовательность на отрезок, и шаг 10 — память о пустом, отданное как садящееся, конец видимого, дыры только внутри записанного.
-- **Урок 11 М10A** — фильтры и предпочтения размещения; `near` и `home: near`.
-- **Урок 25** — запись по событию: строка с `until`.
+- **[Урок 15](15-the-archive-we-did-not-write.md)** — держатель публикует сводку покрытия, а не индекс.
+- **[Урок 16](16-backfill-from-the-edge.md)** — дозапись: наше покрытие, дыры вычитанием, бюджет, «только дыры», последовательность на отрезок, и шаг 10 — память о пустом, отданное как садящееся, конец видимого, дыры только внутри записанного.
+- **[М10A, урок 11](../М10A_Platform/11-SpecController-placement.md)** — фильтры и предпочтения размещения; `near` и `home: near`, `affinity`; словарь деклараций — [М10A, урок 9](../М10A_Platform/09-SubsystemSpec.md), шаг 20.
+- **[Урок 25](25-automation.md)** — запись по событию: строка с `until`.
 
 ## Чему вы научитесь
 
@@ -100,18 +100,18 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 
 У карты камеры сводка — по её сегментам: по пролёту на сегмент, склеенные, раз в десять секунд (`CardRecorder.our_coverage`, `COVERAGE_EVERY`; так же часто публикует покрытие карты продукт). Сегменты — список в памяти, но heartbeat камеры уходит каждые две секунды, а карта меняется за минуты.
 
-И рядом — дверь, через которую этот том можно прочитать. Это та же дверь регистратора, которой консоль рисует таймлайн и собирает экспорт:
+И рядом — дверь, через которую этот том можно прочитать: дверь архива регистратора между процессами, та же, из которой дверь записи собирает для страницы шкалу и куски (урок 24):
 
 ```python
 # A recorder's archive door, over the volume it holds: what a primary copies from a backup, and what the console
 # draws and plays. Two reads, both from a FRESH reader — a reader sees what was closed when it mounted:
 #
-#   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
+#   GET /spans/<unit>?from&to      {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
 #   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
 #                                  owns it, from a key frame (`Archive.stream`). STREAMED, a sequence at a time
 ```
 
-`serve_archive()` поднимает её и кладёт адрес в heartbeat как `archive_url`. Адрес — то, к чему дверь привязана: loopback или имя сервера, никогда не `0.0.0.0`. Дверь на loopback другого сервера основная не берёт (`local_only`, обратная связь BT): по такому адресу она постучалась бы к себе.
+`serve_archive()` поднимает её и кладёт адрес в heartbeat как `url`. Адрес — то, к чему дверь привязана: loopback или имя сервера, никогда не `0.0.0.0`. Дверь на loopback другого сервера основная не берёт (`local_only`, обратная связь BT): по такому адресу она постучалась бы к себе.
 
 Дверь отдаёт ровно то, что показала бы оператору: `visible_from` строки резервной — `retention_days` как потолок — действует и здесь.
 
@@ -134,11 +134,11 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
         from .config import local_only
         units = look.units(self.SUB.name)
         for name, _, hb, st in sorted((e for rid in recs for e in units.get(rid, ())), key=lambda e: e[:2]):
-            if not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
-                continue                      # silent, or a clock from the future (M9 of the review): not a source
+            if not self.eyes.fresh(f"{self.SUB.name}/heartbeats/{name}", hb.token, self.LOST_AFTER, hb.ts, self.SUB.name):
+                continue                      # silent by what this recorder saw change — whatever its clock (13th)
             if not st.get("coverage"):
                 continue
-            url = hb.extra.get("archive_url", "")
+            url = hb.extra.get("url", "")
             if url and local_only(url, hb.extra.get("server", "?"), self.server):
                 url = ""                      # that recorder's archive door is on its own loopback: not reachable from here
             kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
@@ -156,7 +156,7 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
         return out
 ```
 
-Источник `edge` несёт ещё слово своей камеры об аплинке (`lagging`, из `stream` её пульса): по нему дозапись спрашивает карту и вне окна (девятое ревью, ниже в шаге 10). `recs` — записи той же камеры, чей дом — резервный том. Источник — только у регистратора, чей heartbeat живой (моложе `LOST_AFTER` = 45 секунд) и кто публикует сводку. Резервной на диске нужна ещё и дверь.
+Источник `edge` несёт ещё слово своей камеры об аплинке (`lagging`, из `stream` её пульса): по нему дозапись спрашивает карту и вне окна (девятое ревью, ниже в шаге 10). `recs` — записи той же камеры, чей дом — резервный том. Источник — только у регистратора, чей heartbeat живой (менялся за последние `LOST_AFTER` = 45 секунд по часам того, кто спрашивает: `Eyes`, тринадцатое ревью) и кто публикует сводку. Резервной на диске нужна ещё и дверь.
 
 **Строки и heartbeat'ы читаются раз за проход, а не раз на запись.** Функция отвечала на вопрос об одной записи, перебирая всё: строки всех записей дважды (`_recordings()` — список и чтение каждой строки) и heartbeat'ы всех регистраторов. А дозапись задаёт этот вопрос по каждой своей записи, и цена прохода росла как квадрат числа записей (масштабный проход, измерено счётчиком на `get` и `list` обоих хранилищ). На тысяче записей и пятистах резервных один проход дозаписи читал хранилище 3 032 003 раза и шёл 112 секунд. Теперь проход смотрит в хранилище один раз (`Look`, декоратор `one_look`). Строки, heartbeat'ы регистраторов и держателей, имена резервных томов читаются при первом вопросе, а дальше ответы берутся из словарей: записи по камере (`by_cam`), записи статусов по записи (`units`), дома по имени (`homes`). Тот же проход стоит 1531 чтение. Прочитанное принадлежит проходу: следующий читает заново. Долгий проход перечитывает через `Look.FRESH` (10 секунд, период heartbeat'а), так что дозапись, потратившая минуты на один диапазон, ищет источники следующей записи не по старым heartbeat'ам. Решения прежние: старый и новый код прогнаны на одном сценарии (живые, пропавшие, мёртвые и «из будущего» регистраторы, надгробия, карта, дверь на loopback), расхождений ноль. Тесты: `test_recorder_reads.py::test_a_recorders_pass_reads_each_recording_once_not_once_per_recording` (потолки на тысяче записей и линейность: вдвое больше записей — не больше чем вдвое больше чтений) и `test_a_pass_reads_the_rows_and_heartbeats_once_and_the_next_pass_reads_them_again`.
 
@@ -184,7 +184,7 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
         if src["kind"] == "device":
             return self.fetch(unit, cam, src["url"], t0, t1)
         unit = str(unit)
-        if not self.may_record(unit):
+        if not self.may_write(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
 
         def read(a, b):
@@ -208,9 +208,9 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
         try:
             with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
                 # an answer with neither chunks nor a length cannot be told whole from cut (the seventh pass, minor;
-                # the console's `_door` refuses it the same way)
-                if r.headers.get("Content-Length") is None and \
-                        "chunked" not in (r.headers.get("Transfer-Encoding") or "").lower():
+                # the console's `_door` refuses it the same way) — and a length that is not a number is none (`framed`,
+                # the eighth pass)
+                if not framed(r):
                     raise OSError(f"{url}: the frames of {unit} came with neither chunks nor a length — whole or cut "
                                   f"cannot be told")
                 data = r.read()
@@ -222,7 +222,7 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
             raise OSError(f"{url}: the frames of {unit} came cut short ({e})") from None
 ```
 
-Оборванный ответ двери — `OSError`, как и недоступная дверь: ответ без `Content-Length` и без `chunked`, по которому не сказать, целый он или обрезан (седьмое ревью, мелкие; консоль так же отказывает в своём `_door`), оборванное чтение (`HTTPException`) и кадры, которые не декодируются. `fetch_from` ловит `OSError`: копия кончается `error`, и диапазон спросят снова.
+Оборванный ответ двери — `OSError`, как и недоступная дверь: ответ без `Content-Length` и без `chunked` или с длиной, которая не число, — по нему не сказать, целый он или обрезан (`framed`; седьмое и восьмое ревью, мелкие; дверь записи так же отказывает в своём `_door`, урок 24), оборванное чтение (`HTTPException`) и кадры, которые не декодируются. `fetch_from` ловит `OSError`: копия кончается `error`, и диапазон спросят снова.
 
 У карты камеры — крючок `card_range`. Две строки с `_source_answered` в `fetch_from` — отсрочка для источника, который не отдал диапазон: и для камеры, и для двери резервной (шаг 10).
 
@@ -277,31 +277,30 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 
 Для резервного тома это неверно в обе стороны. Основная запись, переложенная на него, пока её сервер перезагружался, оставляет **одну** копию там, где их должно быть две — а на карте ещё и занимает аплинк камеры. Резервная, переложенная на том основной, — не копия вовсе.
 
-Предпочтение здесь нужно заменить фильтром, а платформа про тома ничего не знает. Для таких правил у неё есть дверь того же рода, что `register_constraint`, — правило подсистемы кодом под именем:
+Предпочтение здесь нужно заменить фильтром, а платформа про тома ничего не знает. Ей и не нужно: фильтр говорится словами её словаря, и спека `rec` его объявляет ([М10A, урок 11](../М10A_Platform/11-SpecController-placement.md); ADR 0002 — правило в спеке, а не код подсистемы, который платформа вызывает):
 
-```python
-def admit_recording(ctl, row: dict, worker: str) -> bool:
-    names, kept = backups(ctl.vars), incidents(ctl.vars)
-    if not names and not kept:
-        return True
-    place = ctl.place_of(worker)
-    if place in kept:
-        return False                                  # a place for what somebody kept, never one to record into
-    home = str(row.get("home") or "")
-    if home in names:
-        return place == home
-    return place not in names
+```yaml
+  # …and a FILTER where the volume is a standby (`affinity`; М10B Lesson 26 — it was `volumes.admit_recording`, a hook,
+  # until the boundary's step 6). A recording homed on an enabled backup or edge volume goes there or nowhere, and
+  # nothing else goes there: a primary moved onto the backup while its server rebooted is ONE copy where the operator
+  # paid for two, and a backup moved off it is no copy at all. A volume row that says `admits: false` — an incidents
+  # volume, a place for what somebody kept (`RecWorker.keep_pass`) — takes no recording. `/unplaceable` says so.
+  affinity:   {field: home, table: volumes, server_field: server, strict: {kind: [backup, edge], enabled: true}}
 ```
 
-```python
-    register_admit(SUB, admit_recording)
-```
+Читается это так: поле `home` строки называет строку таблицы `volumes`; если та строка — включённый том вида `backup` или `edge` (`strict`), запись идёт только туда, где этот том держат, и туда не идёт ничто другое; том со словом `admits: false` в своей строке (вид `incidents`, схема таблицы требует его там) не принимает ни одной записи. Платформа знает таблицу, поле и значения, а что такое «резерв», не знает.
 
-`admit` работает в `eligible`, рядом с метками и `spread_by`, поэтому он сильнее и `home`, и `near`, как любой фильтр. Запись, которой некуда, попадает в `/unplaceable` и говорит об этом — честный ответ на «сервер с резервным томом упал». Тот же фильтр не пускает ни одну запись на том `incidents`.
+`affinity` работает в `eligible`, рядом с метками и `spread_by`, поэтому он сильнее и `home`, и `near`, как любой фильтр. Запись, которой некуда, попадает в `/unplaceable` и говорит об этом — честный ответ на «сервер с резервным томом упал». Тот же фильтр не пускает ни одну запись на том `incidents`.
 
 Тест: `test_a_backup_volume_holds_its_own_recordings_and_nothing_else` — пока отвечает только `srv-b`, резервная ложится туда, а основная ждёт неразмещённой; `srv-a` вернулся — основная там. Резервная, чей том молчит, тоже ждёт свой том.
 
-**Карта — место только для записей своей камеры, и ставит туда запись только тот, у кого есть права на камеру карты.** Шлюз проверял камеру, о которой строка, а `home` указывает на другое. `PUT /rec/recordings/1-b {"home": "card2"}` с `admin` на камеру 1 отвечал 200, и регистратор карты камеры 2, который пишет кольцо своей камеры в любую данную ему запись, клал кадры камеры 2 в запись камеры 1 и тратил на это свой бюджет; то же через `record` сценария с `archive: card2` (шестое ревью, major). Теперь правило в двух половинах. Что можно — у двери, через которую проходит каждый писатель строк (`spec.register_refuse`): `volumes.refuse_recording` не принимает запись с `home` на карте, если `cam` записи — не камера карты; карту без `cam` (объявленную до правила) новой записи тоже не дают. Кто может — у шлюза: `recording_cams` добавляет к камере записи камеру карты из её `home`, и права маршрута спрашиваются на обе, до правки и после; у сценария камеру карты из `archive` добавляет `scenario_cams`. Обратный порядок закрыт там же: карту, на которой стоят записи, нельзя объявить заново картой другой камеры (урок 27, шаг 2). А строку, которая всё же есть — записанную до правила или в обход двери, — регистратор карты не пишет (`CardRecorder.enrich`, шаг 10): запись ждёт, в `not_ours` и в статусе записи сказано, чья это карта, а своя запись карты идёт дальше. Тесты: `test_console_gate.py::test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_camera_and_only_its_own` — карта без `cam` — 400, с правами на одну камеру — 403, с правами на обе — 400, повторное объявление карты картой камеры 1 — 400; `::test_a_cards_recorder_does_not_record_another_cameras_recording_even_when_the_row_is_there` — строка `2-b` в обход двери не запущена, на карту легли только кадры своей записи.
+**Карта — место только для записей своей камеры.** Шлюз проверял камеру, о которой строка, а `home` указывает на другое. `PUT /rec/recordings/1-b {"home": "card2"}` с `admin` на камеру 1 отвечал 200, и регистратор карты камеры 2, который пишет кольцо своей камеры в любую данную ему запись, клал кадры камеры 2 в запись камеры 1 и тратил на это свой бюджет; то же через `record` сценария с `archive: card2` (шестое ревью, major). Теперь это одно слово спеки, и исполняет его контроллер строк платформы для любого писателя (`SpecController.refuse_refs`):
+
+```yaml
+    home:           {type: string, ref: rec/volumes, must_match: {cam: cam}}
+```
+
+Строка тома карты называет свою камеру (`cam`; схема таблицы требует его у `edge` и запрещает у диска и бакета), и запись с `home` на карте другой камеры — 400, кто бы её ни писал: консоль, процесс заданий, превращающий `record` сценария в строку (урок 25), — ни у кого прав на это нет. Обратный порядок закрыт там же: карту, на которой стоят записи, нельзя объявить заново картой другой камеры (урок 27, шаг 2). А строку, которая всё же есть — записанную в обход контроллера, — регистратор карты не пишет (`CardRecorder.enrich`, шаг 10): запись ждёт, в `not_ours` и в статусе записи сказано, чья это карта, а своя запись карты идёт дальше. Тесты: `test_console_gate.py::test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_camera_and_only_its_own` — карта без `cam` — 400, запись камеры 1 на карту камеры 2 — 400 «home card2 is cam 2's» и с правами на одну камеру, и с правами на обе, повторное объявление карты картой камеры 1 — 400, `record` сценария с `archive: card2` записью не становится; `::test_a_cards_recorder_does_not_record_another_cameras_recording_even_when_the_row_is_there` — строка `2-b` в обход двери не запущена, на карту легли только кадры своей записи.
 
 ## Шаг 7 — Воркер камеры — рядом с резервной
 
@@ -309,27 +308,19 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 
 Это очевидный выбор и неправильный. Падение сервера основной уносит с собой и воркер камеры, и резервная запись теряет поток ровно в ту минуту, ради которой она существует. Воркер рядом с резервной переживает падение сервера основной; резервная продолжает писать; основная, переехав, дозаписывает из резервной собственный переезд.
 
-Вторая дверь платформы — порядок среди нескольких совпадений:
+Порядок среди нескольких совпадений — тоже слово спеки, на этот раз `vms`: у `near` есть `prefer`, и он называет поля строки того, за кем идёт воркер, и строки, на которую она указывает:
 
-```python
-def rank_near_recording(ctl, recording_id: str, memo: dict | None = None) -> int:
-    memo = {} if memo is None else memo
-    if "backups" not in memo:
-        memo["backups"] = backups(ctl.vars)
-    names = memo["backups"]
-    if not names:
-        return 0
-    items, _ = ctl.vars.get(f"{SUB}/recordings/{recording_id}")
-    return 0 if items and str(items.get("home") or "") in names else 1
+```yaml
+  # An affinity: the recorder running a recording OF this camera — and of two, the one homed on a STANDBY volume (an
+  # enabled backup or a card): beside the primary, the worker falls with the primary's server and the backup loses its
+  # stream at exactly the moment it exists for (М10B Lesson 26; it was `volumes.rank_near_recording`, a hook, until the
+  # boundary's step 6).
+  near:       {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}
 ```
 
-```python
-    register_near_rank("vms", rank_near_recording)
-```
+`home.kind` — поле `kind` строки тома, которую называет `home` записи. Платформа по-прежнему не знает, что такое резерв: она ставит первым найденного, у которого предпочтение сошлось, а при равенстве — по имени, чтобы два прохода пришли к одному серверу ([М10A, урок 11](../М10A_Platform/11-SpecController-placement.md), шаг 6). Тест: `test_the_camera_stands_beside_the_backup_recording` — `holder_near("1") == ("r-2", "srv-b")`.
 
-Платформа по-прежнему не знает, что такое резерв: она сортирует найденных по числу, которое вернула подсистема, а при равенстве — по имени, чтобы два прохода пришли к одному серверу. Тест: `test_the_camera_stands_beside_the_backup_recording` — `holder_near("1") == ("r-2", "srv-b")`.
-
-**Какие тома резервные, читается раз на взгляд, а не раз на запись.** `memo` — словарь, который платформа держит, пока живёт один взгляд на heartbeat'ы регистраторов (`NearIndex`, урок 11 М10A). Раньше список томов перечитывался для каждой записи, которую ранжировали, а ранжировали и единственную найденную. Теперь тома читаются один раз, строка каждой записи — один раз, когда её ранжируют, а одну найденную не ранжируют вовсе (масштабный проход). Тест: `test_recorder_reads.py::test_where_a_thousand_cameras_belong_is_found_in_one_look_at_the_recorders`.
+**Какие тома резервные, читается раз на взгляд, а не раз на запись.** Предпочтение платформа считает внутри одного взгляда на heartbeat'ы регистраторов (`NearIndex`, урок 11 М10A): строки томов — один раз, строка каждой записи — один раз, когда её ранжируют, а одну найденную не ранжируют вовсе (масштабный проход). Тест: `test_recorder_reads.py::test_where_a_thousand_cameras_belong_is_found_in_one_look_at_the_recorders`.
 
 ## Шаг 8 — Писать за сбой, никогда за решение
 
@@ -344,10 +335,11 @@ def rank_near_recording(ctl, recording_id: str, memo: dict | None = None) -> int
             if str(other["id"]) == str(row["id"]) or volumes.is_backup(other, names=names):
                 continue
             ...
-            said = [hb.ts for _, _, hb, st in units.get(str(other["id"]), ()) if st.get("phase") == "running"]
-            running = any(is_live(self.SUB.name, ts, now, self.LOST_AFTER) for ts in said)
-            gone = [ts for ts in said if not is_live(self.SUB.name, ts, now, self.LOST_AFTER)
-                    and now - ts <= self.LOST_AFTER + self.START_GRACE]
+            sub = self.SUB.name
+            ages = [self.eyes.age(f"{sub}/heartbeats/{w}", hb.token, hb.ts, sub)
+                    for w, _, hb, st in units.get(str(other["id"]), ()) if st.get("phase") == "running"]
+            running = any(a <= self.LOST_AFTER for a in ages)
+            gone = [now - a for a in ages if self.LOST_AFTER < a <= self.LOST_AFTER + self.START_GRACE]
             until = float(other.get("until") or 0)
             should = bool(other.get("enabled")) and (until == 0 or until > now)
             if not should or running:
@@ -357,11 +349,11 @@ def rank_near_recording(ctl, recording_id: str, memo: dict | None = None) -> int
             need = need or now - since >= self.START_GRACE
 ```
 
-(`gone` — основная, чей регистратор **пропал**: его heartbeat уже не живой, но замолчал не дольше `LOST_AFTER + START_GRACE` назад. Для неё отсчёт идёт от его последнего heartbeat'а, а не от момента, когда это заметили; об этом — в шаге 9, «Кольцо должно доставать до смерти сервера основной».)
+(`ages` — сколько каждый heartbeat стоит без перемен по часам **этого** регистратора, `Eyes`: основная, чей регистратор отстаёт часами, иначе числилась бы «пропавшей», пока пишет, — тринадцатое ревью. `gone` — основная, чей регистратор **пропал**: его heartbeat уже не живой, но замолчал не дольше `LOST_AFTER + START_GRACE` назад. Для неё отсчёт идёт от его последнего heartbeat'а, а не от момента, когда это заметили; об этом — в шаге 9, «Кольцо должно доставать до смерти сервера основной».)
 
 **Другие записи камеры и что о них говорят регистраторы — из прохода, а не из хранилища.** Масштабный проход: правило читало строки всех записей и heartbeat'ы всех регистраторов для каждой резервной, а шлюз спрашивает его о каждой. На тысяче записей и пятистах резервных один проход шлюза читал хранилище 755 500 раз и шёл 30 секунд. Теперь записи той же камеры берутся из словаря по камере (`look.by_cam()`), а что о каждой сказали регистраторы — из словаря по записи (`look.units`). И то и другое прочитано один раз за проход (шаг 3): тот же проход шлюза стоит 1508 чтений. Книга основных (`carried_primary`, урок 13 М12) — тоже раз за проход, а не раз на резервную. Если хранилище не ответило, проход это помнит: шлюз пропускается и считается, как раньше, а хранилище не спрашивают пятьсот раз. Тест: `test_recorder_reads.py::test_a_recorders_pass_reads_each_recording_once_not_once_per_recording`.
 
-«Пишется» — значит у живого регистратора кластера (heartbeat моложе 45 секунд) эта запись числится `running`. Только что замолчавшей основной даются секунды — `START_GRACE = 20`, число продукта, намеренное на коробке: так начинается **каждая** запись по событию — строка появилась, конвейер поднимается, — и будить резервную на каждое событие не нужно. Тест: `test_an_offline_backup_stands_in_for_a_failure_and_never_for_a_decision`.
+«Пишется» — значит у живого регистратора кластера (heartbeat менялся за последние 45 секунд) эта запись числится `running`. Только что замолчавшей основной даются секунды — `START_GRACE = 20`, число продукта, намеренное на коробке: так начинается **каждая** запись по событию — строка появилась, конвейер поднимается, — и будить резервную на каждое событие не нужно. Тест: `test_an_offline_backup_stands_in_for_a_failure_and_never_for_a_decision`.
 
 **Что говорит сам поток — раньше всего остального** (`RecWorker.stream_says`). Резерв, которому поток приходит, только когда основная его не берёт, или карта камеры, которая сама знает, что поток не отдан, решают по этому сразу. Это для двух серверов как двух кластеров из одного (урок 1 М11), где решать иначе пришлось бы по книге домена, а домен мог умереть вместе с основной. Тест: `test_what_the_stream_says_comes_before_the_book`.
 
@@ -787,7 +779,7 @@ RING_BYTES, QUEUE_BYTES, PIECE_BYTES = memory_split()
             return
         self.card_failures += 1
         log.warning("%s: the card %s refused a write: %s; closing it, trying again in %.0f s (the ring and the pusher "
-                    "work; what the ring lets go of meanwhile is lost to the card)", self.name, vol.url, err, self.CARD_RETRY)
+                    …
         for uid in list(self.reconciler.actual):
             self.actuator("stop", {"id": uid})
             self.reconciler.lost(uid, self.now())
@@ -996,8 +988,8 @@ RING_BYTES, QUEUE_BYTES, PIECE_BYTES = memory_split()
 - План — по сводке, копия — тем, что отдаёт дверь (`/samples/<unit>`); чего дверь не отдала, запоминается для этого источника.
 - Кадры копируются со своим временем, а не пишутся заново, и режутся по дыре; каждый отрезок — своя последовательность в потоке `…/backfill` нашего тома.
 - Резервная не берёт ни у кого.
-- Для резервного тома `home` — фильтр: дверь `register_admit`.
-- Воркер камеры стоит рядом с резервной записью: дверь `register_near_rank`.
+- Для резервного тома `home` — фильтр: `affinity` с `strict` в спеке `rec`; карта — только своей камеры: `must_match` у `home`.
+- Воркер камеры стоит рядом с резервной записью: `near: {…, prefer: {home.kind: [backup, edge]}}` в спеке `vms`.
 - `when: offline` пишет за основную, которая должна писаться и не пишется; за решение — никогда. Сначала спрашивают поток, потом книгу основных, потом свой кластер.
 - До того резервная стоит на удержании с кольцом в памяти (`PREBUFFER` = 60 с); выпущенное идёт первым, с ключевого кадра, со временем съёмки — запись начинается раньше, чем сбой заметили. После возврата основной резервная пишет ещё минуту, чтобы архивы перекрылись.
 
@@ -1006,7 +998,7 @@ RING_BYTES, QUEUE_BYTES, PIECE_BYTES = memory_split()
 1. Уберите правило «резервная не берёт ни у кого». Сделайте по дыре в каждой записи и посмотрите, что лежит в обоих томах через два прохода.
 2. Просите у двери резервной не `[t0, t1)`, а весь её пролёт вокруг дыры. Сколько кадров пройдёт через дверь, сколько из них сядет и сколько отбросит проверка перекрытия?
 3. Уберите `finish` на разрыве в `_land` и сделайте дыру внутри резервной. Что покажет таймлайн основной?
-4. Уберите `register_admit`. Перезагрузите сервер основной и найдите, где оказались обе записи.
+4. Уберите `affinity` из `rec.subsystem.yaml` (на копии спеки). Перезагрузите сервер основной и найдите, где оказались обе записи.
 5. Поставьте воркер рядом с основной и уроните её сервер. Сколько минут не хватит в резервной?
 6. Замените правило `when: offline` на «никто не пишет камеру» и заведите запись по событию. Сколько часов запишет резервная за сутки?
 7. Уберите кольцо: резервная `when: offline` запускается, только когда основную нашли пропавшей. Сколько секунд пропажи не записано нигде при `START_GRACE = 20` и проходе в две секунды?
