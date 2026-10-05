@@ -100,14 +100,14 @@ class AutoWorker(Worker):
     # wants its window whole, and one query per kind is what keeps it that way.
     PER_KIND = 500
 
-    SLOT_PREFIX = AUTO_SPEC.slot_prefix                          # a slot it has to make is `a-<n>`, like the ones it is given
+    spec = AUTO_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     def __init__(self, name: str | None, vars_: Variables, objects, index=None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None,
                  resource_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(AUTO, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
-        self.claim_at_start(name if name is not None else runtime.slot(env, AUTO_SPEC.slot_name_env, AUTO_SPEC.slot_prefix), env)   # a spare: an offer
+        self.claim_at_start(name, env)   # a spare: an offer
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env)

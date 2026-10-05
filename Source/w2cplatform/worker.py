@@ -94,6 +94,11 @@ class Worker:
         self._hold_lock = threading.RLock()
         self._hold_seen: dict[str, tuple[int, float]] = {}
         self._slot_seen: dict[str, tuple[int, float]] = {}   # …and each garbled slot row's (`_garbled_stale`)
+        # When the store last said the hold is this instance's, by the clock (`note_hold_confirmed`), and where each place
+        # taken lies, as its row said at the take ("" — any box may write it): what a strict place is fenced by
+        # (`may_write_place`) and let go by (`_strict_place_pass`) while the store is silent.
+        self._hold_confirmed = clock()
+        self._place_where: dict[str, str] = {}
         # What this process has seen change, and when, by its own clock (`Eyes`; the review's thirteenth pass, blocker 4):
         # whose heartbeat is fresh enough to read a unit from — a holder, another subsystem's worker — by change, not by its writer's `ts`
         self.eyes = Eyes(clock, wall)
@@ -134,8 +139,25 @@ class Worker:
     # someone took it between read and write, move on. Sets `self.slot` and `self.name`.
     # `test_identity_by_claim_is_a_platform_piece`: two nameless workers get `w-1` and `w-2`; after `w-1`
     # lapses a third gets `w-1` back and its assignment with it; `prefer="w-7"` creates and takes `w-7`.
-    SLOT_PREFIX = "w"                             # what a slot this worker has to MAKE is called: `<prefix>-<n>`
     server: str | None = None                     # the server it runs on, when its subsystem says (`_claim_slot` asks it)
+
+    # What a slot this worker has to MAKE is called (`<prefix>-<n>`), and the variable its unit names the one it is
+    # started under beside `WORKER_NAME`: the spec's `slot: {prefix, name_env}`, read here and nowhere else. Each
+    # subsystem's class copied them (`SLOT_PREFIX`, `NAME_ENV`) and passed `runtime.slot` its own reading — a key the
+    # loader read and a subsystem carried out, and a class that forgot made `w-<n>` whatever its spec said. A worker
+    # with no spec (a bare one of a test) makes `w-<n>` and is named in `WORKER_NAME`.
+    @property
+    def slot_prefix(self) -> str:
+        return self.spec.slot_prefix if self.spec is not None else "w"
+
+    @property
+    def name_env(self) -> str:
+        return self.spec.slot_name_env if self.spec is not None else runtime.WORKER_NAME
+
+    # The name the runtime gave this process (`runtime.slot`: its spec's variable, `WORKER_NAME`, `SLOT_INDEX`), or
+    # None — "whichever is free, a lapsed one first".
+    def given_name(self, env: dict) -> str | None:
+        return runtime.slot(env, self.name_env, self.slot_prefix)
 
     # Whether a held slot's name stays its holder's — the controller's verdict, at the revision this process reads
     # (`published_names`): the rule stays in one place, and so does the judge.
@@ -202,12 +224,12 @@ class Worker:
 
     # What a process does at its start: claim, as `claim_slot` — or, started as a spare (`SPARE_FOR` in `env`), take an
     # offer of its set, and with none be nobody (`seeking`): no slot, no heartbeat, nothing assigned, nothing taken.
-    # Every lease step looks for an offer again (`_seek_slot`). Returns the name, or None while it waits.
+    # Every lease step looks for an offer again (`_seek_slot`). Returns the name, or None while it waits. `prefer` None:
+    # the name the runtime gave it (`given_name`), if any.
     def claim_at_start(self, prefer: str | None, env: dict) -> str | None:
-        from . import runtime
         spare = runtime.spare_for(env)
         if spare is None:
-            return self.claim_slot(prefer=prefer)
+            return self.claim_slot(prefer=prefer if prefer is not None else self.given_name(env))
         try:
             return self.claim_slot(spare_for=spare)
         except NoOffer as e:
@@ -294,12 +316,12 @@ class Worker:
                 # still when its holder is hung, too, and was taken past `slot_fate` with the hung worker's units.
                 free += sorted((n for n in names if n not in known and rows[n][0] and self._garbled_stale(n, rows[n][1])
                                 and not self._held(n, rows[n][1])), key=slot_number)
-                # A NEW slot is named after the kind of worker taking it (`SLOT_PREFIX`: one letter per subsystem's
+                # A NEW slot is named after the kind of worker taking it (`slot_prefix`: one letter per subsystem's
                 # worker — the letters a process given a name already had), not `w-` for
                 # everybody: a worker of one kind that had to make a slot looked like one of another in every list, every
                 # heartbeat and every log line (the product's box, feedback BU). Slots that exist keep their
                 # names; a lapsed or free one is still taken before a new one is made.
-                nxt = f"{self.SLOT_PREFIX}-{max([slot_number(n) for n in names] + [0]) + 1}"
+                nxt = f"{self.slot_prefix}-{max([slot_number(n) for n in names] + [0]) + 1}"
                 order = lapsed + free + [nxt]
             for cand in order:
                 items, idx = stored(self.vars, prefix + cand, SLOTS)
@@ -369,7 +391,7 @@ class Worker:
             return None
         here, there = runtime.box_of(self.instance), runtime.box_of(holder)
         return NameOnAnotherBox(slot, holder, there or "", socket.gethostname(), here or runtime.box(os.environ),
-                                getattr(self, "NAME_ENV", ""), held)
+                                self.name_env, held)
 
     # A slot nobody holds: released, or never held — not an offer, which is a spare's (`_claim_offer`).
     @staticmethod
@@ -598,7 +620,14 @@ class Worker:
         """Take one place out of a list somebody else wrote. None when they are
         all taken — a spare, not a failure."""
         with self._hold_lock:
-            return self._claim_hold(candidates, retries)
+            t0 = self.clock()
+            got = self._claim_hold(candidates, retries)
+            if got is not None:
+                self._hold_confirmed = t0                      # a new hold: its own clock, not the last one's
+                where = self._place_server(got)                # remembered for the silence (`held_strictly`)
+                if where is not None:
+                    self._place_where[got] = where
+            return got
 
     def _claim_hold(self, candidates: list[str], retries: int) -> str | None:
         for attempt in range(retries):
@@ -677,10 +706,14 @@ class Worker:
     # one that lost the CAS to the other took the conflict for the hold taken: let go of its own fresh hold, stopped
     # writing, and waited out the term to take it back. Renewals are serialised now, and a conflict is answered by
     # the row: still ours — somebody of ours renewed it a moment ago — is ours.
+    #
+    # A renewal confirms the hold as it was when the store was ASKED, as a lease's does (`Lease.renew`; the review's
+    # fifth pass): one that took ten seconds to come back is ten seconds old (`note_hold_confirmed`).
     def renew_hold(self) -> bool:
         with self._hold_lock:
             if self.hold is None:
                 return True
+            t0 = self.clock()
             key = self.sub.hold_key(self.hold)
             cur, idx = self._own_hold()
             if cur.holder != self.instance:
@@ -691,9 +724,11 @@ class Worker:
             except Conflict:
                 again = read_hold(key, self.hold, stored(self.vars, key, HOLDS)[0])
                 if again is not None and again.holder == self.instance and not again.released:
+                    self.note_hold_confirmed(t0)
                     return True
                 self.hold = None
                 return False
+            self.note_hold_confirmed(t0)
             return True
 
     # The row of the place this instance holds, read now. One that does not parse is not a row naming ANOTHER holder:
@@ -719,6 +754,71 @@ class Worker:
             except Conflict:
                 pass
         self.hold = None
+
+    # A PLACE ANY BOX MAY WRITE, UNDER A STRICT LEASE (`placement.places.lease: strict`; the architect, 5 Oct: it is about
+    # the place, not the unit). Two writers in one place is damage, not a duplicate, so whatever `lease.unconfirmed_max`
+    # lets the units write, such a place is written only while its hold was confirmed less than `slot_ttl −
+    # lease_margin` ago — the claimant that takes it next waits `slot_ttl + HOLD_SKEW` of an unchanged row
+    # (`_hold_stale`) — and let go once it has not been. The platform's to carry out, not a subsystem's: a key the loader
+    # reads and a subsystem executes is a promise the spec makes and the subsystem may forget (the architect's rule).
+    #
+    # Strict is a place whose row names no server (`server_field`), or whose server is not known: read in the safe
+    # direction, as `hold_follows_name` reads the same row the other way. `row` is the place's row as the caller holds it
+    # this second; without it, the row as it read when the place was taken (a silent store answers nothing now).
+    def held_strictly(self, place: str, row: dict | None = None) -> bool:
+        places = getattr(self.spec, "places", None) or {}
+        if places.get("lease") != "strict":
+            return False
+        field = places.get("server_field")
+        if not field:
+            return True
+        where = str(row.get(field) or "") if row is not None else self._place_where.get(place, "")
+        return not where
+
+    # May this worker write into `place` this second? A place not held strictly always — nobody else may write there.
+    # One held strictly only while the hold is this worker's and inside its write window. A check before sending, as
+    # `Lease.may_act` is: what fences the place itself is the place's own engine, if it has one.
+    def may_write_place(self, place: str, row: dict | None = None) -> bool:
+        if not self.held_strictly(place, row):
+            return True
+        return self.hold == place and self.clock() - self._hold_confirmed < self.slot_ttl - self.lease_margin
+
+    # …and may what writes into it be CLOSED — its last writes flushed — while nobody else may have taken it? Wider than
+    # the write window by the margin and the skew: a claimant waits `slot_ttl + HOLD_SKEW` of an unchanged row.
+    def may_close_place(self, place: str, row: dict | None = None) -> bool:
+        if not self.held_strictly(place, row):
+            return True
+        return self.hold == place and self.clock() - self._hold_confirmed < self.slot_ttl + self.HOLD_SKEW
+
+    # The lease step's part (`lease_pass`): a place held strictly whose hold has gone unconfirmed past its write window
+    # is asked for once more, and let go unless the store confirms it — the store silent, or the row another worker's.
+    # Confirmed late is confirmed: by CAS on the row this worker wrote last, so nobody took it meanwhile (a claimant's
+    # take would have changed it), and the fence opens again. A place not held strictly stays this worker's for as long
+    # as the silence lasts: nobody else can write there.
+    def _strict_place_pass(self) -> None:
+        place = self.hold
+        if place is None or not self.held_strictly(place):
+            return
+        quiet = self.clock() - self._hold_confirmed
+        if quiet < self.slot_ttl - self.lease_margin:
+            return
+        try:
+            if self.renew_hold():
+                return
+            why = "another worker holds it now"
+        except OSError as e:
+            why = f"the store does not answer: {e}"
+        self.leave_place(f"the hold on {place} has not been confirmed for {quiet:.0f} s, and its lease is strict ({why})")
+
+    # Stop writing into the place held, and let go of it: it is not this worker's any more. Here the hold alone (a silent
+    # store lets it lapse by itself); a subsystem whose worker writes into its place closes that first, overriding this —
+    # as a lost lease's work is stopped by `stop_unit`.
+    def leave_place(self, why: str) -> None:
+        log.warning("%s: %s — letting go of it", self.name, why)
+        try:
+            self.release_hold()
+        except OSError:
+            self.hold = None
 
     def release_slot(self) -> None:
         """An orderly stop (SIGTERM from the scheduler: scale-in, or a drain).
@@ -1107,10 +1207,11 @@ class Worker:
     def may_stand_in_hold(self) -> bool:
         return True
 
-    # The place confirmed by the store at `at` (the clock, before it was asked). Nothing here; a subsystem's worker may
-    # fence its samples by it (overriding this).
+    # The place confirmed by the store at `at` (the clock, before it was asked): what a strict place is fenced by
+    # (`may_write_place`). Never backwards — the pass, a subsystem's own renewal and the stand-in confirm it from three
+    # threads.
     def note_hold_confirmed(self, at: float) -> None:
-        pass
+        self._hold_confirmed = max(self._hold_confirmed, at)
 
     # Starts the stand-in beside a loop. Returns the event that ends it: the loop sets it when it ends. Its own
     # event, not the loop's `stop` — the stand-in must outlive nothing and wait on nothing the loop's caller owns.
@@ -1340,7 +1441,8 @@ class Worker:
     # And an exception (feedback BK): a lease that ran out while the store was SILENT is not lost. The work goes on
     # under the epoch it has — DATA, which a stale epoch cannot harm — and ACTIONS wait (`requests` asks the strict
     # `may_act`). When the store answers again: the same epoch, and nothing was stopped; another, and the unit stops
-    # as it always did. `unconfirmed_max` is the ceiling, in seconds past the lease's end.
+    # as it always did. `unconfirmed_max` is the ceiling, in seconds past the lease's end. A place held strictly has none:
+    # it is let go once its hold has gone unconfirmed past its write window (`_strict_place_pass`).
     def lease_pass(self) -> list[str]:
         """Renew the slot and every lease. Another holder on my slot: the instance
         fences. A lost lease: that one unit stops and gives its epoch up."""
@@ -1387,6 +1489,7 @@ class Worker:
             self.stop_unit(unit)
             self.release(unit)
             self.lost_to_epoch.add(unit)
+        self._strict_place_pass()
         return lost
 
     # How a log line names a unit: `unit 7`; a subsystem says it in its own word.

@@ -304,9 +304,8 @@ HOLDER_EVENTS = ("command", "command.failed", "silent")
 # row it writes that is not a claim about itself — what a device turned out to be. The process (`__main__.worker`) and a
 # cluster's rights file (`w2cplatform/cluster/rights.py`) read the same declaration.
 WORKER_ACL = SPEC.acl_worker_role()
-# …and the same for objects: its heartbeat, and the marks it leaves before it calls a device (`vms/commands/<id>`,
-# written and — when the request is gone — removed; `VmsWorker.requests`).
-WORKER_OBJECTS = SPEC.sub.acl_objects_worker() + [f"{SPEC.name}/{p}" for p in SPEC.object_rows]
+# (Its objects — its heartbeat, the marks it leaves before it calls a device, `vms/commands/<id>` — are the platform's
+# to grant, from the spec's `objects.rows`: `w2cplatform/cluster/rights.py`.)
 
 
 def describe(caps: dict | None) -> dict | None:

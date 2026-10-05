@@ -377,7 +377,6 @@ class RecWorker(VmsWorker):
     # ten minutes a pass, the rest on the passes after (`requests`), the way a planned gap is (`backfill`).
     PIECE = 60.0
     RANGE_CAP = 600.0
-    SLOT_PREFIX, NAME_ENV = REC_SPEC.slot_prefix, REC_SPEC.slot_name_env   # `slot:` in rec.subsystem.yaml
     parse_row = staticmethod(rec_row)
 
     def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,
@@ -481,7 +480,6 @@ class RecWorker(VmsWorker):
         self._depth_at = -1e18
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
         self._missing_said: dict[str, str] = {}     # volume -> the address `volume.missing` was said for, this episode
-        self._hold_confirmed = self.clock()          # when the store last said the hold is ours (`renew_hold`, `claim_hold`)
         # Volumes any box may serve that THIS recorder does not take, and why: its host's engine cannot give a volume
         # up (`_engine_refuses`). In the heartbeat with `refused`, and on the volumes page (`volumes.served`).
         self.unservable: dict[str, str] = {}
@@ -1219,7 +1217,7 @@ class RecWorker(VmsWorker):
                 return self.volume
         if rows is None:
             rows = self._declared()
-        self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked when the store is silent
+        self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked between passes
         # A camera's card is not this recorder's to take: it is the camera's buffer, and only the camera's own recorder
         # (`vms/card.py`, `CardRecorder`) writes it — a recorder of the engine on the camera's box included.
         free = [n for n in volumes.servable(list(rows.values()), self.server) if rows[n].kind != "edge"]
@@ -1541,31 +1539,6 @@ class RecWorker(VmsWorker):
         if self.store is not None and self.store.lost and not self.engine_lost:
             self._lost_engine()
 
-    # WHEN THE HOLD WAS LAST CONFIRMED (the review's third pass). It was stamped when `volume_pass` ended — after the
-    # renewal AND after whatever the pass did next, a remount that closes a writer and opens another included, which
-    # can take a minute. A hold confirmed at the start of that minute and stamped at its end looked a minute younger
-    # than it was. The stamp is the store's answer, now: at the renewal, and at the claim.
-    #
-    # And from BEFORE the store was asked, as a lease is (`Lease.renew`; the review's fifth pass): a renewal that took
-    # ten seconds to come back confirmed the hold as it was when it was asked. Never backwards — the pass, a keep's
-    # seal and the stand-in confirm it from three threads.
-    def renew_hold(self) -> bool:
-        t0 = self.clock()
-        ok = super().renew_hold()
-        if ok and self.hold is not None:
-            self.note_hold_confirmed(t0)
-        return ok
-
-    def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
-        t0 = self.clock()
-        got = super().claim_hold(candidates, retries)
-        if got is not None:
-            self._hold_confirmed = t0                # a new hold: its own clock, not the last one's
-        return got
-
-    def note_hold_confirmed(self, at: float) -> None:
-        self._hold_confirmed = max(self._hold_confirmed, at)
-
     # A VOLUME ANY BOX MAY SERVE FOLLOWS THE NAME ONLY ON ITS HOLDER'S HOST (the review's sixth pass, blocker 2, and its
     # seventh). A disk does: the instance that took this recorder's name is on the same host, where the daemon keeps one
     # writer per volume. A network volume's next holder may be on ANOTHER host, and the instance it takes the name from
@@ -1579,33 +1552,27 @@ class RecWorker(VmsWorker):
     # `placement.places.server_field` — a volume whose row names no server is one any box may serve, taken back at once
     # only on the holder's own box. A hold let go on purpose — its writer closed first (`leave_volume`, `after_stop`) — is
     # taken at once by anybody.
-    # A place any box may write is held strictly — let go when its hold goes unconfirmed, fenced before every sample —
-    # when the spec says so next to the place (`placement.places.lease: strict`; the architect, 5 Oct: it is about the
-    # place, not the unit, whatever `lease.unconfirmed_max` lets the recordings write).
-    @property
-    def places_strict(self) -> bool:
-        return (getattr(self.spec, "places", None) or {}).get("lease") == "strict"
-
-    # BEFORE EVERY SAMPLE (the review's fifth pass, blocker 1): may this recorder write into `vol` this second?
-    # A disk of this server always — nobody else can write there. A network volume any box may serve, pinned or not
-    # (the review's seventh pass, blocker 2), only while the hold is this recorder's and was confirmed less than
-    # `slot_ttl − lease_margin` ago: the recorder that takes it next waits `slot_ttl + HOLD_SKEW` of an unchanged row by its own clock (`_hold_stale`),
-    # so writing stops ten seconds before anybody else may start. It is `Lease.may_act`, for the place — and like
-    # it a check before sending: what fences the volume itself is the engine (`Archive._fenced`).
+    #
+    # BEFORE EVERY SAMPLE (the review's fifth pass, blocker 1): may this recorder write into `vol` this second? The
+    # platform's answer, by the spec (`placement.places.lease: strict`; `Worker.may_write_place`): a disk of this server
+    # always — nobody else can write there; a network volume any box may serve, pinned or not (the review's seventh
+    # pass, blocker 2), only while the hold is this recorder's and inside its write window, so writing stops ten
+    # seconds before anybody else may start. Like `Lease.may_act`, a check before sending: what fences the volume
+    # itself is the engine (`Archive._fenced`).
     def _may_write_volume(self, vol) -> bool:
-        if vol is None or not volumes.any_box(vol) or not self.places_strict:
-            return True
-        return self.hold == vol.name and self.clock() - self._hold_confirmed < self.slot_ttl - self.lease_margin
+        return vol is None or self.may_write_place(vol.name, vol.to_items())
 
-    # …and may its writer be CLOSED — the flush, the volume's status, the engine's lock released by its path? While the
-    # hold is still this recorder's and nobody else may have taken it: a claimant waits `slot_ttl + HOLD_SKEW` of an
-    # unchanged row. Wider than the fence by the margin and the skew — the ten seconds a close is given on the leases'
-    # thread — and the engine's own lock, refreshed by a daemon that is not frozen, holds the claimant off until the
+    # …and may its writer be CLOSED — the flush, the volume's status, the engine's lock released by its path? While
+    # nobody else may have taken the hold (`Worker.may_close_place`): the ten seconds a close is given on the leases'
+    # thread, and the engine's own lock, refreshed by a daemon that is not frozen, holds the claimant off until the
     # close has released it.
     def _may_close_volume(self, vol) -> bool:
-        if vol is None or not volumes.any_box(vol) or not self.places_strict:
-            return True
-        return self.hold == vol.name and self.clock() - self._hold_confirmed < self.slot_ttl + self.HOLD_SKEW
+        return vol is None or self.may_close_place(vol.name, vol.to_items())
+
+    # A volume let go by the platform — its hold strict and unconfirmed past its window (`Worker._strict_place_pass`)
+    # — is left as any volume no longer ours: the recordings stopped, the writer closed or given up, then the hold.
+    def leave_place(self, why: str) -> None:
+        self.leave_volume(why)
 
     # The stand-in renews the hold while a step hangs (`Worker._stand_in_hold`) — but not while the engine itself is
     # silent (the review's fifth pass, a minor): a step stuck on a daemon that answers nothing writes nothing either,
@@ -2125,7 +2092,9 @@ class RecWorker(VmsWorker):
     #                             it lapses. Two writers in one archive is not a duplicate, it is damage — so
     #                             when the hold has gone `slot_ttl − margin` unconfirmed, it is let go, and its
     #                             recordings stop. The one case where silence still stops a recording — said by
-    #                             the spec, next to the place: `placement.places.lease: strict` (`places_strict`)
+    #                             the spec, next to the place (`placement.places.lease: strict`), and carried out
+    #                             by the platform's lease step before this one (`Worker._strict_place_pass`,
+    #                             which calls `leave_place`)
     #
     # From that moment the fence refuses every sample (`_may_write_volume`; the review's fifth pass, blocker 1), and the
     # writer is still closed — its flush is the last minutes — while nobody else may have taken the hold: until
@@ -2139,15 +2108,9 @@ class RecWorker(VmsWorker):
             except OSError as e:
                 self.unanswered += 1                 # the hold's renewal too: the loop looks again at its next turn
                 self.store_errors += 1
-                quiet = self.clock() - self._hold_confirmed
-                if self.places_strict and self.hold is not None and self.hold in self._shared \
-                        and quiet >= self.slot_ttl - self.lease_margin:
-                    self.leave_volume(f"the hold on network archive {self.hold} has not been confirmed for {quiet:.0f} s "
-                                      f"(the store does not answer: {e})")
-                else:
-                    logging.warning("%s: the store did not answer for the volumes (%s); still writing into %s",
-                                    self.name, e, self.volume or "nothing")
-                    self._remount_by_last()
+                logging.warning("%s: the store did not answer for the volumes (%s); still writing into %s",
+                                self.name, e, self.volume or "nothing")
+                self._remount_by_last()
             except PARSE_ERRORS as e:
                 # A ROW THAT DOES NOT PARSE is the row's trouble, not the lease step's (the review's seventh pass, part
                 # 2, blocker 1): it went out of here to the loop's one `try`, and the heartbeat after it never went.

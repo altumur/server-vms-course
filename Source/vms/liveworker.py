@@ -85,7 +85,7 @@ class Upstream:
 class LiveWorker(Worker):
     """`name` is a slot (`g-1`); `url` is where the console proxies WHEP to; `capacity` is viewers."""
 
-    SLOT_PREFIX = LIVE_SPEC.slot_prefix                          # a slot it has to make is `g-<n>`, like the ones it is given
+    spec = LIVE_SPEC                  # its spec: the platform executes every key of it (`slot`, `lease`, …)
 
     def __init__(self, name: str | None, vars_: Variables, objects, ctl: SpecController | None = None, url: str = "",
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
@@ -94,7 +94,7 @@ class LiveWorker(Worker):
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
         self.server = runtime.server(env, server)   # before the claim: a process on a decommissioned server gets no slot
-        self.claim_at_start(name if name is not None else runtime.slot(env, LIVE_SPEC.slot_name_env, LIVE_SPEC.slot_prefix), env)   # a spare: an offer
+        self.claim_at_start(name, env)   # a spare: an offer
         self.ctl = ctl                                              # the live SpecController with the gateway's token: deletes its own idle units
         self.url = url or env.get("GATEWAY_URL", "")
         self.owners: dict[str, str | None] = {}         # who opened each session (the door token's name): its own to hang up

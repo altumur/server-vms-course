@@ -131,8 +131,8 @@ def make_recorder(vars_, objects, actuator=None, env: dict | None = None, **kw):
 
 
 # Builds `vmsworker`:
-# - Resolves the slot name: `WORKER_NAME`, else `w-$NOMAD_ALLOC_INDEX`, else `None`. (Same rule as
-#   `worker.slot_from_environment`, written out again here.)
+# - The slot name is the runtime's, by the spec's `slot` (`Worker.given_name`: `WORKER_NAME`, else `w-$SLOT_INDEX`,
+#   else `None` — whichever is free), taken by the constructor.
 # - Opens Variables as writer `vmsworker` with `config.WORKER_ACL` — `Subsystem.acl_worker()` for `vms`
 #   (epochs, slot, the place it took) plus `vms/devices/*`: a worker says what a device it holds turned out to
 #   be (М10B Lesson 25), and can write nothing else. A bug that tried to write a camera row would be a

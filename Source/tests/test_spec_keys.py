@@ -57,6 +57,27 @@ def test_a_slot_is_named_by_the_spec_and_a_worker_started_under_its_variable_tak
     assert _spec(slot={"prefix": "k"}, placement={**CAP, "offers": True}).offers is True     # offered as `k-<n>`
 
 
+def test_the_base_worker_names_its_slot_by_its_spec_and_no_subsystem_class_copies_it():
+    """`slot:` is executed by the platform (the architect's rule: a key the loader reads and a subsystem executes must
+    not exist). A worker whose class names nothing but its spec makes `k-<n>`, and started under the spec's variable
+    takes that name; a worker with no spec makes `w-<n>`. (Each subsystem's worker class copied the spec's into
+    `SLOT_PREFIX` and `NAME_ENV`, and passed `runtime.slot` its own reading: a class that forgot made `w-<n>`.)"""
+    from tests.conftest import Box
+    from w2cplatform.worker import Worker
+    spec = _spec(slot={"prefix": "k", "name_env": "KEEPER_NAME"})
+    keeper = type("Keeper", (Worker,), {"spec": spec})
+
+    def started(box, cls, env):
+        w = cls(spec.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall)
+        w.claim_at_start(None, env)
+        return w.name
+    box = Box()
+    assert started(box, keeper, {}) == "k-1"                                # made: the spec's prefix
+    assert started(box, keeper, {"KEEPER_NAME": "k-7"}) == "k-7"            # given in the spec's variable
+    assert started(box, keeper, {"SLOT_INDEX": "3"}) == "k-3"
+    assert started(Box(), Worker, {}) == "w-1"                              # no spec: `w`
+
+
 def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
     """`objects: {rows: [...]}` under the subsystem's name, from the specs this process loaded (`catalog.object_rows`):
     the platform's constant naming one subsystem's family is gone. A pattern that is no key is refused at load."""
@@ -129,12 +150,16 @@ def test_how_long_data_goes_on_past_an_unconfirmed_lease_is_the_specs_and_typed(
     """`lease: {unconfirmed_max: forever | off | <seconds>}` (the architect, 5 Oct; it was `UNCONFIRMED_MAX` in a
     subsystem's environment): `forever` is no ceiling, `off` — the platform's default — none at all, a number that many
     seconds; the worker takes it from its spec (`Worker.unconfirmed_max`, and every lease it opens). Typed: a word
-    `"90"`, a zero, a negative, a flag are refused at load with the path. And a place any box may write is let go
+    `"90"`, a zero, a negative, a flag are refused at load with the path — but `off` written bare, which YAML reads as
+    false, is the word `off`. And a place any box may write is let go
     unconfirmed when the spec says so next to it (`placement.places.lease: strict`), nothing else."""
     from tests.conftest import Box
     from w2cplatform.worker import Worker
     said = lambda v: _spec(lease={"unconfirmed_max": v}).unconfirmed_max     # noqa: E731
     assert (_spec().unconfirmed_max, said("forever"), said("off"), said(90)) == (0.0, None, 0.0, 90.0)
+    import yaml
+    bare = yaml.safe_load("lease: {unconfirmed_max: off}")["lease"]          # the product's spelling: YAML reads false
+    assert _spec(lease=bare).unconfirmed_max == 0.0
     for bad in ({"unconfirmed_max": "90"}, {"unconfirmed_max": 0}, {"unconfirmed_max": -5}, {"unconfirmed_max": True},
                 {"unconfirmed_max": "always"}, {}, {"unconfirmed_max": 90, "strict": True}, "forever"):
         _refused(lambda bad=bad: _spec(lease=bad), "lease.unconfirmed_max is forever, off or a number of seconds")

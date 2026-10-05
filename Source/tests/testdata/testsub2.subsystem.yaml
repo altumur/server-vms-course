@@ -33,9 +33,15 @@ unit:
     mask:     {type: blob}
     shelf:    {type: string, ref: testsub2/shelves, must_match: {zone: zone}}
     zone:     {type: string}
-    feed:     {type: url, unique: canonical, schemes: [https, sftp], credentials: {login: feed_user, secret: feed_secret},
-               secret_in: [{param: [token*, "*key", =who], login: [=who]}, {nested: [via]},
-                           {regex: '^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$', in: fragment, schemes: [sftp], decoded: false}]}
+    feed:
+      type: url
+      unique: canonical
+      schemes: [https, sftp]
+      credentials: {login: feed_user, secret: feed_secret}
+      secret_in:
+        - {param: [token*, "*key", =who], login: [=who]}
+        - {nested: [via]}
+        - {regex: '^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$', in: fragment, schemes: [sftp], decoded: false}
     feed_user:   {type: string}
     feed_secret: {type: string, bound_to: [feed]}
     keep_days:   {inherit: 7, type: int, merge: override}
@@ -56,9 +62,14 @@ tables:
       admits:  {type: bool, default: true}
       enabled: {type: bool, default: true}
       # where the shelf's own goods come from, and the shelf it overflows to — a table's field says what a unit's does
-      feed:    {type: url, schemes: [https], credentials: {login: feed_user, secret: feed_secret},
-                secret_in: [{param: [token*, =who], login: [=who]}, {nested: [via]},
-                            {regex: '^/~(?P<login>[^:/]+):(?P<secret>[^/]+)', in: path, schemes: [https], decoded: true}]}
+      feed:
+        type: url
+        schemes: [https]
+        credentials: {login: feed_user, secret: feed_secret}
+        secret_in:
+          - {param: [token*, =who], login: [=who]}
+          - {nested: [via]}
+          - {regex: '^/~(?P<login>[^:/]+):(?P<secret>[^/]+)', in: path, schemes: [https], decoded: true}
       feed_user:   {type: string}
       feed_secret: {type: string, bound_to: [feed]}
       size:    {type: int, default: 1, schema: {minimum: 1}}
@@ -152,16 +163,29 @@ display:
   field_help: {of: счётчик, shelf: полка, lane: "полоса, по которой воркер ведёт счёт"}
   kinds: {tally.tick: тик}
   actions: {add: прибавить}
-  tree: {group_by: zone, nested_by: "/", columns: [{field: name, width: 12}, {field: phase, title: фаза}], children: false,
-         group_title: По зонам, group_hint: зоны → счёты, filter: имя счёта, no_group: Без зоны, contents_title: Состав зоны,
-         group_word: зона, no_group_suffix: без зоны, pick_note: выберите счёт в дереве}
+  tree:
+    group_by: zone
+    nested_by: "/"
+    columns: [{field: name, width: 12}, {field: phase, title: фаза}]
+    children: false
+    group_title: По зонам
+    group_hint: зоны → счёты
+    filter: имя счёта
+    no_group: Без зоны
+    contents_title: Состав зоны
+    group_word: зона
+    no_group_suffix: без зоны
+    pick_note: выберите счёт в дереве
   general: Счёт
   fields: {name: Имя, mode: Режим, id: ID}
   # `lane` is no field of the row: its worker says it in the unit's status (form[].status), and its values are free words
   options: {mode: {plain: тихо, loud: громко}, lane: {fast: быстрая, slow: медленная}}
   form:
     - {title: Счёт, state: true, fields: [name, mode]}
-    - {title: Где, placement: true, status: [{field: lane, since: lane_since, title: Полоса}], fields: [shelf, zone],
-       note: полка решает}
+    - title: Где
+      placement: true
+      status: [{field: lane, since: lane_since, title: Полоса}]
+      fields: [shelf, zone]
+      note: полка решает
 console:
   running: tallies_running

@@ -3,5 +3,6 @@
 auto:console.running
 live:console.running
 rec:console.running
+rec:placement.places
 vms:console.running
 vms:tables
