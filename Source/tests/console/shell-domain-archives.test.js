@@ -16,9 +16,9 @@ b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type
 b.FIX["/cameras"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"srv-box":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
-b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:[{name:"srv",holder:true,state:"ok"},{name:"cam-a",state:"ok",age:2},{name:"office",state:"ok",age:2}],
-  units:[u("vms","cam-a","1",{ref:"SN-A",name:"door a"}),u("rec","cam-a","1-sd",{name:"1-sd",phase:"standby"}),
-         u("vms","office","1",{ref:"SN-B",name:"hall"}),u("vms","office","2",{ref:"SN-C",name:"lobby"}),u("rec","office","SN-A")],tables:{}};
+b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:[{name:"srv",holder:true,state:"ok",age:0,rpo:0,reaches:[]},{name:"cam-a",holder:false,state:"ok",age:2,rpo:2,reaches:[]},{name:"office",holder:false,state:"ok",age:2,rpo:2,reaches:[]}],
+  units:{vms:[u("vms","cam-a","1",{ref:"SN-A",name:"door a"}),u("vms","office","1",{ref:"SN-B",name:"hall"}),u("vms","office","2",{ref:"SN-C",name:"lobby"})],
+         rec:[u("rec","cam-a","1-sd",{name:"1-sd",phase:"standby"}),u("rec","office","SN-A")]},tables:{}};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 await b.ready(700);await w.platformConsole.ready;await w.platformConsole.refresh();await b.ready(50);
