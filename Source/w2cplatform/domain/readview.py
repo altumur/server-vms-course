@@ -326,11 +326,15 @@ class ReadView:
         own = ("ref", "unit", "sub", "name", "cluster", "server", "worker", "phase", "worker_state", "as_of")
         shown = {s.name: set(s.domain.view) for s in declared.directory()}
 
+        # a unit as the product lists it (`id`, `state` — live | stale | configured | silent —, `age`, the `view`
+        # fields by name), and the course's words beside them, which the VMS's page reads (`unit`, `worker_state`)
         def unit(r: Row) -> dict:
             d = r.to_json()
             row = self._configured_row(r)
-            return {**{k: v for k, v in d.items() if k in own},
-                    **{f: row[f] for f in shown.get(r.sub, ()) if f in row and f not in own}}
+            view = {f: row[f] for f in shown.get(r.sub, ()) if f in row}
+            return {**{k: v for k, v in d.items() if k in own}, "id": r.unit, "age": round(r.age, 1),
+                    "state": "silent" if r.worker_state == "unreachable" else r.worker_state, "view": view,
+                    **{f: v for f, v in view.items() if f not in own}}
 
         def member(n: str, behind) -> dict:
             c, down = self.fed.clusters[n], n in self.cluster_down_since

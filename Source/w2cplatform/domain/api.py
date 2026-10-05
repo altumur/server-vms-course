@@ -115,13 +115,20 @@ class ConsoleAPI:
     # …AND ONLY WHAT ITS SPEC LETS THROUGH (ADR-0031: a subsystem's door held the list, and the domain's own route took
     # any field the member's console takes). `domain.edit` of the unit's spec names the fields an edit through the domain
     # may carry; any other is refused here, before the member is asked or the edit is kept, in words that name the
-    # fields and the list. A spec that says none leaves the member's console to decide, as before.
+    # fields and the list — and a spec that names none lets nothing through (ADR-0012: no default that passes).
+    # The subsystem is the route's (`sub`: the door always names it); a call in process that names none — the lessons'
+    # own façade — is not held to a list.
     @staticmethod
     def _refuse_undeclared(sub: str | None, fields: dict) -> None:
         from .declared import edit_fields
-        allowed = edit_fields(sub) if sub else ()
+        if not sub:
+            return
+        allowed = edit_fields(sub)
+        if not allowed:
+            raise ApiError(400, f"{sub}'s spec declares no domain.edit: the domain's door lets no field of its units "
+                                f"into an edit — they are edited in their own cluster")
         bad = sorted(k for k in fields if k not in allowed)
-        if allowed and bad:
+        if bad:
             raise ApiError(400, f"{', '.join(bad)}: not the domain's to edit — {sub}'s spec lets an edit through the "
                                 f"domain carry {', '.join(allowed)} (domain.edit)")
 

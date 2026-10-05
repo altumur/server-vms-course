@@ -373,7 +373,10 @@ snapshot: [name, source, enabled, events_retention_days, priority, labels, alarm
 # another, issued by the domain's signer with these claims only.
 domain:
   ref: ref
-  view: [name]
+  view: [name, enabled]   # what the holder knows of a camera: its name, and whether it is on (domain.edit)
+  # What the domain's door lets through in a member's camera (PUT /domain/vms/cameras/<ref>): on or off. Its name,
+  # folders, labels and retention are its cluster's console's (ADR-0031).
+  edit: [enabled]
   books: [sources, primaries, poll, upstream, asks]
   kept: [crossings, roads]
   tables: [crossings]

@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -60,6 +61,8 @@ log = logging.getLogger("domain.console")
 # The tables of what others wrote that `/healthz` counts (`w2cplatform.rows`): members' objects, grants, user records,
 # and the trust rows a cluster holds (the review's eighth pass: "counted, named" — and shown).
 GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row")
+# The holder's page (the console module's contract, §10a): the module mounted with `sections: ["domain"]`, nothing else.
+HOLDER_PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page.html")
 
 
 class Console:
@@ -144,6 +147,22 @@ class Console:
         if self.members is not None:
             out["member_list"] = self.members.read()
             out["knocking"] = self.members.knocking(self.publish_to) if self.publish_to is not None else []
+        if self.pending is not None:
+            # the edits kept for a cluster that is off (Lesson 9): waiting, or refused by the member — the course keeps
+            # a member's outcome on the entry it answers, so `outcomes` are the refused ones
+            out["pending"], out["outcomes"] = {}, {}
+            for name, c in self.view.fed.clusters.items():
+                if c.is_domain_holder:
+                    continue
+                entries = self.pending.of(name)
+                waiting = [{"what": ref, "id": ref, "rev": e.get("rev"), "fields": sorted(e.get("fields") or {})}
+                           for ref, e in entries.items() if not e.get("refused")]
+                refused = [{"what": ref, "id": ref, "status": 409, "error": e["refused"]}
+                           for ref, e in entries.items() if e.get("refused")]
+                if waiting:
+                    out["pending"][name] = waiting
+                if refused:
+                    out["outcomes"][name] = refused
         return out
 
     def view_doc(self) -> tuple[int, dict]:
@@ -223,6 +242,15 @@ class Console:
                 try:
                     if u.path == "/healthz":
                         return self._send(200, console.health())
+                    # the holder's page: the platform's console module with the domain alone (§10a, `page.html`), open
+                    # as a cluster console's page is — what it shows it asks of the gated routes below
+                    from w2cplatform.console import MODULE_ROUTES, page_csp, send_file, send_module
+                    if u.path in ("/", "/index.html"):
+                        send_file(self, HOLDER_PAGE, "text/html; charset=utf-8",
+                                  headers=(("Content-Security-Policy", page_csp(HOLDER_PAGE)),))
+                        return
+                    if u.path in MODULE_ROUTES:
+                        return send_module(self, u.path, q)
                     if console.viewer is not None and (u.path.startswith("/domain") or u.path in ("/spec", "/mounts")):
                         subject = console.api._subject(self._token())
                         if subject is not None and not console.viewer(subject):

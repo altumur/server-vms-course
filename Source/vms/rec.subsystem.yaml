@@ -302,5 +302,8 @@ display:
 domain:
   reports: [ingest, polled/]
   witness: polled
+  # What the domain's door would let through in a member's recording (ADR-0031). The course's door edits the units of
+  # its directory alone (`PUT /domain/<sub>/<rows>/<ref>`) and a recording has no `ref`: declared, as the product's.
+  edit: [enabled, retention_days]
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

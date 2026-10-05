@@ -238,9 +238,16 @@ def test_console_over_http():
         assert body["total"] == 1 and body["rows"][0]["as_of"] == "as of 2 s ago"
         w = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/domain/where/7"))
         assert w["cluster"] == "south" and w["worker"] == "w-0" and w["complete"]
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"name":"x"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"enabled":false}', method="PUT",
                                      headers={"Idempotency-Key": "abc"})
         assert json.load(urllib.request.urlopen(req))["cluster"] == "south"
+        # a camera's name is its cluster's console's: `domain.edit: [enabled]` of the VMS's spec (ADR-0031)
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"name":"x"}', method="PUT",
+                                     headers={"Idempotency-Key": "ghi"})
+        try:
+            urllib.request.urlopen(req); raise AssertionError()
+        except urllib.error.HTTPError as e:
+            assert e.code == 400 and "domain.edit" in json.load(e)["detail"]
         req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
                                      headers={"Idempotency-Key": "def"})
         try:
