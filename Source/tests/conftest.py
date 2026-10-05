@@ -163,20 +163,50 @@ TESTSUB2 = os.path.join(TESTDATA, "testsub2.subsystem.yaml")
 _SPECS: dict = {}
 
 
-def testsub():
-    """testsub's spec, read once."""
-    if TESTSUB not in _SPECS:
+def _read(path: str):
+    """A spec read from its file and NOT put in this process's catalogue (`from_dict`, not `load`): the catalogue is
+    what the process knows, and its derived rules — how an address hides a login (`catalog.secret_rules`), which
+    objects are rows — are every loaded spec's together. A test of the platform that loaded testsub2 would change
+    them for every test after it in the same run; a test that needs a spec in the catalogue registers it itself."""
+    if path not in _SPECS:
+        import yaml
         from w2cplatform.spec import SubsystemSpec
-        _SPECS[TESTSUB] = SubsystemSpec.load(TESTSUB)
-    return _SPECS[TESTSUB]
+        with open(path, encoding="utf-8") as f:
+            _SPECS[path] = SubsystemSpec.from_dict(yaml.safe_load(f))
+    return _SPECS[path]
+
+
+def testsub():
+    """testsub's spec, read once (`_read`)."""
+    return _read(TESTSUB)
 
 
 def testsub2():
-    """testsub2's spec, read once."""
-    if TESTSUB2 not in _SPECS:
-        from w2cplatform.spec import SubsystemSpec
-        _SPECS[TESTSUB2] = SubsystemSpec.load(TESTSUB2)
-    return _SPECS[TESTSUB2]
+    """testsub2's spec, read once (`_read`)."""
+    return _read(TESTSUB2)
+
+
+class in_catalogue:
+    """`with in_catalogue(testsub2()):` — the specs in this process's catalogue for the block (what the resource reads
+    holds and object rows from), and the catalogue as it was after it: the next test knows what it knew before."""
+
+    def __init__(self, *specs):
+        self.specs = specs
+
+    def __enter__(self):
+        from w2cplatform import catalog
+        self.was = dict(catalog._loaded)
+        for s in self.specs:
+            catalog.register(s)
+        return self
+
+    def __exit__(self, *a):
+        from w2cplatform import catalog
+        with catalog._lock:
+            catalog._loaded.clear()
+            catalog._loaded.update(self.was)
+            catalog.version += 1
+            catalog._derived.clear()
 
 
 def controller(box, vars_=None, spec=None, capacity=None, **kw):

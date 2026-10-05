@@ -55,16 +55,16 @@ PLATFORM_TREE = "w2cplatform"                                  # walked whole, e
 SUBSYSTEM_PACKAGES = ("vms", "gstvms", "cluster")              # what the platform must not reach (`Source/<name>/`)
 
 # The platform's tests: what tests a mechanism of the platform. They are the platform's like its modules — scanned for
-# words and imports. Two kinds: the ones that already import no subsystem, and the ones whose subject is a platform
-# mechanism but which bring a subsystem up to drive it (debt, step 5: «tests on testsub»). A test whose subject is a
-# subsystem's route or loop on the platform — the console's gate over the VMS's rows, garbled rows in every worker's
-# loop, a camera's three subsystems on one timeline — is the subsystem's, and is not here until it is split.
+# words and imports, with their helpers (`conftest.py`). Each proves its rule on the platform alone or on the subsystems
+# of `testdata/`, testsub and testsub2 (step 5). A test whose subject is a subsystem — its worker's own work, its spec,
+# its route or loop on the platform, every kind of its workers — is the subsystem's, beside it in a module of its own
+# with the subsystem's helpers (`vmsconftest.py`), and is not here; a test that proved both was split.
 PLATFORM_TESTS = (
     # on the platform alone
     "tests/conftest.py", "tests/test_configstore.py", "tests/test_configstorevars.py", "tests/test_console_page.py",
     "tests/test_memvariables.py", "tests/test_portability.py", "tests/test_resource_objects.py",
     "tests/test_store_durable.py", "tests/test_storemachine.py", "tests/test_variables_contract.py",
-    # a mechanism of the platform as the subject, a subsystem brought up to drive it
+    # a mechanism of the platform as the subject, on testsub and testsub2
     "tests/test_lesson1_platform.py", "tests/test_alarm_tree.py", "tests/test_blobs.py", "tests/test_doors.py",
     "tests/test_epoch_meaning.py", "tests/test_event_line.py", "tests/test_journal.py",
     "tests/test_lease_step.py", "tests/test_limits.py", "tests/test_names.py", "tests/test_near_by.py",

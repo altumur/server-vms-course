@@ -11,7 +11,7 @@ import os
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.events import ALARM, EventLog, buckets_under, subsystems_under
 from w2cplatform.resource import ALARM_DAYS, Resource, retention_days
-from tests.conftest import Box, console_ctl, testsub2
+from tests.conftest import Box, console_ctl, in_catalogue, testsub2
 
 DAY = 86400.0
 
@@ -92,5 +92,6 @@ def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
         box.vars.put(f"testsub/alarms_retention/{unit}", {"days": 1})
     write_row(testsub2(), "marks", box.vars, {"of": "c7", "from": t, "to": t + 60}, "anna", box.wall())
     res = platform_resource(box.tree, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
-    assert res.retain() == 1
+    with in_catalogue(testsub2()):                                     # the resource reads the holds testsub2 declares
+        assert res.retain() == 1
     assert len(buckets_under(box.tree, "testsub.alarms", "c7", 600)) == 1 and buckets_under(box.tree, "testsub.alarms", "c8", 600) == []
