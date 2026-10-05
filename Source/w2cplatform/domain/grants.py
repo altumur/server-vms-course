@@ -215,7 +215,8 @@ def set_domain_grants(vars_, grants: list[Grant], now: float, journal=None, by: 
     if not any(g.capability == "admin" and g.unit is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
                and _item(g) in new for g in grants):                    # …and an admin left out is no admin
         raise LastAdmin("the domain's grants would name no admin: nobody could change them again but a command on the holder")
-    vars_.put(DOMAIN_GRANTS, new, cas=idx)
+    from .declared import guarded
+    guarded(vars_).put(DOMAIN_GRANTS, new, cas=idx)    # no wider than a subject family's `grant` (ADR-0031)
     if journal is not None:
         was = items or {}
         added, removed = sorted(k for k in new if k not in was), sorted(k for k in was if k not in new)

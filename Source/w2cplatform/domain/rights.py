@@ -11,8 +11,9 @@
                   never the signer's row
     <sub>domain   a subsystem's worker on the domain, on the holder (`domain.books` of its spec): its own prefix
                   `domain/<sub>/*`; reads what its books are made of — the key set, the topology, the members, the
-                  shared settings' pointer, the units of every subsystem and the platform's rows — and the name spaces
-                  its spec holds its rows apart from (`domain.names`), which the platform asks on each of its writes
+                  shared settings' pointer, the units of every subsystem and the platform's rows — and, when its spec
+                  keeps a family of subjects (`domain.names`), the people and the grants, which the platform asks on
+                  each of its writes
 
 There is no `member` role any more: a member reads NOTHING of the holder's store; what it carries comes through the
 domain's door (`carry.py`).
@@ -58,8 +59,9 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
     for s in on:
         if not (s.domain.books or s.domain.kept):
             continue
-        # …and the name spaces its rows are held apart from (`domain.names`): the platform asks them on its writes
-        apart = [f"{r['exclusive_with']}/*" for r in s.domain.names.values()]
+        # …and, with a family of subjects (`domain.names`), the people and the grants the platform asks on its writes
+        apart = [x for r in s.domain.names.values() for x in (f"{declared.PEOPLE[r['exclusive_with']]}*",
+                                                               f"{declared.GRANTS_PREFIX}*")]
         out[f"{s.name}domain"] = role(f"{s.name}domain", [f"{s.domain_prefix}*"],
                                       [schema, f"{s.domain_prefix}*", "domain/keys", "domain/topology", "domain/members",
                                        "domain/shared", "platform/*", *units, *apart])

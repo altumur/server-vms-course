@@ -142,6 +142,8 @@ def check_secrets(specs: list, out: dict[str, dict]) -> None:
     from w2cplatform.rights import allowed
 
     def role(spec, name: str) -> str:
+        if name == "domainpart":                                # its worker on the domain (`domain/rights.py`)
+            return f"{spec.name}domain"
         return f"{spec.name}{name}" if name in ("controller", "worker") else name
 
     def reading(row: str) -> set[str]:

@@ -85,8 +85,9 @@ class IdentityStore:
         """`sealer`: the platform's ring on the holder — a user's hash is sealed with it in the row (`pwhash_secret`),
         and opened only here, to check a password. With none it lies in the clear, as every secret does then.
 
-        The store is asked through `declared.guarded`: a person is not made under a name a spec holds apart from the
-        people (`domain.names.<kept>.exclusive_with: identity/users` — ADR-0031), refused `declared.NameTaken`."""
+        The store is asked through `declared.guarded`: a person is not made under the name of a subject a spec keeps
+        beside the people (`domain.names.<family>/.exclusive_with: domain/users` — ADR-0031), refused
+        `declared.NameTaken`."""
         from .declared import guarded
         self.signer, self.vars, self.objects, self.now = signer, guarded(vars_), objects, now
         self.sealer = sealer if sealer is not None else getattr(signer, "sealer", None)

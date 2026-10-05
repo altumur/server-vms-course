@@ -196,17 +196,11 @@ class TokenIssuer:
 # claims only, for the declared lifetime. The key stays the signer's; nothing the worker asks can make a person's token
 # (`person` is the platform's) or a claim the spec did not name. `kid` is the key that signs now: a token another key
 # signed is issued again whatever its half-life says (after a move the holder's key is new).
-#
-# …AND NO HIGHER THAN ITS KIND GRANTS (ADR-0031: a subsystem's worker held the ceiling, and a grant above it went
-# through the platform unrefused). A kind may say the highest of the platform's grants a token of it carries —
-# `grant: view` —: the token carries that one in its `grant` claim, or a lower one asked by name, and one above is
-# refused here, where it would be signed. A kind that says none carries no grant at all.
 class Undeclared(TokenError):
-    """A token of a kind no spec declares, with a claim its kind does not name, or a grant above its kind's."""
+    """A token of a kind no spec declares, or with a claim its kind does not name."""
 
 
 RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
-GRANT = "grant"                     # the claim a kind's grant is written in — the platform's, never a spec's
 
 
 class DeclaredIssuer:
@@ -225,23 +219,11 @@ class DeclaredIssuer:
         return float(self.kinds[kind]["lifetime"])
 
     def issue(self, kind: str, subject: str, now: float | None = None, **claims) -> str:
-        from w2cplatform.access import RANK
         life = self.lifetime(kind)
-        ceiling, asked = self.kinds[kind].get("grant"), claims.pop(GRANT, None)
-        if asked is not None:
-            if ceiling is None:
-                raise Undeclared(f"a {kind} token carries no grant: its spec declares none")
-            if asked not in RANK:
-                raise Undeclared(f"{asked!r} is not one of the platform's grants ({', '.join(RANK)})")
-            if RANK[asked] > RANK[ceiling]:
-                raise Undeclared(f"a {kind} token grants at most {ceiling!r} (its spec's domain.tokens.{kind}.grant); "
-                                 f"{asked!r} is above it")
         allowed = set(self.kinds[kind].get("claims") or ())
         extra = sorted(c for c in claims if c not in allowed or c in RESERVED_CLAIMS)
         if extra:
             raise Undeclared(f"a {kind} token names {', '.join(extra)}, which its spec does not declare")
-        if ceiling is not None:
-            claims[GRANT] = asked or ceiling
         return self.issuer.issue(subject, life, now=now, kind=kind, **claims)
 
 

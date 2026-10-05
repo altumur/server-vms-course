@@ -35,8 +35,9 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     Neither half names a vendor in code; a cluster on another orchestrator is a
     different scheme in this one string.
 
-    Every store is opened behind `declared.guarded`: a write that would give one name to two name spaces a spec holds
-    apart (`domain.names`) is refused whoever writes it — the domain's own processes and a subsystem's worker alike."""
+    Every store is opened behind `declared.guarded`: a write a spec's `domain.names` forbids — a subject of its family
+    under a person's name or the other way, a grant to one wider than the family's `grant` — is refused whoever writes
+    it, the domain's own processes and a subsystem's worker alike."""
     from .declared import guarded
     fed = Federation()
     domain = os.environ.get("DOMAIN_HOLDER")

@@ -90,15 +90,32 @@ def edit_fields(sub: str) -> tuple[str, ...]:
     return s.domain.edit if s is not None else ()
 
 
-# NAMES THAT MAY NOT MEET (ADR-0031: it was a subsystem's worker refusing an account under a person's name, and the
-# platform let a person be made under an account's — one check, on one side). A spec says which of its kept rows is a
-# name space held apart from a prefix (`domain.names.<kept>.exclusive_with`), and the platform refuses the write of
-# EITHER side that would make the two meet: a row of the family (`domain/<sub>/<family>/<name>`) or a name in a kept
-# row (its items' keys) against a row `<prefix>/<name>`, and the other way. Asked of every write through `Guarded` —
-# the holder's store as the platform's processes open it (`runtime.federation_from_env`, `identity.IdentityStore`) —
-# so a subsystem's worker writes its rows and is checked without a line of its own.
-class NameTaken(ValueError):
-    """A write that would give one name to two name spaces a spec holds apart."""
+
+# SUBJECTS BESIDE THE PEOPLE (ADR-0031: a subsystem's worker refused an account under a person's name and a grant to an
+# account above `view`, and the platform let a person be made under an account's name and granted an account anything —
+# the checks were on one side, in the subsystem's code). A spec says which family of its kept rows are subjects of the
+# grants beside the domain's people (`domain.names.<family>/: {exclusive_with: domain/users, grant: <grant>}`), and
+# the platform refuses, on every write of the holder's store as its processes open it (`Guarded`: the domain's own,
+# `identity.IdentityStore`, `agent.DomainPublisher`, `grants.set_domain_grants`, and a subsystem's worker through
+# `runtime.federation_from_env` — without a line of its own):
+#   a row of the family under a person's name, and a person under a row's name     `NameTaken`
+#   a grant to a row of the family wider than its `grant` (`domain/grants/*`)       `GrantTooWide`
+# `domain/users` is the platform's word for its people; the course keeps them as `identity/users/<name>`
+# (`identity.IdentityStore._path`).
+PEOPLE = {"domain/users": "identity/users/"}
+GRANTS_PREFIX = "domain/grants/"         # `agent.GRANTS_PATH`: a row per cluster and the domain's own, `domain/grants/domain`
+
+
+class Refused(ValueError):
+    """A write of the holder's store a spec's `domain.names` forbids."""
+
+
+class NameTaken(Refused):
+    """One name for a person and a subject of a subsystem's family."""
+
+
+class GrantTooWide(Refused):
+    """A grant to a subject of a family wider than the family's `grant`."""
 
 
 def _holds(items) -> bool:
@@ -106,51 +123,71 @@ def _holds(items) -> bool:
     return bool(items) and items.get("kind") != "deleted"
 
 
-def exclusive() -> list[tuple[str, str, str]]:
-    """`(sub, <kept key: a family ends in '/'>, <prefix it is held apart from>)` of every loaded spec."""
-    return [(s.name, f"{s.domain_prefix}{k}", rule["exclusive_with"]) for s in specs()
+def subject_families() -> list[tuple[str, str, str, str | None]]:
+    """`(sub, <family prefix 'domain/<sub>/<family>/'>, <the people's prefix>, <grant or None>)` of every loaded spec."""
+    return [(s.name, f"{s.domain_prefix}{k}", PEOPLE[rule["exclusive_with"]], rule.get("grant")) for s in specs()
             for k, rule in s.domain.names.items()]
 
 
-def name_clash(vars_, path: str, items) -> str | None:
-    """Why writing `items` at `path` would make two names meet — None when it would not. A delete (no items) or a
+def _name_under(path: str, prefix: str) -> str | None:
+    """The last segment of `path` when it is a row right under `prefix`, else None."""
+    rest = path[len(prefix):] if path.startswith(prefix) else ""
+    return rest if rest and "/" not in rest else None
+
+
+def _grants(items: dict) -> list[tuple[str, str]]:
+    """`(subject, capability)` of a grants row's items, `<subject>|<capability>|<scope>` (`grants._item`)."""
+    out = []
+    for k in items or {}:
+        parts = str(k).rsplit("|", 2)
+        if len(parts) == 3:
+            out.append((parts[0], parts[1]))
+    return out
+
+
+def refusal(vars_, path: str, items) -> tuple[type, str] | None:
+    """Why writing `items` at `path` is refused — `(the refusal's class, its words)` — or None. A delete (no items) or a
     person's tombstone makes no name and is never refused."""
+    from w2cplatform.access import RANK
     if not _holds(items):
         return None
-    for sub, kept_key, other in exclusive():
-        family = kept_key.endswith("/")
-        rule = f"{sub}'s domain.names.{kept_key.split('/', 2)[2]} exclusive_with {other}"
-        if family and path.startswith(kept_key) and path != kept_key and "/" not in path[len(kept_key):]:
-            name = path[len(kept_key):]                             # a row of the family: its name is the last segment
-            if _holds(vars_.get(f"{other}/{name}")[0]):
-                return f"{path}: {name!r} is already {other}/{name} ({rule})"
-        elif not family and path == kept_key:
-            for name in sorted(items):                              # a kept row: every name in it
-                if _holds(vars_.get(f"{other}/{name}")[0]):
-                    return f"{path}: {name!r} is already {other}/{name} ({rule})"
-        elif path.startswith(other + "/") and "/" not in path[len(other) + 1:]:
-            name = path[len(other) + 1:]                            # the other side: a row of the prefix
-            if family and _holds(vars_.get(kept_key + name)[0]):
-                return f"{path}: {name!r} is already {kept_key}{name} ({rule})"
-            if not family and name in (vars_.get(kept_key)[0] or {}):
-                return f"{path}: {name!r} is already a name in {kept_key} ({rule})"
+    for sub, family, people, ceiling in subject_families():
+        rule = f"{sub}'s domain.names.{family.split('/', 2)[2]}"
+        name = _name_under(path, family)
+        if name is not None:                                        # a row of the family
+            if _holds(vars_.get(people + name)[0]):
+                return NameTaken, f"{path}: {name!r} is a person of the domain already, {people}{name} ({rule})"
+            if ceiling is not None:
+                for row in vars_.list(GRANTS_PREFIX):
+                    wide = [c for s, c in _grants(vars_.get(row)[0]) if s == name and RANK.get(c, -1) > RANK[ceiling]]
+                    if wide:
+                        return GrantTooWide, (f"{path}: {row} grants {name!r} {wide[0]}, wider than {ceiling!r} "
+                                              f"({rule}.grant)")
+        name = _name_under(path, people)
+        if name is not None and _holds(vars_.get(family + name)[0]):   # a person
+            return NameTaken, f"{path}: {name!r} is {family}{name} already ({rule} exclusive_with domain/users)"
+        if ceiling is not None and path.startswith(GRANTS_PREFIX):  # grants
+            for subject, cap in _grants(items):
+                if RANK.get(cap, len(RANK)) > RANK[ceiling] and _holds(vars_.get(family + subject)[0]):
+                    return GrantTooWide, (f"{path}: {subject!r} is {family}{subject}, granted at most {ceiling!r} "
+                                          f"({rule}.grant) — not {cap!r}")
     return None
 
 
-def refuse_clash(vars_, path: str, items) -> None:
-    why = name_clash(vars_, path, items)
+def refuse(vars_, path: str, items) -> None:
+    why = refusal(vars_, path, items)
     if why:
-        raise NameTaken(why)
+        raise why[0](why[1])
 
 
 class Guarded:
-    """A store whose every `put` is asked `refuse_clash` first; everything else is the store's own."""
+    """A store whose every `put` is asked `refuse` first; everything else is the store's own."""
 
     def __init__(self, vars_):
         self.inner = vars_
 
     def put(self, path: str, items: dict, *a, **kw):
-        refuse_clash(self.inner, path, items)
+        refuse(self.inner, path, items)
         return self.inner.put(path, items, *a, **kw)
 
     def __getattr__(self, name):

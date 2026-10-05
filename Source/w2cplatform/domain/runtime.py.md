@@ -13,6 +13,6 @@ Parses `CLUSTERS=<name>,<name>=<store url>|<object store url>,<name>=report,…`
 - `<name>=<store>|<objects>` splits once on `=` and once on `|` (a URL may itself contain `=`).
 - `report` (or `report@<relay>`) is a member the domain never opens a connection to, read from its reports (`uplink.member_copy`); from the first pass on, the domain's member list (`domain/members.py`) says who reports.
 
-Every store is opened behind `declared.guarded`: a write that would give one name to two name spaces a spec holds apart (`domain.names`) is refused `declared.NameTaken`, whoever writes it — the domain's console and a subsystem's domain worker alike, without a line of the worker's (ADR-0031).
+Every store is opened behind `declared.guarded`: a write a spec's `domain.names` forbids — a subject of its family under a person's name or the other way (`declared.NameTaken`), a grant to one wider than the family's `grant` (`declared.GrantTooWide`) — is refused whoever writes it — the domain's console and a subsystem's domain worker alike, without a line of the worker's (ADR-0031).
 
 The holder is `DOMAIN_HOLDER` if set, otherwise the first entry. Empty entries are dropped; an empty list is `SystemExit` — a misconfigured unit dies at start rather than serving an empty domain. `reaches` is not set here; only the read side is wired. The units' own lines run through it in `tests/domain/test_lesson3_readview_api_gateway.py::test_the_domains_units_name_stores_that_open`.

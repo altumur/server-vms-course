@@ -59,7 +59,8 @@ class DomainPublisher:
     the domain HOLDER's Variables, where agents read them."""
 
     def __init__(self, domain_vars: Variables):
-        self.vars = domain_vars
+        from .declared import guarded
+        self.vars = guarded(domain_vars)     # a grant wider than a subject family's `grant` is refused (ADR-0031)
 
     def publish_keys(self, ks: KeySet | dict) -> None:
         """A key set, or — Lesson 15 — the items `DomainRoot.key_set` signed."""

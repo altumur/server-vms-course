@@ -638,8 +638,9 @@ def _lease(name, lease) -> float | None:
 # which roles read a secret row of this subsystem's (its console's door seed, `door/signer`), and the rows of somebody
 # else's its worker reads. The course's rights are the grants the specs make (`w2cplatform/cluster/rights.py`), so the
 # declaration is a promise held to them: the rights file is not generated while any role reads a declared row and is
-# not named, or is named and does not read it (`cluster.rights.check_secrets`). A role is one of `SECRET_ROLES`.
-SECRET_ROLES = ("console", "controller", "worker", "domain", "domainagent", "resource")
+# not named, or is named and does not read it (`cluster.rights.check_secrets`). A role is one of `SECRET_ROLES`:
+# `controller`, `worker` and `domainpart` (its worker on the domain, the role `<sub>domain`) are the subsystem's own.
+SECRET_ROLES = ("console", "controller", "worker", "domainpart", "domain", "domainagent", "resource")
 _SECRET_ROW = re.compile(r"[a-z0-9_][a-z0-9_.\-]*(/[a-z0-9_.\-]+)*/?")
 
 
@@ -694,9 +695,10 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
 _DOMAIN_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
 _DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens", "keys", "shared", "names",
                 "edit")
-# `grant` too: a token's grant is the platform's to write, under the ceiling the spec declares (`tokens.<kind>.grant`)
-_RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind", "grant")
-_KEY_PREFIX = re.compile(r"^[a-z][a-z0-9_-]*(/[a-z0-9][a-z0-9_-]*)*$")
+_RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
+# What a family's names may be held apart from (`domain.names.<family>.exclusive_with`): the domain's people — the
+# grants' other subjects. A closed set, as every word of the section (ADR-0031).
+EXCLUSIVE_WITH = ("domain/users",)
 
 
 # THE SUBSYSTEM ON THE DOMAIN, DECLARED (the boundary's «no hooks», DOMAIN-PLATFORM.md: the domain is the platform's,
@@ -717,16 +719,17 @@ _KEY_PREFIX = re.compile(r"^[a-z][a-z0-9_-]*(/[a-z0-9][a-z0-9_-]*)*$")
 #   kept      rows the subsystem keeps at the holder for the domain as a whole, `domain/<sub>/<name>`, which leave the
 #             holder in its backup with what the domain decided; a name ending in `/` is a FAMILY of rows,
 #             `domain/<sub>/<name>/<row>` — one row per thing, kept, backed up and denied to the agent alike
-#   names     `{<kept family or row>: {exclusive_with: <key prefix>}}` — a name there may not be a name under the prefix
-#             (`domain/<sub>/<family>/<name>` against `<prefix>/<name>`; a kept row's names are its items' keys): the
-#             platform refuses the write of EITHER side that would make the two meet (`domain.declared.refuse_clash`)
+#   names     `{<kept family>/: {exclusive_with: domain/users, grant: <grant>}}` — the family's rows are SUBJECTS of the
+#             grants, beside the domain's people: a row's name may not be a person's, nor a person's a row's — the
+#             platform refuses the write of either side that would make them meet; and a grant to such a subject is no
+#             wider than `grant` (one of the platform's, `access.RANK`) — a write of grants above it is refused
+#             (`domain.declared.refusal`, asked of every write of the holder's store as the platform opens it)
 #   tables    the kept rows the domain's door serves read-only at `/api/<sub>/<table>`
-#   tokens    the kinds of token the books carry: `{<kind>: {lifetime: <seconds>, claims: [<name>, ...], grant: <grant>}}`;
-#             the domain's signer issues them, of those claims only, when the subsystem's worker asks
-#             (`trust.tokens.DeclaredIssuer`). `grant`: the highest of the platform's grants (`access.RANK`) a token of
-#             the kind carries — it carries that one unless a lower one is asked, and one above is refused
-#   edit      the fields of a unit the domain's door lets into an edit of a member's row (`PUT /api/<sub>/<rows>/<ref>`):
-#             any other is refused there by the spec, before the member is asked. Not said: the member's console decides
+#   tokens    the kinds of token the books carry: `{<kind>: {lifetime: <seconds>, claims: [<name>, ...]}}`; the domain's
+#             signer issues them, of those claims only, when the subsystem's worker asks (`trust.tokens.DeclaredIssuer`).
+#             A token carries no rights: what its subject may do is the grants'
+#   edit      the fields of a unit the domain's door lets into an edit of a member's row: any other is refused there by
+#             the spec, before the member is asked. Not said: the member's console decides
 #   keys      the subsystem's key families, for a page that lists the domain's keys (the domain card's «Ключи»):
 #             `[{id, keys: [<exact key>], prefix: "domain/<sub>/…/"}]` — the composition only, every key under the
 #             subsystem's own prefix; the words are `display.keys: {<id>: {title, about, absent}}`, merged by id on the
@@ -749,7 +752,7 @@ class DomainSection:
     tokens: dict = field(default_factory=dict)
     keys: tuple = ()
     shared: tuple = ()
-    names: dict = field(default_factory=dict)       # {<kept name>: {"exclusive_with": <key prefix>}}
+    names: dict = field(default_factory=dict)       # {<kept family>/: {exclusive_with, grant?}}
     edit: tuple = ()
 
     def family_of(self, key: str) -> str | None:
@@ -796,18 +799,14 @@ class DomainSection:
         sec.names = cls._names(spec, d.get("names"), sec.kept, where)
         tokens = d.get("tokens") or {}
         if not isinstance(tokens, dict):
-            raise ValueError(f"{where}.tokens is {{<kind>: {{lifetime, claims, grant}}}}")
-        from .access import RANK
+            raise ValueError(f"{where}.tokens is {{<kind>: {{lifetime, claims}}}}")
         for kind, t in tokens.items():
             if not isinstance(kind, str) or not _DOMAIN_NAME.match(kind) or kind == "person":
                 raise ValueError(f"{where}.tokens: {kind!r} is not a kind a subsystem may declare ('person' is the "
                                  f"platform's)")
-            if not isinstance(t, dict) or set(t) - {"lifetime", "claims", "grant"}:
-                raise ValueError(f"{where}.tokens.{kind} is {{lifetime: <seconds>, claims: [<name>, ...], grant: "
-                                 f"<grant>}}")
-            if "grant" in t and t["grant"] not in RANK:
-                raise ValueError(f"{where}.tokens.{kind}.grant is one of the platform's grants ({', '.join(RANK)}), "
-                                 f"not {t['grant']!r}")
+            if not isinstance(t, dict) or set(t) - {"lifetime", "claims"}:
+                raise ValueError(f"{where}.tokens.{kind} is {{lifetime: <seconds>, claims: [<name>, ...]}} — a token "
+                                 f"carries no rights")
             life = t.get("lifetime")
             if isinstance(life, bool) or not isinstance(life, (int, float)) or not math.isfinite(life) or life <= 0:
                 raise ValueError(f"{where}.tokens.{kind}.lifetime is a positive number of seconds, not {life!r}")
@@ -815,14 +814,10 @@ class DomainSection:
             if not isinstance(claims, list) or not all(isinstance(c, str) and c and c not in _RESERVED_CLAIMS
                                                        for c in claims):
                 raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
-            sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims),
-                                **({"grant": t["grant"]} if "grant" in t else {})}
+            sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
         sec.keys = cls._families(spec, d.get("keys"), where)
         sec.shared = names("shared")
         sec.edit = names("edit")
-        if sec.edit and not sec.ref:
-            raise ValueError(f"{where}.edit: the domain's door edits the units of its directory, and this spec has none "
-                             f"(no `ref`)")
         for f in sec.edit:
             if f not in spec.fields:
                 raise ValueError(f"{where}.edit: {f!r} is not a field of the unit")
@@ -843,28 +838,29 @@ class DomainSection:
 
     @staticmethod
     def _names(spec: "SubsystemSpec", raw, kept: tuple, where: str) -> dict:
-        """`names: {<kept>: {exclusive_with: <key prefix>}}` — of the rows this spec keeps (a family by its `/`), a
-        prefix outside them: a name space the platform holds apart from another (a subsystem's accounts and the
-        domain's people)."""
+        """`names: {<kept family>/: {exclusive_with: domain/users, grant: <grant>}}` — a family this spec keeps whose
+        rows are subjects of the grants beside the domain's people (a subsystem's accounts): held apart from them, and
+        granted no wider than `grant`."""
+        from .access import RANK
         if raw is None:
             return {}
-        shape = "{<kept family or row>: {exclusive_with: <key prefix>}}"
+        shape = f"{{<kept family>/: {{exclusive_with: {'|'.join(EXCLUSIVE_WITH)}, grant: {'|'.join(RANK)}}}}}"
         if not isinstance(raw, dict):
             raise ValueError(f"{where}.names is {shape}")
         out = {}
         for name, rule in raw.items():
-            if name not in kept:
-                raise ValueError(f"{where}.names: {name!r} is not a row this spec keeps (domain.kept: {list(kept)})")
-            if not isinstance(rule, dict) or set(rule) != {"exclusive_with"}:
-                raise ValueError(f"{where}.names.{name} is {{exclusive_with: <key prefix>}}, not {rule!r}")
-            other = rule["exclusive_with"]
-            own = f"{spec.domain_prefix}{name}".rstrip("/")
-            if not isinstance(other, str) or not _KEY_PREFIX.match(other):
-                raise ValueError(f"{where}.names.{name}.exclusive_with is a key prefix (`domain/users`), not {other!r}")
-            if other == own or other.startswith(own + "/") or own.startswith(other + "/"):
-                raise ValueError(f"{where}.names.{name}.exclusive_with: {other!r} holds or lies in {own!r} — a name "
-                                 f"space cannot be held apart from itself")
-            out[name] = {"exclusive_with": other}
+            if not isinstance(name, str) or not name.endswith("/") or name not in kept:
+                raise ValueError(f"{where}.names: {name!r} is not a family this spec keeps (`domain.kept` with a "
+                                 f"trailing `/`: {[k for k in kept if k.endswith('/')]})")
+            if not isinstance(rule, dict) or "exclusive_with" not in rule or set(rule) - {"exclusive_with", "grant"}:
+                raise ValueError(f"{where}.names.{name} is {shape}, not {rule!r}")
+            if rule["exclusive_with"] not in EXCLUSIVE_WITH:
+                raise ValueError(f"{where}.names.{name}.exclusive_with is one of {list(EXCLUSIVE_WITH)}, not "
+                                 f"{rule['exclusive_with']!r}")
+            if "grant" in rule and rule["grant"] not in RANK:
+                raise ValueError(f"{where}.names.{name}.grant is one of the platform's grants ({', '.join(RANK)}), "
+                                 f"not {rule['grant']!r}")
+            out[name] = dict(rule)
         return out
 
     @staticmethod
