@@ -141,6 +141,22 @@ POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": 1007, "items": {
 → 200 {"index": 1008}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disks-a
+→ 200 {
+  "items": {
+    "name": "disks-a",
+    "kind": "local",
+    "url": "/data/srv-a/disks",
+    "server": "srv-a",
+    "quota_bytes": "4000000000000",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 1004
+}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 GET /v1/get?key=objects/rec/used/disks-a
 → 200 {"items": null, "index": ""}
 

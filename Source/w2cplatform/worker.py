@@ -116,8 +116,8 @@ class Worker:
         self._hold_seen: dict[str, tuple[int, float]] = {}
         self._slot_seen: dict[str, tuple[int, float]] = {}   # …and each garbled slot row's (`_garbled_stale`)
         # When the store last said the hold is this instance's, by the clock (`note_hold_confirmed`), and where each place
-        # taken lies, as its row last read at the take or a renewal ("" — any box may write it; `_read_where`): what a strict place is fenced by
-        # (`may_write_place`) and let go by (`_strict_place_pass`) while the store is silent.
+        # taken lies, as its row last read at the take or a renewal ("" — any box may write it; `_read_where`): what a
+        # strict place is fenced by (`may_write_place`) and let go by (`_strict_place_pass`) while the store is silent.
         self._hold_confirmed = clock()
         self._place_where: dict[str, str] = {}
         # What this process has seen change, and when, by its own clock (`Eyes`; the review's thirteenth pass, blocker 4):
