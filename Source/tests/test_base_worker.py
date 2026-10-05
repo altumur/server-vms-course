@@ -21,8 +21,11 @@ SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _testsub2_without(key: str) -> SubsystemSpec:
-    """testsub2 with one key of its `placement.places` taken out: the spec that does not say it."""
-    spec = SubsystemSpec.load(TESTSUB2)
+    """testsub2 with one key of its `placement.places` taken out: the spec that does not say it. A copy of its own, put in
+    no catalogue (`conftest._read`): a loaded testsub2 changes the derived rules of every test after it in the run."""
+    import yaml
+    with open(TESTSUB2, encoding="utf-8") as f:
+        spec = SubsystemSpec.from_dict(yaml.safe_load(f))
     assert key in spec.places, key
     spec.places = {k: v for k, v in spec.places.items() if k != key}
     return spec
