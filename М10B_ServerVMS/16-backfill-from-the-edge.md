@@ -309,7 +309,9 @@ POST /rec/requests …восьмая неотвеченная заявка то�
 
 Не длиннее суток, не короче секунды (регистратор выкачивает целые секунды), не дальше минуты вперёд от его часов (расхождение двух часов, а не минуты вперёд), не целиком старше того, что запись показывает (`visible_from` по её `retention_days`: двери никогда не покажут выкачанное). Отказ — ответ: id уходит в `fetched`, и уборка консоли убирает строку, а место человека освобождается; почему — в heartbeat'е (`requests_refused`) и в событиях записи (`archive.backfill.refused`, с `of: vms/<камера>`, как остальные строки регистратора). Тест: `test_console_gate.py::test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartbeat`.
 
-**Заявка, на которую некому ответить, места не держит вечно.** `valid_until` у дозаписи нет — час, выкачанный с опозданием, тот же час, — поэтому строку, простоявшую `ttl` спеки (сутки), кончает уборка платформы и считает в `w2c_requests_expired_total{sub="rec"}`; список заявок человека, которого сутки никто не касался, уходит туда же. Задача, которой эти минуты ещё нужны, попросит снова (`ask_for_footage`); человек увидит, что дыра на месте, и тоже может. Тест: `test_jobs.py::test_a_backfill_nobody_answered_for_a_day_is_ended_and_a_record_request_is_not_its_business` — заявка старше суток уходит и считается, младшая остаётся, `record` со своим `valid_until` не тронут.
+**Заявка, на которую некому ответить, места не держит вечно.** У дозаписи, поданной у двери консоли, `valid_until` нет — час, выкачанный с опозданием, тот же час, — поэтому строку, простоявшую `ttl` спеки (сутки), кончает уборка платформы и считает в `w2c_requests_expired_total{sub="rec"}`; список заявок человека, которого сутки никто не касался, уходит туда же. Задача, которой эти минуты ещё нужны, попросит снова (`ask_for_footage`); человек увидит, что дыра на месте, и тоже может. Тест: `test_jobs.py::test_a_backfill_nobody_answered_for_a_day_is_ended_and_a_record_request_is_not_its_business` — заявка старше суток уходит и считается, младшая остаётся, `record` со своим `valid_until` не тронут.
+
+Заявку, которую подаёт сама VMS — задача или обзор карт (`jobs._ask_recorder`, уроки 21 и 23), — она подаёт так, как подаёт строку семейство просьб (М10A, урок 14): `unit: rec/<запись>` и срок `valid_until`. Регистратор читает обе формы единицы и чтит срок, где его дали: не начатая к сроку заявка получает ответ «просрочена» (`expired`), а не выкачивается — кто просил, попросит снова; начатая доводится до конца. Тест: `test_backfill_bounds.py::test_a_request_filed_as_the_family_files_one_is_fetched_and_one_past_its_deadline_unbegun_is_answered_expired`.
 
 Регистратор читает заявки в каждом проходе:
 
@@ -349,7 +351,7 @@ POST /rec/requests …восьмая неотвеченная заявка то�
                 self._refuse_request(rid, unit, cam, why, done)
                 continue
             ours = self.our_coverage(unit)
-            if unit in self.reconciler.actual:
+            if unit in self.reconciler.running():
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
             ...
             srcs = self.sources_of({"id": unit, "cam": cam, "home": (self._row_of(unit) or {}).get("home", "")})
