@@ -60,8 +60,10 @@ Source/
                                VMS's specs and nothing of the VMS's own — no media route: /where/<id> hands out the holder's door with a token, and the page reads
                                the footage from the recorder (/timeline, /segment) and the stream from the gateway (/whep) itself; the first viewer asks for a
                                fan-out with POST /live/streams
-    shell.html                 Lesson 16 the VMS's page, `/` when CONSOLE_ROOT=vms (it lies beside the specs): for now the course's page as it was
-                               before the platform's module — its own list, forms, timeline, player — until the VMS's shell over the module replaces it
+    shell.html                 Lesson 12 the VMS's page, `/` when CONSOLE_ROOT=vms (it lies beside the specs): a shell over the platform's console module —
+                               the camera's video (live at the gateway's door, the timeline from the recorders' and the places' doors) and archive, the volumes,
+                               the scenarios, the domain's cameras; its core (the doors, the timeline, the pieces, WHEP) the product's, checked by
+                               tests/test_shell_core.py; jsdom tests tests/console/shell-*.test.js
     live.subsystem.yaml        Lesson 8  the SECOND subsystem, as a spec: live fan-outs named by camera, placed on gateways by viewer headroom, labels for where viewers are
     det.subsystem.yaml         Lesson 9  the THIRD subsystem, as a spec: one model on one camera, named by the operator, placed on GPU-labelled workers by stream headroom
     detworker.py               Lesson 9  DetWorker: runs a Model against the camera's fan-out, writes what it saw into det/<unit>/e<epoch>/ on the resource under its own epoch —

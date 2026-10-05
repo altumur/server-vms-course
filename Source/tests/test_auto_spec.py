@@ -300,18 +300,29 @@ def test_the_catalogue_says_what_each_unit_raises_and_can_do():
     assert list(cat["vms"]) == ["7", "12", "20"]                        # numeric ids in numeric order
 
 
-def test_the_pages_scenario_form_takes_its_subsystem_from_the_spec_and_names_none_of_its_own():
-    """The page (`vms/shell.html`; the platform's until the boundary's step 3), and its scenario form said `vms` itself:
-    the units from `catalog.vms`, the trigger `vms|<unit>|<kind>`, the action `{sub: 'vms', …}` — a page over another root
-    subsystem would have offered nothing and filed actions for a subsystem it does not show (the course's decision on
-    the platform's names). Now the form takes the root console's `spec.name`, and the catalogue it builds from the
-    routes the specs declare keys the units by that same name — no `/auto/catalog`, a route of the VMS's on the
-    platform's console until the boundary's step 6."""
+def test_the_pages_scenario_form_offers_exactly_the_actions_the_auto_spec_accepts():
+    """The VMS's page (`vms/shell.html`, «Сценарии») builds its «то» from a catalogue (`RACTIONS`), and the catalogue is
+    the auto spec's `then`: each `anyOf` of its schema is one action, its `required` (beside `sub` and `action`) the
+    fields the form will not send empty, the rest optional — an operator cannot ask for what no executor is written for,
+    and is not refused at the door for a field the form never showed. The page's words for the triggers are the VMS
+    spec's `display.kinds`; it has no `/auto/catalog` (a route of the VMS's on the platform's console until the boundary's
+    step 6)."""
     import os
     import re
     page = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms",
                              "shell.html"), encoding="utf-8").read()
-    form = page.split("// -- automation:", 1)[1].split("// -- the administrator's knob", 1)[0]
-    assert "catalog[spec.name]" in form and "sub: spec.name" in form and "${spec.name}|${current}|" in form
-    assert "[spec.name]: units" in form and "/auto/catalog" not in page
-    assert not re.search(r"catalog\.vms|'vms'|`vms\|", form), "the form names a subsystem of its own"
+    cat = page.split("const RACTIONS=[", 1)[1].split("];", 1)[0]
+    offered = {}
+    for m in re.finditer(r'\{sub:"(\w+)",action:"(\w+)",label:"[^"]*",fields:\[(.*?)\]\}', cat):
+        fields = re.findall(r'\{id:"(\w+)",label:"[^"]*"(,opt:true)?\}', m.group(3))
+        offered[(m.group(1), m.group(2))] = ({f for f, o in fields if not o}, {f for f, o in fields if o})
+    assert offered and len(offered) == cat.count("{sub:")
+    spec = {}
+    for alt in AUTO_SPEC.fields["then"].schema["items"]["anyOf"]:
+        p = alt["properties"]
+        spec[(p["sub"]["const"], p["action"]["const"])] = (set(alt["required"]) - {"sub", "action"}, set(p) - {"sub", "action"})
+    assert set(offered) == set(spec) == set(ACTIONS), (sorted(offered), sorted(spec))
+    for k, (need, may) in offered.items():
+        assert need == spec[k][0], f"{k}: the form requires {sorted(need)}, the spec {sorted(spec[k][0])}"
+        assert may <= spec[k][1] - spec[k][0], f"{k}: the form offers {sorted(may)}, which the spec does not take"
+    assert 'pc.display("vms").kinds' in page and "/auto/catalog" not in page

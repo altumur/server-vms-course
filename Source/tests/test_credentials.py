@@ -780,19 +780,19 @@ def test_a_closed_consoles_gate_never_quotes_a_source_it_refuses():
 
 def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_mask():
     """The thirteenth review, minor: the page drew `cred_secret` as `type="text"` — the password on the screen while it
-    is typed, where `access_secret` beside it was a password field. Every `*_secret` of a spec is a password field now
-    (`input` in the VMS's page, `vms/shell.html`); and the edit form leaves it empty, its placeholder saying whether one is set — filled
-    with the row's `***` it saved `***` as the camera's password on the next Save."""
+    is typed, where `access_secret` beside it was a password field. A camera's fields are the platform's console module's
+    general form now (`fieldInput` in `w2cplatform/console.js`: a secret is a password field, empty, «задан» when one
+    is set — `tests/console/module-form.test.js`), and the VMS's page (`vms/shell.html`) draws no field of a spec
+    itself; the one secret it asks — a network volume's `access_secret`, in its declaring dialog — is a password field
+    with no value: filled with the row's `***` it would save `***` as the bucket's key."""
     import os
     import re
     page = open(os.path.join(os.path.dirname(__file__), "..", "vms", "shell.html"), encoding="utf-8").read()
-    body = page[page.index("function input(f, adding)"):]
-    body = body[:body.index("\n}\n")]
-    first = body.index("if (f.name.endsWith('_secret'))")
-    assert 'type="password"' in body[first:body.index("\n", first)] and first < body.index('type="text"')
-    fill = page[page.index("function fillEdit(c)"):]
-    fill = fill[:fill.index("\n}\n")]
-    assert re.search(r"endsWith\('_secret'\)\) \{ el\.value = '';", fill)
+    assert "function input(" not in page and "fillEdit" not in page and "cred_secret" not in page
+    asked = re.findall(r"\{name:\"(\w+_secret)\"[^}]*\}", page)
+    assert asked == ["access_secret"], asked
+    field = re.search(r"\{name:\"access_secret\"[^}]*\}", page).group(0)
+    assert 'type:"password"' in field and "value:" not in field
 
 
 def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_from_the_spec():

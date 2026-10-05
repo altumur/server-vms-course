@@ -10,13 +10,14 @@ from w2cplatform.resource import peers_of, resources_seen
 from vms.archive import event_log
 from w2cplatform.events import EventLog, buckets_under, subsystems_under
 from tests.cluster.conftest import Cluster, host
+from tests.conftest import stamped
 
 B = 600
 
 
-def _observe(c, server, sub, unit, epoch, t, kind, **fields):
-    """A worker of `sub` holding `unit`'s epoch on `server` observed something."""
-    return EventLog(c.servers[server].archive, sub, unit, epoch, B).append(t, kind, **fields)
+def _observe(c, server, sub, unit, epoch, t, kind, of="", **fields):
+    """A worker of `sub` holding `unit`'s epoch on `server` observed something — about `of`, which the base stamps."""
+    return stamped(EventLog(c.servers[server].archive, sub, unit, epoch, B), of).append(t, kind, **fields)
 
 
 def _resources(c):

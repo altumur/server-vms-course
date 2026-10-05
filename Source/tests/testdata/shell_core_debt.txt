@@ -1,0 +1,7 @@
+# shell_core_debt.txt — the lines the core of the course's VMS page (vms/shell.html) differs from the product's by
+# (test_shell_core.py): where the course leads, until the product follows. It only shrinks.
+#   <function> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>
+loadTimeline | - | c151bd6b | let places=T==="volumes"&&vols&&vols.length?vols:[];
+loadTimeline | - | f3d1ba65 | if(T&&!places.length){try{const d=await (await fetch(`/rec/${encodeURIComponent(T)}`)).json();places
+loadTimeline | + | d6e0cc45 | let places=[];
+loadTimeline | + | 38af20e2 | if(T){try{const d=await (await fetch(`/rec/${encodeURIComponent(T)}`)).json();places=d[T]||[]}catch(

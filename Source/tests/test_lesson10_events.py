@@ -79,9 +79,10 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         assert [(e["subsystem"], e["kind"], e["server"], e["fenced"]) for e in ev] == [
             ("det", "linecross", "srv-1", False), ("console", "mark", "srv-1", False), ("vms", "silent", "srv-1", False)]
         assert ev[0]["unit"] == "det/1-linecross" and ev[0]["of"] == "vms/1" and ev[0]["pass"] == 3 and ev[0]["epoch"] == 1 and ev[1]["user"] == "murat"
-        # the page shows all of it: the events under the timeline, the live feed beside the picture, the Mark button
+        # the page shows all of it: the events under the timeline, the live feed beside the picture, the Mark button —
+        # the VMS's page over the platform's console module, which draws the servers and the journal
         page = urllib.request.urlopen(base + "/").read().decode()
-        assert 'id="events"' in page and 'id="livefeed"' in page and "/marks" in page and "/servers" in page
+        assert 'id="events"' in page and 'id="livefeed"' in page and "/marks" in page and "/platform/console.js" in page
         # the same answer under the mount: /det/events fences by det's epochs too
         assert call(base, "GET", "/det/events?unit=vms/1&subsystem=det")[1]["events"][0]["kind"] == "linecross"
         # an open bucket keeps growing: the next event is in the next answer — the file is looked at, not remembered
@@ -1199,9 +1200,10 @@ def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_
     its name is not its camera. Once its lines have said camera 7, a timeline for camera 9 does not read its buckets."""
     from vms.config import DET_SPEC
     from w2cplatform.events import EventLog
+    from tests.conftest import stamped
     box = Box()
     now = box.wall()
-    EventLog(box.resource_root, "det", "7-motion", 1, 600, of=DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
+    stamped(EventLog(box.resource_root, "det", "7-motion", 1, 600), DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
     db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     assert [(e["unit"], e["of"]) for e in db.query(now - 600, now, unit="vms/7")["events"]] == [("det/7-motion", "vms/7")]
     assert db._may_be_about("srv-1", "det", "7-motion", "vms/9") is False and db.query(now - 600, now, unit="vms/9")["events"] == []

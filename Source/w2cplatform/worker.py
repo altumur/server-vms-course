@@ -45,6 +45,10 @@ class NoSpec(ValueError):
 # rediscovers everything from the store. Subsystems subclass it and implement `reconcile_once`; the loop is this
 # class's (`run`), and so are the fields of the heartbeat the platform reads, the events' line (`observe`, through
 # the spec's `events.suppress`) and the resource tree they go to (`resource_root`).
+# What the heartbeat of a worker that names no server says (`server_unsaid`): one text, the product's too.
+SERVER_UNSAID = "this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"
+
+
 class Worker:
     """Runs its assignment and reports. Reads <name>/workers/<me> and the
     units it names; writes its heartbeat object and, when it starts a unit,
@@ -653,6 +657,9 @@ class Worker:
                 where = self._place_server(got)                # remembered for the silence (`held_strictly`)
                 if where is not None:
                     self._place_where[got] = where
+                if where and not self.server:
+                    log.warning("%s: took %s, a place of server %s, naming no server of its own: it is let go when its "
+                                "hold goes unconfirmed, not kept through a silence (ADR 0029)", self.name, got, where)
             return got
 
     def _claim_hold(self, candidates: list[str], retries: int) -> str | None:
@@ -788,18 +795,23 @@ class Worker:
     # (`_hold_stale`) — and let go once it has not been. The platform's to carry out, not a subsystem's: a key the loader
     # reads and a subsystem executes is a promise the spec makes and the subsystem may forget (the architect's rule).
     #
-    # Strict is a place whose row names no server (`server_field`), or whose server is not known: read in the safe
-    # direction, as `hold_follows_name` reads the same row the other way. `row` is the place's row as the caller holds it
-    # this second; without it, the row as it read when the place was taken (a silent store answers nothing now).
+    # A FENCE IS WEAKENED ONLY ON EVIDENCE THAT THE PLACE IS OURS (ADR 0012; the architect after the product's base worker,
+    # ADR 0029). A place goes through a silence by the units' ceiling only where its row names THIS worker's server: that
+    # server's daemon keeps one writer there. Every other place is strict — one any box may write, ANOTHER server's (its
+    # row names it: someone else's place, never written into through a silence), one whose row could not be read, a spec
+    # with no `server_field`, and every place of a worker that names no server of its own (`server_unsaid` says so in its
+    # heartbeat). Read in the safe direction, as `hold_follows_name` reads the same row the other way. `row` is the
+    # place's row as the caller holds it this second; without it, the row as it read when the place was taken (a silent
+    # store answers nothing now).
     def held_strictly(self, place: str, row: dict | None = None) -> bool:
         places = self.spec.places
         if places.get("lease") != "strict":
             return False
         field = places.get("server_field")
-        if not field:
+        if not field or not self.server:
             return True
         where = str(row.get(field) or "") if row is not None else self._place_where.get(place, "")
-        return not where
+        return where != self.server
 
     # May this worker write into `place` this second? A place not held strictly always — nobody else may write there.
     # One held strictly only while the hold is this worker's and inside its write window. A check before sending, as
@@ -819,14 +831,20 @@ class Worker:
     # The lease step's part (`lease_pass`): a place held strictly whose hold has gone unconfirmed past its write window
     # is asked for once more, and let go unless the store confirms it — the store silent, or the row another worker's.
     # Confirmed late is confirmed: by CAS on the row this worker wrote last, so nobody took it meanwhile (a claimant's
-    # take would have changed it), and the fence opens again. A place not held strictly stays this worker's for as long
-    # as the silence lasts: nobody else can write there.
+    # take would have changed it), and the fence opens again. A place not held strictly — its row names this worker's
+    # server — stays this worker's through the silence by the units' ceiling (`lease.unconfirmed_max`, past the hold's
+    # end; `forever`: for as long as the silence lasts). Nothing is held through a silence longer than the spec says:
+    # past the ceiling it is asked for and let go the same way.
     def _strict_place_pass(self) -> None:
         place = self.hold
-        if place is None or not self.held_strictly(place):
+        if place is None:
             return
         quiet = self.clock() - self._hold_confirmed
-        if quiet < self.slot_ttl - self.lease_margin:
+        strict = self.held_strictly(place)
+        if strict:
+            if quiet < self.slot_ttl - self.lease_margin:
+                return
+        elif self.unconfirmed_max is None or quiet < self.slot_ttl + self.unconfirmed_max:
             return
         try:
             if self.renew_hold():
@@ -834,7 +852,8 @@ class Worker:
             why = "another worker holds it now"
         except OSError as e:
             why = f"the store does not answer: {e}"
-        self.leave_place(f"the hold on {place} has not been confirmed for {quiet:.0f} s, and its lease is strict ({why})")
+        self.leave_place(f"the hold on {place} has not been confirmed for {quiet:.0f} s, "
+                         + ("and its lease is strict" if strict else "past the units' ceiling") + f" ({why})")
 
     # Stop writing into the place held, and let go of it: it is not this worker's any more. Here the hold alone (a silent
     # store lets it lapse by itself); a subsystem whose worker writes into its place closes that first, overriding this —
@@ -1401,6 +1420,11 @@ class Worker:
             extra.setdefault("present", True)     # registered with its server's resource (`present`)
             if getattr(self, "_presence_unsaid", None):
                 extra.setdefault("presence_unsaid", self._presence_unsaid)   # …but its name is not beside its lock
+        # A worker that names no server of its own, of a subsystem whose places say their server: none of them is its
+        # own, so every one is let go when its hold goes unconfirmed (`held_strictly`, ADR 0029). Said, for the person
+        # reading the heartbeat; the platform decides nothing by it, and `/metrics` does not count it.
+        if not self.server and self.spec.places.get("server_field"):
+            extra.setdefault("server_unsaid", SERVER_UNSAID)
         # `schema` and `build` are on EVERY heartbeat, from here, so no subsystem has to remember them:
         # the first says what layout this process understands (what `set_schema` is checked against), the
         # second is for the person looking at a half-upgraded cluster.
@@ -1959,8 +1983,9 @@ class Worker:
     BUCKET_SECONDS = 600
 
     def observe(self, unit, kind: str, **fields) -> str | None:
+        from .events import refuse_own_of
         from .rows import number
-        self._refuse_of(fields)
+        refuse_own_of(self.sub.name, str(unit), fields)   # at once: a line the suppressor swallows is refused as well
         epoch = self.epochs.get(str(unit))
         if epoch is None or not self.resource_root or not self.__dict__.get("writing_allowed", True):
             return None
@@ -1991,7 +2016,7 @@ class Worker:
         return OBSERVATION
 
     def _write_lines(self, unit, epoch: int, lines, cls: str) -> str | None:
-        log_ = self._event_log(unit, epoch)
+        log_ = self.event_log(unit, epoch)
         path = None
         for t, kind, fields in lines:
             path = log_.append(t, kind, cls, **fields)
@@ -2003,26 +2028,19 @@ class Worker:
     # bucket on this server's resource, as `observe`'s; None when no epoch is held for it and none is named.
     def write_event(self, unit, t: float, kind: str, cls: str = OBSERVATION, *, epoch: int | None = None,
                     durable: bool = False, **fields) -> str | None:
-        self._refuse_of(fields)
         epoch = self.epochs.get(str(unit)) if epoch is None else epoch
         if epoch is None or not self.resource_root:
             return None
-        return self._event_log(unit, epoch).append(t, kind, cls, durable, **fields)
+        return self.event_log(unit, epoch).append(t, kind, cls, durable, **fields)
 
-    # The writer of a unit's lines under `epoch`, every line of it stamped with what the unit is about (`of`).
-    def _event_log(self, unit, epoch: int):
+    # The writer of a unit's lines under `epoch`, every line of it stamped with what the unit is about (`of`; the
+    # product's `Worker.EventLog`). The ONE place a log's `of` is set (`EventLog._of`): a line that says its own is
+    # refused by the log itself (`events.refuse_own_of`), whoever opened it.
+    def event_log(self, unit, epoch: int):
         from .events import EventLog
-        return EventLog(self.resource_root, self.sub.name, str(unit), epoch,
-                        getattr(self, "bucket_seconds", self.BUCKET_SECONDS), of=self.of(unit))
-
-    # `of` is the PLATFORM's (`of`): a line that says its own is refused, so a subsystem that still passes it — the way
-    # each did before the base stamped it — fails at the line, not in a query that finds less than it should. Two writers
-    # of one column drift, and the one that forgets is the one nobody sees.
-    @staticmethod
-    def _refuse_of(fields: dict) -> None:
-        if OF in fields:
-            raise ValueError(f"`{OF}` is stamped by the worker from its spec's `about` (`Worker.of`): a subsystem does not "
-                             f"say what a unit is about, line by line — {OF}={fields[OF]!r} refused")
+        log_ = EventLog(self.resource_root, self.sub.name, str(unit), epoch, getattr(self, "bucket_seconds", self.BUCKET_SECONDS))
+        log_._of = self.of(unit)
+        return log_
 
     # WINDOWS THAT CLOSED WITH NOBODY LEFT TO CLOSE THEM — the storm stopped, so no observation came to carry the summary
     # out. Once a pass (`pump_once`), and wherever a subsystem drains its lines: without it a burst that ENDS is a burst
