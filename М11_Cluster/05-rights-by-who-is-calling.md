@@ -119,7 +119,7 @@ Heartbeat'ов, срезов снимка и отчётов прохода в э
                          "delete": ["…"]}}}
 ```
 
-Шаблон со звёздочкой в конце — `vms/epoch/*` — покрывает всё под префиксом. Шаблон **без** звёздочки — один точный ключ. Шаблон с `!` в начале — **запрет**, и запреты спрашиваются раньше разрешений, где бы в списке они ни стояли (`w2cplatform/storemachine.py`):
+Шаблон со звёздочкой в конце — `vms/epoch/*` — покрывает всё под префиксом. Шаблон **без** звёздочки — один точный ключ. Шаблон с `!` в начале — **запрет**, и запреты спрашиваются раньше разрешений, где бы в списке они ни стояли. Демон (`w2cplatform/storemachine.py`) спрашивает одну функцию платформы — ту же, что ручка в процессе (`w2cplatform/rights.py`):
 
 ```python
     def allows(self, role: str, action: str, key: str) -> bool:
@@ -127,10 +127,15 @@ Heartbeat'ов, срезов снимка и отчётов прохода в э
             return False                          # nobody, `admin` included (`variables.refuse_delete`)
         if role == ADMIN:
             return True                           # `PEER` is no role of the file: no grant on any row (twelfth pass)
-        pats = self.roles.get(role, {}).get(action, [])
-        if any(_hit(p[1:], key) for p in pats if p.startswith("!")):
-            return False                          # a denial wins over every grant, wherever it stands in the list
-        return any(_hit(p, key) for p in pats if not p.startswith("!"))
+        return allowed(self.roles.get(role, {}).get(action, []), key)   # a denial first, wherever it stands
+```
+
+```python
+def allowed(patterns, key: str) -> bool:
+    pats = list(patterns or ())
+    if any(hit(p[1:], key) for p in pats if p.startswith("!")):
+        return False                          # a denial wins over every grant, wherever it stands in the list
+    return any(hit(p, key) for p in pats if not p.startswith("!"))
 ```
 
 Два удаления не делает никто, что бы ни говорил файл: строку эпохи (эпоха — счётчик, удалённая начнётся снова с 1) и `domain/*` — кроме ролей самого домена (`domain`, `domainagent`). Запреты в файле, который генерирует платформа, — у агента домена: `!domain/signer*` в чтении и список строк держателя в записи (шаг 2); всё остальное выражается разрешениями. Формат запреты держит, потому что держит продукт, и тест проверяет, что запрет бьёт разрешение (`test_a_denial_wins_over_every_grant_wherever_it_stands`, `test_a_key_is_exact_and_a_prefix_says_so`).
