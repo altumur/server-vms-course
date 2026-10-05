@@ -43,10 +43,17 @@ def _masked(x):
 def keys(vars_, objects, now: float) -> dict:
     """Every key under `domain/` in this cluster's stores. A store that cannot list says so in `error`, and whatever
     the other holds still comes back."""
+    from w2cplatform.variables import Forbidden
     out, errors = {"vars": [], "objects": []}, []
     try:
         for k in sorted(vars_.list(PREFIX)):
-            items, idx = vars_.get(k)
+            try:
+                items, idx = vars_.get(k)
+            except Forbidden:
+                # a row this process's role may not read — the signer's keys, read by the domain's console (ADR-0032):
+                # named, and nothing of it shown
+                out["vars"].append({"key": k, "items": None, "withheld": "not this process's to read"})
+                continue
             out["vars"].append({"key": k, "items": {f: _value(f, v) for f, v in (items or {}).items()},
                                 "index": str(idx)})
     except Exception as e:                                       # noqa: BLE001 — said, and the objects still listed

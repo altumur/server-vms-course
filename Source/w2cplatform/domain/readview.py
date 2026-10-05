@@ -320,8 +320,9 @@ class ReadView:
     # ITS SHAPE IS THE PRODUCT'S (the console module is one file for both, a byte copy of the product's): `members` is a
     # LIST, the holder among them (`holder: true`), each with its `state` — `ok`, `silent` (did not answer: `why`), or
     # `never` (nothing of it read yet) — and `age`, seconds behind; `holder` names the holder, `as_of` is when; `units` by
-    # subsystem. `extra` is what the domain's console adds from the records it keeps: the topology, the list of members
-    # and who knocks, where its door is (`url`).
+    # subsystem. `extra` is what the signer's pass adds (ADR-0032, `signer_service.Holder.extra`): the records the domain
+    # keeps — the topology, the list of members and who knocks —, the term, what fails, and where the domain's console
+    # is (`url`).
     def doc(self, tables: dict | None = None, extra: dict | None = None) -> dict:
         own = ("ref", "unit", "sub", "name", "cluster", "server", "worker", "phase", "worker_state", "as_of")
         shown = {s.name: set(s.domain.view) for s in declared.directory()}

@@ -129,7 +129,9 @@ def test_the_history_keeps_an_alarm_once_however_late_the_domain_reads_the_repor
     cards["cam-SN1"].observe(1, NOW - 100, "door_forced", alarm=True)
     for late in (3.0, 0.4, 2.7):                                          # how long after the report the domain reads it
         report(); wall.advance(late)
-        out = DomainAlarms(fed, reported, wall, history=history, ref_of=serial_of).list(since=NOW - 3600)
+        alarms = DomainAlarms(fed, reported, wall, history=history, ref_of=serial_of)
+        alarms.keep()                                                     # the signer's pass keeps; the list reads
+        out = alarms.list(since=NOW - 3600)
         assert [e["kind"] for e in out["events"] if e["member"] == "cam-SN1"] == ["door_forced"]
         wall.advance(30 - late)
     assert [e["kind"] for e in history.read("cam-SN1", NOW - 3600, wall())] == ["door_forced"]
@@ -185,9 +187,10 @@ def test_the_domain_keeps_a_week_of_what_it_read_and_a_dead_card_takes_nothing_w
     alarms = lambda: DomainAlarms(fed, reported, wall, history=history, ref_of=serial_of)
     cards["cam-SN1"].observe(1, NOW - 100, "door_forced", alarm=True)
     report()
-    alarms().list(since=NOW - 3600)                                      # read: kept
+    alarms().keep()                                                      # the pass read it: kept
     wall.advance(2 * 86400)
     report()
+    alarms().keep()
     got = [e for e in alarms().list(since=NOW - 3600, until=NOW + 1)["events"] if e["member"] == "cam-SN1"]
     assert [(e["kind"], e.get("from_history")) for e in got] == [("door_forced", True)]   # in no page any more
     devices["cam-SN1"].power_off()                                        # the card goes with the camera
@@ -211,6 +214,7 @@ def test_a_storm_pushes_its_oldest_out_of_the_history_and_the_list_says_so():
     for i in range(100):
         cards["cam-SN1"].observe(1, NOW - 1000 + i, "stream_lost", alarm=True)
     report()
+    alarms().keep()
     out = alarms().list(since=NOW - 3600)
     assert len(history.read("cam-SN1", NOW - 3600, wall() + 1)) == 50 and history.cut_before("cam-SN1") == NOW - 950
     assert out["members"]["cam-SN1"]["history_cut_before"] == NOW - 950

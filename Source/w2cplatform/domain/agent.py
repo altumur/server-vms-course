@@ -353,7 +353,7 @@ class DomainAgent:
             try:
                 paged_at = self.now()
                 n = report(self.cluster, self.cluster_vars, self.published, self.domain_objects, paged_at,
-                           self.pages() if self.pages else None)
+                           self.pages() if self.pages else None, key=self.key)
                 self._paged_at = paged_at
                 self.reported = f"reported ({n} written)"
             except NotPublished as e:
@@ -499,7 +499,9 @@ def main() -> None:
     own_vars = open_vars(store_url(os.environ, "configstore:///run/configstore/domainagent.sock"))   # its cluster's store, by its role's socket
     sealer = Sealer.from_env(os.environ)                     # this member's ring: what it keeps of the domain's secrets
     key = MemberKey.load_or_make(own_vars, sealer)           # who it is to the door; admitted by this public key
-    log.info("%s: member key %s, sealing key %s — the domain admits this member by them", cluster, key.pub, key.seal_pub)
+    from .members import fingerprint
+    log.info("%s: member key %s (fingerprint %s), sealing key %s — the domain admits this member by them; the person "
+             "who admits it compares the fingerprint", cluster, key.pub, fingerprint(key.pub), key.seal_pub)
     # What it carries comes through a DOOR, never from the holder's store (`carry.py`): DOMAIN_URL — the holder's door —
     # or, Lesson 17, RELAY_URL — this member reaches only its relay, which keeps what the domain answered for it in
     # memory (`relay.RelayDoor`). DOMAIN_CONFIG_URL: the holder's own agent, on the holder's own box, reading its store.

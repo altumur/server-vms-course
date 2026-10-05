@@ -143,6 +143,10 @@ class DomainHolder:
         self.restored_from: dict | None = None           # {term, rev} of the backup this term started from
         self.deposed_by: dict | None = None
         self.frozen_for: str | None = None               # the member a planned handover is moving the domain to
+        # Where this holder's signer answers (ADR-0032): said in the record it claims, so that whoever reads the record —
+        # an old holder that was replaced, applying again what it alone held — knows which door holds the domain now.
+        # The view's `url` is the domain console's; the signer's address is the record's.
+        self.url: str | None = None
         # The key this cluster was admitted with as a MEMBER (hex) — the holder is on nobody's list while it holds
         # (`Members` refuses it), so its key travels in its backups instead (`holder_key`), and the next holder
         # writes it into the list when this one becomes a member like the others (the product, feedback CC).
@@ -159,7 +163,8 @@ class DomainHolder:
 
     def claim(self) -> None:
         doc = self.record or sign({"term": self.term, "holder": self.name, "at": self.wall(),
-                                   **({"from": self.restored_from} if self.restored_from else {})}, self.signer.tokens)
+                                   **({"from": self.restored_from} if self.restored_from else {}),
+                                   **({"url": self.url} if self.url else {})}, self.signer.tokens)
         _, idx = self.vars.get(HOLDER)
         self.vars.put(HOLDER, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
 

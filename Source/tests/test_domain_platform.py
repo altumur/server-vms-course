@@ -167,12 +167,15 @@ def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_t
     north.vars.put("domain/testsub/badges/gold", {"since": "1", "pin_secret": "4321"})
     view = ReadView(fed, wall=wall)
     view.refresh()
+    from w2cplatform.domain.signer_service import Holder
+    members = Members(north.vars, wall=wall, configured=lambda: ["south"], domain="north")
     con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda c: None), refresh_interval=60,
-                  publish_to=north.objects, holder_vars=north.vars, topology=Topology(north.vars),
-                  members=Members(north.vars, wall=wall, configured=lambda: ["south"], domain="north"))
+                  holder_objects=north.objects, holder_vars=north.vars, topology=Topology(north.vars), members=members)
     door = con.serve(port=0)
-    con.url = f"http://127.0.0.1:{door.server_address[1]}"
-    con._publish_view()
+    url = f"http://127.0.0.1:{door.server_address[1]}"
+    # the view is the signer's pass's to leave (ADR-0032), naming the console's address
+    Holder(north.vars, north.objects, None, fed=fed, view=view, topology=Topology(north.vars), members=members,
+           console_url=url, wall=wall).publish_view()
     consoles = [Mount(SpecConsole(SpecController(spec(), c.vars, c.objects, wall=wall, cluster=c.name), wall=wall)).serve(port=0)
                 for c in (north, south)]
 
@@ -184,7 +187,7 @@ def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_t
             return e.code, json.loads(e.read() or b"{}")
     try:
         st, d = get(door, "/domain")
-        assert st == 200 and d["holder"] == "north" and d["url"] == con.url and "topology" in d and "knocking" in d
+        assert st == 200 and d["holder"] == "north" and d["url"] == url and "topology" in d and "knocking" in d
         assert [(m["name"], m["holder"]) for m in d["members"]] == [("north", True), ("south", False)]
         st, k = get(door, "/domain/keys")
         gold = next(v for v in k["vars"] if v["key"] == "domain/testsub/badges/gold")
@@ -427,6 +430,11 @@ def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_whic
                        if self.path == "/api/shared" else (404, {"detail": "no such route"}))
             body = json.dumps(out).encode()
             self.send_response(st); self.send_header("Content-Length", str(len(body))); self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):                                         # `/api/holder`: a domain that holds no term
+            body = json.dumps({"detail": "this domain holds no term"}).encode()
+            self.send_response(404); self.send_header("Content-Length", str(len(body))); self.end_headers()
             self.wfile.write(body)
 
         def log_message(self, *a):

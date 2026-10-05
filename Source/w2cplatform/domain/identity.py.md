@@ -64,4 +64,4 @@ Appends an audit entry `{at, who, why, ok}` and an alarm line (`BREAK-GLASS used
 ## Notes
 - `login` takes the clock from `self.now`, so a token issued in a test carries the fake time — the Lesson 4 tests depend on it.
 - The constant here is the only token lifetime; no environment variable changes it (`deploy/domain/systemd/w2c-domain.service` sets none).
-- No process exposes `create_local`/`create_federated`/`set_roles` over HTTP (`signer_service` has only `/login`, `/revoke`, `/keys`); creating a user in production is not wired.
+- The signer is the one process that writes people (ADR-0032): `signer_service.Holder.people` — `/api/people/users` (`create_local`, `set_password`, `set_roles`, `delete`), handed on by the domain's console from `/domain/users`. `create_federated` has no route.

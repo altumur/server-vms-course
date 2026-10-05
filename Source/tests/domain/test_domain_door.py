@@ -60,7 +60,7 @@ def test_the_door_asks_for_view_to_look_and_admin_to_change():
     may = lambda cap: (lambda s: domain_may(holder.vars, s, cap, wall()))         # noqa: E731
     con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None,
                   verifier=lambda t: t), refresh_interval=60, members=Members(holder.vars, wall),
-                  admin=may("admin"), viewer=may("view"), publish_to=devices["cam-SN0"].disk_door())
+                  admin=may("admin"), viewer=may("view"), holder_objects=devices["cam-SN0"].disk_door())
     srv = con.serve(port=0)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
 

@@ -2598,7 +2598,7 @@ class SpecConsole:
     # boundary's step 3):
     #
     #   GET     `{open, login_url, user?, until?, via?}` — whether this console asks at all (`open`: it does not), who
-    #           the caller is here, and the login door (`LOGIN_URL` is the domain's signer, its door `/login`; a console
+    #           the caller is here, and the login door (`LOGIN_URL` is the domain's signer, its door `/api/login`; a console
     #           issues no tokens and keeps no passwords, М12 Lesson 4)
     #   POST    `{token}` — checked exactly as the gate would check it, and set as a cookie the page's script cannot
     #           read (`access.session_cookie`), for as long as the token lives: `{user, until}`
@@ -2615,7 +2615,7 @@ class SpecConsole:
         except Denied as e:
             return h._send(e.status, {"detail": e.why, "error": "denied"})
         signer = os.environ.get("LOGIN_URL") or ""
-        login = signer.rstrip("/") + "/login" if signer else None
+        login = signer.rstrip("/") + "/api/login" if signer else None
         if method == "DELETE" and path == "/session":
             self.gate.close_glass(h.headers)
             h._extra_headers = (("Set-Cookie", session_cookie("", 0)), ("Set-Cookie", session_cookie("", 0).replace(COOKIE, GLASS_COOKIE, 1)))

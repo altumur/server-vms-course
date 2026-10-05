@@ -163,12 +163,12 @@ def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
 
     view = ReadView(fed, wall=lambda: 1000.0)
     con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
-                  refresh_interval=60, members=members, admin=lambda s: s == "anna", publish_to=north.objects)
+                  refresh_interval=60, members=members, admin=lambda s: s == "anna", holder_objects=north.objects)
     srv = con.serve(port=0)
     base = f"http://127.0.0.1:{srv.server_address[1]}/domain/members"
     try:
         body = json.load(urllib.request.urlopen(base))
-        assert [(k["name"], k["reported"]) for k in body["knocking"]] == [("cam-SN9007", 1000.0)]
+        assert [(k["name"], k["last"]) for k in body["knocking"]] == [("cam-SN9007", 1000.0)]
         req = urllib.request.Request(base, data=json.dumps({"name": "cam-SN9007"}).encode(), method="POST",
                                      headers={"Authorization": "Bearer boris"})
         try:
