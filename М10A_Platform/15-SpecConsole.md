@@ -51,20 +51,21 @@
 ```python
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
-    holding the console's token; `media` says the page may draw a timeline and
-    play, from the doors of the units' holders (`door:` in a spec)."""
+    holding the console's token."""
 
     def __init__(self, ctl: SpecController, marks_root: str | None = None, index=None, worst_failover: float = 0.0,
-                 wall=None, media: bool = False, lost_after: float = 45.0, per_minute: float = 0.0):
+                 wall=None, lost_after: float = 45.0, per_minute: float = 0.0):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
-        self.worst_failover, self.wall, self.media, self.lost_after = worst_failover, wall or ctl.wall, media, lost_after
+        self.worst_failover, self.wall, self.lost_after = worst_failover, wall or ctl.wall, lost_after
         self.instance = f"{socket.gethostname()}:{os.getpid()}"
         self.marks_root = marks_root
         …
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
         self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
         from .door import Signer
-        self.door_signer = Signer.from_env()             # signs the holders' door tokens (`DOOR_KEY`); None: open doors
+        # signs the holders' door tokens with the key in the store (`door/signer`, sealed with the cluster's key ring);
+        # None without a ring to seal one with: the doors' open mode
+        self.door_signer = Signer.for_console(ctl.vars, getattr(ctl, "sealer", None))
         self.gate = Gate(ctl.vars, self.wall, lambda: self.journal)   # who is calling, and may they (`access.py`)
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall,   # in the store: any instance answers a retry
                                     sealer=getattr(ctl, "sealer", None))                 # its digests under the cluster's key
@@ -76,7 +77,7 @@ class SpecConsole:
 
 `index` — то, чем отвечать про события: `MergedIndex` из урока 13. Может быть `None` — тогда `/events` честно отвечает 503.
 
-`media` — флаг, который уедет в описание и скажет странице: держатели единиц отдают странице байты сами, и плеер есть кому кормить. Ставит его сборка консоли (`host.build_console`), если хоть одна спека каталога объявила `door:`. Сама консоль байтов не отдаёт и не проводит: она только выдаёт адрес двери держателя и токен к ней (шаг 12). Подпись токена — `door_signer`; без ключа двери открыты, и это режим, о котором говорят вслух (`door.py`).
+`door_signer` — то, чем консоль подписывает токены дверей держателей. Сама консоль байтов не отдаёт и не проводит: она только выдаёт адрес двери держателя и токен к ней (шаг 12). Ключ лежит **в хранилище**, а не в окружении процесса: `door/signer` — закрытая половина, запечатанная кольцом ключей кластера (её читает только консоль), `door/keys` — открытые половины, которые читает каждый держатель (`door.py`). Нет кольца, которым запечатать ключ, — `door_signer` равен `None`, и двери открыты; это режим, о котором говорят вслух.
 
 `journal` — журнал «кто что сделал» (шаг 8), `gate` — ворота (шаг 12а), `units` — каталог подсистем процесса по имени: одна консоль знает только себя, в `Mount` все консоли делят один словарь (шаг 14). По нему ворота находят строку единицы, названной ссылкой `<sub>/<id>`, даже если это единица соседней подсистемы.
 
@@ -107,32 +108,46 @@ class SpecConsole:
 ```python
     def describe(self) -> dict:
         s = self.spec
-        return {"name": s.name, "rows": s.rows, "id": s.id, "media": self.media,
+        return {"name": s.name, "rows": s.rows, "id": s.id,
                 "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
                             **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
-                            **({"fixed": True} if f.fixed else {})} for f in s.fields.values()],
+                            **({"fixed": True} if f.fixed else {}),
+                            **({"enum": list(f.enum)} if f.enum else {})} for f in s.fields.values()],
                 **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
                 **({"display": s.display} if s.display else {}),
                 **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
                 **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
-                "running_gauge": f"{s.name}_{s.running_gauge}", "workers_gauge": f"{s.name}_workers_live",
-                "metrics": {"prefix": s.name, "running": s.running_gauge}}
+                # the subsystem's key families of the domain (`domain.keys`; their words are `display.keys`)
+                **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
+                                        for f in s.domain.keys], "shared": list(s.domain.shared)}}
+                   if s.domain and (s.domain.keys or s.domain.shared) else {}),
+                "running_gauge": f"{s.name}_{s.running_gauge}" if s.running_gauge else None,
+                "workers_gauge": f"{s.name}_workers_live",
+                "metrics": {"prefix": s.name, "running": s.running_gauge or None}}
 ```
 
-Спецификация, пересказанная в JSON. Для `testsub` — подсистемы, на которой платформа гоняет свои тесты (`tests/testdata/testsub.subsystem.yaml`), — получится:
+Спецификация, пересказанная в JSON. Для `testsub` — подсистемы, на которой платформа гоняет свои тесты (`tests/testdata/testsub.subsystem.yaml`), — получится (запуск на коде, длинные строки `about` укорочены):
 
 ```json
-{"name": "testsub", "rows": "counters", "id": "name", "media": false,
+{"name": "testsub", "rows": "counters", "id": "name",
  "fields": [{"name": "name", "type": "string", "default": "", "required": true},
             {"name": "start", "type": "int", "default": 0, "required": false},
-            {"name": "labels", "type": "list", "default": [], "required": false}],
+            {"name": "labels", "type": "list", "default": [], "required": false},
+            {"name": "step", "type": "int", "default": null, "required": false, "inherit": 1, "merge": "override"},
+            {"name": "marks", "type": "list", "default": null, "required": false, "inherit": [], "merge": "union"}],
+ "display": {"keys": {"tallies": {"title": "tallies", "about": "a member's tally book: …"},
+                      "ledger": {"title": "ledger", "about": "the ledger the holder keeps for the domain",
+                                 "absent": "nothing ledgered yet"}}},
+ "domain": {"keys": [{"id": "tallies", "keys": ["domain/testsub/tallies"], "prefix": "domain/testsub/tallies/"},
+                     {"id": "ledger", "keys": ["domain/testsub/ledger"]}],
+            "shared": ["step", "marks"]},
  "running_gauge": "testsub_counters_running", "workers_gauge": "testsub_workers_live",
  "metrics": {"prefix": "testsub", "running": "counters_running"}}
 ```
 
-Этого достаточно, чтобы построить экран. Список единиц — по `rows` (и путь к ним тот же: `/counters`). Форма создания — по `fields`: строковое поле даёт текстовый ввод, `bool` — галочку, `list` — поле через запятую, `required` — звёздочку и проверку, `fixed` — поле, которое после создания не правится. Строка состояния — по именам метрик `running_gauge` и `workers_gauge`. Таймлайн и плеер — только если `media`.
+Этого достаточно, чтобы построить экран. Список единиц — по `rows` (и путь к ним тот же: `/counters`). Форма создания — по `fields`: строковое поле даёт текстовый ввод, `bool` — галочку, `list` — поле через запятую, `enum` — выпадающий список, `required` — звёздочку и проверку, `fixed` — поле, которое после создания не правится. Поле с `inherit` (у `testsub` это `step` и `marks`) своего умолчания не имеет — `default: null`: пустое, оно берёт значение домена, а без домена — то, что написано в `inherit`; `merge` говорит, заменяет ли своё значение доменное или складывается с ним. Строка состояния — по именам метрик `running_gauge` и `workers_gauge`; `running_gauge` — `null`, если спека не назвала свою метрику `console: {running: …}` (шаг 11).
 
-Остальные ключи появляются, только когда спека их объявила. `about` — о какой единице другой подсистемы каждая единица этой (урок 9). `display` — словарь слов для страницы: как назвать единицу, подсказки к полям, слова для видов событий, дерево групп. Платформа его не читает, она его передаёт. `servers.show` — строки каких таблиц подсистемы показать под сервером, который назван в их поле. `door` — какие маршруты держатель единицы открывает странице сам (шаг 12).
+Остальные ключи появляются, только когда спека их объявила. `about` — о какой единице другой подсистемы каждая единица этой (урок 9). `display` — словарь слов для страницы: как назвать единицу, подсказки к полям, слова для видов событий, дерево групп, слова для семейств ключей. Платформа его не читает, она его передаёт. `servers.show` — строки каких таблиц подсистемы показать под сервером, который назван в их поле. `door` — какие маршруты держатель единицы открывает странице сам (шаг 12); по ним — у самой подсистемы или у той, что `about` её единицы, — страница решает, рисовать ли шкалу и плеер (урок 16). `domain` — семейства ключей подсистемы в домене и поля, чьё общее значение держит домен (М12).
 
 Вот что здесь важно осознать. Страница **не знает** ни одной подсистемы: ни камер, ни счётчиков. Она умеет отрисовать «подсистему вообще» — и потому одна и та же на все. Слова, которыми страница говорит с оператором, тоже из спеки (`display`), а не из страницы. Страницу разбирает урок 16; сейчас достаточно, что описание содержит ровно то, из чего экран собирается.
 
@@ -679,22 +694,31 @@ class Journal:
                  # one's — at `FUTURE_TOLERANCE` such a worker stops counting as live.
                  f"# TYPE {p}_heartbeats_garbled counter", f"{p}_heartbeats_garbled {GARBLED.get(p, 0)}",
                  f"# TYPE {p}_heartbeat_skew_seconds_max gauge", f"{p}_heartbeat_skew_seconds_max {round(SKEW_MAX.get(p, 0.0), 1)}",
-                 f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}",
-                 f"# TYPE {p}_{self.spec.running_gauge} gauge",
-                 f"{p}_{self.spec.running_gauge} {sum(1 for hb in live.values() for s in hb.status if s.get('phase') == 'running')}"]
+                 f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}"]
 ```
 
 `failover_seconds` **измеряется**, а не только называется (восьмое ревью, найдено координатором). Раньше `kind="worst"` был числом, с которым собрали консоль, — арифметикой урока 11; в кластере его не передают, и после любого failover там стоял `0.0`. Теперь последний failover каждого воркера меряется (`SpecController.failover_seconds`, урок 11) и называется по воркеру — `kind="last",worker=…`. Меряется он на одних часах (девятое ревью): на том же сервере — начало этого экземпляра минус последний heartbeat предыдущего, по тому, что они написали (`previous_server` равен `server`); на другом сервере — то, что консоль сама видела по своим часам между последним сдвигом heartbeat'а старого экземпляра и появлением нового. А `kind="worst"` — наибольшее из числа, данного консоли (`worst_failover`: цифра учений, паспорт), из всего, что этот процесс измерил за время работы (`failover_worst`), и из последних: более короткий второй failover того же воркера худший не стирает. Разница между измеренным и данным — самое полезное на этом графике. Переключение, которое на одних часах не измерить (другой сервер, а консоль не видела предшественника живым; отрицательный промежуток), числом не становится, а считается: `<p>_failovers_unmeasured` — сколько воркеров сейчас с неизмеренным переключением. Тест: `tests/cluster/test_lesson4_failover.py::test_a_restart_is_measured_on_one_clock_and_a_name_taken_elsewhere_by_the_readers` (М11).
 
 **Значение каждой метки экранируется** (`label`: `\`, `"`, перевод строки; восьмое ревью, часть 4). Имя записи `7"x` ломало строку `/metrics`, и Prometheus отвергал весь скрейп. Новые имена с `"`, `|` и управляющими символами отказываются при создании (`doors.unnamable`), а уже записанные проходят через `label`.
 
-`running_gauge` — снова имя из YAML (`console: {running: …}`, по умолчанию `units_running`): у `testsub` это `counters_running`, и строка выходит `testsub_counters_running`; у VMS — `cameras_running`. Считается перечислением статусов живых воркеров с `phase == running` — то есть **не** «сколько настроено», а «сколько на самом деле идёт».
+**Сколько единиц идёт — тоже объявление, а не строка консоли.** Счётчик работающих единиц, который страница показывает в строке состояния, подсистема объявляет как любое своё число (ниже) и называет его один раз в `console: {running: …}`. У `testsub`:
 
-Дальше в `lines` идут возраст снимка, проход контроллера и строки, которые не разбираются (таблица ниже), очередь сборщика блобов, если у подсистемы есть блобы, числа для скрипта запасных, если спека объявила `placement.offers`, числа, которые подсистема объявила сама (ниже), и — один раз на процесс консоли — числа платформы. Ответ (`return "\n".join(lines) + "\n"` в конце метода) заканчивается переводом строки: Prometheus на это не жалуется, а `curl` без него печатает промпт впритык.
+```yaml
+metrics:
+  - {name: counters_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+console:
+  running: counters_running
+```
+
+Строка выходит `testsub_counters_running`: записи статуса с `phase: running` по всем живым воркерам — то есть **не** «сколько настроено», а «сколько на самом деле идёт». Умолчания нет: спека, которая не назвала метрику, счётчика не имеет (`running_gauge: null` в `/spec`), а `console.running`, который называет не свою метрику, — отказ при загрузке спеки («declare it under `metrics:`»). Одно число объявлено в одном месте, и консоль его не считает отдельно.
+
+Дальше в `lines` идут возраст снимка, проход контроллера и строки, которые не разбираются (таблица ниже), очередь сборщика блобов, если у подсистемы есть блобы, числа для скрипта запасных, если спека говорит `placement.offers: true`, число нужных воркеров у подсистемы, размещаемой по строкам (`placement.places`), числа, которые подсистема объявила сама (ниже), и — один раз на процесс консоли — числа платформы. Ответ (`return "\n".join(lines) + "\n"` в конце метода) заканчивается переводом строки: Prometheus на это не жалуется, а `curl` без него печатает промпт впритык.
 
 ```python
         if self.spec.offers:
             lines += self.spares_lines(rep, now, hbs)
+        if self.spec.places:
+            lines += self.places_lines(live)
         from . import metrics
         lines += metrics.lines(self.spec, self.ctl, hbs, live, now)   # the subsystem's own numbers, as its spec declares them
         if self.says_platform:
@@ -702,23 +726,29 @@ class Journal:
         return "\n".join(lines) + "\n"
 ```
 
+`spares_lines` — то, что читает скрипт запасных узла: `<p>_workers_needed{labels}`, `<p>_units_short`, `<p>_spare_offers` из отчёта прохода контроллера и метки серверов, и только пока отчёт не старше `SPARES_FRESH` (60 с): скрипт, читающий число остановившегося контроллера, запускал бы процессы под нехватку, которой давно нет. `places_lines` — то же первое число для подсистемы, чьи места — строки её таблицы (урок 11): `<p>_workers_needed{labels=""}` — места, которые подходят под `where` и которых не держит ни один живой воркер, минус живые воркеры без места. Оно считается здесь, на каждом скрейпе, из хранилища и пульсов, которые консоль читает и так, — от `place_by` не зависит.
+
 **Числа подсистемы — объявления, а не код.** Платформа не знает, что у подсистемы стоит считать. Подсистема говорит это в спеке, списком `metrics:`, а консоль печатает строки из того, что уже читает: строки таблиц и heartbeat'ы (`w2cplatform/metrics.py`). Форм две:
 
 | Форма | Что считает |
 |---|---|
-| `count: table <t>` (и `where: {поле: значение}`, `unheld: true`) | строки одной из таблиц спеки: с таким значением поля; ещё и те, которых не держит ни один живой воркер |
-| `from: heartbeat.<путь>` или `status.<путь>`, `agg` | поле heartbeat'а воркера или каждой записи его статуса: само число (`value`), флаг, возраст, метка, число записей по значению (`count`), сумма или максимум по всем воркерам, гистограмма; сегмент пути `<имя>` проходит по всем ключам карты и становится меткой |
+| `count: table <t>` (и `where: {поле: значение}`, `unheld: true`, `unless: {table, where}`) | строки одной из таблиц спеки: с таким значением поля; ещё и те, которых не держит ни один живой воркер; ноль, пока в другой таблице есть такая строка |
+| `from: heartbeat.<путь>` или `status.<путь>`, `agg` | поле heartbeat'а воркера или каждой записи его статуса: само число (`value`), флаг (`flag`, с `equals` — равно ли одному из значений), возраст, метка, число записей по значению (`count`; с `equals` — одна строка по всем воркерам), сумма или максимум по всем воркерам, гистограмма; сегмент пути `<имя>` проходит по всем ключам карты и становится меткой; `live: true` — только живые воркеры, `when` — только записи, где поле сказано |
 
-Строка выходит `<sub>_<name>`, с меткой `worker` у поля heartbeat'а и `unit` у записи статуса; каждое число — через `rows.number`, как выше. Объявление проверяется при загрузке спеки: неизвестная форма, неизвестный `agg`, таблица, которой у спеки нет, — спека не загружается. Пример объявлений — из спеки регистратора в М10B:
+Строка выходит `<sub>_<name>` (`type` — `gauge` по умолчанию, `counter` или `histogram`; `labels` — постоянные метки), с меткой `worker` у поля heartbeat'а и `unit` у записи статуса; каждое число — через `rows.number`, как выше. Объявление проверяется при загрузке спеки: неизвестный ключ, неизвестная форма, неизвестный `agg`, таблица, которой у спеки нет, — спека не загружается. Каждую форму и каждый ключ объявляет `tests/testdata/testsub2.subsystem.yaml` — вторая подсистема для тестов платформы, которая говорит всё, что платформа читает в спеке, по разу:
 
 ```yaml
 metrics:
-  - {name: volumes_declared, count: table volumes, where: {enabled: true}}
-  - {name: recordings, from: status.phase, agg: count}
-  - {name: volume_error, from: heartbeat.volume_error, agg: flag, default: 0}
+  - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
+  - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}
+  - {name: marks_unshelved, count: table marks, unless: {table: shelves, where: {kind: reserve}}}
+  - {name: jam, from: heartbeat.jam, agg: flag, equals: [stuck, "yes"]}
+  - {name: adds_total, from: "heartbeat.adds.<outcome>", agg: sum, type: counter, labels: {kind: add}}
+  - {name: wait_seconds, from: heartbeat.wait, agg: histogram, type: histogram, buckets: [1.0, 5.0]}
+  …
 ```
 
-Тест: `test_spec_declarations.py::test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_the_store_and_the_heartbeats`.
+Каждый ключ и каждый оператор, который платформа читает в спеке, должен быть в ходу — у двух подсистем продукта или у тестовой подсистемы платформы; ключ, нужный одной подсистеме, — это её код в одежде платформы. Это проверяет `tests/test_spec_rule.py::test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_by_a_test_subsystem`. В М10B те же формы объявляет, например, регистратор: `volumes_declared` (`count: table volumes`), `recordings` (`from: status.phase, agg: count`), `keeps_unprotected` (`unless`). Тест: `test_spec_declarations.py::test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_the_store_and_the_heartbeats`.
 
 **Ресурсы — числа платформы, и говорятся они один раз, под именем `w2c`** (решение курса о платформенных именах, по правилу продукта: платформа — `w2c`, VMS — одна из её подсистем). Ресурс — один на сервер, что бы в него ни писали подсистемы. А каждая смонтированная консоль повторяла его числа под своим префиксом — `<sub>_resources_live` у каждой подсистемы процесса: один факт столько раз, сколько подсистем смонтировано, и алерт на диск, написанный по префиксу одной подсистемы, молчал бы на консоли без неё. Теперь живые ресурсы, их диски, ожидания, нечитаемые строки, зеркало и восстановление — в `platform_metrics`, с префиксом `w2c`:
 
@@ -738,6 +768,8 @@ metrics:
                  # resource heartbeats that did not parse, since this process started (the review's second pass, M6)
                  f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}"]
 ```
+
+Метод кончается числами семейства запросов (`requests.metrics_lines()`): `w2c_requests_expired_total{sub}` и `w2c_requests_unknown_total{sub}` — заявки, которые уборка этого процесса закончила без ответа (никто не исполнил к сроку; держатель начал и пропал, не сказав, чем кончилось). Это тоже числа процесса, а не подсистемы: уборку заявок ведёт процесс консоли (`host.requests_loop`), а что она делает, разбирает [урок 14](14-Resource.md), шаг «Семейство запросов».
 
 Кто их говорит, решает `Mount` (шаг 14): консоль, которая работает одна, — сама; в `Mount` — только корень, в том числе когда подсистему смонтировали позже (`console.says_platform = console is self.root` в `Mount._adopt`). Скрейп всех страниц процесса видит каждое число ресурса один раз. Тест: `test_one_bad_element.py::test_the_resources_are_said_once_per_console_under_the_platforms_name`.
 
@@ -759,6 +791,7 @@ metrics:
 | `<p>_worker_<table>s_garbled{worker}` | то же по другим таблицам, которые знает процесс консоли (`rows.counts`): `holds_garbled` — место, которое никто не возьмёт; `assignments_garbled`; у регистратора — `volumes_garbled`, `keeps_garbled`. Строки, каждая один раз, пока снова не разберётся, — не чтения (седьмое ревью: `holds_garbled` был в heartbeat'е, а здесь не был) |
 | `w2c_resource_rows_garbled{server,table}`, `w2c_resource_space_garbled{server}` (числа платформы, один раз на процесс) | строки, которые не разобрал ресурс сервера, по таблицам, и испорченная `platform/space` (тогда водяная отметка — по последней настройке или умолчаниям); раньше были только в heartbeat'е ресурса (восьмое ревью) |
 | `w2c_resource_restore_left{server}`, `w2c_resource_restore_failures_total{server}`, `w2c_resource_mirror_failures_total{server}`, `w2c_resource_mirror_too_big_total{server}` (числа платформы) | что ресурс ещё не привёз при `restore` (он повторяет его в своём цикле, по пиру и ведру), сколько раз пир или ведро не отдались, сколько копий зеркала не легло и сколько вёдер больше `MIRROR_MAX` пропущено (восьмое ревью) |
+| `w2c_requests_expired_total{sub}`, `w2c_requests_unknown_total{sub}` (числа платформы) | заявки подсистемы, закрытые уборкой без ответа: просроченные никем и начатые держателем, который пропал (урок 14) |
 | `<sub>_<name>` из `metrics:` спеки | числа, которые подсистема объявила сама (выше): что они значат, знает она, а платформа только печатает. В М10B так объявлены, например, `rec_volume_wait`, `rec_stream_behind_seconds`, `auto_wants_folded`, `vms_devices_slow`, `vms_commands_in_flight` — что каждое из них говорит, разбирают уроки М10B |
 | `<p>_console_rows_garbled{table}` | строки, которые не смогла разобрать сама консоль, по таблицам (`rows.counts`): поля heartbeat'ов, прочитанные выше как «не сказано» (`table="field"`), строки единиц, которые ворота `/events` читают ради меток (`table="unit"`, шаг 12а), единицы, чьи фильтры упали, когда `/unplaceable` или `/drain` их проверяли (`table="unit_judged"`; урок 11) |
 
@@ -766,7 +799,7 @@ metrics:
 
 ## Шаг 12 — Что подсистема объявляет, и дверь держателя
 
-Платформа не знает ни одной подсистемы — а у подсистемы, кроме единиц, бывают свои списки (места, отметки «сохранить»), свои просьбы к держателю единицы (сделай, принеси) и свои байты, которые держатель отдаёт странице. Соблазн один и тот же для всех трёх: дать подсистеме вставить в консоль свой код — функцию, которой консоль отдаёт непонятые маршруты. Такая функция и была, и она сделала то, что делает любой крюк: консоль платформы стала консолью тех подсистем, чей код в неё вставили, а байты пошли через процесс, который не должен их видеть.
+Платформа не знает ни одной подсистемы — а у подсистемы, кроме единиц, бывают свои списки (места, отметки «сохранить»), свои просьбы к держателю единицы (сделай, принеси) и свои байты, которые держатель отдаёт странице. Соблазн один и тот же для всех трёх: дать подсистеме вставить в консоль свой код — функцию, которой консоль отдаёт непонятые маршруты. Такая функция — крюк, и делает она то, что делает любой крюк: консоль платформы становится консолью тех подсистем, чей код в неё вставили, а байты идут через процесс, который не должен их видеть.
 
 Правило, которое её заменило: **у подсистемы три места, и консоли среди них нет.** Что строка значит и кто её может писать — в спеке. Что сделать с данными — в воркере подсистемы. Что показать — в странице. Консоль обслуживает только объявленное и ни одного маршрута подсистемы кодом не добавляет:
 
@@ -784,21 +817,73 @@ metrics:
 
 `dispatch` спрашивает `_declared` в конце каждой ветки метода, перед 404. Объявлений, которые консоль обслуживает, три.
 
-**Таблицы** (`tables:`, `w2cplatform/tables.py`) — семейства строк `<sub>/<table>/<name>`, которые не единицы: на них ничего не размещается, у них нет эпохи и воркера. Спека говорит, чем строка названа (`key`: поле или шаблон `"{a}-{b:int}"`), какие у неё поля, общая схема строки (JSON Schema), что консоль штампует (`by`, `at`) и как назвать строки журнала. Консоль отдаёт `GET /<table>` и `GET /<table>/<name>` (секреты не показываются; при воротах — только строки тех единиц, которые человеку можно видеть), `POST /<table>` пишет строку целиком, `DELETE /<table>/<name>` её удаляет; каждая запись — строка журнала с именем. Объявление, которое платформа могла бы проверить на `testsub`-подобной подсистеме:
+**Таблицы** (`tables:`, `w2cplatform/tables.py`) — семейства строк `<sub>/<table>/<name>`, которые не единицы: на них ничего не размещается, у них нет эпохи и воркера. Спека говорит, чем строка названа (`key`: поле или шаблон `"{a}-{b:int}"`), какие у неё поля, общая схема строки (JSON Schema), что консоль штампует (`by`, `at`) и как назвать строки журнала. Консоль отдаёт `GET /<table>` и `GET /<table>/<name>` (секреты не показываются; при воротах — только строки тех единиц, которые человеку можно видеть), `POST /<table>` пишет строку целиком, `DELETE /<table>/<name>` её удаляет; каждая запись — строка журнала с именем. Объявление из `testsub2`:
 
 ```yaml
 tables:
-  pins:
+  shelves:
     key: name
     fields:
-      name: {type: string, required: true}
-      note: {type: string}
+      name:    {type: string, required: true}
+      zone:    {type: string}
+      server:  {type: string}
+      kind:    {type: string, default: plain, enum: [plain, reserve, closed]}
+      …
+    schema:
+      if: {properties: {kind: {const: closed}}}
+      then: {properties: {admits: {const: false}}, required: [admits]}
     stamp: [by, at]
+    journal: {written: shelf.declared, deleted: shelf.withdrawn}
+  marks:
+    key: "{of}-{from:int}-{to:int}"
+    …
 ```
 
 Тест: `test_spec_declarations.py::test_a_declared_table_is_written_listed_and_deleted_by_the_console_and_each_write_is_a_line`.
 
-**Заявки** (`requests:`) — `POST /requests {unit: <sub>/<id>, …}`: просьба к держателю единицы, поданная строкой `<sub>/requests/<id>`. Спека говорит форму тела (схема), чем заявка названа (шаблон из полей или `Idempotency-Key` — повтор та же заявка), сколько она стоит делать (`valid_for`, `most_valid`), сколько неотвеченных у одного человека (`per_person`, счёт по CAS), что консоль штампует (`by`, `at`, группа единицы, единица, о которой она) и вид строки журнала. Консоль отвечает 202: «держатель ответит на следующем взгляде на заявки, в своём heartbeat'е». Что может решить только держатель — его, и отказ он говорит в heartbeat'е. Тест: `test_spec_declarations.py::test_a_request_is_a_row_named_by_its_key_stamped_with_its_group_and_held_to_its_schema_and_deadline`.
+**Заявки** (`requests:`, семейство платформы) — `POST /requests {unit: <sub>/<id>, …}`, в `Mount` — `POST /<sub>/requests`: просьба к держателю единицы сделать ограниченную работу, поданная строкой `<sub>/requests/<id>`. Здесь консоль только **подаёт**. Исполняет держатель, один раз, и отвечает в своём heartbeat'е (`fetched`) и в метке `<sub>/commands/<id>`; убирает строку уборка процесса консоли (`requests.clear_requests` из `host.requests_loop`). Весь путь строки — [урок 14](14-Resource.md), шаг «Семейство запросов». Подаёт заявку не только человек: воркер другой подсистемы, чья спека говорит `worker: {requests: [<sub>]}` (урок 9), пишет такую же строку сам.
+
+Подача — то место, где повтор опасен. Строка единицы, созданная дважды, — заметная ошибка; заявка, поданная дважды, — два нажатия одного реле, и второе никто не увидит. Поэтому подача **идемпотентна**:
+
+```python
+    def _request_route(self, h) -> None:
+        key = self._idem(h)
+        if key is None:
+            return
+        try:
+            resp = self._file_request(h, key)
+        except Exception as e:                                       # noqa: BLE001
+            return h._send(*self._failed(key, e))
+        if resp[0] == 202:
+            self._remember(key, resp)
+        else:
+            self.seen.release(key)                                  # a refusal is not a request: the key is not spent
+        return h._send(*resp)
+```
+
+Три слоя, и каждый закрывает свой повтор.
+
+- **Ключ обязателен** — тот же `_idem`, что у `POST /<rows>` (шаг 13): без `Idempotency-Key` — 400; ключ — одного человека и одного тела (повтор с другим телом — 422 `key reused`). Ответ 202 запоминается под ключом (`_remember`), и повтор после того, как строку уже исполнили и убрали, получает тот же 202, а не вторую работу: ключ живёт сутки, строка — секунды. Отказ ключа не тратит (`release`): исправленное тело под тем же ключом подаётся.
+- **Имя строки — из спеки.** Шаблон `key` из полей тела (у регистратора М10B — `"{unit}-{from:int}-{to:int}"`: тот же диапазон — та же заявка, под каким ключом её ни пошли), иначе `id` тела, иначе сам ключ. Строка пишется create-only (`cas=0`); `Conflict` значит «эта заявка уже подана», и ответ — её строка.
+- **Что консоль проверяет до записи** (`_file_request`): тело — объект и отвечает схеме (`schema`); единица названа ссылкой своей подсистемы и существует (иначе 400 и 404); имя — имя, а не путь; срок `valid_until` — конечное число секунд, не дальше `most_valid` (не сказан — `now + valid_for`); неотвеченных заявок одного человека не больше `per_person` — их список одна строка `<sub>/requests/asks-<sha256 имени, 16 знаков>`, меняемая по CAS, так что сорок POST разом не насчитают одно и то же; id держится в нём, пока стоит строка заявки, и `settle` секунд после добавления, но не дольше `ttl`; сверх — 429. Штампы (`stamp`: `by`, `at`, группа единицы, единица, о которой она) и строка журнала (`journal`) — тоже по спеке.
+
+Запуск на `testsub` (его спека: `requests: {schema: {required: [unit, add], …}, valid_for: 30, most_valid: 600}`):
+
+```
+POST /requests {"unit": "testsub/c1", "add": 5}      + Idempotency-Key: r1
+  → 202 {"queued": {"id": "r1", "add": "5", "unit": "c1", "valid_until": "1791190227.77943"},
+         "detail": "whoever holds the unit answers it on its next look at the requests, in its heartbeat;
+                    after valid_until it expires unperformed"}
+POST /requests {"unit": "testsub/c1", "add": 5}      + Idempotency-Key: r1   → 202, тот же ответ; строка одна
+POST /requests {"unit": "testsub/c1", "add": 6}      + Idempotency-Key: r1   → 422 key reused
+POST /requests {"unit": "testsub/c1", "add": 5}                              → 400 Idempotency-Key header is required
+POST /requests {"unit": "c1", "add": 5}              + Idempotency-Key: r2   → 400 a unit is named <sub>/<id> …
+POST /requests {"unit": "testsub/c1", "add": "x"}    + Idempotency-Key: r3   → 400 the request.add is integer, not string 'x'
+POST /requests {"unit": "testsub/c1", "add": 1}      + Idempotency-Key: r3   → 202: отказ ключа не потратил
+POST /requests {…, "valid_until": 1e12}              + Idempotency-Key: r4   → 400 a request's `valid_until` is at most 600 s away
+```
+
+В хранилище после этого две строки: `testsub/requests/r1` и `testsub/requests/r3`. Значения полей в строке — слова (`"add": "5"`): консоль пишет каждое поле строкой, вложенное — JSON, и число из неё держатель читает сам. Что может решить только держатель — что диапазон длиннее, чем он выкачивает, что аргумент больше, чем есть у его единицы, — его, и отказ он говорит в heartbeat'е. Тесты: `test_spec_declarations.py::test_a_request_is_a_row_named_by_its_key_stamped_with_its_group_and_held_to_its_schema_and_deadline`, `test_review_remainder.py::test_a_command_retried_is_one_command`.
 
 **Дверь держателя** (`door: {routes: [...]}`, `w2cplatform/door.py`) — байты. **Байты консоль не проводит** (решение владельца): то, что держатель единицы отдаёт странице, идёт от держателя к браузеру, а консоль говорит только, где дверь, и впускает. Это и есть третий ответ `/where/<id>` из шага 6:
 
@@ -810,7 +895,7 @@ tables:
         pl = self.ctl.placement(uid)
         hb = holders(self.ctl.objects, f"{self.spec.name}/", self.wall(), self.lost_after, self.ctl.eyes).get(pl.worker) if pl else None
         holds = hb is not None and any(str(st.get("id")) == str(uid) for st in hb.status)
-        url = str(hb.extra.get("door_url") or "") if holds else ""
+        url = str(hb.extra.get("url") or "").rstrip("/") if holds else ""
         if not url:
             return {"door": None}
         found = (pl.worker, hb)
@@ -823,9 +908,11 @@ tables:
         return {"door": {"url": url, "token": token, "expires": exp, "routes": list(routes)}}
 ```
 
-Держатель — тот воркер, на котором единица **размещена**, живой (`holders`, шаг 10) и говорящий в heartbeat'е, что держит её: не любой heartbeat, где она ещё числится. Адрес двери держатель объявляет в своём heartbeat'е сам. Нет такого держателя — `door: null`, и страница спросит снова. Ворота спросили `view` на единице до этой строки — это право и несёт токен: кому выдан, какая единица, какой держатель, какие маршруты, до когда (`door.TTL`, 120 с). Подпись асимметричная: консоль **подписывает**, держатель только **проверяет** по открытому ключу (`Signer`, `Ring`), и ни один держатель не держит того, чем токен выпускают. Без ключа двери открыты: консоль отдаёт дверь с `token: null`, а держатель без открытых ключей впускает всякого и один раз говорит об этом в логе. Единица переехала — у неё другой держатель, и старый токен не его: страница спросит `/where` ещё раз. Тесты: `test_spec_declarations.py::test_a_door_token_opens_one_holders_door_to_one_unit_for_its_routes_until_it_ends`, `…::test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_holder_has_one`.
+Держатель — тот воркер, на котором единица **размещена**, живой (`holders`, шаг 10) и говорящий в heartbeat'е, что держит её: не любой heartbeat, где она ещё числится. Адрес двери держатель объявляет в своём heartbeat'е сам, словом `url`, и страница идёт на `<url>/<маршрут>/<id>`. Нет такого держателя — `door: null`, и страница спросит снова. Ворота спросили `view` на единице до этой строки — это право и несёт токен `v1.<kid>.<тело>.<подпись>`: кому выдан, какая единица, какой держатель, какие маршруты, до когда (`door.TTL`, 120 с). Подпись асимметричная (Ed25519): консоль **подписывает**, держатель только **проверяет** по открытому ключу (`Signer`, `Ring`), и ни один держатель не держит того, чем токен выпускают.
 
-Что платформа делает для двери — выпуск токена, ключи, проверка, CORS только для источников консолей (`DOOR_ORIGINS`), маскировка `?t=` в логах. Что маршрут **отдаёт** — решение воркера подсистемы: держатель зовёт `DoorKeeper.admit(handler, route, unit)` и отвечает, как отвечает. В М10B так отдают свои куски регистратор и держатель камеры, а предложение живого потока принимает шлюз.
+Ключи — в хранилище кластера. Первый ключ консоль делает сама, когда у неё впервые просят дверь (`Signer.current`): сначала открытая половина в `door/keys` — токен никогда не подписан ключом, которого не знает ни одна дверь, — потом закрытая, запечатанная, в `door/signer`. `python3 -m w2cplatform.door new` выпускает новый ключ: им подписывают все консоли в пределах `SIGNER_REREAD` (30 с), а старая открытая половина остаётся в `door/keys` для токенов, которые она подписала. Держатель, увидевший незнакомый `kid`, перечитывает `door/keys`, но не чаще раза в секунду. Нет кольца ключей, которым запечатать закрытую половину, — консоль ключа не держит и отдаёт дверь с `token: null`; держатель, у которого `door/keys` пуст, впускает всякого и один раз говорит об этом в логе. Отказ двери — всегда 401 `{error, reason}` с `WWW-Authenticate`, и `reason` — одно слово, по которому страница действует: `token` (токена нет), `signature`, `expired`, `holder`, `unit`, `route`. Единица переехала — у неё другой держатель, и старый токен не его (`holder`): страница спросит `/where` ещё раз и повторит один раз. Тесты: `test_spec_declarations.py::test_a_door_token_opens_one_holders_door_to_one_unit_for_its_routes_until_it_ends`, `…::test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_holder_has_one`.
+
+Что платформа делает для двери — выпуск токена, ключи, проверка, CORS только для источников консолей (`DOOR_ORIGINS`), маскировка `?t=` в логах. Что маршрут **отдаёт** — решение воркера подсистемы: держатель зовёт `DoorKeeper.admit(handler, route, unit)` и отвечает, как отвечает. В М10B так регистратор отдаёт шкалу и куски записи (`door: {routes: [timeline, segment]}`), а шлюз принимает предложение живого потока (`door: {routes: [whep]}`); строку потока создаёт первый зритель сам, `POST /live/streams` по праву `view` на камеру. Своих маршрутов для байтов у консоли нет ни одного.
 
 Обратите внимание, чего в этом шаге нет: ни одной функции подсистемы, которую звала бы консоль. Подсистема говорит словами спеки, а консоль, страница и держатель делают по этим словам каждый своё.
 
@@ -915,7 +1002,7 @@ def may_on(access, payload: dict, capability: str, unit: str | None, labels, of:
 
 **Единицу читают один раз — и ворота, и маршрут.** Ворота брали единицу из третьего сегмента пути (`segs[2]`), а маршруты — из последнего: `DELETE /<rows>/1/2` с правом `admin` на единицу 1 удалял единицу 2. Ревью проверило это запуском (третье ревью, блокер 1). Теперь путь разбирает одна функция, `path_id`, и её ответ берут и `needs`, и маршрут (`_uid`, `/where`, строки таблиц); всё, что стоит в пути **после** id, — 404 до ворот, кроме `PUT /<rows>/<id>/<поле-блоб>`. Тест: `test_console_gate.py::test_the_gate_and_the_route_read_the_unit_from_the_same_segment`.
 
-**Чья строка — и до чего дотягивается изменение: это говорит спека.** Ворота проверяют единицу, которую называет путь. Но запись может дотянуться до других единиц через поля строки, которую пишет, — и каждое ревью находило новое такое поле (четвёртое, пятое, шестое; major, воспроизведены запуском): строку переводили на чужую единицу правкой одного поля; правка адреса уводила единицу на чужой канал, чьи учётные данные общие; правило, названное по гранту на его метки, действовало на единицы, на которые у правившего прав нет. Платформа не знает, что значат эти поля. Раньше подсистема отвечала за неё кодом, вставленным в консоль; теперь она говорит это словами спеки, и консоль спрашивает ворота по словам:
+**Чья строка — и до чего дотягивается изменение: это говорит спека.** Ворота проверяют единицу, которую называет путь. Но запись может дотянуться до других единиц через поля строки, которую пишет, — и каждое ревью находило новое такое поле (четвёртое, пятое, шестое; major, воспроизведены запуском): строку переводили на чужую единицу правкой одного поля; правка адреса уводила единицу на чужой канал, чьи учётные данные общие; правило, названное по гранту на его метки, действовало на единицы, на которые у правившего прав нет. Платформа не знает, что значат эти поля. Кода, вставленного в консоль, у подсистемы нет; она говорит это словами спеки, и консоль спрашивает ворота по словам:
 
 | Объявление | Что значит для ворот |
 |---|---|
@@ -933,7 +1020,7 @@ def may_on(access, payload: dict, capability: str, unit: str | None, labels, of:
 
 И это только половина правила — **кто может**. Что **может быть**, решает контроллер для любого писателя строк (урок 10): спека объявляет, на что поле может указывать и что должно совпасть (`ref`, `must_match`, `unique`), и запись, которая этому не отвечает, отказывается, кто бы её ни прислал. А чтобы следующее поле не осталось без ответа, в М10B есть тест, который перечисляет **каждое поле каждой спеки** VMS и говорит, на что оно указывает — или что ни на что: `test_console_gate.py::test_every_field_of_every_spec_that_points_at_something_else_is_asked_about`; новое поле его не пройдёт, пока кто-то не скажет, какое оно.
 
-И ещё одно о том же классе, найденное на соседней двери. Консоль М11 собирается своей функцией (`cluster/console.py`), и когда у ворот были крюки подсистемы, вторая сборка забыла их подключить: в кластере, который спрашивает, кто звонит, зритель одной камеры получал данные другой за любой грант. Теперь второй сборке нечего забыть: она собирает те же `SpecConsole` и `Mount`, и всё, что ворота знают о единицах, приходит из спек. Тест: М11, `test_lesson5_controller.py::test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the_boxes_does`.
+И ещё одно о том же классе, найденное на соседней двери (шестое ревью). Две сборки консоли — две возможности забыть: сборка консоли кластера (М11) своей функцией не подключила того, что подключала сборка коробки, и в кластере, который спрашивает, кто звонит, зритель одной камеры получал данные другой за любой грант. Поэтому сборка одна: консоль кластера — `python3 -m w2cplatform.cluster console`, то есть тот же `host.console` с окружением кластера, и `host.spec_console` собирает те же `SpecConsole` и `Mount` (шаг 14); всё, что ворота знают о единицах, приходит из спек, и второй сборке нечего забыть. Тест: М11, `test_lesson5_controller.py::test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the_boxes_does`.
 
 **Ворота закрываются, когда не могут проверить.** Набор ключей есть, а проверить токен нечем — реализация не установлена, хранилище не отвечает: каждый запрос получает 503, а не открытую консоль. «Не могу проверить» — не «проверять нечего»; это то же правило, что у аренд и меток удержания, в третий раз. И в четвёртый: набор ключей, который ворота уже видели, **пропал** — удалили или откатили хранилище из копии, сделанной до вступления в домен. Это не «кластер не в домене», это «кто-то убрал проверку», и ворота закрыты (503), пока агент не принесёт набор снова (второе ревью). Открытой консоль бывает только у кластера, который набора не видел никогда. «Видел» сначала жило в памяти ворот, и перезапущенная консоль после такого отката снова была открыта (третье ревью). Теперь членство в домене читается из самого хранилища: если есть хоть одна строка, которую пишет только агент домена (`domain/member` — её агент пишет на каждой синхронизации, так что она есть у каждого члена, — и `domain/root`, `domain/grants`, `domain/revoked`, `domain/break_glass`; всё вместе — `DOMAIN_MARKS`), а набора ключей нет, — 503 и после перезапуска. А удалить `domain/*` не может никто, кроме писателя-агента (`refuse_delete`, М10A, урок 2). Что остаётся: откат **всего** хранилища на время до вступления уносит и метки, и консоль открыта, пока агент не принесёт их снова. Тест: `test_a_cluster_that_is_in_a_domain_stays_shut_without_its_keys_after_a_restart_too`.
 
@@ -1025,7 +1112,7 @@ def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
             self._remember(key, resp); return h._send(*resp)
 ```
 
-Порядок: сначала маршрут, потом ключ. Запрос на несуществующий путь получает 404, не 400 про заголовок — иначе опечатка в URL выглядела бы как проблема с идемпотентностью. Путь, который не строки и не отметки, может быть объявленным (шаг 12) — таблица или заявка, у которой свой разговор с ключом.
+Порядок: сначала маршрут, потом ключ. Запрос на несуществующий путь получает 404, не 400 про заголовок — иначе опечатка в URL выглядела бы как проблема с идемпотентностью. Путь, который не строки и не отметки, может быть объявленным (шаг 12) — строка таблицы или заявка; заявка зовёт тот же `_idem` и так же обязательно, но имя её строки говорит спека.
 
 `object_body` — тело, которое не JSON-объект (список, вложенное глубже, чем читает JSON), — 400, ничего не записано. Запись, которая бросила, — `_failed`: заявка ключа снимается (записано ничего, за что ключ мог бы отвечать), хранилище — 503, клиент повторит, остальное — 500.
 
@@ -1093,10 +1180,11 @@ def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
 ```python
 class Mount:
     """One console process, several subsystems. The root console answers at `/`
-    (the page, `/<rows>`, …); every other subsystem is a path: … — the same SpecConsole
-    class, its routes under its name, its own token-scoped controller. A person opens one page;
-    the machines (the autoscaler, М12's read model) find every subsystem on one
-    port; a new subsystem is a YAML, a worker, and a path."""
+    (the page, `/<rows>`, its tables); every other subsystem is a path: `/<sub>/spec`,
+    `/<sub>/<rows>`, `/<sub>/where/<id>` — the same SpecConsole class, its routes
+    under its name, its own token-scoped controller. A person opens one page;
+    the machines (a host's spares script, М12's read model) find every subsystem
+    on one port; a new subsystem is a YAML, a worker, and a path."""
 
     def __init__(self, root: SpecConsole, mounts: dict[str, SpecConsole] | None = None):
         self.root, self.mounts = root, dict(mounts or {})
@@ -1121,22 +1209,35 @@ class Mount:
 Корневая консоль и словарь остальных. `_adopt` делает общими для всех консолей процесса два словаря, **по ссылке**: что значит старая эпоха в каждой подсистеме (`/events` сливает все подсистемы, и отвечающая консоль должна знать это и о чужих), и каталог `units` (ссылка `<sub>/<id>` называет единицу любой подсистемы процесса, и ворота любой консоли читают её строку, её `about` и её метки). `mount` возвращает `self`, чтобы сборка читалась одной цепочкой. Настоящая сборка — `host.build_console`, из каталога спек:
 
 ```python
+def build_console(env: dict):
+    """The console's `Mount` and its controllers, from `SPEC_DIR` and `CONSOLE_ROOT` — not served yet."""
+    …
     specs = {s.name: s for s in catalog.load_dir(env[catalog.SPEC_DIR])}   # the deployment's directory: what this console fronts
     root_name = env.get("CONSOLE_ROOT", "")
     …
-    vars_, objects = box_stores(env, "console", [a for s in specs.values() for a in s.acl_console()])
+    from .door import KEYS_KEY, SIGNER_KEY
+    vars_, objects = stores(env, "console", [a for s in specs.values() for a in s.acl_console()] + [SIGNER_KEY, KEYS_KEY])
     ctls = {n: SpecController(s, vars_, objects) for n, s in specs.items()}
-    index = MergedIndex(objects)
-    media = any(s.door_routes for s in specs.values())              # something a holder serves a page: the player is drawn
-    root = SpecConsole(ctls[root_name], marks_root=runtime.events_root(env), media=media, index=index)
-    m = Mount(root)
-    for n, c in ctls.items():
-        if n != root_name:
-            m.mount(n, SpecConsole(c, index=index))
-            m.mounts[n].journal = root.journal                    # one journal for the process
+    m = spec_console(ctls, root_name, runtime.events_root(env))
+    …
 ```
 
-Один токен хранилища — консольные гранты всех спек, один журнал, один индекс. `CONSOLE_ROOT`, который не называет ни одной спеки каталога, — отказ словами: что стоит в корне, говорит развёртывание, а не платформа. Запуск — `python3 -m w2cplatform console` с `SPEC_DIR` и `CONSOLE_ROOT`.
+а сам `Mount` — `host.spec_console`, общая для обеих сборок, коробки и кластера (шаг 12а):
+
+```python
+def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, index=None, wall=None, worst_failover: float = 0.0):
+    …
+    root_ctl = ctls[root_name]
+    index = index or MergedIndex(root_ctl.objects, wall=wall or root_ctl.wall)
+    m = Mount(SpecConsole(root_ctl, marks_root=marks_root, index=index, wall=wall, worst_failover=worst_failover))
+    for n, c in ctls.items():
+        if n != root_name:
+            m.mount(n, SpecConsole(c, index=index, wall=wall))
+            m.mounts[n].journal = m.root.journal                  # one journal for the process
+    return m
+```
+
+Один токен хранилища — консольные гранты всех спек и две строки ключа двери (`door/signer`, `door/keys`, шаг 12), один журнал, один индекс. `CONSOLE_ROOT`, который не называет ни одной спеки каталога, — отказ словами: что стоит в корне, говорит развёртывание, а не платформа. Запуск — `python3 -m w2cplatform console` с `SPEC_DIR` и `CONSOLE_ROOT`; рядом с сервером `host.console` пускает уборку блобов (`sweep_loop`) и уборку заявок (`requests_loop`, урок 14).
 
 Асимметрия — корень отдельно, остальные в словаре — не случайна. У корня есть страница, и `/` должен вести к ней, а не к списку подсистем. Оператор открывает подсистему, которую развёртывание поставило в корень (в М10B это камеры, `CONSOLE_ROOT=vms`); всё остальное — под своими именами.
 
@@ -1301,7 +1402,7 @@ def open_doors(host: str, port: int, handler, unix_env: str = "CONSOLE_UNIX", sa
 
 **Та же дверь — у каждой двери.** Защиты были только у консоли, а дверь держателя (`/playback`, М10B, урок 15), дверь регистратора, шлюз живого видео, ресурс и обе двери домена (М12) оставались `ThreadingHTTPServer` без предела и срока: триста медленных соединений к держателю — триста два потока в процессе, который держит все камеры сервера (шестое ревью, major). Поэтому обе половины вынесены и подмешиваются: сервер — `door_server` (тот же `ConsoleServer` с `Bounds` по умолчанию на 64 соединения и 32 на адрес — пир такой двери это процесс кластера, который спрашивает многое сразу — без резерва, без полосы мониторов и без полосы коробки: сюда никто не входит), обработчик — `Deadlined` (срок на строку запроса и заголовки). Числа у дверей не одни: дверь держателя передаёт свои — `PLAYBACK_CONNECTIONS` 32 и `PLAYBACK_PER_ADDRESS` 8, — потому что её потоки это потоки процесса со всеми камерами сервера; регистратор, шлюз и ресурс — 64 и 32. Тело читают не все двери, и читают по-разному: консоль, шлюз (предложение WebRTC), консоль домена и подписчик — через `read_body` (потолок, срок `timeout + n/BODY_RATE`); ресурс в `PUT /mirror` пишет тело в файл кусками и даёт ему тот же срок через `body_deadline`, а не через `read_body` — до седьмого ревью срока у этого тела не было вовсе, и правило теперь такое: кто читает тело после заголовков, ставит ему срок; двери держателя и регистратора тел не читают, у них только `GET`.
 
-**У тела — пол темпа, а не только срок** (восьмое ревью, воспроизведено запуском). Срок был пропорционален длине, которую тело **объявило**, без пола скорости. 60 МБ получали 945 с, 64 МиБ — 1054 с, и отправитель байта раз в несколько секунд держал соединение всё это время. 32 таких соединения занимали долю адреса у двери ресурса, а два адреса — всю дверь (`/events`, `/events/wait`, зеркала) примерно на 17 минут за цикл. Теперь после льготы тело приходит не медленнее `BODY_RATE` в среднем, иначе чтение опоздало (`DeadlineReader.pace`, его ставит `body_deadline` для каждой двери, читающей тело): к `timeout + got / BODY_RATE` секундам от начала тела должны прийти `got` байтов. Телу, которое идёт с тем темпом, на который срок всегда рассчитывал, ничего не меняется — прежний срок и есть последняя точка этого пола. Струйку дверь отпускает на льготе, а не в конце объявленного. Чтобы держать долю двери, теперь нужно **слать** `BODY_RATE` на соединение. Тест: `test_console_load.py::test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared` — 60 МБ, объявленные и поданные струйкой в `PUT /mirror`, получают 408 меньше чем за 4 с при льготе 1 с, и копии нет; так же запись подсистемы через ресурс (`extra_put`) и тело `POST /marks` у консоли; бакет, поданный втрое быстрее пола, ложится целым. Что дверь **отдаёт потоком**, идёт через `Paced` и `start_stream` — об этом в М10B, уроке 15. Консоль домена и подписчик (М12) с седьмого ревью — не `door_server`, а консольные двери: те же `Bounds`, что у консоли, с резервом, полосой мониторов и сокетом коробки (`open_doors`). Тесты: `test_console_load.py::test_the_holders_door_is_bounded_and_deadlined_like_the_consoles`, `…::test_the_gateways_offer_is_bounded_and_its_door_is_the_consoles`, `…::test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole`, `…::test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsystems_write_too`; М12, `test_lesson3_readview_api_gateway.py::test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceiling_on_a_body` и `…::test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_answered_whoever_floods`. Отдельного теста двери подписчика нет: она собирается в `main()` из окружения и идёт тем же `open_doors`, что консоль домена.
+**У тела — пол темпа, а не только срок** (восьмое ревью, воспроизведено запуском). Срок был пропорционален длине, которую тело **объявило**, без пола скорости. 60 МБ получали 945 с, 64 МиБ — 1054 с, и отправитель байта раз в несколько секунд держал соединение всё это время. 32 таких соединения занимали долю адреса у двери ресурса, а два адреса — всю дверь (`/events`, `/events/wait`, зеркала) примерно на 17 минут за цикл. Теперь после льготы тело приходит не медленнее `BODY_RATE` в среднем, иначе чтение опоздало (`DeadlineReader.pace`, его ставит `body_deadline` для каждой двери, читающей тело): к `timeout + got / BODY_RATE` секундам от начала тела должны прийти `got` байтов. Телу, которое идёт с тем темпом, на который срок всегда рассчитывал, ничего не меняется — прежний срок и есть последняя точка этого пола. Струйку дверь отпускает на льготе, а не в конце объявленного. Чтобы держать долю двери, теперь нужно **слать** `BODY_RATE` на соединение. Тест: `test_console_load.py::test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared` — 60 МБ, объявленные и поданные струйкой в `PUT /mirror`, получают 408 меньше чем за 4 с при льготе 1 с, и копии нет; так же тело `POST /marks` у консоли; бакет, поданный втрое быстрее пола, ложится целым. Что дверь **отдаёт потоком**, идёт через `Paced` и `start_stream` — об этом в М10B, уроке 15. Консоль домена и подписчик (М12) с седьмого ревью — не `door_server`, а консольные двери: те же `Bounds`, что у консоли, с резервом, полосой мониторов и сокетом коробки (`open_doors`). Тесты: `test_console_load.py::test_the_holders_door_is_bounded_and_deadlined_like_the_consoles`, `…::test_the_gateways_offer_is_bounded_and_its_door_is_the_consoles`, `…::test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole`, `…::test_the_resources_door_gives_a_mirrored_body_a_deadline_whole`; М12, `test_lesson3_readview_api_gateway.py::test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceiling_on_a_body` и `…::test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_answered_whoever_floods`. Отдельного теста двери подписчика нет: она собирается в `main()` из окружения и идёт тем же `open_doors`, что консоль домена.
 
 **После заголовков пол есть всегда, даже если обработчик не поставил срок телу** (двенадцатое ревью, major 8). После заголовков срок запроса становился годом (`365 * 86400`), и пол получал только тот, кто звал `body_deadline`. Обработчик, читающий клиента без него, — дверь подсистемы, написанная позже, маршрут, который дочитывает часть тела сам, — ждал по байту, пока клиент капал, и соединение с потоком принадлежали клиенту. Теперь первое чтение после заголовков, не нашедшее пола, ставит его само (`DeadlineReader.lazy`): льгота — `timeout` обработчика, дальше `BODY_RATE`, кто бы ни читал.
 
@@ -1331,7 +1432,7 @@ def open_doors(host: str, port: int, handler, unix_env: str = "CONSOLE_UNIX", sa
 
 ## Результат
 
-`SpecConsole`, собранная из спецификации: описание и чтения, идемпотентные ключи в хранилище, четыре записи, `/servers`, `/policy`, `/metrics`, объявленные таблицы, заявки и дверь держателя, ворота — и `Mount`, после которого подсистема становится путём.
+`SpecConsole`, собранная из спецификации: описание и чтения, идемпотентные ключи в хранилище, четыре записи, `/servers`, `/policy`, `/metrics`, объявленные таблицы, идемпотентная подача заявок и дверь держателя, ворота — и `Mount`, после которого подсистема становится путём. Ниже — запуск на `testsub` (ответы укорочены).
 
 ```python
 from w2cplatform.console import SpecConsole, Mount
@@ -1349,8 +1450,10 @@ POST /counters {"name": "c1"} + Idempotency-Key: a1   → 201 {"id": "c1", …, 
 POST /counters {"name": "c1"} + Idempotency-Key: a1   → 201 тот же ответ, вторая единица не создана
 POST /marks {"unit": "testsub/c1", "note": "…"} + Idempotency-Key: m1 → 201 {"subsystem": "console", …}
 POST /marks {"unit": "c1"}  + Idempotency-Key: m2   → 400 a unit is named <sub>/<id> …
+POST /requests {"unit": "testsub/c1", "add": 5} + Idempotency-Key: r1 → 202 {"queued": {"id": "r1", …}, …}
+POST /requests {"unit": "testsub/c1", "add": 5} + Idempotency-Key: r1 → 202 тот же ответ, строка одна
 PUT  /policy            {"servers": "distinct"} → 200
-GET  /metrics           → testsub_workers_live 0 …
+GET  /metrics           → testsub_workers_live 0 … testsub_counters_running 0 … w2c_requests_expired_total …
 DELETE /counters/c1     → 200 {"deleted": "c1"}
 DELETE /counters/c1     → 404
 ```
@@ -1369,6 +1472,8 @@ DELETE /counters/c1     → 404
 | Страница не показывает поле, добавленное в YAML | Процесс консоли не перезапущен: спецификация читается при старте. |
 | `/where` показывает воркера, не совпадающего с размещением | Идёт перемещение. Для того и два ответа; `directory` покажет обоих через `+`. |
 | `/where` отвечает `door: null` | Единицу сейчас никто живой не держит, или держатель не объявил адрес двери. Страница спросит снова. |
+| `POST /requests` отвечает 429 | У человека уже `per_person` неотвеченных заявок: держатель не успевает или единицу никто не держит (`/where`). Заявки уходят из счёта, когда их строки убраны, но не позже `ttl`. |
+| `POST /requests` повторили — и работа сделана дважды | Строка названа не входами и не ключом (`id` из тела, меняющийся от попытки к попытке). Имя заявки — шаблон `key` спеки или `Idempotency-Key`. |
 | `/where` отвечает медленно | Кэш скана меньше пяти секунд или отключён: это скан всех назначений. |
 | События одной подсистемы не отсекаются | В словарь эпох не попал её префикс: перечисление идёт по всем ключам с `/epoch/`, а то, чего скан не увидел, спрашивается по имени — проверьте `epochs_unread` в ответе. |
 | `/events?unit=7` отвечает 400 | Единица названа голым id. Ссылка — `<sub>/<id>`. |
@@ -1409,7 +1514,8 @@ DELETE /counters/c1     → 404
 - Единица вне своих маршрутов называется одной ссылкой `<sub>/<id>` — в `/events`, в отметке, в заявке, в гранте; голый id — 400.
 - Вид по серверам собран из одних heartbeat'ов: реестра машин в системе нет, и сервер, с которого никто не бился, не существует; поля подсистемы в нём нет — что показать под сервером, говорит спека.
 - Метрики — текст, а имена метрик выведены из спецификации; собственные числа подсистема объявляет в спеке, и консоль печатает их, не зная, что они значат.
-- Подсистема не добавляет в консоль ни строки кода: таблицы, заявки, права, метрики и дверь — объявления спеки; байты держателя идут мимо консоли.
+- Подсистема не добавляет в консоль ни строки кода: таблицы, заявки, права, метрики и дверь — объявления спеки; байты держателя идут мимо консоли, своих маршрутов для байтов у неё нет.
+- Заявка подаётся идемпотентно: ключ обязателен, имя строки — из спеки или ключ, запись create-only, ответ помнится под ключом, отказ ключа не тратит; исполняет её держатель, а убирает уборка (урок 14).
 - `Mount` — несколько десятков строк, после которых новая подсистема становится путём; одиночная консоль реализована как `Mount` без смонтированных.
 - Соединения считаются по адресу, у входа и мониторинга резерв, у коробки — unix-сокет; права по пути спрашиваются до тела; тот же сервер и тот же срок — у каждой двери курса.
 
@@ -1430,6 +1536,7 @@ DELETE /counters/c1     → 404
 13. Смонтируйте подсистему под именем `spec`. Какой запрос сломается и почему его не поймает ни один тест?
 14. Объявите в копии `testsub` таблицу `pins` (`key: name`, поля `name` и `note`) и пошлите `POST /pins {"note": "x"}` — без `name`. Какой код вернётся, где именно в коде отказ, и появится ли строка в журнале?
 15. Напишите `GET /mounts` для семи подсистем и посчитайте размер ответа. Что стоит из него убрать, если консолей на узле станет двадцать?
+16. У `testsub` заявка названа ключом идемпотентности, у `testsub2` — шаблоном `"{unit}-{add:int}"`. Пошлите одно и то же тело дважды под двумя разными ключами в каждую. Сколько строк окажется в `<sub>/requests/` у каждой, и что это значит для оператора, который дважды и намеренно просит прибавить 5 — пока первую ещё не исполнили?
 
 ## Что дальше
 
