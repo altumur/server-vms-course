@@ -484,6 +484,10 @@ display:
     group_word: папка
     no_group_suffix: без папки
     pick_note: "Папки берутся из поля folders камеры и на размещение не влияют; размещение решают её labels."
+    new_root: Папка
+    new_sub: Подпапка
+    add_here: Добавить камеру сюда
+    new_group_note: "Папка создана — добавьте в неё камеру, иначе она не сохранится"
   # The words of the key families (domain.keys), by id; `absent` — what to say when the row is missing.
   keys:
     roads:

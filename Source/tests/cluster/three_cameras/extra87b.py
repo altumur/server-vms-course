@@ -1,0 +1,22 @@
+import sys
+sys.path.insert(0, "/private/tmp/claude-501/-Users-murat-w2c/2bb348d1-4209-4bed-b182-709fa7b18d2e/scratchpad/three_cameras")
+import scenario as sc
+s = sc.S()
+ws, ctl = sc.running(s)
+a = ws["srv-a"]
+b = s.worker("srv-a", tag="(вторая копия, srv-a:4104)")
+b.reconcile_once(); b.heartbeat_once()
+a.lease_pass()
+mark = s.log.mark()
+r = a.rejoin(); a.heartbeat_once()
+print("==== rejoin ->", r, repr(a.name), a.seeking, a.nameless)
+print(s.view(mark).render())
+mark = s.log.mark()
+print(sc.controller_pass(ctl)["name_conflicts"])
+v = s.view(mark).render()
+i = v.find("contenders")
+print(v[i-200:i+900])
+print("OBJ:", a.objects.get("vms/contenders/w-srv-a-1/machine-id-srv-a"))
+mark = s.log.mark()
+a.heartbeat_once()
+print("HB after:", s.view(mark).render() or "(nothing)")

@@ -176,6 +176,10 @@ display:
     group_word: зона
     no_group_suffix: без зоны
     pick_note: выберите счёт в дереве
+    new_root: Зона
+    new_sub: Подзона
+    add_here: Добавить счёт сюда
+    new_group_note: Зона создана — добавьте в неё счёт, иначе она не сохранится
   general: Счёт
   fields: {name: Имя, mode: Режим, id: ID}
   # `lane` is no field of the row: its worker says it in the unit's status (form[].status), and its values are free words
