@@ -48,7 +48,6 @@ course-only rec.subsystem.yaml placement.affinity.strict
 course-only rec.subsystem.yaml placement.affinity.table
 course-only rec.subsystem.yaml placement.places.enabled
 course-only rec.subsystem.yaml placement.places.server_field
-course-only rec.subsystem.yaml placement.places.table
 course-only rec.subsystem.yaml placement.places.where
 course-only rec.subsystem.yaml requests
 course-only rec.subsystem.yaml requests.elsewhere
