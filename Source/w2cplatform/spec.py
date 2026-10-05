@@ -93,7 +93,7 @@ from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES, SCHEMA_KEY,
                        OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
                        label_set, one_pass, read_slot, slot_number, stored)
-from .events import Suppress
+from .events import OWN_OF_TREES, Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
 from .rows import PARSE_ERRORS, Table, finite
@@ -1092,6 +1092,11 @@ class SubsystemSpec:
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
     @classmethod
     def from_dict(cls, d: dict) -> "SubsystemSpec":
+        # The console's marks and the journal are the platform's trees: the logs whose lines say their own `of`
+        # (`events.refuse_own_of`). A subsystem of such a name would write there and say what its units are about itself.
+        if d.get("name") in OWN_OF_TREES:
+            raise ValueError(f"spec {d['name']}: `{d['name']}` is a tree of the platform's own events, not a "
+                             f"subsystem's name")
         unit, pl = d.get("unit", {}), d.get("placement", {})
         fields = read_fields(f"spec {d.get('name')}", unit.get("fields") or {})
         derived = [Derived(x["row"], dict(x.get("items", {})), x.get("on_delete")) for x in unit.get("derived", [])]

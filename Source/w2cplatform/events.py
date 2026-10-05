@@ -201,10 +201,16 @@ def tree_owner(name: str) -> tuple[str, bool]:
     return (name[:-len(ALARM_TREE)], True) if name.endswith(ALARM_TREE) else (name, False)
 
 
-# The console's own subsystem name: its marks (and whatever else an operator records about the system)
-# live in `console/<instance>/` beside every worker's buckets, written by the console process, epoch 1
-# because there is one writer. `resource.retain` knows this name for one reason — see `console_floor`.
-CONSOLE = "console"
+# The console's own tree (the product's `ConsoleMarks`): its marks (and whatever else an operator records about the
+# system) live in `console/<instance>/` beside every worker's buckets, written by the console process, epoch 1 because
+# there is one writer. `resource.retain` knows this name for one reason — see `console_floor`; and the log for another:
+# a mark says its own `of` — what the operator marked is what it is about (`refuse_own_of`).
+CONSOLE_MARKS = "console"
+# …and the platform's journal (`journal.py`, the product's `AuditSubsystem`): `audit/<role>/`, what was done to the units
+# and by whom. Its lines are the platform's record of a unit, as a mark is, and may say what they are about.
+AUDIT = "audit"
+# The trees whose lines say their own `of`: the platform's own, never a subsystem's (`refuse_own_of`).
+OWN_OF_TREES = (CONSOLE_MARKS, AUDIT)
 
 
 # macOS' `fsync` returns as soon as the kernel has the bytes; only `F_FULLFSYNC` asks the drive to flush
@@ -302,6 +308,18 @@ def when(e: dict) -> float:
     return float(e.get("occurred", e["t"]))
 
 
+# `of` IS THE PLATFORM'S TO WRITE (the architect, on the product's base worker): what a unit is about is read from its
+# row by its spec's `about` and stamped by the base (`Worker.event_log`). A subsystem's line that names `of` — an empty
+# one too: "about nothing" is also a claim — is refused, not written over: a subsystem that still says it fails at the
+# line, not in a query that finds less than it should. Two writers of one column drift, and the one that forgets is the
+# one nobody sees. The platform's own trees say their own (`OWN_OF_TREES`): the console's marks — what the operator
+# marked — and the journal — what was done to a unit; names no subsystem takes (`SubsystemSpec.from_dict`).
+def refuse_own_of(subsystem: str, unit: str, fields: dict) -> None:
+    if OF in fields and subsystem not in OWN_OF_TREES:
+        raise ValueError(f"`{OF}` is the platform's to write: what {subsystem}/{unit} is about is read from its row by "
+                         f"its spec's `about` (Worker.event_log), and a line does not say its own")
+
+
 # What a worker holds per unit it has an epoch for: the writer side.
 class EventLog:
     """What a worker holds per unit it has an epoch for. `append` writes one
@@ -309,11 +327,12 @@ class EventLog:
     anything the subsystem does."""
 
     # Fixes the resource root, the subsystem prefix, the unit (stringified), the epoch this writer holds and
-    # the bucket span (10 minutes by default). `of`: the unit this log's unit is about (`SubsystemSpec.of_row` of its
-    # row, as the writer holds it), written into every line as `of` unless the line names its own; "" for none.
-    def __init__(self, root: str, subsystem: str, unit: str, epoch: int, bucket_seconds: int = 600, of: str = ""):
+    # the bucket span (10 minutes by default). `_of`: the unit this log's unit is about, written into every line — the
+    # BASE worker's to set (`Worker.event_log`, from the spec's `about` and the unit's row), never a caller's to pass:
+    # a log opened past the worker stamps nothing, and a line that says its own is refused (`append`). "" for none.
+    def __init__(self, root: str, subsystem: str, unit: str, epoch: int, bucket_seconds: int = 600):
         self.root, self.subsystem, self.unit, self.epoch, self.bucket_seconds = root, subsystem, str(unit), epoch, bucket_seconds
-        self.of = of
+        self._of = ""
         self._synced: set[str] = set()            # bucket FILES whose directory entry this writer has made durable
         self._synced_dirs: set[str] = set()       # …and epoch directories whose own entry it has
 
@@ -344,12 +363,15 @@ class EventLog:
             raise ValueError(f"`occurred` is a time, in seconds, by the writer's clock — not {fields['occurred']!r}")
         if "v" in fields:
             raise ValueError("`v` is the format's version and is not written: a line without it is version 1")
-        # `of`: the log's, unless the line says its own — and a reference either way, or the index's second column would
-        # hold whatever a field of that name meant to somebody. An empty one is as if not said.
+        # `of`: the log's, stamped by the base — and a reference, or the index's second column would hold whatever a
+        # field of that name meant to somebody. A subsystem's line that says its own is refused here, at the log, and not
+        # only in the worker: a subsystem that opened the log itself got past a refusal that lived in `Worker.write_event`.
+        # A mark or a journal line alone says one (`OWN_OF_TREES`), and an empty one there is as if not said.
+        refuse_own_of(self.subsystem, self.unit, fields)
         if fields.get(OF) in ("", None):
             fields.pop(OF, None)
-        if OF not in fields and self.of:
-            fields[OF] = self.of
+        if OF not in fields and self._of:
+            fields[OF] = self._of
         if OF in fields:
             from .doors import ref_fault
             why = ref_fault(fields[OF])

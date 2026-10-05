@@ -62,7 +62,7 @@ def test_every_worker_key_is_executed_by_the_base_with_no_line_of_subsystem_code
         slot             `slot: {prefix: t, name_env: TALLY_NAME}`: made `t-<n>`, given in `TALLY_NAME`   / `w-<n>`
         lease            `lease: {unconfirmed_max: 600}`: the worker's and every lease it opens            / none
         places           `places: {…, server_field: server, lease: strict}`: a shelf whose row names no
-                         server is held strictly, one that names its server is not                        / never
+                         server — or another server — is held strictly, one that names its own is not     / never
         events.suppress  `tally.tick: {window: 5, by: [unit]}`: a repeat inside the window is nothing      / written
     """
     box = Box()
@@ -79,7 +79,9 @@ def test_every_worker_key_is_executed_by_the_base_with_no_line_of_subsystem_code
     assert two.unconfirmed_max == 600.0 and two.take_epoch("t1") == 1 and two.leases["t1"].unconfirmed_max == 600.0
     assert one.unconfirmed_max == 0.0 and one.take_epoch("c1") == 1 and one.leases["c1"].unconfirmed_max == 0.0
 
+    two.server = "srv-1"
     assert two.held_strictly("s1", {"name": "s1"}) and not two.held_strictly("s2", {"name": "s2", "server": "srv-1"})
+    assert two.held_strictly("s3", {"name": "s3", "server": "srv-2"})      # another server's: not this worker's
     assert not one.held_strictly("s1", {"name": "s1"})
 
     assert two.observe("t1", "tally.tick", n=1) is not None
@@ -148,16 +150,17 @@ def test_a_line_written_through_observe_carries_of_as_every_other_line_does():
 
 
 def test_a_subsystem_that_still_says_of_is_refused():
-    """`of` is the base's: a line that says its own — through `observe` or `write_event` — raises before anything is
-    written, whatever the unit, so a call site left over from when each subsystem passed it fails where it stands."""
+    """`of` is the base's: a line that says its own — through `observe` or `write_event`, by the log itself
+    (`events.refuse_own_of`) — raises before anything is written, whatever the unit, so a call site left over from when
+    each subsystem passed it fails where it stands."""
     box = Box()
     w = _base(box, spec=testsub2())
     w.claim_slot("t-1")
     _tally(box, "t1", "c1")
     w.take_epoch("t1")
-    _refused(lambda: w.observe("t1", "tally.tick", of="testsub/c1"), "`of` is stamped by the worker")
-    _refused(lambda: w.write_event("t1", box.wall(), "tally.jammed", of="testsub/c9"), "`of` is stamped by the worker")
-    _refused(lambda: w.observe("t9", "tally.tick", of=""), "`of` is stamped by the worker")    # not held: refused all the same
+    _refused(lambda: w.observe("t1", "tally.tick", of="testsub/c1"), "`of` is the platform's to write")
+    _refused(lambda: w.write_event("t1", box.wall(), "tally.jammed", of="testsub/c9"), "`of` is the platform's to write")
+    _refused(lambda: w.observe("t9", "tally.tick", of=""), "`of` is the platform's to write")    # not held: refused all the same
     assert not os.path.exists(os.path.join(box.resource_root, "testsub2"))
 
 

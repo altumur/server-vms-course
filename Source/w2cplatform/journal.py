@@ -41,9 +41,8 @@
 # ================================================================================================
 import logging
 
-from .events import OBSERVATION, EventLog
+from .events import AUDIT, OBSERVATION, EventLog   # the journal's tree: one of the platform's own (`OWN_OF_TREES`)
 
-AUDIT = "audit"
 log = logging.getLogger("w2cplatform.journal")
 
 

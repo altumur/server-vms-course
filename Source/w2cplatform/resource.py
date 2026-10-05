@@ -106,7 +106,7 @@ log = logging.getLogger(__name__)
 
 from .contract import ALIVE_EVERY, BUILD, PRESENCE, SCHEMA, Eyes, check_schema, judge_clock, parse_heartbeat
 from .rows import PARSE_ERRORS, Table, answer, counts as garbled_by_table, finite, number
-from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
+from .events import CONSOLE_MARKS, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
@@ -376,7 +376,7 @@ def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> 
 # day the record is missing.
 def console_floor(days_of: dict[tuple[str, str], float]) -> float:
     """The longest retention among everything that is not the console's own."""
-    others = [d for (sub, _), d in days_of.items() if tree_owner(sub)[0] != CONSOLE]
+    others = [d for (sub, _), d in days_of.items() if tree_owner(sub)[0] != CONSOLE_MARKS]
     return max(others) if others else 0.0
 
 
@@ -1564,7 +1564,7 @@ class Resource:
         for sub, units in self.units().items():
             for unit in units:
                 self._progressed()
-                days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)]
+                days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days_of[(sub, unit)]
                 for path in self.volumes.values():
                     # by NAME: no file is opened to be swept; and a mark per bucket, not per unit (the review's fifth pass)
                     # …and a mark per REMOVAL (the sixth): the names are all marked while the list is built, and then
@@ -1584,7 +1584,7 @@ class Resource:
         # days. It used to be one number in a log line (feedback BN).
         for (sub, unit), (n, a, z) in sorted(swept.items()):
             self.journal.say("events.removed", sub=sub, target=unit, buckets=n, since=a, until=z,
-                             days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)])
+                             days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days_of[(sub, unit)])
             self._progressed()                                          # a line written to the medium per unit
         # THE COPIES AGE TOO (the review, "mirror copies are never deleted"). `.mirror/<server>/…` is in no
         # walk above — `units()` skips hidden directories, on purpose: a copy is not this server's data — so
@@ -1598,7 +1598,7 @@ class Resource:
                 for sub, units in subsystems_under(base).items():
                     for unit in units:
                         days = self._days(sub, unit, garbled)
-                        days = max(days, floor) if tree_owner(sub)[0] == CONSOLE else days
+                        days = max(days, floor) if tree_owner(sub)[0] == CONSOLE_MARKS else days
                         self._progressed()
                         for b in bucket_names_under(base, sub, unit, self.bucket_seconds, self._progressed):
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
