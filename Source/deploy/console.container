@@ -46,7 +46,7 @@ After=network.target
 [Container]
 Image=localhost/vmsserver:latest
 # the platform's `console` verb (`w2cplatform/host.py`): one token, `console`, with every spec's console grant, and the
-# console over `$ARCHIVE` for its marks; the subsystem at `/` is this deployment's word.
+# console over `$RESOURCE_ROOT` for its marks; the subsystem at `/` is this deployment's word.
 Exec=python3 -m w2cplatform console
 Environment=CONSOLE_ROOT=vms
 # listen on every interface (the code's default is `127.0.0.1`); with `Network=host` this is the box's
@@ -71,7 +71,7 @@ Volume=/run/vms-console:/run/vms-console:z
 # connections of their own, which a flood from the network cannot take; anyone else is answered `/metrics` only from
 # the common slots. Set it to Prometheus's address in `vms.env` (`CONSOLE_MONITORS=10.0.0.5`); unset — no lane.
 #Environment=CONSOLE_MONITORS=10.0.0.5
-# `PLATFORM_DIR`, `ARCHIVE` (both the platform's, `w2c.env`), `CAPACITY` (the fallback capacity its controller object carries; it
+# `PLATFORM_DIR`, `RESOURCE_ROOT` (both the platform's, `w2c.env`), `CAPACITY` (the fallback capacity its controller object carries; it
 # never places, so it is unused in practice), `LOG_LEVEL`.
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env

@@ -7,17 +7,17 @@ the report its agent leaves in the domain holder (step 7). What IS special is sm
 wears, and a box that is rebooted whole, which makes the order of its boot a correctness question — for the
 site that reads its door, and for the domain that reads its report.
 """
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
-from domain.agent import DomainAgent, DomainPublisher
-from domain.api import ConsoleAPI
-from domain.device import DeviceCluster
-from domain.federation import DomainDirectory, Federation
-from domain.grants import Grant
-from domain.pending import PendingEdits
-from domain.federation import Unreachable
-from domain.readview import ReadView
-from domain.uplink import member_copy
+from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+from w2cplatform.domain.api import ConsoleAPI
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import DomainDirectory, Federation
+from w2cplatform.domain.grants import Grant
+from w2cplatform.domain.pending import PendingEdits
+from w2cplatform.domain.federation import Unreachable
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, Running, make_cluster
 
 SERIAL = "SN4471"
@@ -145,14 +145,14 @@ def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
     api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, verifier=lambda token: token, pending=pending,
                      last_known=view.last_known)
 
-    assert api.update_camera(SERIAL, {"name": "main-gate"}, idempotency_key="k1", token="anna")["pending"]
+    assert api.update_unit(SERIAL, {"name": "main-gate"}, idempotency_key="k1", token="anna")["pending"]
     agents[SERIAL].sync()
     assert d.row()["name"] == "main-gate" and d.row()["revision"] == 2
     pending.collect(fed)
     assert pending.of(d.name) == {}
 
     view.refresh()                                                   # the domain's next pass: the row as it now is
-    api.update_camera(SERIAL, {"name": "x"}, idempotency_key="k2", token="boris")
+    api.update_unit(SERIAL, {"name": "x"}, idempotency_key="k2", token="boris")
     agents[SERIAL].sync()
     assert d.row()["name"] == "main-gate"                            # boris has no grant on this camera
     pending.collect(fed)
@@ -186,7 +186,7 @@ def test_the_door_opens_after_the_first_publish_not_before():
     view.refresh()
     api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, pending=PendingEdits(fed.domain_holder.vars, wall),
                      last_known=view.last_known)
-    assert api.update_camera(SERIAL, {"name": "main-gate"}, idempotency_key="k2")["pending"] is True
+    assert api.update_unit(SERIAL, {"name": "main-gate"}, idempotency_key="k2")["pending"] is True
 
     # …and `boot` keeps that order: the door is still shut while the first publish is being made
     shut_during_publish = []
@@ -214,7 +214,7 @@ def test_a_kept_edit_reaches_a_real_camera_when_it_boots():
 
     d.power_off()
     view.refresh()
-    assert api.update_camera(SERIAL, {"name": "main-gate"}, idempotency_key="k1", token="anna")["pending"]
+    assert api.update_unit(SERIAL, {"name": "main-gate"}, idempotency_key="k1", token="anna")["pending"]
     wall.advance(3600)
     _grant(fed, d.name, "anna", wall)                    # grants are renewed while it is off; they expire otherwise
     d.boot()

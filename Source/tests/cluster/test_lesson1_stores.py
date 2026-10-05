@@ -6,8 +6,9 @@ import json
 import os
 import threading
 
-from cluster.variables import Conflict, FakeVariables, Forbidden
-from w2cplatform.contract import Controller, Subsystem, Worker
+from w2cplatform.cluster.variables import Conflict, FakeVariables, Forbidden
+from w2cplatform.contract import Controller, Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.epoch import next_epoch
 from tests.cluster.conftest import Cluster
 
@@ -59,7 +60,7 @@ def test_m10s_base_classes_run_on_the_cluster_stores_unchanged():
     w.heartbeat([{"id": 1, "phase": "running"}], server="srv-a")
     assert list(ctl.workers_seen()) == ["w-1"] and ctl.workers_seen()["w-1"].extra["server"] == "srv-a"
     ctl.assign("w-1", ["1"]); assert w.assignment().units == ["1"]
-    assert w.take_epoch("1") == 1 and w.may_write("1")
+    assert w.take_epoch("1") == 1 and w.may_act("1")
 
 
 def test_objects_are_files_on_each_server_read_across():

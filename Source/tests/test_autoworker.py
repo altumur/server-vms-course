@@ -70,7 +70,7 @@ def _worker(box, log, name="a-1"):
     the one family of somebody else's it may write."""
     vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec"))
     return AutoWorker(name, vars_, box.objects, index=log, clock=box.clock, wall=box.wall,
-                      server="srv-a", archive_root=box.archive, env={})
+                      server="srv-a", resource_root=box.archive, env={})
 
 
 def _assigned(box, scenario, worker="a-1"):
@@ -469,7 +469,7 @@ def test_the_evaluators_loop_keeps_its_leases_and_its_slot_for_longer_than_half_
 
     w.run(poll=0, stop=Minute())
     assert len(box.vars.list("vms/requests/")) == 2                   # the first pass, and one a minute later
-    assert w.epochs == {"one": 1} and w.may_write("one")              # the same epoch, renewed — not taken again
+    assert w.epochs == {"one": 1} and w.may_act("one")              # the same epoch, renewed — not taken again
     slot, _ = box.vars.get(w.sub.slot_key("a-1"))
     assert slot["released"] == "true" and float(slot["until"]) >= box.wall() - 1    # held to the end, then let go
 
@@ -546,7 +546,7 @@ def test_a_scenario_whose_lease_went_elsewhere_does_not_keep_saying_what_it_last
     w = _worker(box, log)
     w.reconcile_once()
     assert w.status()[0]["holding"] == {"srv-b": "did not answer"}
-    w.may_write = lambda unit: False
+    w.may_act = lambda unit: False
     w.reconcile_once()
     st = w.status()[0]
     assert "holding" not in st and st["phase"] == "waiting" and "lease" in st["why"]
@@ -805,7 +805,7 @@ def test_a_scenario_that_went_away_and_came_back_is_decided_under_a_new_epoch_an
     assert a2.epochs == {"one": 2}
     ctl.assign("a-2", []); ctl.assign("a-1", ["one"])                    # …and comes back, before any lease step
     a1.reconcile_once()
-    assert a1.epochs == {"one": 3} and a1.may_write("one") and a1.status()[0]["phase"] == "running"
+    assert a1.epochs == {"one": 3} and a1.may_act("one") and a1.status()[0]["phase"] == "running"
     assert int(box.vars.get("auto/epoch/one")[0]["epoch"]) == 3
     a2.reconcile_once()
     assert a2.epochs == {} and a2.lease_pass() == []                     # the other one let it go on its pass

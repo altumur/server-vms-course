@@ -2,7 +2,7 @@
 outage arithmetic, renewal with overlap, root rotation under load, clock
 skew as a named failure."""
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from domain.signer import DAY, LIFETIMES, Signer, TrustBundle, VerifyError, max_tolerable_outage
+from w2cplatform.trust.signer import DAY, LIFETIMES, Signer, TrustBundle, VerifyError, max_tolerable_outage
 from tests.domain.conftest import Clock, make_domain
 
 

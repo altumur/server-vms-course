@@ -793,7 +793,7 @@ def _canned(box, name: str, body, status: list | None = None, volume: str = "v-c
     srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     box.objects.put(REC_SPEC.sub.heartbeat_key(name), Heartbeat(name, box.wall(), status or [], {
-        "server": "srv-1", "archive_url": f"http://127.0.0.1:{srv.server_address[1]}", "volume": volume}).to_bytes())
+        "server": "srv-1", "url": f"http://127.0.0.1:{srv.server_address[1]}", "volume": volume}).to_bytes())
     return srv
 
 
@@ -860,7 +860,7 @@ def test_a_doors_held_since_is_laid_on_this_recorders_clock_by_the_doors_own_now
     lagging = _canned(box, "r-lag", {"spans": [], "held_since": t - 1200 - 600, "now": t - 1200})
     older = _canned(box, "r-old", {"spans": [], "held_since": t - 600})
     try:
-        url = lambda n: Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key(n))).extra["archive_url"]
+        url = lambda n: Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key(n))).extra["url"]
         _, held = k._door_timeline(url("r-lag"), "7", t - 3600, t)
         assert t - 601 <= held <= t - 599, held - t                    # it took the epoch 600 s ago, by anybody's clock
         assert k._door_timeline(url("r-old"), "7", t - 3600, t)[1] == t - 600
@@ -871,7 +871,7 @@ def test_a_doors_held_since_is_laid_on_this_recorders_clock_by_the_doors_own_now
     srv = door(box, st, "r-now", held={"7": t - 60})
     try:
         import urllib.request
-        with urllib.request.urlopen(f"{url('r-now')}/timeline/7?from=0&to={t}") as r:
+        with urllib.request.urlopen(f"{url('r-now')}/spans/7?from=0&to={t}") as r:
             body = json.loads(r.read())
         assert body["held_since"] == t - 60 and body["now"] == box.wall()   # the door says the clock it is on
     finally:

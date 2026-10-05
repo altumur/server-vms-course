@@ -31,7 +31,7 @@ job "recworker" {
       kill_timeout = "40s"                           # the pipelines stop, the writer closes after its flush, then the hold goes
       config {
         command = "/opt/w2c/bin/w2c-run.sh"
-        args    = ["recorder"]
+        args    = ["vms", "recorder"]
       }
       env {
         PLATFORM_STORE  = "configstore:///run/configstore/recworker.sock"
@@ -43,7 +43,7 @@ job "recworker" {
         OBSD_SOCKET     = "/run/vms-obsd/obsd.sock"  # where vms-obsd.service listens
         UNCONFIRMED_MAX = "90"
         SECRETS_KEY     = "/etc/w2c/secrets/platform.key"
-        # No ARCHIVE: its events go where the node's resource keeps them, `ARCHIVE` in /etc/w2c/w2c.env
+        # No RESOURCE_ROOT: its events go where the node's resource keeps them, `RESOURCE_ROOT` in /etc/w2c/w2c.env
         # (`/data/platform/events`) — `meta.archive` only says where disks are, which is what the constraint asks.
         ARCHIVE_HOST = "${attr.unique.network.ip-address}"
         ARCHIVE_PORT = "8084"

@@ -50,8 +50,8 @@ def test_the_recorder_process_holds_a_token_that_can_take_a_volume():
     epochs and its slot, and not its hold. On a box with a declared volume it was refused its own place."""
     import vms.__main__ as main
     src = inspect.getsource(main.recorder)
-    assert 'acl={"recworker": REC_SPEC.sub.acl_worker()}' in src and '"rec/holds/*"' not in src     # derived, not listed by hand
-    assert "rec/holds/*" in REC_SPEC.sub.acl_worker()
+    assert "REC_SPEC.acl_worker_role()" in src and '"rec/holds/*"' not in src     # derived from the spec, not listed by hand
+    assert "rec/holds/*" in REC_SPEC.acl_worker_role()
     box = Box()
     volumes.write(box.vars, {"name": "vol", "kind": "local", "url": os.path.join(box.root, "vol"), "server": "srv-a", "quota_bytes": 64 << 20})
     r = recorder(box, "r-1", "srv-a", acl=REC_SPEC.sub.acl_worker())

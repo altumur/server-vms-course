@@ -72,11 +72,11 @@ def test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no
     b = _unit(box)                                                       # the unit's restart, the old one alive: taken at start
     assert a.name == b.name == NAME and _holder(box) == b.instance
     a.lease_pass()
-    assert not a.recording_allowed and "held by another instance" in a.fenced_reason
+    assert not a.writing_allowed and "held by another instance" in a.fenced_reason
     for _ in range(4):                                                   # pass after pass: nobody, and said once
         assert a.rejoin() is None, "it rejoined under another number"
         _tick(box, 5, b)
-    assert a.seeking == NAME and a.slot is None and not a.recording_allowed
+    assert a.seeking == NAME and a.slot is None and not a.writing_allowed
     assert sorted(_ctl(box).slots()) == [NAME]                           # no w-2
     [(kind, cls, said)] = a.journal.lines
     assert (kind, cls) == ("worker.name_taken", ALARM)
@@ -88,7 +88,7 @@ def test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no
     assert json.loads(box.objects.get(SPEC.sub.heartbeat_key(NAME)))["instance"] == b.instance
 
     b.release_slot()                                                     # b stops in order: the name is free
-    assert a.rejoin() == NAME and a.recording_allowed and _holder(box) == a.instance
+    assert a.rejoin() == NAME and a.writing_allowed and _holder(box) == a.instance
     assert [k for k, _, _ in a.journal.lines] == ["worker.name_taken", "worker.name_back"]
     assert _mark(box, "machine-a") is None                               # it asks for nothing any more
 
@@ -109,7 +109,7 @@ def test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_ho
     for _ in range(20):
         assert a.rejoin() is None
         _tick(box, 5, b)
-        assert b.lease_pass() == [] and b.recording_allowed                # b is never fenced by a
+        assert b.lease_pass() == [] and b.writing_allowed                # b is never fenced by a
     assert _holder(box) == b.instance
     ctl.look()
     _tick(box, b.slot_ttl + 1)                                           # b silent past its slot…
@@ -122,7 +122,7 @@ def test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_ho
     ctl.pass_once()
     assert a.rejoin() == NAME and _holder(box) == a.instance
     b.lease_pass()
-    assert not b.recording_allowed and b.rejoin() is None                # now b is the nobody, and takes nothing else
+    assert not b.writing_allowed and b.rejoin() is None                # now b is the nobody, and takes nothing else
     assert sorted(_ctl(box).slots()) == [NAME]
 
 
@@ -134,8 +134,8 @@ def test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number
     assert a.name == "w-1"
     _unit(box, name="w-1")                                               # somebody started one under that name
     a.lease_pass()
-    assert not a.recording_allowed
-    assert a.rejoin() == "w-2" and a.recording_allowed and a.journal.lines == []
+    assert not a.writing_allowed
+    assert a.rejoin() == "w-2" and a.writing_allowed and a.journal.lines == []
 
 
 def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_seen():
@@ -202,9 +202,9 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
 def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive():
     """The product's cross-check (4 Oct): its live gateway wrote `worker.name_taken` — the ALARM that says a process is
     nobody because another instance holds its name — into its own log and nowhere else. The course's gateway had the
-    same gap: `LiveWorker` had no `archive_root`, so its journal (`Worker.journal`) was the log only, while its
+    same gap: `LiveWorker` had no `resource_root`, so its journal (`Worker.journal`) was the log only, while its
     container mounts the archive for its registration. Every kind of worker, told the archive the way its entry point
-    tells it (`ARCHIVE` in its environment), writes its journal there: the alarm into the alarms' tree, the line beside
+    tells it (`RESOURCE_ROOT` in its environment), writes its journal there: the alarm into the alarms' tree, the line beside
     it into the audit family's."""
     import tempfile
     from w2cplatform.events import alarm_tree, buckets_under
@@ -221,7 +221,7 @@ def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive
                                                       server="srv-a", env=env)
     for kind, make in made.items():
         root = tempfile.mkdtemp(prefix="events-")
-        w = make({"ARCHIVE": root})
+        w = make({"RESOURCE_ROOT": root})
         role = f"{w.sub.name}worker"
         w.journal.say("worker.name_taken", ALARM, sub=w.sub.name, worker=w.name, holder="another")
         w.journal.say("worker.name_back", sub=w.sub.name, worker=w.name)

@@ -6,7 +6,7 @@ act — by filing a request, never by touching a device.
 
     AUTO_NAME / SLOT_INDEX     -> the slot to claim: a-<index>
     SERVER_NAME (or hostname)  -> `server` in the heartbeat
-    ARCHIVE                    -> where its own events and its cursor live
+    RESOURCE_ROOT              -> where its own events and its cursor live
 
 Three things carry the whole design, and each one is a decision that could have
 gone the other way:
@@ -32,7 +32,7 @@ import time
 
 from w2cplatform import runtime
 from w2cplatform.doors import unit_ref
-from w2cplatform.contract import Worker
+from w2cplatform.worker import Worker
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
@@ -104,14 +104,14 @@ class AutoWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, index=None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None,
-                 archive_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
+                 resource_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(AUTO, None, vars_, objects, clock=clock, wall=wall)
         self.claim_at_start(name if name is not None else runtime.slot(env, AUTO_SPEC.slot_name_env, AUTO_SPEC.slot_prefix), env)   # a spare: an offer
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env)
-        self.archive_root = runtime.events_root(env, archive_root)
+        self.resource_root = runtime.events_root(env, resource_root)
         # The same reader the console uses, for the same reason: a scenario watches what an operator would
         # see on the timeline. One merge, one definition of "the events of the last minute".
         self.index = index or MergedIndex(objects, wall=wall)
@@ -209,7 +209,7 @@ class AutoWorker(Worker):
                     self.status_by_unit[unit] = {"id": unit, "phase": "failed", "why": f"its epoch could not be taken: {e}"}
                     log.error("%s: %s not evaluated: its epoch could not be taken: %s", self.name, unit, e)
                     continue
-            if not self.may_write(unit):             # the lease says another instance has it: decide nothing…
+            if not self.may_act(unit):             # the lease says another instance has it: decide nothing…
                 # …and say so. The status of the last pass this instance made would otherwise stay, and say
                 # `holding` for a window this instance no longer asks for (feedback AV). What it was waiting
                 # for goes too: taken back later, it starts waiting afresh, not five minutes into a wait.
@@ -272,7 +272,7 @@ class AutoWorker(Worker):
     # no other camera can crowd, and for the index the cheapest there is: it opens that unit's files and no
     # others. Scenarios on the same unit and kind still share it; a trigger naming no unit shares the kind's.
     def _since(self, row: dict, now: float) -> float:
-        since = Frontier(self.archive_root, str(row["id"]), AUTO.name).read()
+        since = Frontier(self.resource_root, str(row["id"]), AUTO.name).read()
         return now - self.COLD_START if since is None else max(since, now - self.COLD_START)
 
     # An early pass (`partial`) plans for the scenarios it evaluates and leaves what is watched as the last ordinary
@@ -359,7 +359,7 @@ class AutoWorker(Worker):
     # One scenario against the log. Returns how many firings were filed.
     def evaluate(self, row: dict, now: float) -> int:
         unit = str(row["id"])
-        front = Frontier(self.archive_root, unit, AUTO.name)
+        front = Frontier(self.resource_root, unit, AUTO.name)
         since = front.read()
         held = self.held_from.get(unit)
         if held is not None and now - held > self.COLD_START and self.holes.get(unit) and unit not in self.said_without:
@@ -399,7 +399,7 @@ class AutoWorker(Worker):
             log.warning("%s: %s is over its ceiling of %s/min — %d firing(s) not filed", self.name, unit,
                         row["rate_per_minute"], len(refused))
             if unit in self.epochs:
-                EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(   # written now; about then
+                EventLog(self.resource_root, AUTO.name, unit, self.epochs[unit]).append(   # written now; about then
                     now, "suppressed", occurred=max(refused), scenario=unit, count=len(refused),
                     since=min(refused), until=max(refused))
         self.late_by_unit[unit], self.suppressed_by_unit[unit] = late, len(refused)
@@ -538,7 +538,7 @@ class AutoWorker(Worker):
             self.fired[fid] = self.wall()
             self.late += 1
             if unit in self.epochs:
-                EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
+                EventLog(self.resource_root, AUTO.name, unit, self.epochs[unit]).append(
                     self.wall(), "fired", occurred=at, scenario=unit, actions=0, late=round(self.wall() - at, 3))
             return False
         for i, action in enumerate(row["then"]):
@@ -568,7 +568,7 @@ class AutoWorker(Worker):
         # a held cursor is minutes back: a line appended to a bucket that had closed, and that a neighbour
         # mirroring this server had already copied without it.
         if unit in self.epochs:
-            EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
+            EventLog(self.resource_root, AUTO.name, unit, self.epochs[unit]).append(
                 self.wall(), "fired", occurred=at, scenario=unit, actions=len(row["then"]))
         return True
 
@@ -620,7 +620,7 @@ class AutoWorker(Worker):
     # pass over all of them still comes every `poll`, and the gap widens with a long pass and with a resource that
     # refused (`Wake.pace`): the long poll speeds up the road and is never what loads the resources.
     # Staying itself. The loop used to pass and heartbeat and renew NOTHING: thirty seconds after it started the
-    # leases on its scenarios ran out, `may_write` said no for every one of them, and the evaluator went on
+    # leases on its scenarios ran out, `may_act` said no for every one of them, and the evaluator went on
     # heartbeating and decided nothing, for ever; fifteen seconds later its slot lapsed and another process could
     # take its name (the product noticed the slot; the leases were worse — feedback BC). No test saw it: they move
     # the wall clock, and a lease runs on the monotonic one.

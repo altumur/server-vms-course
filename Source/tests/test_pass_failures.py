@@ -198,18 +198,18 @@ def _workers(box):
     common = dict(clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": "gpu"})
     live_vars = box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"])
     return [DetWorker("d-1", box.vars.as_writer("detworker", ["det/epoch/*", "det/slots/*"]), box.objects,
-                      archive_root=box.archive, **common),
+                      resource_root=box.archive, **common),
             DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
-                         archive_root=box.archive, **common),
+                         resource_root=box.archive, **common),
             SurveyWorker("s-1", box.vars.as_writer("surveyworker", SURVEY_SPEC.sub.acl_worker()), box.objects,
-                         archive_root=box.archive, **common),
+                         resource_root=box.archive, **common),
             LiveWorker("g-1", live_vars, box.objects, ctl=SpecController(LIVE_SPEC, live_vars, box.objects, wall=box.wall), **common)]
 
 
 def test_a_pass_that_raises_half_way_still_renews_the_leases_and_heartbeats():
     """M19 of the review, the remainder. The heartbeat had been given a `try` of its own; `renew_leases()` was
     still the LAST line of `reconcile_once`, so the one exception that skipped the heartbeat also skipped the
-    renewal — the worker was reported alive, held its units, and `may_write` ran out on all of them twenty-five
+    renewal — the worker was reported alive, held its units, and `may_act` ran out on all of them twenty-five
     seconds later. Every worker here: the four that renewed at the end of the pass (det, detjob, survey, live)."""
     box = Box()
     for w in _workers(box):
@@ -227,7 +227,7 @@ def test_a_pass_that_raises_half_way_still_renews_the_leases_and_heartbeats():
             logging.getLogger().removeHandler(rec)
         assert any("pass failed" in ln for ln in rec.lines), (type(w).__name__, rec.lines)
         assert w.leases["u"].last_renewal == box.clock(), f"{type(w).__name__}: the pass raised and the lease was not renewed"
-        assert w.may_write("u"), type(w).__name__
+        assert w.may_act("u"), type(w).__name__
         hb = box.objects.get(w.sub.heartbeat_key(w.name))
         assert hb is not None, f"{type(w).__name__}: no heartbeat after a failed pass"
 

@@ -1,0 +1,31 @@
+# /etc/systemd/system/w2c-domainagent.service — the domain's agent on every server (`w2c-run.sh domainagent` →
+# `python3 -m w2cplatform.domain.agent`): what this cluster carries, asked of the domain's DOOR by its member key
+# (`DOMAIN_URL`, w2c.env) — never the holder's store; kept sealed with this server's ring; its report up.
+[Unit]
+Description=w2c domain agent — what this cluster carries from the domain, and its report up
+After=network-online.target configstore.service
+Wants=network-online.target
+
+[Service]
+User=w2c
+Group=w2c
+SupplementaryGroups=w2c-domainagent w2c-store w2c-secrets
+Environment=PLATFORM_STORE=configstore:///run/configstore/domainagent.sock
+Environment=SYNC_INTERVAL=30
+LoadCredential=platform.key:/etc/w2c/secrets/platform.key
+Environment=SECRETS_KEY=%d/platform.key
+# /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says (the cluster's units' rule) —
+# the site's lines (CLUSTER, DOMAIN_URL, CLUSTERS, OBJECTS…) are there, `domain.env.example`; the sockets are the unit's.
+UMask=0007
+ExecStart=/opt/w2c/bin/w2c-run.sh domainagent
+ReadWritePaths=/data/platform/objects
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

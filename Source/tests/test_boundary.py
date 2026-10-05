@@ -10,7 +10,7 @@ all it knows is the specs, `<sub>.subsystem.yaml`. Three checks:
                 `alive`, `receive`, `recover`, `automatic`, `deliver`, `record` are not words of the product.
                 Some words are the product's by meaning and not by letters (`live`, `volume`, `rec`, `запис*`):
                 `BY_MEANING` says when.
-    3. runs     the platform's pieces — the contract, the controller, the console, the resource — come up on
+    3. runs     the platform's pieces — the contract, the controller, the console, the resource, the domain — come up on
                 `testdata/testsub.subsystem.yaml` alone, each in a process of its own where importing a
                 subsystem's package fails; and a platform entry point loads a directory of specs.
 
@@ -52,7 +52,7 @@ DEBT = os.path.join(HERE, "boundary_debt.txt")
 TESTSUB = os.path.join(HERE, "testdata", "testsub.subsystem.yaml")
 
 PLATFORM_TREE = "w2cplatform"                                  # walked whole, every subpackage
-SUBSYSTEM_PACKAGES = ("vms", "gstvms", "domain", "cluster")    # what the platform must not reach (`Source/<name>/`)
+SUBSYSTEM_PACKAGES = ("vms", "gstvms", "cluster")              # what the platform must not reach (`Source/<name>/`)
 
 # The platform's tests: what tests a mechanism of the platform. They are the platform's like its modules — scanned for
 # words and imports. Two kinds: the ones that already import no subsystem, and the ones whose subject is a platform
@@ -72,7 +72,7 @@ PLATFORM_TESTS = (
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",
     "tests/test_store_outage.py", "tests/test_sweep.py",
     "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/test_host.py", "tests/testdata/testsub.subsystem.yaml",
-    "tests/test_spec_declarations.py",
+    "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py", "tests/test_domain_secrets.py",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
@@ -317,7 +317,7 @@ def _module_file(mod: str) -> str | None:
     return None
 
 
-# `vms.x`, `domain.access:cluster_access` — a dotted module path or a `module:function` (an entry point); not a file
+# `vms.x`, `vms.domainpart.worker:main` — a dotted module path or a `module:function` (an entry point); not a file
 # name (`vms.subsystem.yaml`) and not the bare word, which is a subsystem's NAME and a word of the dictionary.
 _BY_NAME = re.compile(r"^(%s)((\.[A-Za-z_]\w*)+(:[A-Za-z_]\w*)?|:[A-Za-z_]\w*)$(?<!\.yaml)(?<!\.yml)(?<!\.json)(?<!\.py)"
                       % "|".join(SUBSYSTEM_PACKAGES))
@@ -325,7 +325,7 @@ _BY_NAME = re.compile(r"^(%s)((\.[A-Za-z_]\w*)+(:[A-Za-z_]\w*)?|:[A-Za-z_]\w*)$(
 
 def _imports(path: str) -> list[tuple[int, str]]:
     """`(line, module)` for every import in a file — at the top, inside a function, or a module of a subsystem named
-    in a string (`"vms.x"`, `"domain.access:cluster_access"`: what `importlib` would import). Relative imports are
+    in a string (`"vms.x"`, `"vms.domainpart.worker:main"`: what `importlib` would import). Relative imports are
     resolved against the file's package."""
     src = open(path, encoding="utf-8").read()
     tree = ast.parse(src, path)
@@ -344,7 +344,7 @@ def _imports(path: str) -> list[tuple[int, str]]:
             out += [(node.lineno, f"{mod}.{a.name}") for a in node.names if _module_file(f"{mod}.{a.name}")]
         elif isinstance(node, ast.Constant) and isinstance(node.value, str) and _BY_NAME.match(node.value):
             # a module named in a string — `importlib.import_module(name)` of a default like
-            # `"domain.access:cluster_access"` — is an import that happens at run time
+            # `"vms.domainpart.worker:main"` — is an import that happens at run time
             out.append((node.lineno, node.value.partition(":")[0]))
     return out
 
@@ -414,7 +414,7 @@ def import_findings() -> list[tuple[str, int, str, str]]:
 # does not import: an import of one is `run:<piece> | run import <package>`. A piece that comes up short says why
 # (`BOUNDARY-RUN <why>`), and that is `run:<piece> | run <why>`; anything else it raises is `run broken: …` — never
 # debt to write down, a piece to mend.
-PIECES = ("contract", "controller", "console", "events", "resource", "host")
+PIECES = ("contract", "controller", "console", "events", "resource", "host", "worker", "domain")
 
 _GUARD = f"""
 import sys
@@ -443,7 +443,7 @@ def _testsub_box():
 def _counter_worker(sub, vars_, objects, clock, wall, instance: str, server: str):
     """testsub's worker, a stub: it holds the counters it was given — takes each one's epoch, lets go of the ones taken
     away — and says so in its heartbeat. Everything else is the platform's `Worker`."""
-    from w2cplatform.contract import Worker
+    from w2cplatform.worker import Worker
 
     class CounterWorker(Worker):
         def reconcile_once(self, now=None):
@@ -475,9 +475,76 @@ def _piece_contract():
     b = _counter_worker(sub, vars_, objects, clock, wall, "B", "srv-2")
     assert (a.name, b.name) == ("w-1", "w-2"), (a.name, b.name)
     Controller(sub, vars_, objects, wall=wall).assign("w-1", ["c1"])
-    assert a.reconcile_once() == ["c1"] and a.epochs == {"c1": 1} and a.may_write("c1")
+    assert a.reconcile_once() == ["c1"] and a.epochs == {"c1": 1} and a.may_act("c1")
     assert b.take_epoch("c1") == 2
-    assert a.renew_leases() == ["c1"] and not a.may_write("c1")
+    assert a.renew_leases() == ["c1"] and not a.may_act("c1")
+
+
+def _piece_worker():
+    """The platform's worker life cycle (`w2cplatform/worker.py`, §3 row 7) and its request family (§3 row 3) on testsub:
+    the loop holds what it was given and heartbeats; a request filed for a counter is performed once by its holder, at
+    most once, answered in the heartbeat and cleared by the console's clearing (`requests.py`); one past its deadline is
+    expired; another instance on the worker's name fences it, and it rejoins under a free one. The subsystem wrote only
+    `reconcile_once`, `status`, `held_rows` and `perform`."""
+    import threading
+    from w2cplatform import requests
+    from w2cplatform.contract import Controller, Slot
+    from w2cplatform.spec import SpecController, SubsystemSpec
+    from w2cplatform.worker import Worker
+    root, vars_, objects, clock, wall = _testsub_box()
+    spec = SubsystemSpec.load(TESTSUB)
+    assert spec.requests.get("schema") and spec.requests.get("most_valid") == 600
+
+    class CounterWorker(Worker):
+        def reconcile_once(self, now=None):
+            units = self.assignment().units
+            for u in units:
+                if u not in self.epochs:
+                    self.take_epoch(u)
+                    self.counts.setdefault(u, 0)
+            return units
+
+        def status(self):
+            return [{"id": u, "phase": "running", "count": self.counts.get(u, 0)} for u in self.assignment().units]
+
+        def held_rows(self):
+            return {u: {"id": u} for u in self.assignment().units}
+
+        def perform(self, target, row, it):
+            self.counts[str(row["id"])] += int(it["add"])
+            return {"added": int(it["add"])}
+
+    CounterWorker.spec = spec
+    w = CounterWorker(spec.sub, None, vars_, objects, clock=clock, wall=wall, instance="A")
+    w.server, w.capacity, w.counts = "srv-1", 4, {}
+    w.claim_slot()
+    Controller(spec.sub, vars_, objects, wall=wall).assign(w.name, ["c1"])
+
+    class OneTurn(threading.Event):
+        def wait(self, timeout=None):
+            self.set()
+            return True
+    w.run(poll=0, stop=OneTurn())                               # a turn of the platform's loop, and its orderly stop
+    from w2cplatform.contract import Heartbeat
+    hb = Heartbeat.from_bytes(objects.get(spec.sub.heartbeat_key("w-1")))
+    assert [s["id"] for s in hb.status] == ["c1"] and hb.extra["pending_writes"] == 0 and hb.extra["server"] == "srv-1"
+    assert vars_.get(spec.sub.slot_key("w-1"))[0]["released"] == "true"       # an orderly stop says so
+    w.claim_slot("w-1")
+    w.reconcile_once()
+    con = SpecController(spec, vars_.as_writer("console", spec.acl_console()), objects, wall=wall)
+    vars_.put(spec.sub.request_key("r1"), {"unit": "testsub/c1", "add": "3", "valid_until": str(wall() + 30), "at": str(wall())})
+    vars_.put(spec.sub.request_key("r0"), {"unit": "c1", "add": "1", "valid_until": str(wall() - 1), "at": str(wall() - 60)})
+    done = {d["request"]: d for d in w.requests()}
+    assert done["r1"]["added"] == 3 and done["r0"].get("expired") and w.counts["c1"] == 3, done
+    assert w.requests() == [] and w.counts["c1"] == 3                    # at most once: answered, not performed again
+    w.heartbeat_once()
+    assert requests.clear_requests(con, sweep=False) == 2 and vars_.list(spec.sub.requests_prefix()) == []
+    vars_.put(spec.sub.slot_key("w-1"), Slot("w-1", "B", wall() + 45, False, 9).to_items())   # another instance's now
+    w.lease_pass()
+    assert not w.writing_allowed and w.fenced_reason
+    assert w.rejoin() is None and not w.writing_allowed           # started under its name: it waits for that one
+    vars_.put(spec.sub.slot_key("w-1"), Slot("w-1", "B", wall() + 45, True, 10).to_items())   # …which B let go
+    assert w.rejoin() == "w-1" and w.writing_allowed and w.epochs == {} and w.was_fenced
 
 
 def _piece_controller():
@@ -502,7 +569,7 @@ def _piece_controller():
     ctl.ensure_placed()
     held = {u: w.name for w in ws for u in w.reconcile_once()}
     assert sorted(held) == ["c1", "c2", "c3"] and len(set(held.values())) == 2, held
-    assert all(w.epochs and all(w.may_write(u) for u in w.epochs) for w in ws)
+    assert all(w.epochs and all(w.may_act(u) for u in w.epochs) for w in ws)
 
 
 def _http(base: str, method: str, path: str, body=None) -> tuple[int, object]:
@@ -604,7 +671,7 @@ def _piece_host():
     root = tempfile.mkdtemp(prefix="testsub-host-")
     env = {"SPEC_DIR": os.path.dirname(TESTSUB), "PLATFORM_DIR": root}
     assert host.main(["controller", "testsub"], {"PLATFORM_DIR": root}) == 2          # no SPEC_DIR: nothing runs
-    vars_, objects = host.box_stores(env)
+    vars_, objects = host.stores(env)
     ws = [_counter_worker(Subsystem("testsub"), vars_, objects, time.monotonic, time.time, f"I{i}", f"srv-{i}")
           for i in (1, 2)]
     for w in ws:
@@ -619,6 +686,16 @@ def _piece_host():
     held = {u: w.name for w in ws for u in w.reconcile_once()}
     assert sorted(held) == ["c1", "c2", "c3"] and len(set(held.values())) == 2, held
     assert json_loads(objects.get("testsub/controller/pass")) is not None              # the report `/metrics` reads
+
+
+def _piece_domain():
+    """The platform's domain on testsub alone, with its `domain:` section (DOMAIN-PLATFORM.md, «no hooks»): two clusters
+    of counters, a counter found across them by the field the spec names, listed at the route its row name makes, a
+    book the spec declares carried home, only the token kinds it declares issued, and what it keeps backed up and
+    restored by a move (`tests/test_domain_platform.py`, every check of it)."""
+    import tests.test_domain_platform as d
+    for name in sorted(n for n in dir(d) if n.startswith("test_")):
+        getattr(d, name)()
 
 
 def json_loads(raw):

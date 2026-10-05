@@ -13,11 +13,12 @@ for all three (`FakeVariables`, the same contract as the daemon).
 import json
 import os
 
-from cluster.objectstore import ClusterObjectStore, ObjectsUnavailable, open_store
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.objectstore import ClusterObjectStore, ObjectsUnavailable, open_store
+from w2cplatform.cluster.variables import FakeVariables
 from tests.cluster.conftest import Clock
 from w2cplatform.blobs import digest
-from w2cplatform.contract import Controller, Subsystem, Worker
+from w2cplatform.contract import Controller, Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.resource import Resource, resources_seen, serve
 
 

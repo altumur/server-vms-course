@@ -15,6 +15,8 @@ Group=vms
 SupplementaryGroups=vms-console w2c-events w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/console.sock
 Environment=CONSOLE_PORT=8080
+# What is at `/`: the deployment's word (`host.build_console`); every other spec of `SPEC_DIR` is mounted under its name.
+Environment=CONSOLE_ROOT=vms
 # Who is "on the box" is whoever came through this socket (`w2cplatform/access.py`, `is_local`).
 Environment=CONSOLE_UNIX=/run/vms-console/console.sock
 RuntimeDirectory=vms-console

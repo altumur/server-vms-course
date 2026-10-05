@@ -13,6 +13,9 @@ show them. So the console is one class, run from the same spec:
     GET  /servers                every server as placement sees it: its archive (the label), its resource (the fact), its workers, placeable or why not
     GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
                                  units by cluster, with its age; 404 anywhere else — a cluster does not know the others
+    GET  /domain/shared/<sub>[?unit=<id>]   the fields a spec shares with the domain (`domain.shared`), resolved from
+                                 this cluster's verified copy of the shared document: value and where it came from, the
+                                 groups the domain offers for the field the page groups by; nothing undeclared
     GET/PUT /policy              the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
     GET/PUT/DELETE /servers/<server>/labels   what a server reaches, the administrator's word over its node's (<sub>/servers/<server>)
     GET  /events?from&to&unit&kind&subsystem   the resources' event indexes, merged (MergedIndex), fenced by every subsystem's epochs
@@ -61,18 +64,17 @@ rule in this file.
 # - `PAGE` — absolute path of `console.html` beside this file; served at `/`.
 #
 # ### `__init__(self, ctl, marks_root=None, index=None, worst_failover=0.0, wall=None,
-# media=False, lost_after=45.0)` `ctl` is the subsystem's `SpecController` holding the console's token;
+# lost_after=45.0)` `ctl` is the subsystem's `SpecController` holding the console's token;
 # `marks_root` is this server's resource root — if given, `self.marks` is an `EventLog(marks_root,
 # "console", <hostname:pid>, epoch 1)` (the console's own log; one writer, so epoch 1 forever); `index` is
-# an optional `MergedIndex` (anything with `query(...)`); `worst_failover` is a number exported on `/metrics`;
-# `media` tells the page it may draw a timeline and play, from the holders' doors. `seen` is the `IdempotencyKeys`
+# an optional `MergedIndex` (anything with `query(...)`); `worst_failover` is a number exported on `/metrics`.
+# What a holder serves a page is the spec's `door:`, which `/spec` says. `seen` is the `IdempotencyKeys`
 # over `<sub>/idem/`. `_scan` caches the assignment directory; `scans` counts cache refreshes.
 #
 # ## Notes
 # - `test_the_console_over_http` walks the whole surface: POST twice with one key is one camera; the
 #   console's controller cannot `place` (`Forbidden`); PUT `{"worker": "w-9"}` is 400; `/cameras` rows show
-#   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras,
-#   media true`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
+#   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
 #   the page mentions `/spec`, `/timeline/`, `<video>` and never the word camera outside its comment;
 #   what the holders serve is read at the doors `/where` hands out, never here; PUT `{"enabled": false}` bumps
 #   revision to 2; DELETE marks the row and the placement waits for `unplace_deleted`.
@@ -1352,13 +1354,12 @@ def _labels(row: dict | None) -> list:
 
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
-    holding the console's token; `media` says the page may draw a timeline and
-    play, from the doors of the units' holders (`door:` in a spec)."""
+    holding the console's token."""
 
     def __init__(self, ctl: SpecController, marks_root: str | None = None, index=None, worst_failover: float = 0.0,
-                 wall=None, media: bool = False, lost_after: float = 45.0, per_minute: float = 0.0):
+                 wall=None, lost_after: float = 45.0, per_minute: float = 0.0):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
-        self.worst_failover, self.wall, self.media, self.lost_after = worst_failover, wall or ctl.wall, media, lost_after
+        self.worst_failover, self.wall, self.lost_after = worst_failover, wall or ctl.wall, lost_after
         self.instance = f"{socket.gethostname()}:{os.getpid()}"
         self.marks_root = marks_root
         # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
@@ -1373,7 +1374,9 @@ class SpecConsole:
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
         self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
         from .door import Signer
-        self.door_signer = Signer.from_env()             # signs the holders' door tokens (`DOOR_KEY`); None: open doors
+        # signs the holders' door tokens with the key in the store (`door/signer`, sealed with the cluster's key ring);
+        # None without a ring to seal one with: the doors' open mode
+        self.door_signer = Signer.for_console(ctl.vars, getattr(ctl, "sealer", None))
         self.gate = Gate(ctl.vars, self.wall, lambda: self.journal)   # who is calling, and may they (`access.py`)
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall,   # in the store: any instance answers a retry
                                     sealer=getattr(ctl, "sealer", None))                 # its digests under the cluster's key
@@ -1425,11 +1428,29 @@ class SpecConsole:
         return {**out, "aggregated": True, "events": [], "groups": ordered}
 
     # -- what the page reads first ------------------------------------------------------------
-    # `/spec`'s body: `{name, rows, id, media, fields: [{name, type, default, required}], metrics: {prefix,
-    # running}}` — the page's only knowledge of the subsystem.
+    # `/spec`'s body: `{name, rows, id, fields: [{name, type, default, required}], door?, metrics: {prefix,
+    # running}}` — the page's only knowledge of the subsystem. What a holder serves a page is `door: {routes}`.
+    def shared_route(self, sub: str, q: dict) -> tuple[int, dict]:
+        """`GET /domain/shared/<sub>`: what the domain holds for a subsystem's shared fields, resolved by the platform
+        (`domain/shared.py`: `inherit` and `merge` applied) from the copy this cluster's agent took and verified — for a
+        unit of this console's own subsystem with `?unit=<id>`."""
+        from w2cplatform.domain import declared
+        from w2cplatform.domain.shared import SharedView, door
+        s = declared.spec(sub)
+        if s is None or not s.domain.shared:
+            return 404, {"error": "no such shared settings", "detail": f"{sub!r} shares no field with the domain"}
+        row = None
+        if q.get("unit"):
+            if sub != self.spec.name:
+                return 400, {"error": "not this console's", "detail": f"a unit of {sub} is resolved by its own console"}
+            row = next((r for r in self.ctl.units() if str(r.get("id")) == str(q["unit"])), None)
+            if row is None:
+                return 404, {"error": "no such unit", "detail": f"{sub} has no unit {q['unit']!r}"}
+        return 200, door(s, SharedView(self.ctl.vars, self.ctl.objects, self.wall).document(), row)
+
     def describe(self) -> dict:
         s = self.spec
-        return {"name": s.name, "rows": s.rows, "id": s.id, "media": self.media,
+        return {"name": s.name, "rows": s.rows, "id": s.id,
                 "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
                             **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
                             **({"fixed": True} if f.fixed else {})} for f in s.fields.values()],
@@ -1439,6 +1460,10 @@ class SpecConsole:
                 **({"display": s.display} if s.display else {}),
                 **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
                 **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
+                # the subsystem's key families of the domain (`domain.keys`; their words are `display.keys`)
+                **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
+                                        for f in s.domain.keys], "shared": list(s.domain.shared)}}
+                   if s.domain and (s.domain.keys or s.domain.shared) else {}),
                 "running_gauge": f"{s.name}_{s.running_gauge}", "workers_gauge": f"{s.name}_workers_live",
                 "metrics": {"prefix": s.name, "running": s.running_gauge}}
 
@@ -1506,9 +1531,9 @@ class SpecConsole:
 
     # THE HOLDER'S DOOR, HANDED OUT WITH THE UNIT'S PLACE (the boundary's step 6, the owner's decision 1: the bytes do not
     # go through the console). For a spec that declares `door: {routes}`, `/where/<id>` says `door: {url, token, expires,
-    # routes}` — the door the holder announces in its heartbeat (`door_url`), and a token for those routes, this unit,
-    # this holder, `door.TTL` seconds, signed by this console's key (`DOOR_KEY`; none: the door's open mode, `token:
-    # null`). The gate asked `view` on the unit before this line: that is the grant the token carries. THE holder is the
+    # routes}` — the door the holder announces in its heartbeat (`url`, the product's word), and a token for those routes,
+    # this unit, this holder, `door.TTL` seconds, signed by the cluster's door key (`door/signer` in the store; with no key
+    # ring to seal one, the door's open mode, `token: null`). The gate asked `view` on the unit before this line: that is the grant the token carries. THE holder is the
     # worker the unit is placed on, live, saying in its heartbeat that it holds the unit — not any heartbeat that
     # still lists it (a dead holder's last word, read for the first time, looks new). Nobody holding it so, or a holder
     # that announces no door: `door: null`, and the page asks again. Each token handed out is a
@@ -1520,7 +1545,7 @@ class SpecConsole:
         pl = self.ctl.placement(uid)
         hb = holders(self.ctl.objects, f"{self.spec.name}/", self.wall(), self.lost_after, self.ctl.eyes).get(pl.worker) if pl else None
         holds = hb is not None and any(str(st.get("id")) == str(uid) for st in hb.status)
-        url = str(hb.extra.get("door_url") or "") if holds else ""
+        url = str(hb.extra.get("url") or "").rstrip("/") if holds else ""
         if not url:
             return {"door": None}
         found = (pl.worker, hb)
@@ -1566,13 +1591,23 @@ class SpecConsole:
         server = server or ctl.draining()
         if not server:
             return {"draining": "", "subsystem": ctl.spec.name}
-        here = [w for w in heartbeats(ctl.objects, ctl.sub.name + "/") if ctl.server_of(w) == server]
+        hbs = heartbeats(ctl.objects, ctl.sub.name + "/")
+        here = [w for w in hbs if ctl.server_of(w) == server]
         units = sum(len(ctl.assignment(w).units) for w in here)
         strand = ctl.would_strand(server)
-        # Nothing waits on this machine to be moved somewhere: what a worker wrote is wherever it wrote it — a
-        # recorder's footage in its volume, closed when the writer was closed. No units left is the whole answer.
-        return {"draining": server, "subsystem": ctl.spec.name, "workers": sorted(here),
-                "units": units, "would_strand": strand, "safe": units == 0}
+        # No units left is not the whole answer: a worker may hold writes it has not made durable yet — a buffer on
+        # this machine's disk — and they go with the machine. Every worker says how many in its heartbeat
+        # (`pending_writes`, `Worker.pending_writes`); one that does not say, or says a word, is not known to be done.
+        pending, unsaid = 0, []
+        for w in here:
+            n = number(f"{ctl.sub.heartbeat_key(w)}#pending_writes", hbs[w].extra.get("pending_writes"), int, None)
+            if n is None:
+                unsaid.append(w)
+            else:
+                pending += n
+        return {"draining": server, "subsystem": ctl.spec.name, "workers": sorted(here), "units": units,
+                "pending_writes": pending, **({"pending_unsaid": sorted(unsaid)} if unsaid else {}),
+                "would_strand": strand, "safe": units == 0 and pending == 0 and not unsaid}
 
     # One look at the store for the whole answer (`contract.one_pass`, on this door's thread): each server's
     # `decommission_refusal` and each worker's `slot_fate` ask the heartbeats and the resources, and outside a pass every
@@ -1961,7 +1996,9 @@ class SpecConsole:
                   *[f'{p}_resource_retain_failures_total{{server="{label(s)}"}} {rn(s, "retain_failed", hb.get("retain_failed", 0), int)}' for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_mirror_too_big_total counter",
                   *[f'{p}_resource_mirror_too_big_total{{server="{label(s)}"}} {rn(s, "mirror.too_big", said(hb, "mirror").get("too_big"), int)}' for s, hb in sorted(res.items())]]
-        return lines
+        # …and the request rows this process's housekeeping ended unanswered (`requests.py`): expired, or not known
+        from . import requests
+        return lines + requests.metrics_lines()
 
     # WHAT A HOST'S SPARES SCRIPT READS (the М11 rework; the product's names): `<p>_workers_needed{labels}` — the empty
     # set's row always — `<p>_units_short{labels}`, `<p>_spare_offers{labels}` from the controller's pass report
@@ -2069,7 +2106,7 @@ class SpecConsole:
         except TooLarge as e:
             # The blob is bigger than the STORE will hold — which is the one case where changing the store
             # is the answer, because a blob is exactly the class of data an object store exists for. The cluster's
-            # objects are files on each server (`OBJECTS=cluster://…`, `cluster/objectstore.py`) with no ceiling; a
+            # objects are files on each server (`OBJECTS=cluster://…`, `w2cplatform/cluster/objectstore.py`) with no ceiling; a
             # store that declares one (`?max_bytes=`) is what refused this.
             return 413, {"detail": f"{e} — a blob is what an object store is for: this one declares a ceiling; the "
                                    f"cluster's file objects (OBJECTS=cluster://…) have none", "error": str(e)}
@@ -2910,6 +2947,8 @@ class SpecConsole:
                 return h._send(*con.server_labels_route(h, "GET", path, q))
             if path == "/domain":
                 return h._send(*domain_view(ctl.objects, con.wall(), con.lost_after))
+            if path.startswith("/domain/shared/"):
+                return h._send(*con.shared_route(path[len("/domain/shared/"):], q))
             if path == "/policy":
                 return h._send(200, {**ctl.policy(), "choices": ctl.POLICY_CHOICES})
             if path == "/unplaceable":

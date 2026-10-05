@@ -245,12 +245,12 @@ def what_the_spares_script_reads() -> str:
     """Lesson 4: two workers of capacity 4 carry eight cameras, a ninth waits. What the console's `/metrics` says
     without a token while the controller's pass is fresh — the four series `w2c-spares.sh` reads: how many workers
     are needed for each label set, how many units are short, how many offers wait, and what each server reaches."""
-    from cluster.console import metrics_text
+    from w2cplatform.console import SpecConsole
     s = Stand()
     con, ctl, ws = _full(s)
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4", "labels": ["vlan:cctv-b"]})
     host.placement_pass(ctl)
-    text = metrics_text(s.console(), 0.0)
+    text = SpecConsole(s.console()).metrics_text()
     series = ("vms_workers_live", "vms_worker_load", "vms_workers_needed", "vms_units_short", "vms_spare_offers",
               "vms_server_labels")
     keep = [l for l in text.splitlines()
@@ -369,14 +369,11 @@ def a_timeline_across_two_volumes() -> str:
         hb = r.heartbeat_extra()
         out.append(f"{r.name} on {server}: volume {hb['volume']!r}, archive {hb['archive']!r}, writer {hb['writer']}")
     ctl = s.controller()
-    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)     # the recording's holder's door (step 6)
-    keep = ("start", "end", "epoch", "fenced", "recording", "recorder", "volume", "media")
+    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)     # a recorder's door to the page
 
     def ask():
-        _, body = routes(None, "GET", "/door/timeline/7", {"from": t - 2000, "to": t})
-        if isinstance(body, list):
-            return [{k: sp[k] for k in keep} for sp in body]
-        return {**body, "segments": [{k: sp[k] for k in keep} for sp in body["segments"]]}
+        _, body, headers = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
+        return {"spans": body, **({"headers": dict(headers)} if headers else {})}
     out += ["", "# GET /timeline/7 — both recorders answer", _json(ask())]
     s.wall.advance(60); recs["srv-b"].heartbeat_once()
     out += ["", "# srv-a's recorder has been silent for 60 s", _json(ask())]
@@ -577,7 +574,7 @@ def a_reassignment_is_not_a_zombie() -> str:
     lost = a.lease_pass()
     a.reconcile_once()
     return (s.log.render(since=mark)
-            + f"\n# a.lease_pass() lost {lost}; a.recording_allowed = {a.recording_allowed}; running {sorted(a.actuator.running)}\n")
+            + f"\n# a.lease_pass() lost {lost}; a.writing_allowed = {a.writing_allowed}; running {sorted(a.actuator.running)}\n")
 
 
 def _labelled_workers(s):
@@ -629,7 +626,7 @@ def two_controllers_one_camera() -> str:
 
 def where_is_camera_7() -> str:
     """Lesson 10: the cluster's directory is one scan of one store. Nine cameras, nine answers, one scan."""
-    from cluster.directory import Directory
+    from w2cplatform.cluster.directory import Directory
     s = Stand()
     _labelled_workers(s)
     con, ctl = s.console(), s.controller()
@@ -637,7 +634,7 @@ def where_is_camera_7() -> str:
         con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4"})
     ctl.ensure_placed()
     mark = s.log.mark()
-    d = Directory(s.door("console", "console on srv-a"), ttl=5.0, clock=s.clock)
+    d = Directory(s.door("console", "console on srv-a"), "vms", ttl=5.0, clock=s.clock)
     answers = {i: d.where(i) for i in range(1, 10)}
     return s.log.render(since=mark) + f"\n# where(1..9) = {answers}; scans = {d.scans}\n"
 

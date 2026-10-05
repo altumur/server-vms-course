@@ -3,7 +3,7 @@
 `keep_slot` reads a slot row naming another instance, lets its units go and claims a free slot. When that claim
 failed — the store blinked, every candidate was taken under it — the worker was left with no slot and its OLD
 name: `renew_slot` with no slot said "still me", the stand-in renewed for it, the next pass read the other
-instance's assignment, took new epochs on its units with `may_write` true, and the heartbeat under that name was
+instance's assignment, took new epochs on its units with `may_act` true, and the heartbeat under that name was
 written over the legitimate one. Two processes took the same detectors in turn, until a restart.
 
 Now, while there is no slot, the instance is fenced: `renew_slot` says no, the stand-in does not stand in, no epoch
@@ -97,7 +97,7 @@ def test_a_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_
         assert w.name == was and w.renew_slot() is True and w.may_stand_in() is True, kind
         assert w.assignment().units == ["u", "v"], kind                # its own name's list, read again — as its next pass does
         w.take_epoch("v")
-        assert "v" in w.epochs and w.may_write("v"), kind
+        assert "v" in w.epochs and w.may_act("v"), kind
 
 
 def test_the_detector_and_the_gateway_with_no_slot_run_nothing_of_the_name_they_gave_up():
@@ -148,7 +148,7 @@ def _holders(box):
     return [_holder(box), recorder(box, "r-1", "srv-1"),
             CardRecorder("r-9", box.vars.as_writer("recworker-r-9", REC_ACL), box.objects, ring,
                          CardActuator(ring, threaded=False), clock=box.clock, wall=box.wall, server="cam-9",
-                         archive_root=tempfile.mkdtemp(prefix="cam-"), env={})]
+                         resource_root=tempfile.mkdtemp(prefix="cam-"), env={})]
 
 
 def _one_turn():
@@ -187,10 +187,10 @@ def test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_
         was = _taken(box, w)
         box.vars.put(w.sub.assignment(was), {"units": "1,2", "rev": 5})      # the other instance's assignment
         w.lease_pass()
-        assert not w.recording_allowed and "held by another instance" in w.fenced_reason, kind
+        assert not w.writing_allowed and "held by another instance" in w.fenced_reason, kind
         _nobody(box, w, was, kind)                                          # fenced, before any `rejoin`: already nobody
         with _Blink(w.vars):                                                # the store blinks on the claim
-            assert w.rejoin() is None and not w.recording_allowed, kind
+            assert w.rejoin() is None and not w.writing_allowed, kind
             _nobody(box, w, was, kind)
             w.run(poll=0, stop=_one_turn())                                 # a turn of the real loop, and its orderly stop
             assert b"somebody-else" in box.objects.get(w.sub.heartbeat_key(was)), kind
@@ -198,14 +198,14 @@ def test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_
             assert row.holder == "somebody-else" and not row.released, f"{kind}: it released the other instance's slot"
         real = w._claim_slot                                                # …or every candidate is taken under it
         w._claim_slot = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("could not claim a slot in 50 tries"))
-        assert w.rejoin() is None and not w.recording_allowed, kind
+        assert w.rejoin() is None and not w.writing_allowed, kind
         _nobody(box, w, was, kind)
         w._claim_slot = real
-        assert w.rejoin() is None and not w.recording_allowed, kind         # the store answers, the other holds it live:
+        assert w.rejoin() is None and not w.writing_allowed, kind         # the store answers, the other holds it live:
         _nobody(box, w, was, kind)                                          # its own name only (the owner's decision of 4 Oct)
         _let_go(box, w, was)                                                # the other instance stops in order
         name = w.rejoin()                                                   # somebody again — under its own name
-        assert name == was and w.name == name and w.recording_allowed and w.seeking is None, kind
+        assert name == was and w.name == name and w.writing_allowed and w.seeking is None, kind
         assert w.renew_slot() is True and w.assignment().units == ["1", "2"], kind   # the name's assignment with it
         w.heartbeat_once()
         assert w.instance.encode() in box.objects.get(w.sub.heartbeat_key(name)), kind
@@ -225,7 +225,7 @@ def test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_tak
         assert w.lease_pass() == []
         Controller(Subsystem("vms"), box.vars, box.objects, wall=box.wall).set_schema(SCHEMA + 1)
         w.lease_pass()
-        assert not w.recording_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason and w.seeking is None, kind
+        assert not w.writing_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason and w.seeking is None, kind
         w.heartbeat_once()                                                  # the name is still its own: it says so
         assert Heartbeat.from_bytes(box.objects.get(w.sub.heartbeat_key(w.name))).extra["fenced"] is True, kind
         was = _taken(box, w)                                                # the row lapsed and a new build took the name
@@ -286,7 +286,7 @@ def test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted():
         # The counter of the module the workers RUN on, found through the method that reads it and not by an import:
         # `test_portability` rebuilds `sys.modules`, and after it `from w2cplatform import contract` is another module
         # object than the one these classes were made from.
-        garbled = type(w).heartbeat.__globals__["SLOTS_GARBLED"]
+        garbled = type(w).heartbeat.__globals__["SLOTS"].counts      # `SLOTS_GARBLED`, the table the worker reads by
         before = garbled.get(sub, 0)
         w.given = None                     # a process that took whatever was free: it walks the slots (one started under
                                            # a name asks for that name alone, `test_names.py`)
@@ -327,10 +327,10 @@ def test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names():
 
     w.reconcile_once()
     box.vars.put("vms/slots/w-1", GARBLED_SLOT)                         # its own row, now
-    assert w.lease_pass() == [] and w.recording_allowed and w.seeking is None
+    assert w.lease_pass() == [] and w.writing_allowed and w.seeking is None
     row = Slot.from_items("w-1", box.vars.get("vms/slots/w-1")[0])      # parses again: the renewal wrote it whole
     assert row.holder == w.instance and not row.released and row.until > box.wall()
-    assert w.may_write("1") and w.renew_slot() is True
+    assert w.may_act("1") and w.renew_slot() is True
 
     try:                                                                # "somebody": whose box, the row does not say
         _holder(box, name="w-9", instance="other:9")

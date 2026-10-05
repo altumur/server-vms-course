@@ -14,14 +14,15 @@ import threading
 import time
 
 from vms.worker import FakeActuator, VmsWorker
-from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem, Worker
+from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, next_epoch
 from tests.conftest import Box
 
 
 def _holder(box, name="w-1", **kw):
     return VmsWorker(name, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                     archive_root=box.archive, **kw)
+                     resource_root=box.archive, **kw)
 
 
 def _tick(box, s):
@@ -45,7 +46,7 @@ def test_a_step_stuck_longer_than_half_the_lease_keeps_its_leases_and_its_slot_r
         for _ in range(12):                                         # 12 × 5 s
             _tick(box, 5)
             w.stand_in_once()
-            assert w.may_write("1"), f"the lease ran out under a hung step at {box.clock() - 1000:.0f} s"
+            assert w.may_act("1"), f"the lease ran out under a hung step at {box.clock() - 1000:.0f} s"
             assert not _slot_row(box, w).lapsed(box.wall()), "the slot row lapsed under a hung step"
     assert w.stand_in_renewals >= 5
     w.heartbeat_once()
@@ -85,13 +86,13 @@ def test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go():
         while box.clock() - start + 5 <= w.STAND_IN_FOR:
             _tick(box, 5)
             w.stand_in_once()
-            assert w.may_write("1")
+            assert w.may_act("1")
         held = w.stand_in_renewals
         for _ in range(12):                                         # another minute past STAND_IN_FOR
             _tick(box, 5)
             w.stand_in_once()
         assert w.stand_in_renewals == held, "the stand-in went on renewing past STAND_IN_FOR"
-        assert not w.may_write("1"), "a step hung past STAND_IN_FOR still holds its camera"
+        assert not w.may_act("1"), "a step hung past STAND_IN_FOR still holds its camera"
         assert _slot_row(box, w).lapsed(box.wall()), "a step hung past STAND_IN_FOR still holds its slot"
         ctl.look()
         _tick(box, SLOT_LOST_AFTER + HUNG_MOVE_AFTER + 1)           # …the margin past the lapse, and the limit
@@ -99,7 +100,7 @@ def test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go():
         spare = _holder(box, name=None, instance="spare:1")         # a nameless process takes a given slot first
         assert spare.name == "w-1"
     assert w.lease_pass() == ["1"]
-    assert not w.recording_allowed and "held by another instance" in w.fenced_reason
+    assert not w.writing_allowed and "held by another instance" in w.fenced_reason
 
 
 def test_a_slot_row_another_instance_took_is_not_written_over_by_the_stand_in():
@@ -124,7 +125,7 @@ def test_a_slot_row_another_instance_took_is_not_written_over_by_the_stand_in():
         for _ in range(4):
             _tick(box, 5)
             assert not w.stand_in_once()
-        assert not w.may_write("1")
+        assert not w.may_act("1")
     assert w.stand_in_renewals == 0
 
 
@@ -153,12 +154,12 @@ def test_a_fenced_worker_is_not_revived_by_the_stand_in():
     with w.guarded("pass"):
         _tick(box, 15)
         assert w.stand_in_once()                                   # the slot is still its own: renewed
-        assert w.leases["1"].fenced and not w.may_write("1")
+        assert w.leases["1"].fenced and not w.may_act("1")
         _tick(box, 10)
         w.stand_in_once()
-        assert w.leases["1"].fenced and not w.may_write("1"), "the stand-in revived a fenced lease"
+        assert w.leases["1"].fenced and not w.may_act("1"), "the stand-in revived a fenced lease"
     assert w.lease_pass() == ["1"]
-    assert w.recording_allowed                                     # one camera given up, not the instance
+    assert w.writing_allowed                                     # one camera given up, not the instance
 
 
 def test_a_lease_the_loop_released_is_renewed_by_nobody():
@@ -273,12 +274,12 @@ def test_STAND_IN_FOR_counts_from_the_loops_last_renewal_and_a_new_step_does_not
         while box.clock() - 1000 + 5 <= w.STAND_IN_FOR - 60:
             _tick(box, 5)
             w.stand_in_once()
-    assert w.may_write("1")                                        # four minutes stood in for: the camera still held
+    assert w.may_act("1")                                        # four minutes stood in for: the camera still held
     with w.guarded("pump"):                                        # the next step, and the loop renewed nothing between
         for _ in range(24):                                        # two more minutes
             _tick(box, 5)
             w.stand_in_once()
-        assert not w.may_write("1"), "a second hung step was given five more minutes of somebody else's camera"
+        assert not w.may_act("1"), "a second hung step was given five more minutes of somebody else's camera"
 
 
 def test_STAND_IN_FOR_is_not_started_again_by_a_renewal_inside_the_step_that_then_hangs():
@@ -297,7 +298,7 @@ def test_STAND_IN_FOR_is_not_started_again_by_a_renewal_inside_the_step_that_the
             for _ in range(56):
                 _tick(box, 5)
                 w.stand_in_once()
-                if held_until is None and not w.may_write("1"):
+                if held_until is None and not w.may_act("1"):
                     held_until = box.clock()
     assert held_until is not None, "a loop that hangs in every lease step held its camera for 1680 s"
     assert held_until - start <= w.STAND_IN_FOR + w.lease_ttl      # five minutes of standing in, and the lease's own term
@@ -308,7 +309,7 @@ def test_STAND_IN_FOR_is_not_started_again_by_a_renewal_inside_the_step_that_the
     w.take_epoch("1")
     with w.guarded("pass"):                                        # …and the next hung step is stood in for afresh
         _tick(box, 60)
-        assert w.stand_in_once() and w.may_write("1")
+        assert w.stand_in_once() and w.may_act("1")
 
 
 def test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_one_is_taken_at_once():
@@ -371,7 +372,7 @@ def _all_workers(box):
     from vms.config import AUTO_SPEC
     from w2cplatform.contract import requests_acl
     auto = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
-                      box.objects, clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive, env={})
+                      box.objects, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive, env={})
     return [_holder(box)] + _workers(box) + [auto]
 
 
@@ -402,14 +403,14 @@ def test_every_workers_loop_has_a_stand_in_for_a_pass_that_hangs():
             _wait_for(lambda: getattr(w, "stand_in_renewals", 0) >= 1)
             _tick(box, 10)                                         # thirty seconds since the last renewal by the loop
             _wait_for(lambda: getattr(w, "stand_in_renewals", 0) >= 2)
-            seen["may_write"] = w.may_write("u")
+            seen["may_act"] = w.may_act("u")
             return []
 
         w.reconcile_once = hung
         t = threading.Thread(target=w.run, kwargs={"poll": 0.01, "stop": stop}, daemon=True)
         t.start(); t.join(10)
         assert not t.is_alive(), type(w).__name__
-        assert seen.get("may_write"), f"{type(w).__name__}: the lease ran out under a hung pass — no stand-in in its loop"
+        assert seen.get("may_act"), f"{type(w).__name__}: the lease ran out under a hung pass — no stand-in in its loop"
 
 
 def test_a_fast_run_starts_the_stand_in_and_it_renews_nothing():
@@ -580,5 +581,5 @@ def test_a_step_that_comes_back_after_its_units_went_takes_no_epoch_from_their_n
         theirs = other.take_epoch("2")
         assert not w._actuate("start", {"id": 2, "source": "driverpack://file/2.mp4"})   # the step goes on with its list…
         assert "outlived its stand-in" in w.epoch_errors["2"]
-        assert other.may_write("2") and other.epochs["2"] == theirs           # …and w-2 keeps camera 2, unfenced
+        assert other.may_act("2") and other.epochs["2"] == theirs           # …and w-2 keeps camera 2, unfenced
     assert not w.step_abandoned()                                             # the next step is a step like any other

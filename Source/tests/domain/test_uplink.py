@@ -8,19 +8,19 @@ the reports, and a member's silence is the age of its last one.
 """
 import json
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
-from domain.agent import DomainAgent, DomainPublisher
-from domain.alarms import Card, DomainAlarms, ReportedDoor, pages
-from domain.api import ConsoleAPI
-from domain.device import DeviceCluster
-from domain.federation import DomainDirectory, Federation, Unreachable
-from domain.grants import Grant
-from domain.pending import PendingEdits
-from domain.readview import ReadView
-from domain.shared import SharedSettings
-from domain.signer import Signer
-from domain.uplink import UPLINK, member_copy, reported_at
+from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+from w2cplatform.domain.alarms import Card, DomainAlarms, ReportedDoor, pages
+from w2cplatform.domain.api import ConsoleAPI
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import DomainDirectory, Federation, Unreachable
+from w2cplatform.domain.grants import Grant
+from w2cplatform.domain.pending import PendingEdits
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.domain.shared import SharedSettings
+from w2cplatform.trust.signer import Signer
+from w2cplatform.domain.uplink import UPLINK, member_copy, reported_at
 from tests.domain.conftest import Clock, make_cluster
 
 NOW = 1_001_000.0
@@ -38,7 +38,7 @@ def _site(wall, n=2, nets=None):
     for i in range(n):
         d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall, reaches=((nets or ["vlan:a"] * n)[i],))
         d.boot(first_name=f"gate-{i}")
-        cards[d.name] = Card()
+        cards[d.name] = Card("vms")
         fed.add(member_copy(d.name, north.objects, d.reaches, wall=wall))
         devices[d.name] = d
         agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=d, current=d.current,
@@ -121,7 +121,7 @@ def test_an_edit_for_a_camera_the_domain_cannot_reach_is_kept_carried_applied_an
 
     api = ConsoleAPI(DomainDirectory(fed, wall=wall), no_door, verifier=lambda t: t, pending=pending,
                      last_known=view.last_known)
-    out = api.update_camera("SN0", {"name": "main-gate"}, idempotency_key="k1", token="anna")
+    out = api.update_unit("SN0", {"name": "main-gate"}, idempotency_key="k1", token="anna")
     assert out["pending"] and d.row()["name"] == "gate-0"                     # kept, not applied
     agents[d.name].sync()                                                      # the camera's next pass
     assert d.row()["name"] == "main-gate"
@@ -178,7 +178,7 @@ def test_a_camera_whose_clock_is_wrong_is_neither_stale_for_ever_nor_never_stale
     """A camera's clock is not the domain's. Its report's age is counted by the DOMAIN's clock, from when the
     domain first saw it, and the times inside it are moved onto the domain's clock by the difference. A
     camera fifteen minutes slow is live while it reports and silent when it stops, like any other."""
-    from domain.uplink import offset_of
+    from w2cplatform.domain.uplink import offset_of
     wall = Clock(NOW)
     slow = Clock(NOW - 900)                                                     # the camera's own clock
     north, _ = make_cluster("north", domain=True)
@@ -205,13 +205,13 @@ def test_a_cluster_with_no_cameras_yet_reports_that_it_has_none():
     """Feedback AA, on the report. A server room nobody has given a camera yet runs its controller once and
     publishes an empty `unplaced` shard; its agent reports; the domain lists it as a member that answered
     with nothing — complete — and not as one that never reported."""
-    from cluster.controller import ClusterController
+    from vms.controller import VmsController
     wall = Clock(NOW)
     north, _ = make_cluster("north", domain=True)
     south, _ = make_cluster("south")
     fed = Federation(); fed.add(north)
     fed.add(member_copy("south", north.objects, wall=wall))
-    ClusterController(south.vars, south.objects, wall=wall, cluster="south").publish_snapshot()
+    VmsController(south.vars, south.objects, wall=wall, cluster="south").publish_snapshot()
     agent = DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects, published=south.objects)
     assert agent.sync() and agent.reported.startswith("reported")
     view = ReadView(fed, wall=wall); view.refresh()

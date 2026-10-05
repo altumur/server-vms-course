@@ -61,7 +61,7 @@ the group, and what a test stand applies in one process — the same code, so th
 # box's rows are measured at the import (`configstore.import_rows`), all of them before the first write.
 #
 # ## The rights file — who may do what, by the socket the caller came through
-# `/etc/w2c/configstore-rights.json` (generated from the spec by `python3 -m cluster rights`, М11), in the product's
+# `/etc/w2c/configstore-rights.json` (generated from the specs by `python3 -m w2cplatform.cluster rights`), in the product's
 # format (its configstore round 2):
 #     {"roles": {"testsubworker": {"group": "testsub-worker", "read": ["testsub/*"],
 #                                  "write": ["testsub/epoch/*", "testsub/slots/*"], "delete": []}, …}}
@@ -97,6 +97,7 @@ import json
 import re
 import urllib.parse
 
+from .rights import DOMAIN_ROLES, allowed, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
 from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
@@ -106,9 +107,8 @@ CAS_MAX = 1 << 63                                    # a `cas` that is a number:
 MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
-# The roles that may delete `domain/*` (the product's names): the domain's own processes on its store, and its agent in
-# a member cluster's (М12, `domain/agent.py`). Nobody else — `admin` included.
-DOMAIN_ROLES = frozenset({"domain", "domainagent"})
+# The roles that may delete `domain/*`, and how a pattern is asked: the platform's one evaluator (`rights.py`), which the
+# in-process ACL of a box's `file://` and `memory://` stores asks too.
 
 
 class Unavailable(Exception):
@@ -256,18 +256,6 @@ _ROLE = re.compile(r"^[a-z][a-z0-9_-]{0,63}$")          # a socket's file name: 
 _GROUP = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$")        # a group's name, as `groupadd` takes it
 
 
-def _hit(pattern: str, key: str) -> bool:
-    return key == pattern or (pattern.endswith("*") and key.startswith(pattern[:-1]))
-
-
-# A pattern: a key, or a prefix with one trailing `*`; with a leading `!` it denies what it names.
-def _pattern(p) -> bool:
-    if not isinstance(p, str):
-        return False
-    body = p[1:] if p.startswith("!") else p
-    return bool(body) and "!" not in body and "*" not in body[:-1]
-
-
 class Rights:
     """The rights file, read and checked. `allows(role, action, key)` is the one question; `groups` says whose each
     role's socket is (the role's `group`, where the file says one)."""
@@ -315,10 +303,7 @@ class Rights:
             return False                          # nobody, `admin` included (`variables.refuse_delete`)
         if role == ADMIN:
             return True                           # `PEER` is no role of the file: no grant on any row (twelfth pass)
-        pats = self.roles.get(role, {}).get(action, [])
-        if any(_hit(p[1:], key) for p in pats if p.startswith("!")):
-            return False                          # a denial wins over every grant, wherever it stands in the list
-        return any(_hit(p, key) for p in pats if not p.startswith("!"))
+        return allowed(self.roles.get(role, {}).get(action, []), key)   # a denial first, wherever it stands
 
 
 # -- the API ------------------------------------------------------------------------------------------

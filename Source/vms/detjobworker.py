@@ -32,7 +32,7 @@ import time
 
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
-from w2cplatform.contract import Worker
+from w2cplatform.worker import Worker
 from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
 
@@ -76,7 +76,7 @@ class DetJobWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
-                 archive_root: str | None = None, env: dict | None = None, step: float | None = None):
+                 resource_root: str | None = None, env: dict | None = None, step: float | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(DETJOB, None, vars_, objects, clock=clock, wall=wall)
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, DETJOB_SPEC.slot_name_env, DETJOB_SPEC.slot_prefix))
@@ -84,7 +84,7 @@ class DetJobWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("SCAN_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = runtime.events_root(env, archive_root)
+        self.resource_root = runtime.events_root(env, resource_root)
         self.step = self.STEP if step is None else float(step)
         self.lag = float(env.get("VISIBLE_LAG_SECONDS", "600"))   # how far behind the visible footage runs: a block's worth
         self.wait_max = float(env.get("SCAN_WAIT_SECONDS", self.WAIT_MAX))
@@ -164,7 +164,7 @@ class DetJobWorker(Worker):
             # while a door was silent or a volume unread — it waits for them, and says which (`missing`).
             read = recording_read(self.objects, row["rec"], row["from"], max(row["to"], now) + self.lag, self.wall(),
                                   vars_=self.vars, eyes=self.eyes)   # the doors live by change (r29-writers2)
-            log_ = ScanLog(self.archive_root, job)
+            log_ = ScanLog(self.resource_root, job)
             if not read.answered:
                 self._stop(job)
                 self.status_by_unit[job] = self._status(job, row, "waiting", log=log_,
@@ -245,11 +245,11 @@ class DetJobWorker(Worker):
                     continue
             if model is None:
                 model = self.running[job] = self.models[row["kind"]](row)
-            if self.may_write(job):
+            if self.may_act(job):
                 for sc in left[:self.STRETCHES_PER_PASS]:
                     n = 0
                     for ts, kind, fields in self._stretch(model, sc):
-                        EventLog(self.archive_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
+                        EventLog(self.resource_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
                             ts, kind, cam=_cam(row["cam"]), job=job, source="archive", **fields)
                         n += 1
                     log_.append(sc, n, self.wall())         # the line AFTER the events: a crash costs one re-scan
@@ -277,9 +277,9 @@ class DetJobWorker(Worker):
             why_not = self._take_epoch(job) if job not in self.epochs else ""
             if why_not:
                 return self._status(job, row, "failed", scans=scans, log=log_, why=why_not)
-            if not self.may_write(job):
+            if not self.may_act(job):
                 return self._status(job, row, "waiting", scans=scans, log=log_, why=why + "; ".join(missing))
-            EventLog(self.archive_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
+            EventLog(self.resource_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
                 float(row["from"]), "scan.partial", cam=_cam(row["cam"]), job=job, source="archive", missing=list(missing),
                 waited=round(self.wall() - waited["since"]))
             partial = log_.wait(self.wall(), partial=missing)["partial"]
@@ -335,32 +335,14 @@ class DetJobWorker(Worker):
                        labels=",".join(self.labels), capacity=self.capacity + idle, headroom=self.headroom(),
                        conflicts=self.conflicts(), events=self.events_written)
 
-    def run(self, poll: float = 2.0, stop=None) -> None:
-        import threading
-        stop = stop or threading.Event()
-        stand_in = self.start_stand_in()               # renews for a step that hangs, for a while (feedback DD)
-        while not stop.is_set():
-            try:
-                with self.guarded("pass"):
-                    self.reconcile_once()
-            except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
-                log.exception("scan pass failed")
-            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
-                with self.guarded("lease"):
-                    self.keep_slot(lambda: [self._stop(u) for u in list(self.running)])   # the slot row too, not only the leases
-                    self.renew_leases()
-            except Exception:                            # noqa: BLE001
-                log.exception("scan lease renewal failed")
-            try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
-                with self.guarded("heartbeat"):
-                    self.heartbeat_once()
-            except Exception:                            # noqa: BLE001
-                log.exception("scan heartbeat failed")
-            stop.wait(poll)
-        stand_in.set()
-        for job in list(self.running):
-            self._stop(job)
-        self.release_slot()
+    # The loop is the platform's (`Worker.run`: the pass, the lease step, the heartbeat, each in a try of its own, the
+    # stand-in for a step that hangs, an orderly stop); what it stops is its scans.
+    def stop_unit(self, unit) -> None:
+        self._stop(unit)
+
+    def stop_all_units(self) -> None:
+        for unit in list(self.running):
+            self._stop(unit)
 
 
 # The camera an event carries: its number when it is one, else as written — `ref:<serial>`, a camera of another cluster

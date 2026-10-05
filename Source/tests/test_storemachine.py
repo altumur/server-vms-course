@@ -17,7 +17,7 @@ from w2cplatform.storemachine import (ADMIN, MAX_VALUE, PEER, Ambiguous, Rights,
 from w2cplatform.configstorevars import ConfigstoreVariables, StoreAmbiguous, StoreUnavailable
 from w2cplatform.variables import Conflict, Forbidden
 
-# A small rights file, in the format `python3 -m cluster rights` generates from the spec (М11).
+# A small rights file, in the format `python3 -m w2cplatform.cluster rights` generates from the specs (М11).
 RIGHTS = {"roles": {
     "vmsworker": {"read": ["vms/*"], "write": ["vms/epoch/*", "vms/slots/*"], "delete": ["vms/slots/*"]},
     "console": {"read": ["vms/*", "rec/*"], "write": ["vms/cameras/*"], "delete": ["vms/cameras/*"]},

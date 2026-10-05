@@ -243,7 +243,7 @@ def recorder(box, name: str = "r-1", server: str = "srv-1", actuator=None, acl=N
     if kw.get("obsd") is None:
         kw["obsd"] = obsd_session(f"rec-{name}")
     return RecWorker(name, vars_, box.objects, actuator or FakeActuator(), clock=box.clock, wall=box.wall, server=server,
-                     archive_root=box.archive, block=TEST_BLOCK, read=TEST_READ, **kw)
+                     resource_root=box.archive, block=TEST_BLOCK, read=TEST_READ, **kw)
 
 
 def store(name: str = "vol", quota: int = TEST_QUOTA, path: str | None = None, owner: str | None = None):
@@ -265,31 +265,39 @@ def footage(st, unit, epoch: int, t0: float, t1: float, step: float = 1.0, backf
         st.seal()
 
 
+def key_ring() -> str:
+    """A fresh key ring file for a test (`SECRETS_KEY`, `w2cplatform/sealing.py`): one 32-byte key, `k1`."""
+    d = tempfile.mkdtemp(prefix="ring-")
+    path = os.path.join(d, "platform.key")
+    with open(path, "w") as f:
+        f.write(f"k1 {os.urandom(32).hex()}\n")
+    return path
+
+
 class door_keys:
-    """`with door_keys():` — a cluster's door key pair for a test (`w2cplatform/door.py`): `DOOR_KEY` for the consoles
-    made inside, `DOOR_RING` for the holders, both files of a fresh Ed25519 key; the environment as it was after."""
+    """`with door_keys(vars_) as keys:` — the cluster's door key in the store for a test (`w2cplatform/door.py`):
+    `SECRETS_KEY` a fresh key ring for the processes made inside (a console seals its door key with it), a door key made
+    in `vars_` (`door.rotate`: `door/signer`, `door/keys`), `keys.signer` the console's half, `keys.ring` a holder's; the
+    environment as it was after."""
+
+    def __init__(self, vars_):
+        self.vars = vars_
 
     def __enter__(self):
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-        k = Ed25519PrivateKey.generate()
-        seed = k.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption())
-        pub = k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
-        d = tempfile.mkdtemp(prefix="door-keys-")
-        self.was = {n: os.environ.get(n) for n in ("DOOR_KEY", "DOOR_RING")}
-        for n, line in (("DOOR_KEY", f"k1 {seed.hex()}"), ("DOOR_RING", f"k1 {pub.hex()}")):
-            path = os.path.join(d, n.lower())
-            with open(path, "w") as f:
-                f.write(line + "\n")
-            os.environ[n] = path
+        from w2cplatform.door import Ring, Signer, rotate
+        from w2cplatform.sealing import Sealer
+        self.was = os.environ.get("SECRETS_KEY")
+        os.environ["SECRETS_KEY"] = key_ring()
+        sealer = Sealer.from_env()
+        rotate(self.vars, sealer)
+        self.signer, self.ring = Signer(self.vars, sealer), Ring(self.vars)
         return self
 
     def __exit__(self, *a):
-        for n, v in self.was.items():
-            if v is None:
-                os.environ.pop(n, None)
-            else:
-                os.environ[n] = v
+        if self.was is None:
+            os.environ.pop("SECRETS_KEY", None)
+        else:
+            os.environ["SECRETS_KEY"] = self.was
 
 
 class ByName:
@@ -307,7 +315,7 @@ class ByName:
 
 
 def page_door(box, name: str = "r-page", keeper=None):
-    """A recording's holder's page door alone (`vms/footage.py`: `/door/timeline/<recording>`, `/door/export/<recording>`)
+    """A recording's holder's page door alone (`vms/footage.py`: `/timeline/<recording>`, `/segment/<recording>/…`)
     over every recorder's archive door announced in the store — what a recorder serves beside its archive. Its journal is
     `audit/door-<name>` under `box.archive`; `keeper` defaults to `ByName`. Returns the server; `srv.base` is its URL."""
     import threading
@@ -340,9 +348,10 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
          keeper=None):
     """A recorder's archive door over `st`, served, and a heartbeat that announces it — what a recording's holder and
     a scan find a recording's footage by. `held`: `{recording: since}` its recorder writes into `st` (`held_since`).
-    It serves the page's door too, as a recorder does (`/door/timeline/<recording>`, `/door/export/<recording>`:
-    `vms/footage.py`), open — no `DOOR_RING` — unless `keeper` says otherwise; its journal is `audit/door-<name>`
-    under `box.archive`. Returns the server (`srv.page` — the door's base URL); shut it down when done."""
+    It serves the page's door too, as a recorder does (`/timeline/<recording>`, `/segment/<recording>/…`:
+    `vms/footage.py`), open — no door key in the store — unless `keeper` says otherwise; its journal is
+    `audit/door-<name>` under `box.archive`. Returns the server (`srv.page` — the door's base URL, the same server);
+    shut it down when done."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     from urllib.parse import parse_qs, urlsplit
@@ -359,7 +368,7 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
             pass
 
         def do_GET(self):
-            if self.path.startswith("/door/"):
+            if self.path.startswith(("/timeline/", "/segment/")):
                 u = urlsplit(self.path)
                 got = page(self, "GET", u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
                 return answer(self, got if got is not None else (404, {"error": "no such path"}))
@@ -371,8 +380,7 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
 
     def announce():                                  # a heartbeat, now: a test that moves the clock says it again
         box.objects.put(REC_SPEC.sub.heartbeat_key(name),
-                        Heartbeat(name, box.wall(), status or [], {"server": server, "archive_url": url, "volume": st.name,
-                                                                   "door_url": url + "/door"}).to_bytes())
+                        Heartbeat(name, box.wall(), status or [], {"server": server, "url": url, "volume": st.name}).to_bytes())
     announce()
-    srv.announce, srv.url, srv.page = announce, url, url + "/door"
+    srv.announce, srv.url, srv.page = announce, url, url
     return srv

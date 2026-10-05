@@ -46,7 +46,7 @@ def _footage(box, rec, epoch, a, b):
 def _worker(box, name="j-1", **kw):
     return DetJobWorker(name, box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
                         models={"lpr": Every}, clock=box.clock, wall=box.wall, server="srv-1",
-                        archive_root=box.archive, env={"LABELS": "gpu"}, step=60.0, **kw)
+                        resource_root=box.archive, env={"LABELS": "gpu"}, step=60.0, **kw)
 
 
 def _job(box, name="7-lpr-1", frm=0, to=10, rec="7", cam="7"):
@@ -257,7 +257,7 @@ def test_one_door_answering_is_not_the_whole_recording_and_the_job_waits_for_the
     box = _site(); _footage(box, "7", 2, 5, 10); _job(box)                 # B (the box's door): minutes 5–10
     a = store(); footage(a, "7", 1, m(0), m(5), step=10)                    # A: minutes 0–5, behind a door that is down
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-a"), Heartbeat("r-a", box.wall(), [], {
-        "server": "srv-2", "archive_url": "http://127.0.0.1:9", "volume": a.name}).to_bytes())
+        "server": "srv-2", "url": "http://127.0.0.1:9", "volume": a.name}).to_bytes())
     w = _worker(box)
     for _ in range(4):
         w.reconcile_once()
@@ -277,7 +277,7 @@ def _silent_recorder(box, name, volume, recordings, age=3600):
     from w2cplatform.contract import Heartbeat
     from vms.config import REC_SPEC
     box.objects.put(REC_SPEC.sub.heartbeat_key(name), Heartbeat(name, box.wall() - age, [{"id": r, "phase": "running"} for r in recordings], {
-        "server": "srv-9", "archive_url": "http://127.0.0.1:9", "volume": volume}).to_bytes())
+        "server": "srv-9", "url": "http://127.0.0.1:9", "volume": volume}).to_bytes())
 
 
 def _unheard(box, w, *names):

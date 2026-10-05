@@ -3,12 +3,12 @@ the product's vendor key, graceful for a stated period; recording never stops.""
 import json
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from domain.entitlement import GRACE, EntitlementCache, LicenceError
+from w2cplatform.domain.entitlement import GRACE, EntitlementCache, LicenceError
 from tests.domain.conftest import Clock, make_domain
 
 
 def vendor_licence(key, domain, cameras, valid_until, issued):
-    body = json.dumps({"domain": domain, "cameras": cameras, "features": ["record"], "valid_until": valid_until,
+    body = json.dumps({"domain": domain, "units": cameras, "features": ["record"], "valid_until": valid_until,
                        "issued": issued}, sort_keys=True).encode()
     return body + b"." + key.sign(body).hex().encode()
 
@@ -19,9 +19,9 @@ def test_licence_verified_cached_and_graceful():
     vendor = Ed25519PrivateKey.generate()
     pub = vendor.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
     ent = EntitlementCache("acme", fed.domain_holder.vars, pub, now=clk)
-    assert ent.status() == "none" and ent.may_add_camera(0) == (False, "entitlement none: recording continues, adding cameras does not")
+    assert ent.status() == "none" and ent.may_add_unit(0) == (False, "entitlement none: work continues, adding units does not")
     ent.install(vendor_licence(vendor, "acme", cameras=100, valid_until=clk() + 30 * 86400, issued=clk()))
-    assert ent.status() == "valid" and ent.may_add_camera(99)[0] and not ent.may_add_camera(100)[0]
+    assert ent.status() == "valid" and ent.may_add_unit(99)[0] and not ent.may_add_unit(100)[0]
     try:
         ent.install(vendor_licence(Ed25519PrivateKey.generate(), "acme", 1000, clk() + 1e9, clk())); raise AssertionError()
     except LicenceError:
@@ -31,7 +31,7 @@ def test_licence_verified_cached_and_graceful():
     except LicenceError:
         pass                                                   # somebody else's licence
     clk.advance(31 * 86400)                                    # the licence server has been unreachable for a month
-    assert ent.status() == "grace" and ent.may_add_camera(50)[0]
+    assert ent.status() == "grace" and ent.may_add_unit(50)[0]
     clk.advance(GRACE)
-    assert ent.status() == "degraded" and not ent.may_add_camera(50)[0]
-    assert ent.recording_allowed()                             # by construction, in every state
+    assert ent.status() == "degraded" and not ent.may_add_unit(50)[0]
+    assert ent.writing_allowed()                             # by construction, in every state

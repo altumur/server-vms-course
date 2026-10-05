@@ -2,9 +2,10 @@
 
 The store's rights are a file the daemon reads — `deploy/cluster/configstore-rights.json`, installed as
 `/etc/w2c/configstore-rights.json` — and the daemon asks it before anything is forwarded or applied, by the socket the
-caller came through. The file is GENERATED from the spec (`python3 -m cluster rights`, `cluster/rights.py`): the
-writes from `acl_console`, `acl_controller`, `acl_worker`, `WORKER_ACL` and the create-only object rows, the reads
-from a list with the code that makes each read.
+caller came through. The file is GENERATED from the specs of the catalogue (`python3 -m w2cplatform.cluster rights`,
+`w2cplatform/cluster/rights.py`): the roles of every subsystem the catalogue holds, the writes from `acl_console`,
+`acl_controller`, `acl_worker_role` (the spec's `worker:`) and the create-only object rows, the reads from a list with the
+code that makes each read.
 
 The history this file comes from: on Nomad the policies were written by hand in `*-policy.hcl`, and inside two
 commits they stopped matching the code three times — the controller's grant named `objects/vms/snapshot` exactly when
@@ -18,12 +19,16 @@ lists do not ask for — and every read the code makes is granted.
 import json
 import os
 
-from cluster.objectstore import is_row
-from cluster.rights import render, roles
-from vms.config import REC_SPEC, SPEC, WORKER_ACL, WORKER_OBJECTS
+from w2cplatform.domain.rights import roles as domain_roles  # noqa: E402
+from w2cplatform import catalog
+from w2cplatform.cluster.objectstore import is_row
+from w2cplatform.cluster.rights import render, roles
+from vms.config import REC_SPEC, SPEC
 from w2cplatform.resource import DOORS
 from w2cplatform.storemachine import Rights
-from tests.cluster.conftest import RIGHTS
+from tests.cluster.conftest import HERE, RIGHTS
+
+SPECS = catalog.load_dir(os.path.join(HERE, "vms"))       # the catalogue the installed tree carries (`SPEC_DIR`)
 
 OBJECTS = "objects/"
 SOCKETS = "/run/configstore/"
@@ -39,11 +44,12 @@ def doc() -> dict:
 
 
 def test_the_committed_file_is_what_the_spec_generates():
-    """`deploy/cluster/configstore-rights.json` is `python3 -m cluster rights` now — a hand edit, or a spec changed without
-    regenerating it, fails here (and `install.sh` refuses to install it)."""
+    """`deploy/cluster/configstore-rights.json` is `python3 -m w2cplatform.cluster rights` now — a hand edit, or a spec
+    changed without regenerating it, fails here (and `install.sh` refuses to install it)."""
     with open(RIGHTS, encoding="utf-8") as f:
-        assert f.read() == render(), "regenerate it: python3 -m cluster rights > deploy/cluster/configstore-rights.json"
-    assert Rights.parse(doc()).roles == {r: {a: g[a] for a in ("read", "write", "delete")} for r, g in roles().items()}
+        assert f.read() == render(SPECS, "vms"), \
+            "regenerate it: SPEC_DIR=vms python3 -m w2cplatform.cluster rights > deploy/cluster/configstore-rights.json"
+    assert Rights.parse(doc()).roles == {r: {a: g[a] for a in ("read", "write", "delete")} for r, g in roles(SPECS, "vms").items()}
 
 
 def test_each_role_says_its_sockets_group_in_the_products_format():
@@ -51,24 +57,22 @@ def test_each_role_says_its_sockets_group_in_the_products_format():
     `vms-<role>`, the platform's `w2c-<role>` — which is what a unit joins (`SupplementaryGroups=`)."""
     r = rights()
     for role in doc()["roles"]:
-        platform = role in ("resource", "domain", "domainagent", "member")
+        platform = role in ("resource", "domain", "domainagent")
         assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
     assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
 
 
 def _expected_writes() -> dict[str, set[str]]:
     rows = lambda objs: {OBJECTS + p for p in objs if is_row(p)}            # noqa: E731
-    return {
-        "console": set(SPEC.acl_console()) | set(REC_SPEC.acl_console()),
-        "vmscontroller": set(SPEC.acl_controller()),
-        "reccontroller": set(REC_SPEC.acl_controller()),
-        "vmsworker": set(WORKER_ACL) | rows(WORKER_OBJECTS),
-        "recworker": set(REC_SPEC.sub.acl_worker()) | rows(REC_SPEC.sub.acl_objects_worker()),
-        "resource": {DOORS + "/*", REC_SPEC.sub.request_key("free-*")},   # its ask to free bytes (`requests: {free}`, step 6)
-        "domainagent": {"domain/*", "relay/*", "!domain/signer*"},
-        "member": set(),
-        "domain": {"domain/*", "identity/*"},
-    }
+    out = {"console": {a for s in SPECS for a in s.acl_console()} | {"door/signer", "door/keys"}}   # the door key (`door.py`)
+    for s in SPECS:                                                           # every subsystem of the catalogue: its two roles
+        out[f"{s.name}controller"] = set(s.acl_controller())
+        out[f"{s.name}worker"] = set(s.acl_worker_role()) | rows(s.sub.acl_objects_worker() + [s.sub.config(p) for p in s.object_rows])
+    return {**out,
+            "resource": {DOORS + "/*", *[s.sub.request_key("free-*") for s in SPECS if s.requests_free]},   # its ask to free bytes
+            # the domain's roles are the platform domain's to say, from the specs (`w2cplatform/domain/rights.py`): the
+            # agent's grant on `domain/*` with a denial of every row only the holder writes; no member role
+            **{role: set(g["write"]) for role, g in domain_roles(specs=SPECS).items()}}
 
 
 def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there():
@@ -108,19 +112,22 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
     no daemon opened that socket, the first read was `StoreUnavailable`, the signer went round its restarts. The role
     is the platform's (`w2c-domain`, a group configstore is a member of): the domain's rows and the people's
     (`identity/*`) written, the holder's own cluster read. And the least of DOMAIN-PLATFORM.md's narrowing: the domain's
-    keys (`domain/signer`) are read and written by `domain` alone — the agent and a member's report read `domain/*`
-    but not them."""
+    keys (`domain/signer`) are read and written by `domain` alone — the agent reads `domain/*` but not them, and writes
+    none of what only the holder writes; a member reads nothing of the holder's store (no member role: it carries
+    through the domain's door)."""
     r = rights()
     assert r.groups["domain"] == "w2c-domain"
     for action, key in (("read", "domain/signer"), ("write", "domain/signer"), ("write", "identity/users/u1"),
-                        ("read", "identity/pointer"), ("write", "domain/sources/north"), ("read", "vms/cameras/7"),
+                        ("read", "identity/pointer"), ("write", "domain/vms/crossings"), ("read", "vms/cameras/7"),
                         ("delete", "domain/pending/north")):
         assert r.allows("domain", action, key), (action, key)
-    for role in ("domainagent", "member", "console", "vmsworker"):
+    for role in ("domainagent", "vmsdomain", "console", "vmsworker"):
         for action in ("read", "write", "delete"):
             assert not r.allows(role, action, "domain/signer"), (role, action)
-    assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants/north")
-    assert r.allows("member", "read", "domain/keys") and not r.allows("domain", "write", "vms/cameras/7")
+    assert r.allows("domainagent", "read", "domain/keys") and r.allows("domainagent", "write", "domain/grants")
+    assert not r.allows("domainagent", "write", "domain/grants/north") and "member" not in r.roles
+    assert r.allows("vmsdomain", "write", "domain/vms/primaries/cam-SN1") and not r.allows("vmsdomain", "write", "domain/keys")
+    assert not r.allows("domain", "write", "vms/cameras/7")
 
 
 # -- what the processes DO: every scene of the stand, and the doors the scenes do not knock on ------------------------
@@ -129,8 +136,8 @@ def _doors(s) -> None:
     written from the page, a decommission, and the recorder controller's passes — none of which a scene makes."""
     import urllib.error
     import urllib.request
-    from cluster.console import serve
     from vms.worker import FakeDevice
+    from w2cplatform.host import spec_console
     from w2cplatform.spec import SpecController
     s.resources_up()
     con, ctl = s.console("srv-a", "console on srv-a (gate)"), s.controller()
@@ -143,7 +150,7 @@ def _doors(s) -> None:
     v = s.door("reccontroller", "reccontroller on srv-b")
     rc = SpecController(REC_SPEC, v, s.objects_on("srv-b", v, "reccontroller on srv-b"), wall=s.wall)
     s.wall.watchers += [rec_con, rc]                      # each judges by what it saw change: it looks as time moves
-    srv = serve(con, port=0, rec_ctl=rec_con)
+    srv = spec_console({"vms": con, "rec": rec_con}, "vms").serve("127.0.0.1", 0)
     try:
         for url in (f"http://127.0.0.1:{door.server_address[1]}/playback/1?from=0&to=1",
                     f"http://127.0.0.1:{srv.server_address[1]}/cameras"):
@@ -292,7 +299,7 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     vars_, read = FileVariables(f"{root}/vars"), []
     real = vars_.get
     vars_.get = lambda path: (read.append(path), real(path))[1]
-    w = VmsWorker("w-1", vars_, FsObjectStore(f"{root}/objects"), FakeActuator(), archive_root=f"{root}/archive")
+    w = VmsWorker("w-1", vars_, FsObjectStore(f"{root}/objects"), FakeActuator(), resource_root=f"{root}/archive")
     assert w.playback_refusal("1", "", {}, "127.0.0.1") is None        # an open cluster: the door asks nobody
     vars_.put(MEMBER_MARK, {"cluster": "acme"})                       # a member that lost its keys: it asks
     assert w.playback_refusal("1", "", {}, "127.0.0.1")[0] == 503      # …and has no key of its own yet: shut

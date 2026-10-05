@@ -43,7 +43,7 @@ Exec=python3 -m vms worker
 # exactly that slot by CAS, even from a holder that has not lapsed — systemd is the authority on which
 # process is the current `w-1`, and the old one finds out at its next `renew_slot` and fences.
 Environment=WORKER_NAME=%i
-# `PLATFORM_DIR`, `ARCHIVE` (`w2c.env.example`), `MEDIA_DIR`, `CAPACITY`, `LOG_LEVEL` (`vms.env.example`):
+# `PLATFORM_DIR`, `RESOURCE_ROOT` (`w2c.env.example`), `MEDIA_DIR`, `CAPACITY`, `LOG_LEVEL` (`vms.env.example`):
 # `/etc/w2c` and `/etc/vms` are links into the data partition, never a rootfs slot.
 # The worker's TWO doors, and neither may be a constant in a template: the RTSP fan-out and the playback
 # surface. A second `vmsworker@w-2` on the same box is the ordinary way to use capacity (the autoscaler

@@ -18,24 +18,24 @@ from tests.cluster.test_recorder_job import unit
 
 HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Source/
 DEPLOY = os.path.join(HERE, "deploy", "cluster")
-# The role each unit runs as, and the verb `w2c-run.sh` runs (`cluster/__main__.py`).
+# The role each unit runs as, and what `w2c-run.sh` is told to run: the platform's verbs (`python3 -m w2cplatform.cluster`)
+# and the VMS's processes (`python3 -m vms`).
 UNITS = {"w2c-resource": ("resource", "resource"), "vms-console": ("console", "console"),
-         "vms-vmscontroller": ("vmscontroller", "controller"), "vms-reccontroller": ("reccontroller", "reccontroller"),
-         "vms-vmsworker": ("vmsworker", "worker"), "vms-recworker": ("recworker", "recorder")}
-PLISTS = {"com.w2c.resource": "w2c-resource", "com.w2c.vms.console": "vms-console",
+         "vms-jobs": ("console", "vms jobs"),
+         "vms-vmscontroller": ("vmscontroller", "controller vms"), "vms-reccontroller": ("reccontroller", "controller rec"),
+         "vms-vmsworker": ("vmsworker", "vms worker"), "vms-recworker": ("recworker", "vms recorder")}
+PLISTS = {"com.w2c.resource": "w2c-resource", "com.w2c.vms.console": "vms-console", "com.w2c.vms.jobs": "vms-jobs",
           "com.w2c.vms.vmscontroller": "vms-vmscontroller", "com.w2c.vms.reccontroller": "vms-reccontroller",
           "com.w2c.vms.vmsworker": "vms-vmsworker", "com.w2c.vms.recworker": "vms-recworker"}
 
 
 def test_every_unit_opens_its_roles_socket_and_joins_its_group():
-    import cluster.__main__ as m
     groups = {r: g["group"] for r, g in json.load(open(RIGHTS, encoding="utf-8"))["roles"].items()}
-    assert set(m.ROLES.values()) == {role for role, _ in UNITS.values()}            # a unit for each verb's role
     for name, (role, verb) in UNITS.items():
         u = unit(os.path.join(DEPLOY, "systemd", f"{name}.service"))
         assert u["env"]["PLATFORM_STORE"] == f"configstore:///run/configstore/{role}.sock", name
         assert u["SupplementaryGroups"][0].split()[0] == groups[role], name
-        assert u["ExecStart"] == [f"/opt/w2c/bin/w2c-run.sh {verb}"] and m.ROLES[verb] == role, name
+        assert u["ExecStart"] == [f"/opt/w2c/bin/w2c-run.sh {verb}"], name
         assert "configstore.service" in u["After"][0], name                         # the store's member first
         assert u["User"] == (["w2c"] if role == "resource" else ["vms"]), name       # the platform's user, the subsystem's
         assert "EnvironmentFile" not in u, f"{name}: a file would override what the unit says"
@@ -59,7 +59,7 @@ def test_every_plist_is_its_units_twin():
         with open(os.path.join(DEPLOY, "launchd", f"{label}.plist"), "rb") as f:
             p = plistlib.load(f)
         role, verb = UNITS[name]
-        assert p["Label"] == label and p["ProgramArguments"] == ["__BOX__/bin/w2c-run.sh", verb], label
+        assert p["Label"] == label and p["ProgramArguments"] == ["__BOX__/bin/w2c-run.sh", *verb.split()], label
         assert p["EnvironmentVariables"]["PLATFORM_STORE"] == f"configstore://__BOX__/state/run/configstore/{role}.sock", label
         assert p["KeepAlive"] is True and p["StandardErrorPath"] == f"__BOX__/state/logs/{label}.log", label
     for f in sorted(os.listdir(os.path.join(DEPLOY, "launchd"))):
@@ -87,19 +87,19 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
         f.write("# the platform's\nSERVER_NAME=srv-b\nPLATFORM_STORE=file:///nowhere\nCAPACITY=7\nnot a line\n"
                 "EVIL=$(touch " + d + "/ran)\n")
     with open(vms_, "w") as f:
-        f.write("CAPACITY=50\nARCHIVE=/data/archive\n")
+        f.write("CAPACITY=50\nRESOURCE_ROOT=/data/archive\n")
     py = os.path.join(d, "python3")
     with open(py, "w") as f:                                          # what the runner execs: print the environment
         f.write("#!/bin/sh\necho \"$@\"\nenv\n")
     os.chmod(py, 0o755)
     env = {"PATH": os.environ["PATH"], "W2C_ENV": w2c, "VMS_ENV": vms_, "PYTHON": py, "W2C_HOME": d,
            "PLATFORM_STORE": "configstore:///run/configstore/vmsworker.sock"}
-    out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], env=env, capture_output=True, text=True,
+    out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "console"], env=env, capture_output=True, text=True,
                          check=True).stdout.splitlines()
     got = dict(l.split("=", 1) for l in out[1:] if "=" in l)
-    assert out[0] == "-m cluster worker"
+    assert out[0] == "-m w2cplatform.cluster console"
     assert got["PLATFORM_STORE"] == "configstore:///run/configstore/vmsworker.sock"      # the unit's
-    assert got["SERVER_NAME"] == "srv-b" and got["CAPACITY"] == "7" and got["ARCHIVE"] == "/data/archive"
+    assert got["SERVER_NAME"] == "srv-b" and got["CAPACITY"] == "7" and got["RESOURCE_ROOT"] == "/data/archive"
     assert got["EVIL"] == "$(touch " + d + "/ran)" and not os.path.exists(os.path.join(d, "ran"))   # a value, never run
     assert got["PYTHONPATH"].startswith(f"{d}/Source")
     with open(w2c, "a") as f:
@@ -127,7 +127,7 @@ def test_the_runner_writes_as_its_group_however_it_was_started_and_finds_a_box_b
     with open(os.path.join(d, "vms.env"), "w") as f:
         f.write("CAPACITY=9\n")
     env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d}
-    out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], env=env, capture_output=True, text=True,
+    out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "console"], env=env, capture_output=True, text=True,
                          check=True, preexec_fn=lambda: os.umask(0o022)).stdout.splitlines()
     got = dict(l.split("=", 1) for l in out[1:] if "=" in l)
     assert got["umask"] in ("0007", "007"), got["umask"]
@@ -145,15 +145,15 @@ def test_the_controllers_reach_budget_is_named_where_an_operator_looks():
     that reaches them; a group left over is `units.over_budget`) was read by the controller and named in no env file of
     the delivery and in neither entry point's list of settings. Both env examples (this module's and the box's) name
     it, and both entry points' docstrings."""
-    import cluster.__main__ as cm
+    import w2cplatform.host as h
     import vms.__main__ as vm
-    assert "REACH_BUDGET" in (cm.__doc__ or "") and "REACH_BUDGET" in (vm.__doc__ or "")
+    assert "REACH_BUDGET" in (h.__doc__ or "") and "REACH_BUDGET" in (vm.__doc__ or "")
     for path in (os.path.join(SYSTEMD, "vms.env.example"), os.path.join(M10, "vms.env.example")):
         assert "#REACH_BUDGET=10" in open(path, encoding="utf-8").read(), path
 
 
 def _run_spare(d: str, said: str | None, env: dict | None = None, w2c_env: str = "") -> subprocess.CompletedProcess:
-    """`w2c-run.sh worker` as a spare's template runs it: `SPARE_FILE` names `said` (None: no file at all), the two
+    """`w2c-run.sh` as a spare's template runs it (the verb is the runner's last word, the set its first): `SPARE_FILE` names `said` (None: no file at all), the two
     shared files empty but for `w2c_env`, and a `python3` that prints its environment."""
     spare, w2c = os.path.join(d, "spare.env"), os.path.join(d, "w2c.env")
     if os.path.exists(spare):
@@ -169,7 +169,7 @@ def _run_spare(d: str, said: str | None, env: dict | None = None, w2c_env: str =
     os.chmod(py, 0o755)
     full = {"PATH": os.environ["PATH"], "W2C_ENV": w2c, "VMS_ENV": os.path.join(d, "none"), "PYTHON": py,
             "W2C_HOME": d, "SPARE_FILE": spare, **(env or {})}
-    return subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], env=full, capture_output=True, text=True)
+    return subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "console"], env=full, capture_output=True, text=True)
 
 
 def test_a_spares_runner_takes_only_its_set_from_its_file_and_refuses_one_outside_the_alphabet():
@@ -191,7 +191,7 @@ def test_a_spares_runner_takes_only_its_set_from_its_file_and_refuses_one_outsid
     assert got["SPARE_FOR"] == "vlan:dmz,zone-1.b_2"                                   # the first line, that line only
     assert "LD_PRELOAD" not in got and "SECRETS_KEY" not in got
     out = _run_spare(d, "# a comment first\nSPARE_FOR=vlan:dmz\n")
-    assert out.returncode == 2 and "is not SPARE_FOR=" in out.stderr and "-m cluster" not in out.stdout, out.stderr
+    assert out.returncode == 2 and "is not SPARE_FOR=" in out.stderr and "-m " not in out.stdout, out.stderr
     assert got["PYTHONPATH"] == f"{d}/Source"                        # the runner's own, nothing added
     out = _run_spare(d, "SPARE_FOR=\n")
     assert out.returncode == 0 and "SPARE_FOR=" in out.stdout.splitlines(), out.stderr  # the empty set is a set
@@ -200,16 +200,37 @@ def test_a_spares_runner_takes_only_its_set_from_its_file_and_refuses_one_outsid
     assert _run_spare(d, f"SPARE_FOR={word64}\n").returncode == 0
     for bad in ("vlan dmz", "$(touch x)", ",a", "a,", "a,,b", "-a", "a;b", "склад", word64 + "a", "a\tb"):
         out = _run_spare(d, f"SPARE_FOR={bad}\n")
-        assert out.returncode == 2 and "is not a label set" in out.stderr and "-m cluster" not in out.stdout, bad
+        assert out.returncode == 2 and "is not a label set" in out.stderr and "-m " not in out.stdout, bad
     for said in (None, "LD_PRELOAD=x\n", "# SPARE_FOR=a\n"):
         out = _run_spare(d, said)
-        assert out.returncode == 2 and "is not SPARE_FOR=" in out.stderr and "-m cluster" not in out.stdout, said
+        assert out.returncode == 2 and "is not SPARE_FOR=" in out.stderr and "-m " not in out.stdout, said
     out = _run_spare(d, "SPARE_FOR=x\n", w2c_env=f"SPARE_FOR=from-a-shared-file\nSPARE_FILE={d}/other\n")
     assert out.returncode == 0 and "SPARE_FOR=x" in out.stdout.splitlines()
-    regular = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "worker"], capture_output=True, text=True,
+    regular = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "console"], capture_output=True, text=True,
                              env={"PATH": os.environ["PATH"], "W2C_ENV": os.path.join(d, "w2c.env"), "PYTHON": os.path.join(d, "python3"),
                                   "VMS_ENV": os.path.join(d, "none"), "W2C_HOME": d})
     assert regular.returncode == 0 and not [l for l in regular.stdout.splitlines() if l.startswith(("SPARE_FOR=", "SPARE_FILE="))]
+
+
+def test_the_runner_runs_a_subsystems_package_by_its_name_and_nothing_else():
+    """The platform's verbs are its own (`controller <sub>`, `console`, `resource`, `rights`: `python3 -m
+    w2cplatform.cluster`); a subsystem's process is `w2c-run.sh <package> <verb>` — a package of the installed tree that
+    has an entry point (`vms worker`), and not a module path, the platform's own package or a name with no entry point."""
+    d = tempfile.mkdtemp(prefix="run-")
+    os.makedirs(os.path.join(d, "Source", "vms"))
+    open(os.path.join(d, "Source", "vms", "__main__.py"), "w").close()
+    py = os.path.join(d, "python3")
+    with open(py, "w") as f:
+        f.write("#!/bin/sh\necho \"$@\"\n")
+    os.chmod(py, 0o755)
+    env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_HOME": d, "W2C_ENV": os.path.join(d, "none"),
+           "VMS_ENV": os.path.join(d, "none")}
+    run = lambda *a: subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), *a], env=env, capture_output=True, text=True)  # noqa: E731
+    assert run("vms", "worker").stdout.strip() == "-m vms worker"
+    assert run("controller", "rec").stdout.strip() == "-m w2cplatform.cluster controller rec"
+    for bad in (("w2cplatform", "console"), ("os.path", "x"), ("nope", "x"), ("../vms", "worker")):
+        out = run(*bad)
+        assert out.returncode == 2 and "no such program" in out.stderr and not out.stdout, bad
 
 
 def _polkit(rule: str, user: str, action: str, verb: str | None, unit_: str | None) -> str | None:
@@ -341,7 +362,7 @@ def test_on_a_mac_the_box_is_a_directory_named_to_the_installer_and_everything_g
         os.chmod(os.path.join(box, "tls", f), 0o644)
     out, home, bin_, calls = _install_on_a_mac("--box", box, "--spares")
     assert out.returncode == 0, out.stdout + out.stderr
-    for p in ("bin/w2c-run.sh", "bin/w2c-spares.sh", "Source/vms/config.py", "Source/cluster/rights.py",
+    for p in ("bin/w2c-run.sh", "bin/w2c-spares.sh", "Source/vms/config.py", "Source/w2cplatform/cluster/rights.py",
               "configstore-rights.json", "state/configstore", "state/run/configstore", "state/logs", "state/events",
               "state/objects", "state/vms/obsd/volume"):
         assert os.path.exists(os.path.join(box, p)), p
@@ -349,7 +370,7 @@ def test_on_a_mac_the_box_is_a_directory_named_to_the_installer_and_everything_g
     assert mode("secrets") == mode("state/configstore") == 0o700 and mode("tls") == 0o750
     assert mode("tls/raft.secret") == mode("tls/server.key") == 0o600              # the bundle, the user's alone
     w2c, vms_ = open(os.path.join(box, "w2c.env")).read(), open(os.path.join(box, "vms.env")).read()
-    assert f"PLATFORM_DIR={box}/state\n" in w2c and f"ARCHIVE={box}/state/events\n" in w2c and f"W2C_TLS={box}/tls\n" in w2c
+    assert f"PLATFORM_DIR={box}/state\n" in w2c and f"RESOURCE_ROOT={box}/state/events\n" in w2c and f"W2C_TLS={box}/tls\n" in w2c
     assert f"OBJECTS=cluster://{box}/state/objects?" in w2c
     assert f"ARCHIVE_VOLUME=file://{box}/state/vms/obsd/volume\n" in vms_ and f"SHM_DIR={box}/state/run/vms\n" in vms_
     agents = os.path.join(home, "Library", "LaunchAgents")
@@ -515,7 +536,7 @@ def test_the_stores_journal_is_its_members_alone_however_it_was_started():
     with open(os.path.join(d, "w2c.env"), "w") as f:
         f.write("SERVER_NAME=a\nCONFIGSTORE_RAFT=127.0.0.1:8301\nCONFIGSTORE_API=127.0.0.1:8300\n")
     env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d}
-    for program, mask in (("configstore", ("0077", "077")), ("worker", ("0007", "007"))):
+    for program, mask in (("configstore", ("0077", "077")), ("console", ("0007", "007"))):
         out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), program], env=env, capture_output=True,
                              text=True, check=True, preexec_fn=lambda: os.umask(0o022)).stdout
         assert out.strip().split("=", 1)[1] in mask, (program, out)
@@ -550,8 +571,9 @@ def test_the_worker_and_the_recorder_tell_systemds_watchdog_that_their_loop_turn
     datagrams. With no socket nothing is sent and nothing fails."""
     import socket
     import threading
-    from cluster.worker import notify
-    from w2cplatform.contract import HUNG_MOVE_AFTER, Worker
+    from w2cplatform.runtime import notify
+    from w2cplatform.contract import HUNG_MOVE_AFTER
+    from w2cplatform.worker import Worker
     from tests.cluster.conftest import Cluster
     for name in ("vms-vmsworker", "vms-recworker", "vms-vmsworker-spare@", "vms-recworker-spare@"):
         u = unit(os.path.join(SYSTEMD, f"{name}.service"))

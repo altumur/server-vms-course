@@ -644,7 +644,8 @@ def test_the_platforms_cas_loops_run_on_configstore_unchanged():
     """The seam's promise, run: two workers on two servers take a slot each, take epochs, renew — and the second
     taking a unit the first holds fences the first on its next renewal, as on files. Nothing in the platform knows
     which store answered."""
-    from w2cplatform.contract import Subsystem, Worker
+    from w2cplatform.contract import Subsystem
+    from w2cplatform.worker import Worker
 
     class _W(Worker):
         def reconcile_once(self, now=None):

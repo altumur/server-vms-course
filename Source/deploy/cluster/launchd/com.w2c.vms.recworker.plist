@@ -12,6 +12,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>__BOX__/bin/w2c-run.sh</string>
+		<string>vms</string>
 		<string>recorder</string>
 	</array>
 	<key>EnvironmentVariables</key>

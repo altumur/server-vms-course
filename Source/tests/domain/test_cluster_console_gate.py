@@ -9,11 +9,11 @@ import tempfile
 import urllib.error
 import urllib.request
 
-from cluster.objectstore import FsObjectStore
-from cluster.variables import FakeVariables
-from domain.agent import GRANTS_PATH, KEYS_PATH, REVOKED_PATH
-from domain.grants import Grant, grants_from_items, grants_to_items
-from domain.tokens import RevocationList, TokenError, TokenIssuer, verify
+from w2cplatform.cluster.objectstore import FsObjectStore
+from w2cplatform.cluster.variables import FakeVariables
+from w2cplatform.domain.agent import GRANTS_PATH, KEYS_PATH, REVOKED_PATH
+from w2cplatform.domain.grants import Grant, grants_from_items, grants_to_items
+from w2cplatform.trust.tokens import RevocationList, TokenError, TokenIssuer, verify
 from vms.console import make_console
 from vms.controller import VmsController
 
@@ -55,10 +55,10 @@ def test_a_clusters_console_checks_the_domains_token_against_its_own_store():
         vars_.put(GRANTS_PATH, grants_to_items([
             Grant("alice", "view", "vms/1", clk() + 86400), Grant("bob", "edit", None, clk() + 86400, ("ground",)),
             Grant("root", "admin", None, clk() + 86400), Grant("late", "admin", None, clk() + 60)]))
-        tok = lambda who, life=900: signer.issue(who, life, now=clk())
+        tok = lambda who, life=900: signer.issue(who, life, now=clk(), kind="person")
 
         assert _call(base, "GET", "/cameras")[0] == 401                                     # the console asks now
-        assert _call(base, "GET", "/cameras", TokenIssuer("acme").issue("alice", 900, now=clk()))[0] == 401   # another signer's token
+        assert _call(base, "GET", "/cameras", TokenIssuer("acme").issue("alice", 900, now=clk(), kind="person"))[0] == 401   # another signer's token
         alice, bob, root = tok("alice"), tok("bob"), tok("root")
         assert _call(base, "GET", "/cameras", alice)[0] == 200
         assert _call(base, "GET", "/where/1", alice)[0] in (200, 404) and _call(base, "GET", "/where/2", alice)[0] == 403
@@ -78,7 +78,7 @@ def test_a_clusters_console_checks_the_domains_token_against_its_own_store():
         assert _call(base, "GET", "/cameras", alice)[0] == 401
         fresh = tok("alice")
         assert _call(base, "GET", "/cameras", fresh)[0] == 200
-        from domain.tokens import verify
+        from w2cplatform.trust.tokens import verify
         rl = RevocationList(); rl.revoke(verify(fresh, signer.keyset(), now=clk()))
         vars_.put(REVOKED_PATH, rl.to_items())
         assert _call(base, "GET", "/cameras", fresh)[0] == 401
@@ -90,7 +90,7 @@ def test_a_labelled_grant_travels_as_a_row_and_never_means_every_camera():
     g = [Grant("bob", "edit", None, 2000.0, ("ground", "east")), Grant("bob", "view", "vms/7", 2000.0), Grant("ann", "admin", None, 2000.0)]
     assert sorted(grants_from_items(grants_to_items(g)), key=str) == sorted(
         [Grant("bob", "edit", None, 2000.0, ("east", "ground")), Grant("bob", "view", "vms/7", 2000.0), Grant("ann", "admin", None, 2000.0)], key=str)
-    from domain.grants import ClusterGrants
+    from w2cplatform.domain.grants import ClusterGrants
     cg = ClusterGrants("south", now=lambda: 1000.0); cg.renew_from_domain(grants_from_items(grants_to_items(g)))
     assert cg.may("bob", "edit", "vms/3", labels=["ground", "east", "roof"]) and not cg.may("bob", "edit", "vms/3", labels=["ground"])
     assert not cg.may("bob", "edit", "vms/3") and not cg.may("bob", "edit", None)      # asked about no camera's labels: it is not "all"
@@ -99,19 +99,19 @@ def test_a_labelled_grant_travels_as_a_row_and_never_means_every_camera():
 
 
 def test_a_cluster_in_a_domain_runs_its_console_from_an_image_that_can_check_a_token():
-    """The gate loads `domain.access`; М11's image has neither that module nor the library it verifies with. A
+    """The gate loads `w2cplatform.domain.access`; М11's image has not the library it verifies with. A
     console left on that image in a domain answers 503 to everything — shut, and useless. So the domain has an
     image of its own; and the cluster's console job — М11's appendix for a site that runs Nomad (М11's own servers
     run a systemd unit) — takes its installation as a variable."""
     import os
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     image = open(os.path.join(here, "deploy", "domain", "Containerfile")).read()
-    assert "FROM localhost/clustervms:latest" in image and "COPY domain domain" in image and "python3-cryptography" in image
+    assert "FROM localhost/clustervms:latest" in image and "python3-cryptography" in image and "ACCESS_IMPL" not in image
     job = open(os.path.join(here, "deploy", "cluster", "nomad", "console.nomad.hcl")).read()
     assert 'variable "w2c_home"' in job and 'command = "${var.w2c_home}/bin/w2c-run.sh"' in job and 'default = "/opt/w2c"' in job
     import importlib
     from w2cplatform.access import Gate
-    assert importlib.import_module("domain.access").cluster_access                 # what `ACCESS_IMPL` names is there to be loaded
+    assert importlib.import_module("w2cplatform.domain.access").cluster_access                 # what `ACCESS_IMPL` names is there to be loaded
     vars_ = FakeVariables(); vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
     assert type(Gate(vars_, lambda: 0.0).access()).__name__ == "ClusterAccess"     # …and with a key set in the store, the gate loads it
 
@@ -144,7 +144,7 @@ def test_a_browser_is_handed_a_cookie_for_a_token_the_console_checked():
         assert raw("GET", "/session")[1] == {"gated": True, "user": None, "login": None}           # gated, and not known
         assert raw("POST", "/session", {"token": "not-a-token"})[0] == 401
 
-        token = signer.issue("alice", 900, now=clk())
+        token = signer.issue("alice", 900, now=clk(), kind="person")
         code, body, cookie = raw("POST", "/session", {"token": token})
         assert code == 200 and body["user"] == "alice" and body["until"] == clk() + 900
         assert cookie.startswith(f"w2c_token={token}; ") and "HttpOnly" in cookie and "SameSite=Strict" in cookie and "Max-Age=900" in cookie
@@ -173,13 +173,13 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
     a session in its own memory — no token is made, so none can be taken from the store. Every attempt is an
     alarm, the refused ones too; every request under it is one."""
     import itertools
-    from domain.agent import BREAK_GLASS_PATH, PER_CLUSTER, DomainPublisher
-    from domain.identity import _hash
+    from w2cplatform.domain.agent import BREAK_GLASS_PATH, per_cluster, DomainPublisher
+    from w2cplatform.domain.identity import _hash
     from w2cplatform.eventdatabase import EventIndex
-    assert BREAK_GLASS_PATH in PER_CLUSTER                                            # carried home by the agent like the grants
+    assert BREAK_GLASS_PATH in per_cluster()                                            # carried home by the agent like the grants
     home = FakeVariables()
     DomainPublisher(home).publish_break_glass("south", _hash("glass-for-south"), 1000.0)
-    assert home.get(f"{BREAK_GLASS_PATH}/south")[0]["pwhash"].count(":") == 1          # a hash, never the password
+    assert home.get(f"{BREAK_GLASS_PATH}/south")[0]["pwhash_secret"].count(":") == 1          # a hash, never the password
 
     clk = Clock(1_757_500_000.0)
     vars_ = FakeVariables()
@@ -233,7 +233,7 @@ def test_a_token_of_any_shape_but_ours_is_401_before_and_after_its_signature():
     `AttributeError`, a `TypeError`, a `RecursionError` — and the console answered 500 (no answer at all) instead of
     401. And a token whose signature holds and whose `exp` is a word, `NaN` or 10**400, or whose `jti` is a list: no
     signer of ours writes one, and it is refused too. Each is 401 at a cluster's console and at `POST /session`."""
-    from domain.tokens import _b64
+    from w2cplatform.trust.tokens import _b64
     clk = Clock(1_757_500_000.0)
     signer = TokenIssuer("acme")
     vars_, ctl, srv, base = _cluster(clk)
@@ -256,7 +256,7 @@ def test_a_token_of_any_shape_but_ours_is_401_before_and_after_its_signature():
         signed(json.dumps({"sub": "root", "iat": now, "exp": now + 900, "jti": ["j4"]})),
     ]
     try:
-        assert _call(base, "GET", "/cameras", signer.issue("root", 900, now=now))[0] == 200   # ours: admitted
+        assert _call(base, "GET", "/cameras", signer.issue("root", 900, now=now, kind="person"))[0] == 200   # ours: admitted
         for tok in garbage:
             if isinstance(tok, str):
                 code, body = _call(base, "GET", "/cameras", tok)
@@ -287,10 +287,10 @@ def test_the_signers_door_in_answers_a_garbage_body_400_and_a_garbage_token_401(
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
-    env = {**os.environ, "DOMAIN_ID": "acme", "PLATFORM_STORE": f"file://{root}/vars", "OBJECT_STORE_URL": f"file://{root}/objects",
+    env = {**os.environ, "DOMAIN_ID": "acme", "PLATFORM_STORE": f"file://{root}/vars", "OBJECTS": f"file://{root}/objects",
            "SIGNER_HOST": "127.0.0.1", "SIGNER_PORT": str(port)}
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    proc = subprocess.Popen([sys.executable, "-m", "domain.signer_service"], cwd=here, env=env,
+    proc = subprocess.Popen([sys.executable, "-m", "w2cplatform.domain.signer_service"], cwd=here, env=env,
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def post(path: str, raw: bytes) -> int:

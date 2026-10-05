@@ -51,7 +51,7 @@ def test_the_platforms_resource_comes_up_heartbeats_and_says_its_tree_through_th
         assert host.main(["resource"], env) == 0
     finally:
         host.stop.clear()
-    _, objects = host.box_stores(env)
+    _, objects = host.stores(env)
     hb = json.loads(objects.get(heartbeat_key("srv-9")))
     assert hb["server"] == "srv-9"
     seen = resources_seen(objects)

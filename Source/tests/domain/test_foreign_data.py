@@ -8,23 +8,23 @@ import logging
 import threading
 import time
 
-from cluster.variables import FakeVariables
+from w2cplatform.cluster.variables import FakeVariables
 
-from domain.agent import ClusterTrust, DomainAgent, DomainPublisher, KEYS_PATH, REVOKED_PATH, run
-from domain.books import Books
-from domain.chain import BUNDLE, MEMBER_SHARE, BundleView, Relay, bundle, say_seen, RELAY_SEEN
-from domain.crossing import Crossings
-from domain.device import DeviceCluster
-from domain.federation import MEMBER_OBJECTS, DomainDirectory, Federation, Unreachable
-from domain.grants import DOMAIN_GRANTS, BadName, Grant, domain_may, grants_from_items, grants_to_items, set_domain_grants
-from domain.identity import IdentityStore
-from domain.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Ingest, Refused, audience
-from domain.pending import OUTCOMES_PATH, PendingEdits
-from domain.readview import ReadView
-from domain.signer import Signer
-from domain.steps import Steps
-from domain.tokens import RevocationList
-from domain.uplink import base, member_copy, page, report
+from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher, KEYS_PATH, REVOKED_PATH, run
+from vms.domainpart.books import Books
+from w2cplatform.domain.relay import BUNDLE, MEMBER_SHARE, BundleView, Relay, bundle, say_seen, RELAY_SEEN
+from vms.domainpart.crossing import Crossings
+from vms.domainpart.device import DeviceCluster
+from w2cplatform.domain.federation import MEMBER_OBJECTS, DomainDirectory, Federation, Unreachable
+from w2cplatform.domain.grants import DOMAIN_GRANTS, BadName, Grant, domain_may, grants_from_items, grants_to_items, set_domain_grants
+from w2cplatform.domain.identity import IdentityStore
+from vms.domainpart.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Ingest, Refused, audience
+from w2cplatform.domain.pending import OUTCOMES_PATH, PendingEdits
+from w2cplatform.domain.readview import ReadView
+from w2cplatform.trust.signer import Signer
+from w2cplatform.domain.steps import Steps
+from w2cplatform.trust.tokens import RevocationList
+from w2cplatform.domain.uplink import base, member_copy, page, report
 from tests.domain.conftest import Clock, make_cluster, snapshot
 
 SERIAL = "SN7001"
@@ -46,7 +46,7 @@ def _relay_domain(wall):
     fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
                               bundle_store=east.objects, bundle_members=[cam.name], relay_members=[cam.name])
-    through = Relay(east.vars, east.objects)
+    through = Relay(relay_agent, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects())
     relay_agent.sync(); cam_agent.sync(); relay_agent.sync()
@@ -57,7 +57,7 @@ class _Console:
     def __init__(self):
         self.edits = []
 
-    def update_camera(self, camera, fields, subject):
+    def update_unit(self, camera, fields, subject):
         self.edits.append((camera, fields))
         return {"ok": True}
 
@@ -68,7 +68,7 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     through the domain failed for EVERY camera of the domain, and the pass over the books raised (the signer's loop
     swallowed it; stream tokens stopped being re-issued). Now the bundle is read through the members' reader: the
     members behind the relay did not answer — named, with why, counted once — and the rest is answered and written."""
-    from domain.api import ConsoleAPI
+    from w2cplatform.domain.api import ConsoleAPI
     wall = Clock(10_000.0)
     fed, north, east, cam, signer, _ = _relay_domain(wall)
     view = ReadView(fed, wall=wall); view.refresh()
@@ -81,7 +81,7 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     assert a.found and a.cluster == "north" and a.unreachable == [cam.name]
     console = _Console()
     api = ConsoleAPI(d, lambda name: console)
-    assert api.update_camera("101", {"name": "lobby"}, "k1")["cluster"] == "north" and console.edits
+    assert api.update_unit("101", {"name": "lobby"}, "k1")["cluster"] == "north" and console.edits
 
     books = Books(Crossings(north.vars, view, wall, issuer=signer.tokens), north.objects)
     for _ in range(2):
@@ -193,7 +193,7 @@ def test_a_pipe_in_a_name_is_refused_where_it_is_made_and_a_stored_one_closes_no
     decision: `|`, `"` and control characters are not allowed in a user's name — refused where a user is made and
     wherever a grant is written. A row that holds one anyway is read item by item: that item is not a grant, counted
     once; the others are read; and the mending command writes the row without it."""
-    from domain.agent import GRANTS_PATH
+    from w2cplatform.domain.agent import GRANTS_PATH
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     ids = IdentityStore(Signer("acme", north.vars, now=wall), north.vars, north.objects, now=wall)
@@ -216,7 +216,7 @@ def test_a_pipe_in_a_name_is_refused_where_it_is_made_and_a_stored_one_closes_no
         assert domain_may(north.vars, "root", "admin", wall())
     assert not domain_may(north.vars, "anna", "view", wall())             # `nan` never lapsed: not a grant
     assert {f"{DOMAIN_GRANTS}#acme|ivan|view|", f"{DOMAIN_GRANTS}#anna|view|"} <= {k for k in __import__(
-        "domain.grants", fromlist=["GRANTS"]).GRANTS.bad}
+        "w2cplatform.domain.grants", fromlist=["GRANTS"]).GRANTS.bad}
     have = grants_from_items(north.vars.get(DOMAIN_GRANTS)[0], DOMAIN_GRANTS)
     set_domain_grants(north.vars, have + [Grant("anna", "view", None, 0.0)], wall())   # what `python -m domain.grants` does
     assert sorted(north.vars.get(DOMAIN_GRANTS)[0]) == ["anna|view|", "root|admin|"]
@@ -260,10 +260,10 @@ def test_an_ask_whose_deadline_or_camera_clock_is_not_a_number_is_refused_and_th
 
 
 def test_the_signers_loop_runs_each_step_and_says_the_one_that_failed_once():
-    """The signer's loop was `except Exception: pass` (the review's eighth pass, major): the blocker's books stopped in
-    silence, and a failed publication of the identity set skipped the pruning behind it. Each is a step of its own now:
-    the one that raises is logged once until it works again, counted, named on `/healthz`; the others run."""
-    from domain.signer_service import signer_steps
+    """The signer's loop was `except Exception: pass` (the review's eighth pass, major): a failed publication of the
+    identity set skipped the pruning behind it. Each is a step of its own now: the one that raises is logged once until
+    it works again, counted, named on `/healthz`; the others run. (The books are the VMS's worker's pass now.)"""
+    from w2cplatform.domain.signer_service import signer_steps
     said, ran = [], []
 
     class Catch(logging.Handler):
@@ -278,18 +278,14 @@ def test_the_signers_loop_runs_each_step_and_says_the_one_that_failed_once():
         def prune(self, now):
             ran.append("pruned")
 
-    class BooksStub:
-        def pass_once(self):
-            ran.append("books")
-
     log = logging.getLogger("test.signer"); h = Catch(); log.addHandler(h)
     try:
         loop = Steps("domain signer", 5.0, log)
         for _ in range(3):
-            loop.run(*signer_steps(Ids(), Revoked(), BooksStub()))
+            loop.run(*signer_steps(Ids(), Revoked()))
     finally:
         log.removeHandler(h)
-    assert ran == ["pruned", "books"] * 3
+    assert ran == ["pruned"] * 3
     assert len([m for m in said if "publishing the identity set failed" in m]) == 1
     assert loop.said() == {"step_failures": 3, "failing": ["publishing the identity set"]}
 
@@ -302,9 +298,9 @@ def test_a_torn_age_mark_of_a_relay_is_written_whole_again_and_a_failing_agent_p
     pass that raised."""
     east, _ = make_cluster("east")
     east.objects.put(RELAY_SEEN, b'{"n": ')
-    assert Relay(east.vars, east.objects).vars.seen() is None
+    assert Relay(None, east.objects).vars.seen() is None
     mark = say_seen(east.objects, 900.0, 1000.0)
-    assert mark == {"n": 1_000_000, "age": 100.0} and Relay(east.vars, east.objects).vars.seen() == mark
+    assert mark == {"n": 1_000_000, "age": 100.0} and Relay(None, east.objects).vars.seen() == mark
     assert say_seen(east.objects, 900.0, 1001.0)["n"] == 1_000_001
 
     class Raising:
@@ -348,7 +344,7 @@ def test_a_cluster_whose_trust_rows_do_not_parse_answers_503_with_why_and_its_ag
     revocation list that does not parse stays revoked and the rest is read; and the agent's next pass writes the key
     set again from the domain's — a key set from the domain that does not parse is refused and the one carried
     before is held, and the pass goes on to its report."""
-    from domain.access import ClusterAccess
+    from w2cplatform.domain.access import ClusterAccess
     from w2cplatform.access import Denied
     wall = Clock(10_000.0)
     fed, north, east, cam, signer, cam_agent = _relay_domain(wall)
@@ -377,8 +373,8 @@ def test_the_agents_pass_goes_on_past_a_row_of_the_domain_that_does_not_parse_an
     that did not parse raised out of the pass — and the report, the member's sign of life, was not written; the domain
     called a member silent whose only trouble was a row the domain wrote. Each is refused in its own step now, said
     once in the log, and the report goes."""
-    from domain.shared import POINTER
-    from domain.term import HOLDER
+    from w2cplatform.domain.shared import POINTER
+    from w2cplatform.domain.term import HOLDER
     wall = Clock(10_000.0)
     north, _ = make_cluster("north", domain=True)
     signer = Signer("acme", north.vars, now=wall)
@@ -415,14 +411,14 @@ def test_a_signer_whose_key_row_does_not_parse_does_not_start_and_does_not_make_
     """The product's sibling: a signer that took a row it could not read for "no keys" would make new ones and write
     them over — orphaning every member. A row that is there and does not parse stops the start with what to do; the
     row is left as it was. A torn revocation list does not stop it: entry by entry, the torn one kept revoked."""
-    from domain.signer_service import revocations
+    from w2cplatform.domain.signer_service import revocations
     v = FakeVariables()
-    v.put("domain/signer", {"ca_key": "zz", "ca_cert": "x", "token_key": "y", "kid": "k"})
+    v.put("domain/signer", {"issuing_key_secret": "zz", "issuing_cert": "x", "token_key_secret": "y", "kid": "k"})
     try:
         Signer("acme", v); raise AssertionError("must not start")
     except RuntimeError as e:
         assert "do not parse" in str(e)
-    assert v.get("domain/signer")[0]["ca_key"] == "zz"
+    assert v.get("domain/signer")[0]["issuing_key_secret"] == "zz"
     v.put(REVOKED_PATH, {"jtis": "a:1e12,b:"})
     assert revocations(v).jtis == {"a", "b"}
 
@@ -454,7 +450,7 @@ def test_a_camera_whose_description_is_words_stops_no_book_and_reads_as_not_said
     """`int(can.get("presets"))` on "five" and `can_a['events']` on a description that is not one raised out of the
     pass over the books — every camera's books with it. A description that is not one says nothing: the camera
     reads as one that has not said, and `misfit` reads a count that is a word as none."""
-    from domain.scenario import misfit
+    from vms.domainpart.scenario import misfit
     assert misfit("cam", {"ptz": True, "presets": "five"}, {"action": "preset", "arg": 3}) is None
     assert misfit("cam", {"relays": "two"}, {"action": "output", "arg": 1}) == "cam has no relays"
 
@@ -491,25 +487,25 @@ def test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_who
     assert "east/vms/heartbeats/w-1" in MEMBER_OBJECTS.bad
 
 
-def test_a_recorders_archive_url_that_is_a_list_stops_no_source_book_and_a_string_of_urls_takes_no_road_away():
+def test_a_recorders_url_that_is_a_list_stops_no_source_book_and_a_string_of_urls_takes_no_road_away():
     """Two reads of another cluster's data in the books, not through the one reader: the backup's recorder publishing
-    `archive_url` as a list raised in `.rstrip` out of the whole `sources` step — no book written for any camera;
+    its archive door's `url` as a list raised in `.rstrip` out of the whole `sources` step — no book written for any camera;
     and an ingest announcing `urls` as a STRING passed `list(...)` as its letters, and the book of primaries handed
     the camera a string for a road. Now the url is that heartbeat's trouble — no backup archive from it, counted —
     and the string is an announcement that does not parse: the road the book already held stays."""
-    from domain.agent import PRIMARIES_PATH, SOURCES_PATH
-    from domain.ingest import INGEST
+    from vms.domainpart.keys import PRIMARIES_PATH, SOURCES_PATH
+    from vms.domainpart.ingest import INGEST
     from w2cplatform.contract import Heartbeat, Subsystem
-    from tests.domain.test_two_servers import A_URLS, SERIAL as SN, _office
+    from tests.domainvms.test_two_servers import A_URLS, SERIAL as SN, _office
     wall = Clock()
     o = _office(wall)
     o.b.objects.put(Subsystem("rec").heartbeat_key("r-b"), Heartbeat("r-b", wall(), [
         {"id": f"{SN}-copy", "cam": f"ref:{SN}", "enabled": True, "phase": "running",
-         "coverage": {"from": wall() - 60, "to": wall()}}], {"archive_url": ["http://srv-b:9100/"]}).to_bytes())
+         "coverage": {"from": wall() - 60, "to": wall()}}], {"url": ["http://srv-b:9100/"]}).to_bytes())
     books = o.crossings.publish()
     entry = json.loads(books["srv-a"][SN])
     assert "backups" not in entry and json.loads(o.b.vars.get(f"{SOURCES_PATH}/srv-a")[0][SN]) == entry
-    assert any(k.endswith("#archive_url") for k in MEMBER_OBJECTS.bad)
+    assert any(k.endswith("#url") for k in MEMBER_OBJECTS.bad)
     o.a.objects.put(INGEST, json.dumps({"cluster": "srv-a", "urls": "srt://srv-a:9000", "ts": wall()}).encode())
     o.crossings.publish_primaries()
     said = json.loads(o.b.vars.get(f"{PRIMARIES_PATH}/{o.cam.name}")[0][SN])
@@ -520,7 +516,7 @@ def test_a_camera_that_says_who_takes_its_stream_as_a_string_is_not_read_as_its_
     """The sibling of the string of urls: `taken_by: "srv-b"` passed `list(...)` as letters, every letter is somebody
     else, and the standby `srv-b` read the camera as taken by another and never pulled. A list of names, or nothing
     known (None: change nothing)."""
-    from domain.crossing import camera_taken
+    from vms.domainpart.crossing import camera_taken
 
     class Door:
         def __init__(self, said):
@@ -537,7 +533,7 @@ def test_an_old_name_with_a_quote_blocks_no_write_of_grants_and_a_new_one_is_sti
     which raised: revoking `mallory` (deleting the user) was refused, and the command that mends the grants failed the
     same way. A rewrite leaves such a grant out — counted, with why and what to do — and writes the rest; a NEW grant
     under such a name is still refused, and an admin left out is no admin."""
-    from domain.grants import GRANTS, LastAdmin
+    from w2cplatform.domain.grants import GRANTS, LastAdmin
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
     ids = IdentityStore(Signer("acme", north.vars, now=wall), north.vars, north.objects, now=wall)
@@ -567,10 +563,10 @@ def test_a_token_whose_header_or_key_id_is_not_what_a_token_holds_is_refused_and
     """Before the signature, everything in a token is a stranger's: a header that is a list (`.get`), a `kid` that is
     a list (unhashable in `kid in keys`), JSON nested ten thousand deep, a signature that is not base64, a token that
     is not a string — each raised past the door's `TokenError` and answered 500. Each is "not a token" now."""
-    from domain.tokens import TokenError, _b64, kid_of, verify
+    from w2cplatform.trust.tokens import TokenError, _b64, kid_of, verify
     signer = Signer("acme", FakeVariables(), now=lambda: 1000.0)
     ks = signer.tokens.keyset()
-    good = signer.tokens.issue("anna", 60, now=1000.0)
+    good = signer.tokens.issue("anna", 60, now=1000.0, kind="person")
     h, p, s = good.split(".")
     for bad in (_b64(b"[1]") + "." + p + "." + s, _b64(b'{"kid": ["x"]}') + "." + p + "." + s,
                 _b64(b"[" * 10000) + "." + p + "." + s, h + "." + p + ".%%é", 7):
@@ -584,7 +580,7 @@ def test_a_token_whose_header_or_key_id_is_not_what_a_token_holds_is_refused_and
 def test_one_status_entry_that_is_not_numbers_stops_no_shadow_report():
     """The shadow report read every running entry of every heartbeat bare: `id: "seven"` raised out of the report for
     every cluster of the domain. That entry is left out, counted; the others are reported."""
-    from domain.shadow import reports_from
+    from w2cplatform.domain.shadow import reports_from
     from tests.domain.conftest import heartbeat
     wall = Clock(10_000.0)
     fed, north, east, cam, *_ = _relay_domain(wall)
@@ -593,7 +589,7 @@ def test_one_status_entry_that_is_not_numbers_stops_no_shadow_report():
         {"id": "seven", "phase": "running"}, {"id": 201, "phase": "running", "ref": "201", "epoch": 1}]}).encode())
     reports, _, _ = reports_from(fed)
     by = {(r.cluster, r.worker): r for r in reports}
-    assert [c[0] for c in by[("east", "w-0")].cameras] == ["201"] and "east/vms/heartbeats/w-0#seven" in MEMBER_OBJECTS.bad
+    assert [c[0] for c in by[("east", "w-0")].units] == ["201"] and "east/vms/heartbeats/w-0#seven" in MEMBER_OBJECTS.bad
 
 
 def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are_bounded_without_crowding_out_another():
@@ -602,7 +598,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
     `REMEMBER`, and every ask swept all of them: 27.5 s of the ingest's CPU. A deadline that has passed is refused now;
     an asker that lets its asks run out as fast as it may keeps at most `OUTCOMES_KEPT` outcomes at a camera, the
     oldest forgotten first; and another asker's outcome is not pushed out by it."""
-    from domain.ingest import OUTCOMES_KEPT
+    from vms.domainpart.ingest import OUTCOMES_KEPT
     wall = Clock(10_000.0)
     south, _ = make_cluster("south")
     signer = Signer("acme", south.vars, now=wall)
@@ -633,7 +629,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
 def test_a_preset_or_a_port_in_digits_that_are_not_ascii_is_a_misfit_and_not_a_value_error():
     """The tenth pass's sweep of `isdigit` then `int` (М10B's `vms/auto.py` had it too): `"²".isdigit()` is true and
     `int("²")` raised out of `misfit` — out of the domain's check of the scenario being written. By `doors.numeric`."""
-    from domain.scenario import misfit
+    from vms.domainpart.scenario import misfit
     for arg in ("²", "١", "７"):
         assert misfit("cam", {"relays": 2}, {"action": "output", "arg": arg}) == f"cam has 2 relay(s), not port {arg}"
         assert misfit("cam", {"ptz": True, "presets": 4}, {"action": "preset", "arg": arg}) == f"cam has 4 preset(s), not {arg}"

@@ -675,7 +675,7 @@ def _holder(box, dev, **attrs):
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive, device_factory=lambda k: dev)
+                  resource_root=box.archive, device_factory=lambda k: dev)
     for k, v in attrs.items():
         setattr(w, k, v)
     w.heartbeat_once()

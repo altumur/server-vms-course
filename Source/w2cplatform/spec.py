@@ -494,10 +494,12 @@ def _slot(name, slot) -> tuple[str, str]:
 
 
 # `objects: {rows: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a segment `*`.
+# `objects.door` — the product's files a resource's door gives the other servers — is accepted and not read: the course
+# keeps no such file (its objects are rows of the store, or the resource's buckets), and a product spec loads as it is.
 def _object_rows(name, objects) -> tuple:
     if objects is None:
         return ()
-    if not isinstance(objects, dict) or set(objects) - {"rows"} or not isinstance(objects.get("rows", []), list):
+    if not isinstance(objects, dict) or set(objects) - {"rows", "door"} or not isinstance(objects.get("rows", []), list):
         raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …]}}, not {objects!r}")
     out = []
     for p in objects.get("rows") or []:
@@ -509,11 +511,184 @@ def _object_rows(name, objects) -> tuple:
     return tuple(out)
 
 
+# `worker: {writes: [<table>], reads: [<key>], requests: [<sub>]}` — what this subsystem's WORKER may touch beyond its
+# epochs, its slot and its place (`Subsystem.acl_worker`): rows of its own tables it writes (what it found a thing to
+# be — a discovery, not a decision), keys of the store outside its subsystem it reads, and the subsystems whose
+# request rows it files. What the role of every process is comes from the specs (§3 row 8 of the boundary note): the
+# box's tokens (`SubsystemSpec.acl_worker_role`) and the cluster's rights file (`w2cplatform/cluster/rights.py`) alike.
+def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
+    if worker is None:
+        return (), (), ()
+    if not isinstance(worker, dict) or set(worker) - {"writes", "reads", "requests"} \
+            or any(not isinstance(worker.get(k, []), list) for k in worker):
+        raise ValueError(f"spec {name}: `worker:` is {{writes: [<table>], reads: [<key>], requests: [<sub>]}}, "
+                         f"not {worker!r}")
+    word = re.compile(r"[a-z][a-z0-9_]*")
+    for k in ("writes", "requests"):
+        bad = [x for x in worker.get(k) or [] if not word.fullmatch(str(x))]
+        if bad:
+            raise ValueError(f"spec {name}: worker.{k} takes names, not {bad}")
+    bad = [x for x in worker.get("reads") or [] if not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+", str(x))]
+    if bad:
+        raise ValueError(f"spec {name}: worker.reads takes keys of the store (`<family>/<name>`), not {bad}")
+    return tuple(map(str, worker.get("writes") or ())), tuple(map(str, worker.get("reads") or ())), \
+        tuple(map(str, worker.get("requests") or ()))
+
+
 # The parsed YAML. Fields: `name`; `rows` (`"units"`; the VMS says `cameras`); `id` (`"numeric"` or a field
 # name); `fields`; `derived`; `capacity_from` / `capacity_default` (heartbeat key for a worker's capacity,
 # and the number for a worker that said nothing); `headroom_from`; `constraint`; `tie_break` (only
 # `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`units_running` by
 # default; `cameras_running` for the VMS).
+_DOMAIN_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
+_DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens", "keys", "shared")
+_RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
+
+
+# THE SUBSYSTEM ON THE DOMAIN, DECLARED (the boundary's «no hooks», DOMAIN-PLATFORM.md: the domain is the platform's,
+# and what a subsystem brings to it is a declaration the platform reads, never code it calls). Every name below is a
+# row family under the subsystem's own prefix of the domain, `domain/<sub>/…` (`SubsystemSpec.domain_prefix`).
+#
+#   ref       the field of a unit's row that names it in the domain: the units of this subsystem are in the domain's
+#             directory, found across clusters by it. A field of the snapshot — the directory reads nothing else
+#   view      the fields of a unit the holder's shared view shows beside the platform's own (cluster, server, worker,
+#             phase, age): fields of the snapshot too, for the same reason
+#   reports   objects of this subsystem a member reports to the domain beside its heartbeats and snapshot, which every
+#             subsystem's member reports (`<sub>/<name>`, a prefix when it ends in `/`)
+#   witness   an object family `<sub>/<witness>/*` — `{ts, cluster, units: {<ref>: seconds since}}` — saying when a
+#             member's unit was last heard of by another process than its agent: the domain's word "alive, not reporting"
+#   books     rows the subsystem writes at the holder for each member, `domain/<sub>/<book>/<member>`, which that
+#             member's agent carries home as `domain/<sub>/<book>` without reading them; a `*_secret` field in a book
+#             (at the top of the row, or of a JSON object that is one of its values) travels sealed
+#   kept      rows the subsystem keeps at the holder for the domain as a whole, `domain/<sub>/<name>`, which leave the
+#             holder in its backup with what the domain decided
+#   tables    the kept rows the domain's door serves read-only at `/api/<sub>/<table>`
+#   tokens    the kinds of token the books carry: `{<kind>: {lifetime: <seconds>, claims: [<name>, ...]}}`; the domain's
+#             signer issues them, of those claims only, when the subsystem's worker asks (`trust.tokens.DeclaredIssuer`)
+#   keys      the subsystem's key families, for a page that lists the domain's keys (the domain card's «Ключи»):
+#             `[{id, keys: [<exact key>], prefix: "domain/<sub>/…/"}]` — the composition only, every key under the
+#             subsystem's own prefix; the words are `display.keys: {<id>: {title, about, absent}}`, merged by id on the
+#             page. The platform's own families (members, reaches, topology, pending, outcomes, view) the page names
+#             itself; a key in no family is «other». The platform acts on none of it: it passes it through `/spec`
+#   shared    the unit's fields whose domain-wide value the domain holds (the shared document, `domain/shared.py`):
+#             a field that `inherit`s — the domain's value is the middle link of its chain (the unit's, the
+#             domain's, the spec's), `merge: union` adding to the unit's own — or the field the page groups units by
+#             (`display.tree.group_by`) — the domain's value is the groups it offers, never a unit's value. The
+#             platform resolves them and serves them at one door, `GET /domain/shared/<sub>`
+@dataclass
+class DomainSection:
+    ref: str = ""
+    view: tuple = ()
+    reports: tuple = ()
+    witness: str = ""
+    books: tuple = ()
+    kept: tuple = ()
+    tables: tuple = ()
+    tokens: dict = field(default_factory=dict)
+    keys: tuple = ()
+    shared: tuple = ()
+
+    def family_of(self, key: str) -> str | None:
+        """The id of the first declared family `key` falls into — an exact key, or under a prefix — or None."""
+        for f in self.keys:
+            if key in f["keys"] or (f["prefix"] and key.startswith(f["prefix"])):
+                return f["id"]
+        return None
+
+    @classmethod
+    def read(cls, spec: "SubsystemSpec", d) -> "DomainSection | None":
+        if d is None:
+            return None
+        where = f"spec {spec.name}: domain"
+        if not isinstance(d, dict) or set(d) - set(_DOMAIN_KEYS):
+            raise ValueError(f"{where} takes {', '.join(_DOMAIN_KEYS)} — not {d!r}")
+
+        def names(key: str, tail: bool = False) -> tuple:
+            v = d.get(key) or []
+            if not isinstance(v, list):
+                raise ValueError(f"{where}.{key} is a list of names")
+            for n in v:
+                body = n[:-1] if tail and isinstance(n, str) and n.endswith("/") else n
+                if not isinstance(body, str) or not _DOMAIN_NAME.match(body):
+                    raise ValueError(f"{where}.{key}: {n!r} is not a name (lower case, digits, - and _)")
+            if len(set(v)) != len(v):
+                raise ValueError(f"{where}.{key} names one thing twice")
+            return tuple(v)
+        sec = cls(ref=str(d.get("ref") or ""), view=names("view"), reports=names("reports", tail=True),
+                  witness=str(d.get("witness") or ""), books=names("books"), kept=names("kept"), tables=names("tables"))
+        for f in ([sec.ref] if sec.ref else []) + list(sec.view):
+            if f not in spec.snapshot and f != "id":
+                raise ValueError(f"{where}: {f!r} is not in the snapshot — the domain reads a unit from the snapshot "
+                                 f"and nothing else")
+        if sec.witness and not _DOMAIN_NAME.match(sec.witness):
+            raise ValueError(f"{where}.witness: {sec.witness!r} is not a name")
+        both = set(sec.books) & set(sec.kept)
+        if both:
+            raise ValueError(f"{where}: {sorted(both)} both a book and a kept row — one writer's rows, one shape")
+        stray = [t for t in sec.tables if t not in sec.kept]
+        if stray:
+            raise ValueError(f"{where}.tables names rows that are not kept: {stray}")
+        tokens = d.get("tokens") or {}
+        if not isinstance(tokens, dict):
+            raise ValueError(f"{where}.tokens is {{<kind>: {{lifetime, claims}}}}")
+        for kind, t in tokens.items():
+            if not isinstance(kind, str) or not _DOMAIN_NAME.match(kind) or kind == "person":
+                raise ValueError(f"{where}.tokens: {kind!r} is not a kind a subsystem may declare ('person' is the "
+                                 f"platform's)")
+            if not isinstance(t, dict) or set(t) - {"lifetime", "claims"}:
+                raise ValueError(f"{where}.tokens.{kind} is {{lifetime: <seconds>, claims: [<name>, ...]}}")
+            life = t.get("lifetime")
+            if isinstance(life, bool) or not isinstance(life, (int, float)) or not math.isfinite(life) or life <= 0:
+                raise ValueError(f"{where}.tokens.{kind}.lifetime is a positive number of seconds, not {life!r}")
+            claims = t.get("claims") or []
+            if not isinstance(claims, list) or not all(isinstance(c, str) and c and c not in _RESERVED_CLAIMS
+                                                       for c in claims):
+                raise ValueError(f"{where}.tokens.{kind}.claims is a list of claim names, none of {_RESERVED_CLAIMS}")
+            sec.tokens[kind] = {"lifetime": float(life), "claims": tuple(claims)}
+        sec.keys = cls._families(spec, d.get("keys"), where)
+        sec.shared = names("shared")
+        grouped = ((spec.display or {}).get("tree") or {}).get("group_by") if isinstance(spec.display, dict) else None
+        for f in sec.shared:
+            fld = spec.fields.get(f)
+            if fld is None:
+                raise ValueError(f"{where}.shared: {f!r} is not a field of the unit")
+            if f.endswith("_secret"):
+                raise ValueError(f"{where}.shared: {f!r} is a secret — the shared document is signed, not sealed")
+            if not fld.inherits and f != grouped:
+                raise ValueError(f"{where}.shared: {f!r} neither inherits nor is the field the page groups by "
+                                 f"(display.tree.group_by) — a domain value it would have nowhere to go")
+        return sec
+
+    @staticmethod
+    def _families(spec: "SubsystemSpec", raw, where: str) -> tuple:
+        own = spec.domain_prefix
+        shape = f"{{id, keys: [<key>], prefix: '{own}…/'}} — the family's keys; its words are display.keys.<id>"
+        if raw is None:
+            return ()
+        if not isinstance(raw, list):
+            raise ValueError(f"{where}.keys is a list of {shape}")
+        out, seen = [], set()
+        for f in raw:
+            if not isinstance(f, dict) or set(f) - {"id", "keys", "prefix"} or not isinstance(f.get("id"), str) \
+                    or not _DOMAIN_NAME.match(f["id"]):
+                raise ValueError(f"{where}.keys: {f!r} is not {shape}")
+            if f["id"] in seen:
+                raise ValueError(f"{where}.keys names the family {f['id']!r} twice")
+            seen.add(f["id"])
+            exact, prefix = f.get("keys") or [], f.get("prefix") or ""
+            if not isinstance(exact, list) or not all(isinstance(k, str) and k.startswith(own) and len(k) > len(own)
+                                                      and not k.endswith("/") for k in exact):
+                raise ValueError(f"{where}.keys.{f['id']}.keys are keys under {own!r}, not {exact!r} — the platform's "
+                                 f"own families are the page's")
+            if prefix and (not isinstance(prefix, str) or not prefix.startswith(own) or not prefix.endswith("/")
+                           or len(prefix) <= len(own)):
+                raise ValueError(f"{where}.keys.{f['id']}.prefix is a prefix under {own!r} ending in '/', not {prefix!r}")
+            if not exact and not prefix:
+                raise ValueError(f"{where}.keys.{f['id']} names no key: give keys, a prefix, or both")
+            out.append({"id": f["id"], "keys": tuple(exact), "prefix": prefix})
+        return tuple(out)
+
+
 @dataclass
 class SubsystemSpec:
     name: str
@@ -658,7 +833,9 @@ class SubsystemSpec:
     # `POST /requests` of this subsystem (`SpecConsole._request_route`; the boundary's step 6: it was a subsystem's
     # route, `extra`): the body's shape, how long a request is worth doing (`valid_until`), how many one person may
     # have unanswered, how it is named (a template of its fields, or the `Idempotency-Key`), what the console stamps
-    # on it (`by`, `at`, its unit's `group`, the field its unit is `about`), the journal's line.
+    # on it (`by`, `at`, its unit's `group`, the field its unit is `about`), the journal's line; `elsewhere` — the
+    # actions of this family another process turns into work (not the unit's holder): the reaper leaves them to it
+    # (`requests.clear_requests`). The holder performs the rest (`Worker.requests`), and `most_valid` bounds its wait.
     requests: dict = field(default_factory=dict)
     running_gauge: str = "units_running"     # the console's gauge for units in phase "running" (console: {running: …})
     # `events: {older_epochs: fenced | earlier-run}` — what it MEANS that a unit's events were written
@@ -707,6 +884,10 @@ class SubsystemSpec:
     # (`runtime.slot`). It was each worker's class saying it.
     slot_prefix: str = "w"
     slot_name_env: str = "WORKER_NAME"
+    # `worker: {writes, reads, requests}` (`_worker`)
+    worker_writes: tuple = ()
+    worker_reads: tuple = ()
+    worker_requests: tuple = ()
     # `metrics: [...]` — the subsystem's own numbers on `/metrics`, declared (`metrics.py`; the boundary's step 6 — it
     # was a function of the subsystem's the console called, `metrics_extra`).
     metrics: list = field(default_factory=list)
@@ -726,8 +907,18 @@ class SubsystemSpec:
     requests_free: bool = False
     # `door: {routes: [<route>]}` — what a unit's holder opens to a page itself, the bytes going holder → browser and
     # never through the console (the boundary's step 6, the owner's decision 1): `/where/<id>` hands out the door —
-    # the holder's `door_url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
+    # the holder's `url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
     door_routes: tuple = ()
+    # `domain: {...}` — what this subsystem gives the domain above its clusters and takes from it (`DomainSection`; the
+    # boundary's «no hooks»: it was code the domain called and named — the books, the rows a member carries, the fields
+    # of the shared view, the kinds of token). None: the subsystem is not on the domain at all.
+    domain: "DomainSection | None" = None
+
+    @property
+    def domain_prefix(self) -> str:
+        """Where this subsystem's rows of the domain lie, in the holder's store and in a member's: `domain/<name>/`.
+        Given by the platform, never written by the subsystem."""
+        return f"domain/{self.name}/"
 
     # Builds the spec from the YAML dict, tolerating absent sections. Field defaults are parsed to their
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
@@ -754,6 +945,7 @@ class SubsystemSpec:
         declared = d.get("snapshot")
         cap = pl.get("capacity")
         slot = _slot(d.get("name"), d.get("slot"))
+        worker = _worker(d.get("name"), d.get("worker"))
         spec = cls(name=d["name"], rows=unit.get("rows", "units"), id=str(unit.get("id", "numeric")), fields=fields,
                    derived=derived,
                    headroom_from=(pl.get("headroom", {}) or {}).get("from", "headroom"),
@@ -778,10 +970,17 @@ class SubsystemSpec:
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}),
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
-                   slot_prefix=slot[0], slot_name_env=slot[1])
+                   slot_prefix=slot[0], slot_name_env=slot[1],
+                   worker_writes=worker[0], worker_reads=worker[1], worker_requests=worker[2])
         spec._about_and_rights(d)
         spec._placement_words(pl)
         spec._page_words(d)
+        spec.domain = DomainSection.read(spec, d.get("domain"))
+        words = set((spec.display.get("keys") or {}) if isinstance(spec.display, dict) else {})
+        stray = words - {f["id"] for f in (spec.domain.keys if spec.domain else ())}
+        if stray:
+            raise ValueError(f"spec {spec.name}: display.keys gives words to {sorted(stray)}, which domain.keys does not "
+                             f"declare — words for a family nobody composed")
         if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
             raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
         if spec.offers and d.get("slot") is not None and spec.offers != spec.slot_prefix:
@@ -931,9 +1130,11 @@ class SubsystemSpec:
         self.door_routes = parse_routes(f"spec {self.name}", d.get("door"))
         req = d.get("requests")
         if req is not None:
-            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal"}
+            known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
+                     "elsewhere"}
             if not isinstance(req, dict) or set(req) - known or not isinstance(req.get("free", False), bool) \
-                    or set(req.get("stamp") or []) - {"by", "at", "group", "about"}:
+                    or set(req.get("stamp") or []) - {"by", "at", "group", "about"} \
+                    or not isinstance(req.get("elsewhere", []), list):
                 raise ValueError(f"spec {self.name}: `requests:` is {{{', '.join(sorted(known))}}}, not {req!r}")
             from . import schema as _schema
             self.requests_free = req.get("free", False)
@@ -947,9 +1148,13 @@ class SubsystemSpec:
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
         disp = d.get("display")
         if disp is not None:
-            if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree"}:
-                raise ValueError(f"spec {self.name}: `display:` is {{unit, units, field_help, kinds, actions, tree}} — words "
-                                 f"for a page, no logic — not {disp!r}")
+            if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree", "keys"}:
+                raise ValueError(f"spec {self.name}: `display:` is {{unit, units, field_help, kinds, actions, tree, keys}} — "
+                                 f"words for a page, no logic — not {disp!r}")
+            for fid, w in (disp.get("keys") or {}).items():
+                if not isinstance(w, dict) or set(w) - {"title", "about", "absent"} or not isinstance(w.get("title"), str) \
+                        or not all(isinstance(v, str) for v in w.values()):
+                    raise ValueError(f"spec {self.name}: display.keys.{fid} is {{title, about, absent}} — words, not {w!r}")
             tree = disp.get("tree") or {}
             if not isinstance(tree, dict) or set(tree) - {"group_by", "nested_by", "columns"} \
                     or (tree.get("group_by") and tree["group_by"] not in self.fields):
@@ -1099,6 +1304,13 @@ class SubsystemSpec:
             out.append(f"{self.name}/{d.row.split('/')[0]}/*")
         out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `rec/volumes/*`
         return out
+
+    # What a worker of this subsystem may write: its epochs, its slot and its place, the rows of its own tables its spec
+    # says it writes (`worker.writes`), and the request rows of the subsystems it files to (`worker.requests`).
+    def acl_worker_role(self) -> list[str]:
+        from .contract import requests_acl
+        return (self.sub.acl_worker() + [self.sub.config(t, "*") for t in self.worker_writes]
+                + requests_acl(*self.worker_requests))
 
     # Placement: `<name>/workers/*`, `<name>/placement/*`, `<name>/slots/*` — never a unit's row. The
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the

@@ -82,7 +82,7 @@ def _derive(what: str, make):
 
 
 # `objects.rows` of every spec, each under its subsystem's name: `<sub>/commands/*` — the objects kept as rows of the
-# store, not as files (`cluster/objectstore.py`).
+# store, not as files (`w2cplatform/cluster/objectstore.py`).
 def object_rows() -> tuple[str, ...]:
     return _derive("rows", lambda: tuple(f"{s.name}/{p}" for s in specs() for p in s.object_rows))
 

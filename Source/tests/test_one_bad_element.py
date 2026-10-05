@@ -152,21 +152,21 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
     """`float(cov["from"])` bare in three routes (the ninth answer's open list): one holder announcing `{"from": "x"}`
     was no reply at all for the camera's `/timeline`, and for its `/segment`. The coverage is read once
     (`coverage_of`): one that does not read is a holder that announces none — no device spans, a segment held to the
-    ceiling alone — counted once as that holder's field. (The holder's own door says both since the boundary's step 6:
-    `/door/timeline/<cam>`, `/door/segment/<cam>`.)"""
+    ceiling alone — counted once as that holder's field. (A recording's recorder door says both: its `/timeline` with
+    the camera's span that yields, its `/segment/…/e0/….device.mp4`.)"""
     import urllib.error
     import urllib.request
     from w2cplatform.rows import FIELDS
-    from vms.worker import FakeActuator, VmsWorker
+    from tests.conftest import page_door
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(1)
     t = box.wall()
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-a")
-    door = w.serve_playback("127.0.0.1", 0)
+    box.vars.put("rec/recordings/1", {"name": "1", "cam": "1"})
     box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", t, [
         {"id": 1, "phase": "running", "coverage": {"from": "x", "to": "y"}, "playback_url": "http://w-1/play/1"}],
         {"server": "srv-a"}).to_bytes())
-    base = f"http://127.0.0.1:{door.server_address[1]}/door"
+    door = page_door(box)
+    base = door.base
 
     def get(path):
         try:
@@ -176,7 +176,7 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
             return e.code, json.loads(e.read() or b"{}")
     try:
         assert get(f"/timeline/1?from={t - 60}&to={t}") == (200, [])                 # no device spans
-        status, rep = get(f"/segment/1?from={t - 60}&to={t}")
+        status, rep = get(f"/segment/1/e0/{(t - 60) * 1000:.0f}-{t * 1000:.0f}.device.mp4")
         assert status == 404 and rep["error"] == "no device archive", rep            # held to the ceiling, and answered
         assert "vms/heartbeats/w-1#coverage" in FIELDS.bad
         assert get("/timeline/1?from=yesterday")[0] == 400                          # a word in the query: 400, not no reply
@@ -207,7 +207,7 @@ def test_a_body_that_is_no_json_object_is_refused_on_every_write_route():
     from tests.conftest import page_door
     pd = page_door(box)
     try:
-        assert _raw(pd.base, "GET", "/door/export/1?from=nan&to=60", None) == 400   # a recording's export, at its holder's door
+        assert _raw(pd.base, "GET", "/segment/1/e1/nan-60000.mp4", None) == 404   # a piece's bounds are digits, or no piece
     finally:
         pd.shutdown()
 
@@ -545,7 +545,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     ctl.assign("w-1", ["1", "2"])
     act = FakeActuator()
-    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
     w.reconcile_once()
     act.post(1, "io.input", port="1", occurred=int(BIG))              # a driver's integer of 400 digits
     act.post(1, "io.input", port="2", occurred=float("nan"))          # …and `nan`, which `float` took for a time
@@ -603,7 +603,7 @@ def test_a_keep_line_whose_seconds_or_moment_is_no_number_is_that_lines():
         f.write(json.dumps({**good, "t": "yesterday", "seconds": 50.0, "id": "c"}) + "\n")
         f.write(json.dumps({**good, "kind": "archive.keep.lost", "t": t + 1, "seconds": 10.0, "id": "d"}) + "\n")
         f.write("5\n")                                                 # a line that is no object
-    me = types.SimpleNamespace(archive_root=box.archive, volume="v1")
+    me = types.SimpleNamespace(resource_root=box.archive, volume="v1")
     held = RecWorker._keeps_held_before(me, [types.SimpleNamespace(id="k1")], lambda k: ["1"], lambda k, rec: 0.0)
     assert held == {("k1", "1"): 20.0}, held
     assert rows.counts()["field"].get(REC.name, 0) >= 1                 # both lines: one spell of recording 1's copies

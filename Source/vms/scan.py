@@ -113,7 +113,7 @@ def written_through(spans: list[Span]) -> float:
 
 
 # What was recorded of `unit` in `[t0, t1)`, as the volumes' index has it: asked of the archive door of every
-# live recorder (`/timeline/<unit>`), since each serves the one volume it holds and a recording's life may have
+# live recorder (`/spans/<unit>`), since each serves the one volume it holds and a recording's life may have
 # been written into several. `None` when no door answered at all — "nobody could say" is not "nothing recorded".
 def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0, eyes=None) -> list[Span] | None:
     seen = recording_read(objects, unit, t0, t1, now, timeout=timeout, eyes=eyes)
@@ -189,11 +189,11 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
     out, answered, silent, read, garbled = set(), False, [], set(), []
     every = heartbeats(objects, "rec/")
     for w, hb in sorted(every.items()):
-        url = str(hb.extra.get("archive_url") or "")
+        url = str(hb.extra.get("url") or "")
         if not url or not heard_live("rec", w, hb, now, 45.0, eyes):   # whose clock: the reader's (M9, r29-writers2)
             continue
         try:
-            with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
+            with urllib.request.urlopen(f"{url.rstrip('/')}/spans/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
                 spans, whole = door_spans(f"rec/doors/{w}#{unit}", _json.loads(answer(r)))
         except (OSError, *PARSE_ERRORS):
             silent.append(w)
@@ -240,8 +240,8 @@ class ScanLog:
     starting again; and on the resource rather than in a row, because a worker's
     ACL is `[<name>/epoch/*, <name>/slots/*]` — it may not write configuration."""
 
-    def __init__(self, archive_root: str, job):
-        self.path = os.path.join(unit_dir(archive_root, SUB, str(job)), PROGRESS)
+    def __init__(self, resource_root: str, job):
+        self.path = os.path.join(unit_dir(resource_root, SUB, str(job)), PROGRESS)
 
     def append(self, scan: Scan, events: int, at: float) -> None:
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
@@ -348,8 +348,8 @@ class Frontier:
     # `sub` because the sixth subsystem keeps the same shape of number for the same reason: how far it has
     # READ. The survey's watched-through and the evaluator's considered-through are one idea, and one idea
     # gets one file format — the default keeps every survey written before this call site unchanged.
-    def __init__(self, archive_root: str, unit, sub: str = SURVEY):
-        self.path = os.path.join(unit_dir(archive_root, sub, str(unit)), "frontier.json")
+    def __init__(self, resource_root: str, unit, sub: str = SURVEY):
+        self.path = os.path.join(unit_dir(resource_root, sub, str(unit)), "frontier.json")
 
     def read(self) -> float | None:
         try:

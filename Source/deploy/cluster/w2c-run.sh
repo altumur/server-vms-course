@@ -3,15 +3,19 @@
 # `ProgramArguments` of the same in a plist (launchd), `$SPARES_RUN <verb>` in `w2c-spares.sh`.
 #
 #   w2c-run.sh configstore                  this server's member of the store's raft group, a socket per role
-#   w2c-run.sh worker|recorder|controller|reccontroller|console|resource      python3 -m cluster <verb>
-#   w2c-run.sh rights                       print the rights file generated from the spec
+#   w2c-run.sh controller <sub>|console|resource      the platform's processes: python3 -m w2cplatform.cluster <verb>
+#   w2c-run.sh rights [--check FILE]        print (or check) the rights file generated from the specs
+#   w2c-run.sh signer|domainconsole|domainagent   the domain's processes: python3 -m w2cplatform.domain.<module>
+#                                           (`signer_service`, `console`, `agent`; `deploy/domain/systemd`)
+#   w2c-run.sh <package> <verb>             a subsystem's own process: python3 -m <package> <verb> — a package of the
+#                                           installed tree with an entry point (the VMS's: `vms worker|recorder|jobs`)
 #   w2c-run.sh spares <role>...             a box on macOS: `w2c-spares.sh` with the box's two files read (a Linux
 #                                           server's timers give it them by `EnvironmentFile=`)
 #
 # The environment comes from two files, the platform's and the subsystem's (the product's split):
 #
 #   /etc/w2c/w2c.env    PLATFORM_DIR, SERVER_NAME, BOX_ID, LABELS, the store's addresses (CONFIGSTORE_*), secrets
-#   /etc/vms/vms.env    the VMS subsystem's settings: CAPACITY, ARCHIVE, ports, budgets
+#   /etc/vms/vms.env    the VMS subsystem's settings: CAPACITY, ports, budgets
 #
 # read here — not by `EnvironmentFile=` — so a launchd plist, a spare started from its template and a person at a
 # shell all get the same. What the unit itself said WINS: a line of a file sets a name only when the unit did not
@@ -96,7 +100,7 @@ export PYTHONPATH="$W2C_HOME/Source${PYTHONPATH:+:$PYTHONPATH}"
 export SPEC_DIR="${SPEC_DIR:-$W2C_HOME/Source/vms}"
 PYTHON="${PYTHON:-python3}"
 
-program="${1:?w2c-run.sh configstore | worker | recorder | controller | reccontroller | console | resource | rights | spares}"
+program="${1:?w2c-run.sh configstore | controller <sub> | console | resource | rights | signer | domainconsole | domainagent | spares | <package> <verb>}"
 shift
 case "$program" in
     configstore)
@@ -118,11 +122,23 @@ case "$program" in
             -api "${CONFIGSTORE_API:?CONFIGSTORE_API in $W2C_ENV}" -sockets "${CONFIGSTORE_SOCKETS:-/run/configstore}" \
             -rights "${CONFIGSTORE_RIGHTS:-/etc/w2c/configstore-rights.json}" -tls "${W2C_TLS:-/etc/w2c/tls}" \
             -tuning "${CONFIGSTORE_TUNING:-lan}" $start "$@" ;;
-    worker|recorder|controller|reccontroller|console|resource|rights)
-        exec "$PYTHON" -m cluster "$program" "$@" ;;
+    controller|console|resource|rights)
+        exec "$PYTHON" -m w2cplatform.cluster "$program" "$@" ;;
+    signer)
+        exec "$PYTHON" -m w2cplatform.domain.signer_service "$@" ;;
+    domainconsole)
+        exec "$PYTHON" -m w2cplatform.domain.console "$@" ;;
+    domainagent)
+        exec "$PYTHON" -m w2cplatform.domain.agent "$@" ;;
     spares)
         exec sh "$W2C_HOME/bin/w2c-spares.sh" "$@" ;;
     *)
-        echo "w2c-run.sh: no such program: $program" >&2
+        # A subsystem's package, by its plain name, with an entry point in the installed tree — and nothing else: not a
+        # module path, not the platform's own package (its processes are the verbs above).
+        case "$program" in *[!a-z0-9_]*|[0-9_]*|w2cplatform) program="" ;; esac
+        if [ -n "$program" ] && [ -f "$W2C_HOME/Source/$program/__main__.py" ]; then
+            exec "$PYTHON" -m "$program" "$@"
+        fi
+        echo "w2c-run.sh: no such program: ${1:-$program}" >&2
         exit 2 ;;
 esac

@@ -41,7 +41,7 @@ def _box():
 def _holder(box, factory, act=None, wall=None):
     """The holder claims its slot and heartbeats first: a controller places on workers it can see."""
     w = VmsWorker("w-1", box.vars, box.objects, act or FakeActuator(), clock=box.clock, wall=wall or box.wall,
-                  server="srv-1", archive_root=box.archive, device_factory=factory)
+                  server="srv-1", resource_root=box.archive, device_factory=factory)
     w.heartbeat_once()
     return w
 
@@ -140,28 +140,35 @@ def test_the_devices_ceiling_is_the_devices_not_the_workers():
 def test_the_device_says_what_it_holds_and_yields_to_our_footage():
     """Our footage wins; the device's coverage is drawn in the holes. The same subtraction the recorder fetches by —
     one rule, two uses. A span that exists only on the device is the one that will disappear when the ring wraps.
-    Since the boundary's step 6 the camera's holder says it at its own door (`/door/timeline/<cam>`, handed out with
-    the camera's place), as a span that YIELDS — the page draws it only where no recording's span is — and plays it
-    from the same door (`/door/segment/<cam>`)."""
-    import json
+    A recording's recorder door says it (`/timeline/<recording>`, handed out with the recording's place), as a span that
+    YIELDS — `{start_ms, end_ms, epoch: 0, source: "device", yields: true}`, the owner's form: the page draws it only where
+    no recording's span is — and plays it through the same door (`/segment/<recording>/e0/<fromMs>-<toMs>.device.mp4`),
+    which reads it from the camera's holder by this process's capability. The camera's holder has no door of its own."""
+    from vms.footage import footage_routes
+    from tests.conftest import page_door
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000.0, 7)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
-    door = w.serve_playback("127.0.0.1", 0)
+    play = w.serve_playback("127.0.0.1", 0)
     w.heartbeat_once()
-    srv = serve(con, box.archive, port=0, wall=box.wall)
+    SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
+    routes = footage_routes(box.objects, box.vars, box.wall)
     try:
-        where = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/where/1").read())
-        d = where["door"]
-        assert d["url"] == f"http://127.0.0.1:{door.server_address[1]}/door" and d["routes"] == ["timeline", "segment"]
-        got = json.loads(urllib.request.urlopen(f"{d['url']}/timeline/1?from=0&to=1000").read())
-        assert [(s["start"], s["end"], s["yields"], s["media"]) for s in got] == [(0.0, 1000.0, True, "segment/1")]
-        got = json.loads(urllib.request.urlopen(f"{d['url']}/timeline/1?from=100&to=300").read())
-        assert [(s["start"], s["end"]) for s in got] == [(100.0, 300.0)]   # what was asked, of what it holds
+        status, got, _ = routes(None, "GET", "/timeline/1", {"from": 0, "to": 1000})
+        assert status == 200 and got == [{"start_ms": 0, "end_ms": 1000000, "epoch": 0, "source": "device", "yields": True}]
+        _, got, _ = routes(None, "GET", "/timeline/1", {"from": 100, "to": 300})
+        assert [(s["start_ms"], s["end_ms"]) for s in got] == [(100000, 300000)]   # what was asked, of what it holds
+        assert routes(None, "GET", "/segment/1/e0/2000000-2005000.device.mp4", {})[0] == 404   # it holds nothing there
+        pd = page_door(box)
+        try:
+            with urllib.request.urlopen(f"{pd.base}/segment/1/e0/100000-105000.device.mp4") as r:   # read from the holder
+                assert r.status == 200 and r.headers["Content-Type"] == "video/mp4" and len(r.read()) == 5
+        finally:
+            pd.shutdown()
     finally:
-        srv.shutdown(); door.shutdown()
+        play.shutdown()
 
 
 def _ours(box, r, unit, spans, step: float = 10.0):
@@ -442,15 +449,14 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     st.seal()
 
     # 1. a recorder's archive door: what a primary copying from a backup and the console read
-    status, body, _ = archive_routes(lambda: st, box.wall)("/timeline/1-backup")
+    status, body, _ = archive_routes(lambda: st, box.wall)("/spans/1-backup")
     assert status == 200 and json.loads(body)["unit"] == "1-backup"
 
-    # 2. a recording's timeline at its holder's door (the console's `/timeline/<cam>` until the boundary's step 6): a
-    # named recording, read from every recorder's archive door
+    # 2. a recording's timeline at a recorder's door: a named recording, read from every recorder's archive door
     srv = door(box, st, "r-door", "srv-1")
     try:
-        status, spans = footage_routes(box.objects, box.vars, box.wall)(None, "GET", "/door/timeline/1-backup", {})
-        assert status == 200 and len(spans) == 1 and spans[0]["recording"] == "1-backup"
+        status, spans, _ = footage_routes(box.objects, box.vars, box.wall)(None, "GET", "/timeline/1-backup", {})
+        assert status == 200 and len(spans) == 1 and spans[0]["epoch"] == 1
     finally:
         srv.shutdown()
 
@@ -462,7 +468,7 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     rec.move(held[0], "r-2", "operator asked")
     r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.archive + "-2"})
     r2.lease_pass(); r2.reconcile_once()
-    assert r1.lease_pass() == [held[0]] and r1.recording_allowed        # released, not fenced — and no ValueError
+    assert r1.lease_pass() == [held[0]] and r1.writing_allowed        # released, not fenced — and no ValueError
     assert held[0] not in r1.reconciler.actual
 
 
@@ -777,9 +783,9 @@ def test_the_dry_run_answers_before_the_reboot_not_after():
 
 
 def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
-    """`safe` is the whole point: no units left on that machine. Nothing else waits there to be moved — a
-    recorder's footage is in its volume, closed when the writer was — so the moment the work has left, the
-    power may go."""
+    """`safe` is the whole point: no units left on that machine, and no worker of it holding writes it has not made
+    durable — the platform's heartbeat field `pending_writes: 0`. A recorder's footage is in its volume, closed when the
+    writer was, so it says 0 and the moment the work has left, the power may go."""
     box, ctl, con, con_vars = _box()
     from vms.console import make_console
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"]))
@@ -812,6 +818,13 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
     rep = m.drain_route("GET", {})[1]
     assert rep["subsystems"]["rec"]["units"] == 0 and rep["subsystems"]["vms"]["units"] == 0
     assert rep["safe"] is True                                      # now the power may go
+    # …unless a worker of the machine still holds writes it has not made durable (`pending_writes`, §2.5 of the boundary
+    # note): no units is not "nothing left here" for a subsystem that buffers on the machine's disk
+    r.pending_writes = lambda: 3; r.heartbeat_once()
+    rep = m.drain_route("GET", {})[1]
+    assert rep["safe"] is False and rep["subsystems"]["rec"]["pending_writes"] == 3
+    r.pending_writes = lambda: 0; r.heartbeat_once()
+    assert m.drain_route("GET", {})[1]["safe"] is True
 
     assert m.drain_route("DELETE", {})[1] == {"draining": "", "safe": True,
                                               "subsystems": {"vms": {"draining": "", "subsystem": "vms"},
@@ -848,7 +861,7 @@ def test_a_request_is_fetched_outside_the_window_and_the_budget():
     hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key("r-1")))
     assert "1-a" in hb.extra["fetched"]                                     # the worker says so; the console removes the row
 
-    from vms.jobs import clear_requests
+    from w2cplatform.requests import clear_requests
     assert clear_requests(con_rec) == 1 and box.vars.list(REC_SPEC.sub.requests_prefix()) == []
 
 
@@ -906,7 +919,7 @@ def test_a_request_the_recorder_could_not_serve_is_not_reported_as_served():
     con_rec.vars.put(REC_SPEC.sub.request_key("1-c"),
                      {"unit": "1", "cam": "1", "from": "900000", "to": "930000", "at": "1", "by": "anna"})
     box.clock.advance(26)                                                    # past the lease, short of a renewal
-    assert not r.may_write("1")
+    assert not r.may_act("1")
     r.requests()
     assert r.fetched == []
     assert box.vars.list(REC_SPEC.sub.requests_prefix()) == ["rec/requests/1-c"]
@@ -1049,7 +1062,7 @@ def test_a_job_is_not_promised_minutes_the_device_does_not_have():
                         Heartbeat(w.name, box.wall(), [st], hb.extra).to_bytes())
 
         j = DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
-                         clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive, env={"LABELS": "gpu"})
+                         clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive, env={"LABELS": "gpu"})
         assert j.device_has("1", 100.0, 200.0)                     # a span it really has
         assert not j.device_has("1", 1000.0, 2000.0)               # inside the summary, and empty
     finally:

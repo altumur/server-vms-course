@@ -196,7 +196,7 @@ def part3(box, rs: dict, now: float, scenarios: int) -> dict:
     res = {}
     w = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
                    box.objects, index=MergedIndex(box.objects), wall=time.time, server="srv-a",
-                   archive_root=os.path.join(box.root, "auto"), env={})
+                   resource_root=os.path.join(box.root, "auto"), env={})
     res["pass_first"], _ = timed(w.reconcile_once)
     res["pass_queries"] = w.pass_stats["queries"]
     res["pass_cut"] = sum(1 for st in w.status() if st.get("cut"))

@@ -85,7 +85,7 @@ def test_worker_runs_its_assignment_and_takes_an_epoch_per_camera():
     assert w.reconcile_once() == []                          # unassigned: it invents nothing
     ctl.assign("w-1", ["1", "2"])
     assert w.reconcile_once() == [("start", 1), ("start", 2)]
-    assert act.epochs == {1: 1, 2: 1} and w.may_write("1") and w.may_write("2")
+    assert act.epochs == {1: 1, 2: 1} and w.may_act("1") and w.may_act("2")
     assert box.vars.get("vms/epoch/1")[0] == {"epoch": "1"}
     ctl.update_camera(1, {"name": "gate"})                   # an edit: revision 2
     assert w.reconcile_once() == [("restart", 1)] and act.epochs[1] == 1     # a restart keeps its epoch
@@ -157,7 +157,7 @@ def test_the_zombie_on_one_box():
     a.reconcile_once(); assert a_act.running == {1} and a_act.epochs[1] == 1
     b = VmsWorker("w-1", box.vars, box.objects, b_act, clock=box.clock, wall=box.wall)     # the replacement
     b.reconcile_once(); assert b_act.running == {1} and b_act.epochs[1] == 2
-    assert a.lease_pass() == ["1"] and not a.recording_allowed and a_act.running == set()   # A wakes, renews, fences
+    assert a.lease_pass() == ["1"] and not a.writing_allowed and a_act.running == set()   # A wakes, renews, fences
     assert "slot w-1" in a.fenced_reason                      # fenced at the slot first...
     assert a.renew_leases() == ["1"] and a.conflicts() == 1   # ...and the camera's epoch says the same
     # it is nobody: the name is B's, and A does not even read w-1's assignment (the review's sixth pass) — it used to
@@ -227,7 +227,7 @@ def test_the_worker_observes_what_it_holds_recording_or_not():
     from w2cplatform.events import read_bucket
     box, ctl = _box_with_cameras(2)
     ctl.assign("w-1", ["1"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
     assert w.observe(1, "motion") is None                          # no epoch held yet: not mine to observe
     w.reconcile_once()
     p = w.observe(1, "motion", zone="gate")
@@ -251,7 +251,7 @@ def test_a_reassignment_is_not_a_zombie():
     w1 = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall); w1.reconcile_once()
     ctl.move(1, "w-2", "operator asked")
     w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall); w2.reconcile_once()
-    assert w1.lease_pass() == ["1"] and w1.recording_allowed and w1.reconciler.actual == {}   # released, not fenced
+    assert w1.lease_pass() == ["1"] and w1.writing_allowed and w1.reconciler.actual == {}   # released, not fenced
     assert w1.reconcile_once() == []
 
 
@@ -262,7 +262,7 @@ def test_lease_expiry_without_renewal_stops_starts():
     w = VmsWorker("w-1", box.vars, box.objects, act, lease_ttl=30, lease_margin=5, clock=box.clock, wall=box.wall)
     w.reconcile_once()
     box.clock.advance(26)
-    assert not w.may_write("1")
+    assert not w.may_act("1")
     w.reconciler.lost(1, w.now())                             # the pipeline died meanwhile
     box.clock.advance(5)                                      # past its backoff
     assert w.reconcile_once() == [("start", 1)] and act.epochs[1] == 2     # a start takes a fresh epoch and lease
@@ -315,7 +315,7 @@ def test_a_storm_becomes_one_line_and_a_count_of_what_it_swallowed():
     from w2cplatform.events import read_bucket
     box, ctl = _box_with_cameras(1)
     ctl.assign("w-1", ["1"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
     w.reconcile_once()
 
     p = w.observe(1, "io.input", port="1", value="closed")        # the first one is the news…
@@ -344,7 +344,7 @@ def test_a_contact_that_changes_is_never_one_event_and_a_storm_that_ends_is_coun
     from w2cplatform.events import read_bucket
     box, ctl = _box_with_cameras(1)
     ctl.assign("w-1", ["1"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
     w.reconcile_once()
 
     p = w.observe(1, "io.input", port="1", value="closed")
@@ -378,7 +378,7 @@ def test_the_same_kind_is_an_alarm_on_one_device_and_noise_on_the_next():
     box, ctl = _box_with_cameras(2)
     ctl.update(1, {"alarms": "io.input"})                          # the gate: a contact here is an incident
     ctl.assign("w-1", ["1", "2"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
     w.reconcile_once()
 
     gate = w.observe(1, "io.input", port="1", value="open")

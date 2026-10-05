@@ -31,7 +31,7 @@ have been lost. Workers on the killed server are counted apart: they die with th
 TWO WAYS TO LOSE A LEASE, and only one of them is what `renew_leases` reports. `leases_lost` is a lease the
 worker gave up: fenced, or found expired while the store was silent. `past_window` is a lease that went longer than
 `lease_ttl − lease_margin` between two confirmations and was then confirmed again: `Lease.renew` takes an answer
-with the same epoch as a renewal, so the worker carries on — but for those seconds `may_write` was false and its
+with the same epoch as a renewal, so the worker carries on — but for those seconds `may_act` was false and its
 writes stood still. Both are counted; the second is the one the slow timings produce.
 """
 from __future__ import annotations
@@ -53,7 +53,8 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 
 from w2cplatform.configstore import TUNINGS  # noqa: E402
-from w2cplatform.contract import Subsystem, Worker  # noqa: E402
+from w2cplatform.contract import Subsystem
+from w2cplatform.worker import Worker
 from w2cplatform.variables import open_vars  # noqa: E402
 
 POLL = 2.0                     # `Worker.run`'s default `poll`: the lease step is LOOKED AT this often

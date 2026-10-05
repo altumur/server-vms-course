@@ -137,8 +137,8 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
     box = Box()
     ctl, rec, m, srv, base = _console(box)
     # `domain.access` sits in the same code root (`Source/domain/`) since the move: this console is one without it
-    hidden = sys.modules.get("domain.access")
-    sys.modules["domain.access"] = None
+    hidden = sys.modules.get("w2cplatform.domain.access")
+    sys.modules["w2cplatform.domain.access"] = None
     try:
         assert _call(base, "GET", "/cameras")[0] == 200
         box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # the cluster joined a domain while the console ran
@@ -153,9 +153,9 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
     finally:
         srv.shutdown()
         if hidden is None:
-            del sys.modules["domain.access"]
+            del sys.modules["w2cplatform.domain.access"]
         else:
-            sys.modules["domain.access"] = hidden
+            sys.modules["w2cplatform.domain.access"] = hidden
 
     class Away:
         def get(self, path): raise PermissionError(13, "the store does not answer")
@@ -196,7 +196,7 @@ def test_a_cluster_that_is_in_a_domain_stays_shut_without_its_keys_after_a_resta
             assert code == 503 and mark in body["detail"], (mark, code, body)
         finally:
             srv.shutdown()
-    box.vars.as_writer("agent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
+    box.vars.as_writer("domainagent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
     assert not any(box.vars.get(p)[0] for p in DOMAIN_MARKS)
     ctl, rec, m, srv, base = _console(box)
     try:
@@ -339,13 +339,12 @@ def test_what_a_route_needs_and_where_a_token_is_read_from():
 
 def test_the_live_gateway_asks_the_viewer_too():
     """A gateway's door is reached by anybody on its network. The console gave the viewer a door token with the stream's
-    place — after asking `view` on the camera — and the gateway checks it by the cluster's public key (`DOOR_RING`;
-    the boundary's step 6: it asked the cluster's gate itself, with the viewer's token the console passed on while it
-    proxied the offer): this gateway, this stream, the `whep` route, not past its time. No ring: open, and it says so."""
+    place — after asking `view` on the camera — and the gateway checks it by the cluster's public keys (`door/keys` in
+    the store): this gateway, this stream, the `whep` route, not past its time; any refusal is a 401 whose `reason` says
+    which. No key in the store: open, and it says so."""
     import time
     from tests.conftest import door_keys
     from tests.test_lesson8_live import OFFER, _gateway
-    from w2cplatform.door import Signer
     box = Box()
 
     def whep(g, cam, token=None, method="POST", path=None):
@@ -358,16 +357,16 @@ def test_the_live_gateway_asks_the_viewer_too():
             return e.code
 
     assert whep(_gateway(box, "g-0"), 1) == 404                        # no ring: open — and the stream is simply not here
-    with door_keys():
+    with door_keys(box.vars) as keys:
         g = _gateway(box, "g-1")
-        sign = Signer.from_env()
+        sign = keys.signer
         now = box.wall()
         token = lambda unit="live/1", holder="g-1", routes=("whep",), at=now: sign.issue("anna", unit, holder, routes, at)[0]   # noqa: E731
         assert whep(g, 1) == 401 and whep(g, 1, "not-a-token") == 401   # now it asks
         assert whep(g, 1, token()) == 404                               # admitted (and the stream is not here)
-        assert whep(g, 2, token()) == 403                               # a token for another stream
-        assert whep(g, 1, token(holder="g-2")) == 403                   # …for another gateway: the stream moved
-        assert whep(g, 1, token(routes=("export",))) == 403             # …for another route
+        assert whep(g, 2, token()) == 401                               # a token for another stream
+        assert whep(g, 1, token(holder="g-2")) == 401                   # …for another gateway: the stream moved
+        assert whep(g, 1, token(routes=("segment",))) == 401            # …for another route
         assert whep(g, 1, token(at=now - 600)) == 401                   # …ended
         forged = token()[:-4] + ("AAAA" if not token().endswith("AAAA") else "BBBB")
         assert whep(g, 1, forged) == 401                                # a signature that does not hold
@@ -931,52 +930,56 @@ def _get(url, headers=None):
         return e.code, e.read()
 
 
-def _door_get(door, route, unit, q, token=True):
-    """A read at a holder's door, as the page makes it: `<url>/<route>/<unit>?<q>`, the door token as a header."""
-    return _get(f"{door['url']}/{route}/{unit}?{q}", {"Authorization": f"Bearer {door['token']}"} if token and door.get("token") else {})
+def _device_site(box, dev, access=None):
+    """A console, a camera holder serving its playback door over `dev`, cameras 1 and 2 (its channels) placed on it, and
+    a recording of each (`1`, `2`) — what a recording's door reads the camera's own footage for."""
+    from vms.worker import FakeActuator, VmsWorker
+    ctl, rec, m, srv, base = _console(box, access or Tokens({"admin": [("admin", None, ())]}))
+    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                  resource_root=box.archive, device_factory=lambda k: dev)
+    w.heartbeat_once()
+    play = w.serve_playback("127.0.0.1", 0)
+    for ch in (1, 2):
+        assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
+        rec.create({"name": str(ch), "cam": str(ch)})
+    placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+    return w, play, srv, base
+
+
+def _piece(a: float, b: float) -> str:
+    """The path of a piece of what the camera holds: `.device.mp4`, epoch 0, the bounds in milliseconds."""
+    return f"e0/{a * 1000:.0f}-{b * 1000:.0f}.device.mp4"
 
 
 def test_a_segment_is_cut_to_what_the_device_holds_and_the_door_streams_it_a_piece_at_a_time():
     """The review's fifth pass, major: `/segment` signed any interval, and the holder's door read it in one `read` into
     one buffer — 1000 s of a 100 kB/s card was 100 MB in the process holding every camera of its server. The console
-    is out of the bytes since the boundary's step 6: it hands out the holder's door with the camera's place (`/where`),
-    and the door cuts the interval to the coverage the holder announces and holds it to `SEGMENT_MAX` (nothing of the
-    device's there: 404; longer: 400). The door asks the device for `PLAYBACK_PIECE` seconds at a time, one session at
-    a time, and sends each piece as it comes, in chunks — the last one only when every piece went."""
+    is out of the bytes: a recording's door (its recorder's, `/segment/<recording>/e0/<a>-<b>.device.mp4`) cuts the
+    interval to the coverage the camera's holder announces and holds it to `SEGMENT_MAX` (nothing of the device's there:
+    404; longer: 400), reads it from the holder by its capability and passes it on as it comes, in chunks — the last one
+    only when every piece went. The holder asks the device for `PLAYBACK_PIECE` seconds at a time, one session at a
+    time."""
     import http.client
-    from urllib.parse import urlsplit
-    from tests.conftest import door_keys
-    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    from tests.conftest import page_door
+    from vms.worker import FakeDevice
     box = Box()
-    access = Tokens({"viewer": [("view", "vms/1", ()), ("view", "vms/2", ())], "admin": [("admin", None, ())]})
-    with door_keys():
-        ctl, rec, m, srv, base = _console(box, access)
-        placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
-        dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 10000.0)},
-                         max_playbacks=2, bps=20000)
-        pieces = []
-        read = dev.read
-        dev.read = lambda sid: (lambda b: (pieces.append((len(b), len(dev.open))), b)[1])(read(sid))
-        w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive, device_factory=lambda k: dev)
-        w.heartbeat_once()
-        door = w.serve_playback("127.0.0.1", 0)
-        w.door_keeper()                                                           # its ring, read while the keys are there
+    dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 10000.0)},
+                     max_playbacks=2, bps=20000)
+    pieces = []
+    read = dev.read
+    dev.read = lambda sid: (lambda b: (pieces.append((len(b), len(dev.open))), b)[1])(read(sid))
+    w, play, srv, base = _device_site(box, dev)
+    pd = page_door(box)
     try:
-        for ch in (1, 2):
-            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
-        placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-        d1, d2 = (_call(base, "GET", f"/where/{c}", token="viewer")[1]["door"] for c in (1, 2))
-        assert d1["routes"] == ["timeline", "segment"] and d1["url"].endswith("/door") and d1["token"]
-        code, spans = _door_get(d1, "timeline", 1, "from=0&to=86400")
-        assert code == 200 and [(s["start"], s["end"]) for s in json.loads(spans)] == [(0.0, 1000.0)]   # what the card holds
-        assert _door_get(d1, "segment", 1, "from=5000&to=6000")[0] == 404
-        code, body2 = _door_get(d2, "segment", 2, "from=0&to=1e12")
+        code, spans = _get(f"{pd.base}/timeline/1?from=0&to=86400")
+        assert code == 200 and [(s["start_ms"], s["end_ms"], s["yields"]) for s in json.loads(spans)] == [(0, 1000000, True)]
+        assert _get(f"{pd.base}/segment/1/{_piece(5000, 6000)}")[0] == 404          # the card holds nothing there
+        code, body2 = _get(f"{pd.base}/segment/2/{_piece(0, 3601)}")
         assert code == 400 and b"3600" in body2                                  # longer than an export: not served at all
 
-        u = urlsplit(d1["url"])
-        c = http.client.HTTPConnection(u.hostname, u.port, timeout=30)
-        c.request("GET", f"{u.path}/segment/1?from=0&to=86400", headers={"Authorization": f"Bearer {d1['token']}"})
+        c = http.client.HTTPConnection("127.0.0.1", pd.server_address[1], timeout=30)
+        c.request("GET", f"/segment/1/{_piece(0, 86400)}")
         r = c.getresponse()
         assert r.status == 200 and r.getheader("Transfer-Encoding") == "chunked" and r.getheader("Content-Length") is None
         total = len(r.read())
@@ -985,7 +988,7 @@ def test_a_segment_is_cut_to_what_the_device_holds_and_the_door_streams_it_a_pie
         assert len(pieces) >= 1000 / w.PLAYBACK_PIECE and max(o for _, o in pieces) == 1   # one session at a time
         assert not dev.open                                                          # and every one closed
     finally:
-        door.shutdown(); srv.shutdown()
+        pd.shutdown(); play.shutdown(); srv.shutdown()
 
 
 def test_the_doors_expiry_forgives_clocks_a_little_apart_and_names_the_difference_when_they_are_not():
@@ -1024,60 +1027,55 @@ def _raises(fn):
     raise AssertionError("did not raise")
 
 
-def test_the_devices_own_door_opens_only_to_the_token_the_console_gave():
+def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
     """The review's fourth pass, blocker 4. The console checked `view` and handed the browser the holder's door as it
-    is; the door asked nobody, so a viewer of camera 1 edited `1` into `2` and took camera 2's card. The console signed
-    the address with the door's own key until the boundary's step 6; it hands out the door with the camera's place now,
-    and a door token — this holder, this camera, these routes, two minutes — which the door checks by the cluster's
-    public key: the camera edited, no token, a token past its time are refused; the token's is served and a line naming
-    the viewer. A process of the cluster reads by a per-camera capability (`/playback/<cam>/<capability>`), and in a
-    gated cluster the bare address is refused."""
-    from tests.conftest import door_keys
+    is; the door asked nobody, so a viewer of camera 1 edited `1` into `2` and took camera 2's card. A page reads the
+    camera's own footage at a RECORDING's door now — its recorder's, handed out with the recording's place — with a
+    door token: this recorder, this recording, these routes, two minutes, checked by the cluster's public keys
+    (`door/keys`): the recording edited, no token, a token past its time are refused (401, the `reason` says which);
+    the token's is served and a line names the viewer. The camera's holder has no door for a page: a process of the
+    cluster reads it by a per-camera capability (`/playback/<cam>/<capability>`), and in a gated cluster the bare
+    address is refused."""
+    from tests.conftest import door_keys, page_door
     from vms.playback import process_url
-    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    from vms.worker import FakeDevice
     from w2cplatform.console import holder_of
-    from w2cplatform.door import TTL
+    from w2cplatform.door import TTL, DoorKeeper
+    from w2cplatform.events import buckets_under
     box = Box()
-    access = Tokens({"viewer": [("view", "vms/1", ())], "admin": [("admin", None, ())]})
-    with door_keys():
-        ctl, rec, m, srv, base = _console(box, access)
-        placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
-        dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 1000.0)}, max_playbacks=4)
-        w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive, device_factory=lambda k: dev)
-        w.heartbeat_once()
-        door = w.serve_playback("127.0.0.1", 0)
-        w.door_keeper()
-    try:
-        for ch in (1, 2):
-            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
-        placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-        bare = f"http://127.0.0.1:{door.server_address[1]}/playback/2?from=0&to=5"
-        assert _get(bare)[0] == 200                                    # no key set in the store: open, as the console is
+    dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 1000.0)}, max_playbacks=4)
+    w, play, srv, base = _device_site(box, dev)
+    bare = f"http://127.0.0.1:{play.server_address[1]}/playback/2?from=0&to=5"
+    assert _get(bare)[0] == 200                                        # no key set in the store: open, as the console is
+    with door_keys(box.vars) as keys:
+        pd = page_door(box, "r-1", keeper=DoorKeeper("r-1", box.wall, box.vars))
+    token = keys.signer.issue("viewer", "rec/1", "r-1", ("timeline", "segment"), box.wall())[0]
 
-        box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # in a domain: the door asks
-        d = _call(base, "GET", "/where/1", token="viewer")[1]["door"]
-        assert _door_get(d, "segment", 1, "from=0&to=5")[0] == 200     # the token the console gave
-        assert _door_get(d, "segment", 2, "from=0&to=5")[0] == 403     # the camera edited
-        assert _door_get(d, "segment", 1, "from=0&to=5", token=False)[0] == 401   # no token
-        assert _get(bare)[0] == 403                                   # the bare address, unsigned
-        assert _call(base, "GET", "/where/2", token="viewer")[0] == 403   # the console's gate, as before: no door
+    def get(unit, tok=token):
+        return _get(f"{pd.base}/segment/{unit}/{_piece(0, 5)}", {"Authorization": f"Bearer {tok}"} if tok else {})
+    try:
+        box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # in a domain: the holder asks
+        assert get(1)[0] == 200                                        # the token the console gave
+        code, body = get(2)
+        assert code == 401 and json.loads(body)["reason"] == "unit"   # the recording edited
+        code, body = get(1, None)
+        assert code == 401 and json.loads(body)["reason"] == "token"  # no token
+        assert _get(bare)[0] == 403                                   # the holder's bare address, unsigned
 
         found = holder_of(box.objects, "vms/", "2", box.wall(), field="playback_url")
         cap = process_url(found)                                     # the recorder's and the survey's address for camera 2
         assert _get(f"{cap}?from=0&to=5")[0] == 200
         assert _get(f"{cap.replace('/playback/2/', '/playback/1/')}?from=0&to=5")[0] == 403   # one camera's capability is not another's
 
-        box.wall.advance(TTL + 1)
-        assert _door_get(d, "segment", 1, "from=0&to=5")[0] == 401     # two minutes on: ask `/where` again
+        box.wall.advance(TTL + 6)
+        code, body = get(1)
+        assert code == 401 and json.loads(body)["reason"] == "expired"   # two minutes on: ask `/rec/where` again
 
-        audit = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
-        reads = [(e["user"], e["target"]) for e in audit if e.get("unit") == "audit/door-w-1" and e["kind"] == "archive.read"]
-        assert reads and set(reads) == {("viewer", "1")}             # the door says the door was USED, and by whom
-        handed = [(e["user"], e["target"], e["holder"]) for e in audit if e["kind"] == "door.issued"]
-        assert handed == [("viewer", "1", "w-1")]                    # …and the console whom it gave the door
+        reads = [(e["user"], e.get("recording")) for b in buckets_under(box.archive, "audit", "door-r-1", 600)
+                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
+        assert reads == [("viewer", "1")]                            # the door says the door was USED, and by whom
     finally:
-        door.shutdown(); srv.shutdown()
+        pd.shutdown(); play.shutdown(); srv.shutdown()
 
 
 # -- the sixth pass: a field that points at another unit ---------------------------------------------------------------
@@ -1355,7 +1353,7 @@ def test_two_spellings_of_one_channel_are_one_camera_to_its_holder_which_says_de
         code, body = _call(base, "POST", "/cameras", {"source": "driverpack://ACME/10.0.0.50/ch/02"}, token="admin")
         assert code == 201, body                                                          # another spelling: the platform takes it
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive)
+                      resource_root=box.archive)
         placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w.heartbeat_once(); placer.ensure_placed()
         assert placer.where(1) == placer.where(2) == "w-1"                                # one group, one worker
@@ -1419,7 +1417,7 @@ def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_secon
     devs = {"acme/10.0.0.50": FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042"),
             "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["7"], relays=2, identity="ACME-SN-0042")}
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive, device_factory=lambda k: devs.get(k))
+                  resource_root=box.archive, device_factory=lambda k: devs.get(k))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     try:
         for ch in (1, 2):
@@ -1472,7 +1470,7 @@ def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_th
                      "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive)                           # the course's build: no device factory
+                  resource_root=box.archive)                           # the course's build: no device factory
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     try:
         for ch in (1, 2):
@@ -1517,7 +1515,7 @@ def test_an_empty_word_from_a_device_does_not_unsay_what_it_said_before():
     def holder():
         act = FakeActuator()
         return act, VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
-                              archive_root=box.archive, device_factory=lambda k: devs.get(k))
+                              resource_root=box.archive, device_factory=lambda k: devs.get(k))
     act, w = holder()
     try:
         for ch in (1, 2):
@@ -1556,7 +1554,7 @@ def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidenc
     devs = {k: FakeDevice(k, channels=["1"], relays=1, identity="CLONE-0000") for k in ("acme/10.0.0.50", "acme/10.0.0.60")}
     act = FakeActuator()
     w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive, device_factory=lambda k: devs.get(k))
+                  resource_root=box.archive, device_factory=lambda k: devs.get(k))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     said: list[str] = []
 
@@ -1641,7 +1639,7 @@ def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartb
     r = recorder(box)
     r.lease_pass()
     r.rows = [rec.unit("1")]
-    r.may_write = lambda unit: True                    # the recording's holder, its lease its own
+    r.may_act = lambda unit: True                    # the recording's holder, its lease its own
     t = box.wall()
     cases = {"day": (t - 40 * 365 * 86400, t, "at most 86400 s"), "ms": (t - 60, t - 59.5, "at least 1 s"),
              "future": (t + 3600, t + 7200, "from now"), "1970": (0.5, 600, "before anything the recording shows"),
@@ -1683,16 +1681,14 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
     access = Tokens({"admin": [("admin", None, ())], "viewer": [("view", "vms/1", ())]})
     ctl, rec, m, srv, base = _console(box, access)
     from tests.conftest import door_keys
-    from w2cplatform.door import Signer
-    with door_keys():                                  # the gateway checks the console's door token (the boundary's step 6)
+    with door_keys(box.vars) as keys:                  # the gateway checks the console's door token by `door/keys`
         g = _gateway(box, "g-1")
-        g.door_keeper()                                # its ring, read while the keys are there
-        door_token = Signer.from_env().issue("viewer", "live/1", "g-1", ("whep",), box.wall())[0]
+        door_token = keys.signer.issue("viewer", "live/1", "g-1", ("whep",), box.wall())[0]
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive)
+                  resource_root=box.archive)
     holder = w.serve_playback("127.0.0.1", 0)
     rec_door = RecWorker.serve_archive(SimpleNamespace(store=None, wall=box.wall, epochs={}, server="srv-1", name="r-1",
-                                                       objects=box.objects, vars=box.vars, archive_root=None, eyes=None,
+                                                       objects=box.objects, vars=box.vars, resource_root=None, eyes=None,
                                                        _visible_from=lambda *a: None, _kept_of=lambda *a: None,
                                                        _held_since=lambda *a: None), "127.0.0.1", 0)
     res = serve_resource(platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
@@ -1852,7 +1848,7 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
         for i, bad in enumerate(("driverpack://acme/10.0.0.5:8²/ch/1", "driverpack://acme/10.0.0.6/ch/①")):
             box.vars.put(f"vms/cameras/{10 + i}", {"id": str(10 + i), "name": f"old{i}", "source": bad, "revision": "1"})
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive)
+                      resource_root=box.archive)
         placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w.heartbeat_once(); placer.ensure_placed()
         w.reconcile_once(); w.heartbeat_once()                        # neither raises

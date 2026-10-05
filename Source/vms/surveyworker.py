@@ -33,7 +33,7 @@ import urllib.error
 
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
-from w2cplatform.contract import Worker
+from w2cplatform.worker import Worker
 from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
 
@@ -64,7 +64,7 @@ class SurveyWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
-                 archive_root: str | None = None, env: dict | None = None, step: float | None = None,
+                 resource_root: str | None = None, env: dict | None = None, step: float | None = None,
                  fetch=None, index=None):
         env = dict(os.environ if env is None else env)
         super().__init__(SURVEY_SUB, None, vars_, objects, clock=clock, wall=wall)
@@ -73,7 +73,7 @@ class SurveyWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("SURVEY_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = runtime.events_root(env, archive_root)
+        self.resource_root = runtime.events_root(env, resource_root)
         self.step = self.STEP if step is None else float(step)
         self.fetch = fetch or _fetch_bytes           # the door: reading, and what costs a session
         self.index = index or device_recordings      # the listing: where the footage is, and it costs none
@@ -126,7 +126,7 @@ class SurveyWorker(Worker):
                                                          why="nobody holds this camera, or its device has no archive")
                 continue
             index_url, play_url, oldest, newest = dev
-            front = Frontier(self.archive_root, unit)
+            front = Frontier(self.resource_root, unit)
             at = front.read()
             if at is None:
                 # The first time. `earliest` means thirty days of backlog on the day somebody enables it,
@@ -171,7 +171,7 @@ class SurveyWorker(Worker):
                 model = self.running.get(unit)
                 if model is None:
                     model = self.running[unit] = self.models[row["kind"]](row)
-                if not self.may_write(unit):
+                if not self.may_act(unit):
                     continue
                 for a, b in (spans if spans is not None else [want]):
                     try:
@@ -184,7 +184,7 @@ class SurveyWorker(Worker):
                         break
                     looked[0] = a
                     for ts, kind, fields in self._watch(model, a, b, looked):
-                        EventLog(self.archive_root, SURVEY, unit, self.epochs[unit], of=SURVEY_SPEC.of_row(row)).append(
+                        EventLog(self.resource_root, SURVEY, unit, self.epochs[unit], of=SURVEY_SPEC.of_row(row)).append(
                             ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
                         self.events_written += 1
                         fired.append(ts)
@@ -270,32 +270,14 @@ class SurveyWorker(Worker):
                        labels=",".join(self.labels), capacity=self.capacity, headroom=self.headroom(),
                        conflicts=self.conflicts(), events=self.events_written, hits=",".join(self.hits))
 
-    def run(self, poll: float = 2.0, stop=None) -> None:
-        import threading
-        stop = stop or threading.Event()
-        stand_in = self.start_stand_in()               # renews for a step that hangs, for a while (feedback DD)
-        while not stop.is_set():
-            try:
-                with self.guarded("pass"):
-                    self.reconcile_once()
-            except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
-                log.exception("survey pass failed")
-            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
-                with self.guarded("lease"):
-                    self.keep_slot(lambda: [self._stop(u) for u in list(self.running)])   # the slot row too, not only the leases
-                    self.renew_leases()
-            except Exception:                            # noqa: BLE001
-                log.exception("survey lease renewal failed")
-            try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
-                with self.guarded("heartbeat"):
-                    self.heartbeat_once()
-            except Exception:                            # noqa: BLE001
-                log.exception("survey heartbeat failed")
-            stop.wait(poll)
-        stand_in.set()
+    # The loop is the platform's (`Worker.run`: the pass, the lease step, the heartbeat, each in a try of its own, the
+    # stand-in for a step that hangs, an orderly stop); what it stops is its watches.
+    def stop_unit(self, unit) -> None:
+        self._stop(unit)
+
+    def stop_all_units(self) -> None:
         for unit in list(self.running):
             self._stop(unit)
-        self.release_slot()
 
 
 class _Busy(Exception):

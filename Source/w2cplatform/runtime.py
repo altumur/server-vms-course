@@ -13,7 +13,7 @@
     LABELS        what this server can reach, comma-separated
     INSTANCE_ID   this incarnation — what failover is measured from
     PLATFORM_DIR  the platform's state: config/, objects/, events/ (`/data/platform`)
-    ARCHIVE       the platform's events tree, the resource's (`<PLATFORM_DIR>/events`)
+    RESOURCE_ROOT the platform's events tree, the resource's root (`<PLATFORM_DIR>/events`)
     BOX_ID        which machine (systemd's `%m`): two machines with one hostname are two boxes (`box`)
 
 Not one of these names an orchestrator, and that is the whole point of the
@@ -35,7 +35,7 @@ import socket
 
 SLOT_INDEX, SERVER_NAME, LABELS, INSTANCE_ID = "SLOT_INDEX", "SERVER_NAME", "LABELS", "INSTANCE_ID"
 WORKER_NAME, SPARE_FOR = "WORKER_NAME", "SPARE_FOR"
-PLATFORM_DIR, ARCHIVE = "PLATFORM_DIR", "ARCHIVE"
+PLATFORM_DIR, RESOURCE_ROOT = "PLATFORM_DIR", "RESOURCE_ROOT"
 
 # THE PLATFORM'S LAYOUT, each default said once (the owner's decisions, 4 October). All the platform's mutable state
 # is under one root on the data partition — `config/` (the file store's rows), `objects/` (heartbeats, the snapshot),
@@ -61,7 +61,7 @@ def events_root(env: dict, given: str | None = None) -> str:
 
 # The events tree as the environment says it, or None: a process that writes a journal only where it was told to.
 def events_said(env: dict) -> str | None:
-    return env.get(ARCHIVE) or None
+    return env.get(RESOURCE_ROOT) or None
 
 
 # The slot to prefer: the role's own name (its spec's `slot.name_env`), else the unit's `WORKER_NAME`, else
@@ -145,3 +145,23 @@ def instance_on_box(env: dict, given: str | None = None) -> str:
     if given:
         return f"{said}:{os.getpid()}:{given}" if said else given
     return f"{box(env)}:{os.getpid()}:{uuid.uuid4().hex[:6]}"
+
+
+# THE WATCHDOG (the twelfth review, major 14): a hung process gives its supervisor time to see it (`WatchdogSec`) before
+# its units move — `KeepAlive`/`Restart=always` see a process that ENDED, never one that stopped turning. `sd_notify`
+# without libsystemd: one datagram to the socket systemd names in `$NOTIFY_SOCKET` (`@` — the abstract namespace).
+# Nothing to say to (launchd, a bench, a test without one): False, and nothing else happens. A socket that refuses is
+# the same: the supervisor's business, never a reason for the loop to stop. A worker's loop says it at every turn.
+def notify(state: bytes = b"WATCHDOG=1", env: dict | None = None) -> bool:
+    path = (os.environ if env is None else env).get("NOTIFY_SOCKET", "")
+    if not path:
+        return False
+    if path.startswith("@"):
+        path = "\0" + path[1:]
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as s:
+            s.connect(path)
+            s.send(state)
+        return True
+    except OSError:
+        return False

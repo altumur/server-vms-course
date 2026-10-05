@@ -31,6 +31,8 @@ slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
 # a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone.
 objects: {rows: [used/*]}
+# What a recorder reads outside its subsystem's rows: the domain's book of where each camera's primary is (М12).
+worker: {reads: [domain/vms/primaries]}
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -72,7 +74,7 @@ placement:
   constraint: labels-subset
   # STILL `requires: resource` with the footage in obsd (the review's third pass asked why). The footage no longer
   # needs the resource; two other things do. The recorder's EVENTS — `archive.shallow`, `keep.copied`/`keep.lost`,
-  # what it fetched — go into the resource's tree (`ARCHIVE`), and the resource's door is how anybody reads them.
+  # what it fetched — go into the resource's tree (`RESOURCE_ROOT`), and the resource's door is how anybody reads them.
   # And the resource's heartbeat is the second witness that a SERVER is gone: `gone_servers` moves the recordings
   # of a slot that lapsed only when the resource of its server is silent too (one silence is a crash, two are the
   # server — М11 Lesson 4); without `requires` that move never happens, and the recordings of a box that lost its
@@ -186,9 +188,11 @@ rights:
 # most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).
 holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800}
 # What a recording's holder opens to a page itself (the boundary's step 6, the owner's decision 1: the bytes bypass the
-# console): its spans from every recorder's door, and an interval as MP4 (`vms/footage.py`). The console hands out the
-# door with the recording's place — `GET /rec/where/<recording>` → `door: {url, token, expires, routes}`.
-door: {routes: [timeline, export]}
+# console), in the product's paths: `/timeline/<recording>?from&to` — its spans, raw, from every recorder's door, and what
+# its camera holds itself as a span that yields — and `/segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4` (`.backfill.mp4`,
+# `.device.mp4`), a piece of it (`vms/footage.py`). The console hands out the door with the recording's place —
+# `GET /rec/where/<recording>` → `door: {url, token, expires, routes}`.
+door: {routes: [timeline, segment]}
 # A REQUEST of this subsystem (the boundary's step 6: it was `POST /backfill`, the VMS's route on the console): a person
 # asks for a stretch of a recording to be fetched from the camera's device into the archive — `POST /rec/requests
 # {unit: rec/<recording>, from, to}`, named by its range (the same range again is the same request), at most seven of
@@ -210,6 +214,9 @@ requests:
   ttl: 86400
   stamp: [by, at, about]
   journal: archive.backfill.asked
+  # A scenario's `record` (`vms/autoworker.py`) is turned into a recording by the VMS's jobs (`jobs.record_on_request`),
+  # not performed by a recorder: the platform's reaper leaves it to them.
+  elsewhere: [record]
 snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
@@ -275,5 +282,11 @@ display:
     archive.shallow: архив мельче обещанного
     keep.copied: сохранённое скопировано
     keep.lost: сохранённое не удалось скопировать
+# The recorders on the domain: a member reports, beside its heartbeats and snapshot, where its ingest takes streams
+# (`rec/ingest`) and when each camera last polled it (`rec/polled/<ingest>`) — the domain's witness that a camera is
+# alive while its agent is silent.
+domain:
+  reports: [ingest, polled/]
+  witness: polled
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

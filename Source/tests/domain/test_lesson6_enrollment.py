@@ -1,6 +1,6 @@
 """Lesson 6 — a box enrolls from cold with nobody typing a secret."""
-from domain.enroll import EnrollError, Manufacturer, Pledge, Registrar, finish
-from domain.signer import Signer, TrustBundle
+from w2cplatform.trust.enroll import EnrollError, Manufacturer, Pledge, Registrar, finish
+from w2cplatform.trust.signer import Signer, TrustBundle
 from tests.domain.conftest import Clock, make_domain
 
 

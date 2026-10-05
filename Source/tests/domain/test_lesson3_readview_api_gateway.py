@@ -3,11 +3,11 @@ one cause per dead server; the API refuses placement at both levels and is
 idempotent; the gateway fans out and the worker sees one viewer."""
 import json
 import urllib.request
-from domain.api import ApiError, ConsoleAPI
-from domain.console import Console
-from domain.federation import DomainDirectory
-from domain.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
-from domain.readview import ReadView
+from w2cplatform.domain.api import ApiError, ConsoleAPI
+from w2cplatform.domain.console import Console
+from w2cplatform.domain.federation import DomainDirectory
+from vms.domainpart.gateway import Forbidden, Gateway, LiveTee, WorkerLiveEndpoint
+from w2cplatform.domain.readview import ReadView
 from tests.domain.conftest import Clock, Running, heartbeat, make_domain, snapshot
 
 
@@ -61,7 +61,7 @@ def test_a_camera_nobody_is_running_is_in_the_list_and_says_so():
     view = ReadView(fed, wall=wall)
     view.refresh()
 
-    rows = {r["ref"] or str(r["camera"]): r for r in view.list()["rows"]}
+    rows = {r["ref"] or str(r["unit"]): r for r in view.list()["rows"]}
     assert set(rows) == {"7", "9"}, "the camera nobody runs is missing from the list"
     assert rows["7"]["worker_state"] == "live" and rows["7"]["phase"] == "running"
     assert rows["9"]["worker_state"] == "configured" and rows["9"]["worker"] == ""
@@ -131,7 +131,7 @@ def test_kill_a_server_one_cause_displayed():
     view.refresh()
     causes = view.causes()
     assert len(causes) == 1 and causes[0].scope == "server" and causes[0].name == "north/srv-1"
-    assert causes[0].workers == ["w-0", "w-1"] and causes[0].cameras == 100
+    assert causes[0].workers == ["w-0", "w-1"] and causes[0].units == 100
     assert causes[0].sentence().startswith("server silent: north/srv-1 for 100 s")
     rows = view.list(size=200)["rows"]
     stale = [r for r in rows if r["worker_state"] == "stale"]
@@ -148,14 +148,14 @@ def test_unreachable_cluster_keeps_last_known_rows_and_says_so():
     page = view.list(cluster="south", size=100)
     assert page["total"] == 50 and page["clusters"]["south"] == "unreachable" and not page["complete"]
     assert page["rows"][0]["worker_state"] == "unreachable"
-    assert view.causes()[0].scope == "cluster" and view.causes()[0].cameras == 50
+    assert view.causes()[0].scope == "cluster" and view.causes()[0].units == 50
 
 
 class FakeClusterConsole:
     def __init__(self): self.edits = []; self.creates = []
-    def update_camera(self, camera, fields, subject):
+    def update_unit(self, camera, fields, subject):
         self.edits.append((camera, fields, subject)); return {"revision": len(self.edits) + 1}
-    def create_camera(self, fields, subject):
+    def create_unit(self, fields, subject):
         self.creates.append(fields); return {"id": len(self.creates), "worker": "w-0"}
 
 
@@ -164,19 +164,19 @@ def test_api_refuses_placement_at_both_levels_and_is_idempotent():
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
     consoles = {"south": FakeClusterConsole()}
     api = ConsoleAPI(DomainDirectory(fed), consoles.__getitem__)
-    r1 = api.update_camera(7, {"name": "gate"}, idempotency_key="k1")
-    r2 = api.update_camera(7, {"name": "gate"}, idempotency_key="k1")            # the same PUT, not a second edit
+    r1 = api.update_unit(7, {"name": "gate"}, idempotency_key="k1")
+    r2 = api.update_unit(7, {"name": "gate"}, idempotency_key="k1")            # the same PUT, not a second edit
     assert r1 is r2 and len(consoles["south"].edits) == 1 and r1["cluster"] == "south" and r1["worker"] == "w-0" and not r1["authenticated"]
     for bad in ({"worker": "w-1"}, {"cluster": "north"}, {"server": "srv-1"}, {"placement": {}}, {"phase": "running"}, {"epoch": 9}):
         try:
-            api.update_camera(7, bad, idempotency_key="k2"); raise AssertionError("must refuse")
+            api.update_unit(7, bad, idempotency_key="k2"); raise AssertionError("must refuse")
         except ApiError as e:
             assert e.status == 400 and "may not set" in e.detail
     try:
-        api.update_camera(99, {"name": "x"}, idempotency_key="k3"); raise AssertionError("must 404")
+        api.update_unit(99, {"name": "x"}, idempotency_key="k3"); raise AssertionError("must 404")
     except ApiError as e:
         assert e.status == 404
-    c = api.create_camera({"name": "new", "source": "driverpack://file/n.mp4", "ref": "12"}, cluster="south", idempotency_key="k4")
+    c = api.create_unit({"name": "new", "source": "driverpack://file/n.mp4", "ref": "12"}, cluster="south", idempotency_key="k4")
     assert c["cluster"] == "south" and c["result"]["worker"] == "w-0"              # the cluster chose the worker; the domain forwarded
 
 
@@ -186,7 +186,7 @@ def test_api_says_503_not_404_when_a_cluster_is_unreachable():
     links["south"].up = False
     api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
     try:
-        api.update_camera(7, {"name": "x"}, idempotency_key="k"); raise AssertionError()
+        api.update_unit(7, {"name": "x"}, idempotency_key="k"); raise AssertionError()
     except ApiError as e:
         assert e.status == 503 and "unreachable" in e.detail
 
@@ -234,14 +234,14 @@ def test_console_over_http():
     port = srv.server_address[1]
     try:
         import time; time.sleep(0.2)
-        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/cameras"))
+        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/vms/cameras"))
         assert body["total"] == 1 and body["rows"][0]["as_of"] == "as of 2 s ago"
         w = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/where/7"))
         assert w["cluster"] == "south" and w["worker"] == "w-0" and w["complete"]
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/cameras/7", data=b'{"name":"x"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/vms/cameras/7", data=b'{"name":"x"}', method="PUT",
                                      headers={"Idempotency-Key": "abc"})
         assert json.load(urllib.request.urlopen(req))["cluster"] == "south"
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/vms/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
                                      headers={"Idempotency-Key": "def"})
         try:
             urllib.request.urlopen(req); raise AssertionError()
@@ -280,9 +280,9 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
         return out, time.monotonic() - began
     try:
         assert isinstance(srv, ConsoleServer) and srv.bounds.per_address < srv.bounds.limit
-        reply, took = raw(b"PUT /api/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
+        reply, took = raw(b"PUT /api/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 413") and took < 2.0          # a hundred megabytes declared: not read, not waited for
-        reply, took = raw(b"PUT /api/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
+        reply, took = raw(b"PUT /api/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 400")
         held = [socket.create_connection(("127.0.0.1", port)) for _ in range(srv.bounds.per_address)]
         for s in held:
@@ -342,7 +342,7 @@ def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_an
             time.sleep(0.02)
         assert srv.bounds.used["common"] == srv.bounds.limit
         assert ask("192.0.2.7", "/healthz").startswith(b"HTTP/1.0 200")             # the reserve
-        busy = ask("192.0.2.7", "/api/cameras")
+        busy = ask("192.0.2.7", "/api/vms/cameras")
         assert busy.startswith(b"HTTP/1.0 503") and b"/healthz" in busy               # nothing else on it
         assert ask("192.0.2.100", "/healthz").startswith(b"HTTP/1.0 200")           # a listed monitor: its own lane
     finally:
@@ -355,56 +355,120 @@ def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_an
             os.environ["CONSOLE_MONITORS"] = was
 
 
-def test_what_the_doors_open_in_code_the_jobs_turn_on_and_a_monitor_is_an_address_not_a_network():
-    """М10's eighth review, minor: the domain's console and the signer had the reserve, the box's own door and the
-    monitors' lane in code, and their jobs set none of it — Nomad's own check of `/healthz` failed under a flood from
-    sixteen addresses. The jobs name the unix sockets (in the directory the host makes at boot, mounted) and the
-    monitors: the node's loopback and address, and the scrapers the operator names. And the cluster's console job
-    lists the addresses that scrape, not `10.0.0.0/8` (the same review, major)."""
+def _units() -> dict:
+    """The domain's units (`deploy/domain/systemd`), each parsed as the cluster's tests parse theirs."""
     import os
-    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    console = open(os.path.join(here, "deploy", "domain", "console.nomad.hcl")).read()
-    signer = open(os.path.join(here, "deploy", "domain", "signer.nomad.hcl")).read()
-    monitors = 'CONSOLE_MONITORS=127.0.0.1,{{ env "attr.unique.network.ip-address" }},${var.monitors}'
-    assert "DOMAIN_CONSOLE_UNIX=/run/vms-console/domain-console.sock" in console and monitors in console
-    assert "SIGNER_UNIX=/run/vms-console/signer.sock" in signer and monitors in signer
-    for job in (console, signer):
-        assert '"/run/vms-console:/run/vms-console"' in job and 'variable "monitors"' in job
-    tmpfiles = open(os.path.join(here, "deploy", "vms.tmpfiles")).read()
-    assert "d /run/vms-console 0700 root root" in tmpfiles
-    cluster = open(os.path.join(here, "deploy", "cluster", "nomad", "console.nomad.hcl")).read()
-    assert "10.0.0.0/8" not in cluster.split("CONSOLE_MONITORS =", 1)[1].split("\n", 1)[0]
-    assert 'CONSOLE_MONITORS = "127.0.0.1,${attr.unique.network.ip-address},${var.monitors}"' in cluster
+    from tests.cluster.test_recorder_job import unit
+    here = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "deploy", "domain",
+                        "systemd")
+    return {n[:-len(".service")]: unit(os.path.join(here, n)) for n in os.listdir(here) if n.endswith(".service")}
 
 
-def test_the_domains_jobs_name_stores_that_open():
-    """The twelfth review, major 22: the console's, the signer's and the agent's jobs named their stores `nomad://…` —
-    a backend that is gone — and `open_vars` refused it with `ValueError` before anything started. Each job's lines,
-    as its template hands them to the process, now build the federation (`runtime.federation_from_env`) and open the
-    agent's two stores: this cluster's by its configstore socket and its objects (here under a directory of the
-    test's, which a node has at `/data/platform/objects`), another cluster as a member that reports."""
-    import os
+def _env_lines(path: str) -> dict:
+    """`NAME=value` lines of an env example, the commented ones too (`#NAME=value`: what the site uncomments)."""
     import re
+    out = {}
+    for line in open(path, encoding="utf-8"):
+        m = re.match(r"^#?([A-Z][A-Z0-9_]*)=(\S+)", line)
+        if m:
+            out.setdefault(m.group(1), m.group(2))
+    return out
+
+
+def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_address_not_a_network():
+    """М10's eighth review, minor: the domain's console and the signer had the reserve, the box's own door and the
+    monitors' lane in code, and their deploy set none of it. Their units name the unix sockets — each in the unit's
+    own runtime directory, 0700 — and the monitors (the box's loopback; the site adds its scrapers' addresses, never a
+    network). The tokens' socket is in a directory made at boot, setgid to the books' worker's group: the socket takes
+    that group, and the worker opens it and nothing else of the box does."""
+    import os
+    u = _units()
+    console, signer = u["w2c-domain-console"], u["w2c-domain"]
+    assert console["env"]["DOMAIN_CONSOLE_UNIX"] == "/run/w2c-domain-console/console.sock"
+    assert console["RuntimeDirectory"] == ["w2c-domain-console"] and console["RuntimeDirectoryMode"] == ["0700"]
+    assert signer["env"]["SIGNER_UNIX"] == "/run/w2c-domain/signer.sock"
+    assert signer["RuntimeDirectory"] == ["w2c-domain"] and signer["RuntimeDirectoryMode"] == ["0700"]
+    for door in (console, signer):
+        assert door["env"]["CONSOLE_MONITORS"].split(",")[0] == "127.0.0.1"
+        assert "/" not in door["env"]["CONSOLE_MONITORS"]                       # an address, not a network
+    assert signer["env"]["SIGNER_TOKENS_UNIX"] == u["vms-domainpart"]["env"]["SIGNER_TOKENS_UNIX"] == "/run/w2c-signer/tokens.sock"
+    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    tmpfiles = open(os.path.join(here, "deploy", "domain", "systemd", "w2c-domain.tmpfiles")).read()
+    assert "d /run/w2c-signer 2750 w2c vms-vmsdomain -" in tmpfiles
+    assert "vms-vmsdomain" in u["vms-domainpart"]["SupplementaryGroups"][0].split()
+    assert "vms-vmsdomain" not in signer["SupplementaryGroups"][0].split()       # the directory gives the group, not the signer
+
+
+def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
+    """The domain's units in the cluster's form (no orchestrator): each runs `w2c-run.sh <verb>`, names its role's socket
+    and joins that role's group first (the rights file's), loads the ring as a credential, and lists no
+    `EnvironmentFile=` — the site's lines are `w2c.env`'s, read under what the unit says. And the runner turns each verb
+    into the module it names (a `python3` that prints what it was given). No Nomad file is left in `deploy/domain`."""
+    import json
+    import os
+    import subprocess
     import tempfile
-    from domain.runtime import federation_from_env
+    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    groups = {r: g["group"] for r, g in
+              json.load(open(os.path.join(here, "deploy", "cluster", "configstore-rights.json")))["roles"].items()}
+    want = {"w2c-domain": ("domain", "signer", "w2c", "-m w2cplatform.domain.signer_service"),
+            "w2c-domain-console": ("domain", "domainconsole", "w2c", "-m w2cplatform.domain.console"),
+            "w2c-domainagent": ("domainagent", "domainagent", "w2c", "-m w2cplatform.domain.agent"),
+            "vms-domainpart": ("vmsdomain", "vms domainpart", "vms", "-m vms domainpart")}
+    u = _units()
+    assert sorted(u) == sorted(want)
+    d = tempfile.mkdtemp(prefix="run-")
+    py = os.path.join(d, "python3")
+    with open(py, "w") as f:
+        f.write("#!/bin/sh\necho \"$@\"\n")
+    os.chmod(py, 0o755)
+    os.symlink(here, os.path.join(d, "Source"))
+    for name, (role, verb, user, module) in want.items():
+        s = u[name]
+        assert s["env"]["PLATFORM_STORE"] == f"configstore:///run/configstore/{role}.sock", name
+        assert s["SupplementaryGroups"][0].split()[0] == groups[role], name
+        assert s["User"] == [user] and s["ExecStart"] == [f"/opt/w2c/bin/w2c-run.sh {verb}"], name
+        assert s["env"]["SECRETS_KEY"] == "%d/platform.key" and s["LoadCredential"], name
+        assert "EnvironmentFile" not in s, f"{name}: a file would override what the unit says"
+        env = {"PATH": os.environ["PATH"], "W2C_ENV": os.devnull, "VMS_ENV": os.devnull, "PYTHON": py, "W2C_HOME": d}
+        out = subprocess.run(["sh", os.path.join(here, "deploy", "cluster", "w2c-run.sh"), *verb.split()], env=env,
+                             capture_output=True, text=True, check=True).stdout.splitlines()
+        assert out[0] == module, (name, out)
+    left = os.listdir(os.path.join(here, "deploy", "domain"))
+    assert not [n for n in left if n.endswith((".hcl", ".hcl.md")) or "nomad" in n], left
+
+
+def test_the_domains_units_name_stores_that_open():
+    """The twelfth review, major 22: the domain's deploy named its stores by a backend that is gone, and `open_vars`
+    refused it before anything started. The units' lines, with the site's (`domain.env.example`, the platform's
+    `OBJECTS`), now build the federation (`runtime.federation_from_env`) for the console and for the VMS's books — a
+    bare name in `CLUSTERS` is this server's own cluster, opened by EACH unit's own socket — and open the agent's
+    store; a member's agent carries through the domain's door and reads no store of the holder's."""
+    import os
+    import tempfile
+    from w2cplatform.domain.runtime import federation_from_env
     from w2cplatform.variables import open_vars
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    site = _env_lines(os.path.join(here, "deploy", "domain", "systemd", "domain.env.example"))
+    platform = _env_lines(os.path.join(here, "deploy", "cluster", "systemd", "w2c.env.example"))
     objects = tempfile.mkdtemp(prefix="objects-")
-    for name in ("console", "signer", "agent", "gateway"):
-        assert not re.search(r"=\s*nomad://", open(os.path.join(here, "deploy", "domain", f"{name}.nomad.hcl")).read()), name
-    for name in ("console", "signer"):
-        job = open(os.path.join(here, "deploy", "domain", f"{name}.nomad.hcl")).read()
-        line = re.search(r"^\s*CLUSTERS=(\S+)", job, re.M).group(1).replace("/data/platform/objects", objects)
-        saved = os.environ.get("CLUSTERS")
-        os.environ["CLUSTERS"] = line
+    u = _units()
+    for name in ("w2c-domain-console", "vms-domainpart"):
+        env = {"CLUSTERS": site["CLUSTERS"], "DOMAIN_HOLDER": site["DOMAIN_HOLDER"],
+               "PLATFORM_STORE": u[name]["env"]["PLATFORM_STORE"],
+               "OBJECTS": platform["OBJECTS"].replace("/data/platform/objects", objects)}
+        saved = {k: os.environ.get(k) for k in env}
+        os.environ.update(env)
         try:
             fed = federation_from_env()
         finally:
-            os.environ.pop("CLUSTERS") if saved is None else os.environ.__setitem__("CLUSTERS", saved)
+            for k, v in saved.items():
+                os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
         assert sorted(fed.clusters) == ["north", "south"] and fed.domain_holder.name == "north", name
-    agent = open(os.path.join(here, "deploy", "domain", "agent.nomad.hcl")).read()
-    for var in ("DOMAIN_CONFIG_URL", "PLATFORM_STORE"):
-        assert open_vars(re.search(rf"^\s*{var}=(\S+)", agent, re.M).group(1)) is not None, var
+    assert open_vars(u["w2c-domainagent"]["env"]["PLATFORM_STORE"]) is not None
+    member = open(os.path.join(here, "deploy", "domain", "systemd", "domain.env.example")).read()
+    assert "\nDOMAIN_URL=https://" in member                                   # a member carries through the domain's door
+    assert "\nDOMAIN_CONFIG_URL=" not in member                                 # …only the holder's own agent reads a store
 
 
 def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_rights():
@@ -412,7 +476,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
     named a role `domain` — so no daemon opened that socket, its first `get` was `StoreUnavailable` and the job went
     round its restarts. The test above only made the handle (`open_vars` is lazy), so it said nothing of it. Here a real
     daemon with М11's committed rights file, its sockets in a directory of the test's: the signer's own store URL (its
-    default, and the line its job gives the books) is a socket the daemon opened, and the signer's first start runs
+    default, and its unit's line; the books' worker's from its unit) is a socket the daemon opened, and the signer's first start runs
     through it — its keys made and kept, the key set published, a person created, logged in and the people published,
     a book written — and a second start reads the same keys. The agent's socket reads the key set but not the keys."""
     import inspect
@@ -421,10 +485,10 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
     import shutil
     import tempfile
     import pytest
-    from domain import signer_service
-    from domain.agent import KEYS_PATH, DomainPublisher
-    from domain.identity import IdentityStore
-    from domain.signer import Signer
+    from w2cplatform.domain import signer_service
+    from w2cplatform.domain.agent import KEYS_PATH, DomainPublisher
+    from w2cplatform.domain.identity import IdentityStore
+    from w2cplatform.trust.signer import Signer
     from w2cplatform.configstore import LocalBackend, StoreDaemon
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.storemachine import Rights
@@ -432,9 +496,10 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     rights = Rights.load(os.path.join(here, "deploy", "cluster", "configstore-rights.json"))
     own = re.search(r'"(configstore:///run/configstore/\w+\.sock)"', inspect.getsource(signer_service.main)).group(1)
-    job = open(os.path.join(here, "deploy", "domain", "signer.nomad.hcl")).read()
-    assert re.search(r"^\s*CLUSTERS=north=([^|]+)\|", job, re.M).group(1) == own       # the books: the same socket
-    assert 'SIGNER_PORT={{ env "NOMAD_PORT_https" }}' in job                              # …and the port Nomad gave
+    units = _units()
+    assert units["w2c-domain"]["env"]["PLATFORM_STORE"] == own                           # the unit says the signer's default
+    books = units["vms-domainpart"]["env"]["PLATFORM_STORE"]
+    assert books == "configstore:///run/configstore/vmsdomain.sock"                     # the books: the VMS worker's role
     d = tempfile.mkdtemp(prefix="cs", dir="/tmp")                                          # a socket's path is short
     daemon = StoreDaemon(LocalBackend("north", 1000), node_id="north", sockets=d, rights=rights)
     try:
@@ -446,7 +511,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
         ids = IdentityStore(signer, vars_, FsObjectStore(os.path.join(d, "objects")), publish_floor=0)
         ids.create_local("ann", "a long enough password", ["admin"])
         assert ids.login("ann", "a long enough password") and ids.publish(force=True)
-        vars_.put("domain/sources/north", {"book": "{}"})
+        open_vars(books.replace("/run/configstore", d)).put("domain/vms/sources/north", {"book": "{}"})
         assert Signer("acme", vars_).tokens.keyset().to_items() == signer.tokens.keyset().to_items()
         agent = open_vars(f"configstore://{d}/domainagent.sock")
         assert agent.get(KEYS_PATH)[0] is not None
@@ -466,11 +531,11 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     north, south = fed.clusters["north"], fed.clusters["south"]
     view = ReadView(fed, lost_after=45, wall=wall)
-    view.refresh(); view.publish(north.objects, {"SN7": "north"})
+    view.refresh(); view.publish(north.objects, {"vms/crossings": {"SN7": "north"}})
 
     st, d = domain_view(north.objects, wall())
     assert st == 200 and d["complete"] and not d["silent"] and d["age"] == 0
-    assert d["members"]["south"]["state"] == "ok" and len(d["units"]) == 200 and d["crossings"] == {"SN7": "north"}
+    assert d["members"]["south"]["state"] == "ok" and len(d["units"]) == 200 and d["tables"] == {"vms/crossings": {"SN7": "north"}}
     assert {c["cluster"] for c in d["units"] if c["worker"] == "w-0"} == {"north", "south"}
     assert domain_view(south.objects, wall())[0] == 404      # not the domain's holder: it knows only itself
 
@@ -492,7 +557,7 @@ def test_one_torn_object_of_one_cluster_freezes_neither_the_view_nor_the_directo
     cluster's copy as old as can be; the cluster's other workers, and the other cluster, are read; a status entry whose
     numbers are words is that entry's; and a step of the console's loop that raises is said in the log, once."""
     import logging
-    from domain.federation import MEMBER_OBJECTS
+    from w2cplatform.domain.federation import MEMBER_OBJECTS
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     north, south = fed.clusters["north"], fed.clusters["south"]
     snapshot(south, {151: ("w-0", "srv-9")}, ts=wall())

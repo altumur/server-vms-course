@@ -15,6 +15,9 @@ slot: {prefix: w, name_env: WORKER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
 # a holder's mark before it acts on a device (`VmsWorker`, `put_new`): created ONCE across every server.
 objects: {rows: [commands/*]}
+# What the holder writes beside its claims: what a device it holds turned out to be (`vms/devices/<device>`, М10B Lesson
+# 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
+worker: {writes: [devices]}
 unit:
   # the row directory `vms/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
   # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.
@@ -326,11 +329,44 @@ rights:
     group: [source, labels]
     cluster: [ref]
     requests: [output, preset]
-# What a camera's holder opens to a page itself (the boundary's step 6, the owner's decision 1: the bytes bypass the
-# console): the device's own archive — what it holds, and those minutes (`VmsWorker.playback_handler`). It was the
-# console's `/segment`; `GET /where/<cam>` hands out the door now.
-door: {routes: [timeline, segment]}
+# No door at a camera's holder for a page (the product's rule): the scale is built from the camera's recordings, each its
+# own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
 snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
+# The VMS on the domain (the boundary's «no hooks»; DOMAIN-PLATFORM.md): what the platform's domain reads and moves for
+# it, under `domain/vms/…`, without knowing what any of it means. A camera is found across clusters by its `ref`, and the
+# shared view shows its name. The books the VMS's domain worker writes at the holder for each member (`vms/domainpart`):
+# where a recording cluster finds cameras of others (sources), who records a camera and where it pushes (primaries), the
+# ingest a camera nobody records polls (poll), a relay's road to the centre (upstream), and whom a camera may ask to act
+# (asks) — each carried home by the member's agent as it is. Kept at the holder for the whole domain: which cluster
+# records which camera of another (crossings, served at `/api/vms/crossings`) and the cameras sent to push (roads). The
+# tokens the books carry: a stream token (to push to, poll or pull from an ingest) and a token to ask one camera of
+# another, issued by the domain's signer with these claims only.
+domain:
+  ref: ref
+  view: [name]
+  books: [sources, primaries, poll, upstream, asks]
+  kept: [crossings, roads]
+  tables: [crossings]
+  tokens:
+    stream: {lifetime: 86400, claims: [aud, ref]}
+    ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}
+  # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
+  # `<book>/<member>` at the holder and `<book>` in the member that carried it home. The product's issued stream keys
+  # are no rows here (a book's entry carries its token sealed, `token_secret`); its asks carried up wait in the relay's
+  # memory; scenarios are the platform's shared document (`domain/shared`).
+  # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
+  # them at GET /domain/shared/vms): the folders the page offers, and two that inherit — the site's alarm kinds
+  # (added to the camera's own) and the events' retention.
+  shared: [folders, alarms, events_retention_days]
+  keys:
+    - {id: roads, keys: [domain/vms/roads]}
+    - {id: crossings, keys: [domain/vms/crossings]}
+    - {id: sources, keys: [domain/vms/sources], prefix: domain/vms/sources/}
+    - {id: primaries, keys: [domain/vms/primaries], prefix: domain/vms/primaries/}
+    - {id: polls, keys: [domain/vms/poll], prefix: domain/vms/poll/}
+    - {id: upstream, keys: [domain/vms/upstream], prefix: domain/vms/upstream/}
+    - {id: asks, keys: [domain/vms/asks], prefix: domain/vms/asks/}
+    - {id: worker, keys: [domain/vms/worker]}
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
 metrics:
@@ -378,6 +414,34 @@ display:
   tree:
     group_by: folders
     nested_by: "/"
+  # The words of the key families (domain.keys), by id; `absent` — what to say when the row is missing.
+  keys:
+    roads:
+      title: Дороги
+      about: "Память дорог: камеры, которые домен перевёл на «камера толкает», потому что регистратор не смог забрать поток сам. Запись забывается, когда меняются сети сторон или кластер, который пишет камеру."
+      absent: "Записи нет: помнить нечего — все дороги решены по сетям сторон, и ни один регистратор не пожаловался, что не может забрать поток."
+    crossings:
+      title: Пересечения
+      about: Для камеры другого кластера — кластер, который её пишет.
+    sources:
+      title: Книги источников
+      about: "Откуда кластер записи берёт поток каждой камеры и почему этой дорогой. domain/vms/sources/<кластер> — книги у держателя; domain/vms/sources — книга, которую агент кластера унёс домой."
+    primaries:
+      title: Основные записи
+      about: Для кластера камер — какой кластер пишет его камеры, идёт ли запись и куда толкать. По этой книге решает резервная запись «когда основной недоступен».
+    polls:
+      title: Опросы
+      about: "Книги опросов: для толкающей камеры, которую никто не пишет, — приёмник потоков (ingest), у которого она спрашивает просьбы."
+    upstream:
+      title: Цепочка ретрансляторов
+      about: Для каждой камеры, которую ретранслятор пишет или только опрашивает, — приёмник центра и ключ ретранслятора там.
+    asks:
+      title: Просьбы
+      about: "Книги просьб по сценариям: для камеры-триггера — кого она может просить и какими дорогами; domain/vms/asks/<кластер> — книга каждого кластера."
+    worker:
+      title: Воркер книг
+      about: Слот воркера VMS на домене — кто сейчас пишет книги (экземпляр и время).
+      absent: "Записи нет: воркер книг ещё не запускался на держателе домена."
 
 console:
   # the name of the running gauge: `metrics_text()` emits `vms_cameras_running <n>` for status entries in

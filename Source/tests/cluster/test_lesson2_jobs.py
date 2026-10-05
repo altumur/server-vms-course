@@ -1,8 +1,8 @@
 """Lesson 2 — workers, resources and the controller as units on every server. The name from the unit
 (`WORKER_NAME=w-%l-1`) and the labels from the server; a spare that takes an offer and stops; two processes with one
 name; rights by the socket a process came through."""
-from cluster.controller import ClusterController
-from cluster.variables import Forbidden
+from vms.controller import VmsController
+from w2cplatform.cluster.variables import Forbidden
 from tests.cluster.conftest import Cluster
 
 
@@ -61,13 +61,13 @@ def test_two_processes_with_one_name_resolve_at_the_cas():
     b = c.worker("srv-a")                                                     # the same unit's name, a second process
     assert b.name == a.name == "w-srv-a-1" and b.instance != a.instance
     assert ctl.slots()["w-srv-a-1"].holder == b.instance and ctl.slots()["w-srv-a-1"].gen == 2
-    assert a.lease_pass() and not a.recording_allowed and "slot w-srv-a-1" in a.fenced_reason
+    assert a.lease_pass() and not a.writing_allowed and "slot w-srv-a-1" in a.fenced_reason
     assert b.reconcile_once() == [("start", 1), ("start", 2)] and b.lease_pass() == []
 
 
 def test_rights_by_the_socket_a_process_came_through():
     """The worker's socket writes its epochs and its slot; the controller's, placement; the console's, the operator's
-    rows — three sockets, three grants, one class (`ClusterController` is both the console and the controller). The
+    rows — three sockets, three grants, one class (`VmsController` is both the console and the controller). The
     refusal is the daemon's, by the rights file: nothing in the code knows a list."""
     c, ctl, con = _cluster(1, capacity=50)
     w = c.worker("srv-a")
@@ -88,68 +88,70 @@ def test_rights_by_the_socket_a_process_came_through():
     except Forbidden:
         pass
     assert ctl.ensure_placed()[0].worker == "w-srv-a-1"                     # the controller placed what the console created
-    assert isinstance(con, ClusterController) and isinstance(ctl, ClusterController)
+    assert isinstance(con, VmsController) and isinstance(ctl, VmsController)
 
 
 def test_importing_the_clusters_entry_point_takes_none_of_the_runners_signals():
-    """The review's sixth pass. `cluster/__main__.py` installed its SIGTERM/SIGINT handler at import, as М10's entry
+    """The review's sixth pass. The cluster's entry point installed its SIGTERM/SIGINT handler at import, as М10's entry
     point did: whatever process imported it — a test run — had its signals taken, and a signal sent to stop that run
     was swallowed (`Source/tests/test_pass_failures.py` says what that looked like). The handler is installed only
     when the module is run; this runner fails any module or test that takes its signals (`tests/cluster/run.py`)."""
     import inspect
     import signal
-    import cluster.__main__ as m
+    import w2cplatform.cluster.__main__ as m
     for s in (signal.SIGTERM, signal.SIGINT):
-        assert getattr(signal.getsignal(s), "__module__", None) != m.__name__, f"importing cluster.__main__ took {s.name}"
+        assert getattr(signal.getsignal(s), "__module__", None) != m.__name__, f"importing {m.__name__} took {s.name}"
     src = inspect.getsource(m)
     assert "signal.signal(" not in src.split('if __name__ == "__main__":')[0], "a handler installed at import"
     assert "signal.signal(" in src.split('if __name__ == "__main__":')[1]          # …and the process still stops on SIGTERM
 
 
 def test_each_process_opens_its_roles_socket_and_its_objects_on_its_own_server():
-    """`cluster/__main__.py` opens nothing at import (a test imports it) and, when run, the store by its verb's role —
-    `configstore:///run/configstore/<role>.sock` unless `PLATFORM_STORE` says otherwise —
-    and the objects as `cluster://` on this server, whose create-only rows go through THAT store handle, not a second
-    one opened from the environment."""
+    """`w2cplatform/cluster/__main__.py` opens nothing at import (a test imports it) and, when run, the store by its verb's
+    role — `configstore:///run/configstore/<role>.sock` unless `PLATFORM_STORE` says otherwise — and the objects as
+    `cluster://` on this server, whose create-only rows go through THAT store handle, not a second one opened from the
+    environment (`host.stores`, what the box's processes open too). A subsystem's process opens the same two by the
+    same variables, its unit naming its role's socket (`vms.__main__`)."""
     import tempfile
-    import cluster.__main__ as m
-    from cluster.objectstore import ClusterObjectStore
+    import w2cplatform.cluster.__main__ as m
+    from w2cplatform import host
+    from w2cplatform.cluster.objectstore import ClusterObjectStore
     from w2cplatform.configstorevars import ConfigstoreVariables
-    assert m.ROLES == {"worker": "vmsworker", "recorder": "recworker", "controller": "vmscontroller",
-                       "reccontroller": "reccontroller", "console": "console", "resource": "resource"}
     d = tempfile.mkdtemp(prefix="main-")
-    vars_, objects = m.stores("vmsworker", {"OBJECTS": f"cluster://{d}/objects?resource=http://127.0.0.1:8090"})
-    assert isinstance(vars_, ConfigstoreVariables) and vars_.path == "/run/configstore/vmsworker.sock"
+    env = m.cluster_env("vmscontroller", {"OBJECTS": f"cluster://{d}/objects?resource=http://127.0.0.1:8090"})
+    vars_, objects = host.stores(env)
+    assert isinstance(vars_, ConfigstoreVariables) and vars_.path == "/run/configstore/vmscontroller.sock"
     assert isinstance(objects, ClusterObjectStore) and objects.rows.vars is vars_ and objects.resource == "http://127.0.0.1:8090"
-    vars_, _ = m.stores("console", {"PLATFORM_STORE": f"file://{d}/config", "OBJECTS": f"file://{d}/o"})
+    vars_, _ = host.stores(m.cluster_env("console", {"PLATFORM_STORE": f"file://{d}/config", "OBJECTS": f"file://{d}/o"}))
     assert type(vars_).__name__ == "FileVariables"
-    assert m.OBJECTS == "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
+    assert m.cluster_env("resource", {})["OBJECTS"] == m.OBJECTS == "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
 
 
 def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_rights():
     """The thirteenth review, major 20 (`m11_console_turn`): the reaper (`vms/jobs.py`, `clear_requests`) reads a
     holder's mark (`vms/commands/<id>`, a create-only row of the store here) to tell a command its holder began from
     one nobody performed — and the console's rights did not grant that read: `Forbidden: console may not read
-    objects/vms/commands/x1` on every turn, the command stood, `vms_requests_expired_total` did not move, and the
+    objects/vms/commands/x1` on every turn, the command stood, `w2c_requests_expired_total` did not move, and the
     exception left the rows after it unlooked at. Through the console's own socket, under the committed rights: a
     command past its deadline that nobody held is ended and counted; one its holder answered (a mark with an outcome) is
     cleared and not counted; one its holder began (a mark, no outcome) stays its holder's while that holder holds its
-    name, and once it went is ended as not known (`jobs.unknown`; the thirteenth review, minor — the console reads the
+    name, and once it went is ended as not known (`requests.unknown`; the thirteenth review, minor — the console reads the
     slot row for that, under its rights too)."""
     import json
     from vms import jobs
+    from w2cplatform import requests
     c = Cluster(); c.resources_up()
     con, w = c.console(), c.worker("srv-a")
-    late = c.wall() - jobs.COMMAND_REAP_AFTER - 60
+    late = c.wall() - requests.REAP_AFTER - 60
     for rid in ("x1", "x2", "x3"):
         con.vars.put(f"vms/requests/{rid}", {"action": "output", "unit": "1", "valid_until": late, "at": late - 30}, cas=0)
     assert w._mark("x1", "1", late - 20) and w._mark("x3", "1", late - 20)            # the holder's marks, by its socket
     w.objects.put("vms/commands/x3", json.dumps({"instance": w.instance, "outcome": "performed"}).encode())
-    before, unknown = jobs.expired.get("vms", 0), jobs.unknown.get("vms", 0)
-    jobs.clear_requests(con)
+    before, unknown = requests.expired.get("vms", 0), requests.unknown.get("vms", 0)
+    requests.clear_requests(con)
     assert con.vars.list("vms/requests/") == ["vms/requests/x1"], con.vars.list("vms/requests/")
-    assert jobs.expired.get("vms", 0) - before == 1
+    assert requests.expired.get("vms", 0) - before == 1
     w.release_slot()                                                                   # the holder went
-    jobs.clear_requests(con)
+    requests.clear_requests(con)
     assert con.vars.list("vms/requests/") == [], con.vars.list("vms/requests/")
-    assert jobs.expired.get("vms", 0) - before == 1 and jobs.unknown.get("vms", 0) - unknown == 1
+    assert requests.expired.get("vms", 0) - before == 1 and requests.unknown.get("vms", 0) - unknown == 1

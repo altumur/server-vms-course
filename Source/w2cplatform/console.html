@@ -20,12 +20,13 @@ NOTES — what this page is, its regions and its state (each script function is 
 
 **Role in the module.** Lesson 6. Served by `console.py` at `/`. The page reads `/spec` first — the
 subsystem's name, what its rows are called, how a unit is identified, which fields the operator owns and
-whether there is media — and builds the unit list, the add form and the edit form from that. Nothing on this
-page names a camera: the VMS is the spec that says `rows: cameras`, `media: true`; live and det are other specs
-and the same page (`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http`
-asserts the word "camera" does not appear outside the leading comment). With media the page adds the
-timeline and the player, using the routes the subsystem registered (`/timeline/<id>`, and the `media` each span
-names — the VMS: `/export/<id>?rec=…`, an interval as an MP4) plus the platform's `/events?unit=<sub>/<id>`. Writes go through the console with a fresh `Idempotency-Key` per attempt
+which doors its holders open — and builds the unit list, the add form and the edit form from that. Nothing on this
+page names a subsystem's things: each is a spec (`rows`, `about`, `door`) and the same page
+(`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http` asserts the word "camera"
+does not appear outside the leading comment). Where a spec about this unit declares a door with the spans route
+(`SPANS`) the page adds the scale and the player: the door is asked for at `/<sub>/where/<id>` (its url and a token),
+its spans read raw from `<url>/<SPANS>/<id>` and played piece by piece from `<url>/segment/<id>/e<epoch>/<fromMs>-<toMs>`;
+plus the platform's `/events?unit=<sub>/<id>`. Writes go through the console with a fresh `Idempotency-Key` per attempt
 so a retried click is one unit; refusals are shown as the server's `detail`.
 
 ## `<style>`
@@ -59,7 +60,7 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
         - `#recbox` — the unit's recordings, from `/rec/recordings` when the console mounts `rec`: one line per
     recording of this camera with the recorder's word on it (phase, worker, server) and *stop*, and
     `#recadd` — an archive to write to (empty: this box's disks) and days to keep.
-  - `#media` (only when `spec.media`) — a legend (recorded / fenced), `#timeline` (spans
+  - `#media` (only when a holder's door says spans: `media`) — a legend (recorded / fenced), `#timeline` (spans
       and ticks), `#axis` with `#t0`, `#t1` and the `#last24` / `#all` window buttons, `#note` (the
       cluster's `note`, e.g. unreachable servers), `#player` (`<video controls>`), `#playing` caption,
       `#livefeed` (the events arriving while watching live, newest first), `#evhead` (the events heading,
@@ -101,7 +102,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 ## Routes the page uses
 - `GET /spec`, `GET /<rows>`, `GET /metrics`, `GET /where/<id>` — the platform console.
 - `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
-- the holders' doors, only when `spec.media` (the boundary's step 6: the bytes do not go through the console): `GET
+- the holders' doors, only when one says spans (`media`; the boundary's step 6: the bytes do not go through the console): `GET
   <base>/where/<id>` → `door: {url, token, expires, routes}` for the unit and for every unit of a mounted subsystem
   ABOUT it whose spec declares `door: {routes}`; then `<url>/<route>/<id>` at the holder, the token as a header (a
   media element's `src`: `?t=`).
@@ -304,12 +305,13 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 // the spec has a bool field named `enabled`.
 const $ = s => document.querySelector(s);
 const fmt = t => new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 19) + 'Z';
-let spec = null, units = [], current = null, window_ = null, spans = [], queue = [], events = [], groups = [], evfilter = '';
+let spec = null, media = false, units = [], current = null, window_ = null, spans = [], queue = [], events = [], groups = [], evfilter = '';
 // Colours per subsystem, assigned in order of first sight — the page does not know which subsystems exist.
 const PALETTE = ['#c58a1a', '#8e44ad', '#2a9d5c', '#d35400', '#16a085', '#7f8c8d'];
 const palette = {};
 const subColor = sub => palette[sub] || (palette[sub] = PALETTE[Object.keys(palette).length % PALETTE.length]);
 const ROWS = () => '/' + spec.rows;
+const SPANS = 'timeline';                                          // the route of a door that says what it holds
 const REF = () => spec.name + '/' + current;   // the current unit as the platform names one: <sub>/<id>
 const label = u => u.name || (spec.id === 'numeric' ? spec.rows.replace(/s$/, '') + ' ' + u.id : String(u.id));
 const hasEnabled = () => spec.fields.some(f => f.name === 'enabled' && f.type === 'bool');
@@ -327,7 +329,8 @@ const raw = s => new Raw(String(s));
 
 // -- the spec: the page's only knowledge of the subsystem ------------------------------------
 // `GET /spec`. Sets the document title, the rows heading, the add note (numbered by the controller vs.
-// named by its `<id field>`), shows `#media` if `spec.media`, and renders the add form (every field but
+// named by its `<id field>`), shows `#media` if `media` — this unit's door, or the door of a subsystem about it, says
+// spans (`door.routes` has `SPANS`) — and renders the add form (every field but
 // `enabled`) and the edit form (every field but `enabled` and the id field) with `input()`. Shows `#toggle`
 // if `hasEnabled()`.
 async function loadSpec() {
@@ -337,8 +340,9 @@ async function loadSpec() {
   $('#title').textContent = 'Pick one';
   $('#addnote').textContent = spec.id === 'numeric' ? 'the controller numbers it and places it on the next pass'
                                                     : `named by its ${spec.id}; placed on the controller's next pass`;
-  $('#media').style.display = spec.media ? 'block' : 'none';
-  $('#live').style.display = spec.media ? '' : 'none';
+  media = !!(spec.door && spec.door.routes.includes(SPANS)) || (await subsAbout()).some(([, s]) => s.door.routes.includes(SPANS));
+  $('#media').style.display = media ? 'block' : 'none';
+  $('#live').style.display = media ? '' : 'none';
   $('#addfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled').map(f => input(f, true)).join('');
   $('#editfields').innerHTML = spec.fields.filter(f => f.name !== 'enabled' && f.name !== spec.id).map(f => input(f, false)).join('');
   $('#toggle').style.display = hasEnabled() ? '' : 'none';
@@ -401,10 +405,10 @@ async function select(id) {
   // takes an epoch and writes events like anything else), and the honest way to find out is to look for
   // the address a viewer would dial.
   const streams = !!c.live_url;
-  $('#live').style.display = spec.media && streams ? '' : 'none';
-  $('#media').style.display = spec.media && streams ? 'block' : 'none';
+  $('#live').style.display = media && streams ? '' : 'none';
+  $('#media').style.display = media && streams ? 'block' : 'none';
   loadDets(); loadAutos(); loadRec(streams);
-  if (spec.media && streams) await loadTimeline();
+  if (media && streams) await loadTimeline();
 }
 
 // -- the holders' doors (the boundary's step 6: what a unit's holder serves, it serves the page itself) ----
@@ -438,17 +442,26 @@ async function freshDoor(m) {                                         // a span'
 async function loadTimeline() {
   const now = Date.now() / 1000;
   const [from, to] = window_ || [0, 1e12];
-  const SPANS = 'timeline';                                        // the route of a door that says what it holds
   const raw = [], notes = [], asks = [];
+  // A door's spans are raw (`[{start_ms, end_ms, epoch, source?, fenced?, yields?}]`, the product's): each is played
+  // through the same door's `segment` route, piece by piece. A 401 is the door's word that its token will not do —
+  // ended, another holder — and the door is asked for again, once.
   const ask = async (base, id) => {
-    const door = await doorOf(base, id);
+    let door = await doorOf(base, id);
     if (!door || !door.routes.includes(SPANS)) return;
-    let d;
-    try { const r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
-          if (!r.ok) throw new Error(r.status); d = await r.json(); }
-    catch (_) { notes.push(`the door of ${base || ''}/${id} did not answer`); return; }
-    if (!Array.isArray(d) && d.note) notes.push(d.note);
-    (Array.isArray(d) ? d : (d.segments || [])).forEach(s => raw.push({ ...s, m: s.media ? { base, id, door, path: s.media } : null }));
+    let d, r;
+    try {
+      for (let again = 0; ; again++) {
+        r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
+        if (r.status !== 401 || again) break;
+        door = (await doorOf(base, id)) || door;
+      }
+      if (!r.ok) throw new Error(r.status); d = await r.json();
+    } catch (_) { notes.push(`the door of ${base || ''}/${id} did not answer`); return; }
+    const missing = r.headers.get('X-Unreachable');
+    if (missing) notes.push(`not answering: ${missing} — what it holds is missing from this picture`);
+    (Array.isArray(d) ? d : []).forEach(x => raw.push({ start: x.start_ms / 1000, end: x.end_ms / 1000, epoch: x.epoch,
+      fenced: !!x.fenced, yields: !!x.yields, m: { base, id, door, source: x.source || '' } }));
   };
   if (spec.door && spec.door.routes.includes(SPANS)) asks.push(ask('', current));
   for (const [name, s] of await subsAbout()) {
@@ -518,7 +531,7 @@ async function fetchEvents(from, to) {
 // Re-fetches the events for the current window and redraws ticks and list — every 5 s while a unit is
 // selected, so a detector's line crossed a moment ago is on the timeline within one tail of the resource.
 async function loadEvents() {
-  if (!current || !spec.media) return;
+  if (!current || !media) return;
   const [from, to] = window_ || [0, 1e12];
   await fetchEvents(from, to);
   drawEvents();
@@ -625,7 +638,7 @@ $('#toggle').onclick = async () => {
 };
 $('#del').onclick = async () => {
   const c = units.find(x => x.id === current); if (!c) return;
-  if (!confirm(`Delete ${label(c)}?${spec.media ? ' Its recordings are not deleted with it: their footage stays in its volumes until the ring overwrites it.' : ''}`)) return;
+  if (!confirm(`Delete ${label(c)}?${media ? ' Its recordings are not deleted with it: their footage stays in its volumes until the ring overwrites it.' : ''}`)) return;
   try { await send('DELETE', `${ROWS()}/${encodeURIComponent(current)}`); current = null; $('#edit').style.display = 'none'; $('#title').textContent = 'Pick one'; $('#meta').textContent = ''; $('#timeline').innerHTML = ''; await loadUnits(); }
   catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
 };
@@ -645,11 +658,14 @@ function fillEdit(c) {
   if (hasEnabled()) $('#toggle').textContent = c.enabled === false ? 'Enable' : 'Disable';
 }
 
-// What to play a piece by: the span's `media` is a route of its holder's door, asked for the minutes of the piece,
-// the token in the query — a media element sets no header.
+// What to play a piece by: the door's `segment` route, the piece's epoch and bounds in its path (milliseconds), the
+// stream it is of in its name — the span's `source`, when it says one (the product's) — and the token in the query: a
+// media element sets no header.
 async function segmentURL(s, p) {
   const d = await freshDoor(s.media);
-  return `${d.url}/${s.media.path}?from=${p.from}&to=${p.to}${d.token ? '&t=' + encodeURIComponent(d.token) : ''}`;
+  const tail = s.media.source ? '.' + s.media.source : '';
+  return `${d.url}/segment/${encodeURIComponent(s.media.id)}/e${s.epoch}/${Math.round(p.from * 1000)}-${Math.round(p.to * 1000)}${tail}.mp4` +
+         (d.token ? '?t=' + encodeURIComponent(d.token) : '');
 }
 
 // One piece at a time, the next when this one ends — a span cut into pieces of at most ten minutes, each an
@@ -658,7 +674,7 @@ async function segmentURL(s, p) {
 // each moment once: a fenced span (an older epoch) is played only when it is the one clicked, and minutes two
 // spans share (two volumes, a keep's copy) are queued from the first of them. An export takes each moment from
 // the epoch that owns it whichever span asked.
-const PIECE = 600;
+const PIECE = 60;                                                    // the product's pieces: a minute each
 let playing = null;                                                   // the piece on the player now: {i, from, to}
 function play(i, at) {
   queue = [];
@@ -701,18 +717,19 @@ async function startLive() {
   const [name, s] = (await subsAbout()).find(([, s]) => s.door.routes.includes(OFFER)) || [];
   if (!name) { $('#playing small').textContent = 'nothing here opens a stream'; pc.close(); return; }
   try { await send('POST', `/${name}/${s.rows}`, { [s.about.field]: current }); } catch (_) {}   // "exists": watched already
-  let r = null, door = null, tries = 0;
+  let r = null, door = null, tries = 0, refused = 0;
   for (;;) {
     door = await doorOf(`/${name}`, current);
     if (door) r = await fetch(`${door.url}/${OFFER}/${encodeURIComponent(current)}`,
                               { method: 'POST', headers: { 'Content-Type': 'application/sdp', ...bearer(door) }, body: pc.localDescription.sdp });
+    if (r && r.status === 401 && !refused++) continue;               // its token would not do: the door again, once
     if ((r && ![404, 503].includes(r.status)) || ++tries > 8) break;
     $('#playing small').textContent = 'waiting for its place…';
     await new Promise(res => setTimeout(res, 1500));                    // the controller's next pass, the holder's next look
   }
   if (!r || r.status !== 201) { let d = {}; try { d = await r.json(); } catch (_) {} $('#playing small').textContent = 'refused: ' + (d.detail || d.error || (r ? r.status : 'nobody holds it')); pc.close(); return; }
   await pc.setRemoteDescription({ type: 'answer', sdp: await r.text() });
-  live = { pc, session: door.url + r.headers.get('Location'), door, since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
+  live = { pc, session: door.url + r.headers.get('Location'), door, base: `/${name}`, id: current, since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
   [...$('#timeline').children].forEach(el => el.classList.remove('playing'));
   $('#playing small').textContent = `watching · via ${door.url}`;
   const feed = $('#livefeed'); feed.style.display = 'block'; feed.innerHTML = '<small>live events — what every subsystem observes on this unit while you watch</small>';
@@ -739,7 +756,8 @@ async function pollLive() {
 }
 function stopLive() {
   if (!live) return;
-  fetch(live.session, { method: 'DELETE', headers: bearer(live.door) }).catch(() => {});   // the viewer hangs up, at the door
+  const hangUp = live;                                                // the viewer hangs up, at the door, with a token that holds
+  freshDoor({ door: hangUp.door, base: hangUp.base, id: hangUp.id }).then(d => fetch(hangUp.session, { method: 'DELETE', headers: bearer(d) })).catch(() => {});
   clearInterval(live.timer);
   live.pc.close(); live = null;
   const v = $('#player'); v.srcObject = null;

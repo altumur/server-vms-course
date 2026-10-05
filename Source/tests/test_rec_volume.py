@@ -24,7 +24,7 @@ def _site():
     ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console() + REC_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
     w.heartbeat_once(); con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
     rec_con = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
@@ -92,6 +92,9 @@ def test_leaving_a_volume_closes_its_writer_before_the_hold_goes():
 
 
 def test_the_archive_door_hands_out_timelines_and_frames():
+    """A recorder's archive door: between processes `/spans/<recording>` (its own volume, seconds) and the samples; to a
+    page `/timeline/<recording>` — the product's raw span form, in milliseconds, from every recorder announced by its
+    heartbeat's `url`."""
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
     r.heartbeat_once()
@@ -101,8 +104,12 @@ def test_the_archive_door_hands_out_timelines_and_frames():
     r.store.seal()
     srv = r.serve_archive()
     try:
-        tl = json.load(urllib.request.urlopen(f"{r.archive_url}/timeline/1?from={t - 200}&to={t}"))
+        r.heartbeat_once()                                                  # now it announces its door (`url`)
+        tl = json.load(urllib.request.urlopen(f"{r.archive_url}/spans/1?from={t - 200}&to={t}"))
         assert [(s["start"], s["end"], s["fenced"]) for s in tl["spans"]] == [(t - 100, t, False)]
+        page = json.load(urllib.request.urlopen(f"{r.archive_url}/timeline/1?from={t - 200}&to={t}"))
+        epoch = r.epochs["1"]
+        assert page == [{"start_ms": int((t - 100) * 1000), "end_ms": int(t * 1000), "epoch": epoch}]
         got = r.read_samples(r.archive_url, "1", t - 50, t - 10)
         assert got and got[0].key and unix_s(got[0].begin) >= t - 50 and unix_s(got[-1].end) <= t - 10 + 1
     finally:
@@ -144,7 +151,7 @@ def test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place(
 def test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole():
     """srv-a went down with its disk: the recorder that held `disks-a` is silent, and nobody else can hold a
     disk of srv-a. The footage in it is not lost — it is there, unavailable until srv-a is back — and the
-    recording's timeline says exactly that, by volume and server, beside what the live doors answered. Silent by what the
+    recording's timeline names it (`X-Unavailable: <volume>@<server>`) beside what the live doors answered. Silent by what the
     console saw: its heartbeat stood still a minute (the product's r29-writers2)."""
     from w2cplatform.contract import Heartbeat
     from vms.footage import footage_routes
@@ -160,17 +167,16 @@ def test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole
     try:
         routes = footage_routes(box.objects, box.vars, box.wall)        # the recording's holder's door (step 6)
         rec_con.create({"name": "1", "cam": "1"})
-        routes(None, "GET", "/door/timeline/1", {})                     # the console's first look: every heartbeat just changed
+        routes(None, "GET", "/timeline/1", {})                          # the first look: every heartbeat just changed
         box.wall.advance(60); srv.announce()                        # a minute on, r-a has said nothing (r29-writers2)
-        status, body = routes(None, "GET", "/door/timeline/1", {})
-        assert status == 200 and [(s["start"], s["recorder"]) for s in body["segments"]] == [(t - 300, "r-b")]
-        assert body["unavailable"] == [{"volume": "disks-a", "server": "srv-a", "recorder": "r-a", "since": t - 600}]
-        assert "disks-a (on srv-a) is unavailable" in body["note"] and "not lost" in body["note"]
+        status, body, headers = routes(None, "GET", "/timeline/1", {})
+        assert status == 200 and [(s["start_ms"], s["epoch"]) for s in body] == [(int((t - 300) * 1000), 2)]
+        assert dict(headers) == {"X-Unavailable": "disks-a@srv-a"}   # named: unavailable, not a hole
 
         box.objects.put(REC_SPEC.sub.heartbeat_key("r-a"),                 # srv-a is back, its recorder holds the disk again
                         Heartbeat("r-a", box.wall(), [], {"server": "srv-a", "volume": "disks-a"}).to_bytes())
-        status, body = routes(None, "GET", "/door/timeline/1", {})
-        assert isinstance(body, list) and len(body) == 1                   # nothing to explain: a plain list
+        status, body, headers = routes(None, "GET", "/timeline/1", {})
+        assert len(body) == 1 and headers == []                            # nothing to name
     finally:
         srv.shutdown()
 
@@ -913,7 +919,7 @@ def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_netwo
         assert a2.hold == "net" and a2.store is not None and a2.store.writer is not None   # at once
         assert a2.our_coverage("1") == [(t - 60, t)]                   # one writer wrote it, and all of it is there
         a.lease_pass()                                                 # its name is the other instance's: fenced
-        assert not a.recording_allowed
+        assert not a.writing_allowed
         assert a.rejoin() is None and a.seeking == "r-1"               # …and nobody: no other number (the owner's 4 Oct)
     finally:
         da.stop(); db.stop()

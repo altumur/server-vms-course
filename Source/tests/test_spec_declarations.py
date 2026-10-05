@@ -452,46 +452,55 @@ def test_what_a_change_or_a_request_reaches_is_the_specs_group_the_cluster_or_th
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "rights": {"reach": {"group": ["nope"]}}}), "rights.reach is")
 
 
-def _door_files():
-    """A cluster's door key pair as the deployment gives it (`DOOR_KEY` to the consoles, `DOOR_RING` to the holders)."""
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    k = Ed25519PrivateKey.generate()
-    seed = k.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption())
-    pub = k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
-    d = tempfile.mkdtemp(prefix="door-")
-    for name, line in (("key", f"k1 {seed.hex()}"), ("ring", f"k1 {pub.hex()}")):
-        with open(os.path.join(d, name), "w") as f:
-            f.write(line + "\n")
-    return {"DOOR_KEY": os.path.join(d, "key"), "DOOR_RING": os.path.join(d, "ring")}
+def _sealer():
+    """A key ring for a test (`SECRETS_KEY`): what a console seals the door key with."""
+    from tests.conftest import key_ring
+    from w2cplatform.sealing import Sealer
+    return Sealer.from_file(key_ring())
 
 
 def test_a_door_token_opens_one_holders_door_to_one_unit_for_its_routes_until_it_ends():
-    """`door.py`: the console signs (`Signer`, from `DOOR_KEY`), the holder checks by the public key (`Ring`, from
-    `DOOR_RING`) — this holder, this unit, this route, not past its time, a signature that holds; anything else is 401
-    or 403 in words. A token in a query is masked wherever a path is logged; a page's origin is answered only when it is
-    a console's (`DOOR_ORIGINS`). A spec's `door:` is a list of words."""
-    from w2cplatform.door import DoorRefused, Ring, Signer, cors, masked, origins, parse_routes, token_in
-    env = _door_files()
-    sign, ring = Signer.from_env(env), Ring.from_env(env)
-    assert Signer.from_env({}) is None and Ring.from_env({}) is None            # no files: the open mode
+    """`door.py`: the door key is in the STORE (the product's `door/signer`, `door/keys`): the console makes it the first
+    time it is asked — the public half into the ring first, the seed sealed — and signs (`Signer`); the holder checks by
+    the ring (`Ring`): this holder, this unit, this route, not past its time (and `SKEW`), a signature that holds; anything
+    else is a 401 whose `reason` is one word a page acts on. A rotation signs with a new key and the old half stays. A
+    token in a query is masked wherever a path is logged; a page's origin is answered only when it is a console's
+    (`DOOR_ORIGINS`). A spec's `door:` is a list of words."""
+    from w2cplatform.door import (KEYS_KEY, SIGNER_KEY, DoorRefused, Ring, Signer, cors, masked, origins, parse_routes,
+                                  rotate, token_in)
+    vars_, objects, wall = _box()
+    assert Signer.for_console(vars_, None) is None                            # no key ring to seal one: the open mode
+    sealer = _sealer()
+    sign, ring = Signer(vars_, sealer), Ring(vars_)
+    assert ring.keys() == {}                                                  # nothing made yet: a door that opens to all
     tok, exp = sign.issue("ann", "bin/a", "w-1", ("read",), 1000.0)
-    assert exp == 1000.0 + 120 and ring.check(tok, unit="bin/a", holder="w-1", route="read", now=1100.0)["sub"] == "ann"
-    for kw, status, words in (({"unit": "bin/b"}, 403, "opens 'bin/a'"), ({"holder": "w-2"}, 403, "the unit moved"),
-                              ({"route": "write"}, 403, "does not open 'write'"), ({"now": 1121.0}, 401, "has ended")):
+    signer, keys = vars_.get(SIGNER_KEY)[0], vars_.get(KEYS_KEY)[0]
+    assert set(signer) == {"kid", "seed"} and signer["seed"].startswith("enc:") and list(keys) == [signer["kid"]]
+    assert exp == 1000.0 + 120 and Ring(vars_).check(tok, unit="bin/a", holder="w-1", route="read", now=1100.0)["sub"] == "ann"
+    ring = Ring(vars_)
+    for kw, reason, words in (({"unit": "bin/b"}, "unit", "is for bin/a"), ({"holder": "w-2"}, "holder", "elsewhere"),
+                              ({"route": "write"}, "route", "does not open 'write'"), ({"now": 1126.0}, "expired", "expired")):
         args = {"unit": "bin/a", "holder": "w-1", "route": "read", "now": 1100.0, **kw}
         try:
             ring.check(tok, **args); raise AssertionError(kw)
         except DoorRefused as e:
-            assert e.status == status and words in e.why, (kw, e.why)
-    other = Signer.from_env(_door_files()).issue("ann", "bin/a", "w-1", ("read",), 1000.0)[0]
-    for bad in (None, "", "x.y", tok[:-3] + "AAA", other):                    # none; not one; tampered; another key's kid
+            assert e.status == 401 and e.reason == reason and words in e.why, (kw, e.reason, e.why)
+    assert ring.check(tok, unit="bin/a", holder="w-1", route="read", now=1123.0)       # past `exp`, inside `SKEW`
+    other_vars = _box()[0]
+    other = Signer(other_vars, sealer).issue("ann", "bin/a", "w-1", ("read",), 1000.0)[0]
+    for bad, reason in ((None, "token"), ("", "token"), ("x.y", "signature"), (tok[:-3] + "AAA", "signature"),
+                        (other, "signature")):                               # none; not one; tampered; another cluster's
         try:
             ring.check(bad, unit="bin/a", holder="w-1", route="read", now=1100.0); raise AssertionError(bad)
         except DoorRefused as e:
-            assert e.status == 401
+            assert e.status == 401 and e.reason == reason, (bad, e.reason)
+    old_kid = signer["kid"]
+    new_kid = rotate(vars_, sealer)
+    assert new_kid != old_kid and set(vars_.get(KEYS_KEY)[0]) == {old_kid, new_kid}   # the old half stays in the ring
+    assert Signer(vars_, sealer).issue("ann", "bin/a", "w-1", ("read",), 1000.0)[0].split(".")[1] == new_kid
+    assert ring.check(tok, unit="bin/a", holder="w-1", route="read", now=1100.0)        # a token the old key signed: still
     assert token_in({"Authorization": "Bearer abc"}, "/x") == "abc" and token_in({}, "/x?t=def&from=1") == "def"
-    assert masked("/door/read/a?from=1&t=secret&to=2") == "/door/read/a?from=1&t=***&to=2"
+    assert masked("/read/a?from=1&t=secret&to=2") == "/read/a?from=1&t=***&to=2"
     allowed = origins({"DOOR_ORIGINS": "https://console.example, http://10.0.0.5:8080/"})
     assert allowed == ("https://console.example", "http://10.0.0.5:8080")
     assert cors("https://evil.example", allowed) == [] and ("Access-Control-Allow-Origin", "https://console.example") in cors("https://console.example", allowed)
@@ -501,11 +510,34 @@ def test_a_door_token_opens_one_holders_door_to_one_unit_for_its_routes_until_it
         _refused(lambda: parse_routes("spec x", bad), "`door:` is")
 
 
+def test_a_new_door_key_is_made_in_the_store_by_the_verb_and_the_old_half_stays():
+    """`python3 -m w2cplatform.door new` (`door._new`): a new door key in this cluster's store — the seed sealed into
+    `door/signer` with the cluster's key ring (`SECRETS_KEY`), its public half added to `door/keys` — so a holder reads
+    it there and no unit carries a key file. Without the ring nothing is made, and it says why."""
+    import contextlib
+    import io
+    from tests.conftest import key_ring
+    from w2cplatform import host
+    from w2cplatform.door import KEYS_KEY, SIGNER_KEY, _new
+    env = {"PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-")}
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        assert _new(env) == 2                                         # no key ring: nothing to seal the seed with
+    assert "SECRETS_KEY" in out.getvalue()
+    env["SECRETS_KEY"] = key_ring()
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert _new(env) == 0 and _new(env) == 0                      # made, and made again: a rotation
+    vars_, _ = host.stores(env)
+    signer, keys = vars_.get(SIGNER_KEY)[0], vars_.get(KEYS_KEY)[0]
+    assert signer["seed"].startswith("enc:") and len(keys) == 2 and signer["kid"] in keys
+
+
 def test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_holder_has_one():
-    """`GET /where/<id>` for a spec that declares `door: {routes}`: the door the unit's holder announces (`door_url` in its
-    heartbeat) — the worker it is PLACED on, live, saying it holds the unit — and a token for those routes, this unit,
-    this holder (none without `DOOR_KEY`: the door's open mode); a line `door.issued` names who got it. Nobody holding
-    the unit so: `door: null`. A spec with no `door:` says nothing of one."""
+    """`GET /where/<id>` for a spec that declares `door: {routes}`: the door the unit's holder announces (`url` in its
+    heartbeat, the product's word) — the worker it is PLACED on, live, saying it holds the unit — and a token for those
+    routes, this unit, this holder, signed by the door key the console made in the store (none without a key ring to
+    seal one: the door's open mode); a line `door.issued` names who got it. Nobody holding the unit so: `door: null`. A
+    spec with no `door:` says nothing of one."""
     import json
     import urllib.request
     from w2cplatform.console import SpecConsole
@@ -515,15 +547,9 @@ def test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_
     spec = SubsystemSpec.from_dict({**BIN, "door": {"routes": ["read"]}})
     ctl = SpecController(spec, vars_, objects, wall=wall)
     ctl.create({"name": "a"})
-    env = _door_files()
-    was = {k: os.environ.get(k) for k in env}
-    os.environ.update(env)
+    ctl.sealer = _sealer()                                                     # the console's key ring (`SECRETS_KEY`)
     marks = tempfile.mkdtemp(prefix="marks-")
-    try:
-        con = SpecConsole(ctl, marks_root=marks, wall=wall)
-    finally:
-        for k, v in was.items():
-            os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+    con = SpecConsole(ctl, marks_root=marks, wall=wall)
     srv = con.serve("127.0.0.1", 0)
     def where():
         import urllib.error
@@ -535,17 +561,17 @@ def test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_
     try:
         assert where()["door"] is None                                         # nobody holds it
         objects.put(spec.sub.heartbeat_key("w-1"), Heartbeat("w-1", wall(), [{"id": "a"}], {
-            "server": "s1", "bay": "", "capacity": 4, "headroom": 4, "door_url": "http://w-1:9/door"}).to_bytes())
+            "server": "s1", "bay": "", "capacity": 4, "headroom": 4, "url": "http://w-1:9"}).to_bytes())
         objects.put(spec.sub.heartbeat_key("w-2"), Heartbeat("w-2", wall(), [{"id": "a"}], {
-            "server": "s2", "bay": "", "capacity": 4, "headroom": 0, "door_url": "http://w-2:9/door"}).to_bytes())
+            "server": "s2", "bay": "", "capacity": 4, "headroom": 0, "url": "http://w-2:9"}).to_bytes())
         SpecController(spec, vars_, objects, wall=wall).ensure_placed()
         placed = ctl.placement("a").worker
         d = where()["door"]
-        assert d["url"] == f"http://{placed}:9/door" and d["routes"] == ["read"] and d["expires"] == wall() + 120
-        assert Ring.from_env(env).check(d["token"], unit="bin/a", holder=placed, route="read", now=wall())["sub"] == "ann"
+        assert d["url"] == f"http://{placed}:9" and d["routes"] == ["read"] and d["expires"] == wall() + 120
+        assert Ring(vars_).check(d["token"], unit="bin/a", holder=placed, route="read", now=wall())["sub"] == "ann"
         lines = [e for e in EventIndex(marks, "", wall=wall).query(0, wall() + 1, subsystem="audit")["events"] if e["kind"] == "door.issued"]
         assert [(e["user"], e["target"], e["holder"], e["routes"]) for e in lines] == [("ann", "a", placed, "read")]
-        objects.put(spec.sub.heartbeat_key(placed), Heartbeat(placed, wall(), [], {"server": "s1", "door_url": "x"}).to_bytes())
+        objects.put(spec.sub.heartbeat_key(placed), Heartbeat(placed, wall(), [], {"server": "s1", "url": "x"}).to_bytes())
         assert where()["door"] is None                                         # its holder no longer says it holds it
     finally:
         srv.shutdown()

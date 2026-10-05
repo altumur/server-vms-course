@@ -164,7 +164,7 @@ from .variables import STORE_SCHEME, items_bytes
 # What an installation sees, each said once (the product names them; a rename is a line here).
 SOCKETS = "/run/configstore"                        # `<role>.sock` and `admin.sock`
 DATA = runtime.DATA + "/configstore"                # journal, dump, member.json — the platform's state (`runtime.DATA`)
-RIGHTS_FILE = runtime.ETC + "/configstore-rights.json"   # generated from the spec (М11: `python3 -m cluster rights`)
+RIGHTS_FILE = runtime.ETC + "/configstore-rights.json"   # generated from the spec (`python3 -m w2cplatform.cluster rights`)
 ADMIN_URL = f"{STORE_SCHEME}://{SOCKETS}/admin.sock"
 
 

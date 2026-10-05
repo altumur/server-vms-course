@@ -1,4 +1,4 @@
-"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs —
+"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs|domainpart —
 the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
 (`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
 the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: ch}`), and so are the
@@ -7,7 +7,7 @@ w2cplatform console`, `CONSOLE_ROOT=vms`: the specs' rows, tables, requests and 
 beside its workers is its housekeeping, `jobs`: the requests turned into work and the work into closed rows.
 
     PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
-    ARCHIVE=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
+    RESOURCE_ROOT=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
     ARCHIVE_VOLUME  MEDIA_DIR=/data/media   the recorder's own volume (`/data/vms/obsd/volume`); the holder's files
     OBSD_SOCKET=/run/vms-obsd/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
     WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: NOMAD_ALLOC_INDEX → w-<index>;
@@ -45,7 +45,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 # Environment (from the docstring and the code):
 # - `PLATFORM_DIR` (default `/data/platform`, `runtime.platform_dir`) — the platform's state: `<dir>/config` is
 #   `FileVariables`, `<dir>/objects` is `FsObjectStore`, `<dir>/events` the events archive.
-# - `ARCHIVE` (`runtime.events_root`: `<PLATFORM_DIR>/events`) — the platform's events archive, the resource's tree:
+# - `RESOURCE_ROOT` (`runtime.events_root`: `<PLATFORM_DIR>/events`) — the platform's events archive, the resource's tree:
 #   every subsystem's buckets, each process a client of it (group `w2c-events`). A recorder with nothing declared
 #   formats its server's own volume at `ARCHIVE_VOLUME`, by default `config.OWN_VOLUME` (`/data/vms/obsd/volume`:
 #   the archive engine is the VMS's, and so are its volumes).
@@ -63,7 +63,8 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 # - `LOG_LEVEL` (`INFO`) — `logging.basicConfig` level.
 #
 # ## Module-level names
-# - `root` — `$PLATFORM_DIR`, read once at import.
+# - `_stores(role, acl)` — the process's two stores (`host.stores`: `PLATFORM_STORE`, `OBJECTS`, else the box's files).
+# - `make_worker`, `make_recorder` — a holder and a recorder built AND registered with their server's resource.
 # - `stop` — the platform's flag (`w2cplatform.host.stop`), set by the SIGTERM/SIGINT handler; every verb loops on
 #   it. The handler is installed when the module is RUN (`if __name__ == "__main__"`), never at import: a process that
 #   imports the module (the tests do) keeps its own signals.
@@ -93,18 +94,38 @@ import threading
 
 from w2cplatform import host, runtime
 from w2cplatform.host import stop
-from w2cplatform.objects import FsObjectStore
-from w2cplatform.variables import open_vars, store_url
 
 from .controller import VmsController
 from .worker import FakeActuator, VmsWorker, commands_beat
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
-root = runtime.platform_dir(os.environ)
-# The store seam: a process is told a URL and nothing else (`w2cplatform.variables.open_vars`). On a box
-# this is `file://` — in-process, no daemon, no hop. `PLATFORM_STORE=configstore:///run/configstore/<role>.sock` in a
-# cluster (`store_url`), `k8s://…` later; not one of those names appears in the loop.
-STORE_URL = store_url(os.environ, "file://" + os.path.join(root, "config"))
+
+
+# The store seam: a process is told two URLs and nothing else (`host.stores`). On a box the store is `file://` —
+# in-process, no daemon, no hop — and the objects files under `PLATFORM_DIR`; on a cluster
+# `PLATFORM_STORE=configstore:///run/configstore/<role>.sock` (the role's socket on this server) and
+# `OBJECTS=cluster://…` (this server's objects as files, every server's through its resource). Not one of those names
+# appears in the loop. The role's token is its spec's (`acl_worker_role`, `worker:` in the spec): on a box the file
+# store enforces it, on a cluster the rights file generated from the same specs does.
+def _stores(role: str, acl: list[str]):
+    return host.stores(os.environ, role, acl)
+
+
+# A process that holds a slot REGISTERS with its server's resource before it runs (`Worker.present`): a lock in the
+# resource's tree for as long as the process lives, its name beside it — what lets the controller tell a worker whose
+# process died on a live server (its units move) from one that hangs (they stay). The cluster's stand builds its
+# processes through these two (`tests/cluster/conftest.py`), so what the stand runs is what a unit runs.
+def make_worker(vars_, objects, actuator=None, env: dict | None = None, **kw) -> VmsWorker:
+    w = VmsWorker(None, vars_, objects, actuator or FakeActuator(), env=env, **kw)
+    w.present(w.resource_root)                 # its server's resource tree: where its events go too
+    return w
+
+
+def make_recorder(vars_, objects, actuator=None, env: dict | None = None, **kw):
+    from .recworker import RecWorker
+    r = RecWorker(None, vars_, objects, actuator or FakeActuator(), env=env, **kw)
+    r.present(r.resource_root)
+    return r
 
 
 # Builds `vmsworker`:
@@ -117,18 +138,14 @@ STORE_URL = store_url(os.environ, "file://" + os.path.join(root, "config"))
 # - Tries `gstvms.actuator.GstActuator()` — `driverpacksrc ! tee`, served as the RTSP fan-out on :8554; on
 #   `ImportError` (no `gi`) logs a warning and uses `FakeActuator`, which holds nothing. The worker records
 #   nothing either way: recording is the recorder's (`recorder` below).
-# - Constructs `VmsWorker(name, vars_, objects, act, capacity=$CAPACITY, archive_root=archive)` — its events
+# - Constructs `VmsWorker(name, vars_, objects, act, capacity=$CAPACITY, resource_root=archive)` — its events
 #   go to this server's resource under `vms/<cam>/` — the
 #   constructor claims the slot — logs the claimed name and instance, and calls `w.run(stop=stop)`. `run`
 #   releases the slot on the way out, so SIGTERM is an orderly stop (scale-in), while a kill leaves the slot
 #   to lapse.
 def worker() -> None:
-    from w2cplatform import runtime
-    from .config import WORKER_ACL
-    name = runtime.slot(os.environ, "WORKER_NAME", "w")
-    vars_ = open_vars(STORE_URL, writer="vmsworker", acl={"vmsworker": WORKER_ACL})
-    objects = FsObjectStore(os.path.join(root, "objects"))
-    archive = runtime.events_root(os.environ)
+    from .config import SPEC
+    vars_, objects = _stores(f"{SPEC.name}worker", SPEC.acl_worker_role())
     try:
         from gstvms.actuator import GstActuator
         from .config import port_of, RTSP_PORT
@@ -146,8 +163,7 @@ def worker() -> None:
         from gstvms.devices import open_device as device_factory              # type: ignore
     except ImportError:
         device_factory = None
-    w = VmsWorker(name, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), archive_root=archive,
-                  device_factory=device_factory)
+    w = make_worker(vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), device_factory=device_factory)
     w.rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")   # what the fan-out is bound to is what the heartbeat announces
     # The port is the worker's own (`$PLAYBACK_PORT`, `auto` for "ask the OS"), read in its constructor and
     # written back here by whatever the socket actually got.
@@ -156,7 +172,6 @@ def worker() -> None:
     try:
         # `beat`: between two passes it looks at its request rows every quarter of a second (`COMMANDS_BEAT`; 0 —
         # only on the pass). A command is the second half of the road from an event to a device (`VmsWorker.between`).
-        _present(w)
         w.run(stop=stop, beat=commands_beat(os.environ))
     finally:
         srv.shutdown()
@@ -172,13 +187,12 @@ def worker() -> None:
 #   `/samples` over the volume it holds — what the console draws and plays, and what a primary copies from a
 #   backup.
 def recorder() -> None:
-    from .recworker import RecWorker
-    # The platform's grant for a worker of `rec` — epochs, its slot AND its hold. The list here was written by
-    # hand before a recorder took volumes, and was never given `rec/holds/*`: on a box with a declared volume
+    from urllib.parse import urlsplit
+    # The platform's grant for a worker of `rec` — epochs, its slot AND its hold, from the spec. The list here was
+    # written by hand before a recorder took volumes, and was never given `rec/holds/*`: on a box with a declared volume
     # this process was refused its own place, by its own token (found with feedback BR).
     from .config import REC_SPEC
-    vars_ = open_vars(STORE_URL, writer="recworker", acl={"recworker": REC_SPEC.sub.acl_worker()})
-    objects = FsObjectStore(os.path.join(root, "objects"))
+    vars_, objects = _stores(f"{REC_SPEC.name}worker", REC_SPEC.acl_worker_role())
     try:
         from gstvms.actuator import GstRecActuator
         act = GstRecActuator()
@@ -194,17 +208,25 @@ def recorder() -> None:
     # here, not left to the recorder's fallback beside the events tree, which is the platform's directory now.
     from .config import OWN_VOLUME
     env = {**os.environ, "ARCHIVE_VOLUME": os.environ.get("ARCHIVE_VOLUME") or OWN_VOLUME}
-    r = RecWorker(None, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), env=env,
-                  archive_root=runtime.events_root(os.environ),
-                  window=window, keep_days=float(os.environ.get("RETENTION_DAYS", "30")))
+    r = make_recorder(vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), env=env,
+                      resource_root=runtime.events_root(os.environ),
+                      window=window, keep_days=float(os.environ.get("RETENTION_DAYS", "30")))
     r.backfill_budget = int(os.environ.get("BACKFILL_BUDGET", "1"))
-    srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "127.0.0.1"), int(os.environ.get("ARCHIVE_PORT", "0")))
+    # The door binds where the unit says it is reachable (`ARCHIVE_URL` — on a cluster the server's address, no DNS
+    # between servers), else loopback — never every interface: the door between processes asks nobody who they are.
+    # Its port: `ARCHIVE_PORT`, else the one `ARCHIVE_URL` names, else whatever the OS gives (a spare recorder beside
+    # the server's own). What it got is what its heartbeat says — `ARCHIVE_URL` as written only when that is the port.
+    said = os.environ.get("ARCHIVE_URL", "")
+    announced = urlsplit(said).hostname if said else None
+    port = os.environ.get("ARCHIVE_PORT") or (str(urlsplit(said).port) if said and urlsplit(said).port else "0")
+    srv = r.serve_archive(os.environ.get("ARCHIVE_HOST") or announced or "127.0.0.1", int(port))
+    if said and urlsplit(said).port == srv.server_address[1]:
+        r.archive_url = said
     logging.info("recorder %s (instance %s) claimed its slot; archive door %s", r.name, r.instance, r.archive_url)
     try:
         # No beat between its passes: what a recorder serves from `rec/requests` is a backfill — minutes off a card,
         # on its backfill thread — and a quarter of a second saved on that is nothing. A scenario's `record` is not
-        # its to serve at all: the console turns it into a recording (`_requests_loop`).
-        _present(r)
+        # its to serve at all: the jobs turn it into a recording (`_requests_loop`).
         r.run(stop=stop)
     finally:
         srv.shutdown()
@@ -217,13 +239,19 @@ def _present(w) -> None:
     w.present(runtime.events_root(os.environ))
 
 
+def _spec(name: str):
+    from . import config
+    return {s.name: s for s in (config.SPEC, config.REC_SPEC, config.LIVE_SPEC, config.DET_SPEC, config.DETJOB_SPEC,
+                                config.SURVEY_SPEC, config.AUTO_SPEC)}[name]
+
+
 def detworker() -> None:
     """A detector worker: a worker of the `det` subsystem. Its token writes its slot, its epochs and its
     heartbeat; its events go into det/<unit>/e<epoch>/ on this server's resource."""
     from .detworker import DetWorker
-    vars_ = open_vars(STORE_URL, writer="detworker", acl={"detworker": ["det/epoch/*", "det/slots/*"]})
-    d = DetWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")), capacity=int(os.environ.get("CAPACITY", "8")),
-                  archive_root=runtime.events_root(os.environ))
+    vars_, objects = _stores("detworker", _spec("det").acl_worker_role())
+    d = DetWorker(None, vars_, objects, capacity=int(os.environ.get("CAPACITY", "8")),
+                  resource_root=runtime.events_root(os.environ))
     logging.info("detector %s (instance %s) claimed its slot; models: %s", d.name, d.instance, ",".join(d.models))
     _present(d)
     d.run(stop=stop)
@@ -233,14 +261,13 @@ def autoworker() -> None:
     """A scenario evaluator. Its token is the only one in the course that reaches across a subsystem's
     name — `requests_acl("vms", "rec", "det")` — and it reaches exactly one family: bounded work, addressed
     to a unit or turned into one by the console. It cannot write a camera, a recording, a detector or a placement."""
-    from w2cplatform.contract import requests_acl
     from .autoworker import AutoWorker
     from .config import AUTO_SPEC
-    acl = AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det")
-    vars_ = open_vars(STORE_URL, writer="autoworker", acl={"autoworker": acl})
-    a = AutoWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
+    acl = AUTO_SPEC.acl_worker_role()                        # `worker: {requests: [vms, rec, det]}` in its spec
+    vars_, objects = _stores("autoworker", acl)
+    a = AutoWorker(None, vars_, objects,
                    capacity=int(os.environ.get("CAPACITY", "50")),
-                   archive_root=runtime.events_root(os.environ))
+                   resource_root=runtime.events_root(os.environ))
     logging.info("evaluator %s (instance %s) claimed its slot; may file: %s", a.name, a.instance, ",".join(acl[-3:]))
     # The long poll (`w2cplatform/longpoll.py`): a request held at every resource it asks, answered when an event
     # one of its scenarios watches is written there — the pass begins then, not at the end of its two seconds.
@@ -256,10 +283,10 @@ def detjobworker() -> None:
     to spend the streams live detection is running on. Its events go into detjob/<job>/e<epoch>/ on this
     server's resource; its progress goes beside them, because its token may not write the row."""
     from .detjobworker import DetJobWorker
-    vars_ = open_vars(STORE_URL, writer="detjobworker", acl={"detjobworker": ["detjob/epoch/*", "detjob/slots/*"]})
-    j = DetJobWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
+    vars_, objects = _stores("detjobworker", _spec("detjob").acl_worker_role())
+    j = DetJobWorker(None, vars_, objects,
                      capacity=int(os.environ.get("SCAN_CAPACITY", "2")),
-                     archive_root=runtime.events_root(os.environ))
+                     resource_root=runtime.events_root(os.environ))
     logging.info("scan worker %s (instance %s) claimed its slot; models: %s", j.name, j.instance, ",".join(j.models))
     _present(j)
     j.run(stop=stop)
@@ -271,10 +298,10 @@ def surveyworker() -> None:
     because a survey must never be able to spend what live detection is running on, and its real limit is
     usually the two playback sessions the device allows rather than the GPU."""
     from .surveyworker import SurveyWorker
-    vars_ = open_vars(STORE_URL, writer="surveyworker", acl={"surveyworker": ["survey/epoch/*", "survey/slots/*"]})
-    s = SurveyWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
+    vars_, objects = _stores("surveyworker", _spec("survey").acl_worker_role())
+    s = SurveyWorker(None, vars_, objects,
                      capacity=int(os.environ.get("SURVEY_CAPACITY", "2")),
-                     archive_root=runtime.events_root(os.environ))
+                     resource_root=runtime.events_root(os.environ))
     logging.info("survey %s (instance %s) claimed its slot; models: %s", s.name, s.instance, ",".join(s.models))
     _present(s)
     s.run(stop=stop)
@@ -286,9 +313,7 @@ def gateway() -> None:
     from w2cplatform.spec import SpecController
     from .config import LIVE_SPEC
     from .liveworker import LiveWorker
-    vars_ = open_vars(STORE_URL, writer="liveworker",
-                          acl={"liveworker": ["live/epoch/*", "live/slots/*", "live/streams/*"]})
-    objects = FsObjectStore(os.path.join(root, "objects"))
+    vars_, objects = _stores("liveworker", LIVE_SPEC.acl_worker_role())     # `worker: {writes: [streams]}`
     from .config import port_of
     # `auto` is what lets a second gateway run on this box: it publishes the address it bound (`serve`
     # reads it back into `self.url`), and every viewer reaches it through that, never through a number.
@@ -301,7 +326,7 @@ def gateway() -> None:
         logging.warning("no GStreamer webrtcbin: the fake peer answers SDP and carries no media")
     gw = LiveWorker(None, vars_, objects, ctl=SpecController(LIVE_SPEC, vars_, objects), url=os.environ.get("GATEWAY_URL", f"http://{host}:{port}"),
                      capacity=int(os.environ.get("CAPACITY", "100")), peer_factory=peer,
-                     archive_root=runtime.events_root(os.environ))
+                     resource_root=runtime.events_root(os.environ))
     srv = gw.serve(host, port)
     logging.info("gateway %s (instance %s) on %s", gw.name, gw.instance, srv.server_address)
     _present(gw)
@@ -314,26 +339,26 @@ def gateway() -> None:
 # alone). `python3 -m vms jobs`: what turns a request into work and work into a closed row — the reaper's turn, the
 # answered requests cleared, what automation asked for turned into rows — with the token that writes configuration
 # (the console's grant of the families it touches: a worker writes none, a controller writes placement), and its own
-# numbers on `/metrics` (`jobs.metrics_lines`: what the request loops expired, `vms_requests_expired_total`), at
+# numbers on `/metrics` (`requests.metrics_lines`: what the request loops expired, `w2c_requests_expired_total`), at
 # `JOBS_HOST:JOBS_PORT`.
 # (The blob sweep is the platform console's own, `host.sweep_loop`: `<sub>/blobs/*` is the console's to write, Lesson 27,
 # so it is the console's to collect.)
 # The reaper's pass: a job's row follows the worker that finished it. The worker
 # cannot write the row (its ACL forbids configuration) and the controller must not (one row, one writer),
 # so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
-def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
-    host.every(lambda: _reap_turn(controllers, requests, rec_ctl, det_ctl, survey_ctl), every)
+def _reap_loop(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
+    host.every(lambda: _reap_turn(controllers, rec_ctl, det_ctl, survey_ctl), every)
 
 
 # One turn of it, in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): `scan_what_arrived`
 # read every detector again for every span a recorder closed, `keep_what_fired` every recording for every hit, and
 # `reap` and `forget_finished` each every job — some 55 000 reads a turn at a thousand of each. Each key is read once a
 # turn now; what a step writes, the next reads back from the store.
-def _reap_turn(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, now=None) -> None:
+def _reap_turn(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, now=None) -> None:
     import time
     from w2cplatform.contract import one_pass
-    from .jobs import ask_for_footage, clear_requests, forget_finished, keep_what_fired, reap, scan_what_arrived
-    every_ctl = [c for c in (*controllers, *requests, rec_ctl, det_ctl, survey_ctl) if c is not None]
+    from .jobs import ask_for_footage, forget_finished, keep_what_fired, reap, scan_what_arrived
+    every_ctl = [c for c in (*controllers, rec_ctl, det_ctl, survey_ctl) if c is not None]
     with one_pass(*every_ctl):
         for c in controllers:
             try:
@@ -369,33 +394,10 @@ def _reap_turn(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
                     logging.info("%s: asked the recorder to keep %d stretch(es)", survey_ctl.spec.name, kept)
             except Exception:                         # noqa: BLE001
                 logging.exception("keeping what fired failed in %s — those minutes stay on the device", survey_ctl.spec.name)
-        for c in requests:                            # the same division, one row simpler: fetched, so gone
-            try:
-                gone = clear_requests(c)              # …and the day-old backfills; the answered ones go in `_clear_loop` too
-                if gone:
-                    logging.info("%s: %d request(s) fetched and cleared", c.spec.name, gone)
-            except Exception:                         # noqa: BLE001
-                logging.exception("clearing requests failed in %s — they will be asked for again", c.spec.name)
 
 
-# The answered requests, cleared in a short cycle of their own (the review's seventh pass, M6): every `CLEAR_EVERY`, the
-# rows the workers' heartbeats say they answered — no row is read for it (`clear_requests(sweep=False)`). On the reaper's
-# thirty seconds they piled up behind a holder that answers up to sixteen a second, and a holder started again found
-# them standing. Apart from `_requests_loop` because that one is automation's way in, and a failure here is not its.
-def _clear_loop(requests, every: float | None = None) -> None:
-    from .jobs import CLEAR_EVERY
-    host.every(lambda: _clear_turn(requests), CLEAR_EVERY if every is None else every)
-
-
-def _clear_turn(requests) -> None:
-    from .jobs import clear_requests
-    for c in requests:
-        try:
-            gone = clear_requests(c, sweep=False)
-            if gone:
-                logging.debug("%s: %d answered request(s) cleared", c.spec.name, gone)
-        except Exception:                             # noqa: BLE001
-            logging.exception("clearing answered requests failed in %s — the reaper's pass clears them", c.spec.name)
+# (The answered requests, and the ones nobody answered, are cleared by the platform's console — `w2cplatform/requests.py`,
+# its housekeeping in `host.console`: the request family is the platform's, the boundary's step 7.)
 
 
 # The console's third loop: what AUTOMATION asked for, turned into rows — and a short loop, apart from the
@@ -404,7 +406,7 @@ def _clear_turn(requests) -> None:
 # in six reached them after its `valid_until` and was dropped with a warning nobody reads, while the scenario
 # had already written `fired`. Two seconds is the evaluator's own pass, so neither side waits on the other;
 # what it costs is a listing of two request families and a pass over the rows with an `until`. The drops that
-# still happen are on `/metrics` (`jobs.expired`, `vms_requests_expired_total`).
+# still happen are on `/metrics` (`requests.expired`, `w2c_requests_expired_total`).
 #
 # Turning a request into a recording or a detector is a write to CONFIGURATION, and of the three processes only
 # this one holds the token for it — a worker writes none, and the controller writes placement. Both ends of
@@ -466,11 +468,9 @@ def jobs() -> None:
     from w2cplatform.console import Deadlined, SendMixin, door_server
     from w2cplatform.spec import SpecController
     from .config import DET_SPEC, DETJOB_SPEC, REC_SPEC, SPEC, SURVEY_SPEC
-    from .jobs import metrics_lines
+    from w2cplatform.requests import metrics_lines
     families = (SPEC, REC_SPEC, DET_SPEC, DETJOB_SPEC, SURVEY_SPEC)
-    vars_ = open_vars(STORE_URL, writer="console",                # the console's grant of the families it touches
-                      acl={"console": [a for s in families for a in s.acl_console()]})
-    objects = FsObjectStore(os.path.join(root, "objects"))
+    vars_, objects = _stores("console", [a for s in families for a in s.acl_console()])   # the console's grant of them
     ctl = VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")))
     rec_ctl, det_ctl = SpecController(REC_SPEC, vars_, objects), SpecController(DET_SPEC, vars_, objects)
     job_ctl, survey_ctl = SpecController(DETJOB_SPEC, vars_, objects), SpecController(SURVEY_SPEC, vars_, objects)
@@ -486,14 +486,17 @@ def jobs() -> None:
     srv = door_server((os.environ.get("JOBS_HOST", "127.0.0.1"), int(os.environ.get("JOBS_PORT", "8095"))), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     logging.info("the VMS's jobs; their numbers on %s/metrics", srv.server_address)
-    # `[rec_ctl, ctl]`: two families of requests to clear now — footage a person asked for, and commands
-    # somebody sent a device (a relay, a preset). Same division as everywhere: the worker performs and
-    # says so in its heartbeat, the controller removes the row, because a worker writes no configuration.
-    threading.Thread(target=_reap_loop, args=([job_ctl], [rec_ctl, ctl], rec_ctl, det_ctl, survey_ctl), daemon=True).start()
-    threading.Thread(target=_clear_loop, args=([rec_ctl, ctl],), daemon=True).start()   # answered requests: every 2 s
+    threading.Thread(target=_reap_loop, args=([job_ctl], rec_ctl, det_ctl, survey_ctl), daemon=True).start()
     threading.Thread(target=_requests_loop, args=(rec_ctl, det_ctl, job_ctl), daemon=True).start()   # a request lives 30 s: looked at every 2
     stop.wait()
     srv.shutdown()
+
+
+def domainpart() -> None:
+    """The VMS's worker on the domain, on the server that holds it (`vms/domainpart/worker.py`): the books' pass
+    for every member, its slot and heartbeat under `domain/vms/`, its door (`DOMAINPART_PORT`)."""
+    from .domainpart.worker import main
+    main()
 
 
 if __name__ == "__main__":
@@ -506,4 +509,4 @@ if __name__ == "__main__":
         signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "recorder": recorder, "gateway": gateway, "detworker": detworker, "detjobworker": detjobworker,
      "surveyworker": surveyworker, "autoworker": autoworker,
-     "jobs": jobs}[sys.argv[1]]()
+     "jobs": jobs, "domainpart": domainpart}[sys.argv[1]]()

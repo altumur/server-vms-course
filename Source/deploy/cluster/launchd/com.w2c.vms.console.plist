@@ -22,6 +22,8 @@
 		<string>configstore://__BOX__/state/run/configstore/console.sock</string>
 		<key>CONSOLE_PORT</key>
 		<string>8080</string>
+		<key>CONSOLE_ROOT</key>
+		<string>vms</string>
 		<key>CONSOLE_UNIX</key>
 		<string>__BOX__/state/run/vms-console/console.sock</string>
 		<key>SECRETS_KEY</key>

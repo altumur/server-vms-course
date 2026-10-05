@@ -33,7 +33,7 @@ def _box():
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     live_ctl = SpecController(LIVE_SPEC, box.vars.as_writer("livecontroller", LIVE_SPEC.acl_controller()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
     w.heartbeat_once()
     con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed()   # the console writes the row, the controller places
     w.reconcile_once(); w.heartbeat_once()
@@ -45,7 +45,7 @@ def _gateway(box, name, capacity=100, labels="", url=""):
     g = LiveWorker(name, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects,
                     ctl=SpecController(LIVE_SPEC, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects, wall=box.wall),
                     capacity=capacity, clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": labels},
-                    archive_root=box.archive)
+                    resource_root=box.archive)
     g.serve("127.0.0.1", 0); g.heartbeat_once()
     return g
 
@@ -124,7 +124,7 @@ def test_the_first_viewer_creates_the_stream_and_the_controller_places_it():
         # second try: the door is the gateway's, and it answers — 201 with its SDP and a session at that door
         code, answer, loc = _whep(base, 1)
         assert code == 201 and "m=video" in answer and "a=sendonly" in answer and loc.startswith(g.url + "/whep/session/")
-        assert _door(base, 1) == {"url": g.url, "token": None, "expires": None, "routes": ["whep"]}   # no DOOR_KEY: open
+        assert _door(base, 1) == {"url": g.url, "token": None, "expires": None, "routes": ["whep"]}   # no door key in the store: open
         g.heartbeat_once()                                                               # what the page reads: the gateway's word, from its heartbeat
         st = _stream(base, 1)
         assert st["worker"] == "g-1" and st["phase"] == "live" and st["sessions"] == 1
@@ -515,7 +515,7 @@ def test_who_watched_a_camera_live_is_a_line_in_the_journal():
         return [{k: e[k] for k in ("kind", "user", "target", "session", "gateway", "holder") if k in e}
                 for b in buckets_under(box.archive, "audit", role, 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith(kind)]
-    with door_keys():
+    with door_keys(box.vars):
         con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
         m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.archive, box.wall,
                          live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
@@ -548,7 +548,7 @@ def test_a_viewer_granted_one_camera_hangs_up_its_own_session_and_nobody_elses()
     from vms.console import make_console
     box, ctl, live_ctl, w, srv, base = _box()
     srv.shutdown(); srv.server_close()
-    with door_keys():
+    with door_keys(box.vars):
         con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
         m = make_console(VmsController(con_vars, box.objects, wall=box.wall), None, box.wall,
                          live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))

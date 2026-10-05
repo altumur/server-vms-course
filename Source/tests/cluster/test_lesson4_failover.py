@@ -3,9 +3,15 @@ another server: a crash is systemd's to restart under the same name on the same 
 controller's to act on — by assignment, after two silences (the slot out by `SLOT_LOST_AFTER` more, and the resource
 on its server silent). The power pull on a fake clock; the old instance waking up; two processes with one name; and
 the reassignment window, which is the same window with a different verdict."""
-from cluster.controller import ClusterController
+from vms.controller import VmsController
 from vms.worker import FakeActuator
+from w2cplatform.console import SpecConsole
 from tests.cluster.conftest import Cluster
+
+
+def metrics_text(ctl, worst_failover: float) -> str:
+    """What a console's `/metrics` says of `ctl`'s subsystem — the platform's console over the controller."""
+    return SpecConsole(ctl, worst_failover=worst_failover).metrics_text()
 
 SLOT_TTL = 45.0             # how long a renewal holds the name (`Worker.slot_ttl`)
 LOST_AFTER = 45.0           # the margin past it (`contract.SLOT_LOST_AFTER`): what it started may still be writing
@@ -67,16 +73,15 @@ def test_a_restart_is_measured_on_one_clock_and_a_name_taken_elsewhere_by_the_re
     heartbeat last moved, when the new one was first there; a reader that did not see the old one alive measures
     nothing — it counts it — and a number that is not finite is no number. A name is taken on another server once the
     controller gives it (the thirteenth review, blocker 3): the old server silent, its slot out and the margin past it."""
-    from cluster.console import metrics_text
-    from cluster.worker import ClusterWorker
+    from vms.worker import VmsWorker
     c, ctl, a, _, _ = _recording(b=False)
-    fresh = ClusterController(c.vars, c.objects, wall=c.wall)              # a console started after the failure
+    fresh = VmsController(c.vars, c.objects, wall=c.wall)              # a console started after the failure
     ctl.failover_seconds()                                                  # this one scraped while w-srv-a-1 was alive
     c.wall.advance(SLOT_TTL + LOST_AFTER + 3)                               # srv-a silent, the slot out and the margin
     ctl.pass_once(1)                                                        # the controller gives the name
     v = c.door("vmsworker")
-    b = ClusterWorker(v, c.objects_on("srv-b", v), FakeActuator(), env=c.env("srv-b", "w-srv-a-1"), clock=c.clock,
-                      wall=lambda: c.wall() - 600.0)                        # srv-b's clock: 10 min behind
+    b = VmsWorker(None, v, c.objects_on("srv-b", v), FakeActuator(), env=c.env("srv-b", "w-srv-a-1"), clock=c.clock,
+                  wall=lambda: c.wall() - 600.0)                            # srv-b's clock: 10 min behind
     b.reconcile_once(); b.heartbeat_once()
     assert ctl.failover_seconds() == {"w-srv-a-1": 93.0}                    # by the reader's clock — not −507
     assert fresh.failover_seconds() == {} and fresh.failovers_unmeasured == 1
@@ -85,8 +90,8 @@ def test_a_restart_is_measured_on_one_clock_and_a_name_taken_elsewhere_by_the_re
     c2, ctl2, a2, _, _ = _recording(b=False)
     c2.wall.advance(31)
     again = c2.worker("srv-a"); again.reconcile_once(); again.heartbeat_once()
-    assert ClusterController(c2.vars, c2.objects, wall=c2.wall).failover_seconds() == {"w-srv-a-1": 31.0}
-    assert 'vms_failover_seconds{kind="worst"} 31.0' in metrics_text(ClusterController(c2.vars, c2.objects, wall=c2.wall), 0.0)
+    assert VmsController(c2.vars, c2.objects, wall=c2.wall).failover_seconds() == {"w-srv-a-1": 31.0}
+    assert 'vms_failover_seconds{kind="worst"} 31.0' in metrics_text(VmsController(c2.vars, c2.objects, wall=c2.wall), 0.0)
     # a number that is not one: not said, counted — and the worst stays the worst this reader measured
     from w2cplatform.contract import Heartbeat
     hb = Heartbeat.from_bytes(again.objects.get("vms/heartbeats/w-srv-a-1"))
@@ -145,7 +150,7 @@ def test_every_unit_registers_with_its_servers_resource_and_a_process_that_ended
     """The twelfth review's «Вопросы», defect 1: the cluster's entry points never called `Worker.present` (the box's do,
     `vms/__main__._present`). Every resource heartbeat said `workers` and `running` empty, so a worker whose process
     died on a live server was `wait` — "cannot be told" — for ever, and nobody wrote its cameras if systemd did not
-    bring it back. Now `cluster.__main__.make_worker`/`make_recorder` build AND register — what the units run, and what
+    bring it back. Now `vms.__main__.make_worker`/`make_recorder` build AND register — what the units run, and what
     the stand builds its processes with. srv-a's resource lists its worker and its recorder, placed and running. The
     worker hangs (its process lives): past its slot nothing moves — `hung`. Its process ends: placed, not running — and
     its cameras go to w-srv-b-1 at that pass, srv-a's resource answering all along, its reason saying why."""
@@ -180,17 +185,17 @@ def test_every_unit_registers_with_its_servers_resource_and_a_process_that_ended
 
 
 def test_the_worker_entry_point_registers_its_process_before_it_runs():
-    """What a unit runs, run: `cluster.__main__.worker()` with this server's store and objects and its unit's
-    environment, stopped before its first turn — its registration is in its server's events archive (`ARCHIVE`), under
+    """What a unit runs, run: `vms.__main__.worker()` with this server's store and objects and its unit's
+    environment, stopped before its first turn — its registration is in its server's events archive (`RESOURCE_ROOT`), under
     the name it claimed, and its lock held for as long as its process lives."""
     import json
     import os
-    import cluster.__main__ as m
+    import vms.__main__ as m
     c = Cluster(); c.resources_up()
     srv = c.servers["srv-a"]
     v = c.door("vmsworker")
-    env = {**c.env("srv-a", "w-srv-a-1"), "RTSP_HOST": "0.0.0.0"}
-    saved, stores = {k: os.environ.get(k) for k in env}, m.stores
+    env = {**c.env("srv-a", "w-srv-a-1"), "RTSP_HOST": "0.0.0.0", "PLAYBACK_PORT": "auto"}
+    saved, stores = {k: os.environ.get(k) for k in env}, m._stores
     built = []
     real = m.make_worker
 
@@ -199,12 +204,12 @@ def test_the_worker_entry_point_registers_its_process_before_it_runs():
         return built[-1]
     try:
         os.environ.update(env)
-        m.stores = lambda role, env=None: (v, c.objects_on("srv-a", v))
+        m._stores = lambda role, acl: (v, c.objects_on("srv-a", v))
         m.make_worker = keep
         m.stop.set()                                                            # SIGTERM before the first turn
         m.worker()
     finally:
-        m.stop.clear(); m.stores, m.make_worker = stores, real
+        m.stop.clear(); m._stores, m.make_worker = stores, real
         for k, val in saved.items():
             os.environ.pop(k, None) if val is None else os.environ.__setitem__(k, val)
     d = os.path.join(srv.resource, ".workers")
@@ -271,7 +276,7 @@ def test_the_old_instance_wakes_up_and_the_archive_is_intact():
     ctl.pass_once(1); b.reconcile_once(); b.heartbeat_once()
     c.servers["srv-a"].down = False
     lost = a.lease_pass()                                                  # kill -CONT, or the network back
-    assert sorted(lost) == ["1", "2", "3"] and act_a.running == set() and a.recording_allowed
+    assert sorted(lost) == ["1", "2", "3"] and act_a.running == set() and a.writing_allowed
     assert a.reconcile_once() == [] and a.assignment().units == [] and a.name == "w-srv-a-1"
     assert act_a.epochs == {1: 1, 2: 1, 3: 1} and b.actuator.epochs == {1: 2, 2: 2, 3: 2}
 
@@ -287,7 +292,7 @@ def test_two_processes_with_one_name_the_old_one_is_nobody():
     c.wall.advance(5)
     b = c.worker("srv-a"); b.reconcile_once()
     a.lease_pass()
-    assert not a.recording_allowed and act_a.running == set() and "slot w-srv-a-1" in a.fenced_reason
+    assert not a.writing_allowed and act_a.running == set() and "slot w-srv-a-1" in a.fenced_reason
     assert a.renew_leases() == ["1", "2", "3"] and a.conflicts() == 3      # the resource-level token agrees, per camera
     b.heartbeat_once()
     theirs = ctl.workers_seen()["w-srv-a-1"].extra
@@ -310,7 +315,7 @@ def test_the_reassignment_window_is_the_same_window_with_a_different_verdict():
     c, ctl, a, act_a, b = _recording()
     ctl.move(2, "w-srv-b-1", "operator: srv-b sees that VLAN")
     assert b.reconcile_once() == [("start", 2)] and b.actuator.epochs[2] == 2   # the destination takes the next epoch
-    assert a.lease_pass() == ["2"] and a.recording_allowed and act_a.running == {1, 3}
+    assert a.lease_pass() == ["2"] and a.writing_allowed and act_a.running == {1, 3}
     assert a.reconcile_once() == [] and ctl.where(2) == "w-srv-b-1"
 
 
@@ -318,10 +323,10 @@ def test_the_lease_stops_writing_before_anybody_else_may_start():
     """TTL 30, margin 5: the holder stops at 25 on its own clock; the controller moves its cameras only past the
     slot's 45 s and 45 s more. The window between is the margin the design buys."""
     c, ctl, a, act, _ = _recording(1, b=False)
-    c.clock.advance(24); assert a.may_write("1")
-    c.clock.advance(2);  assert not a.may_write("1")                       # 26 s without a renewal: it stops itself
+    c.clock.advance(24); assert a.may_act("1")
+    c.clock.advance(2);  assert not a.may_act("1")                       # 26 s without a renewal: it stops itself
     assert a.lease_pass() == []                                            # renewal succeeds (nobody took the epoch)...
-    assert a.may_write("1")                                                # ...and it may write again — it was never fenced
+    assert a.may_act("1")                                                # ...and it may write again — it was never fenced
 
 
 def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_written():
@@ -349,8 +354,8 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     t = c.wall()
     assert r1.actuator.feed("1", t - 600, t, step=10) == {"OK": 60}                           # ten minutes into srv-a's volume, as 1/e1
     r1.heartbeat_once(); rec.workers_seen()
-    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)   # the recording's holder's door (step 6)
-    routes(None, "GET", "/door/timeline/1", {"from": t - 2000, "to": t + 1})  # the door looks, as the page asks it (r29)
+    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)   # a recorder's door to the page
+    routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})       # the door looks, as the page asks it (r29)
     # srv-a dies: w-srv-a-1, r-srv-a-1 and srv-a's resource silent
     r1.session.vanish()                                                                         # no BYE: the writer is left detached
     _silence(c, "srv-a", 93, alive=[b, r2])
@@ -368,16 +373,15 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     assert live_url("srv-b", 1) == "rtsp://srv-b:8554/1"                                        # what r-srv-b-1 would read had the camera landed on srv-c
     # the timeline: e1 in srv-a's volume unavailable by name — and srv-a's footage comes back with its disks; silent by
     # what the console saw: r-srv-a-1's heartbeat has stood still since its look (the product's r29-writers2)
-    _, tl = routes(None, "GET", "/door/timeline/1", {"from": t - 2000, "to": t + 1})
-    assert [s for s in tl["segments"] if s["epoch"] == 1] == []
-    assert [(g["volume"], g["server"]) for g in tl["unavailable"]] == [("srv-a", "srv-a")] and "not lost" in tl["note"]
+    _, tl, headers = routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})
+    assert [s for s in tl if s["epoch"] == 1] == []
+    assert dict(headers) == {"X-Unavailable": "srv-a@srv-a"}                                      # unavailable, not lost
     time.sleep(VMS_TESTS.OBSD_LINGER_MS / 1000 + 0.3)                                            # the daemon notices r-srv-a-1's session is gone
     a2 = c.recorder("srv-a"); a2.lease_pass(); a2.serve_archive(); a2.heartbeat_once()          # srv-a is back: its recorder's unit again, on its own disks
     assert a2.name == "r-srv-a-1" and a2.store.reattached                                       # the writer the dead one left, picked up whole
     a2.store.seal()
-    _, tl = routes(None, "GET", "/door/timeline/1", {"from": t - 2000, "to": t + 1})
-    spans = tl if isinstance(tl, list) else tl["segments"]
-    assert [(s["volume"], s["epoch"], s["fenced"]) for s in spans] == [("srv-a", 1, True)]      # e1, kept and told apart: e2 is the writer now
+    _, tl, headers = routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})
+    assert [(s["epoch"], s.get("fenced")) for s in tl] == [(1, True)] and headers == []          # e1, kept and told apart: e2 is the writer now
     assert a2.reconcile_once() == [] and rec.redistribute() == [] and rec.where("1") == "r-srv-b-1"  # a place to record returned; nothing moves back
     for r in (r2, a2):
         r.after_stop()

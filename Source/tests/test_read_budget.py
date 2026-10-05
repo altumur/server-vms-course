@@ -321,6 +321,7 @@ def _console(vars_, objects):
 
 def _old_requests_turn(c, now):
     from vms import jobs
+    from w2cplatform import requests
     with without_pass_reads():
         jobs.record_on_request(c["rec"], now), jobs.expire_recordings(c["rec"], now)
         jobs.detect_on_request(c["det"], c["job"], c["rec"], now), jobs.expire(c["det"], now)
@@ -370,12 +371,14 @@ def test_the_reaper_reads_each_job_detector_and_recording_once_a_turn():
     key once, and the turn leaves the rows the old one left."""
     from vms import __main__ as m
     from vms import jobs
+    from w2cplatform import requests
     n = 1000
     vars_, objects = console_store(n)
     v, o = Reads(vars_), Reads(objects)
     c = _console(v, o)
     v.zero(), o.zero()
-    m._reap_turn([c["job"]], [c["rec"], c["vms"]], c["rec"], c["det"], c["survey"], now=NOW)
+    m._reap_turn([c["job"]], c["rec"], c["det"], c["survey"], now=NOW)
+    requests.turn([c["rec"], c["vms"]], sweep=True)                  # …and the console's clearing of the two request families
     assert v.n + o.n <= 6 * n + 100, (v.n, o.n)
 
     stores = []
@@ -383,12 +386,13 @@ def test_the_reaper_reads_each_job_detector_and_recording_once_a_turn():
         vars_, objects = console_store(300)
         c = _console(vars_, objects)
         if new:
-            m._reap_turn([c["job"]], [c["rec"], c["vms"]], c["rec"], c["det"], c["survey"], now=NOW)
+            m._reap_turn([c["job"]], c["rec"], c["det"], c["survey"], now=NOW)
+            requests.turn([c["rec"], c["vms"]], sweep=True)
         else:
             with without_pass_reads():
                 jobs.reap(c["job"]), jobs.forget_finished(c["job"], NOW), jobs.ask_for_footage(c["job"], c["rec"])
                 jobs.scan_what_arrived(c["rec"], c["det"], c["job"]), jobs.keep_what_fired(c["survey"], c["rec"])
-                jobs.clear_requests(c["rec"]), jobs.clear_requests(c["vms"])
+                requests.clear_requests(c["rec"]), requests.clear_requests(c["vms"])
         stores.append(rows(vars_))
     assert stores[0] == stores[1]
     assert sum(1 for k in stores[0] if k.startswith("detjob/jobs/") and f"-{int(NOW) - 900}-" in k) == 40   # four recorders, ten spans each
@@ -433,6 +437,7 @@ def test_an_end_is_kept_on_time_and_one_moved_by_another_console_is_read_before_
     has come. A recording this console started on request ends on its minute; one whose end another console moved later
     is read before it is ended, and is not; one another console gave an end is ended within `REREAD`."""
     from vms import jobs
+    from w2cplatform import requests
     from vms.jobs import Remembered
     vars_, objects = cluster(10, 2, 2)
     c, mem = _console(vars_, objects), Remembered()
@@ -466,6 +471,7 @@ def test_an_end_given_at_the_consoles_door_takes_effect_at_the_next_turn_not_at_
     rows (`take_written`): the recording ends at the first turn after its end — and costs that row's read, not a whole
     read. A remembered end that is near is read every turn, so one another console moved earlier is seen in a turn."""
     from vms import jobs
+    from w2cplatform import requests
     from vms.jobs import Remembered
     from w2cplatform.spec import SpecController, take_written
     from vms.config import REC_SPEC
