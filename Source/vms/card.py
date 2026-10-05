@@ -2482,8 +2482,8 @@ class CardRecorder(RecWorker):
             card["stalled_s"] = round(self.card.stalled_for(), 1)
             stuck = {"writer": {"state": "stuck", "outstanding": getattr(self.actuator, "queued", 0),
                                 "still": card["stalled_s"]}}
-        # `archive` empty: a worker's is its events tree, and under `rec/` the console reads it as the box's own volume
-        # and offers to declare it (`volumes.suggest`) — a camera has no volume of the engine to offer.
+        # `archive` empty: a worker's is its events tree, and under `rec/` it is read as the box's own volume, one a
+        # page may offer to declare — a camera has no volume of the engine to offer.
         stream = self._stream()                              # the pusher's word on the stream (`stream_said`)
         return {**VmsWorker.heartbeat_extra(self), "archive": "", "volume": self.volume,
                 "volume_error": self.volume_error if self.card is None else f"the card {error}" if error else "",

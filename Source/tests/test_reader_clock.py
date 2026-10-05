@@ -46,9 +46,8 @@ def test_a_recorder_dead_with_its_clock_ahead_stops_being_a_door_and_one_behind_
 
 def test_a_volume_is_served_by_a_holder_behind_and_no_longer_by_a_dead_one_ahead():
     """`volumes.served` (the console's `/volumes`, `rec_volumes_unserved`) read a hold live while `now <= until` — the
-    holder's clock — and a recorder's word by `now - ts`; `volumes.suggest` offered a disk by the same. A hold renewed
-    by a recorder an hour behind was "the recorder that held it went silent", and its disk never offered; a dead one an
-    hour ahead held its volume for that hour. Now a hold is live while the reader has seen it renewed within a slot's
+    holder's clock — and a recorder's word by `now - ts`. A hold renewed by a recorder an hour behind was "the recorder
+    that held it went silent"; a dead one an hour ahead held its volume for that hour. Now a hold is live while the reader has seen it renewed within a slot's
     term, a recorder's word while its heartbeat changes."""
     from vms import volumes
     box = Box()
@@ -73,11 +72,6 @@ def test_a_volume_is_served_by_a_holder_behind_and_no_longer_by_a_dead_one_ahead
     rows = {v["name"]: v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects, eyes=eyes)["volumes"]}
     assert rows["vb"]["served_by"] == "inst-b" and rows["vb"]["why"] is None, rows["vb"]
     assert rows["va"]["served_by"] is None and rows["va"]["why"] == "the recorder that held it went silent", rows["va"]
-    assert volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall(), eyes=eyes) == []   # both disks declared
-    for name in ("va", "vb"):                                         # …and with none declared, the disk of the live one
-        volumes.delete(box.vars, name)
-    beat_b()
-    assert [s["server"] for s in volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall(), eyes=eyes)] == ["srv-b"]
 
 
 def test_a_scan_asks_the_door_of_a_recorder_behind_and_not_of_a_dead_one_ahead():

@@ -2202,7 +2202,7 @@ class Worker:
                     continue
                 unit_of = str(it.get("unit", ""))
                 if "/" in unit_of and unit_of.split("/", 1)[0] == self.sub.name:
-                    unit_of = unit_of.split("/", 1)[1]   # `<sub>/<id>`, as the console files it
+                    unit_of = unit_of.split("/", 1)[1]   # `<sub>/<id>`, as a subsystem's worker may file it
                 got = self._requests_read[rid] = (unit_of, it if unit_of in mine else None)
             row = mine.get(got[0])
             if row is None:

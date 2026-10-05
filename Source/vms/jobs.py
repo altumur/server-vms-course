@@ -506,6 +506,23 @@ def forget_finished(ctl, now: float) -> int:
 # then runs over footage we own, with `vms/scan.py` unchanged.
 #
 # The request id is the range, so a job asking every thirty seconds writes one row, not a queue.
+#
+# FILED AS THE PLATFORM'S REQUEST FAMILY FILES ONE (М10A 14): the unit as `rec/<recording>`, and a deadline —
+# `valid_until`, the spec's `most_valid` away (the family's `MOST_VALID` where it says none). A recorder that has not
+# begun it by then answers it expired and the reaper ends the row; a job still fetching asks again on its next turn,
+# and the recorder goes on from the first moment its volume does not show (`RecWorker.requests`).
+def _ask_recorder(rec_ctl, unit: str, cam: str, t0: float, t1: float, now: float, by: str) -> bool:
+    from w2cplatform.doors import unit_ref
+    from w2cplatform.requests import MOST_VALID
+    key = rec_ctl.sub.request_key(f"{unit}-{int(t0)}-{int(t1)}")
+    if rec_ctl.vars.get(key)[0]:
+        return False                                    # already asked; the recorder says when it is fetched
+    most = float(rec_ctl.spec.requests.get("most_valid") or MOST_VALID)
+    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": str(t0), "to": str(t1),
+                           "at": str(now), "by": by, "valid_until": str(now + most)})
+    return True
+
+
 def ask_for_footage(job_ctl, rec_ctl) -> int:
     asked = 0
     for st in job_ctl.read_model():
@@ -515,13 +532,9 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
         unit, t0, t1 = str(st.get("rec", "")), number(f"{hk}.from", st.get("from", 0), float, None), number(f"{hk}.to", st.get("to", 0), float, None)
         if not unit or t0 is None or t1 is None or t1 <= t0:          # an end that is a word: not a range to ask for
             continue
-        rid = f"{unit}-{int(t0)}-{int(t1)}"
-        key = rec_ctl.sub.request_key(rid)
-        it, _ = rec_ctl.vars.get(key)
-        if it:
-            continue                                        # already asked; the recorder clears it when it is fetched
-        rec_ctl.vars.put(key, {"unit": unit, "cam": str(st.get("cam", unit)), "from": str(t0), "to": str(t1),
-                               "at": str(job_ctl.wall()), "by": f"{job_ctl.spec.name}/{st.get('id')}"})
+        if not _ask_recorder(rec_ctl, unit, str(st.get("cam", unit)), t0, t1, job_ctl.wall(),
+                             f"{job_ctl.spec.name}/{st.get('id')}"):
+            continue
         asked += 1
         log.info("%s %s: asking the recorder for %s [%.0f, %.0f)", job_ctl.spec.name, st.get("id"), unit, t0, t1)
     return asked
@@ -609,12 +622,8 @@ def keep_what_fired(survey_ctl, rec_ctl) -> int:
             unit = next((str(r["id"]) for r in rec_ctl.units() if str(r.get("cam", r["id"])) == cam), None)
             if unit is None:
                 continue                                # nothing on this server records that camera: nowhere to put it
-            rid = f"{unit}-{int(t0)}-{int(t1)}"
-            key = rec_ctl.sub.request_key(rid)
-            if rec_ctl.vars.get(key)[0]:
-                continue                                # already asked; the recorder clears it when it is fetched
-            rec_ctl.vars.put(key, {"unit": unit, "cam": cam, "from": str(t0), "to": str(t1),
-                                   "at": str(survey_ctl.wall()), "by": f"{survey_ctl.spec.name}/{cam}"})
+            if not _ask_recorder(rec_ctl, unit, cam, t0, t1, survey_ctl.wall(), f"{survey_ctl.spec.name}/{cam}"):
+                continue
             asked += 1
             log.info("%s: keeping %s [%.0f, %.0f) — a model liked it", survey_ctl.spec.name, unit, t0, t1)
     return asked

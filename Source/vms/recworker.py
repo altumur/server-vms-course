@@ -1100,10 +1100,10 @@ class RecWorker(VmsWorker):
                 "volume": self.volume,
                 **({"freed": dict(self.freed)} if self.freed else {}),   # the resource's ask to free bytes, answered
                 **({"requests_refused": dict(self.requests_refused)} if self.requests_refused else {}),
-                # The box's own volume — where this recorder writes when nothing is declared. What the console
-                # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
+                # The box's own volume — where this recorder writes when nothing is declared: what a page may offer to
+                # declare, with its size.
                 "archive": hide_in_url(self.default_url),    # as a page says it (the twelfth review, major 15)
-                # …and its size: what the console offers to declare it at. The size it HAS once it was opened — read
+                # …and its size: what a page offers to declare it at. The size it HAS once it was opened — read
                 # from the volume — and only before that the share of the disk it would be formatted at (the review's
                 # third pass: recomputed at every start, the number grew and shrank with the disk's free space, and an
                 # operator who declared it shrank a volume of eight terabytes to the one gigabyte offered).
@@ -2549,7 +2549,11 @@ class RecWorker(VmsWorker):
                 continue
             it, _ = self.vars.get(key)
             if it:
-                self._requests_read[key.rsplit("/", 1)[1]] = (str(it.get("unit", "")), None)
+                # The unit as its id or as `rec/<id>`, the family's two forms (М10A 14): the console's door writes the
+                # id, the VMS's jobs the reference (`jobs._ask_recorder`).
+                ref = str(it.get("unit", ""))
+                it = {**it, "unit": ref.split("/", 1)[1] if ref.startswith(f"{REC.name}/") else ref}
+                self._requests_read[key.rsplit("/", 1)[1]] = (str(it["unit"]), None)
             # THE RESOURCE ASKS TO FREE BYTES on a volume of its server (`free-<server>-<volume>`; the boundary's step 6: it
             # was a hook of the VMS's the resource called). The recorder holding that volume decides, and answers in its
             # heartbeat (`freed`): its footage is a ring of the size the volume was given, which gives up its oldest
@@ -2571,6 +2575,21 @@ class RecWorker(VmsWorker):
             rid = key.rsplit("/", 1)[1]
             if not self.may_act(unit):
                 continue                                     # a lease that lapsed answers nothing, a refusal neither
+            # A DEADLINE, WHERE THE ASKER GAVE ONE (the family's `valid_until`; the console's door gives none for `rec`,
+            # whose rows end after the spec's `ttl`): one not begun by then is answered expired, not fetched — the
+            # asker asks again if it still wants it. One begun is performed to its end. A deadline that is not a time is
+            # this request's refusal.
+            if it.get("valid_until") not in (None, "") and rid not in self._requested:
+                try:
+                    until = finite(it["valid_until"])
+                except (TypeError, ValueError):
+                    self._refuse_request(rid, unit, cam, f"`valid_until` is not a time: {it['valid_until']!r}", done)
+                    continue
+                if now > until:
+                    self.fetched.append(rid)
+                    done.append({"request": rid, "unit": unit, "cam": cam, "expired": True})
+                    log.warning("%s: request %s expired unbegun (%.0fs late)", self.name, rid, now - until)
+                    continue
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
             # …and a range that does not parse is THIS request's refusal (the review's sixth pass, the class of the
