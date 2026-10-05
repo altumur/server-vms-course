@@ -64,7 +64,7 @@ class SurveyWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
-                 archive_root: str | None = None, env: dict | None = None, step: float | None = None,
+                 resource_root: str | None = None, env: dict | None = None, step: float | None = None,
                  fetch=None, index=None):
         env = dict(os.environ if env is None else env)
         super().__init__(SURVEY_SUB, None, vars_, objects, clock=clock, wall=wall)
@@ -73,7 +73,7 @@ class SurveyWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("SURVEY_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = runtime.events_root(env, archive_root)
+        self.resource_root = runtime.events_root(env, resource_root)
         self.step = self.STEP if step is None else float(step)
         self.fetch = fetch or _fetch_bytes           # the door: reading, and what costs a session
         self.index = index or device_recordings      # the listing: where the footage is, and it costs none
@@ -126,7 +126,7 @@ class SurveyWorker(Worker):
                                                          why="nobody holds this camera, or its device has no archive")
                 continue
             index_url, play_url, oldest, newest = dev
-            front = Frontier(self.archive_root, unit)
+            front = Frontier(self.resource_root, unit)
             at = front.read()
             if at is None:
                 # The first time. `earliest` means thirty days of backlog on the day somebody enables it,
@@ -171,7 +171,7 @@ class SurveyWorker(Worker):
                 model = self.running.get(unit)
                 if model is None:
                     model = self.running[unit] = self.models[row["kind"]](row)
-                if not self.may_write(unit):
+                if not self.may_act(unit):
                     continue
                 for a, b in (spans if spans is not None else [want]):
                     try:
@@ -184,7 +184,7 @@ class SurveyWorker(Worker):
                         break
                     looked[0] = a
                     for ts, kind, fields in self._watch(model, a, b, looked):
-                        EventLog(self.archive_root, SURVEY, unit, self.epochs[unit], of=SURVEY_SPEC.of_row(row)).append(
+                        EventLog(self.resource_root, SURVEY, unit, self.epochs[unit], of=SURVEY_SPEC.of_row(row)).append(
                             ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
                         self.events_written += 1
                         fired.append(ts)

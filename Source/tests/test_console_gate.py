@@ -958,7 +958,7 @@ def test_a_segment_is_cut_to_what_the_device_holds_and_the_door_streams_it_a_pie
         read = dev.read
         dev.read = lambda sid: (lambda b: (pieces.append((len(b), len(dev.open))), b)[1])(read(sid))
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive, device_factory=lambda k: dev)
+                      resource_root=box.archive, device_factory=lambda k: dev)
         w.heartbeat_once()
         door = w.serve_playback("127.0.0.1", 0)
         w.door_keeper()                                                           # its ring, read while the keys are there
@@ -1044,7 +1044,7 @@ def test_the_devices_own_door_opens_only_to_the_token_the_console_gave():
         placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 1000.0)}, max_playbacks=4)
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive, device_factory=lambda k: dev)
+                      resource_root=box.archive, device_factory=lambda k: dev)
         w.heartbeat_once()
         door = w.serve_playback("127.0.0.1", 0)
         w.door_keeper()
@@ -1355,7 +1355,7 @@ def test_two_spellings_of_one_channel_are_one_camera_to_its_holder_which_says_de
         code, body = _call(base, "POST", "/cameras", {"source": "driverpack://ACME/10.0.0.50/ch/02"}, token="admin")
         assert code == 201, body                                                          # another spelling: the platform takes it
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive)
+                      resource_root=box.archive)
         placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w.heartbeat_once(); placer.ensure_placed()
         assert placer.where(1) == placer.where(2) == "w-1"                                # one group, one worker
@@ -1419,7 +1419,7 @@ def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_secon
     devs = {"acme/10.0.0.50": FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042"),
             "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["7"], relays=2, identity="ACME-SN-0042")}
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive, device_factory=lambda k: devs.get(k))
+                  resource_root=box.archive, device_factory=lambda k: devs.get(k))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     try:
         for ch in (1, 2):
@@ -1472,7 +1472,7 @@ def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_th
                      "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive)                           # the course's build: no device factory
+                  resource_root=box.archive)                           # the course's build: no device factory
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     try:
         for ch in (1, 2):
@@ -1517,7 +1517,7 @@ def test_an_empty_word_from_a_device_does_not_unsay_what_it_said_before():
     def holder():
         act = FakeActuator()
         return act, VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
-                              archive_root=box.archive, device_factory=lambda k: devs.get(k))
+                              resource_root=box.archive, device_factory=lambda k: devs.get(k))
     act, w = holder()
     try:
         for ch in (1, 2):
@@ -1556,7 +1556,7 @@ def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidenc
     devs = {k: FakeDevice(k, channels=["1"], relays=1, identity="CLONE-0000") for k in ("acme/10.0.0.50", "acme/10.0.0.60")}
     act = FakeActuator()
     w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive, device_factory=lambda k: devs.get(k))
+                  resource_root=box.archive, device_factory=lambda k: devs.get(k))
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     said: list[str] = []
 
@@ -1641,7 +1641,7 @@ def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartb
     r = recorder(box)
     r.lease_pass()
     r.rows = [rec.unit("1")]
-    r.may_write = lambda unit: True                    # the recording's holder, its lease its own
+    r.may_act = lambda unit: True                    # the recording's holder, its lease its own
     t = box.wall()
     cases = {"day": (t - 40 * 365 * 86400, t, "at most 86400 s"), "ms": (t - 60, t - 59.5, "at least 1 s"),
              "future": (t + 3600, t + 7200, "from now"), "1970": (0.5, 600, "before anything the recording shows"),
@@ -1689,10 +1689,10 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
         g.door_keeper()                                # its ring, read while the keys are there
         door_token = Signer.from_env().issue("viewer", "live/1", "g-1", ("whep",), box.wall())[0]
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive)
+                  resource_root=box.archive)
     holder = w.serve_playback("127.0.0.1", 0)
     rec_door = RecWorker.serve_archive(SimpleNamespace(store=None, wall=box.wall, epochs={}, server="srv-1", name="r-1",
-                                                       objects=box.objects, vars=box.vars, archive_root=None, eyes=None,
+                                                       objects=box.objects, vars=box.vars, resource_root=None, eyes=None,
                                                        _visible_from=lambda *a: None, _kept_of=lambda *a: None,
                                                        _held_since=lambda *a: None), "127.0.0.1", 0)
     res = serve_resource(platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
@@ -1852,7 +1852,7 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
         for i, bad in enumerate(("driverpack://acme/10.0.0.5:8²/ch/1", "driverpack://acme/10.0.0.6/ch/①")):
             box.vars.put(f"vms/cameras/{10 + i}", {"id": str(10 + i), "name": f"old{i}", "source": bad, "revision": "1"})
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive)
+                      resource_root=box.archive)
         placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w.heartbeat_once(); placer.ensure_placed()
         w.reconcile_once(); w.heartbeat_once()                        # neither raises

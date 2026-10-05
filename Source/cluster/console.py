@@ -40,12 +40,12 @@ from .controller import ClusterController
 # left through this console was in no journal; and the recorder's mount had neither the archives (`/rec/volumes`,
 # `/rec/keeps`) nor the numbers the recorder's scaling check asks for (`rec_recorders_needed`,
 # `w2c-spares.sh`, for recorders). One function wires a console of the VMS, whoever builds it: `vms.console.wire_vms`.
-def make_console(ctl: ClusterController, worst_failover: float = 0.0, index=None, archive_root: str | None = None,
+def make_console(ctl: ClusterController, worst_failover: float = 0.0, index=None, resource_root: str | None = None,
                  rec_ctl: SpecController | None = None) -> Mount:
     """The VMS at `/` and, when the console fronts it, the recorder at `/rec/…` (the page's Record toggle:
     POST /rec/recordings). Both answer /events from the same merge over the resources' indexes."""
     index = index or MergedIndex(ctl.objects, wall=ctl.wall)
-    root = SpecConsole(ctl, marks_root=archive_root, index=index, worst_failover=worst_failover, media=True)
+    root = SpecConsole(ctl, marks_root=resource_root, index=index, worst_failover=worst_failover)
     m = Mount(root)
     if rec_ctl is not None:
         m.mount("rec", SpecConsole(rec_ctl, wall=ctl.wall, index=index))   # its tables, requests and numbers: its spec's
@@ -56,5 +56,5 @@ def metrics_text(ctl: ClusterController, worst_failover: float) -> str:
     return SpecConsole(ctl, worst_failover=worst_failover).metrics_text()
 
 
-def serve(ctl, host="127.0.0.1", port=8080, worst_failover=0.0, index=None, archive_root=None, rec_ctl=None) -> ThreadingHTTPServer:
-    return make_console(ctl, worst_failover, index, archive_root, rec_ctl).serve(host, port)
+def serve(ctl, host="127.0.0.1", port=8080, worst_failover=0.0, index=None, resource_root=None, rec_ctl=None) -> ThreadingHTTPServer:
+    return make_console(ctl, worst_failover, index, resource_root, rec_ctl).serve(host, port)

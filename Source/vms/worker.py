@@ -57,11 +57,11 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 #
 # ### `__init__(self, name, vars_, objects, actuator=None, lease_ttl=30.0, lease_margin=5.0,
 # clock=time.monotonic, wall=time.time, server=None, capacity=None, instance=None, slot_ttl=45.0,
-# archive_root=None, bucket_seconds=600, env=None)` `env` defaults to `os.environ` (tests pass a dict).
+# resource_root=None, bucket_seconds=600, env=None)` `env` defaults to `os.environ` (tests pass a dict).
 # `instance` defaults to `INSTANCE_ID`, else the base class's `box:pid:6hex` (`runtime.instance_on_box`). Calls
 # `Worker.__init__` with `name=None` and then `claim_slot(prefer=name or slot_from_environment(env))` — so
-# construction *is* the claim, and `self.name` is set afterwards. Then: `archive_root` from the argument or
-# `$ARCHIVE`, else `<PLATFORM_DIR>/events` (`runtime.events_root`: `/data/platform/events`); `capacity` from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I,
+# construction *is* the claim, and `self.name` is set afterwards. Then: `resource_root` from the argument or
+# `$RESOURCE_ROOT`, else `<PLATFORM_DIR>/events` (`runtime.events_root`: `/data/platform/events`); `capacity` from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I,
 # measured on ITS server"; the actuator (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self,
 # self._actuate)`; `recording_allowed = True`; `server` from the argument, `SERVER_NAME`, else the hostname;
 # `labels` (`LABELS`), `alloc` (`INSTANCE_ID`); the two start clocks. Finally it reads the previous
@@ -81,7 +81,7 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 #   each — the old instance is fenced by construction.
 # - Three exits from a lost lease, all in `lease_pass`: reassignment (stop that one, continue), zombie
 #   (fence everything), and slot taken (fence everything, first). A lease that merely expired because the
-#   loop stalled shows up as `may_write` false in `_actuate` and a fresh epoch on the next start.
+#   loop stalled shows up as `may_act` false in `_actuate` and a fresh epoch on the next start.
 # - `observe` returns the bucket path, which the tests read back with `read_bucket`; the worker keeps
 #   `observed` only for tests and diagnostics.
 # ================================================================================================
@@ -522,7 +522,7 @@ def labels_from_environment(env: dict) -> list[str]:
 # so a replacement inherits its assignment. "A worker on a cluster is a worker on a box whose stores happen
 # to be raft: same class, same heartbeat." It is also the `Store` of its own `Reconciler` (`desired()`).
 #
-# State beyond the base class: `archive_root` (this server's resource), `bucket_seconds`, `observed` (every
+# State beyond the base class: `resource_root` (this server's resource), `bucket_seconds`, `observed` (every
 # `(cid, t, kind)` this instance wrote), `capacity`, `actuator`, `rows` (the assignment's camera rows,
 # refreshed each pass), `assignment_rev`, `reconciler`, `recording_allowed` / `fenced_reason` (the
 # instance-wide fence), `server`, `labels`, `alloc`, `started_at` (monotonic) and `_started_wall`, `passes`,
@@ -543,7 +543,7 @@ class VmsWorker(Worker):
     def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,
                  lease_ttl: float = 30.0, lease_margin: float = 5.0, clock=time.monotonic, wall=time.time,
                  server: str | None = None, capacity: int | None = None, instance: str | None = None, slot_ttl: float = 45.0,
-                 archive_root: str | None = None, bucket_seconds: int = 600, env: dict | None = None,
+                 resource_root: str | None = None, bucket_seconds: int = 600, env: dict | None = None,
                  device_factory=None):
         env = dict(os.environ if env is None else env)
         instance = instance or runtime.instance_on_box(env)   # the box in it: whose a name is (`Worker._may_take_by_name`)
@@ -557,7 +557,7 @@ class VmsWorker(Worker):
         self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
         # …or, started as a spare (`SPARE_FOR`), an offer of its set — none: nobody, waiting (`Worker.claim_at_start`)
         self.claim_at_start(name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX), env)
-        self.archive_root = runtime.events_root(env, archive_root)   # this server's resource: where its events go
+        self.resource_root = runtime.events_root(env, resource_root)   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
         # THIS instance's two doors. Defaults are what they always were, so a box with one worker is
         # unchanged; `auto` asks the OS, which is what makes a SECOND worker on the same box possible at
@@ -1077,11 +1077,11 @@ class VmsWorker(Worker):
     # The gate between the reconciler and the real actuator. For `start`/`restart`: refuse if the instance
     # is fenced (`recording_allowed` false); on `start`, or if no epoch is held for the unit,
     # `take_epoch(unit)` — a new epoch for a new writer — else reuse the held epoch (an edit's restart keeps
-    # epoch 1); refuse if `may_write(unit)` is false (no lease, or a lost one); then call the actuator with
+    # epoch 1); refuse if `may_act(unit)` is false (no lease, or a lost one); then call the actuator with
     # `epoch` added to the row — the number in the name of every stream a recorder writes (`<rec>/e<epoch>`) and
     # every event bucket a worker does. For `stop`: call the actuator
     # and `release(unit)` (forget epoch and lease). `test_lease_expiry_without_renewal_stops_starts`: after
-    # 26 s without renewal `may_write` is false; a later start takes epoch 2.
+    # 26 s without renewal `may_act` is false; a later start takes epoch 2.
     def _actuate(self, verb: str, cam: dict) -> bool:
         unit = str(cam["id"])
         if verb in ("start", "restart"):
@@ -1103,7 +1103,7 @@ class VmsWorker(Worker):
                     # (`take_epoch`; the product's cross-check): no new number either way, the same answer below.
                     if isinstance(e, OSError):
                         self.store_errors += 1
-                    if unit in self.epochs and self.may_record(unit):
+                    if unit in self.epochs and self.may_write(unit):
                         # A pipeline that fell over while the store is away comes back under the epoch this
                         # worker ALREADY holds (feedback BK). It is the same writer: nobody else could have been
                         # given a number meanwhile by a store that answers nobody. It used to wait for a new
@@ -1129,7 +1129,7 @@ class VmsWorker(Worker):
                 self.epoch_errors.pop(unit, None)
             else:
                 cam = dict(cam, epoch=self.epochs[unit])
-            if not self.may_record(unit):                       # data: a lease that ran out in silence still records
+            if not self.may_write(unit):                       # data: a lease that ran out in silence still records
                 return False
             cam = self.enrich(cam)                              # what the pipeline needs beyond the row: the fan-out here, the source for a recorder
             if cam is None:
@@ -1211,7 +1211,7 @@ class VmsWorker(Worker):
     #
     # And since feedback BK the second rule has an exception, which is the whole of that decision: a lease that
     # ran out while the store was SILENT is not lost. The pipeline goes on under the epoch it has — DATA, which
-    # a stale epoch cannot harm — and ACTIONS wait (`requests` asks the strict `may_write`). When the store
+    # a stale epoch cannot harm — and ACTIONS wait (`requests` asks the strict `may_act`). When the store
     # answers again: the same epoch, and nothing was stopped; another, and the camera stops as it always did.
     # `UNCONFIRMED_MAX` is the ceiling on that, in seconds past the lease's end; unset is none, `off` is the old
     # behaviour.
@@ -1334,7 +1334,7 @@ class VmsWorker(Worker):
     # An event: written by this worker, now (`wall()`), into the camera's bucket on this server's resource
     # under the epoch this worker holds for it — recording or not. `None` if no epoch is held for the camera
     # (not mine to observe) or the instance is fenced. Records `(cid, t, kind)` in `observed` and returns
-    # the bucket path from `event_log(archive_root, cid, epoch, bucket_seconds).append(...)`. Nothing else
+    # the bucket path from `event_log(resource_root, cid, epoch, bucket_seconds).append(...)`. Nothing else
     # is told — no store write, no controller. `test_the_worker_observes_what_it_holds_recording_or_not`:
     # before the first reconcile `observe(1, ...)` is `None`; after it the line lands in
     # `<archive>/vms/1/e1/…`; camera 2 (not assigned) is `None`; after `fence` a post is dropped;
@@ -1387,7 +1387,7 @@ class VmsWorker(Worker):
     # asked "where did my observation go", and the summary that may precede it is not its answer. `None`
     # when nothing was written, which is what a suppressed repeat is.
     def _write(self, cid: int, epoch: int, lines, cls: str = OBSERVATION) -> str | None:
-        log_ = EventLog(self.archive_root, self.SUB.name, str(cid), epoch, self.bucket_seconds)
+        log_ = EventLog(self.resource_root, self.SUB.name, str(cid), epoch, self.bucket_seconds)
         path = None
         for t, kind, fields in lines:
             path = log_.append(t, kind, cls, **fields)
@@ -1695,7 +1695,7 @@ class VmsWorker(Worker):
             it = got[1]
             self._first_seen.setdefault(rid, self.clock())   # what `wait` is measured from (`_measure`)
             unit = str(row["id"])
-            if not self.recording_allowed or (unit in self.leases and not self.may_write(unit)):
+            if not self.recording_allowed or (unit in self.leases and not self.may_act(unit)):
                 continue                                 # not mine to act on now: fenced, or the lease is lost
             # ANSWERED BEFORE, BY THIS NAME (the review's seventh pass, M6). A holder started again on standing rows
             # it had performed under its previous instance found that instance's mark on each, and answered
@@ -1792,7 +1792,7 @@ class VmsWorker(Worker):
                     log.error("%s: request %s not performed: the epoch of %s could not be taken (%s)", self.name, rid, unit, e)
                     continue
                 self.epoch_errors.pop(unit, None)
-            if not self.may_write(unit):
+            if not self.may_act(unit):
                 continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
             mark = None if unmarked else self.mark_of(rid)   # raises if the store does not answer: not known is not "nobody"
             if mark is not None and mark.get("outcome"):
@@ -2547,7 +2547,7 @@ class VmsWorker(Worker):
     # `Worker.heartbeat(status, …)` to the object `vms/<name>/heartbeat` with the extras the platform reads
     # by name: `server`, `instance`, `alloc`, `labels` (comma-joined), `assignment_rev`, `fenced`,
     # `conflicts`, `passes`, `capacity`, `headroom`, `started`, `previous_hb`, `previous_instance`, `archive`
-    # (the resource root it records into — `$ARCHIVE`, else the server's events root, `runtime.events_root`). The
+    # (the resource root it records into — `$RESOURCE_ROOT`, else the server's events root, `runtime.events_root`). The
     # controller's `capacity_of`, `labels_of`, `server_of`, `headroom`, `failover_seconds` and the console's
     # metrics all read from here.
     #
@@ -2579,9 +2579,9 @@ class VmsWorker(Worker):
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
                        previous_server=self.previous_server,
                        devices=self.device_status(),
-                       # `archive`: the resource tree its events go to — `$ARCHIVE`, else the events root. A
+                       # `archive`: the resource tree its events go to — `$RESOURCE_ROOT`, else the events root. A
                        # recorder says its own volume there instead (`RecWorker.heartbeat_extra`).
-                       **{"archive": self.archive_root, **self.heartbeat_extra()})
+                       **{"archive": self.resource_root, **self.heartbeat_extra()})
 
     # What a subclass adds to the heartbeat. `fetched` for everyone — the requests this worker has
     # answered, which is how the rows get cleared — and a subsystem with one more fact about itself says
@@ -2683,7 +2683,7 @@ class VmsWorker(Worker):
     def playback_journal(self):
         from w2cplatform.journal import Journal
         if getattr(self, "_playback_journal", None) is None:
-            self._playback_journal = Journal(self.archive_root, f"door-{self.name}", self.wall)
+            self._playback_journal = Journal(self.resource_root, f"door-{self.name}", self.wall)
         return self._playback_journal
 
     # `None` when the request may be served; else `(status, reason)`. `rest` is what follows `/playback/<cam>`. `seen`,

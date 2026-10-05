@@ -182,7 +182,7 @@ def test_the_console_over_http():
         where = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/where/1"))
         assert where["worker"] == where["directory"] == "w-1"                         # the placement says, the assignments agree
         spec = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/spec"))      # what the page reads first: the YAML, not code
-        assert spec["rows"] == "cameras" and spec["media"] and {f["name"] for f in spec["fields"]} >= {"name", "source", "enabled"}
+        assert spec["rows"] == "cameras" and "media" not in spec and {f["name"] for f in spec["fields"]} >= {"name", "source", "enabled"}
         assert b"vms_cameras_running 1" in urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics").read()   # held and streaming; recording is rec's gauge
         # an operator's mark is the CONSOLE's event: its own bucket, never a worker's
         req = urllib.request.Request(f"http://127.0.0.1:{port}/marks", data=json.dumps({"unit": "vms/1", "note": "left the bag"}).encode(),

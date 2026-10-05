@@ -35,7 +35,7 @@ def _con(box):
 
 def _worker(box, name=None, server="srv-a", capacity=2, env=None, vars_=None):
     w = VmsWorker(name, vars_ or box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
-                  capacity=capacity, server=server, archive_root=box.archive, env=env or {})
+                  capacity=capacity, server=server, resource_root=box.archive, env=env or {})
     if w.name is not None:
         w.heartbeat_once()
     return w

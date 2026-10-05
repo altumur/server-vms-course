@@ -61,18 +61,17 @@ rule in this file.
 # - `PAGE` — absolute path of `console.html` beside this file; served at `/`.
 #
 # ### `__init__(self, ctl, marks_root=None, index=None, worst_failover=0.0, wall=None,
-# media=False, lost_after=45.0)` `ctl` is the subsystem's `SpecController` holding the console's token;
+# lost_after=45.0)` `ctl` is the subsystem's `SpecController` holding the console's token;
 # `marks_root` is this server's resource root — if given, `self.marks` is an `EventLog(marks_root,
 # "console", <hostname:pid>, epoch 1)` (the console's own log; one writer, so epoch 1 forever); `index` is
-# an optional `MergedIndex` (anything with `query(...)`); `worst_failover` is a number exported on `/metrics`;
-# `media` tells the page it may draw a timeline and play, from the holders' doors. `seen` is the `IdempotencyKeys`
+# an optional `MergedIndex` (anything with `query(...)`); `worst_failover` is a number exported on `/metrics`.
+# What a holder serves a page is the spec's `door:`, which `/spec` says. `seen` is the `IdempotencyKeys`
 # over `<sub>/idem/`. `_scan` caches the assignment directory; `scans` counts cache refreshes.
 #
 # ## Notes
 # - `test_the_console_over_http` walks the whole surface: POST twice with one key is one camera; the
 #   console's controller cannot `place` (`Forbidden`); PUT `{"worker": "w-9"}` is 400; `/cameras` rows show
-#   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras,
-#   media true`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
+#   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
 #   the page mentions `/spec`, `/timeline/`, `<video>` and never the word camera outside its comment;
 #   what the holders serve is read at the doors `/where` hands out, never here; PUT `{"enabled": false}` bumps
 #   revision to 2; DELETE marks the row and the placement waits for `unplace_deleted`.
@@ -1352,13 +1351,12 @@ def _labels(row: dict | None) -> list:
 
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
-    holding the console's token; `media` says the page may draw a timeline and
-    play, from the doors of the units' holders (`door:` in a spec)."""
+    holding the console's token."""
 
     def __init__(self, ctl: SpecController, marks_root: str | None = None, index=None, worst_failover: float = 0.0,
-                 wall=None, media: bool = False, lost_after: float = 45.0, per_minute: float = 0.0):
+                 wall=None, lost_after: float = 45.0, per_minute: float = 0.0):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
-        self.worst_failover, self.wall, self.media, self.lost_after = worst_failover, wall or ctl.wall, media, lost_after
+        self.worst_failover, self.wall, self.lost_after = worst_failover, wall or ctl.wall, lost_after
         self.instance = f"{socket.gethostname()}:{os.getpid()}"
         self.marks_root = marks_root
         # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
@@ -1425,11 +1423,11 @@ class SpecConsole:
         return {**out, "aggregated": True, "events": [], "groups": ordered}
 
     # -- what the page reads first ------------------------------------------------------------
-    # `/spec`'s body: `{name, rows, id, media, fields: [{name, type, default, required}], metrics: {prefix,
-    # running}}` — the page's only knowledge of the subsystem.
+    # `/spec`'s body: `{name, rows, id, fields: [{name, type, default, required}], door?, metrics: {prefix,
+    # running}}` — the page's only knowledge of the subsystem. What a holder serves a page is `door: {routes}`.
     def describe(self) -> dict:
         s = self.spec
-        return {"name": s.name, "rows": s.rows, "id": s.id, "media": self.media,
+        return {"name": s.name, "rows": s.rows, "id": s.id,
                 "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
                             **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
                             **({"fixed": True} if f.fixed else {})} for f in s.fields.values()],
@@ -1566,13 +1564,23 @@ class SpecConsole:
         server = server or ctl.draining()
         if not server:
             return {"draining": "", "subsystem": ctl.spec.name}
-        here = [w for w in heartbeats(ctl.objects, ctl.sub.name + "/") if ctl.server_of(w) == server]
+        hbs = heartbeats(ctl.objects, ctl.sub.name + "/")
+        here = [w for w in hbs if ctl.server_of(w) == server]
         units = sum(len(ctl.assignment(w).units) for w in here)
         strand = ctl.would_strand(server)
-        # Nothing waits on this machine to be moved somewhere: what a worker wrote is wherever it wrote it — a
-        # recorder's footage in its volume, closed when the writer was closed. No units left is the whole answer.
-        return {"draining": server, "subsystem": ctl.spec.name, "workers": sorted(here),
-                "units": units, "would_strand": strand, "safe": units == 0}
+        # No units left is not the whole answer: a worker may hold writes it has not made durable yet — a buffer on
+        # this machine's disk — and they go with the machine. Every worker says how many in its heartbeat
+        # (`pending_writes`, `Worker.pending_writes`); one that does not say, or says a word, is not known to be done.
+        pending, unsaid = 0, []
+        for w in here:
+            n = number(f"{ctl.sub.heartbeat_key(w)}#pending_writes", hbs[w].extra.get("pending_writes"), int, None)
+            if n is None:
+                unsaid.append(w)
+            else:
+                pending += n
+        return {"draining": server, "subsystem": ctl.spec.name, "workers": sorted(here), "units": units,
+                "pending_writes": pending, **({"pending_unsaid": sorted(unsaid)} if unsaid else {}),
+                "would_strand": strand, "safe": units == 0 and pending == 0 and not unsaid}
 
     # One look at the store for the whole answer (`contract.one_pass`, on this door's thread): each server's
     # `decommission_refusal` and each worker's `slot_fate` ask the heartbeats and the resources, and outside a pass every

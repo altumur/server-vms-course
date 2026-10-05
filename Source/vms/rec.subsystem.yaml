@@ -72,7 +72,7 @@ placement:
   constraint: labels-subset
   # STILL `requires: resource` with the footage in obsd (the review's third pass asked why). The footage no longer
   # needs the resource; two other things do. The recorder's EVENTS — `archive.shallow`, `keep.copied`/`keep.lost`,
-  # what it fetched — go into the resource's tree (`ARCHIVE`), and the resource's door is how anybody reads them.
+  # what it fetched — go into the resource's tree (`RESOURCE_ROOT`), and the resource's door is how anybody reads them.
   # And the resource's heartbeat is the second witness that a SERVER is gone: `gone_servers` moves the recordings
   # of a slot that lapsed only when the resource of its server is silent too (one silence is a crash, two are the
   # server — М11 Lesson 4); without `requires` that move never happens, and the recordings of a box that lost its

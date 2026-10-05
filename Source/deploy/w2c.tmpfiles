@@ -24,7 +24,7 @@
 # - `config/`, `objects/` — the platform's two file stores (`file://`): the rows, and the heartbeats and the snapshot.
 #   2770 `w2c`:`w2c-store`, setgid: every unit opens them as a member of `w2c-store` with the umask 0007, so a row
 #   or an object any process writes is a file the resource — `w2c`, not root — reads, and the rows' lock one it takes.
-# - `events/` — the platform's events archive (`ARCHIVE`), the resource's: 2770 `w2c`:`w2c-events`, setgid. A
+# - `events/` — the platform's events archive (`RESOURCE_ROOT`), the resource's: 2770 `w2c`:`w2c-events`, setgid. A
 #   process that writes buckets is a CLIENT, a member of `w2c-events` with the umask 0007: what it makes there is
 #   0660 in directories 2770 of the group, which the resource deletes by its retention. Only the resource deletes buckets,
 #   mirrors and restores there.

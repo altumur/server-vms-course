@@ -270,7 +270,7 @@ class Cluster:
         host and pid. A spare has `SPARE_FOR` and no name."""
         self.pids += 1
         env = {"SERVER_NAME": server, "LABELS": self.servers[server].labels, "INSTANCE_ID": f"{server}:{self.pids}",
-               "ARCHIVE": self.servers[server].resource}          # `w2c.env`: the platform's events archive here
+               "RESOURCE_ROOT": self.servers[server].resource}          # `w2c.env`: the platform's events archive here
         if name is not None:
             env["WORKER_NAME"] = name
         env.update({k: str(v) for k, v in more.items()})
@@ -302,7 +302,7 @@ class Cluster:
                              clock=self.clock, wall=self.wall, capacity=capacity, **kw)
 
     def rec_kw(self, server: str, name: str) -> dict:
-        return {"archive_root": self.servers[server].archive, "obsd": obsd_session(f"rec-{name}-{self.pids}"),
+        return {"resource_root": self.servers[server].archive, "obsd": obsd_session(f"rec-{name}-{self.pids}"),
                 "default_quota": TEST_QUOTA, "block": TEST_BLOCK, "read": TEST_READ}
 
     def controller(self, server: str = "srv-a", who: str | None = None, role: str = "vmscontroller", **kw):

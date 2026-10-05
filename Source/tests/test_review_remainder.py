@@ -441,7 +441,7 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
 
     con.vars.put(SPEC.sub.request_key("d1"), {"unit": str(door), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
     assert [d["request"] for d in w.requests()] == ["d1"] and w.devices["acme/10.0.0.91"].did == [("output", 1, "pulse", 0)]
-    assert w.may_write(str(door)) and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "1"            # under a lease from here on
+    assert w.may_act(str(door)) and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "1"            # under a lease from here on
     con.vars.delete(SPEC.sub.request_key("d1"))                                                        # the console clears what was answered
 
     # a second holder of the same device — the seconds of a double assignment: its command takes epoch 2, and the
@@ -450,11 +450,11 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
     # store confirmed, as every stream is
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-b", env={},
-                   archive_root=box.archive, device_factory=lambda key: FakeDevice(key, channels=["1"], relays=2))
+                   resource_root=box.archive, device_factory=lambda key: FakeDevice(key, channels=["1"], relays=2))
     ctl.assign_add("w-2", str(door)); w2.reconcile_once()                                              # the double assignment
     con.vars.put(SPEC.sub.request_key("d2"), {"unit": str(door), "action": "output", "port": "2", "valid_until": str(box.wall() + 30)})
-    assert [d["request"] for d in w2.requests()] == ["d2"] and w2.may_write(str(door))
-    assert str(door) in w.lease_pass() and not w.may_write(str(door)) and str(door) not in w.leases
+    assert [d["request"] for d in w2.requests()] == ["d2"] and w2.may_act(str(door))
+    assert str(door) in w.lease_pass() and not w.may_act(str(door)) and str(door) not in w.leases
     con.vars.delete(SPEC.sub.request_key("d2"))
     con.vars.put(SPEC.sub.request_key("d3"), {"unit": str(door), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
     # "still assigned to it" is what a pass reads: let go by the lease step, the unit is not taken back on the rows read
@@ -462,7 +462,7 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
     assert w.requests() == [] and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "2"
     w.reconcile_once()                                                                                 # the double assignment still stands
     assert [d["request"] for d in w.requests()] == ["d3"] and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "3"
-    assert str(door) in w2.lease_pass() and not w2.may_write(str(door))
+    assert str(door) in w2.lease_pass() and not w2.may_act(str(door))
 
     # the mark: the store says who made it
     assert w2._mark("m1", str(door), box.wall()) and not w._mark("m1", str(door), box.wall())

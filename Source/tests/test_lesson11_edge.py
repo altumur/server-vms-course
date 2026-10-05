@@ -41,7 +41,7 @@ def _box():
 def _holder(box, factory, act=None, wall=None):
     """The holder claims its slot and heartbeats first: a controller places on workers it can see."""
     w = VmsWorker("w-1", box.vars, box.objects, act or FakeActuator(), clock=box.clock, wall=wall or box.wall,
-                  server="srv-1", archive_root=box.archive, device_factory=factory)
+                  server="srv-1", resource_root=box.archive, device_factory=factory)
     w.heartbeat_once()
     return w
 
@@ -777,9 +777,9 @@ def test_the_dry_run_answers_before_the_reboot_not_after():
 
 
 def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
-    """`safe` is the whole point: no units left on that machine. Nothing else waits there to be moved — a
-    recorder's footage is in its volume, closed when the writer was — so the moment the work has left, the
-    power may go."""
+    """`safe` is the whole point: no units left on that machine, and no worker of it holding writes it has not made
+    durable — the platform's heartbeat field `pending_writes: 0`. A recorder's footage is in its volume, closed when the
+    writer was, so it says 0 and the moment the work has left, the power may go."""
     box, ctl, con, con_vars = _box()
     from vms.console import make_console
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"]))
@@ -812,6 +812,13 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
     rep = m.drain_route("GET", {})[1]
     assert rep["subsystems"]["rec"]["units"] == 0 and rep["subsystems"]["vms"]["units"] == 0
     assert rep["safe"] is True                                      # now the power may go
+    # …unless a worker of the machine still holds writes it has not made durable (`pending_writes`, §2.5 of the boundary
+    # note): no units is not "nothing left here" for a subsystem that buffers on the machine's disk
+    r.pending_writes = lambda: 3; r.heartbeat_once()
+    rep = m.drain_route("GET", {})[1]
+    assert rep["safe"] is False and rep["subsystems"]["rec"]["pending_writes"] == 3
+    r.pending_writes = lambda: 0; r.heartbeat_once()
+    assert m.drain_route("GET", {})[1]["safe"] is True
 
     assert m.drain_route("DELETE", {})[1] == {"draining": "", "safe": True,
                                               "subsystems": {"vms": {"draining": "", "subsystem": "vms"},
@@ -906,7 +913,7 @@ def test_a_request_the_recorder_could_not_serve_is_not_reported_as_served():
     con_rec.vars.put(REC_SPEC.sub.request_key("1-c"),
                      {"unit": "1", "cam": "1", "from": "900000", "to": "930000", "at": "1", "by": "anna"})
     box.clock.advance(26)                                                    # past the lease, short of a renewal
-    assert not r.may_write("1")
+    assert not r.may_act("1")
     r.requests()
     assert r.fetched == []
     assert box.vars.list(REC_SPEC.sub.requests_prefix()) == ["rec/requests/1-c"]
@@ -1049,7 +1056,7 @@ def test_a_job_is_not_promised_minutes_the_device_does_not_have():
                         Heartbeat(w.name, box.wall(), [st], hb.extra).to_bytes())
 
         j = DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
-                         clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive, env={"LABELS": "gpu"})
+                         clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive, env={"LABELS": "gpu"})
         assert j.device_has("1", 100.0, 200.0)                     # a span it really has
         assert not j.device_has("1", 1000.0, 2000.0)               # inside the summary, and empty
     finally:

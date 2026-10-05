@@ -61,7 +61,7 @@ User=2100
 Group=2100
 Environment=RESOURCE_HOST=127.0.0.1
 Environment=RESOURCE_PORT=8090
-# `PLATFORM_DIR` (to read the camera rows and write the heartbeat) and `ARCHIVE` from the platform's file.
+# `PLATFORM_DIR` (to read the camera rows and write the heartbeat) and `RESOURCE_ROOT` from the platform's file.
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
 # read-write: the heartbeat is an object under `platform/resources/<server>/`. Of the rows it reads the camera rows,

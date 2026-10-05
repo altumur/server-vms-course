@@ -11,7 +11,7 @@
 # The environment comes from two files, the platform's and the subsystem's (the product's split):
 #
 #   /etc/w2c/w2c.env    PLATFORM_DIR, SERVER_NAME, BOX_ID, LABELS, the store's addresses (CONFIGSTORE_*), secrets
-#   /etc/vms/vms.env    the VMS subsystem's settings: CAPACITY, ARCHIVE, ports, budgets
+#   /etc/vms/vms.env    the VMS subsystem's settings: CAPACITY, ports, budgets
 #
 # read here — not by `EnvironmentFile=` — so a launchd plist, a spare started from its template and a person at a
 # shell all get the same. What the unit itself said WINS: a line of a file sets a name only when the unit did not

@@ -4,7 +4,7 @@ platform only promises that it comes from one issuer and increases.
 
     next_epoch(vars, key)   issue the next epoch for `key` by check-and-set: two callers
                             racing get two different numbers, in order
-    Lease                   may_write while now − last_renewal < TTL − margin, on a
+    Lease                   may_act while now − last_renewal < TTL − margin, on a
                             monotonic clock; renew = read the key and find it still mine
 """
 # ================================================================================================
@@ -72,7 +72,7 @@ def current_epoch(vars_: Variables, key: str) -> int:
     return int(items["epoch"]) if items else 0
 
 
-# What a worker holds per unit once it has taken the epoch. It answers one question — `may_write()` — from a
+# What a worker holds per unit once it has taken the epoch. It answers one question — `may_act()` — from a
 # monotonic clock, not from the store: writing is allowed while `now − last_renewal < ttl − margin` and the
 # lease has not been fenced. Renewal is "read the key and find it still mine". The store being unreachable
 # does not by itself stop writing; the TTL does. Created by `Worker.take_epoch`; `Worker.renew_leases`
@@ -89,11 +89,11 @@ class Lease:
         self.fenced = False
         self.conflicts = 0
         self.store_errors = 0                  # renewals the store did not answer: not a loss, and not nothing
-        # TWO QUESTIONS, NOT ONE (feedback BK). `may_write` is the strict one and it has not changed: the store
+        # TWO QUESTIONS, NOT ONE (feedback BK). `may_act` is the strict one and it has not changed: the store
         # confirmed this epoch less than `ttl − margin` ago. It is what an ACTION asks — a relay, a scenario's
         # firing — because an action done twice is done twice.
         #
-        # `may_record` is what DATA asks, and it is wider by exactly one case: a lease that ran out while the
+        # `may_write` is what DATA asks, and it is wider by exactly one case: a lease that ran out while the
         # store was SILENT is not a lease somebody took. Nobody said this epoch is over; nobody could have. A
         # frame written under it harms nothing — the epoch is in the path, a reader marks what an old epoch
         # wrote, and if there really was a second writer the cost is a duplicate. Stopping costs a hole.
@@ -113,7 +113,7 @@ class Lease:
         self.released = False                  # the worker let go of the unit (`Worker.release`): renewed by nobody
 
     # Once fenced, always `False`. Otherwise read `current_epoch(key)`: if the store raises (unreachable),
-    # do not fence — return `may_write()` and keep going until `ttl − margin` runs out; if the live epoch
+    # do not fence — return `may_act()` and keep going until `ttl − margin` runs out; if the live epoch
     # differs from mine, set `fenced = True`, count a conflict and return `False`; else stamp `last_renewal`
     # and return `True`. `conflicts` is what the worker sums into its heartbeat (`conflicts=`) and the
     # console exports as `<sub>_epoch_conflicts`.
@@ -133,9 +133,9 @@ class Lease:
         except OSError:                        # the store is unreachable: not a loss, and not a confirmation
             with self._lock:
                 self.store_errors += 1
-                if self.silent_since is None and self.may_write():
+                if self.silent_since is None and self.may_act():
                     self.silent_since = t0     # silence, established while the lease was still good
-                return self.may_record()
+                return self.may_write()
         except PARSE_ERRORS:                   # `epoch: Infinity` too — it raised out of `renew_leases`, every lease (the tenth round)
             # The store ANSWERED, with a row that is not an epoch. That is not silence to record through
             # (the review's second pass): somebody wrote over the counter, and whoever did may have given the
@@ -161,11 +161,11 @@ class Lease:
             self.released = True
 
     # Data may go on: the strict answer, or a lease that ran out in silence and is under its ceiling.
-    def may_record(self) -> bool:
+    def may_write(self) -> bool:
         with self._lock:
             if self.fenced:
                 return False
-            if self.may_write():
+            if self.may_act():
                 return True
             if self.silent_since is None:
                 return False                   # it ran out and nobody was silent about it: lost
@@ -180,11 +180,11 @@ class Lease:
 
     # `not fenced and (clock() − last_renewal) < ttl − margin`. The one line the actuator asks before a
     # write.
-    def may_write(self) -> bool:
+    def may_act(self) -> bool:
         with self._lock:
             return not self.fenced and (self.clock() - self.last_renewal) < (self.ttl - self.margin)
 
-    # Time until `may_write` would become false, floored at 0.
+    # Time until `may_act` would become false, floored at 0.
     def seconds_left(self) -> float:
         with self._lock:
             return max(0.0, (self.ttl - self.margin) - (self.clock() - self.last_renewal))

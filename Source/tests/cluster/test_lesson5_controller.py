@@ -188,7 +188,7 @@ def test_the_console_over_http():
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
     rec_con = SpecController(REC_SPEC, c.vars.as_writer("console", REC_SPEC.acl_console()), c.objects, wall=c.wall)   # the console's door to recordings
-    srv = serve(ctl, "127.0.0.1", 0, worst_failover=48.0, archive_root=c.servers["srv-a"].archive, rec_ctl=rec_con); port = srv.server_address[1]
+    srv = serve(ctl, "127.0.0.1", 0, worst_failover=48.0, resource_root=c.servers["srv-a"].archive, rec_ctl=rec_con); port = srv.server_address[1]
     base = f"http://127.0.0.1:{port}"
     def call(method, path, body=None, headers=None):
         req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method, headers=headers or {})

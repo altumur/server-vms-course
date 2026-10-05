@@ -545,7 +545,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     ctl.assign("w-1", ["1", "2"])
     act = FakeActuator()
-    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
     w.reconcile_once()
     act.post(1, "io.input", port="1", occurred=int(BIG))              # a driver's integer of 400 digits
     act.post(1, "io.input", port="2", occurred=float("nan"))          # …and `nan`, which `float` took for a time
@@ -603,7 +603,7 @@ def test_a_keep_line_whose_seconds_or_moment_is_no_number_is_that_lines():
         f.write(json.dumps({**good, "t": "yesterday", "seconds": 50.0, "id": "c"}) + "\n")
         f.write(json.dumps({**good, "kind": "archive.keep.lost", "t": t + 1, "seconds": 10.0, "id": "d"}) + "\n")
         f.write("5\n")                                                 # a line that is no object
-    me = types.SimpleNamespace(archive_root=box.archive, volume="v1")
+    me = types.SimpleNamespace(resource_root=box.archive, volume="v1")
     held = RecWorker._keeps_held_before(me, [types.SimpleNamespace(id="k1")], lambda k: ["1"], lambda k, rec: 0.0)
     assert held == {("k1", "1"): 20.0}, held
     assert rows.counts()["field"].get(REC.name, 0) >= 1                 # both lines: one spell of recording 1's copies

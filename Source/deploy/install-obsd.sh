@@ -29,9 +29,8 @@
 #    as М11's install.sh), and the course's old places too — `/data/config/w2c.env` → `/etc/w2c/w2c.env`,
 #    `/data/config/vms.env` → `/etc/vms/vms.env`, `/data/secrets/*` → `/etc/w2c/secrets/`, `/data/archive` →
 #    `/data/platform/events` (one rename: a writer still running writes on into the same directory). A file already
-#    where one goes is kept, and the moved one put beside it as `<name>.from-config`. The old `vms.env` said
-#    `ARCHIVE=/data/archive`, and the second file wins: that line is commented out and `w2c.env` given
-#    `ARCHIVE=/data/platform/events` — the archive is the platform's. A ring at the old `/data/volume` is not moved
+#    where one goes is kept, and the moved one put beside it as `<name>.from-config`. `w2c.env` is given
+#    `RESOURCE_ROOT=/data/platform/events` — the events tree is the platform's. A ring at the old `/data/volume` is not moved
 #    under a daemon: `vms.env` is told `ARCHIVE_VOLUME=file:///data/volume`, and the box records where its footage is.
 #    A box with no env file yet gets the examples.
 # 4. `w2c.tmpfiles` → /etc/tmpfiles.d/w2c.conf (the platform's: /data/platform and its etc/, etc/secrets, config/,
@@ -152,18 +151,9 @@ link_etc "$R/etc/w2c" "$R/data/platform/etc"
 link_etc "$R/etc/vms" "$R/data/vms/etc"
 [ -f "$R/etc/w2c/w2c.env" ] || install -m 0644 "$HERE/w2c.env.example" "$R/etc/w2c/w2c.env"
 [ -f "$R/etc/vms/vms.env" ] || install -m 0644 "$HERE/vms.env.example" "$R/etc/vms/vms.env"
-# The archive is the platform's: its root is a key of w2c.env, and an old vms.env — read second, so it wins — must not
-# keep saying /data/archive, where no unit mounts anything any more.
-if [ -f "$R/etc/vms/vms.env" ] && grep -q '^ARCHIVE=' "$R/etc/vms/vms.env"; then
-  OLD="$(sed -n 's/^ARCHIVE=//p' "$R/etc/vms/vms.env" | tail -n 1)"
-  sed 's/^ARCHIVE=/# the events archive is the platform'"'"'s: ARCHIVE is in \/etc\/w2c\/w2c.env (install-obsd.sh) — ARCHIVE=/' \
-    "$R/etc/vms/vms.env" > "$R/etc/vms/vms.env.new" && cat "$R/etc/vms/vms.env.new" > "$R/etc/vms/vms.env"
-  rm -f "$R/etc/vms/vms.env.new"
-  echo "vms.env said ARCHIVE=$OLD: commented out — the events archive is /data/platform/events, set in w2c.env"
-  [ "$OLD" = /data/archive ] || echo "$OLD is not /data/archive: its buckets are not moved by this script, move them by hand" >&2
-fi
-if [ -f "$R/etc/w2c/w2c.env" ] && ! grep -q '^ARCHIVE=' "$R/etc/w2c/w2c.env"; then
-  printf '%s\n' "ARCHIVE=/data/platform/events" >> "$R/etc/w2c/w2c.env"
+# The events tree is the platform's: its root is a key of w2c.env.
+if [ -f "$R/etc/w2c/w2c.env" ] && ! grep -q '^RESOURCE_ROOT=' "$R/etc/w2c/w2c.env"; then
+  printf '%s\n' "RESOURCE_ROOT=/data/platform/events" >> "$R/etc/w2c/w2c.env"
 fi
 if [ -d "$R/data/archive" ] && [ ! -L "$R/data/archive" ]; then
   if [ ! -e "$R/data/platform/events" ] || rmdir "$R/data/platform/events" 2>/dev/null; then

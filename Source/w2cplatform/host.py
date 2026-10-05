@@ -220,8 +220,7 @@ def build_console(env: dict):
     vars_, objects = box_stores(env, "console", [a for s in specs.values() for a in s.acl_console()])
     ctls = {n: SpecController(s, vars_, objects) for n, s in specs.items()}
     index = MergedIndex(objects)
-    media = any(s.door_routes for s in specs.values())              # something a holder serves a page: the player is drawn
-    root = SpecConsole(ctls[root_name], marks_root=runtime.events_root(env), media=media, index=index)
+    root = SpecConsole(ctls[root_name], marks_root=runtime.events_root(env), index=index)
     m = Mount(root)
     for n, c in ctls.items():
         if n != root_name:

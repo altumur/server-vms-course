@@ -87,7 +87,7 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
         f.write("# the platform's\nSERVER_NAME=srv-b\nPLATFORM_STORE=file:///nowhere\nCAPACITY=7\nnot a line\n"
                 "EVIL=$(touch " + d + "/ran)\n")
     with open(vms_, "w") as f:
-        f.write("CAPACITY=50\nARCHIVE=/data/archive\n")
+        f.write("CAPACITY=50\nRESOURCE_ROOT=/data/archive\n")
     py = os.path.join(d, "python3")
     with open(py, "w") as f:                                          # what the runner execs: print the environment
         f.write("#!/bin/sh\necho \"$@\"\nenv\n")
@@ -99,7 +99,7 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
     got = dict(l.split("=", 1) for l in out[1:] if "=" in l)
     assert out[0] == "-m cluster worker"
     assert got["PLATFORM_STORE"] == "configstore:///run/configstore/vmsworker.sock"      # the unit's
-    assert got["SERVER_NAME"] == "srv-b" and got["CAPACITY"] == "7" and got["ARCHIVE"] == "/data/archive"
+    assert got["SERVER_NAME"] == "srv-b" and got["CAPACITY"] == "7" and got["RESOURCE_ROOT"] == "/data/archive"
     assert got["EVIL"] == "$(touch " + d + "/ran)" and not os.path.exists(os.path.join(d, "ran"))   # a value, never run
     assert got["PYTHONPATH"].startswith(f"{d}/Source")
     with open(w2c, "a") as f:
@@ -349,7 +349,7 @@ def test_on_a_mac_the_box_is_a_directory_named_to_the_installer_and_everything_g
     assert mode("secrets") == mode("state/configstore") == 0o700 and mode("tls") == 0o750
     assert mode("tls/raft.secret") == mode("tls/server.key") == 0o600              # the bundle, the user's alone
     w2c, vms_ = open(os.path.join(box, "w2c.env")).read(), open(os.path.join(box, "vms.env")).read()
-    assert f"PLATFORM_DIR={box}/state\n" in w2c and f"ARCHIVE={box}/state/events\n" in w2c and f"W2C_TLS={box}/tls\n" in w2c
+    assert f"PLATFORM_DIR={box}/state\n" in w2c and f"RESOURCE_ROOT={box}/state/events\n" in w2c and f"W2C_TLS={box}/tls\n" in w2c
     assert f"OBJECTS=cluster://{box}/state/objects?" in w2c
     assert f"ARCHIVE_VOLUME=file://{box}/state/vms/obsd/volume\n" in vms_ and f"SHM_DIR={box}/state/run/vms\n" in vms_
     agents = os.path.join(home, "Library", "LaunchAgents")

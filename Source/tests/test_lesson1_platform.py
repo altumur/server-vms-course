@@ -68,9 +68,9 @@ def test_lease_on_a_monotonic_clock():
     box = Box(); clk = Clock()
     e, _ = next_epoch(box.vars, "vms/epoch/7")
     lease = Lease(box.vars, "vms/epoch/7", e, ttl=30, margin=5, clock=clk)
-    clk.advance(24.9); assert lease.may_write()
-    clk.advance(0.2);  assert not lease.may_write() and lease.seconds_left() == 0
-    assert lease.renew() and lease.may_write()
+    clk.advance(24.9); assert lease.may_act()
+    clk.advance(0.2);  assert not lease.may_act() and lease.seconds_left() == 0
+    assert lease.renew() and lease.may_act()
     next_epoch(box.vars, "vms/epoch/7")                        # somebody else took camera 7
     assert lease.renew() is False and lease.fenced and lease.conflicts == 1
 
@@ -101,7 +101,7 @@ def test_controller_and_worker_bases_speak_only_the_contract():
     a = ctl.assign("t-1", ["3", "1", "2"])
     assert a.units == ["1", "2", "3"] and a.rev == 1 and w.assignment().units == ["1", "2", "3"]
     assert ctl.assign("t-1", ["1"]).rev == 2
-    assert w.take_epoch("1") == 1 and w.may_write("1")
+    assert w.take_epoch("1") == 1 and w.may_act("1")
     box.wall.advance(100)
     assert ctl.workers_seen(max_age=45) == {}                  # a silent worker is not a worker
 
@@ -227,8 +227,8 @@ def test_a_worker_that_released_its_slot_stops_receiving_units():
     box = Box()
     ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    w1 = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive)
-    w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2", archive_root=box.archive)
+    w1 = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
+    w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2", resource_root=box.archive)
     w1.heartbeat_once(); w2.heartbeat_once()
 
     w1.heartbeat_once(); w1.release_slot()                    # an orderly stop: a last word, then let go
@@ -253,7 +253,7 @@ def test_a_subscriber_is_not_handed_a_holder_that_has_gone_silent():
     box = Box()
     ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
     w.heartbeat_once(); con.create_camera({"source": "driverpack://file/a.mp4"}); ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
 

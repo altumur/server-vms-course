@@ -181,7 +181,7 @@ def test_every_unit_registers_with_its_servers_resource_and_a_process_that_ended
 
 def test_the_worker_entry_point_registers_its_process_before_it_runs():
     """What a unit runs, run: `cluster.__main__.worker()` with this server's store and objects and its unit's
-    environment, stopped before its first turn — its registration is in its server's events archive (`ARCHIVE`), under
+    environment, stopped before its first turn — its registration is in its server's events archive (`RESOURCE_ROOT`), under
     the name it claimed, and its lock held for as long as its process lives."""
     import json
     import os
@@ -318,10 +318,10 @@ def test_the_lease_stops_writing_before_anybody_else_may_start():
     """TTL 30, margin 5: the holder stops at 25 on its own clock; the controller moves its cameras only past the
     slot's 45 s and 45 s more. The window between is the margin the design buys."""
     c, ctl, a, act, _ = _recording(1, b=False)
-    c.clock.advance(24); assert a.may_write("1")
-    c.clock.advance(2);  assert not a.may_write("1")                       # 26 s without a renewal: it stops itself
+    c.clock.advance(24); assert a.may_act("1")
+    c.clock.advance(2);  assert not a.may_act("1")                       # 26 s without a renewal: it stops itself
     assert a.lease_pass() == []                                            # renewal succeeds (nobody took the epoch)...
-    assert a.may_write("1")                                                # ...and it may write again — it was never fenced
+    assert a.may_act("1")                                                # ...and it may write again — it was never fenced
 
 
 def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_written():

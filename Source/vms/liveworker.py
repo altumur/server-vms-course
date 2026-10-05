@@ -89,7 +89,7 @@ class LiveWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, ctl: SpecController | None = None, url: str = "",
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
-                 peer_factory=None, env: dict | None = None, archive_root: str | None = None):
+                 peer_factory=None, env: dict | None = None, resource_root: str | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
@@ -103,7 +103,7 @@ class LiveWorker(Worker):
         # Its server's events archive — where its journal goes (`Worker.journal`: `worker.name_taken`, an alarm). It had
         # none, and those lines went to its log alone while every other worker's reached the archive (the product's
         # cross-check, 4 Oct: its gateway had the same gap). A gateway writes no events of its own beside them.
-        self.archive_root = runtime.events_root(env, archive_root)
+        self.resource_root = runtime.events_root(env, resource_root)
         self.peer_factory = peer_factory or FakePeer
         self.upstreams: dict[str, Upstream] = {}
         self.sessions: dict[str, tuple[str, object]] = {}          # session id -> (cam, peer)

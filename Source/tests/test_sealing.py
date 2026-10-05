@@ -90,7 +90,7 @@ def test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_onl
             return super().__call__(verb, cam)
 
     act = Recording()
-    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive, env={"SECRETS_KEY": key})
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive, env={"SECRETS_KEY": key})
     w.reconcile_once()
     assert act.last["cred_secret"] == secret                          # the pipeline gets the password…
     assert is_sealed(next(r for r in w.rows if r["id"] == 1)["cred_secret"])                 # …the worker's rows keep it sealed
@@ -100,7 +100,7 @@ def test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_onl
     logging.getLogger("vmsworker").addHandler(h)
     try:
         box2_act = Recording()
-        nokey = VmsWorker("w-1", box.vars, box.objects, box2_act, clock=box.clock, wall=box.wall, archive_root=box.archive, env={})
+        nokey = VmsWorker("w-1", box.vars, box.objects, box2_act, clock=box.clock, wall=box.wall, resource_root=box.archive, env={})
         box.wall.advance(46)
         nokey.claim_slot(prefer="w-1"); nokey.reconcile_once()
         assert not hasattr(box2_act, "last")                           # a sealed password and no key: not started…
@@ -188,7 +188,7 @@ def test_a_camera_whose_password_cannot_be_opened_says_why_in_its_status():
         del os.environ["SECRETS_KEY"]
     con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4", "cred_secret": "Hunter2"})
     VmsController(box.vars, box.objects, wall=box.wall).assign("w-1", ["1"])
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, archive_root=box.archive, env={})
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, resource_root=box.archive, env={})
     w.reconcile_once()
     st = next(s for s in w.status() if s["id"] == 1)
     assert st["phase"] != "running" and "SECRETS_KEY" in st["why"]
@@ -367,7 +367,7 @@ def test_a_value_that_only_looks_sealed_stops_its_own_camera_and_is_refused_at_t
     items, idx = box.vars.get("vms/cameras/1")
     box.vars.put("vms/cameras/1", {**items, "cred_secret": "enc:v1:x"}, cas=idx)             # a copy that lost its tail, past the console
     VmsController(box.vars, box.objects, wall=box.wall).assign("w-1", ["1", "2"])
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, archive_root=box.archive, env={"SECRETS_KEY": key})
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, resource_root=box.archive, env={"SECRETS_KEY": key})
     w.reconcile_once()
     st = {s["id"]: s for s in w.status()}
     assert st[1]["phase"] != "running" and "looks sealed" in st[1]["why"]

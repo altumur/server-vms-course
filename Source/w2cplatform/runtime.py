@@ -13,7 +13,7 @@
     LABELS        what this server can reach, comma-separated
     INSTANCE_ID   this incarnation — what failover is measured from
     PLATFORM_DIR  the platform's state: config/, objects/, events/ (`/data/platform`)
-    ARCHIVE       the platform's events tree, the resource's (`<PLATFORM_DIR>/events`)
+    RESOURCE_ROOT the platform's events tree, the resource's root (`<PLATFORM_DIR>/events`)
     BOX_ID        which machine (systemd's `%m`): two machines with one hostname are two boxes (`box`)
 
 Not one of these names an orchestrator, and that is the whole point of the
@@ -35,7 +35,7 @@ import socket
 
 SLOT_INDEX, SERVER_NAME, LABELS, INSTANCE_ID = "SLOT_INDEX", "SERVER_NAME", "LABELS", "INSTANCE_ID"
 WORKER_NAME, SPARE_FOR = "WORKER_NAME", "SPARE_FOR"
-PLATFORM_DIR, ARCHIVE = "PLATFORM_DIR", "ARCHIVE"
+PLATFORM_DIR, RESOURCE_ROOT = "PLATFORM_DIR", "RESOURCE_ROOT"
 
 # THE PLATFORM'S LAYOUT, each default said once (the owner's decisions, 4 October). All the platform's mutable state
 # is under one root on the data partition — `config/` (the file store's rows), `objects/` (heartbeats, the snapshot),
@@ -61,7 +61,7 @@ def events_root(env: dict, given: str | None = None) -> str:
 
 # The events tree as the environment says it, or None: a process that writes a journal only where it was told to.
 def events_said(env: dict) -> str | None:
-    return env.get(ARCHIVE) or None
+    return env.get(RESOURCE_ROOT) or None
 
 
 # The slot to prefer: the role's own name (its spec's `slot.name_env`), else the unit's `WORKER_NAME`, else

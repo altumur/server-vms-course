@@ -26,13 +26,12 @@ from .controller import VmsController
 # `SpecConsole`s over the VMS's specs, mounted in one process: the VMS at `/` (the page, /cameras, /where with the
 # holder's door), and every other subsystem the console fronts under its name — `/live/…`, `/rec/…`, `/det/…` — each
 # with the console's token. With a resource root on this server, operator marks (`POST /marks`) go into the console's
-# own event log there. `media` — the page draws a timeline and a player, from the holders' doors.
-def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_ctl: SpecController | None = None,
-                 mounts: dict[str, SpecController] | None = None, index=None, media: bool | None = None) -> Mount:
+# own event log there.
+def make_console(ctl: VmsController, resource_root: str | None, wall=None, live_ctl: SpecController | None = None,
+                 mounts: dict[str, SpecController] | None = None, index=None) -> Mount:
     """One console process for the box: the VMS at `/`, and every other subsystem the console fronts under its name."""
     index = index or MergedIndex(ctl.objects, wall=wall or time.time)   # no database here: the resource process's, asked over HTTP
-    media = archive_root is not None if media is None else media         # footage to show: the holders' doors
-    root = SpecConsole(ctl, marks_root=archive_root, wall=wall, media=media, index=index)
+    root = SpecConsole(ctl, marks_root=resource_root, wall=wall, index=index)
     m = Mount(root)
     if live_ctl is not None:
         m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
@@ -53,6 +52,6 @@ def wire_vms(m: Mount, ctl, index=None) -> Mount:
 
 # `make_console(...).serve(host, port)`: the server in a daemon thread, returned so the caller can
 # `shutdown()` it. `__main__.console` calls it with `$CONSOLE_HOST:$CONSOLE_PORT`; the tests with `port=0`.
-def serve(ctl: VmsController, archive_root: str | None, host: str = "127.0.0.1", port: int = 8080, wall=None,
+def serve(ctl: VmsController, resource_root: str | None, host: str = "127.0.0.1", port: int = 8080, wall=None,
           live_ctl: SpecController | None = None, mounts: dict[str, SpecController] | None = None, index=None) -> ThreadingHTTPServer:
-    return make_console(ctl, archive_root, wall, live_ctl, mounts, index).serve(host, port)
+    return make_console(ctl, resource_root, wall, live_ctl, mounts, index).serve(host, port)

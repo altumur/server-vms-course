@@ -53,7 +53,7 @@ class DetWorker(Worker):
     SLOT_PREFIX = DET_SPEC.slot_prefix                          # a slot it has to make is `d-<n>`, like the ones it is given
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None, capacity: int | None = None,
-                 clock=time.monotonic, wall=time.time, server: str | None = None, archive_root: str | None = None,
+                 clock=time.monotonic, wall=time.time, server: str | None = None, resource_root: str | None = None,
                  env: dict | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(DET, None, vars_, objects, clock=clock, wall=wall)
@@ -62,7 +62,7 @@ class DetWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "8"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = runtime.events_root(env, archive_root)   # this server's resource: where the buckets go
+        self.resource_root = runtime.events_root(env, resource_root)   # this server's resource: where the buckets go
         self.running: dict[str, object] = {}                                     # unit -> model
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0
@@ -126,7 +126,7 @@ class DetWorker(Worker):
                 if unit not in self.running:
                     self.running[unit] = self.models[row["kind"]](row)
                     self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "running", "events": 0, "server": src[0], "source": src[1]}
-                if self.may_write(unit):
+                if self.may_act(unit):
                     for kind, fields in self.running[unit].observe(now):       # what the model saw, into the unit's bucket under its epoch
                         # Suppression stands between the model and the file, last before the write, as in the
                         # VMS worker: everything above is about whether this worker may speak about this unit
@@ -157,7 +157,7 @@ class DetWorker(Worker):
     # Writes the lines the suppressor handed back — the observation, nothing, or the summary of a window that
     # just closed and then the observation — each under its class, into the unit's bucket under its epoch.
     def _write(self, unit: str, row: dict, lines) -> None:
-        log_ = EventLog(self.archive_root, DET.name, unit, self.epochs[unit], of=DET_SPEC.of_row(row))   # about its camera
+        log_ = EventLog(self.resource_root, DET.name, unit, self.epochs[unit], of=DET_SPEC.of_row(row))   # about its camera
         for t, kind, fields in lines:
             log_.append(t, kind, self.class_of(row, kind), **fields)
             self.status_by_unit[unit]["events"] = self.status_by_unit[unit].get("events", 0) + 1; self.events_written += 1
@@ -171,7 +171,7 @@ class DetWorker(Worker):
                 row = self.unit_row(unit) if unit in self.epochs and unit in self.status_by_unit else None
             except PARSE_ERRORS:                            # `1e999` in an int field too (the tenth round's sweep)
                 continue
-            if row is not None and self.may_write(unit):
+            if row is not None and self.may_act(unit):
                 self._write(unit, row, [(t, kind, fields)])
 
     def _stop(self, unit: str) -> None:

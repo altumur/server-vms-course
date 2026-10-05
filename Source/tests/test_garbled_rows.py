@@ -88,7 +88,7 @@ def test_a_lease_whose_epoch_row_stops_parsing_is_lost_alone():
     box.vars.put("vms/epoch/1", {"epoch": "one"})
     box.clock.advance(10)
     assert w.renew_leases() == ["1"] and w.conflicts() == 1
-    assert w.may_write("2") and w.leases["2"].last_renewal == box.clock() and not w.may_write("1")
+    assert w.may_act("2") and w.leases["2"].last_renewal == box.clock() and not w.may_act("1")
 
 
 # -- the slot, freed by the controller ---------------------------------------------------------------------------
@@ -551,7 +551,7 @@ def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the
     try:
         c2 = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      archive_root=box.archive)
+                      resource_root=box.archive)
         w.heartbeat_once()
         ctl.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); c2.ensure_placed()
         w.reconcile_once(); w.heartbeat_once()

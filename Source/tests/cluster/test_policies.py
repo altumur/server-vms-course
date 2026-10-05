@@ -292,7 +292,7 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     vars_, read = FileVariables(f"{root}/vars"), []
     real = vars_.get
     vars_.get = lambda path: (read.append(path), real(path))[1]
-    w = VmsWorker("w-1", vars_, FsObjectStore(f"{root}/objects"), FakeActuator(), archive_root=f"{root}/archive")
+    w = VmsWorker("w-1", vars_, FsObjectStore(f"{root}/objects"), FakeActuator(), resource_root=f"{root}/archive")
     assert w.playback_refusal("1", "", {}, "127.0.0.1") is None        # an open cluster: the door asks nobody
     vars_.put(MEMBER_MARK, {"cluster": "acme"})                       # a member that lost its keys: it asks
     assert w.playback_refusal("1", "", {}, "127.0.0.1")[0] == 503      # …and has no key of its own yet: shut

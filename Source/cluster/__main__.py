@@ -21,7 +21,7 @@ platform's from the spec alone (`SPEC_DIR`, which `w2c-run.sh` sets to the insta
                                        only an offer of the set (`Worker.claim_slot(spare_for=)`), else waits holding nothing
     SERVER_NAME, LABELS                the server, what it can reach (`/etc/w2c/w2c.env`) — neutral names
                                        (`w2cplatform/runtime.py`); a unit or an orchestrator fills them alike
-    ARCHIVE                            the platform's events archive on this server (`/etc/w2c/w2c.env`; unset:
+    RESOURCE_ROOT                      the platform's events archive on this server (`/etc/w2c/w2c.env`; unset:
                                        `<PLATFORM_DIR>/events`, `runtime.events_root`): the resource's tree, where the
                                        worker and the recorder write their events and register (`Worker.present`)
     ARCHIVE_VOLUME                     recorder: its own volume when nothing is declared (`vms.config.OWN_VOLUME`,
@@ -89,14 +89,14 @@ def stores(role: str, env=None):
 def make_worker(vars_, objects, actuator=None, env: dict | None = None, **kw):
     from cluster.worker import ClusterWorker
     w = ClusterWorker(vars_, objects, actuator, env=env, **kw)
-    w.present(w.archive_root)                  # its server's resource tree: where its events go too
+    w.present(w.resource_root)                  # its server's resource tree: where its events go too
     return w
 
 
 def make_recorder(vars_, objects, actuator=None, env: dict | None = None, **kw):
     from cluster.recworker import ClusterRecorder
     r = ClusterRecorder(vars_, objects, actuator, env=env, **kw)
-    r.present(r.archive_root)
+    r.present(r.resource_root)
     return r
 
 
@@ -138,7 +138,7 @@ def recorder() -> None:
     # the platform's directory now (WP-E).
     from vms.config import OWN_VOLUME
     env = {**os.environ, "ARCHIVE_VOLUME": os.environ.get("ARCHIVE_VOLUME") or OWN_VOLUME}
-    r = make_recorder(*stores("recworker"), act, env=env, archive_root=archive)
+    r = make_recorder(*stores("recworker"), act, env=env, resource_root=archive)
     # The door binds where the unit says it is reachable (`ARCHIVE_URL`), else loopback — `0.0.0.0` was the
     # default, and a door with no authentication on every interface is what the review's second pass found.
     announced = urlsplit(os.environ.get("ARCHIVE_URL", "")).hostname
@@ -187,7 +187,7 @@ def console() -> None:
                             cluster=os.environ.get("CLUSTER") or CLUSTER)
     rec_ctl = SpecController(catalog.spec("rec"), vars_, objects)
     srv = serve(ctl, os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8080")),
-                archive_root=archive if os.path.isdir(archive) else None,     # marks go into this server's resource, if it has one
+                resource_root=archive if os.path.isdir(archive) else None,     # marks go into this server's resource, if it has one
                 rec_ctl=rec_ctl)                                               # the recorder at /rec/…: the page's Record toggle
     threading.Thread(target=_console_loop, args=(ctl, rec_ctl), daemon=True).start()
     stop.wait()

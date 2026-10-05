@@ -175,7 +175,7 @@ def test_the_recorders_calls_wait_less_than_a_lease_and_only_a_close_waits_for_i
     """The number behind the test above, in production: a third of a lease, and `WRITER_CLOSE` — which the
     protocol lets take thirty seconds to flush — the one call allowed to wait longer."""
     box = Box()
-    r = RecWorker("r-x", box.vars, box.objects, clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive,
+    r = RecWorker("r-x", box.vars, box.objects, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive,
                   env={}, default_quota=1 << 26)
     assert r.session.timeout == 10.0 and r.session.timeout < r.lease_ttl - r.lease_margin
     assert r.session.long_timeout >= 30.0

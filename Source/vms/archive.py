@@ -483,7 +483,7 @@ class Archive:
     # EVERY SAMPLE INTO A VOLUME ANY BOX MAY SERVE IS FENCED (the review's fifth pass, blocker 1). The hold was checked
     # before `VOLUME_MOUNT_RW` and never again: a box frozen whole — recorder and daemon — woke with its writer
     # mounted, and its pipelines put thirty frames into a ring another box had taken meanwhile, all `OK`. The hold's
-    # confirmation is asked on every sample now, the way a lease is (`Lease.may_write`): too old, and nothing is sent.
+    # confirmation is asked on every sample now, the way a lease is (`Lease.may_act`): too old, and nothing is sent.
     #
     # A CHECK BEFORE SENDING, NOT A TOKEN (the review's sixth pass). Nothing travels with the sample that the engine
     # could refuse it by: a process frozen between this check and the send puts that one sample into a volume another

@@ -53,7 +53,7 @@ def _worker(box, spans, name="s-1", busy=False, busy_at=0, **kw):
 
     w = SurveyWorker(name, box.vars.as_writer("surveyworker", SURVEY_SPEC.sub.acl_worker()), box.objects,
                      models={"lpr": Every}, clock=box.clock, wall=box.wall, server="srv-1",
-                     archive_root=box.archive, env={"LABELS": "gpu"}, step=60.0, fetch=fetch, index=index, **kw)
+                     resource_root=box.archive, env={"LABELS": "gpu"}, step=60.0, fetch=fetch, index=index, **kw)
     w.reads = reads
     return w
 

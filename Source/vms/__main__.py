@@ -7,7 +7,7 @@ w2cplatform console`, `CONSOLE_ROOT=vms`: the specs' rows, tables, requests and 
 beside its workers is its housekeeping, `jobs`: the requests turned into work and the work into closed rows.
 
     PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
-    ARCHIVE=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
+    RESOURCE_ROOT=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
     ARCHIVE_VOLUME  MEDIA_DIR=/data/media   the recorder's own volume (`/data/vms/obsd/volume`); the holder's files
     OBSD_SOCKET=/run/vms-obsd/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
     WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: NOMAD_ALLOC_INDEX → w-<index>;
@@ -45,7 +45,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 # Environment (from the docstring and the code):
 # - `PLATFORM_DIR` (default `/data/platform`, `runtime.platform_dir`) — the platform's state: `<dir>/config` is
 #   `FileVariables`, `<dir>/objects` is `FsObjectStore`, `<dir>/events` the events archive.
-# - `ARCHIVE` (`runtime.events_root`: `<PLATFORM_DIR>/events`) — the platform's events archive, the resource's tree:
+# - `RESOURCE_ROOT` (`runtime.events_root`: `<PLATFORM_DIR>/events`) — the platform's events archive, the resource's tree:
 #   every subsystem's buckets, each process a client of it (group `w2c-events`). A recorder with nothing declared
 #   formats its server's own volume at `ARCHIVE_VOLUME`, by default `config.OWN_VOLUME` (`/data/vms/obsd/volume`:
 #   the archive engine is the VMS's, and so are its volumes).
@@ -117,7 +117,7 @@ STORE_URL = store_url(os.environ, "file://" + os.path.join(root, "config"))
 # - Tries `gstvms.actuator.GstActuator()` — `driverpacksrc ! tee`, served as the RTSP fan-out on :8554; on
 #   `ImportError` (no `gi`) logs a warning and uses `FakeActuator`, which holds nothing. The worker records
 #   nothing either way: recording is the recorder's (`recorder` below).
-# - Constructs `VmsWorker(name, vars_, objects, act, capacity=$CAPACITY, archive_root=archive)` — its events
+# - Constructs `VmsWorker(name, vars_, objects, act, capacity=$CAPACITY, resource_root=archive)` — its events
 #   go to this server's resource under `vms/<cam>/` — the
 #   constructor claims the slot — logs the claimed name and instance, and calls `w.run(stop=stop)`. `run`
 #   releases the slot on the way out, so SIGTERM is an orderly stop (scale-in), while a kill leaves the slot
@@ -146,7 +146,7 @@ def worker() -> None:
         from gstvms.devices import open_device as device_factory              # type: ignore
     except ImportError:
         device_factory = None
-    w = VmsWorker(name, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), archive_root=archive,
+    w = VmsWorker(name, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), resource_root=archive,
                   device_factory=device_factory)
     w.rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")   # what the fan-out is bound to is what the heartbeat announces
     # The port is the worker's own (`$PLAYBACK_PORT`, `auto` for "ask the OS"), read in its constructor and
@@ -195,7 +195,7 @@ def recorder() -> None:
     from .config import OWN_VOLUME
     env = {**os.environ, "ARCHIVE_VOLUME": os.environ.get("ARCHIVE_VOLUME") or OWN_VOLUME}
     r = RecWorker(None, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), env=env,
-                  archive_root=runtime.events_root(os.environ),
+                  resource_root=runtime.events_root(os.environ),
                   window=window, keep_days=float(os.environ.get("RETENTION_DAYS", "30")))
     r.backfill_budget = int(os.environ.get("BACKFILL_BUDGET", "1"))
     srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "127.0.0.1"), int(os.environ.get("ARCHIVE_PORT", "0")))
@@ -223,7 +223,7 @@ def detworker() -> None:
     from .detworker import DetWorker
     vars_ = open_vars(STORE_URL, writer="detworker", acl={"detworker": ["det/epoch/*", "det/slots/*"]})
     d = DetWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")), capacity=int(os.environ.get("CAPACITY", "8")),
-                  archive_root=runtime.events_root(os.environ))
+                  resource_root=runtime.events_root(os.environ))
     logging.info("detector %s (instance %s) claimed its slot; models: %s", d.name, d.instance, ",".join(d.models))
     _present(d)
     d.run(stop=stop)
@@ -240,7 +240,7 @@ def autoworker() -> None:
     vars_ = open_vars(STORE_URL, writer="autoworker", acl={"autoworker": acl})
     a = AutoWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                    capacity=int(os.environ.get("CAPACITY", "50")),
-                   archive_root=runtime.events_root(os.environ))
+                   resource_root=runtime.events_root(os.environ))
     logging.info("evaluator %s (instance %s) claimed its slot; may file: %s", a.name, a.instance, ",".join(acl[-3:]))
     # The long poll (`w2cplatform/longpoll.py`): a request held at every resource it asks, answered when an event
     # one of its scenarios watches is written there — the pass begins then, not at the end of its two seconds.
@@ -259,7 +259,7 @@ def detjobworker() -> None:
     vars_ = open_vars(STORE_URL, writer="detjobworker", acl={"detjobworker": ["detjob/epoch/*", "detjob/slots/*"]})
     j = DetJobWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                      capacity=int(os.environ.get("SCAN_CAPACITY", "2")),
-                     archive_root=runtime.events_root(os.environ))
+                     resource_root=runtime.events_root(os.environ))
     logging.info("scan worker %s (instance %s) claimed its slot; models: %s", j.name, j.instance, ",".join(j.models))
     _present(j)
     j.run(stop=stop)
@@ -274,7 +274,7 @@ def surveyworker() -> None:
     vars_ = open_vars(STORE_URL, writer="surveyworker", acl={"surveyworker": ["survey/epoch/*", "survey/slots/*"]})
     s = SurveyWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                      capacity=int(os.environ.get("SURVEY_CAPACITY", "2")),
-                     archive_root=runtime.events_root(os.environ))
+                     resource_root=runtime.events_root(os.environ))
     logging.info("survey %s (instance %s) claimed its slot; models: %s", s.name, s.instance, ",".join(s.models))
     _present(s)
     s.run(stop=stop)
@@ -301,7 +301,7 @@ def gateway() -> None:
         logging.warning("no GStreamer webrtcbin: the fake peer answers SDP and carries no media")
     gw = LiveWorker(None, vars_, objects, ctl=SpecController(LIVE_SPEC, vars_, objects), url=os.environ.get("GATEWAY_URL", f"http://{host}:{port}"),
                      capacity=int(os.environ.get("CAPACITY", "100")), peer_factory=peer,
-                     archive_root=runtime.events_root(os.environ))
+                     resource_root=runtime.events_root(os.environ))
     srv = gw.serve(host, port)
     logging.info("gateway %s (instance %s) on %s", gw.name, gw.instance, srv.server_address)
     _present(gw)

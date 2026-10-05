@@ -9,10 +9,10 @@
 - `GET /timeline/<cam>?from=&to=` — every recording of the camera (`recordings_of`), from every live recorder's door, each span tagged with its `recording`, `recorder` and `volume`, and `fenced` against the recording's epoch row in raft. A door that did not answer is listed in `unreachable`; a volume nobody serves now — its recorder silent and nobody else holding it, which is what a dead server's disk looks like — in `unavailable`, with the note "… is unavailable until a recorder holds it again — not lost". Everything answered: a plain list.
 - `GET /export/<cam>?rec=&from=&to=` — the interval as a fragmented MP4, from whichever doors hold it, and an `archive.read` line in the console's journal with its sha256.
 
-### `make_console(ctl, worst_failover=0.0, index=None, archive_root=None, rec_ctl=None) -> Mount`
+### `make_console(ctl, worst_failover=0.0, index=None, resource_root=None, rec_ctl=None) -> Mount`
 The VMS at `/` with `cluster_routes` and `media=True`; when `rec_ctl` is given, the recorder at `/rec/…` (the page's Record toggle). Both answer `/events` from the same `MergedIndex` over the resources' indexes.
 
-### `serve(ctl, host, port, worst_failover, index, archive_root, rec_ctl)`
+### `serve(ctl, host, port, worst_failover, index, resource_root, rec_ctl)`
 `make_console(...).serve(host, port)`.
 
 ## Notes

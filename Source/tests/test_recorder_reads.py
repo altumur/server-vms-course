@@ -85,7 +85,7 @@ def _recorder(box, name: str, server: str, fail: str | None = None):
     from vms.recworker import RecWorker
     vars_, objects = Counting(box.vars), Counting(box.objects, fail)
     r = RecWorker(name, vars_, objects, FakeActuator(), clock=box.clock, wall=box.wall, server=server,
-                  archive_root=box.archive, obsd=types.SimpleNamespace(), env={})
+                  resource_root=box.archive, obsd=types.SimpleNamespace(), env={})
     r.store = _Volume()
     return r, vars_, objects
 

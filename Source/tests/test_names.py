@@ -202,9 +202,9 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
 def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive():
     """The product's cross-check (4 Oct): its live gateway wrote `worker.name_taken` — the ALARM that says a process is
     nobody because another instance holds its name — into its own log and nowhere else. The course's gateway had the
-    same gap: `LiveWorker` had no `archive_root`, so its journal (`Worker.journal`) was the log only, while its
+    same gap: `LiveWorker` had no `resource_root`, so its journal (`Worker.journal`) was the log only, while its
     container mounts the archive for its registration. Every kind of worker, told the archive the way its entry point
-    tells it (`ARCHIVE` in its environment), writes its journal there: the alarm into the alarms' tree, the line beside
+    tells it (`RESOURCE_ROOT` in its environment), writes its journal there: the alarm into the alarms' tree, the line beside
     it into the audit family's."""
     import tempfile
     from w2cplatform.events import alarm_tree, buckets_under
@@ -221,7 +221,7 @@ def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive
                                                       server="srv-a", env=env)
     for kind, make in made.items():
         root = tempfile.mkdtemp(prefix="events-")
-        w = make({"ARCHIVE": root})
+        w = make({"RESOURCE_ROOT": root})
         role = f"{w.sub.name}worker"
         w.journal.say("worker.name_taken", ALARM, sub=w.sub.name, worker=w.name, holder="another")
         w.journal.say("worker.name_back", sub=w.sub.name, worker=w.name)
