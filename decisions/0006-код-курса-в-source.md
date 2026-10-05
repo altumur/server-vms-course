@@ -9,7 +9,7 @@ informed: «Сборка», «Code-ревью», «Сравнение»
 # Код курса в одном месте: `vmsserver` → `Source`, старый Go-порт удалён
 
 ## Context and Problem Statement
-Код курса лежал в трёх местах: `vmsserver/` (М10), `М11_ClusterVMS/clustervms/` и `М12_DomainVMS/domainvms/` как тонкие пакеты поверх него с хаками `sys.path`; рядом лежал старый Go-порт `vmsserver-go` и тест сверки с ним.
+Код курса лежал в трёх местах: `vmsserver/` (М10), `М11_ClusterVMS/clustervms/` и `М12A_Domain/domainvms/` как тонкие пакеты поверх него с хаками `sys.path`; рядом лежал старый Go-порт `vmsserver-go` и тест сверки с ним.
 
 ## Decision Drivers
 * все лекции должны ссылаться в одно место;

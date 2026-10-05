@@ -41,7 +41,7 @@ Prometheus, работающий заданием Nomad внутри домен�
 
 Это правило курс уже знает, и оно приходит в четвёртый раз:
 
-> **Подробности — локально; сводка — домену.** [`where-the-database-lives.md`](../М12_DomainVMS/where-the-database-lives.md) назвала его для записей, индекса архива и событий и сказала, что «четвёртый когда-нибудь появится». **Метрики — четвёртый.**
+> **Подробности — локально; сводка — домену.** [`where-the-database-lives.md`](../М12A_Domain/where-the-database-lives.md) назвала его для записей, индекса архива и событий и сказала, что «четвёртый когда-нибудь появится». **Метрики — четвёртый.**
 
 ---
 
@@ -217,6 +217,6 @@ Grafana, Loki и Tempo перешли с Apache 2.0 на AGPLv3 в **апрел�
 - [LICENSE Grafana](https://raw.githubusercontent.com/grafana/grafana/main/LICENSE) · [Loki](https://raw.githubusercontent.com/grafana/loki/main/LICENSE) · [Tempo](https://raw.githubusercontent.com/grafana/tempo/main/LICENSE) · [Mimir](https://raw.githubusercontent.com/grafana/mimir/main/LICENSE) — все **AGPLv3**
 - [Объявление о смене лицензии Grafana](https://grafana.com/blog/2021/04/20/grafana-loki-tempo-relicensing-to-agplv3/) — апрель 2021; *«плагины, агенты и некоторые библиотеки останутся под Apache»* · [вопросы и ответы с CEO](https://grafana.com/blog/2021/04/20/qa-with-our-ceo-on-relicensing/) · [Лицензионное соглашение Grafana Labs](https://grafana.com/legal/grafana-labs-license/) — бесплатный бинарник Enterprise распространять нельзя
 - [LICENSE Grafana Alloy](https://raw.githubusercontent.com/grafana/alloy/main/LICENSE) · [VictoriaMetrics](https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/master/LICENSE) · [Thanos](https://raw.githubusercontent.com/thanos-io/thanos/main/LICENSE) · [Cortex](https://raw.githubusercontent.com/cortexproject/cortex/master/LICENSE) · [OTel Collector](https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector/main/LICENSE) — все Apache 2.0
-- [`where-the-database-lives.md`](../М12_DomainVMS/where-the-database-lives.md) — подробности локально, сводка домену, и предсказание, что появится четвёртый тип данных
+- [`where-the-database-lives.md`](../М12A_Domain/where-the-database-lives.md) — подробности локально, сводка домену, и предсказание, что появится четвёртый тип данных
 
 *Написано 7 сентября 2026. Переведено на русский 26 сентября 2026; заодно устаревшее приведено к плану курса: уроки нумеруются с 1, Node заменён сервером и воркерами, сигналы — по таблице `COURSE-PLAN.md` (`vms_failover_seconds`, `vms_epoch_conflicts`, `domain_snapshot_age_seconds`), вендор — М14, облачная площадка — урок 8 М12.*

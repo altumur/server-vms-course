@@ -46,7 +46,7 @@ def _files():
     from w2cplatform import catalog
     from w2cplatform.spec import SubsystemSpec
     spec = SubsystemSpec.from_dict({"name": "files", "unit": {"rows": "files", "id": "name", "fields": {"name": {"type": "string"}}},
-                                    "placement": {"capacity": {"from": "capacity", "default": 4}}, "requests": {"free": True}})
+                                    "placement": {"capacity": {"from": "capacity", "default": 4}}, "requests": {"free": True, "ttl": 0}})
     catalog.register(spec)
     return spec
 
