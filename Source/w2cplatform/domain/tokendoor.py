@@ -3,8 +3,9 @@
 A subsystem's books carry tokens for its members (`domain.tokens` of its spec: a kind, its claims, its lifetime). The
 worker that writes the books runs at the holder, and the key that signs them stays in the signer's process: the worker
 asks, the signer issues — of a declared kind, with declared claims only (`trust.tokens.DeclaredIssuer`), never a
-person's token. The door is a unix socket on the holder (`SIGNER_TOKENS_UNIX`, mode 0660, its group the workers'),
-not the signer's network door: who may ask for a token is who may open that file.
+person's token. The door is a unix socket on the holder (`SIGNER_TOKENS_UNIX`, mode 0660, its group the tokens socket's
+own — `rights.tokens_group`, one member: the subsystem's domain worker), not the signer's network door: who may ask for
+a token is who may open that file, and that does not hang on who else joins a role group of the store.
 
     GET  /kid               {"kid"} — the key that signs now (a book re-issues a token another key signed)
     GET  /kinds             {kind: {lifetime, claims}} — what the loaded specs declare

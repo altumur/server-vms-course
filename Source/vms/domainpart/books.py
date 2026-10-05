@@ -51,8 +51,9 @@ class Books:
             settings = got["the shared settings"]
             more = self.steps.run(
                 ("asks", lambda: len(publish_asks(c, pairs(settings)))),
-                # Checked at writing; a camera can still leave the domain afterwards. Such a scenario is SAID, every
-                # pass, never skipped in silence.
+                # What a scenario means is checked here, not where the document is signed (the signer asks no
+                # subsystem's code, ADR-0032) — and a camera can leave the domain afterwards: such a scenario is SAID,
+                # every pass, never skipped in silence.
                 ("refused", lambda: refusals(settings, c)),
                 ("unchecked", lambda: unchecked(settings, c)))    # accepted, and nobody could vouch for it: said too
             out.update(more)

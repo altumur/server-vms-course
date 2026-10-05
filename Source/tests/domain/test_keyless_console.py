@@ -2,10 +2,11 @@
 
 The signer (`signer_service.Holder`) is the one process with the domain's keys, and the holder's whole pass runs there:
 every output of the pass — the view, the week of alarms, the backup, the kept edits closed — has that one writer. It has
-exactly four operations, and checks each itself, the freeze of a handover included: the shared settings, a handover,
-the people with their passwords, the backup sealed by the pass. The domain's console (`console.Console`) reads: the
-members and their publications from the store, what only the signer knows from the view the signer publishes; it writes
-what a person decides with no key, and hands the rest to the signer as it came."""
+exactly five operations, and checks each itself, the freeze of a handover included: the shared settings, a handover,
+the people with their passwords, the backup sealed by the pass, a move of the domain onto its cluster. The domain's
+console (`console.Console`) reads: the members and their publications from the store, what only the signer knows from
+the view the signer publishes; it writes what a person decides with no key, and hands the rest to the signer as it
+came."""
 import ast
 import json
 import os
@@ -154,14 +155,15 @@ def test_the_domain_console_holds_no_key_material_and_has_no_role_on_the_signers
         assert name not in imported, name
 
 
-def test_each_of_the_four_operations_runs_in_the_signer_and_refuses_while_a_handover_freezes_it():
-    """The shared settings, the people with their passwords, a handover and the backup sealed by the pass: each asks the
-    freeze HERE — 503 while a handover is under way, nothing written — whatever the console says or does not say; and
-    each goes through once the holder is not frozen. The fourth operation has no route: the pass seals the backup."""
+def test_each_of_the_five_operations_runs_in_the_signer_and_refuses_while_a_handover_freezes_it():
+    """The shared settings, the people with their passwords, a handover, a move and the backup sealed by the pass: each
+    asks the freeze HERE — 503 while a handover is under way, nothing written — whatever the console says or does not
+    say; and each goes through once the holder is not frozen (a move then says this cluster holds the domain already).
+    The backup has no route: the pass seals it."""
     wall, fed, north, devices, cards, report, signer = _domain()
     wrote = []
     h = _signer(fed, north, signer, wall, wrote, Lines())
-    h.move = lambda to: (_ for _ in ()).throw(AssertionError("a frozen holder moves nothing"))
+    h.hand_to = lambda to: (_ for _ in ()).throw(AssertionError("a frozen holder moves nothing"))
     anna = signer.tokens.issue("anna", 900, now=wall(), kind=PERSON)
     h.run_pass()                                                          # the view read every member: backups have keepers
     h.term.frozen_for = "cam-SN1"                                         # a handover is under way
@@ -169,7 +171,8 @@ def test_each_of_the_four_operations_runs_in_the_signer_and_refuses_while_a_hand
     ops = [lambda: h.shared(anna, {"base_rev": 0, "shared": {"vms": {"retention_days": 3}}}),
            lambda: h.people("POST", "users", anna, {"name": "vera", "password": "a long password"}),
            lambda: h.people("PUT", "break-glass/cam-SN1", anna, {"password": "glass glass glass"}),
-           lambda: h.handover(anna, {"to": "cam-SN1"})]
+           lambda: h.handover(anna, {"to": "cam-SN1"}),
+           lambda: h.move({"recovery": signer.backup().decode()})]
     for op in ops:
         st, body = op()
         assert st == 503 and "cam-SN1" in body["detail"], (st, body)
@@ -182,6 +185,8 @@ def test_each_of_the_four_operations_runs_in_the_signer_and_refuses_while_a_hand
     st, body = ops[2]()
     assert st == 200 and north.vars.get("domain/break_glass/cam-SN1")[0]["pwhash_secret"] != "glass glass glass"
     assert isinstance(h.backup(), int) and any(k.startswith("backup/rev-") for k in wrote)
+    st, body = ops[4]()
+    assert st == 409 and "holds the domain at term 1" in body["detail"], body      # nothing to move onto a holder
     assert h.people("POST", "users", None, {"name": "x", "password": "a long password"})[0] == 401
     boris = signer.tokens.issue("boris", 900, now=wall(), kind=PERSON)
     assert h.people("POST", "users", boris, {"name": "x", "password": "a long password"})[0] == 403
@@ -201,7 +206,8 @@ def test_a_handover_is_the_signers_and_the_console_only_hands_it_on():
     lines = Lines()
     h = Holder(holder.vars, devices["cam-SN0"].disk, signer, ids=IdentityStore(signer, holder.vars, devices["cam-SN0"].disk,
                publish_floor=0, now=wall), revoked=RevocationList(), fed=fed, term=holder, journal=lines,
-               move=lambda to: handover(holder, to, offline, DOMAIN, _objects(devices), lambda: agents[to].sync(), wall),
+               hand_to=lambda to: handover(holder, to, offline, DOMAIN, _objects(devices), lambda: agents[to].sync(),
+                                           wall),
                wall=wall)
     srv, signer_url = _serve(h)
     con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None),

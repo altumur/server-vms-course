@@ -386,9 +386,11 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     """М10's eighth review, minor: the domain's console and the signer had the reserve, the box's own door and the
     monitors' lane in code, and their deploy set none of it. Their units name the unix sockets — each in the unit's
     own runtime directory, 0700 — and the monitors (the box's loopback; the site adds its scrapers' addresses, never a
-    network). The tokens' socket is in a directory made at boot, setgid to the books' worker's group: the socket takes
-    that group, and the worker opens it and nothing else of the box does."""
+    network). The tokens' socket is in a directory made at boot, setgid to the tokens socket's own group — derived by
+    the platform's rule (`rights.tokens_group`: `vms-vmsdomaintokens`), never the worker's store role group: the socket
+    takes that group, and the worker opens it and nothing else of the box does."""
     import os
+    from w2cplatform.domain.rights import tokens_group
     u = _units()
     console, signer = u["w2c-domain-console"], u["w2c-domain"]
     assert console["env"]["DOMAIN_CONSOLE_UNIX"] == "/run/w2c-domain-console/console.sock"
@@ -401,9 +403,43 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
     assert signer["env"]["SIGNER_TOKENS_UNIX"] == u["vms-domainpart"]["env"]["SIGNER_TOKENS_UNIX"] == "/run/w2c-signer/tokens.sock"
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     tmpfiles = open(os.path.join(here, "deploy", "domain", "systemd", "w2c-domain.tmpfiles")).read()
-    assert "d /run/w2c-signer 2750 w2c vms-vmsdomain -" in tmpfiles
-    assert "vms-vmsdomain" in u["vms-domainpart"]["SupplementaryGroups"][0].split()
-    assert "vms-vmsdomain" not in signer["SupplementaryGroups"][0].split()       # the directory gives the group, not the signer
+    group = tokens_group("vms", "vms")
+    assert group == "vms-vmsdomaintokens"
+    assert f"d /run/w2c-signer 2750 w2c {group} -" in tmpfiles
+    assert group in u["vms-domainpart"]["SupplementaryGroups"][0].split()
+    assert group not in signer["SupplementaryGroups"][0].split()                # the directory gives the group, not the signer
+
+
+def test_the_tokens_socket_has_a_group_of_its_own_with_one_member_the_subsystems_domain_worker():
+    """ADR-0031: the group of the signer's tokens socket is its own — `<deployment>-<sub>domaintokens`, derived by the
+    platform's rule — and it has exactly ONE member: the VMS's domain worker, by its unit's `SupplementaryGroups=`. No
+    other unit anywhere in the deploy names it, no sysusers line makes anyone a member (not configstore, which is in
+    every store role group, not `vms`, the user every VMS worker runs as), and it is no role group of the store's rights
+    file: «only the token reader reads the tokens socket» does not hang on who joins a role group."""
+    import json
+    import os
+    from tests.cluster.test_recorder_job import unit
+    from w2cplatform.domain.rights import tokens_group
+    group = tokens_group("vms", "vms")
+    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    deploy = os.path.join(here, "deploy")
+    joined = []
+    for d, _, files in os.walk(deploy):
+        for n in files:
+            path = os.path.join(d, n)
+            if n.endswith((".service", ".container")):
+                u = unit(path)
+                if group in " ".join(u.get("SupplementaryGroups", []) + u.get("GroupAdd", [])).split():
+                    joined.append(n)
+            elif n.endswith(".sysusers"):
+                for line in open(path, encoding="utf-8"):
+                    parts = line.split()
+                    assert not (parts[:1] == ["m"] and group in parts), (n, line)   # nobody made a member by name
+    assert joined == ["vms-domainpart.service"], joined
+    roles = json.load(open(os.path.join(deploy, "cluster", "configstore-rights.json")))["roles"]
+    assert group not in {r["group"] for r in roles.values()}                  # no role group of the store
+    sysusers = open(os.path.join(deploy, "cluster", "systemd", "w2c-cluster.sysusers"), encoding="utf-8").read()
+    assert f"\ng {group} " in sysusers                                        # the group exists on the server
 
 
 def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():

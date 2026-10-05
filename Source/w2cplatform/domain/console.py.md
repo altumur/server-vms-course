@@ -9,8 +9,8 @@ One set of paths (the console module's contract, §10a): every human route under
 - `GET /domain` — the view the signer's last pass left (`view_doc`: `console.domain_view`, with its age); 404 when there is none.
 - `GET /domain/keys` — every `domain/` key of the holder's stores, masked; a row the role may not read (`domain/signer`) named and withheld (`keysview.keys`).
 - `GET /`, `/index.html` — the holder's page, `page.html`: the console module with `sections: ["domain"]` (§10a); `/platform/console.{js,css}` — the module.
-- `GET /domain/shared` — `shared_view()`: `{doc, delivery, declared}` read from the store, no key.
-- `PUT /domain/shared`, `POST /domain/handover`, `/domain/users[/<name>]`, `/domain/break-glass[/<cluster>]` (`GET` too: the people's rows are opened where the ring is) — handed to the signer's `/api/shared`, `/api/handover` (a 90 s bound: it waits for the target's report), `/api/people/…`.
+- `GET /domain/shared` — `shared_view()`: `{doc, delivery, declared}` read from the store, no key; `declared` names each field with its type, a document (`{name, type: json, schema}`) with its schema.
+- `PUT /domain/shared`, `POST /domain/handover`, `POST /domain/move`, `/domain/users[/<name>]`, `/domain/break-glass[/<cluster>]` (`GET` too: the people's rows are opened where the ring is) — handed to the signer's `/api/shared`, `/api/handover` (a 90 s bound: it waits for the target's report), `/api/move` (`{recovery, stolen?}`, on the cluster that is to hold the domain; 90 s; checked there by the file, no early refusal here), `/api/people/…`.
 - `GET /domain/alarms?since=&until=` — `alarms_doc`: `DomainAlarms.list`, read; the week is the signer's pass's to keep.
 - `GET /domain/backup` — `backup_doc`: for each `domain/backup/<member>` the pointer and what the member's last report says it took, and the signer's term.
 - `GET /domain/grants`, `PUT /domain/grants/<cluster> {lines}` — `grants_doc`, `set_grants`: lines `{subject, cap, scope, until}`, `scope` `*`, `unit:<sub>/<id>` or `labels:a,b`; the domain's own (`domain`) never lapse and keep an admin (`set_domain_grants`), a cluster's lapse at `until` (default a grant's lifetime from now); a journal line each.
@@ -20,6 +20,7 @@ One set of paths (the console module's contract, §10a): every human route under
 - `GET /spec` — `{name: "", rows: null}`; `GET /mounts` — `{root: "", mounts: {<sub>: console.describe(spec)}}`.
 - `GET /domain/<sub>/<rows>?q=&page=&size=&cluster=`, `PUT /domain/<sub>/<rows>/<ref>` (Idempotency-Key; 202 when kept), `GET /domain/<sub>/<table>`, `GET /domain/causes`, `GET /domain/where/<ref>`, `GET|POST /domain/members` (`{name, fingerprint?}`: admitted by the key its report presents, `Members.accept`), `DELETE /domain/members/<name>`, `GET|PUT /domain/topology`, `GET /healthz`.
 - With `viewer`, every `GET /domain*` asks for a token (bearer or the session's cookie) and a `view` on the domain; its own writes need an `admin` on the domain; a write carried by the cookie from another site's page is refused (`access.cross_site`).
+- Refusal codes (the architect's rule): 409 when the refusal depends on rows that exist — a name a person and a subject of a family would share, the last admin, a stale revision; 400 when the request is wrong by the spec on its own — a grant wider than a family's declared `grant` (`declared.GrantTooWide`), a shared field nobody declared or a value its schema refuses.
 
 ## `class Console`
 Its pass, every step in a try of its own (`steps.Steps`), READS: following the members, following the topology, the read view's pass — in memory, for the routes that list units and say where they are. `health()` is `/healthz`: passes, failing steps, and what others wrote that does not parse (`GARBLED_SHOWN`).

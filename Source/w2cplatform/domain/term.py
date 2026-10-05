@@ -32,7 +32,8 @@ in the target's report, never by calling it. The site's doors are used only by a
 one that boots and looks for the holder (`find_holder`), an old holder that comes back and looks whether it still is
 one (`check`), and the operator moving the domain to a member, which reads its neighbours for the newest backup and
 the largest term (`move_domain`) — the one exception the lesson names, because the holder that would have held the
-reports is the one that is gone.
+reports is the one that is gone. That move is the new holder's signer's operation (`signer_service.Holder.move`,
+`POST /api/move`, which `w2cctl domain move` calls), checked by the recovery file.
 
 What is NOT in the backup: the signer's key. It is the one thing that must never sit beside the rest, and it
 is restored from where Lesson 7 put it — offline, or in the recovery file the installer handed over. Without

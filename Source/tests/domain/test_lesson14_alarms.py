@@ -14,7 +14,7 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.agent import DomainAgent
 from vms.domainpart.ingest import POLLED
 from w2cplatform.domain.alarms import AlarmHistory, Card, DomainAlarms, ReportedDoor, pages
-from vms.domainpart.device import DeviceCluster, serial_of
+from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster
@@ -55,7 +55,7 @@ def test_one_list_newest_first_each_line_naming_its_member():
     cards["cam-SN2"].observe(1, NOW - 100, "tamper", alarm=True)
     cards["cam-SN2"].observe(1, NOW - 90, "motion")                       # an observation: not an alarm
     report()
-    out = DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 3600)
+    out = DomainAlarms(fed, reported, wall).list(since=NOW - 3600)
     assert [(e["member"], e["kind"]) for e in out["events"]] == [("cam-SN2", "tamper"), ("cam-SN1", "stream_lost"), ("cam-SN0", "door_forced")]
     assert out["complete"] and out["sentence"] == "every member answered"
 
@@ -71,12 +71,12 @@ def test_an_alarm_wakes_the_agent_and_leaves_at_once_and_a_storm_is_one_report_a
     assert not agent.due()
     cards["cam-SN0"].observe(1, NOW, "door_forced", alarm=True)
     assert agent.due() and agent.report_now()                             # now, not in half a minute
-    assert [e["kind"] for e in DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 60, until=NOW + 60)["events"]] == ["door_forced"]
+    assert [e["kind"] for e in DomainAlarms(fed, reported, wall).list(since=NOW - 60, until=NOW + 60)["events"]] == ["door_forced"]
     cards["cam-SN0"].observe(1, NOW + 0.2, "tamper", alarm=True)
     assert not agent.due()                                                # inside the second: it waits
     wall.advance(1)
     assert agent.due() and agent.report_now()
-    kinds = [e["kind"] for e in DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 60, until=NOW + 60)["events"]]
+    kinds = [e["kind"] for e in DomainAlarms(fed, reported, wall).list(since=NOW - 60, until=NOW + 60)["events"]]
     assert kinds == ["tamper", "door_forced"]
     cards["cam-SN0"].observe(1, NOW + 1.5, "motion")                     # an observation wakes nobody
     wall.advance(5)
@@ -114,7 +114,7 @@ def test_an_agent_the_card_cannot_wake_asks_it_once_a_second():
     wall.advance(0.5)
     card.observe(1, wall(), "door_forced", alarm=True)
     assert agent.due() and agent.report_now()
-    assert [e["kind"] for e in DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 60, until=NOW + 60)["events"]] == ["door_forced"]
+    assert [e["kind"] for e in DomainAlarms(fed, reported, wall).list(since=NOW - 60, until=NOW + 60)["events"]] == ["door_forced"]
     assert not agent.due()                                                # reported: nothing newer on the card
 
 
@@ -129,7 +129,7 @@ def test_the_history_keeps_an_alarm_once_however_late_the_domain_reads_the_repor
     cards["cam-SN1"].observe(1, NOW - 100, "door_forced", alarm=True)
     for late in (3.0, 0.4, 2.7):                                          # how long after the report the domain reads it
         report(); wall.advance(late)
-        alarms = DomainAlarms(fed, reported, wall, history=history, ref_of=serial_of)
+        alarms = DomainAlarms(fed, reported, wall, history=history)
         alarms.keep()                                                     # the signer's pass keeps; the list reads
         out = alarms.list(since=NOW - 3600)
         assert [e["kind"] for e in out["events"] if e["member"] == "cam-SN1"] == ["door_forced"]
@@ -147,11 +147,11 @@ def test_a_member_that_goes_dark_is_answered_from_its_last_report_and_its_silenc
     cards["cam-SN0"].observe(1, NOW - 1500, "door_forced", alarm=True)
     cards["cam-SN0"].observe(1, NOW - 90, "door_forced", alarm=True)
     report()
-    DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 3600)            # the domain's pass: it has seen these reports
+    DomainAlarms(fed, reported, wall).list(since=NOW - 3600)            # the domain's pass: it has seen these reports
     devices["cam-SN0"].power_off()
     wall.advance(60)
     report()
-    out = DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 3600)
+    out = DomainAlarms(fed, reported, wall).list(since=NOW - 3600)
     mine = [(e["kind"], e["t"]) for e in out["events"] if e["member"] == "cam-SN0"]
     assert mine == [("silent", NOW + 45), ("door_forced", NOW - 90), ("door_forced", NOW - 1500)]
     assert [e for e in out["events"] if e["kind"] == "silent"][0]["class"] == "alarm"
@@ -167,11 +167,11 @@ def test_a_camera_still_polling_its_ingest_is_alive_and_not_reporting():
     to look for a broken camera."""
     wall = Clock(NOW)
     fed, north, devices, cards, agents, report, reported = _site(wall)
-    DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 60)
+    DomainAlarms(fed, reported, wall).list(since=NOW - 60)
     wall.advance(120)
     report(skip=("cam-SN0",))                                            # its agent is gone; the camera is not
-    north.objects.put(f"{POLLED}/srt___north_9000", json.dumps({"cluster": "north", "ts": wall(), "units": {"SN0": 2.0}}).encode())
-    out = DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 60)
+    north.objects.put(f"{POLLED}/srt___north_9000", json.dumps({"cluster": "north", "ts": wall(), "units": {"cam-SN0": 2.0}}).encode())
+    out = DomainAlarms(fed, reported, wall).list(since=NOW - 60)
     alarm = [e for e in out["events"] if e["member"] == "cam-SN0"][0]
     assert (alarm["kind"], alarm["alive_at"], alarm["alive_via"]) == ("not_reporting", NOW + 118, "north")
     assert "alive, and not reporting to the domain" in out["sentence"]
@@ -184,7 +184,7 @@ def test_the_domain_keeps_a_week_of_what_it_read_and_a_dead_card_takes_nothing_w
     wall = Clock(NOW)
     fed, north, devices, cards, agents, report, reported = _site(wall)
     history = AlarmHistory(north.objects, days=7, wall=wall)
-    alarms = lambda: DomainAlarms(fed, reported, wall, history=history, ref_of=serial_of)
+    alarms = lambda: DomainAlarms(fed, reported, wall, history=history)
     cards["cam-SN1"].observe(1, NOW - 100, "door_forced", alarm=True)
     report()
     alarms().keep()                                                      # the pass read it: kept
@@ -210,7 +210,7 @@ def test_a_storm_pushes_its_oldest_out_of_the_history_and_the_list_says_so():
     wall = Clock(NOW)
     fed, north, devices, cards, agents, report, reported = _site(wall)
     history = AlarmHistory(north.objects, days=7, wall=wall, max_lines=50)
-    alarms = lambda: DomainAlarms(fed, reported, wall, history=history, ref_of=serial_of)
+    alarms = lambda: DomainAlarms(fed, reported, wall, history=history)
     for i in range(100):
         cards["cam-SN1"].observe(1, NOW - 1000 + i, "stream_lost", alarm=True)
     report()
@@ -232,7 +232,7 @@ def test_a_member_never_heard_from_is_named_not_read_as_quiet():
     wall = Clock(NOW)
     fed, north, devices, cards, agents, report, reported = _site(wall)
     fed.add(member_copy("cam-SN9", north.objects, wall=wall))            # admitted, and never reported
-    out = DomainAlarms(fed, reported, wall, ref_of=serial_of).list(since=NOW - 3600)
+    out = DomainAlarms(fed, reported, wall).list(since=NOW - 3600)
     assert out["members"]["cam-SN9"]["state"] == "unreachable"
     assert "cam-SN9 has never reported to the domain" in out["sentence"]
 
