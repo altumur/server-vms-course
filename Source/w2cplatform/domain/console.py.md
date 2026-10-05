@@ -6,6 +6,8 @@
 One set of paths (the console module's contract, §10a): every human route under `/domain/*`, the path a cluster console forwards unrewritten (`console.Mount.domain_forward`); `/api/*` is the processes' (`signer_service.py`).
 - `GET /domain` — the view (`view_doc`: the one the last pass left, with its age, else composed now): `ReadView.doc` in the product's shape — `members` a list with the holder among them, `holder`, `complete`, `units` by subsystem, `causes`, `tables` — and `extra()`: `topology`, `member_list`, `knocking`, `url` (this door: `CONSOLE_URL`, else `http://CONSOLE_HOST:CONSOLE_PORT`).
 - `GET /domain/keys` — every `domain/` key of the holder's stores, masked (`keysview.keys`).
+- `GET /`, `/index.html` — the holder's page, `page.html`: the console module with `sections: ["domain"]` (§10a); `/platform/console.{js,css}` — the module.
+- `GET /domain/shared` — `shared_view()`: `{doc, delivery, declared}` read from the store, no key; `PUT /domain/shared` — handed to the signer as it came (`_to_signer`, `signer_url` from `SIGNER_HOST`/`SIGNER_PORT`; ADR-0032), which checks and signs.
 - `GET /spec` — `{name: "", rows: null}`: no root, no key of its own (the page mounts the module with `sections: ["domain"]`); `GET /mounts` — `{root: "", mounts: {<sub>: console.describe(spec)}}`, every loaded spec.
 - `GET /domain/<sub>/<rows>?q=&page=&size=&cluster=` — the read view of a subsystem of the directory (`route` → `("rows", sub, rows)`).
 - `PUT /domain/<sub>/<rows>/<ref>` — `api.update_unit(…, sub=<sub>)`, held to `<sub>`'s `domain.edit`; `Idempotency-Key` required; 202 when the edit was kept for a cluster that is off.
