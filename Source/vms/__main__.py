@@ -57,7 +57,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 # - `CAPACITY` (default `50`) — cameras this worker can carry; exported as `headroom`. A worker whose heartbeat says
 #   nothing is placed by its spec's `placement.capacity.default`: the platform's controller reads no `CAPACITY`.
 # - `CONSOLE_HOST` (`127.0.0.1`), `CONSOLE_PORT` (`8080`) — where the console listens
-#   (`console.container` sets `0.0.0.0`).
+#   (`w2c-console.container` sets `0.0.0.0`).
 # - `RESOURCE_HOST` (`127.0.0.1`), `RESOURCE_PORT` (`8090`), `RESOURCE_URL` — the resource process's HTTP and the URL
 #   its heartbeat advertises (the console asks `/events` there).
 # - `LOG_LEVEL` (`INFO`) — `logging.basicConfig` level.

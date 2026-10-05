@@ -1,9 +1,11 @@
-"""python3 -m w2cplatform controller <sub> | resource — the platform's own processes, for whatever subsystems the
-directory `SPEC_DIR` holds specs of (`host.py`; the boundary's step 5). Nothing here names a subsystem: the controller
-of `<sub>` is the platform's controller run from `<sub>.subsystem.yaml`, the resource is the platform's resource.
+"""python3 -m w2cplatform controller <sub> | resource | console — the platform's own processes, for whatever subsystems
+the directory `SPEC_DIR` holds specs of (`host.py`; the boundary's steps 5 and 6). Nothing here names a subsystem: the
+controller of `<sub>` is the platform's controller run from `<sub>.subsystem.yaml`, the resource is the platform's
+resource, the console the platform's console over the specs (`CONSOLE_ROOT` names the one at `/`).
 
     SPEC_DIR=/app/specs python3 -m w2cplatform controller <sub>
     SPEC_DIR=/app/specs python3 -m w2cplatform resource
+    SPEC_DIR=/app/specs CONSOLE_ROOT=<sub> python3 -m w2cplatform console
 """
 from __future__ import annotations
 

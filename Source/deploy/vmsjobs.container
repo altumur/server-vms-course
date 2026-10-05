@@ -2,7 +2,7 @@
 # turned into work (a scenario's recording, a detector with an end), the work into
 # a closed row (a finished job, an answered request, a recording whose minutes are
 # over). Its own process since the boundary's step 6 — it ran inside the VMS's
-# console, and the console is the platform's now (`console.container`).
+# console, and the console is the platform's now (`w2c-console.container`).
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================

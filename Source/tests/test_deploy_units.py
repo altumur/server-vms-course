@@ -57,7 +57,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
     assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
     assert "controller <sub>" in host.USAGE and "console" in host.USAGE
     for name, entry in [("vmsworker@.container", "worker"), ("w2c-resource.container", "resource"),
-                        ("console.container", "console"), ("vmsjobs.container", "jobs"),
+                        ("w2c-console.container", "console"), ("vmsjobs.container", "jobs"),
                         ("recworker@.container", "recorder"), ("liveworker@.container", "gateway"),
                         ("detworker@.container", "detworker"), ("detjobworker@.container", "detjobworker"),
                         ("surveyworker@.container", "surveyworker"), ("autoworker@.container", "autoworker"),
@@ -66,7 +66,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
         if name == "w2c-resource.container":
             assert u["Container"]["Exec"] == "python3 -m w2cplatform resource"         # the platform's own (step 6)
-        elif name == "console.container":
+        elif name == "w2c-console.container":
             assert u["Container"]["Exec"] == "python3 -m w2cplatform console"          # the platform's own (step 6)
             assert "CONSOLE_ROOT=vms" in u["Container"]["Environment"]                 # the deployment says what is at `/`
         elif name in platform:
@@ -151,7 +151,7 @@ def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
     # the cluster's key ring: one file of the platform's, in the three units that open sealed fields and no other
     keyed = {n for n in os.listdir(DEPLOY) if n.endswith(".container")
              and "SECRETS_KEY=/run/secrets/platform.key" in unit(n)["Container"].get("Environment", [])}
-    assert keyed == {"console.container", "vmsworker@.container", "recworker@.container"}, keyed
+    assert keyed == {"w2c-console.container", "vmsworker@.container", "recworker@.container"}, keyed
     for n in keyed:
         assert f"{KEY}:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
         assert W2C_SECRETS in _list(unit(n)["Container"]["GroupAdd"]), n                 # 0640, its group: the clients of the key
@@ -402,14 +402,14 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
         groups = _list(c.get("GroupAdd"))
         assert vols.get(CONFIG) == f"{CONFIG}:z" and vols.get(OBJECTS) == f"{OBJECTS}:z" and W2C_STORE in groups, n
         assert "--umask=0007" in _list(c.get("PodmanArgs")), n
-        platform = n in ("w2c-resource.container", "console.container", "w2c-controller@.container")
-        assert (EVENTS in vols and n != "console.container") == (W2C_EVENTS in groups), n
+        platform = n in ("w2c-resource.container", "w2c-console.container", "w2c-controller@.container")
+        assert (EVENTS in vols and n != "w2c-console.container") == (W2C_EVENTS in groups), n
         if EVENTS in vols:
             writers.add(n)
         assert ("User" in c) == platform, n
         if platform:
             assert (c["User"], c["Group"]) == (W2C, W2C), n
-    assert writers == {"w2c-resource.container", "console.container", "w2c-controller@.container", "vmsworker@.container", "recworker@.container",
+    assert writers == {"w2c-resource.container", "w2c-console.container", "w2c-controller@.container", "vmsworker@.container", "recworker@.container",
                        "detworker@.container", "detjobworker@.container", "surveyworker@.container",
                        "autoworker@.container", "liveworker@.container"}, writers
     r = unit("w2c-resource.container")["Container"]
@@ -836,7 +836,7 @@ def test_a_bundle_copied_to_a_server_is_given_to_the_daemons_user_who_can_then_r
 
 
 def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name():
-    """`console.container` runs the platform's console (`python3 -m w2cplatform console`; the boundary's step 6: it was
+    """`w2c-console.container` runs the platform's console (`python3 -m w2cplatform console`; the boundary's step 6: it was
     `python3 -m vms console`, with the VMS's own routes and its own list of what it fronts): over the specs the image
     carries (`SPEC_DIR=/app/vms`, here the package's directory), the VMS at `/` by the unit's `CONSOLE_ROOT`, and the
     recorder, the live gateways, the detectors, the scans, the survey and automation under their names — one token."""

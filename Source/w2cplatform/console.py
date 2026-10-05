@@ -66,7 +66,7 @@ rule in this file.
 # its holders serve go holder → browser through the door `/where` hands out (`door.py`; the boundary's step 6). The
 # console holds the subsystem's `SpecController` with the *console's* token (the operator's rows, never
 # placement), so a write it should not make is a 403 from the store, not a rule in this file.
-# `vms/console.py` builds it via `make_console`; the deploy unit `console.container` runs it as its own
+# `vms/console.py` builds it via `make_console`; the deploy unit `w2c-console.container` runs it as its own
 # process.
 #
 # ## Module-level names

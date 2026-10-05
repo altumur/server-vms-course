@@ -88,7 +88,7 @@ Source/
                                each access unit a sample into the volume's writer
   deploy/                      Quadlet, on М9's box: Containerfile (localhost/vmsserver:latest, the image М11 builds FROM), obsd.service (the host's archive engine),
                                vmsworker@.container, recworker@.container (the only writer of footage), w2c-controller@.container (every subsystem's
-                               controller, one instance per spec, as `w2c`), console.container, w2c-resource.container,
+                               controller, one instance per spec, as `w2c`), w2c-console.container, w2c-resource.container,
                                liveworker@.container, detworker@.container, w2c.env.example + vms.env.example, check-quadlet.sh
   tests/                       the suite: no GStreamer, but the archive's tests start a real obsd (OBSD_BIN); every runner keeps the run's
                                temp dirs under a root of its own (/tmp/w2c-tests-<pid> on macOS), removed at exit (runroot.py)
