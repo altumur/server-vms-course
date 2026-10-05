@@ -257,7 +257,8 @@ def test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_
         for i, bad in enumerate(("NaN", "Infinity", '"soon"')):
             payload = f'{{"unit": "vms/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
             st, body = call("POST", "/requests", raw=payload, key=f"k{i}")
-            assert st == 400 and "valid_until" in body["detail"], (bad, st, body)    # the schema's word, or the deadline's
+            # `NaN`/`Infinity` are no JSON: refused at the body (`not_json`); a word — by the schema or the deadline's rule
+            assert st == 400 and (body.get("fault") == "not_json" or "valid_until" in body["detail"]), (bad, st, body)
     assert box2.vars.list("vms/requests/") == []
 
 

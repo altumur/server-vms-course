@@ -174,8 +174,9 @@ def test_a_five_hundred_camera_tree_does_not_fit_a_variable_and_does_not_need_to
 
     def big(s):
         s.setdefault("shared", {}).setdefault("vms", {})["folders"] = [f"Site-{i // 100:02d}/Building-{i // 20 % 5}/Floor-{i // 5 % 4}/Zone-{i:03d}" for i in range(500)]
-        s["scenarios"] = [{"when": {"camera": f"SN{i}", "kind": "motion"}, "then": {"camera": f"SN{i + 1}", "action": "preset", "arg": 3}}
-                          for i in range(500)]
+        s["shared"]["auto"] = {"scenarios": [{"when": {"camera": f"SN{i}", "kind": "motion"},
+                                              "then": {"camera": f"SN{i + 1}", "action": "preset", "arg": 3}}
+                                             for i in range(500)]}
     shared.edit(big, base_rev=0)
     assert items_bytes(shared.current()[0]["settings"]) > 65536
     assert items_bytes(north.vars.get(POINTER)[0]) < 200

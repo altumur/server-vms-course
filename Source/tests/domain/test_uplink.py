@@ -134,7 +134,8 @@ def test_shared_settings_delivery_is_read_from_what_members_reported():
     wall = Clock(NOW)
     fed, north, signer, devices, agents, _ = _site(wall, n=3)
     shared = SharedSettings(north.vars, north.objects, signer.tokens, wall=wall)
-    shared.edit(lambda s: s.setdefault("defaults", {}).update(events_retention_days=14), base_rev=0, by="anna")
+    shared.edit(lambda s: s.setdefault("shared", {}).setdefault("vms", {}).update(events_retention_days=14), base_rev=0,
+                by="anna")
     _pass(agents, "cam-SN2")
     wall.advance(60)
     _pass(agents, "cam-SN2")

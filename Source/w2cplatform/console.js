@@ -160,7 +160,7 @@
       uSilent: "cluster silent — last known", turnOn: "Turn on", turnOff: "Turn off",
       sharedW: "Shared settings", sharedNote: "Settings of the site, not of one unit: one document of the domain each member's agent carries home and keeps — the domain may go, the settings stay where they are read. They are defaults: they are not written into the units' rows.",
       sharedRev: "rev {r} · term {t} · {a}", neverPub: "never published yet", onePerLine: "one a line", publishW: "Publish",
-      publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
+      notJson: "Not JSON, nothing sent —", publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
       editsW: "Edits for the clusters", editsNote: "The domain calls no cluster: an edit waits here, the cluster's agent takes it on its next publication, applies it and sends back the outcome.",
       alarmTimesTip: "how many times in the day",
       waitsPub: "waits for publication", appliedW: "applied", refusedStatus: "refused {s}", takenAt: "taken", noEdits: "no edits",
@@ -311,7 +311,7 @@
       uSilent: "кластер молчит — последнее известное", turnOn: "Включить", turnOff: "Выключить",
       sharedW: "Общие настройки", sharedNote: "Настройки площадки, а не одной единицы: один документ домена, который агент каждого члена уносит домой и хранит у себя — домен может пропасть, настройки остаются там, где их читают. Это умолчания: в строки единиц они не пишутся.",
       sharedRev: "rev {r} · срок {t} · {a}", neverPub: "ещё ни разу не публиковались", onePerLine: "по одному на строку", publishW: "Опубликовать",
-      publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
+      notJson: "Не JSON, ничего не отправлено —", publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
       editsW: "Правки для кластеров", editsNote: "Домен не звонит кластерам: правка ждёт здесь, агент кластера забирает её при следующей публикации, применяет у себя и присылает исход.",
       alarmTimesTip: "сколько раз за сутки",
       waitsPub: "ждёт публикации", appliedW: "применена", refusedStatus: "отказ {s}", takenAt: "принята", noEdits: "правок нет",
@@ -1847,31 +1847,37 @@
       const input = (sub, f) => {
         const v = ((d.shared || {})[sub] || {})[f.name], nm = h(sub + "/" + f.name), dis = admin ? "" : " disabled";
         if (f.type === "list") { const t = Array.isArray(v) ? v.join("\n") : ""; return `<textarea rows="4" data-sh="${nm}" data-orig="${h(t)}"${dis}>${h(t)}</textarea>`; }
+        // a json document (a spec's shape, checked against its schema where it is kept): its text, indented
+        if (f.type === "json") { const t = v == null ? "" : JSON.stringify(v, null, 2); return `<textarea rows="8" spellcheck="false" style="font-family:ui-monospace,monospace" data-sh="${nm}" data-orig="${h(t)}"${dis}>${h(t)}</textarea>`; }
         if (f.type === "bool") { const t = v == null ? "" : String(v); return `<select data-sh="${nm}" data-orig="${h(t)}"${dis}>${[["", W.notSetW], ["true", W.yesW], ["false", W.noW]].map(([x, l]) => `<option value="${x}"${t === x ? " selected" : ""}>${h(l)}</option>`).join("")}</select>`; }
         const t = v == null ? "" : String(v); return `<input ${f.type === "int" || f.type === "float" ? 'type="number"' : 'type="text"'} data-sh="${nm}" data-orig="${h(t)}" value="${h(t)}"${dis}>`;
       };
       return card(h(W.sharedW), `<p class="sub">${h(W.sharedNote)}</p><p class="sub">${d.rev ? h(W.sharedRev.replace("{r}", d.rev).replace("{t}", d.term ?? "—").replace("{a}", fmt(d.at))) + (d.by ? " · " + h(d.by) : "") : h(W.neverPub)}</p>
         ${d.rev ? `<div class="nt${bad ? " err" : ""}" style="margin-top:8px">${h(dl.sentence || "")}${Object.entries(dl.refused || {}).map(([m, w]) => `<br>${h(m)}: ${h(w)}`).join("")}</div>` : ""}
         ${Object.entries(dec).map(([sub, fields]) => { const s2 = st.subs.find(x => x.name === sub);
-          return `<div class="pc-g" style="margin-top:10px">${h(s2 ? cap(display(s2).section || s2.name) : sub)}</div><div class="g">${(fields || []).map(f => `<div><label>${h(s2 ? fieldTitle(s2, f.name) : f.name)}${f.type === "list" ? " — " + h(W.onePerLine) : ""}</label>${input(sub, f)}</div>`).join("")}</div>`; }).join("") || `<p class="sub">${h(W.noSharedDecl)}</p>`}
-        ${st.sharedErr ? `<div class="nt err" style="margin-top:8px">${h(st.sharedErr)}</div>` : ""}
+          return `<div class="pc-g" style="margin-top:10px">${h(s2 ? cap(display(s2).section || s2.name) : sub)}</div><div class="g">${(fields || []).map(f => `<div><label>${h(s2 ? fieldTitle(s2, f.name) : f.name)}${f.type === "list" ? " — " + h(W.onePerLine) : f.type === "json" ? " — JSON" : ""}</label>${input(sub, f)}</div>`).join("")}</div>`; }).join("") || `<p class="sub">${h(W.noSharedDecl)}</p>`}
+        <div class="pc-sherr">${st.sharedErr ? `<div class="nt err" style="margin-top:8px">${h(st.sharedErr)}</div>` : ""}</div>
         ${admin && Object.keys(dec).length ? `<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn pri s" data-a="publish">${h(W.publishW)}</button></div>` : ""}`);
     }
     function wireShared(box) {
       const b = box && box.querySelector('[data-a="publish"]'); if (!b) return;
       b.onclick = async () => {
-        const sh = st.domShared || {}, dec = sh.declared || {}, shared = {};
+        const sh = st.domShared || {}, dec = sh.declared || {}, shared = {}, bad = [];
+        // a refusal keeps what the person typed: only the error is drawn, the fields stay
+        const said = msg => { st.sharedErr = msg; const e = box.querySelector(".pc-sherr"); if (e) e.innerHTML = msg ? `<div class="nt err" style="margin-top:8px">${h(msg)}</div>` : ""; };
         for (const [sub, fields] of Object.entries(dec)) {
           shared[sub] = {};
           for (const f of fields || []) {
             const x = [...box.querySelectorAll("[data-sh]")].find(y => y.dataset.sh === sub + "/" + f.name); if (!x) continue;
             const raw = x.value, lines = raw.split("\n").map(y => y.trim()).filter(Boolean);
+            if (f.type === "json") { if (raw.trim() === "") shared[sub][f.name] = null; else try { shared[sub][f.name] = JSON.parse(raw); } catch (e) { bad.push(sub + "/" + f.name + ": " + e.message); } continue; }
             shared[sub][f.name] = f.type === "list" ? (lines.length ? lines : null) : f.type === "bool" ? (raw === "" ? null : raw === "true")
               : f.type === "int" || f.type === "float" ? (raw === "" ? null : Number(raw)) : (raw === "" ? null : raw);
           }
         }
+        if (bad.length) return said(W.notJson + " " + bad.join("; "));
         try { const d = await C.api("PUT", "/domain/shared", { base_rev: Number((sh.doc || {}).rev) || 0, shared }); st.sharedErr = ""; C.toast(W.publishedRev.replace("{r}", d && d.rev)); }
-        catch (e) { st.sharedErr = e.message; }
+        catch (e) { return said(e.message); }
         box.querySelectorAll("[data-sh]").forEach(x => { x.dataset.orig = x.value; });
         await loadDomShared(); box.innerHTML = sharedCard(); wireShared(box);
       };

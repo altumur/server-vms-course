@@ -54,3 +54,4 @@ null	(absent)	a null is no field at all: a holder tells an empty string from not
 {"z": null, "y": false}	{"y":false,"z":null}	a null inside JSON stays null
 NaN	(refused)	not JSON, though Python reads it
 1e999	(refused)	past what a JSON number holds here
+"\ud800"	(refused)	a lone surrogate is no character: not JSON

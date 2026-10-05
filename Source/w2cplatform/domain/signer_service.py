@@ -12,9 +12,9 @@ the week of alarms, seals the backup for the members chosen to keep it, and leav
 this process alone knows: the term, whether a handover freezes it, the steps that fail, the rows it could not read.
 The domain's console reads all of it and writes none of it.
 
-Its door is the processes' (`/api/*`, `/revoke`, `/keys`) and the four operations that need the keys — each checked
-HERE, the person's token and grant, the freeze of a handover, the operation's own rules — whoever hands it on (the
-domain's console, which has no key, forwards a person's request as it came):
+Its door is the processes' (`/api/*`, `/revoke`, `/keys`) and the five operations that need the keys — each checked
+HERE, the person's token and grant (or, for a move, the recovery file), the freeze of a handover, the operation's own
+rules — whoever hands it on (the domain's console, which has no key, forwards a person's request as it came):
 
     POST /api/login           {"user","password"}         -> {"token"}
     POST /revoke              {"token"}                    -> revokes that token's jti
@@ -24,13 +24,15 @@ domain's console, which has no key, forwards a person's request as it came):
                               frozen_for][, console]}; 404 for a domain that holds no term
     PUT  /api/shared          {base_rev, shared} — the shared settings, checked and signed (`Holder.shared`)
     POST /api/handover        {to} — a planned handover (`Holder.handover`: `term.handover`)
+    POST /api/move            {recovery, stolen?} — the domain moved HERE, on the NEW holder, from the newest backup any
+                              member holds (`Holder.move`: `term.move_domain`), checked by the recovery file
     GET|POST /api/people/users, PUT|DELETE /api/people/users/<name>, GET /api/people/break-glass,
     PUT  /api/people/break-glass/<cluster> — the people with their passwords and the clusters' emergency passwords,
                               sealed with the ring (`Holder.people`)
     GET  /healthz             alive — what a monitor asks
 
-The fourth operation has no route: the backup is sealed by the pass (`Holder.backup`), with the backup key, and a pass
-that finds the holder frozen or replaced seals nothing. No route signs what it is given.
+The backup has no route: it is sealed by the pass (`Holder.backup`), with the backup key, and a pass that finds the
+holder frozen or replaced seals nothing. No route signs what it is given.
 
 Its keys, the people's hashes and the emergency hashes lie sealed under the platform's ring (`SECRETS_KEY`); at its
 start it seals what it finds of the domain's and the people's rows in the clear, or under an older key (`w2cctl`).
@@ -50,6 +52,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler
 
+from w2cplatform.canonical import parse_json
 from w2cplatform.console import Deadlined, open_doors, read_body
 from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.trust.signer import DomainRoot, Signer
@@ -74,26 +77,28 @@ GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row")
 
 
 class Holder:
-    """The holder's pass and the four operations that need the domain's keys — the signer's, and nobody else's.
+    """The holder's pass and the five operations that need the domain's keys — the signer's, and nobody else's.
 
     `vars_`, `objects`: the holder's stores. `fed`: the domain as this process reads it (its own cluster, the members by
     their reports) — without it the pass is the identity set and the revocation list alone, a signer of the earlier
     lessons. `term`: the `term.DomainHolder` this signer holds the domain as (Lesson 15), or None for a domain that
-    never moves. `move(to)`: how a handover is made (`term.handover` with this process's means), None where it cannot
-    be. `console_url`: where the domain's console answers — the view's `url`, where a cluster console hands `/domain/*`.
+    never moves or that this cluster does not hold. `hand_to(to)`: how a handover is made (`term.handover` with this
+    process's means), None where it cannot be. `console_url`: where the domain's console answers — the view's `url`,
+    where a cluster console hands `/domain/*`; `signer_url`: where this signer answers, said in the holder record a
+    move here claims.
     """
 
     def __init__(self, vars_, objects, signer: Signer, *, sealer=None, ids=None, revoked=None, pub=None, carry_door=None,
-                 fed=None, view=None, members=None, topology=None, pending=None, alarms=None, term=None, move=None,
-                 journal=None, console_url: str | None = None, wall=time.time, backup_every: float = BACKUP_EVERY,
-                 backup_holders: int = BACKUP_HOLDERS):
+                 fed=None, view=None, members=None, topology=None, pending=None, alarms=None, term=None, hand_to=None,
+                 journal=None, console_url: str | None = None, signer_url: str | None = None, wall=time.time,
+                 backup_every: float = BACKUP_EVERY, backup_holders: int = BACKUP_HOLDERS):
         from .steps import Steps
         self.vars, self.objects, self.signer = vars_, objects, signer
         self.sealer = sealer if sealer is not None else getattr(signer, "sealer", None)
         self.ids, self.revoked, self.pub, self.carry_door = ids, revoked, pub, carry_door
         self.fed, self.view, self.members, self.topology = fed, view, members, topology
-        self.pending, self.alarms, self.term, self.move = pending, alarms, term, move
-        self.journal, self.console_url, self.wall = journal, console_url, wall
+        self.pending, self.alarms, self.term, self.hand_to = pending, alarms, term, hand_to
+        self.journal, self.console_url, self.signer_url, self.wall = journal, console_url, signer_url, wall
         self.backup_every, self.backup_holders = backup_every, backup_holders
         self.loop = Steps("domain signer", 5.0, log)
         self._backed_up: float | None = None             # when the pass last sealed a backup
@@ -217,7 +222,7 @@ class Holder:
     def hand_targets(self) -> list[str]:
         """The members a planned handover can go to: the ones whose stores this process can write — the move writes
         the new holder's (`term.move_domain`); a member read by its reports alone is not one of them."""
-        if self.term is None or self.move is None or self.fed is None:
+        if self.term is None or self.hand_to is None or self.fed is None:
             return []
         from .uplink import _CopyObjects
         return sorted(n for n, c in self.fed.clusters.items() if n != self.term.name and not isinstance(c.objects, _CopyObjects))
@@ -257,7 +262,7 @@ class Holder:
         if self.journal is not None:
             self.journal.say(kind, **fields)
 
-    # -- the four operations ----------------------------------------------------------------------------------------
+    # -- the five operations ----------------------------------------------------------------------------------------
     def shared(self, token: str | None, body: dict) -> tuple[int, dict]:
         """`PUT /api/shared`: a person's edit of the shared settings, checked and signed (`edit_shared`)."""
         who, no = self._person(token, "admin")
@@ -280,7 +285,7 @@ class Holder:
         who, no = self._person(token, "admin")
         if no:
             return no
-        if self.term is None or self.move is None:
+        if self.term is None or self.hand_to is None:
             return 404, {"detail": "this domain holds no term here: there is nothing to hand over"}
         refused = self.refusal()
         if refused:
@@ -296,7 +301,7 @@ class Holder:
             if refused:
                 return refused
             try:
-                new, report = self.move(to)
+                new, report = self.hand_to(to)
             except RuntimeError as e:
                 self._say("domain.handover.called_off", user=who, target=to, why=str(e))
                 return 409, {"detail": str(e)}
@@ -305,6 +310,100 @@ class Holder:
         self._say("domain.handover", user=who, target=to, term=report["term"], stranded=len(report.get("stranded", [])))
         return 200, {"term": report["term"], "rev": report.get("rev"), "to": to, "sentence": report["sentence"],
                      "stranded": [{"path": p, "key": k, "value": v} for p, k, v in report.get("stranded", [])]}
+
+    # THE MOVE IS THE NEW HOLDER'S, AND THE RECOVERY FILE IS ITS AUTHORITY (ADR-0032's addition). A handover is asked of
+    # the holder that leaves, by a person with a grant on the domain it holds. When that holder is gone — dead, stolen —
+    # there is nobody to ask and no grant to read: the holder kept them. So the move is made on the member that is to
+    # hold the domain, by its own signer, and what it checks is the file the operator kept beyond the holder (Lesson 7,
+    # Lesson 15, step 9): the domain's root, or — for a domain whose root is the holder's own — the signer's backup.
+    # It wraps `term.move_domain` whole; nothing else moves a domain (`handover` ends in the same function).
+    def move(self, body: dict) -> tuple[int, dict]:
+        """`POST /api/move {recovery, stolen?}`: the domain moved onto this signer's cluster, from the newest verified
+        backup any reachable member holds and the largest term any carries. `recovery`: the file, as its text. `stolen`:
+        the old holder's keys dropped at once, its issuing certificates revoked, every member's LDevID signed again —
+        a root's recovery file only. Refused: 404 with no domain to read; 503 while a handover from this holder is
+        under way (the freeze, as for the other operations); 409 while this cluster holds the domain; 400 for a body
+        that is not the move's; 403 for a file that is not this domain's. Returns the move's report."""
+        from w2cplatform.trust.signer import is_recovery_file
+        if self.fed is None:
+            return 404, {"detail": "this signer reads no domain (CLUSTERS): there is nowhere to move it from"}
+        refused = self.refusal()
+        if refused and refused[0] == 503:
+            return refused
+        me = self.fed.domain_holder.name
+        if self.term is not None and not self.term.deposed_by:
+            return 409, {"detail": f"{me} holds the domain at term {self.term.term}: there is nothing to move here"}
+        raw, stolen = body.get("recovery"), body.get("stolen", False)
+        if not isinstance(raw, str) or not raw or not isinstance(stolen, bool):
+            return 400, {"detail": "a move is {recovery: <the recovery file, as its text>, stolen?: true | false}"}
+        blob = raw.encode()
+        if stolen and not is_recovery_file(blob):
+            return 400, {"detail": "a stolen holder is answered by the root's recovery file: the signer's backup holds "
+                                   "the stolen keys themselves"}
+        why = self._not_the_domains(blob, me)
+        if why:
+            return 403, {"detail": why}
+        if not self._moving.acquire(blocking=False):
+            return 503, {"detail": "a move is under way already: seconds, not minutes"}
+        try:
+            from .federation import Unreachable
+            from .term import move_domain
+            try:
+                new, report = move_domain(self.fed, me, blob, self.signer.domain,
+                                          lambda n: self.fed.clusters[n].objects, self.wall, stolen=stolen,
+                                          sealer=self.sealer)
+            except (ValueError, RuntimeError, Unreachable) as e:
+                return 409, {"detail": f"the domain was not moved: {e}"}
+            self._took(new)
+        finally:
+            self._moving.release()
+        self._say("domain.moved", user="recovery file", target=me, term=report["term"], stolen=stolen,
+                  reissued=len(report.get("reissued") or []))
+        return 200, {k: report.get(k) for k in ("term", "rev", "restored_from", "keys_rev", "stolen", "reissued",
+                                                "shared_from", "sentence")}
+
+    def _not_the_domains(self, blob: bytes, me: str) -> str | None:
+        """Why `blob` is not this domain's recovery file — None when it is. A root's: some member holds a key set that
+        root signed (`term._trusted_keys`). The signer's backup: the key set this cluster holds names its token key, by
+        the same public half."""
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from w2cplatform.trust.signer import DomainRoot, is_recovery_file
+        from .agent import ClusterTrust, Untrusted
+        from .term import _trusted_keys
+        try:
+            if is_recovery_file(blob):
+                root = DomainRoot.restore(self.signer.domain, blob, now=self.wall)
+                if _trusted_keys(self.fed, me, root, self.wall()).rev == 0:
+                    return "no member holds a key set this root signed: it is not this domain's recovery file"
+                return None
+            d = json.loads(blob)
+            pub = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(d["token_key_secret"])).public_key().public_bytes(
+                serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+            kid = d["kid"]
+        except (*PARSE_ERRORS, ValueError):
+            return "the file is neither the domain's recovery file nor the signer's backup"
+        try:
+            keys = ClusterTrust(self.fed.clusters[me].vars).keyset()
+        except Untrusted as e:
+            return f"{me} cannot read the key set it holds ({e}): nothing to check the file against"
+        if keys is None or keys.keys.get(kid) != pub:
+            return f"the key set {me} holds does not name this backup's key: it is not this domain's signer"
+        return None
+
+    def _took(self, new) -> None:
+        """This process holds the domain now: the new term, its signer for everything it signs from here on (the
+        people's tokens too), and — for a signer whose root is its own — a handover's means again."""
+        new.url = self.signer_url
+        if new.record is None and self.signer_url:
+            new.claim()                                  # the record says where this signer answers
+        self.term, self.signer = new, new.signer
+        if self.ids is not None:
+            self.ids.signer = new.signer
+        if self.pub is not None and self.revoked is not None:
+            self.pub.publish_revoked(self.revoked)
+        self.hand_to = (lambda to: move_by_handover(self, to, new.signer.domain, new.signer)) if not new.signer.chain \
+            else None
 
     def backup(self) -> int | None:
         """The pass's backup: the domain's state, its secrets sealed with the backup key, signed, and a pointer for each
@@ -352,8 +451,12 @@ class Holder:
             return self._break_glass(method, name, who, body)
         return 404, {"detail": "no such route"}
 
+    # The codes by the architect's rule: 409 when the refusal depends on rows that exist (a person under a subject's
+    # name, one that exists, the last admin), 400 when the request is wrong by the spec alone (a grant wider than a
+    # family's declared `grant` — no write of the people's makes one, every grant a person loses is narrower; said all
+    # the same).
     def _users(self, method: str, name: str, who: str, body: dict) -> tuple[int, dict]:
-        from .declared import NameTaken
+        from .declared import GrantTooWide, NameTaken
         from .grants import BadName, LastAdmin
         if method == "GET" and not name:
             return 200, {"users": [{"name": u.id, "how": "oidc" if u.kind == "idp" else "password", "roles": u.roles,
@@ -366,7 +469,7 @@ class Holder:
                 return 400, {"detail": f"a password is {MIN_PASSWORD} characters at least"}
             try:
                 self.ids.create_local(uid, password, roles, by=who)
-            except (BadName, TypeError) as e:
+            except (BadName, TypeError, GrantTooWide) as e:
                 return 400, {"detail": str(e)}
             except NameTaken as e:
                 return 409, {"detail": str(e)}
@@ -381,6 +484,8 @@ class Holder:
                 self.ids.delete(name, by=who)
             except LastAdmin as e:
                 return 409, {"detail": str(e)}
+            except GrantTooWide as e:
+                return 400, {"detail": str(e)}
             return 200, {"user": name, "deleted": True}
         if method != "PUT":
             return 405, {"detail": "PUT {password?, roles?} or DELETE /domain/users/<name>"}
@@ -429,7 +534,7 @@ class Holder:
     # -- the door ---------------------------------------------------------------------------------------------------
     def handler(self):
         holder = self
-        vars_, signer, ids, revoked, pub = self.vars, self.signer, self.ids, self.revoked, self.pub
+        vars_, ids, revoked, pub = self.vars, self.ids, self.revoked, self.pub
 
         # THE LOGIN DOOR IS ANYBODY'S, SO IT IS BOUNDED (М10's sixth review: "every HTTP door in the code base"). Whoever
         # reaches it has proved nothing yet — that is what it is for — and it was a thread for every connection, no
@@ -491,7 +596,7 @@ class Holder:
                 if self.path == "/healthz":
                     return self._send(200, {"ok": True, **holder.loop.said()})   # what is failing in its loop, said (the eighth pass)
                 if self.path == "/keys":
-                    return self._send(200, vars_.get(KEYS_PATH)[0] or signer.tokens.keyset().to_items())
+                    return self._send(200, vars_.get(KEYS_PATH)[0] or holder.signer.tokens.keyset().to_items())
                 if self.path == "/api/holder":
                     said = holder.holder_says()
                     return self._send(200, said) if said is not None else self._send(404, {"detail": "this domain holds no term"})
@@ -523,7 +628,7 @@ class Holder:
                             return self._send(400, {"detail": "a login names a user and a password, both strings"})
                         return self._send(200, {"token": ids.login(user, password)})
                     if self.path == "/revoke" and revoked is not None:
-                        revoked.revoke(verify(body.get("token"), signer.tokens.keyset()))
+                        revoked.revoke(verify(body.get("token"), holder.signer.tokens.keyset()))
                         if pub is not None:
                             pub.publish_revoked(revoked)
                         return self._send(200, {"revoked": True})
@@ -533,6 +638,8 @@ class Holder:
                     return self._send(401, {"detail": f"token refused: {e}"})
                 if self.path == "/api/handover":
                     return self._send(*holder.handover(self._token(), body))
+                if self.path == "/api/move":
+                    return self._send(*holder.move(body))         # checked by the file it carries, not by a token
                 if self.path.startswith("/api/people/"):
                     return self._send(*holder.people("POST", self.path[len("/api/people/"):], self._token(), body))
                 self._send(404, {"detail": "no such route"})
@@ -587,7 +694,10 @@ def main() -> None:
         pub.publish_keys(root.key_set(signer.tokens.keyset(), rev=1, issuing=[signer.root.cert.serial_number]))
     else:
         signer = Signer(domain, vars_, sealer=sealer)
-        if not signer.chain:
+        # A first start publishes its own key set. A start on a MEMBER — a signer waiting for a move here
+        # (`Holder.move`) — finds the domain's key set its agent carried, and leaves it: over it, a key set of its own
+        # would make the cluster trust nobody but itself, and the move could not check the file against what it holds.
+        if not signer.chain and vars_.get(KEYS_PATH)[0] is None:
             pub.publish_keys(signer.tokens.keyset())
     # Its own lines of the journal, as role `domain` — who changed the people, the shared settings, who handed the domain
     # on; the domain's console writes its own (`domainconsole`). Where it was told to (`runtime.events_said`).
@@ -598,7 +708,8 @@ def main() -> None:
     holder = Holder(vars_, objects, signer, sealer=sealer, ids=ids, revoked=revocations(vars_), pub=pub,
                     carry_door=HolderDoor(vars_, objects, sealer), journal=journal,
                     console_url=os.environ.get("CONSOLE_URL") or
-                    f"http://127.0.0.1:{os.environ.get('CONSOLE_PORT', '8443')}")
+                    f"http://127.0.0.1:{os.environ.get('CONSOLE_PORT', '8443')}",
+                    signer_url=os.environ.get("SIGNER_URL") or None)
     if os.environ.get("CLUSTERS"):
         holder_pass(holder, domain, signer)
     srv = open_doors(os.environ.get("SIGNER_HOST", "0.0.0.0"), int(os.environ.get("SIGNER_PORT", "8445")),
@@ -609,8 +720,11 @@ def main() -> None:
         from w2cplatform.console import UnixConsoleServer
         from w2cplatform.trust.tokens import DeclaredIssuer
         from . import declared, tokendoor
+        class Current:                                   # the key the holder signs with NOW: a move here changes it
+            def __getattr__(self, name):
+                return getattr(holder.signer.tokens, name)
         tokens_door = UnixConsoleServer(os.environ["SIGNER_TOKENS_UNIX"],
-                                        tokendoor.handler(DeclaredIssuer(signer.tokens, declared.token_kinds())), srv.bounds)
+                                        tokendoor.handler(DeclaredIssuer(Current(), declared.token_kinds())), srv.bounds)
         threading.Thread(target=tokens_door.serve_forever, daemon=True).start()
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
@@ -642,12 +756,12 @@ def holder_pass(holder: Holder, domain: str, signer: Signer) -> None:
     holder.topology, holder.pending = Topology(hv), PendingEdits(hv)
     holder.alarms = DomainAlarms(fed, lambda m: ReportedDoor(m, ho, lost_after), lost_after=lost_after,
                                  history=AlarmHistory(ho))
-    holder.term = term_of(fed, signer, ho)
+    holder.term = term_of(fed, signer, ho, holder.signer_url)
     if holder.term is not None and not signer.chain:
-        holder.move = lambda to: move_by_handover(holder, to, domain, signer)
+        holder.hand_to = lambda to: move_by_handover(holder, to, domain, signer)
 
 
-def term_of(fed, signer: Signer, objects):
+def term_of(fed, signer: Signer, objects, url: str | None = None):
     """The term this signer holds the domain at: the holder record in its store, verified — or None, a domain that was
     never installed with one. Started as a holder process starts (`DomainHolder.start`): it looks before it claims."""
     from .agent import ClusterTrust, Untrusted
@@ -668,7 +782,7 @@ def term_of(fed, signer: Signer, objects):
     term = DomainHolder(fed, fed.domain_holder.name, signer, int(rec["term"]), objects=objects,
                         record=json.loads(items["doc"]) if root_signed else None)
     term.restored_from = rec.get("from")
-    term.url = os.environ.get("SIGNER_URL") or None
+    term.url = url
     term.start()
     return term
 
@@ -698,9 +812,13 @@ def move_by_handover(holder: Holder, to: str, domain: str, signer: Signer):
 # whole; a «sign me this» door would sign anything for whoever reaches it). `PUT /api/shared {base_rev, shared: {<sub>:
 # {<field>: value | null}}}` is a person's edit with its intent: the signer checks the person (a token of the domain, an
 # `admin` on it), the revision the edit was made against and the specs' declarations (`SharedSettings.edit`:
-# `domain.shared`), builds the document itself and signs it. The domain's console, which has no key, hands the person's
-# edit on here as it came (`console.Console`, `PUT /domain/shared`). Returns `(status, body)`. The freeze of a handover
-# is `Holder.shared`'s to check, before this.
+# `domain.shared`, each field and document by its schema), builds the document itself and signs it. The domain's
+# console, which has no key, hands the person's edit on here as it came (`console.Console`, `PUT /domain/shared`).
+# Returns `(status, body)`. The freeze of a handover is `Holder.shared`'s to check, before this.
+#
+# ONE OPERATION OVER WHAT THE SPECS DECLARE (ADR-0032's addition): no field is known here by what it means — a document
+# a spec declares (`{name, type: json, schema}`) is taken as JSON, an object or the text of one, and checked by its
+# schema like any field with one; the words of a refusal are the schema's.
 def edit_shared(vars_, objects, issuer, keyset, revoked, token: str | None, body: dict, now: float) -> tuple[int, dict]:
     from w2cplatform.trust.tokens import PERSON
     from w2cplatform.variables import Conflict
@@ -722,6 +840,13 @@ def edit_shared(vars_, objects, issuer, keyset, revoked, token: str | None, body
             isinstance(base, bool) or not isinstance(base, int):
         return 400, {"detail": "the edit is {base_rev: <the revision it was made against>, shared: {<sub>: {<field>: "
                                "value or null}}}"}
+
+    from . import declared
+    try:
+        shared = {sub: {f: _document(declared.spec(sub), f, v) for f, v in values.items()}
+                  for sub, values in shared.items()}
+    except ValueError as e:
+        return 400, {"detail": str(e)}
 
     def mutate(settings: dict) -> None:
         held = settings.setdefault("shared", {})
@@ -747,6 +872,18 @@ def edit_shared(vars_, objects, issuer, keyset, revoked, token: str | None, body
     except ApiError as e:
         return e.status, {"detail": e.detail}
     return 200, {"rev": rev, "by": who}
+
+
+def _document(spec, name: str, value):
+    """A value of the edit as the document keeps it: a document a spec declares (`domain.documents`) given as the TEXT
+    of its JSON — what a form's text box sends — is read as JSON; anything else is kept as it came. A text that is no
+    JSON is a `ValueError`, said with the field's name."""
+    if spec is None or name not in spec.domain.documents or not isinstance(value, str):
+        return value
+    try:
+        return parse_json(value)                         # the platform's one reading (`canonical.py`): no `NaN`
+    except PARSE_ERRORS as e:
+        raise ValueError(f"{spec.name}.{name} is a JSON document, and this is not JSON: {e}") from None
 
 
 # THE SIGNER'S LOOP, STEP BY STEP (the review's eighth pass, major). It was two `try` blocks with `except Exception: pass`
