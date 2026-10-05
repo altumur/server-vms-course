@@ -227,7 +227,7 @@ def test_a_job_waiting_on_the_device_asks_the_recorder_once():
     assert ask_for_footage(ctl, rec) == 1
     it, _ = box.vars.get(REC_SPEC.sub.request_key("7-100-200"))
     assert it and it["unit"] == "rec/7" and it["by"] == f"detjob/{job}"             # the family's form (М10A 14)…
-    assert float(it["valid_until"]) == box.wall() + float(REC_SPEC.requests.get("most_valid") or 600)   # …and its deadline
+    assert float(it["valid_until"]) == box.wall() + __import__("vms.jobs", fromlist=["FETCH_WAIT"]).FETCH_WAIT   # …and its deadline: the job's, `rec` declares no most_valid
     assert ask_for_footage(ctl, rec) == 0                          # a pass every 30 s writes one row, not a queue
 
 

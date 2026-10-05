@@ -20,7 +20,7 @@
 #
 # The page keeps the simple case simple: with no archive chosen the name IS the camera, so a box with one
 # volume still writes `rec/recordings/7` and `rec/7/e1/…`, and the rule is visible in one place
-# (`#recadd` in `console.html`) instead of hidden in a default here.
+# (`addToArchive` in `vms/vms.shell.html`) instead of hidden in a default here.
 #
 # Created by the operator: a camera exists without a recording (watched: live, detected, its events kept),
 # and records when a row is here — from the page's Record form, which POSTs `/rec/recordings`.
@@ -210,7 +210,7 @@ door: {routes: [timeline, segment]}
 # asks for a stretch of a recording to be fetched from the camera's device into the archive — `POST /rec/requests
 # {unit: rec/<recording>, from, to}`, named by its range (the same range again is the same request), at most seven of
 # one person's unanswered at once (counted by CAS; one counts for a minute after it was filed, row or no row, and never
-# past a day — `jobs.BACKFILL_TTL`). What only the recorder can judge — a range longer than a day, shorter than a
+# past a day — `requests.ttl`, the platform's `clear_requests`). What only the recorder can judge — a range longer than a day, shorter than a
 # second, in the future, older than the recording shows — it refuses, in its heartbeat (`RecWorker.requests`).
 # And the resource asks it to free bytes on a volume of its server (`free-<server>-<volume>`); the recorder decides:
 # the footage is in rings of a fixed size, and it answers that it frees nothing (`freed` in its heartbeat).
