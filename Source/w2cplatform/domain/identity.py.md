@@ -63,5 +63,5 @@ Appends an audit entry `{at, who, why, ok}` and an alarm line (`BREAK-GLASS used
 
 ## Notes
 - `login` takes the clock from `self.now`, so a token issued in a test carries the fake time — the Lesson 4 tests depend on it.
-- `deploy/domain/signer.nomad.hcl` sets `TOKEN_LIFETIME=900` in the environment, but the constant here is the only lifetime used; nothing reads that variable.
+- The constant here is the only token lifetime; no environment variable changes it (`deploy/domain/systemd/w2c-domain.service` sets none).
 - No process exposes `create_local`/`create_federated`/`set_roles` over HTTP (`signer_service` has only `/login`, `/revoke`, `/keys`); creating a user in production is not wired.

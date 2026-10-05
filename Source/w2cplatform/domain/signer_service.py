@@ -9,7 +9,11 @@ over mTLS, which need the bench.
     POST /login          {"user","password"}         -> {"token"}
     POST /revoke         {"token"}                    -> revokes that token's jti
     GET  /keys           the key set (what agents copy)
+    GET  /api/carry/<c>  what member <c> carries home, to the member alone, its secrets sealed to its key (`carry.py`)
     GET  /healthz        alive — what a monitor asks
+
+Its keys, the people's hashes and the emergency hashes lie sealed under the platform's ring (`SECRETS_KEY`); at its
+start it seals what it finds of the domain's and the people's rows in the clear, or under an older key (`w2cctl`).
 
 The books a subsystem writes at the holder for its members are its own worker's pass (a spec's `domain.books`); the
 tokens those books carry are of the kinds its spec declares, and the signer issues them on the worker's ask — the key
@@ -43,7 +47,11 @@ def main() -> None:
     # The domain holder's store: its configstore by the domain's own socket, unless `PLATFORM_STORE` says otherwise;
     # the role `domain` is one of the two that may delete `domain/*` rows (`storemachine.DOMAIN_ROLES`).
     vars_ = open_vars(store_url(os.environ, "configstore:///run/configstore/domain.sock"))
-    objects = open_objects(os.environ.get("OBJECT_STORE_URL", "file:///data/domain"))
+    from w2cplatform.sealing import Sealer
+    from w2cplatform.w2cctl import DOMAIN_PREFIXES, seal as seal_stored
+    sealer = Sealer.from_env(os.environ)
+    seal_stored(vars_, sealer, DOMAIN_PREFIXES)
+    objects = open_objects(os.environ.get("OBJECTS", "file:///data/platform/objects"))   # the platform's, `w2c.env`
     pub = DomainPublisher(vars_)
     # Lesson 15, step 9: a domain whose root stays off the holder. The installer points RECOVERY_FILE at the root
     # for the FIRST start only: the holder's issuing certificate and the first key set are signed, and the file
@@ -53,13 +61,16 @@ def main() -> None:
     if vars_.get("domain/signer")[0] is None and recovery:
         with open(recovery, "rb") as f:
             root = DomainRoot.restore(domain, f.read())
-        signer = Signer(domain, vars_, root=root)
+        signer = Signer(domain, vars_, root=root, sealer=sealer)
         pub.publish_keys(root.key_set(signer.tokens.keyset(), rev=1, issuing=[signer.root.cert.serial_number]))
     else:
-        signer = Signer(domain, vars_)
+        signer = Signer(domain, vars_, sealer=sealer)
         if not signer.chain:
             pub.publish_keys(signer.tokens.keyset())
-    ids = IdentityStore(signer, vars_, objects, publish_floor=float(os.environ.get("IDENTITY_PUBLISH_FLOOR", "60")))
+    ids = IdentityStore(signer, vars_, objects, publish_floor=float(os.environ.get("IDENTITY_PUBLISH_FLOOR", "60")),
+                        sealer=sealer)
+    from .carry import HolderDoor, Refused
+    carry_door = HolderDoor(vars_, objects, sealer)
     revoked = revocations(vars_)
 
     # THE LOGIN DOOR IS ANYBODY'S, SO IT IS BOUNDED (М10's sixth review: "every HTTP door in the code base"). Whoever
@@ -103,6 +114,18 @@ def main() -> None:
                 return self._send(200, {"ok": True, **loop.said()})       # what is failing in its loop, said (the eighth pass)
             if self.path == "/keys":
                 return self._send(200, vars_.get(KEYS_PATH)[0] or signer.tokens.keyset().to_items())
+            if self.path.startswith("/api/carry/"):
+                from urllib.parse import parse_qs, urlsplit
+                u = urlsplit(self.path)
+                try:
+                    got = carry_door.carry(u.path[len("/api/carry/"):], float(self.headers.get("X-W2C-Time", "nan")),
+                                           self.headers.get("X-W2C-Seal", ""), self.headers.get("X-W2C-Signature", ""),
+                                           (parse_qs(u.query).get("for") or [None])[0])
+                except ValueError:
+                    return self._send(400, {"detail": "an ask names its time"})
+                except Refused as e:
+                    return self._send(e.status, {"detail": e.detail})
+                return self._send(200, got)
             self._send(404, {"detail": "no such route"})
 
         def do_POST(self):

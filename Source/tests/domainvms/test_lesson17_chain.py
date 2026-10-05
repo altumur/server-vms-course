@@ -239,7 +239,7 @@ def test_a_centre_that_restarts_in_the_middle_of_a_pull_with_two_answers_lost_ha
                 raise Unreachable("the answer to the pull was lost")
             ing.pull = answer_lost
         try:
-            fwd._pull(ing, "7", {"token": "t"})
+            fwd._pull(ing, "7", {"token_secret": "t"})
         except Unreachable:
             pass
         ing.pull = real
@@ -382,7 +382,7 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
                                bundle_store=east.objects, bundle_members=[cam.name], relay_members=[cam.name])
-    through = Relay(east.vars, east.objects)                           # all the camera can reach
+    through = Relay(relay_agent, east.objects)                         # all the camera can reach: east, and what it keeps
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, console=cam.local_console(), current=cam.current,
                             domain_objects=through.objects, published=cam.local_objects(), seen_store=cam.local_objects())
     relay = Ingest("east", RELAY_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
@@ -484,7 +484,7 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     centre = Ingest("north", CENTRE_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
     centre.announce(north.objects)                                     # there IS an ingest up there: the wrong one
-    through = Relay(east.vars, east.objects)                           # all a camera of this site can reach
+    through = Relay(None, east.objects)                                # all a camera of this site can reach
     cams, agents = {}, []
     for n in ("SN7002", "SN7003"):                                     # the gate, the PTZ
         d = DeviceCluster(n, FakeVariables(), wall=wall, pushes=True)
@@ -496,6 +496,7 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     members = [d.name for d in cams.values()]
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
                                bundle_store=east.objects, bundle_members=members, relay_members=members)
+    through.door.agent = relay_agent                                   # what the cameras ask: what east keeps
     relay_agent.sync()
     relay = Ingest("east", RELAY_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
     relay.announce(east.objects)
@@ -566,7 +567,7 @@ def _two_relays(wall):
     cams, agents, relays = {}, [], []
     for relay, serials in (("east", (GATE7, PTZ7)), ("west", (YARD7,))):
         store = east if relay == "east" else west
-        through = Relay(store.vars, store.objects)                     # all a camera of that site reaches
+        through = Relay(None, store.objects)                           # all a camera of that site reaches
         members = []
         for n in serials:
             d = DeviceCluster(n, FakeVariables(), wall=wall, pushes=True)
@@ -578,6 +579,7 @@ def _two_relays(wall):
             members.append(d.name)
         relays.append(DomainAgent(relay, north.vars, store.vars, now=wall, domain_objects=north.objects,
                                    bundle_store=store.objects, bundle_members=members, relay_members=members))
+        through.door.agent = relays[-1]                                # what the camera asks: what this relay keeps
     for o in relays:
         o.sync()
     SharedSettings(north.vars, north.objects, signer.tokens, wall=wall).edit(lambda s: s.update(scenarios=[
@@ -751,14 +753,14 @@ def test_a_torn_announcement_or_book_entry_is_that_ones_trouble_and_the_relay_fo
     items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
     north.vars.put(f"{UPSTREAM_PATH}/east", {**items, SERIAL: "{"}, cas=idx)   # the book's own entry, torn
     books = publish_upstream(domain_pass.crossings, "north")
-    assert json.loads(books["east"][SERIAL])["token"] and f"{UPSTREAM_PATH}/east/{SERIAL}" in BOOKS.bad
+    assert json.loads(books["east"][SERIAL])["token_secret"] and f"{UPSTREAM_PATH}/east/{SERIAL}" in BOOKS.bad
     before = fwd.book()[SERIAL]
     items, idx = east.vars.get(UPSTREAM_PATH)
     east.vars.put(UPSTREAM_PATH, {**items, SERIAL: '{"urls": ["srt://'}, cas=idx)   # what the relay carried, torn
     assert fwd.book()[SERIAL] == before and f"{UPSTREAM_PATH}/{SERIAL}" in BOOKS.bad
     centre.want(SERIAL, "recorder:centre")
     assert "forwarding" in fwd.pass_once()[SERIAL]                        # the relay forwards on, by the entry read last
-    road = json.dumps({"roads": [{"urls": CENTRE_URLS, "token": "t"}]})
+    road = json.dumps({"roads": [{"urls": CENTRE_URLS, "token_secret": "t"}]})
     east.vars.put(ASKS_PATH, {"a|b": road, "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
     assert set(fwd.asks_book()) == {"a|b"}                                # never read whole: not a road
     east.vars.put(ASKS_PATH, {"a|b": "[", "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
@@ -793,7 +795,7 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
     north.vars.put(f"{ASKS_PATH}/{home}", {**items, SERIAL: '{"roads": [{"cluster": "east", "until": "'}, cas=idx)
     books = publish_asks(crossings, scenarios)
     roads = json.loads(books[home][SERIAL])["roads"]
-    assert roads and all(r["token"] for r in roads)                     # issued anew
+    assert roads and all(r["token_secret"] for r in roads)                     # issued anew
     assert {f"{UPSTREAM_PATH}/east/{SERIAL}", f"{ASKS_PATH}/{home}/{SERIAL}"} <= BOOKS.bad
     settings = {"scenarios": [7, {"when": [], "then": {}},
                               {"when": {"camera": "SN7002", "kind": "motion"}, "then": {"camera": SERIAL, "preset": 3}}]}
@@ -810,7 +812,7 @@ def test_a_torn_entry_of_the_book_a_camera_carried_home_stops_no_ask_to_another_
     from vms.domainpart.keys import ASKS_PATH
     from vms.domainpart.ingest import BOOKS, Asker
     flash = FakeVariables()
-    road = json.dumps({"roads": [{"urls": RELAY_URLS, "token": "t"}]})
+    road = json.dumps({"roads": [{"urls": RELAY_URLS, "token_secret": "t"}]})
     flash.put(ASKS_PATH, {"SN-a": road, "SN-b": road})
     asker = Asker("SN7002", flash, lambda url: (_ for _ in ()).throw(Unreachable(url)), clock=Clock())
     assert set(asker.book()) == {"SN-a", "SN-b"}
@@ -873,7 +875,7 @@ def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_count
                 raise Unreachable("the answer to the pull was lost")
             ing.pull = answer_lost
         try:
-            fwd._pull(ing, "7", {"token": "t"})
+            fwd._pull(ing, "7", {"token_secret": "t"})
         except Unreachable:
             pass
         ing.pull = real

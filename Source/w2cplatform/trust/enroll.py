@@ -90,13 +90,20 @@ class Pledge:
     temp_credential: str | None = None       # Lesson 4's hand-provisioned stand-in, to be deleted
     ldevid: x509.Certificate | None = None
     ldevid_key: Ed25519PrivateKey | None = None
+    member_key: object = None                # `trust.memberkey.MemberKey`: the LDevID's key, and what secrets are sealed to
 
+    # The key the box asks its LDevID for IS its member key (`memberkey.MemberKey`): what it signs its asks to the
+    # domain's door with, and — derived from the same seed — what the holder seals its secrets to (`seal_pub`, carried
+    # in the signed hello and kept with the member, `domain/members`).
     def hello(self, nonce: str) -> dict:
-        key = Ed25519PrivateKey.generate()
-        self.ldevid_key = key
+        from .memberkey import MemberKey
+        self.member_key = MemberKey.new()
+        key = self.ldevid_key = self.member_key.signing
         pub = key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
-        signed = json.dumps({"serial": self.serial, "nonce": nonce, "csr_pub": pub.hex()}, sort_keys=True).encode()
-        return {"serial": self.serial, "nonce": nonce, "csr_pub": pub.hex(),
+        seal = self.member_key.seal_pub
+        signed = json.dumps({"serial": self.serial, "nonce": nonce, "csr_pub": pub.hex(), "seal_pub": seal},
+                            sort_keys=True).encode()
+        return {"serial": self.serial, "nonce": nonce, "csr_pub": pub.hex(), "seal_pub": seal,
                 "idevid": self.idevid.public_bytes(serialization.Encoding.PEM).decode(),
                 "proof": self.idevid_key.sign(signed).hex()}
 
@@ -129,8 +136,8 @@ class Registrar:
     def _check_hello(self, hello: dict) -> x509.Certificate:
         cert = x509.load_pem_x509_certificate(hello["idevid"].encode())
         self.vendor.verify(cert, now=self.now())            # a real IDevID from a manufacturer we trust
-        signed = json.dumps({"serial": hello["serial"], "nonce": hello["nonce"], "csr_pub": hello["csr_pub"]},
-                            sort_keys=True).encode()
+        signed = json.dumps({"serial": hello["serial"], "nonce": hello["nonce"], "csr_pub": hello["csr_pub"],
+                             **({"seal_pub": hello["seal_pub"]} if "seal_pub" in hello else {})}, sort_keys=True).encode()
         try:
             cert.public_key().verify(bytes.fromhex(hello["proof"]), signed)
         except InvalidSignature:
@@ -157,7 +164,8 @@ class Registrar:
         cert = self.signer.issue(hello["serial"], "ldevid", pub)        # EST, in one line
         self.audit.append({"at": self.now(), "serial": hello["serial"], "how": how, "ldevid_serial": cert.serial_number})
         if self.members is not None:
-            self.members.add(self.cluster_of(hello["serial"]), how, serial=hello["serial"], key=hello["csr_pub"])
+            self.members.add(self.cluster_of(hello["serial"]), how, serial=hello["serial"], key=hello["csr_pub"],
+                             seal=hello.get("seal_pub"))
         return cert
 
     def leave(self, serial: str, by: str) -> bool:

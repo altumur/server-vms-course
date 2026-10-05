@@ -36,7 +36,7 @@ OBJECTS = ROWS_PREFIX + "/"    # the rows of the create-only objects, a worker's
 # Whose each socket is (the product's format): the platform's own roles `w2c-<role>`, a subsystem deployment's
 # `<deployment>-<role>` — the directory the specs ship in (`SPEC_DIR`'s name), unless `ROLE_GROUP` says otherwise.
 # The domain is the platform's (the owner, 4 Oct: "the domain is a platform service").
-PLATFORM = ("resource", "domain", "domainagent", "member")
+PLATFORM = ("resource", "domain", "domainagent")
 
 # The domain's keys (`domain/signer`: the token key and the issuing key) are read by the domain's own processes alone —
 # not by its agent in a member cluster, nor by a member's report, both of which read `domain/*`.
@@ -115,14 +115,11 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
                            + [s.sub.request_key("free-*") for s in specs if s.requests_free]
                            + [f"{t}/{family}{tail}" for t in trees for family in ("retention", "alarms_retention")
                               for tail in ("", "/*")])
-    # М12, in a member cluster's store: the domain's agent writes the domain's rows and the relay's, and is the one role
-    # of the cluster that deletes `domain/*` (`storemachine.DOMAIN_ROLES`); a member's report reads them — neither the
-    # domain's keys (`SIGNER_KEYS`).
-    out["domainagent"] = role("domainagent", ["domain/*", "relay/*", SIGNER_KEYS], [SCHEMA_KEY, "domain/*", "relay/*", SIGNER_KEYS])
-    out["member"] = role("member", [], [SCHEMA_KEY, "domain/*", "relay/*", SIGNER_KEYS])
-    # М12, in the DOMAIN HOLDER's store: the domain's own processes on the holder — the signer and the domain's console —
-    # by `CLUSTERS`' own line for the holder's cluster, whose snapshot and heartbeats they read too (every subsystem's).
-    out["domain"] = role("domain", ["domain/*", "identity/*"], [SCHEMA_KEY, "domain/*", "identity/*", "relay/*", *every, "platform/*"])
+    # The domain's roles — its own processes on the holder, its agent in every cluster with `!` denials on what only the
+    # holder writes, a subsystem's worker on the domain — are the platform domain's to say, from the specs
+    # (`w2cplatform/domain/rights.py`). A member reads nothing of the holder's store: there is no member role.
+    from w2cplatform.domain.rights import roles as domain_roles
+    out.update(domain_roles(lambda r: group(r, deployment), SCHEMA_KEY, specs))
     return out
 
 

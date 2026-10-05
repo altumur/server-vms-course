@@ -258,7 +258,7 @@ def test_have_is_the_recorders_word_on_the_cameras_clock_whichever_ingest_it_rea
 
 
 def _token(ingest, pusher):
-    return pusher.entry()["ingest"]["token"]
+    return pusher.entry()["ingest"]["token_secret"]
 
 
 # -- the seventh review: nothing moves until an ingest took it; a break goes a piece at a time ------------------------

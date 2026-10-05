@@ -24,7 +24,6 @@ u w2c-spares        -     "w2c spares (starts spare units, by polkit)"         -
 g w2c-resource      -
 g w2c-domain        -
 g w2c-domainagent   -
-g w2c-member        -
 g vms-console       -
 g vms-vmscontroller -
 g vms-reccontroller -
@@ -40,10 +39,10 @@ g vms-livecontroller -
 g vms-liveworker -
 g vms-surveycontroller -
 g vms-surveyworker -
+g vms-vmsdomain   -
 m configstore w2c-resource
 m configstore w2c-domain
 m configstore w2c-domainagent
-m configstore w2c-member
 m configstore vms-console
 m configstore vms-vmscontroller
 m configstore vms-reccontroller
@@ -59,3 +58,4 @@ m configstore vms-livecontroller
 m configstore vms-liveworker
 m configstore vms-surveycontroller
 m configstore vms-surveyworker
+m configstore vms-vmsdomain

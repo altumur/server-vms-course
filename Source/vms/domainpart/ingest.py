@@ -268,7 +268,7 @@ def _an_object(v) -> dict:
 def _a_road(road) -> None:
     """A road of a book: its ingest's `urls` (a list of addresses) and a `token`."""
     if not isinstance(road, dict) or not isinstance(road.get("urls"), list) \
-            or not all(isinstance(u, str) for u in road["urls"]) or not isinstance(road.get("token"), str):
+            or not all(isinstance(u, str) for u in road["urls"]) or not isinstance(road.get("token_secret"), str):
         raise TypeError("a road is its urls and its token")
 
 
@@ -1624,6 +1624,8 @@ def stream_metrics(fed) -> list[str]:
 
 
 class CameraPusher:
+    sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
+
     def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
                  hold_seconds: float = 30.0, recording: str | None = None, ring=None, steady=None):
         """`perform(action) -> outcome` carries out an ask from another camera (a preset, a relay) and says
@@ -1768,8 +1770,8 @@ class CameraPusher:
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
         asks, never told to push (step 8)."""
-        from .keys import POLL_PATH, PRIMARIES_PATH
-        items, _ = self.flash.get(PRIMARIES_PATH)
+        from .keys import POLL_PATH, PRIMARIES_PATH, opened
+        items = opened(self.flash.get(PRIMARIES_PATH)[0], PRIMARIES_PATH, self.sealer)
         raw = (items or {}).get(self.serial)
         if raw:
             e = BOOKS.read(f"{PRIMARIES_PATH}/{self.serial}", lambda: _a_primary(json.loads(raw)))
@@ -1778,10 +1780,10 @@ class CameraPusher:
             return e if e is not None else self._entry           # torn: the entry read last (`BOOKS`)
 
         def polls(p) -> dict:
-            road = {k: p[k] for k in ("urls", "token", "until")}
+            road = {k: p[k] for k in ("urls", "token_secret", "until")}
             _a_road(road)
             return {"cluster": str(p["cluster"]), "polls_only": True, "ingest": road}
-        items, _ = self.flash.get(POLL_PATH)
+        items = opened(self.flash.get(POLL_PATH)[0], POLL_PATH, self.sealer)
         raw = (items or {}).get(self.serial)
         if not raw:
             return None
@@ -2132,7 +2134,7 @@ class CameraPusher:
         for url in road["urls"]:
             try:
                 ing = self.dial(url)
-                work = self._request(ing.poll, road["token"], self.serial, version=self.versions.get(key, -1), wait=wait,
+                work = self._request(ing.poll, road["token_secret"], self.serial, version=self.versions.get(key, -1), wait=wait,
                                      held=wait > 0)
                 self.versions[key] = work["version"]
                 told = work.get("ranges") or {}
@@ -2366,7 +2368,7 @@ class CameraPusher:
         # did not answer, or said the recording is uncovered, or (with no word from it) the book says so.
         self.uncovered = not takes if ing is None or "uncovered" in (work or {}) or backup else None
         if ing is not None:
-            p, u, a, ok = self._serve(ing, e["ingest"]["token"], work if takes else {**work, "push": False}, loose,
+            p, u, a, ok = self._serve(ing, e["ingest"]["token_secret"], work if takes else {**work, "push": False}, loose,
                                       "primary")
             pushed, uploaded, performed = p, u, a
             if takes and ok:
@@ -2374,7 +2376,7 @@ class CameraPusher:
         if road is None and backup:
             bing, bwork, burl = self._poll(backup["ingest"], "backup", 0.0 if self.busy() else wait)
             if bing is not None:
-                p, u, a, ok = self._serve(bing, backup["ingest"]["token"], bwork, loose, "backup")
+                p, u, a, ok = self._serve(bing, backup["ingest"]["token_secret"], bwork, loose, "backup")
                 pushed, uploaded, performed = pushed + p, uploaded + u, performed + a
                 if ok:
                     road = ("backup", burl, bwork["push"])
@@ -2581,6 +2583,7 @@ class Asker:
     """The camera whose event fired: it leaves the ask at an ingest its book names for the target, calling OUT.
     The book lists roads nearest first — the cluster that records the target, then the level above that the
     target's cluster forwards to (Lesson 17) — each with its own token; the first ingest that answers takes it."""
+    sealer = None                  # the ring its book's tokens are opened with: this process's (`keys.ring`) when None
 
     def __init__(self, serial: str, flash, dial, clock=None):
         self.serial, self.flash, self.dial, self.clock = str(serial), flash, dial, clock or time.time
@@ -2590,7 +2593,8 @@ class Asker:
     # carried home raised out of `book()` — no ask to any target. Each entry is read through `BOOKS`: one that does not
     # parse is the one read last of it (`_last`), or none, counted once; the other targets are asked as before.
     def book(self) -> dict[str, list[dict]]:
-        items, _ = self.flash.get(ASKS_PATH)
+        from .keys import opened
+        items = opened(self.flash.get(ASKS_PATH)[0], ASKS_PATH, self.sealer)
         last = self.__dict__.setdefault("_last", {})
 
         def roads(raw):
@@ -2619,7 +2623,7 @@ class Asker:
             for url in road["urls"]:
                 try:
                     ing = self.dial(url)
-                    return ing, ing.ask(road["token"], target, action, self.clock() + within, camera_now=self.clock())
+                    return ing, ing.ask(road["token_secret"], target, action, self.clock() + within, camera_now=self.clock())
                 except Unreachable:
                     continue
         return None
@@ -2697,11 +2701,11 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
 
     def road(old: dict | None, cluster: str, urls: list, sub: str, a: str, b: str, acts: list, up: str | None = None):
         if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
-                and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token", "")) == crossings.issuer.kid:
+                and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token_secret", "")) == crossings.issuer.kid:
             return old
         claims = {"aud": audience(cluster), "ask": b, "by": a, "acts": acts, **({"up": up} if up else {})}
         return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
-                "token": crossings.issuer.issue("ask", sub, now=now, **claims)}
+                "token_secret": crossings.issuer.issue("ask", sub, now=now, **claims)}
 
     # ONE ENTRY OF A BOOK THAT DOES NOT PARSE IS THAT ENTRY'S (vmsserver's eleventh review, a major; a run): the entries
     # of the book of asks and of the upstream book were read bare, and `upstream/east[SN7001] = "{"` — the very entry the

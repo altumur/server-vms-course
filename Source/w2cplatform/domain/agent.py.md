@@ -19,5 +19,5 @@
 
 ## Functions
 - `local_networks()` — `REACHES`, else this host's IPv4 networks, not tunnels or host routes.
-- `main()` — the process: `CLUSTER`, its store by its role's socket (`domainagent`), the holder's (`DOMAIN_CONFIG_URL`, `DOMAIN_OBJECTS_URL`) or its relay's (`RELAY_CONFIG_URL`, `RELAY_OBJECTS_URL`), `REPORT=1` for a member the domain never reaches, `RELAY=1`/`RELAY_MEMBERS` for a relay; object stores opened by `runtime.open_objects`.
+- `main()` — the process (`w2c-run.sh domainagent`): `CLUSTER`, its store by its role's socket (`domainagent`), its member key and ring (`SECRETS_KEY`); what it carries through the domain's door (`DOMAIN_URL`, signed by the member key) or its relay's (`RELAY_URL`, `RELAY_OBJECTS_URL`) — only the holder's own agent reads its store (`DOMAIN_CONFIG_URL`); `DOMAIN_OBJECTS_URL` for reports; this cluster's objects by the platform's `OBJECTS`; `REPORT=1` for a member the domain never reaches, `RELAY=1`/`RELAY_MEMBERS` for a relay; object stores opened by `runtime.open_objects`.
 - `run(agent, interval, stop)` — the loop: the next pass set before the pass, a pass that raises said once.

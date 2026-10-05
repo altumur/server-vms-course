@@ -1,11 +1,14 @@
 """Lesson 4 and Lesson 7 — the domain signer: one job, two keys.
 
 The CA and the token issuer are the same operational thing — a process that
-holds keys and signs — so they are one service. Its keys live in a Nomad
-Variable in the domain holder's raft (domain/signer): a SOFTWARE key on
-purpose, because a TPM-sealed key pins the signer to one server and defeats
-the failover it just gained. A software key is acceptable because
-everything it signs is short-lived.
+holds keys and signs — so they are one service. Its keys live in one row of
+the domain holder's store (`domain/signer`): a SOFTWARE key on purpose,
+because a TPM-sealed key pins the signer to one server and defeats the
+failover it just gained. A software key is acceptable because everything it
+signs is short-lived — and it is SEALED at rest under the platform's ring
+(`issuing_key_secret`, `token_key_secret`, `backup_key_secret`;
+`sealing.Sealer`, `SECRETS_KEY`): a copy of the store, or a backup of it, is no
+copy of the keys.
 
 Certificates, split by job (Lesson 7):
 
@@ -232,34 +235,56 @@ def is_recovery_file(blob: bytes) -> bool:
         return False
 
 
+SIGNER_ROW = "domain/signer"
+
+
+def backup_key(seed: bytes, rev: int) -> bytes:
+    """The key the holder's backups seal their secrets under: HMAC(the root's key, rev) — the product's r23-seal. A new
+    holder moved by the recovery file derives it again from the root; a keeper of a backup copy, which has no root,
+    reads no secret of it. A domain of Lessons 4–7, whose signer has no root, derives it from its issuing key, which
+    its backup holds."""
+    import hashlib
+    import hmac
+    return hmac.new(seed, f"w2c domain backup key|{int(rev)}".encode(), hashlib.sha256).digest()
+
+
 class Signer:
-    """The domain signer. `vars_` is the domain holder's Variables; the
-    keys are loaded from domain/signer or created on first start (the cold
-    start Lesson 1 walks: Nomad up → signer scheduled → certificates issued
-    → workers heartbeat).
+    """The domain signer. `vars_` is the domain holder's store; the keys are loaded from `domain/signer` or created on
+    first start, and kept there sealed under `sealer` (the platform's ring; with none, in the clear, said once).
 
     Given a `root` (Lesson 15), what it creates is an issuing certificate
     under that root instead of a root of its own: `self.root` is then the
     issuing CA, and `self.chain` the certificate a verifier needs between a
     leaf and the root. The root's key is never written here."""
 
-    def __init__(self, domain: str, vars_, org: str = "customer", now=time.time, root: DomainRoot | None = None):
-        self.domain, self.org, self.now = domain, org, now
-        items, _ = vars_.get("domain/signer")
+    def __init__(self, domain: str, vars_, org: str = "customer", now=time.time, root: DomainRoot | None = None,
+                 sealer=None):
+        from w2cplatform.sealing import open_row
+        self.domain, self.org, self.now, self.sealer = domain, org, now, sealer
+        items, _ = vars_.get(SIGNER_ROW)
         self.vars = vars_
         self.chain: list[x509.Certificate] = []
+        self.backup_rev, self._backup_key = 1, None
         # A row that is there and holds no keys, or keys that do not parse, is NOT "no keys" (the review's eighth pass;
         # the product found its signer taking a store it could not read for an empty one): new keys written over it
         # would orphan every member that holds the old ones. The signer refuses to start, and says what to do. Only an
         # absent row is a first start.
-        if items is not None and "ca_key" not in items:
+        if items is not None and "issuing_key_secret" not in items:
             raise RuntimeError(f"this cluster no longer holds the domain's keys ({items.get('forgotten', 'forgotten')})")
         if items is not None:
             try:
-                key = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["ca_key"]))
-                self.root = Root(x509.load_pem_x509_certificate(items["ca_cert"].encode()), key)
-                self.tokens = TokenIssuer(domain, Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["token_key"])), items["kid"])
+                items = open_row(sealer, items, SIGNER_ROW)          # `Sealed`: sealed, and no key here — said, not guessed
+                key = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["issuing_key_secret"]))
+                self.root = Root(x509.load_pem_x509_certificate(items["issuing_cert"].encode()), key)
+                self.tokens = TokenIssuer(domain, Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["token_key_secret"])),
+                                          items["kid"])
+                # The token keys of before a rotation, still trusted until their retirement (the rotation persisted:
+                # a restart read the old key back and every token signed since the rotation stopped verifying).
+                self.tokens.previous = [(k, bytes.fromhex(p), float(u)) for k, p, u in json.loads(items.get("previous", "[]"))]
                 self.generation = int(items.get("gen", "1"))
+                if items.get("backup_key_secret"):
+                    self._backup_key = bytes.fromhex(items["backup_key_secret"])
+                    self.backup_rev = int(items.get("backup_key_rev", "1"))
             except PARSE_ERRORS as e:
                 raise RuntimeError(f"the domain's keys in domain/signer do not parse ({e}): the signer does not start "
                                    f"rather than make new ones — restore the row from the holder's backup") from None
@@ -267,22 +292,33 @@ class Signer:
                 self.chain = [self.root.cert]
         elif root is not None:
             self.generation = 1
+            self._backup_key = backup_key(_key_bytes(root.key), self.backup_rev)
             self._issue_from(root)
         else:
             self.generation = 1
             self.root = self._new_root(self.root_cn())
+            self._backup_key = backup_key(_key_bytes(self.root.key), self.backup_rev)   # its own root's, kept sealed
             self.tokens = TokenIssuer(domain)
             self._persist()
         self.serial = 0
 
     @classmethod
-    def issued(cls, domain: str, vars_, root: DomainRoot, now=time.time) -> "Signer":
+    def issued(cls, domain: str, vars_, root: DomainRoot, now=time.time, sealer=None, backup_rev: int = 1) -> "Signer":
         """A signer with keys of its OWN under `root` — whatever this cluster held before. What a move gives
-        the new holder: the old holder's keys are not in the recovery file, and must not be."""
+        the new holder: the old holder's keys are not in the recovery file, and must not be. Its backup key is the
+        root's for `backup_rev`, derived again: the backups the old holder wrote open with it."""
         s = cls.__new__(cls)                             # `_persist` writes over whatever was there, by CAS
         s.domain, s.org, s.now, s.vars, s.chain, s.serial, s.generation = domain, root.org, now, vars_, [], 0, 1
+        s.sealer, s.backup_rev = sealer, backup_rev
+        s._backup_key = backup_key(_key_bytes(root.key), backup_rev)
         s._issue_from(root)
         return s
+
+    @property
+    def backup_key(self) -> bytes:
+        """The key this holder's backups seal their secrets under (`backup_key`): the root's, given at install or
+        derived at a move; for a signer of its own root, its issuing key's."""
+        return self._backup_key or backup_key(_key_bytes(self.root.key), self.backup_rev)
 
     def _issue_from(self, root: DomainRoot) -> None:
         key = Ed25519PrivateKey.generate()
@@ -297,10 +333,27 @@ class Signer:
         return f"{self.domain} root g{self.generation}"
 
     def _persist(self) -> None:
-        _, idx = self.vars.get("domain/signer")
-        self.vars.put("domain/signer", {"ca_key": _key_bytes(self.root.key).hex(), "ca_cert": self.root.pem.decode(),
-                                        "token_key": _key_bytes(self.tokens.key).hex(), "kid": self.tokens.kid,
-                                        "gen": self.generation, **({"issued": "true"} if self.chain else {})}, cas=idx)
+        from w2cplatform.sealing import seal_items
+        _, idx = self.vars.get(SIGNER_ROW)
+        row = {"issuing_key_secret": _key_bytes(self.root.key).hex(), "issuing_cert": self.root.pem.decode(),
+               "token_key_secret": _key_bytes(self.tokens.key).hex(), "kid": self.tokens.kid, "gen": self.generation,
+               "previous": json.dumps([[k, p.hex(), u] for k, p, u in self.tokens.previous]),
+               **({"backup_key_secret": self._backup_key.hex(), "backup_key_rev": self.backup_rev}
+                  if self._backup_key else {}),
+               **({"issued": "true"} if self.chain else {})}
+        self.vars.put(SIGNER_ROW, seal_items(self.sealer, row, SIGNER_ROW), cas=idx)
+
+    def backup_sealer(self):
+        """A ring of one key — the backup key — for the secrets a backup or a published object carries."""
+        from w2cplatform.sealing import Sealer
+        return Sealer({f"backup{self.backup_rev}": self.backup_key}, f"backup{self.backup_rev}")
+
+    def rotate_tokens(self, overlap: float) -> str:
+        """A new token key, the old one trusted for `overlap` seconds more — kept in the row, so a restart signs with the
+        new key and still verifies what the old one signed (the course's rotation lived in memory only)."""
+        kid = self.tokens.rotate(overlap, now=self.now())
+        self._persist()
+        return kid
 
     def _new_root(self, cn: str) -> Root:
         key = Ed25519PrivateKey.generate()
@@ -362,13 +415,14 @@ class Signer:
         the holder, and what the operator keeps is the root's recovery file."""
         if self.chain:
             raise RuntimeError("an issuing signer's keys stay on the holder; keep the root's recovery file instead")
-        return json.dumps({"ca_key": _key_bytes(self.root.key).hex(), "ca_cert": self.root.pem.decode(),
-                           "token_key": _key_bytes(self.tokens.key).hex(), "kid": self.tokens.kid,
+        return json.dumps({"issuing_key_secret": _key_bytes(self.root.key).hex(), "issuing_cert": self.root.pem.decode(),
+                           "token_key_secret": _key_bytes(self.tokens.key).hex(), "kid": self.tokens.kid,
                            "gen": self.generation}).encode()
 
     @classmethod
-    def restore(cls, domain: str, vars_, backup: bytes, now=time.time) -> "Signer":
+    def restore(cls, domain: str, vars_, backup: bytes, now=time.time, sealer=None) -> "Signer":
+        from w2cplatform.sealing import seal_items
         d = json.loads(backup)
-        _, idx = vars_.get("domain/signer")
-        vars_.put("domain/signer", d, cas=idx)
-        return cls(domain, vars_, now=now)
+        _, idx = vars_.get(SIGNER_ROW)
+        vars_.put(SIGNER_ROW, seal_items(sealer, d, SIGNER_ROW), cas=idx)
+        return cls(domain, vars_, now=now, sealer=sealer)

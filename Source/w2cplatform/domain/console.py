@@ -16,6 +16,8 @@ The domain holder runs it pointed at every cluster. Every route but `/healthz` i
     GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
     PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
                                                 domain only (`topology.py`)
+    PUT  /api/break-glass/<cluster>             {password} — that cluster's emergency password set or rotated: its
+                                                hash, sealed (`breakglass.py`); an admin of the domain only
     GET  /healthz
 
 What a subsystem computes or streams on the domain — a catalogue of what one unit may ask another, its own numbers — is
@@ -51,12 +53,13 @@ GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row")
 
 class Console:
     def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
-                 publish_to=None, pending=None, topology=None, admin=None, members=None, viewer=None, holder_vars=None):
+                 publish_to=None, pending=None, topology=None, admin=None, members=None, viewer=None, holder_vars=None,
+                 sealer=None):
         """`publish_to`: the domain holder's object store — each pass leaves the view there as `domain/view`,
         for that cluster's own console to draw (feedback X). `holder_vars`: the holder's store, where the tables the
         specs serve are kept (`domain.tables`)."""
         self.directory, self.view, self.api, self.refresh_interval = directory, view, api, refresh_interval
-        self.publish_to, self.pending, self.holder_vars = publish_to, pending, holder_vars
+        self.publish_to, self.pending, self.holder_vars, self.sealer = publish_to, pending, holder_vars, sealer
         # The operator's topology, and `admin(subject) -> bool`: who may edit it. Each pass also makes the domain's
         # copy of every reporting member read where the topology says it reports.
         self.topology, self.admin, self.members = topology, admin, members
@@ -224,6 +227,8 @@ class Console:
                 u = urlsplit(self.path)
                 if u.path == "/api/topology" and console.topology is not None:
                     return self._topology()
+                if u.path.startswith("/api/break-glass/") and console.holder_vars is not None:
+                    return self._break_glass(u.path[len("/api/break-glass/"):])
                 parent, _, ref = u.path.rpartition("/")
                 target = console.route(parent)
                 if target is None or target[0] != "rows" or not ref:
@@ -274,6 +279,25 @@ class Console:
                     if not console.members.remove(name, by=subject):
                         return self._send(404, {"detail": f"{name} is not a member of this domain"})
                     self._send(200, console.members.read())
+                except ApiError as e:
+                    self._send(e.status, {"detail": e.detail})
+
+            def _break_glass(self, cluster: str):
+                from .breakglass import set_password
+                if not read_body(self, self.MAX_BODY):
+                    return
+                body = self._body()
+                if body is None:
+                    return
+                try:
+                    subject = console.api._subject(self._token())
+                    if console.admin is not None and subject is not None and not console.admin(subject):
+                        raise ApiError(403, f"{subject} is not an admin of the domain: the emergency accounts are the domain's")
+                    if not isinstance(body.get("password"), str) or not body["password"]:
+                        raise ApiError(400, "name the new emergency password")
+                    set_password(console.holder_vars, cluster, body["password"], time.time(), console.sealer,
+                                 by=subject)
+                    self._send(200, {"cluster": cluster, "set": True})
                 except ApiError as e:
                     self._send(e.status, {"detail": e.detail})
 
@@ -384,6 +408,7 @@ def main() -> None:
     members = Members(fed.domain_holder.vars, configured=lambda: configured, domain=fed.domain_holder.name)
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
                       publish_to=fed.domain_holder.objects, holder_vars=fed.domain_holder.vars,
+                      sealer=__import__("w2cplatform.sealing", fromlist=["Sealer"]).Sealer.from_env(os.environ),
                       pending=pending, topology=topology, admin=admin, members=members, viewer=viewer)
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()

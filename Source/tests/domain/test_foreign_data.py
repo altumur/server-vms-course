@@ -46,7 +46,7 @@ def _relay_domain(wall):
     fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
                               bundle_store=east.objects, bundle_members=[cam.name], relay_members=[cam.name])
-    through = Relay(east.vars, east.objects)
+    through = Relay(relay_agent, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects())
     relay_agent.sync(); cam_agent.sync(); relay_agent.sync()
@@ -298,9 +298,9 @@ def test_a_torn_age_mark_of_a_relay_is_written_whole_again_and_a_failing_agent_p
     pass that raised."""
     east, _ = make_cluster("east")
     east.objects.put(RELAY_SEEN, b'{"n": ')
-    assert Relay(east.vars, east.objects).vars.seen() is None
+    assert Relay(None, east.objects).vars.seen() is None
     mark = say_seen(east.objects, 900.0, 1000.0)
-    assert mark == {"n": 1_000_000, "age": 100.0} and Relay(east.vars, east.objects).vars.seen() == mark
+    assert mark == {"n": 1_000_000, "age": 100.0} and Relay(None, east.objects).vars.seen() == mark
     assert say_seen(east.objects, 900.0, 1001.0)["n"] == 1_000_001
 
     class Raising:
@@ -413,12 +413,12 @@ def test_a_signer_whose_key_row_does_not_parse_does_not_start_and_does_not_make_
     row is left as it was. A torn revocation list does not stop it: entry by entry, the torn one kept revoked."""
     from w2cplatform.domain.signer_service import revocations
     v = FakeVariables()
-    v.put("domain/signer", {"ca_key": "zz", "ca_cert": "x", "token_key": "y", "kid": "k"})
+    v.put("domain/signer", {"issuing_key_secret": "zz", "issuing_cert": "x", "token_key_secret": "y", "kid": "k"})
     try:
         Signer("acme", v); raise AssertionError("must not start")
     except RuntimeError as e:
         assert "do not parse" in str(e)
-    assert v.get("domain/signer")[0]["ca_key"] == "zz"
+    assert v.get("domain/signer")[0]["issuing_key_secret"] == "zz"
     v.put(REVOKED_PATH, {"jtis": "a:1e12,b:"})
     assert revocations(v).jtis == {"a", "b"}
 

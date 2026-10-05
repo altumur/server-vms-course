@@ -1,0 +1,37 @@
+# /etc/systemd/system/w2c-domain-console.service — the domain's console, on the server that holds the domain
+# (`w2c-run.sh domainconsole` → `python3 -m w2cplatform.domain.console`): the read view of every subsystem of the
+# directory (/api/vms/cameras), the tables the specs serve (/api/vms/crossings), members, topology, the emergency
+# passwords (PUT /api/break-glass/<cluster>). Its federation is `CLUSTERS` (w2c.env): a bare name — this server's own
+# cluster — opens the store by THIS unit's socket.
+[Unit]
+Description=w2c domain console — the domain's door for people and tools
+After=network-online.target configstore.service w2c-resource.service
+Wants=network-online.target
+
+[Service]
+User=w2c
+Group=w2c
+SupplementaryGroups=w2c-domain w2c-store w2c-secrets
+Environment=PLATFORM_STORE=configstore:///run/configstore/domain.sock
+Environment=CONSOLE_PORT=8444
+Environment=DOMAIN_CONSOLE_UNIX=/run/w2c-domain-console/console.sock
+Environment=CONSOLE_MONITORS=127.0.0.1
+RuntimeDirectory=w2c-domain-console
+RuntimeDirectoryMode=0700
+LoadCredential=platform.key:/etc/w2c/secrets/platform.key
+Environment=SECRETS_KEY=%d/platform.key
+# /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says (the cluster's units' rule) —
+# the site's lines (CLUSTER, DOMAIN_URL, CLUSTERS, OBJECTS…) are there, `domain.env.example`; the sockets are the unit's.
+UMask=0007
+ExecStart=/opt/w2c/bin/w2c-run.sh domainconsole
+ReadWritePaths=/data/platform/objects
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

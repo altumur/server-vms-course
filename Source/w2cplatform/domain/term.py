@@ -46,6 +46,7 @@ import time
 from .agent import DomainPublisher
 from .alarms import HISTORY
 from w2cplatform.rows import PARSE_ERRORS
+from w2cplatform.secrets import is_secret_field
 
 from w2cplatform.trust.documents import NotTaken, sign, verify
 from w2cplatform.trust.signer import DomainRoot, Signer, is_recovery_file
@@ -66,8 +67,13 @@ HOLDER, BACKUP, STRANDED = "domain/holder", "domain/backup", "domain/stranded"
 # are recomputed by the next pass, and the keys, the revocation list and each cluster's grants are already on every
 # member, the new holder first among them. The licence is a cache of the vendor's file (Lesson 5): kept, so that
 # a move does not start the grace period for nothing.
+#
+# The people move with the domain (the product's answer, Q7): the users and every cluster's emergency hash are in the
+# backup — their secrets SEALED UNDER THE BACKUP KEY (`Signer.backup_key`, HMAC of the root's key and a revision; the
+# product's r23-seal), not under the holder's ring, which no other holder has, and never in the clear: a member chosen to
+# keep a copy reads no hash of it. The signer's own keys are not in the backup, ever.
 PLATFORM_EXPORTED = ("domain/pending/", "domain/grants/", "domain/shared", "domain/topology", "domain/members",
-                     "domain/placement", "domain/licence")
+                     "domain/placement", "domain/licence", "domain/break_glass/", "identity/users/")
 
 
 def exported() -> tuple[str, ...]:
@@ -168,13 +174,15 @@ class DomainHolder:
         return True
 
     def export(self) -> dict[str, dict]:
+        """What the domain decided, each row's secrets moved from the holder's ring to the backup key."""
+        from .carry import open_row, seal_row
         self._settle_members()
-        out = {}
+        box, out = self.signer.backup_sealer(), {}
         for prefix in exported():
             for path in self.vars.list(prefix):
                 items, _ = self.vars.get(path)
                 if items is not None:
-                    out[path] = items
+                    out[path] = seal_row(box, open_row(self.signer.sealer, items, path), path)
         return out
 
     # Publish the state beyond the holder: one signed document in the holder's durable store, and a pointer for
@@ -202,7 +210,7 @@ class DomainHolder:
         self.backups = objects
         self.backup_rev += 1
         doc = sign({"term": self.term, "rev": self.backup_rev, "holder": self.name, "at": self.wall(),
-                    "state": self.export(), "objects": self.export_objects(),
+                    "state": self.export(), "objects": self.export_objects(), "backup_key_rev": self.signer.backup_rev,
                     **({"holder_key": self.member_key} if self.member_key else {})}, self.signer.tokens)
         raw = json.dumps(doc, sort_keys=True, ensure_ascii=False).encode()
         key = f"backup/rev-{self.backup_rev}"
@@ -265,7 +273,7 @@ class DomainHolder:
         elif mine:
             rev = max(mine)
             base, state = f"its own last backup, rev {rev}", mine[rev]
-        left = stranded(self.vars, state)
+        left = stranded(self.vars, state, self.signer)
         self.vars.put(STRANDED, {"doc": json.dumps({"term": self.deposed_by["term"], "holder": self.deposed_by["holder"],
                                                      "base": base, "items": left}, sort_keys=True, ensure_ascii=False)})
 
@@ -350,7 +358,7 @@ OLD_KEYS_OVERLAP = 3600.0
 
 
 def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall=time.time,
-                stolen: bool = False) -> tuple[DomainHolder, dict]:
+                stolen: bool = False, sealer=None) -> tuple[DomainHolder, dict]:
     """Move the domain on `new` from the signer's backup and the newest verified state any reachable
     member holds. `objects_of(member)` is that member's durable store.
 
@@ -366,11 +374,11 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         if stolen:
             raise ValueError("a stolen holder cannot be revoked from the signer's backup: it holds the stolen keys "
                              "themselves; that takes a root off the holder (step 9)")
-        signer = Signer.restore(domain_id, new_vars, signer_backup, now=wall)
+        signer = Signer.restore(domain_id, new_vars, signer_backup, now=wall, sealer=sealer)
         keys = signer.tokens.keyset()
     else:
         keys = _trusted_keys(fed, new, root, now)        # what members trust NOW — the old holder's keys, under the root
-        signer = Signer.issued(domain_id, new_vars, root, now=wall)
+        signer = Signer.issued(domain_id, new_vars, root, now=wall, sealer=sealer)
     top_term, top_holder, best, ignored = 0, None, None, []
     for name, c in fed.clusters.items():
         try:
@@ -391,9 +399,14 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         if best is None or (int(doc["term"]), int(doc["rev"])) > (int(best[1]["term"]), int(best[1]["rev"])):
             best = (name, doc)
     if best:
+        # Each secret opened with the backup key this holder derives — from the recovery file's root, or the signer's
+        # backup — and sealed again with this holder's own ring. A backup this holder cannot open is not a backup of
+        # this domain (a forged one was refused above, by its signature).
+        from .carry import open_row, seal_row
+        box = signer.backup_sealer()
         for path, items in best[1]["state"].items():
             _, idx = new_vars.get(path)
-            new_vars.put(path, items, cas=idx)
+            new_vars.put(path, seal_row(sealer, open_row(box, items, path), path), cas=idx)
         for key, text in best[1].get("objects", {}).items():
             objects_of(new).put(key, text.encode())      # the alarm history, as of the backup
         _keep_member_key(new_vars, best[1], new, wall, revoked=keys.revoked_members)
@@ -664,13 +677,18 @@ def handover(holder: DomainHolder, to: str, signer_backup: bytes, domain_id: str
 # A kept edit counts only as an EDIT: its `rev` moved, or the new term has none for that unit. An entry that
 # differs only because a report closed fields of it, or annotated a conflict or a refusal, is not stranded —
 # the new term will carry the same edit and the member will say "already" (see `GuardedPending`).
-def stranded(old_vars, restored_state: dict) -> list:
+def stranded(old_vars, restored_state: dict, signer=None) -> list:
+    """Compared by what the rows SAY: the old holder's under its ring, the restored state's under the backup key."""
+    from .carry import open_row
     from .pending import PENDING_PATH
     out = []
     for prefix in exported():
         for path in old_vars.list(prefix):
             items, _ = old_vars.get(path)
             theirs = restored_state.get(path, {})
+            if signer is not None:
+                items = open_row(signer.sealer, items, path) if items else items
+                theirs = open_row(signer.backup_sealer(), theirs, path) if theirs else theirs
             for k, v in (items or {}).items():
                 if theirs.get(k) == v:
                     continue
@@ -680,5 +698,7 @@ def stranded(old_vars, restored_state: dict) -> list:
                             continue                     # the same edit, closed further here: not the operator's
                     except PARSE_ERRORS:
                         pass
-                out.append([path, k, v])
+                # The list is a plain row the operator reads: a secret that differs is NAMED, its value never copied
+                # out of the ring it was opened from.
+                out.append([path, k, "<secret: differs>" if is_secret_field(k) else v])
     return out

@@ -105,7 +105,7 @@ def test_the_passes_follow_the_topology_without_a_restart():
     topo = Topology(north.vars)
     relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
                          relay_members=lambda: topo.relayed_by("east"), bundle_members=lambda: topo.relayed_by("east"))
-    through = Relay(east.vars, east.objects)
+    through = Relay(relay, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                             published=cam.local_objects(), seen_store=cam.local_objects())
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, topology=topo), north.objects)
@@ -191,7 +191,10 @@ def test_a_member_placed_behind_a_relay_is_read_by_whichever_road_is_newer():
     assert [r["ref"] for r in view.list()["rows"] if r["cluster"] == cam.name] == ["SN8003"]
 
     wall.advance(30)
-    through = Relay(east.vars, east.objects)                           # now it reports through east, and renames itself
+    relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
+                        relay_members=[cam.name])
+    relay.sync()                                                       # east keeps what the domain answers for it
+    through = Relay(relay, east.objects)                               # now it reports through east, and renames itself
     cam.local_console().update_unit(1, {"name": "through-east"}, None)
     DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
                 published=cam.local_objects()).sync()
@@ -207,7 +210,7 @@ def test_books_behind_a_relay_are_as_old_as_the_relay_says_on_the_cameras_own_cl
     from w2cplatform.domain.relay import say_seen
     relay_clock, cam_clock = Clock(10_000.0), Clock(10_300.0)       # the camera runs five minutes ahead
     relay_vars, relay_objects = FakeVariables(), __import__("vms.domainpart.device", fromlist=["Ram"]).Ram()
-    agent = DomainAgent("cam-SN8004", Relay(relay_vars, relay_objects).vars, FakeVariables(), now=cam_clock)
+    agent = DomainAgent("cam-SN8004", Relay(None, relay_objects).vars, FakeVariables(), now=cam_clock)
     last = relay_clock()
     say_seen(relay_objects, last, relay_clock())                     # the relay reached the domain just now
     assert agent._relay_mark() == cam_clock()
@@ -260,7 +263,10 @@ def test_a_camera_whose_clock_stepped_back_is_not_frozen_on_its_stale_road():
     view = ReadView(fed, wall=wall); view.refresh()                    # the domain has seen the direct report
     behind = lambda: wall() - 1000                                     # the camera's clock, a thousand seconds back
     cam.local_console().update_unit(1, {"name": "clock-stepped-back"}, None)
-    through = Relay(east.vars, east.objects)
+    relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
+                        relay_members=[cam.name])
+    relay.sync()
+    through = Relay(relay, east.objects)
     relay_agent = DomainAgent(cam.name, through.vars, cam.flash, now=behind, domain_objects=through.objects,
                               published=cam.local_objects())
     for _ in range(4):                                                 # a minute of passes through east

@@ -319,4 +319,4 @@ def test_a_camera_that_a_pulls_is_not_called_uncovered_and_its_card_does_not_rec
     out = o.pusher.pass_once(_frames(wall, 3))
     assert out["road"] == "primary" and o.q["srv-b"].drain() == []     # no second stream
     assert edge_gate(o.pusher)(EDGE) is False                          # and the card holds
-    assert "uncovered" not in o.ing["srv-a"].poll(o.pusher.entry()["ingest"]["token"], SERIAL)   # silent, not "covered"
+    assert "uncovered" not in o.ing["srv-a"].poll(o.pusher.entry()["ingest"]["token_secret"], SERIAL)   # silent, not "covered"

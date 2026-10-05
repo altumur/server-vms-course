@@ -105,11 +105,11 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
         except PARSE_ERRORS:
             fresh = False
         if old.get("urls") == road and old.get("mode") == mode and fresh \
-                and kid_of(str(old.get("token", ""))) == crossings.issuer.kid:
+                and kid_of(str(old.get("token_secret", ""))) == crossings.issuer.kid:
             entry = old
         else:
             entry = {"urls": road, "mode": mode, "until": now + lifetime,
-                     "token": crossings.issuer.issue("stream", on, now=now, aud=audience(centre), ref=ref)}
+                     "token_secret": crossings.issuer.issue("stream", on, now=now, aud=audience(centre), ref=ref)}
         books.setdefault(on, {})[ref] = json.dumps(entry, sort_keys=True)
     for on, book in books.items():
         path = f"{UPSTREAM_PATH}/{on}"
@@ -138,6 +138,8 @@ FORWARD_FRAMES = 300
 # and carry its outcome back up. PULL mode (the star) — this cluster
 # wants the stream for its own recorder: pull it from the centre and inject it here.
 class Forwarder:
+    sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
+
     def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None):
         """`local`: this cluster's `Ingest`. `dial(url)`: calling OUT to the centre. `archive(ref, t0, t1)`:
         frames of a range from this cluster's archive — called with `recording=` when the centre named one, and
@@ -173,7 +175,8 @@ class Forwarder:
     # whole pass, every camera of the relay with it.
     def _entries(self, path: str, keep, check) -> dict[str, dict]:
         from .ingest import BOOKS
-        items, _ = self.vars.get(path)
+        from .keys import opened
+        items = opened(self.vars.get(path)[0], path, self.sealer)
         out = {}
         for k, raw in (items or {}).items():
             if not keep(k):
@@ -220,7 +223,7 @@ class Forwarder:
         return dict(self.state)
 
     def _push(self, ing, ref: str, e: dict, wait: float = 0.0) -> str:
-        work = ing.poll(e["token"], ref, version=self.versions.get(ref) if wait else None, wait=wait)
+        work = ing.poll(e["token_secret"], ref, version=self.versions.get(ref) if wait else None, wait=wait)
         self.versions[ref], self.forwarding[ref] = work["version"], work["push"]
         # WHAT THE CENTRE WROTE GOES DOWN TO THE CAMERA (the product's DY, checked in the course): what this relay's ingest
         # took, the camera counted delivered and its card let go of — whether or not it ever reached the centre. The
@@ -240,7 +243,7 @@ class Forwarder:
             frames = self.unsent.pop(ref, []) + q.drain()       # what the centre did not take last time, first
             if frames:
                 try:
-                    ing.push(e["token"], ref, frames)
+                    ing.push(e["token_secret"], ref, frames)
                 except Unreachable:
                     self.unsent[ref] = self._kept(ref, frames)
                     raise
@@ -258,12 +261,12 @@ class Forwarder:
             try:
                 frames = self.archive(ref, r["from"], r["to"], **named)
             except OSError as err:
-                ing.upload(e["token"], ref, rid, [], failed=str(err))
+                ing.upload(e["token_secret"], ref, rid, [], failed=str(err))
                 continue
-            ing.upload(e["token"], ref, rid, frames)                     # the answer to that request (AD)
+            ing.upload(e["token_secret"], ref, rid, frames)                     # the answer to that request (AD)
         for aid, a in work.get("asks", {}).items():                     # an ask left above: down it goes…
             with self._lock:
-                self.carried.setdefault((ref, aid), (ing, e["token"], float(a["deadline"])))
+                self.carried.setdefault((ref, aid), (ing, e["token_secret"], float(a["deadline"])))
             self.local.carry_ask(ref, aid, a)
         self._answer_carried()                                           # …and what became of it, up
         return said
@@ -316,7 +319,7 @@ class Forwarder:
                         for url in road["urls"]:
                             try:
                                 c = self.dial(url)
-                                sent = (c, c.ask(road["token"], a["target"], a["action"], a["deadline"]))
+                                sent = (c, c.ask(road["token_secret"], a["target"], a["action"], a["deadline"]))
                                 break
                             except Unreachable:
                                 continue
@@ -452,7 +455,7 @@ class Forwarder:
         # `(boot, n)`: a pull whose answer was lost on the way down is answered with that batch again, first, and a
         # mark from before the centre restarted is never taken for one of after (the eighth review, blocker 2)
         had = self.pulled.get(ref, ())
-        frames = ing.pull(e["token"], ref, self.up, have=had)
+        frames = ing.pull(e["token_secret"], ref, self.up, have=had)
         self.pulled[ref] = mark = getattr(frames, "have", ())
         # A BATCH LOST WITH THE SIDE THAT SENT IT IS COUNTED (the ninth review, a minor; the product's sibling E). The
         # centre keeps the batch it handed over until the relay says it has it — in memory: an answer lost on the way

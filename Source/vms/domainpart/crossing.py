@@ -58,7 +58,7 @@ from w2cplatform.domain.api import ApiError
 class Crossings:
     """The domain's side: which cluster records which camera of another cluster, and the books."""
 
-    def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float | None = None,
+    def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float | None = None, sealer=None,
                  centre: str | None = None, star=frozenset(), poll_home: str | None = None, topology=None):
         """`issuer` is Lesson 16: the domain signer's token issuer. Given it, the book of primaries also tells
         a camera where to PUSH — the recording cluster's ingest — with a stream token for it."""
@@ -70,6 +70,10 @@ class Crossings:
             from w2cplatform.trust.tokens import DeclaredIssuer
             issuer = DeclaredIssuer(issuer, token_kinds())
         self.issuer = issuer
+        # The holder's store as the books see it: what they read, opened; what they write, sealed (`keys.OpenedVars`).
+        from .keys import OpenedVars
+        if not isinstance(domain_vars, OpenedVars):
+            self.vars = OpenedVars(domain_vars, sealer)
         self.token_lifetime = token_lifetime if token_lifetime is not None else (
             issuer.lifetime("stream") if issuer is not None else 86400.0)
         # Lesson 17: the monitoring centre, and the recording clusters that cannot be pushed to — their cameras
@@ -381,10 +385,10 @@ class Crossings:
             return old                                   # …and one whose announcement does not parse, the same (the seventh review)
         urls = announced["urls"]
         if old and old.get("urls") == urls and _until(old) - now > self.token_lifetime / 2 \
-                and kid_of(old.get("token", "")) == self.issuer.kid:
+                and kid_of(old.get("token_secret", "")) == self.issuer.kid:
             return old
         token = self.issuer.issue("stream", home, now=now, aud=audience(on), ref=ref)
-        return {"urls": urls, "token": token, "until": now + self.token_lifetime}
+        return {"urls": urls, "token_secret": token, "until": now + self.token_lifetime}
 
     # Lesson 16, step 8: the book of polls. A camera that pushes and that nobody records polls nothing, and an
     # ask for it — "turn to preset 3" is the usual one for a PTZ camera kept for live view only — would have

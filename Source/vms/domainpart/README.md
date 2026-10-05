@@ -36,8 +36,9 @@ Source/
 
 ```bash
 python3 tests/domain/run.py ; python3 tests/domainvms/run.py      # from Source/
-python3 -m w2cplatform.domain.console    # CLUSTERS=north=configstore:///run/configstore/domain.sock|cluster:///data/platform/objects,...
-python3 -m w2cplatform.domain.signer_service ; python3 -m w2cplatform.domain.agent ; python3 -m vms.domainpart
+python3 -m w2cplatform.domain.console    # CLUSTERS=north,south=report  (a bare name: this server's own, by PLATFORM_STORE and OBJECTS)
+python3 -m w2cplatform.domain.signer_service ; python3 -m w2cplatform.domain.agent ; python3 -m vms domainpart
+# on a server: deploy/domain/systemd — w2c-run.sh signer | domainconsole | domainagent | vms domainpart
 ```
 
 ## What the VMS declares (`vms.subsystem.yaml`, `domain:`)

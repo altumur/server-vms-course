@@ -86,13 +86,13 @@ def test_the_camera_learns_where_to_push_from_its_book_and_the_book_does_not_chu
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     e = pusher.entry()
     assert e["cluster"] == "south" and e["ingest"]["urls"] == URLS
-    ingest.poll(e["ingest"]["token"], SERIAL)                          # the ingest takes the domain's token
+    ingest.poll(e["ingest"]["token_secret"], SERIAL)                          # the ingest takes the domain's token
     writes = cam.flash.writes
     for _ in range(10):
         wall.advance(30); cam.publish(); domain_pass()
     assert cam.flash.writes == writes                                  # five minutes of passes: the book did not change
     wall.advance(13 * 3600); cam.publish(); domain_pass()
-    assert pusher.entry()["ingest"]["token"] != e["ingest"]["token"]  # past half its life: a new token, one write
+    assert pusher.entry()["ingest"]["token_secret"] != e["ingest"]["token_secret"]  # past half its life: a new token, one write
 
 
 def test_a_token_the_current_key_did_not_sign_is_issued_again_whatever_its_half_life():
@@ -102,10 +102,10 @@ def test_a_token_the_current_key_did_not_sign_is_issued_again_whatever_its_half_
     from w2cplatform.trust.tokens import kid_of
     wall = Clock()
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    before = pusher.entry()["ingest"]["token"]
+    before = pusher.entry()["ingest"]["token_secret"]
     signer.tokens.rotate(overlap=0, now=wall()); DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     wall.advance(30); cam.publish(); domain_pass()
-    after = pusher.entry()["ingest"]["token"]
+    after = pusher.entry()["ingest"]["token_secret"]
     assert after != before and kid_of(after) == signer.tokens.kid
     ingest.poll(after, SERIAL)
 
@@ -228,7 +228,7 @@ def test_the_long_poll_answers_first_holds_when_nothing_changed_and_wakes_when_a
     poll the real ingest holds; a viewer who left wakes it at the end of the linger, not at the end of the poll."""
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token"]
+    token = pusher.entry()["ingest"]["token_secret"]
     first = ingest.poll(token, SERIAL, version=-1)
     assert "held" not in first and first["push"] is False
     assert ingest.poll(token, SERIAL, version=first["version"]).get("held")
@@ -303,10 +303,10 @@ def test_a_scenario_between_two_unreachable_cameras_acts_within_one_poll():
     book = asker.book()
     assert [r["urls"] for r in book[SERIAL]] == [URLS]              # one road: the room that records it
     e = pusher.entry()["ingest"]
-    held = ingest.poll(e["token"], SERIAL, version=ingest.poll(e["token"], SERIAL)["version"])
+    held = ingest.poll(e["token_secret"], SERIAL, version=ingest.poll(e["token_secret"], SERIAL)["version"])
     assert held.get("held")                                            # the yard camera is waiting, nothing new
     ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
-    woken = ingest.poll(e["token"], SERIAL, version=held["version"])
+    woken = ingest.poll(e["token_secret"], SERIAL, version=held["version"])
     assert not woken.get("held") and [a["action"] for a in woken["asks"].values()] == [{"preset": 3}]
     out = pusher.pass_once([])
     assert out["asks"] == [({"preset": 3}, "performed")] and done == [{"preset": 3}]
@@ -336,7 +336,7 @@ def test_a_refused_action_is_answered_and_only_a_scenario_gives_the_right_to_ask
         assert False
     except Refused:
         pass
-    push = pusher.entry()["ingest"]["token"]                           # a push token is not a token to ask
+    push = pusher.entry()["ingest"]["token_secret"]                           # a push token is not a token to ask
     for bad in (push, signer.tokens.issue(GATE, 60, now=wall(), aud=audience("south"), ask="SN9999", kind="ask")):
         try:
             ingest.ask(bad, SERIAL, {"preset": 1}, wall() + 10)
@@ -716,7 +716,7 @@ def test_a_held_poll_hears_a_linger_run_out_and_an_ask_expire_on_real_clocks():
     import time as _t
     wall = _t.time
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token"]
+    token = pusher.entry()["ingest"]["token_secret"]
     ingest.linger = 0.3
     ingest.want(SERIAL, "viewer:anna")
     first = ingest.poll(token, SERIAL, version=-1)
@@ -832,7 +832,7 @@ def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wak
     import time as _t
     wall = _t.time
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token"]
+    token = pusher.entry()["ingest"]["token_secret"]
     ingest.should, ingest.recheck = (lambda ref: True), 0.3
     ingest.want(SERIAL, "recorder:r-0"); ingest.subscribe(SERIAL, "recorder:r-0")
     first = ingest.poll(token, SERIAL, version=-1)

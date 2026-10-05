@@ -1,7 +1,6 @@
-"""Wiring for the real processes: the environment the jobspecs set, turned
-into Clusters over the config store (`open_vars`) and the object store. Run by the tests over the
-jobs' own lines (`test_lesson3_readview_api_gateway.py`, the twelfth review's major 22); everything it
-wires is exercised elsewhere."""
+"""Wiring for the real processes: the environment the units set, turned into Clusters over the config store
+(`open_vars`) and the object store. Run by the tests over the units' own lines
+(`test_lesson3_readview_api_gateway.py`); everything it wires is exercised elsewhere."""
 from __future__ import annotations
 
 import os
@@ -27,6 +26,10 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     """CLUSTERS=north=configstore:///run/configstore/console.sock|cluster:///data/platform/objects,south=report
     The first entry, or DOMAIN_HOLDER, is the domain holder.
 
+    A bare name (`CLUSTERS=north,south=report`) is THIS server's own cluster: its store by the process's own role
+    socket (`PLATFORM_STORE`, which its unit names) and its objects by the platform's `OBJECTS` (`w2c.env`) — so one
+    line in `w2c.env` serves the domain's console and a subsystem's domain worker, each through its own socket.
+
     Each half is a URL with a scheme: the config store (`open_vars` — `configstore://`,
     `file://`, whatever a backend registered) and the object store (`open_objects`).
     Neither half names a vendor in code; a cluster on another orchestrator is a
@@ -35,6 +38,10 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     domain = os.environ.get("DOMAIN_HOLDER")
     reporting = []
     for i, entry in enumerate(filter(None, os.environ.get(var, "").split(","))):
+        if "=" not in entry:                                           # this server's own: the unit's socket
+            fed.add(Cluster(entry, open_vars(os.environ["PLATFORM_STORE"]), open_objects(os.environ["OBJECTS"]),
+                            is_domain_holder=(entry == domain) if domain else i == 0))
+            continue
         name, rest = entry.split("=", 1)
         if rest == "report" or rest.startswith("report@"):
             reporting.append((name, rest.partition("@")[2] or None))   # reached by nobody: read from its reports

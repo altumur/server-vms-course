@@ -23,8 +23,12 @@ from .grants import ClusterGrants
 
 
 class ClusterAccess:
-    def __init__(self, cluster_vars, wall=time.time):
+    def __init__(self, cluster_vars, wall=time.time, sealer=None):
+        """`sealer`: this cluster's key ring (`SECRETS_KEY`) — the emergency hash its agent carried home lies sealed
+        with it, and is opened here, at the one moment it is checked."""
+        from w2cplatform.sealing import Sealer
         self.trust, self.wall = ClusterTrust(cluster_vars), wall
+        self.sealer = sealer if sealer is not None else Sealer.from_env()
 
     def who(self, token: str) -> dict:
         try:
@@ -44,11 +48,16 @@ class ClusterAccess:
     # sees them.
     def glass(self, who: str, why: str, password: str) -> dict:
         from .agent import BREAK_GLASS_PATH
+        from .carry import open_row
         from .identity import TOKEN_LIFETIME, _check
         items, _ = self.trust.vars.get(BREAK_GLASS_PATH)
-        if not items or not items.get("pwhash"):
+        if not items or not items.get("pwhash_secret"):
             raise Denied(403, "this cluster has no emergency account")
-        if not _check(password, items["pwhash"]):
+        try:
+            pwhash = open_row(self.sealer, items, BREAK_GLASS_PATH)["pwhash_secret"]
+        except Exception as e:                               # noqa: BLE001 — sealed, and no key here: nobody gets in by it
+            raise Denied(503, f"the emergency hash is sealed and this console cannot open it ({e})") from None
+        if not _check(password, pwhash):
             raise Denied(401, "break-glass: bad password")
         now = self.wall()
         return {"sub": "break-glass", "via": "break-glass", "who": who, "why": why, "iat": now, "exp": now + TOKEN_LIFETIME}

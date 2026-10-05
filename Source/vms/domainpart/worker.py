@@ -137,7 +137,7 @@ def main() -> None:
     view = ReadView(fed, lost_after=float(os.environ.get("LOST_AFTER", "45")))
     configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
     star = frozenset(filter(None, os.environ.get("STAR", "").split(",")))
-    issuer = TokenDoor(os.environ.get("SIGNER_TOKENS_UNIX", "/run/w2c/signer-tokens.sock"))
+    issuer = TokenDoor(os.environ.get("SIGNER_TOKENS_UNIX", "/run/w2c-signer/tokens.sock"))
     books = Books(Crossings(holder.vars, view, issuer=issuer, centre=os.environ.get("CENTRE") or None, star=star,
                             topology=Topology(holder.vars)), holder.objects,
                   members=Members(holder.vars, configured=lambda: configured, domain=holder.name))

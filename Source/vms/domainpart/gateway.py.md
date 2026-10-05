@@ -51,4 +51,4 @@ After a failover: the directory says the camera moved; if the upstream's worker 
 
 ## Notes
 - `watch()` on a camera whose worker changed replaces the `Upstream` with an empty `viewers` dict, so existing viewers are silently dropped from fan-out; only `reconnect()` preserves them. Neither path unsubscribes the gateway from the old worker's tee. See the report.
-- `deploy/domain/gateway.nomad.hcl`'s `UPSTREAM_QUEUE=30` is the `maxsize` default here.
+- `UPSTREAM_QUEUE=30` is the `maxsize` default here; no unit of `deploy/domain/systemd` runs a domain gateway (the cluster's live gateway is the VMS's `vms gateway`).

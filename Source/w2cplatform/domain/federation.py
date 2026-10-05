@@ -116,7 +116,7 @@ class Cluster:
         directory is only as fresh as its stalest part.
 
         A unit can appear in two shards for the length of a move. The newer shard wins; reporting it twice would make
-        `where()` raise on what is not a fault."""
+        `where()` answer `contested` — a placement failure — on what is not a fault."""
         keys_of = [(s, self.objects.list(f"{s.name}/snapshot/")) for s in _specs(sub)]
         if not any(keys for _, keys in keys_of):
             return None

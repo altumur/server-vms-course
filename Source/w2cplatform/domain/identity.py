@@ -1,7 +1,8 @@
 """Lesson 4 — where users live, and creating a user touches no cluster.
 
-    identity/users/<id>   in the domain holder's Variables, the signer the only writer
-                          local: a scrypt hash; federated: an IdP subject and no secret
+    identity/users/<id>   in the domain holder's store, the signer the only writer
+                          local: a scrypt hash (`pwhash_secret`, sealed under the platform's ring at rest);
+                          federated: an IdP subject and no secret
     identity/pointer      -> identity/rev-N object: the whole set, published object-first
     users/<id>/prefs      per-user UI configuration as an object; last write wins, with a revision
 
@@ -32,6 +33,7 @@ from w2cplatform.variables import Conflict, Variables
 # every federated user. Skipped, counted once by its path, logged once; the others are read and published.
 USERS = Table("user", "left out of the published identity set and of federated logins — the others are read", "user record")
 
+IDENTITY_SET = "identity/pointer"          # what the hashes in the published object are bound to
 TOKEN_LIFETIME = 15 * 60.0        # the number the product states; Lesson 4 makes students defend it
 
 
@@ -65,12 +67,12 @@ class User:
     created: float = 0.0
 
     def to_items(self) -> dict:
-        return {"id": self.id, "kind": self.kind, "roles": ",".join(self.roles), "pwhash": self.pwhash,
+        return {"id": self.id, "kind": self.kind, "roles": ",".join(self.roles), "pwhash_secret": self.pwhash,
                 "idp_subject": self.idp_subject, "created": self.created}
 
     @classmethod
     def from_items(cls, it: dict) -> "User":
-        return cls(it["id"], it["kind"], [r for r in it.get("roles", "").split(",") if r], it.get("pwhash", ""),
+        return cls(it["id"], it["kind"], [r for r in it.get("roles", "").split(",") if r], it.get("pwhash_secret", ""),
                    it.get("idp_subject", ""), float(it.get("created", 0)))
 
 
@@ -78,8 +80,12 @@ class IdentityStore:
     # WHO CHANGED THE PEOPLE (feedback CL). A record held who edited it last and when; the history was lost. Every
     # change here is a line in the holder's journal — role `domain` — naming the actor the domain's door verified
     # (`by`), the record, and what changed. Never a password: the line says the password changed, and that is all.
-    def __init__(self, signer: Signer, vars_: Variables, objects, publish_floor: float = 60.0, now=time.time, journal=None):
+    def __init__(self, signer: Signer, vars_: Variables, objects, publish_floor: float = 60.0, now=time.time, journal=None,
+                 sealer=None):
+        """`sealer`: the platform's ring on the holder — a user's hash is sealed with it in the row (`pwhash_secret`),
+        and opened only here, to check a password. With none it lies in the clear, as every secret does then."""
         self.signer, self.vars, self.objects, self.now = signer, vars_, objects, now
+        self.sealer = sealer if sealer is not None else getattr(signer, "sealer", None)
         self.floor, self._last_publish, self._dirty = publish_floor, -1e9, False
         self.published_rev, self.publishes = 0, 0
         self.journal = journal
@@ -93,12 +99,14 @@ class IdentityStore:
         return f"identity/users/{uid}"
 
     def get(self, uid: str) -> User | None:
+        from w2cplatform.sealing import open_row
         items, _ = self.vars.get(self._path(uid))
-        return User.from_items(items) if items else None
+        return User.from_items(open_row(self.sealer, items, self._path(uid))) if items else None
 
     def _put(self, u: User) -> None:
+        from w2cplatform.sealing import seal_items
         _, idx = self.vars.get(self._path(u.id))
-        self.vars.put(self._path(u.id), u.to_items(), cas=idx)
+        self.vars.put(self._path(u.id), seal_items(self.sealer, u.to_items(), self._path(u.id)), cas=idx)
         self._dirty = True
 
     # A user's name is the subject of every token and grant they will hold: `|`, `"` and control characters are refused
@@ -164,10 +172,11 @@ class IdentityStore:
 
     def users(self) -> list[User]:
         out = []
+        from w2cplatform.sealing import open_row
         for p in self.vars.list("identity/users/"):
             items, _ = self.vars.get(p)
-            u = USERS.read(p, lambda items=items: User.from_items(items) if items and items.get("kind") in ("local", "idp")
-                           else None)
+            u = USERS.read(p, lambda items=items, p=p: User.from_items(open_row(self.sealer, items, p))
+                           if items and items.get("kind") in ("local", "idp") else None)
             if u is not None:
                 out.append(u)
         return out
@@ -196,7 +205,13 @@ class IdentityStore:
         if not force and self.now() - self._last_publish < self.floor:
             return False
         rev = self.published_rev + 1
-        blob = json.dumps({"format": 1, "revision": rev, "users": [u.to_items() for u in self.users()]}).encode()
+        # The hashes in the object are sealed under the holder's BACKUP key (`Signer.backup_sealer`): an object is read by
+        # whoever reads the holder's objects and is copied with them (the course check of the domain's secrets), and a
+        # new holder derives the backup key again — from the root, or from the signer's backup (Lessons 4–7).
+        box = self.signer.backup_sealer()
+        users = [{**u.to_items(), "pwhash_secret": box.seal("pwhash_secret", u.pwhash, IDENTITY_SET) if u.pwhash else ""}
+                 for u in self.users()]
+        blob = json.dumps({"format": 2, "revision": rev, "users": users}).encode()
         self.objects.put(f"identity/rev-{rev}", blob)                                     # 1. the object
         _, idx = self.vars.get("identity/pointer")
         self.vars.put("identity/pointer", {"object": f"identity/rev-{rev}", "revision": rev}, cas=idx)   # 2. the pointer
@@ -205,14 +220,17 @@ class IdentityStore:
 
     @classmethod
     def restore(cls, signer: Signer, new_vars: Variables, objects, pointer_items: dict, now=time.time) -> "IdentityStore":
-        """Moving the domain: the backed-up key (Signer.restore), then the
-        identity object the pointer names. М11's restore with different nouns."""
+        """Moving the domain: the backed-up key (Signer.restore), then the identity object the pointer names — its
+        hashes opened with the backup key the restored signer derives, and sealed again with this holder's ring."""
         blob = objects.get(pointer_items["object"])
         if blob is None:
             raise RuntimeError(f"pointer names {pointer_items['object']} but the object store has no such object — refusing to guess")
         d = json.loads(blob)
         st = cls(signer, new_vars, objects, now=now)
+        box = signer.backup_sealer()
         for it in d["users"]:
+            if it.get("pwhash_secret"):
+                it = {**it, "pwhash_secret": box.open("pwhash_secret", it["pwhash_secret"], IDENTITY_SET)}
             st._put(User.from_items(it))
         st.published_rev, st._dirty = int(d["revision"]), False
         _, idx = new_vars.get("identity/pointer")

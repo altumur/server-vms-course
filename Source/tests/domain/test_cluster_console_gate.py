@@ -179,7 +179,7 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
     assert BREAK_GLASS_PATH in per_cluster()                                            # carried home by the agent like the grants
     home = FakeVariables()
     DomainPublisher(home).publish_break_glass("south", _hash("glass-for-south"), 1000.0)
-    assert home.get(f"{BREAK_GLASS_PATH}/south")[0]["pwhash"].count(":") == 1          # a hash, never the password
+    assert home.get(f"{BREAK_GLASS_PATH}/south")[0]["pwhash_secret"].count(":") == 1          # a hash, never the password
 
     clk = Clock(1_757_500_000.0)
     vars_ = FakeVariables()
@@ -287,7 +287,7 @@ def test_the_signers_door_in_answers_a_garbage_body_400_and_a_garbage_token_401(
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
-    env = {**os.environ, "DOMAIN_ID": "acme", "PLATFORM_STORE": f"file://{root}/vars", "OBJECT_STORE_URL": f"file://{root}/objects",
+    env = {**os.environ, "DOMAIN_ID": "acme", "PLATFORM_STORE": f"file://{root}/vars", "OBJECTS": f"file://{root}/objects",
            "SIGNER_HOST": "127.0.0.1", "SIGNER_PORT": str(port)}
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     proc = subprocess.Popen([sys.executable, "-m", "w2cplatform.domain.signer_service"], cwd=here, env=env,

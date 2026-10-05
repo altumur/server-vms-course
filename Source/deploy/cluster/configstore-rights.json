@@ -508,51 +508,20 @@
     "rec/requests/free-*"
    ]
   },
-  "domainagent": {
-   "group": "w2c-domainagent",
-   "read": [
-    "platform/schema",
-    "domain/*",
-    "relay/*",
-    "!domain/signer*"
-   ],
-   "write": [
-    "domain/*",
-    "relay/*",
-    "!domain/signer*"
-   ],
-   "delete": [
-    "domain/*",
-    "relay/*",
-    "!domain/signer*"
-   ]
-  },
-  "member": {
-   "group": "w2c-member",
-   "read": [
-    "platform/schema",
-    "domain/*",
-    "relay/*",
-    "!domain/signer*"
-   ],
-   "write": [],
-   "delete": []
-  },
   "domain": {
    "group": "w2c-domain",
    "read": [
     "platform/schema",
     "domain/*",
     "identity/*",
-    "relay/*",
+    "platform/*",
     "auto/*",
     "det/*",
     "detjob/*",
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*",
-    "platform/*"
+    "vms/*"
    ],
    "write": [
     "domain/*",
@@ -561,6 +530,83 @@
    "delete": [
     "domain/*",
     "identity/*"
+   ]
+  },
+  "domainagent": {
+   "group": "w2c-domainagent",
+   "read": [
+    "platform/schema",
+    "domain/*",
+    "!domain/signer*"
+   ],
+   "write": [
+    "domain/*",
+    "!domain/signer*",
+    "!domain/members",
+    "!domain/placement*",
+    "!domain/licence",
+    "!domain/stranded",
+    "!domain/grants/*",
+    "!domain/pending/*",
+    "!domain/backup/*",
+    "!domain/break_glass/*",
+    "!domain/ldevid/*",
+    "!domain/vms/sources/*",
+    "!domain/vms/primaries/*",
+    "!domain/vms/poll/*",
+    "!domain/vms/upstream/*",
+    "!domain/vms/asks/*",
+    "!domain/vms/crossings",
+    "!domain/vms/roads",
+    "!domain/vms/worker",
+    "!domain/vms/heartbeat"
+   ],
+   "delete": [
+    "domain/*",
+    "!domain/signer*",
+    "!domain/members",
+    "!domain/placement*",
+    "!domain/licence",
+    "!domain/stranded",
+    "!domain/grants/*",
+    "!domain/pending/*",
+    "!domain/backup/*",
+    "!domain/break_glass/*",
+    "!domain/ldevid/*",
+    "!domain/vms/sources/*",
+    "!domain/vms/primaries/*",
+    "!domain/vms/poll/*",
+    "!domain/vms/upstream/*",
+    "!domain/vms/asks/*",
+    "!domain/vms/crossings",
+    "!domain/vms/roads",
+    "!domain/vms/worker",
+    "!domain/vms/heartbeat"
+   ]
+  },
+  "vmsdomain": {
+   "group": "vms-vmsdomain",
+   "read": [
+    "platform/schema",
+    "domain/vms/*",
+    "domain/keys",
+    "domain/topology",
+    "domain/members",
+    "domain/shared",
+    "platform/*",
+    "auto/*",
+    "det/*",
+    "detjob/*",
+    "live/*",
+    "rec/*",
+    "survey/*",
+    "vms/*"
+   ],
+   "write": [
+    "domain/vms/*"
+   ],
+   "delete": [
+    "domain/vms/*"
    ]
   }
  }

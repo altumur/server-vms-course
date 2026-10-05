@@ -1239,7 +1239,7 @@ def test_polls_in_the_middle_of_an_upload_recreate_nothing_and_the_answer_lands_
     try:
         pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=read)
         pusher.pass_once([])
-        token, upload, seqs = pusher.entry()["ingest"]["token"], ingest.upload, []
+        token, upload, seqs = pusher.entry()["ingest"]["token_secret"], ingest.upload, []
 
         def poll():
             return ingest.poll(token, SERIAL, camera_now=wall(), version=pusher.versions.get("primary"))
@@ -1467,7 +1467,7 @@ def test_a_long_poll_held_at_the_ingest_is_not_a_request_that_travelled_and_tell
     from vms.domainpart.ingest import CLOCK_STEP
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token"]
+    token = pusher.entry()["ingest"]["token_secret"]
     for _ in range(3):
         ingest.poll(token, SERIAL, camera_now=wall())
         wall.advance(0.5)
@@ -1491,7 +1491,7 @@ def test_a_range_told_by_the_travel_of_a_first_request_fails_and_is_told_again_b
     (`Ingest._untold`) — RANGE FAILED, never a wrong answer — and asked again it is told by the offset held."""
     wall = Clock(100_000.0)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    token = pusher.entry()["ingest"]["token"]
+    token = pusher.entry()["ingest"]["token_secret"]
     rid = ingest.request_range(SERIAL, wall() - 60.0, wall() - 50.0)
     work = ingest.poll(token, SERIAL, camera_now=wall() - 8.0)        # the first request: eight seconds on its way
     assert abs(work["ranges"][rid]["from"] - (wall() - 68.0)) < 0.01   # told by the travel
@@ -1785,7 +1785,7 @@ def test_a_step_of_this_clusters_clock_inside_the_cameras_round_trip_is_taken_an
     def world():
         wall = Clock(100_000.0)
         *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-        return wall, ingest, pusher.entry()["ingest"]["token"]
+        return wall, ingest, pusher.entry()["ingest"]["token_secret"]
 
     def polls(wall, ingest, token, seconds, behind, rtt, every=5.0):
         """The camera polls every `every` s for `seconds`: its clock `behind` the cluster's (its road's travel in it)."""

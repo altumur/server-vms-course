@@ -70,12 +70,13 @@ class DomainPublisher:
         _, idx = self.vars.get(REVOKED_PATH)
         self.vars.put(REVOKED_PATH, rl.to_items(), cas=idx)
 
-    def publish_break_glass(self, cluster: str, pwhash: str, now: float) -> None:
-        """The one local account of `cluster`: its password's hash, never the password. Rotating it is
-        publishing a new one — which the domain does when an emergency entry has been used."""
+    def publish_break_glass(self, cluster: str, pwhash: str, now: float, sealer=None) -> None:
+        """The one local account of `cluster`: its password's hash, never the password, sealed under the holder's ring
+        (`pwhash_secret`). Rotating it is publishing a new one (`breakglass.set_password`)."""
+        from .carry import seal_row
         path = f"{BREAK_GLASS_PATH}/{cluster}"
         _, idx = self.vars.get(path)
-        self.vars.put(path, {"pwhash": pwhash, "set_at": now}, cas=idx)
+        self.vars.put(path, seal_row(sealer, {"pwhash_secret": pwhash, "set_at": now}, path), cas=idx)
 
     def publish_grants(self, cluster: str, grants: list) -> None:
         """The grants for one cluster, under domain/grants/<cluster> in the
@@ -90,7 +91,7 @@ class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
                  console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
                  published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None, alarm_waiting=None,
-                 reaches=None, own_objects=None):
+                 reaches=None, own_objects=None, sealer=None, key=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a unit by the domain's name. Given them, the agent also applies
         the edits the domain kept while this cluster was off. Without them it only carries them home.
@@ -106,8 +107,16 @@ class DomainAgent:
         `published` and `pages` are the uplink (`domain/uplink.py`): this member's own object store, where
         its workers publish, and a callable returning the pages it is asked to show (Lesson 14). Given
         them, every pass ends with a REPORT into the domain holder's object store — the domain never opens
-        a connection to this member; this pass is the only one there is, and it carries both ways."""
+        a connection to this member; this pass is the only one there is, and it carries both ways.
+
+        `domain_vars` is where the pass reads what this member carries (`carry.py`): a door — `carry.CarryClient`, a
+        relay's `relay.Relay(...).vars` — whose answer is this member's own rows, its secrets sealed to `key` (this
+        member's `trust.memberkey.MemberKey`); or the holder's store itself, on the holder's own box and in the tests,
+        read through the same `carry.answer`: its own rows and nothing else. `sealer`: this member's key ring — every
+        secret the agent writes into its own store is sealed with it (`carry.seal_row`)."""
         self.cluster, self.domain_vars, self.cluster_vars, self.now = cluster, domain_vars, cluster_vars, now
+        self.sealer, self.key = sealer, key
+        self.relayed: dict[str, dict] = {}                 # a relay: what the domain answered for each member it relays
         self.console, self.current = console, current
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
         self.seen_store = seen_store
@@ -136,13 +145,20 @@ class DomainAgent:
         self._urgent_at: float | None = None
         self._relay_n, self._relay_seen = None, None      # through a relay: its last age mark, on OUR clock
 
+    # One row home, by CAS, only when what it SAYS changed: a secret in it is sealed afresh every time (a new nonce), so
+    # the row as stored is compared opened — or the member's flash would be written every pass for nothing.
     def _carry(self, path: str, items: dict | None, clear: bool = False) -> None:
+        from .carry import open_row, seal_row
         have, idx = self.cluster_vars.get(path)
         if items is None and not clear:
             return
         items = items or {}
-        if have != items and not (have is None and not items):
-            self.cluster_vars.put(path, items, cas=idx)
+        try:
+            said = open_row(self.sealer, have, path) if have else have
+        except Exception:                                   # noqa: BLE001 — what is there does not open: written anew
+            said = None
+        if said != items and not (have is None and not items):
+            self.cluster_vars.put(path, seal_row(self.sealer, items, path), cas=idx)
 
     # The key set, carried with one rule per lesson. Lesson 4: as it is — the channel was the trust. Lesson 15:
     # once this member has a root pinned, only a key set that root SIGNED, and never an older revision than it
@@ -239,27 +255,46 @@ class DomainAgent:
         return ok
 
     def _relay_mark(self) -> float | None:
-        mark = self.domain_vars.seen()                     # None when it does not parse (`relay._RelayVars.seen`)
+        mark = self.domain_vars.seen()                     # None when it does not parse (`relay.RelayLink.seen`)
         if mark and mark.get("n") != self._relay_n:
             self._relay_n = mark.get("n")
             self._relay_seen = None if mark.get("age") is None else self.now() - float(mark["age"])
         return self._relay_seen
 
+    # What this member carries, as the door answered (`carry.py`): its own rows, the public ones, the documents they
+    # point at — its secrets opened by its own key. The holder's store itself (the holder's own agent, the tests) is read
+    # through the same `answer`, so no member's pass ever reads another member's rows.
+    def _answer(self) -> dict:
+        from .carry import answer
+        if hasattr(self.domain_vars, "answer_for"):
+            return self.domain_vars.answer_for(self.cluster, self.key)
+        return answer(self.domain_vars, self.domain_objects, self.cluster)
+
     def _sync(self) -> bool:
+        from .carry import CarriedObjects, CarriedVars, Refused
         from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
         try:
-            keys, _ = self.domain_vars.get(KEYS_PATH)
-            revoked, _ = self.domain_vars.get(REVOKED_PATH)
-            grants, _ = self.domain_vars.get(f"{GRANTS_PATH}/{self.cluster}")
-            pending, _ = self.domain_vars.get(f"{PENDING_PATH}/{self.cluster}")
-            # What the domain decided for THIS cluster in the later lessons — each one more row of the same
-            # kind: written by the domain under `<path>/<cluster>`, carried home to `<path>`.
-            later = [(path, self.domain_vars.get(f"{path}/{self.cluster}")[0]) for path in per_cluster()]
+            got = self._answer()
         except Unreachable:
             return False
+        except Refused as e:                               # the door said no: said once, the last carried rows stand
+            self.keys = f"refused by the domain's door: {e.detail}"
+            self._say_refused("the door", self.keys)
+            return False
+        self._say_refused("the door", "")
+        dv, do = CarriedVars(got.get("rows", {})), CarriedObjects(got.get("objects", {}), report_to=self.domain_objects)
+        self._carried_seen = got.get("seen")
+        keys, _ = dv.get(KEYS_PATH)
+        revoked, _ = dv.get(REVOKED_PATH)
+        grants, _ = dv.get(f"{GRANTS_PATH}/{self.cluster}")
+        pending, _ = dv.get(f"{PENDING_PATH}/{self.cluster}")
+        # What the domain decided for THIS cluster in the later lessons — each one more row of the same
+        # kind: written by the domain under `<path>/<cluster>`, carried home to `<path>`.
+        later = [(path, dv.get(f"{path}/{self.cluster}")[0]) for path in per_cluster()]
         self.keys = self._carry_keys(keys)
         self._say_refused("the key set", self.keys)
-        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), *later):
+        from .topology import TOPOLOGY
+        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]), *later):
             self._carry(path, items)
         # Edits the domain kept while this cluster was off (Lesson 9) — carried home even when there are
         # none left, because an edit the domain has cleared must stop being applied here. Then applied, by
@@ -291,13 +326,13 @@ class DomainAgent:
             self._carry(MEMBER_PATH, {"cluster": self.cluster})   # written when missing — after a rollback too — and only then
         try:
             self.holder = self._step("the holder record", lambda: carry_holder(
-                self.domain_vars, self.cluster_vars, keyset, self.now()) if keyset else "no keys yet")
-            if self.domain_objects is not None and self.cluster_objects is not None:
+                dv, self.cluster_vars, keyset, self.now()) if keyset else "no keys yet")
+            if self.cluster_objects is not None:
                 from .shared import carry
                 self.shared = self._step("the shared settings", lambda: carry(
-                    self.domain_vars, self.domain_objects, self.cluster_vars, self.cluster_objects, keyset, self.now()))
+                    dv, do, self.cluster_vars, self.cluster_objects, keyset, self.now()))
                 self.backup = self._step("the backup", lambda: carry(
-                    self.domain_vars, self.domain_objects, self.cluster_vars, self.cluster_objects, keyset, self.now(),
+                    dv, do, self.cluster_vars, self.cluster_objects, keyset, self.now(),
                     src=f"{BACKUP}/{self.cluster}", dst=BACKUP, obj=BACKUP, refused=f"{BACKUP}-refused"))
         except Unreachable:
             return False
@@ -329,8 +364,7 @@ class DomainAgent:
             from .relay import relay_down
             try:
                 self._step("relaying down", lambda: relay_down(
-                    self.relay_members() if callable(self.relay_members) else self.relay_members,
-                    self.domain_vars, self.domain_objects, self.cluster_vars, self.bundle_store, self.now()))
+                    self, self.relay_members() if callable(self.relay_members) else self.relay_members))
             except Unreachable:
                 return False
         if self.bundle_members and self.bundle_store is not None and self.domain_objects is not None:
@@ -342,6 +376,17 @@ class DomainAgent:
             except Unreachable:
                 return False
         return True
+
+    def relays(self) -> list[str]:
+        """The members this cluster relays, by the domain's topology as it last carried it."""
+        import json
+        from .topology import TOPOLOGY
+        items, _ = self.cluster_vars.get(TOPOLOGY)
+        try:
+            via = json.loads(items["doc"]).get("via", {}) if items and items.get("doc") else {}
+        except PARSE_ERRORS:
+            via = {}
+        return sorted(m for m, r in via.items() if r == self.cluster)
 
     # One step of the pass that reads what the domain wrote: what does not parse is that step's — refused, said once
     # in the log until it works again — and `Unreachable` is still the domain not answering, which ends the pass.
@@ -443,18 +488,27 @@ def main() -> None:
     from w2cplatform.variables import open_vars, store_url
 
     cluster = os.environ.get("CLUSTER", "local")
-    # REPORT=1: this member is one the domain never reaches (`domain/uplink.py`) — every pass also leaves its
-    # report in the domain holder's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own
-    # `OBJECTS_URL`. The same one connection, opened from here, carrying both ways.
+    # REPORT=1: this member is one the domain never reaches (`uplink.py`) — every pass also leaves its report in the
+    # domain holder's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own `OBJECTS` (`w2c.env`).
     report = os.environ.get("REPORT") == "1"
+    from w2cplatform.sealing import Sealer
+    from w2cplatform.trust.memberkey import MemberKey
+    from .carry import CarryClient
     from .runtime import open_objects as open_store
     own_vars = open_vars(store_url(os.environ, "configstore:///run/configstore/domainagent.sock"))   # its cluster's store, by its role's socket
-    # Lesson 17. RELAY_CONFIG_URL / RELAY_OBJECTS_URL: this member can reach only its relay — the relay is
-    # its road to the domain both ways (`chain.Relay`). RELAY_MEMBERS: this is such a relay, relaying for them.
-    if os.environ.get("RELAY_CONFIG_URL"):
-        from .relay import Relay
-        through = Relay(open_vars(os.environ["RELAY_CONFIG_URL"]), open_store(os.environ["RELAY_OBJECTS_URL"]))
-        domain_vars, domain_objects = through.vars, through.objects
+    sealer = Sealer.from_env(os.environ)                     # this member's ring: what it keeps of the domain's secrets
+    key = MemberKey.load_or_make(own_vars, sealer)           # who it is to the door; admitted by this public key
+    log.info("%s: member key %s, sealing key %s — the domain admits this member by them", cluster, key.pub, key.seal_pub)
+    # What it carries comes through a DOOR, never from the holder's store (`carry.py`): DOMAIN_URL — the holder's door —
+    # or, Lesson 17, RELAY_URL — this member reaches only its relay, which keeps what the domain answered for it in
+    # memory (`relay.RelayDoor`). DOMAIN_CONFIG_URL: the holder's own agent, on the holder's own box, reading its store.
+    if os.environ.get("RELAY_URL"):
+        domain_vars = CarryClient(os.environ["RELAY_URL"], cluster, key)
+        domain_objects = open_store(os.environ["RELAY_OBJECTS_URL"])
+    elif os.environ.get("DOMAIN_URL"):
+        domain_vars = CarryClient(os.environ["DOMAIN_URL"], cluster, key)
+        domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") \
+            or os.environ.get("RELAY") == "1" else None
     else:
         domain_vars = open_vars(os.environ["DOMAIN_CONFIG_URL"])
         domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") else None
@@ -466,15 +520,18 @@ def main() -> None:
     if relay and domain_objects is None:
         domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"])
     if relay and not relayed:
-        from .topology import Topology
-        topo = Topology(domain_vars)
-        relayed = lambda: topo.relayed_by(cluster)                       # noqa: E731
-    own_objects = open_store(os.environ["OBJECTS_URL"]) if os.environ.get("OBJECTS_URL") else None
+        relayed = lambda: agent.relays()                                  # noqa: E731  the topology, as carried
+    own_objects = open_store(os.environ["OBJECTS"]) if os.environ.get("OBJECTS") else None
     agent = DomainAgent(cluster, domain_vars, own_vars, domain_objects=domain_objects,
                         published=own_objects if report else None,
                         relay_members=relayed or None, bundle_members=relayed or None,
                         bundle_store=own_objects if relay else None,
-                        reaches=local_networks, own_objects=own_objects)
+                        reaches=local_networks, own_objects=own_objects, sealer=sealer, key=key)
+    if relay:                                                # its members ask it for what the domain answered for them
+        from w2cplatform.console import open_doors
+        from .relay import RelayDoor, door_handler
+        open_doors(os.environ.get("RELAY_HOST", "0.0.0.0"), int(os.environ.get("RELAY_PORT", "8446")),
+                   door_handler(RelayDoor(agent)), unix_env="RELAY_UNIX", say=False)
     interval = float(os.environ.get("SYNC_INTERVAL", "30"))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

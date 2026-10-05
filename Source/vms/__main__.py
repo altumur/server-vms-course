@@ -1,4 +1,4 @@
-"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs —
+"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs|domainpart —
 the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
 (`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
 the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: ch}`), and so are the
@@ -519,6 +519,13 @@ def jobs() -> None:
     srv.shutdown()
 
 
+def domainpart() -> None:
+    """The VMS's worker on the domain, on the server that holds it (`vms/domainpart/worker.py`): the books' pass
+    for every member, its slot and heartbeat under `domain/vms/`, its door (`DOMAINPART_PORT`)."""
+    from .domainpart.worker import main
+    main()
+
+
 if __name__ == "__main__":
     # Only when run: a module imported (the tests) must not take the process's signals. Installed at import, the
     # handler swallowed a SIGTERM or SIGINT sent to the test run itself: the run went on with `stop` set, and the first
@@ -529,4 +536,4 @@ if __name__ == "__main__":
         signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "recorder": recorder, "gateway": gateway, "detworker": detworker, "detjobworker": detjobworker,
      "surveyworker": surveyworker, "autoworker": autoworker,
-     "jobs": jobs}[sys.argv[1]]()
+     "jobs": jobs, "domainpart": domainpart}[sys.argv[1]]()

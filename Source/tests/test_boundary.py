@@ -72,7 +72,7 @@ PLATFORM_TESTS = (
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",
     "tests/test_store_outage.py", "tests/test_sweep.py",
     "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/test_host.py", "tests/testdata/testsub.subsystem.yaml",
-    "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py",
+    "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py", "tests/test_domain_secrets.py",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 

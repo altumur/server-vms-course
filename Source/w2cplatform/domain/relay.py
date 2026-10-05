@@ -6,10 +6,11 @@ from above. Control is flat where it can be — one domain, held by the centre, 
 centre reports to it directly (Lesson 10). A member that can reach ONLY ITS RELAY cannot — and then the relay is its
 road to the domain both ways:
 
-    down    the relay's agent RELAYS everything the domain leaves for that member (keys, revocations, its grants, kept
-            edits, the rows its subsystems' specs say it carries, the holder record, shared settings and backups, with
-            their objects) into `relay/` in the relay's own stores, with the time the relay last reached the domain;
-            the member's agent reads that instead of the domain (`Relay`)
+    down    the relay's agent asks the domain's door for what each member it relays carries (`carry.py`: the answer
+            is that member's own rows, every secret in them sealed to THAT member's key), keeps the answers in its
+            MEMORY — never in its stores, which every member of the site reaches — and gives each member only its own,
+            by the member's signature (`RelayDoor`); with the time the relay last reached the domain (`say_seen`).
+            What a relay can open of its members' secrets: nothing
     up      the member reports into the relay's store and the relay carries ONE object for all such members (`bundle`,
             `member_copy(..., via=relay)`)
 
@@ -133,46 +134,30 @@ class BundleView:
 
 
 # -- the relay: a cluster as its members' road to the domain ---------------------------------------------
-# What the domain leaves for a member, as its agent reads it (`DomainAgent.sync`): named once here, so the
-# relay carries exactly that and a member's agent needs no other code.
-RELAY = "relay/"
 RELAY_SEEN = "relay/domain/seen"
 
 
-def _relayed_rows(member: str) -> list[str]:
-    from .agent import GRANTS_PATH, KEYS_PATH, REVOKED_PATH, per_cluster
-    from .pending import PENDING_PATH
-    from .shared import POINTER
-    from .term import BACKUP, HOLDER
-    return [KEYS_PATH, REVOKED_PATH, HOLDER, POINTER, f"{GRANTS_PATH}/{member}", f"{PENDING_PATH}/{member}",
-            f"{BACKUP}/{member}", *[f"{p}/{member}" for p in per_cluster()]]
-
-
-def relay_down(members: list[str], domain_vars, domain_objects, relay_vars, relay_objects, now: float) -> int:
-    """One pass of relaying down, after the relay's agent has reached the domain. Copies each row a member's agent
-    would read, and the object a pointer names (shared settings, backup), into `relay/`; only what changed.
-    How current it all is, the relay says on every pass of its own, reached or not (`say_seen`)."""
-    written, seen = 0, set()
+def relay_down(agent, members: list[str]) -> int:
+    """One pass of relaying down, after the relay's agent reached the domain: the domain's answer for each member it
+    relays, kept in the agent's memory (`agent.relayed`) — asked of the holder's door for that member when the agent
+    has a door (`CarryClient.carry_for`: sealed to the member, with the member's key to check its asks by), read
+    through `carry.answer` when it holds the holder's store itself (the tests). A member it no longer relays is
+    forgotten. How current it all is, the relay says on every pass of its own, reached or not (`say_seen`)."""
+    from .carry import answer
+    from .members import Members
+    changed = 0
     for m in members:
-        for path in _relayed_rows(m):
-            if path in seen:
-                continue
-            seen.add(path)
-            items, _ = domain_vars.get(path)
-            have, idx = relay_vars.get(RELAY + path)
-            if items is None and have is None:
-                continue
-            items = dict(items or {})
-            if have != items:
-                relay_vars.put(RELAY + path, items, cas=idx)
-                written += 1
-            obj = items.get("object") if isinstance(items, dict) else None
-            if obj and domain_objects is not None:
-                raw = domain_objects.get(obj)
-                if raw is not None and relay_objects.get(RELAY + obj) != raw:
-                    relay_objects.put(RELAY + obj, raw)
-                    written += 1
-    return written
+        if hasattr(agent.domain_vars, "carry_for"):
+            got = agent.domain_vars.carry_for(m)
+        else:
+            got = answer(agent.domain_vars, agent.domain_objects, m)
+            got["key"] = (Members(agent.domain_vars).read()["members"].get(m) or {}).get("key")
+        if agent.relayed.get(m) != got:
+            changed += 1
+        agent.relayed[m] = got
+    for m in [m for m in agent.relayed if m not in members]:
+        del agent.relayed[m]
+    return changed
 
 
 # How current the relayed books are — an AGE, measured on the relay's clock: how long ago the relay last
@@ -197,54 +182,113 @@ def say_seen(relay_objects, last_contact: float | None, now: float) -> dict:
     return mark
 
 
-class Relay:
-    """What a member that can reach only its relay uses in place of the domain: `vars` and `objects` over the
-    relay's `relay/` copy — its reports go into the relay's store as they are — and `seen()`, how long ago the
-    RELAY last reached the domain (`say_seen`), which is how current the member's books are."""
+class RelayDoor:
+    """What a relay answers its members: each one's kept answer, to that member only — checked by the member's key (the
+    domain's answer carried it), its clock within `carry.SKEW` of the relay's. A member admitted without a key is
+    answered only in the same process (`plain`: the tests' members), never over the network."""
 
-    def __init__(self, relay_vars, relay_objects):
-        self.vars = _RelayVars(relay_vars, relay_objects)
-        self.objects = _RelayObjects(relay_objects)
+    def __init__(self, agent, relay_objects=None):
+        self.agent = agent
+        self.objects = relay_objects if relay_objects is not None else getattr(agent, "bundle_store", None)
+
+    def _kept(self, cluster: str) -> dict:
+        from .carry import Refused
+        kept = self.agent.relayed.get(cluster) if self.agent is not None else None
+        if kept is None:
+            raise Refused(404, f"{getattr(self.agent, 'cluster', 'the relay')} relays no member {cluster}, or has not "
+                               f"reached the domain for it yet")
+        return {**kept, "seen": seen_mark(self.objects)}
+
+    def carry(self, cluster: str, at: float, seal: str, signature: str, for_member: str | None = None) -> dict:
+        from w2cplatform.trust.memberkey import verify
+        from .carry import SKEW, Refused, request_message
+        kept = self._kept(cluster)
+        if for_member not in (None, cluster):
+            raise Refused(403, f"a member asks a relay for its own rows only, not {for_member}'s")
+        if not kept.get("key"):
+            raise Refused(403, f"{cluster} was admitted without a key: it cannot be told from anybody on the site")
+        if not verify(kept["key"], request_message(cluster, at, seal), signature):
+            raise Refused(401, f"the ask is not signed by {cluster}'s key")
+        if abs(self.agent.now() - at) > SKEW:
+            raise Refused(401, f"the ask is {self.agent.now() - at:+.0f} s from the relay's clock")
+        return kept
+
+    def plain(self, cluster: str) -> dict:
+        from .carry import Refused
+        kept = self._kept(cluster)
+        if kept.get("key"):
+            raise Refused(401, f"{cluster} has a key: it asks signed")
+        return kept
 
 
-class _RelayVars:
-    def __init__(self, relay_vars, relay_objects):
-        self.relay_vars, self.relay_objects = relay_vars, relay_objects
+class RelayLink:
+    """A member's `domain_vars` when it reaches only its relay: `answer_for(cluster, key)` — signed by its key when it has
+    one (`carry.CarryClient`, secrets opened by its key), else the relay's plain answer; `seen()` — the relay's age mark."""
 
-    def get(self, path):
-        return self.relay_vars.get(RELAY + path)
+    def __init__(self, door: RelayDoor):
+        self.door = door
 
-    def list(self, prefix):
-        return [k[len(RELAY):] for k in self.relay_vars.list(RELAY + prefix)]
+    def answer_for(self, cluster: str, key) -> dict:
+        from .carry import CarryClient
+        if key is None:
+            return self.door.plain(cluster)
+        return CarryClient(self.door, cluster, key, wall=self.door.agent.now).carry()
 
     def seen(self) -> dict | None:
-        """The relay's age mark, or None when there is none or it does not parse (the relay writes it whole again on
-        its next pass, `say_seen`): a member that cannot read it knows nothing of how current its books are."""
-        from w2cplatform.rows import finite
-        from .federation import published
-        mark = published("relay", RELAY_SEEN, self.relay_objects.get(RELAY_SEEN),
-                         lambda m: None if m.get("age") is None else finite(m["age"]))
-        return mark
+        return seen_mark(self.door.objects)
 
 
-class _RelayObjects:
-    """Documents from the relay; the member's own report straight into the relay's store."""
+class Relay:
+    """What a member that can reach only its relay uses in place of the domain: `vars`, the relay's door to what the
+    domain answered for it (`RelayLink`), and `objects`, the relay's object store, where its reports go as they are."""
 
-    def __init__(self, relay_objects):
-        self.relay = relay_objects
+    def __init__(self, relay_agent, relay_objects=None):
+        self.door = RelayDoor(relay_agent, relay_objects)
+        self.vars = RelayLink(self.door)
+        self.objects = self.door.objects
 
-    def _key(self, key: str) -> str:
-        return key if key.startswith(UPLINK + "/") else RELAY + key
 
-    def get(self, key):
-        return self.relay.get(self._key(key))
+def seen_mark(relay_objects) -> dict | None:
+    """The relay's age mark, or None when there is none or it does not parse (the relay writes it whole again on its
+    next pass, `say_seen`): a member that cannot read it knows nothing of how current its books are."""
+    if relay_objects is None:
+        return None
+    from w2cplatform.rows import finite
+    from .federation import published
+    return published("relay", RELAY_SEEN, relay_objects.get(RELAY_SEEN),
+                     lambda m: None if m.get("age") is None else finite(m["age"]))
 
-    def list(self, prefix):
-        return self.relay.list(prefix) if prefix.startswith(UPLINK + "/") else \
-            [k[len(RELAY):] for k in self.relay.list(RELAY + prefix)]
 
-    def put(self, key, data):
-        return self.relay.put(key, data)
+def door_handler(door: RelayDoor):
+    """The relay's door over HTTP for its members: `GET /api/carry/<cluster>`, signed as the holder's door is asked."""
+    from http.server import BaseHTTPRequestHandler
 
-    def delete(self, key):
-        return self.relay.delete(key)
+    from w2cplatform.console import Deadlined
+    from .carry import Refused
+
+    class H(Deadlined, BaseHTTPRequestHandler):
+        def _send(self, status, body):
+            raw = json.dumps(body).encode()
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def do_GET(self):
+            path = self.path.split("?", 1)[0]
+            if not path.startswith("/api/carry/"):
+                return self._send(404, {"detail": "no such route"})
+            try:
+                at = float(self.headers.get("X-W2C-Time", "nan"))
+                got = door.carry(path[len("/api/carry/"):], at, self.headers.get("X-W2C-Seal", ""),
+                                 self.headers.get("X-W2C-Signature", ""))
+            except ValueError:
+                return self._send(400, {"detail": "an ask names its time"})
+            except Refused as e:
+                return self._send(e.status, {"detail": e.detail})
+            self._send(200, got)
+
+        def log_message(self, *a):
+            pass
+    return H

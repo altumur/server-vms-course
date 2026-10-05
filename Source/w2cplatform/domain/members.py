@@ -100,7 +100,8 @@ class Members:
                 continue
         raise Conflict("the list of members kept changing underneath the write")
 
-    def add(self, name: str, how: str, serial: str | None = None, by: str | None = None, key: str | None = None) -> bool:
+    def add(self, name: str, how: str, serial: str | None = None, by: str | None = None, key: str | None = None,
+            seal: str | None = None) -> bool:
         """Admitted — by a voucher, or by a person who approved it. Adding one already there changes nothing.
         `key`: the public key its LDevID was issued for (hex) — what a new holder signs again when the issuing
         certificate that signed it is revoked (Lesson 15, step 9), and the one key it will sign for this member."""
@@ -113,7 +114,8 @@ class Members:
         def mutate(m):
             if name in m:
                 return False
-            m[name] = {"how": how, "serial": serial, "since": self.wall(), "by": by, **({"key": key} if key else {})}
+            m[name] = {"how": how, "serial": serial, "since": self.wall(), "by": by, **({"key": key} if key else {}),
+                       **({"seal": seal} if seal else {})}
             return True
         done = self._change(mutate)
         if done and self.journal is not None:
@@ -130,6 +132,25 @@ class Members:
         except PARSE_ERRORS as e:                        # not known is not "none revoked": the admission waits (the review's eighth pass)
             raise ApiError(503, f"the domain's key set does not parse ({e}): whether this key was revoked after a theft "
                                 f"cannot be checked, so nobody is admitted with a key until it is mended") from None
+
+    # A member admitted without a key — one the configuration named — asks the domain's door with none, and is answered
+    # nothing (`carry.HolderDoor`). Its key is registered here, by a person on the holder, as its agent printed it at its
+    # first start: the signing key and the sealing key, once. A key it has is never replaced this way.
+    def set_key(self, name: str, key: str, seal: str, by: str | None = None) -> bool:
+        if key in self._revoked_keys():
+            from .api import ApiError
+            raise ApiError(409, f"{name}: this key was revoked by the domain's root after a theft")
+
+        def mutate(m):
+            row = m.get(name)
+            if row is None or row.get("key"):
+                return False
+            m[name] = {**row, "key": key, "seal": seal}
+            return True
+        done = self._change(mutate)
+        if done and self.journal is not None:
+            self.journal.say("domain.member.key", user=by or "?", target=name, key=key)
+        return done
 
     def remove(self, name: str, by: str | None = None) -> bool:
         self._refuse_domain(name)
@@ -222,3 +243,16 @@ def apply(fed, members: Members, domain_objects, topology=None, lost_after: floa
     for n in left:
         del fed.clusters[n]
     return {"joined": joined, "left": left}
+
+
+# On the holder: `PLATFORM_STORE=… python3 -m w2cplatform.domain.members key <member> <pub> <seal_pub>` — the keys its
+# agent printed at its first start.
+if __name__ == "__main__":
+    import os
+    import sys
+
+    from w2cplatform.variables import open_vars
+    if len(sys.argv) != 5 or sys.argv[1] != "key":
+        sys.exit("usage: python3 -m w2cplatform.domain.members key <member> <pub> <seal_pub>")
+    done = Members(open_vars(os.environ["PLATFORM_STORE"])).set_key(sys.argv[2], sys.argv[3], sys.argv[4], by="the holder's operator")
+    print(f"{sys.argv[2]}: {'key registered' if done else 'not registered — no such member, or it has a key'}")
