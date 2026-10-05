@@ -198,7 +198,7 @@ unit:
     # pipeline: the worker still HOLDS the device — its session, its playback, its coverage — and reports the
     # camera as `held`. Thirty-two channels imported for their footage would otherwise be thirty-two streams
     # nobody watches.
-    live:                  {type: string, default: "always"}  # always | on-demand
+    live:                  {type: string, default: "always", enum: [always, on-demand]}
     # WHAT THIS DEVICE IS, and the reason the field exists at all: not every device has a picture. A door
     # controller, a fire panel, a relay board are IP devices integrated the same way, through the same
     # DriverPack, and they need everything a camera needs except the one thing the subsystem is named
@@ -266,7 +266,7 @@ placement:
   # What nothing live has room for is OFFERED to a spare: a slot row `vms/slots/w-<n>` with `offer: <label set>`, which
   # only a process started with `SPARE_FOR` of that set takes (`SpecController.offer_spares`; `vms_workers_needed` on
   # `/metrics`, read by `w2c-spares.sh vmsworker`). The controller starts nothing.
-  offers:     w
+  offers:     true
   # the camera has no home of its own: it goes where its RECORDING is. The anchor of the pair is the
   # recording, because it writes to a disk and a disk does not move; the fan-out can be read from anywhere
   # over RTSP, so the camera is the one that can follow. Both together mean the recorder reads shared
@@ -370,6 +370,7 @@ domain:
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
 metrics:
+  - {name: cameras_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   # The commands the holders performed, refused, let expire or could not say about, summed over their heartbeats.
   - {name: commands_total, from: "heartbeat.command_counts.<outcome>", agg: sum, type: counter}
   # The road to the device, where it ends (`VmsWorker._measure`), per holder and by who asked (`by`: `auto` or
@@ -444,10 +445,9 @@ display:
       absent: "Записи нет: воркер книг ещё не запускался на держателе домена."
 
 console:
-  # the name of the running gauge: `metrics_text()` emits `vms_cameras_running <n>` for status entries in
-  # phase `running` on live workers (`test_the_console_over_http` sees `vms_cameras_running 1`); `/spec`
-  # sends it as `metrics.running` so the page's status line knows which metric to read. Default would have
-  # been `units_running`.
+  # the name of the running gauge, one of `metrics:` above (`vms_cameras_running <n>`: status entries in phase
+  # `running` on live workers); `/spec` sends it as `metrics.running` so the page's status line knows which metric
+  # to read. Not said: no running gauge.
   running: cameras_running             # vms_cameras_running: cameras held — streaming to whoever subscribes; recording is rec's gauge
 
 events:

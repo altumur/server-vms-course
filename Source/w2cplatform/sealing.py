@@ -8,21 +8,22 @@
 # section 3.6; the order agreed with it, feedback BP).
 #
 # THE KEY IS NOT IN THE STORE. That is the whole design, and everything else follows from it. A key kept beside
-# the rows it protects protects nothing: a copy of the store is a copy of both. So the key is a FILE, given only
-# to the processes that write a secret or use one — on the box, the members of `w2c-secrets`:
+# the rows it protects protects nothing: a copy of the store is a copy of both. So the key ring is a FILE, given only
+# to the processes whose role writes a secret or opens one — the members of `w2c-secrets`, on a box and on every
+# server of a cluster alike:
 #
-#   the console     writes rows: it SEALS every `*_secret` value on the way in (`SpecController`)
-#   the holder      opens the device: it OPENS the password at the last moment, for the pipeline (`VmsWorker`)
+#   the console     writes rows: it SEALS every `*_secret` value on the way in (`SpecController`), and the door key
+#                   it signs a page's tokens with (`door.py`, `door/signer`)
+#   a worker        whose subsystem opens a thing with a secret: it OPENS the value at the last moment, for the use
 #
-# and to nobody else — the controller, the resource, automation, the domain's agent and every backup read the
-# row and get ciphertext. On a box the file is mounted into those two units only; in a cluster it is a Nomad
-# variable the two jobs' policies may read, rendered into the same file by the job's template. One interface,
-# `SECRETS_KEY=<path>`, both places.
+# and to nobody else — a controller, the resource and every backup read the row and get ciphertext. Which units
+# join the group is the deployment's (its unit files; the rights file, `configstore-rights.json`, grants ROWS, and the
+# key is no row). One interface, `SECRETS_KEY=<path>`, both places.
 #
 #   file      lines `<kid> <64 hex digits>`; the FIRST is the current key. Rotating is adding a line on top:
 #             new writes are sealed with it, and every older one still opens by the kid it names
-#   value     `enc:v1:<kid>:<nonce>:<ciphertext>` — AES-256-GCM, the field's name as associated data, so a
-#             sealed password pasted into another field does not open
+#   value     `enc:v1:<kid>:<nonce>:<ciphertext>` — AES-256-GCM, the field's name AND the row's key as associated
+#             data, so a sealed password pasted into another field, or into another unit's row, does not open
 #
 # NO KEY IS STILL A MODE, AND IT SAYS SO. Without `SECRETS_KEY` a secret is written as it always was, and the
 # console's log says, once, that secrets are stored in the clear. A value that IS sealed and a process with no

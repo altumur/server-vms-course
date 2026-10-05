@@ -26,9 +26,10 @@ The contract, in eight clauses:
     the store — an edit without an index is the one thing CAS exists to prevent, and a
     backend that returns its own state gives it away for free.
 8.  the store SAYS what it can hold (`max_bytes`, 0 meaning no ceiling), and a write over
-    that is refused, not truncated. Nomad caps a Variable at 64 KiB and the platform has no
-    say in it; before this clause that number lived in prose, `FileVariables` accepted
-    anything, and a write that production would reject was green in every test.
+    that is refused, not truncated. The cluster's store weighs a row and refuses one past
+    `storemachine.MAX_VALUE`, and the number is the store's; before this clause a ceiling
+    lived in prose, `FileVariables` accepted anything, and a write that production would
+    reject was green in every test.
 """
 import os
 import tempfile
@@ -148,7 +149,7 @@ def test_a_writer_is_refused_outside_its_prefixes():
     or the split that holds the whole system is decoration."""
     v = _store()
     if not hasattr(v, "as_writer"):
-        return                       # a real store enforces this server-side (Nomad workload identity)
+        return                       # a real store enforces this server-side (the configstore's rights by role)
     w = v.as_writer("contract-writer", ["contract/mine/*"])
     w.put("contract/mine/k", {"x": "1"}, cas=0)
     try:
@@ -193,7 +194,7 @@ def test_two_spellings_are_never_one_place():
 
 
 def test_the_index_is_opaque():
-    """Compared for equality, never ordered and never arithmetic. Nomad's
+    """Compared for equality, never ordered and never arithmetic. The configstore's
     `ModifyIndex` is a number and invites both; Kubernetes' `resourceVersion` is a
     string, and a backend for it is only possible while nothing in the platform
     does anything to this value but pass it back."""
@@ -258,8 +259,8 @@ def test_the_platforms_cas_loops_run_over_a_non_numeric_version():
 
     v = OpaqueIndexStore()
 
-    e1, idx1 = next_epoch(v, "vms/epoch/7")                     # read-modify-CAS, twice, on one key
-    e2, idx2 = next_epoch(v, "vms/epoch/7")
+    e1, idx1 = next_epoch(v, "probe/epoch/7")                   # read-modify-CAS, twice, on one key
+    e2, idx2 = next_epoch(v, "probe/epoch/7")
     assert (e1, e2) == (1, 2) and idx1 != idx2                  # the EPOCH is a number; the index is not
 
     class _W(Worker):
@@ -273,12 +274,12 @@ def test_the_platforms_cas_loops_run_over_a_non_numeric_version():
         def list(self, p): return sorted(k for k in self.d if k.startswith(p))
 
     now = [1000.0]
-    w = _W(Subsystem("vms"), None, v, _Objects(), wall=lambda: now[0], clock=lambda: now[0])
-    w.claim_slot(prefer="w-1")                                  # CAS on vms/slots/w-1
+    w = _W(Subsystem("probe"), None, v, _Objects(), wall=lambda: now[0], clock=lambda: now[0])
+    w.claim_slot(prefer="w-1")                                  # CAS on probe/slots/w-1
     assert w.name == "w-1"
     assert w.renew_slot() is True                               # read, compare, write back — still opaque
     w.release_slot()
-    assert v.get("vms/slots/w-1")[0]["released"] == "true"
+    assert v.get("probe/slots/w-1")[0]["released"] == "true"
 
 
 def test_the_store_says_what_it_can_hold_and_refuses_more():

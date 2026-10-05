@@ -4,13 +4,13 @@ leaves the cluster; that is everything a console needs to list, edit and
 show them. So the console is one class, run from the same spec:
 
     GET  /                       the page (console.html): the unit list, the edit form built from the spec's fields,
-                                 and — when the subsystem registered media routes — a timeline and a player
-    GET  /spec                   what the page reads first: name, rows, id rule, fields, media, metric names
+                                 and — where a spec about the unit declares a door with spans — a timeline and a player
+    GET  /spec                   what the page reads first: name, rows, id rule, fields, door, metric names
     GET  /<rows>                 {rows: the read model from every worker's heartbeat, configured: the units}
     GET  /where/<id>             the stored placement (why) and the assignments' answer (where, one scan)
     GET  /resources              the platform's resources: usage, units, live | silent
     GET  /unplaceable            units nothing live can serve, with the labels that say why
-    GET  /servers                every server as placement sees it: its archive (the label), its resource (the fact), its workers, placeable or why not
+    GET  /servers                every server as placement sees it: its labels, its resource (the fact), its workers, placeable or why not
     GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
                                  units by cluster, with its age; 404 anywhere else — a cluster does not know the others
     GET  /domain/shared/<sub>[?unit=<id>]   the fields a spec shares with the domain (`domain.shared`), resolved from
@@ -1453,7 +1453,8 @@ class SpecConsole:
         return {"name": s.name, "rows": s.rows, "id": s.id,
                 "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
                             **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
-                            **({"fixed": True} if f.fixed else {})} for f in s.fields.values()],
+                            **({"fixed": True} if f.fixed else {}),
+                            **({"enum": list(f.enum)} if f.enum else {})} for f in s.fields.values()],
                 **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
                 # the page's words and what it shows under a server, as the spec wrote them; the gauges it reads on
                 # `/metrics` by name (the boundary's step 6; the product's keys)
@@ -1464,8 +1465,9 @@ class SpecConsole:
                 **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
                                         for f in s.domain.keys], "shared": list(s.domain.shared)}}
                    if s.domain and (s.domain.keys or s.domain.shared) else {}),
-                "running_gauge": f"{s.name}_{s.running_gauge}", "workers_gauge": f"{s.name}_workers_live",
-                "metrics": {"prefix": s.name, "running": s.running_gauge}}
+                "running_gauge": f"{s.name}_{s.running_gauge}" if s.running_gauge else None,
+                "workers_gauge": f"{s.name}_workers_live",
+                "metrics": {"prefix": s.name, "running": s.running_gauge or None}}
 
     # -- the directory: where is unit N, in one scan of the assignments ---------------------------
     # `{worker: units}` from one scan of the assignments, cached for 5 s of monotonic time.
@@ -1575,8 +1577,7 @@ class SpecConsole:
     # under its prefix (the course's decision on the platform's names: `vms_resources_live`, `rec_resources_live`, …
     # were one fact said as many times as there were subsystems mounted).
     # The servers this subsystem runs on, as the placement sees them: every server a worker heartbeats from
-    # or a resource heartbeats from — the archive root its workers say they record into (the server's events
-    # root, `runtime.events_root`), the state of its resource (`live`, `silent`, `unreachable` — it writes to the
+    # or a resource heartbeats from — the state of its resource (`live`, `silent`, `unreachable` — it writes to the
     # store but its heartbeat cannot be read here — or `unknown`), its workers with load and capacity, and whether the controller would place
     # there now, with the reason when it would not.
     # What one subsystem can say about a machine that is about to stop: how many of ITS units are still
@@ -1625,8 +1626,8 @@ class SpecConsole:
             s = out.setdefault(hb.extra.get("server", "?"), {"resource": "unknown", "workers": []})
             s["workers"].append({"worker": w, "load": ctl.load(w), "capacity": ctl.capacity_of(w), "labels": hb.extra.get("labels", ""),
                                  # WHERE this worker is, in whatever the spec counts places in (`place_by`): the server
-                                 # for almost everyone, the volume for the recorder. The page needs it to offer the
-                                 # archives that exist when a recording is created — `home` names one of these.
+                                 # unless the spec names a field of the heartbeat. The page needs it to offer the
+                                 # places that exist when a unit is created — a `home` field names one of these.
                                  "place": ctl.place_of(w),
                                  # …by what this console saw change, on its clock (the review's thirteenth pass)
                                  "state": "live" if ctl.eyes.fresh(ctl.sub.heartbeat_key(w), hb.token, self.lost_after, hb.ts,
@@ -1820,9 +1821,7 @@ class SpecConsole:
                  # one's — at `FUTURE_TOLERANCE` such a worker stops counting as live.
                  f"# TYPE {p}_heartbeats_garbled counter", f"{p}_heartbeats_garbled {GARBLED.get(p, 0)}",
                  f"# TYPE {p}_heartbeat_skew_seconds_max gauge", f"{p}_heartbeat_skew_seconds_max {round(SKEW_MAX.get(p, 0.0), 1)}",
-                 f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}",
-                 f"# TYPE {p}_{self.spec.running_gauge} gauge",
-                 f"{p}_{self.spec.running_gauge} {sum(1 for hb in live.values() for s in hb.status if s.get('phase') == 'running')}"]
+                 f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}"]
         # How far behind the copy the layer above reads is. The controller publishes every pass and has no
         # port; this is read from the store, so a failing publish shows up here as a number that climbs,
         # rather than only as a log line on a host nobody is looking at. `-1` distinguishes "never
@@ -1931,6 +1930,8 @@ class SpecConsole:
                       f"{p}_blobs_marked {len(marked)}"]
         if self.spec.offers:
             lines += self.spares_lines(rep, now, hbs)
+        if self.spec.places:
+            lines += self.places_lines(live)
         from . import metrics
         lines += metrics.lines(self.spec, self.ctl, hbs, live, now)   # the subsystem's own numbers, as its spec declares them
         if self.says_platform:
@@ -2007,6 +2008,17 @@ class SpecConsole:
     # while the pass is at most `SPARES_FRESH` old: a script reading the number of a controller that stopped would start
     # processes for a shortage that may be long gone. A stale pass: none of the four, and `w2c-spares.sh` starts nothing.
     SPARES_FRESH = 60.0
+
+    # …and for a subsystem placed by its rows (`placement.places`): `<p>_workers_needed{labels=""}` — the places that say
+    # `where` and that no live hold names, less the live workers that hold no place. Read here, on every scrape, from the
+    # store and the heartbeats this console reads anyway: no offer is written (a spare takes a free place by itself).
+    def places_lines(self, live: dict) -> list[str]:
+        from .metrics import matches
+        p, t = self.spec.name, self.spec.places
+        held = self.ctl.live_holds()
+        free = [n for n, it in self.ctl.table_rows(t["table"]).items() if matches(it, t["where"]) and n not in held]
+        needed = max(0, len(free) - len(self.ctl.placeless_live(live)))
+        return [f"# TYPE {p}_workers_needed gauge", f'{p}_workers_needed{{labels=""}} {needed}']
 
     def spares_lines(self, rep: dict, now: float, hbs: dict) -> list[str]:
         p, rk = self.spec.name, f"{self.spec.name}/controller/pass"
@@ -2107,7 +2119,8 @@ class SpecConsole:
             # The blob is bigger than the STORE will hold — which is the one case where changing the store
             # is the answer, because a blob is exactly the class of data an object store exists for. The cluster's
             # objects are files on each server (`OBJECTS=cluster://…`, `w2cplatform/cluster/objectstore.py`) with no ceiling; a
-            # store that declares one (`?max_bytes=`) is what refused this.
+            # store that declares one (`max_bytes`: an object store built with one, or one over a capped row store —
+            # `VariablesObjectStore` takes the ceiling of the store under it) is what refused this.
             return 413, {"detail": f"{e} — a blob is what an object store is for: this one declares a ceiling; the "
                                    f"cluster's file objects (OBJECTS=cluster://…) have none", "error": str(e)}
         self.journal.say("unit.changed", sub=self.spec.name, target=str(uid), user=user, fields=field,
@@ -2165,8 +2178,8 @@ class SpecConsole:
     #         - `GET /where/<id>` — `{worker, reason}` from the stored placement (404 with nulls if
     #       unplaced), plus `directory` (the assignments' answer) and `scans`.
     #   - `GET /resources` — every resource heartbeat with `state: live | silent` by `lost_after`.
-    #   - `GET /servers` — `servers()`: per server, `archive` (what its workers record into — the server's events
-    #     root), `resource` (`live | silent | unreachable | unknown`), `workers`, `placeable` and `why`.
+    #   - `GET /servers` — `servers()`: per server, `resource` (`live | silent | unreachable | unknown`), `workers`,
+    #     `placeable` and `why` (what of a subsystem's tables a server holds is the spec's `servers.show`, read with `/spec`).
     #   - `GET /unplaceable` — `ctl.unplaceable()`.
     #         - `GET /events?from&to&unit&kind&subsystem&limit&keep&class` — 503 if no index; else
     #       `current_epochs` from every `<sub>/epoch/*` row (`epochs`, cached `EPOCH_CACHE` seconds) and
@@ -3142,11 +3155,11 @@ def names_in(spec, row: dict) -> set:
 
 class Mount:
     """One console process, several subsystems. The root console answers at `/`
-    (the page, `/<rows>`, its extras); every other subsystem is a path: `/live/spec`,
-    `/det/units`, `/det/where/7-motion` — the same SpecConsole class, its routes
+    (the page, `/<rows>`, its tables); every other subsystem is a path: `/<sub>/spec`,
+    `/<sub>/<rows>`, `/<sub>/where/<id>` — the same SpecConsole class, its routes
     under its name, its own token-scoped controller. A person opens one page;
-    the machines (the autoscaler, М12's read model) find every subsystem on one
-    port; a new subsystem is a YAML, a worker, and a path."""
+    the machines (a host's spares script, М12's read model) find every subsystem
+    on one port; a new subsystem is a YAML, a worker, and a path."""
 
     def __init__(self, root: SpecConsole, mounts: dict[str, SpecConsole] | None = None):
         self.root, self.mounts = root, dict(mounts or {})

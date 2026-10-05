@@ -84,5 +84,7 @@ events:
                                      # older epoch here is a finished earlier result — a run to compare
                                      # against, not a writer that lost a race. `fenced` would tell the
                                      # operator that the search they ran last week was never valid.
+metrics:
+  - {name: jobs_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: jobs_running              # detjob_jobs_running: scans whose worker is decoding right now

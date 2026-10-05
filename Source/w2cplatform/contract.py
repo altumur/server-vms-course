@@ -3,7 +3,7 @@ and it is all of this:
 
     a config prefix        <name>/*                      writable by the controller only
     assignment rows        <name>/workers/<worker>       what each worker should run
-    a heartbeat object     <name>/<worker>/heartbeat     {ts, status: [...]} — the worker's own report
+    a heartbeat object     <name>/heartbeats/<worker>    {ts, status: [...]} — the worker's own report
     an epoch prefix        <name>/epoch/<unit>           fencing tokens the workers take by CAS
     an event log           <resource>/<name>/<unit>/e<epoch>/<start>Z.events.jsonl   (w2cplatform.events)
                                                          what a worker observed about a unit it holds the epoch for;
@@ -12,14 +12,15 @@ and it is all of this:
                                                          holds by CAS and renews; a replacement process
                                                          takes the lapsed slot and inherits its assignment
 
-Who decides how many workers there are: not the controller. The scheduler
-runs `count` of them (Nomad, or `systemctl start <name>worker@w-N` on one box)
-and an autoscaler moves `count` from a headroom metric the workers export.
-The platform's part is to give `count` interchangeable processes stable
-names — the slots — so that assignments survive a reschedule. A slot is
-released on an orderly stop (scale-in); the controller then redistributes
-what the slot held. A slot that merely lapses (a crash) is left alone: the
-scheduler brings the process back, and it claims the same slot.
+Who decides how many workers there are: not the controller. The service
+manager runs them (`systemctl start <name>worker@…` on a box, a unit per role on
+every server of a cluster), and a host's spares script starts a spare where the
+controller offers a slot (`<sub>_workers_needed`, `offer_spares`). The platform's
+part is to give interchangeable processes stable names — the slots — so that
+assignments survive a restart. A slot is released on an orderly stop; the
+controller then redistributes what the slot held. A slot that merely lapses (a
+crash) is left alone: the service manager brings the process back, and it claims
+the same slot.
 
 `Controller` and `Worker` are the two base classes. The platform never
 imports anything from a subsystem; the other subsystems prove the
@@ -104,13 +105,13 @@ UNPLACED = "unplaced"
 #
 # It used to be `<name>/<worker>/heartbeat`, with the worker's name as the FIRST segment — and that one
 # decision made the grant un-narrowable. A worker's name is claimed at run time (`claim_slot` hands out
-# `w-1`), and a scheduler's ACL policy is static text, so "may write its own heartbeat and nothing else"
-# could not be written down: the narrowest expressible grant was `objects/<name>/*`, the whole subsystem,
+# `w-1`), and a grant is written before any process runs — a rights file is static text — so "may write its own
+# heartbeat and nothing else" could not be written down: the narrowest expressible grant was the whole subsystem,
 # which also covers the snapshot shards М12 reads and the blobs the workers trust.
 #
 # Moving the worker to the LAST segment makes it expressible. Three sibling directories under the
 # subsystem, one writer each: `heartbeats/` the workers, `snapshot/` the controller, `blobs/` the console.
-# A prefix that cannot be bounded by a policy is a layout problem, not a missing ACL feature.
+# A prefix that cannot be bounded by a grant is a layout problem, not a missing feature of the rights.
 HEARTBEATS = "heartbeats"
 REQUESTS = "requests"      # `<name>/requests/<id>`: bounded work an operator asked for, written by the console
 CONTROLLER_PASS = "controller/pass"   # `<name>/controller/pass`: the controller's report on its last pass (`SpecController.pass_once`)
@@ -402,6 +403,22 @@ def _named(hb) -> None:
             raise TypeError(f"`{field}` is a name, not {said[field]!r:.40}")
 
 
+# …AND THE NAME IT SAYS IS THE NAME OF ITS KEY (the product's r30, defect A). Readers key a heartbeat by the name in its
+# body (`hb.worker`, a resource's `server`) and judge it fresh by the key of that name: a file under `w-1`'s key whose
+# body said `w-2` kept `w-2` alive while `w-2` was dead, and `w-1`'s name was never given back. A heartbeat whose body
+# names another than its key — a foreign file copied in, a process that wrote under a name it does not hold — is not a
+# heartbeat of either: skipped and counted as garbled.
+def _owner_said(key: str, hb) -> None:
+    if isinstance(hb, Heartbeat) and f"/{HEARTBEATS}/" in key:
+        owner = key.partition(f"/{HEARTBEATS}/")[2]
+        if hb.worker != owner:
+            raise ValueError(f"the body names {hb.worker!r:.40}, the key {owner!r}")
+    elif isinstance(hb, dict) and key.endswith("/heartbeat") and "server" in hb:
+        owner = key[: -len("/heartbeat")].rsplit("/", 1)[-1]
+        if hb["server"] != owner:
+            raise ValueError(f"the body names {hb['server']!r:.40}, the key {owner!r}")
+
+
 def parse_heartbeat(key: str, raw: bytes, parse=None):
     """The object parsed, or None — skipped, counted, and logged once."""
     try:
@@ -412,6 +429,7 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
         if isinstance(hb, Heartbeat) and not all(isinstance(s, dict) for s in hb.status):
             raise TypeError("a status entry is not an object")
         _named(hb)
+        _owner_said(key, hb)
     except PARSE_ERRORS:                          # `OverflowError` (`ts: 10**400`) and `RecursionError` too (the ninth review's sweep)
         sub = key.split("/", 1)[0]
         GARBLED[sub] = GARBLED.get(sub, 0) + 1
@@ -627,8 +645,8 @@ class Subsystem:
 
     # `<name>/snapshot/<worker>` — one object per worker, the same shape the heartbeat key already has.
     # The snapshot used to be ONE object for the whole cluster, and it was the only place in the platform
-    # where data grew in a single object: an object store has a ceiling (Nomad Variables: 64 KiB on the
-    # whole object), and 600 units — the cluster's own design maximum — did not fit under it. Sharded by
+    # where data grew in a single object: a store may declare a ceiling (`limits.py`; the capped store the
+    # tests declare is 64 KiB), and 600 units — the cluster's own design maximum — did not fit under it. Sharded by
     # the worker that holds the unit, it grows the way the cluster grows: more units means more workers
     # means more objects, each the size of one worker's assignment.
     #
@@ -741,11 +759,12 @@ class Subsystem:
 
     # -- the object store's half of the same question ------------------------------------------------
     # Variables have had an ACL since Lesson 1; the OBJECT STORE never did. On one box that was invisible
-    # — `FsObjectStore` has no writer and no prefixes — and on a cluster the ACL is real but lives in a
-    # policy file a person maintains by hand, which drifted from the code twice in two commits.
+    # — `FsObjectStore` has no writer and no prefixes — and on a cluster the objects a spec names rows are rows
+    # of the store, granted by the same rights file as every other row.
     #
-    # So the three grants are DERIVED here, from the same spec the Variables ACLs come from, and the
-    # policy files are checked against them. One source, and a test that says so.
+    # So the three grants are DERIVED here, from the same spec the Variables ACLs come from, and the cluster's
+    # rights file is generated from them (`w2cplatform/cluster/rights.py`). One source, and a test that says so
+    # (`tests/test_boundary.py`'s derivation on testsub; `tests/cluster/test_policies.py` for the file).
     #
     # Each is one directory with one writer, which is what the key layout was rearranged to allow:
     def acl_objects_worker(self) -> list[str]:
@@ -756,7 +775,8 @@ class Subsystem:
     # …and the report on its pass (the review's ninth pass, major): `pass_once` writes `<name>/controller/pass`, the one
     # object `/metrics` reads `<name>_units_unplaced` and the last pass from, and this list — and the policy checked
     # against it — granted only the shards: on a cluster with an ACL the report was a 403 every five seconds and the
-    # metrics stayed -1 and 0. `tests/test_policies.py` checks the policy against what the stand's processes WRITE now.
+    # metrics stayed -1 and 0. `tests/cluster/test_policies.py` checks the rights against what the stand's processes
+    # WRITE now.
     def acl_objects_controller(self) -> list[str]:
         """The controller publishes the snapshot shards — the only thing that leaves the cluster — and its pass report."""
         return [f"{self.name}/snapshot/*", f"{self.name}/{CONTROLLER_PASS}"]

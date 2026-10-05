@@ -2,30 +2,31 @@
 # ================================================================================================
 # # journal.py — who deleted it, who read it, what the policy removed
 #
-# A deleted unit left a tombstone and a revision number, and no name: who deleted camera 7 could not be
-# answered. The retention pass said how many buckets it removed, as one number in a log. Footage left through
-# the console and nothing said so (the platform review, "deletions by policy are not journalled"; the product's
+# A deleted unit left a tombstone and a revision number, and no name: who deleted unit 7 could not be
+# answered. The retention pass said how many buckets it removed, as one number in a log. Bytes left through a
+# door and nothing said so (the platform review, "deletions by policy are not journalled"; the product's
 # journal, feedback BN).
 #
 # Not a mechanism of its own: a FAMILY OF KINDS in the event log there already is. Subsystem `audit`, the unit
 # is the ROLE of the writer (`console`, `resource`), and everything an event log has comes with it — the
 # timeline reads it, the retention pass keeps it, the mirror copies it, the index answers it.
 #
-#   unit.deleted              console    a camera, a recording, any unit was deleted: which, and who
-#   archive.read              console    a piece of footage was served through the console: who, which, from where
-#   live.view / live.view.ended  console  a viewer was admitted to a camera's live stream, and hung up: who, which, where from (feedback CL)
-#   archive.keep.made/lifted  console    a keep was set or lifted: who
-#   archive.volume.shrink_requested/withdrawn  console    a volume's quota was lowered (confirmed or not), or the volume withdrawn: who
-#   archive.read, access.denied  door-<worker>   the device's own footage served through a signed address, or refused (`vms/playback.py`)
+#   unit.created/changed/deleted   console    a unit of any subsystem was created, edited, deleted: which, and who
+#   door.issued               console    a holder's door was handed out with a unit's place: who, which unit, which
+#                                        holder, which routes, until when (`door.py`) — the console never sees the bytes
+#   schema.raised             console    the store's layout was raised: to what, from what, who
 #   events.removed            resource   the retention pass removed buckets: whose, how many, of what period
+#
+# …and a subsystem's own kinds, under the role that wrote them: what a holder's door served a page (`door-<holder>`,
+# with the name the door token was given to), a viewer admitted and gone, a row of one of its tables set or lifted —
+# each its spec's and its code's words, in this same family.
 #
 # Kept as long as alarms are (`resource.retention_days`): the record of who deleted a camera is wanted for as
 # long as that camera's alarms are.
 #
-# What is NOT here: footage a ring overwrote. A volume gives up its oldest minutes by itself, by the thousand,
-# and a line each would be the noise the journal exists to be read through. What a person needs to hear about
-# — kept footage the incidents ring took, a recording shallower than it was promised — is an ALARM in the
-# recorder's own events (`archive.keep.lost`, `archive.shallow`).
+# What is NOT here: what a subsystem gives up by itself, by the thousand — a ring that overwrites its oldest — where
+# a line each would be the noise the journal exists to be read through. What a person needs to hear about of that is
+# an ALARM in that subsystem's own events.
 #
 # What a line is ABOUT is in `sub` (a subsystem) and `target` (a unit). Not `subsystem` and `unit`: those are
 # the line's own — `audit`, and the role that wrote it — and a field of the same name would answer for them

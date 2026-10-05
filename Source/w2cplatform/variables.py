@@ -1,7 +1,7 @@
 """A config store with the semantics a raft-backed store promises (М11's
-`configstore://`, and Nomad Variables before it) — a raft-assigned
-ModifyIndex, PUT with cas=<index> succeeding only if the index still matches,
-a conflict otherwise — on one box, as files.
+`configstore://`) — a raft-assigned ModifyIndex, PUT with cas=<index>
+succeeding only if the index still matches, a conflict otherwise — on one box,
+as files.
 
 One JSON file per path under <root>/vars/, one counter file for the index,
 one lock. Every write is atomic (write-then-rename) and serialised by the
@@ -15,7 +15,7 @@ raft would: one of them wins the CAS.
 # check-and-set, one writer per prefix
 #
 # **Role in the module.** Lesson 1's config store. It gives one box exactly what a raft-backed store
-# (`configstore://`; Nomad Variables when the course began) gives a cluster: every path has a `ModifyIndex`, a `put(cas=<index>)` succeeds only if the
+# (`configstore://`) gives a cluster: every path has a `ModifyIndex`, a `put(cas=<index>)` succeeds only if the
 # index still matches and raises `Conflict` otherwise, and a writer identity may be confined to a set of
 # prefixes (the ACL policy). Everything in the platform that must be consistent — assignments, placement
 # rows, epochs, slots, idempotency keys, unit rows — lives here; bulk or frequent data (heartbeats,
@@ -70,7 +70,7 @@ class Forbidden(Exception):
 
 # The version of a path, as the store hands it out. OPAQUE: the platform compares it for equality, passes
 # it back unmodified, and does nothing else with it — never orders it, never does arithmetic on it. That is
-# not fastidiousness, it is what a backend needs. Nomad's `ModifyIndex` is the raft index and is a number;
+# not fastidiousness, it is what a backend needs. The configstore's `ModifyIndex` is the raft index and is a number;
 # Kubernetes' `resourceVersion` is a string, and its API conventions require it: "This value MUST be treated
 # as opaque by clients and passed unmodified back to the server" — it is "currently backed by etcd's
 # mod_revision", but an application "should *not* rely on the implementation details of the versioning
@@ -84,7 +84,7 @@ Index = str | int
 
 class Variables(Protocol):
     # What one path may weigh: the sum of the lengths of every key and every value in it, which is how
-    # the cluster's daemon weighs a row (`storemachine.MAX_VALUE`) and Nomad weighed a Variable. `NO_CEILING`
+    # the cluster's daemon weighs a row (`storemachine.MAX_VALUE`). `NO_CEILING`
     # (0) when the store has none. See `limits.py`.
     max_bytes: int
 
@@ -155,7 +155,7 @@ def register_scheme(scheme: str, factory) -> None:
 
 
 def open_vars(url: str, writer: str | None = None, acl: dict[str, list[str]] | None = None):
-    """`file:///data/platform/config` · `configstore:///run/configstore/vmsworker.sock` · whatever else registered.
+    """`file:///data/platform/config` · `configstore:///run/configstore/<role>.sock` · whatever else registered.
 
     A bare path is read as `file://` so the box keeps working with no URL at all."""
     if "://" not in url:
@@ -283,7 +283,7 @@ class Corrupt(Exception):
 
 
 # A ROW THE STORE HOLDS AND CANNOT READ IS THAT ROW'S PARSE ERROR (the eleventh review, a minor). A store answers every
-# row as a map of strings (the daemon does, Nomad did); a file of this store can be torn (a hand edit, a disk that lied about a write), hold
+# row as a map of strings (the daemon does); a file of this store can be torn (a hand edit, a disk that lied about a write), hold
 # `items` that are not a map, or values that are not strings — and `get` raised whatever `json` or `dict` raised, or
 # handed the non-strings on, and the routes that read the drain, a slot, a placement or a worker's row bare fell whole
 # with it. A torn file, `items` that are not a map, an index that is no whole number: one error now, a `ValueError`
@@ -342,13 +342,13 @@ class FileVariables:
         self.max_bytes = max_bytes          # a directory has no ceiling; a test or an install may say otherwise
 
     # Returns a new handle on the same directory seen through another identity, allowed only the given
-    # prefixes (`'vms/*'`, `'vms/epoch/*'` style: a trailing `*` means prefix match, otherwise exact path).
-    # This is what the cluster daemon's rights file does for a role (`storemachine.Rights`). The tests build the controller with
-    # `as_writer("vmscontroller", SPEC.acl_controller())` and the console with `as_writer("console",
-    # SPEC.acl_console())`.
+    # prefixes (`'<sub>/*'`, `'<sub>/epoch/*'` style: a trailing `*` means prefix match, otherwise exact path).
+    # This is what the cluster daemon's rights file does for a role (`storemachine.Rights`). The tests build a
+    # controller with `as_writer("<sub>controller", spec.acl_controller())` and the console with
+    # `as_writer("console", spec.acl_console())`.
     def as_writer(self, writer: str, allowed: list[str]) -> "FileVariables":
         """The same store seen through another identity, allowed only these
-        prefixes ('vms/*', 'vms/epoch/*') — what the daemon's rights file does for a role."""
+        prefixes ('<sub>/*', '<sub>/epoch/*') — what the daemon's rights file does for a role."""
         v = FileVariables(self.root, writer, dict(self.acl), volatile=self.volatile)
         v.acl[writer] = allowed
         return v

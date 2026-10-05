@@ -10,8 +10,7 @@ again within a pass, so no consensus is needed to hold it. A read is the local
 file when it is a blob (any copy that hashes to its name is the object),
 otherwise the freshest copy among every server's, asked of the local
 resource with `scope=cluster`. A listing is the union of every server's,
-cached for a second. No ceiling: `max_bytes = 0` — the 64 KiB of a Nomad
-Variable went with the Variables.
+cached for a second. No ceiling: `max_bytes = 0` — files on a disk.
 
 Two kinds of object are not files. A key a subsystem's spec names a ROW
 (`objects: {rows: […]}`, `catalog.object_rows`) — one that must be created ONCE
@@ -266,7 +265,7 @@ class ClusterObjectStore:
     """`cluster:///data/platform/objects?resource=http://127.0.0.1:8090` — this server's objects as files under `root`,
     every server's through the resource on this one (`/v1/objects`), the create-only keys as rows in the store."""
 
-    max_bytes = 0                       # files on a disk: no ceiling worth naming (the 64 KiB went with the Variables)
+    max_bytes = 0                       # files on a disk: no ceiling worth naming
 
     def __init__(self, root: str, resource: str = "http://127.0.0.1:8090", vars_=None, timeout: float = DOOR_TIMEOUT,
                  wall=time.time, clock=time.monotonic, list_fresh: float = LIST_FRESH):

@@ -73,6 +73,8 @@ PLATFORM_TESTS = (
     "tests/test_store_outage.py", "tests/test_sweep.py",
     "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/test_host.py", "tests/testdata/testsub.subsystem.yaml",
     "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py", "tests/test_domain_secrets.py",
+    "tests/test_heartbeat_owner.py", "tests/test_frontier.py", "tests/testdata/testsub2.subsystem.yaml",
+    "tests/test_spec_rule.py",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
@@ -414,7 +416,7 @@ def import_findings() -> list[tuple[str, int, str, str]]:
 # does not import: an import of one is `run:<piece> | run import <package>`. A piece that comes up short says why
 # (`BOUNDARY-RUN <why>`), and that is `run:<piece> | run <why>`; anything else it raises is `run broken: …` — never
 # debt to write down, a piece to mend.
-PIECES = ("contract", "controller", "console", "events", "resource", "host", "worker", "domain")
+PIECES = ("contract", "controller", "console", "events", "resource", "host", "worker", "domain", "two_specs")
 
 _GUARD = f"""
 import sys
@@ -686,6 +688,55 @@ def _piece_host():
     held = {u: w.name for w in ws for u in w.reconcile_once()}
     assert sorted(held) == ["c1", "c2", "c3"] and len(set(held.values())) == 2, held
     assert json_loads(objects.get("testsub/controller/pass")) is not None              # the report `/metrics` reads
+
+
+def _piece_two_specs():
+    """The platform on BOTH test subsystems (`testdata/`: testsub, and testsub2, which says every key the platform reads —
+    `test_spec_rule.py`): the console of the deployment fronts testsub at `/` and testsub2 under its name, from the specs
+    alone; `/spec` carries what the page reads (a field's `enum`, `display.tree.children`, the door's routes); a value
+    outside a field's `enum` is a 400 naming the values; every metric testsub2 declares is a line on `/metrics`, with the
+    platform's count of its places (`<sub>_workers_needed`); and the rights file is generated for both."""
+    import json
+    import urllib.request
+    from w2cplatform import host
+    from w2cplatform.cluster import rights
+    from w2cplatform.contract import Heartbeat
+    from w2cplatform.spec import SubsystemSpec
+    root = tempfile.mkdtemp(prefix="testsub-two-")
+    env = {"SPEC_DIR": os.path.dirname(TESTSUB), "PLATFORM_DIR": root, "CONSOLE_ROOT": "testsub"}
+    m, ctls = host.build_console(env)
+    assert set(ctls) == {"testsub", "testsub2"} and set(m.mounts) == {"testsub2"}, (set(ctls), set(m.mounts))
+    srv = m.serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        st, spec = _http(base, "GET", "/testsub2/spec")
+        assert st == 200 and spec["door"] == {"routes": ["read", "play"]}, (st, spec)
+        assert {f["name"]: f.get("enum") for f in spec["fields"]}["mode"] == ["plain", "loud"]
+        assert spec["display"]["tree"]["children"] is False and spec["running_gauge"] == "testsub2_tallies_running"
+        assert _http(base, "POST", "/counters", {"name": "c1"})[0] in (200, 201)
+        st, why = _http(base, "POST", "/testsub2/tallies", {"name": "t1", "of": "c1", "mode": "noisy"})
+        assert st == 400 and "one of plain, loud" in json.dumps(why), (st, why)
+        assert _http(base, "POST", "/testsub2/tallies", {"name": "t1", "of": "c1", "mode": "loud"})[0] in (200, 201)
+        assert _http(base, "POST", "/testsub2/shelves", {"name": "s1", "kind": "nowhere"})[0] == 400    # a table's too
+        assert _http(base, "POST", "/testsub2/shelves", {"name": "s1", "zone": "a", "server": "srv-1"})[0] in (200, 201)
+        objects = ctls["testsub2"].objects
+        now = ctls["testsub2"].wall()
+        objects.put("testsub2/heartbeats/t-1", Heartbeat("t-1", now, [{"id": "t1", "phase": "running", "depth": 2}], {
+            "server": "srv-1", "shelf": "", "jam": "yes", "away_since": now - 5, "belt": {"state": "slow"},
+            "adds": {"done": 3}, "queue": {"a": 4, "b": 1}, "wait": {"buckets": [1, 2], "count": 2, "sum": 3.0}}).to_bytes())
+        with urllib.request.urlopen(base + "/testsub2/metrics", timeout=10) as r:
+            text = r.read().decode()
+        for name in ("tallies_running", "shelves_open", "marks_unshelved", "phases", "depth", "jam", "away_seconds",
+                     "belt", "adds_total", "queue_max", "wait_seconds_bucket"):
+            assert f"testsub2_{name}" in text, (name, text[-2000:])
+        assert 'testsub2_workers_needed{labels=""}' in text                                # `placement.places`
+    finally:
+        srv.shutdown(); srv.server_close()
+    specs = [SubsystemSpec.load(os.path.join(os.path.dirname(TESTSUB), f)) for f in ("testsub.subsystem.yaml",
+                                                                                     "testsub2.subsystem.yaml")]
+    roles = rights.roles(specs, "probe")
+    assert "testsub2/shelves/*" in roles["testsub2worker"]["write"] and {"testsub/*", "testsub/counters"} <= set(roles["testsub2worker"]["read"])
+    assert "testsub/requests/*" in roles["testsub2worker"]["write"]                         # `worker.requests`
 
 
 def _piece_domain():

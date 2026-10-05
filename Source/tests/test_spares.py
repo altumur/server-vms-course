@@ -399,6 +399,34 @@ def test_a_new_group_that_did_not_fit_is_short_whole_and_a_spare_that_can_take_i
     assert [ctl.where(i) for i in ids] == ["w-3"] * 4 and rep["units_short"] == {"": 0}, ([ctl.where(i) for i in ids], rep)
 
 
+def test_a_group_held_by_a_live_worker_that_stopped_reaching_it_is_short_whole():
+    """The product's r30, defect B: a 4-channel NVR on w-1, whose server stops reaching the NVR's label (its row says so
+    now). `ensure_reach` moves the group whole or not at all — and no live worker has room for four, so it waits on w-1.
+    The count did not see it (w-1 is live, not leaving): short 0, no offer, four channels on a worker that cannot reach
+    the device. Now the group is waiting, WHOLE: short 4 — one piece, too big for a spare of the size w-2 says, so the
+    reason is said — and a worker with room for four, once it comes, takes it."""
+    from tests.test_server_labels import _beat, _site
+    nvr = "driverpack://acme/10.0.0.50/ch/"
+    box = Box()
+    ctl = _site(box, capacity=4, srv_a="vlan:a")
+    _beat(box, "w-1", "srv-a", "vlan:a", capacity=4)
+    ids = [ctl.create_camera({"source": f"{nvr}{c}", "labels": "vlan:a"})["id"] for c in range(1, 5)]
+    rep = ctl.pass_once()
+    assert all(ctl.where(i) == "w-1" for i in ids) and rep["units_short"]["vlan:a"] == 0, rep
+    _beat(box, "w-2", "srv-b", "vlan:a", capacity=2)                                # room for two: not for the group
+    box.vars.put("vms/servers/srv-a", {"labels": ""})                                # srv-a reaches nothing now
+    rep = ctl.pass_once()
+    assert all(ctl.where(i) == "w-1" for i in ids), [ctl.where(i) for i in ids]     # waits whole where it is
+    assert rep["units_short"]["vlan:a"] == 4, rep                                      # short, and whole: one piece of four
+    assert "1 group(s) of 4 units" in rep["spares_withheld"]["vlan:a"], rep           # …more than the spare w-2's size says
+    _beat(box, "w-3", "srv-c", "vlan:a", capacity=4)
+    for _ in range(3):
+        _beat(box, "w-1", "srv-a", "vlan:a", capacity=4); _beat(box, "w-2", "srv-b", "vlan:a", capacity=2)
+        _beat(box, "w-3", "srv-c", "vlan:a", capacity=4)
+        rep = ctl.pass_once()
+    assert [ctl.where(i) for i in ids] == ["w-3"] * 4 and rep["units_short"]["vlan:a"] == 0, ([ctl.where(i) for i in ids], rep)
+
+
 def test_under_distinct_servers_a_spare_is_offered_only_where_it_would_not_idle():
     """«Вопросы» 2: under `servers: distinct` a spare started on a server that already has its worker idles by policy;
     the camera stayed unplaced, `workers_needed` stayed 1, and the next pass offered again — spares raised on every

@@ -8,7 +8,7 @@ a server's disks and nothing about what it means:
 
     platform/resources/<server>/heartbeat   {server, ts, url, usage, space: {total, free}, units: {sub: [unit]}, mirrors: {server: n}}
     platform/mirror                         the knob: {enabled, copies}
-    platform/space                          the knob: {enabled, high, low, min_days} — the disk's watermark
+    platform/space                          the knob: {enabled, high, low} — the disk's watermark
     <sub>/retention, <sub>/retention/<unit> {days}: each subsystem's policy for its buckets, written by ITS controller
 
     GET  <url>/buckets/<sub>/<unit>    closed buckets, from the files
@@ -34,9 +34,8 @@ policy; relieve the disk if it is over the high mark — the resource measures
 and says how many bytes to free, each subsystem decides what to give up;
 mirror closed buckets to the next live resource(s) after this one
 in sorted order — nobody assigns peers, the rule is the assignment; copy
-this server's blobs to the same peers (`mirror_blobs`); and any
-subsystem-specific pass a subsystem registered (the VMS registers none: its
-footage is in volumes of ObjectStorage, not on this tree). `restore` is the reverse of mirror, run by
+this server's blobs to the same peers (`mirror_blobs`). No subsystem's code runs in it: what a
+subsystem asks of the resource is in its spec (`holds:`, `requests: {free}`). `restore` is the reverse of mirror, run by
 the owner at start: a server back with an empty disk pulls its buckets
 home. No controller is involved in any of it.
 """
@@ -50,8 +49,8 @@ home. No controller is involved in any of it.
 # **Role in the module.** Lesson 3. One resource per server, pinned there for as long as the server exists.
 # It knows the shape of what every subsystem leaves on the server's disks —
 # `<root>/<subsystem>/<unit>/e<epoch>/...` — and nothing about what it means; a subsystem may keep files of its
-# own beside its buckets (a scan's progress) and the resource neither reads nor names them. Footage is not
-# here at all: the VMS writes it into volumes of ObjectStorage, through the host's daemon. It writes its own heartbeat
+# own beside its buckets (a scan's progress) and the resource neither reads nor names them. What a subsystem keeps
+# in storage of its own (volumes it holds through its own daemon) is not here at all. It writes its own heartbeat
 # object (`platform/resources/<server>/heartbeat`), serves buckets over HTTP, and runs a policy pass on a
 # timer: bucket retention by each subsystem's own `<sub>/retention[/<unit>]` row — less what a spec's `holds` keeps
 # (`holds.py`) — then the watermark, which asks the subsystems whose spec says `requests: {free: true}` to free bytes by
@@ -157,7 +156,7 @@ def _stat(store, key: str) -> tuple[float, int] | None:
 
 
 # A prefix of keys, as a request names it: `""`, or segments that are each one name with the last possibly empty
-# (`vms/heartbeats/`) or a name's beginning (`vms/heartbeats/w-`). Nothing absolute, no `..`.
+# (`<sub>/heartbeats/`) or a name's beginning (`<sub>/heartbeats/w-`). Nothing absolute, no `..`.
 def _safe_prefix(prefix: str) -> bool:
     if prefix == "":
         return True
@@ -204,8 +203,9 @@ class _TooBig(Exception):
 # freeing and stops at `low`, and the gap between them is the whole point — one mark alone gives a saw, a
 # file freed and a file written, for ever. Choose the gap in HOURS OF INGEST, not in percent: fifty cameras
 # at four megabit write about 2.2 TB a day, and ten percent of a 20 TB disk is less than one of them.
-# `min_days` is the floor no unit is cut below; when everything is on the floor the answer is a shortfall,
-# said out loud, and not a quiet cut into yesterday.
+# A floor no unit is cut below is the subsystem's own word, not the knob's: the resource asks for bytes (a request row,
+# `requests: {free: true}`), and what the subsystem gives up — and what it will not, by its rows — is its to decide; a
+# shortfall is said in its heartbeat (`freed`) and here (`short`), never a quiet cut into yesterday.
 #
 # ON UNLESS SOMEBODY TURNED IT OFF (the platform review, "what happens when the disk fills is chosen by the
 # code"; feedback BM). It used to be off until a row said `enabled: true` — and an installation where nobody
@@ -228,7 +228,7 @@ SPACE = Table("space", "each number that does not parse is the one read last, or
 
 
 def space_defaults() -> dict:
-    return {"enabled": os.environ.get("WATERMARK_DEFAULT", "on") != "off", "high": 0.85, "low": 0.75, "min_days": 3.0}
+    return {"enabled": os.environ.get("WATERMARK_DEFAULT", "on") != "off", "high": 0.85, "low": 0.75}
 
 
 def space_settings(vars_, last: dict | None = None) -> dict:
@@ -238,7 +238,7 @@ def space_settings(vars_, last: dict | None = None) -> dict:
     dflt = space_defaults()
     out = {"enabled": d.get("enabled") == "true" if "enabled" in d else dflt["enabled"]}
     garbled, errors = [], []
-    for f in ("high", "low", "min_days"):
+    for f in ("high", "low"):
         try:
             out[f] = finite(d.get(f, dflt[f]))
         except (ValueError, TypeError) as e:
@@ -266,15 +266,14 @@ def mirror_settings(vars_) -> dict:
 
 
 # The unit's days if its subsystem set `<sub>/retention/<unit>`, else the subsystem's `<sub>/retention`,
-# else a year. For the VMS the per-unit row is the derived row `vms/retention/<id>` written by
-# `SpecController._derived` from `events_retention_days`; on delete it becomes `{days: 0}` so the buckets go
-# on the next pass. Each subsystem's controller owns its row; the resource only reads.
+# else a year. A per-unit row is typically a spec's derived row (`derived:` → `<sub>/retention/<id>`, written by
+# `SpecController._derived` from a field of the unit); on delete it becomes `{days: 0}` so the buckets go on the next
+# pass. Each subsystem's controller owns its row; the resource only reads.
 #
 # THE ALARMS' TREE HAS DAYS OF ITS OWN (feedback BO). `<sub>.alarms/<unit>` is kept by
 # `<sub>/alarms_retention/<unit>`, else `<sub>/alarms_retention`, else THREE YEARS — and three years is what
-# a subsystem that says nothing gets, which is every one that raises an alarm and has no row for it: the
-# recorder's `archive.shallow`, say. That row has no `on_delete`: deleting a unit ends its observations at the
-# next pass, and not the record of what happened at it.
+# a subsystem that says nothing gets, which is every one that raises an alarm and has no row for it. That row has
+# no `on_delete`: deleting a unit ends its observations at the next pass, and not the record of what happened at it.
 ALARM_DAYS = 1095.0
 
 # A row of days that does not read as days (the product team's sibling of the review's ninth pass): `float("nan")` is
@@ -778,8 +777,8 @@ class Resource:
         if not self.volumes or any(not v for v in self.volumes.values()):
             raise ValueError("a resource needs at least one volume with a path")
         # A CEILING per volume, in bytes, and zero means "the disk is the ceiling". Two things need it and
-        # neither is exotic. A network archive has no disk to ask — `shutil.disk_usage` on a mount point
-        # answers about the machine, not the bucket. And two volumes on ONE partition — which is how an
+        # neither is exotic. A volume on a network mount has no disk of its own to ask — `shutil.disk_usage` on a
+        # mount point answers about the machine, not the share. And two volumes on ONE partition — which is how an
         # operator splits a disk between a long-retention archive and a short one — would otherwise both
         # read the same free space and both believe they own it.
         #
@@ -1021,7 +1020,7 @@ class Resource:
               "waits": self.watch.counts(),                          # the requests it holds (`/events/wait`): now, and refused
               # The watermark's row, when it does not parse: what the pass acts on instead (`relieve`; the review's
               # seventh pass) — and the rows of any table this process could not read, by table (`rows.Table`): the
-              # keeps a hook reads, the knobs. Absent when there are none.
+              # rows a spec's `holds:` names, the knobs. Absent when there are none.
               **({"space_garbled": self.space_garbled} if self.space_garbled else {}),
               **({"rows_garbled": garbled} if (garbled := {name: sum(c.values()) for name, c in garbled_by_table().items()
                                                            if sum(c.values())}) else {}),
@@ -1468,7 +1467,7 @@ class Resource:
 
     # -- the policy pass ------------------------------------------------------------------
     # For each subsystem and unit, delete bucket files whose `end` is older than `retention_days` — files
-    # only; a subsystem that indexes its buckets in a file of its own drops the lines in its own hook. The
+    # only; a subsystem that indexes its buckets in a file of its own drops the lines itself. The
     # resource's own index forgets each removed path. Returns the count. The test sets `other/retention {days: 1}`, advances three days and sees exactly the
     # `other` bucket go.
     def retain(self) -> int:
@@ -1552,7 +1551,7 @@ class Resource:
         return len(removed)
 
     # ONE BUCKET THIS RESOURCE CANNOT REMOVE IS THAT BUCKET'S (the review's thirteenth pass, major 13's other half). The
-    # unlink ran bare: a directory a writer made 2755 under another group (no umask under Nomad), one EACCES, and the
+    # unlink ran bare: a directory a writer made 2755 under another group (a unit without the umask), one EACCES, and the
     # `PermissionError` ended `retain` whole — no bucket of any unit swept after it, every pass, and the disk grew without
     # bound. A bucket that will not go is counted (`retain_failed`, in the heartbeat and on `/metrics`), logged once a
     # spell, and the walk goes on; one already gone is gone.
@@ -1837,8 +1836,7 @@ class Resource:
     # what to give up and says what it gave in its heartbeat (`freed: {<volume>: bytes}`), read on the next pass (the
     # boundary's step 6: it was a hook of the subsystem's, `free`, run on this thread). Slowness resolves itself: the row
     # stands while the volume is over and is written again each pass; a volume back under its mark has its rows taken
-    # away. With nobody declared to answer — the VMS's footage is in rings that never outgrow their quota — what is short
-    # is said as a shortfall, and nothing is cut.
+    # away. With nobody declared to answer, what is short is said as a shortfall, and nothing is cut.
     def relieve(self) -> dict:
         """Over the high mark, ask each subsystem that frees to free bytes down to the low one.
 
@@ -2020,8 +2018,7 @@ class Resource:
         return out
 
 
-# The resource over HTTP, in a daemon thread. `extra(path, headers) -> (status, bytes[, headers]) | None`
-# lets a subsystem add its own reads (the VMS adds none: its footage is behind the recorders' doors).
+# The resource over HTTP, in a daemon thread: the platform's routes and nothing a subsystem adds.
 #
 # #### `class H(BaseHTTPRequestHandler)` (nested)
 # - `log_message` — silenced.
@@ -2036,7 +2033,7 @@ class Resource:
 #     runs no index.
 #         - `GET /events/<path>` — the raw bytes of one bucket; `path` may begin with `.mirror/<server>/`.
 #       404 if it contains `..`, does not end in `.events.jsonl`, or is not a file.
-#   - anything else — `extra(path, headers)` if given and it answers; otherwise 404.
+#   - anything else — 404.
 # - `do_PUT`:
 #         - `PUT /mirror/<server>/<path>` — another resource leaves a copy of one of its closed buckets. 400
 #       if `..`, empty server, or not `.events.jsonl`; writes to `.mirror/<server>/<path>` via tmp + rename
@@ -2048,10 +2045,8 @@ class Resource:
 #     bytes are not the blob; 405 for anything that is not a blob; 413 past `OBJECT_MAX`.
 #   - `DELETE /v1/objects/<sub>/blobs/sha256-…?scope=…` — `{deleted: {server: bool}[, missing]}`; 405 if not a blob.
 #   - a scope, key, prefix or length that does not say what it means: 400 with the reason in words.
-def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=None, extra_put=None) -> ThreadingHTTPServer:
-    """The resource over HTTP. `extra(path) -> (status, bytes) | None` lets a
-    subsystem add its own reads, and `extra_put(path, headers, rfile)` its
-    own writes."""
+def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090) -> ThreadingHTTPServer:
+    """The resource over HTTP: its buckets, its index, the mirror and the cluster's objects."""
     # Bounded like every door (the review's sixth pass: the protections were the console's alone): so many connections
     # at once and so many to one address, the next answered 503 on the spot (`door_server`); the request line and
     # headers under a deadline (`Deadlined`). The requests this door HOLDS (`/events/wait`, `WAITERS_MAX`) and the
@@ -2226,10 +2221,6 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                 if not safe_rel(rel) or not rel.endswith(".events.jsonl") or not os.path.isfile(p):
                     return self._raw(404, b"")
                 return self._bucket(p)
-            if extra is not None:
-                r = extra(self.path, self.headers)
-                if r is not None:
-                    return self._raw(*r)
             self._raw(404, b"")
 
         # A BUCKET GOES OUT IN PIECES (the review's seventh pass, major; reproduced by a run). It was `f.read()` into one
@@ -2262,8 +2253,8 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
         # was its handler's, and `PUT /mirror` read its body under nothing but the socket's timeout on each read — 32
         # connections declaring 60 MB and sending a byte every twenty seconds held an address's share for ever, two
         # addresses the whole door: `/events`, `/events/wait` and the mirror were 503. Now the body has the door's
-        # `timeout` and a second for every `BODY_RATE` bytes (`body_deadline`, `read_body`'s rule), here and for a
-        # subsystem's own writes (`extra_put`); one that does not arrive in time is 408 and leaves no copy.
+        # `timeout` and a second for every `BODY_RATE` bytes (`body_deadline`, `read_body`'s rule); one that does not
+        # arrive in time is 408 and leaves no copy.
         #
         # …and a floor on its pace past the door's `timeout` (the review's eighth pass): the deadline was proportional to
         # the length declared, so 64 MiB held its connection 1054 s for a byte every few seconds. Now `got` bytes are in
@@ -2278,15 +2269,6 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             except ValueError:
                 return self._raw(400, b"")
             if not self.path.startswith("/mirror/"):
-                if extra_put is not None:
-                    body_deadline(self, n)
-                    try:
-                        r = extra_put(self.path, self.headers, self.rfile)
-                    except TimeoutError:
-                        self.close_connection = True
-                        return self._raw(408, b"")
-                    if r is not None:
-                        return self._raw(*r)
                 return self._raw(404, b"")
             rel = self.path[len("/mirror/"):]
             server, _, path = rel.partition("/")

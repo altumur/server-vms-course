@@ -10,8 +10,9 @@ stateless shards writing bulk data; nothing here knows what a camera is.
     events.py, eventdatabase.py, resource.py   buckets, the event index each resource reads its own by, the resource job
     longpoll.py    a reader of the events asks a resource to hold a request until a line it watches is written
 
-М11 replaces variables.py with Nomad Variables and objects.py with MinIO,
-behind the same interfaces, and changes nothing above this line.
+М11 replaces variables.py with `configstore://` (the same semantics replicated by raft over the servers) and
+objects.py with `cluster://` (a directory on every server, read through the resources), behind the same interfaces,
+and changes nothing above this line.
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -27,8 +28,8 @@ behind the same interfaces, and changes nothing above this line.
 # data), `console.py` and `console.html` (the console as data), and `events.py` / `eventdatabase.py` /
 # `resource.py` (buckets, the index over them, the resource job).
 #
-# The docstring also fixes the boundary the next module (М11) will use: М11 replaces `variables.py` with
-# Nomad Variables and `objects.py` with MinIO *behind the same interfaces* (the `Variables` and
+# The docstring also fixes the boundary the next module (М11) uses: М11 replaces `variables.py` with
+# `configstore://` and `objects.py` with `cluster://` *behind the same interfaces* (the `Variables` and
 # `ObjectStore` Protocols) and changes nothing above that line.
 #
 # ## Module-level names

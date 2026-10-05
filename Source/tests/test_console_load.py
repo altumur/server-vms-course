@@ -1085,26 +1085,17 @@ def test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole
         srv.shutdown()
 
 
-def test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsystems_write_too():
+def test_the_resources_door_gives_a_mirrored_body_a_deadline_whole():
     """The review's seventh pass, major — a run: past the headers a request was its handler's, and `PUT /mirror` read its
     body under nothing but the socket's timeout on each read: 32 connections declaring 60 MB and sending a byte every
     twenty seconds held an address's share for ever, and two addresses the whole door. The body has the door's
     `timeout` and a second for every `BODY_RATE` bytes (`body_deadline`); one that does not arrive in time is 408 and
-    leaves no copy. A subsystem's own write (`extra_put`) reads under the same deadline."""
+    leaves no copy. A PUT that is not a mirrored bucket or a blob is no route of this door: 404."""
     from w2cplatform import resource as wr
     box = Box()
     res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
     was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0
-    seen = {}
-
-    def extra_put(path, headers, rfile):
-        try:
-            seen["got"] = rfile.read(int(headers.get("Content-Length", 0)))
-        except TimeoutError:
-            seen["late"] = True
-            raise
-        return 204, b""
-    srv = wr.serve(res, "127.0.0.1", 0, extra_put=extra_put)
+    srv = wr.serve(res, "127.0.0.1", 0)
     wr.DOOR_TIMEOUT = was
     port = srv.server_address[1]
     path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
@@ -1136,10 +1127,7 @@ def test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsyst
         reply, took = trickle(path, 60000)                            # 1 s and 60000 / BODY_RATE ≈ 0.9 s: under 2 s
         assert reply.startswith(b"HTTP/1.0 408") and took < 4.0, (reply[:40], took)
         assert not os.path.exists(copy) and not os.path.exists(copy + ".tmp")
-        reply, took = trickle("/theirs/1", 60000)
-        assert reply.startswith(b"HTTP/1.0 408") and took < 4.0 and seen.get("late"), (reply[:40], took)
-        assert _raw(port, b"PUT /theirs/2 HTTP/1.1\r\nHost: x\r\nContent-Length: 3\r\n\r\nabc")[0].startswith(b"HTTP/1.0 204")
-        assert seen["got"] == b"abc"                                   # a body in time: as before
+        assert _raw(port, b"PUT /theirs/2 HTTP/1.1\r\nHost: x\r\nContent-Length: 3\r\n\r\nabc")[0].startswith(b"HTTP/1.0 404")
     finally:
         srv.shutdown()
 
@@ -1150,13 +1138,12 @@ def test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared
     32 of them an address's share of the resource's door, two addresses all of it. Past the door's `timeout` a body
     arrives at `BODY_RATE` on average or it is late (`DeadlineReader.pace`, set by `body_deadline`): 60 MB declared
     and trickled is 408 at the grace; a mirrored bucket that comes at the rate the deadline always assumed is taken
-    whole. The same floor for every door that reads a body: a subsystem's own write at the resource, and the console's
-    (`read_body`)."""
+    whole. The same floor for every door that reads a body: the console's too (`read_body`)."""
     from w2cplatform import resource as wr
     box = Box()
     res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
     was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0
-    srv = wr.serve(res, "127.0.0.1", 0, extra_put=lambda path, headers, rfile: (rfile.read(int(headers["Content-Length"])), (204, b""))[1])
+    srv = wr.serve(res, "127.0.0.1", 0)
     wr.DOOR_TIMEOUT = was
     port = srv.server_address[1]
     path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
@@ -1188,8 +1175,6 @@ def test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared
         reply, took = trickle(port, path, 60_000_000)                 # declared: 1 s and 915 s; the floor: 1 s
         assert reply.startswith(b"HTTP/1.0 408") and took < 4.0, (reply[:40], took)
         assert not os.path.exists(copy) and not os.path.exists(copy + ".tmp")
-        reply, took = trickle(port, "/theirs/1", 60_000_000)          # a subsystem's own write: the same floor
-        assert reply.startswith(b"HTTP/1.0 408") and took < 4.0, (reply[:40], took)
         # a bucket at three times the floor, in pieces: taken whole
         body = b"{}\n" * (400 << 10 // 3)
         s = socket.create_connection(("127.0.0.1", port))

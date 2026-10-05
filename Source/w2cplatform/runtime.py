@@ -103,8 +103,8 @@ def instance(env: dict) -> str | None:
 # name). What "this instance runs on this machine" is read from — whether a hold follows the name at once (a
 # subsystem's worker that holds a place), whether a live holder's name may be taken at a start (`Worker._may_take_by_name`).
 # Two machines installed from one image, two `localhost`s, have one hostname and compute one `w-%l-1`: by the hostname
-# they were one box and took each other's name for ever. `BOX_ID` when the runtime says it (systemd's `%m` in a unit,
-# Nomad's `${node.unique.id}`), else this machine's id (`/etc/machine-id`, the product's `BoxID`), else the hostname —
+# they were one box and took each other's name for ever. `BOX_ID` when the runtime says it (systemd's `%m` in a unit),
+# else this machine's id (`/etc/machine-id`, the product's `BoxID`), else the hostname —
 # a machine with neither, as before.
 BOX_ID = "BOX_ID"
 MACHINE_ID_FILES = ("/etc/machine-id", "/var/lib/dbus/machine-id")

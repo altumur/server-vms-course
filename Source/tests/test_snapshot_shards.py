@@ -3,14 +3,11 @@
 Every other object the platform publishes is already sharded by its writer — a
 heartbeat per worker, a resource heartbeat per server — and each one stays the
 size of what that writer knows. The snapshot was the exception: one object
-holding every unit in the cluster, published into a store with a ceiling. Nomad
-Variables, where М11's objects lived then, cap an object at 64 KiB, and the
-cluster's own design maximum is 600 cameras (12 workers x capacity 50, from the
-worker jobspec). The single object broke at about a third of that.
-
-М11's objects are files on every server now (`cluster://`), with no ceiling.
-The shape stays: a store may still declare one (`limits.py`), and a shard is
-what keeps the snapshot inside whatever it declares.
+holding every unit in the cluster, published into a store with a ceiling. A
+store may declare one (`limits.py`; the capped store here declares 64 KiB), and
+the cluster's own design maximum is 600 units (12 workers x capacity 50). The
+single object broke at about a third of that; a shard is what keeps the snapshot
+inside whatever a store declares.
 
 Sharded by the worker that holds the unit, it grows the way the cluster grows:
 more units means more workers means more objects, each the size of one worker's
@@ -23,7 +20,7 @@ from vms.config import SPEC
 from vms.controller import VmsController
 from tests.conftest import Box, published_snapshot
 
-CAP = 64 * 1024                       # a declared ceiling — Nomad Variables' 64 KiB, the one the shape was measured against
+CAP = 64 * 1024                       # a declared ceiling — 64 KiB, the one the shape was measured against
 LABELS = ["vlan:cctv-a", "site:msk-hq", "floor:3"]
 
 
@@ -113,10 +110,10 @@ def test_a_worker_may_not_be_called_unplaced():
 
 def test_the_shard_fits_where_the_one_object_did_not():
     """The measurement the shape exists for. Both numbers come from the real
-    publisher, against Nomad's 64 KiB ceiling — nothing here is asserted from
+    publisher, against a declared 64 KiB ceiling — nothing here is asserted from
     a table."""
     box = Box()
-    ctl = _cluster(box, 600, workers=12, capacity=50)                 # 12 workers x 50: the jobspec's maximum
+    ctl = _cluster(box, 600, workers=12, capacity=50)                 # 12 workers x 50: the design maximum
     ctl.ensure_placed()
     ctl.publish_snapshot()
     shards = box.objects.list("vms/snapshot/")

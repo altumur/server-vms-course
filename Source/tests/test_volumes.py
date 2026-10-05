@@ -342,7 +342,7 @@ def test_the_numbers_a_scaling_policy_reads():
     _net(box, "s3-third")
     text = con.metrics_text()
     assert "rec_volumes_declared 3" in text and "rec_volumes_unserved 1" in text   # declared, and nobody free
-    assert "rec_recorders_needed 1" in text                        # …and no spare to take it: a process is missing
+    assert 'rec_workers_needed{labels=""} 1' in text               # …and no spare to take it: a process is missing
 
     # A shortage a process cannot fix, which is the runaway this gauge exists to stop. `srv-b-disk` is a
     # disk on a box that runs no recorder: starting one HERE does not make it servable, and a policy
@@ -355,7 +355,7 @@ def test_the_numbers_a_scaling_policy_reads():
     idle.heartbeat_once()
     text = con.metrics_text()
     assert "rec_volumes_unserved 1" in text and "rec_spare_workers 1" in text
-    assert "rec_recorders_needed 0" in text
+    assert 'rec_workers_needed{labels=""} 0' in text
 
     # …and a spare is kept OUT of the load gauge, where zero capacity would read as fully loaded
     assert 'rec_worker_load{worker="r-3"}' not in text
@@ -524,7 +524,7 @@ def test_a_recorder_that_holds_an_archive_is_not_a_spare():
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     _net(box, "s3-main")
-    spare_workers = lambda c: c.placeless_live(heartbeats(c.objects, "rec/"))   # the platform's: no place, no hold (`minus: placeless`)
+    spare_workers = lambda c: c.placeless_live(heartbeats(c.objects, "rec/"))   # the platform's: no place, no hold (`placement.places`)
 
     r, s = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
     r.volume_pass(); s.volume_pass()

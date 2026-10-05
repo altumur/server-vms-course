@@ -1,13 +1,10 @@
 """What a store can hold, said by the store.
 
-A store has a ceiling and the platform has to know it. This was learned when
-the cluster's store was Nomad Variables: Nomad capped a whole Variable — every
-key and every value in it — at 64 KiB, and that number was not the platform's
-to choose: a constant in the scheduler (`maxVariableSize = 65536`), the request
-to make it configurable open since 2022 and answered with "we don't want to
-give users a new way to break their clusters". The cluster's store is now its
-own daemon (`configstore://`), whose row ceiling is `storemachine.MAX_VALUE`;
-the lesson stands — the number belongs to the store, not to its caller.
+A store has a ceiling and the platform has to know it — and the number belongs
+to the store, not to its caller. The cluster's store (`configstore://`) weighs a
+row by every key and every value in it and refuses one past
+`storemachine.MAX_VALUE`, at its door and in the raft machine alike; a caller that
+guessed a different number would find out in production.
 
 Before this module the number lived in prose. `FsObjectStore` never refuses
 anything, so a write that would be rejected in production succeeded in every
@@ -22,16 +19,12 @@ truncated: half a row is worse than no row, and a store that silently drops
 the tail of an object is a store that lies about `get`.
 
 The seam is the same one `PLATFORM_STORE` and `OBJECTS` already are (Lesson 20).
-`file://` has no ceiling, `variables://` has 64 KiB, `s3+https://` has none
-worth naming — and which one an install has is now a fact the code can read
-rather than a fact the operator is supposed to remember.
-
-М11's objects left Variables: `cluster://` is a directory on every server
-(`w2cplatform/cluster/objectstore.py`), and it declares no ceiling. A row in the store
-still has one if its backend says so, and so does any object store a test or
-an install declares — which is why the snapshot stays sharded and the capped
-stores stay in the tests: a declared ceiling is a clause of the contract, not
-a property of one backend.
+`file://` has no ceiling, `configstore://` its row ceiling, `cluster://` (a
+directory on every server, `w2cplatform/cluster/objectstore.py`) and `s3+https://`
+none worth naming — and which one an install has is a fact the code can read
+rather than a fact the operator is supposed to remember. The snapshot stays
+sharded and the capped stores stay in the tests: a declared ceiling is a clause
+of the contract, not a property of one backend.
 """
 from __future__ import annotations
 

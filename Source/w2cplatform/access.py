@@ -24,11 +24,11 @@
 # not "there is nothing to check".
 #
 # With the gate on, `X-User` from outside is thrown away and replaced by the name the token proved. Every line
-# a console writes about who did what — `unit.deleted`, `archive.read`, a keep — then names somebody who was
+# a console writes about who did what — `unit.deleted`, `door.issued`, a row of a table — then names somebody who was
 # checked, not somebody who introduced themselves.
 #
 # What this does NOT close, and it is said in `М10B_ServerVMS/module-design.md`: the doors BEHIND the console —
-# the resource, a recorder's archive door — still ask nobody. That is mutual TLS between processes, the next
+# the resource, a holder's door between processes — still ask nobody. That is mutual TLS between processes, the next
 # step, and until it a cluster of several machines stands behind its network.
 # ================================================================================================
 from __future__ import annotations

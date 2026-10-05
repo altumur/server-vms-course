@@ -15,7 +15,7 @@ gone the other way:
      for B" — it is a question asked of the last thirty seconds of the log,
      re-asked every pass. There is nothing to keep, nothing to restore and
      nothing to get wrong after a crash.
-  2. A CURSOR, not a queue. `Frontier` — the survey's own number, the same file
+  2. A CURSOR, not a queue. `Frontier` — the platform's reader's number (`w2cplatform/events.py`), the same file
      — says how far this scenario has been considered. It is the only thing
      written down.
   3. A DETERMINISTIC REQUEST ID. Delivery is at-least-once by construction, so
@@ -39,7 +39,7 @@ from w2cplatform.variables import Variables
 
 from .auto import Catalog, fires, refusal
 from .config import AUTO_SPEC
-from .scan import Frontier
+from w2cplatform.events import Frontier
 from w2cplatform.rows import PARSE_ERRORS
 
 log = logging.getLogger("autoworker")
@@ -272,7 +272,7 @@ class AutoWorker(Worker):
     # no other camera can crowd, and for the index the cheapest there is: it opens that unit's files and no
     # others. Scenarios on the same unit and kind still share it; a trigger naming no unit shares the kind's.
     def _since(self, row: dict, now: float) -> float:
-        since = Frontier(self.resource_root, str(row["id"]), AUTO.name).read()
+        since = Frontier(self.resource_root, AUTO.name, str(row["id"])).read()
         return now - self.COLD_START if since is None else max(since, now - self.COLD_START)
 
     # An early pass (`partial`) plans for the scenarios it evaluates and leaves what is watched as the last ordinary
@@ -359,7 +359,7 @@ class AutoWorker(Worker):
     # One scenario against the log. Returns how many firings were filed.
     def evaluate(self, row: dict, now: float) -> int:
         unit = str(row["id"])
-        front = Frontier(self.resource_root, unit, AUTO.name)
+        front = Frontier(self.resource_root, AUTO.name, unit)
         since = front.read()
         held = self.held_from.get(unit)
         if held is not None and now - held > self.COLD_START and self.holes.get(unit) and unit not in self.said_without:

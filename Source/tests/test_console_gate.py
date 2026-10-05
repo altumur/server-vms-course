@@ -600,10 +600,7 @@ def test_drain_schema_and_mounts_ask_the_gate_too():
         assert _call(base, "PUT", f"/schema?version={SCHEMA}")[0] == 401
         assert _call(base, "PUT", f"/schema?version={SCHEMA}", token="viewer")[0] == 403
         assert _call(base, "GET", "/schema")[0] == 401 and _call(base, "GET", "/schema", token="viewer")[0] == 200
-        code, body = _call(base, "PUT", f"/schema?version={SCHEMA}", token="admin")
-        assert code == 403 and "platform/schema" in body["detail"]       # past the gate, the console's TOKEN may not
-        m.root.ctl.vars = box.vars                                         # a console whose token reaches it
-        assert _call(base, "PUT", f"/schema?version={SCHEMA}", token="admin")[0] == 200
+        assert _call(base, "PUT", f"/schema?version={SCHEMA}", token="admin")[0] == 200   # the console's token reaches it
 
         assert _call(base, "GET", "/mounts")[0] == 401
         code, body = _call(base, "GET", "/mounts", token="viewer")

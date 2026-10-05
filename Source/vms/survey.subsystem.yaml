@@ -57,5 +57,7 @@ placement:
   # belong on". And no `retire_when`: it does not end.
   tie_break:  most-free-capacity
 snapshot: [name, cam, kind, enabled]             # enough for a domain to say camera 7 is being watched
+metrics:
+  - {name: watches_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: watches_running

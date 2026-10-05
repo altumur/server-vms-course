@@ -62,6 +62,8 @@ placement:
   tie_break:  most-free-capacity
   rebalance:  {dead_band: 0.10}
 snapshot: [name, cam, kind, enabled, until]
+metrics:
+  - {name: units_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: units_running               # det_units_running
 events:

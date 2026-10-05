@@ -82,6 +82,7 @@ placement:
   # silent resource, recordings moved off a sound server — was the pulse, and the pulse is mended
   # (`Resource.pass_`: a `try` per beat, a monotonic clock, a limit on no progress).
   requires:   resource                               # the only subsystem that must be where the archive is
+  places:     {table: volumes, where: {enabled: true}, server_field: server}   # what a recorder holds, one each
   place_by:   volume                                 # WHAT `distinct` and `home` count in: the disk, not the box —
                                                      # a server with three volumes runs three recorders, and one
                                                      # recording's worth of work goes to each. Reachability,
@@ -222,11 +223,11 @@ snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, ho
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
 # (`w2cplatform/metrics.py`): a count of a table's rows, or a field of the recorders' heartbeats and status entries.
 metrics:
+  - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
   - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds
-  # The number a scaling policy must use, and why it is not `unserved` itself: a volume nobody CAN take does not become
-  # takeable by starting processes; one spare running proves the shortage is not of processes (`minus: placeless`).
-  - {name: recorders_needed, count: table volumes, where: {enabled: true}, unheld: true, minus: placeless}
+  # (The number a host's spares script starts recorders for is the platform's, from `placement.places`:
+  # `rec_workers_needed{labels=""}` — the enabled volumes nobody holds, less the live recorders that hold none.)
   # Keeps that nothing copies: marks set while no incidents volume is declared (the review's second pass, B10).
   - {name: keeps_unprotected, count: table keeps, unless: {table: volumes, where: {kind: incidents, enabled: true}}}
   # The seconds of each keep not in the incidents volume yet, the largest a live recorder says (the fourth pass, major).

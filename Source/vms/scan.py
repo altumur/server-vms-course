@@ -337,39 +337,6 @@ def hit_spans(times: list[float], watched: list[tuple[float, float]],
     return sorted(out)
 
 
-class Frontier:
-    """How far a standing survey has watched: one number, durable, beside its events.
-
-    The same argument as `ScanLog` and the same place for the same reason — a worker
-    may not write configuration — but a different shape, because the work is different.
-    A scan has a plan and ticks stretches off it; a survey has no end, and what it
-    keeps is a moving edge."""
-
-    # `sub` because the sixth subsystem keeps the same shape of number for the same reason: how far it has
-    # READ. The survey's watched-through and the evaluator's considered-through are one idea, and one idea
-    # gets one file format — the default keeps every survey written before this call site unchanged.
-    def __init__(self, resource_root: str, unit, sub: str = SURVEY):
-        self.path = os.path.join(unit_dir(resource_root, sub, str(unit)), "frontier.json")
-
-    def read(self) -> float | None:
-        try:
-            with open(self.path) as f:
-                return finite(json.load(f)["watched_through"])
-        # …or a file that does not read as a frontier — a list (`TypeError`), a number past a float, nested past JSON's
-        # depth (the review's tenth round): it raised out of the survey's and the evaluator's pass, every pass.
-        except (FileNotFoundError, *PARSE_ERRORS):
-            return None                                  # never started, or the file was lost: the row decides where to begin
-
-    # Written after the events of that stretch, and atomically: a crash between the work and the number
-    # costs a re-watch, a half-written number would cost the frontier itself.
-    def set(self, t: float) -> None:
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        tmp = self.path + ".tmp"
-        with open(tmp, "w") as f:
-            json.dump({"watched_through": float(t)}, f)
-        os.replace(tmp, self.path)
-
-
 # The plan minus what the log says is behind us — what a restarted worker picks up, and what a follower scans
 # next. By TIME, not by key: the index draws a stream's sequences that touch as ONE span, so the span a follower
 # scanned up to 10:05 is, a block later, a span to 10:10 — a different stretch with a different key, and matching

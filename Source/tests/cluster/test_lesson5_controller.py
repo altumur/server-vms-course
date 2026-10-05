@@ -311,7 +311,7 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
         assert call("POST", "/rec/requests", "guard", ask(2))[0] == 403
         assert call("PUT", "/rec/recordings/2", "guard", {"retention_days": 1})[0] == 403
         assert call("GET", "/rec/volumes", "admin")[0] == 200                           # the archives, as on a box
-        assert "rec_recorders_needed" in call("GET", "/rec/metrics", "admin")[1]        # what `w2c-spares.sh` reads for recorders
+        assert 'rec_workers_needed{labels=""}' in call("GET", "/rec/metrics", "admin")[1]   # what `w2c-spares.sh` reads for recorders
         assert m.mounts["rec"].journal is m.root.journal and m.mounts["rec"].spec.about_sub == "vms"   # a recording is about its camera
     finally:
         srv.shutdown()

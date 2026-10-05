@@ -49,5 +49,7 @@ display:
   keys:
     tallies: {title: tallies, about: "a member's tally book: domain/testsub/tallies/<member> at the holder, domain/testsub/tallies at home"}
     ledger: {title: ledger, about: the ledger the holder keeps for the domain, absent: nothing ledgered yet}
+metrics:
+  - {name: counters_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: counters_running

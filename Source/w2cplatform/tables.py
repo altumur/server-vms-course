@@ -61,6 +61,8 @@ class TableSpec:
         return KEY_TEMPLATE.sub(one, self.key)
 
 
+TABLE_KEYS = ("key", "fields", "schema", "stamp", "journal")   # what a table of a spec says
+
 def parse(sub: str, raw, field_parser) -> tuple[tuple, dict]:
     """`tables:` as written — a list of names (a family the console's token may write, served by nobody), or a map of
     declarations — as `(names, {name: TableSpec})`. `field_parser(table, fields)` reads the fields as a unit's are read."""
@@ -75,7 +77,7 @@ def parse(sub: str, raw, field_parser) -> tuple[tuple, dict]:
     for t, d in raw.items():
         if d is None:
             continue
-        if not isinstance(d, dict) or set(d) - {"key", "fields", "schema", "stamp", "journal"} or not isinstance(d.get("key"), str) \
+        if not isinstance(d, dict) or set(d) - set(TABLE_KEYS) or not isinstance(d.get("key"), str) \
                 or not isinstance(d.get("fields") or {}, dict):
             raise ValueError(f"spec {sub}: tables.{t} is {{key, fields, schema, stamp, journal}}, not {d!r}")
         fields = field_parser(t, d.get("fields") or {})
@@ -163,6 +165,8 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
             row[n] = f.parse(sent[n]) if sent.get(n) is not None else f.default_value()
         except (*PARSE_ERRORS, OverflowError):            # `"1e12"` where a whole number goes, `1e999`: the sender's 400
             raise Refused(f"{n} is {f.type}, not {str(sent[n])[:60]!r}") from None
+        if f.enum and sent.get(n) is not None and row[n] not in f.enum:   # `enum`: one of the values its spec names
+            raise Refused(f"{n} is one of {', '.join(map(str, f.enum))}, not {str(sent[n])[:60]!r}")
     was = {}
     for n, f in t.fields.items():
         if old and n in old:

@@ -1,0 +1,132 @@
+# testsub2.subsystem.yaml — the second subsystem that exists only for the platform's own tests (tests/test_boundary.py,
+# tests/test_spec_rule.py). testsub is the least a spec can say; this one says everything the platform reads in a spec,
+# each key once, so that every key and operator the platform implements is exercised by a subsystem that has nothing
+# to do with the product — and a key no spec uses is a key the platform does not need (`test_spec_rule.py`).
+#
+# A unit is a TALLY about one of testsub's counters (`about`): it is kept on a shelf (a row of `shelves`, its place),
+# beside the worker that holds its counter (`near`), and a person may ask its holder to add to it (`requests`).
+name: testsub2
+slot: {prefix: t, name_env: TALLY_NAME}
+worker: {writes: [shelves], reads: [testsub/counters], requests: [testsub]}
+objects: {rows: [marks/*]}
+about: {sub: testsub, field: of}
+unit:
+  rows: tallies                       # testsub2/tallies/<name>
+  id: name
+  fields:
+    name:     {type: string, required: true, unique: true}
+    of:       {type: string, required: true, fixed: true}       # the counter it is about
+    mode:     {type: string, default: plain, enum: [plain, loud]}
+    step:     {type: int, default: 1, schema: {minimum: 1, maximum: 100}}
+    weight:   {type: float, default: 1.0}
+    active:   {type: bool, default: true}
+    tags:     {type: list}
+    rule:     {type: json}
+    mask:     {type: blob}
+    shelf:    {type: string, ref: testsub2/shelves, must_match: {zone: zone}}
+    zone:     {type: string}
+    feed:     {type: url, unique: canonical, schemes: [https, sftp], credentials: {login: feed_user, secret: feed_secret},
+               secret_in: [{param: [token*, "*key"]}, {nested: via}]}
+    feed_user:   {type: string}
+    feed_secret: {type: string, bound_to: [feed]}
+    keep_days:   {inherit: 7, type: int, merge: override}
+    flags:       {type: list, inherit: [], merge: union}
+    state:       {type: string, default: open}
+  derived:
+    - {row: "retention/{id}", items: {days: keep_days}, on_delete: {days: "0"}}
+tables:
+  shelves:
+    key: name
+    fields:
+      name:    {type: string, required: true}
+      zone:    {type: string}
+      server:  {type: string}
+      kind:    {type: string, default: plain, enum: [plain, reserve, closed]}
+      admits:  {type: bool, default: true}
+      enabled: {type: bool, default: true}
+    schema:
+      if: {properties: {kind: {const: closed}}}
+      then: {properties: {admits: {const: false}}, required: [admits]}
+    stamp: [by, at]
+    journal: {written: shelf.declared, deleted: shelf.withdrawn}
+  marks:
+    key: "{of}-{from:int}-{to:int}"
+    fields:
+      of:   {type: string, required: true}
+      from: {type: float, required: true}
+      to:   {type: float, required: true}
+placement:
+  capacity:    {from: capacity, default: 8}
+  headroom:    {from: headroom}
+  constraint:  labels-subset
+  requires:    resource
+  servers:     distinct
+  tie_break:   most-free-capacity
+  near:        {sub: testsub, by: of, of: name, prefer: {start: [0, 1]}}
+  spread_by:   zone
+  group_by:    {field: feed, cut_at: part}
+  place_by:    shelf
+  places:      {table: shelves, where: {enabled: true}, server_field: server}
+  offers:      true
+  home:        shelf
+  retire_when: {field: state, in: [done]}
+  rebalance:   {dead_band: 0.2}
+  affinity:    {field: shelf, table: shelves, server_field: server, strict: {kind: [reserve], enabled: true}}
+holds: {table: marks, unit: of, since: from, until: to, longest: 86400}
+requests:
+  free: true
+  schema:
+    type: object
+    required: [unit, add]
+    additionalProperties: false
+    properties: {unit: {type: string}, add: {type: integer}, valid_until: {type: number}}
+  key: "{unit}-{add:int}"
+  valid_for: 30
+  most_valid: 600
+  per_person: 3
+  settle: 30
+  ttl: 3600
+  stamp: [by, at, about]
+  journal: tally.asked
+  elsewhere: [recount]
+door: {routes: [read, play]}
+rights:
+  unit_of: {marks: of}
+  routes: {view: [marks], edit: [shelves]}
+  cluster_rows: true
+  reach:
+    group: [feed]
+    cluster: [zone]
+    requests: [add]
+  names:
+    - {field: rule, unit: unit, sub: sub}
+    - {field: rule, unit: of, of: testsub}
+events:
+  older_epochs: fenced
+  suppress:
+    tally.tick: {window: 5, by: [unit]}
+snapshot: [name, of, mode, step]
+metrics:
+  - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
+  - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}
+  - {name: marks_unshelved, count: table marks, unless: {table: shelves, where: {kind: reserve}}}
+  - {name: phases, from: status.phase, agg: count, when: phase}
+  - {name: depth, from: status.depth, agg: value, type: gauge, default: 0}
+  - {name: jam, from: heartbeat.jam, agg: flag, equals: [stuck, "yes"]}
+  - {name: away_seconds, from: heartbeat.away_since, agg: age, default: 0}
+  - {name: belt, from: heartbeat.belt.state, agg: label, label: state, default: ok}
+  - {name: adds_total, from: "heartbeat.adds.<outcome>", agg: sum, type: counter, labels: {kind: add}}
+  - {name: queue_max, from: "heartbeat.queue.<lane>", agg: max}
+  - {name: wait_seconds, from: heartbeat.wait, agg: histogram, type: histogram, buckets: [1.0, 5.0]}
+servers:
+  show:
+    - {table: shelves, by: server, title: полки, columns: [name, kind, enabled]}
+display:
+  unit: счёт
+  units: счёты
+  field_help: {of: счётчик, shelf: полка}
+  kinds: {tally.tick: тик}
+  actions: {add: прибавить}
+  tree: {group_by: zone, nested_by: "/", columns: [{field: name}, {field: phase, title: фаза}], children: false}
+console:
+  running: tallies_running

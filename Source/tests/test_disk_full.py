@@ -25,7 +25,7 @@ def test_the_watermark_is_on_until_somebody_turns_it_off():
     box = Box()
     was = os.environ.pop("WATERMARK_DEFAULT", None)                    # the suite says `off`; an installation says nothing
     try:
-        assert space_settings(box.vars) == {"enabled": True, "high": 0.85, "low": 0.75, "min_days": 3.0}
+        assert space_settings(box.vars) == {"enabled": True, "high": 0.85, "low": 0.75}
         box.vars.put(SPACE_KEY, {"high": "0.9"})                       # a row that tunes it does not switch it off
         assert space_settings(box.vars)["enabled"] is True and space_settings(box.vars)["high"] == 0.9
         box.vars.put(SPACE_KEY, {"enabled": "false"})                  # the decision not to have one: somebody's
@@ -41,9 +41,8 @@ def test_the_watermark_is_on_until_somebody_turns_it_off():
 
 
 def _files():
-    """A subsystem that keeps files on the resource's disk and can give some up — `requests: {free: true}`. The VMS has
-    none any more (footage is in volumes, rings that never outgrow their quota; the recorder answers nought), and the
-    watermark is the platform's, for whatever a subsystem keeps on that disk."""
+    """A subsystem that keeps files on the resource's disk and can give some up — `requests: {free: true}`, made up here:
+    the watermark is the platform's, for whatever a subsystem keeps on that disk, and a test of it needs no product."""
     from w2cplatform import catalog
     from w2cplatform.spec import SubsystemSpec
     spec = SubsystemSpec.from_dict({"name": "files", "unit": {"rows": "files", "id": "name", "fields": {"name": {"type": "string"}}},
@@ -56,7 +55,7 @@ def test_what_could_not_be_freed_is_a_number_anybody_can_read():
     """Over the mark, and everything already on the floor. The pass said so in its report, which went to a log.
     It is in the resource's heartbeat now, and a console exports it for every server."""
     box = Box()
-    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75", "min_days": "3"})
+    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"})
     res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall,
                    space_probe=lambda root: (1_000_000, 100_000))      # 90 % full: 150 000 to free
     files = _files()

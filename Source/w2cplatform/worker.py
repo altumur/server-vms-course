@@ -625,10 +625,27 @@ class Worker:
         return None
 
     # Whether `place`, held under this worker's NAME by the instance `holder`, is taken back at once (`_claim_hold`).
-    # Yes, unless the subsystem knows the place can be written from another host than the holder's
-    # (a subsystem's worker overrides this).
+    # Yes for a place on one box (its row names its server, `placement.places.server_field`): the two instances of the
+    # name are on that box, and its daemon keeps one writer. A place ANY box may write — its row names no server — only
+    # from the holder's own box: the row's `holder` is `host:pid:rnd`, and the host is the box's id where the runtime
+    # says one (`runtime.box_of`; an instance named otherwise says no host, and waits — the safe side). A place whose row
+    # cannot be read now is not known to be on one box: it waits too. It was a subsystem's override (the boundary's
+    # §2.8 #4).
     def hold_follows_name(self, place: str, holder: str = "") -> bool:
-        return True
+        if not self._any_box(place):
+            return True
+        here = runtime.box_of(self.instance)
+        return here is not None and here == runtime.box_of(holder)
+
+    def _any_box(self, place: str) -> bool:
+        places = getattr(self.spec, "places", None) or {}
+        if not places.get("server_field"):
+            return False
+        try:
+            items, _ = self.vars.get(self.sub.config(places["table"], place))
+        except (OSError, *PARSE_ERRORS):
+            return True
+        return not str((items or {}).get(places["server_field"]) or "")
 
     # Still mine? Same three lines as `renew_slot`, and the same meaning when it says no: another process
     # holds this place now, so this one must stop writing into it. Losing a hold is NOT losing the slot —

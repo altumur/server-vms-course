@@ -18,10 +18,10 @@ that builds them from a directory of specs (`python3 -m w2cplatform`, `__main__.
     DOOR_ORIGINS      every holder: the consoles' origins a page may come from (`door.py`, CORS)
 
 The loops were a subsystem's (its `__main__`: the controller's loop, the blob sweep's, the resource's; and again in
-М11's own entry point), and the platform ran only as a library under its `__main__`. They are here, once; a
-subsystem's process that still needs code of its own around them — a controller with a rule of its own, a console with
-routes of its own, a resource that keeps what the subsystem says (the hooks, the boundary's step 6) — runs these same
-loops over the objects it builds.
+М11's own entry point), and the platform ran only as a library under its `__main__`. They are here, once, and the
+controllers, the console and the resource run from the specs alone; a subsystem's own processes are its workers (and
+what it runs beside them, its jobs), which build on `w2cplatform/worker.py` and take from here only the stores
+(`stores`) and the pacing of a loop (`every`, `stop`).
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)

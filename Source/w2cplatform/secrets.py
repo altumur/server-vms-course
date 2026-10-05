@@ -26,10 +26,11 @@ Everything between those two points renders it as `***`."""
 #
 # What it does NOT buy, said plainly: this module is about what LEAVES — the page, the snapshot, the logs. The
 # row in the store holds the secret sealed when the console has a key (`sealing.py`, `SECRETS_KEY`) and in the
-# clear when it has none, with a warning said once; the store's ACL is about writers — anyone who may READ
-# `<sub>/<rows>/*` reads every row, sealed or not. On one box that is the
-# file under `PLATFORM_DIR`; on a cluster it is raft, encrypted at rest, with a policy per job. Narrowing
-# the readers is a change to the Variables contract, not to this file, and it has not been made.
+# clear when it has none, with a warning said once. Anyone who may READ `<sub>/<rows>/*` reads every row, sealed or
+# not: on one box whoever reads the files under `PLATFORM_DIR`; on a cluster the roles the rights file lets read it
+# (`configstore-rights.json`, generated from the specs — the console, the subsystem's controller and workers, the
+# roles of the subsystems that refer to it). Sealing is what keeps those readers from the secret; who opens it is
+# whoever holds the key ring (`sealing.py`).
 #
 # ## An address: what the platform reads in it, and what a spec tells it (the boundary's step 4)
 # The platform reads an address as RFC 3986 says one is written, and nothing more: a login before an `@` (anywhere

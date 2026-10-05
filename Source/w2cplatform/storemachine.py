@@ -53,11 +53,11 @@ the group, and what a test stand applies in one process — the same code, so th
 # and sends it to a follower that lags, and while one entry that size crosses the network the leader's heartbeats
 # wait behind it. A row is a couple of hundred bytes; what makes one big is a field that belongs in an object. So a
 # row's items weigh at most `MAX_VALUE` bytes, counted as every store counts them (`variables.items_bytes`: keys and
-# values, as bytes — Nomad's measure of a Variable, `limits.py`): refused at the door (413 `toolarge`, before
+# values, as bytes, `limits.py`): refused at the door (413 `toolarge`, before
 # anything is submitted) and again by the machine, whose refusal is a function of the command alone, so every member
 # refuses the same. 512 KiB is Consul's ceiling for a value on the same `hashicorp/raft` the product runs
-# (`kv_max_value_size`), for the same reason; it is a thousand times a row, and eight times Nomad's 64 KiB that the
-# platform was built under — no row the code writes comes near it. `FileVariables` has no ceiling of its own, so a
+# (`kv_max_value_size`), for the same reason; it is a thousand times a row, and eight times the 64 KiB the capped
+# stores of the tests declare — no row the code writes comes near it. `FileVariables` has no ceiling of its own, so a
 # box's rows are measured at the import (`configstore.import_rows`), all of them before the first write.
 #
 # ## The rights file — who may do what, by the socket the caller came through

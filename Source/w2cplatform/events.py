@@ -75,6 +75,39 @@ def unit_dir(root: str, subsystem: str, unit: str) -> str:
     return os.path.join(root, subsystem, str(unit))
 
 
+# HOW FAR A READER OF A UNIT'S EVENTS HAS READ (the boundary's §3 row 10; the product's `Frontier`): one number,
+# durable, beside the events it read — `<root>/<sub>/<unit>/frontier.json` `{watched_through}`. A file on the resource
+# and not a row in the store: a worker may not write configuration, and this number is not configuration — it is what
+# THIS reader has read; it lives next to the unit's events because the thing and the bookkeeping about the thing travel
+# together, and a resource that comes back brings both. One number and not an offset into a file: the log is a merge
+# of several resources, not a stream with offsets, and "what have I already considered" has one honest answer in a
+# merged view — a time. The walkers of the tree pass it by (`parse_bucket`: not a bucket). It was a subsystem's class
+# that knew the tree's layout.
+class Frontier:
+    def __init__(self, root: str, sub: str, unit):
+        self.path = os.path.join(unit_dir(root, sub, str(unit)), "frontier.json")
+
+    # How far the unit has been read, or None — never started, or the file was lost, or it does not read as a frontier
+    # (a list, a number past a float, nested past JSON's depth: the review's tenth round). The reader decides where to
+    # begin then.
+    def read(self) -> float | None:
+        from .rows import finite
+        try:
+            with open(self.path) as f:
+                return finite(json.load(f)["watched_through"])
+        except (FileNotFoundError, *PARSE_ERRORS):
+            return None
+
+    # Written AFTER the work of that stretch, and atomically: a crash between the work and the number costs a re-read,
+    # a half-written number would cost the frontier itself.
+    def set(self, t: float) -> None:
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        tmp = self.path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump({"watched_through": float(t)}, f)
+        os.replace(tmp, self.path)
+
+
 # `<root>/<subsystem>/<unit>/e<epoch>/<stamp>.events.jsonl`.
 def bucket_path(root: str, subsystem: str, unit: str, epoch: int, start: float) -> str:
     return os.path.join(unit_dir(root, subsystem, unit), f"e{epoch}", _stamp(start) + ".events.jsonl")
