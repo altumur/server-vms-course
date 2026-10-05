@@ -82,3 +82,32 @@ def test_the_stores_write_door_and_its_membership_door_refuse_a_body_that_is_no_
             assert (code, said.get("kind"), said.get("fault")) == (400, "badrequest", fault), (path, raw[:20], code, said)
         code, said = dm.serve("POST", path, b'{"id": "bad name"}', ADMIN, 1.0)
         assert code == 400 and "fault" not in said, said            # read, and wrong: the door's words alone
+
+
+def test_null_at_the_top_of_a_json_field_is_no_field_and_null_inside_a_document_is_a_value():
+    """`POST /counters {"name": …, "doc": <body>}` and the row as stored: `null` is no `doc` (the default applies — none
+    declared: no field, never the text `null`; one declared: the default's text), absent the same; `{"a": null}`, `{}`,
+    `[]`, `0` are the document, canonical. A string is JSON text (`Field.to_item`): `"s"` is no JSON, 400 `not_json`."""
+    vars_, served = _counters()
+    cases = [("null", None), ("absent", None), ('{"a": null}', '{"a":null}'), ("{}", "{}"), ("[]", "[]"), ("0", "0"),
+             ('[null, {"z": null}]', '[null,{"z":null}]')]
+    wrong = []
+    with served as call:
+        for i, (body, stored) in enumerate(cases):
+            raw = f'{{"name": "c{i}"}}' if body == "absent" else f'{{"name": "c{i}", "doc": {body}}}'
+            st, out = call("POST", "/counters", raw=raw.encode())
+            row = vars_.get(f"ctr/counters/c{i}")[0]
+            if st != 201 or row is None or row.get("doc") != stored or (stored is None and "doc" in row):
+                wrong.append(f"{body}: {st} {out}, stored {row}, not {stored!r}")
+            elif stored is None and out.get("doc") is not None:
+                wrong.append(f"{body}: the reply says doc {out.get('doc')!r}")
+        st, out = call("POST", "/counters", raw=b'{"name": "s", "doc": "s"}')
+        assert st == 400 and out.get("fault") == "not_json" and vars_.get("ctr/counters/s")[0] is None, (st, out)
+    assert not wrong, "\n".join(wrong)
+    vars_, served = _counters(default='{"n": 1}')     # JSON text: a map under `default` is keys the loader refuses
+    with served as call:
+        for i, body in enumerate(("null", "absent")):
+            raw = f'{{"name": "d{i}"}}' if body == "absent" else f'{{"name": "d{i}", "doc": {body}}}'
+            assert call("POST", "/counters", raw=raw.encode())[0] == 201
+            row = vars_.get(f"ctr/counters/d{i}")[0]
+            assert row.get("doc") == '{"n":1}', (body, row)              # the default applies: its text, as for absent
