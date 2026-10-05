@@ -25,6 +25,11 @@ placement:
   tie_break:  most-free-capacity
   offers:     true                              # a gateway short on a label set is offered to a spare (`live_workers_needed`)
   rebalance:  {dead_band: 0.10}
+# Not a moment past its lease's end: a gateway writes nothing that carries an epoch — it holds a camera's stream and
+# hands it to viewers, and a fan-out that goes on under a lease nobody confirms is a second subscription to the camera
+# beside the gateway that took it over, not a duplicate anybody could mark. (The platform's default; said so it is
+# read, as the product says it.)
+lease: {unconfirmed_max: off}
 snapshot: [cam, labels]
 # Asking for a camera's stream is watching it, not changing it: `view` on the camera creates the row (it was the
 # console's `POST /whep/<cam>`, which created it on the first viewer — the boundary's step 6).

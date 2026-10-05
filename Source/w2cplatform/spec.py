@@ -610,7 +610,7 @@ def _heartbeat_strings(name, hb) -> tuple:
 # epoch in its name, and a second writer is a duplicate, not damage; `<seconds>` — up to that long; `off` (the default)
 # — not at all: a lease not confirmed in time stops the unit — where the work is actions, done twice if done by two.
 # Typed: a number of seconds or one of the two words, nothing else (a word `"90"` lifted the ceiling unseen in the
-# product).
+# product). `off` written bare, as the product's specs write it, is what YAML 1.1 reads as false: the same word.
 LEASE_WORDS = {"forever": None, "off": 0.0}
 
 
@@ -618,6 +618,8 @@ def _lease(name, lease) -> float | None:
     if lease is None:
         return 0.0
     got = lease.get("unconfirmed_max") if isinstance(lease, dict) and set(lease) == {"unconfirmed_max"} else None
+    if got is False:
+        got = "off"
     if isinstance(got, str) and got in LEASE_WORDS:
         return LEASE_WORDS[got]
     if isinstance(got, (int, float)) and not isinstance(got, bool) and math.isfinite(got) and got > 0:

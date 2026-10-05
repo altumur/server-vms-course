@@ -21,6 +21,9 @@ name: auto
 slot: {prefix: a, name_env: AUTO_NAME}
 # The one worker that files to other subsystems: their request rows, and nothing else of theirs.
 worker: {requests: [vms, rec, det]}
+# Not a moment past its lease's end: what an evaluator does is ACTIONS — a relay pulsed, a preset called, a request
+# filed — and twice is not a duplicate. (The platform's default; said so it is read, as the product says it.)
+lease: {unconfirmed_max: off}
 unit:
   rows: scenarios                    # auto/scenarios/<name>
   id: name                           # the operator's name for it: "door-on-badge"
