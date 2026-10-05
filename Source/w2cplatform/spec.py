@@ -162,8 +162,17 @@ SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of
 # What a spec's `requests:` says (`SubsystemSpec._page_words`).
 REQUEST_KEYS = ("free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
                 "elsewhere")
-# What a spec's `display:` says: words for a page (`SubsystemSpec._page_words`, `_card_words`).
-DISPLAY_KEYS = ("unit", "units", "field_help", "kinds", "actions", "tree", "keys", "general", "fields", "options", "form")
+# What a spec's `display:` says: words for a page (`SubsystemSpec._page_words`, `_card_words`) — closed by sections (the
+# architect, 5 Oct): what a section holds is free words, and the one thing checked is that a word for a field names one.
+DISPLAY_KEYS = ("unit", "units", "units_count", "section", "general", "fields", "field_help", "options", "form", "events",
+                "kinds", "actions", "keys", "tree")
+# …a section's words, one string each: what a unit and its many are called, the many after a number, the section's title, the first tab
+DISPLAY_WORDS = ("unit", "units", "units_count", "section", "general")
+# …and the tree's: by what it groups, its columns, whether children hang under a unit — and the words a page says of a
+# group, its path's separator among them (the product's words: a group's title and hint, the row of no group…).
+TREE_KEYS = ("group_by", "columns", "children")
+TREE_WORDS = ("nested_by", "group_title", "group_hint", "filter", "no_group", "contents_title", "group_word",
+              "no_group_suffix", "pick_note")
 # THE CONSOLE'S OWN ROUTES: the first segment of every path `SpecConsole.dispatch` and `Mount` answer themselves, before a
 # spec's rows and tables are looked at. A spec whose rows or a declared table is named so is a family no request reaches
 # — a table `marks` was never written over HTTP: `POST /marks` is the operator's mark. Refused at load; a closed set, held
@@ -941,9 +950,9 @@ class SubsystemSpec:
     # `metrics: [...]` — the subsystem's own numbers on `/metrics`, declared (`metrics.py`; the boundary's step 6 — it
     # was a function of the subsystem's the console called, `metrics_extra`).
     metrics: list = field(default_factory=list)
-    # `display: {unit, units, field_help, kinds, actions, tree: {group_by, nested_by, columns, children}, keys, general,
-    # fields, options, form}` — what a page calls things; a dictionary the platform hands to `/spec` and reads none of
-    # (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8).
+    # `display: {unit, units, units_count, section, general, fields, field_help, options, form, events, kinds, actions,
+    # keys, tree}` (`DISPLAY_KEYS`, `TREE_KEYS`, `TREE_WORDS`) — what a page calls things; a dictionary the platform hands
+    # to `/spec` and reads none of (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8), checked only that a word for a field names one.
     display: dict = field(default_factory=dict)
     # `servers: {show: [{table, by, title, columns}]}` — rows of this subsystem's tables a page shows under the server
     # their `by` field names (a disk under its server). Handed to `/spec`; it was a field the console's `/servers` read
@@ -1211,9 +1220,13 @@ class SubsystemSpec:
                                  f"(the console's routes: {', '.join(sorted(CONSOLE_ROUTES))})")
         disp = d.get("display")
         if disp is not None:
-            if not isinstance(disp, dict) or set(disp) - set(DISPLAY_KEYS):
+            if not isinstance(disp, dict):
                 raise ValueError(f"spec {self.name}: `display:` is {{{', '.join(DISPLAY_KEYS)}}} — words for a page, no "
                                  f"logic — not {disp!r}")
+            stray = [k for k in disp if k not in DISPLAY_KEYS]
+            if stray:
+                raise ValueError(f"spec {self.name}: `display.{stray[0]}` is no section of `display:` "
+                                 f"({', '.join(DISPLAY_KEYS)}) — words for a page, no logic, closed by sections")
             self._card_words(disp)
             for fid, w in (disp.get("keys") or {}).items():
                 if not isinstance(w, dict) or set(w) - {"title", "about", "absent"} or not isinstance(w.get("title"), str) \
@@ -1221,12 +1234,13 @@ class SubsystemSpec:
                     raise ValueError(f"spec {self.name}: display.keys.{fid} is {{title, about, absent}} — words, not {w!r}")
             tree = disp.get("tree") or {}
             # `children: false` — the page draws no child units under a unit in the tree (the product's word; the page's
-            # behaviour, passed through `/spec` untouched)
-            if not isinstance(tree, dict) or set(tree) - {"group_by", "nested_by", "columns", "children"} \
+            # behaviour, passed through `/spec` untouched); the rest are words
+            if not isinstance(tree, dict) or set(tree) - {*TREE_KEYS, *TREE_WORDS} \
                     or (tree.get("group_by") and tree["group_by"] not in self.fields) \
-                    or not isinstance(tree.get("children", True), bool):
-                raise ValueError(f"spec {self.name}: display.tree is {{group_by: <a field>, nested_by, columns, children: "
-                                 f"true|false}}, not {tree!r}")
+                    or not isinstance(tree.get("children", True), bool) \
+                    or not all(isinstance(tree[w], str) for w in TREE_WORDS if w in tree):
+                raise ValueError(f"spec {self.name}: display.tree is {{group_by: <a field>, columns, children: true|false, "
+                                 f"{', '.join(TREE_WORDS)}: <words>}}, not {tree!r}")
             for c in tree.get("columns") or []:
                 if not isinstance(c, dict) or (c.get("field") not in self.fields and c.get("field") not in self.STATUS_COLUMNS):
                     raise ValueError(f"spec {self.name}: display.tree.columns names a field of the row or of the unit's "
@@ -1243,30 +1257,56 @@ class SubsystemSpec:
             self.servers_show = show
 
     # A UNIT'S CARD, IN WORDS (the product's; the page module draws the card from them, the platform reads none): `general`
-    # — what the card's first tab is called; `fields` — a field's label (`id` and the unit's status words too); `options`
-    # — the word for each value of a field with an `enum`; `form` — the card's blocks in order, `{title, state?,
-    # placement?, fields, note?}`: `state` puts the unit's state in the block, `placement` where it runs. Each names
-    # fields of the row, checked here: a word for a field that is not there is a word for nothing.
+    # — what the card's first tab is called; `fields` — a field's label (`id` and the unit's status words too);
+    # `field_help` — a field's hint; `options` — the word for each value of a field with an `enum`; `form` — the card's
+    # blocks in order, `{title, state?, placement?, fields, status?, note?}`: `state` puts the unit's state in the block,
+    # `placement` where it runs, `status` what its worker says of it, read only (`[{field, since?, title?}]`: a field of
+    # the unit's STATUS, not of its row: what it is doing, and since when); `events: false` — the card has no journal
+    # tab of the module's (the page shows the unit's events itself). Each word for a field names one, checked here: a
+    # word for a field that is not there is a word for nothing. A status field is named by `form[].status` and nowhere
+    # else, so its words in `options` are free — its values are the worker's to say, no `enum` of the spec holds them.
     def _card_words(self, disp: dict) -> None:
-        named = set(self.fields) | {"id", *self.STATUS_COLUMNS}
-        fields, options, form = disp.get("fields") or {}, disp.get("options") or {}, disp.get("form") or []
-        if not isinstance(disp.get("general", ""), str):
-            raise ValueError(f"spec {self.name}: display.general is a word, not {disp['general']!r}")
-        if not isinstance(fields, dict) or not all(k in named and isinstance(v, str) for k, v in fields.items()):
-            raise ValueError(f"spec {self.name}: display.fields is {{<a field of the row>: <its label>}}, not {fields!r}")
-        for k, words in (options.items() if isinstance(options, dict) else [(None, None)]):
-            f = self.fields.get(k)
-            if f is None or not f.enum or not isinstance(words, dict) or \
-                    not all(isinstance(w, str) and str(v) in map(str, f.enum) for v, w in words.items()):
-                raise ValueError(f"spec {self.name}: display.options is {{<a field with an enum>: {{<one of its values>: "
-                                 f"<its word>}}}}, not {options!r}")
+        form = disp.get("form") or []
         if not isinstance(form, list) or not all(
-                isinstance(b, dict) and not set(b) - {"title", "state", "placement", "fields", "note"}
+                isinstance(b, dict) and isinstance(b.get("status", []), list) and all(
+                    isinstance(x, dict) and not set(x) - {"field", "since", "title"} and isinstance(x.get("field"), str)
+                    and x["field"] and all(isinstance(x.get(k, ""), str) for k in ("since", "title"))
+                    for x in b.get("status", [])) for b in form):
+            raise ValueError(f"spec {self.name}: display.form[].status is [{{field: <a field of the unit's status>, "
+                             f"since?: <its field saying since when>, title?: <words>}}], not {form!r}")
+        row = set(self.fields) | {"id", *self.STATUS_COLUMNS}
+        status = {x["field"] for b in form for x in b.get("status", [])} - set(self.fields)
+        named = row | status
+        for w in DISPLAY_WORDS:
+            if not isinstance(disp.get(w, ""), str):
+                raise ValueError(f"spec {self.name}: display.{w} is a word, not {disp[w]!r}")
+        if not isinstance(disp.get("events", True), bool):
+            raise ValueError(f"spec {self.name}: display.events is true or false — whether the card has the module's "
+                             f"journal tab — not {disp['events']!r}")
+        for k in ("kinds", "actions"):
+            got = disp.get(k) or {}
+            if not isinstance(got, dict) or not all(isinstance(v, str) for v in got.values()):
+                raise ValueError(f"spec {self.name}: display.{k} is {{<a name>: <its words>}}, not {got!r}")
+        for k in ("fields", "field_help"):
+            got = disp.get(k) or {}
+            if not isinstance(got, dict) or not all(f in named and isinstance(v, str) for f, v in got.items()):
+                stray = sorted(str(f) for f in got if f not in named) if isinstance(got, dict) else []
+                raise ValueError(f"spec {self.name}: display.{k} is {{<a field of the row or of form[].status>: <words>}}"
+                                 f"{f' — {stray} names no field' if stray else ''}, not {got!r}")
+        options = disp.get("options") or {}
+        for k, words in (options.items() if isinstance(options, dict) else [(None, None)]):
+            f, free = self.fields.get(k), k in status
+            if not isinstance(words, dict) or not (free or (f is not None and f.enum)) or not all(
+                    isinstance(w, str) and (free or str(v) in map(str, f.enum)) for v, w in words.items()):
+                raise ValueError(f"spec {self.name}: display.options is {{<a field with an enum>: {{<one of its values>: "
+                                 f"<its word>}}, <a field of form[].status>: {{<a value>: <its word>}}}}, not {options!r}")
+        if not all(
+                not set(b) - {"title", "state", "placement", "fields", "status", "note"}
                 and isinstance(b.get("title"), str) and isinstance(b.get("note", ""), str)
                 and isinstance(b.get("state", False), bool) and isinstance(b.get("placement", False), bool)
-                and isinstance(b.get("fields"), list) and all(x in named for x in b["fields"]) for b in form):
+                and isinstance(b.get("fields"), list) and all(x in row for x in b["fields"]) for b in form):
             raise ValueError(f"spec {self.name}: display.form is [{{title, state?, placement?, fields: [<a field of the "
-                             f"row>], note?}}], not {form!r}")
+                             f"row>], status?, note?}}], not {form!r}")
 
     # The placement's words that are a vocabulary or a declaration, checked at load (the boundary's step 6): the
     # constraint and the tie-break are names from the closed catalogue; `group_by` is a field, or `{field, cut_at}` over

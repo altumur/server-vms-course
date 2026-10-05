@@ -42,3 +42,4 @@ console:
 display:
   unit: живой поток
   units: живые потоки
+  units_count: живых потоков

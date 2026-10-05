@@ -186,17 +186,38 @@ def test_a_key_the_platform_does_not_read_is_refused_at_any_level_and_named_wher
 
 
 def test_a_units_card_is_words_naming_its_fields():
-    """`display.general`, `fields`, `options`, `form` — the card's words, the product's: passed to the page, checked at load
-    to name fields of the row (and `id`), values of a field's `enum`, blocks `{title, state?, placement?, fields, note?}`."""
+    """`display` is closed by sections (the architect, 5 Oct): unit, units, units_count, section, general, fields,
+    field_help, options, form, events, kinds, actions, keys, tree (its words the product's: group_title, no_group,
+    pick_note…) — passed to the page. What a section holds is free words with ONE check at load: a word for a field names
+    one — `fields`, `field_help` and `form[].fields` a field of the row (or `id`, a status column), or a field of the
+    unit's status a block names (`form[].status`); `options` the values of a field's `enum`, a status field's values being
+    the worker's and free. Anything else is refused with the path."""
     spec = SubsystemSpec.from_dict(_testsub2())
     assert spec.display["form"][0]["fields"] == ["name", "mode"] and spec.display["options"]["mode"]["loud"] == "громко"
+    assert spec.display["options"]["lane"] == {"fast": "быстрая", "slow": "медленная"}      # a status field: free values
+    assert (spec.display["units_count"], spec.display["tree"]["no_group"], spec.display["events"]) == ("счётов", "Без зоны", False)
     d2 = _testsub2()
+    d2["display"]["options"].pop("lane")                 # the words for the status field, out of the way of a form replaced
+    d2["display"]["field_help"].pop("lane", None)
     for bad, words in (({"fields": {"nothing": "x"}}, "display.fields is"), ({"options": {"name": {"a": "b"}}}, "display.options is"),
                        ({"options": {"mode": {"quiet": "тихо"}}}, "display.options is"),
+                       ({"options": {"belt": {"a": "b"}}}, "display.options is"),           # no field, no status field
+                       ({"field_help": {"nothing": "x"}}, "['nothing'] names no field"),
+                       ({"fields": {"lane": 1}}, "display.fields is"),
                        ({"form": [{"title": "t", "fields": ["nothing"]}]}, "display.form is"),
+                       ({"form": [{"title": "t", "fields": ["lane"]}]}, "display.form is"),   # a status field is read only
                        ({"form": [{"title": "t", "fields": ["name"], "tab": 1}]}, "display.form is"),
-                       ({"general": 1}, "display.general is a word")):
+                       ({"form": [{"title": "t", "fields": [], "status": [{"field": "lane", "when": "x"}]}]}, "form[].status"),
+                       ({"form": [{"title": "t", "fields": [], "status": "lane"}]}, "form[].status"),
+                       ({"general": 1}, "display.general is a word"), ({"units_count": ["счётов"]}, "display.units_count"),
+                       ({"section": 2}, "display.section is a word"), ({"events": "no"}, "display.events is true or false"),
+                       ({"kinds": {"tally.tick": 1}}, "display.kinds"),
+                       ({"tree": {"group_by": "zone", "no_group": ["x"]}}, "display.tree is"),
+                       ({"tree": {"group_by": "zone", "not_in": "x"}}, "display.tree is")):
         _refused(lambda bad=bad: SubsystemSpec.from_dict({**d2, "display": {**d2["display"], **bad}}), words)
+    for stray in ("status", "colour"):                   # a section of no one's: the loader names it with its path
+        _refused(lambda stray=stray: SubsystemSpec.from_dict({**d2, "display": {**d2["display"], stray: {}}}),
+                 f"`display.{stray}`")
 
 
 def test_every_grant_of_a_subsystem_is_derived_from_its_spec():

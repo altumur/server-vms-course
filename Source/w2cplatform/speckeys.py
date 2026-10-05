@@ -20,6 +20,7 @@ stands (the architect, 2026-10-05: the key sets are closed — nothing is accept
 from __future__ import annotations
 
 from . import metrics
+from .spec import TREE_WORDS
 from .tables import TABLE_KEYS
 
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
@@ -62,11 +63,13 @@ KEYS = {
     "rights.names.of",
     "servers.show.table", "servers.show.by", "servers.show.title", "servers.show.columns",
     *(f"metrics.{k}" for k in metrics.KEYS), "metrics.unless.table", "metrics.unless.where",
-    "display.unit", "display.units", "display.field_help", "display.kinds", "display.actions", "display.tree.group_by",
-    "display.tree.nested_by", "display.tree.columns.field", "display.tree.columns.title", "display.tree.columns.width",
-    "display.tree.children", "display.keys.*.title", "display.keys.*.about", "display.keys.*.absent",
+    "display.unit", "display.units", "display.units_count", "display.section", "display.events", "display.field_help",
+    "display.kinds", "display.actions", "display.tree.group_by", "display.tree.columns.field",
+    "display.tree.columns.title", "display.tree.columns.width", "display.tree.children",
+    *(f"display.tree.{w}" for w in TREE_WORDS), "display.keys.*.title", "display.keys.*.about", "display.keys.*.absent",
     "display.general", "display.fields", "display.options.*", "display.form.title", "display.form.state",
-    "display.form.placement", "display.form.fields", "display.form.note",
+    "display.form.placement", "display.form.fields", "display.form.status.field", "display.form.status.since",
+    "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness", "domain.books", "domain.kept", "domain.tables",
     "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys", "domain.keys.prefix",
     "domain.shared",

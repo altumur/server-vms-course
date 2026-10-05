@@ -409,8 +409,10 @@ metrics:
   - {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                    # the thirteenth pass, major 18
 # What a page calls things (the console module reads it from /spec; the platform reads none of it).
 display:
+  section: Оборудование
   unit: камера
   units: камеры
+  units_count: камер
   # The camera's card (the product's words, one card on both sides): its first tab, the fields' labels, the words for
   # `live`'s values, and the blocks of the form in order — the page module draws it; the platform checks each names a
   # field of the row (`SubsystemSpec._card_words`) and reads none of it.
@@ -458,6 +460,14 @@ display:
   tree:
     group_by: folders
     nested_by: "/"
+    group_title: По папкам
+    group_hint: Папки из поля folders → камеры
+    filter: Фильтр по имени, адресу…
+    no_group: Без папки
+    contents_title: Состав папки
+    group_word: папка
+    no_group_suffix: без папки
+    pick_note: "Папки берутся из поля folders камеры и на размещение не влияют; размещение решают её labels."
   # The words of the key families (domain.keys), by id; `absent` — what to say when the row is missing.
   keys:
     roads:

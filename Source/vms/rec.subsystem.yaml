@@ -275,6 +275,7 @@ servers:
 display:
   unit: запись
   units: записи
+  units_count: записей
   field_help:
     cam: камера, которую пишет запись
     home: том, в котором лежит запись
