@@ -38,11 +38,11 @@ def test_a_worker_that_names_no_resource_tree_writes_its_events_where_the_runtim
     forgot had `observe` write nothing, silently — and its journal opened on no tree. The base sets it from the runtime
     (the caller's, else `RESOURCE_ROOT`, else the platform's events root)."""
     box = Box()
-    w = _bare(box, testsub(), "w-1", env={"RESOURCE_ROOT": box.tree})
-    assert w.resource_root == box.tree
+    w = _bare(box, testsub(), "w-1", env={"RESOURCE_ROOT": box.resource_root})
+    assert w.resource_root == box.resource_root
     w.take_epoch("c1")
     path = w.observe("c1", "counted", n=1)
-    assert path is not None and path.startswith(box.tree), path
+    assert path is not None and path.startswith(box.resource_root), path
 
 
 def test_the_loop_calls_the_pass_the_way_the_abstract_declares_it():
@@ -57,12 +57,12 @@ def test_a_worker_whose_subsystem_sets_no_capacity_says_the_specs_default_and_is
     as the worker's word (`capacity_of`): nothing was ever placed on it, whatever `placement.capacity.default` said. It
     says the spec's default now; a worker with no spec and no capacity says none, and the controller's fallback holds."""
     box = Box()
-    w = _bare(box, testsub(), "w-1", resource_root=box.tree)
+    w = _bare(box, testsub(), "w-1", resource_root=box.resource_root)
     w.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(w.sub.heartbeat_key("w-1")))
     assert hb.extra["capacity"] == testsub().capacity_default == 4 and hb.extra["headroom"] == 4
     assert controller(box, capacity=1).capacity_of("w-1") == 4                 # the worker's word, not the fallback
-    plain = _Bare(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, resource_root=box.tree)
+    plain = _Bare(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     plain.server = "srv-1"
     plain.claim_slot("w-2")                                                     # no spec, no capacity
     plain.heartbeat_once()
@@ -79,7 +79,7 @@ def test_a_unit_the_lease_step_let_go_is_forgotten_by_the_assignment_read_that_a
     box = Box()
     ctl = controller(box)
     ctl.create({"name": "c1"})
-    w = counter_worker(box, "w-1", resource_root=box.tree)
+    w = counter_worker(box, "w-1", resource_root=box.resource_root)
     Controller(testsub().sub, box.vars, box.objects, wall=box.wall).assign("w-1", ["c1"])
     w.reconcile_once()
     assert "c1" in w.epochs
@@ -108,7 +108,7 @@ def test_the_specs_suppressed_repeats_are_the_platforms_observe():
     the source's clock — rides on the line written and is no part of a repeat's identity."""
     from w2cplatform.events import read_bucket
     box = Box()
-    w = _bare(box, testsub2(), "t-1", resource_root=box.tree)
+    w = _bare(box, testsub2(), "t-1", resource_root=box.resource_root)
     w.take_epoch("t1")
     first = w.observe("t1", "tally.tick", n=1, occurred=box.wall() - 2)
     assert first is not None
@@ -138,7 +138,7 @@ def test_an_early_pass_is_the_platforms_loop_and_a_worker_may_look_at_what_was_t
         def early_pass(self, touched):
             seen.append(("early", frozenset(touched)))
 
-    w = Early(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, resource_root=box.tree)
+    w = Early(testsub().sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w.claim_slot("w-1")
     w.start_stand_in = lambda: threading.Event()
 
@@ -163,13 +163,13 @@ def test_every_workers_failover_is_measured_from_the_heartbeat_its_name_left():
     constructor, and every other subsystem's failover went unmeasured. The platform reads it, before an instance's first
     heartbeat under its name, and says it in every heartbeat (`previous_hb`, `previous_instance`, `previous_server`)."""
     box = Box()
-    old = counter_worker(box, "w-1", instance="srv-1:101", resource_root=box.tree)
+    old = counter_worker(box, "w-1", instance="srv-1:101", resource_root=box.resource_root)
     old.heartbeat_once()
     was = Heartbeat.from_bytes(box.objects.get(old.sub.heartbeat_key("w-1")))
     assert was.extra["previous_hb"] == 0.0 and was.extra["started"] == old.started_wall   # nobody before it
     old.release_slot()
     box.wall.advance(20)
-    new = counter_worker(box, "w-1", instance="srv-1:102", resource_root=box.tree)
+    new = counter_worker(box, "w-1", instance="srv-1:102", resource_root=box.resource_root)
     new.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(new.sub.heartbeat_key("w-1")))
     assert (hb.extra["previous_hb"], hb.extra["previous_instance"], hb.extra["previous_server"]) == (was.ts, "srv-1:101", "srv-1")
@@ -181,7 +181,7 @@ def test_a_request_look_that_raises_something_else_is_that_looks_trouble():
     in the loop every turn counted a failed pump and logged a trace. It is counted, said once a spell, and the pump goes
     on — the next look tries again."""
     box = Box()
-    w = counter_worker(box, "w-1", resource_root=box.tree)
+    w = counter_worker(box, "w-1", resource_root=box.resource_root)
     w.serve_requests = lambda: (_ for _ in ()).throw(ValueError("not a row of the store"))
     w.pump_once()
     w.pump_once()
@@ -230,7 +230,7 @@ def test_a_persons_request_ledger_that_does_not_read_stops_that_person_and_says_
     spec = testsub2()
     ctl = controller(box, spec=spec)
     ctl.create({"name": "t1", "of": "c1"})
-    con = SpecConsole(ctl, marks_root=box.tree, wall=box.wall)
+    con = SpecConsole(ctl, marks_root=box.resource_root, wall=box.wall)
     said, real = [], con.journal.say
     con.journal.say = lambda kind, *a, **k: (said.append(kind), real(kind, *a, **k))[1]
     as_ = lambda who: {"X-User": who}                                            # noqa: E731

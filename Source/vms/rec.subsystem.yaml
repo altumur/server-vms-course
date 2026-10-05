@@ -29,8 +29,17 @@ name: rec
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
-# a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone.
-objects: {rows: [used/*]}
+# a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone. And
+# the files its resource's door gives the other servers (`resource.door_readable`): what a relay's forwarder dropped,
+# per camera (`rec/forwarded/<forwarder>`), which the ingest reads wherever it runs. What a member reports to the domain
+# (`domain.reports`) the door gives out unasked.
+objects: {rows: [used/*], door: [forwarded/*]}
+# The fields of a recorder's heartbeat that are strings and that something decides by: the volume it is counted in
+# (`place_by`), why that volume will not open, the box's own volume a page offers to declare (`volumes.py`).
+heartbeat: {strings: [volume, volume_error, archive]}
+# A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
+# a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
+lease: {unconfirmed_max: forever}
 # What a recorder reads outside its subsystem's rows: the domain's book of where each camera's primary is (М12).
 worker: {reads: [domain/vms/primaries]}
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
@@ -82,7 +91,8 @@ placement:
   # silent resource, recordings moved off a sound server — was the pulse, and the pulse is mended
   # (`Resource.pass_`: a `try` per beat, a monotonic clock, a limit on no progress).
   requires:   resource                               # the only subsystem that must be where the archive is
-  places:     {table: volumes, where: {enabled: true}, server_field: server}   # what a recorder holds, one each
+  # what a recorder holds, one each; a volume any box may serve is let go when its hold goes unconfirmed (`lease`)
+  places:     {table: volumes, where: {enabled: true}, server_field: server, lease: strict}
   place_by:   volume                                 # WHAT `distinct` and `home` count in: the disk, not the box —
                                                      # a server with three volumes runs three recorders, and one
                                                      # recording's worth of work goes to each. Reachability,
@@ -275,6 +285,7 @@ servers:
 display:
   unit: запись
   units: записи
+  units_count: записей
   field_help:
     cam: камера, которую пишет запись
     home: том, в котором лежит запись

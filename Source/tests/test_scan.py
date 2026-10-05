@@ -82,7 +82,7 @@ def test_footage_fetched_into_a_gap_is_scanned_like_the_rest():
 def test_what_is_logged_is_not_done_again():
     box = Box()
     p = plan([sp(1, 0, 10), sp(1, 12, 20), sp(1, 22, 30)], m(0), m(30))
-    log = ScanLog(box.archive, "job-1")
+    log = ScanLog(box.resource_root, "job-1")
     assert remaining(p, log) == p                                               # nothing logged: everything to do
     log.append(p[0], events=2, at=m(31)); log.append(p[1], events=0, at=m(32))
     assert remaining(p, log) == [p[2]] and log.events() == 2
@@ -93,10 +93,10 @@ def test_the_log_is_on_the_disk_not_in_the_process():
     resource's tree and not a field in the row it may not write."""
     box = Box()
     p = plan([sp(1, 0, 10), sp(1, 12, 20)], m(0), m(20))
-    ScanLog(box.archive, "job-1").append(p[0], events=1, at=m(21))
-    on_disk = os.path.join(box.archive, "detjob", "job-1", PROGRESS)
+    ScanLog(box.resource_root, "job-1").append(p[0], events=1, at=m(21))
+    on_disk = os.path.join(box.resource_root, "detjob", "job-1", PROGRESS)
     assert json.loads(open(on_disk).read().strip())["key"] == p[0].key()        # a file, readable by a process that never ran this scan
-    assert remaining(p, ScanLog(box.archive, "job-1")) == [p[1]]
+    assert remaining(p, ScanLog(box.resource_root, "job-1")) == [p[1]]
 
 
 def test_progress_is_not_a_resume_point():
@@ -105,7 +105,7 @@ def test_progress_is_not_a_resume_point():
     reads."""
     box = Box()
     p = plan([sp(1, 0, 10), sp(1, 12, 20)], m(0), m(20))
-    log = ScanLog(box.archive, "job-1")
+    log = ScanLog(box.resource_root, "job-1")
     log.append(p[1], events=0, at=m(21))                                        # the second one only
     assert log.done_through() == m(20)                                          # says twenty minutes
     assert remaining(p, log) == [p[0]]                                          # the first ten are still to do
@@ -137,7 +137,7 @@ def test_minutes_scanned_under_one_epoch_are_not_scanned_again_under_the_epoch_t
     the plan gives the overlap to e2. Subtracted per stream, minutes 5–10 were scanned again under `7/e2` and every
     car in them counted twice. Subtracted by time over the recording, only 10–20 is left."""
     box = Box()
-    log = ScanLog(box.archive, "job-1")
+    log = ScanLog(box.resource_root, "job-1")
     for s in plan([sp(1, 0, 10)], m(0), m(30)):
         log.append(s, events=3, at=m(11))
     left = remaining(plan([sp(1, 0, 10), sp(2, 5, 20)], m(0), m(30)), log)

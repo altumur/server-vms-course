@@ -27,7 +27,7 @@ def test_a_door_announces_what_it_bound():
 def _worker(env):
     box, ctl = _box_with_cameras(1)
     ctl.assign("w-1", ["1"])
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, resource_root=box.archive,
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, resource_root=box.resource_root,
                   server="srv-a", env=env)
     w.claim_slot(prefer="w-1"); w.reconcile_once()
     return box, w

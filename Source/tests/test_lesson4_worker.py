@@ -228,11 +228,11 @@ def test_the_worker_observes_what_it_holds_recording_or_not():
     from w2cplatform.events import read_bucket
     box, ctl = _box_with_cameras(2)
     ctl.assign("w-1", ["1"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     assert w.observe(1, "motion") is None                          # no epoch held yet: not mine to observe
     w.reconcile_once()
     p = w.observe(1, "motion", zone="gate")
-    assert p and p.startswith(os.path.join(box.archive, "vms", "1", "e1")) and read_bucket(p)[0]["zone"] == "gate"
+    assert p and p.startswith(os.path.join(box.resource_root, "vms", "1", "e1")) and read_bucket(p)[0]["zone"] == "gate"
     assert w.observe(2, "motion") is None                          # camera 2 is not assigned to me
     act.post(1, "person", score=0.91)                              # an element posted on the bus...
     w.pump_once()                                                  # ...and the worker, holding the epoch, made it a line
@@ -316,7 +316,7 @@ def test_a_storm_becomes_one_line_and_a_count_of_what_it_swallowed():
     from w2cplatform.events import read_bucket
     box, ctl = _box_with_cameras(1)
     ctl.assign("w-1", ["1"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w.reconcile_once()
 
     p = w.observe(1, "io.input", port="1", value="closed")        # the first one is the news…
@@ -345,7 +345,7 @@ def test_a_contact_that_changes_is_never_one_event_and_a_storm_that_ends_is_coun
     from w2cplatform.events import read_bucket
     box, ctl = _box_with_cameras(1)
     ctl.assign("w-1", ["1"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w.reconcile_once()
 
     p = w.observe(1, "io.input", port="1", value="closed")
@@ -379,7 +379,7 @@ def test_the_same_kind_is_an_alarm_on_one_device_and_noise_on_the_next():
     box, ctl = _box_with_cameras(2)
     ctl.update(1, {"alarms": "io.input"})                          # the gate: a contact here is an incident
     ctl.assign("w-1", ["1", "2"])
-    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
+    act = FakeActuator(); w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.resource_root)
     w.reconcile_once()
 
     gate = w.observe(1, "io.input", port="1", value="open")

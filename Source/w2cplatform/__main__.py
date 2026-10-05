@@ -17,6 +17,8 @@ from .host import main, stop
 if __name__ == "__main__":
     # Only when run: a module imported (the tests) must not take the process's signals (the review's fifth pass).
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    from w2cplatform.secrets import mask_logs
+    mask_logs()                    # a log line holds no credential: an address, a driver's error (`secrets.mask_text`)
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
     sys.exit(main(sys.argv[1:]))

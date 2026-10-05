@@ -16,12 +16,12 @@ def _runs():
 
 
 def _run(box, sub, unit, t, epoch):
-    EventLog(box.tree, sub, unit, epoch).append(t, "tick", n=7)
+    EventLog(box.resource_root, sub, unit, epoch).append(t, "tick", n=7)
     next_epoch(box.vars, f"{sub}/epoch/{unit}")
 
 
 def _events(box, sub, unit, policy):
-    db = EventIndex(box.tree, "srv-1")
+    db = EventIndex(box.resource_root, "srv-1")
     cur = {(sub, unit): current_epoch(box.vars, f"{sub}/epoch/{unit}")}
     out = db.query(0, 1e12, current_epochs=cur, epoch_policy=policy)["events"]
     return sorted(((e["epoch"], e["epoch_is"], e["fenced"]) for e in out))

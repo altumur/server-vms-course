@@ -27,7 +27,6 @@ Environment=RTSP_HOST=0.0.0.0
 # A second worker on this server: its fan-out on a port the OS gives (`auto`), published in its heartbeat (`live_url`)
 # — 8554 is the server's own worker's.
 Environment=RTSP_PORT=auto
-Environment=UNCONFIRMED_MAX=90
 LoadCredential=platform.key:/etc/w2c/secrets/platform.key
 Environment=SECRETS_KEY=%d/platform.key
 UMask=0007

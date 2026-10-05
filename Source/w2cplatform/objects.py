@@ -24,7 +24,7 @@ whole or not at all."""
 # ## Notes
 # - The walk in `list` is O(files under root), fine for heartbeats on one box; М11 walks one directory per server
 #   and its resource answers the union (`GET /v1/objects?scope=cluster`).
-# - `delete` exists, and two callers use it: the blob sweep (Lesson 29), and a worker's sweep of its own marks
+# - `delete` exists, and two callers use it: the blob sweep (Lesson 20), and a worker's sweep of its own marks
 #   before a request it answered (`Worker.sweep_marks`, once the answer is past every reader). Everything else in
 #   the platform relies on objects NEVER going away — a stale heartbeat simply ages and readers filter by
 #   `ts`, and a worker restarting reads the heartbeat its previous instance left to measure its own

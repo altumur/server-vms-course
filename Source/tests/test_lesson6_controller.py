@@ -158,7 +158,7 @@ def test_the_console_over_http():
     w.heartbeat_once()
     from w2cplatform.events import read_bucket, subsystems_under
     from tests.vmsconftest import door, footage, store
-    srv = serve(con, box.archive, port=0, wall=box.wall); port = srv.server_address[1]
+    srv = serve(con, box.resource_root, port=0, wall=box.wall); port = srv.server_address[1]
     rec_door = None
     try:
         req = urllib.request.Request(f"http://127.0.0.1:{port}/cameras", data=json.dumps({"name": "gate", "source": "driverpack://file/gate.mp4"}).encode(),
@@ -190,12 +190,12 @@ def test_the_console_over_http():
         m = json.load(urllib.request.urlopen(req))
         assert m["subsystem"] == "console" and m["bucket"].startswith(f"console/{m['unit']}/e1/")
         assert json.load(urllib.request.urlopen(req)) == m                                      # idempotent: one mark
-        ev = read_bucket(os.path.join(box.archive, m["bucket"]))
+        ev = read_bucket(os.path.join(box.resource_root, m["bucket"]))
         name = ev[0].pop("id")                                                                   # every line has a name, given by its writer
         assert name.startswith(f"{m['unit']}-e1-") and name.rsplit("-", 1)[1].isdigit()
         assert ev == [{"t": box.wall(), "kind": "mark", "of": "vms/1", "user": "murat", "note": "left the bag"}]   # about camera 1
         # not in vms/1/: that bucket has one writer. (`audit/console`: the journal — who created camera 1, the third pass)
-        assert subsystems_under(box.archive) == {"audit": ["console"], "console": [m["unit"]]}
+        assert subsystems_under(box.resource_root) == {"audit": ["console"], "console": [m["unit"]]}
         # the page, and what it plays: the spans a recording's recorder says at its door — handed out with the recording's
         # place (`/rec/where/<name>`) — raw, in milliseconds, and a piece of one epoch as an MP4, from the same door; the
         # console carries none of it

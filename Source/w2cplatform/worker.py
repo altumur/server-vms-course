@@ -59,10 +59,10 @@ class Worker:
         self.clock, self.wall = clock, wall
         self.started_wall = wall()                # this instance's start, by this box's wall clock: `started` in the heartbeat
         self.lease_ttl, self.lease_margin = lease_ttl, lease_margin
-        # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_write`).
-        # 0: not at all — every subsystem's default. A subsystem whose units write data sets it: `None` is
-        # "for as long as the silence lasts".
-        self.unconfirmed_max: float | None = 0.0
+        # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_write`): what
+        # the subsystem's spec says (`lease: {unconfirmed_max}`) — 0, not at all, unless it says otherwise; `None` is
+        # "for as long as the silence lasts". Never the environment: a weakening of the single writer is the spec's.
+        self.unconfirmed_max: float | None = getattr(self.spec, "unconfirmed_max", 0.0)
         self.epochs: dict[str, int] = {}          # unit -> epoch this worker holds
         self.leases: dict[str, Lease] = {}
         # The process; a name is a slot. Its box in it (`runtime.box`: `BOX_ID`, the machine's id, the hostname) — what

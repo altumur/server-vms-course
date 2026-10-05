@@ -41,7 +41,6 @@ job "vmsworker" {
         SERVER_NAME     = "${node.unique.name}"
         LABELS          = "${meta.labels}"
         RTSP_HOST       = "0.0.0.0"
-        UNCONFIRMED_MAX = "90"
         SECRETS_KEY     = "/etc/w2c/secrets/platform.key"
         OBJECTS   = "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
       }

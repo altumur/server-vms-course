@@ -24,7 +24,7 @@ def _site():
     ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console() + REC_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root)
     w.heartbeat_once(); con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
     rec_con = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
@@ -76,7 +76,7 @@ def test_leaving_a_volume_closes_its_writer_before_the_hold_goes():
     """A declared volume handed over: the writer is closed — its flush puts the last minutes on the volume —
     and only then is the hold let go. Whoever takes it next mounts a volume with no writer left in it."""
     box, rec_con, rec_ctl = _site()
-    vol_dir = box.archive + "-net"
+    vol_dir = box.resource_root + "-net"
     volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{vol_dir}", "quota_bytes": 64 << 20})
     r = recorder(box)
     r.lease_pass(); r.heartbeat_once()
@@ -530,7 +530,7 @@ def _two_boxes_over_one_network_volume():
     from tests.vmsconftest import ObsdDaemon
     da, db = ObsdDaemon.fresh(), ObsdDaemon.fresh()
     box, rec_con, rec_ctl = _site()
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
     env = {"ARCHIVE_LOCK_REFRESH_S": "2"}
     a = recorder(box, "r-1", "srv-1", obsd=Session(da.socket, client="rec-r-1", timeout=1), env=dict(env))
     a.lease_pass(); a.heartbeat_once()
@@ -590,7 +590,7 @@ def test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_t
         a.lease_pass()                                                 # A's pass: the hold is B's
         assert a.hold is None and a.store is None
         assert [w for w in Session(da.socket, client="peek").stats()["writers"] if w["owner"] == "rec:net"] == []
-        events = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+        events = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
         [lost] = [e for e in events if e["kind"] == "archive.footage.dropped"]   # the thirty frames taken before the freeze
         assert (lost["class"], lost["volume"], lost["seconds"], lost["since"], lost["exact"]) == ("alarm", "net", 30, t - 60, True)
         assert a.heartbeat_extra()["archive_dropped_seconds"] == 30
@@ -601,7 +601,7 @@ def test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_t
         for _ in range(3):
             b.lease_pass()
             assert b.store is not None and b.archive_failure == "", b.archive_error
-        assert [e for e in EventIndex(box.archive, "srv-2", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+        assert [e for e in EventIndex(box.resource_root, "srv-2", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
                 if e["kind"] == "archive.volume.recovered"] == []
         assert b.store.coverage("9") == [(tb - 20, tb)]               # nothing of A's touched B's
     finally:
@@ -613,7 +613,7 @@ def test_every_sample_into_a_network_volume_needs_a_hold_confirmed_within_its_wr
     confirmation nothing is sent — and the sink does not take that for the engine lost; confirmed again by the pass,
     the same pipeline writes on. A disk of this server is never fenced: nobody else can write there."""
     box, rec_con, rec_ctl = _site()
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
     r = recorder(box)
     r.lease_pass(); r.heartbeat_once()
     assert r.hold == "net"
@@ -933,7 +933,7 @@ def test_a_network_volume_is_given_up_when_this_hosts_obsd_has_answered_nothing_
     renews no hold at all."""
     from w2cplatform.contract import Slot
     box, rec_con, rec_ctl = _site()
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
     r = recorder(box)
     r.lease_pass(); r.heartbeat_once()
     assert r.hold == "net" and r.store is not None
@@ -998,7 +998,7 @@ def test_a_frozen_daemon_under_a_network_volume_costs_a_pass_one_wait_and_the_vo
             b.lease_pass()
             assert b.store is not None and b.archive_failure == "", b.archive_error
         assert b.store.coverage("9") == [(tb - 20, tb)]               # nothing of A's landed in B's volume
-        events = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+        events = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
         assert [e["kind"] for e in events if e["kind"] == "archive.volume.recovered"] == []
         [lost] = [e for e in events if e["kind"] == "archive.footage.dropped"]
         assert (lost["volume"], lost["seconds"], lost["exact"]) == ("net", 30, False)
@@ -1015,7 +1015,7 @@ def test_the_stand_in_renews_no_hold_while_the_pass_has_found_the_engine_silent(
     the pass found — the engine silent since — stands until the engine answers."""
     from w2cplatform.contract import Slot
     box, rec_con, rec_ctl = _site()
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
     r = recorder(box)
     r.lease_pass()
     assert r.hold == "net"
@@ -1201,7 +1201,7 @@ def _pinned_over_one_network_volume():
     from tests.vmsconftest import ObsdDaemon
     da, db = ObsdDaemon.fresh(), ObsdDaemon.fresh()
     box, rec_con, rec_ctl = _site()
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
     a = recorder(box, "r-1", "srv-1", obsd=Session(da.socket, client="rec-r-1", timeout=1), instance="box-a:1:aaaaaa",
                  env={"ARCHIVE_LOCK_REFRESH_S": "2", "VOLUME": "net"})
     a.lease_pass(); a.heartbeat_once()
@@ -1265,7 +1265,7 @@ def test_a_pinned_network_volume_whose_lock_another_writer_took_is_a_volume_erro
         os.kill(da.proc.pid, signal.SIGSTOP)
         try:
             time.sleep(4)                                              # A's engine lock goes stale
-            b = Archive(f"file://{box.archive}-net", "net", 64 << 20, "rec:net", Session(db.socket, client="b", timeout=2),
+            b = Archive(f"file://{box.resource_root}-net", "net", 64 << 20, "rec:net", Session(db.socket, client="b", timeout=2),
                         block=TEST_BLOCK, read=TEST_READ, lock_refresh=2)
             deadline = time.monotonic() + 15
             while b.writer is None:
@@ -1290,7 +1290,7 @@ def test_a_pinned_network_volume_whose_lock_another_writer_took_is_a_volume_erro
         assert b.coverage("9") == [(t - 20, t)]                       # nothing of A's landed beside B's
         a.lease_pass()                                                 # the other writer still has the volume open
         assert a.dropped_seconds >= 30 and a.heartbeat_extra()["archive_dropped_seconds"] >= 30
-        events = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+        events = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
         [lost] = [e for e in events if e["kind"] == "archive.footage.dropped"]
         assert (lost["class"], lost["volume"], lost["since"]) == ("alarm", "net", t - 60)
         assert a.hold == "net" and a.volume_wait == ""                 # the hold taken again: released, so at once
@@ -1358,7 +1358,7 @@ def test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_o
     from tests.vmsconftest import ObsdDaemon
     from vms.obsd import Session
     box, rec_con, rec_ctl = _site()
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
     old = recorder(box, "r-1", "srv-1", instance="box-a:100:aaaaaa")
     old.lease_pass(); old.heartbeat_once()
     assert old.hold == "net"
@@ -1440,10 +1440,10 @@ def test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_
     from vms.config import REC_SPEC
     from tests.vmsconftest import TEST_BLOCK, TEST_READ, ObsdDaemon
     box, rec_con, rec_ctl = _site()
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
     stuck = Session(ObsdDaemon.get().socket, client="rec-r-1")         # a recorder of the volume that never lets it go
     stuck.pid = 99999
-    theirs = Archive(f"file://{box.archive}-net", "net", 64 << 20, "rec:net", stuck, block=TEST_BLOCK, read=TEST_READ).open()
+    theirs = Archive(f"file://{box.resource_root}-net", "net", 64 << 20, "rec:net", stuck, block=TEST_BLOCK, read=TEST_READ).open()
     r = recorder(box)
     for _ in range(int(r.BUSY_FOR / 10)):                              # ten minutes of passes
         r.lease_pass()
@@ -1454,7 +1454,7 @@ def test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_
     why = r.heartbeat_extra()["refused"]["net"]
     assert "net has been in use by another writer for 10 minutes" in why and "check obsd and the recorders" in why
     assert "ALREADY_LOCKED" not in why and "BUSY_FOR" not in why       # an operator's words
-    [alarm] = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+    [alarm] = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
                if e["kind"] == "archive.volume.busy"]
     assert alarm["class"] == "alarm" and alarm["volume"] == "net" and alarm["seconds"] == r.BUSY_FOR
     r.heartbeat_once()
@@ -1491,10 +1491,10 @@ def test_one_busy_pass_and_then_a_network_down_for_ten_minutes_lets_no_volume_go
     try:
         for env in ({"VOLUME": "net"}, {}):
             box, rec_con, rec_ctl = _site()
-            volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+            volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.resource_root}-net", "quota_bytes": 64 << 20})
             stuck = Session(ObsdDaemon.get().socket, client="rec-r-1")     # the previous writer, still closing
             stuck.pid = 99999
-            theirs = Archive(f"file://{box.archive}-net", "net", 64 << 20, "rec:net", stuck, block=TEST_BLOCK, read=TEST_READ).open()
+            theirs = Archive(f"file://{box.resource_root}-net", "net", 64 << 20, "rec:net", stuck, block=TEST_BLOCK, read=TEST_READ).open()
             r = recorder(box, env=env)
             r.lease_pass()
             assert r.hold == "net" and r.store is None and r.archive_failure == "busy", env
@@ -1505,7 +1505,7 @@ def test_one_busy_pass_and_then_a_network_down_for_ten_minutes_lets_no_volume_go
                 r.lease_pass()
                 assert r.hold == "net" and r.store is None and r.archive_failure == "away", (env, r.archive_failure)
                 assert "net" not in r.refused, (env, r.refused)
-            assert [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+            assert [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
                     if e["kind"] == "archive.volume.busy"] == [], env
             down[0] = False                                                # the store is back
             r.lease_pass()
@@ -1556,8 +1556,8 @@ def test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_
     r.heartbeat_once()
     _recording(box, rec_con, rec_ctl, r)
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=lambda p: (100, 2))
-    res.volumes = {r.volume: box.archive}                                 # the resource's disk is the recorder's volume
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=lambda p: (100, 2))
+    res.volumes = {r.volume: box.resource_root}                                 # the resource's disk is the recorder's volume
     assert res.relieve()["space"] == "over"
     rid = f"free-srv-1-{r.volume}"
     box.vars.put(REC_SPEC.sub.request_key("free-srv-9-other"), {"free": "1", "volume": "other", "server": "srv-9", "at": "0"})

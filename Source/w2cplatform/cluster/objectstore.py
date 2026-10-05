@@ -9,8 +9,11 @@ is a local file — every object has ONE writer, and almost every one is written
 again within a pass, so no consensus is needed to hold it. A read is the local
 file when it is a blob (any copy that hashes to its name is the object),
 otherwise the freshest copy among every server's, asked of the local
-resource with `scope=cluster`. A listing is the union of every server's,
-cached for a second. No ceiling: `max_bytes = 0` — files on a disk.
+resource with `scope=cluster` — for a key the doors give out
+(`resource.door_readable`: the platform's families, a spec's `objects.door`);
+any other key is this server's file alone, read from its directory. A listing
+is the union of every server's, cached for a second. No ceiling:
+`max_bytes = 0` — files on a disk.
 
 Two kinds of object are not files. A key a subsystem's spec names a ROW
 (`objects: {rows: […]}`, `catalog.object_rows`) — one that must be created ONCE
@@ -352,9 +355,11 @@ class ClusterObjectStore:
     # answered has it; `ObjectsUnavailable` when the resource here does not answer.
     def get(self, key: str) -> bytes | None:
         from w2cplatform.blobs import BlobMismatch, verify
-        from w2cplatform.resource import is_blob_key
+        from w2cplatform.resource import door_readable, is_blob_key
         if is_row(key):
             return self.rows.get(key)
+        if not door_readable(key):                       # a file no door gives out: this server's, read here alone
+            return self.local.get(key)
         if is_blob_key(key):
             data = self.local.get(key)
             if data is not None:
@@ -378,17 +383,22 @@ class ClusterObjectStore:
     # Every server's keys under `prefix` (the resource's `scope=cluster`), with the create-only rows when the prefix
     # could hold any — asked again after `list_fresh` seconds; what this process wrote or deleted meanwhile is in it.
     def list(self, prefix: str) -> list[str]:
+        from w2cplatform.resource import door_covers, door_may_hold, door_readable
         cached = self._listed.get(prefix)
         if cached is not None and self.clock() - cached[0] < self.list_fresh:
             return sorted(cached[1])
-        status, body, _ = self._door("GET", "/v1/objects", {"prefix": prefix, "scope": "cluster"})
-        try:
-            said = json.loads(body)
-            keys = set(said["objects"])
-        except (ValueError, TypeError, KeyError) as e:
-            raise ObjectsUnavailable(f"the resource on this server answered a listing that is not one ({e})") from None
-        self._said_missing(said.get("missing"))
-        keys |= self._remembered(prefix, said["objects"], said.get("missing") or [])
+        keys = set()
+        if door_may_hold(prefix):                        # what the doors give out: every server's
+            status, body, _ = self._door("GET", "/v1/objects", {"prefix": prefix, "scope": "cluster"})
+            try:
+                said = json.loads(body)
+                keys = set(said["objects"])
+            except (ValueError, TypeError, KeyError) as e:
+                raise ObjectsUnavailable(f"the resource on this server answered a listing that is not one ({e})") from None
+            self._said_missing(said.get("missing"))
+            keys |= self._remembered(prefix, said["objects"], said.get("missing") or [])
+        if not door_covers(prefix):                      # …and this server's files no door gives out
+            keys |= {k for k in self.local.list(prefix) if not door_readable(k) and not is_row(k)}
         if _may_hold_rows(prefix) and (self._vars is not None or self._rows is not None
                                               or os.environ.get("PLATFORM_STORE")):
             keys |= {k for k in self.rows.list(prefix) if is_row(k)}

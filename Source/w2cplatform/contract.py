@@ -420,6 +420,19 @@ def _owner_said(key: str, hb) -> None:
             raise ValueError(f"the body names {hb['server']!r:.40}, the key {owner!r}")
 
 
+# …AND WHAT ITS SPEC SAYS IS A STRING IS ONE (`heartbeat.strings`, the product's key): the field a subsystem places by
+# (`place_by`) is the place a worker is counted in, and `5` there was a place nobody could name. A worker's heartbeat
+# whose field its subsystem's spec says is a string, and is not, is garbled like one that does not parse. A subsystem
+# this process loaded no spec of says nothing here (`catalog.heartbeat_strings`).
+def _strings_said(key: str, hb) -> None:
+    if not (isinstance(hb, Heartbeat) and f"/{HEARTBEATS}/" in key):
+        return
+    from .catalog import heartbeat_strings
+    for field_ in heartbeat_strings(key.partition(f"/{HEARTBEATS}/")[0]):
+        if field_ in hb.extra and not isinstance(hb.extra[field_], str):
+            raise TypeError(f"`{field_}` is a string by its spec (heartbeat.strings), not {hb.extra[field_]!r:.40}")
+
+
 def parse_heartbeat(key: str, raw: bytes, parse=None):
     """The object parsed, or None — skipped, counted, and logged once."""
     try:
@@ -431,6 +444,7 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
             raise TypeError("a status entry is not an object")
         _named(hb)
         _owner_said(key, hb)
+        _strings_said(key, hb)
     except PARSE_ERRORS:                          # `OverflowError` (`ts: 10**400`) and `RecursionError` too (the ninth review's sweep)
         sub = key.split("/", 1)[0]
         GARBLED[sub] = GARBLED.get(sub, 0) + 1
@@ -1466,8 +1480,8 @@ class Controller:
     # shortened move nor a release is made on it.
     #
     # Whatever the owner decides next changes this function, and every caller follows. What none of it covers: a worker
-    # cut off from the store together with its whole server records on to its lease's end plus `UNCONFIRMED_MAX`
-    # (М11: 90 s) — data under a stale epoch, the duplicate feedback BK chose over a hole.
+    # cut off from the store together with its whole server records on past its lease's end for as long as its spec's
+    # `lease.unconfirmed_max` says — data under a stale epoch, the duplicate feedback BK chose over a hole.
     def slot_fate(self, worker: str, slot: "Slot | None", hung_after: float | None = None) -> tuple[str, str, str]:
         """`(fate, server, why)`: fate "alive", "hung", "hung_moved", "move", "release", "wait", "unsure" or
         "unsure_moved" (see above); `slot` None: a row that does not parse — no lease to read, the heartbeat and the

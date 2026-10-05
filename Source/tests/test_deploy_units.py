@@ -443,8 +443,8 @@ def test_a_recorder_told_nothing_keeps_its_events_in_the_platforms_archive_and_i
                   obsd=types.SimpleNamespace(), env={})
     assert r.resource_root == EVENTS and r.default_url == OWN_VOLUME == "file:///data/vms/obsd/volume"
     named = RecWorker("r-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
-                      obsd=types.SimpleNamespace(), env={}, resource_root=box.archive)
-    assert named.default_url == "file://" + os.path.join(os.path.dirname(os.path.abspath(box.archive)), "volume")
+                      obsd=types.SimpleNamespace(), env={}, resource_root=box.resource_root)
+    assert named.default_url == "file://" + os.path.join(os.path.dirname(os.path.abspath(box.resource_root)), "volume")
 
 
 def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_nothing():

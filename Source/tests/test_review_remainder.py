@@ -163,7 +163,7 @@ def test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days()
     flaky = Flaky(box.vars)
 
     # the watermark: never read -> "unknown", and nothing freed; read once -> the last settings stand
-    res = Resource(box.archive, "srv-1", "http://srv-1", flaky, box.objects, wall=box.wall,
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", flaky, box.objects, wall=box.wall,
                    space_probe=lambda root: (1_000_000, 100_000))
     from vms.config import REC_SPEC                                    # it frees by a request row (`requests: {free}`)
     [vol] = list(res.volumes)
@@ -453,7 +453,7 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
     # store confirmed, as every stream is
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-b", env={},
-                   resource_root=box.archive, device_factory=lambda key: FakeDevice(key, channels=["1"], relays=2))
+                   resource_root=box.resource_root, device_factory=lambda key: FakeDevice(key, channels=["1"], relays=2))
     ctl.assign_add("w-2", str(door)); w2.reconcile_once()                                              # the double assignment
     con.vars.put(SPEC.sub.request_key("d2"), {"unit": str(door), "action": "output", "port": "2", "valid_until": str(box.wall() + 30)})
     assert [d["request"] for d in w2.requests()] == ["d2"] and w2.may_act(str(door))
@@ -618,8 +618,8 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
 
     def _said():
         return [(e["user"], e["media"], e["recording"], e.get("sha256"))   # in the journal: the door's (feedback BN)
-                for b in buckets_under(box.archive, "audit", "door-r-page", 600)
-                for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
+                for b in buckets_under(box.resource_root, "audit", "door-r-page", 600)
+                for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"] == "archive.read"]
 
     try:
         import hashlib
@@ -647,7 +647,7 @@ def test_the_door_to_a_recordings_footage_is_said_when_it_is_handed_out():
     with door_keys(box.vars):
         con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
         rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-        srv = serve(con, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+        srv = serve(con, box.resource_root, port=0, wall=box.wall, mounts={"rec": rec})
     try:
         cam = con.create_camera({"source": "driverpack://file/7.mp4"})["id"]
         rec.create({"name": "7", "cam": str(cam)})
@@ -660,8 +660,8 @@ def test_the_door_to_a_recordings_footage_is_said_when_it_is_handed_out():
         with urllib.request.urlopen(urllib.request.Request(f"{base}/rec/where/7", headers={"X-User": "anna"})) as r:
             d = json.loads(r.read())["door"]
         assert d["url"] == "http://h:1" and d["routes"] == ["timeline", "segment"] and d["token"]
-        lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
-                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "door.issued"]
+        lines = [e for b in buckets_under(box.resource_root, "audit", "console", 600)
+                 for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"] == "door.issued"]
         assert [(e["user"], e["target"], e["holder"], e["routes"], e["until"]) for e in lines] == [
             ("anna", "7", "r-1", "timeline,segment", round(d["expires"]))]
     finally:
@@ -718,7 +718,7 @@ def test_a_shrink_is_requested_until_the_recorder_applies_it_and_an_uncopied_kee
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    srv = serve(ctl, box.resource_root, port=0, wall=box.wall, mounts={"rec": rec})
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     T = 10 ** 12
 
@@ -739,8 +739,8 @@ def test_a_shrink_is_requested_until_the_recorder_applies_it_and_an_uncopied_kee
             "quota_note": "big is 8000000000000 bytes and declared 4000000000000: not done until shrink_confirmed",
             "keep_missing": {"7-100-200": 100.0, "8-1-2": 0}}).to_bytes())
         call("POST", "/rec/volumes", {**vol, "quota_bytes": 2 * T, "shrink_confirmed": 2 * T})
-        lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
-                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith("archive.volume")]
+        lines = [e for b in buckets_under(box.resource_root, "audit", "console", 600)
+                 for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"].startswith("archive.volume")]
         assert [(e.get("changed"), e.get("was")) for e in lines] == [
             (None, None), ("quota_bytes", {"quota_bytes": 8 * T}), ("quota_bytes,shrink_confirmed", {"quota_bytes": 4 * T, "shrink_confirmed": 0})]
         metrics = call("GET", "/rec/metrics")

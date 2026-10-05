@@ -112,22 +112,6 @@ from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT
 from .reconciler import CONVERGED, Reconciler
 
 
-# `UNCONFIRMED_MAX`: how long a holder goes on RECORDING past a lease's end while the store is silent.
-#
-#   unset      no ceiling. One box: the store is a directory on the same disk — away for one process, away for
-#              all of them, and nobody can be given the next epoch. There is nobody to protect the camera from,
-#              and `ttl − margin` was costing footage to guard against something that cannot happen
-#   a number   seconds. A cluster: the store is on the network, and a worker cut off from it may still be
-#              holding the camera's session while its successor cannot connect. Longer than `lost_after`, or
-#              the recording stops before anybody has been given the camera (М11 sets it)
-#   off        none at all: a lease that was not confirmed in time stops its camera, as before feedback BK
-def unconfirmed_max(env) -> float | None:
-    raw = str(env.get("UNCONFIRMED_MAX", "") or "").strip().lower()
-    if not raw:
-        return None
-    return 0.0 if raw == "off" else float(raw)
-
-
 # `COMMANDS_BEAT`: how often a holder looks at its request rows BETWEEN passes, in seconds (`VmsWorker.between`).
 # A quarter of a second unless the environment says — the product's holder does the same (`commandsBeat`, 250 ms);
 # `0` is "only on the pass", the loop as it was. What the process hands `run(beat=…)`.
@@ -542,7 +526,6 @@ class VmsWorker(Worker):
         instance = instance or runtime.instance_on_box(env)   # the box in it: whose a name is (`Worker._may_take_by_name`)
         super().__init__(self.SUB, None, vars_, objects, lease_ttl, lease_margin, clock, wall, instance, slot_ttl,
                          resource_root, env)
-        self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
         self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
         self.row_errors: dict[str, str] = {}                  # camera -> why its own row is not followed (it does not parse)

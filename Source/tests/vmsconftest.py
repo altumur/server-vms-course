@@ -1,6 +1,5 @@
-"""The VMS's test helpers, beside the platform's (`conftest.py`): the VMS's box — the platform's, its resource's tree
-called the archive — a camera row, the front door's site, and, for the archive, a real obsd on a socket of its own,
-the recorders and doors over it. No GStreamer — the actuator is the fake."""
+"""The VMS's test helpers, beside the platform's (`conftest.py`): the VMS's box — the platform's — a camera row, the
+front door's site, and, for the archive, a real obsd on a socket of its own, the recorders and doors over it. No GStreamer — the actuator is the fake."""
 from __future__ import annotations
 
 import os
@@ -10,11 +9,10 @@ from tests import conftest
 
 
 class Box(conftest.Box):
-    """The platform on one box (`conftest.Box`), plus the resource's tree as the VMS calls it (`archive`). The box's own
-    volume goes beside it."""
+    """The platform on one box (`conftest.Box`: the resource's tree is its `resource_root`). The box's own volume goes
+    beside it."""
     def __init__(self):
         super().__init__(prefix="vmsserver-")
-        self.archive = self.tree = os.path.join(self.root, "archive")
 
 
 def published_snapshot(objects, sub: str, rows: str = "cameras") -> dict:
@@ -170,7 +168,7 @@ def recorder(box, name: str = "r-1", server: str = "srv-1", actuator=None, acl=N
     if kw.get("obsd") is None:
         kw["obsd"] = obsd_session(f"rec-{name}")
     return RecWorker(name, vars_, box.objects, actuator or FakeActuator(), clock=box.clock, wall=box.wall, server=server,
-                     resource_root=box.archive, block=TEST_BLOCK, read=TEST_READ, **kw)
+                     resource_root=box.resource_root, block=TEST_BLOCK, read=TEST_READ, **kw)
 
 
 def store(name: str = "vol", quota: int = TEST_QUOTA, path: str | None = None, owner: str | None = None):
@@ -195,14 +193,14 @@ def footage(st, unit, epoch: int, t0: float, t1: float, step: float = 1.0, backf
 def page_door(box, name: str = "r-page", keeper=None):
     """A recording's holder's page door alone (`vms/footage.py`: `/timeline/<recording>`, `/segment/<recording>/…`)
     over every recorder's archive door announced in the store — what a recorder serves beside its archive. Its journal is
-    `audit/door-<name>` under `box.archive`; `keeper` defaults to `ByName`. Returns the server; `srv.base` is its URL."""
+    `audit/door-<name>` under `box.resource_root`; `keeper` defaults to `ByName`. Returns the server; `srv.base` is its URL."""
     import threading
     from http.server import BaseHTTPRequestHandler
     from urllib.parse import parse_qs, urlsplit
     from w2cplatform.console import Deadlined, door_server
     from w2cplatform.journal import Journal
     from vms.footage import answer, footage_routes
-    page = footage_routes(box.objects, box.vars, box.wall, Journal(box.archive, f"door-{name}", box.wall),
+    page = footage_routes(box.objects, box.vars, box.wall, Journal(box.resource_root, f"door-{name}", box.wall),
                           keeper if keeper is not None else conftest.ByName())
 
     class H(Deadlined, BaseHTTPRequestHandler):
@@ -228,7 +226,7 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
     a scan find a recording's footage by. `held`: `{recording: since}` its recorder writes into `st` (`held_since`).
     It serves the page's door too, as a recorder does (`/timeline/<recording>`, `/segment/<recording>/…`:
     `vms/footage.py`), open — no door key in the store — unless `keeper` says otherwise; its journal is
-    `audit/door-<name>` under `box.archive`. Returns the server (`srv.page` — the door's base URL, the same server);
+    `audit/door-<name>` under `box.resource_root`. Returns the server (`srv.page` — the door's base URL, the same server);
     shut it down when done."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -239,7 +237,7 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
     from vms.footage import answer, footage_routes
     from vms.recworker import archive_routes, send_route
     routes = archive_routes(lambda: st, box.wall, held_since=lambda unit: (held or {}).get(unit))
-    page = footage_routes(box.objects, box.vars, box.wall, Journal(box.archive, f"door-{name}", box.wall), keeper)
+    page = footage_routes(box.objects, box.vars, box.wall, Journal(box.resource_root, f"door-{name}", box.wall), keeper)
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
@@ -276,9 +274,9 @@ def four_workers(box):
     common = dict(clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": "gpu"})
     live_vars = box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"])
     return [DetWorker("d-1", box.vars.as_writer("detworker", ["det/epoch/*", "det/slots/*"]), box.objects,
-                      resource_root=box.archive, **common),
+                      resource_root=box.resource_root, **common),
             DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
-                         resource_root=box.archive, **common),
+                         resource_root=box.resource_root, **common),
             SurveyWorker("s-1", box.vars.as_writer("surveyworker", SURVEY_SPEC.sub.acl_worker()), box.objects,
-                         resource_root=box.archive, **common),
+                         resource_root=box.resource_root, **common),
             LiveWorker("g-1", live_vars, box.objects, ctl=SpecController(LIVE_SPEC, live_vars, box.objects, wall=box.wall), **common)]

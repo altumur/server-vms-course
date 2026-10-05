@@ -54,7 +54,7 @@ def _worker(box, spans, name="s-1", busy=False, busy_at=0, **kw):
 
     w = SurveyWorker(name, box.vars.as_writer("surveyworker", SURVEY_SPEC.sub.acl_worker()), box.objects,
                      models={"lpr": Every}, clock=box.clock, wall=box.wall, server="srv-1",
-                     resource_root=box.archive, env={"LABELS": "gpu"}, step=60.0, fetch=fetch, index=index, **kw)
+                     resource_root=box.resource_root, env={"LABELS": "gpu"}, step=60.0, fetch=fetch, index=index, **kw)
     w.reads = reads
     return w
 
@@ -83,7 +83,7 @@ def test_the_frontier_moves_over_the_whole_window_and_not_span_to_span():
     box = Box(); spans = _holder(box); _watch(box, start="earliest")
     w = _worker(box, spans); w.SECONDS_PER_PASS = 1800.0
     w.reconcile_once()
-    assert Frontier(box.archive, SURVEY, "7-lpr").read() == m(30)             # the window, not m(10)
+    assert Frontier(box.resource_root, SURVEY, "7-lpr").read() == m(30)             # the window, not m(10)
 
 
 def test_a_new_watch_starts_now_unless_the_row_says_otherwise():
@@ -91,7 +91,7 @@ def test_a_new_watch_starts_now_unless_the_row_says_otherwise():
     a decision the row makes, not a default this code picks."""
     box = Box(); spans = _holder(box); _watch(box)                    # start: now
     w = _worker(box, spans); w.reconcile_once()
-    assert w.reads == [] and Frontier(box.archive, SURVEY, "7-lpr").read() is None
+    assert w.reads == [] and Frontier(box.resource_root, SURVEY, "7-lpr").read() is None
     assert w.status_by_unit["7-lpr"]["phase"] == "running"
 
 
@@ -99,23 +99,23 @@ def test_the_events_are_ours_and_the_video_is_not_copied():
     box = Box(); spans = _holder(box); _watch(box, start="earliest")
     w = _worker(box, spans); w.SECONDS_PER_PASS = 1800.0
     w.reconcile_once()
-    root = os.path.join(box.archive, "survey", "7-lpr", f"e{w.epochs['7-lpr']}")
+    root = os.path.join(box.resource_root, "survey", "7-lpr", f"e{w.epochs['7-lpr']}")
     lines = [l for f in sorted(os.listdir(root)) for l in read_bucket(os.path.join(root, f))]
     assert lines and all(l["cam"] == 7 and l["source"] == "device" and l["watch"] == "7-lpr" for l in lines)
     assert all(m(0) <= l["t"] < m(60) for l in lines)
-    assert not os.path.exists(os.path.join(box.archive, "rec"))       # nothing was copied anywhere
+    assert not os.path.exists(os.path.join(box.resource_root, "rec"))       # nothing was copied anywhere
 
 
 def test_a_restarted_worker_does_not_watch_it_again():
     box = Box(); spans = _holder(box); _watch(box, start="earliest")
     w = _worker(box, spans); w.SECONDS_PER_PASS = 1800.0
     w.reconcile_once()
-    at = Frontier(box.archive, SURVEY, "7-lpr").read()
+    at = Frontier(box.resource_root, SURVEY, "7-lpr").read()
 
     w2 = _worker(box, spans, name="s-1"); w2.SECONDS_PER_PASS = 1800.0
     w2.reconcile_once()
     assert w2.reads == [(m(50), m(60))]                               # only what is past the frontier
-    assert Frontier(box.archive, SURVEY, "7-lpr").read() > at
+    assert Frontier(box.resource_root, SURVEY, "7-lpr").read() > at
 
 
 def test_a_busy_device_is_a_wait_and_the_frontier_does_not_move():
@@ -126,7 +126,7 @@ def test_a_busy_device_is_a_wait_and_the_frontier_does_not_move():
     w.reconcile_once()
     st = w.status_by_unit["7-lpr"]
     assert st["phase"] == "waiting" and "session" in st["why"]
-    assert Frontier(box.archive, SURVEY, "7-lpr").read() is None              # nothing was watched, nothing is claimed
+    assert Frontier(box.resource_root, SURVEY, "7-lpr").read() is None              # nothing was watched, nothing is claimed
 
 
 def test_a_door_that_closed_half_way_keeps_what_was_watched():
@@ -137,7 +137,7 @@ def test_a_door_that_closed_half_way_keeps_what_was_watched():
     w = _worker(box, spans, busy_at=2); w.SECONDS_PER_PASS = m(100) - m(0)
     w.reconcile_once()
     assert w.status_by_unit["7-lpr"]["phase"] == "waiting"
-    assert Frontier(box.archive, SURVEY, "7-lpr").read() == m(10)            # the end of what WAS watched
+    assert Frontier(box.resource_root, SURVEY, "7-lpr").read() == m(10)            # the end of what WAS watched
     first = w.events_written
 
     w2 = _worker(box, spans, name="s-1"); w2.SECONDS_PER_PASS = m(100) - m(0)
@@ -306,7 +306,7 @@ def test_one_watch_failing_is_that_watchs_trouble_and_not_the_passs():
     w2.reconcile_once()
     st = w2.status_by_unit["7-lpr"]
     assert st["phase"] == "waiting" and "500" in st["why"]
-    assert Frontier(box.archive, SURVEY, "7-lpr").read() == m(10)            # the end of what WAS watched
+    assert Frontier(box.resource_root, SURVEY, "7-lpr").read() == m(10)            # the end of what WAS watched
 
 
 def test_a_model_that_dies_half_way_through_a_stretch_leaves_the_frontier_where_it_died():
@@ -325,11 +325,11 @@ def test_a_model_that_dies_half_way_through_a_stretch_leaves_the_frontier_where_
     w.models = {"lpr": DiesAtThree}
     w.reconcile_once()
     assert w.status_by_unit["7-lpr"]["phase"] == "failed"
-    assert Frontier(box.archive, SURVEY, "7-lpr").read() == m(3)                # not m(10): minutes 3–10 were never looked at
+    assert Frontier(box.resource_root, SURVEY, "7-lpr").read() == m(3)                # not m(10): minutes 3–10 were never looked at
     w.models = {"lpr": Every}
     w.reconcile_once()
     assert w.reads[-2:] == [(m(3), m(10)), (m(50), m(60))]              # the rest of the stretch, then the next
-    root = os.path.join(box.archive, "survey", "7-lpr")
+    root = os.path.join(box.resource_root, "survey", "7-lpr")
     ts = sorted(l["t"] for d, _, fs in os.walk(root) for f in fs if f.endswith(".events.jsonl")
                 for l in read_bucket(os.path.join(d, f)))
     assert ts[:10] == [m(i) for i in range(10)] and len(ts) == len(set(ts))   # every minute once: none lost, none twice

@@ -38,6 +38,8 @@ course-only rec.subsystem.yaml holds.since
 course-only rec.subsystem.yaml holds.table
 course-only rec.subsystem.yaml holds.unit
 course-only rec.subsystem.yaml holds.until
+course-only rec.subsystem.yaml lease
+course-only rec.subsystem.yaml lease.unconfirmed_max
 course-only rec.subsystem.yaml metrics
 course-only rec.subsystem.yaml placement.affinity
 course-only rec.subsystem.yaml placement.affinity.enabled
@@ -48,6 +50,7 @@ course-only rec.subsystem.yaml placement.affinity.strict
 course-only rec.subsystem.yaml placement.affinity.table
 course-only rec.subsystem.yaml placement.places
 course-only rec.subsystem.yaml placement.places.enabled
+course-only rec.subsystem.yaml placement.places.lease
 course-only rec.subsystem.yaml placement.places.server_field
 course-only rec.subsystem.yaml placement.places.table
 course-only rec.subsystem.yaml placement.places.where
@@ -157,6 +160,8 @@ course-only vms.subsystem.yaml domain.tokens.stream
 course-only vms.subsystem.yaml domain.tokens.stream.claims
 course-only vms.subsystem.yaml domain.tokens.stream.lifetime
 course-only vms.subsystem.yaml domain.view
+course-only vms.subsystem.yaml lease
+course-only vms.subsystem.yaml lease.unconfirmed_max
 course-only vms.subsystem.yaml metrics
 course-only vms.subsystem.yaml metrics.buckets
 course-only vms.subsystem.yaml placement.group_by
@@ -184,10 +189,6 @@ course-only vms.subsystem.yaml unit.fields.kind
 course-only vms.subsystem.yaml unit.fields.kind.default
 course-only vms.subsystem.yaml unit.fields.kind.type
 course-only vms.subsystem.yaml unit.fields.ref.unique
-course-only vms.subsystem.yaml unit.fields.source.credentials
-course-only vms.subsystem.yaml unit.fields.source.credentials.login
-course-only vms.subsystem.yaml unit.fields.source.credentials.secret
-course-only vms.subsystem.yaml unit.fields.source.secret_in
 course-only vms.subsystem.yaml unit.fields.source.unique
 course-only vms.subsystem.yaml worker
 course-only vms.subsystem.yaml worker.writes
@@ -195,18 +196,11 @@ product-only auto.subsystem.yaml heartbeat
 product-only auto.subsystem.yaml heartbeat.strings
 product-only live.subsystem.yaml secrets
 product-only live.subsystem.yaml secrets.reads
-product-only rec.subsystem.yaml heartbeat
-product-only rec.subsystem.yaml heartbeat.strings
-product-only rec.subsystem.yaml objects.door
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window
-product-only vms.subsystem.yaml heartbeat
-product-only vms.subsystem.yaml heartbeat.strings
-product-only vms.subsystem.yaml secrets
-product-only vms.subsystem.yaml secrets.readers
 product-only vms.subsystem.yaml tables
 product-only vms.subsystem.yaml unit.fields.alarms_retention_days.default
 product-only vms.subsystem.yaml unit.fields.events_retention_days.default

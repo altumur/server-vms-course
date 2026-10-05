@@ -43,7 +43,7 @@ def _console_over(box, db, per_minute: float = 0.0):
 def _resource_process(box):
     """What `python3 -m w2cplatform resource` does: the platform's Resource with what the specs hold,
     served over HTTP, heartbeating so the console can find it, its index over the tree."""
-    res = platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall)
     rsrv = serve_resource(res, "127.0.0.1", 0)
     res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"
     res.heartbeat()
@@ -56,16 +56,16 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console())
     con = VmsController(con_vars, box.objects, wall=box.wall)
     det_ctl = SpecController(DET_SPEC, box.vars.as_writer("detcontroller", DET_SPEC.acl_controller()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root)
     w.heartbeat_once(); con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     res, rsrv = _resource_process(box)
     assert list(resources_seen(box.objects)) == ["srv-1"]                                  # the console finds the resource by its heartbeat
-    srv = serve(con, box.archive, port=0, wall=box.wall,
+    srv = serve(con, box.resource_root, port=0, wall=box.wall,
                 mounts={"det": SpecController(DET_SPEC, con_vars, box.objects, wall=box.wall)})   # no database here: the default MergedIndex asks srv-1
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
         gpu = DetWorker("d-1", box.vars.as_writer("detworker", ["det/epoch/*", "det/slots/*"]), box.objects, capacity=8,
-                        clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive, env={"LABELS": "gpu"})
+                        clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root, env={"LABELS": "gpu"})
         gpu.heartbeat_once()
         call(base, "POST", "/det/units", {"name": "1-linecross", "cam": "1", "kind": "linecross"}, {"Idempotency-Key": "k1"})
         det_ctl.ensure_placed(); gpu.reconcile_once()
@@ -106,12 +106,12 @@ def test_the_index_is_the_tree_and_retention_takes_the_events_with_the_file():
     removes a bucket file and its events go with it — the console just asks."""
     from vms.archive import event_log
     box = Box(); t = box.wall() - 3 * 86400
-    event_log(box.archive, 7, 1).append(t + 10, "motion", zone="gate")                  # three days old: past a 1-day policy
-    event_log(box.archive, 7, 1).append(box.wall() - 100, "motion")                      # fresh
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    event_log(box.resource_root, 7, 1).append(t + 10, "motion", zone="gate")                  # three days old: past a 1-day policy
+    event_log(box.resource_root, 7, 1).append(box.wall() - 100, "motion")                      # fresh
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     res.heartbeat()
     assert res.index.listing() == {"units": 1, "buckets": 2, "mirrored": [], "cached": 0} and res.index.state == "live"
-    again = EventIndex(box.archive, "srv-1", wall=box.wall)
+    again = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     assert again.query(0, 1e12)["events"] == res.index.query(0, 1e12)["events"]          # nothing of its own: two indexes, one tree
     m = MergedIndex(box.objects, fetch=lambda url, p: res.index.query(float(p["from"]), float(p["to"]), unit=p.get("unit")), wall=box.wall)
     assert [e["t"] for e in m.query(0, 1e12, unit="vms/7")["events"]] == [t + 10, box.wall() - 100]
@@ -132,7 +132,7 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     from tests.vmsconftest import Box
 
     box = Box()
-    log = EventLog(box.archive, "vms", "8123", 7, 600)
+    log = EventLog(box.resource_root, "vms", "8123", 7, 600)
     for i in range(5):
         p = log.append(1000.0 + i, "motion", score=i)
     with open(p, "a") as f:                                   # the writer died mid-append
@@ -143,7 +143,7 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     assert [r["score"] for r in rows] == [0, 1, 2, 3, 4]      # every whole line survives
     assert ev.torn == before + 1                              # and the damage is counted, not silent
 
-    db = EventIndex(box.archive, "srv-1", lambda: 2000.0, 600)
+    db = EventIndex(box.resource_root, "srv-1", lambda: 2000.0, 600)
     assert len(db.query(0, 1e12, kind=None, subsystem="vms", unit="vms/8123",
                         current_epochs={("vms", "8123"): 7})["events"]) == 5
 
@@ -151,10 +151,10 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
 def _events(box, n, cam=7):
     """`n` observations a second apart in one bucket, numbered so a test can say WHICH ones came back."""
     from vms.archive import event_log
-    log = event_log(box.archive, cam, 1)
+    log = event_log(box.resource_root, cam, 1)
     for i in range(n):
         log.append(1000.0 + i, "motion", n=i)
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     return db
 
 
@@ -238,7 +238,7 @@ def test_the_operators_timeline_can_ask_for_its_own_window():
     _events(box, 10)
     res, rsrv = _resource_process(box)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(con, box.archive, port=0, wall=box.wall)
+    srv = serve(con, box.resource_root, port=0, wall=box.wall)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
         st, rep = call(base, "GET", "/events?from=0&to=1e12&limit=3")
@@ -293,11 +293,11 @@ def test_an_overflowing_window_drops_observations_before_alarms():
     from w2cplatform.events import ALARM
     from vms.archive import event_log
     box = Box()
-    log = event_log(box.archive, 7, 1)
+    log = event_log(box.resource_root, 7, 1)
     for i in range(20):
         log.append(1000.0 + i, "stats", n=i)                      # the noise, filling the window
     log.append(1001.5, "io.input", ALARM, port="1", value="open")  # one alarm, and an OLD one at that
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
 
     rep = db.query(0, 1e12, limit=5)
     assert rep["truncated"] is True
@@ -350,7 +350,7 @@ def test_a_traffic_class_is_a_declared_value_and_not_a_convention_on_kind():
     one thing, and they drift."""
     from w2cplatform.events import EventLog
     box = Box()
-    log = EventLog(box.archive, "vms", "7", 1)
+    log = EventLog(box.resource_root, "vms", "7", 1)
 
     try:
         log.append(1000.0, "io.input", "Alarm")
@@ -382,12 +382,12 @@ def test_past_the_norm_the_timeline_counts_instead_of_listing():
     from w2cplatform.events import ALARM
     from vms.archive import event_log
     box = Box(); t = box.wall() - 60
-    log = event_log(box.archive, 7, 1)
+    log = event_log(box.resource_root, 7, 1)
     for i in range(90):
         log.append(t + i * 0.5, "stats", n=i)
     for i in range(3):
         log.append(t + 10 + i, "io.input", ALARM, port="1", value="open")
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     con = _console_over(box, db)
 
     quiet = con.timeline(db.query(0, t + 5), 0, t + 5)             # a handful over a long window
@@ -413,10 +413,10 @@ def test_the_norm_is_the_operators_and_a_process_still_gets_every_line():
     control room with four screens and a guard with a phone are not one reader."""
     from vms.archive import event_log
     box = Box(); t = box.wall() - 60
-    log = event_log(box.archive, 7, 1)
+    log = event_log(box.resource_root, 7, 1)
     for i in range(90):
         log.append(t + i * 0.5, "stats", n=i)
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
 
     assert len(db.query(t, t + 60)["events"]) == 90                # the index never aggregates
     assert "aggregated" not in db.query(t, t + 60)
@@ -440,7 +440,7 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
     import w2cplatform.events as ev
     from w2cplatform.events import ALARM, EventLog
     box = Box()
-    log = EventLog(box.archive, "vms", "7", 1)
+    log = EventLog(box.resource_root, "vms", "7", 1)
     synced, dirs = [], []
     real_durably, real_dir = ev.durably, ev.durable_dir
     ev.durably = lambda f: synced.append(f.name)
@@ -451,7 +451,7 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
         pa = log.append(1001.0, "io.input", ALARM, port="1")
         epoch_dir = os.path.dirname(pa)
         unit_dir_ = os.path.dirname(epoch_dir)
-        assert synced == [pa] and dirs == [epoch_dir, unit_dir_, os.path.dirname(unit_dir_), box.archive]   # the alarm pays for
+        assert synced == [pa] and dirs == [epoch_dir, unit_dir_, os.path.dirname(unit_dir_), box.resource_root]   # the alarm pays for
         log.append(1002.0, "io.input", ALARM, port="1")             # both, the entries included: the file's, and every new
         assert synced == [pa, pa] and len(dirs) == 4                # directory's up to the root — and once per bucket is enough
         # ten minutes on, the NEXT bucket in the same `e1` (the review's third pass): its entry is synced too — once
@@ -463,7 +463,7 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
 
     # …and the alarm lies in a tree of its own (feedback BO): the same shape, another first directory
     from w2cplatform.events import read_bucket
-    assert os.path.relpath(p, box.archive).startswith("vms/7/e1/") and os.path.relpath(pa, box.archive).startswith("vms.alarms/7/e1/")
+    assert os.path.relpath(p, box.resource_root).startswith("vms/7/e1/") and os.path.relpath(pa, box.resource_root).startswith("vms.alarms/7/e1/")
     assert [r["kind"] for r in read_bucket(p)] == ["stats"] and [r["kind"] for r in read_bucket(pa)] == ["io.input", "io.input"]
 
 
@@ -480,12 +480,12 @@ def test_every_directory_above_a_durable_line_is_synced_up_to_the_root_once():
     dirs = []
     ev.durably, ev.durable_dir = (lambda f: None), (lambda d: dirs.append(os.path.abspath(d)))
     try:
-        log = EventLog(box.archive, "journal", "srv-1", 3)
+        log = EventLog(box.resource_root, "journal", "srv-1", 3)
         p = log.append(1000.0, "stats", n=1)                       # an observation makes the directories, and pays nothing
         assert dirs == []
         log.append(1001.0, "unit.deleted", durable=True, target="7")   # the journal's line: durable
         e = os.path.dirname(os.path.abspath(p))
-        assert dirs == [e, os.path.dirname(e), os.path.dirname(os.path.dirname(e)), os.path.abspath(box.archive)]
+        assert dirs == [e, os.path.dirname(e), os.path.dirname(os.path.dirname(e)), os.path.abspath(box.resource_root)]
         log.append(1002.0, "unit.deleted", durable=True, target="8")
         assert len(dirs) == 4                                       # once per writer: the chain is not walked again
     finally:
@@ -500,8 +500,8 @@ def test_the_durable_write_reaches_the_medium_or_says_it_could_not():
     correct."""
     import w2cplatform.events as ev
     box = Box()
-    p = os.path.join(box.archive, "sync-probe")
-    os.makedirs(box.archive, exist_ok=True)
+    p = os.path.join(box.resource_root, "sync-probe")
+    os.makedirs(box.resource_root, exist_ok=True)
     with open(p, "w") as f:
         f.write("x"); f.flush()
         ev.durably(f)                                              # whichever path, it must not raise
@@ -527,12 +527,12 @@ def test_the_timeline_endpoint_hands_the_page_counts_and_says_why():
     shape."""
     from vms.archive import event_log
     box = Box(); t = box.wall() - 60
-    log = event_log(box.archive, 7, 1)
+    log = event_log(box.resource_root, 7, 1)
     for i in range(90):
         log.append(t + i * 0.5, "stats", n=i)
     res, rsrv = _resource_process(box)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(con, box.archive, port=0, wall=box.wall)
+    srv = serve(con, box.resource_root, port=0, wall=box.wall)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
         st, rep = call(base, "GET", f"/events?from={t}&to={t + 60}")
@@ -553,9 +553,9 @@ def test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_o
     epochs of the units in its answer, so a fence that fell a moment ago still shows."""
     from vms.archive import event_log
     box = Box(); t = box.wall() - 60
-    event_log(box.archive, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
-    event_log(box.archive, 9, 1).append(t + 2, "motion"); box.vars.put("vms/epoch/9", {"epoch": "2"})   # a zombie's line: epoch 1 < 2
-    con = _console_over(box, EventIndex(box.archive, "srv-1", wall=box.wall))
+    event_log(box.resource_root, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
+    event_log(box.resource_root, 9, 1).append(t + 2, "motion"); box.vars.put("vms/epoch/9", {"epoch": "2"})   # a zombie's line: epoch 1 < 2
+    con = _console_over(box, EventIndex(box.resource_root, "srv-1", wall=box.wall))
     con.clock = box.clock
 
     class Counting:
@@ -605,7 +605,7 @@ def test_a_burst_of_timeline_requests_lists_the_resources_once_in_two_seconds():
     from w2cplatform.resource import RESOURCES
     box = Box()
     for server in ("srv-1", "srv-2"):
-        res = platform_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
+        res = platform_resource(box.resource_root, server, "", box.vars, box.objects, wall=box.wall)
         res.url = f"http://{server}"
         res.heartbeat()
 
@@ -634,7 +634,7 @@ def test_a_burst_of_timeline_requests_lists_the_resources_once_in_two_seconds():
     box.clock.advance(m.SEEN_FOR)
     assert ask()[0] == 200 and (objects.lists, objects.reads) == (2, 4)        # past the window: listed again
     # a resource that appears inside the window is seen once the window is over
-    late = platform_resource(box.archive, "srv-3", "", box.vars, box.objects, wall=box.wall)
+    late = platform_resource(box.resource_root, "srv-3", "", box.vars, box.objects, wall=box.wall)
     late.url = "http://srv-3"; late.heartbeat()
     ask()
     assert "http://srv-3" not in asked
@@ -661,12 +661,12 @@ def test_the_consoles_records_outlive_what_they_refer_to():
     from w2cplatform.resource import console_floor
     box = Box(); old = box.wall() - 400 * 86400
     event_log = __import__("vms.archive", fromlist=["event_log"]).event_log
-    event_log(box.archive, 7, 1).append(old, "motion")             # a camera that keeps two years…
-    marks = EventLog(box.archive, "console", "c-1", 1)
+    event_log(box.resource_root, 7, 1).append(old, "motion")             # a camera that keeps two years…
+    marks = EventLog(box.resource_root, "console", "c-1", 1)
     mark = marks.append(old, "mark", user="anna", note="checked")  # …and the record written the same day
     box.vars.put("vms/retention/7", {"days": "730"})
 
-    res = platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 0                                       # neither is old enough yet
     assert os.path.exists(mark)
 
@@ -686,9 +686,9 @@ def test_an_event_written_into_a_past_bucket_is_in_the_next_answer():
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    scan = EventLog(box.archive, "detjob", "7-scan", 1, 600)
+    scan = EventLog(box.resource_root, "detjob", "7-scan", 1, 600)
     scan.append(now - 7200, "person", n=1)                                       # two hours ago, into a closed bucket
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     window = (now - 7300, now - 7100)
     assert [e["n"] for e in db.query(*window)["events"]] == [1]
     scan.append(now - 7150, "person", n=2)                                       # the scan goes on: the same past bucket grows
@@ -704,13 +704,13 @@ def test_a_bucket_removed_and_written_again_is_read_as_a_new_file():
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    EventLog(box.archive, "detjob", "7-scan", 1, 600).append(now - 7200, "person", n=1)
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    EventLog(box.resource_root, "detjob", "7-scan", 1, 600).append(now - 7200, "person", n=1)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     window = (now - 7300, now - 7100)
     assert [e["n"] for e in db.query(*window)["events"]] == [1]
-    [path] = glob.glob(os.path.join(box.archive, "**", "*.events.jsonl"), recursive=True)
+    [path] = glob.glob(os.path.join(box.resource_root, "**", "*.events.jsonl"), recursive=True)
     os.remove(path)                                                              # retention
-    again = EventLog(box.archive, "detjob", "7-scan", 1, 600)                   # the late scan
+    again = EventLog(box.resource_root, "detjob", "7-scan", 1, 600)                   # the late scan
     again.append(now - 7190, "person", n=2)
     again.append(now - 7180, "person", n=3)
     assert [e["n"] for e in db.query(*window)["events"]] == [2, 3]
@@ -753,12 +753,12 @@ def test_a_query_holds_what_the_answer_can_carry_and_answers_as_before():
     from w2cplatform.events import ALARM, EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.archive, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "vms", "7", 1, 600)
     for i in range(20_000):
         log.append(now - 20_000 + i + 0.5, "motion", n=i)
     for i in range(30):
         log.append(now - 19_000 + i * 600, "door_forced", cls=ALARM, n=i)
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     everything = db.query(0, now + 1, limit=10 ** 9)["events"]
     assert len(everything) == 20_030
     for keep in ("newest", "oldest"):
@@ -881,7 +881,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
     try:
         res.PULSE_SECONDS = 0.02
         for i in range(8):                                            # eight closed buckets for the mirror to send
-            EventLog(box.archive, "vms", "7", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
+            EventLog(box.resource_root, "vms", "7", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
         box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
         res.heartbeat()
         seen = {}
@@ -928,7 +928,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
         box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
         box.vars.put("platform/space", {"enabled": "false"})
         for i in range(2):
-            EventLog(box.archive, "vms", "8", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
+            EventLog(box.resource_root, "vms", "8", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
         peer.hang, peer.took = True, []
         peer_hb(); res.heartbeat()
         res.pass_()
@@ -950,12 +950,12 @@ def test_a_walk_over_many_buckets_keeps_the_pulse_with_a_mark_per_bucket_and_ope
     from w2cplatform.events import bucket_path
     from w2cplatform.resource import Resource
     box = Box()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock,
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock,
                    lost_after=0.5)
     limit = res.PULSE_LIMIT * res.lost_after                        # two seconds, as the review measured against
     n = 2000
     for i in range(n):                                              # closed buckets of one camera, a few lines each
-        p = bucket_path(box.archive, "vms", "7", 1, box.wall() - (n - i + 1) * 600)
+        p = bucket_path(box.resource_root, "vms", "7", 1, box.wall() - (n - i + 1) * 600)
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w") as f:
             f.write("".join(json.dumps({"t": 0, "kind": "stats", "n": k}) + "\n" for k in range(5)))
@@ -963,7 +963,7 @@ def test_a_walk_over_many_buckets_keeps_the_pulse_with_a_mark_per_bucket_and_ope
     box.objects.put("platform/resources/srv-2/heartbeat",
                     json.dumps({"server": "srv-2", "ts": box.wall(), "url": "http://srv-2"}).encode())
     res.heartbeat()
-    held = sorted(b.path for b in ev_mod.bucket_names_under(box.archive, "vms", "7", 600))
+    held = sorted(b.path for b in ev_mod.bucket_names_under(box.resource_root, "vms", "7", 600))
 
     class Peer:                                                     # holds every one already: the pass is the walk
         def mirrored(self, url, server):
@@ -1032,7 +1032,7 @@ def _year_of_buckets(box, n, root=None, t0=None):
     from w2cplatform.events import bucket_path
     t0 = box.wall() - 60 * 86400 if t0 is None else t0
     for i in range(n):
-        p = bucket_path(root or box.archive, "vms", "7", 1, t0 + i * 600)
+        p = bucket_path(root or box.resource_root, "vms", "7", 1, t0 + i * 600)
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w") as f:
             f.write(json.dumps({"t": 0, "kind": "stats"}) + "\n")
@@ -1048,13 +1048,13 @@ def test_measuring_the_tree_and_removing_what_is_old_keep_the_pulse_with_a_mark_
     this server's buckets, and the copies it keeps of another's."""
     from w2cplatform.resource import MIRROR_DIR, MIRROR_GRACE, Resource
     box = Box()
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock,
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock,
                    lost_after=0.5)
     limit = res.PULSE_LIMIT * res.lost_after
     n = 2000
     box.vars.put("vms/retention", {"days": "30"})
     _year_of_buckets(box, n)                                                        # two weeks of them, the newest 46 days old: past the 30 kept
-    _year_of_buckets(box, n, root=os.path.join(box.archive, MIRROR_DIR, "srv-2"))   # …and as many copies of a peer's
+    _year_of_buckets(box, n, root=os.path.join(box.resource_root, MIRROR_DIR, "srv-2"))   # …and as many copies of a peer's
     with _slow_disk(box, res, limit) as disk:
         res._progressed()
         assert res.usage() > 0 and disk.stats >= 2 * n
@@ -1074,7 +1074,7 @@ def test_reading_what_is_kept_marks_every_row_it_reads():
     from vms import keeps
     from w2cplatform.resource import platform_resource
     box = Box()
-    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     res.clock, res.lost_after = box.clock, 0.5
     limit = res.PULSE_LIMIT * res.lost_after
     t = box.wall()
@@ -1107,8 +1107,8 @@ def test_a_file_that_vanishes_under_the_walk_and_a_part_that_raises_end_only_the
     box = Box()
     res, rsrv = _resource_process(box)
     try:
-        _os.makedirs(_os.path.join(box.archive, "vms", "7"), exist_ok=True)
-        open(_os.path.join(box.archive, "vms", "7", "keep.bin"), "wb").write(b"x" * 1000)
+        _os.makedirs(_os.path.join(box.resource_root, "vms", "7"), exist_ok=True)
+        open(_os.path.join(box.resource_root, "vms", "7", "keep.bin"), "wb").write(b"x" * 1000)
         real_getsize = _os.path.getsize
 
         def getsize(path):
@@ -1140,12 +1140,12 @@ def test_a_narrow_window_computes_its_files_and_a_wide_one_lists_them_with_the_s
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.archive, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "vms", "7", 1, 600)
     for i in range(6):
         log.append(now - 3 * 86400 + i * 3600, "motion", n=i)                   # six hours, three days ago
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     narrow = db.query(now - 3 * 86400 - 1, now - 3 * 86400 + 6 * 3600)
-    wide = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, now + 1)
+    wide = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, now + 1)
     assert (now - (now - 3 * 86400 - 1)) / 600 > NARROW                          # the second one took the listing road
     assert [e["n"] for e in narrow["events"]] == [e["n"] for e in wide["events"]] == list(range(6))
 
@@ -1156,10 +1156,10 @@ def test_a_query_reads_the_files_of_its_window_and_nothing_else_and_nothing_twic
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.archive, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "vms", "7", 1, 600)
     for i in range(3 * 144):
         log.append(now - 3 * 86400 + i * 600 + 5, "motion", n=i)                 # a line in every bucket of three days
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     opened = []
     real_open = open
 
@@ -1185,10 +1185,10 @@ def test_the_cache_keeps_to_its_ceiling():
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    log = EventLog(box.archive, "vms", "7", 1, 600)
+    log = EventLog(box.resource_root, "vms", "7", 1, 600)
     for i in range(20):
         log.append(now - 20 * 600 + i * 600 + 5, "motion", pad="x" * 200)
-    db = EventIndex(box.archive, "srv-1", wall=box.wall, cache_bytes=5 * 300)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall, cache_bytes=5 * 300)
     assert len(db.query(now - 20 * 600, now)["events"]) == 20
     assert db.listing()["cached"] <= 6 and db._bytes <= 5 * 300 + 300
     assert len(db.query(now - 20 * 600, now)["events"]) == 20                   # evicted is not lost: read again
@@ -1201,8 +1201,8 @@ def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    EventLog(box.archive, "det", "7-motion", 1, 600, of=DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
-    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    EventLog(box.resource_root, "det", "7-motion", 1, 600, of=DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
+    db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     assert [(e["unit"], e["of"]) for e in db.query(now - 600, now, unit="vms/7")["events"]] == [("det/7-motion", "vms/7")]
     assert db._may_be_about("srv-1", "det", "7-motion", "vms/9") is False and db.query(now - 600, now, unit="vms/9")["events"] == []
 
@@ -1237,10 +1237,10 @@ def test_the_timeline_fences_a_subsystem_its_scan_did_not_list_and_says_one_it_m
     from vms.archive import event_log
     from w2cplatform.events import EventLog
     box = Box(); t = box.wall() - 60
-    event_log(box.archive, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
-    EventLog(box.archive, "det", "7-motion", 1, 600).append(t + 2, "motion")
+    event_log(box.resource_root, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
+    EventLog(box.resource_root, "det", "7-motion", 1, 600).append(t + 2, "motion")
     box.vars.put("det/epoch/7-motion", {"epoch": "2"})                        # det's holder changed: epoch 1 is a zombie's
-    con = _console_over(box, EventIndex(box.archive, "srv-1", wall=box.wall))
+    con = _console_over(box, EventIndex(box.resource_root, "srv-1", wall=box.wall))
 
     class Rights:
         """The console's store under rights that leave `det/` out of a listing — and, `deny`, out of reads too."""

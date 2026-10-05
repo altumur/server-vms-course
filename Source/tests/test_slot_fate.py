@@ -35,7 +35,7 @@ ENOSPC = os.strerror(errno.ENOSPC)                                           # t
 def Box():
     """The platform on one box, its resource's tree made."""
     box = _PlatformBox()
-    os.makedirs(box.tree, exist_ok=True)
+    os.makedirs(box.resource_root, exist_ok=True)
     return box
 
 
@@ -51,7 +51,7 @@ class _Console(Served):
 
     def __init__(self, box):
         self.ctl = console_ctl(box)
-        self.m = spec_console({"testsub": self.ctl}, "testsub", box.tree, EventIndex(box.tree, "srv-1", wall=box.wall),
+        self.m = spec_console({"testsub": self.ctl}, "testsub", box.resource_root, EventIndex(box.resource_root, "srv-1", wall=box.wall),
                               box.wall)
         super().__init__(self.m)
 
@@ -82,7 +82,7 @@ class _Site:
 
     def __init__(self, counters: int = 4, register: bool = True):
         self.box = box = Box()
-        self.roots = {"srv-1": box.tree, "srv-2": os.path.join(box.root, "tree2")}
+        self.roots = {"srv-1": box.resource_root, "srv-2": os.path.join(box.root, "tree2")}
         os.makedirs(self.roots["srv-2"], exist_ok=True)
         self.ctl = controller_ctl(box, capacity=4)
         self.said = self.ctl.journal = _Said()
@@ -473,7 +473,7 @@ def test_the_resource_says_which_workers_are_placed_and_which_run():
     newer registration under the same name replaces an old one let go; a resource heartbeat carries both, and a `ts`
     that is no finite number is no live resource heartbeat — a resource known and silent."""
     box = Box()
-    root = box.tree
+    root = box.resource_root
     a = Worker(testsub().sub, "w-1", box.vars, box.objects, clock=box.clock, wall=box.wall)
     b = Worker(testsub().sub, "w-2", box.vars, box.objects, clock=box.clock, wall=box.wall)
     assert a.present(root) and b.present(root)
@@ -863,7 +863,7 @@ def test_the_decommission_door_reads_its_body_as_every_door_and_a_refusal_is_jou
             c.close()
         st, out = call("POST", "/servers/srv-1/decommission", {"why": "burnt"}, user="anna")
         assert st == 409
-    kinds = [e["kind"] for e in EventIndex(box.tree, "srv-1", wall=box.wall).query(0, box.wall() + 1)["events"]]
+    kinds = [e["kind"] for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1)["events"]]
     assert "server.decommission_refused" in kinds, kinds
     site.tick(100); site.ctl.pass_once()
     site.tick(HUNG_MOVE_AFTER)

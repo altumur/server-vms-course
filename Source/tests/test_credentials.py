@@ -88,7 +88,7 @@ def test_the_console_never_hands_out_the_secret_and_the_store_holds_one_copy():
     secret = "Hunter2-not-in-any-reply"
     box = Box()
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(con, box.archive, port=0, wall=box.wall)
+    srv = serve(con, box.resource_root, port=0, wall=box.wall)
     port = srv.server_address[1]
     base = f"http://127.0.0.1:{port}"
     try:
@@ -189,7 +189,7 @@ def test_a_credential_in_an_addresss_parameters_is_refused_and_a_stored_one_is_s
     key = f"vms/cameras/{ok['id']}"
     items, idx = box.vars.get(key)
     box.vars.as_writer("console", SPEC.acl_console()).put(key, {**items, "source": CRED_QUERIES[0][0]}, cas=idx)
-    srv = serve(con, box.archive, port=0, wall=box.wall)
+    srv = serve(con, box.resource_root, port=0, wall=box.wall)
     try:
         page = urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/cameras").read().decode()
         upd = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/cameras/{ok['id']}", method="PUT",
@@ -573,10 +573,12 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
         con.delete(made["id"])
     # the names, word by word: a credential's — and a word that only begins a name, or `pass` glued at its end, is not
     for n in ("pwd", "PassWord", "pass_word", "access_token", "authToken", "X-Amz-Signature",
-              "AWSAccessKeyId", "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
+              "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
               "Authorization", "session_id", "passcode", "loginpas"):
         assert is_credential_param(n) and not is_login_param(n), n
-    for n in ("user_id", "usr", "user", "User-Name", "loginuse", "login", "account"):     # a login's: refused, said
+    # …a login's: refused, said — an access key's id among them (the product's decision: the id of a key is no key)
+    for n in ("user_id", "usr", "user", "User-Name", "loginuse", "login", "account", "AWSAccessKeyId", "accessKeyId",
+              "uname"):
         assert is_login_param(n) and not is_credential_param(n), n
     for n in ("token_bucket", "passage", "authmode", "auth_mode", "bypass", "compass", "passthrough", "monkey", "hotkey",
               "keyframe", "key_frame_interval", "apikey_required", "sid_hint", "usrname_hint", "user_stream", "authority",
@@ -620,7 +622,7 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
             con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
         finally:
             os.environ.pop("SECRETS_KEY", None)
-        srv = serve(con, box.archive, port=0, wall=box.wall)
+        srv = serve(con, box.resource_root, port=0, wall=box.wall)
         base = f"http://127.0.0.1:{srv.server_address[1]}"
 
         def send(method, path, body, k):
@@ -712,8 +714,10 @@ def test_the_products_second_secrets_pass_finds_nothing_in_the_course():
         assert not _leaks(mask_secrets([{"source": src}])), src
     assert hide_in_url(R28_FORMS[0]) == "http://h:1984/api/stream.mp4?src=***"
     assert hide_in_url(R28_FORMS[1]) == "http://h:1984/api/stream.mp4?src=***"
-    assert hide_in_url("rtsp://10.0.0.5:554/live?x=y@b") == "rtsp://10.0.0.5:554/live?x=\u2026@b"
-    assert hide_in_url("rtsp://a:Hunter2@10.0.0.5:554/live?x=y@b") == "rtsp://\u2026@10.0.0.5:554/live?x=\u2026@b"
+    assert hide_in_url("rtsp://10.0.0.5:554/live?x=y@b") == "rtsp://10.0.0.5:554/live?x=y@b"   # a login: said
+    # …a userinfo's login is said, its password not
+    # …a userinfo's password runs to the last `@`: more masked, never less (the product's reading)
+    assert hide_in_url("rtsp://a:Hunter2@10.0.0.5:554/live?x=y@b") == "rtsp://a:***@b"
     assert "pass" in address_refusal("rtsp://10.0.0.5/live?pass%3DHunter2=1")
     for n in ("psk", "wpa_psk", "WPA-PSK", "privkey", "private_key", "auth", "Authorization"):
         assert is_credential_param(n), n
@@ -794,19 +798,20 @@ def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_
 def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_from_the_spec():
     """The boundary's step 4: the name lists, the XMeye chain, a password's name segment, DriverPack's host in the path
     and go2rtc's `?src=` were `secrets.py`'s own; they are the `secret_in` of `source` in `vms.subsystem.yaml` now, with
-    `schemes` and `credentials`. Without those rules the platform refuses only an `@` and a port that is no number — the
+    `schemes` and `credentials`. Without those rules the platform refuses an `@`, a port that is no number and its few
+    common names of a credential (`COMMON_RULES`: `pwd`, `token`…), and no vendor's spelling — the
     forms below stand; with them every one is refused, its password hidden, and the refusal names `cred_secret` — and
     `cred_username` beside it where a login was found too."""
     from w2cplatform.secrets import NO_RULES, address_refusal, hide_in_url
     source = SPEC.fields["source"]
     assert source.credentials == {"login": "cred_username", "secret": "cred_secret"} and "driverpack" in source.schemes
-    spelt = ["http://10.0.0.5/cgi-bin/snapshot.cgi?usr=admin&pwd=Hunter2",
+    spelt = ["http://10.0.0.5/cgi-bin/snapshot.cgi?usr=admin&loginpas=Hunter2",
              "rtsp://10.0.0.9:554/channel=1_user=admin_password=Hunter2_stream=0.sdp",
              "http://10.0.0.5/user/admin/password/Hunter2/snap.jpg",
              "driverpack://acme/admin:Hunter2/ch/1", "driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1",
              "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"]
     for src in spelt:
-        assert address_refusal(src, NO_RULES) is None, src                  # the platform's own reading: no list
+        assert address_refusal(src, NO_RULES) is None, src                  # the platform's own names: no vendor's
         assert address_refusal(src, source.rules) and not _leaks(hide_in_url(src, source.rules)), src
         try:
             SPEC.refuse({"source": src})

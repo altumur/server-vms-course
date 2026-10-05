@@ -71,7 +71,7 @@ def _site(box):
     with door_keys(box.vars):
         ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
         rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-        m = make_console(ctl, box.archive, box.wall, mounts={"rec": rec})
+        m = make_console(ctl, box.resource_root, box.wall, mounts={"rec": rec})
     old = door(box, old_st, "r-old", "srv-1", keeper=DoorKeeper("r-old", box.wall, box.vars))
     new = door(box, new_st, "r-new", "srv-2", status=[{"id": "1", "phase": "running", "epoch": 2}],
                keeper=DoorKeeper("r-new", box.wall, box.vars))

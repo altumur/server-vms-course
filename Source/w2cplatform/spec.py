@@ -166,8 +166,17 @@ SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of
 # What a spec's `requests:` says (`SubsystemSpec._page_words`).
 REQUEST_KEYS = ("free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
                 "elsewhere")
-# What a spec's `display:` says: words for a page (`SubsystemSpec._page_words`, `_card_words`).
-DISPLAY_KEYS = ("unit", "units", "field_help", "kinds", "actions", "tree", "keys", "general", "fields", "options", "form")
+# What a spec's `display:` says: words for a page (`SubsystemSpec._page_words`, `_card_words`) — closed by sections (the
+# architect, 5 Oct): what a section holds is free words, and the one thing checked is that a word for a field names one.
+DISPLAY_KEYS = ("unit", "units", "units_count", "section", "general", "fields", "field_help", "options", "form", "events",
+                "kinds", "actions", "keys", "tree")
+# …a section's words, one string each: what a unit and its many are called, the many after a number, the section's title, the first tab
+DISPLAY_WORDS = ("unit", "units", "units_count", "section", "general")
+# …and the tree's: by what it groups, its columns, whether children hang under a unit — and the words a page says of a
+# group, its path's separator among them (the product's words: a group's title and hint, the row of no group…).
+TREE_KEYS = ("group_by", "columns", "children")
+TREE_WORDS = ("nested_by", "group_title", "group_hint", "filter", "no_group", "contents_title", "group_word",
+              "no_group_suffix", "pick_note")
 # THE CONSOLE'S OWN ROUTES: the first segment of every path `SpecConsole.dispatch` and `Mount` answer themselves, before a
 # spec's rows and tables are looked at. A spec whose rows or a declared table is named so is a family no request reaches
 # — a table `marks` was never written over HTTP: `POST /marks` is the operator's mark. Refused at load; a closed set, held
@@ -541,20 +550,108 @@ def _slot(name, slot) -> tuple[str, str]:
     return prefix, env
 
 
-# `objects: {rows: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a segment `*`.
-def _object_rows(name, objects) -> tuple:
+# `objects: {rows: […], door: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a
+# segment `*`. `rows`: the objects that are rows of the store, never files; `door`: the files of its that a resource's
+# door gives the other servers (`resource.door_readable`; the product's key) — any other file of its is read on the server
+# that wrote it alone. The platform's own families (`resource.PLATFORM_DOOR`: heartbeats, contenders, used, snapshot,
+# controller, blobs) are not a spec's to name, nor every family at once.
+PLATFORM_FAMILIES = ("heartbeats", "contenders", "used", "snapshot", "controller", "blobs")
+
+
+def _object_patterns(name, objects, family: str) -> tuple:
     if objects is None:
         return ()
-    if not isinstance(objects, dict) or set(objects) - {"rows"} or not isinstance(objects.get("rows", []), list):
-        raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …]}}, not {objects!r}")
+    if not isinstance(objects, dict) or not objects or set(objects) - {"rows", "door"} \
+            or not all(isinstance(v, list) for v in objects.values()):
+        raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …], door: [<key pattern>, …]}}, not "
+                         f"{objects!r}")
     out = []
-    for p in objects.get("rows") or []:
+    for p in objects.get(family) or []:
         segs = str(p).split("/")
         if not p or any(not x or x == ".." or ("*" in x and x != "*") for x in segs):
-            raise ValueError(f"spec {name}: objects.rows takes key patterns under the subsystem's name — names "
+            raise ValueError(f"spec {name}: objects.{family} takes key patterns under the subsystem's name — names "
                              f"separated by '/', a whole segment '*' — not {p!r}")
+        if family == "door" and segs[0] in ("*", *PLATFORM_FAMILIES):
+            raise ValueError(f"spec {name}: objects.door: {p!r} names a family of the platform's own "
+                             f"({', '.join(PLATFORM_FAMILIES)}) or every one — a door gives those out unasked")
         out.append(str(p))
     return tuple(out)
+
+
+def _object_rows(name, objects) -> tuple:
+    return _object_patterns(name, objects, "rows")
+
+
+# `heartbeat: {strings: [<field>]}` — the fields of this subsystem's heartbeats that are strings by contract and that
+# something decides by (the product's key: the field it places by, say — the place a worker is counted in). A heartbeat
+# in which one of them is not a string is garbled — skipped and counted, as one that does not parse
+# (`contract.parse_heartbeat`): a reader that keyed or compared by it raised, or took `5` for a place. The platform's
+# own (`worker`, `server`, `url`, `instance`, `labels`) are not a spec's to say.
+PLATFORM_HEARTBEAT_STRINGS = ("worker", "server", "url", "instance", "labels")
+
+
+def _heartbeat_strings(name, hb) -> tuple:
+    if hb is None:
+        return ()
+    got = hb.get("strings") if isinstance(hb, dict) and set(hb) == {"strings"} else None
+    if not isinstance(got, list) or not got:
+        raise ValueError(f"spec {name}: `heartbeat:` is {{strings: [<a field of its heartbeats>, …]}}, not {hb!r}")
+    word = re.compile(r"[a-z][a-z0-9_]*")
+    for i, f in enumerate(got):
+        if not isinstance(f, str) or not word.fullmatch(f) or f in PLATFORM_HEARTBEAT_STRINGS or f in got[:i]:
+            raise ValueError(f"spec {name}: heartbeat.strings: {f!r} is no field of its own heartbeats (the "
+                             f"platform's are {', '.join(PLATFORM_HEARTBEAT_STRINGS)}), or is said twice")
+    return tuple(got)
+
+
+# `lease: {unconfirmed_max: forever | off | <seconds>}` — how long past a lease's end a holder of this subsystem may go
+# on WRITING DATA while the store is silent (`Lease.may_write`; the architect, 5 Oct: a weakening of the single writer
+# is off until the spec turns it on). `forever` — for as long as the silence lasts: what its units write carries the
+# epoch in its name, and a second writer is a duplicate, not damage; `<seconds>` — up to that long; `off` (the default)
+# — not at all: a lease not confirmed in time stops the unit — where the work is actions, done twice if done by two.
+# Typed: a number of seconds or one of the two words, nothing else (a word `"90"` lifted the ceiling unseen in the
+# product).
+LEASE_WORDS = {"forever": None, "off": 0.0}
+
+
+def _lease(name, lease) -> float | None:
+    if lease is None:
+        return 0.0
+    got = lease.get("unconfirmed_max") if isinstance(lease, dict) and set(lease) == {"unconfirmed_max"} else None
+    if isinstance(got, str) and got in LEASE_WORDS:
+        return LEASE_WORDS[got]
+    if isinstance(got, (int, float)) and not isinstance(got, bool) and math.isfinite(got) and got > 0:
+        return float(got)
+    raise ValueError(f"spec {name}: lease.unconfirmed_max is forever, off or a number of seconds — `lease:` is "
+                     f"{{unconfirmed_max: forever | off | <seconds>}}, not {lease!r}")
+
+
+# `secrets: {readers: {<row or prefix>: [<role>]}, reads: [<row or prefix>]}` — the product's key, the course checks it:
+# which roles read a secret row of this subsystem's (its console's door seed, `door/signer`), and the rows of somebody
+# else's its worker reads. The course's rights are the grants the specs make (`w2cplatform/cluster/rights.py`), so the
+# declaration is a promise held to them: the rights file is not generated while any role reads a declared row and is
+# not named, or is named and does not read it (`cluster.rights.check_secrets`). A role is one of `SECRET_ROLES`.
+SECRET_ROLES = ("console", "controller", "worker", "domain", "domainagent", "resource")
+_SECRET_ROW = re.compile(r"[a-z0-9_][a-z0-9_.\-]*(/[a-z0-9_.\-]+)*/?")
+
+
+def _secrets(name, sec) -> tuple[dict, tuple]:
+    if sec is None:
+        return {}, ()
+    readers, reads = (sec.get("readers", {}), sec.get("reads", [])) if isinstance(sec, dict) else (None, None)
+    if not isinstance(sec, dict) or not sec or set(sec) - {"readers", "reads"} or not isinstance(readers, dict) \
+            or not isinstance(reads, list):
+        raise ValueError(f"spec {name}: `secrets:` is {{readers: {{<row or prefix>: [<role>]}}, reads: [<row or "
+                         f"prefix>]}}, not {sec!r}")
+    for row in [*readers, *reads]:
+        if not isinstance(row, str) or not _SECRET_ROW.fullmatch(row) or ".." in row:
+            raise ValueError(f"spec {name}: secrets names {row!r}, which is no key of the store nor a prefix of keys "
+                             f"(`door/signer`, `domain/<sub>/accounts/`)")
+    for row, roles in readers.items():
+        if not isinstance(roles, list) or not roles or not all(r in SECRET_ROLES for r in roles):
+            raise ValueError(f"spec {name}: secrets.readers.{row} is a list of roles — {', '.join(SECRET_ROLES)} — "
+                             f"not {roles!r}")
+    return {k: tuple(v) for k, v in readers.items()}, tuple(reads)
 
 
 # `worker: {writes: [<table>], reads: [<key>], requests: [<sub>]}` — what this subsystem's WORKER may touch beyond its
@@ -841,8 +938,14 @@ class SubsystemSpec:
     # none is a place ANY box may write (a share), and a hold of it under a worker's name is taken back at once only on
     # the holder's own box (`Worker.hold_follows_name`); one that names a server is a disk there, taken back at once only
     # on that server. No `server_field`: where a place is is not known, and a hold never follows the name — it waits.
-    # The table is also what `/where/<table>/<place>` asks a place's holder by (`SpecConsole.where_place`).
+    # The table is also what `/where/<table>/<place>` asks a place's holder by (`SpecConsole.where_place`). `lease:
+    # strict` — a place ANY box may write (no server named) is let go when its hold has gone unconfirmed past its
+    # end, whatever `lease.unconfirmed_max` lets the units write: two writers in one place is damage, not a duplicate
+    # (the architect, 5 Oct: it is about the place, not the unit). Said or not, `places["lease"]` is `strict` or "".
     places: dict = field(default_factory=dict)
+    # `lease: {unconfirmed_max}` (`_lease`): the ceiling a holder's data writes past an unconfirmed lease, in seconds;
+    # None — for as long as the silence lasts; 0 — none (`Worker.unconfirmed_max`, `Lease.may_write`)
+    unconfirmed_max: float | None = 0.0
     # `retire_when: {field: state, in: [done, failed]}` — a unit whose row says one of those values is
     # FINISHED, and finished work is not placed. The first subsystem to need it is `detjob`, whose unit
     # ends; everything before it ran until an operator said stop.
@@ -933,6 +1036,13 @@ class SubsystemSpec:
     # it acts) or read where the place it names is gone. The cluster's object store asks the loaded specs for them
     # (`catalog.object_rows`; it was a constant of the platform's, naming one subsystem's family).
     object_rows: tuple = ()
+    # `objects: {door: [...]}` — its files a resource's door gives the other servers (`catalog.door_objects`)
+    object_door: tuple = ()
+    # `heartbeat: {strings: [...]}` (`_heartbeat_strings`): read where a heartbeat is (`catalog.heartbeat_strings`)
+    heartbeat_strings: tuple = ()
+    # `secrets: {readers, reads}` (`_secrets`): held to the rights the specs make (`cluster.rights.check_secrets`)
+    secret_readers: dict = field(default_factory=dict)
+    secret_reads: tuple = ()
     # `slot: {prefix: w, name_env: WORKER_NAME}` — what a slot this subsystem's worker has to MAKE is called
     # (`<prefix>-<n>`), and the environment variable naming the slot it is started under beside `WORKER_NAME`
     # (`runtime.slot`). It was each worker's class saying it.
@@ -945,9 +1055,9 @@ class SubsystemSpec:
     # `metrics: [...]` — the subsystem's own numbers on `/metrics`, declared (`metrics.py`; the boundary's step 6 — it
     # was a function of the subsystem's the console called, `metrics_extra`).
     metrics: list = field(default_factory=list)
-    # `display: {unit, units, field_help, kinds, actions, tree: {group_by, nested_by, columns, children}, keys, general,
-    # fields, options, form}` — what a page calls things; a dictionary the platform hands to `/spec` and reads none of
-    # (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8).
+    # `display: {unit, units, units_count, section, general, fields, field_help, options, form, events, kinds, actions,
+    # keys, tree}` (`DISPLAY_KEYS`, `TREE_KEYS`, `TREE_WORDS`) — what a page calls things; a dictionary the platform hands
+    # to `/spec` and reads none of (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8), checked only that a word for a field names one.
     display: dict = field(default_factory=dict)
     # `servers: {show: [{table, by, title, columns}]}` — rows of this subsystem's tables a page shows under the server
     # their `by` field names (a disk under its server). Handed to `/spec`; it was a field the console's `/servers` read
@@ -1025,6 +1135,11 @@ class SubsystemSpec:
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}),
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
+                   object_door=_object_patterns(d.get("name"), d.get("objects"), "door"),
+                   heartbeat_strings=_heartbeat_strings(d.get("name"), d.get("heartbeat")),
+                   secret_readers=_secrets(d.get("name"), d.get("secrets"))[0],
+                   secret_reads=_secrets(d.get("name"), d.get("secrets"))[1],
+                   unconfirmed_max=_lease(d.get("name"), d.get("lease")),
                    slot_prefix=slot[0], slot_name_env=slot[1],
                    worker_writes=worker[0], worker_reads=worker[1], worker_requests=worker[2])
         spec._about_and_rights(d)
@@ -1215,9 +1330,13 @@ class SubsystemSpec:
                                  f"(the console's routes: {', '.join(sorted(CONSOLE_ROUTES))})")
         disp = d.get("display")
         if disp is not None:
-            if not isinstance(disp, dict) or set(disp) - set(DISPLAY_KEYS):
+            if not isinstance(disp, dict):
                 raise ValueError(f"spec {self.name}: `display:` is {{{', '.join(DISPLAY_KEYS)}}} — words for a page, no "
                                  f"logic — not {disp!r}")
+            stray = [k for k in disp if k not in DISPLAY_KEYS]
+            if stray:
+                raise ValueError(f"spec {self.name}: `display.{stray[0]}` is no section of `display:` "
+                                 f"({', '.join(DISPLAY_KEYS)}) — words for a page, no logic, closed by sections")
             self._card_words(disp)
             for fid, w in (disp.get("keys") or {}).items():
                 if not isinstance(w, dict) or set(w) - {"title", "about", "absent"} or not isinstance(w.get("title"), str) \
@@ -1225,12 +1344,13 @@ class SubsystemSpec:
                     raise ValueError(f"spec {self.name}: display.keys.{fid} is {{title, about, absent}} — words, not {w!r}")
             tree = disp.get("tree") or {}
             # `children: false` — the page draws no child units under a unit in the tree (the product's word; the page's
-            # behaviour, passed through `/spec` untouched)
-            if not isinstance(tree, dict) or set(tree) - {"group_by", "nested_by", "columns", "children"} \
+            # behaviour, passed through `/spec` untouched); the rest are words
+            if not isinstance(tree, dict) or set(tree) - {*TREE_KEYS, *TREE_WORDS} \
                     or (tree.get("group_by") and tree["group_by"] not in self.fields) \
-                    or not isinstance(tree.get("children", True), bool):
-                raise ValueError(f"spec {self.name}: display.tree is {{group_by: <a field>, nested_by, columns, children: "
-                                 f"true|false}}, not {tree!r}")
+                    or not isinstance(tree.get("children", True), bool) \
+                    or not all(isinstance(tree[w], str) for w in TREE_WORDS if w in tree):
+                raise ValueError(f"spec {self.name}: display.tree is {{group_by: <a field>, columns, children: true|false, "
+                                 f"{', '.join(TREE_WORDS)}: <words>}}, not {tree!r}")
             for c in tree.get("columns") or []:
                 if not isinstance(c, dict) or (c.get("field") not in self.fields and c.get("field") not in self.STATUS_COLUMNS):
                     raise ValueError(f"spec {self.name}: display.tree.columns names a field of the row or of the unit's "
@@ -1247,30 +1367,56 @@ class SubsystemSpec:
             self.servers_show = show
 
     # A UNIT'S CARD, IN WORDS (the product's; the page module draws the card from them, the platform reads none): `general`
-    # — what the card's first tab is called; `fields` — a field's label (`id` and the unit's status words too); `options`
-    # — the word for each value of a field with an `enum`; `form` — the card's blocks in order, `{title, state?,
-    # placement?, fields, note?}`: `state` puts the unit's state in the block, `placement` where it runs. Each names
-    # fields of the row, checked here: a word for a field that is not there is a word for nothing.
+    # — what the card's first tab is called; `fields` — a field's label (`id` and the unit's status words too);
+    # `field_help` — a field's hint; `options` — the word for each value of a field with an `enum`; `form` — the card's
+    # blocks in order, `{title, state?, placement?, fields, status?, note?}`: `state` puts the unit's state in the block,
+    # `placement` where it runs, `status` what its worker says of it, read only (`[{field, since?, title?}]`: a field of
+    # the unit's STATUS, not of its row: what it is doing, and since when); `events: false` — the card has no journal
+    # tab of the module's (the page shows the unit's events itself). Each word for a field names one, checked here: a
+    # word for a field that is not there is a word for nothing. A status field is named by `form[].status` and nowhere
+    # else, so its words in `options` are free — its values are the worker's to say, no `enum` of the spec holds them.
     def _card_words(self, disp: dict) -> None:
-        named = set(self.fields) | {"id", *self.STATUS_COLUMNS}
-        fields, options, form = disp.get("fields") or {}, disp.get("options") or {}, disp.get("form") or []
-        if not isinstance(disp.get("general", ""), str):
-            raise ValueError(f"spec {self.name}: display.general is a word, not {disp['general']!r}")
-        if not isinstance(fields, dict) or not all(k in named and isinstance(v, str) for k, v in fields.items()):
-            raise ValueError(f"spec {self.name}: display.fields is {{<a field of the row>: <its label>}}, not {fields!r}")
-        for k, words in (options.items() if isinstance(options, dict) else [(None, None)]):
-            f = self.fields.get(k)
-            if f is None or not f.enum or not isinstance(words, dict) or \
-                    not all(isinstance(w, str) and str(v) in map(str, f.enum) for v, w in words.items()):
-                raise ValueError(f"spec {self.name}: display.options is {{<a field with an enum>: {{<one of its values>: "
-                                 f"<its word>}}}}, not {options!r}")
+        form = disp.get("form") or []
         if not isinstance(form, list) or not all(
-                isinstance(b, dict) and not set(b) - {"title", "state", "placement", "fields", "note"}
+                isinstance(b, dict) and isinstance(b.get("status", []), list) and all(
+                    isinstance(x, dict) and not set(x) - {"field", "since", "title"} and isinstance(x.get("field"), str)
+                    and x["field"] and all(isinstance(x.get(k, ""), str) for k in ("since", "title"))
+                    for x in b.get("status", [])) for b in form):
+            raise ValueError(f"spec {self.name}: display.form[].status is [{{field: <a field of the unit's status>, "
+                             f"since?: <its field saying since when>, title?: <words>}}], not {form!r}")
+        row = set(self.fields) | {"id", *self.STATUS_COLUMNS}
+        status = {x["field"] for b in form for x in b.get("status", [])} - set(self.fields)
+        named = row | status
+        for w in DISPLAY_WORDS:
+            if not isinstance(disp.get(w, ""), str):
+                raise ValueError(f"spec {self.name}: display.{w} is a word, not {disp[w]!r}")
+        if not isinstance(disp.get("events", True), bool):
+            raise ValueError(f"spec {self.name}: display.events is true or false — whether the card has the module's "
+                             f"journal tab — not {disp['events']!r}")
+        for k in ("kinds", "actions"):
+            got = disp.get(k) or {}
+            if not isinstance(got, dict) or not all(isinstance(v, str) for v in got.values()):
+                raise ValueError(f"spec {self.name}: display.{k} is {{<a name>: <its words>}}, not {got!r}")
+        for k in ("fields", "field_help"):
+            got = disp.get(k) or {}
+            if not isinstance(got, dict) or not all(f in named and isinstance(v, str) for f, v in got.items()):
+                stray = sorted(str(f) for f in got if f not in named) if isinstance(got, dict) else []
+                raise ValueError(f"spec {self.name}: display.{k} is {{<a field of the row or of form[].status>: <words>}}"
+                                 f"{f' — {stray} names no field' if stray else ''}, not {got!r}")
+        options = disp.get("options") or {}
+        for k, words in (options.items() if isinstance(options, dict) else [(None, None)]):
+            f, free = self.fields.get(k), k in status
+            if not isinstance(words, dict) or not (free or (f is not None and f.enum)) or not all(
+                    isinstance(w, str) and (free or str(v) in map(str, f.enum)) for v, w in words.items()):
+                raise ValueError(f"spec {self.name}: display.options is {{<a field with an enum>: {{<one of its values>: "
+                                 f"<its word>}}, <a field of form[].status>: {{<a value>: <its word>}}}}, not {options!r}")
+        if not all(
+                not set(b) - {"title", "state", "placement", "fields", "status", "note"}
                 and isinstance(b.get("title"), str) and isinstance(b.get("note", ""), str)
                 and isinstance(b.get("state", False), bool) and isinstance(b.get("placement", False), bool)
-                and isinstance(b.get("fields"), list) and all(x in named for x in b["fields"]) for b in form):
+                and isinstance(b.get("fields"), list) and all(x in row for x in b["fields"]) for b in form):
             raise ValueError(f"spec {self.name}: display.form is [{{title, state?, placement?, fields: [<a field of the "
-                             f"row>], note?}}], not {form!r}")
+                             f"row>], status?, note?}}], not {form!r}")
 
     # The placement's words that are a vocabulary or a declaration, checked at load (the boundary's step 6): the
     # constraint and the tie-break are names from the closed catalogue; `group_by` is a field, or `{field, cut_at}` over
@@ -1311,13 +1457,16 @@ class SubsystemSpec:
         places = pl.get("places")
         if places is not None:
             from .metrics import where_of
-            if not isinstance(places, dict) or set(places) - {"table", "where", "server_field"} \
+            if not isinstance(places, dict) or set(places) - {"table", "where", "server_field", "lease"} \
+                    or places.get("lease", "strict") != "strict" \
                     or places.get("table") not in self.tables or self.place_by == "server" \
                     or not isinstance(places.get("server_field", ""), str):
-                raise ValueError(f"spec {self.name}: placement.places is {{table: <one of its tables>, where?, server_field?}}, "
-                                 f"for a subsystem placed by something other than the server (`place_by`) — not {places!r}")
+                raise ValueError(f"spec {self.name}: placement.places is {{table: <one of its tables>, where?, "
+                                 f"server_field?, lease?: strict}}, for a subsystem placed by something other than the "
+                                 f"server (`place_by`) — not {places!r}")
             self.places = {"table": str(places["table"]), "where": where_of(self.name, places.get("where"), "places"),
-                           "server_field": str(places.get("server_field") or "")}
+                           "server_field": str(places.get("server_field") or ""),
+                           "lease": str(places.get("lease") or "")}
         aff = pl.get("affinity")
         if aff is not None:
             if not isinstance(aff, dict) or set(aff) - {"field", "table", "server_field", "strict"} \

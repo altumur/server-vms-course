@@ -73,8 +73,8 @@ def test_archive_read_says_what_left_and_the_digest_of_what_left():
 
     def _said():
         return [(e["user"], e["status"], e["bytes"], e.get("sha256"))
-                for b in buckets_under(box.archive, "audit", "door-r-page", 600)
-                for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
+                for b in buckets_under(box.resource_root, "audit", "door-r-page", 600)
+                for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"] == "archive.read"]
 
     try:
         code, ctype, body = get()
@@ -149,8 +149,8 @@ def test_an_export_is_read_a_minute_at_a_time_and_written_as_it_is_made():
         assert r.headers.get("Content-Length") is None and r.headers["Content-Type"] == "video/mp4"   # written as it is made
         assert streamed == whole and len(streamed) > 600 * 200                                       # the same file
         assert sum("/samples/" in u for u in asked) >= 10                                            # a minute at a time
-        digests = [json.loads(line).get("sha256") for b in buckets_under(box.archive, "audit", "door-r-page", 600)
-                   for line in open(os.path.join(box.archive, b.path)) if json.loads(line)["kind"] == "archive.read"]
+        digests = [json.loads(line).get("sha256") for b in buckets_under(box.resource_root, "audit", "door-r-page", 600)
+                   for line in open(os.path.join(box.resource_root, b.path)) if json.loads(line)["kind"] == "archive.read"]
         assert hashlib.sha256(streamed).hexdigest() in digests
     finally:
         vc._door = real; da.shutdown(); srv.shutdown()
@@ -216,8 +216,8 @@ def _export_box(size=256):
 
 
 def _journal(box):
-    return [json.loads(line) for b in buckets_under(box.archive, "audit", "door-r-page", 600)
-            for line in open(os.path.join(box.archive, b.path))]
+    return [json.loads(line) for b in buckets_under(box.resource_root, "audit", "door-r-page", 600)
+            for line in open(os.path.join(box.resource_root, b.path))]
 
 
 def test_each_recording_of_a_camera_is_an_export_of_its_own():
@@ -708,7 +708,7 @@ def test_an_export_asks_for_an_interval_and_never_a_path():
     from tests.vmsconftest import page_door
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(ctl, box.archive, "127.0.0.1", 0)
+    srv = serve(ctl, box.resource_root, "127.0.0.1", 0)
     pd = page_door(box)
     url, page = f"http://127.0.0.1:{srv.server_address[1]}", pd.base
     try:

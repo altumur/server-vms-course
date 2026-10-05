@@ -32,7 +32,7 @@ def _put(url, body, headers):
 
 
 def _resource(box):
-    res = platform_resource(box.tree, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.resource_root, "srv-1", "", box.vars, box.objects, wall=box.wall)
     srv = serve_resource(res, "127.0.0.1", 0)
     return f"http://127.0.0.1:{srv.server_address[1]}", srv
 

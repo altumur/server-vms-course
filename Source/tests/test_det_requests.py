@@ -269,7 +269,7 @@ def _follower(box, frm, to):
     box.vars.put(DETJOB_SPEC.sub.assignment("j-1"), {"units": "7-lpr-f", "rev": 1}, cas=0)
     return DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
                         models={"lpr": Every}, clock=box.clock, wall=box.wall, server="srv-1",
-                        resource_root=box.archive, env={"LABELS": "gpu", "VISIBLE_LAG_SECONDS": str(LAG)}, step=60.0)
+                        resource_root=box.resource_root, env={"LABELS": "gpu", "VISIBLE_LAG_SECONDS": str(LAG)}, step=60.0)
 
 
 def _phase(w):

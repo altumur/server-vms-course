@@ -28,12 +28,13 @@ class Clock:
 
 
 class Box:
-    """The platform on one box: its two stores, the resource's tree (`tree`), a monotonic clock and a wall clock."""
+    """The platform on one box: its two stores, the resource's tree (`resource_root`, the process's `RESOURCE_ROOT`), a
+    monotonic clock and a wall clock."""
     def __init__(self, prefix: str = "w2c-"):
         self.root = tempfile.mkdtemp(prefix=prefix)
         self.vars = FileVariables(os.path.join(self.root, "config"))
         self.objects = FsObjectStore(os.path.join(self.root, "objects"))
-        self.tree = os.path.join(self.root, "tree")
+        self.resource_root = os.path.join(self.root, "tree")
         self.clock, self.wall = Clock(), Clock(1_757_500_000.0)
 
 

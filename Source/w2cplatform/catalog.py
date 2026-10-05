@@ -24,6 +24,8 @@ is nobody's catalogue.
 # - `specs()` / `spec(name)` — what is loaded; with nothing loaded, the directory `SPEC_DIR` names first.
 # - `object_rows()` — the objects that are rows of the store (`rows_of` every spec, under its name: its `objects.rows`,
 #   and `commands/*` for a spec whose units take requests).
+# - `door_objects()` — the files a resource's door gives the other servers (`objects.door`, `domain.reports`).
+# - `heartbeat_strings(sub)` — the fields of a subsystem's heartbeats that are strings (`heartbeat.strings`).
 # - `secret_rules()` — how an address carries a login (`secret_in` of every url field of every spec, together).
 # ================================================================================================
 from __future__ import annotations
@@ -96,6 +98,38 @@ def rows_of(spec) -> tuple[str, ...]:
 
 def object_rows() -> tuple[str, ...]:
     return _derive("rows", lambda: tuple(f"{s.name}/{p}" for s in specs() for p in rows_of(s)))
+
+
+# A key by a pattern of the specs' objects: segment by segment, `*` one segment, a last `*` the rest (one at least).
+def matches(pattern: str, key: str) -> bool:
+    p, k = pattern.split("/"), key.split("/")
+    for i, seg in enumerate(p):
+        if i == len(p) - 1 and seg == "*":
+            return len(k) > i and all(k[i:])
+        if i >= len(k) or not k[i] or seg not in ("*", k[i]):
+            return False
+    return len(k) == len(p)
+
+
+# The files of every spec a resource's door gives the other servers, each under its subsystem's name (`resource.
+# door_readable`): its `objects.door`, and what its domain section says a member reports and who witnesses a unit
+# (`domain.reports`, `domain.witness`) — the member's agent reads them on whichever server it runs.
+def door_objects() -> tuple[str, ...]:
+    def make():
+        out = []
+        for s in specs():
+            out += [f"{s.name}/{p}" for p in s.object_door]
+            if s.domain is not None:
+                out += [f"{s.name}/{r}*" if r.endswith("/") else f"{s.name}/{r}" for r in s.domain.reports]
+                out += [f"{s.name}/{s.domain.witness}/*"] if s.domain.witness else []
+        return tuple(dict.fromkeys(out))
+    return _derive("door", make)
+
+
+# `heartbeat.strings` of the subsystem `sub`: the fields of its heartbeats a reader takes as strings, or the heartbeat
+# is garbled (`contract.parse_heartbeat`). A subsystem no spec here names has none but the platform's.
+def heartbeat_strings(sub: str) -> tuple[str, ...]:
+    return _derive("heartbeat_strings", lambda: {s.name: s.heartbeat_strings for s in specs()}).get(sub, ())
 
 
 # The `secret_in` of every url field of every spec, as one set of rules: what hides an address wherever one is said

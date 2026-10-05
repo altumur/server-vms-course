@@ -52,7 +52,7 @@ DEBT = os.path.join(HERE, "boundary_debt.txt")
 TESTSUB = os.path.join(HERE, "testdata", "testsub.subsystem.yaml")
 
 PLATFORM_TREE = "w2cplatform"                                  # walked whole, every subpackage
-SUBSYSTEM_PACKAGES = ("vms", "gstvms", "cluster")              # what the platform must not reach (`Source/<name>/`)
+SUBSYSTEM_PACKAGES = ("vms", "gstvms")                         # what the platform must not reach (`Source/<name>/`)
 
 # The platform's tests: what tests a mechanism of the platform. They are the platform's like its modules — scanned for
 # words and imports, with their helpers (`conftest.py`). Each proves its rule on the platform alone or on the subsystems

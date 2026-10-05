@@ -18,7 +18,7 @@ DAY = 86400.0
 
 
 def _audit(box, role="console"):
-    rows = EventIndex(box.tree, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", unit=f"audit/{role}")["events"]
+    rows = EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", unit=f"audit/{role}")["events"]
     return [{k: v for k, v in r.items() if k not in ("id", "t", "server", "bucket", "epoch", "epoch_is", "fenced", "class", "subsystem", "unit")} for r in rows]
 
 
@@ -28,7 +28,7 @@ def test_who_deleted_it_who_held_it_and_who_took_the_shelf_away():
     mounted = console_ctl(box, testsub2())
     counter = ctl.create({"name": "c1"})["id"]
     mounted.create({"name": "t1", "of": "c1"})
-    srv = spec_console({"testsub": ctl, "testsub2": mounted}, "testsub", box.tree, wall=box.wall).serve("127.0.0.1", 0)
+    srv = spec_console({"testsub": ctl, "testsub2": mounted}, "testsub", box.resource_root, wall=box.wall).serve("127.0.0.1", 0)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
 
     def call(method, path, body=None, user="anna"):
@@ -64,16 +64,16 @@ def test_who_deleted_it_who_held_it_and_who_took_the_shelf_away():
 
 
 def _raw(box):
-    return EventIndex(box.tree, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
+    return EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
 
 
 def test_the_retention_pass_says_whose_buckets_it_removed_and_the_journal_outlives_them():
     box = Box()
     t = box.wall() - 3 * DAY
-    EventLog(box.tree, "testsub", "c7", 1).append(t, "tick"); EventLog(box.tree, "testsub", "c7", 1).append(t + 700, "tick")
-    EventLog(box.tree, "testsub", "c8", 1).append(t, "tick")
+    EventLog(box.resource_root, "testsub", "c7", 1).append(t, "tick"); EventLog(box.resource_root, "testsub", "c7", 1).append(t + 700, "tick")
+    EventLog(box.resource_root, "testsub", "c8", 1).append(t, "tick")
     box.vars.put("testsub/retention/c7", {"days": 1})
-    res = Resource(box.tree, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 2
     [line] = _audit(box, "resource")
     assert (line["kind"], line["buckets"], line["days"]) == ("events.removed", 2, 1.0) and line["since"] <= t < line["until"]

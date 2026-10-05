@@ -28,6 +28,8 @@ a server's disks and nothing about what it means:
                                        `X-Written`, `X-Server`; `X-Missing` names the doors that did not answer)
     PUT    <url>/v1/objects/<sub>/blobs/sha256-…          a peer leaves a copy of a blob here, verified before stored
     DELETE <url>/v1/objects/<sub>/blobs/sha256-…?scope=   a blob let go here, or on every server (the sweep); blobs only
+                                       — each only for what the door gives out (`door_readable`: the platform's
+                                       families, a spec's `objects.door`); any other key is 403, at either scope
 
 The policy pass runs on a timer: retain each subsystem's buckets by its
 policy; relieve the disk if it is over the high mark — the resource measures
@@ -132,6 +134,60 @@ OBJECTS_TIMEOUT = 2.0        # what a peer has to answer a read of the cluster's
 PEER_REST = 10.0             # a peer that did not answer is not asked again for this long — named `missing` meanwhile
 SCOPES = ("local", "cluster")
 _BLOB_KEY = re.compile(r"^(?:[^/]+/)+blobs/sha256-[0-9a-f]{64}$")
+
+
+# WHAT THE DOOR GIVES OUT (the product's `DoorReads`, `objects.door` of its specs). Until the doors between processes are
+# mTLS, whoever reaches the port is answered — so the door answers for the families another server's processes read,
+# and nothing else: the platform's own below, and each loaded spec's (`catalog.door_objects`: its `objects.door`, what
+# its domain section says a member reports and who witnesses a unit). Any other file is its writer's server's alone:
+# a process there reads it from its own directory (`ClusterObjectStore`), and the door refuses it (403), at any scope.
+# The domain's objects (`domain/`, its relay's `relay/`, its people's `identity/` and `users/`) have one holder, which
+# moves from server to server.
+PLATFORM_DOOR = (f"{RESOURCES}/*", "domain/*", "relay/*", "identity/*", "users/*", "*/heartbeats/*", "*/contenders/*",
+                 "*/used/*", "*/snapshot/*", "*/controller/*", "*/blobs/*")
+
+
+class ObjectNotGiven(ValueError):
+    """A key this door does not give out (`door_readable`): 403, never "nobody has it"."""
+
+
+def door_patterns() -> tuple[str, ...]:
+    from .catalog import door_objects
+    return PLATFORM_DOOR + door_objects()
+
+
+def door_readable(key: str) -> bool:
+    from .catalog import matches
+    return any(matches(p, key) for p in door_patterns())
+
+
+# Whether a key under `prefix` could be one the door gives out — else a listing of it is this server's files alone —, and
+# whether every key under it is (a listing that needs no walk of this server's own directory). `prefix` is the start of
+# a key: its last segment may be cut short (`<sub>/heart`).
+def door_may_hold(prefix: str) -> bool:
+    return any(_prefix_fits(p, prefix, every=False) for p in door_patterns())
+
+
+def door_covers(prefix: str) -> bool:
+    return any(_prefix_fits(p, prefix, every=True) for p in door_patterns())
+
+
+def _prefix_fits(pattern: str, prefix: str, every: bool) -> bool:
+    *whole, part = prefix.split("/")
+    segs = pattern.split("/")
+    for i, seg in enumerate(whole):
+        if i >= len(segs):
+            return False
+        if i == len(segs) - 1 and seg and segs[i] == "*":
+            return True                                  # the last `*` takes the rest
+        if segs[i] not in ("*", seg):
+            return False
+    i = len(whole)
+    if i >= len(segs):
+        return False
+    if every:                                            # every key under it: the next segment is the pattern's last `*`
+        return i == len(segs) - 1 and segs[i] == "*" and part == ""
+    return segs[i] == "*" or segs[i].startswith(part)
 
 
 # A blob's key: `<sub>/blobs/sha256-<hex>` — the one kind of object a peer may put here, or a sweep delete: immutable,
@@ -664,7 +720,7 @@ class PeerClient:
                 data = _whole(r, f"GET {key}", OBJECT_MAX)
                 return data, finite(r.headers.get("X-Written", "")), str(r.headers.get("X-Server", ""))
         except urllib.error.HTTPError as e:
-            if e.code == 404:
+            if e.code in (404, 403):                     # 403: a key that door does not give out — not there for us
                 return None
             raise
 
@@ -1263,11 +1319,15 @@ class Resource:
     # the union, and for a key on several servers the copy written last (`written`; a blob's copies are one object).
     # Returns `(objects, missing)`: the doors that did not answer, named. A peer's entry that is not one (a `written`
     # that is not a finite number) is left out and counted once (`PEER_OBJECTS`).
+    # Only what the door gives out (`door_readable`), at either scope; a prefix under which it gives nothing out is asked
+    # of no peer.
     def objects_listing(self, prefix: str, scope: str = "local") -> tuple[dict, list[str]]:
         local = local_store(self.objects)
         out = {}
+        if not door_may_hold(prefix):
+            return out, []
         for key in local.list(prefix):
-            st = _stat(local, key)
+            st = _stat(local, key) if door_readable(key) else None
             if st is not None:
                 out[key] = {"written": st[0], "server": self.server, "size": st[1]}
         if scope != "cluster":
@@ -1277,8 +1337,10 @@ class Resource:
             for key, e in objs.items():
                 def entry(e=e, server=server) -> dict:
                     return {"written": finite(e["written"]), "server": server, "size": int(finite(e.get("size", 0)))}
+                if not isinstance(key, str) or not key.startswith(prefix) or not door_readable(key):
+                    continue                              # …and of a peer's, only what this door would give out too
                 got = PEER_OBJECTS.read(f"platform/objects/{server}#{key}", entry)
-                if got is None or not isinstance(key, str) or not key.startswith(prefix):
+                if got is None:
                     continue
                 if key not in out or got["written"] > out[key]["written"]:
                     out[key] = got
@@ -1295,6 +1357,8 @@ class Resource:
         # object though no listing names it (`FsObjectStore.list` passes such files by). Both: 404, here and anywhere.
         if key.endswith(".tmp"):
             return None, []
+        if not door_readable(key):
+            raise ObjectNotGiven(f"{key} is not given out by this door: it gives {', '.join(door_patterns())}")
         local = local_store(self.objects)
         mine, unread = None, ""
         try:
@@ -2107,6 +2171,8 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090) -> Thread
                 got, missing = resource.object_read(key, scope)
             except ObjectUnreadable as e:                    # there and not readable: 503 in words, not a dropped line
                 return self._json(503, {"error": str(e)})
+            except ObjectNotGiven as e:                      # a key this door gives nobody (`door_readable`)
+                return self._json(403, {"error": str(e)})
             gone = [("X-Missing", ",".join(missing))] if missing else []
             if got is None:
                 return self._json(404, {"error": f"no object {key} on {'any server that answered' if scope == 'cluster' else resource.server}",

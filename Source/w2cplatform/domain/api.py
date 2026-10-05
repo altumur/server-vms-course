@@ -93,10 +93,11 @@ class ConsoleAPI:
                                 f"observed_revision are the worker's; revision is the controller's")
 
     # A PASSWORD IS NOT THE DOMAIN'S TO CARRY (the product, feedback CD). An edit through the domain for a cluster that
-    # is off is KEPT (Lesson 9): in the holder's store, in every backup of it (Lesson 15), in the books a relay carries
-    # (Lesson 17), and its fields in the journal. A `*_secret` among them is in the clear in all of those — past the
-    # cluster's key, which seals a secret only on the way into the cluster's own store (М10A Lesson 18). So the domain
-    # refuses it, kept or forwarded: a password is set in the unit's own cluster.
+    # is off is KEPT (Lesson 9): in the holder's store, in every backup of it (Lesson 15), in the member's carry answer a
+    # relay keeps in memory on its way to the member (`relay.RelayDoor`, Lesson 17), and its fields in the journal. A
+    # `*_secret` among them is in the clear in all of those — past the cluster's key, which seals a secret only on the
+    # way into the cluster's own store (М10A Lesson 18). So the domain refuses it, kept or forwarded: a password is set
+    # in the unit's own cluster.
     #
     # …NOR IN AN ADDRESS (the twelfth review, blocker 9; a run). The rule looked at field NAMES, and an address with a
     # login in its query for a unit whose cluster was off was 202 with the password in the reply, kept in

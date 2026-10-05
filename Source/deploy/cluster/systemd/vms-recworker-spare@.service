@@ -21,7 +21,6 @@ SupplementaryGroups=vms-recworker vms-obsd w2c-events w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/recworker.sock
 Environment=OBSD_SOCKET=/run/vms-obsd/obsd.sock
 Environment=BOX_ID=%m
-Environment=UNCONFIRMED_MAX=90
 # A second recorder on this server: its door on a port the OS gives, published in its heartbeat on the address
 # `ARCHIVE_URL` names — 8084 is the server's own recorder's.
 Environment=ARCHIVE_PORT=0

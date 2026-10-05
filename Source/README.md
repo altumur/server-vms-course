@@ -53,9 +53,10 @@ Source/
                                said and opened again; `card.prebuffer.short`)
     vms.subsystem.yaml         Lesson 6  the VMS's controller, as a spec: cameras numbered, seven operator fields, vms/retention/<cam> derived, labels-subset placement, requires: resource (for its events), the snapshot
     controller.py              Lesson 6  vmscontroller: the platform's SpecController run from the spec, in the VMS's words (create_camera, cameras)
-    console.py                 Lesson 7  the console, its own process with its own token (the operator's rows, never placement): SpecConsole plus the VMS's media routes —
-                               /timeline/<cam> from every recorder's door, /export/<cam> (an interval as fMP4), and the WHEP door /whep/<cam> that creates a fan-out
-                               on the first viewer and proxies to its gateway
+    console.py                 Lesson 7  the console, its own process with its own token (the operator's rows, never placement): the platform's SpecConsole over the
+                               VMS's specs and nothing of the VMS's own — no media route: /where/<id> hands out the holder's door with a token, and the page reads
+                               the footage from the recorder (/timeline, /segment) and the stream from the gateway (/whep) itself; the first viewer asks for a
+                               fan-out with POST /live/streams
     live.subsystem.yaml        Lesson 8  the SECOND subsystem, as a spec: live fan-outs named by camera, placed on gateways by viewer headroom, labels for where viewers are
     det.subsystem.yaml         Lesson 9  the THIRD subsystem, as a spec: one model on one camera, named by the operator, placed on GPU-labelled workers by stream headroom
     detworker.py               Lesson 9  DetWorker: runs a Model against the camera's fan-out, writes what it saw into det/<unit>/e<epoch>/ on the resource under its own epoch —

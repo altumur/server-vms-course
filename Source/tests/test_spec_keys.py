@@ -74,10 +74,86 @@ def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
     _refused(lambda: catalog.spec("nobody"), "no subsystem 'nobody'")
 
 
+def test_a_heartbeat_field_its_spec_says_is_a_string_and_is_not_garbles_the_heartbeat():
+    """`heartbeat: {strings: [...]}` (the product's key, the course implements it): the fields of a subsystem's
+    heartbeats that are strings by contract and that something decides by. A worker's heartbeat holding one of them as
+    anything but a string is garbled — skipped and counted (`<sub>_heartbeats_garbled`), as one that does not parse;
+    absent is not garbled, and another subsystem's heartbeat is not this spec's business. The platform's own fields are
+    not a spec's to name, and a field is named once."""
+    from w2cplatform.contract import GARBLED, Heartbeat, parse_heartbeat
+    root = tempfile.mkdtemp(prefix="specs-")
+    with open(os.path.join(root, "beater.subsystem.yaml"), "w") as f:
+        f.write("name: beater\nunit: {rows: items, id: name, fields: {name: {type: string}}}\n"
+                "placement: {capacity: {from: capacity, default: 2}}\nheartbeat: {strings: [shelf, shelf_error]}\n")
+    catalog.load_dir(root)
+    assert catalog.spec("beater").heartbeat_strings == ("shelf", "shelf_error")
+    key = "beater/heartbeats/w-1"
+    beat = lambda **extra: Heartbeat("w-1", 1.0, [], extra).to_bytes()      # noqa: E731
+    assert parse_heartbeat(key, beat(shelf="a", shelf_error="")).extra["shelf"] == "a"
+    assert parse_heartbeat(key, beat()) is not None                         # not said: nobody is sent by it
+    before = GARBLED.get("beater", 0)
+    for bad in (beat(shelf=5), beat(shelf="a", shelf_error=None), beat(shelf=["a"])):
+        assert parse_heartbeat(key, bad) is None
+    assert GARBLED["beater"] == before + 3
+    assert parse_heartbeat("nobody/heartbeats/w-1", beat(shelf=5)) is not None
+    _refused(lambda: _spec(heartbeat={"strings": ["server"]}), "heartbeat.strings: 'server' is no field of its own")
+    _refused(lambda: _spec(heartbeat={"strings": ["a", "a"]}), "or is said twice")
+    _refused(lambda: _spec(heartbeat={"strings": "a"}), "`heartbeat:` is {strings:")
+
+
+def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to_it():
+    """`secrets: {readers: {<row>: [<role>]}, reads: [<row>]}` (the product's key, the course checks it): the rights file
+    is the grants the specs make, and the declaration is the promise they are held to (`cluster.rights.check_secrets`).
+    testsub2's console alone reads its door's seed, as it says. Named with a role that does not read it — or kept under
+    the subsystem's own name, where its controller and worker read every row — it is no file at all, the disagreement
+    named; a row the worker says it reads and its grants do not reach is the same; a role is one of the platform's."""
+    from w2cplatform.cluster.rights import roles
+    two = _testsub2()
+    roles([SubsystemSpec.from_dict(_testsub()), SubsystemSpec.from_dict(two)], "test")
+    for secrets, words in (({"readers": {"door/signer": ["console", "worker"]}}, "the rights let console read it"),
+                           ({"readers": {"testsub2/vault/": ["console"]}},
+                            "testsub2/vault/: the specs name console as its readers, and the rights let console, "
+                            "domain, testsub2controller, testsub2worker, testsubdomain read it"),
+                           ({"reads": ["door/signer"]}, "says its worker reads it (secrets.reads)"),
+                           ({"readers": {"door/signer": ["console"]}, "reads": ["door/signer"]},
+                            "the specs name console, testsub2worker")):
+        _refused(lambda secrets=secrets: roles([SubsystemSpec.from_dict(_testsub()),
+                                                SubsystemSpec.from_dict({**two, "secrets": secrets})], "test"), words)
+    for bad, words in (({"readers": {"door/signer": ["operator"]}}, "is a list of roles"),
+                       ({"readers": {"/door": ["console"]}}, "no key of the store"),
+                       ({"reads": "door/signer"}, "`secrets:` is {readers:"), ({}, "`secrets:` is {readers:")):
+        _refused(lambda bad=bad: SubsystemSpec.from_dict({**two, "secrets": bad}), words)
+
+
+def test_how_long_data_goes_on_past_an_unconfirmed_lease_is_the_specs_and_typed():
+    """`lease: {unconfirmed_max: forever | off | <seconds>}` (the architect, 5 Oct; it was `UNCONFIRMED_MAX` in a
+    subsystem's environment): `forever` is no ceiling, `off` — the platform's default — none at all, a number that many
+    seconds; the worker takes it from its spec (`Worker.unconfirmed_max`, and every lease it opens). Typed: a word
+    `"90"`, a zero, a negative, a flag are refused at load with the path. And a place any box may write is let go
+    unconfirmed when the spec says so next to it (`placement.places.lease: strict`), nothing else."""
+    from tests.conftest import Box
+    from w2cplatform.worker import Worker
+    said = lambda v: _spec(lease={"unconfirmed_max": v}).unconfirmed_max     # noqa: E731
+    assert (_spec().unconfirmed_max, said("forever"), said("off"), said(90)) == (0.0, None, 0.0, 90.0)
+    for bad in ({"unconfirmed_max": "90"}, {"unconfirmed_max": 0}, {"unconfirmed_max": -5}, {"unconfirmed_max": True},
+                {"unconfirmed_max": "always"}, {}, {"unconfirmed_max": 90, "strict": True}, "forever"):
+        _refused(lambda bad=bad: _spec(lease=bad), "lease.unconfirmed_max is forever, off or a number of seconds")
+    box = Box()
+    for said, want in (("forever", None), (90, 90.0), ("off", 0.0)):
+        holder = type("Holder", (Worker,), {"spec": _spec(lease={"unconfirmed_max": said})})
+        w = holder(SubsystemSpec.from_dict(_testsub()).sub, "w-1", box.vars, box.objects, clock=box.clock,
+                   wall=box.wall)
+        assert w.unconfirmed_max == want, (said, w.unconfirmed_max)
+    assert SubsystemSpec.from_dict(_testsub2()).places["lease"] == "strict"
+    two = _testsub2()
+    two["placement"]["places"] = {**two["placement"]["places"], "lease": "loose"}
+    _refused(lambda: SubsystemSpec.from_dict(two), "lease?: strict")
+
+
 # A url field the way a subsystem says how its addresses carry a login.
 TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
           "credentials": {"login": "account_name", "secret": "pass_secret"},
-          "secret_in": [{"param": ["pwd", "token*", "*key", "=auth"], "login": ["user", "*name"]},
+          "secret_in": [{"param": ["pwd", "token*", "*key", "=auth", "user", "*name"], "login": ["user", "*name"]},
                         {"regex": r"(?:^|/)~(?P<login>[^:/]+):(?P<secret>[^/]+)", "in": "path"},
                         {"regex": r"^(?P<name>code)=(?P<secret>.+)$", "in": "fragment", "schemes": ["sftp"]},
                         {"nested": ["via"]}]}
@@ -89,15 +165,21 @@ def _target_spec(target=None):
         "account_name": {"type": "string"}, "pass_secret": {"type": "string", "bound_to": ["target"]}}})
 
 
-def test_how_an_address_carries_a_login_is_the_specs_and_the_platform_keeps_no_list_of_its_own():
+def test_how_an_address_carries_a_login_is_the_specs_beside_the_platforms_few_common_names():
     """The forms a credential takes in an address — the names of its parameters, a login spelt in the path, a parameter
-    holding another address — were lists in `secrets.py`. They are a url field's `secret_in` now: with no rules the
-    platform refuses only what RFC 3986 says is a login (an `@`, a port that is no number); with the field's rules it
-    refuses what they find and hides the passwords — a login is said as written —, and the refusal names the field of
-    `credentials` for what it found (a password the secret's, a login alone the login's), never the value. A regex reads
-    the part it names of an address of the schemes it names, its escapes undone; its `name` is what the refusal says."""
-    for plain in ("https://h/x?pwd=Hunter2", "https://h/~me:Hunter2/x", "https://h/x?via=https%3A%2F%2Fh2%2F%3Fpwd%3DHunter2"):
+    holding another address — were lists in `secrets.py`. They are a url field's `secret_in` now, beside a few names
+    every system spells a credential by (`COMMON_RULES`, the product's decision of 5 Oct: `pwd`, `token`, `key` as the
+    last word, `=auth`, `=pin`…): with no rules the platform refuses what RFC 3986 says is a login (an `@`, a port that
+    is no number) and those names; with the field's rules it refuses what they find and hides the passwords — a login is
+    said as written, a userinfo's too (`me:***@`) —, and the refusal names the field of `credentials` for what it found
+    (a password the secret's, a login alone the login's), never the value. A regex reads the part it names of an address
+    of the schemes it names, its escapes undone; its `name` is what the refusal says."""
+    for plain in ("https://h/~me:Hunter2/x", "https://h/x?via=https%3A%2F%2Fh2%2F%3Fpwd%3DHunter2",
+                  "https://h/x?gpio_pin=4&hotkey=2&p=1"):
         assert address_refusal(plain, NO_RULES) is None and hide_in_url(plain, NO_RULES) == plain
+    for common in ("pwd", "hot_key", "pin", "access_token", "auth"):
+        assert hide_in_url(f"https://h/x?{common}=Hunter2", NO_RULES) == f"https://h/x?{common}=***", common
+    assert hide_in_url("https://me:Hunter2@h/x", NO_RULES) == "https://me:***@h/x"
     assert address_refusal("https://me:Hunter2@h/x", NO_RULES) and address_refusal("https://h:Hunter2/x", NO_RULES)
     rules = _target_spec().fields["target"].rules
     assert is_credential_param("pwd", rules) and is_credential_param("token_bucket", rules)     # `token*`: a word begins it
@@ -144,8 +226,13 @@ def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
     _refused(lambda: _target_spec({**TARGET, "credentials": {"login": "pass_secret"}}), "credentials.login")
     _refused(lambda: _target_spec({**TARGET, "credentials": {"secret": "account_name"}}), "credentials.secret")
     _refused(lambda: _target_spec({**TARGET, "schemes": ["HTTPS"]}), "`schemes` is a list of schemes")
-    for bad, words in (({"param": "pwd"}, "`param` is a list of names"), ({"param": ["*pwd*"]}, "a name, `=name`, `name*` or `*name`"), ({"param": ["=pwd*"]}, "a name, `=name`"),
-                       ({"login": []}, "`login` is a list of names"), ({"login": ["us er"]}, "in `login` is a name"),
+    for bad, words in (({"param": "pwd"}, "`param` is a list of names"),
+                       ({"param": ["*pwd*"]}, "a name, `=name`, `name*` or `*name`"),
+                       ({"param": ["=pwd*"]}, "a name, `=name`"),
+                       ({"login": ["us"]}, "is param, regex or nested"),
+                       ({"param": ["a"], "login": []}, "`login` is a list of names"),
+                       ({"param": ["a"], "login": ["us er"]}, "in `login` is a name"),
+                       ({"param": ["a"], "login": ["b"]}, "'b' in `login` is not in `param`"),
                        ({"regex": "x(?P<secret>.)"}, "`in:` path, query, authority, fragment"),
                        ({"regex": "x(?P<secret>.)", "in": "host"}, "`in:` path, query"),
                        ({"regex": "x(?P<secret>.)", "in": "path", "schemes": "https"}, "`schemes` is a list of schemes"),
@@ -163,14 +250,14 @@ def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
 
 def test_a_key_the_platform_does_not_read_is_refused_at_any_level_and_named_where_it_stands():
     """The key sets are closed (the architect, 2026-10-05): a key nobody reads — a typo, another team's word — is a
-    refusal at load naming it with its path, at the top, in a section, in a field, in an item of a list. The product's
-    `objects.door`, `heartbeat.strings` and `secrets` are such keys in the course: refused, not passed over. Where the
+    refusal at load naming it with its path, at the top, in a section, in a field, in an item of a list. Where the
     spec writes names (a field, an event kind) or words (`display.kinds`), anything stands."""
     plain = _testsub()
-    _refused(lambda: SubsystemSpec.from_dict({**plain, "objects": {"rows": [], "door": ["taken/*"]}}), "`objects:` is {rows:")
-    for where, add in (("heartbeat", {"heartbeat": {"strings": ["events"]}}),
-                       ("secrets", {"secrets": {"reads": ["domain/member-key"]}}),
-                       ("placement.requries", {"placement": {**plain["placement"], "requries": "resource"}}),
+    for words, add in (("`heartbeat:` is {strings:", {"heartbeat": {"strings": ["jam"], "beats": 1}}),
+                       ("`secrets:` is {readers:", {"secrets": {"writers": {"door/signer": ["console"]}}}),
+                       ("`objects:` is {rows:", {"objects": {"rows": ["marks/*"], "files": ["x/*"]}})):
+        _refused(lambda add=add: SubsystemSpec.from_dict({**plain, **add}), words)     # …by the section's own reader
+    for where, add in (("placement.requries", {"placement": {**plain["placement"], "requries": "resource"}}),
                        ("console.gauge", {"console": {"gauge": "x"}}),
                        ("events.suppress.tick.windw", {"events": {"suppress": {"tick": {"window": 5, "windw": 6}}}}),
                        ("unit.fields.name.requird", {"unit": {**plain["unit"], "fields": {
@@ -186,17 +273,38 @@ def test_a_key_the_platform_does_not_read_is_refused_at_any_level_and_named_wher
 
 
 def test_a_units_card_is_words_naming_its_fields():
-    """`display.general`, `fields`, `options`, `form` — the card's words, the product's: passed to the page, checked at load
-    to name fields of the row (and `id`), values of a field's `enum`, blocks `{title, state?, placement?, fields, note?}`."""
+    """`display` is closed by sections (the architect, 5 Oct): unit, units, units_count, section, general, fields,
+    field_help, options, form, events, kinds, actions, keys, tree (its words the product's: group_title, no_group,
+    pick_note…) — passed to the page. What a section holds is free words with ONE check at load: a word for a field names
+    one — `fields`, `field_help` and `form[].fields` a field of the row (or `id`, a status column), or a field of the
+    unit's status a block names (`form[].status`); `options` the values of a field's `enum`, a status field's values being
+    the worker's and free. Anything else is refused with the path."""
     spec = SubsystemSpec.from_dict(_testsub2())
     assert spec.display["form"][0]["fields"] == ["name", "mode"] and spec.display["options"]["mode"]["loud"] == "громко"
+    assert spec.display["options"]["lane"] == {"fast": "быстрая", "slow": "медленная"}      # a status field: free values
+    assert (spec.display["units_count"], spec.display["tree"]["no_group"], spec.display["events"]) == ("счётов", "Без зоны", False)
     d2 = _testsub2()
+    d2["display"]["options"].pop("lane")                 # the words for the status field, out of the way of a form replaced
+    d2["display"]["field_help"].pop("lane", None)
     for bad, words in (({"fields": {"nothing": "x"}}, "display.fields is"), ({"options": {"name": {"a": "b"}}}, "display.options is"),
                        ({"options": {"mode": {"quiet": "тихо"}}}, "display.options is"),
+                       ({"options": {"belt": {"a": "b"}}}, "display.options is"),           # no field, no status field
+                       ({"field_help": {"nothing": "x"}}, "['nothing'] names no field"),
+                       ({"fields": {"lane": 1}}, "display.fields is"),
                        ({"form": [{"title": "t", "fields": ["nothing"]}]}, "display.form is"),
+                       ({"form": [{"title": "t", "fields": ["lane"]}]}, "display.form is"),   # a status field is read only
                        ({"form": [{"title": "t", "fields": ["name"], "tab": 1}]}, "display.form is"),
-                       ({"general": 1}, "display.general is a word")):
+                       ({"form": [{"title": "t", "fields": [], "status": [{"field": "lane", "when": "x"}]}]}, "form[].status"),
+                       ({"form": [{"title": "t", "fields": [], "status": "lane"}]}, "form[].status"),
+                       ({"general": 1}, "display.general is a word"), ({"units_count": ["счётов"]}, "display.units_count"),
+                       ({"section": 2}, "display.section is a word"), ({"events": "no"}, "display.events is true or false"),
+                       ({"kinds": {"tally.tick": 1}}, "display.kinds"),
+                       ({"tree": {"group_by": "zone", "no_group": ["x"]}}, "display.tree is"),
+                       ({"tree": {"group_by": "zone", "not_in": "x"}}, "display.tree is")):
         _refused(lambda bad=bad: SubsystemSpec.from_dict({**d2, "display": {**d2["display"], **bad}}), words)
+    for stray in ("status", "colour"):                   # a section of no one's: the loader names it with its path
+        _refused(lambda stray=stray: SubsystemSpec.from_dict({**d2, "display": {**d2["display"], stray: {}}}),
+                 f"`display.{stray}`")
 
 
 def test_every_grant_of_a_subsystem_is_derived_from_its_spec():

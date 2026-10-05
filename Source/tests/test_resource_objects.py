@@ -96,6 +96,47 @@ def test_local_is_this_servers_and_cluster_is_everyones_with_the_freshest_copy()
         _stop(s)
 
 
+def test_the_door_gives_out_the_platforms_families_and_what_a_spec_declares_and_nothing_else():
+    """`objects: {door: [...]}` (the product's key, the course implements it): until the doors are mTLS, whoever reaches
+    the port is answered, so a resource's door gives out the platform's own families (heartbeats, snapshots, blobs…)
+    and each loaded spec's `objects.door` (and what its domain section says a member reports), and refuses any other
+    key — 403, at either scope; a listing names none of them, and no peer is asked for one. A process on the server
+    that wrote such a file reads it from its own directory (`ClusterObjectStore`): the other servers never see it."""
+    import tempfile
+
+    from w2cplatform import catalog
+    from w2cplatform.cluster.objectstore import ClusterObjectStore
+    root = tempfile.mkdtemp(prefix="specs-")
+    with open(os.path.join(root, "doorsub.subsystem.yaml"), "w") as f:
+        f.write("name: doorsub\nunit: {rows: items, id: name, fields: {name: {type: string}}}\n"
+                "placement: {capacity: {from: capacity, default: 2}}\nobjects: {door: [taken/*]}\n"
+                "domain: {reports: [counts/], witness: seen}\n")
+    catalog.load_dir(root)
+    box = Box()
+    s = _servers(box)
+    try:
+        (a, oa, _), (b, ob, _) = s["srv-a"], s["srv-b"]
+        for key in ("doorsub/taken/x", "doorsub/private/x", "doorsub/counts/x", "doorsub/seen/x", "doorsub/heartbeats/w-1"):
+            ob.put(key, key.encode())
+        for key in ("doorsub/taken/x", "doorsub/counts/x", "doorsub/seen/x", "doorsub/heartbeats/w-1"):
+            st, body, _ = _call("GET", f"{a.url}/v1/objects/{key}?scope=cluster")
+            assert (st, body) == (200, key.encode()), (key, st, body)
+        for url, scope in ((a.url, "cluster"), (b.url, "local"), (b.url, "cluster")):
+            st, body, _ = _call("GET", f"{url}/v1/objects/doorsub/private/x?scope={scope}")
+            assert st == 403 and "not given out by this door" in json.loads(body)["error"], (url, scope, st, body)
+        for url, scope in ((a.url, "cluster"), (b.url, "local")):
+            st, body, _ = _call("GET", f"{url}/v1/objects?prefix=doorsub/&scope={scope}")
+            assert sorted(json.loads(body)["objects"]) == ["doorsub/counts/x", "doorsub/heartbeats/w-1", "doorsub/seen/x",
+                                                           "doorsub/taken/x"], (url, scope, body)
+        on_b = ClusterObjectStore(ob.root, b.url, vars_=box.vars)
+        on_a = ClusterObjectStore(oa.root, a.url, vars_=box.vars)
+        assert on_b.get("doorsub/private/x") == b"doorsub/private/x" and "doorsub/private/x" in on_b.list("doorsub/")
+        assert on_a.get("doorsub/private/x") is None and "doorsub/private/x" not in on_a.list("doorsub/")
+        assert on_a.get("doorsub/taken/x") == b"doorsub/taken/x"
+    finally:
+        _stop(s)
+
+
 def test_a_peers_copy_of_a_blob_is_hashed_before_it_is_kept():
     """`PUT /v1/objects/<sub>/blobs/sha256-…` from a peer: the bytes that hash to the name are kept (204); bytes that
     do not are refused with the reason, and leave nothing — not even over a good copy already here."""
@@ -184,7 +225,8 @@ def test_a_garbled_request_is_answered_in_words():
 
 def test_a_key_that_names_a_directory_or_a_temporary_file_is_no_object():
     """The review's twelfth pass, minor: `GET /v1/objects/testsub` — a key that is a directory — dropped the connection, and
-    an in-flight put's `….tmp` file was served as an object though no listing names it. Both are 404, on either scope."""
+    an in-flight put's `….tmp` file was served as an object though no listing names it. Neither is served, on either
+    scope: the temporary file is 404, and a directory's key is no key the door gives out (403, `door_readable`)."""
     box = Box()
     s = _servers(box)
     try:
@@ -193,9 +235,9 @@ def test_a_key_that_names_a_directory_or_a_temporary_file_is_no_object():
         with open(os.path.join(oa.root, "testsub", "heartbeats", "w-1.x1.tmp"), "wb") as f:
             f.write(b"half")
         for scope in ("local", "cluster"):
-            for key in ("testsub", "testsub/heartbeats", "testsub/heartbeats/w-1.x1.tmp"):
+            for key, status in (("testsub", 403), ("testsub/heartbeats", 403), ("testsub/heartbeats/w-1.x1.tmp", 404)):
                 st, _, _ = _call("GET", f"{a.url}/v1/objects/{key}?scope={scope}")
-                assert st == 404, (key, scope, st)
+                assert st == status, (key, scope, st)
             assert _call("GET", f"{a.url}/v1/objects/testsub/heartbeats/w-1?scope={scope}")[0] == 200
     finally:
         _stop(s)

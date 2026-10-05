@@ -27,8 +27,6 @@
 		<string>__BOX__/state/run/vms-obsd/obsd.sock</string>
 		<key>BOX_ID</key>
 		<string>@BOXID@</string>
-		<key>UNCONFIRMED_MAX</key>
-		<string>90</string>
 		<key>ARCHIVE_PORT</key>
 		<string>8084</string>
 		<key>SECRETS_KEY</key>

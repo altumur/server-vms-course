@@ -125,7 +125,48 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
     # (`w2cplatform/domain/rights.py`). A member reads nothing of the holder's store: there is no member role.
     from w2cplatform.domain.rights import roles as domain_roles
     out.update(domain_roles(lambda r: group(r, deployment), SCHEMA_KEY, specs))
+    check_secrets(specs, out)
     return out
+
+
+# WHO READS A SECRET ROW IS WHAT THE SPECS SAY (`secrets: {readers, reads}`, the product's key; `spec._secrets`). Here the
+# reads are the grants above, so a declaration is held to them, never the other way: the file is not made while a role
+# reads a declared row and is not named (a grant that reaches a seed nobody meant it to — a worker's `<sub>/*` over a
+# secret kept under its subsystem's name), or is named and reads nothing of it. A spec's `controller`/`worker` is its
+# subsystem's; `console`, `domain`, `domainagent`, `resource` are the one role of that name. A row only `reads` names (no
+# spec keeps it secret) is held to the worker's grant alone.
+def check_secrets(specs: list, out: dict[str, dict]) -> None:
+    from w2cplatform.rights import allowed
+
+    def role(spec, name: str) -> str:
+        return f"{spec.name}{name}" if name in ("controller", "worker") else name
+
+    def reading(row: str) -> set[str]:
+        key = row + "_" if row.endswith("/") else row          # a prefix: one row under it stands for every row
+        return {r for r, grant in out.items() if allowed(grant["read"], key)}
+
+    declared: dict[str, set[str]] = {}
+    for s in specs:
+        for row, names in s.secret_readers.items():
+            declared.setdefault(row, set()).update(role(s, n) for n in names)
+    for s in specs:
+        for row in s.secret_reads:
+            if row in declared:
+                declared[row].add(role(s, "worker"))
+    faults = []
+    for row, want in sorted(declared.items()):
+        have = reading(row)
+        if have != want:
+            faults.append(f"{row}: the specs name {', '.join(sorted(want))} as its readers, and the rights let "
+                          f"{', '.join(sorted(have)) or 'nobody'} read it")
+    for s in specs:
+        for row in s.secret_reads:
+            if row not in declared and role(s, "worker") not in reading(row):
+                faults.append(f"{row}: {s.name}'s spec says its worker reads it (secrets.reads), and its rights give it "
+                              f"no read — `worker.reads` names what it reads")
+    if faults:
+        raise ValueError("the secret rows the specs declare are not read as they say (secrets.readers, secrets.reads):\n  "
+                         + "\n  ".join(faults))
 
 
 def specs_of(env: dict | None = None) -> tuple[list, str]:

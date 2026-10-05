@@ -24,7 +24,7 @@ def _box():
     con = VmsController(con_vars, box.objects, wall=box.wall)
     rec_con = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)                      # the console's door to recordings
     rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.resource_root)
     w.heartbeat_once(); con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     return box, ctl, con, rec_con, rec_ctl, w
 
@@ -70,10 +70,10 @@ def test_a_recording_is_a_unit_placed_on_the_archive_and_fed_by_the_workers_fan_
     r.store.seal()
     assert [(s.stream, s.start, s.end) for s in r.store.spans("1")] == [("1/e1", box.wall() - 600, box.wall())]
     w.observe(1, "motion")
-    assert subsystems_under(box.archive) == {"vms": ["1"]}
+    assert subsystems_under(box.resource_root) == {"vms": ["1"]}
     # the camera's worker fails over to srv-2: the recorder re-subscribes — to the RTSP fan-out now, the worker is on another
     # server — same recorder, same disks, same tree; a new pipeline is a new epoch (e1 before the move, e2 after, both here)
-    w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2", resource_root=box.archive)
+    w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2", resource_root=box.resource_root)
     ctl.move(1, "w-2", "test"); w2.reconcile_once(); w2.heartbeat_once(); w.reconcile_once(); w.heartbeat_once()
     assert r.resubscribe() == ["1"] and r.actuator.calls[-1] == ("stop", "1")
     box.clock.advance(10)
@@ -119,9 +119,9 @@ def test_a_recording_waits_while_nobody_holds_the_camera_and_records_when_someon
     assert r.reconcile_once() == [("start", "2")] and r.actuator.started["2"]["source"] == "shm:///run/vms/2.shm"   # held here: the tee's shared memory
     # a camera with no recording is watched, not recorded: it is held (live, detection, events), and has no stream
     assert rec_ctl.units() == [{"id": "2", "name": "2", "cam": "2", "retention_days": 30, "enabled": True, "labels": [], "home": "", "until": 0.0, "min_depth_days": 0.0, "when": "always", "revision": 1}]
-    assert [c["id"] for c in ctl.cameras()] == [1, 2] and subsystems_under(box.archive) == {}
+    assert [c["id"] for c in ctl.cameras()] == [1, 2] and subsystems_under(box.resource_root) == {}
     w.observe(1, "motion")
-    assert subsystems_under(box.archive) == {"vms": ["1"]}
+    assert subsystems_under(box.resource_root) == {"vms": ["1"]}
     # stop recording: the row goes, the placement is taken back on the next pass, the footage stays until the ring needs the room
     rec_con.delete("2"); rec_ctl.unplace_deleted()
     assert rec_ctl.assignment("r-1").units == [] and r.reconcile_once() == [("stop", "2")]
