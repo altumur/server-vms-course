@@ -52,6 +52,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler
 
+from w2cplatform.canonical import parse_json
 from w2cplatform.console import Deadlined, open_doors, read_body
 from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.trust.signer import DomainRoot, Signer
@@ -877,12 +878,10 @@ def _document(spec, name: str, value):
     """A value of the edit as the document keeps it: a document a spec declares (`domain.documents`) given as the TEXT
     of its JSON — what a form's text box sends — is read as JSON; anything else is kept as it came. A text that is no
     JSON is a `ValueError`, said with the field's name."""
-    # TODO(canonical_json): once the platform's `canonical_json` helper is on main, the value is kept in its one form —
-    # the document is signed canonically already (`trust.documents`), so this is only the stored bytes' spelling.
     if spec is None or name not in spec.domain.documents or not isinstance(value, str):
         return value
     try:
-        return json.loads(value)
+        return parse_json(value)                         # the platform's one reading (`canonical.py`): no `NaN`
     except PARSE_ERRORS as e:
         raise ValueError(f"{spec.name}.{name} is a JSON document, and this is not JSON: {e}") from None
 
