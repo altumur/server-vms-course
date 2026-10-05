@@ -1912,6 +1912,12 @@ class SubsystemSpec:
                 if f.schemes and scheme not in f.schemes:
                     raise AddressRefused(f"{name} is reached by {', '.join(f.schemes)}, not by "
                                   f"{repr(scheme) if scheme else 'an address with no scheme'}")
+                # …and no login where the scheme writes its host in the path (`host: path`): `x://vendor/admin:
+                # …%40host/ch/1` — the url rule's, at any url field, whatever its `secret_in` (ADR 0053; the group is
+                # still read: `host`, refused)
+                if path_login(written, f.schemes):
+                    raise AddressRefused(f"{name} holds a login where its scheme writes the host (in the path): the "
+                                         f"login and the password are the spec's own fields, not the address")
                 # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/dev7#@nvr50/ch/1` is
                 # device `dev7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
                 # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
@@ -2194,12 +2200,33 @@ def _authority_host(a: str, *, host: bool = True) -> str | None:
     return "ok" if ok else ""
 
 
+def _path_login(path: str) -> bool:
+    """A login written in the first segment of `path` (`host: path`): an `@` in it, escaped or not, or a password where
+    the port goes (`10.0.0.5:hunter2`, or past a password holding a `/`)."""
+    seg = path[1:].split("/", 1)[0]
+    rest, plain = path[1 + len(seg):], _unescaped(seg)
+    port = (_split_port(plain) or (plain, None))[1]
+    return "@" in plain or (port is not None and (port != "" and not _digits(port) or "@" in _unescaped(rest)))
+
+
+def path_login(v, schemes: dict | None = None) -> bool:
+    """Whether the address `v`, of a scheme whose host stands in its path (`host: path`), writes a login there — the
+    url rule's refusal at any url field (ADR 0053; the product's c13c25f), whatever the field's `secret_in` says."""
+    s = "" if v is None else str(v)
+    scheme, sep, rest = s.partition("://")
+    opts = (schemes or {}).get(scheme.lower()) or {}
+    if not sep or opts.get("host", "authority") != "path":
+        return False
+    cut = min([i for i in (rest.find("/"), rest.find("?")) if i >= 0], default=len(rest))
+    path = rest[cut:].partition("?")[0]
+    return bool(path[1:].split("/", 1)[0]) and _path_login(path)
+
+
 def _host_in_path(path: str) -> str:
     """The host written in the first segment of `path` (`host: path`), in its one spelling, or ""."""
     seg = path[1:].split("/", 1)[0]
     rest, plain = path[1 + len(seg):], _unescaped(seg)
-    port = (_split_port(plain) or (plain, None))[1]
-    login = "@" in plain or (port is not None and (port != "" and not _digits(port) or "@" in _unescaped(rest)))
+    login = _path_login(path)
     if not login:
         written = _split_port(seg)
         return host_spelling(written[0]) if written else ""
