@@ -887,6 +887,16 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
         res.heartbeat()
         seen = {}
 
+        def beat_caught_up(more=lambda b: True, within=10.0):
+            """Wait by the condition, not by a sleep: the pulse's thread has written a beat as of the box's clock now
+            (and `more` of it holds) — under a loaded machine 0.1 s was sometimes not enough for one beat."""
+            end = time.monotonic() + within
+            while time.monotonic() < end:
+                b = resources_seen(box.objects).get("srv-1") or {}
+                if b.get("ts") == box.wall() and more(b):
+                    return
+                time.sleep(0.005)
+
         class Peer:                                                   # each copy takes a third of the limit
             took, hang = [], False
 
@@ -896,7 +906,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
             def put(self, url, server, path, data):
                 peer_hb()
                 box.wall.advance(limit + 1 if self.hang else limit / 3); box.clock.advance(limit + 1 if self.hang else limit / 3)
-                time.sleep(0.1)
+                beat_caught_up((lambda b: b.get("pass_stuck", 0) > limit) if self.hang else (lambda b: True))
                 self.took.append(path)
                 seen.update(resources_seen(box.objects))
 
@@ -914,7 +924,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
             def pass_(self, now, progressed):
                 for _ in range(6):
                     box.wall.advance(limit / 3); box.clock.advance(limit / 3)
-                    progressed(); time.sleep(0.05)
+                    progressed(); beat_caught_up()
                 seen["hook"] = (resources_seen(box.objects)["srv-1"]["ts"], box.wall())
                 return {}
 
