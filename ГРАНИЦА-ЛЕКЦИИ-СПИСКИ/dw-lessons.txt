@@ -1,0 +1,56 @@
+dw — lesson lines that say something untrue after the dw step (ADR 0032/0010 additions; the architect's 409/400 rule;
+the tokens socket's own group). Format: file:line — what is untrue — what is true now.
+
+== М12A_Domain/12-shared-settings-without-a-database.md
+12:41-44 (yaml `shared: [step, marks]`) — testsub's `domain.shared` is now `[step, marks, {name: rounds, type: json, schema: …}]`: a list entry may be a DOCUMENT the domain holds whole, `{name, type: json, schema}`, no unit's field. Add the document form beside the field form.
+12:49 — "поле не из `domain.shared` или подсистема, которой на домене нет, — отказ всей правке, 409 … (`shared.undeclared_shared`)" — now 400 (wrong by the specs on its own; the architect's rule: 409 only when the refusal depends on rows that exist — a stale base_rev); the function is `shared.refusals`, and it also refuses any key beside `shared` in the document and a value its schema refuses (a document's, or a unit field's that has a `schema`). Also: "поле должно быть полем единицы … либо наследовать, либо группировать" — or be a document `{name, type: json, schema}` that is NOT a field of the unit.
+12:56 — `def edit(self, mutate, base_rev, by=None, check=None)` — `check` is gone: `edit(self, mutate, base_rev, by=None)`; no subsystem check is asked when the document is signed (ADR-0032: the signer asks no subsystem's code).
+12:85-87 — "ревизию, против которой сделана правка, и декларации спек" — and each declared field/document by its SCHEMA (400 with the schema's words); a document may come as the text of its JSON (a form's text box) and is read as JSON (`signer_service._document`). "необъявленное поле … — отказ" — 400 now (stale revision stays 409).
+12:89 (`GET /domain/shared` … "с их типами") — `declared` also carries a document's `schema` (`{name, type: "json", schema}`).
+12:178 — "VMS кладёт рядом с `shared` сценарии — `scenarios`, — и платформа их не читает" — untrue: the document holds `shared` and NOTHING beside it (`refusals`: "settings.<k>: the document holds `shared` and nothing beside it"). The scenarios between cameras are `auto`'s DOCUMENT in `domain.shared` (`auto.subsystem.yaml`: `{name: scenarios, type: json, schema: …}`), at `settings.shared.auto.scenarios`; the signer checks them by that schema like any shared field and knows no word «scenario».
+12:182 — "сценарий, который камеры не могут выполнить, воркер называет на каждом проходе" — still true, and it is now the ONLY check of meaning (nothing at writing).
+12:184 — "Дверь правки человека (`PUT /domain/shared`) сегодня несёт только `shared`: сценарии кладёт в документ сам `SharedSettings.edit` — так их пишут тесты М12B" — untrue: the person's door carries scenarios like any shared field (`PUT /domain/shared {base_rev, shared: {auto: {scenarios: [...]}}}` → the signer's `/api/shared`); the М12B tests write them through the door (`tests/domain/conftest.py::SharedDoor` → `signer_service.edit_shared`).
+12:193 (table) — "Правка общих настроек — 409 «not in its domain.shared»" — 400 now.
+12:68 — "Пятьсот папок и пятьсот сценариев" — still true; the test now puts the 500 scenarios at `settings.shared.auto.scenarios`.
+
+== М12A_Domain/13-alarms-from-every-member.md
+13:103 — "`domain.witness` — семейство объектов … `<sub>/<witness>/<имя>` = `{ts, cluster, units: {ref: секунды…}}`" — now `domain.witness: {report, member_field}`: the family is `<sub>/<report>/*`, and `units` is keyed by the value of `member_field` — a unit field declared `fixed: true` in `fields:` that carries the member's NAME; the domain matches a silent member by its own name. A spec whose `member_field` is not a fixed field of the unit does not load.
+13:110 (yaml `witness: polled`) — `witness: {report: polled, member_field: cam}` (rec spec).
+13:113-121 (publish_polled listing: `cams = {ref: …}`) — the ingest keys `units` by the MEMBER that polled — its stream token's subject (`cam.polled_by`), e.g. `cam-SN0`, keeping a member's freshest poll: `cams[c.polled_by] = min(age, …)`.
+13:127 — "Имя, под которым свидетель знает единицу члена, — не обязательно имя члена: камера-член называется `cam-SN0`, а приёмник знает её как `SN0`. Это `ref_of` у `DomainAlarms`; тест даёт `serial_of` … Процессы держателя (`signer_service`, `console`) `ref_of` не передают, и у них свидетель ищется по имени члена." — untrue: there is no `ref_of`; the witness names what it heard of by the member's name (the field `member_field` carries it), so `DomainAlarms.alive_at(member)` finds `cam-SN0` in every process — the signer's and the console's included — and the test passes nothing.
+13:179 (summary) — "Свидетель, которого объявляет спека (`domain.witness`; у VMS — приёмник, к…" — add `{report, member_field}`; the member matched by its own name.
+13:189 (exercise 5: "Процессы держателя не передают `ref_of`. Предложите, как подсистема могла бы сказать платформе…") — answered by the code now (`member_field`); the exercise asks for what is done. Replace or reword (e.g. ask why the field must be `fixed: true`).
+
+== М12A_Domain/14-a-domain-holder-on-one-node.md
+14:103 — "`term.move_domain`, функцией платформы; двери или команды для аварийного переноса у курса нет, его зовут тесты" — untrue: the move is the signer's FIFTH operation on the NEW holder, `POST /api/move {recovery, stolen?}`; people reach it as `POST /domain/move` at the new holder's domain console, the stand and drills as `w2cctl domain move <door> <recovery-file> [stolen]` (same door). It is checked by the recovery file (a root's: some member holds a key set it signed; the signer's backup: the cluster's key set names its token key) — not by a grant. It wraps `term.move_domain` whole; no test-only path remains (`Holder.move`, `tests/test_domain_platform.py::test_a_move_is_made_on_the_new_holder_by_its_signer_through_the_door_and_checked_by_the_recovery_file`).
+14:191 — `POST /domain/stranded/apply {path, key}` — still what it was (an item a replaced holder alone held, applied again on the new holder's console). Note: ADR-0032's addition says the move is exposed AS stranded/apply; the code keeps stranded/apply's meaning and gives the move `POST /domain/move` (see the dw report).
+14:222 — "Проверяет её signer, в каждо[й из четырёх операций]" — in each of the FIVE (the move too: 503 while a handover from that holder is under way).
+14:278 — `new, report = move_domain(fed, "cam-SN1", recovery, DOMAIN, objects_of, wall, stolen=True)` as the operator's act — the operator's act is `w2cctl domain move <door> <recovery-file> stolen` (→ `POST /domain/move {recovery, stolen: true}` → `Holder.move`); `move_domain` is what that operation wraps. A theft answered by the signer's backup is refused at the door (400) before the function's ValueError.
+14:308 — "… и четыре операции, каждая со своей проверкой человека и заморозки" — five operations; the move's check is the recovery file, not a person.
+14:310-315 (table) — add a row: «перенос сюда (шаг 3, 9) | `POST /api/move {recovery, stolen?}` | файл восстановления (корень подписал набор, который держит член; или ключ токенов — в наборе кластера), заморозка (503), этот кластер уже держит — 409; оборачивает `move_domain`».
+14:317 — "каталог `2750 w2c:vms-vmsdomain` из `w2c-domain.tmpfiles`" — `2750 w2c:vms-vmsdomaintokens`: the tokens socket's own group (ADR-0031, `<deployment>-<sub>domaintokens`, `domain.rights.tokens_group`) with ONE member, `vms-domainpart`; not the store's role group.
+14:319 (console paragraph) — "Общие настройки, передачу и людей передаёт signer'у (…)" — and the move: `POST /domain/move` → `/api/move` (no early refusal at the console: the signer checks the file).
+14:321 — "не входит ни в группу кольца, ни в группу сокета токенов" — the tokens socket's group is now `vms-vmsdomaintokens` (still not the console's).
+14:323 — "каждая из четырёх операций — в signer'е и отказывает…" — five (`test_each_of_the_five_operations_runs_in_the_signer_and_refuses_while_a_handover_freezes_it`).
+14:360 — "Заморозку проверяет signer в каждой из четырёх операций" — five.
+14:361 — "весь проход и четыре операции" — five.
+
+== М12A_Domain/15-domain-secrets.md
+15:288-297 — "… три операции с маршрутом отвечают 503" — four operations with a route answer 503 while frozen (shared, handover, people, move); five operations in all.
+15:342 — "он сам выполняет четыре операции, которым они нужны" — five.
+
+== М12A_Domain/module-design.md
+module-design.md:28 — "он сам выполняет четыре оп[ерации]" — five: shared, handover, backup, people, move.
+module-design.md:158 (the signer's row) — add `/api/move` (the move onto this cluster, checked by the recovery file).
+module-design.md:436 (lesson 14 row) — add `signer_service.Holder.move`, `w2cctl domain move`.
+
+== М12B_DomainVMS/03-a-camera-nobody-can-reach.md
+03:469 — "При записи документа `scenario.refusals` проверяет по этому описанию три вещи" — not at writing: the signer checks a scenario's shape by `auto`'s schema only; `scenario.refusals` runs on every pass over the books (`Books.pass_once` → `refused`), the same three checks.
+03:474 — "Камера, которая ещё не сказала о себе, не отвергается: сценарий принят…" — still true; nothing is refused at writing for meaning at all now.
+03:478 — "Сценарий оператор пишет в общий документ урока 12 — `{"when": …}`" — at `settings.shared.auto.scenarios`, through the person's door (`PUT /domain/shared {base_rev, shared: {auto: {scenarios: […]}}}`), checked by `auto`'s schema (when{camera,kind}, then{camera,action,arg?,within?}, rate_per_minute?, enabled?).
+03:594 (table) — "сценарий на не-члена — 409 при записи" — taken at writing (its shape is right) and named on every pass over the books ("… (target) polls nothing"); a scenario whose shape is wrong (no `kind`) is 400 at the door.
+03 (tests named in the text) — `test_a_scenario_on_a_camera_that_polls_nothing_is_refused_when_written_and_named_on_every_pass` is now `…_is_taken_by_the_door_and_named_on_every_pass`.
+
+== ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md / КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md (not lessons; for the coordinator)
+КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md:280 — lists `POST /domain/handover {to}`, `POST /domain/stranded/apply {path, key}` — add `POST /domain/move {recovery, stolen?}` (the holder's page may offer it on a member that is to hold the domain; today the module has no button for it).
+КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md:284 — the list of human routes under `/domain/*` — add `move`.
