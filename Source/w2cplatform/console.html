@@ -270,7 +270,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
     </form>
   </div>
   <div id="autos" style="display:none">
-    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Automation</strong><small>scenarios this unit triggers or is asked by — the auto subsystem, when the console mounts it: the choices are what the units' holders said they raise and can do (<code>/auto/catalog</code>)</small></div>
+    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Automation</strong><small>scenarios this unit triggers or is asked by — the auto subsystem, when the console mounts it: what a unit cannot do, its evaluator says</small></div>
     <ul id="autolist"></ul>
     <form id="autoadd" style="margin-top:6px;padding-top:0;border-top:0">
       <div class="row">
@@ -836,22 +836,22 @@ $('#detadd').onsubmit = async e => {
   try { await send('POST', '/det/units', { name: `${current}-${f.kind}`, cam: String(current), kind: f.kind, params: f.params || '' }); e.target.reset(); loadDets(); }
   catch (err) { $('#deterr').textContent = 'refused: ' + err.message; }
 };
-// -- automation: the `auto` subsystem, mounted at /auto. The form is built from `/auto/catalog` — what
-// automation may ask for, and what each unit raises and can do as its holder described it — so the kinds
-// offered are the ones THIS unit raises and the presets the ones the target has. A unit whose device never
-// described itself (`can: null`) gets a free field: "unknown" is offered as unknown, and the console's own
-// check says the rest. The form is rebuilt when the unit changes or a scenario is added — never on the
+// -- automation: the `auto` subsystem, mounted at /auto. The form is built from the routes the specs declare
+// (`autoCatalog`: the page's units; the catalogue route of one subsystem's on the platform's console is gone — the
+// boundary's step 6). What a unit can do and raise the page does not know: every unit is `can: null` and gets a free
+// field — "unknown" is offered as unknown — and the evaluator says what a scenario cannot do, in its status
+// (`refused`). The form is rebuilt when the unit changes or a scenario is added — never on the
 // ten-second refresh, which would redraw a select under the operator's cursor.
 // The units the form offers are the PAGE's subsystem's — `spec.name`, the root console's, whose unit is `current` —
 // and the catalogue keys them by that name: the platform's page names no subsystem of its own (it said `vms`).
-let autos = null, catalog = null, autoFor = null;                    // /auto/spec, /auto/catalog, the unit the form was built for
+let autos = null, catalog = null, autoFor = null;                    // /auto/spec, `autoCatalog`, the unit the form was built for
 const held = () => catalog[spec.name] || {};                          // the catalogue's units of the page's subsystem
 async function loadAutos(rebuild) {
   if (autos === null) { try { const r = await fetch('/auto/spec'); autos = r.ok ? await r.json() : false; } catch (_) { autos = false; } }
   $('#autos').style.display = autos && current != null ? 'block' : 'none';
   if (!autos || current == null) return;
   if (rebuild || autoFor !== String(current)) {
-    try { catalog = await (await fetch('/auto/catalog')).json(); } catch (_) { return; }
+    try { catalog = await autoCatalog(); } catch (_) { return; }
     autoFor = String(current); buildAutoForm();
   }
   const d = await (await fetch('/auto/scenarios')).json();
@@ -872,6 +872,11 @@ async function loadAutos(rebuild) {
     ul.appendChild(li);
   }
 }
+async function autoCatalog() {
+  const rows = await (await fetch(ROWS())).json(), units = {};
+  for (const u of rows.configured || []) units[String(u.id)] = { name: u.name || String(u.id), can: null };
+  return { [spec.name]: units, det: {}, holder_events: Object.keys((spec.display || {}).kinds || {}) };
+}
 function opt(value, text) { const o = document.createElement('option'); o.value = value; o.textContent = text; return o; }
 function buildAutoForm() {
   const me = held()[String(current)] || {}, when = $('#autowhen'), target = $('#autotarget');
@@ -888,7 +893,7 @@ function buildAutoAction() {
   if (!can || can.relays) action.appendChild(opt('output', 'pulse a relay'));
   if (!can || can.ptz) action.appendChild(opt('preset', 'go to a preset'));
   action.appendChild(opt('record', 'record 10 minutes'));
-  // The detectors' two (`det.detect`, `det.scan`): the models this unit's detectors run, else the course's three.
+  // The two actions that ask a model (`.detect`, `.scan`): the models the catalogue says this unit runs, else the course's three.
   const cam = $('#autotarget').value, kinds = [...new Set(Object.values(catalog.det).filter(d => d.cam === cam).flatMap(d => d.raises))];
   for (const k of (kinds.length ? kinds : ['motion', 'linecross', 'lpr'])) {
     action.appendChild(opt(`detect:${k}`, `detect ${k} 10 minutes`));

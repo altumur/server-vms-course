@@ -9,7 +9,8 @@ import logging
 
 from w2cplatform.contract import requests_acl
 from w2cplatform.variables import Forbidden
-from vms.auto import AutoController
+from vms.config import AUTO_SPEC
+from w2cplatform.spec import SpecController
 from vms.autoworker import AutoWorker
 from vms.config import AUTO_SPEC, REC_SPEC, SPEC as VMS_SPEC
 from tests.conftest import Box, door_site
@@ -73,14 +74,14 @@ def _worker(box, log, name="a-1"):
 
 
 def _assigned(box, scenario, worker="a-1"):
-    ctl = AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
     ctl.assign(worker, [scenario])
     return ctl
 
 
 def _scenario(box, **patch):
     door_site(box)                                   # the door, the lobby and its detector exist
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     return con.create({**DOOR, **patch})
 
 
@@ -198,7 +199,7 @@ def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
     lines = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(t - 60, t + 1, subsystem="auto")["events"]
              if e["kind"] == "suppressed"]
     assert [(e["count"], e["since"], e["until"]) for e in lines] == [(47, bounce[3]["t"], bounce[49]["t"])]
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     assert 'auto_firings_suppressed_total{worker="a-1"} 47' in spec_metrics(con)
 
 
@@ -620,7 +621,7 @@ def test_scenarios_watching_one_kind_share_one_query_a_pass():
     log = _Log([ev(t - 20, "vms", 12, "io.input", port="1", value="closed")])
     for name in ("a", "b", "c"):
         _scenario(box, name=name, when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
-    ctl = AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
     ctl.assign("a-1", ["a", "b", "c"])
     w = _worker(box, log)
     assert sorted(w.reconcile_once()) == ["a", "b", "c"]
@@ -639,7 +640,7 @@ def test_a_cut_in_the_shared_answer_counts_only_against_the_scenario_it_reached(
               when=[DOOR["when"][0], {"sub": "vms", "kind": "io.input", "unit": "12", "match": {"value": "open"}}],
               then=[DOOR["then"][0]])
     _scenario(box, name="short", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
-    ctl = AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl = SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
     ctl.assign("a-1", ["long", "short"])
     w = _worker(box, log)
     w.reconcile_once()
@@ -663,7 +664,7 @@ def test_a_pass_says_what_it_cost_in_its_heartbeat_and_the_console_exports_it():
     w.reconcile_once(); w.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(AUTO_SPEC.sub.heartbeat_key("a-1")))
     assert hb.extra["queries"] == 1 and hb.extra["latency_seconds"] == 4.0 and hb.extra["lag_seconds"] == w.COLD_START
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     text = spec_metrics(con)
     assert 'auto_firing_latency_seconds{worker="a-1"} 4.0' in text and 'auto_queries_per_pass{worker="a-1"} 1' in text
     # …and the road as a histogram since the process started: the pass after this one files nothing and its
@@ -700,7 +701,7 @@ def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_
              if e["kind"] == "fired"]
     # written NOW, about THEN (feedback BL): `t` files the line, `occurred` is the cause's moment
     assert sorted((e["occurred"], e.get("late"), e["t"]) for e in fired) == [(t - 120, 120.0, t), (t - 3, None, t)]
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     assert 'auto_fired_late_total{worker="a-1"} 1' in spec_metrics(con)
     w.reconcile_once()
     assert len(box.vars.list("vms/requests/")) == 1 and w.late == 1      # remembered: not late twice
@@ -780,7 +781,7 @@ def test_one_camera_row_that_cannot_be_read_does_not_withdraw_the_scenarios():
     reply = Catalog(box.vars).reply()
     assert reply["vms"]["7"]["can"] is None and "cannot be read" in reply["vms"]["7"]["unread"], reply["vms"]
     assert "12" in reply["vms"]
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     con.create({**DOOR, "name": "door-again"})                               # checked against the rest, not a 500
 
 

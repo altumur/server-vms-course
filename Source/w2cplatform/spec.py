@@ -277,6 +277,10 @@ class Field:
     ref: str = ""
     must_match: dict = field(default_factory=dict)
     unique: str = ""
+    # `schema: {…}` — what the field's value may BE, as JSON Schema (`schema.py`; the boundary's step 6, the owner's
+    # decision 3): checked at the door on the value as it parses — a `json` field's document, an `int`'s number — for
+    # every writer, in the schema's words. What a value may MEAN beyond its shape is the subsystem's worker's to say.
+    schema: object = None
 
     # Convert an item string or JSON value to the typed value; `None` gives the default. Bools accept a real
     # bool or the string `"true"`; lists accept a list or a comma-separated string.
@@ -667,6 +671,9 @@ class SubsystemSpec:
         for n, f in (unit.get("fields") or {}).items():
             _url_words(fields, n, f)
             _ref_words(fields, n, f)
+            if "schema" in f:
+                from . import schema as _schema
+                fields[n].schema = _schema.load(f["schema"], f"spec {d.get('name')}: field {n}: schema")
         for f in fields.values():
             if f.bound_to and not is_secret_field(f.name):
                 raise ValueError(f"field {f.name}: `bound_to` is a secret's — the address it is the key to; "
@@ -1100,11 +1107,19 @@ class SubsystemSpec:
                 raw = fields[name]
                 try:
                     text = raw if isinstance(raw, str) else _json.dumps(raw)
-                    _json.loads(text)
+                    doc = _json.loads(text)
                 except PARSE_ERRORS as e:                # nested past JSON's depth too: 400, not 500 (the tenth round)
                     raise Refused(f"{name} is not JSON: {e}")
                 if len(text) > JSON_CEILING:
                     raise Refused(f"{name} is {len(text)} bytes of JSON; the ceiling is {JSON_CEILING}")
+                if f.schema is not None:
+                    self._schema_refusal(name, f, doc)
+            elif f.schema is not None and name in fields and fields[name] is not None:
+                try:
+                    value = f.parse(fields[name])
+                except PARSE_ERRORS:
+                    raise Refused(f"{name} is {f.type}, not {str(fields[name])[:60]!r}") from None
+                self._schema_refusal(name, f, value)
             if f.type == "url" and fields.get(name):
                 # …and a url `urlsplit` cannot read, or whose port is no port, is a 400 with the words (the product
                 # team's sibling of the tenth pass): `rtsp://[10.0.0.5/x` raised `ValueError` out of here — a 500 — and
@@ -1143,6 +1158,17 @@ class SubsystemSpec:
                 if "#" in str(fields[name]):
                     raise Refused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
                                   f"and maybe another to the driver")
+
+    # A value against its field's schema: `Refused` in the schema's words, where it failed (`schema.check`).
+    @staticmethod
+    def _schema_refusal(name: str, f, value) -> None:
+        from .schema import Invalid, check
+        try:
+            check(f.schema, value, name)
+        except Invalid as e:
+            raise Refused(str(e)) from None
+        except RecursionError:
+            raise Refused(f"{name} is nested past what is read") from None
 
     # A fresh row: each required field must be present and truthy (`"a vms unit needs a source"`), others
     # get their default; a string value containing `{id}` has it substituted (a spec's `name: "u{id}"`);

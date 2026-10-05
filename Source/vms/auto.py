@@ -1,53 +1,46 @@
-"""The scenario as data: what a trigger may say, what an action may ask for,
-and the refusal that happens at the door instead of at three in the morning."""
+"""The scenario as data: what a trigger may say, what an action may ask for, and the refusal the evaluator says
+of a scenario it cannot run."""
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # auto.py — the seventh subsystem's controller, and the whole of the scenario language
+# # auto.py — the scenario language: its catalogue, the check against the devices, the match
 #
-# **Role in the module.** `auto.subsystem.yaml` says a scenario has a `when`, a `within` and a `then`; the
-# platform checks that those are JSON and small, and stops there, because a generic loader that validated a
-# trigger would be a generic loader that knows what a trigger is. This file is where the shapes mean
-# something: `AutoController.create` refuses a scenario the evaluator could not run, at the moment the
-# operator presses the button.
+# **Role in the module.** `auto.subsystem.yaml` says a scenario has a `when`, a `within` and a `then`, and since the
+# boundary's step 6 it says what their SHAPE may be — JSON Schema on each field (the owner's decision 3) — which the
+# platform checks at the door for every writer, in the schema's words. It was a controller of the VMS's own here
+# (`AutoController`, `refuse_scenario`), and a hook in the platform's console is what the boundary takes away. What no
+# schema of one field can say is this file's, and the evaluator's to act on: two triggers need `within` and one
+# refuses it (`refusal`), and what a scenario asks of a device the device can do (`Catalog.check`). A scenario that
+# fails either is REFUSED by its evaluator — not fired, `refused` with why in its heartbeat (`AutoWorker`).
 #
 # **Why the language is fixed and not an expression.** An expression language is an interpreter: a parser,
 # a grammar, precedence, errors at evaluation time, and a page that cannot offer a form because it cannot
-# know what the operator will type. A fixed shape is a dozen checks, a form the console can build from the
-# catalogue, and every refusal arriving while somebody is still looking at what they wrote. When the shape
-# stops fitting, the honest move is another field — not a parser.
+# know what the operator will type. A fixed shape is a schema, a form a page can build from it, and every refusal of
+# the shape arriving while somebody is still looking at what they wrote. When the shape stops fitting, the honest
+# move is another field — not a parser.
 #
 # **The catalogue is the boundary.** `ACTIONS` names the pairs `(subsystem, action)` this course knows how
-# to file a request for, with the fields each one needs. It lives here and not in the platform for the same
-# reason the trigger shapes do; it lives here and not in each target subsystem because it is a statement
-# about what AUTOMATION may ask for, which is narrower than what those subsystems can do.
+# to file a request for, with the fields each one needs — the same five the spec's schema of `then` allows. It is
+# a statement about what AUTOMATION may ask for, which is narrower than what those subsystems can do.
 #
 # **The catalogue is not the device.** `ACTIONS` says preset is a thing automation may ask for; it does not
 # say camera 12 has a telemetry, or that it raises `io.input`, or that detector `7` exists. That is a FACT,
 # and only the holder of the device knows it: it writes it in `vms/devices/<device>` (`config.describe`).
-# `Catalog` reads those rows beside the operator's own (`vms/cameras/*`, `det/units/*`), and a scenario is
-# checked against both — the policy (may automation ask for this at all) and the fact (can this unit say
-# or do it). A misfit is refused at the door like a missing field; a scenario the fact cannot vouch for yet
-# (the device has never been held) is accepted and named on every pass, and so is one that stopped fitting
-# after it was written (the camera was replaced by one without a telemetry).
+# `Catalog` reads those rows beside the operator's own (`vms/cameras/*`, `det/units/*`), and the evaluator checks a
+# scenario against both on its pass. A misfit is refused there; a scenario the fact cannot vouch for yet (the device
+# has never been held) runs and is named on every pass.
 #
 # ## Public API
 # - `TRIGGER_KEYS`, `ACTIONS` — the language, as data.
-# - `Catalog(vars_)` — what the units say and do; `check(fields) -> (misfits, unchecked)`; `reply()` — the
-#   whole of it, for the page to build its form from (`GET /auto/catalog`).
-# - `refuse_scenario(fields, catalog=None)` — raises `Refused` with a sentence an operator can act on.
-# - `AutoController` — `SpecController` over `AUTO_SPEC`, refusing on create and on update.
+# - `Catalog(vars_)` — what the units say and do; `check(fields) -> (misfits, unchecked)`; `reply()` — the whole of it.
+# - `refusal(fields, catalog=None) -> [why]` — what the evaluator refuses a scenario for, `[]` when it may run.
 # - `fires(trigger, event)` — does this event match this trigger. The evaluator's half of the language,
 #   here beside the validation so the two cannot drift.
 # ================================================================================================
 from __future__ import annotations
 
-import time
-
 from w2cplatform.doors import numeric, unit_ref
-from w2cplatform.objects import ObjectStore
 from w2cplatform.rows import PARSE_ERRORS, Table
-from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import Variables
 
 from .config import AUTO_SPEC, DET_SPEC, DEVICES, HOLDER_EVENTS, SPEC as VMS_SPEC, device_of, parse_device_row
@@ -68,24 +61,14 @@ ACTIONS = {
     ("det", "scan"): {"need": ("cam", "kind"), "may": ("before", "after", "rec", "params")},
 }
 
-# A scenario may not ask for the world. The ceiling is on the SHAPE — how many triggers, how long a window
-# — because a scenario with forty triggers and an hour-long window is a query over the whole log run every
-# pass, and it would be the operator's own console that got slow.
+# A scenario may not ask for the world. The ceiling is on the SHAPE — how many triggers, how long a window — because a
+# scenario with forty triggers and an hour-long window is a query over the whole log run every pass, and it would be
+# the operator's own console that got slow. The numbers are the spec's schema's (`auto.subsystem.yaml`: `maxItems`,
+# `maximum`); these say them for the code that reads a scenario, and `test_auto_spec` holds the two to one another.
 MAX_TRIGGERS = 4
 MAX_WITHIN = 3600
 MAX_VALID_FOR = 600          # what a holder accepts: `VmsWorker.MAX_VALID` (a command's deadline is near)
 MAX_ACTIONS = 4
-
-
-def _dicts(v, what: str) -> list[dict]:
-    if not isinstance(v, list) or not v:
-        raise Refused(f"`{what}` is a non-empty list")
-    if len(v) > (MAX_TRIGGERS if what == "when" else MAX_ACTIONS):
-        raise Refused(f"`{what}` takes at most {MAX_TRIGGERS if what == 'when' else MAX_ACTIONS} entries")
-    for e in v:
-        if not isinstance(e, dict):
-            raise Refused(f"every entry of `{what}` is an object, not {type(e).__name__}")
-    return v
 
 
 # What the units of this cluster can say and do — the operator's rows for what EXISTS, the holders' rows for
@@ -305,71 +288,26 @@ class Catalog:
 # With a `catalog`, the scenario is checked against the units too — after the language, for the reason the
 # platform's check runs before this one: "camera 12 has no relays" is not a sentence to hand somebody whose
 # action has no `sub`.
-def refuse_scenario(fields: dict, catalog: Catalog | None = None) -> None:
-    for t in _dicts(fields.get("when"), "when"):
-        bad = [k for k in t if k not in TRIGGER_KEYS]
-        if bad:
-            raise Refused(f"a trigger has no key {bad[0]!r} — it takes {', '.join(TRIGGER_KEYS)}")
-        if not str(t.get("sub", "")) or not str(t.get("kind", "")):
-            raise Refused("a trigger names the subsystem it watches and the kind of event: {sub, kind}")
-        if "match" in t and not isinstance(t["match"], dict):
-            raise Refused("`match` is an object of field: value, compared against the event's fields")
-
+# WHAT A SCENARIO MAY BE IS ITS SPEC'S, WHAT IT MAY DO IS ITS EVALUATOR'S (the boundary's step 6, the owner's decision 3).
+# The shape — which keys a trigger takes, the five actions and what each needs, the bounds of `within`, `valid_for`,
+# `rate_per_minute` — is JSON Schema in `auto.subsystem.yaml`, checked by the platform at the door for every writer. It
+# was `refuse_scenario`, run by a controller of the VMS's own (`AutoController`) before the row was written. What no
+# schema of one field can say is said here, and the evaluator refuses the scenario with it in its heartbeat
+# (`AutoWorker.reconcile_once`): two triggers need `within`, one refuses it; and what the scenario asks of a device the
+# device can do (`Catalog.check`, its misfits).
+def refusal(fields: dict, catalog: Catalog | None = None) -> list[str]:
+    """Why the evaluator does not run this scenario — `[]` when it may."""
+    out = []
     when, within = fields.get("when") or [], int(fields.get("within") or 0)
-    if len(when) > 1 and within <= 0:
-        raise Refused("two triggers need `within`: within how many seconds do they count as together")
-    if len(when) == 1 and within:
-        raise Refused("`within` is the window between triggers; with one trigger there is nothing to window")
-    if within > MAX_WITHIN:
-        raise Refused(f"`within` is at most {MAX_WITHIN} seconds")
-
-    for a in _dicts(fields.get("then"), "then"):
-        key = (str(a.get("sub", "")), str(a.get("action", "")))
-        spec = ACTIONS.get(key)
-        if spec is None:
-            known = ", ".join(f"{s}.{n}" for s, n in sorted(ACTIONS))
-            raise Refused(f"this course files {known} — not {key[0] or '?'}.{key[1] or '?'}")
-        allowed = {"sub", "action", *spec["need"], *spec["may"]}
-        bad = [k for k in a if k not in allowed]
-        if bad:
-            raise Refused(f"{key[0]}.{key[1]} has no field {bad[0]!r} — it takes {', '.join(sorted(allowed))}")
-        missing = [k for k in spec["need"] if a.get(k) in (None, "")]
-        if missing:
-            raise Refused(f"{key[0]}.{key[1]} needs {missing[0]!r}")
-
-    valid = int(fields.get("valid_for") or 0)
-    if valid and not 5 <= valid <= MAX_VALID_FOR:
-        raise Refused(f"`valid_for` is between 5 and {MAX_VALID_FOR} seconds — less is shorter than the road from "
-                      f"an event to the device, and the request would expire on its way; more is not a command "
-                      f"any longer, and the worker holding the device refuses it")
-
-    rate = int(fields.get("rate_per_minute") or 0)
-    if rate and not 1 <= rate <= 600:
-        raise Refused("`rate_per_minute` is between 1 and 600 — automation without a ceiling can ring")
-
+    if isinstance(when, list) and len(when) > 1 and within <= 0:
+        out.append("two triggers need `within`: within how many seconds do they count as together")
+    if isinstance(when, list) and len(when) == 1 and within:
+        out.append("`within` is the window between triggers; with one trigger there is nothing to window")
     if catalog is not None:
-        misfit, _ = catalog.check(fields)
-        if misfit:
-            raise Refused("; ".join(misfit))
+        out += catalog.check(fields)[0]
+    return out
 
 
-# Does this event set off this trigger? The evaluator's half of the language, and it lives beside the
-# validation deliberately: two files would drift, and the drift would look like a scenario that never
-# fires — the hardest kind of bug to see, because nothing happens.
-#
-# An event is what the console's merge hands over, and the key names are ITS, not ours: `subsystem`, not
-# `sub` (`eventdatabase.py`, the row built in `query`). A trigger says `sub` because that is what an
-# operator writes; the comparison reads what the log actually carries. Getting this wrong is invisible in
-# a test with a hand-built event and total on a box: the scenario simply never fires.
-#
-# Matching is equality on strings and nothing else. No ranges, no negation, no substring: each of those is
-# a question about what the operator meant, and the answer belongs in another trigger or in another field.
-#
-# A line carrying `repeats` is the summary of a window the WRITER suppressed (`Suppressor`, М10A урок 12),
-# and it never fires. It is not a new observation: the first line of that window was, and it fired this
-# scenario already. Acting on the summary too would open the door a second time for one continuous event —
-# and would do it worse the longer the storm ran, because the louder the sensor, the more summaries.
-# The summary exists for the operator reading the timeline and for whoever reconstructs the incident.
 def fires(trigger: dict, event: dict) -> bool:
     if "repeats" in event:
         return False
@@ -383,31 +321,3 @@ def fires(trigger: dict, event: dict) -> bool:
         if str(event.get(k, "")) != str(v):
             return False
     return True
-
-
-class AutoController(SpecController):
-    """The platform's controller over `auto.subsystem.yaml`, plus the one thing
-    the platform cannot do: refuse a scenario that says nothing runnable."""
-
-    def __init__(self, vars_: Variables, objects: ObjectStore, capacity: int = 50, wall=time.time,
-                 cluster: str | None = None, catalog: Catalog | None = None):
-        super().__init__(AUTO_SPEC, vars_, objects, capacity, wall, cluster)
-        self.catalog = catalog if catalog is not None else Catalog(vars_)
-
-    # Both doors, because an edit can break a scenario exactly as a create can — and an edit is the likelier
-    # of the two: the scenario that runs the site was written months ago and is being adjusted at speed.
-    # The platform's check runs FIRST, and the order is not tidiness: it answers "is this JSON, and does it
-    # fit", and everything below assumes the answer is yes. Ask what a trigger means before knowing it
-    # parsed and the operator gets a sentence about triggers for a missing brace.
-    def create(self, fields: dict, **reserved) -> dict:
-        self.spec.refuse(fields)
-        refuse_scenario(fields, self.catalog)
-        return super().create(fields, **reserved)
-
-    def update(self, uid, fields: dict) -> dict:
-        row = self.unit(uid)
-        if row is None:
-            raise Refused(f"no scenario {uid}")
-        self.spec.refuse(fields)                    # the patch: shapes and sizes
-        refuse_scenario({**row, **fields}, self.catalog)   # the scenario as it WOULD be, not the half being sent
-        return super().update(uid, fields)

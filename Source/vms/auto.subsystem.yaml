@@ -24,28 +24,70 @@ unit:
   id: name                           # the operator's name for it: "door-on-badge"
   fields:
     name:            {type: string, required: true}
-    # WHEN: a list of triggers, each `{sub, kind}` plus optional `unit` and `match`. JSON because a
-    # scenario's triggers are a list of shapes: flattening them into fields would cap the count at one or
-    # invent `when_1_sub`, `when_2_sub` — a schema pretending not to be one. The platform checks that it is
-    # JSON and small; what the shapes MEAN is checked in `vms/auto.py` before the row is written.
-    when:            {type: json,   required: true}
-    # The correlation window, in seconds. Required when there is more than one trigger and refused when
-    # there is one: "A and B within thirty seconds" is a question, "A within thirty seconds" is not.
-    within:          {type: int,    default: 0}
-    # THEN: a list of actions, each `{sub, action, …}` out of a catalogue `vms/auto.py` keeps. Every one of
-    # them becomes a REQUEST — never a configuration row. A request has an owner who performs it and a
-    # `valid_until` after which it is not performed at all; a row would make this subsystem the owner of
-    # something with a lifetime, and there is nowhere to keep that.
-    then:            {type: json,   required: true}
-    # The ceiling on firing, per scenario. Automation that can fire without bound is automation that can
-    # ring: a sensor bouncing at 5 Hz would file three hundred door commands a minute, and every one of
-    # them would be obeyed.
-    rate_per_minute: {type: int,    default: 6}
-    # How long a request this scenario files stays worth doing, from the moment of the event: the holder does
-    # not perform it later (`expired`). Its own field and not `within`: `within` is how far apart two triggers
-    # may be, and a scenario comparing two events five seconds apart still needs its door opened when the
-    # request gets there, which takes up to seven with nothing loaded.
-    valid_for:       {type: int,    default: 30}
+    # WHEN: a list of triggers, each `{sub, kind}` plus optional `unit` and `match`. JSON because a scenario's triggers
+    # are a list of shapes: flattening them into fields would cap the count at one or invent `when_1_sub`, `when_2_sub`.
+    # What a trigger may BE is the schema below, checked by the platform at the door for every writer (the boundary's
+    # step 6, the owner's decision 3: it was `AutoController`, a controller of the VMS's own); what it may MEAN — that
+    # camera 7 raises `io.input` on port 2 — the evaluator checks against what the devices said, and a scenario that
+    # asks for what nobody can do is refused in its heartbeat (`AutoWorker`, `why`), never fired.
+    when:
+      type: json
+      required: true
+      schema:
+        type: array
+        minItems: 1
+        maxItems: 4
+        items:
+          type: object
+          required: [sub, kind]
+          additionalProperties: false
+          properties:
+            sub:   {type: string, minLength: 1}
+            kind:  {type: string, minLength: 1}
+            unit:  {type: [string, integer]}
+            match: {type: object}
+    # The correlation window, in seconds. That two triggers need it and one refuses it is the evaluator's to say (a
+    # scenario's two fields together); how large it may be is the schema's.
+    within:          {type: int,    default: 0, schema: {minimum: 0, maximum: 3600}}
+    # THEN: a list of actions, each `{sub, action, …}` — one of the five shapes below. Every one becomes a REQUEST, never
+    # a configuration row: a request has an owner who performs it and a `valid_until` after which it is not performed.
+    then:
+      type: json
+      required: true
+      schema:
+        type: array
+        minItems: 1
+        maxItems: 4
+        items:
+          type: object
+          required: [sub, action]
+          anyOf:
+            - properties: {sub: {const: vms}, action: {const: output}, unit: {type: [string, integer]}, port: {type: [string, integer]},
+                           state: {type: string}, pulse_ms: {type: [string, integer]}}
+              required: [unit, port]
+              additionalProperties: false
+            - properties: {sub: {const: vms}, action: {const: preset}, unit: {type: [string, integer]}, n: {type: [string, integer]}}
+              required: [unit, n]
+              additionalProperties: false
+            - properties: {sub: {const: rec}, action: {const: record}, cam: {type: [string, integer]}, minutes: {type: [number, string]},
+                           archive: {type: string}}
+              required: [cam, minutes]
+              additionalProperties: false
+            - properties: {sub: {const: det}, action: {const: detect}, cam: {type: [string, integer]}, kind: {type: string},
+                           minutes: {type: [number, string]}, params: {}}
+              required: [cam, kind, minutes]
+              additionalProperties: false
+            - properties: {sub: {const: det}, action: {const: scan}, cam: {type: [string, integer]}, kind: {type: string},
+                           before: {type: [number, string]}, after: {type: [number, string]}, rec: {type: string}, params: {}}
+              required: [cam, kind]
+              additionalProperties: false
+    # The ceiling on firing, per scenario. Automation that can fire without bound is automation that can ring: a sensor
+    # bouncing at 5 Hz would file three hundred door commands a minute, and every one of them would be obeyed.
+    rate_per_minute: {type: int,    default: 6, schema: {anyOf: [{const: 0}, {minimum: 1, maximum: 600}]}}   # 0: the default
+    # How long a request this scenario files stays worth doing, from the moment of the event: the holder does not perform
+    # it later (`expired`). Five seconds at least — less is shorter than the road from an event to the device — and ten
+    # minutes at most: the holder refuses a command valid longer (`VmsWorker.MAX_VALID`).
+    valid_for:       {type: int,    default: 30, schema: {anyOf: [{const: 0}, {minimum: 5, maximum: 600}]}}  # 0: the default
     enabled:         {type: bool,   default: true}
     labels:          {type: list}
 placement:

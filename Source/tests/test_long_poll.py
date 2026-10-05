@@ -27,7 +27,8 @@ from w2cplatform import longpoll
 from w2cplatform.contract import Heartbeat, Subsystem, Worker, requests_acl
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import ALARM, EventLog
-from vms.auto import AutoController
+from vms.config import AUTO_SPEC
+from w2cplatform.spec import SpecController
 from vms.autoworker import AutoWorker
 from vms.config import AUTO_SPEC, SPEC as VMS, WORKER_ACL
 from vms.controller import VmsController
@@ -84,10 +85,10 @@ def _holder(box, **kw):
 
 def _evaluator(box, cid, index=None):
     """An evaluator holding one scenario: the contact of camera `cid` closes — its relay 2 is pulsed."""
-    AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
+    SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
         {"name": "door", "when": [{"sub": "vms", "kind": "io.input", "unit": str(cid)}], "within": 0,
          "then": [{"sub": "vms", "action": "output", "unit": str(cid), "port": 2, "pulse_ms": 500}], "rate_per_minute": 600})
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", ["door"])
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", ["door"])
     return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det")),
                       box.objects, index=index or MergedIndex(box.objects, wall=box.wall), clock=box.clock, wall=box.wall,
                       server="srv-a", archive_root=box.archive, env={})
@@ -801,7 +802,7 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     assert w.wants() == [] and w._resources() == {}                  # before its first pass; and a fake index keeps no list
     assert w.reconcile_once() == ["door-on-badge"]
     assert w.wants() == [("det", "motion", "7-motion"), ("vms", "io.input", "12")]   # the unit is in the want (M8)
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     w.heartbeat_once()
     assert "auto_waits_total{" not in spec_metrics(con)                 # the long poll was not asked for
 
@@ -1268,10 +1269,10 @@ def test_an_evaluator_is_woken_by_the_units_it_watches_and_its_early_pass_reads_
     gate = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall).create_camera(
         {"name": "gate", "source": "driverpack://acme/10.0.0.91/ch/1"})["id"]
     assert str(gate) == "2"
-    AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
+    SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
         {"name": "other", "when": [{"sub": "vms", "kind": "io.input", "unit": "2"}], "within": 0,
          "then": [{"sub": "vms", "action": "output", "unit": str(cid), "port": 1, "pulse_ms": 100}], "rate_per_minute": 600})
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign(
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign(
         "a-1", ["door", "other"])
     passes: list[tuple] = []                                         # (what the pass was told was touched, what it evaluated)
     current: list = []
@@ -1514,12 +1515,12 @@ def test_an_ordinary_pass_reads_the_catalog_once_however_many_scenarios_name_no_
     from tests.test_autoworker import _Log, _worker
     box = Box()
     door_site(box)
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     names = [f"any-{i}" for i in range(4)]
     for name in names:
         con.create({"name": name, "when": [{"sub": "vms", "kind": "io.input"}], "within": 0,
                     "then": [{"sub": "vms", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]})
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", names)
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", names)
     w = _worker(box, _Log([]))
     listed: list[str] = []
     real = w.catalog.vars.list

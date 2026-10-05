@@ -210,7 +210,8 @@ def test_the_numbers_on_metrics_without_a_token_while_the_pass_is_fresh():
     server, else its node's word. No token asked. A pass older than a minute: none of the four — a script reading a
     stale number would start processes for a shortage that may be gone."""
     from w2cplatform.spec import SpecController
-    from vms.auto import AutoController
+    from vms.config import AUTO_SPEC
+    from w2cplatform.spec import SpecController
     from vms.config import LIVE_SPEC
     from vms.console import make_console
     box = Box()
@@ -221,7 +222,7 @@ def test_the_numbers_on_metrics_without_a_token_while_the_pass_is_fresh():
     ctl.pass_once()
     live = SpecController(LIVE_SPEC, box.vars, box.objects, wall=box.wall)
     live.pass_once()
-    auto = AutoController(box.vars, box.objects, wall=box.wall)
+    auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
     auto.pass_once()
     m = make_console(_con(box), box.archive, box.wall, live_ctl=live, mounts={"auto": auto})
     srv = m.serve("127.0.0.1", 0)

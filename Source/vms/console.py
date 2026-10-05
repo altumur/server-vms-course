@@ -1359,16 +1359,9 @@ def rec_routes(rec_ctl: SpecController):
     return extra
 
 
-# What the `auto` mount adds: the catalogue a scenario form is built from (М10B Lesson 25). One answer with
-# both halves — what automation may ask for, and what each unit raises and can do, as its holder described
-# it — so the page offers the kinds camera 12 actually raises and the presets camera 7 actually has, and an
-# operator picks rather than types. The check at the door stays: a form is a convenience, `curl` is not.
-def auto_routes(auto_ctl):
-    def extra(handler, method, path, q):
-        if method == "GET" and path in ("/catalog", "/catalog/") and getattr(auto_ctl, "catalog", None) is not None:
-            return 200, auto_ctl.catalog.reply()
-        return None
-    return extra
+# (The scenario catalogue was `auto_routes`, a route of the VMS's on the platform's console — `GET /auto/catalog`;
+# since the boundary's step 6 a page builds its form from the routes the specs declare, and the evaluator says what a
+# scenario cannot do: `vms/auto.py`, `refusal`.)
 
 
 # The camera behind a VOLUME, when it has one: an edge volume is the card in a camera (`volumes.Volume.cam`). `"*"`
@@ -1565,8 +1558,7 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
         m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
     for name, c in (mounts or {}).items():
         m.mount(name, SpecConsole(c, wall=wall, index=index,             # every mount answers /events from the same merge
-                                  extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
-                                         auto_routes(c) if name == "auto" else None)))  # `auto` for its catalogue
+                                  extra=(rec_routes(c) if name == "rec" else None)))  # …and `rec` answers for the archives too
     return wire_vms(m, ctl, index)
 
 

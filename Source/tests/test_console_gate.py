@@ -647,7 +647,8 @@ def test_a_row_cannot_be_moved_to_another_camera_by_an_edit():
 
 def _console_with_jobs(box, access):
     """A gated console that fronts `rec`, `det`, `detjob` and `auto`, as the console process does."""
-    from vms.auto import AutoController
+    from vms.config import AUTO_SPEC
+    from w2cplatform.spec import SpecController
     from vms.config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC
     acl = SPEC.acl_console() + REC_SPEC.acl_console() + DET_SPEC.acl_console() + DETJOB_SPEC.acl_console() + AUTO_SPEC.acl_console()
     vars_ = box.vars.as_writer("console", acl)
@@ -655,7 +656,7 @@ def _console_with_jobs(box, access):
     mounts = {"rec": SpecController(REC_SPEC, vars_, box.objects, wall=box.wall),
               "det": SpecController(DET_SPEC, vars_, box.objects, wall=box.wall),
               "detjob": SpecController(DETJOB_SPEC, vars_, box.objects, wall=box.wall),
-              "auto": AutoController(vars_, box.objects, wall=box.wall)}
+              "auto": SpecController(AUTO_SPEC, vars_, box.objects, wall=box.wall)}
     m = make_console(ctl, box.archive, box.wall, mounts=mounts, index=EventIndex(box.archive, "srv-1", wall=box.wall))
     for con in (m.root, *m.mounts.values()):
         con.gate.impl = access
@@ -1191,7 +1192,8 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
     built by `make_console` asks what a change reaches (`moved_units`) or takes the rows as the cluster's
     (`CLUSTER_ROWS`), or the controller refuses what it may not point at (the boundary's step 2 took the hooks that read
     a camera out of a row — `cams_of` — and put whose a row is into the specs)."""
-    from vms.auto import AutoController
+    from vms.config import AUTO_SPEC
+    from w2cplatform.spec import SpecController
     from vms.config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, SURVEY_SPEC
     FIXED, ABOUT, MOVED, RULE, CLUSTER = "fixed: true", "about", "moved_units", "refused by the controller", "CLUSTER_ROWS"
     points = {
@@ -1227,7 +1229,7 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
     vars_ = box.vars.as_writer("console", acl)
     ctl = VmsController(vars_, box.objects, wall=box.wall)
     mounts = {n: SpecController(specs[n], vars_, box.objects, wall=box.wall) for n in ("rec", "det", "survey")}
-    mounts.update(detjob=SpecController(DETJOB_SPEC, vars_, box.objects, wall=box.wall), auto=AutoController(vars_, box.objects, wall=box.wall))
+    mounts.update(detjob=SpecController(DETJOB_SPEC, vars_, box.objects, wall=box.wall), auto=SpecController(AUTO_SPEC, vars_, box.objects, wall=box.wall))
     m = make_console(ctl, box.archive, box.wall, live_ctl=SpecController(LIVE_SPEC, vars_, box.objects, wall=box.wall),
                      mounts=mounts, index=EventIndex(box.archive, "srv-1", wall=box.wall))
     consoles = {"vms": m.root, **m.mounts}
@@ -1869,16 +1871,21 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
 def test_a_relay_port_written_in_a_digit_that_is_not_ascii_is_a_misfit_and_not_a_500():
     """The tenth pass's sweep of `isdigit` then `int` (`vms/auto.py`, the scenario's catalogue check, and М12's
     `domain/scenario.py`): `"²".isdigit()` is true and `int` raised out of the check — a 500 to whoever wrote the
-    scenario. By `doors.numeric` now: a port that is no number is a misfit like port 9 of a device with two relays."""
+    scenario. By `doors.numeric` now: a port that is no number is a misfit like port 9 of a device with two relays — said
+    by the evaluator since the boundary's step 6 (`Catalog.check`, a scenario `refused` in its heartbeat), never a 500."""
+    from vms.auto import Catalog
     box = Box()
     mounts, srv, base = _console_with_jobs(box, Tokens({"admin": [("admin", None, ())]}))
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
         _opened(box, "acme/10.0.0.50")                                # its device said: one relay
-        for port in ("²", "١", "2"):
-            code, body = _call(base, "POST", "/auto/scenarios", {"name": "s", "when": [{"sub": "vms", "kind": "motion"}],
-                               "then": [{"sub": "vms", "action": "output", "unit": "1", "port": port}]}, token="admin")
-            assert code == 400 and "relay" in body.get("detail", ""), (port[:5], code, body)
+        for i, port in enumerate(("²", "١", "2")):
+            then = [{"sub": "vms", "action": "output", "unit": "1", "port": port}]
+            code, body = _call(base, "POST", "/auto/scenarios", {"name": f"s{i}", "when": [{"sub": "vms", "kind": "motion"}],
+                               "then": then}, token="admin")
+            assert code == 201, (port[:5], code, body)                # the shape is right: the door takes it
+            misfit, _ = Catalog(box.vars).check({"when": [{"sub": "vms", "kind": "motion"}], "then": then})
+            assert any("relay" in m for m in misfit), (port[:5], misfit)
     finally:
         srv.shutdown()
 

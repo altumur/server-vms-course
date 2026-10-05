@@ -173,14 +173,13 @@ def part2(rs: dict, now: float) -> dict:
 def part3(box, rs: dict, now: float, scenarios: int) -> dict:
     print(f"\n3. Automation's pass: {scenarios} scenarios, {len(rs)} resources")
     from w2cplatform.contract import requests_acl
-    from vms.auto import AutoController, Catalog
     from vms.autoworker import AutoWorker
     from vms.config import AUTO_SPEC
+    from w2cplatform.spec import SpecController
     for cam in range(1, 21):
         box.vars.put(f"vms/cameras/{cam}", {"id": str(cam), "name": f"cam{cam}", "source": f"driverpack://file/{cam}"})
         box.vars.put(f"det/units/{cam}-motion", {"name": f"{cam}-motion", "cam": str(cam), "kind": "motion"})
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=time.time,
-                         catalog=Catalog(box.vars))
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=time.time)
     names = []
     for i in range(scenarios):
         cam = i % 20 + 1
@@ -192,7 +191,7 @@ def part3(box, rs: dict, now: float, scenarios: int) -> dict:
         con.create({"name": f"s{i}", "when": when, "within": 30 if len(when) > 1 else 0,
                     "then": [{"sub": "vms", "action": "output", "unit": str(cam), "port": 1}], "rate_per_minute": 600})
         names.append(f"s{i}")
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects,
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects,
                    wall=time.time).assign("a-1", names)
     res = {}
     w = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),

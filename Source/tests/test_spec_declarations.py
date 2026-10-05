@@ -281,3 +281,37 @@ def test_the_resource_asks_a_subsystem_that_frees_by_a_request_row_and_reads_its
     assert out["freed"] == 40 and out["short"] == 8 and vars_.get(key)[0]["free"] == "8"   # what is left, asked again
     full["used"] = 10
     assert res.relieve()["space"] == "ok" and vars_.get(key)[0] is None                # under the mark: nothing asked
+
+
+def test_a_fields_shape_is_a_json_schema_in_the_spec_and_the_door_says_where_it_does_not_fit():
+    """The owner's decision 3 of the boundary's step 6: what a field may BE is JSON Schema in the spec (`schema.py`),
+    checked at the door for every writer — a json field's document, an int's number — in the schema's words, naming
+    the place: it was a controller of one subsystem's own. A schema with a word the platform does not read does not
+    load: a typo is not a rule that silently holds nothing."""
+    from w2cplatform.schema import Invalid, check, load
+    vars_, objects, wall = _box()
+    spec = SubsystemSpec.from_dict({"name": "plan", "placement": CAP, "unit": {"rows": "plans", "id": "name", "fields": {
+        "name": {"type": "string", "required": True},
+        "steps": {"type": "json", "required": True, "schema": {
+            "type": "array", "minItems": 1, "maxItems": 2,
+            "items": {"type": "object", "required": ["op"], "additionalProperties": False,
+                      "properties": {"op": {"enum": ["lift", "drop"]}, "n": {"type": "integer", "minimum": 1}},
+                      "if": {"properties": {"op": {"const": "lift"}}}, "then": {"required": ["n"]}}}},
+        "every": {"type": "int", "default": 0, "schema": {"anyOf": [{"const": 0}, {"minimum": 5, "maximum": 60}]}}}}})
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    ctl.create({"name": "a", "steps": [{"op": "lift", "n": 2}, {"op": "drop"}]})
+    for steps, every, words in (([], 0, "steps has at least 1 entry"),
+                                ([{"op": "spin"}], 0, "steps[0].op is one of 'lift', 'drop', not 'spin'"),
+                                ([{"op": "lift"}], 0, "steps[0] needs 'n'"),
+                                ([{"op": "drop", "x": 1}], 0, "steps[0] has no key 'x' — it takes n, op"),
+                                ([{"op": "drop"}], 3, "every fits none of what it may be")):
+        _refused(lambda: ctl.create({"name": "b", "steps": steps, "every": every}), words)
+    _refused(lambda: ctl.update("a", {"steps": [{"op": "lift", "n": 0}]}), "steps[0].n is at least 1, not 0")
+    assert check(True, {"anything": 1}) is None
+    try:
+        check({"type": "integer"}, True)
+        raise AssertionError("true is not an integer")
+    except Invalid as e:
+        assert "is integer, not boolean" in str(e)
+    _refused(lambda: load({"type": "array", "itmes": {}}, "x"), "itmes — not a keyword the platform reads")
+    _refused(lambda: load({"type": "list"}, "x"), "type 'list' is none of")

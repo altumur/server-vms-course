@@ -468,7 +468,6 @@ def console() -> None:
     from .config import SPEC
     from .console import serve
     from w2cplatform.spec import SpecController
-    from .auto import AutoController
     from .config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, REC_SPEC, SURVEY_SPEC
     vars_ = open_vars(STORE_URL, writer="console",
                           acl={"console": SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console()
@@ -482,9 +481,9 @@ def console() -> None:
                 mounts={"det": SpecController(DET_SPEC, vars_, objects), "rec": SpecController(REC_SPEC, vars_, objects),
                         "detjob": SpecController(DETJOB_SPEC, vars_, objects),   # a scan's recording is its camera's: its spec's `must_match`
                         "survey": SpecController(SURVEY_SPEC, vars_, objects),
-                        # `AutoController` and not the platform's class: a scenario is refused where it is
-                        # written, which is here, and the refusal has to be the subsystem's own words.
-                        "auto": AutoController(vars_, objects)})
+                        # the platform's class: a scenario's shape is its spec's schema, and what it cannot do its
+                        # evaluator says (the boundary's step 6)
+                        "auto": SpecController(AUTO_SPEC, vars_, objects)})
     logging.info("console on %s", srv.server_address)                     # no event index here: /events asks the resource process
     # Rows written before this console had a key: sealed now, not at their next write — a camera nobody edits is
     # never written again (feedback CD). Every subsystem's rows this console writes, and the declared volumes.

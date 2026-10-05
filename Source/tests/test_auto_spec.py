@@ -1,16 +1,17 @@
 """The scenario language, and where it is checked.
 
-`auto.subsystem.yaml` says a scenario has a `when`, a `within` and a `then`.
-The platform checks that those are JSON and small and stops there, because a
-generic loader that validated a trigger would be a generic loader that knows
-what a trigger is. Everything else is `vms/auto.py`, and it runs at the door —
-while the operator is still looking at what they typed, which is the only
-moment the answer is cheap.
+`auto.subsystem.yaml` says a scenario has a `when`, a `within` and a `then`, and since the boundary's step 6 it says
+what their SHAPE may be — JSON Schema on each field (the owner's decision 3) — which the platform checks at the door
+for every writer, in the schema's words, while the operator is still looking at what they typed. It was a controller
+of the VMS's own (`AutoController`). What no schema of one field can say — two triggers need `within`, one refuses
+it; what a scenario asks of a device the device can do — is the evaluator's (`vms/auto.py`, `refusal`): it refuses
+such a scenario in its heartbeat (`refused`, with why) and never fires it.
 """
 import json
 
-from w2cplatform.spec import Refused, SubsystemSpec
-from vms.auto import ACTIONS, AutoController, fires, refuse_scenario
+from w2cplatform.contract import requests_acl
+from w2cplatform.spec import Refused, SpecController, SubsystemSpec
+from vms.auto import ACTIONS, MAX_ACTIONS, MAX_TRIGGERS, MAX_VALID_FOR, MAX_WITHIN, Catalog, fires, refusal
 from vms.config import AUTO_SPEC
 from tests.conftest import Box, door_site
 
@@ -25,7 +26,20 @@ DOOR = {"name": "door-on-badge",
 
 def _con(box):
     door_site(box)                                   # the door, the lobby and its detector exist
-    return AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    return SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+
+
+def _evaluator(box, *names):
+    """The evaluator holding these scenarios — what says the refusals only it can make."""
+    from vms.autoworker import AutoWorker
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects,
+                   wall=box.wall).assign("a-1", list(names))
+
+    class _Quiet:
+        def query(self, *a, **kw): return {"events": [], "state": "live", "truncated": False}
+    return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
+                      box.objects, index=_Quiet(), clock=box.clock, wall=box.wall, server="srv-a",
+                      archive_root=box.archive, env={})
 
 
 def test_a_scenario_is_a_row_and_its_shapes_survive_the_round_trip():
@@ -48,8 +62,8 @@ def test_a_scenario_is_a_row_and_its_shapes_survive_the_round_trip():
 
 
 def test_what_the_platform_checks_and_what_it_does_not():
-    """The line, in two assertions. JSON and a ceiling are the platform's; what
-    a trigger MEANS is the subsystem's."""
+    """The line, in three assertions. JSON and a ceiling are the platform's; the shape is the spec's schema, which the
+    platform reads; what a trigger MEANS is the evaluator's."""
     box = Box(); con = _con(box)
 
     try:
@@ -64,29 +78,31 @@ def test_what_the_platform_checks_and_what_it_does_not():
     except Refused as e:
         assert "ceiling" in str(e)
 
-    # …and the platform would happily have taken this one: it is valid JSON and small
-    assert AUTO_SPEC.fields["when"].type == "json"
+    assert AUTO_SPEC.fields["when"].type == "json" and AUTO_SPEC.fields["when"].schema is not None
     try:
         con.create({**DOOR, "name": "nonsense", "when": [{"sub": "vms", "kind": "io.input", "colour": "red"}],
                     "within": 0})
         raise AssertionError("a trigger with an invented key was accepted")
     except Refused as e:
-        assert "no key 'colour'" in str(e)
+        assert "when[0] has no key 'colour'" in str(e), str(e)
+    con.create({**DOOR, "name": "no-such-camera", "when": [{"sub": "vms", "kind": "io.input", "unit": "99"}], "within": 0})
+    # …taken: whether camera 99 exists is not the shape — the evaluator says it (`test_a_scenario_is_checked_…`)
 
 
-def test_every_refusal_says_what_would_be_right():
-    """A refusal that names only what is wrong makes the operator guess. These
-    are read by somebody mid-edit, so each one carries the alternative."""
+def test_every_refusal_at_the_door_says_where_and_what_would_be_right():
+    """A refusal that names only what is wrong makes the operator guess. The schema's words name the place in the
+    document and what it may be — read by somebody mid-edit."""
     box = Box(); con = _con(box)
     cases = [
-        ({"when": DOOR["when"], "within": 0}, "within how many seconds"),
-        ({"when": [DOOR["when"][0]], "within": 30}, "with one trigger there is nothing to window"),
-        ({"when": [], "within": 0}, "non-empty list"),
-        ({"then": [{"sub": "vms", "action": "reboot", "unit": "1"}]}, "this course files"),
-        ({"then": [{"sub": "rec", "action": "record", "cam": "7"}]}, "needs 'minutes'"),
-        ({"then": [{"sub": "vms", "action": "output", "unit": "1", "port": 1, "volume": "x"}]}, "no field 'volume'"),
-        ({"when": [{"sub": "vms"}], "within": 0}, "names the subsystem it watches"),
-        ({"rate_per_minute": 9999}, "between 1 and 600"),
+        ({"when": [], "within": 0}, "when has at least 1 entry"),
+        ({"when": [DOOR["when"][0]] * 5, "within": 30}, "when has at most 4 entries"),
+        ({"then": [{"sub": "vms", "action": "reboot", "unit": "1"}]}, "then[0] fits none of what it may be"),
+        ({"then": [{"sub": "rec", "action": "record", "cam": "7"}]}, "then[0] needs 'minutes'"),
+        ({"then": [{"sub": "vms", "action": "output", "unit": "1", "port": 1, "volume": "x"}]}, "then[0] has no key 'volume'"),
+        ({"when": [{"sub": "vms"}], "within": 0}, "when[0] needs 'kind'"),
+        ({"rate_per_minute": 9999}, "rate_per_minute is at most 600"),
+        ({"valid_for": 2}, "valid_for is at least 5"),
+        ({"within": 99999}, "within is at most 3600"),
     ]
     for i, (patch, want) in enumerate(cases):
         try:
@@ -94,27 +110,37 @@ def test_every_refusal_says_what_would_be_right():
             raise AssertionError(f"accepted {patch}")
         except Refused as e:
             assert want in str(e), (patch, str(e))
+    # the schema's numbers are the code's (`vms/auto.py`): one ceiling, said in two places that cannot drift
+    then, when = AUTO_SPEC.fields["then"].schema, AUTO_SPEC.fields["when"].schema
+    assert (when["maxItems"], then["maxItems"]) == (MAX_TRIGGERS, MAX_ACTIONS)
+    assert AUTO_SPEC.fields["within"].schema["maximum"] == MAX_WITHIN
+    assert AUTO_SPEC.fields["valid_for"].schema["anyOf"][1]["maximum"] == MAX_VALID_FOR
+    assert {(b["properties"]["sub"]["const"], b["properties"]["action"]["const"]) for b in then["items"]["anyOf"]} == set(ACTIONS)
 
 
-def test_an_edit_is_checked_as_the_scenario_it_would_become():
-    """The likelier of the two doors: the scenario that runs the site was
-    written months ago and is being adjusted at speed. Validating the half being
-    sent would pass anything; the check is on the row as it would end up."""
+def test_two_triggers_without_a_window_are_refused_by_the_evaluator_as_the_scenario_it_became():
+    """What a schema of one field cannot say: two triggers need `within`, one refuses it. An edit that leaves the
+    scenario so is taken at the door now — and its evaluator refuses it, in its heartbeat, as the scenario the row
+    became (the likelier of the two doors: the scenario that runs the site was written months ago and is being
+    adjusted at speed); mended, it runs."""
     box = Box(); con = _con(box)
     con.create(DOOR)
-
-    try:
-        con.update("door-on-badge", {"when": [DOOR["when"][0]]})       # one trigger, and `within` still 30
-        raise AssertionError("an edit left the scenario unrunnable")
-    except Refused as e:
-        assert "nothing to window" in str(e)
-
-    con.update("door-on-badge", {"when": [DOOR["when"][0]], "within": 0})   # both together: fine
-    assert con.unit("door-on-badge")["within"] == 0
+    con.update("door-on-badge", {"when": [DOOR["when"][0]]})          # one trigger, and `within` still 30
+    w = _evaluator(box, "door-on-badge")
+    w.reconcile_once()
+    st = w.status()[0]
+    assert st["phase"] == "refused" and "with one trigger there is nothing to window" in st["why"], st
+    con.update("door-on-badge", {"when": DOOR["when"], "within": 0})
+    w.reconcile_once()
+    assert "within how many seconds" in w.status()[0]["why"]
+    con.update("door-on-badge", {"within": 30})                       # both together: fine
+    w.reconcile_once()
+    assert w.status()[0]["phase"] != "refused"
+    assert refusal({"when": DOOR["when"], "within": 30}) == []
 
 
 def test_matching_is_equality_and_nothing_else():
-    """The evaluator's half of the language, beside the validation on purpose:
+    """The evaluator's half of the language, beside the catalogue on purpose:
     two files would drift, and the drift would look like a scenario that never
     fires — the hardest kind of bug to see, because nothing happens."""
     ev = {"subsystem": "vms", "unit": "vms/12", "kind": "io.input", "t": 100.0, "port": "1", "value": "closed"}
@@ -143,8 +169,8 @@ def test_the_catalogue_is_the_boundary():
 
 def test_the_spec_says_nothing_about_doors():
     """The subsystem is domain from the first word, and the platform stays where
-    it was: the spec it loads has fields, types and a placement policy, and not
-    one line of it means anything about sensors."""
+    it was: the spec it loads has fields, types, schemas and a placement policy, and
+    not one line of the platform means anything about sensors."""
     d = SubsystemSpec.load(AUTO_SPEC.path) if hasattr(AUTO_SPEC, "path") else AUTO_SPEC
     assert d.requires == "resource" and d.servers == "shared"
     assert [f.type for f in (d.fields[n] for n in ("when", "then"))] == ["json", "json"]
@@ -200,9 +226,10 @@ def test_the_holder_says_what_its_device_raises_and_can_do_once():
 
 def test_a_scenario_is_checked_against_what_the_units_are():
     """The catalogue says what automation may ask for; the device rows say what THIS unit raises and can do.
-    Each of these passed the language and would have been accepted before — and never fired, or been refused
-    by the holder at three in the morning. Now each is refused while the operator is looking at it, with
-    what would be right. The first is the trigger this lesson printed: a detector is named by its unit."""
+    Each of these passed the language and, before the door checked it, would never have fired, or been refused by
+    the holder at three in the morning. The door checked it in the VMS's own controller; the evaluator checks it now
+    (the boundary's step 6) and refuses the scenario with what would be right, in its heartbeat — never firing it.
+    The first is the trigger this lesson printed: a detector is named by its unit."""
     box = Box(); con = _con(box)
     cases = [
         ({"when": [{"sub": "det", "kind": "motion", "unit": "7"}], "within": 0},
@@ -220,38 +247,34 @@ def test_a_scenario_is_checked_against_what_the_units_are():
         ({"then": [{"sub": "vms", "action": "preset", "unit": "7", "n": 9}]}, "camera 7 has 5 preset(s), not 9"),
         ({"then": [{"sub": "rec", "action": "record", "cam": "99", "minutes": 10}]}, "there is no camera 99 to record"),
     ]
-    for i, (patch, want) in enumerate(cases):
-        try:
-            con.create({**DOOR, "name": f"bad{i}", **patch})
-            raise AssertionError(f"accepted {patch}")
-        except Refused as e:
-            assert want in str(e), (patch, str(e))
+    names = []
+    for i, (patch, _) in enumerate(cases):
+        con.create({**DOOR, "name": f"bad{i}", **patch})                # the shape is right: taken at the door
+        names.append(f"bad{i}")
     con.create({**DOOR, "then": DOOR["then"] + [{"sub": "vms", "action": "preset", "unit": "7", "n": 3}]})   # fits
+    w = _evaluator(box, *names, "door-on-badge")
+    w.reconcile_once()
+    said = {st["id"]: st for st in w.status()}
+    for name, (patch, want) in zip(names, cases):
+        assert said[name]["phase"] == "refused" and want in said[name]["why"], (patch, said[name])
+    assert said["door-on-badge"]["phase"] != "refused"
 
 
-def test_a_device_nobody_has_held_is_not_refused_and_a_scenario_that_stops_fitting_says_so():
-    """Two answers the door cannot give. A camera added this minute, whose device no holder has opened yet,
-    has said nothing — and "unknown" is not "cannot": the scenario is accepted and the evaluator names what it
-    could not check, on every pass. And a scenario that fitted when it was written can stop fitting: the
-    lobby camera replaced by one without a telemetry. The evaluator checks again every pass and says so."""
-    from w2cplatform.contract import requests_acl
-    from vms.autoworker import AutoWorker
+def test_a_device_nobody_has_held_is_not_refused_and_a_scenario_that_stops_fitting_is():
+    """Two answers only the evaluator can give. A camera added this minute, whose device no holder has opened yet,
+    has said nothing — and "unknown" is not "cannot": the scenario runs and the evaluator names what it could not
+    check, on every pass. And a scenario that fitted when it was written can stop fitting: the lobby camera replaced
+    by one without a telemetry. The evaluator checks again every pass, and refuses it now, saying why."""
     box = Box(); con = _con(box)
     box.vars.put("vms/cameras/20", {"id": "20", "name": "gate", "source": "driverpack://acme/10.0.0.20/ch/1"})
     gate = {"name": "gate-to-lobby", "when": [{"sub": "vms", "kind": "io.input", "unit": "20"}], "within": 0,
             "then": [{"sub": "vms", "action": "preset", "unit": "7", "n": 3}]}
-    con.create(gate)                                                   # accepted: camera 20 has said nothing yet
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects,
-                   wall=box.wall).assign("a-1", ["gate-to-lobby"])
-
-    class _Quiet:
-        def query(self, *a, **kw): return {"events": [], "state": "live", "truncated": False}
-    w = AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")),
-                   box.objects, index=_Quiet(), clock=box.clock, wall=box.wall, server="srv-a", archive_root=box.archive, env={})
+    con.create(gate)
+    w = _evaluator(box, "gate-to-lobby")
     w.reconcile_once()
     st = w.status()[0]
     assert st["unchecked"] == ["camera 20 has not said what it raises — its device has not been held yet; "
-                               "'io.input' is not checked"] and "unfit" not in st
+                               "'io.input' is not checked"] and "unfit" not in st and st["phase"] != "refused"
 
     box.vars.put("vms/devices/acme/10.0.0.20", {"events": "command,command.failed,io.input,silent", "rays": "2",
                                                 "relays": "0", "ptz": "false", "presets": "0"})   # held, at last
@@ -260,17 +283,17 @@ def test_a_device_nobody_has_held_is_not_refused_and_a_scenario_that_stops_fitti
     w.reconcile_once()
     st = w.status()[0]
     assert "unchecked" not in st and st["unfit"] == ["camera 7 has no telemetry: it cannot go to a preset"]
+    assert st["phase"] == "refused"
 
 
-def test_the_form_is_built_from_the_catalogue():
-    """One answer with both halves: what automation may ask for, and per unit what it raises and can do. The
-    page offers camera 12's kinds and camera 7's five presets from it; a camera nobody has held says `can:
-    null`, and the page offers a free field for it."""
-    from vms.console import auto_routes
-    box = Box(); con = _con(box)
+def test_the_catalogue_says_what_each_unit_raises_and_can_do():
+    """One answer with both halves: what automation may ask for, and per unit what it raises and can do. A camera
+    nobody has held says `can: null`. (The console served it as `/auto/catalog`, a route of the VMS's on the
+    platform's console, until the boundary's step 6; the page builds its form from the routes the specs declare.)"""
+    box = Box(); _con(box)
     box.vars.put("vms/cameras/20", {"id": "20", "name": "gate", "source": "driverpack://acme/10.0.0.20/ch/1"})
-    code, cat = auto_routes(con)(None, "GET", "/catalog", {})
-    assert code == 200 and set(cat["actions"]) == {"vms.output", "vms.preset", "rec.record", "det.detect", "det.scan"}
+    cat = Catalog(box.vars).reply()
+    assert set(cat["actions"]) == {"vms.output", "vms.preset", "rec.record", "det.detect", "det.scan"}
     assert cat["vms"]["12"]["can"]["relays"] == 2 and "io.input" in cat["vms"]["12"]["can"]["events"]
     assert cat["vms"]["7"]["can"]["presets"] == 5 and cat["vms"]["20"]["can"] is None
     assert cat["det"] == {"7-motion": {"cam": "7", "raises": ["motion"]}}
@@ -281,17 +304,14 @@ def test_the_pages_scenario_form_takes_its_subsystem_from_the_spec_and_names_non
     """The page is the platform's (`w2cplatform/console.html`), and its scenario form said `vms` itself: the units
     from `catalog.vms`, the trigger `vms|<unit>|<kind>`, the action `{sub: 'vms', …}` — a page over another root
     subsystem would have offered nothing and filed actions for a subsystem it does not show (the course's decision on
-    the platform's names). Now the form takes the root console's `spec.name`, and the catalogue keys the units by
-    that same name — the two halves agree, and the page's code names no subsystem in that form."""
+    the platform's names). Now the form takes the root console's `spec.name`, and the catalogue it builds from the
+    routes the specs declare keys the units by that same name — no `/auto/catalog`, a route of the VMS's on the
+    platform's console until the boundary's step 6."""
     import os
     import re
-    from vms.config import SPEC
-    from vms.console import auto_routes
     page = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "w2cplatform",
                              "console.html"), encoding="utf-8").read()
     form = page.split("// -- automation:", 1)[1].split("// -- the administrator's knob", 1)[0]
     assert "catalog[spec.name]" in form and "sub: spec.name" in form and "${spec.name}|${current}|" in form
+    assert "[spec.name]: units" in form and "/auto/catalog" not in page
     assert not re.search(r"catalog\.vms|'vms'|`vms\|", form), "the form names a subsystem of its own"
-    box = Box(); con = _con(box)
-    code, cat = auto_routes(con)(None, "GET", "/catalog", {})
-    assert code == 200 and isinstance(cat.get(SPEC.name), dict)          # what the form reads, by the spec's name
