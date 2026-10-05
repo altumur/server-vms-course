@@ -27,6 +27,7 @@ import sys
 from w2cplatform import catalog
 from w2cplatform.access import DOMAIN_MARKS, MEMBER_MARK, TRUST_KEYS
 from w2cplatform.contract import DECOMMISSION, SCHEMA_KEY
+from w2cplatform.door import KEYS_KEY, SIGNER_KEY
 from w2cplatform.resource import DOORS, MIRROR_KEY, SPACE_KEY
 
 from .objectstore import ROWS_PREFIX, is_row
@@ -89,8 +90,11 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # The page and the API, one per server: the operator's rows of every subsystem; reads every row of each, the
         # platform's (drain, decommission, the doors /servers shows), the gate's — and every worker's mark before it
         # acts (a create-only row): the reaper reads it to tell a request its holder answered from one nobody performed.
-        "console": role("console", [a for s in specs for a in s.acl_console()],
-                        [SCHEMA_KEY, *every, "platform/*", *_gate(), *[r for s in specs for r in _worker_objects(s)]]),
+        # And the cluster's door key (`door.py`): it makes it the first time it is asked for a door — the seed, sealed,
+        # read by the console alone; the public halves every holder reads.
+        "console": role("console", [a for s in specs for a in s.acl_console()] + [SIGNER_KEY, KEYS_KEY],
+                        [SCHEMA_KEY, *every, "platform/*", *_gate(), *[r for s in specs for r in _worker_objects(s)],
+                         SIGNER_KEY, KEYS_KEY]),
     }
     for s in specs:
         # Placement, one pass at a time and safe at two: its prefixes; reads its subsystem, the ones it refers to, the
@@ -99,11 +103,12 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
                                           [SCHEMA_KEY, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"])
         # The holder: its claims, what its spec says it writes, its marks; reads its subsystem, what its units are about,
         # whether its server is decommissioned (`Worker._claim_slot`), what a holder's door asks (`Gate.gated`: the key
-        # set, and `domain/member` while there is none) and what its spec says it reads — never the grants.
+        # set, and `domain/member` while there is none), the door keys its page door checks a token by (`door/keys`) and
+        # what its spec says it reads — never the grants.
         rows = _worker_objects(s)
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
                                       [SCHEMA_KEY, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
-                                       DECOMMISSION + "*", TRUST_KEYS, MEMBER_MARK, *s.worker_reads, *rows])
+                                       DECOMMISSION + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads, *rows])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to
     # free bytes, a request row of each subsystem whose spec says it frees (`requests: {free: true}`); reads the others'
     # doors, the mirror and the watermark's knobs, every subsystem's days, what a spec's `holds:` table holds and the rows

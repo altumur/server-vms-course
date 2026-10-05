@@ -328,5 +328,5 @@ def test_abandoning_a_session_under_calls_in_flight_answers_them_unavailable_at_
             slow.append(took)
     assert wrong == [] and slow == [], (wrong[:3], slow[:3])
     st = Archive("file:///anywhere", "gone", session=s)
-    status, _, _ = archive_routes(lambda: st, time.time)("/timeline/1?from=0&to=1")
+    status, _, _ = archive_routes(lambda: st, time.time)("/spans/1?from=0&to=1")
     assert status == 503

@@ -190,7 +190,7 @@ def test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days()
     routes = archive_routes(lambda: r.store, box.wall, visible_from=r._visible_from)
 
     def shown(unit):
-        return len(json.loads(routes(f"/timeline/{unit}?from=0")[1])["spans"])
+        return len(json.loads(routes(f"/spans/{unit}?from=0")[1])["spans"])
 
     assert (shown("7"), shown("8")) == (1, 0)
 
@@ -589,8 +589,8 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
 def test_who_read_the_archive_is_an_event_and_once_a_minute():
     """Footage that leaves is said: who, which interval, and — the piece having left whole — its sha256 (feedback BI,
     BU). A whole file is said every time it leaves (the review's fourth pass, minor: the second file of the same minute
-    need not be the first); a part — a player that moved on — once a minute. Said by the recording's holder, whose door
-    it leaves through since the boundary's step 6 (`audit/door-<recorder>`), with the name the door token was given to."""
+    need not be the first); a part — a player that moved on — once a minute. Said by the recorder whose door it leaves
+    through (`audit/door-<recorder>`), with the name the door token was given to."""
     from tests.conftest import page_door
     box = Box()
     st = store()
@@ -601,7 +601,7 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
     port = srv.server_address[1]
 
     def read(user, a, b):
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/door/export/7?from={start + a}&to={start + b}",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/segment/7/e3/{(start + a) * 1000:.0f}-{(start + b) * 1000:.0f}.mp4",
                                      headers={"X-User": user})
         with urllib.request.urlopen(req) as r:
             return r.read()
@@ -632,32 +632,37 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         srv.shutdown(); rec_door.shutdown()
 
 
-def test_the_door_to_a_devices_own_footage_is_said_when_it_is_handed_out():
+def test_the_door_to_a_recordings_footage_is_said_when_it_is_handed_out():
     """The review's third pass (Н-B1's remainder, and its minor): the console handed out the holder's playback door, the
-    footage then went holder → browser, and nothing said so. Since the boundary's step 6 every holder's door is handed
-    out with the unit's place (`/where/<id>` → `door`) and the console never sees those bytes; it says what it gave —
-    `door.issued`: who, which unit, which holder, which routes, until when — and the door says what was read."""
+    footage then went holder → browser, and nothing said so. A recording's door — its recorder's, `url` in its
+    heartbeat — is handed out with the recording's place (`/rec/where/<id>` → `door`) and the console never sees those
+    bytes; it says what it gave — `door.issued`: who, which unit, which holder, which routes, until when — and the door
+    says what was read. The camera's holder has no door to hand out (`vms` declares none)."""
     from tests.conftest import door_keys
+    from w2cplatform.spec import SpecController
     from vms.console import serve
     from vms.controller import VmsController
     box = Box()
-    with door_keys():
+    with door_keys(box.vars):
         con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-        srv = serve(con, box.archive, port=0, wall=box.wall)
+        rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+        srv = serve(con, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
     try:
         cam = con.create_camera({"source": "driverpack://file/7.mp4"})["id"]
-        box.objects.put(SPEC.sub.heartbeat_key("w-1"),
-                        Heartbeat("w-1", box.wall(), [{"id": cam, "phase": "running"}],
-                                  {"server": "srv-1", "capacity": 4, "headroom": 4, "door_url": "http://h:1/door"}).to_bytes())
-        VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()
-        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/where/{cam}", headers={"X-User": "anna"})
-        with urllib.request.urlopen(req) as r:
+        rec.create({"name": "7", "cam": str(cam)})
+        box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"),
+                        Heartbeat("r-1", box.wall(), [{"id": "7", "phase": "running"}],
+                                  {"server": "srv-1", "capacity": 4, "headroom": 4, "url": "http://h:1"}).to_bytes())
+        box.vars.put("rec/placement/7", {"worker": "r-1", "reason": "its volume", "at": box.wall(), "rev": 1})   # the controller's word
+        base = f"http://127.0.0.1:{srv.server_address[1]}"
+        assert SPEC.door_routes == () and REC_SPEC.door_routes == ("timeline", "segment")   # no door at a camera's holder
+        with urllib.request.urlopen(urllib.request.Request(f"{base}/rec/where/7", headers={"X-User": "anna"})) as r:
             d = json.loads(r.read())["door"]
-        assert d["url"] == "http://h:1/door" and d["routes"] == ["timeline", "segment"] and d["token"]
+        assert d["url"] == "http://h:1" and d["routes"] == ["timeline", "segment"] and d["token"]
         lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
                  for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "door.issued"]
         assert [(e["user"], e["target"], e["holder"], e["routes"], e["until"]) for e in lines] == [
-            ("anna", str(cam), "w-1", "timeline,segment", round(d["expires"]))]
+            ("anna", "7", "r-1", "timeline,segment", round(d["expires"]))]
     finally:
         srv.shutdown()
 
@@ -678,7 +683,7 @@ def test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_
     routes = archive_routes(lambda: r.store, box.wall, visible_from=r._visible_from, kept=r._kept_of)
 
     def spans():
-        return [(s["start"], s["end"]) for s in json.loads(routes("/timeline/7?from=0")[1])["spans"]]
+        return [(s["start"], s["end"]) for s in json.loads(routes("/spans/7?from=0")[1])["spans"]]
 
     assert spans() == [(now - 8 * DAY, now)]                           # cut at the ceiling, not drawn from twelve days ago
     assert routes(f"/samples/7?from={now - 11 * DAY}&to={now - 10 * DAY}")[1] == b""

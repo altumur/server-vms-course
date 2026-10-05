@@ -188,9 +188,11 @@ rights:
 # most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).
 holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800}
 # What a recording's holder opens to a page itself (the boundary's step 6, the owner's decision 1: the bytes bypass the
-# console): its spans from every recorder's door, and an interval as MP4 (`vms/footage.py`). The console hands out the
-# door with the recording's place — `GET /rec/where/<recording>` → `door: {url, token, expires, routes}`.
-door: {routes: [timeline, export]}
+# console), in the product's paths: `/timeline/<recording>?from&to` — its spans, raw, from every recorder's door, and what
+# its camera holds itself as a span that yields — and `/segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4` (`.backfill.mp4`,
+# `.device.mp4`), a piece of it (`vms/footage.py`). The console hands out the door with the recording's place —
+# `GET /rec/where/<recording>` → `door: {url, token, expires, routes}`.
+door: {routes: [timeline, segment]}
 # A REQUEST of this subsystem (the boundary's step 6: it was `POST /backfill`, the VMS's route on the console): a person
 # asks for a stretch of a recording to be fetched from the camera's device into the archive — `POST /rec/requests
 # {unit: rec/<recording>, from, to}`, named by its range (the same range again is the same request), at most seven of

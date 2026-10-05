@@ -324,8 +324,8 @@ class LiveWorker(Worker):
         for sid in [s for s in self.owners if s not in self.sessions]:
             self.owners.pop(sid, None)                  # swept or hung up: nobody's to hang up any more
         self.heartbeat([up.to_status() for up in self.upstreams.values()], server=self.server, instance=self.instance,
+                       # `url`: the page's door too (the platform's word: `/live/where/<cam>` hands it out with a token)
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
-                       **({"door_url": self.url} if self.url else {}),   # the page's door (`/live/where/<cam>` hands it out)
                        sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
                        swept=self.swept, resets=self.resets, **({"refused": dict(self.refused)} if self.refused else {}))
 
@@ -338,7 +338,7 @@ class LiveWorker(Worker):
     def door_keeper(self):
         from w2cplatform.door import DoorKeeper
         if getattr(self, "_door_keeper", None) is None:
-            self._door_keeper = DoorKeeper(self.name, self.wall)
+            self._door_keeper = DoorKeeper(self.name, self.wall, self.vars)   # the ring: the store's `door/keys`
         return self._door_keeper
 
     # -- the WHEP server -------------------------------------------------------------------------------
@@ -398,7 +398,7 @@ class LiveWorker(Worker):
             # THE PAGE COMES HERE ITSELF (the boundary's step 6, the owner's decision 1: the console proxied the offer and
             # the hang-up, `LiveFront`). It comes with the door token the console gave with the stream's place (`GET
             # /live/where/<cam>`) — the console asked `view` on the camera then — for THIS gateway and this stream
-            # (`w2cplatform/door.py`): checked here by the cluster's public key, `DOOR_RING`; none, the door is open and
+            # (`w2cplatform/door.py`): checked here by the cluster's public key (`door/keys` in the store); none, the door is open and
             # says so. The token is needed to OPEN — an offer, a hang-up; a stream that is up lives by its session.
             def _admitted(self, cam):
                 return gw.door_keeper().admit(self, "whep", f"live/{cam}")

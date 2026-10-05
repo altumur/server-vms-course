@@ -63,7 +63,7 @@ def test_retention_is_a_ceiling_on_what_is_shown_and_the_ring_decides_what_is_th
         footage(st, "7", 3, start, start + 600, step=10, seal=False)
     st.seal()
     routes = archive_routes(lambda: st, lambda: now, visible_from=lambda unit: visible_from({"retention_days": "8"}, now))
-    code, body, _ = routes("/timeline/7?from=0")
+    code, body, _ = routes("/spans/7?from=0")
     assert code == 200 and [s["start"] for s in json.loads(body)["spans"]] == [utc("2026-10-19T10:00:00")]
     assert len(st.spans("7")) == 3                                 # …and all three are still in the volume
     assert visible_from(None, now) == now - 30 * 86400             # no row: thirty days, not "for ever"

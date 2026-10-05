@@ -3,95 +3,61 @@ r-srv-a-1 on srv-a: volume 'srv-a', archive 'file:///data/srv-a/volume', writer 
 r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer {'state': 'ok'}
 
 # GET /timeline/7 — both recorders answer
-[
-  {
-    "start": 1757498800.0,
-    "end": 1757499100.0,
-    "epoch": 3,
-    "fenced": true,
-    "recording": "7",
-    "recorder": "r-srv-a-1",
-    "volume": "srv-a",
-    "media": "export/7"
-  },
-  {
-    "start": 1757499400.0,
-    "end": 1757499550.0,
-    "epoch": 3,
-    "fenced": true,
-    "recording": "7",
-    "recorder": "r-srv-a-1",
-    "volume": "srv-a",
-    "media": "export/7"
-  },
-  {
-    "start": 1757499700.0,
-    "end": 1757500000.0,
-    "epoch": 4,
-    "fenced": false,
-    "recording": "7",
-    "recorder": "r-srv-b-1",
-    "volume": "srv-b",
-    "media": "export/7"
-  }
-]
+{
+  "spans": [
+    {
+      "start_ms": 1757498800000,
+      "end_ms": 1757499100000,
+      "epoch": 3,
+      "fenced": true
+    },
+    {
+      "start_ms": 1757499400000,
+      "end_ms": 1757499550000,
+      "epoch": 3,
+      "fenced": true
+    },
+    {
+      "start_ms": 1757499700000,
+      "end_ms": 1757500000000,
+      "epoch": 4
+    }
+  ]
+}
 
 # srv-a's recorder has been silent for 60 s
 {
-  "segments": [
+  "spans": [
     {
-      "start": 1757499700.0,
-      "end": 1757500000.0,
-      "epoch": 4,
-      "fenced": false,
-      "recording": "7",
-      "recorder": "r-srv-b-1",
-      "volume": "srv-b",
-      "media": "export/7"
+      "start_ms": 1757499700000,
+      "end_ms": 1757500000000,
+      "epoch": 4
     }
   ],
-  "unreachable": [],
-  "unavailable": [
-    {
-      "volume": "srv-a",
-      "server": "srv-a",
-      "recorder": "r-srv-a-1",
-      "since": 1757500000.0
-    }
-  ],
-  "note": "footage in srv-a (on srv-a) is unavailable until a recorder holds it again — not lost"
+  "headers": {
+    "X-Unavailable": "srv-a@srv-a"
+  }
 }
 
 # srv-a is back — its volume with it
-[
-  {
-    "start": 1757498800.0,
-    "end": 1757499100.0,
-    "epoch": 3,
-    "fenced": true,
-    "recording": "7",
-    "recorder": "r-srv-a-1",
-    "volume": "srv-a",
-    "media": "export/7"
-  },
-  {
-    "start": 1757499400.0,
-    "end": 1757499550.0,
-    "epoch": 3,
-    "fenced": true,
-    "recording": "7",
-    "recorder": "r-srv-a-1",
-    "volume": "srv-a",
-    "media": "export/7"
-  },
-  {
-    "start": 1757499700.0,
-    "end": 1757500000.0,
-    "epoch": 4,
-    "fenced": false,
-    "recording": "7",
-    "recorder": "r-srv-b-1",
-    "volume": "srv-b",
-    "media": "export/7"
-  }
-]
+{
+  "spans": [
+    {
+      "start_ms": 1757498800000,
+      "end_ms": 1757499100000,
+      "epoch": 3,
+      "fenced": true
+    },
+    {
+      "start_ms": 1757499400000,
+      "end_ms": 1757499550000,
+      "epoch": 3,
+      "fenced": true
+    },
+    {
+      "start_ms": 1757499700000,
+      "end_ms": 1757500000000,
+      "epoch": 4
+    }
+  ]
+}

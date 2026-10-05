@@ -494,10 +494,12 @@ def _slot(name, slot) -> tuple[str, str]:
 
 
 # `objects: {rows: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a segment `*`.
+# `objects.door` — the product's files a resource's door gives the other servers — is accepted and not read: the course
+# keeps no such file (its objects are rows of the store, or the resource's buckets), and a product spec loads as it is.
 def _object_rows(name, objects) -> tuple:
     if objects is None:
         return ()
-    if not isinstance(objects, dict) or set(objects) - {"rows"} or not isinstance(objects.get("rows", []), list):
+    if not isinstance(objects, dict) or set(objects) - {"rows", "door"} or not isinstance(objects.get("rows", []), list):
         raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …]}}, not {objects!r}")
     out = []
     for p in objects.get("rows") or []:
@@ -756,7 +758,7 @@ class SubsystemSpec:
     requests_free: bool = False
     # `door: {routes: [<route>]}` — what a unit's holder opens to a page itself, the bytes going holder → browser and
     # never through the console (the boundary's step 6, the owner's decision 1): `/where/<id>` hands out the door —
-    # the holder's `door_url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
+    # the holder's `url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
     door_routes: tuple = ()
 
     # Builds the spec from the YAML dict, tolerating absent sections. Field defaults are parsed to their

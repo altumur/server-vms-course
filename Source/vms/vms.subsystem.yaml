@@ -329,10 +329,8 @@ rights:
     group: [source, labels]
     cluster: [ref]
     requests: [output, preset]
-# What a camera's holder opens to a page itself (the boundary's step 6, the owner's decision 1: the bytes bypass the
-# console): the device's own archive — what it holds, and those minutes (`VmsWorker.playback_handler`). It was the
-# console's `/segment`; `GET /where/<cam>` hands out the door now.
-door: {routes: [timeline, segment]}
+# No door at a camera's holder for a page (the product's rule): the scale is built from the camera's recordings, each its
+# own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
 snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).

@@ -369,14 +369,11 @@ def a_timeline_across_two_volumes() -> str:
         hb = r.heartbeat_extra()
         out.append(f"{r.name} on {server}: volume {hb['volume']!r}, archive {hb['archive']!r}, writer {hb['writer']}")
     ctl = s.controller()
-    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)     # the recording's holder's door (step 6)
-    keep = ("start", "end", "epoch", "fenced", "recording", "recorder", "volume", "media")
+    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)     # a recorder's door to the page
 
     def ask():
-        _, body = routes(None, "GET", "/door/timeline/7", {"from": t - 2000, "to": t})
-        if isinstance(body, list):
-            return [{k: sp[k] for k in keep} for sp in body]
-        return {**body, "segments": [{k: sp[k] for k in keep} for sp in body["segments"]]}
+        _, body, headers = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
+        return {"spans": body, **({"headers": dict(headers)} if headers else {})}
     out += ["", "# GET /timeline/7 — both recorders answer", _json(ask())]
     s.wall.advance(60); recs["srv-b"].heartbeat_once()
     out += ["", "# srv-a's recorder has been silent for 60 s", _json(ask())]

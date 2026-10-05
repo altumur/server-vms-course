@@ -13,7 +13,9 @@ that builds them from a directory of specs (`python3 -m w2cplatform`, `__main__.
     REACH_BUDGET      controller: units one pass moves to a server that reaches them (`spec.reach_budget`)
     RESOURCE_HOST, RESOURCE_PORT, RESOURCE_URL   resource: what its door binds, and the address its heartbeat says
     CONSOLE_ROOT      console: the subsystem at `/` (the deployment's word); every other spec is mounted under its name
-    CONSOLE_HOST, CONSOLE_PORT   console: what it binds (`CONSOLE_UNIX`, `DOOR_KEY`, `SECRETS_KEY`: the console's own)
+    CONSOLE_HOST, CONSOLE_PORT   console: what it binds (`CONSOLE_UNIX`, `SECRETS_KEY`: the console's own; the door key
+                      is the store's, `door/signer`, made by the console the first time it is asked for a door)
+    DOOR_ORIGINS      every holder: the consoles' origins a page may come from (`door.py`, CORS)
 
 The loops were a subsystem's (its `__main__`: the controller's loop, the blob sweep's, the resource's; and again in
 М11's own entry point), and the platform ran only as a library under its `__main__`. They are here, once; a
@@ -248,7 +250,8 @@ def build_console(env: dict):
     if root_name not in specs:
         raise ValueError(f"CONSOLE_ROOT={root_name!r} names no spec of {env.get(catalog.SPEC_DIR)} "
                          f"({', '.join(sorted(specs))}): the subsystem at `/` is the deployment's to say")
-    vars_, objects = stores(env, "console", [a for s in specs.values() for a in s.acl_console()])
+    from .door import KEYS_KEY, SIGNER_KEY
+    vars_, objects = stores(env, "console", [a for s in specs.values() for a in s.acl_console()] + [SIGNER_KEY, KEYS_KEY])
     ctls = {n: SpecController(s, vars_, objects) for n, s in specs.items()}
     m = spec_console(ctls, root_name, runtime.events_root(env))
     seal_stored(Sealer.from_env(env), vars_,

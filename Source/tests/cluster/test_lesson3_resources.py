@@ -46,21 +46,20 @@ def test_a_timeline_spans_two_volumes_and_names_the_one_nobody_serves():
     c.vars.put("rec/epoch/7", {"epoch": "4"})                                       # the recording's writer is e4 now
     a = _recorder_with_footage(c, "srv-a", "7", 3, ((t - 1200, t - 900), (t - 600, t - 450)))   # before the failure, on A
     b = _recorder_with_footage(c, "srv-b", "7", 4, ((t - 300, t),))                             # after, on B, next epoch
-    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)          # the recording's holder's door (step 6)
+    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)          # a recorder's door to the page
     try:
-        status, tl = routes(None, "GET", "/door/timeline/7", {"from": t - 2000, "to": t})
-        assert status == 200 and isinstance(tl, list)                                # everything answered: a plain list
-        assert [(s["recorder"], s["epoch"], s["fenced"]) for s in tl] == [("r-srv-a-1", 3, True), ("r-srv-a-1", 3, True), ("r-srv-b-1", 4, False)]
+        status, tl, headers = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
+        assert status == 200 and headers == []                                       # everything answered: nothing named
+        assert [(s["epoch"], s.get("fenced", False)) for s in tl] == [(3, True), (3, True), (4, False)]
         # srv-a dies: its recorder goes silent, nobody else can hold srv-a's disk — its footage is unavailable, by name
         c.wall.advance(60); b.heartbeat_once()
-        status, tl = routes(None, "GET", "/door/timeline/7", {"from": t - 2000, "to": t})
-        assert [s["recorder"] for s in tl["segments"]] == ["r-srv-b-1"]
-        assert [(g["volume"], g["server"]) for g in tl["unavailable"]] == [("srv-a", "srv-a")]
-        assert "unavailable until a recorder holds it again" in tl["note"] and "not lost" in tl["note"]
+        status, tl, headers = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
+        assert [s["epoch"] for s in tl] == [4]
+        assert dict(headers) == {"X-Unavailable": "srv-a@srv-a"}                    # unavailable until a recorder holds it
         # srv-a returns: its volume came back with its disks — nothing was rebuilt, nothing copied
         a.heartbeat_once()
-        status, tl = routes(None, "GET", "/door/timeline/7", {"from": t - 2000, "to": t})
-        assert isinstance(tl, list) and len(tl) == 3
+        status, tl, headers = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
+        assert len(tl) == 3 and headers == []
     finally:
         for r in (a, b):
             r.after_stop()
@@ -92,9 +91,8 @@ def test_a_worker_with_no_assignment_invents_nothing():
 
 def test_a_recordings_timeline_is_named_and_answered_by_its_own_recorder():
     """A recording is named, not numbered: `7-main` on one server and `7-backup` on another are two recordings of
-    camera 7, each in its own volume, each served by its own recorder. The page reads each at its holder's door since
-    the boundary's step 6 (`/door/timeline/<recording>`; it was the console's `/timeline/<cam>`, which turned the
-    camera into its recordings). A route that parsed a recording's id as a number would answer 500 to `7-backup`."""
+    camera 7, each in its own volume, each served by its own recorder. The page reads each at a recorder's door
+    (`/timeline/<recording>`). A route that parsed a recording's id as a number would answer 500 to `7-backup`."""
     c = Cluster(); ctl = VmsController(c.vars, c.objects, wall=c.wall)
     rec = SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall)
     rec.create({"name": "7-main", "cam": "7"}); rec.create({"name": "7-backup", "cam": "7"})
@@ -103,8 +101,8 @@ def test_a_recordings_timeline_is_named_and_answered_by_its_own_recorder():
     b = _recorder_with_footage(c, "srv-b", "7-backup", 1, ((t - 600, t),))
     try:
         routes = footage_routes(ctl.objects, ctl.vars, ctl.wall)
-        tl = [s for unit in ("7-main", "7-backup") for s in routes(None, "GET", f"/door/timeline/{unit}", {"from": t - 2000, "to": t})[1]]
-        assert sorted((s["recording"], s["recorder"]) for s in tl) == [("7-backup", "r-srv-b-1"), ("7-main", "r-srv-a-1")]
-        assert {s["media"] for s in tl} == {"export/7-main", "export/7-backup"}
+        tl = {unit: routes(None, "GET", f"/timeline/{unit}", {"from": t - 2000, "to": t})[1] for unit in ("7-main", "7-backup")}
+        assert {u: [(s["start_ms"], s["end_ms"]) for s in spans] for u, spans in tl.items()} == {
+            "7-main": [((t - 1200) * 1000, (t - 600) * 1000)], "7-backup": [((t - 600) * 1000, t * 1000)]}
     finally:
         a.after_stop(); b.after_stop()

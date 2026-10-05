@@ -158,13 +158,13 @@ def test_the_read_says_which_doors_were_silent_and_which_volumes_nobody_read():
     footage(st, "7", 1, m(0), m(10), step=10)
     srv = door(box, st)
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-gone"), Heartbeat("r-gone", box.wall() - 3600, [{"id": "9"}], {
-        "archive_url": "http://127.0.0.1:9", "volume": "old"}).to_bytes())    # silent for an hour: not asked, and not 7's
+        "url": "http://127.0.0.1:9", "volume": "old"}).to_bytes())    # silent for an hour: not asked, and not 7's
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-warm"), Heartbeat("r-warm", box.wall() - 3600, [{"id": "7"}], {
-        "archive_url": "http://127.0.0.1:9", "volume": "warm"}).to_bytes())   # silent, and it was recording 7
+        "url": "http://127.0.0.1:9", "volume": "warm"}).to_bytes())   # silent, and it was recording 7
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-off"), Heartbeat("r-off", box.wall() - 3600, [{"id": "7"}], {
-        "archive_url": "http://127.0.0.1:9", "volume": "off"}).to_bytes())    # …on a volume since disabled
+        "url": "http://127.0.0.1:9", "volume": "off"}).to_bytes())    # …on a volume since disabled
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-mute"), Heartbeat("r-mute", box.wall(), [], {
-        "archive_url": "http://127.0.0.1:9", "volume": "b"}).to_bytes())      # alive, its door does not answer
+        "url": "http://127.0.0.1:9", "volume": "b"}).to_bytes())      # alive, its door does not answer
     for name, on in ((st.name, True), ("b", True), ("never", True), ("off", False)):   # `never`: declared, nobody's ever
         volumes.write(box.vars, {"name": name, "kind": "local", "server": "srv-1", "url": "/x/" + name,
                                  "quota_bytes": 1 << 30, "enabled": "true" if on else "false"})

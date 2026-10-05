@@ -1371,7 +1371,9 @@ class SpecConsole:
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
         self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
         from .door import Signer
-        self.door_signer = Signer.from_env()             # signs the holders' door tokens (`DOOR_KEY`); None: open doors
+        # signs the holders' door tokens with the key in the store (`door/signer`, sealed with the cluster's key ring);
+        # None without a ring to seal one with: the doors' open mode
+        self.door_signer = Signer.for_console(ctl.vars, getattr(ctl, "sealer", None))
         self.gate = Gate(ctl.vars, self.wall, lambda: self.journal)   # who is calling, and may they (`access.py`)
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall,   # in the store: any instance answers a retry
                                     sealer=getattr(ctl, "sealer", None))                 # its digests under the cluster's key
@@ -1504,9 +1506,9 @@ class SpecConsole:
 
     # THE HOLDER'S DOOR, HANDED OUT WITH THE UNIT'S PLACE (the boundary's step 6, the owner's decision 1: the bytes do not
     # go through the console). For a spec that declares `door: {routes}`, `/where/<id>` says `door: {url, token, expires,
-    # routes}` — the door the holder announces in its heartbeat (`door_url`), and a token for those routes, this unit,
-    # this holder, `door.TTL` seconds, signed by this console's key (`DOOR_KEY`; none: the door's open mode, `token:
-    # null`). The gate asked `view` on the unit before this line: that is the grant the token carries. THE holder is the
+    # routes}` — the door the holder announces in its heartbeat (`url`, the product's word), and a token for those routes,
+    # this unit, this holder, `door.TTL` seconds, signed by the cluster's door key (`door/signer` in the store; with no key
+    # ring to seal one, the door's open mode, `token: null`). The gate asked `view` on the unit before this line: that is the grant the token carries. THE holder is the
     # worker the unit is placed on, live, saying in its heartbeat that it holds the unit — not any heartbeat that
     # still lists it (a dead holder's last word, read for the first time, looks new). Nobody holding it so, or a holder
     # that announces no door: `door: null`, and the page asks again. Each token handed out is a
@@ -1518,7 +1520,7 @@ class SpecConsole:
         pl = self.ctl.placement(uid)
         hb = holders(self.ctl.objects, f"{self.spec.name}/", self.wall(), self.lost_after, self.ctl.eyes).get(pl.worker) if pl else None
         holds = hb is not None and any(str(st.get("id")) == str(uid) for st in hb.status)
-        url = str(hb.extra.get("door_url") or "") if holds else ""
+        url = str(hb.extra.get("url") or "").rstrip("/") if holds else ""
         if not url:
             return {"door": None}
         found = (pl.worker, hb)

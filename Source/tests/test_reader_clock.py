@@ -34,12 +34,12 @@ def test_a_recorder_dead_with_its_clock_ahead_stops_being_a_door_and_one_behind_
     from vms.footage import recorder_doors, unserved_volumes
     box, eyes = Box(), None
     eyes = _eyes(box)
-    _beat(box, REC_SPEC, "r-ahead", AHEAD, archive_url="http://127.0.0.1:9", volume="va", server="srv-a")
-    _beat(box, REC_SPEC, "r-behind", BEHIND, archive_url="http://127.0.0.1:8", volume="vb", server="srv-b")
+    _beat(box, REC_SPEC, "r-ahead", AHEAD, url="http://127.0.0.1:9", volume="va", server="srv-a")
+    _beat(box, REC_SPEC, "r-behind", BEHIND, url="http://127.0.0.1:8", volume="vb", server="srv-b")
     recorder_doors(box.objects, box.wall(), eyes=eyes)                       # the first look: both just changed
     for _ in range(3):
         box.wall.advance(20)
-        _beat(box, REC_SPEC, "r-behind", BEHIND, archive_url="http://127.0.0.1:8", volume="vb", server="srv-b")
+        _beat(box, REC_SPEC, "r-behind", BEHIND, url="http://127.0.0.1:8", volume="vb", server="srv-b")
     assert [n for n, _, _ in recorder_doors(box.objects, box.wall(), eyes=eyes)] == ["r-behind"]
     assert [v["volume"] for v in unserved_volumes(box.objects, box.wall(), eyes=eyes)] == ["va"]
 
@@ -100,11 +100,11 @@ def test_a_scan_asks_the_door_of_a_recorder_behind_and_not_of_a_dead_one_ahead()
         box = Box()
         eyes = _eyes(box)
         url = f"http://127.0.0.1:{srv.server_address[1]}"
-        _beat(box, REC_SPEC, "r-ahead", AHEAD, archive_url="http://127.0.0.1:9", volume="va")
-        _beat(box, REC_SPEC, "r-late", -100.0, archive_url=url, volume="vb")
+        _beat(box, REC_SPEC, "r-ahead", AHEAD, url="http://127.0.0.1:9", volume="va")
+        _beat(box, REC_SPEC, "r-late", -100.0, url=url, volume="vb")
         recording_read(box.objects, "7", 0, 200, box.wall(), timeout=0.5, eyes=eyes)       # the first look
         box.wall.advance(46)
-        _beat(box, REC_SPEC, "r-late", -100.0, archive_url=url, volume="vb")
+        _beat(box, REC_SPEC, "r-late", -100.0, url=url, volume="vb")
         got = recording_read(box.objects, "7", 0, 200, box.wall(), timeout=0.5, eyes=eyes)
         assert got.answered and [(s.start, s.end) for s in got.spans] == [(100.0, 160.0)] and got.silent == [], got
     finally:

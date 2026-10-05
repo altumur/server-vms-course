@@ -76,7 +76,7 @@ def test_a_keep_is_copied_into_the_incidents_volume_and_outlives_the_recordings_
     box.src_door.shutdown()                                            # the recording's ring moved on — or its server is gone
     srv = k.serve_archive()
     try:
-        got = json.loads(urllib.request.urlopen(f"{k.archive_url}/timeline/7?from=0").read())
+        got = json.loads(urllib.request.urlopen(f"{k.archive_url}/spans/7?from=0").read())
         assert [(sp["start"], sp["end"], sp["epoch"]) for sp in got["spans"]] == [(t - 1800, t - 1200, 0)]
         frames = k.read_samples(k.archive_url, "7", t - 1800, t - 1200)
         assert frames and frames[0].key                                # and the frames are served, as any recording's
