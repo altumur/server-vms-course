@@ -393,7 +393,7 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     assert standing(rec, REC_SPEC) == ["7-1-2", "s-1"]
     assert requests.expired.get("vms", 0) == was.get("vms", 0) + 1           # the answered one is not counted again
     assert requests.expired.get("rec", 0) == was.get("rec", 0) + 1
-    box.wall.advance(requests.MOST_VALID)
+    box.wall.advance(SPEC.requests["most_valid"])                          # the declared longest wait, no other
     requests.turn([rec, con], sweep=True)
     assert standing(con, SPEC) == [] and requests.expired.get("vms", 0) == was.get("vms", 0) + 2
     text = "\n".join(requests.metrics_lines())                               # the request loops' process's own numbers

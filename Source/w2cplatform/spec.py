@@ -96,6 +96,7 @@ from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMM
 from .events import OWN_OF_TREES, Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
+from .canonical import canonical_json, number_text, parse_json
 from .rows import PARSE_ERRORS, Table, finite
 from .variables import Conflict, Garbled, Variables
 
@@ -361,8 +362,7 @@ class Field:
         # checks a volume. A generic loader that tried to validate a trigger would be a generic loader
         # that knows what a trigger is.
         if self.type == "json":
-            import json as _json
-            return _json.loads(v) if isinstance(v, (str, bytes)) else v
+            return parse_json(v) if isinstance(v, (str, bytes)) else v
         return str(v)
 
     # The declared default, else the type's zero (`0`, `0.0`, `False`, `[]`, `""`).
@@ -373,15 +373,16 @@ class Field:
             return self.default
         return {"int": 0, "float": 0.0, "bool": False, "list": [], "json": None}.get(self.type, "")
 
-    # The Variables form: bools as `"true"/"false"`, lists comma-joined, else `str`.
+    # The Variables form: bools as `"true"/"false"`, lists comma-joined, else `str`. A `json` field is its canonical text
+    # (`canonical.py`: sorted keys, `5` for `5.0` — the product's `CanonicalJSON`, the architect 2026-10-05); a string
+    # given is JSON text, parsed first — stored as typed, it was another row than the same value given parsed.
     def to_item(self, v) -> str:
         if self.type == "bool":
             return "true" if v else "false"
         if self.type == "list":
             return ",".join(v)
         if self.type == "json":
-            import json as _json
-            return _json.dumps(v, separators=(",", ":"), ensure_ascii=False) if not isinstance(v, str) else v
+            return canonical_json(parse_json(v) if isinstance(v, (str, bytes)) else v)
         return str(v)
 
 
@@ -1395,6 +1396,20 @@ class SubsystemSpec:
             if not self.requests_free and "valid_for" not in req:
                 raise ValueError(f"spec {self.name}: requests.valid_for is required without `free: true` — the seconds "
                                  f"a request is worth doing")
+            # …and how far a deadline may be, with it (ADR 0012, the same rule): the door assumed no bound and the reaper
+            # ten minutes — two numbers nobody declared, and not the same one. A default deadline past it is a family
+            # whose every request is refused.
+            if "valid_for" in req and "most_valid" not in req:
+                raise ValueError(f"spec {self.name}: requests.most_valid is required with `valid_for` — the farthest a "
+                                 f"request's `valid_until` may be, in seconds")
+            if "valid_for" in req and req["valid_for"] > req["most_valid"]:
+                raise ValueError(f"spec {self.name}: requests.valid_for ({req['valid_for']}) is past requests.most_valid "
+                                 f"({req['most_valid']}): a request given no deadline would be refused for its own")
+            # A stamp of what the unit is about names the field `about:` declares; without one it stamped nothing,
+            # silently (the cross-check of «Паритет», 2026-10-05).
+            if "about" in (req.get("stamp") or []) and not self.about_field:
+                raise ValueError(f"spec {self.name}: requests.stamp names `about`, and the spec says no `about:` — "
+                                 f"declare {{sub, field}}, or stamp without it")
         from .tables import parse as _tables
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
         # …a table the console SERVES (declared, `{key, fields}`) and the rows: a table only named (`tables: [x]`) is a
@@ -1741,15 +1756,15 @@ class SubsystemSpec:
             # the next read. The ceiling is the row's own (Lesson 19's limit) — this one keeps a single
             # field from eating it: a scenario is a handful of triggers, not a document.
             if f.type == "json" and fields.get(name) is not None:
-                import json as _json
                 raw = fields[name]
-                try:
-                    text = raw if isinstance(raw, str) else _json.dumps(raw)
-                    doc = _json.loads(text)
+                try:                                     # the text measured is the text stored (`Field.to_item`)
+                    doc = parse_json(raw) if isinstance(raw, (str, bytes)) else raw
+                    text = canonical_json(doc)
                 except PARSE_ERRORS as e:                # nested past JSON's depth too: 400, not 500 (the tenth round)
                     raise Refused(f"{name} is not JSON: {e}")
-                if len(text) > JSON_CEILING:
-                    raise Refused(f"{name} is {len(text)} bytes of JSON; the ceiling is {JSON_CEILING}")
+                size = len(text.encode())                # the BYTES of the text stored, as the product counts
+                if size > JSON_CEILING:                  # (`ж` is two: characters let 4008 bytes through, «Паритет»)
+                    raise Refused(f"{name} is {size} bytes of JSON; the ceiling is {JSON_CEILING}")
                 if f.schema is not None:
                     self._schema_refusal(name, f, doc)
             elif f.schema is not None and name in fields and fields[name] is not None:
@@ -1969,9 +1984,8 @@ def _unit_key(u: str):
 # raised there, and no blob of the subsystem could be stored. Nothing is deleted on the word of a list nobody can
 # read: the sweep reads it as empty and marks afresh — a new list, a new grace.
 def _sweep_list(items) -> tuple[list, float]:
-    import json
     try:
-        marked = json.loads((items or {}).get("digests", "[]"))
+        marked = parse_json((items or {}).get("digests", "[]"))
         at = float((items or {}).get("at", 0))
     except PARSE_ERRORS:                              # `[` ten thousand deep too (`RecursionError`, the ninth review's sweep)
         return [], 0.0
@@ -4158,7 +4172,6 @@ class SpecController(Controller):
     # the same object twice, and two units with the same mask share one object.
     def put_blob(self, data: bytes) -> str:
         """Store the bytes; return the digest to put in the row."""
-        import json
         d = blob_digest(data)
         # These exact bytes may be sitting on the sweep's list right now — the same mask uploaded again
         # for a second unit, while the copy the first unit stopped naming is marked for collection.
@@ -4168,7 +4181,7 @@ class SpecController(Controller):
 
         def off_the_list(it):
             marked = _sweep_list(it)[0]
-            return {**it, "digests": json.dumps([x for x in marked if x != d])} if d in marked else None
+            return {**it, "digests": canonical_json([x for x in marked if x != d])} if d in marked else None
 
         self.write(key, off_the_list)                 # by CAS, tried again on a conflict: the sweeper writes this row too
         # On the platter before the row names it (`FsObjectStore.put_durable`); a store without the barrier puts as it can.
@@ -4238,7 +4251,6 @@ class SpecController(Controller):
 
     def sweep_blobs(self, limit: int = SWEEP_LIMIT, grace: float = SWEEP_GRACE) -> dict:
         """One pass: marks, or sweeps, or waits. `{marked, deleted, waiting}`."""
-        import json
         names = [n for n, f in self.spec.fields.items() if f.type == "blob"]
         if not names:
             return {"marked": 0, "deleted": 0, "waiting": 0}
@@ -4252,7 +4264,7 @@ class SpecController(Controller):
             orphans = sorted(k[len(prefix):] for k in self.objects.list(prefix)
                              if k[len(prefix):] not in referenced)[:limit]
             if orphans:
-                self.vars.put(key, {"at": str(now), "digests": json.dumps(orphans)}, cas=idx)
+                self.vars.put(key, {"at": number_text(now), "digests": canonical_json(orphans)}, cas=idx)
             return {"marked": len(orphans), "deleted": 0, "waiting": 0}
 
         if now - at < grace:
@@ -4263,7 +4275,7 @@ class SpecController(Controller):
         # Only digests: an entry of the list that is none is no blob's name — `blob_key` raised on it, every sweep, and the
         # list was never cleared: nothing of the subsystem was reclaimed again (the review's seventh pass).
         doomed = [d for d in marked if isinstance(d, str) and is_digest(d) and d not in referenced]
-        self.vars.put(key, {"at": str(now), "digests": json.dumps(doomed), "state": "deleting"}, cas=idx)   # Conflict here deletes nothing
+        self.vars.put(key, {"at": number_text(now), "digests": canonical_json(doomed), "state": "deleting"}, cas=idx)   # Conflict here deletes nothing
         deleted = 0
         for d in doomed:
             items, idx = self.vars.get(key)                                 # still doomed? `put_blob` takes a digest off this list

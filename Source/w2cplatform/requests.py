@@ -25,7 +25,6 @@ log = logging.getLogger(__name__)
 CLEAR_EVERY = 2.0            # the answered rows: a holder may answer sixteen a second (the review's seventh pass, M6)
 SWEEP_EVERY = 30.0           # the reaper's turn, which reads the rows
 REAP_AFTER = 60.0            # past a deadline: a holder ends its own rows at it and says so within a heartbeat
-MOST_VALID = 600.0           # the longest a request may wait, when the spec says no `most_valid`
 
 # Requests ended unanswered, per subsystem — `expired` (nobody performed it) and `unknown` (a holder began it and went
 # without saying how): counted here, said on `/metrics` (`metrics_lines`). One tally per process.
@@ -72,14 +71,18 @@ def _holder_still_there(ctl, said) -> bool:
 
 # One standing request with a deadline, looked at by the reaper: True when it was ended here. A deadline that is not a
 # time is the holder's refusal when there is one; with none, the row ends once its filing is older than the longest a
-# request may wait. BEGUN AND NOT ANSWERED (the review's thirteenth pass, minor): a mark with no outcome whose holder
-# still holds the name it marked under is that holder's to answer; once the holder is gone, the row ends as NOT KNOWN.
-def _end(ctl, key: str, it: dict, idx, now: float, most_valid: float) -> bool:
+# request may wait — the spec's `most_valid`, declared with `valid_for` (ADR 0012); a family that declares neither has
+# no such bound, and the row is not known to be over. BEGUN AND NOT ANSWERED (the review's thirteenth pass, minor): a
+# mark with no outcome whose holder still holds the name it marked under is that holder's to answer; once the holder is
+# gone, the row ends as NOT KNOWN.
+def _end(ctl, key: str, it: dict, idx, now: float, most_valid) -> bool:
     try:
         until = finite(it.get("valid_until") or 0)
     except (TypeError, ValueError):
         until = 0.0
     if not until:
+        if most_valid is None:
+            return False
         try:
             until = finite(it.get("at")) + most_valid
         except (TypeError, ValueError):
@@ -135,7 +138,7 @@ def clear_requests(ctl, sweep: bool = True) -> int:
     gone, now = 0, ctl.wall()
     declared = ctl.spec.requests or {}
     elsewhere = set(declared.get("elsewhere") or ())
-    most_valid = float(declared.get("most_valid") or MOST_VALID)
+    most_valid = declared.get("most_valid")                 # the declared one, no other: the loader requires it with `valid_for`
     ttl = declared.get("ttl")                               # None: a family of deadlines (`valid_for`); 0: no limit, said
     for key in keys:
         rid = key.rsplit("/", 1)[1]

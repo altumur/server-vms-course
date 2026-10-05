@@ -1,0 +1,56 @@
+# How a request's body value is written into its row, and how any JSON value a row holds is written (the canonical
+# form): one table for the course (Source/, Python: w2cplatform/canonical.py, SpecConsole._file_request) and the
+# product (Go: canonjson.go, requests.go). THIS IS THE COURSE'S SEED: the shared table is «Паритет»'s
+# (testdata/requests_body.tsv in the product), and when its committed main keeps one, this file is a copy of it, byte
+# for byte (tests/test_requests_body_table.py).
+#
+# Each row is filed as `POST /requests {"unit": <a unit>, "v": <raw>}` in a family whose schema says of `v` only
+# `maxLength: 32`, and the row's field `v` is read back.
+#
+# Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
+#   raw      the value as the body carries it, JSON text exactly as sent (`5.0` is not `5`)
+#   written  the text of the row's field: a string as it is, without quotes; true/false; a number whose value is whole
+#            in integer digits — an integer in exactly the digits it came with, never through a float — any other in
+#            its shortest decimal form, never an exponent; a list or a map as canonical JSON (compact, keys sorted,
+#            UTF-8 as it is: control characters as JSON writes them, \b \f \n \r \t short, U+2028/U+2029 raw, < > & /
+#            not escaped). Two words are no text: (absent) — the row has no such field (`null`); (refused) — the request
+#            is refused, 400 (not JSON; or the text is longer than the schema's maxLength, a number's text too)
+#   note     why the row is here
+# A text that would hold a tab or a line break is no row here: the table could not say it.
+true	true	a JSON boolean, not Python's True
+false	false	and not False
+null	(absent)	a null is no field at all: a holder tells an empty string from nothing
+""		an empty string is a field, empty
+5	5	an integer in its digits
+5.0	5	a whole value in integer digits, not 5.0
+1000.0	1000	json.dumps says 1000.0
+1.50	1.5	the shortest decimal
+-2.5	-2.5	a negative number
+0.1	0.1	the shortest decimal that reads back as the same float
+1e3	1000	no exponent: a whole value in digits
+1E+3	1000	an exponent spelt otherwise
+1e-7	0.0000001	json.dumps says 1e-07
+-0	-0	an integer in exactly the digits it came with
+-0.0	-0	a negative zero, as the product's float formatting says it
+12345678901234567890	12345678901234567890	past 2^53: never through a float
+99999999999999999999999999999999	99999999999999999999999999999999	32 digits: as long as maxLength lets
+-99999999999999999999999999999999	(refused)	33 characters as written: past maxLength, a number's text too
+1e40	(refused)	41 digits as written
+"text"	text	a string as it is, without quotes
+"text, as \"it\" is"	text, as "it" is	its quotes are its own
+"5.0"	5.0	a string that looks like a number stays the string
+"true"	true	and one that looks like a boolean
+"é ü"	é ü	UTF-8 as it is
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	(refused)	a string past maxLength: the schema says so
+{"b": 2, "a": [1]}	{"a":[1],"b":2}	a map: compact, keys sorted
+[1.50, 1e3, -0]	[1.5,1000,-0]	numbers inside JSON by the same rule
+[12345678901234567890]	[12345678901234567890]	an integer inside JSON in exactly its digits
+{"s": "<&>/"}	{"s":"<&>/"}	no HTML escape, no escaped slash
+{"e": "\b\f\n\u0001"}	{"e":"\b\f\n\u0001"}	control characters as JSON writes them
+{"l": "\u2028"}	{"l":" "}	U+2028 raw, not escaped as Go writes it
+{"é": true}	{"é":true}	a key in UTF-8 as it is
+[]	[]	an empty list
+{}	{}	an empty map
+{"z": null, "y": false}	{"y":false,"z":null}	a null inside JSON stays null
+NaN	(refused)	not JSON, though Python reads it
+1e999	(refused)	past what a JSON number holds here
