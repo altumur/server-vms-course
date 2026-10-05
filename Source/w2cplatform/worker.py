@@ -116,7 +116,7 @@ class Worker:
         self._hold_seen: dict[str, tuple[int, float]] = {}
         self._slot_seen: dict[str, tuple[int, float]] = {}   # …and each garbled slot row's (`_garbled_stale`)
         # When the store last said the hold is this instance's, by the clock (`note_hold_confirmed`), and where each place
-        # taken lies, as its row said at the take ("" — any box may write it): what a strict place is fenced by
+        # taken lies, as its row last read at the take or a renewal ("" — any box may write it; `_read_where`): what a strict place is fenced by
         # (`may_write_place`) and let go by (`_strict_place_pass`) while the store is silent.
         self._hold_confirmed = clock()
         self._place_where: dict[str, str] = {}
@@ -654,9 +654,10 @@ class Worker:
             got = self._claim_hold(candidates, retries)
             if got is not None:
                 self._hold_confirmed = t0                      # a new hold: its own clock, not the last one's
-                where = self._place_server(got)                # remembered for the silence (`held_strictly`)
-                if where is not None:
-                    self._place_where[got] = where
+                # Remembered for the silence (`held_strictly`), from this take's row alone: a place whose row the take
+                # could not read is strict (ADR 0029), whatever an earlier hold of it had read.
+                self._place_where.pop(got, None)
+                where = self._read_where(got)
                 if where and not self.server:
                     log.warning("%s: took %s, a place of server %s, naming no server of its own: it is let go when its "
                                 "hold goes unconfirmed, not kept through a silence (ADR 0029)", self.name, got, where)
@@ -758,11 +759,24 @@ class Worker:
                 again = read_hold(key, self.hold, stored(self.vars, key, HOLDS)[0])
                 if again is not None and again.holder == self.instance and not again.released:
                     self.note_hold_confirmed(t0)
+                    self._read_where(self.hold)
                     return True
                 self.hold = None
                 return False
             self.note_hold_confirmed(t0)
+            self._read_where(self.hold)
             return True
+
+    # WHERE THE PLACE IS, READ AGAIN AT EVERY RENEWAL THAT SUCCEEDED (ADR 0029, More Information; the product's
+    # `TestWhereAPlaceIsIsReadAgainAtEveryRenewal`). Read only at the take, a place the administrator gave to another
+    # server mid-hold went on through silences as this server's; and one whose row the take could not read stayed strict
+    # for good. The mark follows a row that was READ: one naming this worker's server makes the place its own, any other
+    # takes that away; a read that fails changes nothing — it is no evidence either way, and weakens nothing.
+    def _read_where(self, place: str) -> str | None:
+        where = self._place_server(place)
+        if where is not None:
+            self._place_where[place] = where
+        return where
 
     # The row of the place this instance holds, read now. One that does not parse is not a row naming ANOTHER holder:
     # it is read as the row this instance last wrote — as its slot's is (`_own_slot`) — so a renewal or a release
@@ -801,8 +815,8 @@ class Worker:
     # row names it: someone else's place, never written into through a silence), one whose row could not be read, a spec
     # with no `server_field`, and every place of a worker that names no server of its own (`server_unsaid` says so in its
     # heartbeat). Read in the safe direction, as `hold_follows_name` reads the same row the other way. `row` is the
-    # place's row as the caller holds it this second; without it, the row as it read when the place was taken (a silent
-    # store answers nothing now).
+    # place's row as the caller holds it this second; without it, the row as it last read — at the take or at a renewal
+    # (`_read_where`; a silent store answers nothing now).
     def held_strictly(self, place: str, row: dict | None = None) -> bool:
         places = self.spec.places
         if places.get("lease") != "strict":
