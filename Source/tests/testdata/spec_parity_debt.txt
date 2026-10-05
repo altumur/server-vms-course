@@ -20,24 +20,14 @@ course-only auto.subsystem.yaml unit.fields.when.schema
 course-only auto.subsystem.yaml unit.fields.within.maximum
 course-only auto.subsystem.yaml unit.fields.within.minimum
 course-only auto.subsystem.yaml unit.fields.within.schema
-course-only auto.subsystem.yaml worker
-course-only auto.subsystem.yaml worker.requests
 course-only live.subsystem.yaml metrics
 course-only live.subsystem.yaml placement.offers
 course-only live.subsystem.yaml rights
 course-only live.subsystem.yaml rights.routes
 course-only live.subsystem.yaml rights.routes.view
-course-only live.subsystem.yaml worker
-course-only live.subsystem.yaml worker.writes
 course-only rec.subsystem.yaml domain
 course-only rec.subsystem.yaml domain.reports
 course-only rec.subsystem.yaml domain.witness
-course-only rec.subsystem.yaml holds
-course-only rec.subsystem.yaml holds.longest
-course-only rec.subsystem.yaml holds.since
-course-only rec.subsystem.yaml holds.table
-course-only rec.subsystem.yaml holds.unit
-course-only rec.subsystem.yaml holds.until
 course-only rec.subsystem.yaml metrics
 course-only rec.subsystem.yaml placement.affinity
 course-only rec.subsystem.yaml placement.affinity.enabled
@@ -46,9 +36,6 @@ course-only rec.subsystem.yaml placement.affinity.kind
 course-only rec.subsystem.yaml placement.affinity.server_field
 course-only rec.subsystem.yaml placement.affinity.strict
 course-only rec.subsystem.yaml placement.affinity.table
-course-only rec.subsystem.yaml placement.places.enabled
-course-only rec.subsystem.yaml placement.places.server_field
-course-only rec.subsystem.yaml placement.places.where
 course-only rec.subsystem.yaml requests
 course-only rec.subsystem.yaml requests.elsewhere
 course-only rec.subsystem.yaml requests.free
@@ -138,7 +125,6 @@ course-only rec.subsystem.yaml tables.volumes.schema
 course-only rec.subsystem.yaml unit.fields.home.cam
 course-only rec.subsystem.yaml unit.fields.home.must_match
 course-only rec.subsystem.yaml unit.fields.home.ref
-course-only rec.subsystem.yaml worker
 course-only rec.subsystem.yaml worker.reads
 course-only vms.subsystem.yaml domain
 course-only vms.subsystem.yaml domain.books
@@ -190,6 +176,7 @@ product-only live.subsystem.yaml secrets
 product-only live.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
+product-only rec.subsystem.yaml worker.requests   # the recorder files a device's ask to the VMS (recproc's asker): the course's rec.subsystem.yaml says it next
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window
