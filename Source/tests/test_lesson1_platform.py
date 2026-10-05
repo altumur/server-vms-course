@@ -267,7 +267,7 @@ def _counter(name: str = "counter"):
     """A subsystem that frees — `requests: {free: true}` — registered in this process's catalogue, as a loaded spec is."""
     from w2cplatform import catalog
     spec = SubsystemSpec.from_dict({"name": name, "unit": {"rows": "ticks", "id": "name", "fields": {"name": {"type": "string"}}},
-                                    "placement": {"capacity": {"from": "capacity", "default": 4}}, "requests": {"free": True}})
+                                    "placement": {"capacity": {"from": "capacity", "default": 4}}, "requests": {"free": True, "ttl": 0}})
     catalog.register(spec)
     return spec
 

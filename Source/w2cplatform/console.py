@@ -2926,7 +2926,7 @@ class SpecConsole:
             # POSTs at once left fifteen rows). A person's open requests are ONE row — `<sub>/requests/asks-<sha256 of
             # the person, 16 hex>`, the list of their ids — changed by CAS; an id stays in it while its row stands, and
             # for `settle` seconds after it was added, row or no row (the list is written before the request is), and
-            # never past `ttl`. The same request again is the same id, and is not counted twice.
+            # never past the spec's `ttl` (`0`: no limit). The same request again is the same id, and is not counted twice.
             #
             # A LEDGER THAT DOES NOT READ STOPS THAT PERSON, AND SAYS SO (the architect's decision after step 7). It was read
             # as an empty list and written over by CAS: the person's limit silently reset, nothing counted. Now it is 429
@@ -2935,7 +2935,7 @@ class SpecConsole:
             # the ledger starts anew.
             name = LEDGER + hashlib.sha256(user.encode()).hexdigest()[:16]
             ledger = spec.sub.request_key(name)
-            settle, ttl = req.get("settle", 60.0), req.get("ttl", 86400.0)
+            settle, ttl = req.get("settle", 60.0), req["ttl"]   # the loader requires it with `per_person`; 0: no limit
             for _ in range(50):
                 try:
                     it, idx = ctl.vars.get(ledger)
@@ -2943,7 +2943,7 @@ class SpecConsole:
                 except PARSE_ERRORS as e:                 # `Garbled` too: a row the store holds and cannot read
                     return self._ledger_garbled(name, user, e)
                 self._ledger_read(name)
-                held = [(r, at) for r, at in held if now - at <= ttl
+                held = [(r, at) for r, at in held if (not ttl or now - at <= ttl)
                         and (now - at < settle or ctl.vars.get(spec.sub.request_key(r))[0])]
                 if rid not in [r for r, _ in held]:
                     if len(held) >= req["per_person"]:

@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: предложения
-subject: М10A_Platform, М12_DomainVMS
+subject: М10A_Platform, М12A_Domain
 source-commit: 4099cd5
 date: 2026-09-23
 status: draft
@@ -207,7 +207,7 @@ def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float
 
 > **Detail is local; summary is domain.** Three data types, one rule — worth naming once rather than rediscovering per data type, **because the fourth one will arrive eventually.**
 >
-> — [`where-the-database-lives.md`](../М12_DomainVMS/where-the-database-lives.md)
+> — [`where-the-database-lives.md`](../М12A_Domain/where-the-database-lives.md)
 
 ### Почему эта база не возвращает проблему доступности
 
@@ -314,8 +314,8 @@ def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> 
 
 - [`where-camera-settings-go.md`](./where-camera-settings-go.md) — путь одной правки, лимит 64 KiB, тяжёлые настройки
 - [`ARCHITECTURE.md`](../ARCHITECTURE.md) — §1.5 (какое хранилище под какую форму данных), §1.9 (матрица отказов), и «found on audit»: пароль внутри `rtsp_url`
-- [`М12_DomainVMS/where-the-database-lives.md`](../М12_DomainVMS/where-the-database-lives.md) — семь ревизий, «detail is local, summary is domain» и предсказание четвёртого типа данных
-- [`М12_DomainVMS/04-who-may-call-it.md`](../М12_DomainVMS/04-who-may-call-it.md) — токены, гранты, ограниченный отказ, break-glass
+- [`М12A_Domain/where-the-database-lives.md`](../М12A_Domain/where-the-database-lives.md) — семь ревизий, «detail is local, summary is domain» и предсказание четвёртого типа данных
+- [`М12A_Domain/04-who-may-call-it.md`](../М12A_Domain/04-who-may-call-it.md) — токены, гранты, ограниченный отказ, break-glass
 - [`М13_Observability/module-design.md`](../М13_Observability/module-design.md) — `unreachable` как первоклассное состояние; логи локальные, структурированные, без секретов
 - [`М10A_Platform/14-Resource.md`](../М10A_Platform/14-Resource.md) — бакеты, эпоха в пути, принятая потеря открытого бакета
 - [`М10A_Platform/13-EventDatabase.md`](../М10A_Platform/13-EventDatabase.md) — почему событийная база не источник истины
