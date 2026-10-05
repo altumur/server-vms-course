@@ -1,7 +1,7 @@
 """python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs|domainpart —
 the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
 (`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
-the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: ch}`), and so are the
+the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: host}`), and so are the
 resource (`python3 -m w2cplatform resource`: what a keep holds is the spec's `holds:`) and the console (`python3 -m
 w2cplatform console`, `CONSOLE_ROOT=vms`: the specs' rows, tables, requests and doors). What is left of the VMS's own
 beside its workers is its housekeeping, `jobs`: the requests turned into work and the work into closed rows.

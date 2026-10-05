@@ -86,7 +86,8 @@ class VmsController(SpecController):
         super().__init__(SPEC, vars_, objects, capacity, wall, cluster)
 
     # No `group_value` of its own any more (the boundary's step 6): what a device is, for placement, is the spec's
-    # `group_by: {field: source, cut_at: ch}` — the source in its one spelling up to `/ch/`, read by the platform.
+    # `group_by: {field: source, cut_at: host, schemes: …}` — the host the source names, in one spelling, read by the
+    # platform (`SubsystemSpec.group_of`).
 
     # the VMS's word is "camera"
     create_camera = SpecController.create

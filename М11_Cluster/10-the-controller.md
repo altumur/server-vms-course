@@ -153,7 +153,7 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
 Контроллер на `srv-a` получает `409` — хранилище говорит словами, что строка уже есть и какая у неё версия, — читает строку размещения снова и находит, что воркер уже назван. Его функция изменения возвращает `None`: «менять нечего», и `Controller.write` ничего не пишет (урок 2). Он **принимает** решение соседа. В трассе после `409` нет ни одной записи:
 
 ```
-# … and 67 GET requests, omitted
+# … and 59 GET requests, omitted
 # where(1) = w-srv-a-1; placement reason: 'most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live'
 ```
 
