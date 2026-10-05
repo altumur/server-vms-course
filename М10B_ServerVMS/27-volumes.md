@@ -1,7 +1,7 @@
 # Урок 27 — Тома: local, network, edge, backup, incidents
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `vms/volumes.py` целиком — пять видов тома, `on_a_box` и `any_box`, `refuse`, `write`, `servable`, `suggest`, `served`, `admit_recording` и `rank_near_recording`; в `vms/recworker.py` — то, что регистратор делает с томом: `volume_pass`, `_write_into`, `_place_kind`, `leave_volume`, `after_stop` и ветку томов в `lease_pass`; в `vms/archive.py` — `volume_params`.
+**Вы напишете:** таблицу `volumes` в `rec.subsystem.yaml` со схемой строки и объявления размещения, которые её читают (`placement.places`, `affinity`); `vms/volumes.py` — пять видов тома, `on_a_box` и `any_box`, `write` (по правилам той же таблицы), `servable`, `suggest`, `served`, `backups` и `incidents`; в `vms/recworker.py` — то, что регистратор делает с томом: `volume_pass`, `_write_into`, `_place_kind`, `leave_volume` (и `leave_place`, которым его зовёт платформа), `after_stop`; в `vms/archive.py` — `volume_params`. Захват места, строгая аренда места и возврат места за именем — платформенные (М10A, урок 7, шаг 11; ADR 0029): здесь — что они значат для тома.
 **Время:** ~90 минут.
 
 ## Зачем этот урок
@@ -14,22 +14,22 @@
 |---|---|
 | где том: на одном сервере или по адресу | `server` в строке, `on_a_box` / `any_box` |
 | кто может его обслуживать | `servable` |
-| что делать, когда хранилище конфигурации молчит | `lease_pass` |
-| что можно на него поставить | `admit_recording` |
+| что делать, когда хранилище конфигурации молчит | `placement.places: {…, lease: strict}` и `server` строки — исполняет платформа |
+| что можно на него поставить | `affinity` в `placement` спеки `rec` |
 | как читать отказ при открытии | `_write_into` |
 
-Остальное у видов общее: строка-заявление, захват по CAS, квота как размер кольца, открытие через `obsd`. Кроме одного вида: `edge`, карта камеры, — место, но не том движка. Её открывает и пишет регистратор самой камеры, обычными файлами, а квота у неё — бюджет карты (урок 26, шаг 10; как в продукте).
+Остальное у видов общее: строка-заявление, захват по CAS (механизм мест платформы), квота как размер кольца, открытие через `obsd`. Кроме одного вида: `edge`, карта камеры, — место, но не том движка. Её открывает и пишет регистратор самой камеры, обычными файлами, а квота у неё — бюджет карты (урок 26, шаг 10; как в продукте).
 
-> **Проверка без железа.** Всё в этом уроке идёт против настоящего `obsd`. Набор тестов поднимает демон сам (`tests/conftest.py`, `ObsdDaemon`), а без бинарника тест падает с подсказкой: собрать `ObjectStorage/standalone-build/build.sh` и указать `OBSD_BIN`. GStreamer не нужен: кадры пишет `FakeActuator`. Чего тесты не покрывают: настоящий S3. Сетевой том в них — каталог, «который `obsd` открывает как бакет» (`_net` в `tests/test_volumes.py`).
+> **Проверка без железа.** Всё в этом уроке идёт против настоящего `obsd`. Набор тестов поднимает демон сам (`tests/vmsconftest.py`, `ObsdDaemon`), а без бинарника тест падает с подсказкой: собрать `ObjectStorage/standalone-build/build.sh` и указать `OBSD_BIN`. GStreamer не нужен: кадры пишет `FakeActuator`. Чего тесты не покрывают: настоящий S3. Сетевой том в них — каталог, «который `obsd` открывает как бакет» (`_net` в `tests/test_volumes.py`).
 
 ## Что нужно знать заранее
 
-- **Уроки 6–8** — движок: том, блок, последовательность, поток; читатель видит только закрытые блоки; кольцо.
-- **Урок 10** — регистратор, `place_by: volume`, `home` как предпочтение.
-- **Урок 26** — резервная запись, `when: offline`, дверь архива.
-- **М10A, урок 7** — слот и захват места (`claim_hold`, `renew_hold`, `release_hold`).
-- **М10A, урок 11** — фильтры размещения и именованные двери `register_admit`, `register_near_rank`.
-- **М10A, урок 18** — секреты: суффикс `_secret` и запечатывание.
+- **Уроки [6](06-objectstorage-the-engine.md)–[8](08-visibility-retention-timeline.md)** — движок: том, блок, последовательность, поток; читатель видит только закрытые блоки; кольцо.
+- **[Урок 10](10-recworker.md)** — регистратор, `place_by: volume`, `home` как предпочтение.
+- **[Урок 26](26-a-backup-archive-of-our-own.md)** — резервная запись, `when: offline`, дверь архива.
+- **[М10A, урок 7](../М10A_Platform/07-Slot-and-Runtime.md)**, шаг 11 — место и его захват (`claim_hold`, `renew_hold`, `release_hold`), строгая аренда и возврат за именем; решение о месте сквозь молчание — ADR 0029.
+- **[М10A, урок 11](../М10A_Platform/11-SpecController-placement.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
+- **[М10A, урок 18](../М10A_Platform/18-Secrets.md)** — секреты: поле-секрет, `bound_to` и запечатывание; правило адресов.
 
 ## Чему вы научитесь
 
@@ -49,7 +49,7 @@
 SUB = "rec"
 TABLE = "volumes"
 KINDS = ("local", "network", "backup", "edge", "incidents")
-FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled")
+FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled", "shrink_confirmed", "cam")
 ```
 
 Том — это две записи, и держать их врозь и есть решение:
@@ -59,11 +59,18 @@ rec/volumes/<имя>    ЗАЯВЛЕНИЕ: kind, url, server, quota_bytes, acce
 rec/holds/<имя>      ФАКТ: кто пишет туда сейчас                                                      ← пишет регистратор
 ```
 
-Строку пишут на консоли. Кто именно обслуживает том в эту секунду — факт о кластере, и консоль его знать не может. Поэтому факт — отдельная запись того же вида, что слот воркера: держатель, срок, флаг «отпущен», поколение, CAS (М10A, урок 7). Заголовок `volumes.py` говорит так:
+Строку пишут на консоли. Кто именно обслуживает том в эту секунду — факт о кластере, и консоль его знать не может. Поэтому факт — отдельная запись того же вида, что слот воркера: держатель, срок, флаг «отпущен», поколение, CAS. Это механизм мест платформы (М10A, урок 7, шаг 11), и спека `rec` называет ему таблицу мест одной строкой:
+
+```yaml
+  # what a recorder holds, one each; a volume any box may serve is let go when its hold goes unconfirmed (`lease`)
+  places:     {table: volumes, where: {enabled: true}, server_field: server, lease: strict}
+```
+
+`table` — какие строки места, `where` — какие из них предлагать (выключенный том — ничей), `server_field` — какое поле строки говорит, на каком сервере место (пусто — по адресу), `lease: strict` — что делать с местом сквозь молчание (шаг 8). Заголовок `volumes.py` говорит так:
 
 > *Nobody assigns, nobody starts a process: the controller places recordings on the places that exist, and a place exists because somebody is holding it.*
 
-Отсюда первое следствие для оператора. Удалить строку — не удалить видео. Консоль отвечает на `DELETE /volumes/<имя>` словами *the footage already written is untouched*, а регистратор, державший том, на следующем проходе останавливает записи этого тома и берёт другой (`test_volumes.py::test_the_console_declares_a_volume_and_says_who_serves_it`).
+Отсюда первое следствие для оператора. Удалить строку — не удалить видео. Консоль на `DELETE /rec/volumes/<имя>` удаляет строку и только её (`{"deleted": "<имя>"}`), а регистратор, державший том, на следующем проходе останавливает записи этого тома, отпускает захват (`released`) и берёт другой (`test_volumes.py::test_the_console_declares_a_volume_and_says_who_holds_it`, `test_a_withdrawn_volume_stops_the_recordings_and_leaves_the_process_running`).
 
 То же у записи, одним этажом ниже: удалённая строка `rec/recordings/<имя>` оставляет в томах поток `<имя>/e<n>`, и читатели находят его по имени. Поэтому имя удалённой записи возвращается только её камере: надгробие хранит `cam`, и запись другой камеры под тем же именем консоль не создаёт (пятое ревью: пересозданная «1-cloud» камеры 2 отдавала кадры камеры 1; [`СКОЛЬКО-ЗАПИСЕЙ-У-КАМЕРЫ.md`](СКОЛЬКО-ЗАПИСЕЙ-У-КАМЕРЫ.md), тест `test_console_gate.py::test_a_deleted_recordings_name_comes_back_only_for_its_own_camera`).
 
@@ -82,38 +89,35 @@ def any_box(v: "Volume") -> bool:
 
 **`local`** — диск. Писать на него может только регистратор на его сервере, поэтому `server` обязателен.
 
-**`edge`** — карта в камере, которая сама работает на платформе. Камера и есть сервер, поэтому `server` тоже обязателен. Это единственный вид, который не открывается движком. На камере около 32 МБ памяти, движку нужно 20–25 МБ на писателя (обратная связь CB, DG; записка продукта о прошивке, §12 и §14), и продукт сделал карту буфером: каталог с файлами сегментов и бюджетом в байтах. Пишет его только регистратор камеры (`vms/card.py`, `CardRecorder`); регистратор движка карту не берёт, даже на той же коробке. Поэтому `url` карты — каталог на камере, без ключа: адрес или ключ `refuse` не примет. Движок на камере — NAS или мини-диск — был бы томом `local` или `network`, а не `edge`.
+**`edge`** — карта в камере, которая сама работает на платформе. Камера и есть сервер, поэтому `server` тоже обязателен. Это единственный вид, который не открывается движком. На камере около 32 МБ памяти, движку нужно 20–25 МБ на писателя (обратная связь CB, DG; записка продукта о прошивке, §12 и §14), и продукт сделал карту буфером: каталог с файлами сегментов и бюджетом в байтах. Пишет его только регистратор камеры (`vms/card.py`, `CardRecorder`); регистратор движка карту не берёт, даже на той же коробке. Поэтому `url` карты — каталог на камере, без ключа: адрес или ключ схема таблицы не примет. Движок на камере — NAS или мини-диск — был бы томом `local` или `network`, а не `edge`.
 
-**И карта называет свою камеру.** `server` у карты — коробка, на которой работает её регистратор, и он ничего не говорит о том, чьи кадры на неё ложатся. Регистратор карты пишет кольцо своей камеры в любую запись, которую ему дали, и запись камеры 1 с `home` на карте камеры 2 получала кадры камеры 2 из бюджета камеры 2 (шестое ревью, major). Теперь у `edge` обязательное поле `cam` — id камеры в `vms/cameras` этого кластера (`Volume.cam`; `declare_card(..., cam=…)`), а у остальных видов `refuse` его не принимает: диск и бакет — ничьи. Карту, на которой уже стоят записи, нельзя объявить заново картой другой камеры: `write` отвечает, какую запись сначала перенести. Что из этого следует для записей — запись ложится на карту, только если она этой камеры, и права спрашиваются на обе камеры, — урок 26, шаг 6. Тест: `test_console_gate.py::test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_camera_and_only_its_own`.
+**И карта называет свою камеру.** `server` у карты — коробка, на которой работает её регистратор, и он ничего не говорит о том, чьи кадры на неё ложатся. Регистратор карты пишет кольцо своей камеры в любую запись, которую ему дали, и запись камеры 1 с `home` на карте камеры 2 получала кадры камеры 2 из бюджета камеры 2 (шестое ревью, major). Теперь у `edge` обязательное поле `cam` — id камеры в `vms/cameras` этого кластера (`Volume.cam`; `declare_card(..., cam=…)`), а у остальных видов схема его не принимает: диск и бакет — ничьи. Карту, на которой уже стоят записи, нельзя объявить заново картой другой камеры: `write` отвечает, какую запись сначала перенести. Что из этого следует для записей — запись ложится на карту, только если она этой камеры (`must_match` у `home`), — урок 26, шаг 6. Тест: `test_console_gate.py::test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_camera_and_only_its_own`.
 
-**`network`** — адрес. Дотянуться может любая коробка, поэтому `server` запрещён: `refuse` отвечает *a network volume is served by whichever box takes it — leave `server` empty*.
+**`network`** — адрес. Дотянуться может любая коробка, поэтому `server` запрещён.
 
 **`backup`** и **`incidents`** — то или другое. С сервером это диск того сервера. Без сервера это адрес, как сетевой том. Комментарий объясняет, почему резервному тому это позволено: второе хранилище где-то ещё так же независимо от сервера основной записи, как второй диск.
 
-Правила формы — в `refuse`, единственной двери, через которую строка попадает в хранилище:
+Правила формы — схема таблицы `volumes` в `rec.subsystem.yaml`. Её проверяет платформа у двери, для любого писателя: консоль (`POST /rec/volumes`, `tables.write_row`) и код VMS, который объявляет том сам (`volumes.write` — камера объявляет свою карту, `card.py`), идут через одну функцию:
 
-```python
-    if kind == "local" and not str(fields.get("server", "")):
-        raise Refused("a local volume is a disk on one server: name it")
-    if kind == "edge" and not str(fields.get("server", "")):
-        raise Refused("an edge volume is the card in one camera: name it")
-    # …and names the camera too — `cam`, its id among this cluster's cameras; `server` is the box the card's recorder
-    # runs on, which says nothing of whose frames it writes (the review's sixth pass, major: a recording of camera 1
-    # homed on camera 2's card was written from camera 2's ring). No other kind is a camera's.
-    if kind == "edge" and not str(fields.get("cam", "") or ""):
-        raise Refused("an edge volume is the card in one camera: say which — `cam`, the camera's id here; only that "
-                      "camera's recordings are homed on it")
-    if kind != "edge" and str(fields.get("cam", "") or ""):
-        raise Refused(f"`cam` is an edge volume's — the camera whose card it is; a {kind} volume is no camera's")
-    # A card is a directory on the camera, written by the camera's recorder without an engine (`vms/card.py`): an
-    # address — a bucket, a share — or a key to one is something no card reader can open.
-    if kind == "edge" and ("://" in str(fields.get("url", "")).replace("file://", "", 1)
-                           or fields.get("access_secret") or fields.get("access_key")):
-        raise Refused("an edge volume is the card in a camera — a directory on it, with no key: an address is a "
-                      "local or network volume")
-    if kind == "network" and str(fields.get("server", "")):
-        raise Refused("a network volume is served by whichever box takes it — leave `server` empty")
+```yaml
+    schema:
+      allOf:
+        - if: {properties: {kind: {const: local}}}
+          then: {required: [server]}                 # a disk on one server: name it
+        - if: {properties: {kind: {const: network}}}
+          then: {not: {required: [server]}}          # served by whichever box takes it
+        - if: {properties: {kind: {const: incidents}}}
+          then: {properties: {admits: {const: false}}, required: [admits]}
+        - if: {properties: {kind: {const: edge}}}
+          # the card in one camera — a directory on it, with no key: an address is a local or network volume
+          then:
+            required: [server, cam]
+            properties: {url: {not: {pattern: "^(?!file://)[A-Za-z][A-Za-z0-9+.-]*://"}}}
+            allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
+          else: {not: {required: [cam]}}             # `cam` is a card's: a disk or a bucket is no camera's
 ```
+
+Отказ говорит словами схемы, где и что не так: локальный том без сервера — 400 «volumes needs 'server'», карта без камеры — «needs 'cam'» (`test_volumes.py::test_the_console_declares_a_volume_and_says_who_holds_it`, `test_console_gate.py::test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_camera_and_only_its_own`).
 
 Кто что может взять, считает `servable`:
 
@@ -142,12 +146,12 @@ def servable(vols: list[Volume], server: str) -> list[str]:
         self.volume_wait = ""                        # pinned, and waiting for the hold: why (`_wait_for_pin`)
         self.default_volume = str(self.server or "default")
         beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
-        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
+        self.default_url = env.get("ARCHIVE_VOLUME") or (f"file://{beside}" if resource_root else OWN_VOLUME)
+        …
         self.default_quota = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
-        # 0: sized at its first FORMAT by the disk the DAEMON writes to (`_share_of_space`, `VOLUME_SPACE`)
 ```
 
-Имя тома — имя сервера, путь — `ARCHIVE_VOLUME`, а без него `volume` рядом с деревом событий ресурса. На коробке точка входа задаёт `/data/vms/obsd/volume` (`config.OWN_VOLUME`): движок архива — VMS, и его тома — у VMS, а не возле архива событий платформы. Не внутри дерева, потому что внутри обходы ресурса приняли бы кольцо за подсистему и посчитали бы его блоки занятым местом дерева. Комментарий называет, зачем том вообще такой: это то, что значила любая коробка с одним диском до появления строк, — одно место, `home: srv-a` остаётся верным, а `place_by: volume` ведёт себя в точности как `place_by: server`.
+Имя тома — имя сервера, путь — `ARCHIVE_VOLUME`, а без него `volume` рядом с деревом событий, которое дали регистратору, или `config.OWN_VOLUME` — `/data/vms/obsd/volume`: движок архива — VMS, и его тома — у VMS, а не возле архива событий платформы. Не внутри дерева, потому что внутри обходы ресурса приняли бы кольцо за подсистему и посчитали бы его блоки занятым местом дерева. Комментарий называет, зачем том вообще такой: это то, что значила любая коробка с одним диском до появления строк, — одно место, `home: srv-a` остаётся верным, а `place_by: volume` ведёт себя в точности как `place_by: server`.
 
 Размер — `ARCHIVE_QUOTA_BYTES`, а без неё четыре пятых свободного места, но не больше, чем держит диск под нижней отметкой ватерлинии:
 
@@ -159,12 +163,15 @@ def servable(vols: list[Volume], server: str) -> list[str]:
     # answers `free` any more. At least a gigabyte, whatever the arithmetic says. Asked once, when it is first
     # formatted; a volume that exists keeps the size it has.
     @staticmethod
-    def _share_of_space(space: dict, low: float = 0.75) -> int:   # (was `_share_of_free(root)`: the container's disk, not the daemon's — урок 10)
-        ...
-        return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
+    def _share_of_space(space: dict, low: float = 0.75) -> int:
+        free, total = int(space.get("available") or 0), int(space.get("capacity") or 0)
+        if not total:
+            return 0
+        used = total - int(space.get("free") or free)
+        return max(1 << 30, min(int(free * 0.8), free - (2 << 30), int(total * low) - used))
 ```
 
-Спрашивается это **один раз**, при форматировании. Существующий том хранит свой размер, и перезапуск регистратора на заполненном диске не сожмёт кольцо.
+`space` — что о своём диске говорит демон, который в том пишет (`VOLUME_SPACE`), а не диск контейнера регистратора (урок 10). Спрашивается это **один раз**, при форматировании. Существующий том хранит свой размер, и перезапуск регистратора на заполненном диске не сожмёт кольцо.
 
 Третий путь — `$VOLUME` в юните: том прибит к этому экземпляру. Так говорят про диск, который знает юнит-файл. Прибитый к диску регистратор захвата не берёт и не отдаёт. Но если его том не открывается (`wrong`), он сообщает нулевую ёмкость, как и незакреплённый со сломанным томом (шаг 9):
 
@@ -178,57 +185,51 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 
 **Прибитый к сетевому тому — под тем же холдом, что все** (седьмое ревью, блокер 2). Прибитый регистратор не брал захвата и у сетевого тома: свободный регистратор другой коробки видел том незанятым, брал его и монтировал, писатель прибитого останавливал движок, а записи пропадали молча; второй экземпляр с тем же `$VOLUME` монтировал том через секунду. Теперь `$VOLUME` выбирает, **какой** том писать, а писать ли — решает захват: сетевой том прибитый регистратор берёт тем же путём, что незакреплённый (шаг 6), только кандидат у него один, и на собственный диск сервера он не уходит. Пока захват у другого, он сообщает `volume: ""`, нулевую ёмкость и причину в `volume_wait` (на `/metrics` — `rec_volume_wait{worker} 1`, восьмое ревью): *net is being written by r-2: this recorder is pinned to it and starts writing it once r-2 lets it go or stops* (урок 10, шаг 3).
 
-**Страница томов называет ждущего** (восьмое ревью, часть 2, minor). Причина была только в heartbeat'е, а на странице `GET /volumes` такой регистратор выглядел запасным без ёмкости: администратор видел свободную машину там, где машина ждала конкретный том. Теперь консоль собирает из живых heartbeat'ов (не старше 45 с) тех, у кого непусто `volume_wait`. Ответ несёт их списком `waiting` — `{"recorder", "why"}`, — а у тома, которого они ждут, стоит `waiting: [<регистратор>]`. Том узнаётся по началу причины: она начинается с имени тома. Тест: `test_keeps.py::test_a_garbled_keep_is_shown_as_it_holds_and_a_recorder_waiting_for_its_volume_is_on_the_volumes_page`.
+**Страница томов показывает, кто держит том.** Таблицу томов отдаёт консоль платформы общим маршрутом таблиц (`GET /rec/volumes`), и раз эта таблица — места размещения, к каждой строке она дописывает, кто держит место сейчас (`held_by`, из захватов). Страница VMS говорит по тому «Обслуживается: <держатель>» или «Никто не обслуживает», а выключенный — «Выключен». Почему ждёт прибитый регистратор, говорит его heartbeat (`volume_wait`) и `/metrics` (`rec_volume_wait`).
 
 Тесты: `test_volumes.py::test_nothing_declared_is_the_box_as_it_always_was` и `test_rec_volume.py::test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it` — регистратор форматирует том сервера рядом с деревом ресурса (`file://<корень коробки>/volume`) и пишет в него поток `1/e<эпоха>`.
 
 ### Предложение консоли
 
-Первый том оператор не должен набирать руками. Коробка уже говорит, куда пишет и какого размера её том: `archive` и `archive_quota` в heartbeat'е регистратора. Консоль это и предлагает:
+Первый том оператор не должен набирать руками. Коробка уже говорит, куда пишет и какого размера её том: `archive` и `archive_quota` в heartbeat'е регистратора. Предложение из этого собирает `volumes.suggest`:
 
 ```python
         # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
         # with the resource's events: declared at the partition's size, the ring would be resized past the room.
-        total = int(hb.extra.get("archive_quota") or ((res.get(server) or {}).get("space") or {}).get("total", 0))
+        # Through `rows.number` (the review's seventh pass): a word in one recorder's `archive_quota` raised out of the
+        # whole page of volumes. Not said, the partition's size; neither said, 0, as before.
+        total = number(f"{sub.heartbeat_key(name)}#archive_quota", hb.extra.get("archive_quota") or None, int, None) or \
+            space_total(res, server)                     # the platform's reading of its resource (the boundary's step 5)
         out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
                        "why": "this box records here and the disk is not declared as a volume"}
 ```
 
 Размер раздела из heartbeat'а ресурса остался запасным ответом — для регистратора, который своего размера не сказал. Предложить весь раздел было бы ошибкой: объявление поменяло бы размер кольца, и оно выросло бы за место, которое делит с деревом событий.
 
-**Предложение, а не строка.** Комментарий над `suggest`: *nothing here writes configuration on a process's behalf.* Оператор нажимает кнопку, и с этой минуты диск — том с числом. Число можно уменьшить, а остаток отдать второму тому.
+**Предложение, а не строка.** Комментарий над `suggest`: *nothing here writes configuration on a process's behalf.* Оператор объявляет том, и с этой минуты диск — том с числом. Число можно уменьшить, а остаток отдать второму тому. Показать предложение — дело страницы, а не консоли платформы: её `/rec/volumes` — общий маршрут таблицы. Страница VMS сейчас его не показывает, и `suggest` зовут только тесты (`test_camera_card.py`: камере объявлять нечего).
 
-И главное свойство: **объявление ничего не двигает**. Имя предложения — имя сервера, то есть то же, под которым регистратор уже пишет. Тот же владелец писателя — `rec:<имя>`. Регистратор берёт объявленную строку и продолжает писать туда же, тем же открытым томом:
-
-```python
-    first = r.store
-    assert r.volume_pass() == "srv-a" and r.hold == "srv-a" and r.store is first and first.url == own
-```
-
-Тест — `test_volumes.py::test_the_console_offers_the_disk_this_box_already_records_into`. Он же объявляет рядом второй том `cold` на том же диске.
+И главное свойство: **объявление ничего не двигает**. Имя предложения — имя сервера, то есть то же, под которым регистратор уже пишет. Тот же владелец писателя — `rec:<имя>`. Регистратор берёт объявленную строку и продолжает писать туда же, тем же открытым томом: том по этому адресу у него уже открыт, и `volume_pass` его не перемонтирует.
 
 ## Шаг 4 — Квота — размер кольца
 
-```python
-    for f in ("quota_bytes", "shrink_confirmed"):
-        try:
-            int(fields.get(f, 0) or 0)
-        except (ValueError, TypeError):
-            raise Refused(f"`{f}` is a whole number of bytes, not {fields.get(f)!r}") from None
-    if int(fields.get("quota_bytes", 0) or 0) <= 0:
-        raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
-                      "(the console offers the size the box's own volume already has)")
+```yaml
+      # its SIZE: the ring the engine formats it as — what lets one partition hold two volumes
+      quota_bytes:      {type: int, required: true, schema: {minimum: 1}}
+      …
+      shrink_confirmed: {type: int, default: 0, schema: {minimum: 0}}
 ```
 
-**Число проверяется как число, у двери.** `"1e12"` или `"64M"` бросали из этой проверки голый `ValueError`: строка не писалась, но консоль отвечала ошибкой, а не отказом; `shrink_confirmed` не проверялся вовсе и падал по дороге к строке (седьмое ревью). Теперь оба поля — целое число байт, иначе `Refused` со словами *is a whole number of bytes*. Тест: `test_row_reader.py::test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_page` (его последняя часть).
+**Число проверяется как число, у двери.** `"1e12"` или `"64M"` бросали из проверки голый `ValueError`: строка не писалась, но консоль отвечала ошибкой, а не отказом; `shrink_confirmed` не проверялся вовсе (седьмое ревью). Теперь оба поля — `int` таблицы, и платформа отвечает 400 словами схемы; том без квоты — 400 с именем поля (`test_volumes.py::test_the_console_declares_a_volume_and_says_who_holds_it`). Строка, записанная мимо двери, со словом вместо числа — шаг 12.
 
 Квота нужна **каждому** объявленному тому, локальному тоже. Причина — в том, что такое том для движка. Новый том `obsd` форматирует ровно на этот размер, и дальше он кольцо: заполнился — отдаёт старейшие блоки (урок 7). Без числа форматировать нечем:
 
 ```python
             if not vol.exists():
+                …
                 if not self.quota:
                     raise ArchiveError("wrong", f"{self.name}: no volume there and no quota to format one with")
-                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name)
+                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name,
+                           lock_refresh=self.lock_refresh)
 ```
 
 У сетевого тома спросить свободное место нельзя вообще: `statvfs` у бакета отвечает про машину, а не про бакет. У двух томов на одном разделе свободное место одно на двоих, и каждый счёл бы его своим. Число на каждом — то, что делает их двумя томами, а не двумя именами одного.
@@ -236,12 +237,17 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 Поменять квоту можно на ходу. Регистратор замечает новое число на следующем проходе и меняет размер кольца, не останавливая записи:
 
 ```python
-            if vol.quota_bytes and vol.quota_bytes != self.store.quota:
-                try:
-                    self.store.resize(vol.quota_bytes)   # a new quota is a new size of the ring, without stopping
+        if st is None or not vol.quota_bytes or vol.quota_bytes == st.quota:
+            …
+        if vol.quota_bytes < st.quota and vol.shrink_confirmed != vol.quota_bytes:
+            self.quota_note = (f"{vol.name} is {st.quota} bytes and declared {vol.quota_bytes}: shrinking it erases the "
+                               f"oldest footage, so it is not done until the row says `shrink_confirmed: {vol.quota_bytes}`")
+            …
+        try:
+            st.resize(vol.quota_bytes)           # a new quota is a new size of the ring, without stopping
 ```
 
-`Archive.resize` говорит, что значит уменьшение: *shrinking frees the oldest*. Поэтому консоль пишет уменьшение квоты в журнал — `archive.volume.shrink_requested`, кто, с какого числа на какое и подтверждено ли (М10A, урок 15), — а `archive.volume.shrunk` пишет регистратор, когда движок уменьшение применил. Сначала консоль писала «сжат» в момент просьбы, хотя без `shrink_confirmed` регистратор ничего не сжимал, и страница показывала квоту, а не размер кольца (четвёртое ревью). Теперь `/rec/volumes` и страница показывают **настоящий** размер кольца из heartbeat'а держателя и пометку «не сжат», а в форме есть галочка подтверждения. Отдать тому меньше — значит отдать самые старые минуты, и об этом спросят.
+`Archive.resize` говорит, что значит уменьшение: *shrinking frees the oldest*. Поэтому меньшая квота применяется, только когда строка говорит то же число второй раз — `shrink_confirmed` (`RecWorker._apply_quota`, третье ревью), — а до того регистратор говорит в heartbeat'е, почему кольцо прежнего размера (`quota_note`; на `/metrics` — `rec_volume_shrink_pending`). Строку тома консоль пишет в журнал как любое объявление (`archive.volume.declared`, `tables.volumes.journal` спеки), а `archive.volume.shrunk` — с размером до и после — пишет регистратор, когда движок уменьшение применил. Отдать тому меньше — значит отдать самые старые минуты, и об этом спросят.
 
 Чего квота **не** делает: не удаляет по сроку. Срок записи — `retention_days` — потолок того, что показывают двери (урок 8). Что ещё лежит в томе, решает кольцо.
 
@@ -275,25 +281,23 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     raise ValueError(f"{said}: not an archive this course opens (file://, s3://)")
 ```
 
-Три формы адреса: голый путь, `file://` и `s3://<host>/<region>/<bucket>[/<path>]`. Всё остальное — `ValueError`, а `classify` читает его как `wrong`: адрес, который курс не умеет открыть, сам не починится. **Слова этих отказов говорят адрес так, как его говорит страница** (`hide_in_url`; двенадцатое ревью, major, воспроизведено запуском): строка тома, записанная до правила ниже, — `s3://AKIA:…/x@h/…` — давала `Port could not be cast to integer value as '…'` с секретом внутри, и это шло в `volume_error`, в heartbeat регистратора и в его лог. Теперь там `s3://AKIA:***/…@h/…` и слова `NOT_AN_ADDRESS`, без значения.
+Три формы адреса: голый путь, `file://` и `s3://<host>/<region>/<bucket>[/<path>]`. Всё остальное — `ValueError`, а `classify` читает его как `wrong`: адрес, который курс не умеет открыть, сам не починится. **Слова этих отказов говорят адрес так, как его говорит страница** (`hide_in_url`; двенадцатое ревью, major, воспроизведено запуском): строка тома, записанная до правила ниже, — `s3://AKIA:…/x@h/…` — давала `Port could not be cast to integer value as '…'` с секретом внутри, и это шло в `volume_error`, в heartbeat регистратора и в его лог. Теперь там `s3://AKIA:***@h/…` — логин виден, остальное до `@` скрыто — и слова `NOT_AN_ADDRESS`, без значения.
 
-**Ключ никогда не идёт в адрес.** `url` печатается на странице, уходит в heartbeat регистратора полем `archive` и лежит в строке. Ключ внутри него оказался бы в трёх публичных местах сразу, и правило суффикса `_secret` не помогло бы: поле, которое оно охраняет, — не то, что несёт ключ. Поэтому `refuse` отказывает адресу, который несёт ключ, — по общему правилу адресов `secrets.address_refusal`:
+**Ключ никогда не идёт в адрес.** `url` печатается на странице, уходит в heartbeat регистратора полем `archive` и лежит в строке. Ключ внутри него оказался бы в трёх публичных местах сразу, и правило суффикса `_secret` не помогло бы: поле, которое оно охраняет, — не то, что несёт ключ. Поэтому адрес, который несёт ключ, не принимается у двери — по общему правилу адресов платформы. Поле `url` таблицы — типа `url`, и спека говорит, в каких полях строки лежат учётные данные:
 
-```python
-    from w2cplatform.secrets import address_refusal
-    why = address_refusal(url)
-    if why:
-        raise Refused(f"a volume's url names the archive, never the key to it ({why}): the credentials go in "
-                      f"`access_key` / `access_secret` — this string is printed on the page and published in heartbeats")
+```yaml
+      # the directory it is, or the address it is at — never the key to it: a login or a credential anywhere in it is
+      # refused (the platform's address rule; the twelfth review, blocker 10)
+      url:              {type: url, required: true, credentials: {login: access_key, secret: access_secret}}
 ```
 
-**Каким бы ни был секрет** (двенадцатое ревью, блокер, воспроизведено запуском). Раньше `@` искали только до первого `/`, а секретные ключи AWS часто содержат `/`: `s3://AKIA:…/x@h/bucket` принимался и был виден на `/volumes`; сверка продукта нашла у себя то же — 7 написаний из 7. Теперь адрес тома (строка с `://`) отказывается, если в нём есть:
+**Каким бы ни был секрет** (двенадцатое ревью, блокер, воспроизведено запуском). Раньше `@` искали только до первого `/`, а секретные ключи AWS часто содержат `/`: `s3://AKIA:…/x@h/bucket` принимался и был виден на `/volumes`; сверка продукта нашла у себя то же — 7 написаний из 7. Теперь адрес тома (строка с `://`) отказывается у двери, если в нём есть:
 
 - `@` где угодно после `://` — логин, даже когда `/`, `?` или `#` в секрете увели `@` в путь, запрос или фрагмент;
 - хост или порт, которые `urlsplit` не может прочесть — `KEY:SECRET` вовсе без хоста, или секрет с `?`/`#`, который обрезал хост;
 - пара с именем учётных данных в запросе или в пути (`?X-Amz-Credential=…`, `?secret=…`, `/access_key=…_secret_key=…`; правило и список — М10A, урок 9). Это **и не в параметрах адреса** одиннадцатого ревью: проверка смотрела только на `@`, и `https://s3.example.com/vms?X-Amz-Credential=…` проходил.
 
-Отказ называет, что не так, и никогда не повторяет адрес; параметр без секрета (`?region=eu-1`) проходит, а у локального каталога нет `://`, и его имя — просто имя. **Строка тома, записанная до правила, не видна нигде**: `served` (`GET /volumes`) отдаёт `url` через `hide_in_url`, регистратор — поле `archive` в heartbeat'е и строку «writing into» в логе, карта — свои строки лога и `card.error`. Тесты: `test_volumes.py::test_the_key_never_goes_into_the_address` и `test_volumes.py::test_a_key_in_a_volumes_url_is_refused_whatever_its_characters_and_an_old_row_is_said_nowhere` — 17 написаний ключа (`/`, `+`, `=`, `?`, `#`, без хоста, секрет с цифр, подписанные и именные формы в запросе и пути): было отказано 12 из 17, старых строк скрыто 0 из 17; теперь 17 из 17 и 17 из 17.
+Отказ называет, что не так, и никогда не повторяет адрес (правило — платформы: `secrets.address_refusal`, М10A, урок 18); параметр без секрета (`?region=eu-1`) проходит, а у локального каталога нет `://`, и его имя — просто имя. **Строка тома, записанная до правила, не видна нигде**: `served` (`GET /volumes`) отдаёт `url` через `hide_in_url`, регистратор — поле `archive` в heartbeat'е и строку «writing into» в логе, карта — свои строки лога и `card.error`. Тесты: `test_volumes.py::test_the_key_never_goes_into_the_address` и `test_volumes.py::test_a_key_in_a_volumes_url_is_refused_whatever_its_characters_and_an_old_row_is_said_nowhere` — 17 написаний ключа (`/`, `+`, `=`, `?`, `#`, без хоста, секрет с цифр, подписанные и именные формы в запросе и пути): было отказано 12 из 17, старых строк скрыто 0 из 17; теперь 17 из 17 и 17 из 17.
 
 У ключа бакета две части, и строка тома держит их в двух полях. **Какой** это ключ — `access_key`, идентификатор ключа. Он не секрет, поэтому показывается, как логин камеры:
 
@@ -301,15 +305,14 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     access_key: str = ""          # a bucket's key ID — which key, not the key: shown, like a camera's login
 ```
 
-Сам ключ — `access_secret`, значение среди значений. Консоль кладёт его в хранилище запечатанным, как пароль камеры (`write(..., sealer=…)`, обратная связь CD). Распечатывает его только процесс, который прямо сейчас открывает том, и оба поля доходят до демона параметрами:
+Сам ключ — `access_secret`, значение среди значений. Консоль кладёт его в хранилище запечатанным, как пароль камеры, и держит только для того адреса, для которого его дали (`bound_to: [url]`, ADR 0020; обратная связь CD). Распечатывает его только процесс, который прямо сейчас открывает том, и оба поля доходят до демона параметрами:
 
 ```python
-        secret = self.sealer.open("access_secret", vol.access_secret) if vol.access_secret and self.sealer else vol.access_secret
-        store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
-                        secret=secret, access_key=vol.access_key, ...)
+            secret = open_row(self.sealer, {"access_secret": vol.access_secret}, volumes.key(vol.name))["access_secret"]
+        …
 ```
 
-Раньше идентификатора ключа в строке не было, а `volume_params` искал его в адресе до `@` — там, куда `refuse` его не пускает. Объявленный s3-том доходил до демона без `access_key`. Теперь идентификатор — поле строки, и адрес по-прежнему не несёт ничего, кроме того, где архив.
+Раньше идентификатора ключа в строке не было, а `volume_params` искал его в адресе до `@` — там, куда дверь его не пускает. Объявленный s3-том доходил до демона без `access_key`. Теперь идентификатор — поле строки, и адрес по-прежнему не несёт ничего, кроме того, где архив.
 
 Тесты: `test_volumes.py::test_the_key_never_goes_into_the_address`, `test_a_network_volume_needs_a_quota_and_a_local_one_needs_a_server` — заодно проверяет, что `served` не отдаёт `access_secret` никогда, — и `test_a_bucket_names_its_key_in_a_field_and_its_secret_sealed_never_in_the_address`:
 
@@ -340,26 +343,15 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 ### Том идёт за именем (обратная связь CF), сетевой — только на хосте держателя
 
-Регистратор, убитый `kill -9` и поднятый systemd под тем же именем, — тот же воркер. Слот он забирает сразу (урок 17). Том раньше ждал истечения захвата: 45 секунд без записи на томе, который этот же процесс держал минуту назад. Теперь захват помнит, **чей слот** его держит (`by`), и воркер этого слота забирает его сразу, раньше других кандидатов:
+Регистратор, убитый `kill -9` и поднятый systemd под тем же именем, — тот же воркер. Слот он забирает сразу (урок 17). Том раньше ждал истечения захвата: 45 секунд без записи на томе, который этот же процесс держал минуту назад. Теперь захват помнит, **чей слот** его держит (`by`), и воркер этого слота забирает его сразу, раньше других кандидатов — пока слот и правда у этого экземпляра. Это правило платформы (`Worker.claim_hold`, М10A, урок 7, шаг 11), и решает она его по объявлению места: `placement.places.server_field`.
 
-```python
-            mine = [c for c in candidates if self.name and held[c].by == self.name]
-            slot = read_slot(self.sub.slot_key(self.name), self.name, self.vars.get(self.sub.slot_key(self.name))[0]) if mine else None
-            named = slot is not None and slot.holder == self.instance      # (a slot row that does not parse proves nothing)
-            mine = mine if named else []
-            for cand in mine + [c for c in candidates if c not in mine]:
-                key, now = self.sub.hold_key(cand), self.wall()
-                idx, cur = rows[cand][1], held[cand]
-                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand, cur.holder)
-                if not ours and not self._hold_stale(cand, cur, idx):
-                    continue                                   # somebody live is writing there
-```
+**Место идёт за именем только там, где это безопасно** (`Worker.hold_follows_name`; ADR 0029). Платформа читает строку места:
 
-`named` — условие, без которого правило было бы опасным. Забрать том назад можно, только пока слот и правда у этого экземпляра. Экземпляр, которого systemd заменил, носит то же имя и не должен по дороге отобрать том у преемника. Всем остальным том по-прежнему достаётся после истечения захвата (`test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once`). `held` — строки холдов, прочитанные через `read_hold`: строка, которая не разбирается, — не кандидат и никому не мешает взять другой том (урок 10, шаг 3).
+- место одной коробки (строка называет сервер) — за именем только на этом сервере: диск с другого хоста не запишешь, и демон хоста держит на нём одного писателя;
+- место по адресу (строка не называет сервера) — за именем только на хосте прежнего держателя: `holder` в строке холда — `host:pid:rnd`, тот же хост — тот же демон;
+- спека без `server_field` или строка места, которая сейчас не читается, — ждёт, как чужое, пока место не отпустят или захват не истечёт.
 
-**Сетевой том идёт за именем только на хосте своего держателя.** `hold_follows_name(cand, cur.holder)` — вопрос платформы к подсистеме: идёт ли место за именем, если его держит экземпляр `holder`. Регистратор отвечает «да» для диска — с другого хоста его не запишешь. Для сетевого тома — только когда прежний держатель на этом же хосте. Экземпляр, взявший имя, может оказаться на **другой** коробке, а прежний — замороженным со смонтированным писателем. На двух демонах это воспроизведено (шестое ревью, блокер 2): второй `r-1` брал холд сетевого тома сразу, монтировал через 13 секунд, первый просыпался внутри своего окна записи — и оба писали. Окно записи прежнего держателя отмерено от того, что претендент ждёт `slot_ttl + HOLD_SKEW`, и экземпляр с другого хоста это ожидание не снимает.
-
-Шестое ревью закрыло это ожиданием для всех, и перезапуск на той же коробке стал стоить 50 секунд без записи (седьмое ревью, «Открытое»). На той же коробке ждать не нужно. `holder` в строке холда — `host:pid:rnd`, тот же хост — тот же демон, а демон держит на томе одного писателя: монтирование нового экземпляра получает `ALREADY_LOCKED`, пока писатель старого прицеплен, и подхватывает его (`reattached`), когда тот отцеплен. Экземпляр без хоста в имени (`INSTANCE_ID`, у М11 — `NOMAD_ALLOC_ID`) ждёт. Сразу берётся и холд, отпущенный намеренно (`released`): его писатель закрыт до отпускания. Тесты: `test_rec_volume.py::test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_on_another`, `test_volumes.py::test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go`, `test_rec_volume.py::test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_network_volume_from_a_frozen_one`.
+Для томов это значит: диск идёт за именем слота на своём сервере. Сетевой том — только на хосте своего держателя. Экземпляр, взявший имя, может оказаться на **другой** коробке, а прежний — замороженным со смонтированным писателем. На двух демонах это воспроизведено (шестое ревью, блокер 2): второй `r-1` брал холд сетевого тома сразу, монтировал через 13 секунд, первый просыпался внутри своего окна записи — и оба писали. Окно записи прежнего держателя отмерено от того, что претендент ждёт `slot_ttl + HOLD_SKEW`, и экземпляр с другого хоста это ожидание не снимает. На той же коробке ждать не нужно: демон держит на томе одного писателя, монтирование нового экземпляра получает `ALREADY_LOCKED`, пока писатель старого прицеплен, и подхватывает его (`reattached`), когда тот отцеплен. Сразу берётся и холд, отпущенный намеренно (`released`): его писатель закрыт до отпускания. Тесты: `test_volumes.py::test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once`, `test_rec_volume.py::test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_on_another`, `test_volumes.py::test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go`, `test_rec_volume.py::test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_network_volume_from_a_frozen_one`; правило на нейтральной подсистеме — `test_place_follows.py`.
 
 Писатель идёт за томом тем же способом. Регистратор монтирует том под владельцем `rec:<том>`. Демон держит писателя исчезнувшей сессии *отсоединённым* `OBSD_WRITER_GRACE_S` (в `deploy/obsd.service` — 90 секунд, дольше, чем истекает захват) и отдаёт его тому, кто назовёт того же владельца: `reattached: true`, без ожидания блокировки и без восстановления. Отдаёт — на этом хосте: регистратор другой коробки, взявший сетевой том, писателя первого хоста не получит, и конец отсрочки там закроет его со сбросом. В чужой том этот сброс не попадёт: движок с патчем 07, который курс требует, не даёт писать писателю, чей замок стал чужим, и чужой lock-файл не снимает (урок 6, шаг 12). Тесты: `test_rec_volume.py::test_a_recorder_killed_and_started_again_picks_up_the_writer_it_left` и `test_volumes.py::test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one` — второй заодно проверяет, что перезапущенный регистратор смотрит на объявленные тома **до** того, как откроет что-нибудь своё, и собственный том сервера не форматируется.
 
@@ -393,40 +385,37 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 ## Шаг 8 — Когда хранилище молчит
 
-`volume_pass` читает строки томов и продлевает захват. Хранилище, которое не ответило, бросает исключение, и регистратор из-за этого **ничего не отпускает**. Не прочитать список — не значит «ничего не объявлено». Не прочитать захват — не значит «его держит другой» (обратная связь BK). Сколько так можно, зависит от вида:
+`volume_pass` читает строки томов и продлевает захват. Хранилище, которое не ответило, бросает исключение, и регистратор из-за этого **ничего не отпускает**. Не прочитать список — не значит «ничего не объявлено». Не прочитать захват — не значит «его держит другой» (обратная связь BK). Сколько так можно, решает уже не регистратор, а платформа, по объявлению места `lease: strict` и строке тома (`Worker._strict_place_pass`, `held_strictly`; ADR 0029):
 
 ```python
-    #   a disk of this server     stays this recorder's for as long as the silence lasts. Nobody else can write
-    #                             to it: it is here
-    #   a network archive         any box may serve it, and one that can reach the store will take the hold when
-    #                             it lapses. Two writers in one archive is not a duplicate, it is damage — so
-    #                             when the hold has gone `slot_ttl − margin` unconfirmed, it is let go, and its
-    #                             recordings stop. The one case where silence still stops a recording
-    #
-    # From that moment the fence refuses every sample (`_may_write_volume`; the review's fifth pass, blocker 1), and the
-    # writer is still closed — its flush is the last minutes — while nobody else may have taken the hold: until
-    # `slot_ttl + HOLD_SKEW`, what a claimant waits (`_may_close_volume`). A pass that comes later than that — the box
-    # was frozen — gives the writer up instead (`_close_store`).
+    # A FENCE IS WEAKENED ONLY ON EVIDENCE THAT THE PLACE IS OURS (ADR 0012; the architect after the product's base worker,
+    # ADR 0029). A place goes through a silence by the units' ceiling only where its row names THIS worker's server: that
+    # server's daemon keeps one writer there. Every other place is strict — one any box may write, ANOTHER server's (its
+    # row names it: someone else's place, never written into through a silence), one whose row could not be read, a spec
+    # with no `server_field`, and every place of a worker that names no server of its own (`server_unsaid` says so in its
+    # heartbeat). …
+    def held_strictly(self, place: str, row: dict | None = None) -> bool:
+        places = self.spec.places
+        if places.get("lease") != "strict":
+            return False
+        field = places.get("server_field")
+        if not field or not self.server:
+            return True
+        where = str(row.get(field) or "") if row is not None else self._place_where.get(place, "")
+        return where != self.server
 ```
 
-```python
-            except OSError as e:
-                self.store_errors += 1
-                quiet = self.clock() - self._hold_confirmed
-                if self.hold is not None and self.hold in self._shared and quiet >= self.slot_ttl - self.lease_margin:
-                    self.leave_volume(f"the hold on network archive {self.hold} has not been confirmed for {quiet:.0f} s "
-                                      f"(the store does not answer: {e})")
-```
+Строгое место пишется, только пока его захват подтверждён моложе `slot_ttl − lease_margin`, и отпускается, когда это не так: шаг аренд спрашивает захват ещё раз и, если хранилище не подтвердило, зовёт `leave_place` — у регистратора это `leave_volume` (шаг 7). Нестрогое — диск сервера этого регистратора — держится сквозь молчание по потолку единиц: у `rec` это `lease: {unconfirmed_max: forever}`, сколько бы молчание ни длилось. Ветка `except OSError` в шаге аренд регистратора сама больше ничего не отпускает: она считает ошибку, пишет в лог и монтирует том заново по строкам, прочитанным последними (`_remount_by_last`), если движок потерян.
 
-**Диск остаётся.** Взять его не может никто, кроме регистратора этого сервера. Молчание хранилища здесь ничего не меняет, и запись продолжается.
+**Свой диск остаётся.** Взять его не может никто, кроме регистратора этого сервера. Молчание хранилища здесь ничего не меняет, и запись продолжается. «Свой» — значит строка тома называет сервер этого регистратора (`SERVER_NAME`). Диск **другого** сервера и любой том регистратора, который своего сервера не назвал, строгие: отпускаются после окна, как адрес. Регистратор без сервера говорит это в heartbeat'е (`server_unsaid`) и один раз в логе, когда берёт том.
 
-**Адрес отпускается.** Захват истечёт через `slot_ttl`, и коробка, которая хранилище видит, возьмёт том. Регистратор, который хранилища не видит, не может узнать, что это случилось. Поэтому он уходит сам, раньше: за `lease_margin` до истечения (45 − 5 = 40 секунд по умолчанию). Два писателя кадров под разными эпохами дают перекрытие, которое таймлайн разбирает. Два писателя в одном томе на двух хостах — порча, и демон одного хоста не видит писателя другого.
+**Адрес отпускается.** Захват истечёт через `slot_ttl`, и коробка, которая хранилище видит, возьмёт том. Регистратор, который хранилища не видит, не может узнать, что это случилось. Поэтому он уходит сам, раньше: за `lease_margin` до истечения (45 − 5 = 40 секунд по умолчанию). Проход, который пришёл позже, а хранилище при этом **отвечает**, продлевает захват ещё раз — CAS на собственной строке: никто не взял её тем временем — и том остаётся. Два писателя кадров под разными эпохами дают перекрытие, которое таймлайн разбирает. Два писателя в одном томе на двух хостах — порча, и демон одного хоста не видит писателя другого.
 
-**Отпустить — ещё не значит перестать писать.** Пока отпускание ждало прохода, конвейеры писали: холд проверялся только перед монтированием, и коробка, замороженная целиком, просыпалась с писателем, который клал кадры в чужое кольцо, а её проход закрывал его со сбросом и удалял чужой lock-файл (пятое ревью, блокер 1; урок 10, шаг 11). Теперь холд проверяется перед каждым кадром: с `slot_ttl − margin` без подтверждения в том не уходит ничего, прошёл проход или нет. Закрывается писатель, только пока холд подтверждён моложе `slot_ttl + HOLD_SKEW`, — раньше этого срока никто другой том не возьмёт. Проход, пришедший позже (коробка спала), писателя не закрывает, а бросает (`WRITER_ABANDON`): ни одной записи больше, а взятое и не записанное — тревога `archive.footage.dropped` с секундами. Проверка холда — не ограда: один кадр замороженного процесса она пропустит. Ограждает том движок с патчем 07 — писатель, чей замок стал чужим, не пишет ничего, кто бы его ни закрывал, — и другого движка курс не поддерживает (урок 10, шаги 3 и 11). Тест: `test_rec_volume.py::test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there`.
+**Отпустить — ещё не значит перестать писать.** Пока отпускание ждало прохода, конвейеры писали: холд проверялся только перед монтированием, и коробка, замороженная целиком, просыпалась с писателем, который клал кадры в чужое кольцо, а её проход закрывал его со сбросом и удалял чужой lock-файл (пятое ревью, блокер 1; урок 10, шаг 11). Теперь холд проверяется перед каждым кадром (`_may_write_volume` над платформенным `may_write_place`): с `slot_ttl − margin` без подтверждения в том не уходит ничего, прошёл проход или нет. Закрывается писатель, только пока холд подтверждён моложе `slot_ttl + HOLD_SKEW` (`_may_close_volume` над `may_close_place`), — раньше этого срока никто другой том не возьмёт. Проход, пришедший позже (коробка спала), писателя не закрывает, а бросает (`WRITER_ABANDON`): ни одной записи больше, а взятое и не записанное — тревога `archive.footage.dropped` с секундами. Проверка холда — не ограда: один кадр замороженного процесса она пропустит. Ограждает том движок с патчем 07 — писатель, чей замок стал чужим, не пишет ничего, кто бы его ни закрывал, — и другого движка курс не поддерживает (урок 10, шаги 3 и 11). Тест: `test_rec_volume.py::test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there`.
 
-`self._shared` — какие тома адресные, по последнему удачному чтению. Спросить в момент молчания уже не у кого. В множество попадает всё, что `any_box`: сетевой том, резервный и происшествий без сервера.
+Где лежит место, в молчании спросить уже не у кого. Платформа помнит его по строке, прочитанной при взятии и при каждом удачном продлении (`Worker._place_where`): администратор, отдавший том другому серверу посреди захвата, делает его строгим со следующего продления, а неудавшееся чтение ничего не меняет и ничего не ослабляет.
 
-Тест: `test_store_outage.py::test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go` — одна ошибка хранилища ничего не отпускает; через 72 секунды молчания локальный том при регистраторе, сетевой отпущен.
+Тест: `test_holders_through_a_silent_store.py::test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go` — одна ошибка хранилища ничего не отпускает; через 72 секунды молчания локальный том своего сервера при регистраторе, сетевой отпущен. Строгая аренда на нейтральной подсистеме — `test_strict_place.py`.
 
 ## Шаг 9 — Когда том не открывается: неверно, недоступно, занято
 
@@ -542,25 +531,15 @@ def backups(vars_) -> set[str]:
     return {v.name for v in declared(vars_) if v.kind in STANDBY and v.enabled}
 ```
 
-Везде `home` — предпочтение: дом лёг, запись пишется на соседнем томе и вернётся сама. Для резервного тома предпочтение неверно в обе стороны. Основная запись, переехавшая на резервный том, пока её сервер перезагружается, оставляет одну копию там, где оператор платил за две, а на карте камеры ещё и съедает её канал. Резервная, уехавшая с резервного тома, — уже не копия. Поэтому для `rec` это фильтр:
+Везде `home` — предпочтение: дом лёг, запись пишется на соседнем томе и вернётся сама. Для резервного тома предпочтение неверно в обе стороны. Основная запись, переехавшая на резервный том, пока её сервер перезагружается, оставляет одну копию там, где оператор платил за две, а на карте камеры ещё и съедает её канал. Резервная, уехавшая с резервного тома, — уже не копия. Поэтому для `rec` это фильтр, и спека его объявляет (урок 26, шаг 6):
 
-```python
-def admit_recording(ctl, row: dict, worker: str) -> bool:
-    names, kept = backups(ctl.vars), incidents(ctl.vars)
-    if not names and not kept:
-        return True
-    place = ctl.place_of(worker)
-    if place in kept:
-        return False                                  # a place for what somebody kept, never one to record into
-    home = str(row.get("home") or "")
-    if home in names:
-        return place == home
-    return place not in names
+```yaml
+  affinity:   {field: home, table: volumes, server_field: server, strict: {kind: [backup, edge], enabled: true}}
 ```
 
-Запись с домом на резервном томе идёт на этот том или никуда. На резервный том не идёт больше ничего. «Никуда» — честный ответ: запись попадает в `/unplaceable`, и оператор читает, что карты нет (`test_backup_archive.py::test_a_backup_volume_holds_its_own_recordings_and_nothing_else`). А на карту запись не ставится вовсе, если она не камеры этой карты: такую строку контроллер не принимает (`volumes.refuse_recording`, урок 26, шаг 6).
+Запись с домом на резервном томе идёт на этот том или никуда. На резервный том не идёт больше ничего. «Никуда» — честный ответ: запись попадает в `/unplaceable`, и оператор читает, что карты нет (`test_backup_archive.py::test_a_backup_volume_holds_its_own_recordings_and_nothing_else`). А на карту запись не ставится вовсе, если она не камеры этой карты: такую строку контроллер не принимает (`home: {ref: rec/volumes, must_match: {cam: cam}}`, урок 26, шаг 6).
 
-Вторая дверь — `rank_near_recording`: воркер камеры с двумя записями встаёт рядом с **резервной**. Рядом с основной он упал бы вместе с её сервером, и резервная потеряла бы поток ровно в ту минуту, ради которой существует (`test_the_camera_stands_beside_the_backup_recording`).
+Второе правило — у спеки `vms`: воркер камеры с двумя записями встаёт рядом с **резервной** (`near: {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}`). Рядом с основной он упал бы вместе с её сервером, и резервная потеряла бы поток ровно в ту минуту, ради которой существует (`test_the_camera_stands_beside_the_backup_recording`).
 
 Третье, что дают эти два вида, — `when: offline`. Резервная запись с этим полем пишет только пока основная должна писаться и не пишется: за сбой, никогда за решение (`_offline_backup` требует и поле, и дом на резервном томе; `test_an_offline_backup_stands_in_for_a_failure_and_never_for_a_decision`).
 
@@ -573,10 +552,10 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 ```python
 # `incidents`, which only keeps go into. The recorder that holds it copies every keep's minutes out of whichever
 # recorder's door holds them (`RecWorker.keep_pass`), and nothing is ever recorded into it: it is a place for
-# evidence, not a place to put a camera (`admit_recording`).
+# evidence, not a place to put a camera (`admits: false` in its row, read by the platform's `affinity`).
 ```
 
-Поставить туда запись нельзя, и защищено это дважды. `admit_recording` отказывает месту `incidents` для любой строки. А регистратор, взявший такой том, говорит нулевую ёмкость, как запасной:
+Поставить туда запись нельзя, и защищено это дважды. Строка такого тома говорит `admits: false` (схема таблицы требует его у `incidents`, а `volumes.write` ставит сам), и `affinity` платформы не ставит туда ни одной записи. А регистратор, взявший такой том, говорит нулевую ёмкость, как запасной:
 
 ```python
     def _place_kind(self, vol) -> None:
@@ -595,7 +574,7 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 
 ## Шаг 12 — Что видит оператор
 
-У тома три состояния, а не два. «Обслуживается» и «никто не взял» скрывали худшую поломку: захват свежий, консоль считает том обслуживаемым, записи нет, все числа зелёные. Поэтому регистратор говорит, если том не открылся (`volume_error`), и `served` такой том обслуживаемым не считает:
+У тома три состояния, а не два. «Обслуживается» и «никто не взял» скрывали худшую поломку: захват свежий, консоль считает том обслуживаемым, записи нет, все числа зелёные. Поэтому регистратор говорит, если том не открылся (`volume_error`; на `/metrics` — `rec_volume_error`), и вид томов `volumes.served` такой том обслуживаемым не считает:
 
 ```python
         why = (None if live and not err else
@@ -610,19 +589,17 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
             why += "; " + "; ".join(refusing[v.name])   # …and the recorders that will not take it say why not
 ```
 
-Две строки — от шестого ревью. «Никто не взял» без причины оставляло оператора гадать: регистраторы пишут в heartbeat, какой том они **не берут** и почему (`refused`: том отказал в записи, отдан за молчащий демон, `obsd` слишком стар для сетевого тома), и раньше это было видно только в JSON heartbeat'а. Теперь `served` дописывает эти причины к строке тома (`_refusing`): *declared, and no recorder has taken it; r-1 does not take it: obsd on srv-a is too old to write net safely…*. И строка холда, которая не разбирается, больше не роняет весь список: том назван, причина сказана (`holders` читает через `read_hold`).
+Две строки — от шестого ревью. «Никто не взял» без причины оставляло оператора гадать: регистраторы пишут в heartbeat, какой том они **не берут** и почему (`refused`: том отказал в записи, отдан за молчащий демон, `obsd` слишком стар для сетевого тома), и раньше это было видно только в JSON heartbeat'а. `served` дописывает эти причины к строке тома (`_refusing`): *declared, and no recorder has taken it; r-1 does not take it: obsd on srv-a is too old to write net safely…*. И строка холда, которая не разбирается, больше не роняет весь список: том назван, причина сказана (`holders` читает через `read_hold`). Консоль платформы этот вид не отдаёт — её `/rec/volumes` несёт строки и `held_by`, — и сейчас `served` читают тесты и метрики спеки не заменяют его словами; причины на странице — дело страницы VMS.
 
-**Строка самого тома, которая не разбирается, тоже на странице — названная.** Строка, написанная руками или старой сборкой (`quota_bytes: "1e12"`), бросала из `declared`, а под ним — шаг аренд каждого регистратора, эта страница, карта камеры и скан (седьмое ревью, часть 2, блокер 1; что было с регистраторами — урок 10). Теперь `declared(vars_, garbled)` пропускает такую строку, считает её один раз (`VOLUMES`, `volumes_garbled`) и кладёт её имя в `garbled`. `served` показывает её отдельной строкой с `garbled: True` и причиной *its row (rec/volumes/…) does not parse, so no recorder takes it and the console cannot show it: mend the row — declare the volume again — or delete it*; если регистратор всё ещё держит этот том, к причине дописано, что он пишет по строке, прочитанной последней. В `wanted` такой том считается: его объявили, а включён ли он, сказать нельзя. Удалить его можно: `DELETE /rec/volumes/<имя>` находит имя и среди нечитаемых строк и не отвечает 404. Запись на такой том не садится: `volume_named` бросает `Unreadable` (это `Refused`), и `refuse_recording` отказывает записи с `home` на нём, а права на такой том консоль спрашивает как на карту без камеры — грант на весь кластер (`volume_cam` отвечает `"*"`). Тесты: `test_row_reader.py::test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_page`, `test_row_reader.py::test_a_recording_is_not_homed_on_a_volume_whose_row_does_not_parse`.
+**Строка самого тома, которая не разбирается, тоже на странице — названная.** Строка, написанная руками или старой сборкой (`quota_bytes: "1e12"`), бросала из `declared`, а под ним — шаг аренд каждого регистратора, эта страница, карта камеры и скан (седьмое ревью, часть 2, блокер 1; что было с регистраторами — урок 10). Теперь `declared(vars_, garbled)` пропускает такую строку, считает её один раз (`VOLUMES`, `volumes_garbled`) и кладёт её имя в `garbled`. `served` показывает её отдельной строкой с `garbled: True` и причиной *its row (rec/volumes/…) does not parse, so no recorder takes it and the console cannot show it: mend the row — declare the volume again — or delete it*; если регистратор всё ещё держит этот том, к причине дописано, что он пишет по строке, прочитанной последней. В `wanted` такой том считается: его объявили, а включён ли он, сказать нельзя. Удалить его можно: `DELETE /rec/volumes/<имя>` находит имя и среди нечитаемых строк и не отвечает 404. Запись на такой том не садится: `ref` у `home` не находит строку, которую можно прочесть, и контроллер строк отказывает записи с `home` на нём. Тесты: `test_row_reader.py::test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_page`, `test_row_reader.py::test_a_recording_is_not_homed_on_a_volume_whose_row_does_not_parse`.
 
-Рядом — `writing`: открыт, но пишет плохо, по сторожу писателя (урок 10). И пара чисел: `wanted` — сколько процессов нужно объявленному списку, `serving` — сколько есть. `spare: 0` при `serving < wanted` — единственное состояние, которому нужен человек. Консоль его называет и пишет команду словами того оркестратора, который запустил её саму (`systemctl start recworker@r-2` или `nomad job scale recworker 3`), но не выполняет (`test_the_console_says_which_archives_nobody_is_writing_into`, `test_the_console_writes_out_the_command_and_does_not_run_it`, `test_the_numbers_a_scaling_policy_reads`).
+Рядом — `writing`: открыт, но пишет плохо, по сторожу писателя (урок 10). И пара чисел: `wanted` — сколько процессов нужно объявленному списку, `serving` — сколько есть. Машине эти числа говорит `/metrics` консоли, и все — из деклараций спеки: `rec_volumes_declared` и `rec_volumes_unserved` (`metrics:` спеки `rec`) и платформенный `rec_workers_needed{labels=""}` — включённые тома, которых никто не держит, минус живые регистраторы без тома (из `placement.places`). Его читает скрипт запасных хоста (`w2c-spares.sh`): `spare: 0` при `serving < wanted` — состояние, которое скрипт закрывает запуском регистратора, а без скрипта — человек (`test_the_console_says_which_archives_nobody_is_writing_into`, `test_the_numbers_a_scaling_policy_reads`).
 
 ### Том, который никто не обслуживает: недоступно, а не потеряно
 
-Сервер упал вместе с диском. Регистратор, державший `disks-a`, молчит, а взять диск чужого сервера не может никто. Видео в томе не потеряно: оно там и недоступно, пока сервер не вернётся. Таймлайн камеры так и говорит, по имени тома и сервера, вместо того чтобы рисовать на этом месте дыру (`unserved_volumes` в `vms/console.py`):
+Сервер упал вместе с диском. Регистратор, державший `disks-a`, молчит, а взять диск чужого сервера не может никто. Видео в томе не потеряно: оно там и недоступно, пока сервер не вернётся. Шкала камеры так и говорит, по имени тома и сервера, вместо того чтобы рисовать на этом месте дыру. Дверь записи отвечает на таймлайн заголовком `X-Unavailable: disks-a@srv-a` (`unserved_volumes` в `vms/footage.py`), а дверь места, которое никто не держит, — 404 с `X-Unreachable: <том>@<сервер>`; страница VMS пишет под шкалой: «Недоступно: … его архив недоступен, а не утрачен; лента может быть неполной» (урок 24, [урок 28](28-vms-on-the-cluster.md)).
 
-> *footage in disks-a (on srv-a) is unavailable until a recorder holds it again — not lost*
-
-Сервер вернулся — его том вернулся с дисками. Ничего не перестраивали и не копировали. Тесты: `test_rec_volume.py::test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole` и в М11 `test_lesson3_resources.py::test_a_timeline_spans_two_volumes_and_names_the_one_nobody_serves`.
+Сервер вернулся — его том вернулся с дисками. Ничего не перестраивали и не копировали. Тесты: `test_rec_volume.py::test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole`, `test_where_volume.py::test_a_volume_whose_recorder_went_silent_is_named_and_its_minutes_are_missing_not_drawn` и на стенде кластера `tests/cluster/test_lesson3_resources.py::test_a_timeline_spans_two_volumes_and_names_the_one_nobody_serves`.
 
 ---
 
@@ -632,7 +609,7 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 |---|---|---|---|---|---|
 | **где** | диск сервера; `server` обязателен | адрес; `server` запрещён | с `server` — диск того сервера, без — адрес | карта камеры; `server` (коробка камеры) и `cam` (её id) обязательны | как `backup` |
 | **кто обслуживает** | регистратор этого сервера | любой | с сервером — этот сервер, без — любой | только регистратор самой камеры (`CardRecorder`); регистратор движка — никогда | как `backup` |
-| **хранилище молчит** | остаётся за регистратором | через `slot_ttl − margin` кадры не пишутся и том отпускается; писатель позже `slot_ttl + HOLD_SKEW` не закрывается | с сервером — остаётся, без — отпускается | остаётся | как `backup` |
+| **хранилище молчит** | остаётся за регистратором своего сервера; у чужого сервера и у регистратора без сервера — как `network` | через `slot_ttl − margin` кадры не пишутся и том отпускается; писатель позже `slot_ttl + HOLD_SKEW` не закрывается | с сервером — как `local`, без — как `network` | остаётся | как `backup` |
 | **размещение** | `home` — предпочтение | `home` — предпочтение | фильтр в обе стороны | фильтр в обе стороны | не ставится ничего |
 | **чем открывается** | движком | движком | движком | каталог на камере, без движка | движком |
 | **не открылся** | `IO_ERROR`/`GENERIC_ERROR` — `wrong` | `away` | с сервером `wrong`, без — `away` | ёмкость ноль, `volume_error`, новая попытка через 30 с | как `backup` |
@@ -650,7 +627,7 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - **Сетевой том держат, сколько молчит хранилище.** Захват истёк, том взяла другая коробка, и в одном томе два писателя на двух хостах.
 - **Холд сетевого тома проверяют только перед монтированием.** Проснувшийся писатель пишет в чужое кольцо, пока проход не дошёл до отпускания. Проверка — перед каждым кадром.
 - **Писателя сетевого тома с потерянным холдом закрывают.** Сброс ложится на том другой коробки. Писателя бросают.
-- **Сетевой том отдают экземпляру того же слота сразу.** Прежний экземпляр мог быть заморожен на другой коробке, а его окно записи отмерено от ожидания претендента: два писателя в одном томе.
+- **Сетевой том отдают экземпляру того же слота сразу.** Прежний экземпляр мог быть заморожен на другой коробке, а его окно записи отмерено от ожидания претендента: два писателя в одном томе. Платформа отдаёт место за именем только по `server_field`.
 - **Сетевой том держат, сколько молчит демон.** На нём не пишется ничего, а коробка с живым демоном взять его не может. Срок — `ENGINE_SILENT_FOR`.
 - **Сетевой том дают демону без `WRITER_ABANDON`.** Он закроет писателя со сбросом в том, который уже чужой. Регистратор такой том не берёт и говорит, какой `obsd` обновить.
 - **Одна битая строка холда роняет захват.** Регистратор не берёт никакого тома, список томов в консоли не открывается. Битая строка — беда одного тома.
@@ -660,12 +637,12 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - **Сломанный том отдают, даже когда больше некуда.** Коробка перестаёт писать совсем из-за диагностики.
 - **Том, которого нет, форматируют заново.** Непримонтированный диск становится пустым томом на системном, записи пропадают из виду, системный диск заполняется. Том, открытый по этому адресу раньше (метка `rec/used/<том>`), не форматируется: `volume.missing`, том отдаётся.
 - **Отказавший посреди работы том берут назад на следующем проходе.** Регистратор мигает между «взял» и «отдал». Нужна пауза `REFUSED_FOR`.
-- **Ключ в адресе тома.** Он на странице, в heartbeat'е и в строке. `refuse` не пропускает `@` в части хоста и параметры с именами учётных данных.
-- **Идентификатор ключа из адреса.** Адрес с `@` не пройдёт `refuse`, и s3-том дойдёт до демона без `access_key`. Идентификатор — своё поле строки.
+- **Ключ в адресе тома.** Он на странице, в heartbeat'е и в строке. Правило адресов платформы (поле `type: url`) не пропускает `@` и параметры с именами учётных данных.
+- **Идентификатор ключа из адреса.** Адрес с `@` не пройдёт дверь, и s3-том дойдёт до демона без `access_key`. Идентификатор — своё поле строки.
 - **Закреплённый регистратор с неоткрывшимся томом сообщает полную ёмкость.** Контроллер ставит записи туда, где писать нельзя.
 - **`home` предпочтением для резервного тома.** Основная переезжает на него при перезагрузке своего сервера, и копий становится одна.
-- **Запись на томе `incidents`.** Камера крутит кольцо улик своим потоком, и отмеченное уходит за часы. Двойная защита: `admit_recording` и нулевая ёмкость.
-- **Квота во весь раздел.** `refuse` её пропустит, но кольцо делит раздел с деревом событий ресурса и уведёт диск выше отметки ватерлинии. Консоль поэтому предлагает тот размер, который у тома уже есть.
+- **Запись на томе `incidents`.** Камера крутит кольцо улик своим потоком, и отмеченное уходит за часы. Двойная защита: `admits: false` для `affinity` и нулевая ёмкость.
+- **Квота во весь раздел.** Схема её пропустит, но кольцо делит раздел с деревом событий ресурса и уведёт диск выше отметки ватерлинии. Консоль поэтому предлагает тот размер, который у тома уже есть.
 - **Том недоступного сервера рисуют дырой.** Оператор ищет потерянное видео, которое лежит на месте. Таймлайн называет том и сервер.
 - **Карту камеры монтирует движок.** На камере ему не хватит памяти, а на сервере это не его том. `_write_into` отвечает на `edge` отказом, `volume_pass` карту не предлагает.
 - **Регистратор камеры берёт любой объявленный том.** Сетевой том на консоли камеры уводит его с карты, и карта перестаёт быть резервной (обратная связь DH). Регистратор камеры берёт только свою карту.
@@ -679,8 +656,8 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - Ничего не объявлено — собственный том сервера, `/data/vms/obsd/volume` на коробке, вне дерева ресурса, на четыре пятых свободного места и не выше нижней отметки ватерлинии. Консоль предлагает его объявить с тем размером, который у него есть, и объявление ничего не двигает.
 - Квота — размер кольца. Новый том форматируется на неё, новая квота меняет размер на ходу, уменьшение отдаёт старейшее и попадает в журнал.
 - Том открывается по параметрам. Какой ключ — поле `access_key`, его показывают; сам ключ — значение `access_secret`, запечатанное. Ни то ни другое в адрес не попадает никогда.
-- Захват диска идёт за именем слота; захват сетевого тома — только на хосте прежнего держателя, иначе ждёт срока, если его не отпустили намеренно. Прибитый (`$VOLUME`) сетевой том берётся под тем же захватом. Писатель идёт за владельцем `rec:<том>`. Отпускают в обратном порядке: сначала писатель, потом захват.
-- При молчащем хранилище диск остаётся, адрес отпускается через `slot_ttl − margin`: два писателя в одном томе — порча. С того же срока в сетевой том не отправляется ни кадра, а писателя, чей холд старше `slot_ttl + HOLD_SKEW`, не закрывают — бросают (`WRITER_ABANDON`) и считают, что он не успел записать. Это проверка, а не ограда: ограждает том движок (патч 07), и на демоне без него регистратор сетевой том не берёт.
+- Захват диска идёт за именем слота на сервере этого диска; захват сетевого тома — только на хосте прежнего держателя, иначе ждёт срока, если его не отпустили намеренно. Решает платформа, по `placement.places.server_field`. Прибитый (`$VOLUME`) сетевой том берётся под тем же захватом. Писатель идёт за владельцем `rec:<том>`. Отпускают в обратном порядке: сначала писатель, потом захват.
+- При молчащем хранилище диск своего сервера остаётся, всё остальное (`lease: strict`) отпускается через `slot_ttl − margin`: два писателя в одном томе — порча. Исполняет платформа (ADR 0029). С того же срока в сетевой том не отправляется ни кадра, а писателя, чей холд старше `slot_ttl + HOLD_SKEW`, не закрывают — бросают (`WRITER_ABANDON`) и считают, что он не успел записать. Это проверка, а не ограда: ограждает том движок (патч 07), и на демоне без него регистратор сетевой том не берёт.
 - Через молчащий `obsd` холд сетевого тома продлевается `ENGINE_SILENT_FOR` (300 с) и не дольше, непрерывный `busy` под своим холдом держится `BUSY_FOR` (600 с); диск за молчащий демон и за `busy` не отпускается.
 - `wrong` — отдать (закреплённый диск не отдаёт, но сообщает нулевую ёмкость), `away` и `busy` — держать, и heartbeat называет каждый своим словом. Для тома на коробке `IO_ERROR` и `GENERIC_ERROR` — `wrong`, для тома по адресу — `away`.
 - Для `backup` и `edge` `home` — фильтр в обе стороны, воркер камеры стоит у резервной записи, `when: offline` пишет за сбой.
@@ -691,14 +668,14 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 ## Упражнения
 
 1. Поменяйте порядок в `servable`: сначала адреса, потом свои диски. Два сервера, по диску на каждом, один сетевой том и по одному регистратору на сервере. Какой диск останется без писателя и почему его не возьмёт никто?
-2. Уберите проверку `self.hold in self._shared` из `lease_pass`. Что станет с локальным диском, пока хранилище молчит пять минут? А с записями на нём?
+2. Уберите `lease: strict` из `placement.places` (на копии спеки). Что станет с сетевым томом, пока хранилище молчит пять минут, и что — если в это время его взяла другая коробка? А если вместо этого запустить регистратор без `SERVER_NAME` — что станет с его локальным диском?
 3. Уберите поправку вида в `_write_into`. Объявите локальный том на пути под обычным файлом и прочитайте `heartbeat_extra()`: что скажет `archive_failure`, и куда уйдут записи?
 4. Поставьте `REFUSED_FOR = 0` и повторите `test_an_archive_that_refuses_writes_mid_run_is_handed_back`. Сколько раз за десять проходов регистратор возьмёт и отдаст `vol-a`?
 5. Отпустите захват в `leave_volume` до закрытия писателя. Какой тест из шага 7 упадёт и на какой строке?
 6. Объявите том `incidents` без сервера и два регистратора на разных серверах. Кто его возьмёт, что будет с ёмкостью и что покажет `/volumes`?
 7. Уменьшите квоту тома с записью вдвое через консоль. Что появится в журнале, и какие минуты записи исчезнут первыми?
-8. Резервный том без сервера (адрес) и молчащее хранилище. Что сделает его регистратор через 40 секунд, и что станет с `when: offline`-записью, которую он вёл?
+8. Резервный том без сервера (адрес) и молчащее хранилище. Что сделает платформа с его захватом через 40 секунд, и что станет с `when: offline`-записью, которую вёл регистратор?
 
 ## Что дальше
 
-Двери архива, через которые консоль собирает таймлайн из всех томов, — [урок 12](12-the-vms-console.md). Как основная запись закрывает дыры из резервной — [урок 26](26-a-backup-archive-of-our-own.md). Как устроено само кольцо, блок и последовательность — [уроки 6–8](07-volume-block-sequence-stream.md). На кластере те же тома берут регистраторы задания `recworker` — М11, урок 3.
+Двери, через которые страница собирает шкалу из всех томов, — [урок 12](12-the-vms-console.md) и [урок 24](24-an-interval-in-the-browser.md). Как основная запись закрывает дыры из резервной — [урок 26](26-a-backup-archive-of-our-own.md). Как устроено само кольцо, блок и последовательность — [уроки 6–8](07-volume-block-sequence-stream.md). На кластере те же тома берут регистраторы разных серверов, и шкала собирается через двери мест — [урок 28](28-vms-on-the-cluster.md); платформа кластера — [М11](../М11_Cluster/README.md).
