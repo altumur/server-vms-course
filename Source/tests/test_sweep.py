@@ -14,22 +14,21 @@ tests are mostly about that race.
 """
 import json
 
-from vms.config import DET_SPEC
 from w2cplatform.console import SpecConsole
-from w2cplatform.spec import SpecController
 from w2cplatform.variables import Conflict
-from tests.conftest import Box
+from tests.conftest import Box, controller, testsub2
 
 MASK_A, MASK_B, MASK_C = b"a" * 900, b"b" * 900, b"c" * 900
 
 
-def _det(box):
-    ctl = SpecController(DET_SPEC, box.vars, box.objects, wall=box.wall)
+def _tallies(box):
+    """testsub2's controller — its tally has a `blob` field (`mask`) — and its console."""
+    ctl = controller(box, spec=testsub2())
     return ctl, SpecConsole(ctl)
 
 
 def _blobs(box):
-    return sorted(k.rsplit("/", 1)[1] for k in box.objects.list("det/blobs/"))
+    return sorted(k.rsplit("/", 1)[1] for k in box.objects.list("testsub2/blobs/"))
 
 
 def test_a_blob_nothing_names_is_collected_but_never_on_the_pass_that_noticed_it():
@@ -37,10 +36,10 @@ def test_a_blob_nothing_names_is_collected_but_never_on_the_pass_that_noticed_it
     because a blob created between them must survive, and the only way to know it
     was created between them is that it is not on the list."""
     box = Box()
-    ctl, _ = _det(box)
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})     # A is now an orphan
+    ctl, _ = _tallies(box)
+    ctl.create({"name": "t7", "of": "c7"})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_B)})     # A is now an orphan
     assert len(_blobs(box)) == 2
 
     first = ctl.sweep_blobs()
@@ -60,18 +59,18 @@ def test_a_blob_written_between_the_two_passes_survives():
     row second; a sweep that decided in one breath would delete the bytes a row is
     about to name. It cannot: the digest was not on the list."""
     box = Box()
-    ctl, _ = _det(box)
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})
+    ctl, _ = _tallies(box)
+    ctl.create({"name": "t7", "of": "c7"})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_B)})
     ctl.sweep_blobs()                                              # marks A
 
     box.wall.advance(301)
-    ctl.create({"name": "8-linecross", "cam": "8", "kind": "linecross"})
+    ctl.create({"name": "t8", "of": "c8"})
     fresh = ctl.put_blob(MASK_C)                                   # object written; the row not yet
     ctl.sweep_blobs()                                              # …and the sweep runs right here
-    assert box.objects.get(f"det/blobs/{fresh}") == MASK_C, "the sweep ate a blob whose row was in flight"
-    ctl.update("8-linecross", {"mask": fresh})                     # the row lands, late and intact
+    assert box.objects.get(f"testsub2/blobs/{fresh}") == MASK_C, "the sweep ate a blob whose row was in flight"
+    ctl.update("t8", {"mask": fresh})                     # the row lands, late and intact
     assert ctl.blob(fresh) == MASK_C
 
 
@@ -81,21 +80,21 @@ def test_re_uploading_a_marked_blob_calls_the_whole_sweep_off():
     the one a row is about to name. `put_blob` takes it off the list, which makes
     the sweep's own CAS fail, and a sweep that loses that CAS deletes NOTHING."""
     box = Box()
-    ctl, _ = _det(box)
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})      # A orphaned
+    ctl, _ = _tallies(box)
+    ctl.create({"name": "t7", "of": "c7"})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_B)})      # A orphaned
     ctl.sweep_blobs()
-    assert json.loads(box.vars.get("det/sweep")[0]["digests"]) != []
+    assert json.loads(box.vars.get("testsub2/sweep")[0]["digests"]) != []
 
     box.wall.advance(301)
-    ctl.create({"name": "8-linecross", "cam": "8", "kind": "linecross"})
+    ctl.create({"name": "t8", "of": "c8"})
     again = ctl.put_blob(MASK_A)                                   # the marked digest, uploaded again
-    assert json.loads(box.vars.get("det/sweep")[0]["digests"]) == [], "put_blob did not take it off the list"
-    ctl.update("8-linecross", {"mask": again})
+    assert json.loads(box.vars.get("testsub2/sweep")[0]["digests"]) == [], "put_blob did not take it off the list"
+    ctl.update("t8", {"mask": again})
 
     ctl.sweep_blobs()
-    assert box.objects.get(f"det/blobs/{again}") == MASK_A, "the sweep deleted a blob a row names"
+    assert box.objects.get(f"testsub2/blobs/{again}") == MASK_A, "the sweep deleted a blob a row names"
 
 
 def test_an_upload_between_the_sweepers_last_look_and_its_delete_is_put_back():
@@ -104,13 +103,13 @@ def test_an_upload_between_the_sweepers_last_look_and_its_delete_is_put_back():
     and the row then names nothing. The sweeper now reads the row again after the delete: a digest that left the
     list in between is being uploaded, and its bytes — the same bytes, the key is their digest — are put back."""
     box = Box()
-    ctl, _ = _det(box)
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})      # A orphaned
+    ctl, _ = _tallies(box)
+    ctl.create({"name": "t7", "of": "c7"})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_B)})      # A orphaned
     ctl.sweep_blobs()                                              # …and marked
     box.wall.advance(301)
-    ctl.create({"name": "8-linecross", "cam": "8", "kind": "linecross"})
+    ctl.create({"name": "t8", "of": "c8"})
     real, again = box.objects.delete, []
 
     def delete(key):                                               # the upload lands exactly in the window
@@ -119,20 +118,20 @@ def test_an_upload_between_the_sweepers_last_look_and_its_delete_is_put_back():
         return real(key)
     box.objects.delete = delete
     rep = ctl.sweep_blobs()
-    ctl.update("8-linecross", {"mask": again[0]})                  # the row lands
-    assert box.objects.get(f"det/blobs/{again[0]}") == MASK_A, "the sweep deleted a blob being uploaded"
+    ctl.update("t8", {"mask": again[0]})                  # the row lands
+    assert box.objects.get(f"testsub2/blobs/{again[0]}") == MASK_A, "the sweep deleted a blob being uploaded"
     assert rep["deleted"] == 0 and ctl.blob(again[0]) == MASK_A
 
 
 def test_the_sweep_is_bounded_because_its_own_bookkeeping_is_a_row():
-    """`det/sweep` is a Variable, and a Variable has the store's ceiling over it
+    """`testsub2/sweep` is a Variable, and a Variable has the store's ceiling over it
     (Lesson 26). So the sweep collects at most `limit` per pass — the rule applies
     to the thing that was written under it."""
     box = Box()
-    ctl, _ = _det(box)
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
+    ctl, _ = _tallies(box)
+    ctl.create({"name": "t7", "of": "c7"})
     for i in range(10):
-        ctl.update("7-linecross", {"mask": ctl.put_blob(bytes([i]) * 500)})
+        ctl.update("t7", {"mask": ctl.put_blob(bytes([i]) * 500)})
     assert len(_blobs(box)) == 10                                  # nine orphans and the current one
 
     assert ctl.sweep_blobs(limit=4)["marked"] == 4
@@ -146,13 +145,12 @@ def test_the_sweep_is_bounded_because_its_own_bookkeeping_is_a_row():
 
 
 def test_a_subsystem_with_no_blob_field_is_not_swept_at_all():
-    """The VMS has no `blob` field. A sweep there must not list, not decide and not
+    """testsub has no `blob` field. A sweep there must not list, not decide and not
     write a row — nothing to collect is not the same as nothing collected."""
-    from vms.config import SPEC
     box = Box()
-    ctl = SpecController(SPEC, box.vars, box.objects, wall=box.wall)
+    ctl = controller(box)
     assert ctl.sweep_blobs() == {"marked": 0, "deleted": 0, "waiting": 0}
-    assert box.vars.get("vms/sweep") == (None, 0), "a subsystem with nothing to sweep wrote bookkeeping"
+    assert box.vars.get("testsub/sweep") == (None, 0), "a subsystem with nothing to sweep wrote bookkeeping"
 
 
 def test_nothing_but_the_sweep_leans_on_objects_going_away():
@@ -162,16 +160,16 @@ def test_nothing_but_the_sweep_leans_on_objects_going_away():
     `builds()` answers "what is running here" from heartbeats of any age — sweep
     those and both go quiet. So the sweep touches `blobs/` and nothing else."""
     box = Box()
-    ctl, _ = _det(box)
-    box.objects.put("det/heartbeats/d-1", b'{"worker": "d-1", "ts": 0, "status": []}')
-    box.objects.put("det/snapshot/d-1", b'{"cluster": "c", "worker": "d-1", "ts": 0, "units": []}')
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
+    ctl, _ = _tallies(box)
+    box.objects.put("testsub2/heartbeats/d-1", b'{"worker": "d-1", "ts": 0, "status": []}')
+    box.objects.put("testsub2/snapshot/d-1", b'{"cluster": "c", "worker": "d-1", "ts": 0, "units": []}')
+    ctl.create({"name": "t7", "of": "c7"})
     ctl.put_blob(MASK_A)                                           # an orphan from the first breath
 
     ctl.sweep_blobs(); box.wall.advance(301); ctl.sweep_blobs()
     assert _blobs(box) == []
-    assert box.objects.get("det/heartbeats/d-1") is not None, "the sweep took a heartbeat"
-    assert box.objects.get("det/snapshot/d-1") is not None, "the sweep took a snapshot shard"
+    assert box.objects.get("testsub2/heartbeats/d-1") is not None, "the sweep took a heartbeat"
+    assert box.objects.get("testsub2/snapshot/d-1") is not None, "the sweep took a snapshot shard"
 
 
 def test_the_backlog_is_on_metrics_and_costs_two_reads():
@@ -179,27 +177,25 @@ def test_the_backlog_is_on_metrics_and_costs_two_reads():
     backlog is reported as what IS there and what is marked — a prefix listing and
     one row — and not as `blobs_referenced()`, which is a full scan."""
     box = Box()
-    ctl, con = _det(box)
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})
-    assert "det_blobs_total 2" in con.metrics_text()
-    assert "det_blobs_marked 0" in con.metrics_text()
+    ctl, con = _tallies(box)
+    ctl.create({"name": "t7", "of": "c7"})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_B)})
+    assert "testsub2_blobs_total 2" in con.metrics_text()
+    assert "testsub2_blobs_marked 0" in con.metrics_text()
 
     ctl.sweep_blobs()
-    assert "det_blobs_marked 1" in con.metrics_text()
+    assert "testsub2_blobs_marked 1" in con.metrics_text()
     box.wall.advance(301); ctl.sweep_blobs()
-    assert "det_blobs_total 1" in con.metrics_text() and "det_blobs_marked 0" in con.metrics_text()
+    assert "testsub2_blobs_total 1" in con.metrics_text() and "testsub2_blobs_marked 0" in con.metrics_text()
 
 
 def test_a_subsystem_without_blobs_has_no_blob_gauges():
-    """The VMS has no `blob` field: a gauge that is always zero is noise on every
+    """testsub has no `blob` field: a gauge that is always zero is noise on every
     screen it reaches."""
-    from vms.config import SPEC
-    from vms.controller import VmsController
     box = Box()
-    text = SpecConsole(VmsController(box.vars, box.objects, wall=box.wall)).metrics_text()
-    assert "vms_blobs_total" not in text and "vms_blobs_marked" not in text
+    text = SpecConsole(controller(box)).metrics_text()
+    assert "testsub_blobs_total" not in text and "testsub_blobs_marked" not in text
 
 
 def test_the_decision_to_delete_is_written_by_cas_before_anything_is_deleted():
@@ -213,11 +209,11 @@ def test_the_decision_to_delete_is_written_by_cas_before_anything_is_deleted():
     The interleaving is made deterministic by acting from inside `blobs_referenced`,
     which the sweeper calls after reading the row and before writing it."""
     box = Box()
-    ctl, _ = _det(box)
-    other, _ = _det(box)                                  # a second console, same store
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})
+    ctl, _ = _tallies(box)
+    other, _ = _tallies(box)                                  # a second console, same store
+    ctl.create({"name": "t7", "of": "c7"})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_B)})
     ctl.sweep_blobs()                                     # A is marked
     box.wall.advance(301)
 
@@ -237,7 +233,7 @@ def test_the_decision_to_delete_is_written_by_cas_before_anything_is_deleted():
     except Conflict:
         pass
     from w2cplatform.blobs import digest
-    assert box.objects.get(f"det/blobs/{digest(MASK_A)}") == MASK_A, \
+    assert box.objects.get(f"testsub2/blobs/{digest(MASK_A)}") == MASK_A, \
         "the CAS was lost AFTER the delete: the bytes of a row still in flight are gone"
 
 
@@ -248,11 +244,11 @@ def test_a_blob_uploaded_again_while_the_sweep_is_deleting_is_not_deleted():
     digest off it as before the decision; the sweeper reads the row back before each delete and leaves what is
     gone from it alone."""
     box = Box()
-    ctl, _ = _det(box)
-    other, _ = _det(box)
-    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
-    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})
+    ctl, _ = _tallies(box)
+    other, _ = _tallies(box)
+    ctl.create({"name": "t7", "of": "c7"})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("t7", {"mask": ctl.put_blob(MASK_B)})
     ctl.sweep_blobs()                                     # A is marked
     box.wall.advance(301)
 
@@ -261,24 +257,24 @@ def test_a_blob_uploaded_again_while_the_sweep_is_deleting_is_not_deleted():
         def __getattr__(self, n): return getattr(self._r, n)
         def get(self, path):
             items, idx = self._r.get(path)
-            if path == "det/sweep" and (items or {}).get("state") == "deleting" and not self.raced:
+            if path == "testsub2/sweep" and (items or {}).get("state") == "deleting" and not self.raced:
                 self.raced = True                         # the decision is written; the bytes are about to go
-                other.create({"name": "8-linecross", "cam": "8", "kind": "linecross"})
-                other.update("8-linecross", {"mask": other.put_blob(MASK_A)})
+                other.create({"name": "t8", "of": "c8"})
+                other.update("t8", {"mask": other.put_blob(MASK_A)})
                 return self._r.get(path)
             return items, idx
     ctl.vars = Store(box.vars)
 
     assert ctl.sweep_blobs() == {"marked": 0, "deleted": 0, "waiting": 0} and ctl.vars.raced
     from w2cplatform.blobs import digest
-    assert box.objects.get(f"det/blobs/{digest(MASK_A)}") == MASK_A and other.blob(digest(MASK_A)) == MASK_A
-    assert json.loads(box.vars.get("det/sweep")[0]["digests"]) == [] and "state" not in box.vars.get("det/sweep")[0]
+    assert box.objects.get(f"testsub2/blobs/{digest(MASK_A)}") == MASK_A and other.blob(digest(MASK_A)) == MASK_A
+    assert json.loads(box.vars.get("testsub2/sweep")[0]["digests"]) == [] and "state" not in box.vars.get("testsub2/sweep")[0]
 
     # …and a sweeper that died with the decision written leaves nothing undone: the next pass reads it as marked
-    other.update("8-linecross", {"mask": other.put_blob(MASK_C)})          # A is an orphan again
-    box.vars.put("det/sweep", {"at": str(box.wall() - 301), "digests": json.dumps([digest(MASK_A)]), "state": "deleting"},
-                 cas=box.vars.get("det/sweep")[1])
-    assert other.sweep_blobs() == {"marked": 0, "deleted": 1, "waiting": 0} and box.objects.get(f"det/blobs/{digest(MASK_A)}") is None
+    other.update("t8", {"mask": other.put_blob(MASK_C)})          # A is an orphan again
+    box.vars.put("testsub2/sweep", {"at": str(box.wall() - 301), "digests": json.dumps([digest(MASK_A)]), "state": "deleting"},
+                 cas=box.vars.get("testsub2/sweep")[1])
+    assert other.sweep_blobs() == {"marked": 0, "deleted": 1, "waiting": 0} and box.objects.get(f"testsub2/blobs/{digest(MASK_A)}") is None
 
 
 def test_the_console_process_actually_runs_the_sweep():
@@ -294,7 +290,7 @@ def test_the_console_process_actually_runs_the_sweep():
     from w2cplatform import host
     src = inspect.getsource(host.console)                            # the platform's console since the boundary's step 6
     assert "sweep_loop" in src, "the console process does not start the blob sweep"
-    # and every subsystem the console fronts is handed to it: the recorder has blobs too
+    # and every subsystem the console fronts is handed to it: any of them may declare a blob field
     assert "list(ctls.values())" in src, "the sweep was started for some subsystems, not all"
     loop = inspect.getsource(host.sweep_loop) + inspect.getsource(host.sweep_turn) + inspect.getsource(host.step)
     assert "sweep_blobs()" in loop and "except Exception" in loop, \

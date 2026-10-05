@@ -307,7 +307,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
     from w2cplatform.resource import platform_resource
     from w2cplatform import runtime
     from w2cplatform.events import EventLog
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
     group = (set(os.getgroups()) - {os.getgid()} or {os.getgid()}).pop()   # a group this process is in, not its own if it can
     resource = (os.getuid() + 1, {group})                                    # another uid; the group its only tie
 
@@ -434,7 +434,7 @@ def test_a_recorder_told_nothing_keeps_its_events_in_the_platforms_archive_and_i
     `/data/platform/events`) and its own volume is the VMS's (`config.OWN_VOLUME`, `/data/vms/obsd/volume`) — it was
     `/data/archive` and `/data/volume` beside it, the layout before. A tree named by its caller keeps its volume beside."""
     import types
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
     from vms.config import OWN_VOLUME
     from vms.recworker import RecWorker
     from vms.worker import FakeActuator
@@ -836,4 +836,12 @@ def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_
     assert "door" not in m.root.describe()                               # no door at a camera's holder
     assert m.mounts["rec"].describe()["door"] == {"routes": ["timeline", "segment"]}
     assert m.mounts["live"].describe()["door"] == {"routes": ["whep"]}
+
+
+def test_the_vms_processes_open_their_stores_through_the_platforms_one_function():
+    """What the VMS's entry point does with the platform's rule (`test_configstorevars.py`,
+    `test_a_process_reads_platform_store_and_no_other_name`: `PLATFORM_STORE`, never `CONFIG_URL`): its processes open
+    their stores through the platform's `host.stores`, and the older name is nowhere in it."""
+    entry = open(os.path.join(HERE, "vms", "__main__.py"), encoding="utf-8").read()
+    assert "host.stores(os.environ" in entry and "CONFIG_URL" not in entry
 

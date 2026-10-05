@@ -8,7 +8,7 @@ import os
 import time
 
 from vms.obsd import EPOCH_OFFSET_MS, ObsdError, archive_ms, unix_s, video
-from tests.conftest import OBSD_GRACE_S, OBSD_LINGER_MS, obsd_session, obsd_volume
+from tests.vmsconftest import OBSD_GRACE_S, OBSD_LINGER_MS, obsd_session, obsd_volume
 
 T0 = archive_ms(1_757_500_000)
 FRAME = 40                                                # ms: 25 frames a second
@@ -168,7 +168,7 @@ def test_a_recording_a_month_deep_is_answered_whole():
     one index read per hour, all handed to a pool whose queue holds 128. A recording is a month deep, so `Archive`
     asks five days at a time, halves a window refused anyway, and puts the intervals back together
     (`Archive._timeline`) — insurance against an older daemon, and the same answer on a fixed one."""
-    from tests.conftest import footage, store
+    from tests.vmsconftest import footage, store
     now = 1_757_500_000.0
     st = store()
     footage(st, "7", 1, now - 30 * 86400, now - 15 * 86400 - 3600, step=3600, seal=False)
@@ -181,7 +181,7 @@ def test_a_recording_a_month_deep_is_answered_whole():
 def test_a_new_quota_resizes_the_ring_without_stopping_the_writer():
     """A quota is the size of the ring, and a new one is applied at once (`WRITER_RESIZE`): the writer goes on,
     and what was written stays readable."""
-    from tests.conftest import footage, store
+    from tests.vmsconftest import footage, store
     st = store(quota=64 << 20)
     t = 1_757_500_000.0
     footage(st, "7", 1, t - 600, t, step=10, seal=False)
@@ -197,7 +197,7 @@ def test_a_write_that_went_out_before_the_connection_broke_is_not_sent_twice():
     never went out (the break came on connecting) is simply tried once more."""
     import socket
     from vms.obsd import NOT_RESENT, Session, Unavailable
-    from tests.conftest import ObsdDaemon
+    from tests.vmsconftest import ObsdDaemon
     s = Session(ObsdDaemon.get().socket, client="t")
     s.call("STATS")                                               # connected
     assert "PUT_MEDIA" in NOT_RESENT and "WRITER_CLOSE" in NOT_RESENT and "STATS" not in NOT_RESENT
@@ -227,7 +227,7 @@ def test_a_thin_stream_is_visible_after_the_flush_periods_and_not_when_its_block
     and an open one is cut by the engine `sequenceFlushPeriodMs` after it opened — without anybody closing the
     writer. Left at nought, the block waits for the engine's own minute: this test would wait with it."""
     import time
-    from tests.conftest import store
+    from tests.vmsconftest import store
     from vms.worker import fake_samples
     st = store()                                                       # the course's periods: 10 s and 5 s
     st.seal()                                                          # (a fresh writer, configured)
@@ -252,7 +252,7 @@ def test_the_writer_the_readers_and_the_pass_each_have_a_connection_of_their_own
     caller `Unavailable` after a timeout instead of queueing it for ever."""
     import time as _time
     from vms.obsd import Session, Unavailable
-    from tests.conftest import ObsdDaemon
+    from tests.vmsconftest import ObsdDaemon
     s = Session(ObsdDaemon.get().socket, client="t", timeout=0.5)
     vol, _ = obsd_volume(s)
     w = vol.mount_rw("rec:lanes")
@@ -301,7 +301,7 @@ def test_abandoning_a_session_under_calls_in_flight_answers_them_unavailable_at_
     from vms.obsd import Session, Unavailable
     from vms.archive import Archive
     from vms.recworker import archive_routes
-    from tests.conftest import ObsdDaemon
+    from tests.vmsconftest import ObsdDaemon
     wrong, slow = [], []
     for _ in range(40):
         s = Session(ObsdDaemon.get().socket, client="abandoned", timeout=5)

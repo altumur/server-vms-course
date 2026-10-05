@@ -5,16 +5,18 @@ Three rules, each learned on the product's box with the store of one cluster tak
     not knowing is not "no"    a store that did not answer says nothing: the worker goes on with the assignment it
                                read last, and its slot is still its own. Only a slot row READ, with another holder
                                in it, says "no"
-    a lease is one camera's    lost however it was lost, one pipeline stops and gives its epoch up; if the camera
+    a lease is one unit's      lost however it was lost, one unit's work stops and gives its epoch up; if the unit
                                is still this worker's it is started again under a new epoch. The instance is not
-                               fenced, and its other cameras are not stopped
+                               fenced, and its other units are not stopped
     a fence is not for ever    a fenced instance takes a free slot on its next pass and starts from nothing
-"""
-import threading
 
-from w2cplatform.epoch import Lease, next_epoch
-from vms.worker import FakeActuator, VmsWorker
-from tests.test_lesson4_worker import _box_with_cameras
+On testsub (`testdata/testsub.subsystem.yaml`): a unit is a named counter, `c1`…; a worker is `CounterWorker`, and what
+it runs is `running`. What a subsystem's own worker does with these answers — its pipelines, the place it writes in —
+is that subsystem's tests' (`test_holders_through_a_silent_store.py`).
+"""
+from w2cplatform.contract import NotReadThisPass
+from w2cplatform.epoch import Lease, current_epoch, next_epoch
+from tests.conftest import Box, controller, counter_worker, testsub
 
 
 class Flaky:
@@ -36,90 +38,111 @@ class Flaky:
         return call
 
 
-def _worker(n=2, env=None):
-    box, ctl = _box_with_cameras(n)
-    ctl.assign("w-1", [str(i) for i in range(1, n + 1)])
-    store, act = Flaky(box.vars), FakeActuator()
-    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive, env=env)
-    w.claim_slot(prefer="w-1")
+def _box_with_counters(n=2):
+    """A box and testsub's controller over the whole store, with counters `c1`…`c<n>`."""
+    box = Box()
+    ctl = controller(box)
+    for i in range(1, n + 1):
+        ctl.create({"name": f"c{i}"})
+    return box, ctl
+
+
+def _names(n, first=1):
+    return [f"c{i}" for i in range(first, n + 1)]
+
+
+def _worker(n=2, unconfirmed_max=None):
+    """w-1 running `c1`…`c<n>` on a store with a switch. Its units write data, so a lease that runs out in silence
+    goes on under its epoch up to `unconfirmed_max` past its end (`None`: for as long as the silence lasts; `0`: not
+    at all) — the subsystem's knob, set before any epoch is taken."""
+    box, ctl = _box_with_counters(n)
+    ctl.assign("w-1", _names(n))
+    store = Flaky(box.vars)
+    w = counter_worker(box, "w-1", vars_=store)
+    w.unconfirmed_max = unconfirmed_max
     w.reconcile_once()
-    assert act.running == set(range(1, n + 1))
-    return box, ctl, store, act, w
+    assert w.running == {u: 1 for u in _names(n)}
+    return box, ctl, store, w
 
 
 def test_a_store_that_does_not_answer_is_not_an_empty_assignment():
-    """Sixteen seconds without the store: the cameras record under the same epochs, nothing is fenced, the pass
-    goes on with the assignment read last — and a pipeline that fell over meanwhile is noticed."""
-    box, ctl, store, act, w = _worker()
+    """Sixteen seconds without the store: the counters run under the same epochs, nothing is fenced, the pass goes
+    on with the assignment read last — and for a unit whose work fell over meanwhile the platform has the two answers
+    a subsystem restarts it from: no NEW epoch on an assignment that did not answer, and the epoch it holds still
+    good for data."""
+    box, ctl, store, w = _worker()
     store.down = True
     box.clock.advance(16); box.wall.advance(16)
-    assert w.reconcile_once() == []                                   # nothing stopped: the last assignment stands
+    assert w.reconcile_once() == ["c1", "c2"] and w.stopped == []    # nothing stopped: the last assignment stands
     assert w.lease_pass() == [] and w.writing_allowed               # the slot: not confirmed, and still mine
-    assert act.running == {1, 2} and act.epochs == {1: 1, 2: 1} and w.store_errors == 2
-    act.dead.append(1)                                                # a pipeline falls over while the store is away
-    w.pump_once()                                                     # noticed: the pump is local (the requests are not, and wait)
-    box.clock.advance(5); box.wall.advance(5)
-    assert w.reconcile_once() == [("start", 1)]                       # it comes back under the epoch this worker holds:
-    assert act.running == {1, 2} and act.epochs == {1: 1, 2: 1}       # the same writer — nobody could be given another number
+    assert w.running == {"c1": 1, "c2": 1} and w.epochs == {"c1": 1, "c2": 1} and w.store_errors == 2
+    try:
+        w.take_epoch("c1"); raise AssertionError("a new epoch on an assignment that did not answer")
+    except NotReadThisPass:
+        pass
+    assert w.may_write("c1") and w.epochs == {"c1": 1, "c2": 1}     # the same writer — nobody could be given another number
     store.down = False
-    assert w.lease_pass() == [] and w.reconcile_once() == [] and act.epochs == {1: 1, 2: 1}
+    assert w.lease_pass() == [] and w.reconcile_once() == ["c1", "c2"] and w.epochs == {"c1": 1, "c2": 1}
+    assert current_epoch(box.vars, testsub().sub.epoch_key("c1")) == 1
 
 
-def test_a_lease_that_ran_out_with_nobody_asking_stops_that_camera_and_it_comes_back_under_a_new_epoch():
+def test_a_lease_that_ran_out_with_nobody_asking_stops_that_unit_and_it_comes_back_under_a_new_epoch():
     """Thirty-six seconds in which this worker asked nothing — a GC pause, a suspended VM — and then a store
     that does not answer. That is not silence (feedback BK): the lease ran out while nobody was asking, and
-    somebody may have been given the cameras meanwhile. They stop — each with the reason in the log — and the
-    instance is NOT fenced. The store returns, and the reconciler starts them again under the next epoch.
+    somebody may have been given the units meanwhile. They stop — each with the reason in the log — and the
+    instance is NOT fenced. The store returns, and the next pass starts them again under the next epoch.
     Silence counts from a renewal that failed while the lease was still good; see the tests at the end."""
-    box, ctl, store, act, w = _worker()
+    box, ctl, store, w = _worker()
     store.down = True
     box.clock.advance(36); box.wall.advance(36)
-    assert sorted(w.lease_pass()) == ["1", "2"]
-    assert act.running == set() and w.epochs == {} and w.writing_allowed and w.fenced_reason is None
+    assert sorted(w.lease_pass()) == ["c1", "c2"]
+    assert w.running == {} and w.epochs == {} and w.writing_allowed and w.fenced_reason is None
+    assert sorted(w.stopped) == ["c1", "c2"]
     store.down = False
     box.clock.advance(60); box.wall.advance(60)                       # past any backoff
     w.reconcile_once()
-    assert act.running == {1, 2} and act.epochs == {1: 2, 2: 2}
+    assert w.running == {"c1": 2, "c2": 2}
     assert w.lease_pass() == []
 
 
-def test_a_camera_in_two_assignments_costs_one_pipeline_not_fifty():
-    """Camera 1 is listed on two workers for the seconds a controller takes to mend it. The other worker took the
+def test_a_unit_in_two_assignments_costs_one_unit_not_fifty():
+    """Counter c1 is listed on two workers for the seconds a controller takes to mend it. The other worker took the
     next epoch. This worker used to read that as "another instance of me holds it: I am a zombie" and stop every
-    camera it had. Its slot was renewed a line before — there is no other instance of it."""
-    box, ctl, store, act, w = _worker()
-    next_epoch(box.vars, "vms/epoch/1")                               # somebody else started camera 1
-    assert w.lease_pass() == ["1"]
-    assert w.writing_allowed and act.running == {2} and "1" not in w.epochs
-    assert w.conflicts() == 0 and w.lease_pass() == []                # camera 2 is untouched; nothing left to lose
+    unit it had. Its slot was renewed a line before — there is no other instance of it."""
+    box, ctl, store, w = _worker()
+    next_epoch(box.vars, testsub().sub.epoch_key("c1"))               # somebody else started c1
+    assert w.lease_pass() == ["c1"]
+    assert w.writing_allowed and w.running == {"c2": 1} and "c1" not in w.epochs
+    assert w.conflicts() == 0 and w.lease_pass() == []                # c2 is untouched; nothing left to lose
 
 
 def test_only_a_slot_row_naming_another_holder_fences_and_a_fence_is_not_for_ever():
     """The replacement took w-1. The old instance reads the slot row, finds another holder and fences — that is a
-    "no". It used to stay so: alive, heartbeating `fenced: true`, recording nothing until somebody restarted it.
+    "no". It used to stay so: alive, heartbeating `fenced: true`, doing nothing until somebody restarted it.
     On its next pass it takes a free slot and starts from nothing — a process that took whatever was free; one named by
     its unit takes its own name back only (`test_names.py`)."""
     from w2cplatform.contract import HUNG_MOVE_AFTER
-    box, ctl, store, act, a = _worker(1)
+    box, ctl, store, a = _worker(1)
     a.given = None                                                    # not named by its unit: any free slot will do
     ctl.look()
     box.wall.advance(91 + HUNG_MOVE_AFTER)                            # a long pause: the slot lapsed, the margin out,
     assert "w-1" in ctl.publish_names()["names_given"]                # and the controller gives its name (the 13th pass)
-    b = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+    b = counter_worker(box, None)
     assert b.name == "w-1"
-    assert a.lease_pass() == ["1"] and not a.writing_allowed and "slot w-1" in a.fenced_reason
+    assert a.lease_pass() == ["c1"] and not a.writing_allowed and "slot w-1" in a.fenced_reason
     assert a.rejoin() == "w-2" and a.writing_allowed and a.was_fenced and a.fenced_reason is None
-    assert a.epochs == {} and a.rows == [] and a.reconciler.actual == {}
-    ctl.assign("w-2", ["1"])
-    assert a.reconcile_once() == [("start", 1)]                       # whatever ITS slot's assignment says, from nothing
+    assert a.epochs == {} and a.rows == {} and a.running == {}
+    ctl.assign("w-2", ["c1"])
+    assert a.reconcile_once() == ["c1"] and a.running == {"c1": 2}    # whatever ITS slot's assignment says, from nothing
     assert b.lease_pass() == []                                       # and the replacement never noticed
 
 
 def test_a_lease_runs_from_before_the_read_not_from_after_it():
     """A holder paused for a minute between reading the epoch row and stamping the renewal woke up with a fresh
     lease it had in fact slept through."""
-    box, ctl = _box_with_cameras(1)
-    epoch, _ = next_epoch(box.vars, "vms/epoch/1")
+    box, ctl = _box_with_counters(1)
+    key = testsub().sub.epoch_key("c1")
+    epoch, _ = next_epoch(box.vars, key)
 
     class Slow:
         def get(self, key):
@@ -127,15 +150,15 @@ def test_a_lease_runs_from_before_the_read_not_from_after_it():
             box.clock.advance(60)                                     # the pause: a GC, a stalled disk
             return out
 
-    lease = Lease(Slow(), "vms/epoch/1", epoch, 30.0, 5.0, box.clock)
+    lease = Lease(Slow(), key, epoch, 30.0, 5.0, box.clock)
     assert lease.renew() is True                                      # the row said "yours" — a minute ago
     assert lease.may_act() is False and lease.seconds_left() == 0
 
 
 def test_the_pump_does_not_wait_for_the_pass_over_the_store():
-    """What is local — the buses, the devices' events, the spool — is drained whether or not the pass succeeded.
-    They shared one `try`, and a pass that raised skipped the pump, every pass."""
-    box, ctl, store, act, w = _worker(1)
+    """The pump — what a subsystem drains beside the pass, and the requests — runs whether or not the pass
+    succeeded. They shared one `try`, and a pass that raised skipped the pump, every pass."""
+    box, ctl, store, w = _worker(1)
     pumps = []
     w.reconcile_once = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("the pass raised"))
     w.pump_once = lambda: pumps.append(1)
@@ -150,7 +173,7 @@ def test_the_pump_does_not_wait_for_the_pass_over_the_store():
     assert len(pumps) == 2
 
 
-# -- recording through a silent store (feedback BK) -------------------------------------------------------
+# -- working through a silent store (feedback BK) -------------------------------------------------------
 
 def _silence(box, w, seconds, step=8):
     """The loop, for `seconds`: a lease pass and a reconcile every `step` — the store asked each time."""
@@ -163,132 +186,62 @@ def _silence(box, w, seconds, step=8):
 
 
 def test_ten_minutes_of_silence_stop_nothing_and_the_store_coming_back_stops_nothing_either():
-    """A lease that ran out while the store was SILENT is not a lease somebody took. The cameras record on under
-    the epochs they have — a frame under an old epoch harms nothing: the epoch is in the path, and a second writer
-    would cost a duplicate, where stopping costs a hole. On one box there is nobody to protect them from: the
-    store is a directory on the same disk, away for everybody at once."""
-    box, ctl, store, act, w = _worker()
-    assert w.unconfirmed_max is None                                  # one box, nothing said: no ceiling
+    """A lease that ran out while the store was SILENT is not a lease somebody took. Units that write data go on
+    under the epochs they have — a write under an old epoch harms nothing: the epoch is in the path, and a second
+    writer would cost a duplicate, where stopping costs a hole. On one box there is nobody to protect them from: the
+    store is a directory on the same disk, away for everybody at once. The subsystem says so: no ceiling."""
+    box, ctl, store, w = _worker(unconfirmed_max=None)
     store.down = True
-    assert _silence(box, w, 600) == [] and act.running == {1, 2} and act.epochs == {1: 1, 2: 1}
-    assert not w.may_act("1") and w.may_write("1")                 # the strict question says no; the data one says yes
-    st = {s["id"]: s for s in w.status()}
-    assert st[1]["lease"] == "unconfirmed" and 570 <= st[1]["unconfirmed_s"] <= 580
-    w.objects = box.objects; w.heartbeat_once()
-    from w2cplatform.console import SpecConsole
-    text = SpecConsole(ctl, wall=box.wall).metrics_text()
-    assert 'vms_worker_unconfirmed{worker="w-1"} 2' in text
+    assert _silence(box, w, 600) == [] and w.running == {"c1": 1, "c2": 1} and w.stopped == []
+    assert not w.may_act("c1") and w.may_write("c1")               # the strict question says no; the data one says yes
+    assert sorted(w.unconfirmed()) == ["c1", "c2"] and 570 <= w.unconfirmed()["c1"] <= 580
 
     store.down = False
-    assert w.lease_pass() == [] and act.running == {1, 2} and act.epochs == {1: 1, 2: 1}   # confirmed: no stop, no seam
-    assert w.may_act("1") and "lease" not in w.status()[0] and w.unconfirmed() == {}
+    assert w.lease_pass() == [] and w.running == {"c1": 1, "c2": 1} and w.epochs == {"c1": 1, "c2": 1}   # confirmed: no stop, no seam
+    assert w.may_act("c1") and w.unconfirmed() == {}
 
 
-def test_a_camera_given_to_somebody_else_during_the_silence_stops_at_the_stores_first_answer():
-    box, ctl, store, act, w = _worker()
+def test_a_unit_given_to_somebody_else_during_the_silence_stops_at_the_stores_first_answer():
+    box, ctl, store, w = _worker()
     store.down = True
     _silence(box, w, 120)
-    next_epoch(box.vars, "vms/epoch/1")                               # another worker reached the store and started camera 1
+    next_epoch(box.vars, testsub().sub.epoch_key("c1"))               # another worker reached the store and started c1
     store.down = False
-    assert w.lease_pass() == ["1"] and act.running == {2} and w.writing_allowed
+    assert w.lease_pass() == ["c1"] and w.running == {"c2": 1} and w.writing_allowed
 
 
 def test_the_ceiling_and_off():
-    """A cluster's store is on the network: a worker cut off from it may hold the camera's session while its
-    successor cannot connect. `UNCONFIRMED_MAX` is how long past the lease's end it records on; `off` is the old
-    behaviour — a lease not confirmed in time stops its camera."""
-    box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "60"})
+    """A cluster's store is on the network: a worker cut off from it may hold a unit while its successor cannot
+    connect. `unconfirmed_max` is how long past the lease's end it writes on; `0` is the old behaviour — a lease not
+    confirmed in time stops its unit."""
+    box, ctl, store, w = _worker(unconfirmed_max=60.0)
     store.down = True
-    assert _silence(box, w, 80) == [] and act.running == {1, 2}       # 25 s of lease + 55 s unconfirmed: under the ceiling
-    assert sorted(_silence(box, w, 16)) == ["1", "2"] and act.running == set() and w.writing_allowed
+    assert _silence(box, w, 80) == [] and w.running == {"c1": 1, "c2": 1}   # 25 s of lease + 55 s unconfirmed: under the ceiling
+    assert sorted(_silence(box, w, 16)) == ["c1", "c2"] and w.running == {} and w.writing_allowed
 
-    box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "off"})
+    box, ctl, store, w = _worker(unconfirmed_max=0.0)
     store.down = True
-    assert _silence(box, w, 24) == [] and sorted(_silence(box, w, 8)) == ["1", "2"]
+    assert _silence(box, w, 24) == [] and sorted(_silence(box, w, 8)) == ["c1", "c2"]
 
 
-def test_a_camera_never_started_waits_and_an_action_waits_for_the_stores_word():
-    """Data goes on; two things do not. A camera this worker has not started has no epoch to record under — it
-    waits. And a command is not data: a relay pulsed by a worker that may have been replaced is pulsed twice."""
-    from vms.config import SPEC
-    from tests.conftest import Box
-    from tests.test_group_by import _ctl, _holder, _worker as _placed
-    box = Box(); ctl, con = _ctl(box)
-    door = con.create_camera({"name": "front door", "source": "driverpack://acme/10.0.0.90/ch/1"})["id"]
-    _placed(box, "w-1", "srv-a"); ctl.ensure_placed()
-    w = _holder(box, relays=2)
-    store = Flaky(box.vars)
-    w.vars = store
-    w.reconcile_once()
-    late = con.create_camera({"name": "late", "source": "driverpack://acme/10.0.0.91/ch/1"})["id"]
-    ctl.ensure_placed(); w.refresh()                                  # assigned, and not yet started
+def test_a_unit_never_started_waits_and_an_action_waits_for_the_stores_word():
+    """Data goes on; two things do not. A unit this worker has not started has no epoch to write under — it
+    waits. And a request is not data: an action taken by a worker that may have been replaced is taken twice."""
+    box, ctl, store, w = _worker()
+    ctl.create({"name": "c3"})
+    ctl.assign("w-1", _names(3)); w.refresh()                         # assigned, and not yet started
     store.down = True
     _silence(box, w, 40)
-    assert w.may_write(str(door)) and str(late) not in w.epochs      # no epoch for it: it waits
-    assert late not in w.actuator.running
+    assert w.may_write("c1") and "c3" not in w.epochs                # no epoch for it: it waits
+    assert "c3" not in w.running
 
     store.down = False
-    con.vars.put(SPEC.sub.request_key("r1"), {"unit": str(door), "action": "output", "port": "1",
-                                              "valid_until": str(box.wall() + 60)})
-    w.leases[str(door)].vars = Flaky(box.vars); w.leases[str(door)].vars.down = True      # the row is read; the lease is still unconfirmed
-    assert w.requests() == [] and w.devices["acme/10.0.0.90"].did == []                  # not performed
-    w.leases[str(door)].vars.down = False
+    box.vars.put(testsub().sub.request_key("r1"), {"unit": "c1", "add": "2", "valid_until": str(box.wall() + 60)})
+    w.leases["c1"].vars = Flaky(box.vars); w.leases["c1"].vars.down = True     # the row is read; the lease is still unconfirmed
+    assert w.requests() == [] and w.counts["c1"] == 0                 # not performed
+    w.leases["c1"].vars.down = False
     w.lease_pass()
-    assert [d["request"] for d in w.requests()] == ["r1"]             # confirmed: it acts
-
-
-def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
-    """The place, while the store is silent. Not reading the list of volumes is not "nothing is declared", and
-    not reading the hold is not "somebody else holds it": the recorder used to be one store error away from
-    dropping its archive and every recording on it. A disk of this server stays. A network archive any box may
-    serve is let go when its hold has gone unconfirmed for its TTL — two writers in one archive is damage."""
-    import os
-    from vms import volumes
-    from tests.conftest import Box
-    from tests.test_volumes import _recorder
-    for kind, stays in (("local", True), ("network", False)):
-        box = Box()
-        row = {"name": "vol", "kind": kind, "url": os.path.join(box.root, "vol"), "quota_bytes": 10 ** 9}
-        volumes.write(box.vars, {**row, "server": "srv-a"} if kind == "local" else row)
-        r = _recorder(box, "r-1", "srv-a")
-        assert r.lease_pass() == [] and r.hold == "vol" and r.volume == "vol"
-        r.vars = Flaky(box.vars); r.vars.down = True
-        box.clock.advance(8); box.wall.advance(8)
-        r.lease_pass()
-        assert r.hold == "vol" and r.volume == "vol" and r.store_errors >= 1      # one error: nothing is let go
-        for _ in range(8):
-            box.clock.advance(8); box.wall.advance(8); r.lease_pass()
-        assert (r.hold == "vol") is stays and (r.volume == "vol") is stays, kind
-
-
-
-def test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last():
-    """The review's second pass, blocker 4. The recorder's pass began by reading the camera's holder — from the
-    object store, which on a cluster is the same store — and the OSError ended the pass: no restart of a pipeline
-    that fell over, no watch on the writer, for as long as the store was away. The store that does not answer
-    says nothing: the source read last stands, and the other parts of the pass run."""
-    from vms.config import live_shm
-    from vms.recworker import RecWorker
-    from tests.conftest import REC_ACL, TEST_BLOCK, TEST_QUOTA, TEST_READ, obsd_session
-    from tests.test_lesson5_recorder import _box
-    box, ctl, con, rec_con, rec_ctl, w = _box()
-    vars_, objects = Flaky(box.vars.as_writer("recworker-r-1", REC_ACL)), Flaky(box.objects)
-    act = FakeActuator()
-    r = RecWorker("r-1", vars_, objects, act, clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive,
-                  block=TEST_BLOCK, read=TEST_READ, default_quota=TEST_QUOTA, obsd=obsd_session("rec-outage"),
-                  env={"ARCHIVE_VOLUME": f"file://{box.root}/vol-srv-1"})
-    r.lease_pass(); r.heartbeat_once()
-    rec_con.create({"name": "1-main", "cam": "1"}); rec_ctl.ensure_placed()
-    assert r.reconcile_once() == [("start", "1-main")] and act.started["1-main"]["source"] == live_shm(1)
-    vars_.down = objects.down = True
-    box.clock.advance(5); box.wall.advance(5)
-    assert r.reconcile_once() == []                                   # the store away: nothing stopped, nothing fenced
-    act.dead.append("1-main"); r.pump_once()                          # the pipeline falls over meanwhile
-    box.clock.advance(5); box.wall.advance(5)
-    assert r.reconcile_once() == [("start", "1-main")]                # restarted — on the source read last, under the held epoch
-    assert act.started["1-main"]["source"] == live_shm(1) and act.started["1-main"]["epoch"] == 1 and r.store_errors > 0
-    vars_.down = objects.down = False
-    assert r.reconcile_once() == [] and act.running == {"1-main"}
+    assert [d["request"] for d in w.requests()] == ["r1"] and w.counts["c1"] == 2   # confirmed: it acts
 
 
 class OneRead(Flaky):
@@ -306,58 +259,43 @@ class OneRead(Flaky):
 
 
 def _moved_away(n=2):
-    """w-1 holds cameras 1 and 2 on a store that can refuse one read. Camera 1 goes to w-2, which starts it under
-    epoch 2; w-1's lease step finds the newer epoch and lets camera 1 go."""
-    box, ctl = _box_with_cameras(n)
-    ctl.assign("w-1", [str(i) for i in range(1, n + 1)])
-    store, act = OneRead(box.vars), FakeActuator()
-    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, resource_root=box.archive)
-    w.claim_slot(prefer="w-1")
+    """w-1 holds `c1`…`c<n>` on a store that can refuse one read. c1 goes to w-2, which starts it under epoch 2;
+    w-1's lease step finds the newer epoch and lets c1 go."""
+    box, ctl = _box_with_counters(n)
+    ctl.assign("w-1", _names(n))
+    store = OneRead(box.vars)
+    w = counter_worker(box, "w-1", vars_=store)
     assert len(w.reconcile_once()) == n
-    act2 = FakeActuator()
-    w2 = VmsWorker("w-2", box.vars, box.objects, act2, clock=box.clock, wall=box.wall, resource_root=box.archive)
-    w2.claim_slot(prefer="w-2")
-    ctl.assign("w-1", [str(i) for i in range(2, n + 1)]); ctl.assign("w-2", ["1"])
-    assert w2.reconcile_once() == [("start", 1)] and act2.epochs == {1: 2}
-    assert w.lease_pass() == ["1"] and 1 not in act.running
-    return box, store, act, w, act2, w2
+    w2 = counter_worker(box, "w-2")
+    ctl.assign("w-1", _names(n, 2)); ctl.assign("w-2", ["c1"])
+    assert w2.reconcile_once() == ["c1"] and w2.running == {"c1": 2}
+    assert w.lease_pass() == ["c1"] and "c1" not in w.running
+    return box, store, w, w2
 
 
 def test_a_worker_whose_assignment_read_failed_takes_no_new_epoch_on_the_assignment_it_read_before():
     """The product's cross-check (A): the old holder's read of its assignment failed — one 503 — and the pass went on
-    with the assignment read before, which still named camera 1; the reconciler started it, and the epoch CAS, which
-    the store did answer, gave it epoch 3 over the worker the camera had moved to. The new holder was fenced by one
-    that had not read its assignment since. Rule: a new epoch only for a unit of the assignment read this pass."""
-    box, store, act, w, act2, w2 = _moved_away()
-    store.refused = {"vms/workers/w-1"}
+    with the assignment read before, which still named c1; the pass started it, and the epoch CAS, which the store did
+    answer, gave it epoch 3 over the worker the unit had moved to. The new holder was fenced by one that had not read
+    its assignment since. Rule: a new epoch only for a unit of the assignment read this pass."""
+    box, store, w, w2 = _moved_away()
+    store.refused = {testsub().sub.assignment("w-1")}
     box.clock.advance(60); box.wall.advance(60)                       # past any backoff
-    assert ("start", 1) not in w.reconcile_once() and act.running == {2}   # camera 1 is not started from the old list
-    assert int(box.vars.get("vms/epoch/1")[0]["epoch"]) == 2
-    assert w2.lease_pass() == [] and act2.running == {1}              # …and its new holder is not fenced
+    assert w.reconcile_once() == ["c2"] and w.started.count("c1") == 1   # c1 is not started from the old list
+    assert current_epoch(box.vars, testsub().sub.epoch_key("c1")) == 2
+    assert w2.lease_pass() == [] and w2.running == {"c1": 2}         # …and its new holder is not fenced
     store.refused = set()
     box.clock.advance(60); box.wall.advance(60)
-    assert w.reconcile_once() == [] and act.running == {2}            # read again: camera 1 is not its own
+    assert w.reconcile_once() == ["c2"] and w.started.count("c1") == 1   # read again: c1 is not its own
 
 
-def test_a_worker_whose_camera_row_read_failed_takes_no_epoch_for_a_camera_its_new_assignment_does_not_name():
-    """The sibling the product did not name: the assignment answered — camera 1 is gone from it — but the read of
-    camera 2's row did not, and the pass went on with the rows of the pass before, camera 1's among them. Camera 1 is
-    not the fresh assignment's: no epoch is taken for it."""
-    box, store, act, w, act2, w2 = _moved_away()
-    store.refused = {"vms/cameras/2"}
+def test_a_worker_whose_unit_row_read_failed_takes_no_epoch_for_a_unit_its_new_assignment_does_not_name():
+    """The sibling the product did not name: the assignment answered — c1 is gone from it — but the read of c2's row
+    did not, and the pass went on with the rows of the pass before, c1's among them. c1 is not the fresh assignment's:
+    no epoch is taken for it."""
+    box, store, w, w2 = _moved_away()
+    store.refused = {testsub().sub.config(testsub().rows, "c2")}
     box.clock.advance(60); box.wall.advance(60)
-    assert ("start", 1) not in w.reconcile_once() and act.running == {2}
-    assert int(box.vars.get("vms/epoch/1")[0]["epoch"]) == 2
-    assert w2.lease_pass() == [] and act2.running == {1}
-
-
-def test_a_fallen_pipeline_of_a_camera_still_held_comes_back_under_its_epoch_when_the_assignment_read_failed():
-    """The other side of the rule: what this worker HOLDS is not taken from anyone by restarting it. Camera 2's
-    pipeline falls over in a pass whose assignment read failed: it comes back under the epoch it holds (feedback BK),
-    not a new one, and not never."""
-    box, store, act, w, act2, w2 = _moved_away()
-    store.refused = {"vms/workers/w-1"}
-    act.dead.append(2); w.pump_once()
-    box.clock.advance(5); box.wall.advance(5)                         # inside camera 2's lease
-    assert ("start", 2) in w.reconcile_once() and act.epochs[2] == 1 and act.running == {2}
-    assert int(box.vars.get("vms/epoch/2")[0]["epoch"]) == 1
+    assert w.reconcile_once() == ["c2"] and w.started.count("c1") == 1
+    assert current_epoch(box.vars, testsub().sub.epoch_key("c1")) == 2
+    assert w2.lease_pass() == [] and w2.running == {"c1": 2}

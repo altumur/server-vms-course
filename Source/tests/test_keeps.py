@@ -17,7 +17,7 @@ from vms import keeps, volumes
 from vms.archive import event_log
 from vms.config import REC_SPEC
 from vms.worker import fake_samples
-from tests.conftest import TEST_QUOTA, Box, door, footage, recorder, store
+from tests.vmsconftest import TEST_QUOTA, Box, door, footage, recorder, store
 
 DAY = 86400.0
 

@@ -5,14 +5,14 @@ age, host B takes the volume. Before patch 07 the engine noticed nothing — A's
 close removed B's lock file. With it the engine checks the lock at its path before every block and status, stops a
 writer whose lock is another's (`WRITER_STOPPED`, "volume lock lost"), and takes `WRITER_ABANDON`: the writer given up
 writing nothing. That engine is the only one the course supports: the suite's daemon is refused without it
-(`tests/conftest.py`), and a recorder takes no network volume on a daemon that lacks it (the last test here).
+(`tests/vmsconftest.py`), and a recorder takes no network volume on a daemon that lacks it (the last test here).
 """
 import os
 import signal
 import tempfile
 import time
 
-from tests.conftest import TEST_BLOCK, TEST_READ, Box, ObsdDaemon, footage, recorder
+from tests.vmsconftest import TEST_BLOCK, TEST_READ, Box, ObsdDaemon, footage, recorder
 
 
 def test_a_writer_whose_lock_another_writer_took_is_stopped_by_the_engine_and_given_up_writing_nothing():

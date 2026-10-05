@@ -12,7 +12,7 @@ import json
 
 from w2cplatform.contract import Assignment, Heartbeat, Slot
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_group_by import _worker
 from tests.test_lesson4_worker import _box_with_cameras
 
@@ -292,7 +292,7 @@ def test_the_recorder_reads_past_a_recording_whose_row_does_not_parse():
     """The recorder walks EVERY recording's row to answer questions about one — who else records this camera, which
     backup holds it, what a keep names — and parsed each bare: one garbled row, and no backup's pipeline started, no
     range was fetched, no keep was copied, for any recording."""
-    from tests.conftest import recorder
+    from tests.vmsconftest import recorder
     from tests.test_rec_volume import _site
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
@@ -341,9 +341,9 @@ def test_the_detector_the_scan_the_survey_the_evaluator_and_the_gateway_each_pas
     assert a.status_by_unit["a-door"]["phase"] == "failed" and "row does not parse" in a.status_by_unit["a-door"]["why"]
 
     # the gateway: an idle fan-out whose row stopped parsing is kept — nobody can say its grace has run out
-    from tests.test_pass_failures import _workers
+    from tests.vmsconftest import four_workers
     box = Box()
-    gw = _workers(box)[3]
+    gw = four_workers(box)[3]
     gw.rtp_source = lambda cam: ("srv-1", f"rtsp://srv-1/{cam}", 1)
     for cam in ("7", "8"):
         gw.ctl.create({"cam": cam})

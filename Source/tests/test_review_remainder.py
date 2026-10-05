@@ -23,7 +23,8 @@ from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import FileVariables, Forbidden, StoreBusy, cas_pause
 from vms import keeps
 from vms.config import REC_SPEC, SPEC
-from tests.conftest import Box, Served, door, footage, recorder, store
+from tests.conftest import Served
+from tests.vmsconftest import Box, door, footage, recorder, store
 from tests.test_group_by import _ctl, _holder, _worker
 from tests.test_store_outage import Flaky
 
@@ -591,7 +592,7 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
     BU). A whole file is said every time it leaves (the review's fourth pass, minor: the second file of the same minute
     need not be the first); a part — a player that moved on — once a minute. Said by the recorder whose door it leaves
     through (`audit/door-<recorder>`), with the name the door token was given to."""
-    from tests.conftest import page_door
+    from tests.vmsconftest import page_door
     box = Box()
     st = store()
     start = box.wall() - 3600

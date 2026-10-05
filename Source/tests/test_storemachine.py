@@ -19,8 +19,8 @@ from w2cplatform.variables import Conflict, Forbidden
 
 # A small rights file, in the format `python3 -m w2cplatform.cluster rights` generates from the specs (М11).
 RIGHTS = {"roles": {
-    "vmsworker": {"read": ["vms/*"], "write": ["vms/epoch/*", "vms/slots/*"], "delete": ["vms/slots/*"]},
-    "console": {"read": ["vms/*", "rec/*"], "write": ["vms/cameras/*"], "delete": ["vms/cameras/*"]},
+    "testsubworker": {"read": ["testsub/*"], "write": ["testsub/epoch/*", "testsub/slots/*"], "delete": ["testsub/slots/*"]},
+    "console": {"read": ["testsub/*", "testsub2/*"], "write": ["testsub/counters/*"], "delete": ["testsub/counters/*"]},
     "domainagent": {"read": ["domain/*"], "write": ["domain/*"], "delete": ["domain/*"]},
 }}
 
@@ -36,12 +36,12 @@ def test_an_absent_key_reads_as_nothing_and_create_only_takes_it_once():
     """`(None, 0)` for a key never written — the API says `index: ""` — and `cas=0` (on the wire `""`) lets exactly
     one creator through: `next_epoch`, `claim_slot` and `Controller.write` start from there."""
     m = StoreMachine()
-    assert m.apply({"op": "get", "key": "vms/epoch/7"}) == {"items": None, "index": 0}
-    first = _put(m, "vms/epoch/7", {"epoch": 1}, cas="")
+    assert m.apply({"op": "get", "key": "testsub/epoch/7"}) == {"items": None, "index": 0}
+    first = _put(m, "testsub/epoch/7", {"epoch": 1}, cas="")
     assert "index" in first and not first.get("conflict")
-    assert _put(m, "vms/epoch/7", {"epoch": 9}, cas="") == {"conflict": True, "index": first["index"]}
-    assert _put(m, "vms/epoch/7", {"epoch": 9}, cas=0)["conflict"]
-    assert m.apply({"op": "get", "key": "vms/epoch/7"}) == {"items": {"epoch": "1"}, "index": first["index"]}
+    assert _put(m, "testsub/epoch/7", {"epoch": 9}, cas="") == {"conflict": True, "index": first["index"]}
+    assert _put(m, "testsub/epoch/7", {"epoch": 9}, cas=0)["conflict"]
+    assert m.apply({"op": "get", "key": "testsub/epoch/7"}) == {"items": {"epoch": "1"}, "index": first["index"]}
 
 
 def test_a_version_is_the_log_index_above_the_base_and_is_never_handed_out_twice():
@@ -75,15 +75,15 @@ def test_a_write_repeated_with_its_id_is_answered_with_its_first_answer():
     even after another write moved the row — and a conflict is remembered as a conflict. Without the id the same
     write would conflict with itself, and a slot renewal that conflicts fences the worker."""
     m = StoreMachine()
-    i = _put(m, "vms/slots/w-2", {"holder": "a"}, cas=0)["index"]
-    first = _put(m, "vms/slots/w-2", {"holder": "a", "until": "1"}, cas=i, op_id="op-1")
-    j = _put(m, "vms/slots/w-2", {"holder": "b"}, cas=first["index"])["index"]
-    assert _put(m, "vms/slots/w-2", {"holder": "a", "until": "1"}, cas=i, op_id="op-1") == first
-    assert m.apply({"op": "get", "key": "vms/slots/w-2"}) == {"items": {"holder": "b"}, "index": j}
-    lost = _put(m, "vms/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2")
+    i = _put(m, "testsub/slots/w-2", {"holder": "a"}, cas=0)["index"]
+    first = _put(m, "testsub/slots/w-2", {"holder": "a", "until": "1"}, cas=i, op_id="op-1")
+    j = _put(m, "testsub/slots/w-2", {"holder": "b"}, cas=first["index"])["index"]
+    assert _put(m, "testsub/slots/w-2", {"holder": "a", "until": "1"}, cas=i, op_id="op-1") == first
+    assert m.apply({"op": "get", "key": "testsub/slots/w-2"}) == {"items": {"holder": "b"}, "index": j}
+    lost = _put(m, "testsub/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2")
     assert lost["conflict"]
-    assert _put(m, "vms/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2") == lost, "a remembered conflict wrote"
-    assert _put(m, "vms/slots/w-2", {"holder": "c"}, cas=i)["conflict"], "a NEW write against an old version passed"
+    assert _put(m, "testsub/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2") == lost, "a remembered conflict wrote"
+    assert _put(m, "testsub/slots/w-2", {"holder": "c"}, cas=i)["conflict"], "a NEW write against an old version passed"
 
 
 def test_an_operation_id_is_answered_from_memory_only_for_its_own_write():
@@ -92,20 +92,20 @@ def test_an_operation_id_is_answered_from_memory_only_for_its_own_write():
     was never made. Now the id answers only its own write (`_fingerprint`); under another write it is refused and
     nothing is applied — on every member alike, since the refusal is a function of the command."""
     m = StoreMachine()
-    first = _put(m, "vms/servers/srv-b", {"state": "on"}, op_id="op-1")
-    _put(m, "vms/servers/srv-b", {"state": "off"}, op_id="op-2")
+    first = _put(m, "testsub/servers/srv-b", {"state": "on"}, op_id="op-1")
+    _put(m, "testsub/servers/srv-b", {"state": "off"}, op_id="op-2")
     applied = m.applied
-    for other in ({"op": "put", "key": "vms/servers/srv-b", "items": {"state": "off"}, "cas": None, "id": "op-1"},
-                  {"op": "put", "key": "vms/servers/srv-b", "items": {"state": "on"}, "cas": first["index"],
+    for other in ({"op": "put", "key": "testsub/servers/srv-b", "items": {"state": "off"}, "cas": None, "id": "op-1"},
+                  {"op": "put", "key": "testsub/servers/srv-b", "items": {"state": "on"}, "cas": first["index"],
                    "id": "op-1"},
-                  {"op": "delete", "key": "vms/servers/srv-b", "cas": None, "id": "op-1"},
-                  {"op": "put", "key": "vms/servers/srv-c", "items": {"state": "on"}, "cas": None, "id": "op-1"}):
+                  {"op": "delete", "key": "testsub/servers/srv-b", "cas": None, "id": "op-1"},
+                  {"op": "put", "key": "testsub/servers/srv-c", "items": {"state": "on"}, "cas": None, "id": "op-1"}):
         assert "error" in m.apply(other), other
-    assert m.rows["vms/servers/srv-b"][0] == {"state": "off"} and "vms/servers/srv-c" not in m.rows
+    assert m.rows["testsub/servers/srv-b"][0] == {"state": "off"} and "testsub/servers/srv-c" not in m.rows
     assert m.applied == applied + 4
-    assert _put(m, "vms/servers/srv-b", {"state": "on"}, op_id="op-1") == first      # its own write: from memory
+    assert _put(m, "testsub/servers/srv-b", {"state": "on"}, op_id="op-1") == first      # its own write: from memory
     sub, r = _Submit(m), Rights.parse(RIGHTS)
-    code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/servers/srv-b", "items": {"state": "x"},
+    code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/servers/srv-b", "items": {"state": "x"},
                                                      "id": "op-1"}), ADMIN, r, sub)
     assert code == 400 and "another write" in said["error"], said
 
@@ -119,12 +119,12 @@ def test_what_a_write_names_is_bounded_and_never_said_back():
     any key is answered «nothing» without a command."""
     big = "x" * (3 << 20)
     sub, r = _Submit(), Rights.parse(RIGHTS)
-    for body in ({"op": "delete", "key": "vms/x", "cas": None, "id": big},
-                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": big},
-                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": None, "id": "a b"},
-                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": None, "id": 7},
-                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": 1 << 70},
-                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": [1]},
+    for body in ({"op": "delete", "key": "testsub/x", "cas": None, "id": big},
+                 {"op": "put", "key": "testsub/x", "items": {"v": "1"}, "cas": big},
+                 {"op": "put", "key": "testsub/x", "items": {"v": "1"}, "cas": None, "id": "a b"},
+                 {"op": "put", "key": "testsub/x", "items": {"v": "1"}, "cas": None, "id": 7},
+                 {"op": "put", "key": "testsub/x", "items": {"v": "1"}, "cas": 1 << 70},
+                 {"op": "put", "key": "testsub/x", "items": {"v": "1"}, "cas": [1]},
                  {"op": "put", "key": [big], "items": {"v": "1"}},
                  {"op": "put", "key": big + "/../x", "items": {"v": "1"}}):
         code, said = answer("POST", "/v1/write", _write(body), ADMIN, r, sub)
@@ -133,15 +133,15 @@ def test_what_a_write_names_is_bounded_and_never_said_back():
     assert (code, said) == (200, {"keys": {}})
     assert sub.calls == [], "a refused request reached the log"
     m = StoreMachine()
-    for cmd in ({"op": "delete", "key": "vms/x", "cas": None, "id": big},
-                {"op": "put", "key": "vms/x", "items": {}, "cas": big, "id": "op-1"}):
+    for cmd in ({"op": "delete", "key": "testsub/x", "cas": None, "id": big},
+                {"op": "put", "key": "testsub/x", "items": {}, "cas": big, "id": "op-1"}):
         assert "error" in m.apply(cmd) and len(m.done) == 0 and m.rows == {}
     for cas in (None, "", 0, 1003, "1003", "torn", True):                           # what the platform sends
-        code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/y", "items": {}, "cas": cas,
+        code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/y", "items": {}, "cas": cas,
                                                          "id": "0123456789abcdef0123456789abcdef"}), ADMIN, r,
                             _Submit(StoreMachine()))
         assert code in (200, 409), (cas, code, said)
-    code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/y", "items": {}, "cas": "torn"}), ADMIN,
+    code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/y", "items": {}, "cas": "torn"}), ADMIN,
                         r, _Submit(StoreMachine()))
     assert code == 409 and "torn" not in said["error"]
 
@@ -197,20 +197,20 @@ def test_what_the_machine_hands_out_is_a_copy():
 # -- rights -------------------------------------------------------------------------------------------
 def test_rights_grant_by_role_action_and_prefix():
     r = Rights.parse(RIGHTS)
-    assert r.allows("vmsworker", "write", "vms/slots/w-1") and r.allows("vmsworker", "read", "vms/cameras/7")
-    assert not r.allows("vmsworker", "write", "vms/cameras/7")
-    assert not r.allows("vmsworker", "read", "rec/recordings/1")
-    assert not r.allows("vmsworker", "delete", "vms/epoch/7")
-    assert not r.allows("nobody", "read", "vms/cameras/7"), "a role the file does not name was granted something"
+    assert r.allows("testsubworker", "write", "testsub/slots/w-1") and r.allows("testsubworker", "read", "testsub/counters/7")
+    assert not r.allows("testsubworker", "write", "testsub/counters/7")
+    assert not r.allows("testsubworker", "read", "testsub2/tallies/1")
+    assert not r.allows("testsubworker", "delete", "testsub/epoch/7")
+    assert not r.allows("nobody", "read", "testsub/counters/7"), "a role the file does not name was granted something"
     assert r.allows(ADMIN, "write", "anything/at/all")
 
 
 def test_nobody_deletes_an_epoch_and_only_the_domains_roles_delete_domain_rows():
     """The two deletes `variables.refuse_delete` refuses on every backend, refused by the daemon too — for the
-    root-only socket as well: an epoch deleted starts again from 1, a name somebody's footage already has."""
-    r = Rights.parse({"roles": {**RIGHTS["roles"], "vmsworker": {"delete": ["vms/*"]}}})
-    for role in (ADMIN, "vmsworker"):
-        assert not r.allows(role, "delete", "vms/epoch/7"), role
+    root-only socket as well: an epoch deleted starts again from 1, a number somebody's writes already carry."""
+    r = Rights.parse({"roles": {**RIGHTS["roles"], "testsubworker": {"delete": ["testsub/*"]}}})
+    for role in (ADMIN, "testsubworker"):
+        assert not r.allows(role, "delete", "testsub/epoch/7"), role
     assert not r.allows(ADMIN, "delete", "domain/keys/1")
     assert r.allows("domainagent", "delete", "domain/keys/1") and not r.allows("console", "delete", "domain/keys/1")
 
@@ -219,12 +219,12 @@ def test_a_denial_wins_over_every_grant_wherever_it_stands():
     """The product's format (its configstore round 2): a pattern with a leading `!` DENIES, asked before the grants —
     a role may read the domain's rows but not the emergency password's hash, whichever order the file lists them in."""
     for read in (["domain/*", "!domain/break_glass"], ["!domain/break_glass", "domain/*"]):
-        r = Rights.parse({"roles": {"console": {"read": read, "write": ["vms/*", "!vms/epoch/*"]}}})
+        r = Rights.parse({"roles": {"console": {"read": read, "write": ["testsub/*", "!testsub/epoch/*"]}}})
         assert r.allows("console", "read", "domain/keys") and not r.allows("console", "read", "domain/break_glass")
-        assert r.allows("console", "write", "vms/cameras/1") and not r.allows("console", "write", "vms/epoch/1")
-    r = Rights.parse({"roles": {"console": {"read": ["!vms/secret*"]}}})
-    assert not r.allows("console", "read", "vms/cameras/1"), "a denial alone grants nothing"
-    assert Rights.parse({"roles": {"console": {"read": ["!vms/*"]}}}).allows(ADMIN, "read", "vms/cameras/1")
+        assert r.allows("console", "write", "testsub/counters/1") and not r.allows("console", "write", "testsub/epoch/1")
+    r = Rights.parse({"roles": {"console": {"read": ["!testsub/secret*"]}}})
+    assert not r.allows("console", "read", "testsub/counters/1"), "a denial alone grants nothing"
+    assert Rights.parse({"roles": {"console": {"read": ["!testsub/*"]}}}).allows(ADMIN, "read", "testsub/counters/1")
 
 
 def test_each_role_says_its_sockets_group_and_the_daemon_takes_it():
@@ -232,36 +232,36 @@ def test_each_role_says_its_sockets_group_and_the_daemon_takes_it():
     socket by it (`configstore.socket_group`), and a role without one is `w2c-<role>` — the daemon names no subsystem
     (the boundary's step 4); what `/v1/rights` shows is the file's own form, the group with it."""
     from w2cplatform.configstore import socket_group
-    doc = {"roles": {"vmsworker": {"group": "vms-vmsworker", "read": ["vms/*"], "write": [], "delete": []},
+    doc = {"roles": {"testsubworker": {"group": "testsub-testsubworker", "read": ["testsub/*"], "write": [], "delete": []},
                      "resource": {"group": "w2c-resource", "read": ["platform/*"]},
-                     "console": {"read": ["vms/*"]},
+                     "console": {"read": ["testsub/*"]},
                      "domainagent": {"group": "w2c-domainagent", "read": ["domain/*"]}}}
     r = Rights.parse(doc)
-    assert r.groups == {"vmsworker": "vms-vmsworker", "resource": "w2c-resource", "domainagent": "w2c-domainagent"}
-    assert socket_group("vmsworker", r) == "vms-vmsworker" and socket_group("domainagent", r) == "w2c-domainagent"
+    assert r.groups == {"testsubworker": "testsub-testsubworker", "resource": "w2c-resource", "domainagent": "w2c-domainagent"}
+    assert socket_group("testsubworker", r) == "testsub-testsubworker" and socket_group("domainagent", r) == "w2c-domainagent"
     assert socket_group("console", r) == "w2c-console" and socket_group("resource") == "w2c-resource"
-    assert r.doc()["roles"]["vmsworker"] == {"group": "vms-vmsworker", "read": ["vms/*"], "write": [], "delete": []}
+    assert r.doc()["roles"]["testsubworker"] == {"group": "testsub-testsubworker", "read": ["testsub/*"], "write": [], "delete": []}
     assert "group" not in r.doc()["roles"]["console"]
     assert Rights.parse(r.doc()).groups == r.groups                       # the form shown is a file the daemon takes
-    for bad in ({"roles": {"vmsworker": {"group": "VMS Worker"}}}, {"roles": {"vmsworker": {"group": 2101}}},
-                {"roles": {"vmsworker": {"read": ["!"]}}}, {"roles": {"vmsworker": {"read": ["vms/!epoch"]}}},
-                {"roles": {"vmsworker": {"read": ["!!vms/*"]}}}):
+    for bad in ({"roles": {"testsubworker": {"group": "Testsub Worker"}}}, {"roles": {"testsubworker": {"group": 2101}}},
+                {"roles": {"testsubworker": {"read": ["!"]}}}, {"roles": {"testsubworker": {"read": ["testsub/!epoch"]}}},
+                {"roles": {"testsubworker": {"read": ["!!testsub/*"]}}}):
         with pytest.raises(ValueError):
             Rights.parse(bad)
 
 
 def test_a_rights_file_that_is_not_the_format_is_refused_whole():
     """Half a rights file grants what nobody wrote: a file the daemon cannot read whole stops it from starting."""
-    for bad in ({}, {"roles": []}, {"roles": {"Vms Worker": {}}}, {"roles": {"admin": {}}},
-                {"roles": {"vmsworker": {"writes": ["vms/*"]}}}, {"roles": {"vmsworker": {"read": "vms/*"}}},
-                {"roles": {"vmsworker": {"read": ["vms/*/slots"]}}}, {"roles": {"vmsworker": {"read": [""]}}},
+    for bad in ({}, {"roles": []}, {"roles": {"Testsub Worker": {}}}, {"roles": {"admin": {}}},
+                {"roles": {"testsubworker": {"writes": ["testsub/*"]}}}, {"roles": {"testsubworker": {"read": "testsub/*"}}},
+                {"roles": {"testsubworker": {"read": ["testsub/*/slots"]}}}, {"roles": {"testsubworker": {"read": [""]}}},
                 {"roles": {}, "extra": 1}):
         with pytest.raises(ValueError):
             Rights.parse(bad)
     path = os.path.join(tempfile.mkdtemp(), "configstore-rights.json")
     with open(path, "w") as f:
         json.dump(RIGHTS, f)
-    assert Rights.load(path).allows("console", "write", "vms/cameras/1")
+    assert Rights.load(path).allows("console", "write", "testsub/counters/1")
 
 
 # -- the API ------------------------------------------------------------------------------------------
@@ -283,37 +283,37 @@ def _write(body):
 def test_a_role_without_the_grant_is_refused_before_anything_is_submitted():
     """403 at the door: the command never reaches the log — on a daemon it is never forwarded to the leader."""
     sub, r = _Submit(), Rights.parse(RIGHTS)
-    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/cameras/7", "items": {}, "cas": ""}),
-                        "vmsworker", r, sub)
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/counters/7", "items": {}, "cas": ""}),
+                        "testsubworker", r, sub)
     assert (code, body["kind"]) == (403, "forbidden") and sub.calls == []
-    code, body = answer("POST", "/v1/write", _write({"op": "delete", "key": "vms/epoch/7", "cas": None}), ADMIN, r, sub)
+    code, body = answer("POST", "/v1/write", _write({"op": "delete", "key": "testsub/epoch/7", "cas": None}), ADMIN, r, sub)
     assert (code, body["kind"]) == (403, "forbidden") and sub.calls == []
-    code, _ = answer("GET", "/v1/get?key=rec/recordings/1", b"", "vmsworker", r, sub)
+    code, _ = answer("GET", "/v1/get?key=testsub2/tallies/1", b"", "testsubworker", r, sub)
     assert code == 403 and sub.calls == []
 
 
 def test_a_list_answers_only_what_the_role_may_read():
     m = StoreMachine()
-    for k in ("vms/cameras/1", "rec/recordings/1", "secrets/vms/token"):
+    for k in ("testsub/counters/1", "testsub2/tallies/1", "secrets/testsub/token"):
         _put(m, k, {"x": 1})
     r = Rights.parse(RIGHTS)
-    code, body = answer("GET", "/v1/list?prefix=", b"", "vmsworker", r, _Submit(m))
-    assert code == 200 and list(body["keys"]) == ["vms/cameras/1"]
+    code, body = answer("GET", "/v1/list?prefix=", b"", "testsubworker", r, _Submit(m))
+    assert code == 200 and list(body["keys"]) == ["testsub/counters/1"]
     code, body = answer("GET", "/v1/list?prefix=", b"", "console", r, _Submit(m))
-    assert sorted(body["keys"]) == ["rec/recordings/1", "vms/cameras/1"]
+    assert sorted(body["keys"]) == ["testsub/counters/1", "testsub2/tallies/1"]
 
 
 def test_the_api_says_absent_conflict_and_not_a_key_in_the_products_words():
     sub, r = _Submit(), Rights.parse(RIGHTS)
-    assert answer("GET", "/v1/get?key=vms/x", b"", ADMIN, r, sub) == (200, {"items": None, "index": ""})
-    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/x", "items": {"a": 1}, "cas": ""}),
+    assert answer("GET", "/v1/get?key=testsub/x", b"", ADMIN, r, sub) == (200, {"items": None, "index": ""})
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/x", "items": {"a": 1}, "cas": ""}),
                         ADMIN, r, sub)
     assert code == 200 and isinstance(body["index"], int)
-    code, again = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/x", "items": {"a": 2}, "cas": ""}),
+    code, again = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/x", "items": {"a": 2}, "cas": ""}),
                          ADMIN, r, sub)
     assert (code, again["kind"], again["index"]) == (409, "conflict", body["index"])
     n = len(sub.calls)
-    for bad in ("vms/a/../b", "/vms/a", ""):
+    for bad in ("testsub/a/../b", "/testsub/a", ""):
         code, said = answer("GET", "/v1/get?key=" + bad, b"", ADMIN, r, sub)
         assert (code, said["kind"]) == (400, "badkey"), bad
     code, said = answer("POST", "/v1/write", b"{not json", ADMIN, r, sub)
@@ -325,7 +325,7 @@ def test_not_done_and_outcome_unknown_are_two_answers():
     """503 `unavailable` — no leader took it, NOT done; 503 `ambiguous` — a leader took it and went, it may yet be
     applied. The handle raises `StoreUnavailable` and `StoreAmbiguous` for them, both `OSError`s."""
     r = Rights.parse(RIGHTS)
-    body = _write({"op": "put", "key": "vms/x", "items": {}, "cas": None, "id": "op-1"})
+    body = _write({"op": "put", "key": "testsub/x", "items": {}, "cas": None, "id": "op-1"})
     code, said = answer("POST", "/v1/write", body, ADMIN, r, _Submit(raises=Unavailable("no leader")))
     assert (code, said["kind"]) == (503, "unavailable")
     code, said = answer("POST", "/v1/write", body, ADMIN, r, _Submit(raises=Ambiguous("leader went")))
@@ -333,7 +333,7 @@ def test_not_done_and_outcome_unknown_are_two_answers():
     for raises, kind in ((Unavailable("x"), StoreUnavailable), (Ambiguous("x"), StoreAmbiguous)):
         h = ConfigstoreVariables("/nowhere", transport=local_transport(_Submit(raises=raises), r, ADMIN))
         with pytest.raises(kind):
-            h.put("vms/x", {"a": 1})
+            h.put("testsub/x", {"a": 1})
     assert issubclass(StoreAmbiguous, StoreUnavailable) and issubclass(StoreUnavailable, OSError)
 
 
@@ -370,28 +370,28 @@ def test_the_handle_maps_the_wire_back_to_the_contract():
     r = Rights.parse(RIGHTS)
     m = StoreMachine(1000)
     admin = ConfigstoreVariables("/stand", transport=local_transport(_Submit(m), r, ADMIN))
-    worker = ConfigstoreVariables("/stand", transport=local_transport(_Submit(m), r, "vmsworker"))
-    assert admin.get("vms/slots/w-1") == (None, 0)
-    i = worker.put("vms/slots/w-1", {"holder": "a"}, cas=0)
+    worker = ConfigstoreVariables("/stand", transport=local_transport(_Submit(m), r, "testsubworker"))
+    assert admin.get("testsub/slots/w-1") == (None, 0)
+    i = worker.put("testsub/slots/w-1", {"holder": "a"}, cas=0)
     with pytest.raises(Conflict):
-        worker.put("vms/slots/w-1", {"holder": "b"}, cas=0)
+        worker.put("testsub/slots/w-1", {"holder": "b"}, cas=0)
     with pytest.raises(Forbidden):
-        worker.put("vms/cameras/1", {"x": 1})
+        worker.put("testsub/counters/1", {"x": 1})
     with pytest.raises(ValueError):
-        admin.get("vms/../x")
-    worker.delete("vms/slots/w-1", cas=i)
-    assert admin.get("vms/slots/w-1") == (None, 0)
+        admin.get("testsub/../x")
+    worker.delete("testsub/slots/w-1", cas=i)
+    assert admin.get("testsub/slots/w-1") == (None, 0)
 
 
 # -- the twelfth review ---------------------------------------------------------------------------------
 def test_another_daemon_has_no_right_on_any_row_and_the_file_may_not_name_it():
-    """The review's twelfth pass, major 3 (its probe: `R.allows(PEER, "delete", "vms/slots/a")` was True, and so was
+    """The review's twelfth pass, major 3 (its probe: `R.allows(PEER, "delete", "testsub/slots/a")` was True, and so was
     writing `platform/schema`). `configstore` — another daemon on the `-api` door — is granted nothing on a row by
     the rights; what it may do is the group's (`configstore.StoreDaemon.serve`). And the file may name neither it nor
     `admin`: a socket of either name would be that door."""
     r = Rights.parse(RIGHTS)
-    for action, key in (("delete", "vms/slots/a"), ("write", "platform/schema"), ("read", "vms/cameras/1"),
-                        ("write", "vms/epoch/7"), ("read", "domain/break_glass")):
+    for action, key in (("delete", "testsub/slots/a"), ("write", "platform/schema"), ("read", "testsub/counters/1"),
+                        ("write", "testsub/epoch/7"), ("read", "domain/break_glass")):
         assert not r.allows(PEER, action, key), (action, key)
     sub = _Submit()
     code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "platform/schema", "items": {"v": "9"}}),
@@ -411,15 +411,15 @@ def test_a_row_heavier_than_the_store_takes_is_refused_at_the_door_and_by_the_ma
     r, m = Rights.parse(RIGHTS), StoreMachine(1000)
     sub = _Submit(m)
     at = {"b": "x" * (MAX_VALUE - 1)}
-    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/slots/w-1", "items": at}), ADMIN, r, sub)
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/slots/w-1", "items": at}), ADMIN, r, sub)
     assert code == 200, body
     over = {"b": "x" * MAX_VALUE}
     n = len(sub.calls)
-    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/slots/w-1", "items": over}), ADMIN, r, sub)
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "testsub/slots/w-1", "items": over}), ADMIN, r, sub)
     assert (code, body["kind"], body["size"], body["limit"]) == (413, "toolarge", MAX_VALUE + 1, MAX_VALUE)
     assert len(sub.calls) == n, "a row over the ceiling reached the log"
-    assert m.apply({"op": "put", "key": "vms/slots/w-1", "items": over, "cas": None}) == {"toolarge": MAX_VALUE + 1}
-    assert m.rows["vms/slots/w-1"][0] == at, "the machine wrote a row over the ceiling"
+    assert m.apply({"op": "put", "key": "testsub/slots/w-1", "items": over, "cas": None}) == {"toolarge": MAX_VALUE + 1}
+    assert m.rows["testsub/slots/w-1"][0] == at, "the machine wrote a row over the ceiling"
     h = ConfigstoreVariables("/stand", transport=local_transport(sub, r, ADMIN))
     with pytest.raises(TooLarge):
-        h.put("vms/slots/w-1", over)
+        h.put("testsub/slots/w-1", over)

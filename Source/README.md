@@ -109,7 +109,7 @@ describing how the product does it, not a second thing kept in step lesson by le
 
 | Lesson | Deliverable | Test |
 |---|---|---|
-| 1 | a config store that survives a restart and refuses a stale CAS; one writer per prefix; the contract a second team could implement; names by claim | `test_lesson1_platform.py` — including *the platform knows nothing about video* (no import from `vms/`, and not the word) and *identity by claim* (two claims, a lapse inherited, a release, the scheduler's index) |
+| 1 | a config store that survives a restart and refuses a stale CAS; one writer per prefix; the contract a second team could implement; names by claim | `test_lesson1_platform.py` — including *the platform knows nothing about its subsystems* (no import from a subsystem's package, and not the word for the camera) and *identity by claim* (two claims, a lapse inherited, a release, the scheduler's index) |
 | 2 | `driverpacksrc` running for an hour with monotonic PTS; the refusal of a vendor URI | `test_lesson2_driverpacksrc.py` — the URI logic here; the element and the hour on a box with GStreamer |
 | 3 | the archive is a volume: streams named by recording and epoch, readable once their block closes, a fenced epoch on the timeline, retention as a ceiling, events still buckets on the resource | `test_obsd.py` — the engine's properties against a live daemon; `test_lesson3_archive.py` — the stream grammar, `seal`, the fenced epoch across two volumes, the retention ceiling, two writers for one camera |
 | 4 | М9's four failures against the worker with its tests passing unchanged; the zombie on one box | `test_lesson4_worker.py` — М9 Lesson 6's seven, then the assignment, the epoch per camera, `live_url` in the heartbeat, the restart with the controller stopped, a nameless replacement inheriting the lapsed slot, the zombie fenced at the slot, the reassignment that is not one |
@@ -127,7 +127,7 @@ describing how the product does it, not a second thing kept in step lesson by le
 
 **The controller never decides how many workers there are.** It has no scheduler client and no `count`. `test_scale_in_releases_a_slot_and_the_controller_redistributes` shows the only thing it does about worker numbers: moving the cameras of a slot whose holder *said* it was stopping — and leaving a merely silent one alone for Nomad. The workers export `headroom`; `/metrics` serves it; whoever runs `count` reads it.
 
-**The platform knows nothing about video.** `test_the_platform_knows_nothing_about_video` greps `w2cplatform/` — `events.py` included — for an import from `vms/` and for the word *camera*.
+**The platform knows nothing about video.** `test_the_platform_knows_nothing_about_its_subsystems` greps `w2cplatform/` — `events.py` included — for an import from `vms/` (or any subsystem's package) and for the word *camera*, which it reads from `vms/vms.subsystem.yaml`; `test_boundary.py` holds the whole tree to every word of the product.
 
 ## Verified where
 

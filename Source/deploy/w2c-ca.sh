@@ -37,7 +37,7 @@
 # The test fixtures under Source/tests/tls/ were made by this recipe, long-lived:
 #   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 W2C_CA_CA_DAYS=36500 deploy/w2c-ca.sh init
 #   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 deploy/w2c-ca.sh issue srv-a   (and srv-b, srv-c)
-#   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 deploy/w2c-ca.sh issue srv-a recworker
+#   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 deploy/w2c-ca.sh issue srv-a testsub2worker
 #   W2C_CA_DIR=tests/tls W2C_CA_CRL_DAYS=36500 deploy/w2c-ca.sh crl      (their list, made after them)
 set -eu
 

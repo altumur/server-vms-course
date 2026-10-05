@@ -8,7 +8,7 @@ import logging
 
 from vms.config import announce_host, is_loopback, local_only
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from tests.test_lesson4_worker import _box_with_cameras
 
 

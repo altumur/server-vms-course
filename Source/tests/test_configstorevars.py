@@ -31,8 +31,8 @@ from w2cplatform.variables import Conflict, FileVariables, Forbidden, open_vars,
 HERE = os.path.dirname(os.path.abspath(__file__))
 TLS = os.path.join(HERE, "tls")
 RIGHTS = Rights.parse({"roles": {
-    "vmsworker": {"read": ["vms/*"], "write": ["vms/epoch/*", "vms/slots/*"], "delete": ["vms/slots/*"]},
-    "console": {"read": ["vms/*"], "write": ["vms/cameras/*"], "delete": ["vms/cameras/*"]},
+    "testsubworker": {"read": ["testsub/*"], "write": ["testsub/epoch/*", "testsub/slots/*"], "delete": ["testsub/slots/*"]},
+    "console": {"read": ["testsub/*"], "write": ["testsub/counters/*"], "delete": ["testsub/counters/*"]},
 }})
 
 
@@ -49,7 +49,7 @@ def refused(words: str):
 
 def short_dir() -> str:
     d = tempfile.mkdtemp(prefix="cs", dir="/tmp")
-    assert len(os.path.join(d, "vmscontroller.sock")) < 104, d
+    assert len(os.path.join(d, "testsubcontroller.sock")) < 104, d
     return d
 
 
@@ -98,22 +98,22 @@ def test_the_variables_contract_holds_on_configstore_through_a_daemon_socket():
 
 
 def test_a_role_without_the_grant_is_refused_at_its_own_socket_before_anything_is_applied():
-    """The socket is the identity: the worker's socket may write slots and epochs, not cameras. The 403 is the
+    """The socket is the identity: the worker's socket may write slots and epochs, not counters. The 403 is the
     daemon's, before the command reaches the machine (on a raft member: before it is forwarded to the leader) — the
     machine's log index does not move. The handle's own `as_writer` check is a second one, not the one proved here:
     this handle has no writer at all."""
     with Daemon() as dm:
-        w = open_vars(url(dm.dir, "vmsworker"))
-        w.put("vms/slots/w-1", {"holder": "x"}, cas=0)
+        w = open_vars(url(dm.dir, "testsubworker"))
+        w.put("testsub/slots/w-1", {"holder": "x"}, cas=0)
         applied = dm.backend.machine.applied
         with pytest.raises(Forbidden):
-            w.put("vms/cameras/7", {"name": "gate"})
+            w.put("testsub/counters/7", {"name": "gate"})
         with pytest.raises(Forbidden):
-            w.delete("vms/cameras/7")
+            w.delete("testsub/counters/7")
         with pytest.raises(Forbidden):
-            open_vars(url(dm.dir, "console")).delete("vms/epoch/7")
+            open_vars(url(dm.dir, "console")).delete("testsub/epoch/7")
         assert dm.backend.machine.applied == applied, "a refused request reached the log"
-        assert open_vars(url(dm.dir)).get("vms/cameras/7") == (None, 0)
+        assert open_vars(url(dm.dir)).get("testsub/counters/7") == (None, 0)
 
 
 def test_each_role_has_its_own_socket_and_the_admin_socket_is_the_owners():
@@ -121,18 +121,18 @@ def test_each_role_has_its_own_socket_and_the_admin_socket_is_the_owners():
     leave are refused on a role's socket, the rights are shown on the admin's only."""
     with Daemon() as dm:
         names = sorted(f for f in os.listdir(dm.dir) if f.endswith(".sock"))
-        assert names == ["admin.sock", "console.sock", "vmsworker.sock"]
+        assert names == ["admin.sock", "console.sock", "testsubworker.sock"]
         mode = lambda f: stat.S_IMODE(os.stat(os.path.join(dm.dir, f)).st_mode)    # noqa: E731
-        assert mode("admin.sock") == 0o600 and mode("vmsworker.sock") == 0o660
-        assert configstore.socket_group("vmsworker") == "w2c-vmsworker"            # the file names no group for it here
+        assert mode("admin.sock") == 0o600 and mode("testsubworker.sock") == 0o660
+        assert configstore.socket_group("testsubworker") == "w2c-testsubworker"            # the file names no group for it here
         assert configstore.socket_group("resource") == "w2c-resource"
-        w = open_vars(url(dm.dir, "vmsworker"))
+        w = open_vars(url(dm.dir, "testsubworker"))
         with pytest.raises(Forbidden):
             w._call("POST", "/v1/join", {"id": "srv-x", "raft": "127.0.0.1:1"})
         with pytest.raises(Forbidden):
             w._call("GET", "/v1/rights")
-        assert open_vars(url(dm.dir))._call("GET", "/v1/rights")["roles"]["vmsworker"]["write"] == \
-            ["vms/epoch/*", "vms/slots/*"]
+        assert open_vars(url(dm.dir))._call("GET", "/v1/rights")["roles"]["testsubworker"]["write"] == \
+            ["testsub/epoch/*", "testsub/slots/*"]
 
 
 def test_a_refused_connection_is_tried_again_within_d():
@@ -151,16 +151,16 @@ def test_a_refused_connection_is_tried_again_within_d():
         t = threading.Thread(target=start_late)
         t.start()
         t0 = time.monotonic()
-        i = v.put("vms/epoch/7", {"epoch": 1}, cas=0)
+        i = v.put("testsub/epoch/7", {"epoch": 1}, cas=0)
         took = time.monotonic() - t0
         t.join()
         assert 0.9 <= took < 5.0, took
-        assert v.get("vms/epoch/7") == ({"epoch": "1"}, i)
+        assert v.get("testsub/epoch/7") == ({"epoch": "1"}, i)
         holder["dm"].d.stop()
         quick = open_vars(url(d, query="timeout=1"))
         t0 = time.monotonic()
         with pytest.raises(StoreUnavailable):
-            quick.get("vms/epoch/7")
+            quick.get("testsub/epoch/7")
         assert 0.9 <= time.monotonic() - t0 < 3.0
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -181,7 +181,7 @@ def test_callers_refused_together_try_again_each_at_its_own_moment(monkeypatch):
         return 200, b'{"index": "", "items": null}'
     me, real = threading.current_thread(), time.sleep                # `time` is every thread's: only this one's is counted
     monkeypatch.setattr(configstorevars.time, "sleep", lambda s: slept.append(s) if threading.current_thread() is me else real(s))
-    ConfigstoreVariables("/nowhere.sock", transport=transport).get("vms/epoch/7")
+    ConfigstoreVariables("/nowhere.sock", transport=transport).get("testsub/epoch/7")
     assert len(slept) == 12 and all(0.05 <= s <= 0.15 for s in slept), slept
     assert len({round(s, 6) for s in slept}) > 6, slept
 
@@ -203,13 +203,13 @@ def test_not_done_and_outcome_unknown_reach_the_caller_as_their_own_kinds():
     platform, which keeps what it holds — and neither is ever `Conflict`, which would fence a worker."""
     with Daemon(_Faulty(Unavailable("no leader within 5 s"))) as dm:
         try:
-            open_vars(url(dm.dir)).put("vms/epoch/7", {"epoch": 1})
+            open_vars(url(dm.dir)).put("testsub/epoch/7", {"epoch": 1})
             raise AssertionError("a write no leader took was answered")
         except StoreUnavailable as e:
             assert not isinstance(e, StoreAmbiguous), "a write that was not done was said to be maybe done"
     with Daemon(_Faulty(Ambiguous("the leader went"))) as dm:
         with pytest.raises(StoreAmbiguous):
-            open_vars(url(dm.dir)).put("vms/epoch/7", {"epoch": 1})
+            open_vars(url(dm.dir)).put("testsub/epoch/7", {"epoch": 1})
     assert issubclass(StoreAmbiguous, StoreUnavailable) and issubclass(StoreUnavailable, OSError)
 
 
@@ -236,13 +236,13 @@ def test_an_answer_cut_off_by_a_dying_daemon_is_not_an_answer():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     try:
         v = open_vars(url(d, query="timeout=2"))
-        for key in ("vms/cut/1", "vms/garbage/1", "vms/silent/1"):
+        for key in ("testsub/cut/1", "testsub/garbage/1", "testsub/silent/1"):
             with pytest.raises(StoreUnavailable):
                 v.get(key)
         with pytest.raises(StoreUnavailable):
-            v.list("vms/cut/")
+            v.list("testsub/cut/")
         with pytest.raises(StoreAmbiguous):
-            v.put("vms/silent/1", {"x": "1"})
+            v.put("testsub/silent/1", {"x": "1"})
     finally:
         srv.shutdown()
         srv.server_close()
@@ -265,7 +265,7 @@ def _dial(api_url: str, ctx: ssl.SSLContext, name: str, method: str, route: str,
 def test_the_api_door_refuses_a_join_without_a_certificate_and_with_another_roles_certificate():
     """A daemon that accepts `POST /v1/join` from anybody hands the cluster's store to anybody. Without a client
     certificate the handshake itself fails; with a certificate of the installation's CA for another role (a
-    recorder's, `urn:w2c:role:recworker`) the door answers 403 before it reads the request; a daemon's certificate
+    worker's, `urn:w2c:role:testsub2worker`) the door answers 403 before it reads the request; a daemon's certificate
     (`configstore.<server>`, `urn:w2c:role:configstore`) gets through for its own server — here to a store that is
     no group, 503."""
     with Daemon(api=True) as dm:
@@ -275,9 +275,9 @@ def test_the_api_door_refuses_a_join_without_a_certificate_and_with_another_role
         join = json.dumps({"id": "srv-x", "raft": "127.0.0.1:1", "api": ""}).encode()
         with pytest.raises((ssl.SSLError, ConnectionError, OSError)):
             _dial(api, bare, "srv-a", "POST", "/v1/join", join)
-        code, said = _dial(api, tls.client_context(os.path.join(TLS, "srv-a"), "recworker"), "srv-a", "POST",
+        code, said = _dial(api, tls.client_context(os.path.join(TLS, "srv-a"), "testsub2worker"), "srv-a", "POST",
                            "/v1/join", join)
-        assert (code, said["kind"]) == (403, "forbidden") and "recworker" in said["error"]
+        assert (code, said["kind"]) == (403, "forbidden") and "testsub2worker" in said["error"]
         code, said = _dial(api, tls.client_context(os.path.join(TLS, "srv-b")), "srv-a", "POST", "/v1/join",
                            join.replace(b"srv-x", b"srv-b"))
         assert code == 503, said
@@ -287,7 +287,7 @@ def test_the_api_door_refuses_a_join_without_a_certificate_and_with_another_role
 
 def test_a_daemon_dialling_another_checks_the_name_and_the_role_of_the_one_that_answers():
     """The client side of the same door: the answering certificate must be the CA's, carry the SAN DNS of the server
-    dialled (`srv-b@host:port` dials srv-b), and be a store daemon's — a recorder's certificate for the right server
+    dialled (`srv-b@host:port` dials srv-b), and be a store daemon's — a worker's certificate for the right server
     is not the store."""
     with Daemon(api=True) as dm:
         assert configstore.peer_call(f"srv-a@{dm.d.api_url}", os.path.join(TLS, "srv-b"), "GET", "/v1/status")["id"] \
@@ -298,8 +298,8 @@ def test_a_daemon_dialling_another_checks_the_name_and_the_role_of_the_one_that_
     try:
         for f in ("ca.pem", "crl.pem"):
             shutil.copy(os.path.join(TLS, "srv-a", f), rogue_dir)
-        shutil.copy(os.path.join(TLS, "srv-a", "recworker.pem"), os.path.join(rogue_dir, "server.pem"))
-        shutil.copy(os.path.join(TLS, "srv-a", "recworker.key"), os.path.join(rogue_dir, "server.key"))
+        shutil.copy(os.path.join(TLS, "srv-a", "testsub2worker.pem"), os.path.join(rogue_dir, "server.pem"))
+        shutil.copy(os.path.join(TLS, "srv-a", "testsub2worker.key"), os.path.join(rogue_dir, "server.key"))
         with Daemon(api=True, tls_dir=rogue_dir) as dm:
             with pytest.raises(PermissionError):
                 configstore.peer_call(f"srv-a@{dm.d.api_url}", os.path.join(TLS, "srv-b"), "GET", "/v1/status")
@@ -369,7 +369,7 @@ def test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once(monkey
     monkeypatch.setattr(configstore, "ROLE_CONNECTIONS", 6)
     before = threading.active_count()
     with Daemon() as dm:
-        for sock in ("vmsworker.sock", "admin.sock"):
+        for sock in ("testsubworker.sock", "admin.sock"):
             path = os.path.join(dm.dir, sock)
             idle = []
             for _ in range(6):
@@ -381,9 +381,9 @@ def test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once(monkey
             busy = _raw(path, b"GET /v1/status HTTP/1.1\r\nHost: x\r\n\r\n")
             assert busy.startswith(b"HTTP/1.1 503") and b'"unavailable"' in busy, (sock, busy[:80])
             assert time.monotonic() - t0 < 1.0, "the full door kept the next caller waiting"
-            if sock == "vmsworker.sock":
+            if sock == "testsubworker.sock":
                 try:
-                    open_vars(url(dm.dir, "vmsworker")).put("vms/slots/w-1", {"holder": "x"})
+                    open_vars(url(dm.dir, "testsubworker")).put("testsub/slots/w-1", {"holder": "x"})
                     raise AssertionError("a full socket took a write")
                 except StoreUnavailable as e:
                     assert not isinstance(e, StoreAmbiguous), f"a refused connection was said to be maybe done: {e}"
@@ -392,7 +392,7 @@ def test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once(monkey
                 assert s.recv(1) == b"", f"{sock}: an idle connection was kept past its headers' deadline"
                 s.close()
             time.sleep(0.2)
-            assert open_vars(url(dm.dir, sock[:-5])).get("vms/slots/w-1") == (None, 0), sock
+            assert open_vars(url(dm.dir, sock[:-5])).get("testsub/slots/w-1") == (None, 0), sock
     time.sleep(0.3)
     assert threading.active_count() <= before + 1, (before, threading.active_count())
 
@@ -408,15 +408,15 @@ def test_processes_of_one_role_leave_no_connection_held_at_their_socket():
     no pool: a connection per call, closed in the call (`unix_transport`). Four handles of one role, eight threads
     each, two hundred calls at once: not one refused, and nothing held at the socket the moment they are done."""
     with Daemon() as dm:
-        door = _role_door(dm, "vmsworker")
-        handles = [open_vars(url(dm.dir, "vmsworker")) for _ in range(4)]
+        door = _role_door(dm, "testsubworker")
+        handles = [open_vars(url(dm.dir, "testsubworker")) for _ in range(4)]
         errors = []
 
         def calls(h, n):
             try:
                 for i in range(25):
-                    h.put(f"vms/slots/w-{n}", {"holder": str(i)})
-                    h.get(f"vms/slots/w-{n}")
+                    h.put(f"testsub/slots/w-{n}", {"holder": str(i)})
+                    h.get(f"testsub/slots/w-{n}")
             except Exception as e:                     # noqa: BLE001
                 errors.append(e)
         threads = [threading.Thread(target=calls, args=(h, 8 * k + j)) for k, h in enumerate(handles) for j in range(8)]
@@ -441,7 +441,7 @@ def test_a_role_socket_lets_a_kept_alive_connection_go_once_it_has_answered(monk
     import http.client
     from w2cplatform.configstorevars import _UnixConnection
     with Daemon() as dm:
-        path = os.path.join(dm.dir, "vmsworker.sock")
+        path = os.path.join(dm.dir, "testsubworker.sock")
         kept, said = [], []
         for _ in range(6):
             c = _UnixConnection(path, 5.0)
@@ -451,13 +451,13 @@ def test_a_role_socket_lets_a_kept_alive_connection_go_once_it_has_answered(monk
             assert r.status == 200
             said.append((r.getheader("Connection") or "").lower())
             kept.append(c)                                         # the caller keeps it, as a pool does
-        door = _role_door(dm, "vmsworker")
+        door = _role_door(dm, "testsubworker")
         end = time.monotonic() + 2.0                               # a loaded box: the door's threads end when they end
         while door.serving and time.monotonic() < end:
             time.sleep(0.05)
         try:
             assert door.serving == 0 and said == ["close"] * 6, (door.serving, said)   # kept: six, for five seconds
-            open_vars(url(dm.dir, "vmsworker")).put("vms/slots/w-1", {"holder": "x"})   # served, not `busy`
+            open_vars(url(dm.dir, "testsubworker")).put("testsub/slots/w-1", {"holder": "x"})   # served, not `busy`
         finally:
             for c in kept:
                 c.close()
@@ -490,7 +490,7 @@ def test_a_door_queues_as_many_connections_as_it_serves_before_it_accepts_one():
     wait) — so a burst as large as the bound waits to be counted, whatever the accepting thread is doing."""
     d = short_dir()
     try:
-        path = os.path.join(d, "vmsworker.sock")
+        path = os.path.join(d, "testsubworker.sock")
         srv = configstore._unix_server(path, socketserver.BaseRequestHandler, 0o600, None)   # never accepts
         try:
             assert _queued(socket.AF_UNIX, path, configstore.ROLE_CONNECTIONS) == configstore.ROLE_CONNECTIONS
@@ -511,7 +511,7 @@ def test_a_length_that_is_no_byte_count_or_past_the_ceiling_is_refused_unread_at
     open, the door's thread held. A length that is not a non-negative number is 400, one past `MAX_BODY` 413, neither
     read, at once — on a role's socket, `admin.sock` and the `-api` door (`read_body`, the platform's)."""
     with Daemon(api=True) as dm:
-        for sock in ("vmsworker.sock", "admin.sock"):
+        for sock in ("testsubworker.sock", "admin.sock"):
             for length, code in ((b"-1", b"400"), (b"ten", b"400"), (str(configstore.MAX_BODY + 1).encode(), b"413")):
                 t0 = time.monotonic()
                 said = _raw(os.path.join(dm.dir, sock), b"POST /v1/write HTTP/1.1\r\nHost: x\r\nContent-Length: " +
@@ -556,8 +556,8 @@ def test_another_daemon_changes_the_group_only_for_its_own_server_and_never_touc
     """The review's twelfth pass, major 3: a daemon's certificate deleted slots, wrote the schema, added false voters
     and removed members. On the `-api` door a daemon reads the group's status, and joins and leaves for the server
     its certificate names (srv-b's certificate: srv-b, not srv-c, not srv-a). The thirteenth pass, major 1, by its
-    probe (`probe_mtls.py`): `X-Configstore-Forwarded: vmsworker` made srv-b's certificate the worker — it deleted
-    `vms/slots/w-1`; `domain` read and deleted `domain/keys/k1`. Nobody forwards in the course, so the path is gone:
+    probe (`probe_mtls.py`): `X-Configstore-Forwarded: testsubworker` made srv-b's certificate the worker — it deleted
+    `testsub/slots/w-1`; `domain` read and deleted `domain/keys/k1`. Nobody forwards in the course, so the path is gone:
     a data request on the door is 403 with or without the mark, for every role it names, and the log never moves."""
     with Daemon(api=True) as dm:
         api, ctx = dm.d.api_url, tls.client_context(os.path.join(TLS, "srv-b"))
@@ -571,21 +571,21 @@ def test_another_daemon_changes_the_group_only_for_its_own_server_and_never_touc
             code, said = call("POST", route, json.dumps(body).encode())
             assert (code, said["kind"]) == (403, "forbidden") and "srv-b" in said["error"], (route, said)
         assert call("POST", "/v1/leave", b'{"id": "srv-b"}')[0] == 503                  # its own: a store that is no group
-        dm.backend.machine.apply({"op": "put", "key": "vms/slots/w-1", "items": {"holder": "w"}})
+        dm.backend.machine.apply({"op": "put", "key": "testsub/slots/w-1", "items": {"holder": "w"}})
         dm.backend.machine.apply({"op": "put", "key": "domain/keys/k1", "items": {"k": "secret"}})
         applied = dm.backend.machine.applied
-        for headers in (None, *({fwd: role} for role in ("vmsworker", "console", "domain", "admin", "configstore",
+        for headers in (None, *({fwd: role} for role in ("testsubworker", "console", "domain", "admin", "configstore",
                                                            "nobody", ""))):
-            for method, route, body in (("POST", "/v1/write", write("vms/slots/w-1")),
-                                        ("POST", "/v1/write", drop("vms/slots/w-1")),
+            for method, route, body in (("POST", "/v1/write", write("testsub/slots/w-1")),
+                                        ("POST", "/v1/write", drop("testsub/slots/w-1")),
                                         ("POST", "/v1/write", drop("domain/keys/k1")),
                                         ("GET", "/v1/get?key=domain/keys/k1", None),
-                                        ("GET", "/v1/get?key=vms/cameras/1", None),
+                                        ("GET", "/v1/get?key=testsub/counters/1", None),
                                         ("GET", "/v1/list?prefix=", None)):
                 code, said = call(method, route, body, headers)
                 assert (code, said["kind"]) == (403, "forbidden"), (headers, route, code, said)
         assert dm.backend.machine.applied == applied, "a refused request reached the log"
-        assert set(dm.backend.machine.rows) == {"vms/slots/w-1", "domain/keys/k1"}
+        assert set(dm.backend.machine.rows) == {"testsub/slots/w-1", "domain/keys/k1"}
 
 
 def test_a_certificate_that_names_no_server_is_refused_and_a_join_names_a_server():
@@ -710,10 +710,10 @@ def _forge(ca: str, server: str, roles: list[str], out: str) -> None:
 
 def test_a_certificate_with_the_store_role_and_another_is_no_daemons_at_the_door_on_a_call_or_at_start():
     """The product's cross-check (hashicorp/raft): a certificate that carries `configstore` TOGETHER with another role
-    (configstore+recworker) was a daemon wherever the role was asked — `require_role` granted on any of its roles. A
+    (configstore+testsub2worker) was a daemon wherever the role was asked — `require_role` granted on any of its roles. A
     daemon's certificate carries exactly one role: `w2c-ca.sh issue` refuses `configstore` with another; the `-api`
     door answers such a certificate 403 (status and join alike); a daemon dialling a door that shows one refuses it;
-    and a daemon handed one as its own refuses to start — the door and the member alike. A recorder's certificate of
+    and a daemon handed one as its own refuses to start — the door and the member alike. A worker's certificate of
     several roles is still several roles: the rule is the store's."""
     import subprocess
     ca, dual = short_dir(), short_dir()
@@ -722,14 +722,14 @@ def test_a_certificate_with_the_store_role_and_another_is_no_daemons_at_the_door
         for server in ("srv-a", "srv-b"):
             _w2c_ca(ca, "issue", server)
         script = os.path.join(HERE, os.pardir, "deploy", "w2c-ca.sh")
-        for roles in (["configstore", "recworker"], ["recworker", "configstore"]):
+        for roles in (["configstore", "testsub2worker"], ["testsub2worker", "configstore"]):
             done = subprocess.run(["sh", script, "issue", "srv-x", *roles], env={**os.environ, "W2C_CA_DIR": ca},
                                   capture_output=True, text=True, timeout=60)
             assert done.returncode != 0 and "one role" in done.stderr, (roles, done.stdout, done.stderr)
         assert not os.path.exists(os.path.join(ca, "srv-x", "server.pem"))
-        _forge(ca, "srv-b", ["configstore", "recworker"], dual)
+        _forge(ca, "srv-b", ["configstore", "testsub2worker"], dual)
         assert tls.peer_roles(ssl._ssl._test_decode_cert(os.path.join(dual, "server.pem"))) == {"configstore",
-                                                                                                "recworker"}
+                                                                                                "testsub2worker"}
         with refused("one role"):
             tls.client_context(dual)                  # our own contexts are not built on it: the caller's is plain ssl
 
@@ -911,15 +911,15 @@ def test_a_write_asked_again_after_its_outcome_was_unknown_carries_its_first_id_
         return got
 
     h = ConfigstoreVariables("/stand", transport=transport)
-    v = h.put("vms/slots/w-1", {"holder": "a"}, cas=0)
+    v = h.put("testsub/slots/w-1", {"holder": "a"}, cas=0)
     cut["next"] = True
     with pytest.raises(StoreAmbiguous):
-        h.put("vms/slots/w-1", {"holder": "a", "n": "2"}, cas=v)
-    landed = m.rows["vms/slots/w-1"][1]
+        h.put("testsub/slots/w-1", {"holder": "a", "n": "2"}, cas=v)
+    landed = m.rows["testsub/slots/w-1"][1]
     assert landed > v, "the first copy should have landed"
-    again = h.put("vms/slots/w-1", {"holder": "a", "n": "2"}, cas=v)       # not `Conflict`: the same write, once
+    again = h.put("testsub/slots/w-1", {"holder": "a", "n": "2"}, cas=v)       # not `Conflict`: the same write, once
     assert again == landed and sent[-1] == sent[-2]
-    h.put("vms/slots/w-1", {"holder": "a", "n": "3"}, cas=again)
+    h.put("testsub/slots/w-1", {"holder": "a", "n": "3"}, cas=again)
     assert sent[-1] != sent[-2], "a new write took an old one's id"
     # the reviewer's own probe: a transport that cuts every time — both calls carry one id
     ids = []
@@ -931,7 +931,7 @@ def test_a_write_asked_again_after_its_outcome_was_unknown_carries_its_first_id_
     probe = ConfigstoreVariables("/stand", transport=cutting)
     for _ in range(2):
         with pytest.raises(StoreAmbiguous):
-            probe.put("vms/x", {"a": "r"}, cas=5)
+            probe.put("testsub/x", {"a": "r"}, cas=5)
     assert ids[0] == ids[1]
 
 
@@ -965,19 +965,19 @@ def test_a_write_asked_again_after_another_write_to_its_key_is_a_new_write_and_i
             except StoreAmbiguous:
                 assert cut_it
 
-        key = "vms/servers/srv-b"
+        key = "testsub/servers/srv-b"
         m.apply({"op": "put", "key": key, "items": {"state": "init"}})
         step(lambda: h.put(key, {"state": "on"}), True)
         step(lambda: h.put(key, {"state": "off"}), middle_cut)
         step(lambda: h.put(key, {"state": "on"}), False)
         assert row(key) == {"state": "on"}, (middle_cut, row(key))
-        key = "vms/locks/cam1"
+        key = "testsub/locks/c1"
         m.apply({"op": "put", "key": key, "items": {"owner": "w-1"}})
         step(lambda: h.delete(key), True)
         step(lambda: h.put(key, {"owner": "w-2"}), middle_cut)
         step(lambda: h.delete(key), False)
         assert row(key) is None, (middle_cut, row(key))
-        key = "vms/epoch/cam9"
+        key = "testsub/epoch/c9"
         step(lambda: h.put(key, {"epoch": "1"}, cas=0), True)
         m.apply({"op": "delete", "key": key})                                        # gone again, by somebody
         step(lambda: h.put(key, {"epoch": "2"}, cas=0), middle_cut)
@@ -1035,11 +1035,11 @@ def _box() -> tuple[FileVariables, dict, int]:
     box = FileVariables(tempfile.mkdtemp(), volatile=True)
     remembered = {}
     for n in range(5):
-        remembered[f"vms/cameras/{n}"] = box.put(f"vms/cameras/{n}", {"name": f"cam {n}"}, cas=0)
-    remembered["vms/epoch/1"] = box.put("vms/epoch/1", {"epoch": "7"}, cas=0)
-    remembered["vms/cameras/2"] = box.put("vms/cameras/2", {"name": "renamed"}, cas=remembered["vms/cameras/2"])
-    box.delete("vms/cameras/4", cas=remembered.pop("vms/cameras/4"))
-    remembered["rec/recordings/1"] = box.put("rec/recordings/1", {"camera": "1", "days": "10"}, cas=0)
+        remembered[f"testsub/counters/{n}"] = box.put(f"testsub/counters/{n}", {"name": f"counter {n}"}, cas=0)
+    remembered["testsub/epoch/1"] = box.put("testsub/epoch/1", {"epoch": "7"}, cas=0)
+    remembered["testsub/counters/2"] = box.put("testsub/counters/2", {"name": "renamed"}, cas=remembered["testsub/counters/2"])
+    box.delete("testsub/counters/4", cas=remembered.pop("testsub/counters/4"))
+    remembered["testsub2/tallies/1"] = box.put("testsub2/tallies/1", {"counter": "1", "days": "10"}, cas=0)
     counter = int(open(box.index_file).read())
     return box, remembered, counter
 
@@ -1058,11 +1058,11 @@ def test_a_box_imported_into_a_fresh_group_keeps_its_values_and_no_version_it_ha
             items, index = admin.get(key)
             assert items == box.get(key)[0], key
             assert index > counter, (key, index, counter)
-        assert admin.get("vms/cameras/4") == (None, 0)
+        assert admin.get("testsub/counters/4") == (None, 0)
         for key, old in remembered.items():
             with pytest.raises(Conflict):
                 admin.put(key, {"stale": "yes"}, cas=old)
-        fresh = admin.put("vms/cameras/9", {"name": "new"}, cas=0)
+        fresh = admin.put("testsub/counters/9", {"name": "new"}, cas=0)
         assert fresh > max(remembered.values()) and fresh > counter
 
         from tests import test_variables_contract as contract
@@ -1094,13 +1094,13 @@ def test_an_import_is_refused_whole_into_a_group_it_could_confuse():
             configstore.import_rows("file://" + box.root, open_vars(url(dm.dir)))
         assert open_vars(url(dm.dir)).list("") == []
     with Daemon(LocalBackend("srv-a", index_base=counter)) as dm:
-        open_vars(url(dm.dir)).put("vms/already", {"x": "1"})
+        open_vars(url(dm.dir)).put("testsub/already", {"x": "1"})
         with refused("fresh"):
             configstore.import_rows("file://" + box.root, open_vars(url(dm.dir)))
-    with open(box._file("vms/epoch/1"), "w") as f:
+    with open(box._file("testsub/epoch/1"), "w") as f:
         f.write('{"items": {"epoch": "7"}, "ind')
     with Daemon(LocalBackend("srv-a", index_base=counter)) as dm:
-        with refused("vms/epoch/1"):
+        with refused("testsub/epoch/1"):
             configstore.import_rows("file://" + box.root, open_vars(url(dm.dir)))
         assert open_vars(url(dm.dir)).list("") == []
 
@@ -1134,12 +1134,12 @@ def test_an_import_that_stopped_goes_on_and_a_row_heavier_than_the_store_takes_r
         got = configstore.import_rows("file://" + box.root, admin)
         assert (got["rows"], got["there_before"]) == (len(remembered), 2)
         assert {k: admin.get(k)[0] for k in remembered} == {k: box.get(k)[0] for k in remembered}
-        admin.put("vms/cameras/0", {"name": "changed since"}, cas=admin.get("vms/cameras/0")[1])
+        admin.put("testsub/counters/0", {"name": "changed since"}, cas=admin.get("testsub/counters/0")[1])
         with refused("did not write"):
             configstore.import_rows("file://" + box.root, admin)
-    box.put("vms/heavy", {"blob": "x" * MAX_VALUE})
+    box.put("testsub/heavy", {"blob": "x" * MAX_VALUE})
     with Daemon(LocalBackend("srv-a", index_base=counter + 10)) as dm:
-        with refused("vms/heavy"):
+        with refused("testsub/heavy"):
             configstore.import_rows("file://" + box.root, open_vars(url(dm.dir)))
         assert open_vars(url(dm.dir)).list("") == []
 
@@ -1149,7 +1149,7 @@ def test_a_backup_restores_into_a_fresh_group_above_its_highest_version():
     restored group keeps the values and conflicts with every version from before."""
     with Daemon(LocalBackend("srv-a", 1000)) as a:
         h = open_vars(url(a.dir))
-        old = {f"vms/cameras/{n}": h.put(f"vms/cameras/{n}", {"name": str(n)}, cas=0) for n in range(4)}
+        old = {f"testsub/counters/{n}": h.put(f"testsub/counters/{n}", {"name": str(n)}, cas=0) for n in range(4)}
         out = io.StringIO()
         with redirect_stdout(out):
             configstore.main(["backup", "--socket", url(a.dir)])
@@ -1181,19 +1181,17 @@ def test_the_operator_commands_speak_to_the_admin_socket():
         out = io.StringIO()
         with redirect_stdout(out):
             configstore.main(["rights", "--socket", url(dm.dir)])
-        assert sorted(json.loads(out.getvalue())["roles"]) == ["console", "vmsworker"]
+        assert sorted(json.loads(out.getvalue())["roles"]) == ["console", "testsubworker"]
 
 
 def test_a_process_reads_platform_store_and_no_other_name():
     """One function says which store a process opens (`variables.store_url`, product P7): `PLATFORM_STORE`, else the
     process's default. The older name `CONFIG_URL` is not read (the owner's rule of 4 Oct: no aliases, the system runs
     on one machine) — set alone, the process opens its default and not that store."""
-    both = {"PLATFORM_STORE": "configstore:///run/configstore/vmsworker.sock", "CONFIG_URL": "file:///data/c"}
+    both = {"PLATFORM_STORE": "configstore:///run/configstore/testsubworker.sock", "CONFIG_URL": "file:///data/c"}
     assert store_url(both) == both["PLATFORM_STORE"]
     assert store_url({"CONFIG_URL": "file:///data/c"}) is None
     assert store_url({"CONFIG_URL": "file:///data/c"}, "file:///data/platform/config") == "file:///data/platform/config"
     assert store_url({"PLATFORM_STORE": "", "CONFIG_URL": "memory://x"}, "file:///d") == "file:///d"
     stores = open(os.path.join(os.path.dirname(HERE), "w2cplatform", "host.py"), encoding="utf-8").read()
     assert "store_url(env" in stores and "CONFIG_URL" not in stores          # every process's stores: the same function
-    entry = open(os.path.join(os.path.dirname(HERE), "vms", "__main__.py"), encoding="utf-8").read()
-    assert "host.stores(os.environ" in entry and "CONFIG_URL" not in entry   # …the subsystem's processes open them there

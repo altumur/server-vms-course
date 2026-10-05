@@ -14,7 +14,7 @@ from w2cplatform.contract import Heartbeat, Slot
 from w2cplatform.spec import Refused, SpecController
 from vms import volumes
 from vms.config import REC_SPEC
-from tests.conftest import Box, footage, recorder
+from tests.vmsconftest import Box, footage, recorder
 
 
 def _recorder(box, name, server, **kw):
@@ -546,7 +546,7 @@ def test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one()
     and the new process looks at the volumes before it opens anything: it takes the same hold, names the same
     owner, and the daemon hands back the very writer the dead one left. The box's own volume is never formatted."""
     import time
-    from tests.conftest import OBSD_LINGER_MS
+    from tests.vmsconftest import OBSD_LINGER_MS
     box = Box()
     cloud = _disk(box, "cloud")
     r = _recorder(box, "r-1", "srv-a")
@@ -674,7 +674,7 @@ def test_a_volume_another_writer_still_holds_is_said_to_be_busy():
     """Busy is not away: the daemon answers, and it says somebody else's writer is in the volume — a recorder of
     the same volume in its grace. Kept and said as busy, so the operator reads "wait" and not "the network"."""
     import time
-    from tests.conftest import OBSD_LINGER_MS, store
+    from tests.vmsconftest import OBSD_LINGER_MS, store
     box = Box()
     url = _disk(box, "shared")
     other = store("shared", path=url.replace("file://", ""), owner="rec:somebody-else")
@@ -827,7 +827,7 @@ def test_a_new_volume_without_a_quota_is_sized_by_the_disk_the_daemon_writes_to(
         assert r.store is not None and r.store.formatted
         space = r.store.space_where()                                  # the daemon's numbers for the volume's disk
         from vms.archive import Archive
-        from tests.conftest import obsd_session
+        from tests.vmsconftest import obsd_session
         deep = Archive(f"file://{box.root}/a/b/volume", "deep", 0, "rec:deep", obsd_session("deep"))
         assert deep.space_where()["capacity"] == space["capacity"]    # not there yet: the nearest directory above it
     finally:
@@ -932,7 +932,7 @@ def test_a_volume_whose_directory_is_gone_is_not_made_again_empty_and_its_record
     another path — is formatted as before."""
     import time
     from w2cplatform.eventdatabase import EventIndex
-    from tests.conftest import OBSD_LINGER_MS
+    from tests.vmsconftest import OBSD_LINGER_MS
     box = Box()
     url = _disk(box, "disk-a")
     _disk(box, "disk-b")

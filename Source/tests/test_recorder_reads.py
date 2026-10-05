@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import types
 
-from tests.conftest import Box
+from tests.vmsconftest import Box
 from vms import volumes
 from vms.config import REC_SPEC, SPEC
 from vms.worker import FakeActuator

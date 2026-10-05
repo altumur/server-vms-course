@@ -11,7 +11,7 @@ import threading
 from w2cplatform.contract import Slot
 from vms import volumes
 from vms.config import REC_SPEC
-from tests.conftest import Box, footage, recorder
+from tests.vmsconftest import Box, footage, recorder
 
 
 def test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it():

@@ -17,7 +17,7 @@ from w2cplatform.spec import SpecController
 from vms.config import REC_SPEC, SPEC
 from vms.console import make_console
 from vms.controller import VmsController
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 class Tokens:
@@ -733,7 +733,7 @@ def test_a_deleted_recordings_name_comes_back_only_for_its_own_camera():
     viewer of camera 2 alone got camera 1's frames from `GET /export/2`, because footage is found by the recording's
     name. The rule: a tombstone keeps its camera, and the name comes back for that camera only — for another it is
     400, and so is the PUT that asked for it, whose refusal no longer suggests the trick."""
-    from tests.conftest import door, footage, store
+    from tests.vmsconftest import door, footage, store
     box = Box()
     access = Tokens({"two": [("view", "vms/2", ())], "admin": [("admin", None, ())]})
     ctl, rec, m, srv, base = _console(box, access)
@@ -811,7 +811,7 @@ def test_a_camera_without_a_recording_does_not_read_another_cameras_tree_by_its_
     the boundary's step 6 a page reads a RECORDING at its holder's door, handed out with its place (`/rec/where/<name>`)
     to whoever may view the camera the recording is ABOUT; a backfill names its recording (`rec/requests`) and is asked
     the same way."""
-    from tests.conftest import door, footage, store
+    from tests.vmsconftest import door, footage, store
     from vms import keeps
     box = Box()
     access = Tokens({"guard": [("edit", "vms/1", ())], "other": [("edit", "vms/2", ())], "admin": [("admin", None, ())]})
@@ -958,7 +958,7 @@ def test_a_segment_is_cut_to_what_the_device_holds_and_the_door_streams_it_a_pie
     only when every piece went. The holder asks the device for `PLAYBACK_PIECE` seconds at a time, one session at a
     time."""
     import http.client
-    from tests.conftest import page_door
+    from tests.vmsconftest import page_door
     from vms.worker import FakeDevice
     box = Box()
     dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 10000.0)},
@@ -1033,7 +1033,8 @@ def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
     the token's is served and a line names the viewer. The camera's holder has no door for a page: a process of the
     cluster reads it by a per-camera capability (`/playback/<cam>/<capability>`), and in a gated cluster the bare
     address is refused."""
-    from tests.conftest import door_keys, page_door
+    from tests.conftest import door_keys
+    from tests.vmsconftest import page_door
     from vms.playback import process_url
     from vms.worker import FakeDevice
     from w2cplatform.console import holder_of
@@ -1629,7 +1630,7 @@ def test_a_backfill_nobody_could_answer_is_refused_by_the_recorder_in_its_heartb
     the recorder judges what only it can — a day at most, a second at least, not in the future, not before anything the
     recording shows (its `retention_days`) — and refuses it in words: in its heartbeat (`requests_refused`), on the
     recording's events (`archive.backfill.refused`), the row closed (`fetched`)."""
-    from tests.conftest import recorder
+    from tests.vmsconftest import recorder
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     rec.create({"name": "1", "cam": "1", "retention_days": 2})

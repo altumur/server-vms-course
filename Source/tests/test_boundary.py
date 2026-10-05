@@ -55,18 +55,18 @@ PLATFORM_TREE = "w2cplatform"                                  # walked whole, e
 SUBSYSTEM_PACKAGES = ("vms", "gstvms", "cluster")              # what the platform must not reach (`Source/<name>/`)
 
 # The platform's tests: what tests a mechanism of the platform. They are the platform's like its modules — scanned for
-# words and imports. Two kinds: the ones that already import no subsystem, and the ones whose subject is a platform
-# mechanism but which bring a subsystem up to drive it (debt, step 5: «tests on testsub»). A test whose subject is a
-# subsystem's route or loop on the platform — the console's gate over the VMS's rows, garbled rows in every worker's
-# loop, a camera's three subsystems on one timeline — is the subsystem's, and is not here until it is split.
+# words and imports, with their helpers (`conftest.py`). Each proves its rule on the platform alone or on the subsystems
+# of `testdata/`, testsub and testsub2 (step 5). A test whose subject is a subsystem — its worker's own work, its spec,
+# its route or loop on the platform, every kind of its workers — is the subsystem's, beside it in a module of its own
+# with the subsystem's helpers (`vmsconftest.py`), and is not here; a test that proved both was split.
 PLATFORM_TESTS = (
     # on the platform alone
-    "tests/test_configstore.py", "tests/test_configstorevars.py", "tests/test_console_page.py",
+    "tests/conftest.py", "tests/test_configstore.py", "tests/test_configstorevars.py", "tests/test_console_page.py",
     "tests/test_memvariables.py", "tests/test_portability.py", "tests/test_resource_objects.py",
     "tests/test_store_durable.py", "tests/test_storemachine.py", "tests/test_variables_contract.py",
-    # a mechanism of the platform as the subject, a subsystem brought up to drive it
+    # a mechanism of the platform as the subject, on testsub and testsub2
     "tests/test_lesson1_platform.py", "tests/test_alarm_tree.py", "tests/test_blobs.py", "tests/test_doors.py",
-    "tests/test_doors_shut.py", "tests/test_epoch_meaning.py", "tests/test_event_line.py", "tests/test_journal.py",
+    "tests/test_epoch_meaning.py", "tests/test_event_line.py", "tests/test_journal.py",
     "tests/test_lease_step.py", "tests/test_limits.py", "tests/test_names.py", "tests/test_near_by.py",
     "tests/test_pass_failures.py", "tests/test_placement_decides.py", "tests/test_retire.py", "tests/test_sealing.py",
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",
@@ -727,7 +727,7 @@ def _piece_two_specs():
             "adds": {"done": 3}, "queue": {"a": 4, "b": 1}, "wait": {"buckets": [1, 2], "count": 2, "sum": 3.0}}).to_bytes())
         with urllib.request.urlopen(base + "/testsub2/metrics", timeout=10) as r:
             text = r.read().decode()
-        for name in ("tallies_running", "shelves_open", "marks_unshelved", "phases", "depth", "jam", "away_seconds",
+        for name in ("tallies_running", "shelves_open", "notches_unshelved", "phases", "depth", "jam", "away_seconds",
                      "belt", "adds_total", "queue_max", "wait_seconds_bucket"):
             assert f"testsub2_{name}" in text, (name, text[-2000:])
         assert 'testsub2_workers_needed{labels=""}' in text                                # `placement.places`

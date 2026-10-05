@@ -39,12 +39,12 @@ def test_a_row_reaches_the_medium_before_it_is_renamed_into_place_unless_the_sto
     calls, restore = _count_barriers(box.root)
     try:
         durable = FileVariables(os.path.join(box.root, "durable"), volatile=False)
-        durable.put("vms/epoch/7", {"epoch": 5})
+        durable.put("testsub/epoch/7", {"epoch": 5})
         assert calls == {"file": 2, "dir": 2}                     # the counter and the row; their two directories
-        durable.as_writer("w-1", ["vms/*"]).put("vms/epoch/8", {"epoch": 1})
+        durable.as_writer("w-1", ["testsub/*"]).put("testsub/epoch/8", {"epoch": 1})
         assert calls["file"] == 4                                 # another identity on the same store: as durable
         calls.update(file=0, dir=0)
-        FileVariables(os.path.join(box.root, "volatile"), volatile=True).put("vms/epoch/7", {"epoch": 5})
+        FileVariables(os.path.join(box.root, "volatile"), volatile=True).put("testsub/epoch/7", {"epoch": 5})
         assert calls == {"file": 0, "dir": 0}
     finally:
         restore()
@@ -66,22 +66,22 @@ def test_a_counter_that_cannot_be_read_is_an_error_not_a_new_beginning():
     could match a row it was never read from."""
     box = Box()
     v = FileVariables(os.path.join(box.root, "store"), volatile=True)
-    assert v.put("vms/cameras/1", {"name": "gate"}) == 1001       # a store with no rows: 1000, and up
+    assert v.put("testsub/counters/1", {"name": "gate"}) == 1001       # a store with no rows: 1000, and up
     for left in ("", "12a4"):
         with open(v.index_file, "w") as f:
             f.write(left)
         try:
-            v.put("vms/cameras/2", {"name": "dock"})
+            v.put("testsub/counters/2", {"name": "dock"})
             raise AssertionError("an unreadable counter must not be read as 1000")
         except Corrupt as e:
             assert "refusing to number again" in str(e)
     os.remove(v.index_file)
     try:
-        v.put("vms/cameras/2", {"name": "dock"})
+        v.put("testsub/counters/2", {"name": "dock"})
         raise AssertionError("a missing counter beside rows must not be read as 1000")
     except Corrupt:
         pass
-    assert v.get("vms/cameras/2") == (None, 0) and v.get("vms/cameras/1")[1] == 1001   # nothing half-written
+    assert v.get("testsub/counters/2") == (None, 0) and v.get("testsub/counters/1")[1] == 1001   # nothing half-written
 
 
 def test_two_writers_of_one_object_do_not_share_the_file_in_flight():
@@ -97,32 +97,32 @@ def test_two_writers_of_one_object_do_not_share_the_file_in_flight():
 
     objects_mod.os.replace = watching
     try:
-        store.put("vms/heartbeats/w-1", b'{"a": 1}')
-        store.put("vms/heartbeats/w-1", b'{"a": 2}')
+        store.put("testsub/heartbeats/w-1", b'{"a": 1}')
+        store.put("testsub/heartbeats/w-1", b'{"a": 2}')
     finally:
         objects_mod.os.replace = real
     assert len(set(seen)) == 2 and all(n.startswith("w-1.") and n.endswith(".tmp") for n in seen)
-    assert store.get("vms/heartbeats/w-1") == b'{"a": 2}'
-    assert store.list("vms/heartbeats/") == ["vms/heartbeats/w-1"]            # nothing left in flight, nothing listed
+    assert store.get("testsub/heartbeats/w-1") == b'{"a": 2}'
+    assert store.list("testsub/heartbeats/") == ["testsub/heartbeats/w-1"]            # nothing left in flight, nothing listed
 
 
 def test_a_command_mark_is_on_the_medium_before_its_name_and_its_name_after():
-    """The review's third pass (minor). `put_new` is the mark a worker writes BEFORE it calls a device; written with
+    """The review's third pass (minor). `put_new` is the mark a worker writes BEFORE it calls its target; written with
     no barrier, the power going after the call took the mark with it, and the next holder opened the door a second
     time. The bytes reach the medium before the name is made, the directory entry after it — and a mark that loses
     the race pays for the bytes only."""
     box = Box()
     store = FsObjectStore(os.path.join(box.root, "objects"))
-    mark = os.path.join(box.root, "objects", "vms", "commands", "r1")
+    mark = os.path.join(box.root, "objects", "testsub", "commands", "r1")
     g = FsObjectStore.put_new.__globals__
     real, calls = (g["durably"], g["durable_dir"]), []
     g["durably"] = lambda f: calls.append(("file", os.path.exists(mark)))
     g["durable_dir"] = lambda p: calls.append(("dir", os.path.exists(os.path.join(p, "r1"))))
     try:
-        assert store.put_new("vms/commands/r1", b'{"instance": "a"}')
+        assert store.put_new("testsub/commands/r1", b'{"instance": "a"}')
         assert calls == [("file", False), ("dir", True)]                   # bytes before the name, the entry after
         calls.clear()
-        assert not store.put_new("vms/commands/r1", b'{"instance": "b"}') and [c[0] for c in calls] == ["file"]
+        assert not store.put_new("testsub/commands/r1", b'{"instance": "b"}') and [c[0] for c in calls] == ["file"]
     finally:
         g["durably"], g["durable_dir"] = real
-    assert store.get("vms/commands/r1") == b'{"instance": "a"}'
+    assert store.get("testsub/commands/r1") == b'{"instance": "a"}'

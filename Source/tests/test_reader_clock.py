@@ -14,7 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from w2cplatform.contract import CONTENDER_FRESH, Eyes, Heartbeat, Slot, builds, contenders, judge_clock
 from vms.config import REC_SPEC, SPEC
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 AHEAD, BEHIND = 3600.0, -3600.0
 

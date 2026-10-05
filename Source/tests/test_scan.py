@@ -5,7 +5,7 @@ import os
 
 from vms.archive import Span
 from vms.scan import PROGRESS, ScanLog, covered, plan, recording_spans, remaining
-from tests.conftest import Box, door, footage, store
+from tests.vmsconftest import Box, door, footage, store
 
 T = 1_757_500_000.0          # a round unix second to build minutes from
 

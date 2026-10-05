@@ -16,7 +16,8 @@ from vms.console import make_console
 from vms.controller import VmsController
 from w2cplatform.door import DoorKeeper
 from w2cplatform.spec import SpecController
-from tests.conftest import Box, door, door_keys, footage, store
+from tests.conftest import door_keys
+from tests.vmsconftest import Box, door, footage, store
 
 
 def _get(url, token=None):

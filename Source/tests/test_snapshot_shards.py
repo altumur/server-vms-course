@@ -16,12 +16,11 @@ assignment. The arithmetic is measured below rather than asserted.
 import json
 
 from w2cplatform.contract import Heartbeat
-from vms.config import SPEC
-from vms.controller import VmsController
-from tests.conftest import Box, published_snapshot
+from tests.conftest import Box, controller, published_snapshot, testsub
 
 CAP = 64 * 1024                       # a declared ceiling — 64 KiB, the one the shape was measured against
-LABELS = ["vlan:cctv-a", "site:msk-hq", "floor:3"]
+LABELS = ["vlan:north-a", "site:north", "floor:3"]
+SPEC = testsub()                     # a unit is a named counter, `testsub/counters/<name>`
 
 
 def _worker_alive(box, worker: str, server: str, capacity: int = 50):
@@ -32,18 +31,21 @@ def _worker_alive(box, worker: str, server: str, capacity: int = 50):
                     json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}", "units": {}}).encode())
 
 
-def _cluster(box, cameras: int, workers: int, capacity: int = 50):
-    """A realistic cluster: cameras with the fields an operator actually fills in,
+def _cluster(box, counters: int, workers: int, capacity: int = 50):
+    """A realistic cluster: counters named the way a person names them, with labels,
     on workers that heartbeat — so `server` in the snapshot is a real name and the
-    bytes below are the bytes that would be published."""
-    ctl = VmsController(box.vars, box.objects, capacity=capacity, wall=box.wall)
+    bytes below are the bytes that would be published. Each name starts with its
+    number, `c-0001-…` first — `_ids` reads it back."""
+    ctl = controller(box, capacity=capacity)
     for i in range(workers):
-        _worker_alive(box, f"w-{i}", f"srv-cctv-{i:02d}", capacity)
-    for i in range(cameras):
-        ctl.create_camera({"name": f"Подъезд {i} — вход", "ref": f"msk-hq/fl3/cam-{i:04d}",
-                           "source": f"driverpack://hikvision/10.20.{i // 254}.{i % 254}/Streaming/Channels/101",
-                           "labels": LABELS})
+        _worker_alive(box, f"w-{i}", f"srv-north-{i:02d}", capacity)
+    for i in range(counters):
+        ctl.create({"name": f"c-{i + 1:04d}-at-the-north-entrance-of-the-third-floor", "start": i, "labels": LABELS})
     return ctl
+
+
+def _ids(rows) -> list[int]:
+    return sorted(int(r["id"][2:6]) for r in rows)
 
 
 def test_the_snapshot_is_one_object_per_worker():
@@ -51,16 +53,16 @@ def test_the_snapshot_is_one_object_per_worker():
     ctl = _cluster(box, 6, workers=2, capacity=3)
     ctl.ensure_placed()
     ctl.publish_snapshot()
-    keys = box.objects.list("vms/snapshot/")
-    assert keys == ["vms/snapshot/w-0", "vms/snapshot/w-1"]          # the workers, and nothing else
+    keys = box.objects.list("testsub/snapshot/")
+    assert keys == ["testsub/snapshot/w-0", "testsub/snapshot/w-1"]          # the workers, and nothing else
     # each shard holds that worker's assignment and says whose it is
     for key in keys:
         shard = json.loads(box.objects.get(key))
         assert shard["worker"] == key.rsplit("/", 1)[1]
-        assert len(shard["cameras"]) == 3 and all(r["worker"] == shard["worker"] for r in shard["cameras"])
-    # and merged, it is the same set of cameras the cluster has
-    merged = published_snapshot(box.objects, "vms")
-    assert sorted(r["id"] for r in merged["cameras"]) == [1, 2, 3, 4, 5, 6]
+        assert len(shard["counters"]) == 3 and all(r["worker"] == shard["worker"] for r in shard["counters"])
+    # and merged, it is the same set of counters the cluster has
+    merged = published_snapshot(box.objects, "testsub", "counters")
+    assert _ids(merged["counters"]) == [1, 2, 3, 4, 5, 6]
 
 
 def test_the_units_nobody_holds_have_a_shard_of_their_own():
@@ -68,15 +70,15 @@ def test_the_units_nobody_holds_have_a_shard_of_their_own():
     no worker is exactly what М12 must be able to see."""
     box = Box()
     ctl = _cluster(box, 4, workers=1, capacity=2)
-    ctl.ensure_placed()                                               # capacity 2: two cameras have nowhere to go
+    ctl.ensure_placed()                                               # capacity 2: two counters have nowhere to go
     ctl.publish_snapshot()
-    assert box.objects.list("vms/snapshot/") == ["vms/snapshot/unplaced", "vms/snapshot/w-0"]
-    unplaced = json.loads(box.objects.get("vms/snapshot/unplaced"))
-    assert unplaced["worker"] is None and len(unplaced["cameras"]) == 2
-    assert all(r["worker"] is None for r in unplaced["cameras"])
+    assert box.objects.list("testsub/snapshot/") == ["testsub/snapshot/unplaced", "testsub/snapshot/w-0"]
+    unplaced = json.loads(box.objects.get("testsub/snapshot/unplaced"))
+    assert unplaced["worker"] is None and len(unplaced["counters"]) == 2
+    assert all(r["worker"] is None for r in unplaced["counters"])
 
 
-def test_a_worker_that_is_gone_stops_reporting_its_cameras():
+def test_a_worker_that_is_gone_stops_reporting_its_units():
     """Nothing in the platform deletes an object. A worker that is scaled in, or
     whose units moved away, would go on being reported to the domain out of the
     shard it left behind — so the pass writes it EMPTY instead."""
@@ -84,22 +86,23 @@ def test_a_worker_that_is_gone_stops_reporting_its_cameras():
     ctl = _cluster(box, 2, workers=2, capacity=1)
     ctl.ensure_placed()
     ctl.publish_snapshot()
-    assert box.objects.list("vms/snapshot/") == ["vms/snapshot/w-0", "vms/snapshot/w-1"]
-    ctl.move(2, "w-0", reason="w-1 scaled in")                        # w-1 now holds nothing
+    assert box.objects.list("testsub/snapshot/") == ["testsub/snapshot/w-0", "testsub/snapshot/w-1"]
+    second = ctl.units()[1]["id"]
+    ctl.move(second, "w-0", reason="w-1 scaled in")                   # w-1 now holds nothing
     ctl.publish_snapshot()
-    assert box.objects.list("vms/snapshot/") == ["vms/snapshot/w-0", "vms/snapshot/w-1"]   # the key stays…
-    assert json.loads(box.objects.get("vms/snapshot/w-1"))["cameras"] == []                # …empty
-    merged = published_snapshot(box.objects, "vms")
-    assert sorted(r["id"] for r in merged["cameras"]) == [1, 2]       # each camera once, on w-0
-    assert {r["worker"] for r in merged["cameras"]} == {"w-0"}
+    assert box.objects.list("testsub/snapshot/") == ["testsub/snapshot/w-0", "testsub/snapshot/w-1"]   # the key stays…
+    assert json.loads(box.objects.get("testsub/snapshot/w-1"))["counters"] == []                    # …empty
+    merged = published_snapshot(box.objects, "testsub", "counters")
+    assert _ids(merged["counters"]) == [1, 2]                         # each counter once, on w-0
+    assert {r["worker"] for r in merged["counters"]} == {"w-0"}
 
 
 def test_a_worker_may_not_be_called_unplaced():
-    """`vms/snapshot/` is the worker name space, and `unplaced` is reserved inside
+    """`testsub/snapshot/` is the worker name space, and `unplaced` is reserved inside
     it. A reserved name needs a rule that reserves it, not a hope."""
     box = Box()
     ctl = _cluster(box, 1, workers=0)
-    _worker_alive(box, "unplaced", "srv-cctv-00")
+    _worker_alive(box, "unplaced", "srv-north-00")
     ctl.ensure_placed()
     try:
         ctl.publish_snapshot()
@@ -116,13 +119,13 @@ def test_the_shard_fits_where_the_one_object_did_not():
     ctl = _cluster(box, 600, workers=12, capacity=50)                 # 12 workers x 50: the design maximum
     ctl.ensure_placed()
     ctl.publish_snapshot()
-    shards = box.objects.list("vms/snapshot/")
+    shards = box.objects.list("testsub/snapshot/")
     assert len(shards) == 12
     biggest = max(len(box.objects.get(k)) for k in shards)
     one_object = len(json.dumps(ctl.snapshot()).encode())             # what it used to publish
     assert one_object > CAP, f"the single object fits after all ({one_object} B) — this test proved nothing"
     assert biggest <= CAP // 3, f"a shard is {biggest} B: the margin the heartbeat has is gone"
-    print(f"\n  600 камер: один объект {one_object / 1024:.0f} КиБ (потолок {CAP // 1024}), "
+    print(f"\n  600 счётчиков: один объект {one_object / 1024:.0f} КиБ (потолок {CAP // 1024}), "
           f"крупнейший шард {biggest / 1024:.1f} КиБ — запас x{CAP / biggest:.1f}")
 
 

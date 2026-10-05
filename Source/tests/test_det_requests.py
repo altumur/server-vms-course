@@ -11,7 +11,7 @@ from w2cplatform.spec import SpecController
 from vms.config import DET_SPEC, DETJOB_SPEC, REC_SPEC
 from vms.detjobworker import DetJobWorker
 from vms.jobs import detect_on_request, expire
-from tests.conftest import Box, door, footage, store
+from tests.vmsconftest import Box, door, footage, store
 
 
 def _ctl(box, spec):
@@ -226,7 +226,7 @@ def test_a_job_finished_for_days_is_forgotten_and_a_running_one_never_is():
 
 def test_a_scenario_that_asks_for_what_cannot_be_is_refused_where_it_is_written():
     from vms.auto import Catalog
-    from tests.conftest import door_site
+    from tests.vmsconftest import door_site
     box = Box(); door_site(box)
     cat = Catalog(box.vars)
     misfit, _ = cat.check({"then": [{"sub": "det", "action": "detect", "cam": "99", "kind": "lpr", "minutes": "5"}]})

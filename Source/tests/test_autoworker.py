@@ -13,7 +13,7 @@ from vms.config import AUTO_SPEC
 from w2cplatform.spec import SpecController
 from vms.autoworker import AutoWorker
 from vms.config import AUTO_SPEC, REC_SPEC, SPEC as VMS_SPEC
-from tests.conftest import Box, door_site
+from tests.vmsconftest import Box, door_site
 
 
 class _Log:
@@ -298,7 +298,7 @@ def test_a_record_request_the_recorder_sees_is_not_its_to_serve():
     """One family, two kinds of asking. A backfill names a RANGE and the worker
     fetches it; `record` names a DURATION and is nobody's to fetch. Before the
     skip, the recorder tripped over `it["from"]` every pass."""
-    from tests.conftest import recorder
+    from tests.vmsconftest import recorder
 
     box = Box()
     r = recorder(box, "r-1", "srv-a", acl=False)

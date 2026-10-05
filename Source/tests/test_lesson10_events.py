@@ -19,7 +19,8 @@ from vms.controller import VmsController
 from vms.detworker import DetWorker
 from w2cplatform.resource import platform_resource
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box, as_kept
+from tests.conftest import as_kept
+from tests.vmsconftest import Box
 
 
 def call(base, method, path, body=None, headers=None):
@@ -128,7 +129,7 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     counted, and the index over it answers everything that did land."""
     import w2cplatform.events as ev
     from w2cplatform.events import EventLog, read_bucket
-    from tests.conftest import Box
+    from tests.vmsconftest import Box
 
     box = Box()
     log = EventLog(box.archive, "vms", "8123", 7, 600)

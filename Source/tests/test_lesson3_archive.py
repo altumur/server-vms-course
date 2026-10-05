@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from vms.archive import parse_stream, stream_name, visible_from
 from vms.recworker import archive_routes
-from tests.conftest import Box, footage, store
+from tests.vmsconftest import Box, footage, store
 
 
 def utc(s):

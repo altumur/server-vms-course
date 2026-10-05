@@ -14,7 +14,7 @@ from vms.config import DET_SPEC, LIVE_SPEC, REC_SPEC, SPEC, live_shm, live_url
 from vms.controller import VmsController
 from vms.recworker import RecSink
 from vms.worker import FakeActuator, VmsWorker, fake_samples
-from tests.conftest import Box, recorder
+from tests.vmsconftest import Box, recorder
 
 
 def _box():

@@ -11,12 +11,10 @@ box.
 """
 import json
 
-from vms.config import SPEC
-from vms.controller import VmsController
 from w2cplatform.console import SpecConsole
 from w2cplatform.objects import FsObjectStore
 from w2cplatform.variables import FileVariables, items_bytes
-from tests.conftest import Box
+from tests.conftest import Box, controller, testsub2
 
 
 def test_a_store_with_no_ceiling_still_answers_the_question():
@@ -45,9 +43,9 @@ def test_an_oversized_shard_says_how_many_units_that_was():
     what a single worker carries, and the message says which knob that is."""
     box = Box()
     box.objects = FsObjectStore(box.root + "/tiny", max_bytes=512)
-    ctl = VmsController(box.vars, box.objects, capacity=50, wall=box.wall)
+    ctl = controller(box, capacity=50)
     for i in range(20):
-        ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
+        ctl.create({"name": f"c{i}"})
     ctl.ensure_placed(workers=["w-1"])
     try:
         ctl.publish_snapshot()
@@ -64,21 +62,21 @@ def test_a_row_that_does_not_fit_is_a_413_to_the_person_who_typed_it():
     before anything is written — not discovered later by whoever reads the row."""
     box = Box()
     capped = FileVariables(box.root + "/capped-vars", max_bytes=400)
-    ctl = VmsController(capped, box.objects, wall=box.wall)
+    ctl = controller(box, vars_=capped)
     con = SpecConsole(ctl)
-    st, body = con.create({"name": "gate", "source": "driverpack://file/gate.mp4"})
+    st, body = con.create({"name": "gate"})
     assert st == 201
     big = {"labels": [f"x{i}" for i in range(120)]}           # each a label (the one alphabet: 64 at most), the row too big
     st, body = con.update(body["id"], big)
     assert st == 413, (st, body)
     assert "over this store's limit of 400" in body["detail"]
     # and the row is exactly what it was
-    assert ctl.camera(1)["labels"] == []
+    assert ctl.unit("gate")["labels"] == []
 
 
 def test_the_size_a_store_charges_is_keys_and_values():
     """How the cluster's store weighs a row (`storemachine.MAX_VALUE`), and therefore how the platform must: every
     key and every value in the path, together — not the JSON around them."""
     assert items_bytes({"a": "xx", "bb": "y"}) == 1 + 2 + 2 + 1
-    row = SPEC.items({"id": 1, "name": "gate", "source": "driverpack://file/g.mp4", "revision": 1})
+    row = testsub2().items({"id": "gate", "name": "gate", "of": "c1", "revision": 1})
     assert 100 < items_bytes(row) < 400, items_bytes(row)         # a row is small, and that is the point

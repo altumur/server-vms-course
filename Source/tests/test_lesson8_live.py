@@ -21,7 +21,7 @@ from vms.liveworker import LiveWorker
 from vms.config import live_url
 from vms.worker import FakeActuator, VmsWorker
 from vms.console import serve
-from tests.conftest import Box, published_snapshot
+from tests.vmsconftest import Box, published_snapshot
 
 OFFER = "v=0\r\no=- 1 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=recvonly\r\na=rtpmap:96 H264/90000\r\n"
 

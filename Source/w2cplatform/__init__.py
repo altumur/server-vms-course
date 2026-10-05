@@ -37,7 +37,7 @@ and changes nothing above this line.
 # explicitly (`from w2cplatform.spec import SpecController`).
 #
 # ## Notes
-# - `tests/test_lesson1_platform.py::test_the_platform_knows_nothing_about_video` greps every `.py` under
+# - `tests/test_lesson1_platform.py::test_the_platform_knows_nothing_about_its_subsystems` greps every `.py` under
 #   this directory for `from vms` / `import vms`, and every file except this `__init__.py` for the word
 #   "camera" in any case. This file is exempt from the word check only because its docstring says "nothing
 #   here knows what a camera is"; it still must not import from `vms/`.

@@ -9,14 +9,13 @@ without a confirmation went `≈ 2T + P` — past the 25 s window at a pause of 
 Now the next step is counted from the START of the previous one, and a step with a renewal the store did not answer is
 followed by another at the next look: `≈ T + P + poll`. The store here is a fake that pauses like a store electing a
 leader: a call made during the pause waits for its end if that comes within `D` (the call's term), and fails after `D`
-otherwise. The clocks are fakes too; the loop is the real one (`VmsWorker.run`, `AutoWorker.run`), its work stubbed —
-only the lease step talks to the store.
+otherwise. The clocks are fakes too; the loop is the real one (`Worker.run`), its work stubbed — only the lease step
+talks to the store. A test of the platform alone, on testsub: the worker is testsub's (`CounterWorker`), holding two
+counters. A subsystem's worker with a loop of its own shows the same of it in that subsystem's tests.
 """
 import threading
 
-from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
-from tests.test_lesson4_worker import _box_with_cameras
+from tests.conftest import Box, controller, counter_worker
 
 T_POLL = 2.0
 D = 4.5                      # how long one call waits for a leader (the prototype's daemon)
@@ -64,12 +63,15 @@ class _Turns:
 
 
 def _worker(at: float, pause: float):
-    box, ctl = _box_with_cameras(2)
-    ctl.assign("w-1", ["1", "2"])
+    box = Box()
+    ctl = controller(box, capacity=50)
+    for name in ("c1", "c2"):
+        ctl.create({"name": name})
+    ctl.assign("w-1", ["c1", "c2"])
     store = _Pausing(box.vars, box, box.clock() + at, pause)
-    w = VmsWorker("w-1", store, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, resource_root=box.archive)
+    w = counter_worker(box, "w-1", vars_=store)
     w.reconcile_once()
-    assert sorted(w.leases) == ["1", "2"]
+    assert sorted(w.leases) == ["c1", "c2"]
     for stub in ("reconcile_once", "pump_once", "heartbeat_once", "beat_once"):   # only the lease step talks to the store
         setattr(w, stub, lambda *a, **kw: None)
     w.start_stand_in = lambda: threading.Event()                                   # no thread: the clocks are fakes
@@ -95,8 +97,8 @@ def _gaps(box, w, step):
 
 
 def _old_loop(box, w, turns: int):
-    """The loop's lease step as it was (`vms/worker.py` before the fix): `last_lease = self.clock()` AFTER the step, and
-    nothing sooner after a step whose renewals the store did not answer."""
+    """The loop's lease step as it was (the holder's loop before the fix): `last_lease = self.clock()` AFTER the step,
+    and nothing sooner after a step whose renewals the store did not answer."""
     every = max(1.0, (w.lease_ttl - w.lease_margin) / 3)
     last_lease = 0.0
     for _ in range(turns):
@@ -130,31 +132,3 @@ def test_a_pause_a_call_waits_out_costs_the_pause_and_nothing_more():
     after = _gaps(box, w, lambda: w.run(poll=T_POLL, stop=_Turns(40, box)))
     assert after <= 10.0 + 3.5 + 0.01, after
     assert w.store_errors == 0
-
-
-def test_the_evaluators_loop_has_the_same_lease_step():
-    """`AutoWorker.run` keeps its leases the same way: a step whose renewals were not answered is followed by another at
-    the next look, and the period runs from a step's start."""
-    from vms.autoworker import AutoWorker
-    box = Box()
-    store = _Pausing(box.vars, box, box.clock() + 1000.0, 0.0)
-    w = AutoWorker("a-1", store, box.objects, clock=box.clock, wall=box.wall, env={})
-    for stub in ("reconcile_once", "heartbeat_once"):
-        setattr(w, stub, lambda *a, **kw: None)
-    w.start_stand_in = lambda: threading.Event()
-    steps, failing = [], [3]
-
-    def lease_pass():
-        steps.append(box.clock())
-        if failing[0]:
-            failing[0] -= 1
-            w.unanswered += 1                         # a renewal the store did not answer
-        box.clock.advance(1.5)                        # the step itself takes a while
-        return []
-    w.lease_pass = lease_pass
-    w.run(poll=T_POLL, stop=_Turns(20, box))
-    gaps = [round(b - a, 1) for a, b in zip(steps, steps[1:])]
-    assert gaps[:3] == [3.5, 3.5, 3.5], gaps          # unanswered: again at the next look (the step's 1.5 s and a poll)
-    # answered: the next a period after this one BEGAN — the first look past 8.33 s from it, 9.5 s; counted from its
-    # end (the old loop) it was the first look past 8.33 s from 1.5 s later, 11.5 s
-    assert gaps[3:] and all(g == 9.5 for g in gaps[3:]), gaps

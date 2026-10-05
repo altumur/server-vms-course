@@ -6,22 +6,22 @@ from w2cplatform.worker import Worker
 from w2cplatform.epoch import Lease, current_epoch, next_epoch
 from w2cplatform.spec import SpecController, SubsystemSpec
 from w2cplatform.variables import Conflict, FileVariables, Forbidden
-from tests.conftest import Box, Clock
+from tests.conftest import Box, Clock, console_ctl, controller_ctl, counter_worker
 
 
 def test_the_config_store_survives_a_restart_and_refuses_a_stale_cas():
     box = Box()
-    idx = box.vars.put("vms/cameras/7", {"name": "gate", "revision": 1}, cas=0)
+    idx = box.vars.put("testsub/counters/gate", {"name": "gate", "revision": 1}, cas=0)
     assert idx == 1001
     again = FileVariables(box.vars.root)                       # a new process, same directory
-    items, idx2 = again.get("vms/cameras/7")
+    items, idx2 = again.get("testsub/counters/gate")
     assert items == {"name": "gate", "revision": "1"} and idx2 == idx
     try:
-        again.put("vms/cameras/7", {"name": "x"}, cas=idx - 1); raise AssertionError("must conflict")
+        again.put("testsub/counters/gate", {"name": "x"}, cas=idx - 1); raise AssertionError("must conflict")
     except Conflict:
         pass
-    assert again.put("vms/cameras/7", {"name": "x"}, cas=idx) == 1002
-    assert again.list("vms/") == ["vms/cameras/7"] and again.get("nope") == (None, 0)
+    assert again.put("testsub/counters/gate", {"name": "x"}, cas=idx) == 1002
+    assert again.list("testsub/") == ["testsub/counters/gate"] and again.get("nope") == (None, 0)
 
 
 def test_two_processes_one_cas_winner():
@@ -43,12 +43,12 @@ def test_two_processes_one_cas_winner():
 
 def test_one_writer_per_prefix():
     box = Box()
-    ctl = box.vars.as_writer("vmscontroller", ["vms/*"])
-    wrk = box.vars.as_writer("vmsworker-1", ["vms/epoch/*"])
-    ctl.put("vms/cameras/7", {"name": "gate"})
-    wrk.put("vms/epoch/7", {"epoch": 1})
+    ctl = box.vars.as_writer("testsubcontroller", ["testsub/*"])
+    wrk = box.vars.as_writer("testsubworker-1", ["testsub/epoch/*"])
+    ctl.put("testsub/counters/gate", {"name": "gate"})
+    wrk.put("testsub/epoch/gate", {"epoch": 1})
     try:
-        wrk.put("vms/cameras/7", {"name": "mine now"}); raise AssertionError("a worker never writes configuration")
+        wrk.put("testsub/counters/gate", {"name": "mine now"}); raise AssertionError("a worker never writes configuration")
     except Forbidden:
         pass
 
@@ -59,35 +59,42 @@ def test_epoch_issuer_never_reuses_a_number():
     def race():
         v = FileVariables(box.vars.root)
         for _ in range(25):
-            issued.append(next_epoch(v, "vms/epoch/7")[0])
+            issued.append(next_epoch(v, "testsub/epoch/gate")[0])
     ts = [threading.Thread(target=race) for _ in range(4)]
     [t.start() for t in ts]; [t.join() for t in ts]
-    assert sorted(issued) == list(range(1, 101)) and current_epoch(box.vars, "vms/epoch/7") == 100
+    assert sorted(issued) == list(range(1, 101)) and current_epoch(box.vars, "testsub/epoch/gate") == 100
 
 
 def test_lease_on_a_monotonic_clock():
     box = Box(); clk = Clock()
-    e, _ = next_epoch(box.vars, "vms/epoch/7")
-    lease = Lease(box.vars, "vms/epoch/7", e, ttl=30, margin=5, clock=clk)
+    e, _ = next_epoch(box.vars, "testsub/epoch/gate")
+    lease = Lease(box.vars, "testsub/epoch/gate", e, ttl=30, margin=5, clock=clk)
     clk.advance(24.9); assert lease.may_act()
     clk.advance(0.2);  assert not lease.may_act() and lease.seconds_left() == 0
     assert lease.renew() and lease.may_act()
-    next_epoch(box.vars, "vms/epoch/7")                        # somebody else took camera 7
+    next_epoch(box.vars, "testsub/epoch/gate")                 # somebody else took counter gate
     assert lease.renew() is False and lease.fenced and lease.conflicts == 1
 
 
-def test_the_platform_knows_nothing_about_video():
-    """No import from vms/ anywhere under w2cplatform/."""
-    here = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "w2cplatform")
+def test_the_platform_knows_nothing_about_its_subsystems():
+    """No import of a subsystem's package anywhere under w2cplatform/ — and not even the word for the unit of a
+    subsystem whose package carries its spec, whatever that spec calls it (`test_boundary.py` holds the platform's
+    whole tree to every word of the product)."""
+    from tests.test_boundary import ROOT, SUBSYSTEM_PACKAGES
+    here = os.path.join(ROOT, "w2cplatform")
+    specs = [os.path.join(ROOT, p, f"{p}.subsystem.yaml") for p in SUBSYSTEM_PACKAGES]
+    units = [SubsystemSpec.load(s).rows.rstrip("s") for s in specs if os.path.exists(s)]
+    assert units, "no subsystem package carries its own spec"
     for f in os.listdir(here):
         if f.endswith(".py"):
             src = "\n".join(l for l in open(os.path.join(here, f)) if not l.lstrip().startswith("#"))   # the code, not the notes
-            assert "from vms" not in src and "import vms" not in src, f
+            for p in SUBSYSTEM_PACKAGES:
+                assert f"from {p}" not in src and f"import {p}" not in src, (f, p)
             if f != "__init__.py":
-                assert "camera" not in src.lower(), f              # not even the word
-    sub = Subsystem("vms")
-    assert sub.assignment("w-1") == "vms/workers/w-1" and sub.epoch_key("7") == "vms/epoch/7"
-    assert sub.heartbeat_key("w-1") == "vms/heartbeats/w-1" and sub.acl_controller() == ["vms/*"]
+                assert not [u for u in units if u in src.lower()], f     # not even the word
+    sub = Subsystem("testsub")
+    assert sub.assignment("w-1") == "testsub/workers/w-1" and sub.epoch_key("7") == "testsub/epoch/7"
+    assert sub.heartbeat_key("w-1") == "testsub/heartbeats/w-1" and sub.acl_controller() == ["testsub/*"]
 
 
 def test_controller_and_worker_bases_speak_only_the_contract():
@@ -220,50 +227,39 @@ def test_a_worker_that_released_its_slot_stops_receiving_units():
     keeps placing NEW units on a process on its way out — and the next pass moves them
     off again. Churn at every scale-in and every rolling update. `redistribute` already
     read `Slot.released`; placement did not."""
-    from vms.config import SPEC
-    from vms.controller import VmsController
-    from vms.worker import FakeActuator, VmsWorker
-    from tests.conftest import Box
-
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
-    con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    w1 = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
-    w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2", resource_root=box.archive)
+    ctl, con = controller_ctl(box), console_ctl(box)
+    w1 = counter_worker(box, "w-1", server="srv-1")
+    w2 = counter_worker(box, "w-2", server="srv-2")
     w1.heartbeat_once(); w2.heartbeat_once()
 
     w1.heartbeat_once(); w1.release_slot()                    # an orderly stop: a last word, then let go
     assert "w-1" in ctl.workers_seen()                        # still in the catalogue: its heartbeat is seconds old
-    con.create_camera({"source": "driverpack://file/a.mp4"})
+    con.create({"name": "c1"})
     assert ctl.ensure_placed()[0].worker == "w-2"             # …and still not a place to put work
 
 
 def test_a_subscriber_is_not_handed_a_holder_that_has_gone_silent():
     """`heartbeats()` returns every last word whatever its age — the read model wants the
     stale ones, to show them muted. A SUBSCRIBER wants only who is reachable, and each of
-    the four that ask (recorder, gateway, detector, console) used to decide that for
+    the four that ask (three subsystems' workers and the console) used to decide that for
     itself: three leant on a dead worker's last `phase: running`, the fourth checked
     nothing. `holders()`/`holder_of()` put the filter in the catalogue, where it cannot
     be forgotten."""
     from w2cplatform.console import heartbeats, holder_of, holders
-    from vms.config import SPEC
-    from vms.controller import VmsController
-    from vms.worker import FakeActuator, VmsWorker
-    from tests.conftest import Box
 
     box = Box()
-    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
-    con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1", resource_root=box.archive)
-    w.heartbeat_once(); con.create_camera({"source": "driverpack://file/a.mp4"}); ctl.ensure_placed()
+    ctl, con = controller_ctl(box), console_ctl(box)
+    w = counter_worker(box, "w-1", server="srv-1")
+    w.heartbeat_once(); con.create({"name": "c1"}); ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
 
-    assert holder_of(box.objects, "vms/", 1, box.wall(), phase="running", field="live_url") is not None
+    assert holder_of(box.objects, "testsub/", "c1", box.wall(), phase="running", field="epoch") is not None
 
     box.wall.advance(60)                                      # the holder stops saying anything
-    assert heartbeats(box.objects, "vms/")["w-1"].status[0]["phase"] == "running"   # its LAST word still says so
-    assert holders(box.objects, "vms/", box.wall()) == {}                            # …and it is not reachable
-    assert holder_of(box.objects, "vms/", 1, box.wall(), phase="running", field="live_url") is None
+    assert heartbeats(box.objects, "testsub/")["w-1"].status[0]["phase"] == "running"   # its LAST word still says so
+    assert holders(box.objects, "testsub/", box.wall()) == {}                            # …and it is not reachable
+    assert holder_of(box.objects, "testsub/", "c1", box.wall(), phase="running", field="epoch") is None
 
 
 def _counter(name: str = "counter"):
@@ -285,8 +281,8 @@ def test_the_watermark_asks_and_never_deletes():
     boundary's step 6: it called the subsystem's `free`, code of the subsystem's in the
     resource's pass).
 
-    The subsystem here keeps no video and no buckets — it counts. Nothing in this test
-    knows what a camera is, which is the point of the door being a row."""
+    The subsystem here keeps no files and no buckets — it counts. Nothing in this test
+    knows what any subsystem's unit is, which is the point of the door being a row."""
     import tempfile
     from w2cplatform.resource import SPACE_KEY, Resource
 
@@ -326,10 +322,10 @@ def test_the_tree_is_walked_once_a_pass_and_never_on_a_heartbeat():
     first is measured with the policy pass and published from the cache with the time
     it was taken; the second is live in every heartbeat.
 
-    At fifty cameras and ten-minute segments a month of archive is a quarter of a
+    At fifty units writing ten-minute segments a month of the tree is a quarter of a
     million files. Walking them every ten seconds does not merely cost a second — it
-    touches every inode in the tree, so the cache holds the archive's metadata instead
-    of the video the machine exists to serve."""
+    touches every inode in the tree, so the cache holds the tree's metadata instead
+    of the data the machine exists to serve."""
     import tempfile
     from w2cplatform.resource import Resource
 
@@ -356,7 +352,7 @@ def test_the_tree_is_walked_once_a_pass_and_never_on_a_heartbeat():
 def test_space_does_not_average_across_volumes():
     """A box with three disks is not a box with one big disk.
 
-    Half full across two volumes, one of them at 98%, is a box that stops recording:
+    Half full across two volumes, one of them at 98%, is a box that stops writing:
     the unit that cannot write is on the full one, and bytes freed on the empty one
     close nothing. So the watermark is per volume, and the volume goes into the ask —
     only the subsystem knows which of its files are where, only the resource knows
@@ -397,11 +393,11 @@ def test_which_volume_holds_a_unit_is_the_directory_and_not_a_map():
     roots = {"vol-a": tempfile.mkdtemp(prefix="vol-a-"), "vol-b": tempfile.mkdtemp(prefix="vol-b-")}
     res = Resource(None, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, volumes=roots,
                    space_probe=lambda root: (1_000_000, 100_000 if root == roots["vol-a"] else 900_000))
-    assert res.volume_of("rec", "7") is None                   # nothing written yet: no answer, not a guess
-    os.makedirs(os.path.join(roots["vol-b"], "rec", "7"))
-    assert res.volume_of("rec", "7") == "vol-b"
+    assert res.volume_of("thing", "7") is None                 # nothing written yet: no answer, not a guess
+    os.makedirs(os.path.join(roots["vol-b"], "thing", "7"))
+    assert res.volume_of("thing", "7") == "vol-b"
     assert res.place_volume() == "vol-b"                       # a new unit goes where there is room
-    assert res.units() == {"rec": ["7"]}                       # and the tree is read across volumes
+    assert res.units() == {"thing": ["7"]}                     # and the tree is read across volumes
 
 
 def test_the_schema_is_raised_after_the_upgrade_and_never_during_it():
@@ -418,12 +414,12 @@ def test_the_schema_is_raised_after_the_upgrade_and_never_during_it():
     from w2cplatform.contract import (BUILD, SCHEMA, SCHEMA_KEY, Controller, SchemaTooNew,
                                       Subsystem, builds, check_schema, schema_version)
     box = Box()
-    ctl = Controller(Subsystem("vms"), box.vars, box.objects, wall=box.wall)
+    ctl = Controller(Subsystem("testsub"), box.vars, box.objects, wall=box.wall)
     assert schema_version(box.vars) == SCHEMA          # absent: a fresh install is whatever this build is
 
     box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA + 1)}, cas=0)     # somebody upgraded the store
     try:
-        Controller(Subsystem("vms"), box.vars, box.objects, wall=box.wall)
+        Controller(Subsystem("testsub"), box.vars, box.objects, wall=box.wall)
         raise AssertionError("an old build started against a newer store")
     except SchemaTooNew as e:
         assert "understands" in str(e)
@@ -431,23 +427,22 @@ def test_the_schema_is_raised_after_the_upgrade_and_never_during_it():
     assert check_schema(box.vars) == SCHEMA
 
     # every process says what it understands, and one scan finds them all — any subsystem, and the resource
-    from vms.worker import FakeActuator, VmsWorker
-    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
+    w = counter_worker(box, "w-1", server="srv-1")
     w.heartbeat_once()
     seen = builds(box.objects, box.wall())
-    assert seen["vms/w-1"]["schema"] == SCHEMA and seen["vms/w-1"]["build"] == BUILD and seen["vms/w-1"]["live"]
+    assert seen["testsub/w-1"]["schema"] == SCHEMA and seen["testsub/w-1"]["build"] == BUILD and seen["testsub/w-1"]["live"]
 
     # raising is refused while anything live understands less: you cannot raise the store out from
     # under a machine you forgot to upgrade
     old = Heartbeat("w-2", box.wall(), [], {"server": "srv-2", "schema": SCHEMA, "build": "old"}).to_bytes()
-    box.objects.put("vms/heartbeats/w-2", old)
+    box.objects.put("testsub/heartbeats/w-2", old)
     try:
         ctl.set_schema(SCHEMA + 1); raise AssertionError("raised the schema over a running old build")
     except SchemaTooNew as e:
-        assert "still running" in str(e) and "vms/w-2" in str(e)
+        assert "still running" in str(e) and "testsub/w-2" in str(e)
 
     box.wall.advance(60); w.heartbeat_once()            # w-2 is gone; w-1 is new and says so
-    box.objects.put("vms/heartbeats/w-1",
+    box.objects.put("testsub/heartbeats/w-1",
                     Heartbeat("w-1", box.wall(), [], {"server": "srv-1", "schema": SCHEMA + 1}).to_bytes())
     assert ctl.set_schema(SCHEMA + 1)["version"] == str(SCHEMA + 1)
     try:
@@ -463,10 +458,9 @@ def test_a_build_the_store_outgrew_while_it_ran_fences_and_does_not_rejoin():
     Now the check is repeated where the slot is renewed: the instance fences with the reason, and a fenced
     instance does not rejoin while the store stays ahead of it."""
     from w2cplatform.contract import SCHEMA, SCHEMA_KEY, Controller, SchemaTooNew, Subsystem
-    from vms.worker import FakeActuator, VmsWorker
     box = Box()
-    ctl = Controller(Subsystem("vms"), box.vars, box.objects, wall=box.wall)
-    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
+    ctl = Controller(Subsystem("testsub"), box.vars, box.objects, wall=box.wall)
+    w = counter_worker(box, None, server="srv-1")
     assert w.name == "w-1" and w.lease_pass() == []                  # claimed its slot, checked the schema — and has not heartbeaten
     ctl.set_schema(SCHEMA + 1)                                       # nobody live understands less: raised
     try:
@@ -485,14 +479,13 @@ def test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_start
     whole fleet fenced by one field. A process that already read the schema keeps what it read; one that never did
     refuses to start, as for a newer layout. Only a version that PARSES as newer fences a running build."""
     from w2cplatform.contract import SCHEMA, SCHEMA_KEY, SchemaTooNew
-    from vms.worker import FakeActuator, VmsWorker
     box = Box()
-    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
+    w = counter_worker(box, None, server="srv-1")
     assert w.lease_pass() == [] and w.writing_allowed
     box.vars.put(SCHEMA_KEY, {"version": "one"}, cas=0)                              # a hand edit
     assert w.renew_slot() and w.lease_pass() == [] and w.writing_allowed           # running: what it read stands
     try:
-        VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+        counter_worker(box, None, server="srv-2")
         raise AssertionError("a new process started on a schema it cannot read")
     except SchemaTooNew as e:
         assert "does not parse" in str(e)
@@ -510,9 +503,8 @@ def test_a_worker_fenced_for_its_slot_rejoins_over_a_garbled_schema_row_and_one_
     what it last read now. A worker fenced FOR the schema has nothing to keep: a garbled row does not say the store
     came back to its layout, and it stays fenced until a version that parses says so."""
     from w2cplatform.contract import SCHEMA, SCHEMA_KEY, Slot
-    from vms.worker import FakeActuator, VmsWorker
     box = Box()
-    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
+    w = counter_worker(box, None, server="srv-1")
     assert w.name == "w-1" and w.lease_pass() == [] and w.writing_allowed
     box.vars.put(w.sub.slot_key("w-1"), Slot("w-1", "somebody-else", box.wall() + 60, False, 9).to_items(),
                  cas=box.vars.get(w.sub.slot_key("w-1"))[1])                # another instance took the slot

@@ -17,7 +17,7 @@ from vms.controller import VmsController
 from vms.detworker import DetWorker, FakeModel
 from vms.worker import FakeActuator, VmsWorker
 from vms.console import serve
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 
 def _box():

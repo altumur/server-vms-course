@@ -27,7 +27,7 @@ and nothing in platform/ imports from here.
 # platform's `SpecConsole` over the VMS spec, plus `/timeline`, `/export` and `/segment`).
 #
 # The last sentence fixes the dependency direction that
-# `tests/test_lesson1_platform.py::test_the_platform_knows_nothing_about_video` enforces: `vms/` imports
+# `tests/test_lesson1_platform.py::test_the_platform_knows_nothing_about_its_subsystems` enforces: `vms/` imports
 # from the platform only through its public interfaces (`Worker`, `SpecController`, `SpecConsole`,
 # `EventLog`, the store Protocols), and nothing in the platform imports from here.
 #

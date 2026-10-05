@@ -402,6 +402,36 @@ def test_a_declared_table_is_written_listed_and_deleted_by_the_console_and_each_
              "tables.racks is {key, fields, schema, stamp, journal}")
 
 
+def test_a_table_or_rows_named_like_a_route_of_the_console_is_refused_at_load_and_the_routes_are_the_dispatchs():
+    """A table named `marks` was never written over HTTP: `POST /marks` is the operator's mark, answered before a
+    spec's tables are looked at (503 «no resource…» on a mount). The console's own routes are a closed set
+    (`spec.CONSOLE_ROUTES`): a spec whose rows or a declared table is one of them does not load, and says which and
+    why — a table only named (`tables: [metrics]`) is served by nobody and collides with nothing; and the set is the first segments the console's dispatch answers itself, every one of
+    them, read from its code."""
+    import re
+    from w2cplatform import console, spec as spec_mod
+    for route in sorted(spec_mod.CONSOLE_ROUTES):
+        _refused(lambda: SubsystemSpec.from_dict({**SHED, "tables": {route: {"key": "{x}", "fields": {"x": {"type": "string"}}}}}),
+                 f"tables.{route} is {route!r}, a route the console answers itself")
+        _refused(lambda: SubsystemSpec.from_dict({**SHED, "unit": {**SHED["unit"], "rows": route}}),
+                 f"unit.rows is {route!r}, a route the console answers itself")
+    assert SubsystemSpec.from_dict({**SHED, "tables": {"notches": SHED["tables"]["racks"]}}).table_specs
+    assert SubsystemSpec.from_dict({**SHED, "tables": ["metrics"]}).tables == ("metrics",)
+    # the set is the dispatch's: every literal first segment `SpecConsole.dispatch`, `_declared` and `Mount` compare a
+    # path with is in it, and nothing else is
+    src = open(console.__file__, encoding="utf-8").read()
+    start = src.index("    def _declared(")
+    code = src[start:src.index("    # `/<table>[/<name>]`", start)]
+    start = src.index("    def dispatch(self, h, method: str, path: str, q: dict)")
+    code += src[start:src.index("    # Starts the server in a daemon thread", start)]
+    start = src.index("            def _route(self, method):")
+    code += src[start:src.index("            def _answered(self, method):", start)]
+    said = set(re.findall(r'(?<!endswith\()"/([a-z][a-z.]*)', code))           # `"/spec"`, `"/where/"`, `"/domain/shared/"`
+    said |= set(re.findall(r'segs\[1\] == "([a-z]+)"', src))                  # `place_path`: `/where/<table>/<name>`
+    said |= {r.strip("/") for r in (*console.Mount.MOUNT_ROUTES, *console.RESERVE_ROUTES, *console.MONITOR_ROUTES)}
+    assert said == set(spec_mod.CONSOLE_ROUTES), (sorted(said - spec_mod.CONSOLE_ROUTES), sorted(spec_mod.CONSOLE_ROUTES - said))
+
+
 def test_a_request_is_a_row_named_by_its_key_stamped_with_its_group_and_held_to_its_schema_and_deadline():
     """`requests:`: `POST /requests {unit: <sub>/<id>, …}` is a row of `<sub>/requests/` for whoever holds the unit, its
     body held to the spec's schema, its deadline `valid_for` from now unless it says one no further than `most_valid`;

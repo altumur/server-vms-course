@@ -13,7 +13,7 @@ from w2cplatform.contract import requests_acl
 from w2cplatform.spec import Refused, SpecController, SubsystemSpec
 from vms.auto import ACTIONS, MAX_ACTIONS, MAX_TRIGGERS, MAX_VALID_FOR, MAX_WITHIN, Catalog, fires, refusal
 from vms.config import AUTO_SPEC
-from tests.conftest import Box, door_site
+from tests.vmsconftest import Box, door_site
 
 
 DOOR = {"name": "door-on-badge",

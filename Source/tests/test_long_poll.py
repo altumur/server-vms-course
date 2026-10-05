@@ -35,7 +35,7 @@ from vms.autoworker import AutoWorker
 from vms.config import AUTO_SPEC, SPEC as VMS, WORKER_ACL
 from vms.controller import VmsController
 from vms.worker import COMMANDS_BEAT, FakeActuator, FakeDevice, VmsWorker, commands_beat
-from tests.conftest import Box
+from tests.vmsconftest import Box
 
 ON, OFF = {}, {"LONG_POLL": "0", "COMMANDS_BEAT": "0"}     # what a process is started with: both on unless it says
 
@@ -1515,7 +1515,7 @@ def test_an_ordinary_pass_reads_the_catalog_once_however_many_scenarios_name_no_
     """The sweep beside M8. A scenario's fit is checked against the catalog on every pass, and a trigger that names no
     camera lists and reads every camera — once per such scenario, per pass. It is read once per ordinary pass now, and
     an early pass says what the last ordinary one found."""
-    from tests.conftest import door_site
+    from tests.vmsconftest import door_site
     from tests.test_autoworker import _Log, _worker
     box = Box()
     door_site(box)

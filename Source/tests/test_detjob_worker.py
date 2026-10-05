@@ -8,7 +8,7 @@ from w2cplatform.spec import SpecController
 from vms.config import DETJOB_SPEC
 from vms.detjobworker import DetJobWorker
 from vms.scan import ScanLog
-from tests.conftest import Box, door, footage, store
+from tests.vmsconftest import Box, door, footage, store
 
 T = 1_757_500_000.0 - 7 * 24 * 3600      # the footage is a week older than the worker's clock
 
