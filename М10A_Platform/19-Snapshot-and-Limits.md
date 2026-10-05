@@ -210,7 +210,7 @@ MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see t
 
 Та же мысль с другого конца — кластер, у которого единиц нет вовсе. Ему нечего публиковать, и «опубликовал, что их нет» читалось бы как «не публиковал ни разу» (отзыв AA). Поэтому такой кластер пишет пустой шард `unplaced`: пустой объект и здесь — утверждение.
 
-> **Проверено снятием.** Уберите цикл `for key in self.objects.list(prefix)` — и `test_a_worker_that_is_gone_stops_reporting_its_cameras` падает, а остальные тесты набора проходят. Уберите вызов `self.sub.snapshot_key(w)` — падает `test_a_worker_may_not_be_called_unplaced`, и снова только он.
+> **Проверено снятием.** Уберите цикл `for key in self.objects.list(prefix)` — и `test_a_worker_that_is_gone_stops_reporting_its_units` падает, а остальные тесты набора проходят. Уберите вызов `self.sub.snapshot_key(w)` — падает `test_a_worker_may_not_be_called_unplaced`, и снова только он.
 
 ## Шаг 5 — Читатель: слить, не соврав про возраст
 
@@ -254,7 +254,7 @@ MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see t
     ctl = _cluster(box, 600, workers=12, capacity=50)                 # …
     ctl.ensure_placed()
     ctl.publish_snapshot()
-    shards = box.objects.list("vms/snapshot/")
+    shards = box.objects.list("testsub/snapshot/")
     assert len(shards) == 12
     biggest = max(len(box.objects.get(k)) for k in shards)
     one_object = len(json.dumps(ctl.snapshot()).encode())             # what it used to publish
@@ -402,7 +402,7 @@ def _open(url: str, writer: str | None = None, acl: dict[str, list[str]] | None 
 
 Потолок — часть того, **какое это хранилище**, поэтому он в URL рядом с именем. Тот же второй бэкенд, который в уроке 3 нашёл недостающий седьмой пункт, теперь гоняет восьмой.
 
-> **Ловушка, на которую я напоролся.** В контрактном наборе этот пункт ловит `TooLarge` **по имени класса, а не по `except TooLarge`**. Рядом живёт `test_portability`, который перестраивает `sys.modules`, чтобы доказать, что платформа импортируется без юниксовых модулей, — и после него класс, пойманный при импорте тестового модуля, уже не тот класс, который поднимает стор. `except` молча перестаёт ловить. Пункт про то, что стор **делает**, и записан он в форме, которая переживает набор, в котором живёт.
+> **Ловушка, на которую я напоролся.** В контрактном наборе этот пункт ловит `TooLarge` **по имени класса, а не по `except TooLarge`**. Рядом живёт `test_portability.py` (`test_the_platform_imports_on_a_box_without_the_unix_modules`), который перестраивает `sys.modules`, чтобы доказать, что платформа импортируется без юниксовых модулей, — и после него класс, пойманный при импорте тестового модуля, уже не тот класс, который поднимает стор. `except` молча перестаёт ловить. Пункт про то, что стор **делает**, и записан он в форме, которая переживает набор, в котором живёт.
 
 ## Шаг 10 — Кто получает отказ и в каком виде
 
@@ -702,7 +702,7 @@ def step(owner, what: str, name: str, fn, failed: str | None = None) -> bool:
     assert any("publishing the snapshot failed" in ln for ln in lines), lines
     assert not any("placement pass failed" in ln for ln in lines), lines
     # …and the placement it did is still there: the pass did its first job
-    assert ctl.where(1) == "w-1"
+    assert ctl.where("c1") == "w-1"
 ```
 
 ```python
@@ -710,7 +710,7 @@ def step(owner, what: str, name: str, fn, failed: str | None = None) -> bool:
     lines = _one_pass(ctl)
     assert any("placement pass failed" in ln for ln in lines), lines
     assert not any("publishing the snapshot failed" in ln for ln in lines), lines
-    assert box.objects.list("vms/snapshot/"), "the publish was skipped because placement failed"
+    assert box.objects.list("testsub/snapshot/"), "the publish was skipped because placement failed"
 ```
 
 Обратите внимание на `assert not` в обеих. Проверить, что нужная фраза есть, — половина; вся суть в том, что **лишней нет**. Во второй «placement pass failed» говорит уже `pass_once` («… at ensure_placed»), и снимок при этом опубликован: упавший шаг размещения не остановил ни остальные шаги, ни публикацию.
