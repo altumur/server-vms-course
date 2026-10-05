@@ -9,11 +9,11 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-# NOT ROOT (the product's cross-check, 4 Oct): its own user, in no group but its own — polkit lets `w2c-spares` do one thing,
-# `start`, of the spares' templates and nothing else (М11's `w2c-spares.rules`, its user in `w2c-cluster.sysusers`,
-# both installed by its `install.sh --spares`); it opens no store and reads no key.
-User=w2c-spares
-Group=w2c-spares
+# NOT ROOT (the product's cross-check, 4 Oct), and the platform's user (ADR 0030: every platform process runs as `w2c`,
+# in no subsystem's group) — polkit lets `w2c` do one thing through systemd, `start`, of the spares' templates and
+# nothing else (М11's `w2c-spares.rules`, installed by its `install.sh --spares`); it opens no store and reads no key.
+User=w2c
+Group=w2c
 ExecStart=/usr/local/bin/w2c-spares.sh autoworker
 EnvironmentFile=-/etc/w2c/w2c.env
 EnvironmentFile=-/etc/vms/vms.env

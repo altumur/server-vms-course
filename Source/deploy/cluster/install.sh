@@ -7,7 +7,7 @@
 #   --spares   also `w2c-spares.sh` and its timers (М10's `Source/deploy/`): every minute it reads the console's
 #              numbers and starts the spares this server can serve — never stops one (lesson 4) — each from its role's
 #              template (`vms-vmsworker-spare@.service`, `vms-recworker-spare@.service`; macOS: the role's plist).
-#              On Linux it runs as `w2c-spares` (`w2c-cluster.sysusers`), and the polkit rule `w2c-spares.rules` lets
+#              On Linux it runs as the platform's `w2c` (ADR 0030), and the polkit rule `w2c-spares.rules` lets
 #              that user `systemctl start` those templates' instances and nothing else
 #
 # Linux (systemd): /etc/w2c -> /data/platform/etc and /etc/vms -> /data/vms/etc (mutable configuration on the data

@@ -5,7 +5,7 @@
 # Deliberately NOT a container. It talks to systemd on this host, and the two ways to let a container do
 # that are a privileged container or the D-Bus socket bind-mounted into it — both of which hand root on
 # the box to something that also speaks HTTP to the world. This is a page of shell, once a minute, with no
-# listening socket — and no longer root: it runs as `w2c-spares`, and what systemd lets that user do is one
+# listening socket — and no longer root: it runs as the platform's `w2c`, and what systemd lets that user do is one
 # verb on two templates (М11's `w2c-spares.rules`); that is the smaller thing to audit.
 [Unit]
 Description=w2c: start a recorder for every declared archive nobody holds
@@ -13,11 +13,11 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-# NOT ROOT (the product's cross-check, 4 Oct): its own user, in no group but its own — polkit lets `w2c-spares` do one thing,
-# `start`, of the spares' templates and nothing else (М11's `w2c-spares.rules`, its user in `w2c-cluster.sysusers`,
-# both installed by its `install.sh --spares`); it opens no store and reads no key.
-User=w2c-spares
-Group=w2c-spares
+# NOT ROOT (the product's cross-check, 4 Oct), and the platform's user (ADR 0030: every platform process runs as `w2c`,
+# in no subsystem's group) — polkit lets `w2c` do one thing through systemd, `start`, of the spares' templates and
+# nothing else (М11's `w2c-spares.rules`, installed by its `install.sh --spares`); it opens no store and reads no key.
+User=w2c
+Group=w2c
 ExecStart=/usr/local/bin/w2c-spares.sh recworker
 # CONSOLE, MAX_RECORDERS, SERVER_NAME — the same files the units read (the platform's `w2c.env`, then
 # the VMS's `vms.env`; /etc/w2c and /etc/vms, links into the data partition on the course's box), so the box has

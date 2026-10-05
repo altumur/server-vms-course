@@ -10,9 +10,8 @@
 # name as its socket's (`vms-<role>` for a worker, the platform's `w2c-<role>`):
 # a unit joins its own and opens no other socket; the daemon chowns every socket to its group, so configstore is a
 # member of each. vms-obsd (М10's `obsd.sysusers`, gid 2101) is the group the archive's engine lets in.
-# w2c-spares runs `w2c-spares.sh` (`install.sh --spares`): a user in no group but its own — no socket, no key, no archive — whom
-# polkit lets `systemctl start` a spare template's instance and nothing else (`w2c-spares.rules`; the product's
-# cross-check, 4 Oct: the script ran as root).
+# `w2c-spares.sh` (`install.sh --spares`) runs as `w2c` too (ADR 0030), whom polkit lets `systemctl start` a spare
+# template's instance and nothing else (`w2c-spares.rules`; the product's cross-check, 4 Oct: the script ran as root).
 u w2c               2100  "w2c platform (the resource)"                        /data/platform -
 g w2c-events        2102  -
 g w2c-store         2103  -
@@ -22,7 +21,6 @@ m w2c w2c-store
 u configstore       2105  "w2c configstore (this server's member of the store)" /data/platform/configstore -
 g vms               -
 u vms               -     "VMS subsystem processes"                            /data/vms -
-u w2c-spares        -     "w2c spares (starts spare units, by polkit)"         -  -
 g w2c-resource      -
 g w2c-domain        -
 g w2c-domainagent   -

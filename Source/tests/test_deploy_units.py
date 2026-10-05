@@ -700,7 +700,7 @@ def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_it
 
 
 def test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried():
-    """The script runs as `w2c-spares` now, whom polkit lets `start` a spare template's instance and nothing else (the
+    """The script runs as the platform's `w2c` now (ADR 0030), whom polkit lets `start` a spare template's instance and nothing else (the
     product's cross-check, 4 Oct) — so no `reset-failed` before a start either: an instance past systemd's start limit,
     or one polkit refuses, fails its `start`. That is said, and the next number is tried, within the ceiling."""
     out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, env={"MAX_WORKERS": "2"},
@@ -779,15 +779,15 @@ def test_every_spares_unit_runs_the_script_for_its_role():
     """`w2c-spares.{service,timer}` for recorders, `w2c-spares-<role>.{service,timer}` for the camera workers, the
     gateways and the evaluators (the product's §6): each service a one-shot running `w2c-spares.sh <role>` on the host,
     each timer every minute — and the one directory it writes, where each spare's set is for its runner to read;
-    each as the spares' own user, never root."""
+    each as the platform's user, `w2c` (ADR 0030), never root."""
     for role in ("recworker", "vmsworker", "liveworker", "autoworker"):
         name = "w2c-spares" if role == "recworker" else f"w2c-spares-{role}"
         svc = unit(name + ".service")["Service"]
         assert svc["Type"] == "oneshot" and svc["ExecStart"] == f"/usr/local/bin/w2c-spares.sh {role}", svc
         assert svc["RuntimeDirectory"] == "w2c-spares" and svc["RuntimeDirectoryPreserve"] == "yes", svc
-        # not root (the product's cross-check, 4 Oct): its own user in no group but its own; its directory readable by
-        # the spares, who take one line of their file (М11's `w2c-run.sh`, `w2c-spares.rules`, `w2c-cluster.sysusers`)
-        assert svc["User"] == svc["Group"] == "w2c-spares" and "SupplementaryGroups" not in svc, svc
+        # not root (the product's cross-check, 4 Oct): the platform's user, no group in the unit; its directory readable
+        # by the spares, who take one line of their file (М11's `w2c-run.sh`, `w2c-spares.rules`)
+        assert svc["User"] == svc["Group"] == "w2c" and "SupplementaryGroups" not in svc, svc
         assert svc["RuntimeDirectoryMode"] == "0755", svc
         assert unit(name + ".timer")["Timer"]["OnUnitActiveSec"] == "1min"
     assert os.access(os.path.join(DEPLOY, "w2c-spares.sh"), os.X_OK)

@@ -263,10 +263,11 @@ def _polkit(rule: str, user: str, action: str, verb: str | None, unit_: str | No
     return subprocess.run([node, "-e", js], capture_output=True, text=True, check=True).stdout
 
 
-def test_the_spares_script_runs_as_its_own_user_whom_polkit_lets_start_a_spare_template_and_nothing_else():
-    """The product's cross-check (4 Oct): the spares' timer ran its script as root. It runs as `w2c-spares` — a user
-    in no group but its own (`w2c-cluster.sysusers`), so no store socket, no key, no archive — and the polkit rule
-    `install.sh --spares` installs lets that user do one thing through systemd: `start`, of an instance of a spare
+def test_the_spares_script_runs_as_the_platforms_user_whom_polkit_lets_start_a_spare_template_and_nothing_else():
+    """The product's cross-check (4 Oct): the spares' timer ran its script as root. It runs as the platform's `w2c`
+    (ADR 0030: every platform process is `w2c`, in no subsystem's group; there is no user of the spares' own) and joins
+    no group in its unit — no store socket, no key — and the polkit rule `install.sh --spares` installs lets that user
+    do one thing through systemd: `start`, of an instance of a spare
     template, the templates being exactly `install.sh`'s SPARE_UNITS. Run by node where there is one: start of
     `vms-vmsworker-spare@2.service` yes; stop, restart, reset-failed of it no; start of the regular worker, of a
     template that is not a spare's, of a spare with no number, or a unit file written: no; another user: not this
@@ -280,31 +281,30 @@ def test_the_spares_script_runs_as_its_own_user_whom_polkit_lets_start_a_spare_t
     assert sorted(f"vms-{r}-spare@" for r in named) == sorted(spares)
     assert 'install -D -m 0644 "$HERE/systemd/w2c-spares.rules" /etc/polkit-1/rules.d/' in src
     users = _sysusers(os.path.join(SYSTEMD, "w2c-cluster.sysusers"))
-    assert ["u", "w2c-spares", "-"] == next(l for l in users if l[:2] == ["u", "w2c-spares"])[:3]
-    assert not [l for l in users if l[0] == "m" and l[1] == "w2c-spares"]                 # in no group but its own
+    assert not [l for l in users if l[1] == "w2c-spares"]                                 # no user of its own
     for f in sorted(os.listdir(M10)):
         if f.startswith("w2c-spares") and f.endswith(".service"):
             u = unit(os.path.join(M10, f))
-            assert u["User"] == ["w2c-spares"] and u["Group"] == ["w2c-spares"] and "SupplementaryGroups" not in u, f
+            assert u["User"] == ["w2c"] and u["Group"] == ["w2c"] and "SupplementaryGroups" not in u, f
             assert u["RuntimeDirectory"] == ["w2c-spares"] and u["RuntimeDirectoryMode"] == ["0755"], f
     manage = "org.freedesktop.systemd1.manage-units"
-    cases = [("w2c-spares", manage, "start", "vms-vmsworker-spare@2.service", "yes"),
-             ("w2c-spares", manage, "start", "vms-recworker-spare@1.service", "yes"),
-             ("w2c-spares", manage, "stop", "vms-vmsworker-spare@2.service", "no"),
-             ("w2c-spares", manage, "restart", "vms-vmsworker-spare@2.service", "no"),
-             ("w2c-spares", manage, "reset-failed", "vms-vmsworker-spare@2.service", "no"),
-             ("w2c-spares", manage, "start", "vms-vmsworker.service", "no"),
-             ("w2c-spares", manage, "start", "vms-liveworker-spare@1.service", "no"),
-             ("w2c-spares", manage, "start", "vms-vmsworker-spare@.service", "no"),
-             ("w2c-spares", manage, "start", "vms-vmsworker-spare@1.service.d", "no"),
-             ("w2c-spares", manage, "start", "vms-recworker-spare@99.service", "yes"),          # the number: 1 to 99
-             ("w2c-spares", manage, "start", "vms-recworker-spare@100.service", "no"),          # (the thirteenth review)
-             ("w2c-spares", manage, "start", "vms-vmsworker-spare@99999999999999999999.service", "no"),
-             ("w2c-spares", manage, "start", "vms-vmsworker-spare@01.service", "no"),
-             ("w2c-spares", manage, "start", "sshd.service", "no"),
-             ("w2c-spares", manage, None, None, "no"),
-             ("w2c-spares", "org.freedesktop.systemd1.manage-unit-files", None, None, "no"),
-             ("w2c-spares", "org.freedesktop.systemd1.reload-daemon", None, None, "no"),
+    cases = [("w2c", manage, "start", "vms-vmsworker-spare@2.service", "yes"),
+             ("w2c", manage, "start", "vms-recworker-spare@1.service", "yes"),
+             ("w2c", manage, "stop", "vms-vmsworker-spare@2.service", "no"),
+             ("w2c", manage, "restart", "vms-vmsworker-spare@2.service", "no"),
+             ("w2c", manage, "reset-failed", "vms-vmsworker-spare@2.service", "no"),
+             ("w2c", manage, "start", "vms-vmsworker.service", "no"),
+             ("w2c", manage, "start", "vms-liveworker-spare@1.service", "no"),
+             ("w2c", manage, "start", "vms-vmsworker-spare@.service", "no"),
+             ("w2c", manage, "start", "vms-vmsworker-spare@1.service.d", "no"),
+             ("w2c", manage, "start", "vms-recworker-spare@99.service", "yes"),          # the number: 1 to 99
+             ("w2c", manage, "start", "vms-recworker-spare@100.service", "no"),          # (the thirteenth review)
+             ("w2c", manage, "start", "vms-vmsworker-spare@99999999999999999999.service", "no"),
+             ("w2c", manage, "start", "vms-vmsworker-spare@01.service", "no"),
+             ("w2c", manage, "start", "sshd.service", "no"),
+             ("w2c", manage, None, None, "no"),
+             ("w2c", "org.freedesktop.systemd1.manage-unit-files", None, None, "no"),
+             ("w2c", "org.freedesktop.systemd1.reload-daemon", None, None, "no"),
              ("vms", manage, "start", "vms-vmsworker-spare@2.service", "not_handled")]
     for user, action, verb, unit_, want in cases:
         got = _polkit(rule, user, action, verb, unit_)
