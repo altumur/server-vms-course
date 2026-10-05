@@ -475,6 +475,41 @@ def test_how_long_a_request_stands_is_declared_and_a_spec_that_does_not_say_it_d
     assert SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": 0}}).requests["ttl"] == 0
 
 
+def test_how_far_a_deadline_may_be_is_declared_with_valid_for_and_the_door_and_the_reaper_read_that_number():
+    """ADR 0012, the rule of `ttl` (the architect, 2026-10-05): `most_valid` is required wherever `valid_for` is — the
+    door assumed no bound and the reaper ten minutes, two numbers nobody declared. A default deadline past it, and a
+    stamp of `about` in a spec that says no `about:`, are refusals naming the path. The door refuses a deadline past
+    the declared 90 s, and the reaper ends a row with no deadline 90 s after its filing (and `REAP_AFTER`), not 600."""
+    from w2cplatform import requests
+    from w2cplatform.console import SpecConsole
+    from tests.conftest import Served
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 20}}),
+             "requests.most_valid is required with `valid_for`")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": 0, "valid_for": 20}}),
+             "requests.most_valid is required with `valid_for`")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 120, "most_valid": 60}}),
+             "requests.valid_for (120) is past requests.most_valid (60)")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 20, "most_valid": 60, "stamp": ["about"]}}),
+             "requests.stamp names `about`, and the spec says no `about:`")
+    d = dict(SHED, requests={**SHED["requests"], "most_valid": 90})
+    d["placement"] = {**CAP, "group_by": {"field": "addr", "cut_at": "part"}}
+    vars_, objects, wall = _box()
+    ctl = SpecController(SubsystemSpec.from_dict(d), vars_, objects, wall=wall)
+    ctl.create({"name": "drill", "addr": "x://h/bench/part/3"})
+    with Served(SpecConsole(ctl, wall=wall)) as call:
+        for ahead, code in ((89, 202), (91, 400)):
+            st, out = call("POST", "/requests", {"unit": "shed/drill", "action": "poke", "valid_until": wall() + ahead})
+            assert st == code and (code == 202 or out["detail"] == "a request's `valid_until` is at most 90 s away"), (ahead, out)
+    start = wall.t
+    vars_.put("shed/requests/bare", {"unit": "drill", "action": "poke", "at": str(start)})     # filed with no deadline
+    wall.t = start + 90 + requests.REAP_AFTER - 1
+    requests.clear_requests(ctl)
+    assert vars_.get("shed/requests/bare")[0] is not None
+    wall.t = start + 90 + requests.REAP_AFTER + 1
+    requests.clear_requests(ctl)
+    assert vars_.get("shed/requests/bare")[0] is None and not hasattr(requests, "MOST_VALID")
+
+
 def _asks(ttl):
     from w2cplatform.console import SpecConsole
     spec = SubsystemSpec.from_dict({**BIN, "requests": {
