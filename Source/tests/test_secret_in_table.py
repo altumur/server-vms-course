@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 
-from tests.productdir import SOURCE, product_dir
+from tests.productdir import SOURCE, product_file
 
 TABLE = os.path.join(SOURCE, "tests", "testdata", "secret_in.tsv")
 
@@ -56,13 +56,51 @@ def test_every_address_of_the_shared_table_is_masked_and_refused_as_the_table_sa
 
 
 def test_the_shared_table_is_the_products_byte_for_byte_when_the_product_keeps_one():
-    """When the product's checkout keeps the table (`testdata/secret_in.tsv`, or `vmsworker/testdata/secret_in.tsv`),
-    the course's is a copy of it: the same bytes."""
-    root = product_dir()
-    theirs = next((p for p in (os.path.join(root, "vmsworker", "testdata", "secret_in.tsv"),
-                               os.path.join(root, "testdata", "secret_in.tsv")) if os.path.exists(p)), None) if root else None
-    if theirs is None:
-        print("  the product keeps no secret_in.tsv (W2C_PRODUCT_DIR): nothing to compare")
+    """When the product's committed `main` keeps the table (`testdata/secret_in.tsv`, or
+    `vmsworker/testdata/secret_in.tsv`), the course's is a copy of it: the same bytes. A table the product's author is
+    still editing in a working tree is not the product's yet (`productdir.py`)."""
+    for path in ("vmsworker/testdata/secret_in.tsv", "testdata/secret_in.tsv"):
+        theirs = product_file(path)
+        if theirs is not None:
+            break
+    else:
+        print("  the product's main keeps no secret_in.tsv (W2C_PRODUCT_DIR): nothing to compare")
         return
-    with open(theirs, "rb") as a, open(TABLE, "rb") as b:
-        assert a.read() == b.read(), f"{TABLE} is not the product's {theirs} byte for byte — copy it"
+    with open(TABLE, "rb") as b:
+        assert theirs == b.read(), f"{TABLE} is not the product's {path} byte for byte — copy it"
+
+
+def test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_being_edited():
+    """What the course holds itself to is the product's committed `main` (`productdir.product_file`): a table or a spec
+    the product's author is halfway through editing failed the course's suite, which had read the working tree. Here
+    on a made-up checkout: a file changed and not committed is read as committed, a file only in the working tree is
+    none, and no checkout at all is none — the tests that compare skip."""
+    import subprocess
+    import tempfile
+
+    from tests import productdir
+    root = tempfile.mkdtemp(prefix="product-")
+    git = ["git", "-C", root, "-c", "user.email=t@t", "-c", "user.name=t"]
+    subprocess.run(git + ["init", "-q", "-b", "main"], check=True)
+    os.makedirs(os.path.join(root, "testdata"))
+    with open(os.path.join(root, "testdata", "secret_in.tsv"), "w") as f:
+        f.write("committed\n")
+    subprocess.run(git + ["add", "testdata/secret_in.tsv"], check=True)
+    subprocess.run(git + ["commit", "-q", "-m", "t"], check=True)
+    with open(os.path.join(root, "testdata", "secret_in.tsv"), "w") as f:
+        f.write("half edited\n")
+    with open(os.path.join(root, "testdata", "new.tsv"), "w") as f:
+        f.write("not yet\n")
+    was = os.environ.get("W2C_PRODUCT_DIR")
+    os.environ["W2C_PRODUCT_DIR"] = root
+    try:
+        assert productdir.product_file("testdata/secret_in.tsv") == b"committed\n"
+        assert productdir.product_file("testdata/new.tsv") is None
+        assert productdir.product_files("testdata", ".tsv") == ["testdata/secret_in.tsv"]
+        os.environ["W2C_PRODUCT_DIR"] = os.path.join(root, "nowhere")
+        assert productdir.product_file("testdata/secret_in.tsv") is None and productdir.product_files("testdata") == []
+    finally:
+        if was is None:
+            os.environ.pop("W2C_PRODUCT_DIR", None)
+        else:
+            os.environ["W2C_PRODUCT_DIR"] = was
