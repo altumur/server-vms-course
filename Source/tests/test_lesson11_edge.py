@@ -239,8 +239,8 @@ def test_backfill_closes_our_gaps_and_what_it_fetches_is_ours():
 
 
 def test_subtraction_is_one_rule():
-    """The console draws with it and the recorder fetches with it; if they were two
-    functions they would drift."""
+    """The recorder fetches with it, fills its keeps with it and says what is missing with
+    it; if they were several functions they would drift."""
     assert subtract((0, 100), []) == [(0, 100)]
     assert subtract((0, 100), [(0, 100)]) == []
     assert subtract((0, 100), [(20, 40), (60, 80)]) == [(0, 20), (40, 60), (80, 100)]

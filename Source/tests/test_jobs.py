@@ -181,7 +181,8 @@ def test_a_request_the_recorder_fetched_is_cleared():
 
 def test_a_backfill_nobody_answered_for_a_day_is_ended_and_a_record_request_is_not_its_business():
     """The review's sixth pass, minor: a backfill no recorder could ever fetch stood for good, and held one of its
-    person's places. One that has stood for `BACKFILL_TTL` is ended by the console's pass and counted with the
+    person's places. One that has stood for the spec's `requests.ttl` is ended by the platform's clearing
+    (`requests.clear_requests`, the console's housekeeping) and counted with the
     requests that expired; a younger one stays, a `record` — which has a `valid_until` of its own — is not touched,
     and a person's list of asks nobody has touched for a day goes too."""
     from vms import jobs

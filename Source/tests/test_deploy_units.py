@@ -174,7 +174,7 @@ def test_the_archives_engine_is_the_hosts_own_daemon():
 
 
 def test_a_session_named_by_nobody_says_its_process_name_and_not_a_subsystems():
-    """The client is the platform's library, and a session its caller did not name said `vms` in HELLO and in its
+    """The client is the VMS's (ADR 0001), and a session its caller did not name said `vms` in HELLO and in its
     token, whatever the process (the course's decision on the platform's names). Now it is the process's name:
     `python3 -m vms recorder` is `vms`, `tests/run.py` is `run`; a caller that names itself is said as it named."""
     import sys
