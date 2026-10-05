@@ -1381,8 +1381,20 @@ class SubsystemSpec:
             if "schema" in req:
                 self.requests["schema"] = _schema.load(req["schema"], f"spec {self.name}: requests.schema")
             for k in ("valid_for", "most_valid", "per_person", "settle", "ttl"):
-                if k in req and (isinstance(req[k], bool) or not isinstance(req[k], (int, float)) or req[k] <= 0):
-                    raise ValueError(f"spec {self.name}: requests.{k} is a positive number, not {req[k]!r}")
+                if k in req and (isinstance(req[k], bool) or not isinstance(req[k], (int, float))
+                                 or req[k] < 0 or (req[k] == 0 and k != "ttl")):
+                    raise ValueError(f"spec {self.name}: requests.{k} is a positive number"
+                                     + (" (or 0: no limit)" if k == "ttl" else "") + f", not {req[k]!r}")
+            # HOW LONG A REQUEST STANDS IS DECLARED, NEVER ASSUMED (the architect, 2026-10-05, ADR 0012): ending a row by
+            # age is destructive, and a ledger's assumed day silently lifts a person's quota. A family that frees (or
+            # counts per person) says `ttl` — `0` for no limit, said so; any other says `valid_for`, its rows' deadline.
+            if (self.requests_free or "per_person" in req) and "ttl" not in req:
+                raise ValueError(f"spec {self.name}: requests.ttl is required with "
+                                 f"`{'free: true' if self.requests_free else 'per_person'}` — the seconds a request may "
+                                 f"stand unanswered, or 0 for no limit")
+            if not self.requests_free and "valid_for" not in req:
+                raise ValueError(f"spec {self.name}: requests.valid_for is required without `free: true` — the seconds "
+                                 f"a request is worth doing")
         from .tables import parse as _tables
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
         # …a table the console SERVES (declared, `{key, fields}`) and the rows: a table only named (`tables: [x]`) is a
