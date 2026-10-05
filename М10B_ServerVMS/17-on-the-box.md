@@ -77,7 +77,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
 CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
 RECORDER_NAME=r-1                a recorder's slot (systemd: %i); CAPACITY here is recordings — this server's disks and NIC
 GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
-DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; NOMAD_META_labels=gpu says where it is
+DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; LABELS=gpu says where it is
 ```
 
 **Одна переменная, четыре значения.** Примечание к файлу это подчёркивает: `CAPACITY` означает разное в зависимости от глагола.
