@@ -13,14 +13,14 @@ GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
     "vms/heartbeats/w-srv-a-1": {
       "written": 1757500000.0,
       "server": "srv-a",
-      "size": 479
+      "size": 464
     }
   }
 }
 
 # vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
 GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
-→ 200 {"bytes": 479, "X-Written": "1757500000.0", "X-Server": "srv-a"}
+→ 200 {"bytes": 464, "X-Written": "1757500000.0", "X-Server": "srv-a"}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "objects/vms/commands/r-17", "cas": "", "items": {
