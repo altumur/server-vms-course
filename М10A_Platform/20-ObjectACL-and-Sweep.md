@@ -18,7 +18,7 @@
 # client-side check, as in `FileVariables` — a process that opened the wrong socket learns it here first.
 ```
 
-Клиентская проверка — подсказка, а не защита: процесс, который хочет её обойти, просто её не вызывает. Защищает тот, кто стоит **между** процессом и данными и сам знает, кто звонит. У строк такой есть — демон с сокетом на роль. У объектов его нет ни на коробке, ни в М11: там объект — файл на сервере своего писателя, соседям его отдаёт ресурс (`/v1/objects`), и ни одно право хранилища его не называет, кроме ключей, которые спека подсистемы объявила строками (`objects: {rows: […]}`).
+Клиентская проверка — подсказка, а не защита: процесс, который хочет её обойти, просто её не вызывает. Защищает тот, кто стоит **между** процессом и данными и сам знает, кто звонит. У строк такой есть — демон с сокетом на роль. У объектов его нет ни на коробке, ни в М11: там объект — файл на сервере своего писателя, и ни одно право хранилища его не называет, кроме ключей, которые спека подсистемы объявила строками (`objects: {rows: […]}`, и отметки запросов `<sub>/commands/*` у каждой спеки с заявками). Соседям ресурс (`/v1/objects`) отдаёт только те семейства, которые выдаёт его дверь (`resource.door_readable`): платформенные — heartbeat'ы, претенденты, занятые места, снимок, отчёт контроллера, блобы, пульсы ресурсов, домен — и то, что спека объявила в `objects.door`; любой другой объект — 403, он читается только на своём сервере.
 
 Поэтому вопрос распадается на три других. **Можно ли вообще сказать, кто пишет каждый объект**, — это вопрос раскладки ключей. **Где это сказано один раз** — в спеке, рядом со строковыми правами. И **что защищает байты там, где никакой ACL не стоит**, — дайджест.
 
@@ -36,30 +36,39 @@
 
 `Worker._claim_slot` (`w2cplatform/worker.py`, урок 7) берёт сначала слоты, чьё имя можно взять (просроченные), потом свободные, и только потом придумывает новое имя `nxt`. Множество имён сходится к пику одновременно живших воркеров.
 
-И устаревший heartbeat **несущий**: его читает следующий экземпляр того же слота. Так делает держатель VMS на старте (`VmsWorker.__init__` в `vms/worker.py`, М10B):
+И устаревший heartbeat **несущий**: его читает следующий экземпляр того же слота. Так делает базовый воркер платформы (`Worker.previous_said` в `w2cplatform/worker.py`) — один раз на имя, которое экземпляр держит, до того как его первый heartbeat под этим именем запишет поверх:
 
 ```python
-        try:
-            raw = objects.get(self.sub.heartbeat_key(self.name)) if self.name else None
-        except OSError as e:
-            raw = None
-            …
-        if raw:
-            from w2cplatform.contract import parse_heartbeat
-            old = parse_heartbeat(self.sub.heartbeat_key(self.name), raw)
-            if old is not None and old.extra.get("instance") != self.instance:
-                self.previous_hb, self.previous_instance = old.ts, old.extra.get("instance", "")
-                self.previous_server = str(old.extra.get("server", ""))
+    def previous_said(self) -> dict:
+        name = None if self.seeking is not None else self.name
+        if not name:
+            return {}
+        seen = self.__dict__.get("_previous")
+        if seen is None or seen[0] != name:
+            prev = {"previous_hb": 0.0, "previous_instance": "", "previous_server": ""}
+            try:
+                raw = self.objects.get(self.sub.heartbeat_key(name)) if self.objects is not None else None
+            except OSError as e:
+                raw = None
+                …
+            if raw:
+                from .contract import parse_heartbeat
+                old = parse_heartbeat(self.sub.heartbeat_key(name), raw)
+                if old is not None and old.extra.get("instance") != self.instance:   # its own: no instance before it
+                    prev = {"previous_hb": old.ts, "previous_instance": str(old.extra.get("instance", "")),
+                            "previous_server": str(old.extra.get("server", ""))}
+            seen = self.__dict__["_previous"] = (name, prev)
+        return dict(seen[1])
 ```
 
-Прочитанное он кладёт в свой heartbeat (`previous_hb`, `previous_server`), и из этих полей платформа считает измеренное переключение (урок 11). Подметёте старые heartbeat'ы — уберёте измерение у любой подсистемы, которая его так ведёт. Так что уборка этого урока касается **только** `blobs/`, и это не осторожность, а требование. Ещё один объект платформа удаляет, и по тому же правилу: держатель единицы убирает свои отметки запросов `<sub>/commands/<id>`, когда строки запроса уже нет (`Worker.sweep_marks`, урок 14), — отметка, на которую не ссылается ни одна строка, никому не нужна.
+Прочитанное идёт в каждый heartbeat воркера (`previous_hb`, `previous_instance`, `previous_server` — в полях базового heartbeat'а, и свойства с теми же именами у `Worker`), и из этих полей платформа считает измеренное переключение (урок 11). Подметёте старые heartbeat'ы — уберёте измерение у каждой подсистемы. Так что уборка этого урока касается **только** `blobs/`, и это не осторожность, а требование. Ещё один объект платформа удаляет, и по тому же правилу: держатель единицы убирает свои отметки запросов `<sub>/commands/<id>`, когда строки запроса уже нет (`Worker.sweep_marks`, урок 14), — отметка, на которую не ссылается ни одна строка, никому не нужна.
 
 ## Кто стоит между процессом и объектом
 
 | | строки | объекты |
 |---|---|---|
 | одна коробка | `FileVariables` и `as_writer` — проверка в клиенте | `FsObjectStore`; каталог `2770 w2c:w2c-store` — пишет любой член группы |
-| кластер (М11) | демон `configstore`: роль — это сокет, который процесс смог открыть; права из `/etc/w2c/configstore-rights.json` спрашиваются до применения | файл на сервере писателя; соседям — через ресурс, который из объектов принимает только блоб (`PUT` — проверенный по дайджесту, и `DELETE`); ключи `objects.rows` — строки `objects/<key>` с правами роли |
+| кластер (М11) | демон `configstore`: роль — это сокет, который процесс смог открыть; права из `/etc/w2c/configstore-rights.json` спрашиваются до применения | файл на сервере писателя; соседям — через ресурс, который отдаёт только семейства своей двери (платформенные и `objects.door` спек) и из объектов принимает только блоб (`PUT` — проверенный по дайджесту, и `DELETE`); ключи `objects.rows` и отметки запросов — строки `objects/<key>` с правами роли |
 
 Одно и то же правило — «у каждого каталога один писатель» — в левой колонке **проверяется** (на коробке — самим клиентом, в М11 — демоном), в правой — **соблюдается кодом**. Вот вся проверка демона (`storemachine.Rights`):
 
@@ -184,9 +193,10 @@ testsub/blobs/<digest>             консоль
 
 ```python
     def acl_objects_worker(self) -> list[str]:
-        """The workers write their own heartbeats, their claims to a name another instance holds, and the places
-        they opened."""
-        return [f"{self.name}/{HEARTBEATS}/*", f"{self.name}/{CONTENDERS}/*", f"{self.name}/{USED}/*"]
+        """The workers write their own heartbeats, their claims to a name another instance holds, the places they
+        opened, and their marks before they perform a request."""
+        return [f"{self.name}/{HEARTBEATS}/*", f"{self.name}/{CONTENDERS}/*", f"{self.name}/{USED}/*",
+                f"{self.name}/{COMMANDS}/*"]
 
     …
     def acl_objects_controller(self) -> list[str]:
@@ -201,7 +211,7 @@ testsub/blobs/<digest>             консоль
 Рядом с `acl_worker()` в `Subsystem` (`contract.py`), а `acl_controller()` и `acl_console()` — в `SubsystemSpec`, из той же спеки. Ни слова о том, что за подсистема: имя приходит из спеки. На тестовой подсистеме платформы (`tests/testdata/testsub.subsystem.yaml`) выходит:
 
 ```
-acl_objects_worker()      ['testsub/heartbeats/*', 'testsub/contenders/*', 'testsub/used/*']
+acl_objects_worker()      ['testsub/heartbeats/*', 'testsub/contenders/*', 'testsub/used/*', 'testsub/commands/*']
 acl_objects_controller()  ['testsub/snapshot/*', 'testsub/controller/pass']
 acl_objects_console()     ['testsub/blobs/*']
 ```
@@ -211,7 +221,7 @@ acl_objects_console()     ['testsub/blobs/*']
 Кто эти списки **читает** — честно:
 
 - **Уборка.** Блобы — каталог консоли (`acl_objects_console`), поэтому их собирает консоль (шаг 13): `host.py` так и говорит — «the blob sweep the console owns BECAUSE THE ACL SAYS SO».
-- **Генератор прав хранилища в М11.** Из объектных списков право получают только ключи, которые спека объявила строками (`objects: {rows: […]}`), — `objects/<key>`; каждый другой объект — файл на сервере писателя, и ни одно право его не называет. Генератор — часть платформы, её подпакет кластера `Source/w2cplatform/cluster/rights.py`; роли он берёт из спек каталога (`SPEC_DIR`): контроллер и воркер на каждую подсистему, консоль, ресурс и роли домена:
+- **Генератор прав хранилища в М11.** Из объектных списков право получают только ключи-строки — те, что спека объявила в `objects: {rows: […]}`, и отметки запросов `commands/*` у спеки с заявками (`catalog.rows_of`), — `objects/<key>`; каждый другой объект — файл на сервере писателя, и ни одно право его не называет. Генератор — часть платформы, её подпакет кластера `Source/w2cplatform/cluster/rights.py`; роли он берёт из спек каталога (`SPEC_DIR`): контроллер и воркер на каждую подсистему, консоль, ресурс и роли домена:
 
 ```python
 def _rows(objects: list[str]) -> list[str]:
@@ -219,9 +229,17 @@ def _rows(objects: list[str]) -> list[str]:
     return [OBJECTS + p for p in objects if is_row(p)]
 ```
 
-У `testsub` строк среди объектов нет, и `_rows` от любого его списка пуст. Пример — в М10B: спека записей объявляет `objects: {rows: [used/*]}`, и из `acl_objects_worker()` её воркер получает в файле прав ровно `objects/rec/used/*` (`_worker_objects`).
+```python
+# … — and, for a spec whose units take requests (`requests:`), the marks its worker
+# writes before it performs one (`commands/*`, `Worker._mark`): create-only ACROSS servers, which only a row is. The
+# family is the platform's, and the spec does not have to repeat it: …
+def rows_of(spec) -> tuple[str, ...]:
+    from .contract import COMMANDS
+    derived = (f"{COMMANDS}/*",) if spec.requests or spec.requests_free else ()
+    return tuple(dict.fromkeys(tuple(spec.object_rows) + derived))
+```
 
-Каталога отметок запросов, `<sub>/commands/`, в `acl_objects_worker()` нет, хотя пишут его воркеры: в файл прав он попадает, только если спека сама объявила его строками — как VMS, `objects: {rows: [commands/*]}`, откуда у её воркера `objects/vms/commands/*`. Список кода здесь отстаёт от того, что код пишет, — ровно такой расход и ловит упражнение 13.
+Отметки запросов — семейство **платформы**: их пишет базовый воркер перед тем, как исполнить заявку (урок 14), и помнить о них спека не должна. Строкой — потому что «создать, только если нет» между серверами умеет только строка: файлами на каждом сервере два держателя на двух серверах исполнили бы одну заявку дважды. `testsub` заявки принимает (`requests:`), объектов-строк сам не объявляет, — и из четырёх его воркерских каталогов строка одна: в файле прав у его воркера ровно `objects/testsub/commands/*` (`_worker_objects`). У `testsub2`, который объявляет ещё и `objects: {rows: [marks/*]}`, — `objects/testsub2/commands/*` и `objects/testsub2/marks/*`. В М10B так же: спека записей объявляет `objects: {rows: [used/*]}`, и её воркер получает `objects/rec/used/*`; у VMS `objects/vms/commands/*` выводится из её `requests:`, и её собственное `objects: {rows: [commands/*]}` ничего к этому не добавляет — одинаковые строки сливаются.
 
 `acl_objects_controller()` и `acl_objects_console()` строк сегодня не содержат, и права по ним не выдаёт никто. Они — запись о том, **кто пишет**, и на ней стоят уборка и тест «никто не пишет объект, который файл» (шаг 5). Проверки, что объектные записи процессов совпадают с этими списками, в курсе нет — это упражнение 13.
 
@@ -446,7 +464,7 @@ def verify(d: str, data: bytes) -> bytes:
     ctl.blobs_referenced = racing
 ```
 
-`blobs_referenced` вызывается после чтения строки и до записи решения — ровно там, где живёт гонка. Тест (`test_sweep.py::test_the_decision_is_cleared_before_anything_is_deleted`) ждёт `Conflict` от записи решения и байты на месте.
+`blobs_referenced` вызывается после чтения строки и до записи решения — ровно там, где живёт гонка. Тест (`test_sweep.py::test_the_decision_to_delete_is_written_by_cas_before_anything_is_deleted`) ждёт `Conflict` от записи решения и байты на месте.
 
 > **Ловушка, в которую легко попасть.** Сделайте в `racing()` не `put_blob`, а `put_blob` + `update` — и тест пройдёт **одинаково при обоих порядках**: строка уже называет дайджест, на перепроверке он оказывается сославшимся, `doomed` пустеет, и удалять нечего. Утверждение «порядок — это всё доказательство» стоит в комментарии, а проверяет его тест, который его не проверяет. Ловится это только снятием: переставьте строки — и посмотрите, покраснеет ли тест. Если нет — он проверяет что-то другое.
 
