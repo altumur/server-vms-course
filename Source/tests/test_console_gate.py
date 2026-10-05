@@ -988,42 +988,6 @@ def test_a_segment_is_cut_to_what_the_device_holds_and_the_door_streams_it_a_pie
         pd.shutdown(); play.shutdown(); srv.shutdown()
 
 
-def test_the_doors_expiry_forgives_clocks_a_little_apart_and_names_the_difference_when_they_are_not():
-    """The review's fifth pass, minor: the address's expiry is the console's clock, read by the holder's — more than
-    `TTL` apart and every address was "expired" the moment it was made, with nothing to say why. The address carries
-    when it was signed: `SKEW` apart either way is forgiven; further, the refusal names the difference as the door
-    measured it, and an address signed in the door's future is refused too (it would live longer than `TTL`)."""
-    from vms import playback as pb
-    key = pb.new_key()
-
-    def check(console_now, door_now):
-        q = {k: v[0] for k, v in __import__("urllib.parse").parse.parse_qs(
-            pb.signed_query(key, "7", 100, 200, "anna", console_now)).items()}
-        try:
-            return pb.check_signed(key, "7", q, door_now)
-        except PermissionError as e:
-            return str(e)
-    assert check(1000, 1000) == "anna"
-    assert check(1000, 1000 - pb.SKEW + 1) == "anna"                          # the console a little ahead
-    assert check(1000, 1000 + pb.TTL + pb.SKEW - 1) == "anna"                 # …or behind, or a viewer a little late
-    ahead = check(1000, 1000 - 400)
-    assert "400 s ahead" in ahead and "NTP" in ahead                          # the console 400 s ahead of the door
-    behind = check(1000, 1000 + 700)
-    assert "expired" in behind and "700 s" in behind and "NTP" in behind      # …or 700 s behind it: named, not a riddle
-    q = {k: v[0] for k, v in __import__("urllib.parse").parse.parse_qs(pb.signed_query(key, "7", 100, 200, "anna", 1000)).items()}
-    assert "did not sign" in str(_raises(lambda: pb.check_signed(key, "7", {k: v for k, v in q.items() if k != "at"}, 1000)))
-    q["at"] = "1100"
-    assert "does not match" in str(_raises(lambda: pb.check_signed(key, "7", q, 1000)))   # `at` is under the signature
-
-
-def _raises(fn):
-    try:
-        fn()
-    except Exception as e:                                                     # noqa: BLE001
-        return e
-    raise AssertionError("did not raise")
-
-
 def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
     """The review's fourth pass, blocker 4. The console checked `view` and handed the browser the holder's door as it
     is; the door asked nobody, so a viewer of camera 1 edited `1` into `2` and took camera 2's card. A page reads the
@@ -1058,7 +1022,7 @@ def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
         assert code == 401 and json.loads(body)["reason"] == "unit"   # the recording edited
         code, body = get(1, None)
         assert code == 401 and json.loads(body)["reason"] == "token"  # no token
-        assert _get(bare)[0] == 403                                   # the holder's bare address, unsigned
+        assert _get(bare)[0] == 403                                   # the holder's bare address, no capability
 
         found = holder_of(box.objects, "vms/", "2", box.wall(), field="playback_url")
         cap = process_url(found)                                     # the recorder's and the survey's address for camera 2

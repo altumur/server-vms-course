@@ -130,71 +130,27 @@ VMS = Subsystem("vms")
 
 
 # Bytes a door may hold at once, across its connections: `take(n, wait)` — True once `n` are free (within `wait`
-# seconds), False if not; `force(n)` counts bytes it has whatever the limit says (a piece larger than was asked for: it
-# is in memory already); `give(n)` frees them. The holder's playback door (`VmsWorker.playback_pieces`).
-#
-# …AND A PERSON'S SHARE OF IT (the review's ninth pass, minor; a run: four accounts with `view`, four connections each,
-# a piece of 4 MiB per connection — the door's 64 MiB were theirs, and everybody else's playback was 503). A signed
-# viewer's pieces are taken by `take_share(who, most, least, wait)`: at most `share(who)` bytes held by him at once —
-# the budget over the people holding any of it, the asker counted, plus one — and a person who holds some already takes
-# only while a share stays free beside what is held: that one is the reserve, and only somebody who holds nothing takes
-# of it — a newcomer, or a viewer with one connection, who holds nothing each time he asks for his next piece. The piece
-# shrinks to what is left, down to `least`; below that it waits, as `take` does. `give` and `force` name him, so his
-# bytes are counted where they go.
+# seconds), False if not; `room(most, wait)` what `take` would give now, waited for like it and NOT taken; `force(n)`
+# counts bytes it has whatever the limit says (a piece larger than was asked for: it is in memory already); `give(n)`
+# frees them. The holder's playback door (`VmsWorker.playback_pieces`), whose readers are the cluster's processes —
+# a person's share of a door is the recording's door's, where a page reads (`vms/footage.py`, `bounded`).
 class ByteBudget:
     def __init__(self, limit: int):
         self.limit, self.used = int(limit), 0
-        self.held: dict[str, int] = {}                   # signed viewer -> the bytes his pieces hold now
         self.cond = threading.Condition()
 
-    def share(self, who: str) -> int:
-        people = len(self.held) + (0 if who in self.held else 1)
-        return self.limit // (people + 1)
-
-    def take_share(self, who: str, most: int, least: int, wait: float) -> int:
+    # The door sizes a piece by it before the device is asked, and takes the bytes once the device has opened its
+    # footage (the thirteenth review, major 19: a hung open held a piece's bytes for as long as the door waited).
+    def room(self, most: int, wait: float) -> int:
         deadline = time.monotonic() + wait
         with self.cond:
             while True:
-                mine, share = self.held.get(who, 0), self.share(who)
-                # Somebody who holds bytes already leaves a share free for whoever comes next; a newcomer may take of it.
-                room = self.limit - self.used - (share if mine else 0)
-                n = min(int(most), share - mine, room)
-                if n >= least:
-                    self.used += n
-                    self.held[who] = self.held.get(who, 0) + n
-                    return n
+                if not self.used or self.used + most <= self.limit:
+                    return int(most)
                 left = deadline - time.monotonic()
                 if left <= 0:
                     return 0
                 self.cond.wait(left)
-
-    # What `take_share` (a person) or `take` (`who` None) would give now, waited for up to `wait` like them — and NOT
-    # taken: the door sizes a piece by it before the device is asked, and takes the bytes once the device has opened
-    # its footage (the thirteenth review, major 19: a hung open held a piece's bytes for as long as the door waited).
-    def room(self, who: str | None, most: int, least: int, wait: float) -> int:
-        deadline = time.monotonic() + wait
-        with self.cond:
-            while True:
-                if who is None:
-                    if not self.used or self.used + most <= self.limit:
-                        return int(most)
-                else:
-                    mine, share = self.held.get(who, 0), self.share(who)
-                    n = min(int(most), share - mine, self.limit - self.used - (share if mine else 0))
-                    if n >= least:
-                        return n
-                left = deadline - time.monotonic()
-                if left <= 0:
-                    return 0
-                self.cond.wait(left)
-
-    def _mine(self, who: str | None, n: int) -> None:
-        if who is not None:
-            left = self.held.get(who, 0) + n
-            if left > 0:
-                self.held[who] = left
-            else:
-                self.held.pop(who, None)
 
     def take(self, n: int, wait: float) -> bool:
         deadline = time.monotonic() + wait
@@ -207,18 +163,16 @@ class ByteBudget:
             self.used += n
             return True
 
-    def force(self, n: int, who: str | None = None) -> None:
+    def force(self, n: int) -> None:
         with self.cond:
             self.used += n
-            self._mine(who, n)
             if n < 0:
                 self.cond.notify_all()
 
-    def give(self, n: int, who: str | None = None) -> None:
+    def give(self, n: int) -> None:
         if n:
             with self.cond:
                 self.used -= n
-                self._mine(who, -n)
                 self.cond.notify_all()
 
 
@@ -1495,8 +1449,8 @@ class VmsWorker(Worker):
     #                       a piece is read only when its bytes are free (`ByteBudget`), waiting `PLAYBACK_BUDGET_WAIT`
     #                       for them; past that the first piece is 503 and a later one ends the reply short — said, as a
     #                       device that failed half way is. A piece's bytes are the door's until the client has taken it
-    #   one signature       holds at most `PLAYBACK_PER_SIGNATURE` connections at once (`playback_handler`): a signed
-    #                       address is one viewer's, for one interval
+    #   one capability      holds at most `PLAYBACK_PER_CAPABILITY` connections at once (`playback_handler`): one
+    #                       process's reads of one camera
     #
     # So what the door holds of pieces is the budget, whoever asks — a connection holds one piece at a time, and lets go
     # of it before it reads the next. A driver whose stream is far above the rate its first piece came at overshoots one
@@ -1506,27 +1460,11 @@ class VmsWorker(Worker):
     PLAYBACK_PIECE_BYTES = 4 << 20
     PLAYBACK_BUDGET = 64 << 20
     PLAYBACK_BUDGET_WAIT = 5.0
-    PLAYBACK_PER_SIGNATURE = 2
+    PLAYBACK_PER_CAPABILITY = 2
 
-    # …AND ONE PERSON HOLDS A SHARE OF IT, NOT ALL OF IT (the review's eighth pass, major; a run). The bound was per signed
-    # address, and every `/segment` with another `from` is another signature: a viewer with `view` on one camera took
-    # sixteen, opened them from two addresses and read at 80 kB/s — above `Paced`'s floor — and in fifteen seconds the
-    # door's 64 MiB were his; everybody else's playback was 503, or ended at its next piece. So a signed viewer — the
-    # name the console signed (`check_signed`), never a `v` that nobody checked, and in an open cluster nobody — holds
-    # `PLAYBACK_PER_PERSON` connections at once whatever he was signed: a connection holds one piece at a time, so a
-    # person holds `PLAYBACK_PER_PERSON × PLAYBACK_PIECE_BYTES` of the budget (16 of 64 MiB at the defaults), and three
-    # quarters of it are other people's. A process of the cluster (a capability per camera) is held by the signature
-    # bound alone, as before.
-    PLAYBACK_PER_PERSON = 4
-
-    # …AND HIS BYTES ARE A SHARE THAT LEAVES ROOM FOR THE NEXT ONE (the review's ninth pass, minor; a run): four people ×
-    # four connections × a piece of 4 MiB were the door's 64 MiB, and a fifth person's playback was 503. A signed viewer's
-    # pieces hold at most his share (`ByteBudget.take_share`: the budget over the people holding any of it, plus one),
-    # and a person who holds some already leaves a share free — the reserve, which only somebody holding nothing takes
-    # of: at the defaults four such people hold 52 MiB, and a viewer comes in beside them. A piece is cut to what is left,
-    # down to `PLAYBACK_MIN_PIECE`. And a piece to a slow reader is at most what he takes in
-    # `PLAYBACK_PACE_SECONDS` at the pace he took the last one: a reader at 80 kB/s held 4 MiB for fifty seconds, and the
-    # shares of people who came after him waited for it.
+    # A piece to a slow reader is at most what it takes in `PLAYBACK_PACE_SECONDS` at the pace it took the last one, and
+    # never less than `PLAYBACK_MIN_PIECE` (the review's ninth pass, minor): a reader at 80 kB/s held 4 MiB for fifty
+    # seconds, and whoever came after it waited for the budget.
     PLAYBACK_MIN_PIECE = 256 << 10
     PLAYBACK_PACE_SECONDS = 10.0
 
@@ -1542,20 +1480,15 @@ class VmsWorker(Worker):
                 counts.pop(key, None)
             return True
 
-    def playback_signature(self, sig: str, step: int) -> bool:
-        """Count a connection on a signed address in (`+1`: False when it has its `PLAYBACK_PER_SIGNATURE`) or out."""
-        return self._playback_count("_playback_sigs", sig, step, self.PLAYBACK_PER_SIGNATURE)
-
-    def playback_person(self, who: str, step: int) -> bool:
-        """Count a connection of a signed viewer in (`+1`: False when he has his `PLAYBACK_PER_PERSON`) or out."""
-        return self._playback_count("_playback_people", who, step, self.PLAYBACK_PER_PERSON)
+    def playback_capability(self, cap: str, step: int) -> bool:
+        """Count a connection on one camera's capability in (`+1`: False when it has its `PLAYBACK_PER_CAPABILITY`) or out."""
+        return self._playback_count("_playback_caps", cap, step, self.PLAYBACK_PER_CAPABILITY)
 
     def playback_budget(self) -> "ByteBudget":
         return self.__dict__.setdefault("_playback_budget", ByteBudget(self.PLAYBACK_BUDGET))
 
-    # `who`: the signed viewer the pieces are for — his share of the budget (`take_share`); None for a process of the
-    # cluster, held by the budget and its signature bound alone.
-    def playback_pieces(self, cam, t0: float, t1: float, who: str | None = None):
+    # Held by the door's budget, and by the bound on one capability's connections (`playback_handler`).
+    def playback_pieces(self, cam, t0: float, t1: float):
         row = next((r for r in self.rows if str(r["id"]) == str(cam)), None)
         if row is None:
             raise KeyError(cam)
@@ -1572,12 +1505,11 @@ class VmsWorker(Worker):
             at, rate, pace, held = t0, None, None, 0
             try:
                 while at < t1:
-                    budget.give(held, who)               # the last piece is the client's now: its bytes are free
+                    budget.give(held)                    # the last piece is the client's now: its bytes are free
                     held = 0
                     want = self.PLAYBACK_PIECE_BYTES
                     if pace is not None:                 # a slow reader: what he takes in `PLAYBACK_PACE_SECONDS`
                         want = max(self.PLAYBACK_MIN_PIECE, min(want, int(pace * self.PLAYBACK_PACE_SECONDS)))
-                    least = min(want, self.PLAYBACK_MIN_PIECE)
                     full = (f"this door holds {budget.limit} bytes of footage at once, and they are all being sent — "
                             f"retry")
                     # THE BYTES ARE TAKEN ONCE THE DEVICE HAS OPENED ITS FOOTAGE (the thirteenth review, major 19; a
@@ -1586,16 +1518,13 @@ class VmsWorker(Worker):
                     # The piece is sized by what the budget would give now (`room`, waited for as a take is), and the
                     # bytes are taken when the device says the footage is open (`_door_read`'s `opened`): a device that
                     # never opens holds none of them.
-                    plan = budget.room(who, want, least, self.PLAYBACK_BUDGET_WAIT)
+                    plan = budget.room(want, self.PLAYBACK_BUDGET_WAIT)
                     if not plan:
                         raise OverflowError(full)
 
                     def admit():
                         nonlocal held
-                        if who is None:
-                            held = plan if budget.take(plan, self.PLAYBACK_BUDGET_WAIT) else 0
-                        else:
-                            held = budget.take_share(who, plan, min(plan, least), self.PLAYBACK_BUDGET_WAIT)
+                        held = plan if budget.take(plan, self.PLAYBACK_BUDGET_WAIT) else 0
                         if not held:
                             raise OverflowError(full)
                     # Seconds: `PLAYBACK_FIRST` for the first piece; then as many as the bytes planned come to at the
@@ -1605,7 +1534,7 @@ class VmsWorker(Worker):
                     b = min(t1, at + span)
                     got = self._door_read(dev, cam, at, b, admit)   # opened, read and closed before a byte is sent
                     size = sum(len(c) for c in got)
-                    budget.force(size - held, who)       # what the piece really is, whatever was asked
+                    budget.force(size - held)            # what the piece really is, whatever was asked
                     held = size
                     rate = size / max(b - at, 1e-3)
                     sent = time.monotonic()
@@ -1614,7 +1543,7 @@ class VmsWorker(Worker):
                     pace = size / took if took > 1.0 else None
                     at = b
             finally:
-                budget.give(held, who)
+                budget.give(held)
         return pieces()
 
     # A PIECE IS READ OFF THE DOOR'S THREAD, AND WAITED FOR WITH A DEADLINE (the review's twelfth pass, major 8; a run,
@@ -1883,12 +1812,10 @@ class VmsWorker(Worker):
     # to ask about — and whoever needs the spans pays a request for them.
     #
     # WHO MAY READ THE CARD (the review's fourth pass, blocker 4). `/playback/<cam>` asks — when the cluster is gated,
-    # as the console does (`Gate.gated`) — for one of two things: the console's signature over this camera, these
-    # minutes, an expiry and the viewer (`?…&exp&v&sig`, what `GET /segment` hands a browser), or the capability a
-    # process derives from this door's key for this camera (`/playback/<cam>/<capability>`, the recorder and the
-    # survey: `playback.process_url`). Neither: 403, and an `access.denied` line. A viewer's read is a line too,
-    # `archive.read` with `source=device` — the console said it handed the address out; this says it was used,
-    # by whom and from where. The listing and the device list stay as they were: where the footage is, not the
+    # as the console does (`Gate.gated`) — for the capability a process derives from this door's key for this camera
+    # (`/playback/<cam>/<capability>`, the recorder and the survey: `playback.process_url`). None, or another camera's:
+    # 403, and an `access.denied` line. A page reads a camera's footage at its recording's door, with a door token, and
+    # that door says who read (ADR 0015, `vms/footage.py`). The listing and the device list stay as they were: where the footage is, not the
     # footage — a door between processes until mutual TLS. (The review's sixth pass asked for a signature on
     # `/devices` and `/recordings/<cam>` too; authentication between processes is put off to the mutual-TLS step by
     # the owner's decision. Until then whoever reaches this door on the network reads, unasked: the devices held,
@@ -1913,9 +1840,8 @@ class VmsWorker(Worker):
             self._playback_journal = Journal(self.resource_root, f"door-{self.name}", self.wall)
         return self._playback_journal
 
-    # `None` when the request may be served; else `(status, reason)`. `rest` is what follows `/playback/<cam>`. `seen`,
-    # when given, is told who the signed viewer is (`who`) — only once the signature over that name was checked.
-    def playback_refusal(self, cam: str, rest: str, q: dict, addr: str, seen: dict | None = None):
+    # `None` when the request may be served; else `(status, reason)`. `rest` is what follows `/playback/<cam>`.
+    def playback_refusal(self, cam: str, rest: str, q: dict, addr: str):
         from w2cplatform.access import Denied, Gate
         from . import playback as pb
         if getattr(self, "_playback_gate", None) is None:
@@ -1929,22 +1855,11 @@ class VmsWorker(Worker):
         if not key:
             return 503, "this door has no key: it admits nobody in a gated cluster"
         import hmac
-        if rest:
-            if hmac.compare_digest(rest, pb.capability(key, cam)):
-                return None                              # a process of this cluster, for this camera
-            why = "a capability for another camera, or another door"
-        else:
-            try:
-                who = pb.check_signed(key, cam, q, self.wall())
-                if seen is not None:
-                    seen["who"] = who
-                self.playback_journal().say("archive.read", user=who, source="device", target=cam, addr=addr,
-                                            **{"from": q.get("from"), "to": q.get("to"), "worker": self.name})
-                return None
-            except PermissionError as e:
-                why = str(e)
-        self.playback_journal().say("access.denied", user=str(q.get("v") or "?"), capability="playback", target=cam,
-                                    addr=addr, why=why, worker=self.name)
+        if rest and hmac.compare_digest(rest, pb.capability(key, cam)):
+            return None                                  # a process of this cluster, for this camera
+        why = "a capability for another camera, or another door" if rest else "no capability: this door is the processes'"
+        self.playback_journal().say("access.denied", user="?", capability="playback", target=cam, addr=addr, why=why,
+                                    worker=self.name)
         return 403, why
 
     def playback_handler(self):
@@ -1987,35 +1902,24 @@ class VmsWorker(Worker):
                 if len(segs) not in (3, 4) or segs[1] != "playback" or not segs[2]:
                     return self._send(404, {"detail": "no such route", "error": "no such path"})
                 cam = segs[2]
-                seen: dict = {}
-                refused = gw.playback_refusal(cam, segs[3] if len(segs) == 4 else "", q, str(self.client_address[0]), seen)
+                refused = gw.playback_refusal(cam, segs[3] if len(segs) == 4 else "", q, str(self.client_address[0]))
                 if refused is not None:
                     return self._send(refused[0], {"detail": refused[1], "error": "denied"})
-                # One signed address — or one camera's capability — holds `PLAYBACK_PER_SIGNATURE` connections at once
-                # (`playback_pieces`): eight on one address were eight pieces of one viewer's interval. And one VIEWER —
-                # the name the console signed, never a `v` nobody checked — holds `PLAYBACK_PER_PERSON` across every
-                # address he was signed (the review's eighth pass, major).
-                held = q.get("sig") or (segs[3] if len(segs) == 4 else "")
-                who = seen.get("who")
-                if held and not gw.playback_signature(held, +1):
-                    return self._send(503, {"detail": f"this address is being read {gw.PLAYBACK_PER_SIGNATURE} times "
-                                                      f"at once already — one viewer, one interval", "error": "busy"})
-                if who is not None and not gw.playback_person(who, +1):
-                    if held:
-                        gw.playback_signature(held, -1)
-                    return self._send(503, {"detail": f"{who} is reading {gw.PLAYBACK_PER_PERSON} pieces of footage at "
-                                                      f"once already — close one first", "error": "busy"})
+                # One camera's capability holds `PLAYBACK_PER_CAPABILITY` connections at once (`playback_pieces`; the
+                # review's seventh pass): eight on one address were eight pieces of one interval.
+                held = segs[3] if len(segs) == 4 else ""
+                if held and not gw.playback_capability(held, +1):
+                    return self._send(503, {"detail": f"this capability is being read {gw.PLAYBACK_PER_CAPABILITY} times "
+                                                      f"at once already — one process, one interval", "error": "busy"})
                 try:
-                    return self._play(cam, q, who)
+                    return self._play(cam, q)
                 finally:
                     if held:
-                        gw.playback_signature(held, -1)
-                    if who is not None:
-                        gw.playback_person(who, -1)
+                        gw.playback_capability(held, -1)
 
-            def _play(self, cam, q, who=None):
+            def _play(self, cam, q):
                 try:
-                    pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)), who)
+                    pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)))
                     first = next(pieces, None)                   # the first piece read before the reply is chosen
                 except KeyError:
                     return self._send(404, {"detail": "this camera has no archive of its own here",
@@ -2060,7 +1964,7 @@ class VmsWorker(Worker):
         host = (self.playback_host or LOOPBACK) if host is None else host
         self.playback_host = host                        # what it is bound to is what the heartbeat announces
         opened_beyond_loopback(f"{self.name}: the door to the devices' own archives", host, log,
-                               asks="for an address the console signed, in a cluster in a domain (`vms/playback.py`); outside one, nobody")
+                               asks="for a process's capability for the camera, in a cluster in a domain (`vms/playback.py`); outside one, nobody")
         srv = door_server((host, self.playback_port if port is None else port), self.playback_handler(),
                           self.PLAYBACK_CONNECTIONS, self.PLAYBACK_PER_ADDRESS)
         self.playback_port = srv.server_address[1]

@@ -3,7 +3,7 @@
     archive.py      the archive: volumes of ObjectStorage through the host's obsd — streams, the index, the ring
     worker.py       vmsworker — DriverPack as the worker: N pipelines against an assignment
     controller.py   the VMS's words over the platform's controller (the process is `w2c-controller@vms`)
-    console.py      the one-box console: the platform's SpecConsole over the VMS spec, plus /timeline, /export, /segment and the WHEP door
+    console.py      the one-box console of the tests and lessons: the platform's Mount over the VMS's specs, nothing of its own
     gateway.py      the live gateway — the second subsystem's worker: a camera's fan-out as the unit, viewers as the capacity
     detworker.py    the detector worker — the second subsystem's worker: a model on a camera as the unit, streams as the capacity
     det.subsystem.yaml    the third subsystem, as a spec
@@ -22,7 +22,7 @@ and nothing in platform/ imports from here.
 # the package: `archive.py` (the archive: volumes of ObjectStorage through the host's `obsd` — streams, the index, the ring), `worker.py`
 # (vmsworker — DriverPack as the worker, N pipelines against an assignment, over the platform's reconcile helper),
 # `controller.py` (the VMS's words over the platform's controller, whose process is `w2c-controller@vms`) and `console.py` (the one-box console: the
-# platform's `SpecConsole` over the VMS spec, plus `/timeline`, `/export` and `/segment`).
+# platform's `Mount` over the VMS's specs, for the tests and the lessons — the deployed console is the platform's).
 #
 # The last sentence fixes the dependency direction that
 # `tests/test_lesson1_platform.py::test_the_platform_knows_nothing_about_its_subsystems` enforces: `vms/` imports
