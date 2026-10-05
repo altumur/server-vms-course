@@ -25,6 +25,7 @@ from contextlib import contextmanager
 
 from . import runtime
 from .contract import (ASSIGNMENTS, Assignment, BUILD, CONTENDER_FRESH, CONTEND_EVERY, DECOMMISSION, DECOMMISSIONS, Eyes, HOLDS, Heartbeat, NAMELESS, NEVER_READ, NameOnAnotherBox, NoOffer, NoSlot, NotReadThisPass, PRESENCE, REFUSED, SCHEMA, SLOTS, SchemaTooNew, ServerDecommissioned, Slot, Subsystem, _NameTaken, _read_contender, check_schema, label_set, presence_name, published_names, read_assignment, read_hold, read_slot, slot_number, stored)
+from .canonical import canonical_json
 from .doors import numeric
 from .epoch import Lease, next_epoch
 from .events import ALARM, COMMAND, COMMAND_FAILED, OBSERVATION, OF
@@ -456,7 +457,7 @@ class Worker:
                "server": self.server or "", "instance": self.instance, "holder": holder,
                "holder_box": runtime.box_of(holder) or "", "since": since, "at": now}
         try:
-            self.objects.put(key, json.dumps(row).encode())
+            self.objects.put(key, canonical_json(row).encode())   # a row's one text (`canonical.py`)
         except Exception as e:                            # noqa: BLE001 — the claim is said; a mark nobody took is a log line
             log.warning("%s: its claim to %s/%s was not written down (%s): only this log says it", self.instance,
                         self.sub.name, name, e)
@@ -1893,8 +1894,9 @@ class Worker:
     # to reconcile — it happens and it is over.
     #
     # A REQUEST HAS A DEADLINE, AND IT IS NEAR (feedback BI). Without `valid_until` it is refused; with one more than
-    # `most_valid` away (the spec's, `MAX_VALID` by default) it is refused too. One that arrives after its moment is
-    # EXPIRED, reported as such and cleared — never performed, never silently dropped.
+    # `most_valid` away (the spec's number, which the loader requires wherever `valid_for` is declared) it is refused
+    # too; a family that declares none has no deadline to judge near, and refuses them all. One that arrives after its
+    # moment is EXPIRED, reported as such and cleared — never performed, never silently dropped.
     #
     # NOTHING LONG WHERE THE LEASES ARE RENEWED (feedback BE). `perform` is a call into whatever the subsystem holds,
     # and such a call has no timeout of ours: it is made on a thread of its own — the loop waits `PERFORM_GRACE` for it,
@@ -1925,7 +1927,7 @@ class Worker:
     # (the review's seventh pass, M7): `REQUESTS_HOLD` bounds a look, `budget` counts calls begun, and a target whose
     # last call did not answer inside `PERFORM_GRACE` is not waited for at all.
     PERFORM_GRACE, PERFORM_TIMEOUT = 0.2, 10.0
-    MAX_VALID, MARK_SWEEP = 600.0, 30.0
+    MARK_SWEEP = 30.0
     ROAD_BUCKETS = (0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0)
     COMMANDS_SUSTAINED, COMMANDS_BURST = 2.0, 16    # requests a second per holder: the design numbers of 2 October 2026
     HUNG_TARGETS = 200                              # targets hung at once a holder keeps its leases through (the test's)
@@ -2084,8 +2086,10 @@ class Worker:
             written += 1
         return written
 
-    def most_valid(self) -> float:
-        return float((self.spec.requests or {}).get("most_valid") or self.MAX_VALID)
+    # The farthest a deadline may be: the spec's `requests.most_valid`, and nothing else; None when it declares none.
+    def most_valid(self) -> float | None:
+        got = (self.spec.requests or {}).get("most_valid")
+        return None if got is None else float(got)
 
     @staticmethod
     def _histogram() -> dict:
@@ -2256,8 +2260,13 @@ class Worker:
                 self._refused(rid, row, it, "a command carries a deadline (`valid_until`): without one it would wait "
                                             "for its target for ever", done)
                 continue
-            if until - now > self.most_valid():
-                self._refused(rid, row, it, f"`valid_until` is more than {self.most_valid():.0f} s away: that is not a command", done)
+            most = self.most_valid()
+            if most is None:
+                self._refused(rid, row, it, "this family declares no `requests.most_valid`: no deadline can be judged near",
+                              done)
+                continue
+            if until - now > most:
+                self._refused(rid, row, it, f"`valid_until` is more than {most:.0f} s away: that is not a command", done)
                 continue
             if now > until:
                 self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
@@ -2326,7 +2335,7 @@ class Worker:
                 self.fetched.append(rid)
                 done.append({"request": rid, "unit": row["id"], "error": why})
                 self.commands["unknown"] += 1
-                self.observe(row["id"], COMMAND_FAILED, action=str(it.get("action", "")), error=why)
+                self._command_line(row, it, "unknown", error=why)
                 log.warning("%s: request %s not performed — %s", self.name, rid, why)
                 continue
             call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False,
@@ -2371,9 +2380,10 @@ class Worker:
 
     # The answer, written into the mark once the target has said it. A store that does not take the write: the mark is
     # OWED (`_marks_owed`) and written again at every look until it does, or the row is gone (the review's eighth pass).
-    def _confirm(self, rid: str, row: dict, outcome: str, it: dict) -> None:
-        mark = json.dumps({"instance": self.instance, "slot": self.name, "unit": str(row["id"]), **self._of_said(row["id"]),
-                           "outcome": outcome, "action": str(it.get("action", "")), "at": self.wall()}).encode()
+    def _confirm(self, rid: str, row: dict, outcome: str, it: dict, late: bool = False) -> None:
+        mark = canonical_json({"instance": self.instance, "slot": self.name, "unit": str(row["id"]),
+                               **self._of_said(row["id"]), "outcome": outcome, "action": str(it.get("action", "")),
+                               "at": self.wall(), **({"late": True} if late else {})}).encode()
         try:
             self.objects.put(self.command_key(rid), mark)
             self._marks_owed.pop(rid, None)
@@ -2403,8 +2413,8 @@ class Worker:
         put_new = getattr(self.objects, "put_new", None)
         if put_new is None:
             return None
-        return bool(put_new(self.command_key(rid), json.dumps({"instance": self.instance, "slot": self.name, "unit": unit,
-                                                               **self._of_said(unit), "at": now}).encode()))
+        mark = canonical_json({"instance": self.instance, "slot": self.name, "unit": unit, **self._of_said(unit), "at": now})
+        return bool(put_new(self.command_key(rid), mark.encode()))
 
     # …and a mark says it too, as a line does (`of`): what was done to a unit is about what the unit is about. Absent for a
     # unit about nothing but itself.
@@ -2423,7 +2433,16 @@ class Worker:
                 if call.get("took", 0.0) <= self.PERFORM_GRACE:
                     self._slow.discard(key)              # it answered at once
                 if call["answered"]:
-                    continue                             # it came back after we had said it did not answer
+                    # IT CAME BACK AFTER WE HAD SAID IT DID NOT ANSWER (the architect's decision; the product's
+                    # `request-holder`): the request keeps that answer and its row is not touched, but the MARK says what
+                    # was really done — so the next instance says it again rather than `unknown` — and `late`, which tells
+                    # an execution past `PERFORM_TIMEOUT` (an incident) from an ordinary one.
+                    outcome = "refused" if "error" in call else "performed"
+                    self._confirm(rid, row, outcome, it, late=True)
+                    self._command_line(row, it, outcome, reply=call.get("out"), error=call.get("error"), late=True)
+                    log.warning("%s: request %s was %s by %s after it had been answered as not answering (%.1f s)",
+                                self.name, rid, outcome, self.REQUEST_TARGET, call.get("took", 0.0))
+                    continue
                 if "error" in call:
                     self._refused(rid, row, it, call["error"], done)
                     self._confirm(rid, row, "refused", it)
@@ -2432,14 +2451,26 @@ class Worker:
                     done.append({"request": rid, "unit": row["id"], **call["out"]})
                     self.commands["performed"] += 1
                     self._confirm(rid, row, "performed", it)
-                    self.observe(row["id"], COMMAND, **call["out"])      # what was done to a unit is an event about it
+                    self._command_line(row, it, "performed", reply=call["out"])   # what was done to a unit: an event of it
             elif not call["answered"] and self.clock() - call["at"] >= self.PERFORM_TIMEOUT:
                 call["answered"] = True
                 self._refused(rid, row, it, f"{self.REQUEST_TARGET} did not answer", done)
         return done
 
+    # THE LINE OF WHAT WAS DONE, in the platform's fields — the ones the console module reads (its contract, §5):
+    # `outcome` (performed | refused | unknown), `action`, `by` (who asked), `late` (the target answered after the request
+    # had been answered "did not answer"), `error` for what was not done; the target's own answer whole under `reply`, so
+    # nothing a target says can stand where a platform field does. `command` for what was performed, `command.failed` for
+    # the rest; the unit's `of` is the log's (`event_log`).
+    def _command_line(self, row: dict, it: dict, outcome: str, reply: dict | None = None, error: str | None = None,
+                      late: bool = False) -> None:
+        by = str(it.get("by") or "")
+        self.observe(row["id"], COMMAND if outcome == "performed" else COMMAND_FAILED, outcome=outcome,
+                     action=str(it.get("action", "")), **({"by": by} if by else {}), **({"late": True} if late else {}),
+                     **({"error": error} if error else {}), **({"reply": reply} if reply is not None else {}))
+
     def _refused(self, rid: str, row: dict, it: dict, why: str, done: list) -> None:
         self.fetched.append(rid)                         # a refusal is an answer: do not ask for ever
         done.append({"request": rid, "unit": row["id"], "error": why})
         self.commands["refused"] += 1
-        self.observe(row["id"], COMMAND_FAILED, action=str(it.get("action", "")), error=why)
+        self._command_line(row, it, "refused", error=why)
