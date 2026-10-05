@@ -75,6 +75,7 @@ PLATFORM_TESTS = (
     "tests/test_spec_declarations.py", "tests/test_rights.py", "tests/test_domain_platform.py", "tests/test_domain_secrets.py",
     "tests/test_heartbeat_owner.py", "tests/test_frontier.py", "tests/testdata/testsub2.subsystem.yaml",
     "tests/test_spec_rule.py",
+    "tests/test_where_place.py",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
