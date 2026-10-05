@@ -117,6 +117,7 @@ REQUESTS = "requests"      # `<name>/requests/<id>`: bounded work an operator as
 CONTROLLER_PASS = "controller/pass"   # `<name>/controller/pass`: the controller's report on its last pass (`SpecController.pass_once`)
 CONTENDERS = "contenders"  # `<name>/contenders/<slot>/<box>`: a process that wants a name another instance holds (`Worker._contend`)
 USED = "used"              # `<name>/used/<place>`: a place this subsystem's workers have opened, and where (`Subsystem.used_key`)
+COMMANDS = "commands"      # `<name>/commands/<id>`: a worker's mark before it performs a request, create-only (`Worker._mark`)
 
 
 # `<subsystem>/heartbeats/<worker>`, or the resource's `platform/resources/<server>/heartbeat`, which has
@@ -679,10 +680,12 @@ class Subsystem:
     def sweep_key(self) -> str:
         return f"{self.name}/sweep"
 
-    # `<name>/requests/<id>` — bounded work the OPERATOR asked a worker to do, outside its ordinary pass.
+    # `<name>/requests/<id>` — bounded work somebody asked the holder of a unit to do, outside its ordinary pass: filed
+    # by the console for an operator (`POST /<name>/requests`, the spec's `requests:`), by another subsystem's worker
+    # (its spec's `worker: {requests: […]}`), or by the resource for bytes it needs freed (`free-…`, `requests.free`).
     #
-    # The shape the blob sweep's row already has, generalised: the console writes it, a worker's pass reads
-    # it, and the platform never looks inside. It exists because the alternative — a POST that answers 202
+    # The shape the blob sweep's row already has, generalised: one of those writes it, the holder's look reads
+    # it (`Worker.requests`), and the platform never looks inside. It exists because the alternative — a POST that answers 202
     # and stores nothing — is a lie that survives right up until somebody checks whether the thing happened.
     # What a request MEANS is the subsystem's: one subsystem reads a range to fetch, another could
     # read something else entirely.
@@ -765,9 +768,11 @@ class Subsystem:
     def used_key(self, place: str) -> str:
         return f"{self.name}/{USED}/{place}"
 
-    # `[<name>/epoch/*, <name>/slots/*, <name>/holds/*]` — a worker writes only epochs, its slot and the
+    # `[<name>/epoch/*, <name>/slots/*, <name>/holds/*]` — what every worker writes: epochs, its slot and the
     # place it took; never configuration. The place is the worker's to take precisely because taking it
-    # is a claim about this process, not a decision about the system.
+    # is a claim about this process, not a decision about the system. A spec's worker role adds what its spec
+    # declares — rows of its own tables it found a thing to be (`worker.writes`), request rows it files for another
+    # subsystem (`worker.requests`): `SubsystemSpec.acl_worker_role`.
     def acl_worker(self) -> list[str]:
         return [f"{self.name}/epoch/*", f"{self.name}/slots/*", f"{self.name}/holds/*"]
 
@@ -781,10 +786,18 @@ class Subsystem:
     # (`tests/test_boundary.py`'s derivation on testsub; `tests/cluster/test_policies.py` for the file).
     #
     # Each is one directory with one writer, which is what the key layout was rearranged to allow:
+    #
+    # …and the marks before a request is performed (`<name>/commands/*`, `Worker._mark`): the platform's family, named by
+    # the platform's worker — it was granted only where a spec repeated it under `objects.rows`, and a worker of any
+    # other subsystem that serves requests could not write its mark on a cluster.
     def acl_objects_worker(self) -> list[str]:
-        """The workers write their own heartbeats, their claims to a name another instance holds, and the places
-        they opened."""
-        return [f"{self.name}/{HEARTBEATS}/*", f"{self.name}/{CONTENDERS}/*", f"{self.name}/{USED}/*"]
+        """The workers write their own heartbeats, their claims to a name another instance holds, the places they
+        opened, and their marks before they perform a request."""
+        return [f"{self.name}/{HEARTBEATS}/*", f"{self.name}/{CONTENDERS}/*", f"{self.name}/{USED}/*",
+                f"{self.name}/{COMMANDS}/*"]
+
+    def command_key(self, rid: str) -> str:
+        return f"{self.name}/{COMMANDS}/{rid}"
 
     # …and the report on its pass (the review's ninth pass, major): `pass_once` writes `<name>/controller/pass`, the one
     # object `/metrics` reads `<name>_units_unplaced` and the last pass from, and this list — and the policy checked

@@ -1,11 +1,11 @@
 """Every kind of the VMS's worker lives by the platform's life cycle — the stand-in, the slot row, the fence, the lease
 step, the journal — in the loop it runs: the holder (`VmsWorker`, and the recorders that inherit it), the detector, the
-scan, the survey, the gateway and the evaluator (`AutoWorker`, a loop of its own).
+scan, the survey, the gateway and the evaluator (`AutoWorker`: the platform's loop, a lease step of its own).
 
 The rules are the platform's and are proved there, on testsub (`test_stand_in.py`, `test_slot_fence.py`,
 `test_names.py`, `test_lease_step.py`); what is proved here is that each of the VMS's workers keeps them — the ones the
-platform's `Worker.run` drives and the ones with a loop or a lease step of their own (the evaluator's `run` and
-`lease_pass`, the recorder's `lease_pass`). These tests were in those modules, over the VMS's workers, before the
+platform's `Worker.run` drives — every one of them now — and the ones with a lease step of their own (the
+evaluator's `lease_pass`, by `keep_slot`; the recorder's). These tests were in those modules, over the VMS's workers, before the
 boundary's step 5 put the platform's tests on testsub.
 """
 import threading
@@ -109,8 +109,10 @@ def test_a_fast_run_starts_the_stand_in_and_it_renews_nothing():
 def test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given_up():
     """Found beside the stand-in: the detector, scan, survey and gateway loops claimed their slot once and never
     renewed it, so the row lapsed after `slot_ttl` in ordinary work and anybody could take a live worker's name.
-    Their lease step keeps the slot row now (`Worker.keep_slot`); a row that names another instance is a name given up —
-    the units let go, their epochs released — and, named by its unit, nothing else claimed: it waits for its own."""
+    Their loop is the platform's now, and its lease step keeps the slot row (`Worker.run` → `lease_pass`); and read by
+    `Worker.keep_slot` — the platform's lease step for a loop of its own, the evaluator's — a row that names another
+    instance is a name given up — the units let go, their epochs released — and, named by its unit, nothing else
+    claimed: it waits for its own."""
     box = Box()
     for w in _workers(box):
         name = w.name
@@ -174,8 +176,9 @@ def test_every_workers_stand_in_says_its_last_heartbeat_again_for_a_pass_that_ha
 # -- a slot given up and no other taken (from `test_slot_fence.py`) -------------------------------------------
 
 def _keep(w, let_go):
-    """The lease step as the loops run it: in a `try` of its own, so whatever it raises the loop goes on. The
-    evaluator's is its `lease_pass` (it has nothing running to let go of); the others call `keep_slot`."""
+    """A lease step in a `try` of its own, so whatever it raises the loop goes on. The evaluator's is its `lease_pass`
+    (`keep_slot`, with nothing running to let go of); the others' loops fence and `rejoin` (`Worker.lease_pass`, the
+    holders' tests below) — here they are given `keep_slot`, the same rules by the platform's other path."""
     try:
         return w.lease_pass() if type(w).__name__ == "AutoWorker" else w.keep_slot(let_go)
     except Exception:                                                  # noqa: BLE001
@@ -187,7 +190,7 @@ def _every_kind(box):
 
 
 def test_every_kind_of_vms_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_says_nothing():
-    """Every worker that keeps its slot by `keep_slot` — the detector, the scan, the survey, the gateway, the
+    """Every worker but the holders, by `keep_slot` — the detector, the scan, the survey, the gateway, the
     evaluator. The slot is taken by another instance, the claim of a free one fails on a store that blinks: the
     units it had are let go, no epoch is taken, the assignment of the name it gave up is not read, the stand-in
     renews nothing, and the other instance's heartbeat stands."""
@@ -248,8 +251,8 @@ def test_the_detector_and_the_gateway_with_no_slot_run_nothing_of_the_name_they_
 
 
 def _holders(box):
-    """The three that fence and rejoin on their own path instead of `keep_slot`: the holder, the recorder, and the
-    camera's own recorder, which inherits the recorder's."""
+    """The three proved here by the fence and `rejoin` (`lease_pass`): the holder, the recorder, and the camera's own
+    recorder, which inherits the recorder's."""
     import tempfile
     from tests.vmsconftest import REC_ACL, recorder
     from vms.card import CamRing, CardActuator, CardRecorder
@@ -344,7 +347,7 @@ def test_the_vms_holder_and_recorders_fenced_for_the_schema_stop_speaking_when_a
 
 
 def test_every_kind_of_vms_worker_on_a_store_raised_past_its_build_is_nobody_once_another_instance_takes_its_name():
-    """The same sibling in the five that keep their slot by `keep_slot`. There the renewal's refusal goes out of the
+    """The same sibling in the five driven by `keep_slot`. There the renewal's refusal goes out of the
     lease step, every step — nothing is renewed, the row lapses — and the heartbeat, in a `try` of its own, went on
     under the name after a new build had taken it. From the step that reads another holder in the row the instance
     is nobody: its units let go, nothing said under the name, and no other slot claimed on a store past its build."""
@@ -373,7 +376,7 @@ def test_one_garbled_slot_row_leaves_no_kind_of_vms_worker_nobody_and_is_counted
     worker's — raised out of the claim, and an instance that had given its name up stayed nobody for ever, its
     capacity gone with nothing said (the `ValueError` was the loop's to log, every lease step). The row is skipped
     as a candidate now, counted in the heartbeat (`slots_garbled`) and logged once; a slot made new never takes its
-    name. The five that keep their slot by `keep_slot`, and the holder's `rejoin`."""
+    name. The five by `keep_slot`, and the holder's `rejoin`."""
     box = Box()
     for w in _every_kind(box) + [_holder(box)]:
         kind, sub = type(w).__name__, w.sub.name
@@ -437,8 +440,8 @@ def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive
 # -- the lease step (from `test_lease_step.py`) ----------------------------------------------------------------
 
 def test_the_evaluators_loop_has_the_same_lease_step():
-    """`AutoWorker.run` keeps its leases the same way: a step whose renewals were not answered is followed by another at
-    the next look, and the period runs from a step's start."""
+    """`AutoWorker.run` — the platform's loop since it stopped being a copy — keeps its leases the same way: a step
+    whose renewals were not answered is followed by another at the next look, and the period runs from a step's start."""
     from vms.autoworker import AutoWorker
     box = Box()
     store = _Pausing(box.vars, box, box.clock() + 1000.0, 0.0)

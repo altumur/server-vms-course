@@ -21,6 +21,7 @@
     "domain/break_glass",
     "domain/grants/*",
     "objects/rec/used/*",
+    "objects/rec/commands/*",
     "objects/vms/commands/*",
     "door/signer",
     "door/keys"
@@ -358,19 +359,22 @@
     "domain/member",
     "door/keys",
     "domain/vms/primaries",
-    "objects/rec/used/*"
+    "objects/rec/used/*",
+    "objects/rec/commands/*"
    ],
    "write": [
     "rec/epoch/*",
     "rec/slots/*",
     "rec/holds/*",
-    "objects/rec/used/*"
+    "objects/rec/used/*",
+    "objects/rec/commands/*"
    ],
    "delete": [
     "rec/epoch/*",
     "rec/slots/*",
     "rec/holds/*",
-    "objects/rec/used/*"
+    "objects/rec/used/*",
+    "objects/rec/commands/*"
    ]
   },
   "surveycontroller": {

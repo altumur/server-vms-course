@@ -518,7 +518,8 @@ def _piece_worker():
             return {"added": int(it["add"])}
 
     CounterWorker.spec = spec
-    w = CounterWorker(spec.sub, None, vars_, objects, clock=clock, wall=wall, instance="A")
+    w = CounterWorker(spec.sub, None, vars_, objects, clock=clock, wall=wall, instance="A",
+                      resource_root=os.path.join(root, "tree"))   # its server's resource tree (the platform's default is /data)
     w.server, w.capacity, w.counts = "srv-1", 4, {}
     w.claim_slot()
     Controller(spec.sub, vars_, objects, wall=wall).assign(w.name, ["c1"])

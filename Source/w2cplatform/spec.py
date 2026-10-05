@@ -118,6 +118,10 @@ class Refused(Exception):
     pass
 
 
+class Exists(Refused):
+    """A create under an id a unit already has: 409 `{error: "exists"}` at every console, not a 400 (the product's)."""
+
+
 # WHAT A SECRET LOOKS LIKE ON A PAGE, AND WHAT IT IS GIVEN FOR (the thirteenth round; the product's rule, one YAML key in
 # both). A reply shows a secret as `***` (`secrets.mask_secrets`); a page or a client of its own shows `•••`, `●●●` or
 # `＊＊＊`. Sent back, any of them is a password nobody typed: refused at the door (`is_mask`) — three or more of one of
@@ -2248,7 +2252,7 @@ class SpecController(Controller):
         if not self.spec.numeric:
             old, idx = self.vars.get(self.row_key(uid))
             if old and old.get("deleted") != "true":
-                raise Refused(f"{self.spec.name} unit {uid} exists")
+                raise Exists(f"{self.spec.name} unit {uid} exists")
             # A NAME STAYS ITS UNIT'S (the review's fifth pass, major). A unit's name is also the name of what it left
             # behind — what its workers wrote under it — and readers find that by the name. Deleted as one unit's and
             # created again about another, the name handed the first one's history to whoever may view the second.

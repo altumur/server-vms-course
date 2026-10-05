@@ -9,7 +9,7 @@ a server's disks and nothing about what it means:
     platform/resources/<server>/heartbeat   {server, ts, url, usage, space: {total, free}, units: {sub: [unit]}, mirrors: {server: n}}
     platform/mirror                         the knob: {enabled, copies}
     platform/space                          the knob: {enabled, high, low} — the disk's watermark
-    <sub>/retention, <sub>/retention/<unit> {days}: each subsystem's policy for its buckets, written by ITS controller
+    <sub>/retention, <sub>/retention/<unit> {days}: each subsystem's policy for its buckets, written by the console (the operator's edit of a unit, through the spec's `derived`)
 
     GET  <url>/buckets/<sub>/<unit>    closed buckets, from the files
     GET  <url>/events/<path>           one bucket (also .mirror/<server>/<path>)

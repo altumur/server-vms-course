@@ -1338,10 +1338,10 @@ def test_the_gap_widens_with_a_long_pass_and_with_a_resource_that_refuses():
     query = log_.query
     log_.query = lambda *a, **k: {**query(*a, **k), "incomplete": {"srv-b": "did not answer"}, "complete": False}
     w.reconcile_once()
-    assert w._refused is True
+    assert w.pass_refused is True
     log_.query = query
     w.reconcile_once()
-    assert w._refused is False
+    assert w.pass_refused is False
 
 
 def test_a_client_holds_one_wait_the_total_is_a_setting_and_the_counts_are_on_the_pulse_and_metrics():

@@ -297,7 +297,7 @@ def test_two_processes_with_one_name_the_old_one_is_nobody():
     b.heartbeat_once()
     theirs = ctl.workers_seen()["w-srv-a-1"].extra
     a.heartbeat_once()                                                     # one heartbeat under the name, and it is the new one's
-    assert ctl.workers_seen()["w-srv-a-1"].extra == theirs and theirs["fenced"] is False and theirs["alloc"] == b.instance
+    assert ctl.workers_seen()["w-srv-a-1"].extra == theirs and "fenced" not in theirs and theirs["alloc"] == b.instance
     assert a.reconcile_once() == [] and a.rows == []                       # not even the assignment is read
     assert a.rejoin() is None and "w-2" not in ctl.slots()
     assert a.nameless["holder"] == b.instance                              # nobody, waiting: no other number taken
@@ -305,7 +305,7 @@ def test_two_processes_with_one_name_the_old_one_is_nobody():
     name = a.rejoin()                                                      # its own name, from nothing — and what the epochs
     a.heartbeat_once()                                                     # said of it goes with it: the number of this lesson
     told = ctl.workers_seen()[name].extra
-    assert name == "w-srv-a-1" and told["conflicts"] == 3 and "slot w-srv-a-1" in told["was_fenced"] and told["fenced"] is False
+    assert name == "w-srv-a-1" and told["conflicts"] == 3 and "slot w-srv-a-1" in told["was_fenced"] and "fenced" not in told
 
 
 def test_the_reassignment_window_is_the_same_window_with_a_different_verdict():
