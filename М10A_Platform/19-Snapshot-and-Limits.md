@@ -214,34 +214,35 @@ MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see t
 
 ## Шаг 5 — Читатель: слить, не соврав про возраст
 
-В М12 `Cluster.snapshot()` (`Source/domain/federation.py`) читал один ключ. Теперь он читает префикс — ровно тем же движением, каким `heartbeats()` рядом читает heartbeat'ы. Домен — слой над VMS и читает её снимок (`vms/snapshot/`), поэтому строки у него называются `cameras`; сам приём от подсистемы не зависит:
+Читатель снимка наверху — домен М12, `Cluster.snapshot()` в `Source/w2cplatform/domain/federation.py`. Он читает префикс — ровно тем же движением, каким `heartbeats()` рядом читает heartbeat'ы. Домен — тоже платформа: он читает снимок каждой подсистемы своего каталога спек (`<sub>/snapshot/`), строки берёт под тем именем, которое им дала спека (`s.rows`), и помечает каждую её подсистемой:
 
 ```python
-        keys = self.objects.list(SNAPSHOT)
-        if not keys:
+        keys_of = [(s, self.objects.list(f"{s.name}/snapshot/")) for s in _specs(sub)]
+        if not any(keys for _, keys in keys_of):
             return None
-        best: dict[str, tuple[float, dict]] = {}
+        best: dict[tuple, tuple[float, dict]] = {}
         oldest = None
-        for key in keys:
-            raw = self.objects.get(key)
-            if not raw:
-                continue
-            shard = published(self.name, key, raw, _a_shard)
-            if shard is None:
-                oldest = 0.0                       # a shard nobody can read has no age: the copy is as old as can be
-                continue
-            ts = float(shard.get("ts", 0))
-            oldest = ts if oldest is None else min(oldest, ts)
-            for row in shard.get("cameras", []):
-                uid = str(row.get("id"))
-                if uid not in best or ts > best[uid][0]:
-                    best[uid] = (ts, row)
-        return {"cluster": self.name, "ts": oldest or 0, "cameras": [r for _, r in best.values()]}
+        for s, keys in keys_of:
+            for key in keys:
+                raw = self.objects.get(key)
+                if not raw:
+                    continue
+                shard = published(self.name, key, raw, lambda sh, rows=s.rows: _a_shard(sh, rows))
+                if shard is None:
+                    oldest = 0.0                       # a shard nobody can read has no age: the copy is as old as can be
+                    continue
+                ts = float(shard.get("ts", 0))
+                oldest = ts if oldest is None else min(oldest, ts)
+                for row in shard.get(s.rows, []):
+                    uid = (s.name, str(row.get("id")))
+                    if uid not in best or ts > best[uid][0]:
+                        best[uid] = (ts, {**row, "sub": s.name})
+        return {"cluster": self.name, "ts": oldest or 0, "units": [r for _, r in best.values()]}
 ```
 
 Два решения, и оба стоят объяснения.
 
-**Возраст целого — возраст самого старого шарда.** Единого мгновения, в которое весь кластер был в этом состоянии, больше нет: объекты читаются по одному. `ts` снимка — это RPO домена, то, насколько он отстал; складывать туда самый свежий шард значило бы показывать RPO лучше, чем он есть. Каталог свеж настолько, насколько свежа его самая несвежая часть. Отсюда и шард, который не читается (`published` с проверкой `_a_shard`: не JSON, `ts` не конечное число, строка единицы не объект): он пропускается и считается один раз, а копия кластера становится самой старой, какая бывает, — `oldest = 0.0`, а не «свежая без этого шарда».
+**Возраст целого — возраст самого старого шарда.** Единого мгновения, в которое весь кластер был в этом состоянии, больше нет: объекты читаются по одному. `ts` снимка — это RPO домена, то, насколько он отстал; складывать туда самый свежий шард значило бы показывать RPO лучше, чем он есть. Каталог свеж настолько, насколько свежа его самая несвежая часть. Отсюда и шард, который не читается (`published` с проверкой `_a_shard`: не JSON, `ts` не конечное число, строка единицы под именем строк спеки не объект): он пропускается и считается один раз, а копия кластера становится самой старой, какая бывает, — `oldest = 0.0`, а не «свежая без этого шарда».
 
 **Единица, пойманная на переезде, читается один раз, из более свежего шарда.** Домен читает шарды по очереди, и писатель может оказаться между двумя `put` — тогда единица окажется и в старом шарде, и в новом. Это **не** та авария, которую `where()` домена отвечает как спорную (`contested`, со списком кластеров): там два разных **кластера** заявляют права на единицу, и это действительно отказ размещения. Здесь — обычный переезд внутри одного кластера, и правильный ответ на него «она на w-1», а не исключение.
 
@@ -375,7 +376,7 @@ def _open(url: str, writer: str | None = None, acl: dict[str, list[str]] | None 
         self.max_bytes = min(max_bytes, MAX_VALUE) if max_bytes else MAX_VALUE
 ```
 
-У объектов кластера — ответ «нет потолка», и это тоже ответ (`ClusterObjectStore`, `Source/cluster/objectstore.py`):
+У объектов кластера — ответ «нет потолка», и это тоже ответ (`ClusterObjectStore`, `Source/w2cplatform/cluster/objectstore.py`):
 
 ```python
     max_bytes = 0                       # files on a disk: no ceiling worth naming …
@@ -538,8 +539,9 @@ Id единицы маршрут берёт через `_uid` — тот же `p
 ```python
             # The blob is bigger than the STORE will hold — which is the one case where changing the store
             # is the answer, because a blob is exactly the class of data an object store exists for. The cluster's
-            # objects are files on each server (`OBJECTS=cluster://…`, `cluster/objectstore.py`) with no ceiling; a
-            # store that declares one (`?max_bytes=`) is what refused this.
+            # objects are files on each server (`OBJECTS=cluster://…`, `w2cplatform/cluster/objectstore.py`) with no ceiling; a
+            # store that declares one (`max_bytes`: an object store built with one, or one over a capped row store —
+            # `VariablesObjectStore` takes the ceiling of the store under it) is what refused this.
             return 413, {"detail": f"{e} — a blob is what an object store is for: this one declares a ceiling; the "
                                    f"cluster's file objects (OBJECTS=cluster://…) have none", "error": str(e)}
 ```
@@ -673,7 +675,7 @@ def step(owner, what: str, name: str, fn, failed: str | None = None) -> bool:
 | воркер | его единицы не работают | `causes()` |
 | снимок кластера | кластер работает, картина домена не двигается | `rpo()` |
 
-`rpo()` берёт числа у `DomainDirectory.ages()` — того самого, которого до сих пор не вызывало ничто, кроме тестов (`Source/domain/readview.py`, `Source/domain/federation.py`). Второе молчание коварнее: ломаться нечему там, куда пойдут смотреть. Тест домена ставит это рядом — домен читает снимки VMS, поэтому его тест говорит о камерах (`tests/domain/test_lesson3_readview_api_gateway.py`):
+`rpo()` берёт числа у `DomainDirectory.ages()` — того самого, которого до сих пор не вызывало ничто, кроме тестов (`Source/w2cplatform/domain/readview.py`, `Source/w2cplatform/domain/federation.py`). Второе молчание коварнее: ломаться нечему там, куда пойдут смотреть. Тест домена ставит это рядом на снимках VMS, поэтому говорит о камерах (`tests/domain/test_lesson3_readview_api_gateway.py`):
 
 ```python
     assert view.list()["rpo"] == {"north": 120.0, "south": 0.0}

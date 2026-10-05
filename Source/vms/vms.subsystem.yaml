@@ -54,25 +54,31 @@ unit:
     # words naming `credentials`) and hides it wherever a stored one is said, by these rules.
     #
     # `schemes` — what a camera is reached by; `credentials` — where the login and the password go instead.
-    # `secret_in`:
+    # `secret_in` (the form the architect approved for the course and the product alike):
     # - `param`: the names a camera gives a credential parameter (the eleventh review, blocker 4: `?usr=admin&pwd=…`),
-    #   read as words — `pwd` the whole name or its last word (`user_id`, `X-Amz-Signature`), `pwd*` a word beginning
+    #   read as words — `pwd` the whole name or its last word (`X-Amz-Signature`), `pwd*` a word beginning
     #   with it (`pwd_md5`, `passwordHash`), `*pwd` a last word ending with it (`userpwd`, `clientsecret`). `p`, `code`,
     #   `pin` are not here: too many cameras mean something else by them (a profile, a codec), and a list that refuses
     #   those refuses cameras, not passwords. A word that only begins a name (`token_bucket`, `authmode`, `passage`) is
     #   no credential (the thirteenth review, minor). `=auth` — the whole name only: as the last word of a longer one
     #   (`rtsp_auth`, `enable_auth`, `basic_auth`, `x-auth`) it says how the camera authenticates, not with what; a Wi-Fi
     #   key (`psk`, `wpa_psk`) and a private key (`privkey`) are credentials (the product's r28-secrets2).
+    #   `login`: the names it gives a login (`?usr=admin`, `user_id`, Foscam's `loginuse`) — refused as well, the
+    #   refusal naming `cred_username`, and shown as written: a login identifies, it does not authenticate;
     # - the XMeye/Xiongmai chain in the path, `/user=admin_password=…_channel=1_stream=0.sdp` (the twelfth review,
-    #   blocker 8): a password ends at the last `_` before the next `name=`, `Hun_ter2_channel=1` is `Hun_ter2`;
+    #   blocker 8): a password ends at the last `_` before the next `name=`, `Hun_ter2_channel=1` is `Hun_ter2` — and the
+    #   same chain in the query, where it is one pair named by its login (`?user=admin_password=…`), and a login's value
+    #   is shown;
     # - a password's name segment gives the next segment (`/user/admin/password/…/snap.jpg`); not `pass` or `pw`:
     #   `/live/pass/stream`, `/pw/1` are paths (the thirteenth review);
     # - DriverPack names its host in the path, `driverpack://<vendor>/<host>/ch/<n>` (the thirteenth review, major 8):
     #   a port there that is no number (`acme/admin:…/ch/1`; digits of any script are digits — `8²` is a key of its own,
-    #   the review's tenth pass), digits a `/` cut from an `@` further on, and a login before
-    #   an escaped `@` (`acme/admin:…%4010.0.0.5`) are a login and a password. Read in every source's path — a first
-    #   segment `host:word` is no camera's path either;
-    # - go2rtc's `?src=` holds another address (the thirteenth review, blocker 6): read as one, three levels deep.
+    #   the review's tenth pass), digits a `/` cut from an `@` further on, and what stands before an `@` escaped or not
+    #   (`acme/admin:…%4010.0.0.5`) are a login and a password — of a `driverpack://` address only (`schemes`);
+    # - every regex reads the path with its escapes undone (`decoded`, the default): `p%2561ssword/…` is `password/…`,
+    #   and what it finds is hidden where it was written;
+    # - go2rtc's `?src=` holds another address (the thirteenth review, blocker 6), `ffmpeg:` before it or not, and a
+    #   relay's `?url=` too: read as one, three levels deep.
     source:
       type: url
       required: true
@@ -84,23 +90,28 @@ unit:
       unique: canonical
       credentials: {login: cred_username, secret: cred_secret}
       secret_in:
-        - param: [user, usr, username, userid, login, loginuse, loginpas, loginpass, account, key, keyid, apikey, authkey,
-                  accesskey, secretkey, sig, signature, sid, session, sessionid, pw, psd, pass, password, passwd, pwd, psw,
-                  userpass, passcode, passphrase, secret, token, "=auth", authorization, cred, creds, credential, credentials,
-                  psk, privkey, privatekey,
+        - param: [loginpas, loginpass, key, keyid, apikey, authkey, accesskey, secretkey, sig, signature, sid, session,
+                  sessionid, pw, psd, pass, password, passwd, pwd, psw, userpass, passcode, passphrase, secret, token,
+                  "=auth", authorization, cred, creds, credential, credentials, psk, privkey, privatekey,
                   "password*", "passwd*", "pwd*", "psw*", "secret*",
                   "*password", "*passwd", "*pwd", "*secret", "*token"]
-        - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?:password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'
+          login: [user, usr, username, userid, login, loginuse, account]
+        - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'
           in: path
-        - regex: '(?i)(?:^|/)(?:password|passwd|pwd|psw)/(?P<secret>[^/]+)'
+        - regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'
+          in: query
+        - regex: '(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)'
           in: path
-        - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[]*):(?P<secret>[^/]*[^/\d²³¹⁰⁴-⁹₀-₉①-⑨][^/]*)(?=/|$)'
+        - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@\d²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?=/|$)'
           in: path
+          schemes: [driverpack]
         - regex: '^/[^/]*?:(?P<secret>[0-9]+)(?=/[^?#]*@)'
           in: path
-        - regex: '^/(?P<login>[^/]*?)%40'
+          schemes: [driverpack]
+        - regex: '^/(?P<login>[^/:@]*)(?::(?P<secret>[^/]*))?@'
           in: path
-        - nested: src
+          schemes: [driverpack]
+        - nested: [src, url]
     # the reconciler only starts enabled rows and stops what is disabled; the worker reports `phase:
     # pending` for a disabled camera. `PUT {"enabled": false}` bumps `revision` and the worker stops the
     # pipeline.
@@ -400,6 +411,38 @@ metrics:
 display:
   unit: камера
   units: камеры
+  # The camera's card (the product's words, one card on both sides): its first tab, the fields' labels, the words for
+  # `live`'s values, and the blocks of the form in order — the page module draws it; the platform checks each names a
+  # field of the row (`SubsystemSpec._card_words`) and reads none of it.
+  general: Подключение
+  fields:
+    enabled: Включена
+    name: Имя
+    ref: Короткое имя
+    id: ID
+    folders: Папки
+    source: Источник
+    cred_username: Логин устройства
+    cred_secret: Пароль устройства
+    live: Живой поток
+    priority: Приоритет
+    labels: Метки достижимости
+    events_retention_days: Срок хранения событий, дн
+  options:
+    live:
+      always: Держать всегда
+      on-demand: По требованию
+  form:
+    - title: Идентификация
+      state: true
+      fields: [enabled, name, ref, id, folders]
+    - title: Подключение
+      fields: [source, cred_username, cred_secret]
+      note: "Пароль хранится отдельно и не покидает кластер: в ответах он замаскирован, поле при правке пустое. Сменили источник — впишите пароль заново."
+    - title: Размещение
+      placement: true
+      fields: [live, priority, labels, events_retention_days]
+      note: "Метки решают, где может работать камера: её возьмёт воркер, чей сервер несёт все её метки. Пусто — любой сервер. Папки лежат только в дереве и на размещение не влияют."
   field_help:
     source: "адрес устройства (driverpack://производитель/адрес/ch/канал)"
     labels: "сети, в которых виден адрес камеры (vlan:cctv-a)"

@@ -26,7 +26,8 @@ unit:
     shelf:    {type: string, ref: testsub2/shelves, must_match: {zone: zone}}
     zone:     {type: string}
     feed:     {type: url, unique: canonical, schemes: [https, sftp], credentials: {login: feed_user, secret: feed_secret},
-               secret_in: [{param: [token*, "*key"]}, {nested: via}]}
+               secret_in: [{param: [token*, "*key"], login: [=who]}, {nested: [via]},
+                           {regex: '^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$', in: fragment, schemes: [sftp], decoded: false}]}
     feed_user:   {type: string}
     feed_secret: {type: string, bound_to: [feed]}
     keep_days:   {inherit: 7, type: int, merge: override}
@@ -46,6 +47,14 @@ tables:
       kind:    {type: string, default: plain, enum: [plain, reserve, closed]}
       admits:  {type: bool, default: true}
       enabled: {type: bool, default: true}
+      # where the shelf's own goods come from, and the shelf it overflows to — a table's field says what a unit's does
+      feed:    {type: url, schemes: [https], credentials: {login: feed_user, secret: feed_secret},
+                secret_in: [{param: [token*], login: [=who]}, {nested: [via]},
+                            {regex: '^/~(?P<login>[^:/]+):(?P<secret>[^/]+)', in: path, schemes: [https], decoded: true}]}
+      feed_user:   {type: string}
+      feed_secret: {type: string, bound_to: [feed]}
+      size:    {type: int, default: 1, schema: {minimum: 1}}
+      over:    {type: string, ref: testsub2/shelves, must_match: {zone: zone}}
     schema:
       if: {properties: {kind: {const: closed}}}
       then: {properties: {admits: {const: false}}, required: [admits]}
@@ -108,6 +117,8 @@ events:
   suppress:
     tally.tick: {window: 5, by: [unit]}
 snapshot: [name, of, mode, step]
+# what a member reports to the domain beside its heartbeats and snapshot, and who says when a tally was last heard of
+domain: {reports: [counts/], witness: seen}
 metrics:
   - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
   - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}
@@ -129,6 +140,12 @@ display:
   field_help: {of: счётчик, shelf: полка}
   kinds: {tally.tick: тик}
   actions: {add: прибавить}
-  tree: {group_by: zone, nested_by: "/", columns: [{field: name}, {field: phase, title: фаза}], children: false}
+  tree: {group_by: zone, nested_by: "/", columns: [{field: name, width: 12}, {field: phase, title: фаза}], children: false}
+  general: Счёт
+  fields: {name: Имя, mode: Режим, id: ID}
+  options: {mode: {plain: тихо, loud: громко}}
+  form:
+    - {title: Счёт, state: true, fields: [name, mode]}
+    - {title: Где, placement: true, fields: [shelf, zone], note: полка решает}
 console:
   running: tallies_running

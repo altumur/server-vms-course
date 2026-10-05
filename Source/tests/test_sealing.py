@@ -5,9 +5,9 @@ section 3.6; the order agreed with it, feedback BP).
 the clear. The key is not in the store — a file given to the console (which seals) and the holder (which opens) —
 so a copy of the store, a backup, the controller and the domain's agent read ciphertext.
 
-The platform's rules, on testsub2: a tally's `feed_secret` is the key to its `feed` (`bound_to`), and its shelves, given
-a key here (`_keyed_shelves`), are a table whose row holds a secret. How a subsystem's holder opens what was sealed is
-the subsystem's own, and so are its tests.
+The platform's rules, on testsub2: a tally's `feed_secret` is the key to its `feed` (`bound_to`), and a shelf's
+`feed_secret` the key to the shelf's `feed` — a table whose row holds a secret. How a subsystem's holder opens what was
+sealed is the subsystem's own, and so are its tests.
 """
 import logging
 import os
@@ -15,7 +15,7 @@ import tempfile
 
 from w2cplatform.sealing import PREFIX, Sealed, Sealer, is_sealed, kid_of, new_key_file, open_row, seal_items, seal_stored
 from w2cplatform.spec import Refused
-from tests.conftest import TESTSUB2, Box, Served, console_ctl, testsub2
+from tests.conftest import Box, Served, console_ctl, testsub2
 
 TALLIES = "testsub2/tallies/"
 
@@ -46,18 +46,6 @@ def _console_with_key(box, key):
 def _tally(name, **fields):
     """A tally about counter c1, read from a feed of its own (`feed` is unique)."""
     return {"name": name, "of": "c1", "feed": f"https://feed.example/{name}", **fields}
-
-
-def _keyed_shelves():
-    """testsub2 whose shelves are kept at an address behind a key: `url`, and `key_secret` bound to it — a table whose
-    row holds a secret, for the platform's table rules (`tables.write_row`). Read from testsub2's own file and not
-    registered (`from_dict`, not `load`): the catalog keeps testsub2 as shipped."""
-    import yaml
-    from w2cplatform.spec import SubsystemSpec
-    with open(TESTSUB2) as f:
-        d = yaml.safe_load(f)
-    d["tables"]["shelves"]["fields"].update({"url": {"type": "url"}, "key_secret": {"type": "string", "bound_to": ["url"]}})
-    return SubsystemSpec.from_dict(d)
 
 
 def _shelf(spec, vars_, body, sealer=None):
@@ -177,12 +165,12 @@ def test_the_key_is_never_made_inside_the_store_nor_over_another():
 
 
 def test_a_tables_secret_goes_into_the_store_sealed():
-    spec = _keyed_shelves()
+    spec = testsub2()
     box = Box()
     sealer = Sealer.from_file(_key("k1"))
-    _shelf(spec, box.vars, {"name": "s1", "url": "https://shelf.example/s1", "key_secret": "AKIA:xyz"}, sealer=sealer)
+    _shelf(spec, box.vars, {"name": "s1", "feed": "https://shelf.example/s1", "feed_secret": "AKIA:xyz"}, sealer=sealer)
     row, _ = box.vars.get("testsub2/shelves/s1")
-    assert is_sealed(row["key_secret"]) and sealer.open("key_secret", row["key_secret"], spec.sub.config("shelves", "s1")) == "AKIA:xyz"
+    assert is_sealed(row["feed_secret"]) and sealer.open("feed_secret", row["feed_secret"], spec.sub.config("shelves", "s1")) == "AKIA:xyz"
 
 
 def test_a_secret_sent_back_as_its_mask_is_refused_and_the_one_kept_stays():
@@ -191,14 +179,14 @@ def test_a_secret_sent_back_as_its_mask_is_refused_and_the_one_kept_stays():
     and nothing said why. The mask is refused at the door, in words, on a create, an edit and a table row's key; the
     secret kept stays as it was; a field left out keeps it."""
     from w2cplatform.secrets import SECRET_MASK
-    spec = _keyed_shelves()
+    spec = testsub2()
     box = Box()
     con = _console_with_key(box, _key("k1"))
     con.create(_tally("a", feed_secret="Hunter2"))
     kept = box.vars.get(TALLIES + "a")[0]["feed_secret"]
     for write in (lambda: con.update("a", {"feed_secret": SECRET_MASK}),
                   lambda: con.create(_tally("b", feed_secret=SECRET_MASK)),
-                  lambda: _shelf(spec, box.vars, {"name": "s1", "url": "https://shelf.example/s1", "key_secret": SECRET_MASK})):
+                  lambda: _shelf(spec, box.vars, {"name": "s1", "feed": "https://shelf.example/s1", "feed_secret": SECRET_MASK})):
         try:
             write()
             raise AssertionError("a secret's mask was taken as the secret")
@@ -221,9 +209,9 @@ def _refused(write, *words):
 def test_every_mask_a_page_draws_is_refused_and_a_password_with_stars_in_it_is_not():
     """The product's rule (the thirteenth round): `***` is what this console's replies show; a page or a client of its
     own draws `•••`, `●●●` or `＊＊＊` — or more of one of them. Each is refused in a tally's `feed_secret` on a create
-    and an edit and in a table row's `key_secret`; a password that has stars in it is a password."""
+    and an edit and in a table row's `feed_secret`; a password that has stars in it is a password."""
     from w2cplatform.spec import is_mask
-    spec = _keyed_shelves()
+    spec = testsub2()
     box = Box()
     con = _console_with_key(box, _key("k1"))
     con.create(_tally("a", feed_secret="Hunter2"))
@@ -233,7 +221,7 @@ def test_every_mask_a_page_draws_is_refused_and_a_password_with_stars_in_it_is_n
         assert is_mask(m), m
         _refused(lambda: con.update("a", {"feed_secret": m}), "sent as its mask", "leave the field out")
         _refused(lambda: con.create(_tally("b", feed_secret=m)), "sent as its mask")
-        _refused(lambda: _shelf(spec, box.vars, {"name": "s1", "url": "https://shelf.example/s1", "key_secret": m}),
+        _refused(lambda: _shelf(spec, box.vars, {"name": "s1", "feed": "https://shelf.example/s1", "feed_secret": m}),
                  "sent as its mask")
     assert box.vars.get(TALLIES + "a")[0]["feed_secret"] == kept and box.vars.get("testsub2/shelves/s1")[0] is None
     for word in ("a***", "**", "*•*", "pass●●●word"):
@@ -271,35 +259,35 @@ def test_a_secret_sent_empty_on_an_edit_keeps_the_stored_one_and_an_address_chan
 
 
 def test_a_tables_key_not_sent_is_kept_and_a_new_address_needs_a_new_one():
-    """The same rule for a table's row (`key_secret` bound to its `url`). A write over a declared row is the whole
+    """The same rule for a table's row (`feed_secret` bound to its `feed`). A write over a declared row is the whole
     declaration — and the key left out (or sent empty, or null) wiped the row's key. It is kept now, as stored; a mask
-    is refused; another url without a new key is refused; another url with one takes it. The row declared again as
+    is refused; another address without a new key is refused; another address with one takes it. The row declared again as
     another kind at another address is another address too, and refused the same way (the platform's table since the
     boundary's step 6); deleted and declared again, it has no key."""
-    spec = _keyed_shelves()
+    spec = testsub2()
     key = _key("k1")
     sealer = Sealer.from_file(key)
     box = Box()
     row_key = spec.sub.config("shelves", "s1")
-    shelf = {"name": "s1", "url": "https://shelf.example/s1", "zone": "z1"}
-    _shelf(spec, box.vars, {**shelf, "key_secret": "xyz"}, sealer=sealer)
-    opened = lambda: sealer.open("key_secret", box.vars.get(row_key)[0]["key_secret"], row_key)
-    for sent in ({}, {"key_secret": ""}, {"key_secret": None}):
+    shelf = {"name": "s1", "feed": "https://shelf.example/s1", "zone": "z1"}
+    _shelf(spec, box.vars, {**shelf, "feed_secret": "xyz"}, sealer=sealer)
+    opened = lambda: sealer.open("feed_secret", box.vars.get(row_key)[0]["feed_secret"], row_key)
+    for sent in ({}, {"feed_secret": ""}, {"feed_secret": None}):
         _shelf(spec, box.vars, {**shelf, "zone": "z2", **sent}, sealer=sealer)
         assert opened() == "xyz" and box.vars.get(row_key)[0]["zone"] == "z2", sent
-    _refused(lambda: _shelf(spec, box.vars, {**shelf, "key_secret": "***"}, sealer=sealer), "sent as its mask")
-    for sent in ({}, {"key_secret": ""}):
-        why = _refused(lambda: _shelf(spec, box.vars, {**shelf, "url": "https://other.example/s1", **sent}, sealer=sealer),
-                       "key_secret", "url", "send the one for the new address")
+    _refused(lambda: _shelf(spec, box.vars, {**shelf, "feed_secret": "***"}, sealer=sealer), "sent as its mask")
+    for sent in ({}, {"feed_secret": ""}):
+        why = _refused(lambda: _shelf(spec, box.vars, {**shelf, "feed": "https://other.example/s1", **sent}, sealer=sealer),
+                       "feed_secret", "feed", "send the one for the new address")
         assert "other.example" not in why
-    assert box.vars.get(row_key)[0]["url"] == shelf["url"] and opened() == "xyz"
-    _shelf(spec, box.vars, {**shelf, "url": "https://other.example/s1", "key_secret": "abc"}, sealer=sealer)
+    assert box.vars.get(row_key)[0]["feed"] == shelf["feed"] and opened() == "xyz"
+    _shelf(spec, box.vars, {**shelf, "feed": "https://other.example/s1", "feed_secret": "abc"}, sealer=sealer)
     assert opened() == "abc"
-    reserve = {"name": "s1", "kind": "reserve", "url": "https://reserve.example/s1", "zone": "z9"}
+    reserve = {"name": "s1", "kind": "reserve", "feed": "https://reserve.example/s1", "zone": "z9"}
     _refused(lambda: _shelf(spec, box.vars, reserve, sealer=sealer), "send the one for the new address")
     box.vars.delete(row_key)
     _shelf(spec, box.vars, reserve, sealer=sealer)
-    assert not box.vars.get(row_key)[0].get("key_secret")
+    assert not box.vars.get(row_key)[0].get("feed_secret")
 
 
 def test_bound_to_is_read_at_load_and_a_name_it_does_not_know_is_refused():

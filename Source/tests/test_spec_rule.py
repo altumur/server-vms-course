@@ -19,31 +19,27 @@ TESTSUBS = sorted(glob.glob(os.path.join(HERE, "testdata", "testsub*.subsystem.y
 ROOT = os.path.dirname(HERE)
 PRODUCT = sorted(p for p in glob.glob(os.path.join(ROOT, "*", "*.subsystem.yaml")) if not p.startswith(HERE + os.sep))
 
-# Where a spec's keys are NAMES (a field, a table, an event kind): one `*` for all of them.
-NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress"}
-# Where a spec writes words or a document the platform passes on whole: not walked.
-OPAQUE = {"display.field_help", "display.kinds", "display.actions", "requests.schema", "tables.*.schema",
-          "unit.fields.*.schema", "tables.*.fields.*.schema", "placement.near.prefer", "placement.affinity.strict",
-          "rights.unit_of", "placement.places.where", "metrics.where", "metrics.unless.where", "metrics.labels",
-          "tables.*.journal", "unit.derived.items", "unit.derived.on_delete", "unit.fields.*.must_match",
-          "tables.*.fields.*.must_match"}
+# Where a spec's keys are NAMES (a field, a table, an event kind) — one `*` for all of them —, and where it writes words or
+# a document the platform passes on whole (not walked): the loader's own (`speckeys.py`), so the walk here is its walk.
+from w2cplatform.speckeys import NAMED, OPAQUE  # noqa: E402
 # Scalars whose VALUE is an operator: `metrics.agg=sum`.
 OPERATORS = {"metrics.agg", "metrics.type"}
 
-# What the platform reads, key by key (`spec.py`, `metrics.py`, `tables.py`, `holds.py`, `door.py`). The lists the code
-# keeps itself are asserted below to be inside this one, so a key added to the code and not here fails too.
+# A field's own words, of a unit's row and of a table's alike.
+FIELD = ("type", "default", "required", "inherit", "merge", "bound_to", "fixed", "enum", "schema", "ref", "must_match",
+         "unique", "schemes", "credentials.login", "credentials.secret", "secret_in.param", "secret_in.login",
+         "secret_in.regex", "secret_in.in", "secret_in.schemes", "secret_in.decoded", "secret_in.nested")
+TABLE_FIELD = tuple(k for k in FIELD if k not in ("inherit", "merge", "fixed", "unique"))   # a row written whole
+# What the platform reads, key by key (`spec.py`, `metrics.py`, `tables.py`, `holds.py`, `door.py`): asserted below to be
+# exactly the keys the loader takes (`speckeys.KEYS`) — a key added to the code and not here fails, and the other way.
 IMPLEMENTED = {
     "name", "about.sub", "about.field", "slot.prefix", "slot.name_env", "worker.writes", "worker.reads", "worker.requests",
     "objects.rows", "snapshot", "door.routes", "console.running", "events.older_epochs", "events.suppress.*.window",
     "events.suppress.*.by",
-    "unit.rows", "unit.id", "unit.fields.*.type", "unit.fields.*.default", "unit.fields.*.required",
-    "unit.fields.*.inherit", "unit.fields.*.merge", "unit.fields.*.bound_to", "unit.fields.*.fixed",
-    "unit.fields.*.enum", "unit.fields.*.schema", "unit.fields.*.ref", "unit.fields.*.must_match",
-    "unit.fields.*.unique", "unit.fields.*.schemes", "unit.fields.*.credentials.login",
-    "unit.fields.*.credentials.secret", "unit.fields.*.secret_in.param", "unit.fields.*.secret_in.nested",
+    "unit.rows", "unit.id", *{f"unit.fields.*.{k}" for k in FIELD},
     "unit.derived.row", "unit.derived.items", "unit.derived.on_delete",
-    "tables.*.key", "tables.*.fields.*.type", "tables.*.fields.*.required", "tables.*.fields.*.default",
-    "tables.*.fields.*.enum", "tables.*.schema", "tables.*.stamp", "tables.*.journal",
+    "tables.*.key", *{f"tables.*.fields.*.{k}" for k in TABLE_FIELD}, "tables.*.schema", "tables.*.stamp",
+    "tables.*.journal.written", "tables.*.journal.deleted",
     "placement.capacity.from", "placement.capacity.default", "placement.headroom.from", "placement.constraint",
     "placement.requires", "placement.servers", "placement.tie_break", "placement.near.sub", "placement.near.by",
     "placement.near.of", "placement.near.prefer", "placement.spread_by", "placement.group_by.field",
@@ -59,7 +55,13 @@ IMPLEMENTED = {
     "rights.names.of",
     "servers.show.table", "servers.show.by", "servers.show.title", "servers.show.columns",
     "display.unit", "display.units", "display.field_help", "display.kinds", "display.actions", "display.tree.group_by",
-    "display.tree.nested_by", "display.tree.columns.field", "display.tree.children",
+    "display.tree.nested_by", "display.tree.columns.field", "display.tree.columns.title", "display.tree.columns.width",
+    "display.tree.children", "display.keys.*.title", "display.keys.*.about", "display.keys.*.absent", "display.general",
+    "display.fields", "display.options.*", "display.form.title", "display.form.state", "display.form.placement",
+    "display.form.fields", "display.form.note",
+    "domain.ref", "domain.view", "domain.reports", "domain.witness", "domain.books", "domain.kept", "domain.tables",
+    "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys", "domain.keys.prefix",
+    "domain.shared",
     *{f"metrics.{k}" for k in metrics.KEYS}, *{f"metrics.agg={a}" for a in metrics.AGGS},
     *{f"metrics.type={t}" for t in metrics.TYPES}, "metrics.unless.table", "metrics.unless.where",
 }
@@ -100,8 +102,12 @@ def test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_
     # …and the vocabulary the code keeps is inside the list above (a key added to the code is a key added here)
     from w2cplatform.spec import REQUEST_KEYS
     from w2cplatform.tables import TABLE_KEYS
-    code = {f"tables.*.{k}" for k in TABLE_KEYS if k != "fields"} | {f"requests.{k}" for k in REQUEST_KEYS}
+    code = {f"tables.*.{k}" for k in TABLE_KEYS if k not in ("fields", "journal")} | {f"requests.{k}" for k in REQUEST_KEYS}
     assert code <= IMPLEMENTED, sorted(code - IMPLEMENTED)
+    # …and the keys counted here are the keys the loader takes (`speckeys.py`: the closed sets a spec is refused outside)
+    from w2cplatform.speckeys import KEYS
+    keys = {k for k in IMPLEMENTED if "=" not in k}
+    assert keys == KEYS, (sorted(keys - KEYS), sorted(KEYS - keys))
 
 
 def test_a_key_no_spec_uses_is_found_by_the_walk():

@@ -26,7 +26,10 @@ page names a subsystem's things: each is a spec (`rows`, `about`, `door`) and th
 does not appear outside the leading comment). Where a spec about this unit declares a door with the spans route
 (`SPANS`) the page adds the scale and the player: the door is asked for at `/<sub>/where/<id>` (its url and a token),
 its spans read raw from `<url>/<SPANS>/<id>` and played piece by piece from `<url>/segment/<id>/e<epoch>/<fromMs>-<toMs>`;
-plus the platform's `/events?unit=<sub>/<id>`. Writes go through the console with a fresh `Idempotency-Key` per attempt
+and, for a subsystem with places (`places: {table}`), each place's holder is asked too —
+`/<sub>/where/<table>/<place>?unit=<sub>/<id>` — and its door's spans merged without doubling; a place nobody holds is
+named in `#note` from `X-Unreachable` (`<place>@<server>`). Plus the platform's `/events?unit=<sub>/<id>`. The console
+itself carries no bytes: no route of its own for spans or for an offer. Writes go through the console with a fresh `Idempotency-Key` per attempt
 so a retried click is one unit; refusals are shown as the server's `detail`.
 
 ## `<style>`
@@ -421,19 +424,23 @@ async function subsAbout() {
   if (!fronted) { try { fronted = (await (await fetch('/mounts')).json()).mounts || {}; } catch (_) { fronted = {}; } }
   return Object.entries(fronted).filter(([, s]) => s.about && s.about.sub === spec.name && s.door);
 }
-async function doorOf(base, id) {
-  try { return (await (await fetch(`${base}/where/${encodeURIComponent(id)}`)).json()).door || null; } catch (_) { return null; }
+// `whereAt(url)`: the answer of a `/where` — a unit's, or a PLACE's (`<base>/where/<table>/<place>?unit=<sub>/<id>`: who
+// holds that place now and its door for the unit) — with the `X-Unreachable` a place nobody holds is said by.
+async function whereAt(url) {
+  try { const r = await fetch(url); return { ...(await r.json()), missing: r.headers.get('X-Unreachable') }; } catch (_) { return {}; }
 }
+const whereOf = (base, id) => `${base}/where/${encodeURIComponent(id)}`;
+async function doorOf(base, id) { return (await whereAt(whereOf(base, id))).door || null; }
 const bearer = d => d && d.token ? { Authorization: `Bearer ${d.token}` } : {};
 async function freshDoor(m) {                                         // a span's door, asked again near its token's end
-  if (m.door.expires && Date.now() / 1000 > m.door.expires - 15) m.door = (await doorOf(m.base, m.id)) || m.door;
+  if (m.door.expires && Date.now() / 1000 > m.door.expires - 15) m.door = (await whereAt(m.where || whereOf(m.base, m.id))).door || m.door;
   return m.door;
 }
 
 // -- media: only when the spec says so — the spans every holder's door says for this unit ---------------------
 // For the unit itself (its holder, when its spec declares a door with spans) and for every row of a mounted
-// subsystem about it whose spec does: `<door>/<route>/<id>?from&to`. Accepts a plain list or `{segments,
-// unreachable, note}`, showing the notes in `#note`. Normalises spans; tries `GET
+// subsystem about it whose spec does: `<door>/<route>/<id>?from&to` — and of such a row, every place of its
+// subsystem, at the door of whoever holds the place now. Accepts a plain list, showing the notes in `#note`. Normalises spans; tries `GET
 // /events?from&to&unit=<spec.name>/<current>` and ignores a failure (503 without an index). Computes the visible range:
 // the window if set, else from the earliest span/event (or now − 1 h) to the latest (or now). Draws each
 // span as a `div.span` positioned by percentage — `events-only` when it has no media, `fenced` when fenced
@@ -443,35 +450,55 @@ async function freshDoor(m) {                                         // a span'
 async function loadTimeline() {
   const now = Date.now() / 1000;
   const [from, to] = window_ || [0, 1e12];
-  const raw = [], notes = [], asks = [];
+  const raw = [], notes = new Set(), asks = [], places = [], asked = new Set();
+  const gone = missing => notes.add(`not answering: ${missing} — what it holds is missing from this picture`);
   // A door's spans are raw (`[{start_ms, end_ms, epoch, source?, fenced?, yields?}]`, the product's): each is played
   // through the same door's `segment` route, piece by piece. A 401 is the door's word that its token will not do —
-  // ended, another holder — and the door is asked for again, once.
-  const ask = async (base, id) => {
-    let door = await doorOf(base, id);
-    if (!door || !door.routes.includes(SPANS)) return;
+  // ended, another holder — and the door is asked for again, once. `where` is the `/where` the door was handed out
+  // at: the unit's own, or a place's.
+  const ask = async (base, id, where) => {
+    const w = await whereAt(where);
+    if (w.missing) gone(w.missing);                                   // a place nobody holds: `<place>@<server>`
+    let door = w.door;
+    if (!door || !door.routes.includes(SPANS) || asked.has(`${base}|${id}|${w.worker}`)) return;
+    asked.add(`${base}|${id}|${w.worker}`);                          // one holder's door once, whichever way it was found
     let d, r;
     try {
       for (let again = 0; ; again++) {
         r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
         if (r.status !== 401 || again) break;
-        door = (await doorOf(base, id)) || door;
+        door = (await whereAt(where)).door || door;
       }
       if (!r.ok) throw new Error(r.status); d = await r.json();
-    } catch (_) { notes.push(`the door of ${base || ''}/${id} did not answer`); return; }
+    } catch (_) { notes.add(`the door of ${base || ''}/${id} did not answer`); return; }
     const missing = r.headers.get('X-Unreachable');
-    if (missing) notes.push(`not answering: ${missing} — what it holds is missing from this picture`);
+    if (missing) gone(missing);
     (Array.isArray(d) ? d : []).forEach(x => raw.push({ start: x.start_ms / 1000, end: x.end_ms / 1000, epoch: x.epoch,
-      fenced: !!x.fenced, yields: !!x.yields, m: { base, id, door, source: x.source || '' } }));
+      fenced: !!x.fenced, yields: !!x.yields, m: { base, id, door, where, source: x.source || '' } }));
   };
-  if (spec.door && spec.door.routes.includes(SPANS)) asks.push(ask('', current));
+  if (spec.door && spec.door.routes.includes(SPANS)) asks.push(ask('', current, whereOf('', current)));
   for (const [name, s] of await subsAbout()) {
     if (!s.door.routes.includes(SPANS)) continue;
-    let rows = [];
+    let rows = [], held = [];
     try { rows = (await (await fetch(`/${name}/${s.rows}`)).json()).configured || []; } catch (_) {}
-    rows.filter(r => String(r[s.about.field]) === String(current)).forEach(r => asks.push(ask(`/${name}`, r.id)));
+    rows = rows.filter(r => String(r[s.about.field]) === String(current));
+    rows.forEach(r => asks.push(ask(`/${name}`, r.id, whereOf(`/${name}`, r.id))));
+    // WHAT A UNIT LEFT IN A PLACE ANOTHER WORKER HOLDS NOW (the architect's decision after step 7): the console carries
+    // no bytes, so each place of the subsystem (`places: {table}` in its spec, the rows of that table) is asked who
+    // holds it — `/<sub>/where/<table>/<place>?unit=<sub>/<id>` — and that holder's door says what it holds of the unit.
+    if (s.places && rows.length) {
+      try { held = (await (await fetch(`/${name}/${s.places.table}`)).json())[s.places.table] || []; } catch (_) {}
+      for (const r of rows) for (const p of held)
+        places.push([`/${name}`, r.id, `/${name}/where/${s.places.table}/${encodeURIComponent(p.name)}?unit=${encodeURIComponent(`${name}/${r.id}`)}`]);
+    }
   }
-  await Promise.all(asks);
+  await Promise.all(asks);                                            // the units' own doors first: what they say stands
+  await Promise.all(places.map(([base, id, where]) => ask(base, id, where)));
+  // Merged without doubling: a moment two doors both say (a door that reads every place, a place asked twice) is one
+  // span — the first said, the unit's own door's before a place's.
+  const said = new Set();
+  raw.splice(0, raw.length, ...raw.filter(s => { const k = `${s.m.base}|${s.m.id}|${s.start}|${s.end}|${s.epoch}|${s.m.source}`;
+                                                  return !said.has(k) && said.add(k); }));
   // A span its door says YIELDS (`yields: true` — what a holder knows OF and does not hold) is drawn only where no
   // other span is: cut by every one of them.
   const solid = raw.filter(s => !s.yields);
@@ -481,7 +508,7 @@ async function loadTimeline() {
     if (at < b) out.push([at, b]); return out; };
   raw.splice(0, raw.length, ...solid, ...raw.filter(s => s.yields).flatMap(s => holes(s.start, s.end).map(([a, b]) => ({ ...s, start: a, end: b }))));
   raw.sort((a, b) => a.start - b.start);
-  $('#note').textContent = notes.join('; ');
+  $('#note').textContent = [...notes].join('; ');
   spans = raw.map(s => ({ start: s.start, end: s.end, epoch: s.epoch, fenced: !!s.fenced, events: s.events || 0,
                           media: s.m, server: s.server || null, recorder: s.recorder || null }));
   await fetchEvents(from, to);

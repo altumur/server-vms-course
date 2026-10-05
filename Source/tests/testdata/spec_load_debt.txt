@@ -1,0 +1,29 @@
+# spec_load_debt.txt — the key paths of the product's specs the course's loader refuses (test_spec_parity.py),
+# `<spec>:<key path>`. A line goes when the course reads the key or the product drops it; none is ever added.
+auto:console.running
+auto:heartbeat
+live:console.running
+live:display.units_count
+live:secrets
+rec:console.running
+rec:display.units_count
+rec:heartbeat
+rec:objects.door
+rec:secrets
+vms:console.running
+vms:display.events
+vms:display.form.status
+vms:display.options
+vms:display.section
+vms:display.tree.contents_title
+vms:display.tree.filter
+vms:display.tree.group_hint
+vms:display.tree.group_title
+vms:display.tree.group_word
+vms:display.tree.no_group
+vms:display.tree.no_group_suffix
+vms:display.tree.pick_note
+vms:display.units_count
+vms:heartbeat
+vms:secrets
+vms:tables

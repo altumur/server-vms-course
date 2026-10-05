@@ -29,7 +29,7 @@ from .events import ALARM
 from .journal import Journal
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .objects import ObjectStore
-from .rows import garbled_counts
+from .rows import PARSE_ERRORS, garbled_counts
 from .variables import Conflict, Variables, cas_pause
 
 log = logging.getLogger(__name__)
@@ -625,27 +625,40 @@ class Worker:
         return None
 
     # Whether `place`, held under this worker's NAME by the instance `holder`, is taken back at once (`_claim_hold`).
-    # Yes for a place on one box (its row names its server, `placement.places.server_field`): the two instances of the
-    # name are on that box, and its daemon keeps one writer. A place ANY box may write — its row names no server — only
-    # from the holder's own box: the row's `holder` is `host:pid:rnd`, and the host is the box's id where the runtime
-    # says one (`runtime.box_of`; an instance named otherwise says no host, and waits — the safe side). A place whose row
-    # cannot be read now is not known to be on one box: it waits too. It was a subsystem's override (the boundary's
-    # §2.8 #4).
+    # A DEFAULT THAT WEAKENS A FENCE IS OFF UNTIL THE SPEC TURNS IT ON (the architect's rule after step 7): taking a place
+    # back at once skips the one wait the previous holder's write window is measured against, so it is done only where
+    # the spec says where the place is (`placement.places.server_field`) and the row says it:
+    #   a place on one box (its row names its server)   from that box: this worker's server is the row's — its daemon
+    #                                                   keeps one writer there
+    #   a place ANY box may write (its row names none)  from the holder's own box: the row's `holder` is `host:pid:rnd`,
+    #                                                   and the host is the box's id where the runtime says one
+    #                                                   (`runtime.box_of`; an instance named otherwise says no host)
+    #   a spec that names no `server_field`, a row that cannot be read now — where the place is is not known: it WAITS
+    #                                                   like anybody's, until it is let go or its hold lapses
+    # (It followed the name from any box when the spec said nothing: a default that let two instances of one name write
+    # one place. Following from another box is no default; a spec that needed it would declare it.)
     def hold_follows_name(self, place: str, holder: str = "") -> bool:
-        if not self._any_box(place):
-            return True
+        where = self._place_server(place)
+        if where is None:
+            return False
+        if where:
+            return bool(self.server) and self.server == where
         here = runtime.box_of(self.instance)
         return here is not None and here == runtime.box_of(holder)
 
-    def _any_box(self, place: str) -> bool:
+    # The server the place's row names ("" — any box may write it), or None: the spec names no field for it, or the row
+    # does not read now.
+    def _place_server(self, place: str) -> str | None:
         places = getattr(self.spec, "places", None) or {}
         if not places.get("server_field"):
-            return False
+            return None
         try:
             items, _ = self.vars.get(self.sub.config(places["table"], place))
         except (OSError, *PARSE_ERRORS):
-            return True
-        return not str((items or {}).get(places["server_field"]) or "")
+            return None
+        if not isinstance(items, dict):
+            return None
+        return str(items.get(places["server_field"]) or "")
 
     # Still mine? Same three lines as `renew_slot`, and the same meaning when it says no: another process
     # holds this place now, so this one must stop writing into it. Losing a hold is NOT losing the slot —
@@ -1718,7 +1731,6 @@ class Worker:
 
     def mark_of(self, rid: str) -> dict | None:
         """The mark of this request as it stands, or None. Raises if the store does not answer."""
-        from .rows import PARSE_ERRORS
         raw = self.objects.get(self.command_key(rid))
         if raw is None:
             return None

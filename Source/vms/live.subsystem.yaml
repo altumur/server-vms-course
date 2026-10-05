@@ -38,3 +38,7 @@ metrics:
   - {name: streams_live, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: streams_live                # live_streams_live: fan-outs with a subscription up
+# What a page calls a unit of it (the product's words, one spec on both sides).
+display:
+  unit: живой поток
+  units: живые потоки
