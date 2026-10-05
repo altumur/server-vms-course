@@ -25,9 +25,6 @@ course-only live.subsystem.yaml placement.offers
 course-only live.subsystem.yaml rights
 course-only live.subsystem.yaml rights.routes
 course-only live.subsystem.yaml rights.routes.view
-course-only rec.subsystem.yaml domain
-course-only rec.subsystem.yaml domain.reports
-course-only rec.subsystem.yaml domain.witness
 course-only rec.subsystem.yaml metrics
 course-only rec.subsystem.yaml placement.affinity
 course-only rec.subsystem.yaml placement.affinity.enabled
@@ -126,21 +123,6 @@ course-only rec.subsystem.yaml unit.fields.home.cam
 course-only rec.subsystem.yaml unit.fields.home.must_match
 course-only rec.subsystem.yaml unit.fields.home.ref
 course-only rec.subsystem.yaml worker.reads
-course-only vms.subsystem.yaml domain
-course-only vms.subsystem.yaml domain.books
-course-only vms.subsystem.yaml domain.kept
-course-only vms.subsystem.yaml domain.keys
-course-only vms.subsystem.yaml domain.ref
-course-only vms.subsystem.yaml domain.shared
-course-only vms.subsystem.yaml domain.tables
-course-only vms.subsystem.yaml domain.tokens
-course-only vms.subsystem.yaml domain.tokens.ask
-course-only vms.subsystem.yaml domain.tokens.ask.claims
-course-only vms.subsystem.yaml domain.tokens.ask.lifetime
-course-only vms.subsystem.yaml domain.tokens.stream
-course-only vms.subsystem.yaml domain.tokens.stream.claims
-course-only vms.subsystem.yaml domain.tokens.stream.lifetime
-course-only vms.subsystem.yaml domain.view
 course-only vms.subsystem.yaml metrics
 course-only vms.subsystem.yaml placement.group_by
 course-only vms.subsystem.yaml placement.group_by.cut_at
@@ -159,10 +141,6 @@ course-only vms.subsystem.yaml rights.reach
 course-only vms.subsystem.yaml rights.reach.cluster
 course-only vms.subsystem.yaml rights.reach.group
 course-only vms.subsystem.yaml rights.reach.requests
-course-only vms.subsystem.yaml unit.fields.alarms.inherit
-course-only vms.subsystem.yaml unit.fields.alarms.merge
-course-only vms.subsystem.yaml unit.fields.alarms_retention_days.inherit
-course-only vms.subsystem.yaml unit.fields.events_retention_days.inherit
 course-only vms.subsystem.yaml unit.fields.kind
 course-only vms.subsystem.yaml unit.fields.kind.default
 course-only vms.subsystem.yaml unit.fields.kind.type
@@ -177,9 +155,8 @@ product-only live.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml worker.requests   # the recorder files a device's ask to the VMS (recproc's asker): the course's rec.subsystem.yaml says it next
+product-only vms.subsystem.yaml domain.names   # ADR-0031: только у продукта — у курса нет учёток RTSP (stream-clients/)
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window
 product-only vms.subsystem.yaml tables
-product-only vms.subsystem.yaml unit.fields.alarms_retention_days.default
-product-only vms.subsystem.yaml unit.fields.events_retention_days.default

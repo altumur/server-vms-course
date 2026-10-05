@@ -139,8 +139,31 @@
         "worker.name_taken": "a worker's name was taken", "worker.name_back": "a worker got its name back", "worker.name_conflict": "worker name conflict",
         "worker.presence_unknown": "whether a worker is alive is unknown", "worker.presence_unknown_moved": "the units of a worker without a pulse moved",
         "worker.slot_ahead": "a worker's slot lease ran ahead",
+        "session.debug_open": "debug sign-in without a password is on",
       },
-      n: { on: "on", silent: "silent", unitsN: "units", noTwoWriters: "not moved, so that there are never two writers", movedAfter: "moved after",
+      // the domain's holder: its term, its trust, the units on the domain, the shared settings, the edits (§10a)
+      domTerm: "Holding", heldOn: "The domain is held on", restoredFrom: "restored from backup rev {r} of {f}", backupAtW: "backup copy at",
+      noBackupYet: "nobody yet", handOver: "Hand the domain over…", handTo: "To", handBtn: "Hand over",
+      handNote: "For a few seconds edits are not taken; then the domain works there and this holder steps aside.",
+      handing: "Handing over: the last copy goes to {t}…", handed: "Handed over", notHanded: "Not handed over",
+      deposedNote: "This holder was replaced: the domain is held by {h} at term {t}. Edits go there, not here:",
+      strandedHead: "Not in term {t} — apply again?", strandedNote: "Only this holder held these: after its last backup copy. Nothing is applied by itself — a person decides.",
+      nothingStranded: "Nothing left behind: all this holder held is in term {t}.", reapplyOn: "Apply again at {h}", redoOn: "do it again at {h}",
+      reapplied: "The edit is saved again at the new holder", editFor: "edit for",
+      trustW: "Trust", notInstalled: "The domain is not installed: its door is open, nobody is asked who they are.", keysRev: "Key set revision",
+      rootFp: "Root", currentKey: "Current key", issuingW: "Issuing keys", revokedW: "revoked", holderKeys: "The holder has the keys", yesW: "yes", noW: "no",
+      admittedKey: "admitted", presentedKey: "presents", holdsRev: "holds rev", rotating: "rotation not finished",
+      rotationNote: "A member whose revision is below the set's, or whose key is not the admitted one, has not finished the rotation.",
+      domUnits: "Units", domUnitsNote: "What the subsystems hold in the domain's clusters, by their specs: the ref, the cluster, where it runs, its state.",
+      noUnitsDecl: "no subsystem on the domain declared units", uLive: "running", uStale: "worker silent — last known", uConfigured: "configured, nobody holds it",
+      uSilent: "cluster silent — last known", turnOn: "Turn on", turnOff: "Turn off",
+      sharedW: "Shared settings", sharedNote: "Settings of the site, not of one unit: one document of the domain each member's agent carries home and keeps — the domain may go, the settings stay where they are read. They are defaults: they are not written into the units' rows.",
+      sharedRev: "rev {r} · term {t} · {a}", neverPub: "never published yet", onePerLine: "one a line", publishW: "Publish",
+      publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
+      editsW: "Edits for the clusters", editsNote: "The domain calls no cluster: an edit waits here, the cluster's agent takes it on its next publication, applies it and sends back the outcome.",
+      waitsPub: "waits for publication", appliedW: "applied", refusedStatus: "refused {s}", takenAt: "taken", appliedAt: "applied", noEdits: "no edits",
+      debugBadge: "debug: no sign-in", debugTip: "The door let you in without a password: a request from this machine, W2C_DEBUG_PERSON is set (a stand only, ADR-0050). Your rights are this person's.",
+      n: { asPerson: "as", on: "on", silent: "silent", unitsN: "units", noTwoWriters: "not moved, so that there are never two writers", movedAfter: "moved after",
         holds: "held by", leaseUntil: "lease until", pastLimit: "past the limit of", server: "server", lost: "lost",
         nameHeld: "the name is held by", waits: "this process waits for its name", namedAgain: "has its name again", after: "after", nameless: "without a name",
         refused: "refused", min: "min", s: "s" },
@@ -266,8 +289,30 @@
         "worker.name_taken": "имя воркера забрали", "worker.name_back": "воркер вернул себе имя", "worker.name_conflict": "конфликт имени воркера",
         "worker.presence_unknown": "жив ли воркер — неизвестно", "worker.presence_unknown_moved": "единицы воркера без пульса перенесены",
         "worker.slot_ahead": "аренда слота воркера ушла вперёд",
+        "session.debug_open": "отладочный вход без пароля включён",
       },
-      n: { on: "на", silent: "молчит", unitsN: "единиц", noTwoWriters: "не переносятся, чтобы не было двух писателей", movedAfter: "перенесены через",
+      domTerm: "Размещение", heldOn: "Домен размещён на", restoredFrom: "восстановлен из копии rev {r} с {f}", backupAtW: "резервная копия у",
+      noBackupYet: "пока ни у кого", handOver: "Передать домен…", handTo: "Кому", handBtn: "Передать",
+      handNote: "На несколько секунд правки не принимаются; затем домен работает там, а этот держатель отходит.",
+      handing: "Передача: последняя копия — на {t}…", handed: "Передано", notHanded: "Не передано",
+      deposedNote: "Этот держатель заменён: домен держит {h} на сроке {t}. Правки туда, здесь они не принимаются:",
+      strandedHead: "Не вошло в срок {t} — применить заново?", strandedNote: "Это держал только этот держатель: после его последней резервной копии. Само ничего не применяется — решает человек.",
+      nothingStranded: "Ничего не брошено: всё, что держал этот держатель, вошло в срок {t}.", reapplyOn: "Применить заново на {h}", redoOn: "сделайте заново на {h}",
+      reapplied: "Правка снова сохранена на новом держателе", editFor: "правка для",
+      trustW: "Доверие", notInstalled: "Домен не установлен: дверь открыта, никого не спрашивают, кто он.", keysRev: "Ревизия набора ключей",
+      rootFp: "Корень", currentKey: "Текущий ключ", issuingW: "Ключи выдачи", revokedW: "отозваны", holderKeys: "Ключи у держателя", yesW: "да", noW: "нет",
+      admittedKey: "принят", presentedKey: "предъявляет", holdsRev: "держит rev", rotating: "ротация не закончена",
+      rotationNote: "Член, у которого ревизия ниже ревизии набора или предъявленный ключ не тот, что принят, ротацию не закончил.",
+      domUnits: "Единицы", domUnitsNote: "Что подсистемы держат в кластерах домена — по их спекам: ссылка, кластер, где работает, в каком состоянии.",
+      noUnitsDecl: "ни одна подсистема на домене не объявила единиц", uLive: "идёт", uStale: "воркер молчит — последнее известное", uConfigured: "настроена, никто не держит",
+      uSilent: "кластер молчит — последнее известное", turnOn: "Включить", turnOff: "Выключить",
+      sharedW: "Общие настройки", sharedNote: "Настройки площадки, а не одной единицы: один документ домена, который агент каждого члена уносит домой и хранит у себя — домен может пропасть, настройки остаются там, где их читают. Это умолчания: в строки единиц они не пишутся.",
+      sharedRev: "rev {r} · срок {t} · {a}", neverPub: "ещё ни разу не публиковались", onePerLine: "по одному на строку", publishW: "Опубликовать",
+      publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
+      editsW: "Правки для кластеров", editsNote: "Домен не звонит кластерам: правка ждёт здесь, агент кластера забирает её при следующей публикации, применяет у себя и присылает исход.",
+      waitsPub: "ждёт публикации", appliedW: "применена", refusedStatus: "отказ {s}", takenAt: "принята", appliedAt: "применена", noEdits: "правок нет",
+      debugBadge: "отладка: вход без пароля", debugTip: "Дверь впустила без пароля: запрос с этой машины, задан W2C_DEBUG_PERSON (только стенд, ADR-0050). Права — этого человека.",
+      n: { asPerson: "как", on: "на", silent: "молчит", unitsN: "единиц", noTwoWriters: "не переносятся, чтобы не было двух писателей", movedAfter: "перенесены через",
         holds: "держит", leaseUntil: "аренда до", pastLimit: "дальше предела", server: "сервер", lost: "утрачены",
         nameHeld: "имя держит", waits: "этот процесс ждёт своё имя", namedAgain: "снова с именем", after: "после", nameless: "без имени",
         refused: "отказал", min: "мин", s: "с" },
@@ -309,6 +354,9 @@
 
   function mount(root, opts) {
     opts = opts || {};
+    // The domain holder's page (§10a): the module with the domain alone — no units of a cluster, no servers, no root
+    // subsystem; the domain's card is the page.
+    const domainOnly = Array.isArray(opts.sections) && opts.sections.includes("domain") && !opts.sections.includes("units");
     const W = WORDS[opts.lang] || WORDS[(navigator.language || "").startsWith("ru") ? "ru" : "en"];
     const C = { version: VERSION };
     const IC = { logo: "◉", funnel: svgIc(ICONS.funnel), search: svgIc(ICONS.search) };
@@ -319,7 +367,7 @@
     const listeners = {};
     const shell = { sections: [], tabs: {}, nodes: {}, menus: {} };
     const st = {
-      section: "units", sel: null, subs: [], units: {}, servers: {}, policy: {}, session: null, events: [], evfilter: "",
+      section: domainOnly ? "domain" : "units", sel: null, subs: [], units: {}, servers: {}, policy: {}, session: null, events: [], evfilter: "",
       open: new Set(), draft: null, drain: { draining: "", safe: true, subsystems: {} }, labelDraft: null, acc: null, dom: null, alarms: null, held: null, topo: null, keys: null,
       q: "", stateF: "", favs: loadFavs(), shut: new Set(), tab: {}, full: false, norail: false,
       shared: {},   // [course leads] the groups each subsystem shares with the domain: {sub: {groups, rev}}
@@ -389,6 +437,7 @@
       if (k === "worker.slot_ahead")
         return j([e.worker ?? "?", e.holder ? n.holds + " " + e.holder : "", e.until ? n.leaseUntil + " " + fmt(e.until) : "",
           e.limit_s != null ? n.pastLimit + " " + dur(e.limit_s) : "", e.units != null ? n.unitsN + ": " + e.units : ""]);
+      if (k === "session.debug_open") return e.person ? n.asPerson + " " + e.person : "";
       if (k === "worker.name_taken") return j([`${e.worker ?? "?"}: ${n.nameHeld} ${e.holder ?? "?"}${e.holder_box ? " (" + e.holder_box + ")" : ""}`, n.waits + (e.box ? " (" + e.box + ")" : "")]);
       if (k === "worker.name_back") return `${e.worker ?? ""} ${n.namedAgain}${e.nameless_s != null ? " " + n.after + " " + dur(e.nameless_s) + " " + n.nameless : ""}`.trim();
       if (k === "worker.name_conflict")
@@ -479,6 +528,7 @@
         <div class="hr-tools">
           <div class="hload pc-hload"><span class="hmet"><span class="hlab pc-hunits-l">—</span><b class="pc-hunits">—</b></span><span class="hmet"><span class="hlab">${h(W.workersCap)}</span><b class="pc-hworkers">—</b></span><span class="hsrv pc-hsrv"></span></div>
           <div class="umenu pc-umenu"><button type="button" class="ubtn pc-ubtn" aria-expanded="false"><span class="uav">◐</span><span class="uname pc-uname">—</span><span class="uchev">▾</span></button>
+            <span class="bd off pc-debug" hidden>${h(W.debugBadge)}</span>
             <div class="upop pc-upop"><div class="uhead"><span class="uav">◐</span><b class="pc-uinst">—</b></div>
               <label>${h(W.theme)}<select class="pc-theme"><option value="dark">${h(W.dark)}</option><option value="light">${h(W.light)}</option></select></label>
               <label>${h(W.pollW)}<select class="pc-poll"><option value="5">${h(W.pollEvery.replace("{n}", 5))}</option><option value="15">${h(W.pollEvery.replace("{n}", 15))}</option><option value="0">${h(W.manual)}</option></select></label>
@@ -577,6 +627,7 @@
       } catch (e) { st.gauges = {}; }
     }
     function paintHeader() {
+      if (domainOnly) return paintHolderHeader();
       const r0 = st.subs[0], g = st.gauges || {};
       $(".pc-hunits-l").textContent = cap(r0 ? unitWord(r0, true) : W.units);
       $(".pc-hunits").textContent = g.units == null ? "—" : g.units;
@@ -587,17 +638,35 @@
       $(".pc-uinst").textContent = r0 ? W.subsystemW + " " + r0.name : "—";
       const s = st.session || {};
       $(".pc-uname").textContent = s.user ? s.user + (s.glass ? " · " + W.glass : "") : s.open ? W.open : "—";
-      $(".pc-logout").style.display = s.user ? "block" : "none";
+      paintDebug(s);
+    }
+
+    // A door that let the person in without a password (ADR-0050: W2C_DEBUG_PERSON, loopback, a stand only) is said in
+    // the header for as long as it is so; there is nothing to sign out of.
+    function paintDebug(s) {
+      const b = $(".pc-debug"); b.hidden = !s.debug; b.title = W.debugTip;
+      $(".pc-logout").style.display = s.user && !s.debug ? "block" : "none";
+    }
+    // at the holder: the members and how many publish, the holder's name
+    function paintHolderHeader() {
+      const ms = (st.dom && st.dom.members) || [];
+      $(".pc-hunits-l").textContent = cap(W.clusters); $(".pc-hunits").textContent = st.dom ? ms.length : "—"; $(".pc-hworkers").textContent = "—";
+      $(".pc-hsrv").textContent = st.loadErr && !st.dom ? W.noLink : st.dom ? ms.filter(m => m.holder || m.state === "ok").length + "/" + ms.length + " " + W.publishes : "";
+      $(".pc-hload").classList.toggle("stale", !st.dom);
+      $(".pc-uinst").textContent = cap(W.domainWord) + (st.dom && st.dom.holder ? " · " + st.dom.holder : "");
+      const s = st.session || {};
+      $(".pc-uname").textContent = s.user ? s.user : s.open ? W.open : "—";
+      paintDebug(s);
     }
 
     // -- the rail -------------------------------------------------------------------------------------------------
     // The units, the servers and the domain are one section — two layouts of one panel (by the spec's groups, by
     // servers); the rights; the journal at the bottom. A page's own sections stand where they say (after).
-    const SECTIONS = { units: W.hwSection, access: W.access, journal: W.journal };
+    const SECTIONS = { units: W.hwSection, domain: W.domainWord, access: W.access, journal: W.journal };
     const LAYOUT_OF = { units: "units", servers: "units", domain: "units" };   // what the rail shows as on
     function sectionList() {
       const own = { units: () => (st.subs[0] && display(st.subs[0]).section) || W.hwSection };
-      let list = (opts.sections || ["units", "access", "journal"]).filter(s => SECTIONS[s]).map(s => ({ id: s, label: own[s] ? own[s]() : SECTIONS[s], icon: "sec_" + s, bottom: s === "journal" }));
+      let list = (opts.sections || ["units", "access", "journal"]).filter(s => SECTIONS[s]).map(s => ({ id: s, label: own[s] ? own[s]() : SECTIONS[s], icon: s === "domain" ? "domain" : "sec_" + s, bottom: s === "journal" }));
       for (const s of shell.sections) {
         const at = s.after ? list.findIndex(x => x.id === s.after) : -1;
         const it = { id: s.id, label: s.label, icon: s.icon, off: s.off };
@@ -605,7 +674,7 @@
       }
       return list;
     }
-    const railOn = () => LAYOUT_OF[st.section] || st.section;
+    const railOn = () => sectionList().some(s => s.id === st.section) ? st.section : LAYOUT_OF[st.section] || st.section;
     function goSection(id) {
       if (id === "units") { st.section = keep("pc.layout") === "servers" ? "servers" : "units"; } else st.section = id;
       st.sel = null; paintRail(); paintAside(); paintMain(); if (st.section === "access") loadAccess();
@@ -632,8 +701,9 @@
     }
     function paintAside() {
       const el = $(".pc-side"), on = railOn();
-      const ws = $(".pc-ws"); ws.classList.toggle("one", on !== "units" && on !== "access");
-      if (on !== "units" && on !== "access") { el.innerHTML = ""; return; }
+      const tree = on === "units" || on === "access" || on === "domain";
+      const ws = $(".pc-ws"); ws.classList.toggle("one", !tree);
+      if (!tree) { el.innerHTML = ""; return; }
       const cur = layouts().find(l => l.id === (st.section === "servers" || st.section === "domain" ? "servers" : "units"));
       el.innerHTML = (on === "units" ? `<div class="ph"><button type="button" class="ph-sel pc-layout${layoutPop ? " on" : ""}" aria-haspopup="listbox" aria-expanded="${layoutPop}" title="${h(cur.hint)}">${ic(cur.icon)}<span class="ph-nm">${h(cur.label)}</span><span class="ph-cnt">${cur.n()}</span><span class="ph-chev" aria-hidden="true">▾</span></button>
           <div class="sq ph-sq"><span class="sq-lead" aria-hidden="true">${IC.funnel}</span><input class="pc-q" placeholder="${h((st.subs[0] && (display(st.subs[0]).tree || {}).filter) || W.filterPh)}" value="${h(st.q)}" autocomplete="off"><button type="button" class="sq-clear pc-qx${st.q ? "" : " hide"}">✕</button></div>
@@ -830,7 +900,7 @@
     function memberRows(depth, parent) {
       const v = st.dom; if (!v) return "";
       const via = (v.topology || {}).via || {}, names = new Set((v.members || []).map(m => m.name)), q = st.q.trim().toLowerCase();
-      return (v.members || []).filter(m => !m.holder && (parent ? via[m.name] === parent : !via[m.name] || !names.has(via[m.name]))).map(m => {
+      return (v.members || []).filter(m => (domainOnly || !m.holder) && (parent ? via[m.name] === parent : !via[m.name] || !names.has(via[m.name]))).map(m => {
         const ref = "member:" + m.name, extra = nodesOf("member", ref, m), stand = extra.find(x => x.replaces);
         const before = extra.filter(x => !x.replaces && !x.after), after = extra.filter(x => !x.replaces && x.after);
         const behind = memberRows(depth + 1, m.name);
@@ -839,7 +909,8 @@
         if (filtering() && !m.name.toLowerCase().includes(q) && !rows) return "";
         const has = !!rows || before.length + after.length > 0 || !!behind;
         const open = has && (st.open.has(ref) || filtering()), d = decorOf(ref);
-        return nrow({ ref, depth, iconHtml: d.iconHtml || ic("server"), name: m.name, tags: d.tags, has, open, off: m.state !== "ok", cls: "srv" }) + (open ? rows : "");
+        const n = domainOnly ? Object.values(v.units || {}).reduce((k, l) => k + (l || []).filter(u => u.cluster === m.name).length, 0) : undefined;
+        return nrow({ ref, depth, iconHtml: d.iconHtml || ic("server"), name: m.name, tags: d.tags + (m.holder && domainOnly ? tagHtml(W.holder) : ""), cnt: n, has, open, off: !m.holder && m.state !== "ok", cls: "srv" }) + (open ? rows : "");
       }).join("");
     }
     function paintTree() {
@@ -860,7 +931,7 @@
           // the domain is the root: this cluster's servers, the other members, the shared places, the unplaced
           const open = !st.shut.has("domain") || filtering();
           const kids = serverRows(1) + memberRows(1) + extraRows(nodesOf("servers"), 1) + unplacedRow(1);
-          html = nrow({ ref: "domain", depth: 0, icon: "domain", name: cap(W.domainWord || W.domain), tags: tagHtml(`${Object.keys(st.servers).length + (v.members || []).filter(m => !m.holder).length} ${W.srvShort}`), has: true, open, off: v.complete === false, cls: "srv" }) + (open ? kids : "");
+          html = nrow({ ref: "domain", depth: 0, icon: "domain", name: cap(W.domainWord || W.domain), tags: tagHtml(`${Object.keys(st.servers).length + (v.members || []).filter(m => domainOnly || !m.holder).length} ${W.srvShort}`), has: true, open, off: v.complete === false, cls: "srv" }) + (open ? kids : "");
         } else html = serverRows(0) + extraRows(nodesOf("servers"), 0) + unplacedRow(0);
       } else if (st.section === "access") {
         const a = st.acc;
@@ -932,7 +1003,7 @@
     // as nav.pc-tabs; dressing moves them into the head. Its h2 sections become cards (.card: .ch over .cb), now
     // and whenever a part of it is drawn again.
     function crumbsOf(ref) {
-      const r = String(ref), srv = [[W.byServers, "layout:servers"]].concat(st.dom ? [[cap(W.domainWord || W.domain), "domain"]] : []);
+      const r = String(ref), srv = (domainOnly ? [] : [[W.byServers, "layout:servers"]]).concat(st.dom ? [[cap(W.domainWord || W.domain), "domain"]] : []);
       const u = parseUnit(r);
       if (u) {
         const a = aboutOf(u.sub);
@@ -949,7 +1020,7 @@
         return parts.slice(0, -1).map((seg, i) => [seg, "group:" + m[1] + "/" + m[2] + "/" + parts.slice(0, i + 1).join(sep || "")]);
       }
       if (r.startsWith("server:") || r.startsWith("member:") || r === "unplaced") return srv;
-      if (r === "domain") return [[W.byServers, "layout:servers"]];
+      if (r === "domain") return domainOnly ? [] : [[W.byServers, "layout:servers"]];
       if (r.startsWith("worker:")) { const n = Object.keys(st.servers).find(k => (st.servers[k].workers || []).some(w => w.worker === r.slice(7))); return n ? srv.concat([[n, "server:" + n]]) : srv; }
       if (/^(person|grants):/.test(r)) return [[cap(W.access), "section:access"]];
       return null;
@@ -1029,7 +1100,7 @@
       return !!((shell.cards || {})[kind] || shell.sections.some(s => s.id === st.section) || ((shell.tabs[kind] || []).some(t => t.id === st.tab[kind])));
     }
     function refreshMain() {
-      const el = $(".pc-main"); if (!el || !st.sel) return;
+      const el = $(".pc-main"); if (!el || (!st.sel && !domainOnly)) return;
       const a = document.activeElement;
       if (a && el.contains(a) && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;
       if ([...el.querySelectorAll("input,select,textarea")].filter(x => !x.readOnly && !x.disabled && x.type !== "hidden").some(x => x.dataset.orig !== undefined ? x.value !== x.dataset.orig : (x.type !== "checkbox" && x.type !== "search" && x.tagName !== "SELECT" && x.value !== ""))) return;
@@ -1056,6 +1127,7 @@
             if (v) accDo("POST", "/domain/users", { name: v.name.trim(), password: v.password });
           };
         }
+        if (domainOnly) return paintDomain(el, "domain");
         if (st.section === "units" || st.section === "servers" || st.section === "domain") return paintRoot(el);
         return;
       }
@@ -1640,16 +1712,20 @@
     function paintDomain(el, ref) {
       const v = st.dom, admin = C.may("admin", "domain");
       if (!v) { el.innerHTML = `<h1>${h(cap(W.domainWord))}</h1>${card(h(cap(W.domainWord)), `<p class="sub">${h(W.noDomain)}</p>`)}`; return; }
+      if (v.term && v.term.deposed) { el.innerHTML = `<h1>${h(cap(W.domainWord))}</h1><div class="pc-general">${termCard(v)}</div>`; wireTerm(el, v); return; }
+      if (!domainOnly && st.domShared == null) loadDomShared().then(() => { if (st.sel === "domain") refreshMain(); });
       const list = v.member_list || { rev: 0 }, ms = v.members || [];
       const ks = v.knocking || [], a = st.alarms;
       const skip = ["t", "kind", "subsystem", "unit", "of", "member", "from_history", "class", "ongoing", "last_report", "alive_at", "alive_via"];
       el.innerHTML = `<h1>${h(cap(W.domainWord))}</h1><p class="sub pc-hdsub">${h(W.holderIs)} ${h(v.holder || "—")}; ${h(W.viewAge)} ${v.age != null ? Math.round(v.age) + " " + h(W.n.s) + " " + h(W.ago) : "—"}</p>
-        <div class="pc-general">${domAgeNote()}
+        <div class="pc-general">${domAgeNote()}${termCard(v)}
         ${ks.length ? card(h(cap(W.knocking)), ks.map((k, i) => `<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(k.name)}<small>${h(W.knockTimes.replace("{n}", k.times).replace("{t}", fmt(k.last)))}${k.fingerprint ? " · " + h(W.fingerprint) + " <b>" + h(k.fingerprint) + "</b>" : ""}</small></span>${admin ? `<button type="button" class="btn s" data-admit="${i}">${h(W.admit)}</button>` : ""}</div>`).join("") + `<p class="sub">${h(W.knockNote)}</p>`) : ""}
         ${a ? card(`${h(cap(W.alarms))} <small class="sub" style="font-weight:400">· ${h(W.alarmsDay)}</small>`, (a.complete ? "" : `<p class="sub" style="color:var(--rd)">${h(a.sentence || "")}</p>`)
           + ((a.events || []).slice(0, 50).map(e => `<div class="it" style="cursor:default"><span>${ic("bell")}</span><span><b title="${h(e.kind)}">${h(kindWord(e))}</b> · ${h(e.of || e.unit || "")}<small>${h(fmt(e.t))} · ${h(e.member)}${eventNote(e) ? " · " + h(eventNote(e)) : ""} · ${h(Object.entries(e).filter(([k]) => !skip.includes(k)).map(([k, x]) => k + "=" + (typeof x === "object" ? JSON.stringify(x) : x)).join(" "))}</small></span></div>`).join("") || `<p class="sub">${h(cap(W.noAlarms))}.</p>`)) : ""}
         ${card(`${h(cap(W.members))} <small class="sub" style="font-weight:400">· ${h(list.rev ? W.byList + " " + list.rev : W.byConfig)}</small>`, ms.map(m => `<div class="it" data-ref="${m.holder ? "" : "member:" + h(m.name)}"><span>${decorOf("member:" + m.name).iconHtml || ic("server")}</span><span>${h(m.name)}${m.holder ? " · " + h(W.holderHere) : ""} ${topoTags(m.name)}<small>${h(m.holder ? W.readHere : m.state === "never" ? W.never : W.lastPub + " " + Math.round(m.age || 0) + " " + W.n.s + " " + W.ago)}</small></span>${memberBadge(m)}</div>`).join(""))}
+        ${trustCard(v)}${unitsCard(v)}<div class="pc-shared">${sharedCard()}</div>${editsCard(v)}
         <div class="pc-topo"></div></div>`;
+      wireTerm(el, v); wireUnits(el); wireShared(el.querySelector(".pc-shared"));
       el.querySelectorAll(".it[data-ref]").forEach(n => { if (n.dataset.ref) n.onclick = () => go(n.dataset.ref); });
       el.querySelectorAll("[data-admit]").forEach(b2 => { b2.onclick = async () => {
         const k = v.knocking[Number(b2.dataset.admit)];
@@ -1658,8 +1734,125 @@
       }; });
       paintTopo(el.querySelector(".pc-topo"));
       pageBlocks("domain", el.querySelector(".pc-general"), ref, v);
-      if (v.url) el.querySelector(".pc-general").insertAdjacentHTML("beforeend", card(h(W.domainPage), `<p class="sub">${h(W.domainPageNote)} <a href="${h(v.url)}" target="_blank" rel="noopener">${h(v.url)}</a></p>`));
+      if (v.url && !domainOnly) el.querySelector(".pc-general").insertAdjacentHTML("beforeend", card(h(W.domainPage), `<p class="sub">${h(W.domainPageNote)} <a href="${h(v.url)}" target="_blank" rel="noopener">${h(v.url)}</a></p>`));
       tabsOf("domain", el, ref, v, { general: W.overview, extra: [{ id: "access", label: W.accessTab, render: box => domAccess(box) }, { id: "keys", label: cap(W.keys), render: box => domKeys(box) }] });
+    }
+    // The holder: where the domain is held and at what term, who keeps its backup, handing it over. A deposed holder
+    // says who holds it now and what it alone held after its last copy — each applied again only by a person.
+    function termCard(v) {
+      const t = v.term; if (!t) return "";
+      const admin = C.may("admin", "domain");
+      if (t.deposed) {
+        const by = t.deposed_by || {}, left = t.stranded || [];
+        const what = x => { try { const e = JSON.parse(x.value); return e.what || x.value; } catch (e) { return x.value; } };
+        return `<div class="nt err">${h(W.deposedNote.replace("{h}", by.holder || "?").replace("{t}", by.term ?? "?"))} ${by.url ? `<a href="${h(by.url)}" target="_blank" rel="noopener">${h(by.url)}</a>` : ""}</div>`
+          + (left.length ? card(h(W.strandedHead.replace("{t}", by.term ?? "?")), `<p class="sub">${h(W.strandedNote)}</p>` + left.map((x, i) => {
+            const edit = String(x.path).startsWith("domain/pending/");
+            return `<div class="it" style="cursor:default"><span>${ic("bolt")}</span><span>${h(String(x.path).replace("domain/pending/", W.editFor + " "))}<small>${h(what(x))}</small></span>${edit && admin ? `<button type="button" class="btn s" data-reapply="${i}">${h(W.reapplyOn.replace("{h}", by.holder || "?"))}</button>` : `<span class="sub">${h(W.redoOn.replace("{h}", by.holder || "?"))}</span>`}</div>`; }).join(""))
+            : `<p class="sub">${h(W.nothingStranded.replace("{t}", by.term ?? "?"))}</p>`);
+      }
+      const r = t.record || {}, to = t.can_hand_to || [];
+      return card(h(W.domTerm), `<div class="g">${fldRo(W.heldOn, r.holder || "—")}${fldRo(cap(W.term), t.term ?? "—")}${fldRo(cap(W.backupAtW), (t.backup_holders || []).join(", ") || W.noBackupYet)}</div>
+        ${r.restored_from ? `<p class="sub">${h(W.restoredFrom.replace("{r}", r.restored_rev ?? "?").replace("{f}", r.restored_from))}</p>` : ""}
+        ${to.length && admin ? `<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn s" data-a="handover">${h(W.handOver)}</button></div>` : ""}`);
+    }
+    function wireTerm(el, v) {
+      const t = v.term || {}, by = t.deposed_by || {};
+      el.querySelectorAll("[data-reapply]").forEach(b => { b.onclick = async () => {
+        const x = (t.stranded || [])[Number(b.dataset.reapply)]; if (!x) return;
+        try { await C.api("POST", "/domain/stranded/apply", { path: x.path, key: x.key }); C.toast(W.reapplied + " (" + (by.holder || "") + ")"); } catch (e) { C.toast(W.refused + ": " + e.message); }
+      }; });
+      const hb = el.querySelector('[data-a="handover"]');
+      if (hb) hb.onclick = async () => {
+        const c = await C.dialog(W.handOver, [{ name: "to", label: W.handTo, options: (t.can_hand_to || []).map(n => [n, n]), help: W.handNote }], W.handBtn);
+        if (!c || !c.to) return;
+        C.toast(W.handing.replace("{t}", c.to));
+        try { const d = await C.api("POST", "/domain/handover", { to: c.to }); C.toast((d && d.sentence) || W.handed); await load(); paintMain(); } catch (e) { C.toast(W.notHanded + ": " + e.message); }
+      };
+    }
+    // The domain's trust as it stands (fingerprints and revisions only): a member whose revision is below the set's,
+    // or who presents another key than the one admitted, has not finished a rotation.
+    function trustCard(v) {
+      const t = v.trust; if (!t) return "";
+      if (!t.installed) return card(h(W.trustW), `<p class="sub">${h(W.notInstalled)}</p>`);
+      const ms = Object.entries(t.members || {}).sort(([a], [b]) => a.localeCompare(b));
+      const behind = m => (m.keys_rev != null && m.keys_rev < t.rev) || (!!m.presented_key && m.presented_key !== m.admitted_key);
+      return card(h(W.trustW), `<div class="g">${fldRo(cap(W.domainWord), t.domain || "—")}${fldRo(W.keysRev, t.rev ?? "—")}${fldRo(W.rootFp, t.root || "—")}${fldRo(W.currentKey, t.current || "—")}
+          ${fldRo(W.issuingW, (t.issuing || []).length + ((t.revoked_issuing || []).length ? " · " + W.revokedW + " " + (t.revoked_issuing || []).length : ""))}${fldRo(W.holderKeys, t.holder_has_keys ? W.yesW : W.noW)}</div>
+        <div style="margin-top:10px">${ms.map(([n, m]) => `<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(n)}<small>${h(W.admittedKey)} ${h(m.admitted_key || "—")} · ${h(W.presentedKey)} ${h(m.presented_key || "—")} · ${h(W.holdsRev)} ${h(m.keys_rev ?? "—")}</small></span>${behind(m) ? `<span class="bd off">${h(W.rotating)}</span>` : ""}</div>`).join("")}</div>
+        ${ms.some(([, m]) => behind(m)) ? `<p class="sub">${h(W.rotationNote)}</p>` : ""}`);
+    }
+    // The units each subsystem has on the domain (the view's units, by the specs' domain.ref and domain.view): the
+    // ref, the cluster, where it runs, its state; a yes/no field the spec's domain.edit names is switched here.
+    const U_STATE = () => ({ live: [W.uLive, ""], stale: [W.uStale, "wait"], configured: [W.uConfigured, "wait"], silent: [W.uSilent, "off"] });
+    function unitsCard(v) {
+      const all = Object.entries(v.units || {}); if (!all.length && !v.units) return "";
+      const S = U_STATE();
+      return card(h(W.domUnits), `<p class="sub">${h(W.domUnitsNote)}</p>` + (all.map(([name, list]) => {
+        const sub = st.subs.find(x => x.name === name), title = sub ? cap(unitWord(sub, true)) : name;
+        const edit = sub ? (((sub.spec.domain || {}).edit) || []).filter(f => ((sub.spec.fields || []).find(x => x.name === f) || {}).type === "bool") : [];
+        return `<div class="pc-g" style="margin-top:10px">${h(title)} <span class="sub">${(list || []).length}</span></div>` + ((list || []).map(u => {
+          const [w, c] = S[u.state] || [u.state || "—", ""], vw = u.view || {};
+          const vals = Object.entries(vw).map(([k, x]) => (sub ? fieldTitle(sub, k) : k) + ": " + (typeof x === "object" ? JSON.stringify(x) : x)).join(" · ");
+          const may = sub && C.may("edit", "unit:" + name + "/" + u.ref);
+          const btns = edit.filter(f => typeof vw[f] === "boolean" && may && u.ref).map(f => `<button type="button" class="btn s" data-uedit="${h(JSON.stringify([name, u.ref, f, !vw[f]]))}">${h(vw[f] ? W.turnOff : W.turnOn)}${edit.length > 1 ? " · " + h(fieldTitle(sub, f)) : ""}</button>`).join("");
+          return `<div class="it" style="cursor:default"><span>${ic("x")}</span><span>${h(u.ref || "—")}<small>${h(u.cluster)}${u.worker ? " · " + h(u.worker) : ""}${u.server ? " · " + h(u.server) : ""}${u.phase ? " · " + h(u.phase) : ""}${u.age != null ? " · " + h(Math.round(u.age)) + " " + h(W.n.s) : ""}${vals ? " · " + h(vals) : ""}</small></span><span style="display:flex;gap:6px;align-items:center">${btns}<span class="bd${c ? " " + c : ""}">${h(w)}</span></span></div>`;
+        }).join("") || `<p class="sub">${h(W.none)}</p>`);
+      }).join("") || `<p class="sub">${h(W.noUnitsDecl)}</p>`));
+    }
+    function wireUnits(el) {
+      el.querySelectorAll("[data-uedit]").forEach(b => { b.onclick = async () => {
+        const [name, ref, f, to] = JSON.parse(b.dataset.uedit), sub = st.subs.find(x => x.name === name); if (!sub) return;
+        try { await C.api("PUT", "/domain/" + encodeURIComponent(name) + "/" + encodeURIComponent(sub.spec.rows) + "/" + encodeURIComponent(ref), { [f]: to }); C.toast(W.saved); await load(); } catch (e) { C.toast(W.refused + ": " + e.message); }
+      }; });
+    }
+    // The domain's shared settings: the fields each spec shares with the domain (declared: domain.shared with their
+    // types) — a list one value a line, a number, a yes/no; empty takes the domain's value away (null).
+    function sharedCard() {
+      const sh = st.domShared; if (!sh) return "";
+      if (sh.error) return card(h(W.sharedW), `<p class="sub">${h(W.noShared)}</p>`);
+      const d = sh.doc || {}, dl = sh.delivery || {}, dec = sh.declared || {}, admin = C.may("admin", "domain");
+      const bad = (dl.silent || []).length || Object.keys(dl.refused || {}).length || Object.keys(dl.behind || {}).length;
+      const input = (sub, f) => {
+        const v = ((d.shared || {})[sub] || {})[f.name], nm = h(sub + "/" + f.name), dis = admin ? "" : " disabled";
+        if (f.type === "list") { const t = Array.isArray(v) ? v.join("\n") : ""; return `<textarea rows="4" data-sh="${nm}" data-orig="${h(t)}"${dis}>${h(t)}</textarea>`; }
+        if (f.type === "bool") { const t = v == null ? "" : String(v); return `<select data-sh="${nm}" data-orig="${h(t)}"${dis}>${[["", W.notSetW], ["true", W.yesW], ["false", W.noW]].map(([x, l]) => `<option value="${x}"${t === x ? " selected" : ""}>${h(l)}</option>`).join("")}</select>`; }
+        const t = v == null ? "" : String(v); return `<input ${f.type === "int" || f.type === "float" ? 'type="number"' : 'type="text"'} data-sh="${nm}" data-orig="${h(t)}" value="${h(t)}"${dis}>`;
+      };
+      return card(h(W.sharedW), `<p class="sub">${h(W.sharedNote)}</p><p class="sub">${d.rev ? h(W.sharedRev.replace("{r}", d.rev).replace("{t}", d.term ?? "—").replace("{a}", fmt(d.at))) + (d.by ? " · " + h(d.by) : "") : h(W.neverPub)}</p>
+        ${d.rev ? `<div class="nt${bad ? " err" : ""}" style="margin-top:8px">${h(dl.sentence || "")}${Object.entries(dl.refused || {}).map(([m, w]) => `<br>${h(m)}: ${h(w)}`).join("")}</div>` : ""}
+        ${Object.entries(dec).map(([sub, fields]) => { const s2 = st.subs.find(x => x.name === sub);
+          return `<div class="pc-g" style="margin-top:10px">${h(s2 ? cap(display(s2).section || s2.name) : sub)}</div><div class="g">${(fields || []).map(f => `<div><label>${h(s2 ? fieldTitle(s2, f.name) : f.name)}${f.type === "list" ? " — " + h(W.onePerLine) : ""}</label>${input(sub, f)}</div>`).join("")}</div>`; }).join("") || `<p class="sub">${h(W.noSharedDecl)}</p>`}
+        ${st.sharedErr ? `<div class="nt err" style="margin-top:8px">${h(st.sharedErr)}</div>` : ""}
+        ${admin && Object.keys(dec).length ? `<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn pri s" data-a="publish">${h(W.publishW)}</button></div>` : ""}`);
+    }
+    function wireShared(box) {
+      const b = box && box.querySelector('[data-a="publish"]'); if (!b) return;
+      b.onclick = async () => {
+        const sh = st.domShared || {}, dec = sh.declared || {}, shared = {};
+        for (const [sub, fields] of Object.entries(dec)) {
+          shared[sub] = {};
+          for (const f of fields || []) {
+            const x = [...box.querySelectorAll("[data-sh]")].find(y => y.dataset.sh === sub + "/" + f.name); if (!x) continue;
+            const raw = x.value, lines = raw.split("\n").map(y => y.trim()).filter(Boolean);
+            shared[sub][f.name] = f.type === "list" ? (lines.length ? lines : null) : f.type === "bool" ? (raw === "" ? null : raw === "true")
+              : f.type === "int" || f.type === "float" ? (raw === "" ? null : Number(raw)) : (raw === "" ? null : raw);
+          }
+        }
+        try { const d = await C.api("PUT", "/domain/shared", { base_rev: Number((sh.doc || {}).rev) || 0, shared }); st.sharedErr = ""; C.toast(W.publishedRev.replace("{r}", d && d.rev)); }
+        catch (e) { st.sharedErr = e.message; }
+        box.querySelectorAll("[data-sh]").forEach(x => { x.dataset.orig = x.value; });
+        await loadDomShared(); box.innerHTML = sharedCard(); wireShared(box);
+      };
+    }
+    // The edits the domain keeps for its clusters: waiting for the cluster's next publication, or applied there.
+    function editsCard(v) {
+      if (!v.pending && !v.outcomes) return "";
+      const rows = [];
+      for (const [c, list] of Object.entries(v.pending || {})) for (const e of list || []) rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)} · ${h(e.what || e.id || "")}<small>${h(W.takenAt)} ${h(fmt(e.at))}</small></span><span class="bd wait">${h(W.waitsPub)}</span></div>`);
+      for (const [c, list] of Object.entries(v.outcomes || {})) for (const o of list || []) { const ok = o.status >= 200 && o.status < 300;
+        rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)} · ${h(o.what || o.id || "")}<small>${h(W.appliedAt)} ${h(fmt(o.at))}${o.error ? " · " + h(o.error) : ""}</small></span><span class="bd${ok ? "" : " off"}">${h(ok ? W.appliedW : W.refusedStatus.replace("{s}", o.status))}</span></div>`); }
+      return card(h(W.editsW), `<p class="sub">${h(W.editsNote)}</p>` + (rows.join("") || `<p class="sub">${h(W.noEdits)}</p>`));
     }
     // The domain's access at a glance: its people and the clusters they have grants on; each opens in «Rights».
     async function domAccess(box) {
@@ -1667,7 +1860,7 @@
       const a = st.acc; if (!a) { box.innerHTML = card(h(W.refused), ""); return; }
       box.innerHTML = card(`${h(cap(W.people))} <small class="sub" style="font-weight:400">· ${a.users.length}</small>`, a.users.map(u => `<div class="it" data-ref="person:${h(u.name)}"><span>${ic("user")}</span><span>${h(u.name)}</span>${u.disabled ? `<span class="bd off">${h(W.disabledW)}</span>` : ""}</div>`).join(""))
         + card(h(cap(W.clusters)), accClusters().map(c => `<div class="it" data-ref="grants:${h(c)}"><span>${ic(c === "domain" ? "domain" : "server")}</span><span>${h(c === "domain" ? W.domainWord : c)}</span></div>`).join(""));
-      box.querySelectorAll("[data-ref]").forEach(n => { n.onclick = () => { st.section = "access"; paintRail(); paintAside(); C.select(n.dataset.ref); }; });
+      box.querySelectorAll("[data-ref]").forEach(n => { n.onclick = () => { if (sectionList().some(s => s.id === "access")) { st.section = "access"; paintRail(); paintAside(); } C.select(n.dataset.ref); }; });
     }
     // The domain's keys: what the holder keeps under domain/, by family — the module names the platform's; a
     // subsystem's are its spec's part of the domain (domain.keys, their words display.keys); a key no family claims
@@ -1871,7 +2064,7 @@
     async function loadSpecs() {
       const subs = [];
       const rootSpec = await getJSON("/spec");
-      subs.push({ name: rootSpec.name, base: "", spec: rootSpec });
+      if (rootSpec && rootSpec.rows) subs.push({ name: rootSpec.name, base: "", spec: rootSpec });   // the holder has no root (§10a)
       try {
         const m = await getJSON("/mounts");
         for (const [n, spec] of Object.entries(m.mounts || {})) if (spec && spec.rows) subs.push({ name: spec.name || n, base: "/" + n, spec });
@@ -1880,6 +2073,7 @@
       st.subs = Array.isArray(want) ? subs.filter(s => want.includes(s.name)) : subs;
     }
     async function load() {
+      if (domainOnly) return loadHolder();
       for (const sub of st.subs) {
         try {
           const d = await getJSON(sub.base + "/" + sub.spec.rows);
@@ -1906,20 +2100,38 @@
       try { st.schema = await getJSON("/schema"); } catch (e) { st.schema = null; }
       try { st.dom = await getJSON("/domain"); } catch (e) { st.dom = null; }
       if (st.dom) { try { st.alarms = await getJSON("/domain/alarms"); } catch (e) { st.alarms = null; } }
+      await loadDomShared();
       try { st.held = await getJSON("/domain/held"); } catch (e) { st.held = null; }
       await loadGauges();
       paintHeader();
       // the same data is the same picture: an idle poll touches neither the tree nor the card (no flicker, the scroll,
       // the hover, the selection stay); a card or tab of the page's own is its data's, refreshed as it says
-      const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st.unplaceable, st.schema, st.loadErr, st.shared]);   // [course leads] st.shared
+      const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st.unplaceable, st.schema, st.loadErr, st.shared, st.domShared]);   // [course leads] st.shared
       const same = fp === st.fp; st.fp = fp;
       if (!same) { const t = $(".pc-tree"), top = t ? t.scrollTop : 0; paintTree(); if (t) t.scrollTop = top; }
       if (!same || pageOwnsCard()) refreshMain();
       emit("refresh", { units: st.units, servers: st.servers, domain: st.dom });
     }
 
+    // At the holder: the domain's view, its alarms, its shared settings — nothing of a cluster's.
+    async function loadHolder() {
+      try { st.dom = await getJSON("/domain"); st.loadErr = null; } catch (e) { st.dom = null; st.loadErr = e.message; }
+      if (st.dom) { try { st.alarms = await getJSON("/domain/alarms"); } catch (e) { st.alarms = null; } }
+      await loadDomShared();
+      paintHeader();
+      const fp = JSON.stringify([st.dom, st.alarms, st.domShared, st.loadErr]), same = fp === st.fp; st.fp = fp;
+      if (!same) { const t = $(".pc-tree"), top = t ? t.scrollTop : 0; paintTree(); if (t) t.scrollTop = top; refreshMain(); }
+      emit("refresh", { domain: st.dom });
+    }
+    // The shared settings of the domain (GET /domain/shared: {doc, delivery, declared}) — read while the domain's card
+    // is what a person looks at.
+    async function loadDomShared() {
+      if (!st.dom || (!domainOnly && st.sel !== "domain")) { st.domShared = null; return; }
+      try { st.domShared = await getJSON("/domain/shared"); } catch (e) { st.domShared = { error: e.message }; }
+    }
+
     C.ready = (async () => {
-      if (keep("pc.layout") === "servers") st.section = "servers";
+      if (keep("pc.layout") === "servers" && !domainOnly) st.section = "servers";
       paintRail();
       await loadSession();
       try { await loadSpecs(); } catch (e) { st.loadErr = e.message; }

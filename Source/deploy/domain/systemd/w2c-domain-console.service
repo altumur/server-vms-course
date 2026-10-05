@@ -1,30 +1,41 @@
 # /etc/systemd/system/w2c-domain-console.service — the domain's console, on the server that holds the domain
-# (`w2c-run.sh domainconsole` → `python3 -m w2cplatform.domain.console`): the read view of every subsystem of the
-# directory (/api/vms/cameras), the tables the specs serve (/api/vms/crossings), members, topology, the emergency
-# passwords (PUT /api/break-glass/<cluster>). Its federation is `CLUSTERS` (w2c.env): a bare name — this server's own
-# cluster — opens the store by THIS unit's socket.
+# (`w2c-run.sh domainconsole` → `python3 -m w2cplatform.domain.console`): the domain's door for people — the read view
+# of every subsystem of the directory (/domain/vms/cameras), the tables the specs serve (/domain/vms/crossings), the
+# view the signer's pass leaves, members, topology, grants, alarms. Its federation is `CLUSTERS` (w2c.env): a bare name —
+# this server's own cluster — opens the store by THIS unit's socket.
+#
+# NO KEY (ADR-0032). The domain's keys and the people's hashes are the signer's (`w2c-domain.service`): this unit loads
+# no ring (no `LoadCredential=`, no `SECRETS_KEY`), joins neither the ring's group nor the tokens socket's, opens its
+# store by a role that reads no `domain/signer*` (`domainconsole`, `w2cplatform/domain/rights.py`), and the key file, the
+# signer's own socket and the tokens socket are not there for it at all (`InaccessiblePaths=`). What needs a key — the
+# shared settings, a handover, the people — it hands to the signer's TCP door as a process, the person's token with it.
+# Its journal is its own lines (`domainconsole`), in the platform's events tree.
 [Unit]
-Description=w2c domain console — the domain's door for people and tools
-After=network-online.target configstore.service w2c-resource.service
+Description=w2c domain console — the domain's door for people and tools (no keys)
+After=network-online.target configstore.service w2c-resource.service w2c-domain.service
 Wants=network-online.target
 
 [Service]
 User=w2c
 Group=w2c
-SupplementaryGroups=w2c-domain w2c-store w2c-secrets
-Environment=PLATFORM_STORE=configstore:///run/configstore/domain.sock
+SupplementaryGroups=w2c-domainconsole w2c-store w2c-events
+Environment=PLATFORM_STORE=configstore:///run/configstore/domainconsole.sock
 Environment=CONSOLE_PORT=8444
 Environment=DOMAIN_CONSOLE_UNIX=/run/w2c-domain-console/console.sock
 Environment=CONSOLE_MONITORS=127.0.0.1
+# The signer's door on this box, where the operations that need the domain's keys are performed.
+Environment=SIGNER_HOST=127.0.0.1
+Environment=SIGNER_PORT=8445
 RuntimeDirectory=w2c-domain-console
 RuntimeDirectoryMode=0700
-LoadCredential=platform.key:/etc/w2c/secrets/platform.key
-Environment=SECRETS_KEY=%d/platform.key
+InaccessiblePaths=-/etc/w2c/secrets -/data/platform/etc/secrets -/run/w2c-domain -/run/w2c-signer
 # /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says (the cluster's units' rule) —
-# the site's lines (CLUSTER, DOMAIN_URL, CLUSTERS, OBJECTS…) are there, `domain.env.example`; the sockets are the unit's.
+# the site's lines (CLUSTER, DOMAIN_URL, CLUSTERS, OBJECTS, RESOURCE_ROOT…) are there, `domain.env.example`; the sockets
+# are the unit's.
 UMask=0007
 ExecStart=/opt/w2c/bin/w2c-run.sh domainconsole
-ReadWritePaths=/data/platform/objects
+# It writes its journal and nothing else of the box: the objects (the view, the members' reports) it reads.
+ReadWritePaths=/data/platform/events
 Restart=always
 RestartSec=2
 TimeoutStopSec=20

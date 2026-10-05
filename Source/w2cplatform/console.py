@@ -24,7 +24,10 @@ show them. So the console is one class, run from the same spec:
     GET  /domain/shared/<sub>[?unit=<id>]   the fields a spec shares with the domain (`domain.shared`), resolved from
                                  this cluster's verified copy of the shared document: value and where it came from, the
                                  groups the domain offers for the field the page groups by; nothing undeclared
-    GET/PUT /policy              the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
+    GET  /domain/keys            every key under `domain/` in this cluster's stores, secrets masked (`domain.keysview`)
+    …    /domain/<any other>     handed to the domain holder's door at the same path, unrewritten (`Mount.domain_forward`:
+                                 the view's `url`), with the person's token and the edit's Idempotency-Key
+    GET/PUT /policy             the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
     GET/PUT/DELETE /servers/<server>/labels   what a server reaches, the administrator's word over its node's (<sub>/servers/<server>)
     GET  /events?from&to&unit&kind&subsystem   the resources' event indexes, merged (MergedIndex), fenced by every subsystem's epochs
     GET  /metrics                <name>_workers_live · <name>_worker_headroom{worker,server} · <name>_worker_load ·
@@ -258,6 +261,33 @@ def send_file(handler, path: str, content_type: str, headers=()) -> dict:
 # page says "the domain is silent" rather than showing a short list as if it were current (Lesson 1's rule,
 # applied to the console itself). Read only: edits go through the domain, the door of Lesson 3.
 DOMAIN_VIEW = "domain/view"
+
+
+# `GET /spec`: a spec as the page reads it — of the spec alone, so the domain holder's door, which runs no controller,
+# says the same of every spec it loaded (`/mounts` there, the contract's §10a).
+def describe(s) -> dict:
+    return {"name": s.name, "rows": s.rows, "id": s.id,
+            "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
+                        **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
+                        **({"fixed": True} if f.fixed else {}),
+                        **({"bound_to": list(f.bound_to)} if f.bound_to else {}),   # a secret asked anew when they change
+                        **({"enum": list(f.enum)} if f.enum else {})} for f in s.fields.values()],
+            **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
+            # the page's words and what it shows under a server, as the spec wrote them; the gauges it reads on
+            # `/metrics` by name (the boundary's step 6; the product's keys)
+            **({"display": s.display} if s.display else {}),
+            **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
+            **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
+            **({"places": {"table": s.places["table"]}} if s.places else {}),   # `/where/<table>/<place>`
+            # its part of the domain, as the page reads it (the contract, §10a): the key families (`domain.keys`; their
+            # words are `display.keys`), the shared fields, the fields the holder lets into an edit, the view's fields
+            **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
+                                    for f in s.domain.keys], "shared": list(s.domain.shared),
+                           "edit": list(s.domain.edit), "view": list(s.domain.view)}}
+               if s.domain else {}),
+            "running_gauge": f"{s.name}_{s.running_gauge}" if s.running_gauge else None,
+            "workers_gauge": f"{s.name}_workers_live",
+            "metrics": {"prefix": s.name, "running": s.running_gauge or None}}
 
 
 def domain_view(objects, now: float, lost_after: float = 45.0) -> tuple[int, dict]:
@@ -1498,27 +1528,7 @@ class SpecConsole:
         return 200, door(s, SharedView(self.ctl.vars, self.ctl.objects, self.wall).document(), row)
 
     def describe(self) -> dict:
-        s = self.spec
-        return {"name": s.name, "rows": s.rows, "id": s.id,
-                "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
-                            **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
-                            **({"fixed": True} if f.fixed else {}),
-                            **({"bound_to": list(f.bound_to)} if f.bound_to else {}),   # a secret asked anew when they change
-                            **({"enum": list(f.enum)} if f.enum else {})} for f in s.fields.values()],
-                **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
-                # the page's words and what it shows under a server, as the spec wrote them; the gauges it reads on
-                # `/metrics` by name (the boundary's step 6; the product's keys)
-                **({"display": s.display} if s.display else {}),
-                **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
-                **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
-                **({"places": {"table": s.places["table"]}} if s.places else {}),   # `/where/<table>/<place>`
-                # the subsystem's key families of the domain (`domain.keys`; their words are `display.keys`)
-                **({"domain": {"keys": [{"id": f["id"], "keys": list(f["keys"]), **({"prefix": f["prefix"]} if f["prefix"] else {})}
-                                        for f in s.domain.keys], "shared": list(s.domain.shared)}}
-                   if s.domain and (s.domain.keys or s.domain.shared) else {}),
-                "running_gauge": f"{s.name}_{s.running_gauge}" if s.running_gauge else None,
-                "workers_gauge": f"{s.name}_workers_live",
-                "metrics": {"prefix": s.name, "running": s.running_gauge or None}}
+        return describe(self.spec)
 
     # -- the directory: where is unit N, in one scan of the assignments ---------------------------
     # `{worker: units}` from one scan of the assignments, cached for 5 s of monotonic time.
@@ -1527,6 +1537,7 @@ class SpecConsole:
         if now - self._scan[0] >= 5.0:
             self._scan = (now, {w: a.units for w, a in self.ctl.assignments().items()}); self.scans += 1
         return self._scan[1]
+
 
     # -- every subsystem's epochs, for the timeline's fence --------------------------------------
     # `{(subsystem, unit): epoch}` from every `<sub>/epoch/<unit>` row — the one scan of the WHOLE store the
@@ -2587,7 +2598,7 @@ class SpecConsole:
     # boundary's step 3):
     #
     #   GET     `{open, login_url, user?, until?, via?}` — whether this console asks at all (`open`: it does not), who
-    #           the caller is here, and the login door (`LOGIN_URL` is the domain's signer, its door `/login`; a console
+    #           the caller is here, and the login door (`LOGIN_URL` is the domain's signer, its door `/api/login`; a console
     #           issues no tokens and keeps no passwords, М12 Lesson 4)
     #   POST    `{token}` — checked exactly as the gate would check it, and set as a cookie the page's script cannot
     #           read (`access.session_cookie`), for as long as the token lives: `{user, until}`
@@ -2604,7 +2615,7 @@ class SpecConsole:
         except Denied as e:
             return h._send(e.status, {"detail": e.why, "error": "denied"})
         signer = os.environ.get("LOGIN_URL") or ""
-        login = signer.rstrip("/") + "/login" if signer else None
+        login = signer.rstrip("/") + "/api/login" if signer else None
         if method == "DELETE" and path == "/session":
             self.gate.close_glass(h.headers)
             h._extra_headers = (("Set-Cookie", session_cookie("", 0)), ("Set-Cookie", session_cookie("", 0).replace(COOKIE, GLASS_COOKIE, 1)))
@@ -3177,6 +3188,9 @@ class SpecConsole:
                 return h._send(*con.server_labels_route(h, "GET", path, q))
             if path == "/domain":
                 return h._send(*domain_view(ctl.objects, con.wall(), con.lost_after))
+            if path == "/domain/keys":                       # every `domain/` key in this cluster's stores, masked
+                from .domain.keysview import keys
+                return h._send(200, keys(ctl.vars, ctl.objects, con.wall()))
             if path.startswith("/domain/shared/"):
                 return h._send(*con.shared_route(path[len("/domain/shared/"):], q))
             if path == "/policy":
@@ -3570,6 +3584,51 @@ class Mount:
     # Returns the name to act under, or None when it has already answered.
     MOUNT_ROUTES = ("/mounts", "/drain", "/schema")
 
+    # THE DOMAIN'S ROUTES, HANDED ON AS THEY ARE (the contract of the console module, §10a: one set of paths,
+    # literally). `/domain/X` the console does not answer itself — its view, its keys, a spec's shared fields — goes to
+    # the domain holder's door at `/domain/X`, the path unrewritten: the address is the view's `url`, which only the
+    # cluster the domain runs in holds (`domain_view`); elsewhere 404, said so. The person's token, the edit's
+    # `Idempotency-Key` and `X-Operator: console` go with it, and the answer comes back as it came: the domain decides.
+    @staticmethod
+    def domain_local(method: str, path: str) -> bool:
+        return method == "GET" and (path in ("/domain", "/domain/keys") or path.startswith("/domain/shared/"))
+
+    def domain_forward(self, h, method: str, path: str, query: str) -> None:
+        import urllib.error
+        import urllib.request
+
+        from .access import token_of
+        st, view = domain_view(self.root.ctl.objects, self.root.wall(), self.root.lost_after)
+        url = str(view.get("url") or "") if st == 200 else ""
+        if not url:
+            return h._send(404, {"error": "no domain here", "detail": "this cluster is not the domain's, or the "
+                                                                       "domain has not run: its door is not known"})
+        body = b""
+        if method in ("POST", "PUT", "DELETE"):
+            if not read_body(h, 1 << 16):
+                return
+            body = h.rfile.read(int(h.headers.get("Content-Length") or 0))
+        headers = {"Content-Type": "application/json", "X-Operator": "console"}
+        token = token_of(h.headers)
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        if h.headers.get("Idempotency-Key"):
+            headers["Idempotency-Key"] = h.headers["Idempotency-Key"]
+        req = urllib.request.Request(url.rstrip("/") + path + (f"?{query}" if query else ""), data=body or None,
+                                     headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=90.0 if path == "/domain/handover" else 5.0) as r:
+                status, raw = r.status, r.read()
+        except urllib.error.HTTPError as e:
+            status, raw = e.code, e.read()
+        except (OSError, ValueError) as e:
+            return h._send(502, {"error": "the domain did not answer", "detail": str(e)})
+        try:
+            answer = json.loads(raw or b"{}")
+        except PARSE_ERRORS:
+            answer = {"detail": raw[:512].decode("utf-8", "replace")}
+        h._send(status, answer)
+
     def admit(self, h, method: str) -> str | None:
         try:
             return self.root.gate.admit(h.headers, "view" if method == "GET" else "admin")
@@ -3616,6 +3675,10 @@ class Mount:
                     if u.path == "/drain":
                         return self._send(*mnt.drain_route(method, q, user))
                     return self._send(*mnt.schema_route(method, q, user))
+                if u.path.startswith("/domain/") and not mnt.domain_local(method, u.path):
+                    if mnt.admit(self, "GET") is None:                   # who is calling; the domain decides the rest
+                        return
+                    return mnt.domain_forward(self, method, u.path, u.query)
                 con, path = mnt.resolve(u.path)
                 con.dispatch(self, method, path, q)
 

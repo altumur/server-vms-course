@@ -196,19 +196,43 @@ class Members:
             rev = None
         return {"root": None if not (own and pub) else ("this" if pub == own else "another"), "keys_rev": rev}
 
-    def accept(self, name: str, by: str | None, domain_objects=None) -> bool:
+    # ADMITTED BY THE KEY IT PRESENTS (ADR-0032). A knocking member's report mark carries the keys its agent presents
+    # (`uplink.report`); the person who accepts it has compared the key's fingerprint with the one the box itself
+    # shows, and the page sends what it showed (`fingerprint`). Accepted, the member is listed WITH that key — its door
+    # opens to it from the next ask (`carry.HolderDoor`) — and a fingerprint that is not the key the mark holds now is
+    # refused: somebody else is knocking under that name. A mark with no key admits the member without one, as the
+    # configuration's members are listed, and its key is registered on the holder later (`set_key`).
+    def accept(self, name: str, by: str | None, domain_objects=None, fingerprint: str | None = None) -> bool:
         """A person accepts a cluster that is knocking. Refused (409) when its report says it pinned another root:
         accepting it would list a member that takes nothing this domain signs."""
         from .api import ApiError
+        presented = self.presented(name, domain_objects) if domain_objects is not None else {}
         if domain_objects is not None and self.pinned(name, domain_objects)["root"] == "another":
             raise ApiError(409, f"{name} pinned another root than this domain's: it refuses this domain's key set. "
                                 f"Enroll it again; accepting it would not make it a member")
-        return self.add(name, how=f"accepted by {by}", by=by)
+        if fingerprint is not None and fingerprint != presented.get("fingerprint"):
+            raise ApiError(409, f"{name} presents another key than the one whose fingerprint was compared "
+                                f"({presented.get('fingerprint') or 'none'}, not {fingerprint}): look again before admitting it")
+        return self.add(name, how=f"accepted by {by}", by=by, key=presented.get("key"), seal=presented.get("seal"))
+
+    @staticmethod
+    def presented(name: str, domain_objects) -> dict:
+        """The keys `name` presents on its last report mark: {key, seal, fingerprint} — {} when it presents none."""
+        from .federation import published
+        from .uplink import REPORTED, base
+        mark = published(name, base(name) + REPORTED, domain_objects.get(base(name) + REPORTED)) or {}
+        key, seal = mark.get("key"), mark.get("seal")
+        if not isinstance(key, str) or not isinstance(seal, str):
+            return {}
+        try:
+            return {"key": key, "seal": seal, "fingerprint": fingerprint(key)}
+        except ValueError:
+            return {}                                    # a key that is no hex is no key to admit by
 
     def knocking(self, domain_objects) -> list[dict]:
         """Clusters that report into the domain's store and are not on the list — once the list is written.
-        Each with when it last reported (its own clock), how many reports it has left, and which root it
-        pinned (`pinned`)."""
+        Each with when it last reported (`last`, its own clock), how many reports it has left (`times`), the key it
+        presents with its fingerprint, and which root it pinned (`pinned`) — the product's words."""
         from .uplink import REPORTED, UPLINK
         doc = self.read()
         if doc["rev"] == 0:
@@ -221,9 +245,17 @@ class Members:
             raw = domain_objects.get(key)
             from .federation import published
             mark = published(name, key, raw) or {}        # a mark nobody can read: knocking, with no time (the seventh review)
-            out.append({"name": name, "reported": mark.get("ts"), "reports": mark.get("seq"),
+            shown = {k: v for k, v in self.presented(name, domain_objects).items() if k != "seal"}
+            out.append({"name": name, "last": mark.get("ts"), "times": mark.get("seq"), **shown,
                         **self.pinned(name, domain_objects, own)})
         return sorted(out, key=lambda x: x["name"])
+
+
+def fingerprint(key_hex: str) -> str:
+    """A member's public key as a person compares it with the one its box shows: the first eight bytes of its
+    SHA-256, in hex — the product's `trust.Fingerprint`."""
+    import hashlib
+    return hashlib.sha256(bytes.fromhex(key_hex)).hexdigest()[:16]
 
 
 def apply(fed, members: Members, domain_objects, topology=None, lost_after: float = 45.0, wall=None) -> dict[str, list]:

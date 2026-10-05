@@ -62,14 +62,14 @@ def main():
     print(f"1. instance A (pid {a.pid}) recording into epoch-{epoch_a:06d}: {n_before} segments")
 
     os.kill(a.pid, signal.SIGSTOP)
-    print(f"2. kill -STOP {a.pid}   (Nomad cannot tell this from dead)")
+    print(f"2. kill -STOP {a.pid}   (nobody can tell this from dead)")
     time.sleep(0.3)
 
     epoch_b, idx = next_epoch(v, node)
     b = subprocess.Popen([sys.executable, "-c", WRITER, node, str(epoch_b), root, str(pe(epoch_b))])
     time.sleep(0.6)
     index = {"node": node, "epoch": epoch_b, "segments": files(root, node, pe(epoch_b))}   # the live index
-    print(f"3. epoch {epoch_b} issued (ModifyIndex {idx}); instance B (pid {b.pid}) recording into "
+    print(f"3. epoch {epoch_b} issued (version {idx}); instance B (pid {b.pid}) recording into "
           f"epoch-{epoch_b:06d}: {len(index['segments'])} segments indexed")
 
     os.kill(a.pid, signal.SIGCONT)

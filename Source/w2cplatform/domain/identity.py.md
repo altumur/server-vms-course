@@ -26,7 +26,7 @@ Re-derives with the stored salt and compares in constant time.
 ## `class IdentityStore`
 
 ### `__init__(self, signer, vars_, objects, publish_floor=60.0, now=time.time)`
-`signer` issues tokens (`signer.tokens`); `vars_` is the domain holder's Variables (records and the pointer); `objects` the object store (the published set and prefs); `publish_floor` is the minimum seconds between publishes — the stated RPO; `_dirty` marks unpublished changes; `published_rev`, `publishes` are counters.
+`signer` issues tokens (`signer.tokens`); `vars_` is the domain holder's Variables (records and the pointer), held behind `declared.guarded` — a person is not made under the name of a subject a spec keeps beside the people (`domain.names.<family>/.exclusive_with: domain/users`, ADR-0031): `create_local`/`create_federated` raise `declared.NameTaken` naming the row it would meet; `objects` the object store (the published set and prefs); `publish_floor` is the minimum seconds between publishes — the stated RPO; `_dirty` marks unpublished changes; `published_rev`, `publishes` are counters.
 
 ### `_path(self, uid)` — `identity/users/<uid>`.
 ### `get(self, uid) -> User | None` — reads the record (a tombstone comes back as a `User` of kind `deleted`).
@@ -64,4 +64,4 @@ Appends an audit entry `{at, who, why, ok}` and an alarm line (`BREAK-GLASS used
 ## Notes
 - `login` takes the clock from `self.now`, so a token issued in a test carries the fake time — the Lesson 4 tests depend on it.
 - The constant here is the only token lifetime; no environment variable changes it (`deploy/domain/systemd/w2c-domain.service` sets none).
-- No process exposes `create_local`/`create_federated`/`set_roles` over HTTP (`signer_service` has only `/login`, `/revoke`, `/keys`); creating a user in production is not wired.
+- The signer is the one process that writes people (ADR-0032): `signer_service.Holder.people` — `/api/people/users` (`create_local`, `set_password`, `set_roles`, `delete`), handed on by the domain's console from `/domain/users`. `create_federated` has no route.

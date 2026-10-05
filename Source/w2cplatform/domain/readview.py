@@ -313,25 +313,47 @@ class ReadView:
     # whether each answered, whether the list is complete, the units with the cluster, server and worker they are on
     # and the fields their spec shows (`domain.view`), the causes, and the tables the specs serve (`domain.tables`,
     # each as the holder keeps it — `tables`, by `<sub>/<table>`). The domain holder's own console serves it at
-    # `GET /domain` (`w2cplatform.console.domain_view`) and draws the domain as the root of its tree, without asking
-    # any member anything; what a table means is the page's.
-    def publish(self, objects, tables: dict | None = None) -> dict:
-        from w2cplatform.console import DOMAIN_VIEW
+    # `GET /domain` (`w2cplatform.console.domain_view`), and the domain's own door the same (`console.Console`): the
+    # platform's console module draws the domain as the root of its tree from it, without asking any member anything;
+    # what a table means is the page's.
+    #
+    # ITS SHAPE IS THE PRODUCT'S (the console module is one file for both, a byte copy of the product's): `members` is a
+    # LIST, the holder among them (`holder: true`), each with its `state` — `ok`, `silent` (did not answer: `why`), or
+    # `never` (nothing of it read yet) — and `age`, seconds behind; `holder` names the holder, `as_of` is when; `units` by
+    # subsystem. `extra` is what the signer's pass adds (ADR-0032, `signer_service.Holder.extra`): the records the domain
+    # keeps — the topology, the list of members and who knocks —, the term, what fails, and where the domain's console
+    # is (`url`).
+    def doc(self, tables: dict | None = None, extra: dict | None = None) -> dict:
         own = ("ref", "unit", "sub", "name", "cluster", "server", "worker", "phase", "worker_state", "as_of")
         shown = {s.name: set(s.domain.view) for s in declared.directory()}
 
+        # a unit as the product lists it (`id`, `state` — live | stale | configured | silent —, `age`, the `view`
+        # fields by name), and the course's words beside them, which a subsystem's page reads (`unit`, `worker_state`)
         def unit(r: Row) -> dict:
             d = r.to_json()
             row = self._configured_row(r)
-            return {**{k: v for k, v in d.items() if k in own},
-                    **{f: row[f] for f in shown.get(r.sub, ()) if f in row and f not in own}}
-        view = {"ts": self.wall(), "complete": not self.cluster_down_since,
-                "members": {n: {"state": "unreachable" if n in self.cluster_down_since else "ok", "rpo": r,
-                                **({"why": self.why[n]} if n in self.cluster_down_since and n in self.why else {})}
-                            for n, r in self.rpo().items()},
-                "units": [unit(r) for r in self.rows()],
-                "causes": [c.sentence() for c in self.causes()],
-                "tables": dict(tables or {})}
+            view = {f: row[f] for f in shown.get(r.sub, ()) if f in row}
+            return {**{k: v for k, v in d.items() if k in own}, "id": r.unit, "age": round(r.age, 1),
+                    "state": "silent" if r.worker_state == "unreachable" else r.worker_state, "view": view,
+                    **{f: v for f, v in view.items() if f not in own}}
+
+        def member(n: str, behind) -> dict:
+            c, down = self.fed.clusters[n], n in self.cluster_down_since
+            return {"name": n, "holder": bool(c.is_domain_holder), "rpo": behind, "age": behind or 0,
+                    "state": "silent" if down else "ok" if behind is not None else "never",
+                    "reaches": sorted(c.reaches or ()), **({"why": self.why[n]} if down and n in self.why else {})}
+        units: dict[str, list] = {s.name: [] for s in declared.directory()}
+        for r in self.rows():
+            units.setdefault(r.sub, []).append(unit(r))
+        now = self.wall()
+        holder = next((n for n, c in self.fed.clusters.items() if c.is_domain_holder), None)
+        return {"ts": now, "as_of": now, "holder": holder, "complete": not self.cluster_down_since,
+                "members": [member(n, r) for n, r in self.rpo().items()], "units": units,
+                "causes": [c.sentence() for c in self.causes()], "tables": dict(tables or {}), **(extra or {})}
+
+    def publish(self, objects, tables: dict | None = None, extra: dict | None = None) -> dict:
+        from w2cplatform.console import DOMAIN_VIEW
+        view = self.doc(tables, extra)
         objects.put(DOMAIN_VIEW, json.dumps(view, ensure_ascii=False, sort_keys=True).encode())
         return view
 

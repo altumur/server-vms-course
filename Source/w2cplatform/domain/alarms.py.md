@@ -15,7 +15,7 @@
 ## `class AlarmHistory` — `keep(member, events)`, `read(member, since, until)`, `cut_before(member)`; at most `max_lines` (2000), the newest, the object `{events, cut_before}`.
 
 ## `class DomainAlarms(fed, doors, wall, per_member, history, lost_after, ref_of=str)`
-`alive_at(ref)` → `(time, cluster)` of the latest word any witness gives of that unit (`declared.witnesses()`: `<sub>/<witness>/*` = `{ts, cluster, units: {ref: seconds since}}`). `ref_of(member)` is the name the witnesses know a member's unit by — the member's own name unless a subsystem names its boxes otherwise and passes its own. `list(since, until=None)` → `{events, members, complete, sentence}`, a synthetic `silent` or `not_reporting` line for each silent member.
+`alive_at(ref)` → `(time, cluster)` of the latest word any witness gives of that unit (`declared.witnesses()`: `<sub>/<witness>/*` = `{ts, cluster, units: {ref: seconds since}}`). `ref_of(member)` is the name the witnesses know a member's unit by — the member's own name unless a subsystem names its boxes otherwise and passes its own. `list(since, until=None)` → `{events, members, complete, sentence}`, a synthetic `silent` or `not_reporting` line for each silent member — READ ONLY: it writes nothing. `keep()` is the pass's step that writes the week — every reporting member's whole page into `history` — run by the signer's pass alone (ADR-0032: every output of the holder's pass has one writer); the domain's console answers `GET /domain/alarms` with `list`.
 
 ## Notes
 - `_same` compares by `t_src` — the line's time on the member's clock — because the shift onto the domain's clock is taken afresh with every report.

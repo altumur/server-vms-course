@@ -35,8 +35,8 @@ try:
 except Conflict as e:
     print(f"3. stale cas ................ 409 ({e})")
 
-# 4. ModifyIndex alone is a usable epoch: raft-assigned, monotonic, never reused.
+# 4. The version alone is a usable epoch: raft-assigned, monotonic, never reused.
 idxs = [v.put("nodes/node-3/heartbeat", {"t": str(i)}) for i in range(5)]
 assert idxs == sorted(idxs) and len(set(idxs)) == 5
-print(f"4. ModifyIndex as epoch ..... {idxs} — increase is all fencing needs")
+print(f"4. version as epoch ........ {idxs} — increase is all fencing needs")
 print("\nall 4 pass")

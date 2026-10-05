@@ -64,7 +64,7 @@ class _Console:
 
 def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_is_answered_and_its_books_written():
     """The blocker of part 4, reproduced: a torn `domain/members/<relay>/bundle` raised `JSONDecodeError` out of every
-    read of a member behind that relay — `DomainDirectory.where` scans every cluster, so `/api/where` and every edit
+    read of a member behind that relay — `DomainDirectory.where` scans every cluster, so `/domain/where` and every edit
     through the domain failed for EVERY camera of the domain, and the pass over the books raised (the signer's loop
     swallowed it; stream tokens stopped being re-issued). Now the bundle is read through the members' reader: the
     members behind the relay did not answer — named, with why, counted once — and the rest is answered and written."""
@@ -322,7 +322,7 @@ def test_a_torn_age_mark_of_a_relay_is_written_whole_again_and_a_failing_agent_p
 
 def test_a_name_that_is_not_a_string_stops_no_search_and_a_camera_claimed_twice_is_contested():
     """`{"id": 2, "name": 42}` in one worker's heartbeat broke `GET /api/cameras?q=` for every operator
-    (`r.name.lower()`); and a member naming another's camera made `where` raise — a 500 on `/api/where/<ref>`. The name
+    (`r.name.lower()`); and a member naming another's camera made `where` raise — a 500 on `/domain/where/<ref>`. The name
     is read as text; the camera claimed twice is an answer that names both and is not complete."""
     from tests.domain.conftest import heartbeat
     wall = Clock(10_000.0)
@@ -469,7 +469,7 @@ def test_a_camera_id_of_1e400_in_a_members_copy_freezes_no_list_and_no_view_of_t
     view = ReadView(fed, wall=wall); view.refresh()
     listed = {r["ref"] for r in view.list()["rows"]}
     assert {"101", "201"} <= listed and "299" not in listed
-    assert {"101", "201"} <= {u["ref"] for u in view.publish(north.objects)["units"]}
+    assert {"101", "201"} <= {u["ref"] for u in view.publish(north.objects)["units"]["vms"]}
     assert "east/vms/snapshot#inf" in MEMBER_OBJECTS.bad
 
 

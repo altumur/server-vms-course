@@ -33,13 +33,18 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     Each half is a URL with a scheme: the config store (`open_vars` — `configstore://`,
     `file://`, whatever a backend registered) and the object store (`open_objects`).
     Neither half names a vendor in code; a cluster on another orchestrator is a
-    different scheme in this one string."""
+    different scheme in this one string.
+
+    Every store is opened behind `declared.guarded`: a write a spec's `domain.names` forbids — a subject of its family
+    under a person's name or the other way, a grant to one wider than the family's `grant` — is refused whoever writes
+    it, the domain's own processes and a subsystem's worker alike."""
+    from .declared import guarded
     fed = Federation()
     domain = os.environ.get("DOMAIN_HOLDER")
     reporting = []
     for i, entry in enumerate(filter(None, os.environ.get(var, "").split(","))):
         if "=" not in entry:                                           # this server's own: the unit's socket
-            fed.add(Cluster(entry, open_vars(os.environ["PLATFORM_STORE"]), open_objects(os.environ["OBJECTS"]),
+            fed.add(Cluster(entry, guarded(open_vars(os.environ["PLATFORM_STORE"])), open_objects(os.environ["OBJECTS"]),
                             is_domain_holder=(entry == domain) if domain else i == 0))
             continue
         name, rest = entry.split("=", 1)
@@ -47,7 +52,7 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
             reporting.append((name, rest.partition("@")[2] or None))   # reached by nobody: read from its reports
             continue
         config_url, objects = rest.split("|", 1)
-        fed.add(Cluster(name, open_vars(config_url), open_objects(objects),
+        fed.add(Cluster(name, guarded(open_vars(config_url)), open_objects(objects),
                         is_domain_holder=(name == domain) if domain else i == 0))
     if not fed.clusters:
         raise SystemExit(f"{var} is empty: name at least one cluster")

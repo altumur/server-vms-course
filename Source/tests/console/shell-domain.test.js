@@ -2,8 +2,8 @@
 // архивы (addTreeNodes), карточки камеры и архива (addCard: имя в домене, номер, воркер, сервер, «пишет кластер» из
 // таблицы vms/crossings), блок члена «Камеры» и «Архивы» без платформенных частей (addBlock), на «Обзоре» домена —
 // «Пересечения». Только чтение: правки домена идут его дверью, курс не отдаёт их консоли — страница туда не пишет.
-// Члены в фикстуре — списком, как их ждёт модуль (контракт; курсовой /domain пока говорит их словарём — долг части A,
-// в отчёте шага); камеры и архивы — units курса, пересечения — его tables.
+// Фикстура — ответ курсового /domain (ReadView.doc, форма продукта): члены списком, единицы по подсистемам, пересечения
+// — его tables.
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -18,9 +18,10 @@ b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type
 b.FIX["/cameras"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"box-a":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
-b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:["srv","office","north"].map(n=>({name:n,state:"ok",age:2,holder:n==="srv"})),
-  units:[u("vms","office","1",{ref:"SN-A",name:"door a"}),u("vms","office","2",{ref:"SN-B",name:"door b",worker_state:"stale"}),u("rec","office","1"),
-         u("vms","north","1",{ref:"SN-C",name:"gate",worker_state:"configured"}),u("vms","north","2",{ref:"SN-D",name:"yard"})],
+b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:["srv","office","north"].map(n=>({name:n,state:"ok",age:2,rpo:2,reaches:[],holder:n==="srv"})),
+  units:{vms:[u("vms","office","1",{ref:"SN-A",name:"door a"}),u("vms","office","2",{ref:"SN-B",name:"door b",worker_state:"stale"}),
+              u("vms","north","1",{ref:"SN-C",name:"gate",worker_state:"configured"}),u("vms","north","2",{ref:"SN-D",name:"yard"})],
+         rec:[u("rec","office","1")]},
   tables:{"vms/crossings":{"SN-C":"office"}},causes:[]};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));

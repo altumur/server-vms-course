@@ -31,15 +31,21 @@ requests:
   most_valid: 600
 snapshot: [name, start]
 # testsub on the domain: a counter is found across clusters by its name; the holder keeps a book of tallies for each
-# member and a ledger for the domain as a whole, served at `/api/testsub/ledger`; a tally carries a token of its own kind.
+# member, a ledger for the domain as a whole, served at `/domain/testsub/ledger`, and a family of badges, one row each
+# (`domain/testsub/badges/<name>`), each a subject of the grants beside the people; a tally carries a token of its own kind.
 domain:
   ref: name
   view: [start]
   books: [tallies]
-  kept: [ledger]
+  kept: [ledger, badges/]              # `badges/`: a family of rows
   tables: [ledger]
+  # a badge is never named like one of the domain's people, nor a person like a badge, and is granted no more than
+  # `view`: the platform refuses the write that would
+  names:
+    badges/: {exclusive_with: domain/users, grant: view}
   tokens:
     tally: {lifetime: 600, claims: [counter]}
+  edit: [start, labels]                # what the domain's door lets into an edit of a member's counter
   shared: [step, marks]                # the fields whose domain-wide value the domain holds
   # its key families, for a page that lists the domain's keys (their words below, display.keys)
   keys:

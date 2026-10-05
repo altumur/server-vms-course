@@ -23,6 +23,7 @@ g vms               -
 u vms               -     "VMS subsystem processes"                            /data/vms -
 g w2c-resource      -
 g w2c-domain        -
+g w2c-domainconsole -
 g w2c-domainagent   -
 g w2c-console       -
 g w2c-vmscontroller -
@@ -42,6 +43,7 @@ g vms-surveyworker -
 g vms-vmsdomain   -
 m configstore w2c-resource
 m configstore w2c-domain
+m configstore w2c-domainconsole
 m configstore w2c-domainagent
 m configstore w2c-console
 m configstore w2c-vmscontroller

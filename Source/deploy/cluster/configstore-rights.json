@@ -551,6 +551,34 @@
     "identity/*"
    ]
   },
+  "domainconsole": {
+   "group": "w2c-domainconsole",
+   "read": [
+    "platform/schema",
+    "domain/*",
+    "!domain/signer*",
+    "platform/*",
+    "auto/*",
+    "det/*",
+    "detjob/*",
+    "live/*",
+    "rec/*",
+    "survey/*",
+    "vms/*"
+   ],
+   "write": [
+    "domain/members",
+    "domain/topology",
+    "domain/grants/*",
+    "domain/pending/*"
+   ],
+   "delete": [
+    "domain/members",
+    "domain/topology",
+    "domain/grants/*",
+    "domain/pending/*"
+   ]
+  },
   "domainagent": {
    "group": "w2c-domainagent",
    "read": [

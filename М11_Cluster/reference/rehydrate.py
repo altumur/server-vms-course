@@ -1,18 +1,20 @@
-"""Lesson 3 — a recorder's state outlives its server: the rehydration sequence,
-against fakes, and the RPO measured rather than promised.
+"""The FIRST cluster design's answer to "a holder's state outlives its server" — the
+rehydration sequence, against fakes, and the RPO measured rather than promised. М11
+Lesson 6, Step 2 explains why the module needs none of it: the truth lives in the
+replicated store, and a new holder reads it as the old one did.
 
     Server A dies
-      └─ Nomad reschedules recorder 3's allocation → Server B
+      └─ a scheduler starts recorder 3 again → Server B
            1. empty Postgres; migrations run
-           2. read its own Nomad Variable — "I am recorder 3; my configuration
+           2. read its own row in the store — "I am recorder 3; my configuration
               is object node-3/rev-812, and these are my camera ids"
            3. fetch that object from the CLUSTER's object store
-           4. restore it; check the revision against the Variable
+           4. restore it; check the revision against the row
            5. request a new epoch
            6. begin recording into epoch-N+1
 
-Publication order matters: object store FIRST, then the Variable — so a
-Variable never points at an object that is not there.
+Publication order matters: object store FIRST, then the row — so a row never
+points at an object that is not there.
 """
 from __future__ import annotations
 
@@ -71,7 +73,7 @@ class NodeInstance:
         return msg
 
     def publish(self):
-        """The one-way publication upward. Object first, Variable second."""
+        """The one-way publication upward. Object first, row second."""
         key = f"{self.node_id}/rev-{self.db.revision}"
         self.store.put(key, self.db.dump())
         items, idx = self.vars.get(f"nodes/{self.node_id}")
@@ -87,9 +89,9 @@ class NodeInstance:
         if items is None:
             return {"state": "unconfigured"}                 # never invent a configuration
         blob = self.store.get(items["config"])                # step 3
-        assert blob is not None, "a Variable must never point at a missing object"
+        assert blob is not None, "a row must never point at a missing object"
         self.db.restore(blob)                                 # step 4
-        assert self.db.revision == int(items["revision"]), "revision disagrees with the Variable"
+        assert self.db.revision == int(items["revision"]), "revision disagrees with the row"
         self.epoch, _ = next_epoch(self.vars, self.node_id)   # step 5
         return {"state": "restored", "revision": self.db.revision, "epoch": self.epoch,
                 "cameras": sorted(self.db.cameras)}           # step 6 follows
@@ -135,7 +137,7 @@ if __name__ == "__main__":
     n = NodeInstance("node-3", vars_, store)
     print(n.save_camera(7, name="lobby", rtsp_url="rtsp://10.0.0.41/s"))
     n.publish()
-    print(f"published rev {n.published_rev}: object {list(store.objects)[-1]}, Variable -> {vars_.get('nodes/node-3')[0]['config']}")
+    print(f"published rev {n.published_rev}: object {list(store.objects)[-1]}, row -> {vars_.get('nodes/node-3')[0]['config']}")
     print(n.save_camera(7, retention_days=14), "   <- rev 2, not yet published")
     print("\n-- Server A dies. recorder 3 is rescheduled to Server B --")
     n2 = NodeInstance("node-3", vars_, store)

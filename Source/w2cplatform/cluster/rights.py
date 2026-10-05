@@ -39,7 +39,7 @@ OBJECTS = ROWS_PREFIX + "/"    # the rows of the create-only objects, a worker's
 # The console and the domain are the platform's processes (ADR 0014: `python3 -m w2cplatform console`; the owner, 4 Oct:
 # "the domain is a platform service"), and so is every subsystem's controller (`python3 -m w2cplatform controller <sub>`,
 # ADR 0023): its role keeps the spec's name, `<sub>controller`, and its socket is the platform's, `w2c-<sub>controller`.
-PLATFORM = ("resource", "console", "domain", "domainagent")
+PLATFORM = ("resource", "console", "domain", "domainconsole", "domainagent")
 
 # The domain's keys (`domain/signer`: the token key and the issuing key) are read by the domain's own processes alone —
 # not by its agent in a member cluster, nor by a member's report, both of which read `domain/*`.
@@ -142,6 +142,8 @@ def check_secrets(specs: list, out: dict[str, dict]) -> None:
     from w2cplatform.rights import allowed
 
     def role(spec, name: str) -> str:
+        if name == "domainpart":                                # its worker on the domain (`domain/rights.py`)
+            return f"{spec.name}domain"
         return f"{spec.name}{name}" if name in ("controller", "worker") else name
 
     def reading(row: str) -> set[str]:

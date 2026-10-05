@@ -1,16 +1,16 @@
-"""A faithful stand-in for the two Nomad primitives Lesson 4 compares.
+"""A stand-in for the two primitives Lesson 8, Step 3 compares (М11_Cluster).
 
-Nomad Variables (HTTP API): every variable carries a raft-assigned
-ModifyIndex. PUT ?cas=<index> succeeds only if the stored ModifyIndex still
-equals <index>; otherwise 409 Conflict. The index is monotonic across the
-whole raft log, never reused, and survives losing any one server.
+A replicated store with CAS — what the platform's `configstore` is: every row
+carries a raft-assigned version (`index`). A write with cas=<index> succeeds only
+if the stored version still equals <index>; otherwise 409 Conflict. The version is
+monotonic across the whole raft log, never reused, and survives losing any one server.
 
-Nomad Variable Locks: acquire returns an opaque lock ID (a UUID) and a TTL.
-Renew/release need that ID. There is no ordering between successive lock
-IDs — which is exactly the property a fencing token needs and a lock lacks.
+A lock service: acquire returns an opaque lock ID (a UUID) and a TTL — what a
+store with locks (a Consul session) hands out. Renew/release need that ID. There is
+no ordering between successive lock IDs — which is exactly the property a fencing
+token needs and a lock lacks.
 
-Both are simulated with the semantics the docs describe. Nothing here is
-Nomad; everything here is what Nomad promises.
+Both are simulated with the semantics they promise; nothing here is a server.
 """
 from __future__ import annotations
 
@@ -20,14 +20,14 @@ import uuid
 
 
 class Conflict(Exception):
-    """HTTP 409: the cas index did not match the current ModifyIndex."""
+    """HTTP 409: the cas index did not match the row's version now."""
 
 
 class Variables:
     def __init__(self):
         self._lock = threading.Lock()
         self._raft_index = 1000          # one log for the whole cluster
-        self._items: dict[str, tuple[dict, int]] = {}   # path -> (items, ModifyIndex)
+        self._items: dict[str, tuple[dict, int]] = {}   # path -> (items, version)
 
     def get(self, path: str):
         with self._lock:
@@ -37,11 +37,11 @@ class Variables:
             return dict(items), idx
 
     def put(self, path: str, items: dict, cas: int | None = None) -> int:
-        """Returns the new ModifyIndex. With cas, atomic compare-and-set."""
+        """Returns the new version. With cas, atomic compare-and-set."""
         with self._lock:
             _, current = self._items.get(path, (None, 0))
             if cas is not None and cas != current:
-                raise Conflict(f"cas={cas} but ModifyIndex={current}")
+                raise Conflict(f"cas={cas} but the version is {current}")
             self._raft_index += 1
             self._items[path] = (dict(items), self._raft_index)
             return self._raft_index
@@ -83,7 +83,7 @@ class VariableLock:
 # ---- the epoch issuer, built on CAS -----------------------------------
 
 def next_epoch(vars_: Variables, node: str, retries: int = 10) -> tuple[int, int]:
-    """Issue the next epoch for `node`. Returns (epoch, ModifyIndex).
+    """Issue the next epoch for `node`. Returns (epoch, version).
     Two callers racing get two DIFFERENT epochs, in order; the loser of the
     CAS re-reads and goes again. Nobody ever receives the same number."""
     path = f"nodes/{node}/epoch"

@@ -16,7 +16,7 @@
 ### `stranded(old_vars, restored_state, signer=None) -> list` — every exported item on a returning old holder that differs from what the new term was restored from, compared by what the rows SAY (the old holder's opened with its ring, the restored state's with the backup key). A `*_secret` that differs is listed as `<secret: differs>` — the list is a plain row, and a value is never copied out of its ring.
 
 ## `class DomainHolder`
-`claim()`; `export()`; `export_objects()` (the `EXPORTED_OBJECTS` keys, as text — `move_domain` puts them back on the new holder); `backup(targets, objects) -> rev` (a deposed holder may not publish; a frozen one may — that is how it hands over); `check()` — False, and `deposed_by` set, if any reachable member carries a larger term; `guard()` raises `Deposed` naming the new holder and term, or `Frozen` while `frozen_for` names the member a handover is moving the domain to.
+`claim()` (the record names `url`, where this holder's signer answers, when the holder knows it — ADR-0032: the view's `url` is the domain console's, the signer's address is the record's); `export()`; `export_objects()` (the `EXPORTED_OBJECTS` keys, as text — `move_domain` puts them back on the new holder); `backup(targets, objects) -> rev` (a deposed holder may not publish; a frozen one may — that is how it hands over); `check()` — False, and `deposed_by` set, if any reachable member carries a larger term; `guard()` raises `Deposed` naming the new holder and term, or `Frozen` while `frozen_for` names the member a handover is moving the domain to.
 
 ## `class GuardedPending`
 `PendingEdits` with the holder's guard in front of `add`: a kept edit is refused as `ApiError(503, reason)` while the holder is frozen or deposed. Everything else passes through.

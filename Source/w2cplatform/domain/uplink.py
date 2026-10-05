@@ -13,7 +13,8 @@ pass; this module is the other half of that same pass.
             copies of the rows the domain reads (the outcomes of kept edits, its copy of the shared
             settings' pointer, the holder record it follows, its backup pointer, its epochs), the pages it
             is asked for (its newest alarms, the ones it keeps for a neighbour) — and, LAST, `reported`:
-            the time of this report. Only what changed is rewritten
+            the time of this report, and the keys the member presents (`key`, `seal`: what its agent printed at
+            its first start). Only what changed is rewritten
     read    `member_copy()` gives the domain a `Cluster` over that prefix, with the same reads a member's
             own stores have. So the directory, the read view, the books, the delivery report and the edit
             collector read a member exactly as before and do not know which way the bytes came
@@ -88,7 +89,12 @@ class NotPublished(Exception):
 # Lesson 10's ordering rule, on the report: a member that has not published yet does not report. Its report
 # would be a COMPLETE answer with no units in it, which the domain must believe; silence is the truthful
 # thing until the first publish.
-def report(member: str, member_vars, member_objects, domain_objects, now: float, pages: dict | None = None) -> int:
+def report(member: str, member_vars, member_objects, domain_objects, now: float, pages: dict | None = None,
+           key=None) -> int:
+    # The keys it presents ride on the mark (ADR-0032): a member nobody admitted yet is KNOCKING, and the person who
+    # admits it on the domain's console admits it by this key — after comparing its fingerprint with the one the box
+    # shows (`Members.accept`). The mark proves nothing by itself; the person's comparison does.
+    presented = {"key": key.pub, "seal": key.seal_pub} if key is not None else {}
     want: dict[str, bytes] = {}
     for prefix in objects():
         for key in member_objects.list(prefix):
@@ -123,7 +129,7 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
         seq = (int(json.loads(prev).get("seq", 0)) if prev else 0) + 1
     except PARSE_ERRORS:
         seq = int(now * 1000)
-    domain_objects.put(b + REPORTED, json.dumps({"ts": now, "seq": seq, "items": len(want)}).encode())   # last: the report is whole
+    domain_objects.put(b + REPORTED, json.dumps({"ts": now, "seq": seq, "items": len(want), **presented}).encode())   # last: the report is whole
     return written + 1
 
 

@@ -234,14 +234,21 @@ def test_console_over_http():
     port = srv.server_address[1]
     try:
         import time; time.sleep(0.2)
-        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/vms/cameras"))
+        body = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/domain/vms/cameras"))
         assert body["total"] == 1 and body["rows"][0]["as_of"] == "as of 2 s ago"
-        w = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/where/7"))
+        w = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/domain/where/7"))
         assert w["cluster"] == "south" and w["worker"] == "w-0" and w["complete"]
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/vms/cameras/7", data=b'{"name":"x"}', method="PUT",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"enabled":false}', method="PUT",
                                      headers={"Idempotency-Key": "abc"})
         assert json.load(urllib.request.urlopen(req))["cluster"] == "south"
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/vms/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
+        # a camera's name is its cluster's console's: `domain.edit: [enabled]` of the VMS's spec (ADR-0031)
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"name":"x"}', method="PUT",
+                                     headers={"Idempotency-Key": "ghi"})
+        try:
+            urllib.request.urlopen(req); raise AssertionError()
+        except urllib.error.HTTPError as e:
+            assert e.code == 400 and "domain.edit" in json.load(e)["detail"]
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/domain/vms/cameras/7", data=b'{"worker":"w-1"}', method="PUT",
                                      headers={"Idempotency-Key": "def"})
         try:
             urllib.request.urlopen(req); raise AssertionError()
@@ -280,9 +287,9 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
         return out, time.monotonic() - began
     try:
         assert isinstance(srv, ConsoleServer) and srv.bounds.per_address < srv.bounds.limit
-        reply, took = raw(b"PUT /api/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
+        reply, took = raw(b"PUT /domain/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 413") and took < 2.0          # a hundred megabytes declared: not read, not waited for
-        reply, took = raw(b"PUT /api/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
+        reply, took = raw(b"PUT /domain/vms/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 400")
         held = [socket.create_connection(("127.0.0.1", port)) for _ in range(srv.bounds.per_address)]
         for s in held:
@@ -342,7 +349,7 @@ def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_an
             time.sleep(0.02)
         assert srv.bounds.used["common"] == srv.bounds.limit
         assert ask("192.0.2.7", "/healthz").startswith(b"HTTP/1.0 200")             # the reserve
-        busy = ask("192.0.2.7", "/api/vms/cameras")
+        busy = ask("192.0.2.7", "/domain/vms/cameras")
         assert busy.startswith(b"HTTP/1.0 503") and b"/healthz" in busy               # nothing else on it
         assert ask("192.0.2.100", "/healthz").startswith(b"HTTP/1.0 200")           # a listed monitor: its own lane
     finally:
@@ -401,9 +408,10 @@ def test_what_the_doors_open_in_code_the_units_turn_on_and_a_monitor_is_an_addre
 
 def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
     """The domain's units in the cluster's form (no orchestrator): each runs `w2c-run.sh <verb>`, names its role's socket
-    and joins that role's group first (the rights file's), loads the ring as a credential, and lists no
-    `EnvironmentFile=` — the site's lines are `w2c.env`'s, read under what the unit says. And the runner turns each verb
-    into the module it names (a `python3` that prints what it was given). No Nomad file is left in `deploy/domain`."""
+    and joins that role's group first (the rights file's), and lists no `EnvironmentFile=` — the site's lines are
+    `w2c.env`'s, read under what the unit says. Each loads the ring as a credential but the domain's console, which has
+    no key (ADR-0032). And the runner turns each verb into the module it names (a `python3` that prints what it was
+    given). No Nomad file is left in `deploy/domain`."""
     import json
     import os
     import subprocess
@@ -412,7 +420,7 @@ def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
     groups = {r: g["group"] for r, g in
               json.load(open(os.path.join(here, "deploy", "cluster", "configstore-rights.json")))["roles"].items()}
     want = {"w2c-domain": ("domain", "signer", "w2c", "-m w2cplatform.domain.signer_service"),
-            "w2c-domain-console": ("domain", "domainconsole", "w2c", "-m w2cplatform.domain.console"),
+            "w2c-domain-console": ("domainconsole", "domainconsole", "w2c", "-m w2cplatform.domain.console"),
             "w2c-domainagent": ("domainagent", "domainagent", "w2c", "-m w2cplatform.domain.agent"),
             "vms-domainpart": ("vmsdomain", "vms domainpart", "vms", "-m vms domainpart")}
     u = _units()
@@ -428,7 +436,10 @@ def test_every_domain_unit_runs_a_verb_of_the_runner_by_its_roles_socket():
         assert s["env"]["PLATFORM_STORE"] == f"configstore:///run/configstore/{role}.sock", name
         assert s["SupplementaryGroups"][0].split()[0] == groups[role], name
         assert s["User"] == [user] and s["ExecStart"] == [f"/opt/w2c/bin/w2c-run.sh {verb}"], name
-        assert s["env"]["SECRETS_KEY"] == "%d/platform.key" and s["LoadCredential"], name
+        if name == "w2c-domain-console":
+            assert "SECRETS_KEY" not in s["env"] and "LoadCredential" not in s, f"{name} has no key"
+        else:
+            assert s["env"]["SECRETS_KEY"] == "%d/platform.key" and s["LoadCredential"], name
         assert "EnvironmentFile" not in s, f"{name}: a file would override what the unit says"
         env = {"PATH": os.environ["PATH"], "W2C_ENV": os.devnull, "VMS_ENV": os.devnull, "PYTHON": py, "W2C_HOME": d}
         out = subprocess.run(["sh", os.path.join(here, "deploy", "cluster", "w2c-run.sh"), *verb.split()], env=env,
@@ -526,7 +537,8 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
     """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A
     cluster that does not hold the domain has no such object, and says it does not know the others. An old view
-    is served with its age and `silent`, never as if it were current."""
+    is served with its age and `silent`, never as if it were current. Its shape is the product's, which the console
+    module reads: `members` a list with the holder among it, `holder`, `units` by subsystem."""
     from w2cplatform.console import domain_view
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
     north, south = fed.clusters["north"], fed.clusters["south"]
@@ -535,13 +547,16 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
 
     st, d = domain_view(north.objects, wall())
     assert st == 200 and d["complete"] and not d["silent"] and d["age"] == 0
-    assert d["members"]["south"]["state"] == "ok" and len(d["units"]) == 200 and d["tables"] == {"vms/crossings": {"SN7": "north"}}
-    assert {c["cluster"] for c in d["units"] if c["worker"] == "w-0"} == {"north", "south"}
+    members = {m["name"]: m for m in d["members"]}
+    assert d["holder"] == "north" and members["north"]["holder"] and not members["south"]["holder"]
+    assert members["south"]["state"] == "ok" and len(d["units"]["vms"]) == 200
+    assert d["tables"] == {"vms/crossings": {"SN7": "north"}}
+    assert {c["cluster"] for c in d["units"]["vms"] if c["worker"] == "w-0"} == {"north", "south"}
     assert domain_view(south.objects, wall())[0] == 404      # not the domain's holder: it knows only itself
 
     links["south"].up = False; wall.advance(30); view.refresh(); view.publish(north.objects)
     st, d = domain_view(north.objects, wall())
-    assert not d["complete"] and d["members"]["south"]["state"] == "unreachable"
+    assert not d["complete"] and {m["name"]: m["state"] for m in d["members"]}["south"] == "silent"
     assert any(c.startswith("cluster unreachable: south") or "south" in c for c in d["causes"])
 
     wall.advance(120)                                         # the domain's pass stopped

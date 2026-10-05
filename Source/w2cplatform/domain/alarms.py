@@ -238,7 +238,28 @@ class DomainAlarms:
                     best = (at, d.get("cluster", name))
         return best
 
+    # THE WEEK IS KEPT BY THE PASS, AND READ BY THE LIST (ADR-0032: every output of the holder's pass has one writer).
+    # The list kept what it read — every `GET /domain/alarms` wrote the history — so whichever process answered a page
+    # wrote the domain's week: the console a person asked, and the signer's pass beside it. Now the signer's pass
+    # keeps (`keep`: each member's whole page, not a window), and the list only reads; a page asked between two passes
+    # answers from the member's fresh page and the week as the last pass left it, the same lines either way.
+    def keep(self) -> int:
+        """The pass's step: what every reporting member's page says, kept in the week. Returns how many were new."""
+        if self.history is None:
+            return 0
+        new = 0
+        for name, c in self.fed.clusters.items():
+            if c.is_domain_holder:
+                continue
+            try:
+                page = self.doors(name).alarms(self.wall() - WINDOW, self.wall() + 1, self.per_member)
+            except Unreachable:
+                continue                                 # a silent member's last page was kept when it was read
+            new += self.history.keep(name, page["events"])
+        return new
+
     def list(self, since: float, until: float | None = None) -> dict:
+        """The one list, read: it writes nothing — the week is the pass's (`keep`)."""
         until = self.wall() if until is None else until
         events, members = [], {}
         for name, c in self.fed.clusters.items():
@@ -247,10 +268,6 @@ class DomainAlarms:
             door = self.doors(name)
             try:
                 got = door.alarms(since, until, self.per_member)
-                if self.history is not None:          # what it reads, it keeps: the whole page, not the window
-                    self.history.keep(name, door.alarms(self.wall() - WINDOW, self.wall() + 1, self.per_member)["events"])
-                # …and only then reads the history back: kept first, so this answer knows what the keeping pushed
-                # out (feedback BA — the other order answered from a history about to lose its oldest lines).
                 kept = self.history.read(name, since, until) if self.history is not None else []
                 members[name] = {"state": "ok", "truncated": got["truncated"], **self._history_cut(name, since)}
                 events += self._union(name, got["events"], kept)

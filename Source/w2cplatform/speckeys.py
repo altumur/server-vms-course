@@ -24,7 +24,7 @@ from .spec import TREE_WORDS
 from .tables import TABLE_KEYS
 
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
-         "domain.tokens", "secrets.readers"}
+         "domain.tokens", "domain.names", "secrets.readers"}
 OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
           "placement.near.prefer", "placement.affinity.strict", "rights.unit_of", "placement.places.where",
@@ -73,8 +73,9 @@ KEYS = {
     "display.form.placement", "display.form.fields", "display.form.status.field", "display.form.status.since",
     "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness", "domain.books", "domain.kept", "domain.tables",
-    "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys", "domain.keys.prefix",
-    "domain.shared",
+    "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
+    "domain.keys.prefix", "domain.shared", "domain.names.*.exclusive_with", "domain.names.*.grant",
+    "domain.edit",
 }
 _TAKEN = KEYS | {p.rsplit(".", i)[0] for p in KEYS for i in range(1, p.count(".") + 1)}
 

@@ -274,7 +274,7 @@ def test_a_token_of_any_shape_but_ours_is_401_before_and_after_its_signature():
 
 
 def test_the_signers_door_in_answers_a_garbage_body_400_and_a_garbage_token_401():
-    """The sweep of the same minor at the signer's own door (`signer_service`, `POST /login`, `POST /revoke`): a body
+    """The sweep of the same minor at the signer's own door (`signer_service`, `POST /api/login`, `POST /revoke`): a body
     that is not an object, a name that is not a string, a token that does not verify were 500 — `/revoke` let the
     token's own error out, which nobody caught. The signer is run as its process is, on a store of files."""
     import os
@@ -308,9 +308,9 @@ def test_the_signers_door_in_answers_a_garbage_body_400_and_a_garbage_token_401(
                     break
             except OSError:
                 time.sleep(0.1)
-        assert post("/login", b'{"user": "nobody", "password": "x"}') == 401   # the door works: no such user
+        assert post("/api/login", b'{"user": "nobody", "password": "x"}') == 401   # the door works: no such user
         for bad in (b"[1]", b"{not json", b'{"user": ["a"], "password": "x"}', b'{"password": "x"}'):
-            assert post("/login", bad) == 400, bad
+            assert post("/api/login", bad) == 400, bad
         for bad in (b'{"token": "a.b.c"}', b'{"token": ["a"]}', b"{}", b'{"token": "' + b"x" * 200 + b'"}'):
             assert post("/revoke", bad) == 401, bad
     finally:

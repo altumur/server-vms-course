@@ -112,11 +112,35 @@ class ConsoleAPI:
                                 f"backs up and relays its edits, and a password would be in the clear in all of those")
         refuse_addresses(fields)
 
-    def update_unit(self, ref, fields: dict, idempotency_key: str, token: str | None = None) -> dict:
+    # …AND ONLY WHAT ITS SPEC LETS THROUGH (ADR-0031: a subsystem's door held the list, and the domain's own route took
+    # any field the member's console takes). `domain.edit` of the unit's spec names the fields an edit through the domain
+    # may carry; any other is refused here, before the member is asked or the edit is kept, in words that name the
+    # fields and the list — and a spec that names none lets nothing through (ADR-0012: no default that passes).
+    # The subsystem is the route's (`sub`: the door always names it); a call in process that names none — the lessons'
+    # own façade — is not held to a list.
+    @staticmethod
+    def _refuse_undeclared(sub: str | None, fields: dict) -> None:
+        from .declared import edit_fields
+        if not sub:
+            return
+        allowed = edit_fields(sub)
+        if not allowed:
+            raise ApiError(400, f"{sub}'s spec declares no domain.edit: the domain's door lets no field of its units "
+                                f"into an edit — they are edited in their own cluster")
+        bad = sorted(k for k in fields if k not in allowed)
+        if bad:
+            raise ApiError(400, f"{', '.join(bad)}: not the domain's to edit — {sub}'s spec lets an edit through the "
+                                f"domain carry {', '.join(allowed)} (domain.edit)")
+
+    def update_unit(self, ref, fields: dict, idempotency_key: str, token: str | None = None,
+                    sub: str | None = None) -> dict:
+        """`sub`: the subsystem the door's route named (`/domain/<sub>/<rows>/<ref>`), whose spec's `domain.edit` the
+        edit is held to."""
         if idempotency_key in self._seen:
             return self._seen[idempotency_key]                # the same PUT, not a second edit
         self._refuse_placement(fields)
         self._refuse_secrets(fields)
+        self._refuse_undeclared(sub, fields)
         subject = self._subject(token)
         ans = self.directory.where(ref)
         if not ans.found:

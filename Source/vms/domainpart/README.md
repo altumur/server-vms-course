@@ -12,7 +12,7 @@ Source/
     placement.py           L1   which CLUSTER gets a unit, by reachability, stored with a reason, by CAS
     shadow.py              L2   the divergence report and the exit criterion
     readview.py            L3   the list of units from heartbeats and snapshots; one cause per dead server; the shared view
-    api.py, console.py     L3   the write façade; the domain's door (`/api/<sub>/<rows>`, `/api/<sub>/<table>`, …)
+    api.py, console.py     L3   the write façade; the domain's door (`/domain/<sub>/<rows>`, `/domain/<sub>/<table>`, …)
     identity.py, grants.py, access.py, agent.py   L4   users, cluster-local grants, a cluster console's check, the agent
     entitlement.py         L5   the licence cached, graceful; work never stops
     pending.py             L9   an edit kept for a cluster that is off
@@ -47,7 +47,7 @@ python3 -m w2cplatform.domain.signer_service ; python3 -m w2cplatform.domain.age
 
 ## What the product page shows (for «Консоль»)
 
-The platform's domain page draws members, units and causes from `domain/view`. What is the VMS's to show — domain cameras with their `ref` and name, crossings (which cluster records which camera of another: `domain/view` → `tables["vms/crossings"]`, or `GET /api/vms/crossings`), scenarios between cameras and the catalogue of what one camera may ask another (`GET /catalog` on the VMS domain worker's door, `DOMAINPART_PORT`), the streams' numbers (`GET /metrics` there) — is the product page's, not a platform `domain/page.html`.
+The platform's domain page draws members, units and causes from `domain/view`. What is the VMS's to show — domain cameras with their `ref` and name, crossings (which cluster records which camera of another: `domain/view` → `tables["vms/crossings"]`, or `GET /domain/vms/crossings`), scenarios between cameras and the catalogue of what one camera may ask another (`GET /catalog` on the VMS domain worker's door, `DOMAINPART_PORT`), the streams' numbers (`GET /metrics` there) — is the product page's, not a platform `domain/page.html`.
 
 The domain card's «Ключи» tab: the families are the spec's now — `/spec` → `domain.keys` (`[{id, keys, prefix}]`) and
 `display.keys` (`{<id>: {title, about, absent}}`), merged by id; the product page's `KEY_FAMILIES` constant gives way to

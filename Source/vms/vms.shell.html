@@ -974,13 +974,13 @@ function delRule(id){
 pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",render:host=>{RULES_HOST=host;loadAuto().then(renderRules)}});
 
 // ── The domain, as the VMS sees it ───────────────────────────────────────────────────────────────────────────────
-// The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` — every member's units with
-// their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`vms/crossings`:
+// The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` by subsystem — every
+// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the specs serve (`vms/crossings`:
 // for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
 // keys); this is the rest: a member's cameras and archives in the tree, their cards, the crossings. Read only: the
 // domain's edits go through its own door, not this console.
 const DOM_CAM={live:["идёт",""],stale:["воркер молчит — последнее известное","wait"],configured:["настроена, никто не держит","wait"],unreachable:["кластер молчит — последнее известное","off"]};
-const domUnits=(sub,cluster)=>((domView&&domView.units)||[]).filter(u=>u.sub===sub&&(cluster==null||u.cluster===cluster));
+const domUnits=(sub,cluster)=>((((domView&&domView.units)||{})[sub])||[]).filter(u=>cluster==null||u.cluster===cluster);
 const domKey=u=>u.cluster+"/"+u.unit;
 const domFind=(sub,key)=>domUnits(sub).find(u=>domKey(u)===key)||null;
 const crossings=()=>((domView&&domView.tables)||{})["vms/crossings"]||{};

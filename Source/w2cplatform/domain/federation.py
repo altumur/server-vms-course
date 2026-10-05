@@ -187,7 +187,7 @@ class Answer:
     searched: list[str]
     unreachable: list[str]
     # Members that each claim the unit (the review's eighth pass, minor): a member naming another's unit in its
-    # snapshot made `where` raise — a 500 on `/api/where/<ref>` and on every edit of that unit through the domain.
+    # snapshot made `where` raise — a 500 on `/domain/where/<ref>` and on every edit of that unit through the domain.
     # Now the answer says who claims it and is not complete: the domain cannot tell which of them is right.
     contested: list[str] = field(default_factory=list)
     sub: str | None = None

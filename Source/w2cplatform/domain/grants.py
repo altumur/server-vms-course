@@ -81,7 +81,7 @@ class ClusterGrants:
 
 # WHAT A NAME MAY HOLD (the review's eighth pass, major; the coordinator's decision). A grant is the item
 # `<subject>|<capability>|<unit:<sub>/<id>, labels:a,b, or nothing>`, and the reader split it on `|` into three: a user called `acme|ivan`
-# made FOUR, the split raised, and every grant of the row went with it — `domain_may` raised on every `/api/*` of the
+# made FOUR, the split raised, and every grant of the row went with it — `domain_may` raised on every `/domain/*` of the
 # domain's door, for the admin too, and the command that mends the grants raised the same way. `|`, `"` and the
 # control characters (a newline above all) are not allowed in a user's name, a grant's subject or a label: refused
 # where a user is created (`IdentityStore.create_local`, `create_federated`) and wherever a grant is written (every
@@ -215,7 +215,8 @@ def set_domain_grants(vars_, grants: list[Grant], now: float, journal=None, by: 
     if not any(g.capability == "admin" and g.unit is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
                and _item(g) in new for g in grants):                    # …and an admin left out is no admin
         raise LastAdmin("the domain's grants would name no admin: nobody could change them again but a command on the holder")
-    vars_.put(DOMAIN_GRANTS, new, cas=idx)
+    from .declared import guarded
+    guarded(vars_).put(DOMAIN_GRANTS, new, cas=idx)    # no wider than a subject family's `grant` (ADR-0031)
     if journal is not None:
         was = items or {}
         added, removed = sorted(k for k in new if k not in was), sorted(k for k in was if k not in new)
