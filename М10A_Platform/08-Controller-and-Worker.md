@@ -983,7 +983,7 @@ def test_controller_and_worker_bases_speak_only_the_contract():
     box = Box()
     sub = Subsystem("thing")
     ctl = Controller(sub, box.vars, box.objects, wall=box.wall)
-    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall)
+    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=spec_named("thing"))
     assert ctl.workers_seen() == {}                            # nobody has heartbeaten
     w.heartbeat([{"id": 1, "phase": "running"}], server="srv-1")
     seen = ctl.workers_seen()
@@ -1005,6 +1005,8 @@ def test_controller_and_worker_bases_speak_only_the_contract():
 Часы уходят на сто секунд. Воркер молчит. `workers_seen()` пуст — **никто ничего не удалял**, изменилось только время.
 
 И последнее, ради чего этот тест существует: подсистема называется `thing`, единицы — `"1"`, `"2"`, `"3"`, а в теле нет ни одного слова, которое сообщало бы, чем эта система занимается. Всё, что выше, — механика, и она закончена.
+
+Спека у воркера есть и здесь — без неё база не запускается (ADR 0013), — но самая короткая: `spec_named("thing")` из `tests/conftest.py`, единица с именем и ни одного ключа, который прочёл бы механизм.
 
 **Результат:** `Controller` в `contract.py`, `Worker` и его рантайм в `worker.py`; оба теста зелёные; и объяснение своими словами, почему `write` принимает функцию, а не значение, что означает `None` из неё и почему потерянная аренда останавливает одну единицу, а чужая строка слота — весь экземпляр.
 
