@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: решение; в курсе сделано (М11 без оркестратора), в продукте — прототип хранилища
-subject: М11_Cluster, М10A_Platform, М12_DomainVMS
+subject: М11_Cluster, М10A_Platform, М12A_Domain
 source-commit: 133554f
 date: 2026-10-04
 status: draft
@@ -207,6 +207,6 @@ status: draft
 - [М11 урок 2](../М11_Cluster/02-the-store-becomes-replicated.md) — хранилище становится реплицируемым: группа из одного, вступление, API и отказы
 - [М11 урок 6](../М11_Cluster/06-what-stays-on-the-server.md) — объекты как файлы на каждом сервере
 - [«Оркестратор как форма поставки»](../М11_Cluster/orchestrator-as-a-delivery-form.md) — пять случаев, приложение `deploy/nomad/`, лицензия Nomad
-- [М12 урок 16](../М12_DomainVMS/16-a-camera-nobody-can-reach.md), шаг 9 — резерв на втором сервере, один поток
+- [М12 урок 16](../М12B_DomainVMS/03-a-camera-nobody-can-reach.md), шаг 9 — резерв на втором сервере, один поток
 - [М10A урок 3](../М10A_Platform/03-RegisterScheme.md) — шов хранилища по схеме URL
 - [hashicorp/raft](https://github.com/hashicorp/raft) — библиотека консенсуса

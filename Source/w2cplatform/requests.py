@@ -120,8 +120,8 @@ def _end(ctl, key: str, it: dict, idx, now: float, most_valid: float) -> bool:
 
 # The rows the holders answered, cleared — and with `sweep`, the reaper's look at every standing row: a row with a
 # deadline (`valid_until`; in a family with no `ttl`, any action) nobody performed (`_end`), and a row with none older
-# than the spec's `ttl` (an ask nobody
-# could answer holds one of its person's places for good otherwise — the review's sixth pass); a row that names no unit
+# than the spec's `ttl` (an ask nobody could answer holds one of its person's places for good otherwise — the review's
+# sixth pass); `ttl: 0` ends none by age — the spec said so, nothing assumed it (2026-10-05); a row that names no unit
 # is a list, not a request, and goes uncounted. Rows whose `action` the spec says another process serves
 # (`requests.elsewhere`) are that process's to end.
 def clear_requests(ctl, sweep: bool = True) -> int:
@@ -136,7 +136,7 @@ def clear_requests(ctl, sweep: bool = True) -> int:
     declared = ctl.spec.requests or {}
     elsewhere = set(declared.get("elsewhere") or ())
     most_valid = float(declared.get("most_valid") or MOST_VALID)
-    ttl = float(declared.get("ttl") or 0)
+    ttl = declared.get("ttl")                               # None: a family of deadlines (`valid_for`); 0: no limit, said
     for key in keys:
         rid = key.rsplit("/", 1)[1]
         if rid in fetched or said_id(rid) in fetched:       # a long id is said by its digest (the eighth pass)
@@ -148,7 +148,7 @@ def clear_requests(ctl, sweep: bool = True) -> int:
         it, idx = ctl.vars.get(key)
         if not it or str(it.get("action") or "") in elsewhere:
             continue
-        if it.get("valid_until") not in (None, "") or (not ttl and it.get("action")):
+        if it.get("valid_until") not in (None, "") or (ttl is None and it.get("action")):
             _end(ctl, key, it, idx, now, most_valid)        # a deadline: its holder ends it — or, with none, this
             continue
         if not ttl:

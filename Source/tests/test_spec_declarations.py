@@ -285,7 +285,7 @@ def test_the_resource_asks_a_subsystem_that_frees_by_a_request_row_and_reads_its
     the subsystem's runs in the resource."""
     from w2cplatform.resource import SPACE_KEY, Resource
     vars_, objects, wall = _box()
-    spec = SubsystemSpec.from_dict({**BIN, "requests": {"free": True}})
+    spec = SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": 0}})
     catalog.register(spec)
     full = {"used": 98}
     res = Resource(tempfile.mkdtemp(prefix="full-"), "s1", "http://s1", vars_, objects, wall=wall,
@@ -460,6 +460,50 @@ def test_a_request_is_a_row_named_by_its_key_stamped_with_its_group_and_held_to_
         assert call("POST", "/requests", {"unit": "shed/drill", "action": "poke"}, key=False)[0] == 400
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": -1}}), "requests.valid_for is a positive number")
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"stamp": ["colour"]}}), "`requests:` is")
+
+
+def test_how_long_a_request_stands_is_declared_and_a_spec_that_does_not_say_it_does_not_load():
+    """The architect, 2026-10-05 (ADR 0012): no number is assumed. A family that frees says `requests.ttl` — a ledger
+    `per_person` reads it too; any other says `requests.valid_for`; a spec without the key it needs is refused, naming
+    the path. `ttl: 0` is no limit, said so; a negative one is no time."""
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "requests": {"free": True}}), "requests.ttl is required with `free: true`")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"stamp": ["by"]}}), "requests.valid_for is required")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 20, "per_person": 3}}),
+             "requests.ttl is required with `per_person`")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": -1}}), "requests.ttl is a positive number (or 0")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 0}}), "requests.valid_for is a positive number")
+    assert SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": 0}}).requests["ttl"] == 0
+
+
+def _asks(ttl):
+    from w2cplatform.console import SpecConsole
+    spec = SubsystemSpec.from_dict({**BIN, "requests": {
+        "free": True, "ttl": ttl, "per_person": 1, "settle": 10, "stamp": ["at"],
+        "schema": {"type": "object", "required": ["unit"], "properties": {"unit": {"type": "string"}}}}})
+    vars_, objects, wall = _box()
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    ctl.create({"name": "a"})
+    return ctl, SpecConsole(ctl, wall=wall), wall
+
+
+def test_the_ledger_and_the_reaper_both_end_a_request_at_the_declared_ttl_and_ttl_0_ends_none_by_age():
+    """One key, read by both: a person's ledger forgets an id older than `ttl` though its row stands, and the reaper ends
+    that row; `ttl: 0` — no limit — keeps both, a day or a year on (the ledger assumed a day, the reaper nothing)."""
+    from w2cplatform import requests
+    from tests.conftest import Served
+    for ttl, later, forgets in ((100, 101, True), (0, 365 * 86400, False)):
+        ctl, con, wall = _asks(ttl)
+        start = wall.t
+        with Served(con) as call:
+            # an action and no deadline: the reaper's `most_valid` turn is for a family of deadlines, not this one
+            assert call("POST", "/requests", {"unit": "bin/a", "action": "x"}, key="r1", headers={"X-User": "ann"})[0] == 202
+            wall.t = start + 50
+            assert call("POST", "/requests", {"unit": "bin/a"}, key="r2", headers={"X-User": "ann"})[0] == 429
+            wall.t = start + later                         # r1's row stands: the ledger reads its own age of it
+            assert (call("POST", "/requests", {"unit": "bin/a"}, key="r2", headers={"X-User": "ann"})[0] == 202) == forgets, (ttl, "ledger")
+            requests.clear_requests(ctl)
+            assert (ctl.vars.get(ctl.spec.sub.request_key("r1"))[0] is None) == forgets, (ttl, "reaper")
+            assert ctl.vars.get(ctl.spec.sub.request_key("r2"))[0] or not forgets         # filed just now: not old
 
 
 def test_what_a_change_or_a_request_reaches_is_the_specs_group_the_cluster_or_the_units_a_row_names():
