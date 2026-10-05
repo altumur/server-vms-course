@@ -61,13 +61,13 @@ def kept() -> list[str]:
 
 
 def table(sub: str, name: str) -> str | None:
-    """The row the door serves at `/api/<sub>/<name>`, or None when no spec declares that table."""
+    """The row the door serves at `/domain/<sub>/<name>`, or None when no spec declares that table."""
     s = spec(sub)
     return f"{s.domain_prefix}{name}" if s is not None and name in s.domain.tables else None
 
 
 def unit_rows(sub: str) -> bool:
-    """`/api/<sub>/<rows>`: the read view's list of that subsystem's units — a directory spec, by its own row name."""
+    """`/domain/<sub>/<rows>`: the read view's list of that subsystem's units — a directory spec, by its own row name."""
     return any(s.name == sub for s in directory())
 
 

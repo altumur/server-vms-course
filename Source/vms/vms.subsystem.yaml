@@ -368,7 +368,7 @@ snapshot: [name, source, enabled, events_retention_days, priority, labels, alarm
 # where a recording cluster finds cameras of others (sources), who records a camera and where it pushes (primaries), the
 # ingest a camera nobody records polls (poll), a relay's road to the centre (upstream), and whom a camera may ask to act
 # (asks) — each carried home by the member's agent as it is. Kept at the holder for the whole domain: which cluster
-# records which camera of another (crossings, served at `/api/vms/crossings`) and the cameras sent to push (roads). The
+# records which camera of another (crossings, served at `/domain/vms/crossings`) and the cameras sent to push (roads). The
 # tokens the books carry: a stream token (to push to, poll or pull from an ingest) and a token to ask one camera of
 # another, issued by the domain's signer with these claims only.
 domain:

@@ -1,7 +1,7 @@
 # /etc/systemd/system/w2c-domain-console.service — the domain's console, on the server that holds the domain
 # (`w2c-run.sh domainconsole` → `python3 -m w2cplatform.domain.console`): the read view of every subsystem of the
-# directory (/api/vms/cameras), the tables the specs serve (/api/vms/crossings), members, topology, the emergency
-# passwords (PUT /api/break-glass/<cluster>). Its federation is `CLUSTERS` (w2c.env): a bare name — this server's own
+# directory (/domain/vms/cameras), the tables the specs serve (/domain/vms/crossings), members, topology, the emergency
+# passwords (PUT /domain/break-glass/<cluster>). Its federation is `CLUSTERS` (w2c.env): a bare name — this server's own
 # cluster — opens the store by THIS unit's socket.
 [Unit]
 Description=w2c domain console — the domain's door for people and tools

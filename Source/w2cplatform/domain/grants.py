@@ -81,7 +81,7 @@ class ClusterGrants:
 
 # WHAT A NAME MAY HOLD (the review's eighth pass, major; the coordinator's decision). A grant is the item
 # `<subject>|<capability>|<unit:<sub>/<id>, labels:a,b, or nothing>`, and the reader split it on `|` into three: a user called `acme|ivan`
-# made FOUR, the split raised, and every grant of the row went with it — `domain_may` raised on every `/api/*` of the
+# made FOUR, the split raised, and every grant of the row went with it — `domain_may` raised on every `/domain/*` of the
 # domain's door, for the admin too, and the command that mends the grants raised the same way. `|`, `"` and the
 # control characters (a newline above all) are not allowed in a user's name, a grant's subject or a label: refused
 # where a user is created (`IdentityStore.create_local`, `create_federated`) and wherever a grant is written (every

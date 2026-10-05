@@ -104,12 +104,13 @@ def test_the_read_view_lists_a_subsystems_units_and_the_shared_view_shows_the_fi
     north.vars.put("domain/testsub/ledger", {"n1": "counted"})
     view.publish(north.objects, {"testsub/ledger": north.vars.get("domain/testsub/ledger")[0]})
     shown = json.loads(north.objects.get(DOMAIN_VIEW))
-    assert {u["ref"]: u.get("start") for u in shown["units"]} == {"n1": 7, "n2": 7, "s1": 7}
+    assert {u["ref"]: u.get("start") for u in shown["units"]["testsub"]} == {"n1": 7, "n2": 7, "s1": 7}
+    assert shown["holder"] == "north" and [m["name"] for m in shown["members"]] == ["north", "south"]
     assert shown["tables"] == {"testsub/ledger": {"n1": "counted"}}
 
 
 def test_the_door_serves_the_units_and_a_declared_table_and_nothing_undeclared():
-    """`/api/<sub>/<rows>` is the read view of a subsystem of the directory; `/api/<sub>/<table>` a row its spec keeps
+    """`/domain/<sub>/<rows>` is the read view of a subsystem of the directory; `/domain/<sub>/<table>` a row its spec keeps
     and serves; a table no spec declares, or another subsystem's name, is no route."""
     import urllib.error
     import urllib.request
@@ -135,12 +136,78 @@ def test_the_door_serves_the_units_and_a_declared_table_and_nothing_undeclared()
         except urllib.error.HTTPError as e:
             return e.code, None
     try:
-        st, body = get("/api/testsub/counters")
+        st, body = get("/domain/testsub/counters")
         assert st == 200 and sorted(r["ref"] for r in body["rows"]) == ["n1", "n2", "s1"]
-        assert get("/api/testsub/ledger") == (200, {"s1": "seen"})
-        assert get("/api/testsub/hidden")[0] == 404 and get("/api/nobody/counters")[0] == 404
+        assert get("/domain/testsub/ledger") == (200, {"s1": "seen"})
+        assert get("/domain/testsub/hidden")[0] == 404 and get("/domain/nobody/counters")[0] == 404
     finally:
         con.stop(srv)
+
+
+def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_them_on_unrewritten():
+    """One set of paths (the console module's contract, §10a): the domain's door answers `GET /domain` — the view in the
+    product's shape, members a list with the holder among them, the topology, who knocks, where the door is —,
+    `/domain/keys` (every `domain/` key, a secret masked), `/spec` (no root subsystem) and `/mounts` (every spec), and
+    `/domain/topology`, `/domain/members`, `/domain/<sub>/<table>`; the old `/api/…` is no route (no alias). The holder's
+    cluster console serves the same view at `/domain` and hands `/domain/X` to the domain's door at `/domain/X`; a
+    cluster that does not hold the domain says it does not know where its door is."""
+    import urllib.error
+    import urllib.request
+    from w2cplatform.console import Mount, SpecConsole
+    from w2cplatform.domain.api import ConsoleAPI
+    from w2cplatform.domain.console import Console
+    from w2cplatform.domain.federation import DomainDirectory
+    from w2cplatform.domain.members import Members
+    from w2cplatform.domain.readview import ReadView
+    from w2cplatform.domain.topology import Topology
+    from w2cplatform.spec import SpecController
+    fed, wall = site()
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    north.vars.put("domain/testsub/ledger", {"s1": "seen"})
+    north.vars.put("domain/testsub/badges/gold", {"since": "1", "pin_secret": "4321"})
+    view = ReadView(fed, wall=wall)
+    view.refresh()
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda c: None), refresh_interval=60,
+                  publish_to=north.objects, holder_vars=north.vars, topology=Topology(north.vars),
+                  members=Members(north.vars, wall=wall, configured=lambda: ["south"], domain="north"))
+    door = con.serve(port=0)
+    con.url = f"http://127.0.0.1:{door.server_address[1]}"
+    con._publish_view()
+    consoles = [Mount(SpecConsole(SpecController(spec(), c.vars, c.objects, wall=wall, cluster=c.name), wall=wall)).serve(port=0)
+                for c in (north, south)]
+
+    def get(srv, path):
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}{path}") as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+    try:
+        st, d = get(door, "/domain")
+        assert st == 200 and d["holder"] == "north" and d["url"] == con.url and "topology" in d and "knocking" in d
+        assert [(m["name"], m["holder"]) for m in d["members"]] == [("north", True), ("south", False)]
+        st, k = get(door, "/domain/keys")
+        gold = next(v for v in k["vars"] if v["key"] == "domain/testsub/badges/gold")
+        assert gold["items"] == {"since": "1", "pin_secret": "***"} and any(o["key"] == "domain/view" for o in k["objects"])
+        assert get(door, "/spec") == (200, {"name": "domain"}) and "testsub" in get(door, "/mounts")[1]["mounts"]
+        assert get(door, "/domain/testsub/ledger") == (200, {"s1": "seen"})
+        assert get(door, "/domain/members")[0] == 200 and get(door, "/domain/topology")[0] == 200
+        for old in ("/api/members", "/api/topology", "/api/testsub/ledger", "/api/where/s1"):
+            assert get(door, old)[0] == 404, old
+        here, there = consoles
+        st, d = get(here, "/domain")
+        assert st == 200 and d["holder"] == "north" and isinstance(d["members"], list)
+        assert get(here, "/domain/topology") == get(door, "/domain/topology")
+        assert get(here, "/domain/testsub/ledger") == (200, {"s1": "seen"})
+        assert get(here, "/domain/where/s1")[1]["cluster"] == "south"
+        assert get(here, "/domain/keys")[0] == 200
+        st, d = get(there, "/domain/topology")
+        assert st == 404 and d["error"] == "no domain here"
+    finally:
+        con.stop(door)
+        for srv in consoles:
+            srv.shutdown()
+            srv.server_close()
 
 
 def test_a_member_carries_home_the_books_its_spec_declares_and_nothing_it_does_not():
@@ -457,7 +524,7 @@ def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_ca
     assert "grant" not in p and "tally" in token_kinds() and "grant" not in token_kinds()["tally"]
 
 def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_through():
-    """`edit: [start, labels]` — an edit of a member's counter through the domain's door (`PUT /api/testsub/counters/
+    """`edit: [start, labels]` — an edit of a member's counter through the domain's door (`PUT /domain/testsub/counters/
     <ref>`) reaches the member with those fields; one with any other (`step` here) is a 400 naming it and the list, and
     the member is not asked. An edit that names no subsystem has no list to be held to: the member's console decides."""
     import urllib.error
@@ -496,9 +563,9 @@ def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read())
     try:
-        st, body = put("/api/testsub/counters/n1", {"labels": ["b"], "name": "renamed"}, "k-4")
+        st, body = put("/domain/testsub/counters/n1", {"labels": ["b"], "name": "renamed"}, "k-4")
         assert st == 400 and body["detail"].startswith("name:"), body
-        assert put("/api/testsub/counters/n1", {"labels": ["b"]}, "k-5")[0] == 200
+        assert put("/domain/testsub/counters/n1", {"labels": ["b"]}, "k-5")[0] == 200
         assert asked[-1] == ("n1", {"labels": ["b"]}) and len(asked) == 3
     finally:
         con.stop(srv)

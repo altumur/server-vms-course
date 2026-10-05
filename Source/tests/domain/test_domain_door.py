@@ -74,10 +74,10 @@ def test_the_door_asks_for_view_to_look_and_admin_to_change():
             return e.code
     try:
         assert call("/healthz") == 200
-        assert call("/api/members") == 401 and call("/api/vms/cameras") == 401
-        assert call("/api/members", "vera") == 403
-        assert call("/api/members", "boris") == 200 and call("/api/members", "anna") == 200
-        assert call("/api/members", "boris", {"name": "cam-SN3"}) == 403
+        assert call("/domain/members") == 401 and call("/domain/vms/cameras") == 401
+        assert call("/domain/members", "vera") == 403
+        assert call("/domain/members", "boris") == 200 and call("/domain/members", "anna") == 200
+        assert call("/domain/members", "boris", {"name": "cam-SN3"}) == 403
     finally:
         con.stop(srv)
 

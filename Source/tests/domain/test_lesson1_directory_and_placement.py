@@ -58,7 +58,7 @@ def test_unreachable_cluster_makes_the_answer_incomplete_not_short():
 
 def test_two_clusters_claiming_a_camera_is_a_fault_not_a_tie():
     """Neither cluster is picked: the answer names both, is not complete, and says it is a placement failure. It used to
-    raise — and a member naming another's camera then made `/api/where` and every edit of that camera a 500 (the
+    raise — and a member naming another's camera then made `/domain/where` and every edit of that camera a 500 (the
     review's eighth pass); the read view's `where` answers the same."""
     from w2cplatform.domain.readview import ReadView
     fed, _ = make_domain({"north": (), "south": ()}, "north")

@@ -9,7 +9,7 @@ no writer of it but a test (DOMAIN-PLATFORM.md, «Course check of domain secrets
 
     python3 -m w2cplatform.domain.breakglass <cluster>        on the holder (PLATFORM_STORE, SECRETS_KEY): the password
                                                                read from stdin, its hash written, the change journalled
-    PUT /api/break-glass/<cluster> {"password"}               the domain's door, for an admin of the domain
+    PUT /domain/break-glass/<cluster> {"password"}               the domain's door, for an admin of the domain
 """
 from __future__ import annotations
 

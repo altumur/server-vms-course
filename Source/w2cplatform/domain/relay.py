@@ -75,7 +75,7 @@ class BundleView:
     # A BUNDLE THAT DOES NOT PARSE IS ITS RELAY'S MEMBERS NOT ANSWERING (the review's eighth pass, blocker). It was read
     # with a bare `json.loads(raw).get(member)`: a torn bundle — or a list, the shape an older build of the relay wrote —
     # raised `JSONDecodeError`/`AttributeError` out of every read of every member behind it, and the readers above take
-    # only `Unreachable` for "did not answer". `DomainDirectory.where` scans every cluster, so `/api/where` and every
+    # only `Unreachable` for "did not answer". `DomainDirectory.where` scans every cluster, so `/domain/where` and every
     # edit through the domain failed for every unit of the domain; the pass over the books raised, and the signer's
     # loop swallowed it — the stream tokens in the books stopped being re-issued. Now the bundle is read through the
     # members' one reader (`MEMBER_OBJECTS`): what does not parse is counted once under `<relay>/bundle`, logged once,

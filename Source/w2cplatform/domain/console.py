@@ -2,21 +2,30 @@
 The domain holder runs it pointed at every cluster. Every route but `/healthz` is the platform's and the specs'
 (`declared`): what a subsystem's units are called, which of its rows the door serves — never a route a subsystem wrote.
 
-    GET  /api/<sub>/<rows>?q=&page=&size=&cluster=   the read model of a subsystem of the directory (`<rows>`: its
+ONE SET OF PATHS, LITERALLY (the contract of the console module, §10a; ADR-0003): every human route of the holder
+lives under `/domain/*`, the same path a cluster console forwards without rewriting, and the page on either is the
+platform's module. `/api/*` is the processes' (`signer_service.py`: carry, member, relay, holder, login) — none here.
+
+    GET  /domain                                the domain's view, as the pass composed it (`ReadView.doc`): the
+                                                members (a list, the holder among them), the topology, who knocks
+    GET  /domain/keys                           every key under `domain/` in the holder's stores (`keysview.py`)
+    GET  /spec, /mounts                         the specs this process loaded (`SPEC_DIR`), for the module: no root
+                                                subsystem (`{name: "domain"}`), every spec a mount, without words
+    GET  /domain/<sub>/<rows>?q=&page=&size=&cluster=   the read model of a subsystem of the directory (`<rows>`: its
                                                 spec's name for its units), with each row's age and its cluster's state
-    PUT  /api/<sub>/<rows>/<ref>                proxied to the owning cluster's console; Idempotency-Key required;
+    PUT  /domain/<sub>/<rows>/<ref>             proxied to the owning cluster's console; Idempotency-Key required;
                                                 refuses placement fields, and any field but its spec's `domain.edit`
-    GET  /api/<sub>/<table>                     a row a spec keeps at the holder and serves (`domain.tables`), as kept
-    GET  /api/causes                            silence grouped by failure domain: one server, one cause
-    GET  /api/where/<ref>                       the directory of directories, incompleteness included
-    GET  /api/members                           the domain's members: who, admitted how and when, which root each
+    GET  /domain/<sub>/<table>                  a row a spec keeps at the holder and serves (`domain.tables`), as kept
+    GET  /domain/causes                         silence grouped by failure domain: one server, one cause
+    GET  /domain/where/<ref>                    the directory of directories, incompleteness included
+    GET  /domain/members                        the domain's members: who, admitted how and when, which root each
                                                 pinned (`pinned`), and who is knocking
-    POST /api/members                           {name} — accept one that is knocking: an admin of the domain only
-    DELETE /api/members/<name>                  a member leaves: an admin of the domain only
-    GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
-    PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
+    POST /domain/members                        {name} — accept one that is knocking: an admin of the domain only
+    DELETE /domain/members/<name>               a member leaves: an admin of the domain only
+    GET  /domain/topology                       the domain's topology: centre, star relays, who reaches it via whom
+    PUT  /domain/topology                       {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
                                                 domain only (`topology.py`)
-    PUT  /api/break-glass/<cluster>             {password} — that cluster's emergency password set or rotated: its
+    PUT  /domain/break-glass/<cluster>          {password} — that cluster's emergency password set or rotated: its
                                                 hash, sealed (`breakglass.py`); an admin of the domain only
     GET  /healthz
 
@@ -24,7 +33,8 @@ What a subsystem computes or streams on the domain — a catalogue of what one u
 its worker's door, which a page reaches by the address the shared view names; it is not this door's.
 
 Each pass also leaves what it saw as `domain/view` in the domain holder's object store, which that cluster's
-own console serves at `GET /domain` (feedback X): one tree for a site whose domain lives in its server room.
+own console serves at `GET /domain` (feedback X): one tree for a site whose domain lives in its server room. Its
+`url` is this door (`CONSOLE_URL`, else `http://CONSOLE_HOST:CONSOLE_PORT`): where that console forwards `/domain/X`.
 
 Stateless: kill it, start another, the first pass rebuilds everything.
 """
@@ -54,18 +64,20 @@ GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row")
 class Console:
     def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
                  publish_to=None, pending=None, topology=None, admin=None, members=None, viewer=None, holder_vars=None,
-                 sealer=None):
+                 sealer=None, url: str | None = None):
         """`publish_to`: the domain holder's object store — each pass leaves the view there as `domain/view`,
         for that cluster's own console to draw (feedback X). `holder_vars`: the holder's store, where the tables the
-        specs serve are kept (`domain.tables`)."""
+        specs serve are kept (`domain.tables`). `url`: where this door is, said in the view for a cluster console to
+        forward the domain's routes to."""
         self.directory, self.view, self.api, self.refresh_interval = directory, view, api, refresh_interval
         self.publish_to, self.pending, self.holder_vars, self.sealer = publish_to, pending, holder_vars, sealer
         # The operator's topology, and `admin(subject) -> bool`: who may edit it. Each pass also makes the domain's
         # copy of every reporting member read where the topology says it reports.
         self.topology, self.admin, self.members = topology, admin, members
-        # `viewer(subject) -> bool`: who may LOOK (feedback CA). Given, every `GET /api/*` asks for a token and a
+        # `viewer(subject) -> bool`: who may LOOK (feedback CA). Given, every `GET /domain*` asks for a token and a
         # `view` on the domain; not given, reading stays open as the earlier lessons left it.
         self.viewer = viewer
+        self.url = url
         self._stop = threading.Event()
 
     # Each step of the pass in a try of its own, and what one raises SAID (М10's seventh review, part 2): one `try` with
@@ -122,9 +134,29 @@ class Console:
                 out[f"{s.name}/{t}"] = dict(items or {})
         return out
 
+    def extra(self) -> dict:
+        """What the view carries of the records this console keeps: the topology, the list of members and who knocks,
+        and where this door is."""
+        out = {"url": self.url} if self.url else {}
+        if self.topology is not None:
+            out["topology"] = self.topology.read()
+        if self.members is not None:
+            out["member_list"] = self.members.read()
+            out["knocking"] = self.members.knocking(self.publish_to) if self.publish_to is not None else []
+        return out
+
+    def view_doc(self) -> tuple[int, dict]:
+        """`GET /domain`: the view this console's last pass left, with its age; composed now when it leaves none."""
+        if self.publish_to is not None:
+            from w2cplatform.console import domain_view
+            st, doc = domain_view(self.publish_to, self.view.wall(), self.view.lost_after)
+            if st != 404:
+                return st, doc
+        return 200, {**self.view.doc(self.tables(), self.extra()), "age": 0.0, "silent": False}
+
     def _publish_view(self) -> None:
         if self.publish_to is not None:
-            self.view.publish(self.publish_to, self.tables())
+            self.view.publish(self.publish_to, self.tables(), self.extra())
 
     def _collect_pending(self) -> None:
         if self.pending is not None:
@@ -190,7 +222,7 @@ class Console:
                 try:
                     if u.path == "/healthz":
                         return self._send(200, console.health())
-                    if console.viewer is not None and u.path.startswith("/api/"):
+                    if console.viewer is not None and (u.path.startswith("/domain") or u.path in ("/spec", "/mounts")):
                         subject = console.api._subject(self._token())
                         if subject is not None and not console.viewer(subject):
                             return self._send(403, {"detail": f"{subject} may not look at the domain: no `view` on it"})
@@ -202,18 +234,28 @@ class Console:
                                                                      int(q.get("size", 50)), q.get("cluster"), sub=sub))
                         items, _ = console.holder_vars.get(declared.table(sub, name)) if console.holder_vars is not None else (None, 0)
                         return self._send(200, dict(items or {}))
-                    if u.path == "/api/causes":
+                    if u.path == "/domain":
+                        return self._send(*console.view_doc())
+                    if u.path == "/domain/keys":
+                        from .keysview import keys
+                        return self._send(200, keys(console.holder_vars, console.publish_to, console.view.wall()))
+                    if u.path == "/spec":
+                        return self._send(200, {"name": "domain"})
+                    if u.path == "/mounts":
+                        from w2cplatform.console import describe
+                        return self._send(200, {"mounts": {s.name: describe(s) for s in declared.catalog.specs()}})
+                    if u.path == "/domain/causes":
                         return self._send(200, [c.__dict__ | {"sentence": c.sentence()} for c in console.view.causes()])
-                    if u.path == "/api/topology" and console.topology is not None:
+                    if u.path == "/domain/topology" and console.topology is not None:
                         return self._send(200, console.topology.read())
-                    if u.path == "/api/members" and console.members is not None:
+                    if u.path == "/domain/members" and console.members is not None:
                         doc = console.members.read()
                         if console.publish_to is None:
                             return self._send(200, {**doc, "knocking": []})
                         own = console.members.own_root()
                         pinned = {n: console.members.pinned(n, console.publish_to, own) for n in doc["members"]}
                         return self._send(200, {**doc, "pinned": pinned, "knocking": console.members.knocking(console.publish_to)})
-                    if u.path.startswith("/api/where/"):
+                    if u.path.startswith("/domain/where/"):
                         a = console.directory.where(u.path.rsplit("/", 1)[1])
                         return self._send(200 if a.found else (404 if a.complete else 503),
                                           a.__dict__ | {"complete": a.complete, "sentence": a.sentence()})
@@ -225,10 +267,10 @@ class Console:
 
             def do_PUT(self):
                 u = urlsplit(self.path)
-                if u.path == "/api/topology" and console.topology is not None:
+                if u.path == "/domain/topology" and console.topology is not None:
                     return self._topology()
-                if u.path.startswith("/api/break-glass/") and console.holder_vars is not None:
-                    return self._break_glass(u.path[len("/api/break-glass/"):])
+                if u.path.startswith("/domain/break-glass/") and console.holder_vars is not None:
+                    return self._break_glass(u.path[len("/domain/break-glass/"):])
                 parent, _, ref = u.path.rpartition("/")
                 target = console.route(parent)
                 if target is None or target[0] != "rows" or not ref:
@@ -249,7 +291,7 @@ class Console:
 
             def do_POST(self):
                 u = urlsplit(self.path)
-                if not (u.path == "/api/members" and console.members is not None):
+                if not (u.path == "/domain/members" and console.members is not None):
                     return self._send(404, {"detail": "no such route"})
                 if not read_body(self, self.MAX_BODY):
                     return
@@ -269,7 +311,7 @@ class Console:
 
             def do_DELETE(self):
                 u = urlsplit(self.path)
-                if not (u.path.startswith("/api/members/") and console.members is not None):
+                if not (u.path.startswith("/domain/members/") and console.members is not None):
                     return self._send(404, {"detail": "no such route"})
                 name = u.path.rsplit("/", 1)[1]
                 try:
@@ -325,11 +367,11 @@ class Console:
 
         return H
 
-    # `/api/<sub>/<name>` by declaration: ("rows", sub, rows) for the read view of a subsystem of the directory,
+    # `/domain/<sub>/<name>` by declaration: ("rows", sub, rows) for the read view of a subsystem of the directory,
     # ("table", sub, name) for a table its spec serves; None for anything else.
     def route(self, path: str):
         parts = path.split("/")
-        if len(parts) != 4 or parts[:2] != ["", "api"]:
+        if len(parts) != 4 or parts[:2] != ["", "domain"]:
             return None
         sub, name = parts[2], parts[3]
         s = declared.spec(sub)
@@ -409,7 +451,9 @@ def main() -> None:
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
                       publish_to=fed.domain_holder.objects, holder_vars=fed.domain_holder.vars,
                       sealer=__import__("w2cplatform.sealing", fromlist=["Sealer"]).Sealer.from_env(os.environ),
-                      pending=pending, topology=topology, admin=admin, members=members, viewer=viewer)
+                      pending=pending, topology=topology, admin=admin, members=members, viewer=viewer,
+                      url=os.environ.get("CONSOLE_URL") or f"http://{os.environ.get('CONSOLE_HOST', '127.0.0.1')}:"
+                                                           f"{os.environ.get('CONSOLE_PORT', '8443')}")
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

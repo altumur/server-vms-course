@@ -124,7 +124,7 @@ def test_the_passes_follow_the_topology_without_a_restart():
 
 
 def test_the_operator_edits_the_topology_in_the_domain_console():
-    """PUT /api/topology, with the revision the operator was looking at; only an admin of the domain holder;
+    """PUT /domain/topology, with the revision the operator was looking at; only an admin of the domain holder;
     a refusal says why. GET shows it."""
     fed = Federation()
     north, _ = make_cluster("north", domain=True)
@@ -135,7 +135,7 @@ def test_the_operator_edits_the_topology_in_the_domain_console():
     con = Console(DomainDirectory(fed), view, api, refresh_interval=0.05, topology=Topology(north.vars),
                   admin=lambda subject: subject == "anna")
     srv = con.serve(port=0)
-    base = f"http://127.0.0.1:{srv.server_address[1]}/api/topology"
+    base = f"http://127.0.0.1:{srv.server_address[1]}/domain/topology"
 
     def put(body, token):
         req = urllib.request.Request(base, data=json.dumps(body).encode(), method="PUT",

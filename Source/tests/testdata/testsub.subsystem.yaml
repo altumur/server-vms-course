@@ -31,7 +31,7 @@ requests:
   most_valid: 600
 snapshot: [name, start]
 # testsub on the domain: a counter is found across clusters by its name; the holder keeps a book of tallies for each
-# member, a ledger for the domain as a whole, served at `/api/testsub/ledger`, and a family of badges, one row each
+# member, a ledger for the domain as a whole, served at `/domain/testsub/ledger`, and a family of badges, one row each
 # (`domain/testsub/badges/<name>`), each a subject of the grants beside the people; a tally carries a token of its own kind.
 domain:
   ref: name

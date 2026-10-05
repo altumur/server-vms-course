@@ -724,7 +724,7 @@ EXCLUSIVE_WITH = ("domain/users",)
 #             platform refuses the write of either side that would make them meet; and a grant to such a subject is no
 #             wider than `grant` (one of the platform's, `access.RANK`) — a write of grants above it is refused
 #             (`domain.declared.refusal`, asked of every write of the holder's store as the platform opens it)
-#   tables    the kept rows the domain's door serves read-only at `/api/<sub>/<table>`
+#   tables    the kept rows the domain's door serves read-only at `/domain/<sub>/<table>`
 #   tokens    the kinds of token the books carry: `{<kind>: {lifetime: <seconds>, claims: [<name>, ...]}}`; the domain's
 #             signer issues them, of those claims only, when the subsystem's worker asks (`trust.tokens.DeclaredIssuer`).
 #             A token carries no rights: what its subject may do is the grants'

@@ -127,7 +127,7 @@ class ConsoleAPI:
 
     def update_unit(self, ref, fields: dict, idempotency_key: str, token: str | None = None,
                     sub: str | None = None) -> dict:
-        """`sub`: the subsystem the door's route named (`/api/<sub>/<rows>/<ref>`), whose spec's `domain.edit` the
+        """`sub`: the subsystem the door's route named (`/domain/<sub>/<rows>/<ref>`), whose spec's `domain.edit` the
         edit is held to."""
         if idempotency_key in self._seen:
             return self._seen[idempotency_key]                # the same PUT, not a second edit

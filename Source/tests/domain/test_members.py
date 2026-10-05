@@ -100,7 +100,7 @@ def test_a_leave_from_the_domain_console_admins_only():
     con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
                   refresh_interval=0.05, members=members, admin=lambda s: s == "anna")
     srv = con.serve(port=0)
-    base = f"http://127.0.0.1:{srv.server_address[1]}/api/members"
+    base = f"http://127.0.0.1:{srv.server_address[1]}/domain/members"
 
     def delete(name, token):
         req = urllib.request.Request(f"{base}/{name}", method="DELETE", headers={"Authorization": f"Bearer {token}"})
@@ -165,7 +165,7 @@ def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
     con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
                   refresh_interval=60, members=members, admin=lambda s: s == "anna", publish_to=north.objects)
     srv = con.serve(port=0)
-    base = f"http://127.0.0.1:{srv.server_address[1]}/api/members"
+    base = f"http://127.0.0.1:{srv.server_address[1]}/domain/members"
     try:
         body = json.load(urllib.request.urlopen(base))
         assert [(k["name"], k["reported"]) for k in body["knocking"]] == [("cam-SN9007", 1000.0)]
