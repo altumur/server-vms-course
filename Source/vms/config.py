@@ -139,7 +139,7 @@ def _host(raw: str, scheme: str) -> str:
         host = str(ip) if ip.version == 4 else f"[{ip}]"
     # By `doors.numeric`, not `isdigit` + `int` (the review's tenth pass, major): `"8²".isdigit()` is true and `int`
     # raises — one camera row whose port held a superscript stopped its holder's every pass and every heartbeat, and the
-    # console's every camera creation (`refuse_camera` reads every row). A port that is no number stays as typed: a key
+    # console's every camera creation (one channel, one camera read every row). A port that is no number stays as typed: a key
     # of its own, which no holder will open — that camera's trouble, and a grant on the cluster to point one at it.
     n = numeric(port)
     if n is not None:
@@ -209,8 +209,8 @@ def device_of(source: str) -> str:
 # no holder has learned the identity of — a DNS name, a spelling nothing reads as one (`010.000.000.050`, full-width
 # digits), any key in the course's build, which has no device factory — needs a grant on the whole cluster
 # (`vms/console.py`, `source_cams`), until a holder opens the device and says what it is. The identity groups devices
-# for rights only, where two devices taken for one ask for MORE: a camera is still one channel of ONE key
-# (`volumes.refuse_camera`), so two clones' cameras are two cameras.
+# for rights only, where two devices taken for one ask for MORE: a camera is still one channel of ONE key (the holder's
+# «device busy», `VmsWorker.held_back`), so two clones' cameras are two cameras.
 #
 # …and across vendors: the token is the identity alone (the review's ninth pass, (д)) — one recorder under two drivers
 # is one recorder, and two vendors' equal strings only ask for more.
@@ -379,9 +379,10 @@ def channel_key(source: str) -> str:
 # WHAT A NEW SOURCE MAY NOT BE (the review's tenth pass, major; the product team's sibling): a camera created or moved
 # with a `source` nobody can read the device or the channel of — a port or a channel written in digits that are not
 # ASCII 0–9 (`8²`, `①`, full width: `isdigit` says yes to all), a port past 65535, a host in a `[` with no `]` — was
-# 200, and the row then stood in every reader. Refused at the door now, in words (`volumes.refuse_camera`, asked only
-# when the source is new to the row); one stored before is read as a key of its own by every parser above, and is
-# that camera's trouble alone. None: the source may stand.
+# 200, and the row then stood in every reader. What is no address by RFC 3986 the platform refuses at the door; what
+# only the VMS reads — a channel in digits that are not 0–9, a `?` in a `driverpack://` address — its holder does not
+# dial and says why (`VmsWorker.held_back`; the boundary's step 6). A row stored with one is read as a key of its own by
+# every parser above, and is that camera's trouble alone. None: the source may stand.
 #
 # …AND NO PASSWORD IN ITS WORDS (the product team's addition to the tenth round): the refusal repeated the source as
 # typed, `driverpack://acme/u:hunter2@10.0.0.5:8²/…` and all, into the reply and the journal's detail. What is said is

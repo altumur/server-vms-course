@@ -144,10 +144,10 @@ def test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place(
 def test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole():
     """srv-a went down with its disk: the recorder that held `disks-a` is silent, and nobody else can hold a
     disk of srv-a. The footage in it is not lost — it is there, unavailable until srv-a is back — and the
-    camera's timeline says exactly that, by volume and server, beside what the live doors answered. Silent by what the
+    recording's timeline says exactly that, by volume and server, beside what the live doors answered. Silent by what the
     console saw: its heartbeat stood still a minute (the product's r29-writers2)."""
     from w2cplatform.contract import Heartbeat
-    from vms.console import vms_routes
+    from vms.footage import footage_routes
     from tests.conftest import door, footage, store
     box, rec_con, rec_ctl = _site()
     con = VmsController(box.vars, box.objects, wall=box.wall)
@@ -158,18 +158,18 @@ def test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole
     footage(st, "1", 2, t - 300, t)
     srv = door(box, st, "r-b", "srv-b")
     try:
-        routes = vms_routes(True, None, con, rec_con)
+        routes = footage_routes(box.objects, box.vars, box.wall)        # the recording's holder's door (step 6)
         rec_con.create({"name": "1", "cam": "1"})
-        routes(None, "GET", "/timeline/1", {})                     # the console's first look: every heartbeat just changed
+        routes(None, "GET", "/door/timeline/1", {})                     # the console's first look: every heartbeat just changed
         box.wall.advance(60); srv.announce()                        # a minute on, r-a has said nothing (r29-writers2)
-        status, body = routes(None, "GET", "/timeline/1", {})
+        status, body = routes(None, "GET", "/door/timeline/1", {})
         assert status == 200 and [(s["start"], s["recorder"]) for s in body["segments"]] == [(t - 300, "r-b")]
         assert body["unavailable"] == [{"volume": "disks-a", "server": "srv-a", "recorder": "r-a", "since": t - 600}]
         assert "disks-a (on srv-a) is unavailable" in body["note"] and "not lost" in body["note"]
 
         box.objects.put(REC_SPEC.sub.heartbeat_key("r-a"),                 # srv-a is back, its recorder holds the disk again
                         Heartbeat("r-a", box.wall(), [], {"server": "srv-a", "volume": "disks-a"}).to_bytes())
-        status, body = routes(None, "GET", "/timeline/1", {})
+        status, body = routes(None, "GET", "/door/timeline/1", {})
         assert isinstance(body, list) and len(body) == 1                   # nothing to explain: a plain list
     finally:
         srv.shutdown()
@@ -1534,3 +1534,29 @@ def test_a_new_quota_is_a_write_into_the_volume_and_goes_under_the_same_fence():
         raise AssertionError("a resize went out with the engine's lock another writer's")
     except Fenced:
         assert st.writer.sizes == [128 << 20]
+
+
+def test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_ring_frees_nothing():
+    """The boundary's step 6: the resource's watermark called the subsystem's hook (`free`); it files a request row now
+    (`rec.subsystem.yaml`: `requests: {free: true}`), and the recorder holding that volume decides. Its footage is a ring
+    of the size the volume was given — nothing on the disk is the recorder's to give up early — so it answers nought in
+    its heartbeat (`freed`) and closes the row; another server's ask is not its to answer."""
+    from w2cplatform.resource import SPACE_KEY, Resource
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=lambda p: (100, 2))
+    res.volumes = {r.volume: box.archive}                                 # the resource's disk is the recorder's volume
+    assert res.relieve()["space"] == "over"
+    rid = f"free-srv-1-{r.volume}"
+    box.vars.put(REC_SPEC.sub.request_key("free-srv-9-other"), {"free": "1", "volume": "other", "server": "srv-9", "at": "0"})
+    r.requests()
+    r.heartbeat_once()
+    from w2cplatform.contract import Heartbeat
+    hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key(r.name)))
+    assert hb.extra["freed"] == {r.volume: 0} and rid in hb.extra["fetched"].split(",")
+    assert "free-srv-9-other" not in hb.extra["fetched"]
+    out = res.relieve()
+    assert out["freed"] == 0 and out["short"] == 48                       # said as a shortfall, and nothing is cut

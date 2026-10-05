@@ -31,13 +31,12 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from w2cplatform import runtime
-from w2cplatform.access import Denied, Gate
 from w2cplatform.console import Deadlined, SendMixin, door_server, heartbeats, holder_of, read_body
 from w2cplatform.contract import Worker
 from w2cplatform.spec import SpecController
 from w2cplatform.variables import Variables
 
-from .config import LIVE_SPEC, cam_ref
+from .config import LIVE_SPEC
 from w2cplatform.rows import PARSE_ERRORS
 
 LIVE = LIVE_SPEC.sub
@@ -93,12 +92,12 @@ class LiveWorker(Worker):
                  peer_factory=None, env: dict | None = None, archive_root: str | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
-        self.gate = Gate(self.vars, self.wall, glass=False)   # who may be given a stream here (`handler`): a token, never the console's emergency session
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
         self.server = runtime.server(env, server)   # before the claim: a process on a decommissioned server gets no slot
         self.claim_at_start(name if name is not None else runtime.slot(env, LIVE_SPEC.slot_name_env, LIVE_SPEC.slot_prefix), env)   # a spare: an offer
         self.ctl = ctl                                              # the live SpecController with the gateway's token: deletes its own idle units
         self.url = url or env.get("GATEWAY_URL", "")
+        self.owners: dict[str, str | None] = {}         # who opened each session (the door token's name): its own to hang up
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "100"))
         self.labels = runtime.labels(env)
         # Its server's events archive — where its journal goes (`Worker.journal`: `worker.name_taken`, an alarm). It had
@@ -322,8 +321,11 @@ class LiveWorker(Worker):
         return max(0, self.capacity - len(self.sessions) - self.answering)
 
     def heartbeat_once(self) -> None:
+        for sid in [s for s in self.owners if s not in self.sessions]:
+            self.owners.pop(sid, None)                  # swept or hung up: nobody's to hang up any more
         self.heartbeat([up.to_status() for up in self.upstreams.values()], server=self.server, instance=self.instance,
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
+                       **({"door_url": self.url} if self.url else {}),   # the page's door (`/live/where/<cam>` hands it out)
                        sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
                        swept=self.swept, resets=self.resets, **({"refused": dict(self.refused)} if self.refused else {}))
 
@@ -332,14 +334,12 @@ class LiveWorker(Worker):
                 f"# TYPE live_streams_up gauge\nlive_streams_up {len(self.upstreams)}\n"
                 f"# TYPE live_headroom gauge\nlive_headroom {self.headroom()}\n")
 
-    # The labels of the camera a stream is of, for a grant given on labels. Read from the row, as text: a
-    # gateway holds fan-outs, not cameras, and has no parsed rows of them.
-    def labels_of(self, cam) -> list:
-        try:
-            items, _ = self.vars.get(f"vms/cameras/{cam}")
-        except OSError:
-            return []
-        return [l for l in str((items or {}).get("labels", "")).split(",") if l]
+    # The platform's keeper of this gateway's page door (`w2cplatform/door.py`): the console's token, checked here.
+    def door_keeper(self):
+        from w2cplatform.door import DoorKeeper
+        if getattr(self, "_door_keeper", None) is None:
+            self._door_keeper = DoorKeeper(self.name, self.wall)
+        return self._door_keeper
 
     # -- the WHEP server -------------------------------------------------------------------------------
     def handler(self):
@@ -354,11 +354,16 @@ class LiveWorker(Worker):
 
             def log_message(self, *a): pass
 
+            def do_OPTIONS(self):
+                gw.door_keeper().preflight(self)
+
             def do_POST(self):
+                self._extra_headers = gw.door_keeper().headers(self)      # a page of a console's origin reads the answer
                 if not self.path.startswith("/whep/"):
                     return self._send(404, {"error": "no such path"})
                 cam = self.path[len("/whep/"):].split("?")[0]
-                if not self._admitted(cam):
+                who = self._admitted(cam)
+                if who is None:
                     self.close_connection = True         # refused before the body: it is not read
                     return
                 # The offer, bounded (the sixth pass: "every place a body is read"): it was `Content-Length` bytes,
@@ -377,33 +382,47 @@ class LiveWorker(Worker):
                     return self._send(503, {"error": "this gateway is full"})
                 except ValueError as e:
                     return self._send(400, {"error": str(e)})
+                # WHO WATCHED, LIVE (feedback CL), said where the stream is given now — the gateway (the console said it
+                # while it proxied the offer): who (the name the console gave the token to), which camera, the session,
+                # from where. And the session is that viewer's alone to hang up (the review's third pass).
+                gw.owners[sid] = who.get("sub")
+                gw.journal.say("live.view", user=who.get("sub") or "anybody", target=cam, session=sid, gateway=gw.name,
+                               addr=str(self.client_address[0]))
                 data = answer.encode()
                 self.send_response(201); self.send_header("Content-Type", "application/sdp")
+                for k, v in gw.door_keeper().headers(self):
+                    self.send_header(k, v)
                 self.send_header("Location", f"/whep/session/{sid}"); self.send_header("Content-Length", str(len(data)))
                 self.end_headers(); self.wfile.write(data)
 
-            # THE GATEWAY ASKS TOO (the order agreed with the product, feedback BP). The console checks a
-            # viewer's token — and then calls this door, which anybody on the network it listens on could
-            # call instead. Until processes prove themselves to each other (mutual TLS: not in this course's
-            # code), the one check that can stand here is the VIEWER's own: the console passes the token on,
-            # and the gateway checks it against the same cluster store, by the same gate
-            # (`w2cplatform/access.py`) — `view` on this camera. No key set in the store: open, as the
-            # console is. A key set and nothing to check with: shut.
-            def _admitted(self, cam) -> bool:
-                try:
-                    gw.gate.admit(self.headers, "view", cam_ref(cam) if cam is not None else None,   # vms/<cam>: a grant's unit
-                                  gw.labels_of(cam) if cam is not None else [])
-                    return True
-                except Denied as e:
-                    self._send(e.status, {"error": "denied", "detail": e.why})
-                    return False
+            # THE PAGE COMES HERE ITSELF (the boundary's step 6, the owner's decision 1: the console proxied the offer and
+            # the hang-up, `LiveFront`). It comes with the door token the console gave with the stream's place (`GET
+            # /live/where/<cam>`) — the console asked `view` on the camera then — for THIS gateway and this stream
+            # (`w2cplatform/door.py`): checked here by the cluster's public key, `DOOR_RING`; none, the door is open and
+            # says so. The token is needed to OPEN — an offer, a hang-up; a stream that is up lives by its session.
+            def _admitted(self, cam):
+                return gw.door_keeper().admit(self, "whep", f"live/{cam}")
 
             def do_DELETE(self):
+                self._extra_headers = gw.door_keeper().headers(self)
                 if not self.path.startswith("/whep/session/"):
                     return self._send(404, {"error": "no such path"})
-                if not self._admitted(None):                        # to hang up: anybody this cluster knows
+                sid = self.path[len("/whep/session/"):]
+                held = gw.sessions.get(sid)
+                if held is None:
+                    return self._send(404, {"closed": False})
+                who = self._admitted(held[0])                       # to hang up: a token for that session's stream…
+                if who is None:
                     return
-                ok = gw.hangup(self.path[len("/whep/session/"):])
+                owner = gw.owners.get(sid)
+                if owner and who.get("sub") != owner:               # …given to the viewer who opened it
+                    return self._send(403, {"error": "not your session",
+                                            "detail": f"{who.get('sub')} may hang up only the sessions it opened"})
+                ok = gw.hangup(sid)
+                if ok:
+                    gw.owners.pop(sid, None)
+                    gw.journal.say("live.view.ended", user=who.get("sub") or "anybody", session=sid, gateway=gw.name,
+                                   addr=str(self.client_address[0]))
                 self._send(200 if ok else 404, {"closed": ok})
 
             def do_GET(self):

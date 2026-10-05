@@ -27,7 +27,8 @@ from w2cplatform import longpoll
 from w2cplatform.contract import Heartbeat, Subsystem, Worker, requests_acl
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import ALARM, EventLog
-from vms.auto import AutoController
+from vms.config import AUTO_SPEC
+from w2cplatform.spec import SpecController
 from vms.autoworker import AutoWorker
 from vms.config import AUTO_SPEC, SPEC as VMS, WORKER_ACL
 from vms.controller import VmsController
@@ -53,9 +54,9 @@ def _real_box() -> Box:
 
 def _resource(box, server: str = "srv-a"):
     """The resource of one server, over HTTP, heartbeating its address: `(resource, http server)`."""
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from w2cplatform.resource import serve
-    res = vms_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
     srv = serve(res, "127.0.0.1", 0)
     res.url = f"http://127.0.0.1:{srv.server_address[1]}"
     res.heartbeat()
@@ -84,10 +85,10 @@ def _holder(box, **kw):
 
 def _evaluator(box, cid, index=None):
     """An evaluator holding one scenario: the contact of camera `cid` closes — its relay 2 is pulsed."""
-    AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
+    SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
         {"name": "door", "when": [{"sub": "vms", "kind": "io.input", "unit": str(cid)}], "within": 0,
          "then": [{"sub": "vms", "action": "output", "unit": str(cid), "port": 2, "pulse_ms": 500}], "rate_per_minute": 600})
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", ["door"])
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", ["door"])
     return AutoWorker("a-1", box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det")),
                       box.objects, index=index or MergedIndex(box.objects, wall=box.wall), clock=box.clock, wall=box.wall,
                       server="srv-a", archive_root=box.archive, env={})
@@ -718,7 +719,7 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
     skew is counted in both directions: AHEAD, a moment after ours, is a road of zero; BEHIND, a filing before our
     previous listing that did not have the row. After a restart the request's road is measured from its filing, not
     zero. All of it leaves in the heartbeat and is on the console's `/metrics`."""
-    from vms.console import vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
@@ -764,7 +765,7 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
 
     holder.heartbeat_once()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
-    text = "\n".join(vms_metrics(con)())
+    text = spec_metrics(con)
     for line in ('vms_event_to_device_seconds_bucket{worker="w-1",by="auto",le="0.25"} 2',
                  'vms_event_to_device_seconds_count{worker="w-1",by="auto"} 4',
                  'vms_event_to_device_seconds_count{worker="w-1",by="operator"} 1',
@@ -792,7 +793,7 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     asks: live by their heartbeats, at the address `/events` is asked at. And how the long poll went is in its
     heartbeat and on the console's `/metrics` — where a wait that fails, and breaks nothing, is seen."""
     from tests.test_autoworker import _Log, _assigned, _scenario, _worker, ev
-    from vms.console import auto_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     t = box.wall()
     log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
@@ -801,9 +802,9 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     assert w.wants() == [] and w._resources() == {}                  # before its first pass; and a fake index keeps no list
     assert w.reconcile_once() == ["door-on-badge"]
     assert w.wants() == [("det", "motion", "7-motion"), ("vms", "io.input", "12")]   # the unit is in the want (M8)
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     w.heartbeat_once()
-    assert "auto_waits_total{" not in "\n".join(auto_metrics(con)())                 # the long poll was not asked for
+    assert "auto_waits_total{" not in spec_metrics(con)                 # the long poll was not asked for
 
     from tests.conftest import Clock
     looks = Clock()                                                  # the index's cache of the listing: its own clock
@@ -824,7 +825,7 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     lp.sync()
     _until(lambda: lp.errors == 1, 2.0, "the refused wait to be counted")
     w.heartbeat_once()
-    text = "\n".join(auto_metrics(con)())
+    text = spec_metrics(con)
     for line in ('auto_waits_total{worker="a-1"} 1', 'auto_woken_total{worker="a-1"} 0',
                  'auto_early_passes_total{worker="a-1"} 0', 'auto_wait_errors_total{worker="a-1"} 1'):
         assert line in text, line
@@ -913,7 +914,7 @@ def test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares
     import inspect
     import vms.__main__ as m
     from vms.jobs import clear_requests
-    assert "_clear_loop" in inspect.getsource(m.console) and "clear_requests(" in inspect.getsource(m._clear_turn)
+    assert "_clear_loop" in inspect.getsource(m.jobs) and "clear_requests(" in inspect.getsource(m._clear_turn)
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
@@ -973,8 +974,8 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     said it (`_confirm`); one write the store refused, and a restart in the ten seconds after, and the next instance
     found the bare mark — `unknown`, a `command.failed`. The answer is owed now (`_marks_owed`) and written again at
     every look until the store takes it. And what the beat waits on is on `/metrics`: slow devices, calls in flight,
-    answers said again (`beat_lines`)."""
-    from vms.console import vms_metrics
+    answers said again (`metrics:` in vms.subsystem.yaml)."""
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
@@ -1003,7 +1004,7 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     assert "command.failed" not in [k for _, _, k in again.observed]
     again.heartbeat_once()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
-    text = "\n".join(vms_metrics(con)())
+    text = spec_metrics(con)
     for line in ('vms_commands_reanswered_total{worker="w-1"} 1', 'vms_devices_slow{worker="w-1"} 0',
                  'vms_commands_in_flight{worker="w-1"} 0'):
         assert line in text, line
@@ -1011,17 +1012,18 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
 
 def test_a_command_is_performed_only_on_the_device_it_was_given_for():
     """The review's eighth pass, minor: rights on a command are asked when it is given, on every camera of the device
-    (`command_cams`), and it may wait ten minutes (`MAX_VALID`). A camera moved onto another device meanwhile is not
-    the camera the person had the right to command: the console writes the device into the row (`device`), and the
-    holder performs it only there — refused, in plain words, otherwise. A row with no `device` is as before."""
+    (the spec's `rights.reach.requests`, by the group), and it may wait ten minutes (`MAX_VALID`). A camera moved onto
+    another device meanwhile is not the camera the person had the right to command: the console writes the group its
+    rights were asked on into the row (`group`, the spec's `requests.stamp`), and the holder performs it only there —
+    refused, in plain words, otherwise. A row with no `group` is as before."""
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
     until = str(box.wall() + 300)
     box.vars.put("vms/requests/moved", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until,
-                                        "device": "acme/10.0.0.91"})
+                                        "group": "driverpack://acme/10.0.0.91"})
     box.vars.put("vms/requests/here", {"unit": str(cid), "action": "output", "port": "2", "valid_until": until,
-                                       "device": "acme/10.0.0.90"})
+                                       "group": "driverpack://acme/10.0.0.90"})
     box.vars.put("vms/requests/old", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until})
     done = []
     for _ in range(3):
@@ -1268,10 +1270,10 @@ def test_an_evaluator_is_woken_by_the_units_it_watches_and_its_early_pass_reads_
     gate = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall).create_camera(
         {"name": "gate", "source": "driverpack://acme/10.0.0.91/ch/1"})["id"]
     assert str(gate) == "2"
-    AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
+    SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall).create(
         {"name": "other", "when": [{"sub": "vms", "kind": "io.input", "unit": "2"}], "within": 0,
          "then": [{"sub": "vms", "action": "output", "unit": str(cid), "port": 1, "pulse_ms": 100}], "rate_per_minute": 600})
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign(
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign(
         "a-1", ["door", "other"])
     passes: list[tuple] = []                                         # (what the pass was told was touched, what it evaluated)
     current: list = []
@@ -1514,12 +1516,12 @@ def test_an_ordinary_pass_reads_the_catalog_once_however_many_scenarios_name_no_
     from tests.test_autoworker import _Log, _worker
     box = Box()
     door_site(box)
-    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     names = [f"any-{i}" for i in range(4)]
     for name in names:
         con.create({"name": name, "when": [{"sub": "vms", "kind": "io.input"}], "within": 0,
                     "then": [{"sub": "vms", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]})
-    AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", names)
+    SpecController(AUTO_SPEC, box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall).assign("a-1", names)
     w = _worker(box, _Log([]))
     listed: list[str] = []
     real = w.catalog.vars.list
@@ -1538,7 +1540,7 @@ def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_po
     their kinds on any unit: the request is held, a line of any camera answers it and says which camera it was (`touched`
     — the early pass still evaluates only what it touches), and the folding is on the pulse and on `/metrics`. And an
     answer of another shape costs that one wait, not the thread."""
-    from vms.console import auto_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = _real_box()
     res, srv = _resource(box)
     holder, cid, _dev, _called = _holder(box)
@@ -1559,7 +1561,7 @@ def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_po
         hb = Heartbeat.from_bytes(box.objects.get(AUTO_SPEC.sub.heartbeat_key("a-1")))
         assert hb.extra["wants_folded"] == 70 and hb.extra["wait_errors"] == 0
         from w2cplatform.spec import SpecController
-        text = "\n".join(auto_metrics(SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall))())
+        text = spec_metrics(SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall))
         assert 'auto_wants_folded{worker="a-1"} 70' in text
     finally:
         evaluator.stop_polling(); srv.shutdown()
@@ -1811,8 +1813,8 @@ def test_a_device_that_has_not_opened_is_in_the_heartbeat_as_opening_and_one_tha
         st = {s["id"]: s for s in hb.status}
         assert st[hung].get("device_state") == "opening" and "device_state" not in st[cams[0]]
         assert [d["device"] for d in holder.device_status()] == sorted(by)          # the door says the same
-        from vms.console import beat_lines
-        assert 'vms_devices_opening{worker="w-1"} 1' in beat_lines("vms", {"w-1": hb})
+        from w2cplatform.metrics import text as spec_metrics
+        assert 'vms_devices_opening{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
     finally:
         gate.set()
     _until(lambda: (holder.reconcile_once(), "acme/10.0.0.51" in holder.devices)[1], 5.0, "the late open to be held")
@@ -1874,8 +1876,8 @@ def test_another_serial_number_under_the_same_key_is_said_and_counted():
         holder.heartbeat_once()
         hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
         assert hb.extra["identity_changes"] == 1
-        from vms.console import beat_lines
-        assert 'vms_device_identity_changes_total{worker="w-1"} 1' in beat_lines("vms", {"w-1": hb})
+        from w2cplatform.metrics import text as spec_metrics
+        assert 'vms_device_identity_changes_total{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
         nvr.identity = "SN-THIRD"                                     # and a holder started on the row of the second
         fresh = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(),
                           clock=box.clock, wall=box.wall, server="srv-a", env={}, archive_root=box.archive,
@@ -2142,10 +2144,10 @@ def test_one_cameras_hung_read_closes_the_door_to_that_camera_not_to_its_nvr_and
         st = next(d for d in holder.device_status() if d["device"] == key)
         assert st["reads_stuck"] == [str(cams[0])] and st["state"] == "slow", st
         assert holder.heartbeat_extra()["door_reads_stuck"] == 1
-        from vms.console import beat_lines                                     # …and on `/metrics` (the thirteenth pass)
+        from w2cplatform.metrics import text as spec_metrics                       # …and on `/metrics` (the thirteenth pass)
         from w2cplatform.console import heartbeats
         holder.heartbeat_once()
-        assert f'vms_door_reads_stuck{{worker="{holder.name}"}} 1' in beat_lines("vms", heartbeats(holder.objects, "vms/"))
+        assert f'vms_door_reads_stuck{{worker="{holder.name}"}} 1' in spec_metrics(VmsController(holder.vars, holder.objects)).splitlines()
         hang.add(str(cams[2]))                                                 # a second camera of it hangs too
         try:
             holder.playback(cams[2], 0, 2)

@@ -106,10 +106,18 @@ from w2cplatform.variables import Variables
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
-from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_of, describe, device_of,
+from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_key, channel_of, describe, device_of,
                      device_identities, device_row, identity_of, live_shm, live_url, said_id, COMMAND_ARG_MAX,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
+
+
+# The group a camera is in, as the platform reads it from the spec (`group_by: {field: source, cut_at: ch}`): what a
+# command's `group` was stamped with when the console asked for its rights (`SpecController.group_value`).
+def SPEC_GROUP(row: dict) -> str:
+    from w2cplatform.spec import url_cut
+    v = str(row.get(SPEC.group_by) or "")
+    return url_cut(v, SPEC.group_cut) if v and SPEC.group_cut else v
 
 # `UNCONFIRMED_MAX`: how long a holder goes on RECORDING past a lease's end while the store is silent.
 #
@@ -665,7 +673,42 @@ class VmsWorker(Worker):
         still held (see `_refresh_devices`) and its archive still served, but no pipeline is
         built for it. Holding the device is what the row buys; the live fan-out is what `live`
         asks for."""
-        return [r for r in self.rows if r.get("live", "always") != "on-demand"]
+        back = self.held_back()
+        return [r for r in self.rows if r.get("live", "always") != "on-demand" and str(r["id"]) not in back]
+
+    # ONE CHANNEL, ONE CAMERA — THE TWIN ONLY THIS WORKER CAN SEE (the owner's decision on the boundary's step 6). The
+    # platform refuses a second camera at the same address in its one spelling (`source: {unique: canonical}`), and
+    # cannot know that `…/ch/02` and `…/ch/2`, or `…/10.0.0.50:80/…` and `…/10.0.0.50/…`, are one channel: that is how
+    # the VMS reads its addresses (`config.device_of`, `channel_key`). Both are one group (`group_by: {cut_at: ch}`)
+    # when they differ after the host, so both are here: the first by id is opened, every other is «device busy» in
+    # this worker's heartbeat (`status`: `why`, `device_state: busy`) and not opened — two pipelines on one channel are camera 2's picture in
+    # camera 1's archive (the review's sixth pass). Two spellings of the host are two groups to the platform, and may be
+    # on two workers: one spelling is the operator's rule. `{camera id: the camera whose channel it is already}`.
+    #
+    # …AND A SOURCE THE VMS CANNOT READ IS NOT OPENED (the review's tenth pass, major, where it was a refusal at the door in
+    # the VMS's words, `config.source_refusal`, until the boundary's step 6): a channel written in digits that are not
+    # 0–9, a `driverpack://` address with a `?` that could name another host than the one rights were asked of. The
+    # platform takes the row (an address by RFC 3986, its port a port); this worker does not dial it, and says why.
+    # `{camera id: (state, why)}` — `busy` or `refused`.
+    def held_back(self) -> dict[str, tuple[str, str]]:
+        from w2cplatform.doors import numeric
+        from .config import source_refusal
+        seen, out = {}, {}
+        for r in sorted(self.rows, key=lambda r: (numeric(str(r["id"])) is None, numeric(str(r["id"])) or 0, str(r["id"]))):
+            if not r.get("source"):
+                continue
+            why = source_refusal(str(r["source"]))
+            if why:
+                out[str(r["id"])] = ("refused", f"not opened: {why}")
+                continue
+            key = (device_of(str(r["source"])), channel_key(str(r["source"])))
+            if key in seen:
+                out[str(r["id"])] = ("busy", f"device busy: camera {seen[key]} is this channel of the device already, "
+                                             f"written another way — one channel is one camera: point one of the two "
+                                             f"elsewhere, or delete it")
+            else:
+                seen[key] = str(r["id"])
+        return out
 
     # Read the assignment (`assignment_rev` kept for the heartbeat) and, for each unit it names, the row
     # `vms/cameras/<id>`; rows that are missing or marked `deleted: "true"` are skipped. "A fresh worker
@@ -1697,13 +1740,13 @@ class VmsWorker(Worker):
                 log.warning("%s: request %s expired unperformed (%.0fs late)", self.name, rid, now - until)
                 continue
             # RIGHTS ARE THE DEVICE'S THE COMMAND WAS FILED FOR (the review's eighth pass, minor). The console asks for them on
-            # every camera of the device (`command_cams`) and writes that device into the row (`device`); a command
-            # waits up to `MAX_VALID`, and a camera moved onto a recorder's channel meanwhile would have the recorder
-            # pulse a relay nobody with a right on it chose. Performed only on the device it was filed for. A row with
-            # no `device` — a scenario's (asked again when its camera moves: `vms/console.py`, `source_cams`) or an
-            # older console's — is performed as before.
-            filed_for = str(it.get("device") or "")
-            if filed_for and filed_for != device_of(str(row.get("source") or "")):
+            # every camera of the device (`rights.reach.requests` in the spec) and writes the group it asked them on into
+            # the row (`group`: the source up to `/ch/`, `placement.group_by`); a command waits up to `MAX_VALID`, and a
+            # camera moved onto a recorder's channel meanwhile would have the recorder pulse a relay nobody with a right
+            # on it chose. Performed only in the group it was filed for. A row with no `group` — a scenario's (asked again
+            # when its camera moves: the spec's `rights.names`) — is performed as before.
+            filed_for = str(it.get("group") or "")
+            if filed_for and filed_for != SPEC_GROUP(row):
                 self._refused(rid, row, it, f"camera {unit} was moved to another device after this command was given: it "
                                             f"was not performed — give it again if it is still wanted", done)
                 continue
@@ -1937,7 +1980,7 @@ class VmsWorker(Worker):
     # `vms_cameras_running`.
     def status(self) -> list[dict]:
         st = self.reconciler.status()
-        out = []
+        out, back = [], self.held_back()
         for cam in self.rows:
             cid = cam["id"]
             pos, lag = st.get(cid, (CONVERGED, 0))
@@ -1957,6 +2000,8 @@ class VmsWorker(Worker):
                 out[-1]["why"] = f"its epoch could not be taken: {self.epoch_errors[str(cid)]}"
             elif str(cid) in self.row_errors:              # running or not: it is not following its row
                 out[-1]["why"] = f"{self.row_errors[str(cid)]}; going on with the row read last"
+            if str(cid) in back:                           # «device busy», or a source it cannot read: not opened, said why
+                out[-1]["device_state"], out[-1]["why"] = back[str(cid)]
             if cam.get("source") and device_of(cam["source"]) in self.coincidences:   # recorded, and said (`describe_devices`)
                 other = self.coincidences[device_of(cam["source"])][0]
                 out[-1]["warning"] = (f"its device gives the same serial number as {other}: either one device under two "
@@ -2589,7 +2634,11 @@ class VmsWorker(Worker):
                 # The playback door's key, once the door is open (`vms/playback.py`): what the console signs a viewer's
                 # address with, and what a process derives its capability from. Here and not in a camera's status:
                 # statuses are the read model the page shows.
-                **({"playback_key": self.playback_key} if getattr(self, "playback_key", None) else {})}
+                **({"playback_key": self.playback_key} if getattr(self, "playback_key", None) else {}),
+                # …and the door a page reads a device's own archive at (`door_url`, the platform's word: `/where` hands it
+                # out with a token for the spec's `door: {routes}` — the boundary's step 6; it was the console's `/segment`)
+                **({"door_url": f"http://{announce_host(self.playback_host, self.server)}:{self.playback_port}/door"}
+                   if getattr(self, "playback_key", None) else {})}
 
     # -- the playback door ---------------------------------------------------------------------------
     # The holder's second surface, and the reason it is HTTP and not the RTSP fan-out: a browser has to
@@ -2689,8 +2738,13 @@ class VmsWorker(Worker):
                 except OSError:
                     pass
 
+            def do_OPTIONS(self):
+                gw.door_keeper().preflight(self)
+
             def do_GET(self):
                 u = urlsplit(self.path); q = {k: v[0] for k, v in parse_qs(u.query).items()}
+                if u.path.startswith("/door/"):
+                    return self._door(u.path, q)
                 if u.path == "/devices":
                     return self._send(200, gw.device_status())
                 if u.path.startswith("/recordings/"):
@@ -2737,6 +2791,58 @@ class VmsWorker(Worker):
                     if who is not None:
                         gw.playback_person(who, -1)
 
+            # THE PAGE'S DOOR TO THE DEVICE'S OWN ARCHIVE (the boundary's step 6: it was the console's `/segment`, which
+            # signed an address to this door; the bytes went holder → browser then too). Opened by the console's door
+            # token for this holder and camera (`w2cplatform/door.py`):
+            #   GET /door/timeline/<cam>?from&to   what the device holds, from the coverage this holder announces
+            #   GET /door/segment/<cam>?from&to    those minutes — CUT to the coverage and held to `SEGMENT_MAX`, as the
+            #                                      console held them (the review's fifth pass, major: a day of a card read
+            #                                      whole into the holder's memory), then served as `/playback/` serves,
+            #                                      under the viewer's share (`PLAYBACK_PER_PERSON`: the token's name)
+            def _door(self, path, q):
+                from .footage import SEGMENT_MAX, answer, coverage_of
+                from w2cplatform.console import holder_of
+                keeper = gw.door_keeper()
+                segs = path.split("/")                       # "", "door", <route>, <cam>
+                if len(segs) != 4 or segs[2] not in ("timeline", "segment") or not segs[3]:
+                    return answer(self, (404, {"error": "no such path"}), keeper.headers(self))
+                cam = segs[3]
+                admitted = keeper.admit(self, segs[2], f"vms/{cam}")
+                if admitted is None:
+                    return
+                try:
+                    t0, t1 = finite(q.get("from", 0)), finite(q.get("to", 1e12))
+                except ValueError:
+                    return answer(self, (400, {"detail": "from and to are unix seconds", "error": "bad range"}), keeper.headers(self))
+                found = holder_of(gw.objects, "vms/", cam, gw.wall(), field="coverage")
+                cov = coverage_of(found) if found is not None and found[0] == gw.name else None
+                lo, hi = (max(t0, cov[0]), min(t1, cov[1])) if cov is not None else (t0, t1)
+                # What the DEVICE has, drawn only where our own footage does not cover it (`yields`: the page cuts it
+                # by every other span — the same subtraction the recorder fetches by, Lesson 16). A span like this is
+                # the one that will disappear: our archive keeps thirty days, a card keeps three.
+                if segs[2] == "timeline":
+                    spans = [{"start": lo, "end": hi, "epoch": 0, "source": "device", "fenced": False, "device": True,
+                              "yields": True, "media": f"segment/{cam}"}] if cov is not None and hi > lo else []
+                    return answer(self, (200, spans), keeper.headers(self))
+                if cov is not None and hi <= lo:
+                    return answer(self, (404, {"detail": f"the device holds nothing of camera {cam} in that interval (it holds "
+                                                         f"{cov[0]:.0f}..{cov[1]:.0f})", "error": "nothing there"}), keeper.headers(self))
+                if hi - lo > SEGMENT_MAX:
+                    return answer(self, (400, {"detail": f"a piece of the device's footage is at most {SEGMENT_MAX:.0f} s; this one "
+                                                         f"is {hi - lo:.0f} s of what the device holds — ask for less",
+                                               "error": "range too long"}), keeper.headers(self))
+                who = str(admitted.get("sub") or "anybody")
+                if not gw.playback_person(who, +1):
+                    return answer(self, (503, {"detail": f"{who} is reading {gw.PLAYBACK_PER_PERSON} pieces of footage at "
+                                                         f"once already — close one first", "error": "busy"}), keeper.headers(self))
+                try:
+                    gw.playback_journal().say("archive.read", user=who, source="device", target=cam,
+                                              addr=str(self.client_address[0]), worker=gw.name, **{"from": lo, "to": hi})
+                    self._cors = keeper.headers(self)
+                    return self._play(cam, {"from": lo, "to": hi}, who)
+                finally:
+                    gw.playback_person(who, -1)
+
             def _play(self, cam, q, who=None):
                 try:
                     pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)), who)
@@ -2756,7 +2862,8 @@ class VmsWorker(Worker):
                 # piece of the wire's size at a time, to a client that keeps the pace (`Paced`).
                 # A piece is let go before the next is read — by this loop as by `playback_pieces` — so a connection
                 # holds one, as the door's budget counts it.
-                out = Paced(self, start_stream(self, 200, "video/mp4"), gw.PLAYBACK_MIN_RATE, gw.PLAYBACK_GRACE)
+                out = Paced(self, start_stream(self, 200, "video/mp4", getattr(self, "_cors", ())), gw.PLAYBACK_MIN_RATE,
+                            gw.PLAYBACK_GRACE)
                 piece, first = first, None
                 try:
                     while piece is not None:
@@ -2776,6 +2883,13 @@ class VmsWorker(Worker):
     # `port=0` the number is invented by the kernel, so it is read back and kept: from this moment
     # `playback_url` says the truth, and a second worker on the same box is an ordinary thing rather than
     # a crash loop every two seconds.
+    # The platform's keeper of this holder's page door (`w2cplatform/door.py`): the console's token, checked here.
+    def door_keeper(self):
+        from w2cplatform.door import DoorKeeper
+        if getattr(self, "_door_keeper", None) is None:
+            self._door_keeper = DoorKeeper(self.name, self.wall)
+        return self._door_keeper
+
     def serve_playback(self, host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
         from .config import opened_beyond_loopback
         from .playback import new_key

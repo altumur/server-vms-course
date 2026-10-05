@@ -12,7 +12,7 @@ r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer 
     "recording": "7",
     "recorder": "r-srv-a-1",
     "volume": "srv-a",
-    "media": "/export/7?rec=7"
+    "media": "export/7"
   },
   {
     "start": 1757499400.0,
@@ -22,7 +22,7 @@ r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer 
     "recording": "7",
     "recorder": "r-srv-a-1",
     "volume": "srv-a",
-    "media": "/export/7?rec=7"
+    "media": "export/7"
   },
   {
     "start": 1757499700.0,
@@ -32,7 +32,7 @@ r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer 
     "recording": "7",
     "recorder": "r-srv-b-1",
     "volume": "srv-b",
-    "media": "/export/7?rec=7"
+    "media": "export/7"
   }
 ]
 
@@ -47,7 +47,7 @@ r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer 
       "recording": "7",
       "recorder": "r-srv-b-1",
       "volume": "srv-b",
-      "media": "/export/7?rec=7"
+      "media": "export/7"
     }
   ],
   "unreachable": [],
@@ -72,7 +72,7 @@ r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer 
     "recording": "7",
     "recorder": "r-srv-a-1",
     "volume": "srv-a",
-    "media": "/export/7?rec=7"
+    "media": "export/7"
   },
   {
     "start": 1757499400.0,
@@ -82,7 +82,7 @@ r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer 
     "recording": "7",
     "recorder": "r-srv-a-1",
     "volume": "srv-a",
-    "media": "/export/7?rec=7"
+    "media": "export/7"
   },
   {
     "start": 1757499700.0,
@@ -92,6 +92,6 @@ r-srv-b-1 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer 
     "recording": "7",
     "recorder": "r-srv-b-1",
     "volume": "srv-b",
-    "media": "/export/7?rec=7"
+    "media": "export/7"
   }
 ]

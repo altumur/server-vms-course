@@ -473,7 +473,7 @@ def test_an_address_inside_a_parameter_is_an_address_and_a_camera_asks_the_platf
     address with no login in it is taken."""
     from tests.test_console_gate import _call, _console
     from vms.config import device_of
-    from vms.volumes import refuse as refuse_volume
+    from vms.volumes import write as declare_volume       # the spec's table rules (`tables.volumes`, step 6)
     from w2cplatform.secrets import address_refusal, hide_in_url
     box = Box()
     ctl, rec, m, srv, base = _console(box)
@@ -503,7 +503,7 @@ def test_an_address_inside_a_parameter_is_an_address_and_a_camera_asks_the_platf
     assert box.vars.list("vms/idem/") and not _leaks(json.dumps([box.vars.get(k)[0] for k in box.vars.list("vms/idem/")]))
     for src in NESTED_FORMS:                                     # the sibling door on the same rule: a volume's url
         try:
-            refuse_volume({"name": "cold", "url": src, "quota_gb": 1})
+            declare_volume(Box().vars, {"name": "cold", "kind": "network", "url": src, "quota_bytes": 1})
             raise AssertionError(f"a volume took {src}")
         except Refused as e:
             assert not _leaks(e), str(e)

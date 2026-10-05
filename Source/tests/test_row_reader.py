@@ -35,7 +35,7 @@ def test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_pa
     recorder heartbeat for 150 s. The row is skipped where volumes are listed and counted ONCE however often it is
     read; the recorder takes its own disk; the volumes page names the row and what to do; `/metrics` is whole."""
     from tests.test_volumes import _disk, _recorder
-    from vms.console import rec_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     _disk(box, "a-good")
     box.vars.put(volumes.key("s3-main"), {"kind": "network", "url": "s3://vms/site", "quota_bytes": "1e12",
@@ -52,16 +52,17 @@ def test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_pa
     assert rows["a-good"]["served_by"] and rows["s3-main"]["garbled"] and "does not parse" in rows["s3-main"]["why"]
     assert view["wanted"] == 2 and view["serving"] == 1
     rec_ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
-    text = "\n".join(rec_metrics(rec_ctl)())
+    text = spec_metrics(rec_ctl)
     assert "rec_volumes_declared 2" in text and "rec_volumes_unserved 1" in text
-    # …and the console does not write such a row: the door refuses it in words (it raised a bare `ValueError`)
+    # …and the console does not write such a row: the door refuses it in words (it raised a bare `ValueError`) — the
+    # platform's table's, by the field's type, since the boundary's step 6
     from w2cplatform.spec import Refused
     for bad in ({"quota_bytes": "1e12"}, {"quota_bytes": 1 << 30, "shrink_confirmed": "yes"}):
         try:
             volumes.write(box.vars, {"name": "s3-2", "kind": "network", "url": "s3://vms/two", **bad})
             raise AssertionError(f"written: {bad}")
         except Refused as e:
-            assert "whole number of bytes" in str(e)
+            assert " is int, not " in str(e), e
     _forget_garbled()
 
 
@@ -108,16 +109,28 @@ def test_a_card_whose_row_stops_parsing_stays_the_cameras_card():
 
 
 def test_a_recording_is_not_homed_on_a_volume_whose_row_does_not_parse():
-    """Read as "no volume", a card whose row was garbled let any camera's recording be homed on it. It is a refusal."""
+    """Read as "no volume", a card whose row was garbled let any camera's recording be homed on it. It is a refusal: a
+    row the store cannot read is no row to point at, and one whose numbers are words still says whose card it is —
+    the platform reads `cam` from it (`must_match`, the boundary's step 6), not the VMS's reading of the whole row."""
     from w2cplatform.spec import Refused
+    from w2cplatform.variables import Garbled
     box = Box()
     box.vars.put(volumes.key("card2"), {"kind": "edge", "url": "/card", "server": "cam-2", "cam": "2", "quota_bytes": "x"})
     ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     try:
         ctl.create({"name": "1-b", "cam": "1", "home": "card2"})
+        raise AssertionError("homed on another camera's card")
+    except Refused as e:
+        assert "home card2 is cam 2's" in str(e), str(e)
+    real = box.vars.get
+    box.vars.get = lambda k, *a, **kw: (_ for _ in ()).throw(Garbled(k, "torn")) if k == volumes.key("card2") else real(k, *a, **kw)
+    try:
+        ctl.create({"name": "1-b", "cam": "1", "home": "card2"})
         raise AssertionError("homed on a volume nobody can read")
     except Refused as e:
         assert "does not parse" in str(e)
+    finally:
+        box.vars.get = real
     _forget_garbled()
 
 
@@ -228,8 +241,9 @@ def test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_
     """`float("nan")` passed the holder's three checks — every comparison with it is false — and a holder that came up
     three hours later performed the command; the console filed JSON `NaN` as it came. Both refuse it now."""
     from tests.test_epoch_refused import _ask, _two_doors
-    from tests.test_group_by import _Body, _ctl
-    from vms.console import vms_routes
+    from tests.test_group_by import _ctl
+    from tests.conftest import Served
+    from w2cplatform.console import SpecConsole
     box = Box()
     con, (one, two), w = _two_doors(box)
     _ask(box, con, "a-nan", one, valid_until="nan")
@@ -239,11 +253,11 @@ def test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_
     assert w.devices["acme/10.0.0.91"].did == [] and w.commands["refused"] == 2 and w.commands["performed"] == 0
     box2 = Box(); ctl, con2 = _ctl(box2)
     door = con2.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
-    route = vms_routes(None, None, con2, None)
-    for i, bad in enumerate(("NaN", "Infinity", '"soon"')):
-        payload = f'{{"unit": "vms/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
-        st, body = route(_Body(payload, key=f"k{i}"), "POST", "/requests", {})
-        assert st == 400 and body["error"] == "bad deadline", (bad, st, body)
+    with Served(SpecConsole(con2, wall=box2.wall)) as call:                  # the spec's `requests:` (step 6)
+        for i, bad in enumerate(("NaN", "Infinity", '"soon"')):
+            payload = f'{{"unit": "vms/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
+            st, body = call("POST", "/requests", raw=payload, key=f"k{i}")
+            assert st == 400 and "valid_until" in body["detail"], (bad, st, body)    # the schema's word, or the deadline's
     assert box2.vars.list("vms/requests/") == []
 
 
@@ -280,30 +294,23 @@ def test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so():
     """`high: "85%"` raised out of `relieve` on every pass: a disk at 98 % freed nothing, with the settings read last in
     hand. They are used — or, never read, the defaults — and the heartbeat says which."""
     from w2cplatform.resource import SPACE_KEY, Resource
+    from vms.config import REC_SPEC                                     # `requests: {free: true}`: asked by a row (step 6)
     box = Box()
-    asked = []
-
-    class Frees:
-        def pass_(self, now):
-            return {}
-
-        def free(self, need, now, min_days, volume=None):
-            asked.append(need)
-            return {"freed": need}
 
     def full(path):
         return 100, 2                                                   # 98 % used
     res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
-    res.register("vms", Frees())
+    [vol] = list(res.volumes)
+    asked = lambda: box.vars.get(res._free_key(REC_SPEC, vol))[0]
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
-    assert res.relieve()["space"] == "over" and asked == [48]
+    assert res.relieve()["space"] == "over" and asked()["free"] == "48"
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "85%", "low": "0.5"})
     out = res.relieve()
-    assert out["space"] == "over" and asked == [48, 48] and "(high)" in res.heartbeat()["space_garbled"]
+    assert out["space"] == "over" and asked()["free"] == "48" and "(high)" in res.heartbeat()["space_garbled"]
     assert "settings read last" in res.space_garbled
     fresh = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
-    fresh.register("vms", Frees())
-    assert fresh.relieve()["space"] == "over" and asked[-1] == 48 and "the defaults" in fresh.space_garbled   # the row's `low` stands
+    box.vars.delete(res._free_key(REC_SPEC, vol))
+    assert fresh.relieve()["space"] == "over" and asked()["free"] == "48" and "the defaults" in fresh.space_garbled   # the row's `low` stands
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
     fresh.relieve()
     assert "space_garbled" not in fresh.heartbeat()                    # mended: said no more
@@ -325,9 +332,9 @@ def test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept():
     twenty of twenty old buckets: the disk fills. Not knowing which minutes are kept is "all of camera 9's"; the rest are
     swept by their days, the row is counted once and nothing is copied for it."""
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     for cam in ("7", "8", "9"):
         EventLog(box.archive, "vms", cam, 1).append(old, "motion")
@@ -337,7 +344,7 @@ def test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept():
         res.retain()
     assert bucket_names_under(box.archive, "vms", "7", 600) == [] and bucket_names_under(box.archive, "vms", "8", 600) == []
     assert len(bucket_names_under(box.archive, "vms", "9", 600)) == 1
-    assert keeps.KEEPS.counts.get("rec") == 1 and keeps.declared(box.vars) == []
+    assert keeps.declared(box.vars) == [] and keeps.KEEPS.counts.get("rec") == 1
     assert "rows_garbled" in res.heartbeat()
     _forget_garbled()
 
@@ -350,7 +357,7 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
     numbers — a recorder's `archive_away_since`, a holder's `command_counts`, a histogram, an evaluator's gauges. Each
     is read as not said, and every line of the page is a number Prometheus takes."""
     from vms.config import AUTO_SPEC, DET_SPEC, SPEC
-    from vms.console import auto_metrics, rec_metrics, vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import SpecConsole
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(2)
@@ -368,7 +375,7 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
     _prometheus(text)
     assert "vms_reconcile_last_pass_age_seconds -1" in text and 'w2c_resource_full{server="srv-b"} 0' in text
     assert 'vms_worker_holds_garbled{worker="w-2"} 0' in text                # the holds, on the page (a minor)
-    _prometheus("\n".join(vms_metrics(ctl)()))
+    _prometheus(spec_metrics(ctl))
 
     det = SpecController(DET_SPEC, box.vars, box.objects, wall=box.wall)
     box.vars.put(DET_SPEC.sub.sweep_key(), {"at": "then", "digests": '["sha256-'})
@@ -379,12 +386,12 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
         {"id": "1", "phase": "running", "last_frame_at": "x", "depth_days": "deep", "samples_refused": {"BAD": "many"},
          "lease": "unconfirmed", "unconfirmed_s": "long"}], {
         "server": "srv-b", "archive_away_since": "then", "keep_missing": {"k-1": "lots"}}).to_bytes())
-    _prometheus("\n".join(rec_metrics(rec)()))
+    _prometheus(spec_metrics(rec))
 
     auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put("auto/heartbeats/a-1", Heartbeat("a-1", t, [], {
         "pass_seconds": "slow", "late": "lots", "waits": "w", "latency": {"buckets": [1], "count": "c", "sum": 0}}).to_bytes())
-    _prometheus("\n".join(auto_metrics(auto)()))
+    _prometheus(spec_metrics(auto))
     assert SPEC.name == "vms"
     _forget_garbled()
 
@@ -452,7 +459,7 @@ def test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader()
     heartbeats are read; the entry with no id says nothing about a unit."""
     from vms import jobs
     from vms.config import DETJOB_SPEC
-    from vms.console import rec_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     t = box.wall()
     job = SpecController(DETJOB_SPEC, box.vars, box.objects, wall=box.wall)
@@ -463,7 +470,7 @@ def test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader()
     rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put("rec/heartbeats/r-9", Heartbeat("r-9", t, [{"phase": "running", "last_frame_at": t, "depth_days": 1}],
                                                     {"writer": "stuck"}).to_bytes())
-    _prometheus("\n".join(rec_metrics(rec)()))
+    _prometheus(spec_metrics(rec))
     _forget_garbled()
 
 
@@ -559,7 +566,7 @@ def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
     Every label value of every metrics function goes through one escaping (`w2cplatform.console.label`): the platform's
     page (workers, servers, tables), the recorders', the holders', the evaluators', and a recorder's own."""
     from vms.config import AUTO_SPEC
-    from vms.console import auto_metrics, rec_metrics, vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import SpecConsole, label
     from tests.test_lesson4_worker import _box_with_cameras
     assert label('7"x\\y\nz') == '7\\"x\\\\y\\nz'
@@ -572,19 +579,19 @@ def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
     box.objects.put('platform/resources/s"1/heartbeat', json.dumps(
         {"server": 's"1\n', "ts": t, "url": "http://s1", "space": {"full": 0.5}, "rows_garbled": {'ke"ep\n': 2}}).encode())
     _prometheus_strict(SpecConsole(ctl, wall=box.wall).metrics_text())
-    _prometheus_strict("\n".join(vms_metrics(ctl)()))
+    _prometheus_strict(spec_metrics(ctl))
     rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put(f"rec/heartbeats/{bad}", Heartbeat(bad, t, [
         {"id": bad, "phase": 'run"ning', "last_frame_at": t - 5, "depth_days": 1, "samples_refused": {'B"AD\n': 2},
          "lease": "unconfirmed", "unconfirmed_s": 3}], {
         "server": "srv-b", "archive_failure": 'aw"ay', "writer": {"state": 's"t'}, "keep_missing": {bad: 5},
         "volume_wait": "net is being written by r-1"}).to_bytes())
-    text = "\n".join(rec_metrics(rec)())
+    text = spec_metrics(rec)
     _prometheus_strict(text)
     assert 'rec_last_frame_age_seconds{unit="7\\"x\\nnew"} 5.0' in text and 'rec_volume_wait{worker="7\\"x\\nnew"} 1' in text
     auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put(f"auto/heartbeats/{bad}", Heartbeat(bad, t, [], {"pass_seconds": 1, "late": 0, "wants_folded": 70}).to_bytes())
-    text = "\n".join(auto_metrics(auto)())
+    text = spec_metrics(auto)
     _prometheus_strict(text)
     assert 'auto_wants_folded{worker="7\\"x\\nnew"} 70' in text
     r = type("R", (), {"keep_state": {bad: {"missing": 5}}, "reconciler": type("C", (), {"actual": {}})(), "backfilled": 0,
@@ -876,11 +883,12 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
     whole, from 0 to infinity, and every unit of no one camera (a scenario on any camera) whole too: 10 buckets removed
     where a sound keep let 37 go. Now `at` is metadata, read as not said; a bound that parses is kept and the lost one is
     open on its side; such a keep holds its camera's buckets and nothing of the units of no camera — those are held by
-    the keeps that read."""
+    the keeps that read. (A scenario is about nobody since the boundary's step 6 — what a keep holds is the spec's
+    `holds:` through `about` — so no keep holds it.)"""
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     now = box.wall()
     day = lambda d: now - d * 86400
     for d in (40, 35, 32):
@@ -897,7 +905,7 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
     left = lambda sub, unit: sorted(round((now - b.start) / 86400) for b in bucket_names_under(box.archive, sub, unit, 600))
     assert left("vms", "7") == [35]                                    # its interval, and no more
     assert left("vms", "8") == [32]                                    # from its start on: 40 and 35 go
-    assert left("auto", "any-door") == [35]                            # held by the keep that reads, not by the open one
+    assert left("auto", "any-door") == []                              # about nobody (the spec's `holds:`, step 6): no keep holds it
     garbled: list = []
     keeps.declared(box.vars, garbled)
     [k8] = garbled
@@ -1057,12 +1065,15 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
     `rec/recordings/r9` raised out of `kept_buckets` — `removed=None` and every unit of the server kept, every pass, and
     `rows_garbled` did not count it. Now each row is read alone: the others are swept by their days, the torn row is
     counted once (`unit_rows_garbled`), and its unit is a unit of no one camera — held where a keep that reads holds,
-    and swept outside it."""
+    and swept outside it. Since the boundary's step 6 what a keep holds is the spec's (`holds:`, `w2cplatform/holds.py`):
+    a unit is held through its spec's `about`, and a scenario is about nobody — its row is not read, and a keep on a
+    camera holds none of its buckets."""
     import os
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import UNIT_ROWS, vms_resource
+    from w2cplatform.holds import UNITS as UNIT_ROWS
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     for sub, unit in (("vms", "7"), ("vms", "8"), ("det", "55"), ("auto", "s1"), ("rec", "r9")):
         EventLog(box.archive, sub, unit, 1).append(old, "motion")                     # inside the keep below
@@ -1078,11 +1089,12 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
         assert "errors" not in out, out
     assert bucket_names_under(box.archive, "vms", "8", 600) == []                      # swept by its days
     assert len(bucket_names_under(box.archive, "vms", "7", 600)) == 1                  # the kept minutes, and only them
-    for sub, unit in (("det", "55"), ("auto", "s1"), ("rec", "r9")):
+    for sub, unit in (("det", "55"), ("rec", "r9")):
         left = bucket_names_under(box.archive, sub, unit, 600)
         assert len(left) == 1 and left[0].start <= old < left[0].end, (sub, unit, left)   # held as ANY, the rest swept
-    assert UNIT_ROWS.counts == {"det": 1, "auto": 1, "rec": 1}, UNIT_ROWS.counts      # once each, not once per read
-    assert res.heartbeat()["rows_garbled"]["unit_row"] == 3
+    assert bucket_names_under(box.archive, "auto", "s1", 600) == []                    # about nobody: held by no keep
+    assert UNIT_ROWS.counts == {"det": 1, "rec": 1}, UNIT_ROWS.counts                 # once each, not once per read
+    assert res.heartbeat()["rows_garbled"]["unit_row"] == 2
     os.remove(box.vars._file("det/units/55"))
     _forget_garbled()
 

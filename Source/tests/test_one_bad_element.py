@@ -152,22 +152,36 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
     """`float(cov["from"])` bare in three routes (the ninth answer's open list): one holder announcing `{"from": "x"}`
     was no reply at all for the camera's `/timeline`, and for its `/segment`. The coverage is read once
     (`coverage_of`): one that does not read is a holder that announces none — no device spans, a segment held to the
-    ceiling alone — counted once as that holder's field."""
+    ceiling alone — counted once as that holder's field. (The holder's own door says both since the boundary's step 6:
+    `/door/timeline/<cam>`, `/door/segment/<cam>`.)"""
+    import urllib.error
+    import urllib.request
     from w2cplatform.rows import FIELDS
-    from vms.console import vms_routes
+    from vms.worker import FakeActuator, VmsWorker
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(1)
     t = box.wall()
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-a")
+    door = w.serve_playback("127.0.0.1", 0)
     box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", t, [
         {"id": 1, "phase": "running", "coverage": {"from": "x", "to": "y"}, "playback_url": "http://w-1/play/1"}],
         {"server": "srv-a"}).to_bytes())
-    extra = vms_routes(media=True, ctl=ctl)
-    h = types.SimpleNamespace(headers={}, client_address=("10.0.0.1", 0))
-    assert extra(h, "GET", "/timeline/1", {"from": str(t - 60), "to": str(t)}) == (200, [])
-    status, rep = extra(h, "GET", "/segment", {"unit": "vms/1", "from": str(t - 60), "to": str(t)})
-    assert status == 200 and rep["playback"].startswith("http://w-1/play/1?"), rep
-    assert "vms/heartbeats/w-1#coverage" in FIELDS.bad
-    assert extra(h, "GET", "/timeline/1", {"from": "yesterday"})[0] == 400       # a word in the query: 400, not no reply
+    base = f"http://127.0.0.1:{door.server_address[1]}/door"
+
+    def get(path):
+        try:
+            with urllib.request.urlopen(base + path) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+    try:
+        assert get(f"/timeline/1?from={t - 60}&to={t}") == (200, [])                 # no device spans
+        status, rep = get(f"/segment/1?from={t - 60}&to={t}")
+        assert status == 404 and rep["error"] == "no device archive", rep            # held to the ceiling, and answered
+        assert "vms/heartbeats/w-1#coverage" in FIELDS.bad
+        assert get("/timeline/1?from=yesterday")[0] == 400                          # a word in the query: 400, not no reply
+    finally:
+        door.shutdown()
     _forget_garbled()
 
 
@@ -182,15 +196,20 @@ def test_a_body_that_is_no_json_object_is_refused_on_every_write_route():
         assert _raw(base, "POST", "/cameras", json.dumps({"source": "driverpack://file/1.mp4"}).encode(), "k0") == 201
         n = 0
         for method, path in (("POST", "/cameras"), ("PUT", "/cameras/1"), ("PUT", "/policy"), ("POST", "/requests"),
-                             ("POST", "/backfill"), ("POST", "/marks")):
+                             ("POST", "/rec/requests"), ("POST", "/rec/keeps"), ("POST", "/rec/volumes"), ("POST", "/marks")):
             for data in (b"{not json", BODY_DEEP.encode(), b"[1, 2]"):
                 n += 1
                 assert _raw(base, method, path, data, f"k{n}") == 400, (method, path, data[:12])
         assert _raw(base, "POST", "/marks", json.dumps({"cam": "seven"}).encode(), "km") == 400
         assert [r["id"] for r in ctl.units()] == [1]
-        assert _raw(base, "GET", "/export/1?from=nan&to=60", None) == 400
     finally:
         srv.shutdown()
+    from tests.conftest import page_door
+    pd = page_door(box)
+    try:
+        assert _raw(pd.base, "GET", "/door/export/1?from=nan&to=60", None) == 400   # a recording's export, at its holder's door
+    finally:
+        pd.shutdown()
 
 
 def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_labels_and_an_offer_that_is_no_text_too():
@@ -198,9 +217,10 @@ def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_la
     JSON reads) and `PUT /servers/<s>/labels` (nested) dropped the connection with no answer — they read the body bare,
     beside the routes the tenth round had closed. Through `object_body` now: 400, in words, nothing written. The sibling
     of the same class: an offer of a live view that is no text (bytes that are not UTF-8), at the console and at the
-    gateway, was the same dropped connection; 400 now."""
+    gateway, was the same dropped connection; 400 now — at the gateway, where the page makes its offer since the
+    boundary's step 6."""
     from tests.test_console_gate import _console
-    from tests.test_lesson8_live import OFFER, _box as _live_box, _gateway
+    from tests.test_lesson8_live import OFFER, _box as _live_box, _gateway, _whep
     box = Box()
     ctl, rec, m, srv, base = _console(box)
     try:
@@ -215,12 +235,11 @@ def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_la
     box, ctl, live_ctl, w, srv, base = _live_box()
     try:
         g = _gateway(box, "g-1")
-        assert _raw(base, "POST", "/whep/1", OFFER.encode()) == 503    # the first offer makes the stream: placed next
+        assert _whep(base, 1)[0] == 503                                # the first viewer makes the stream: placed next
         live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
         bad = b"v=0\r\n\xff\xfe\xfa"
-        assert _raw(base, "POST", "/whep/1", bad) == 400               # the console's
         assert _raw(g.url, "POST", "/whep/1", bad) == 400              # the gateway's own
-        assert _raw(base, "POST", "/whep/1", OFFER.encode()) == 201 and len(g.sessions) == 1
+        assert _raw(g.url, "POST", "/whep/1", OFFER.encode()) == 201 and len(g.sessions) == 1
     finally:
         srv.shutdown()
 
@@ -259,12 +278,13 @@ def test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_eva
     """Reproduced (the tenth pass, major): a scenario whose `when` is nested a hundred thousand deep raised
     `RecursionError` past `vms/resource.py`'s own tuple of exceptions — out of `kept_buckets`, and the whole server's
     `retain` swept nothing. And past the evaluator's (`AutoWorker.reconcile_once`): no scenario after it was decided.
-    Through `PARSE_ERRORS` now: the scenario is a unit of no one camera to the retain, and `failed` to the evaluator."""
+    The retain reads no scenario now (what is kept is the specs' `holds:`, and a scenario is about nobody — the
+    boundary's step 6), and the evaluator says `failed` of it."""
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from tests.test_autoworker import DOOR, _Log, _assigned, _scenario, _worker as _auto, ev
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     EventLog(box.archive, "vms", "8", 1).append(old, "motion")
     box.vars.put("vms/retention/8", {"days": "30"})
@@ -516,7 +536,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
     from w2cplatform import rows
     from w2cplatform.console import heartbeats
     from w2cplatform.events import read_bucket
-    from vms.console import beat_lines
+    from w2cplatform.metrics import text as spec_metrics
     from vms.controller import VmsController
     from vms.worker import FakeActuator, VmsWorker
     box = Box()
@@ -541,7 +561,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
     assert any(e["kind"] == "io.input" and e.get("port") == "3" for e in lines[2])
     assert rows.counts()["field"].get("vms") == 1                      # both moments: one spell of camera 1's `occurred`
     w.heartbeat_once()
-    assert 'vms_device_events_refused_total{worker="w-1"} 2' in beat_lines("vms", heartbeats(box.objects, "vms/"))
+    assert 'vms_device_events_refused_total{worker="w-1"} 2' in spec_metrics(ctl).splitlines()
     _forget_garbled()
 
 
@@ -595,19 +615,18 @@ def test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_
     one unit already: a filter that raised on one row — a field that reads and does not compare, an `admit` that trips
     on it — took `/unplaceable` and `/drain` down for every unit. That unit is listed now as one nothing can serve (with
     why), counted once a walk (`unit_judged`), and the other units are judged."""
-    from w2cplatform import rows, spec
+    from w2cplatform import rows
     from w2cplatform.console import Mount, SpecConsole
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(3)
     box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
 
-    def admit(c, row, w):
+    def taken(row):                                   # a filter that trips on one row (the platform's own, since `admit` is gone)
         if str(row["id"]) == "2":
             raise TypeError("'<' not supported between instances of 'str' and 'int'")
-        return True
+        return set()
 
-    was = spec.ADMIT.get("vms")
-    spec.ADMIT["vms"] = admit
+    ctl.servers_taken = taken
     try:
         got = {str(u["id"]): u for u in ctl.unplaceable()}
         assert set(got) == {"2"} and "could not be checked" in got["2"]["why"], got
@@ -619,9 +638,7 @@ def test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_
         assert status == 200 and set(rep["subsystems"]["vms"]["would_strand"]) == {"1", "2", "3"}, rep
         assert rows.counts()["unit_judged"].get("vms") == 2, rows.counts()["unit_judged"]   # one spell in each walk
     finally:
-        spec.ADMIT.pop("vms", None)
-        if was is not None:
-            spec.ADMIT["vms"] = was
+        del ctl.servers_taken
         _forget_garbled()
 
 

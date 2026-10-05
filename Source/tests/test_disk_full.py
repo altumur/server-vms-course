@@ -10,9 +10,10 @@ import os
                             its floor, the recorder raises an alarm
 """
 from w2cplatform.console import SpecConsole
+from w2cplatform.contract import Heartbeat
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.resource import SPACE_KEY, Resource, space_settings
-from vms.console import _recorders
+from w2cplatform.metrics import text as spec_metrics
 from vms.controller import VmsController
 from vms.worker import fake_samples
 from tests.conftest import Box, footage, recorder
@@ -39,16 +40,16 @@ def test_the_watermark_is_on_until_somebody_turns_it_off():
             os.environ["WATERMARK_DEFAULT"] = was
 
 
-class _Files:
-    """A subsystem that keeps files on the resource's disk and can give some up: two thousand bytes above its
-    floor. The VMS has none any more — footage is in volumes, rings that never outgrow their quota — and the
+def _files():
+    """A subsystem that keeps files on the resource's disk and can give some up — `requests: {free: true}`. The VMS has
+    none any more (footage is in volumes, rings that never outgrow their quota; the recorder answers nought), and the
     watermark is the platform's, for whatever a subsystem keeps on that disk."""
-    def __init__(self, spare: int = 2000):
-        self.spare = spare
-
-    def free(self, need: int, now: float, min_days: float = 3.0, volume=None) -> dict:
-        got, self.spare = min(need, self.spare), self.spare - min(need, self.spare)
-        return {"freed": got}
+    from w2cplatform import catalog
+    from w2cplatform.spec import SubsystemSpec
+    spec = SubsystemSpec.from_dict({"name": "files", "unit": {"rows": "files", "id": "name", "fields": {"name": {"type": "string"}}},
+                                    "placement": {"capacity": {"from": "capacity", "default": 4}}, "requests": {"free": True}})
+    catalog.register(spec)
+    return spec
 
 
 def test_what_could_not_be_freed_is_a_number_anybody_can_read():
@@ -58,7 +59,10 @@ def test_what_could_not_be_freed_is_a_number_anybody_can_read():
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75", "min_days": "3"})
     res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall,
                    space_probe=lambda root: (1_000_000, 100_000))      # 90 % full: 150 000 to free
-    res.register("files", _Files())
+    files = _files()
+    [vol] = list(res.volumes)
+    box.objects.put(files.sub.heartbeat_key("f-1"), Heartbeat("f-1", box.wall(), [], {"server": "srv-1",
+                                                                                    "freed": {vol: 2000}}).to_bytes())
     assert res.heartbeat()["short"] == 0
     rep = res.relieve()
     assert (rep["freed"], rep["short"]) == (2000, 148_000) and res.heartbeat()["short"] == 148_000
@@ -121,7 +125,7 @@ def test_a_recording_cut_inside_its_floor_raises_an_alarm_and_a_young_ring_does_
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [
         {"id": "7", "phase": "running", "depth_days": 5.0, "shallow": True},
         {"id": "8", "phase": "running", "depth_days": 2.0}], {"server": "srv-a"}).to_bytes())
-    text = "\n".join(_recorders(rec))
+    text = spec_metrics(rec)
     for line in ('rec_archive_depth_days{unit="7"} 5.0', 'rec_archive_shallow{unit="7"} 1', 'rec_archive_shallow{unit="8"} 0'):
         assert line in text, line
     assert rec.create({"name": "9", "cam": "9", "min_depth_days": 14})["min_depth_days"] == 14.0     # a field of the row

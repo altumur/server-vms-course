@@ -64,7 +64,7 @@ def _expected_writes() -> dict[str, set[str]]:
         "reccontroller": set(REC_SPEC.acl_controller()),
         "vmsworker": set(WORKER_ACL) | rows(WORKER_OBJECTS),
         "recworker": set(REC_SPEC.sub.acl_worker()) | rows(REC_SPEC.sub.acl_objects_worker()),
-        "resource": {DOORS + "/*"},
+        "resource": {DOORS + "/*", REC_SPEC.sub.request_key("free-*")},   # its ask to free bytes (`requests: {free}`, step 6)
         "domainagent": {"domain/*", "relay/*", "!domain/signer*"},
         "member": set(),
         "domain": {"domain/*", "identity/*"},

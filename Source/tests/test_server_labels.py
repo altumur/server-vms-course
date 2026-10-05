@@ -359,7 +359,7 @@ def test_the_channels_of_one_device_move_together_or_not_at_all():
     ctl.update(nvr[1], {"labels": "vlan:a,vlan:c"})
     rep = ctl.pass_once()
     assert rep["reach_moves"] == 4 and {ctl.where(c) for c in nvr} == {"w-2"}, [ctl.where(c) for c in nvr]
-    assert ctl.placement(nvr[0]).reason.startswith(f"with {nvr[1]}, one device: srv-a no longer reaches vlan:c")
+    assert ctl.placement(nvr[0]).reason.startswith(f"with {nvr[1]}, one source: srv-a no longer reaches vlan:c")
     ctl.update(nvr[2], {"labels": "vlan:d"})                             # nobody reaches vlan:d
     rep = ctl.pass_once()
     assert (rep["reach_moves"], rep["reach_waiting"]) == (0, 4) and {ctl.where(c) for c in nvr} == {"w-2"}

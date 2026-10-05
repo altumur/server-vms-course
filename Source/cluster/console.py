@@ -1,12 +1,11 @@
 """The cluster console, standard library — its own job (`system`: one on every server, nothing in front),
 its own token (the operator's rows, never placement). The platform's
-SpecConsole run from the VMS spec, exactly as М10 runs it — and since М10's
-console already finds footage by the recorders' heartbeats, the cluster adds
-nothing to it:
+SpecConsole run from the VMS spec, exactly as М10 runs it — and since the footage
+is read at its holders' doors (the boundary's step 6: `/where` hands out the door, the bytes bypass the console), the
+cluster adds nothing to it:
 
-    GET /timeline/<cam>              every recording of the camera, from every live recorder's archive door; a door
-                                     that did not answer, and a volume nobody serves (its server down), named
-    GET /export/<cam>?rec&from&to    an interval as an MP4, from whichever doors hold it
+    GET /rec/where/<recording>       the recorder that holds it, and its door: the recording's spans from every live
+                                     recorder's archive door and an interval as MP4 (`vms/footage.py`)
     GET /events?from&to&unit&…       merged across the live resources' event indexes (the platform's `MergedIndex`); none here
     /rec/spec, /rec/recordings, …    the recorder mounted under its name (`Mount`): the page's Record toggle POSTs here
 
@@ -29,14 +28,9 @@ from w2cplatform.console import Mount, SpecConsole, heartbeats   # noqa: F401
 from w2cplatform.eventdatabase import MergedIndex          # noqa: F401  (re-exported: the console's view of the event indexes)
 from w2cplatform.spec import SpecController
 
-from vms.console import rec_metrics, rec_routes, vms_routes, wire_vms
+from vms.console import wire_vms
 
 from .controller import ClusterController
-
-
-def cluster_routes(ctl: ClusterController, rec_ctl: SpecController | None = None):
-    """The cluster's media routes: М10's — the timeline and the export from the recorders' doors."""
-    return vms_routes(True, None, ctl, rec_ctl)
 
 
 # THE SAME CONSOLE MEANS THE SAME GATE (М10's sixth review, found while sweeping every door). This function built the
@@ -51,11 +45,10 @@ def make_console(ctl: ClusterController, worst_failover: float = 0.0, index=None
     """The VMS at `/` and, when the console fronts it, the recorder at `/rec/…` (the page's Record toggle:
     POST /rec/recordings). Both answer /events from the same merge over the resources' indexes."""
     index = index or MergedIndex(ctl.objects, wall=ctl.wall)
-    root = SpecConsole(ctl, marks_root=archive_root, index=index, worst_failover=worst_failover, extra=cluster_routes(ctl, rec_ctl), media=True)
+    root = SpecConsole(ctl, marks_root=archive_root, index=index, worst_failover=worst_failover, media=True)
     m = Mount(root)
     if rec_ctl is not None:
-        m.mount("rec", SpecConsole(rec_ctl, wall=ctl.wall, index=index, extra=rec_routes(rec_ctl),
-                                   metrics_extra=rec_metrics(rec_ctl)))
+        m.mount("rec", SpecConsole(rec_ctl, wall=ctl.wall, index=index))   # its tables, requests and numbers: its spec's
     return wire_vms(m, ctl, index)
 
 

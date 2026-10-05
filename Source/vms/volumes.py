@@ -98,7 +98,7 @@ class Volume:
     # pass). Absent, the ring keeps its size and the heartbeat says why.
     shrink_confirmed: int = 0
     # An edge volume is the card IN a camera, and says which: the camera's id in this cluster's `vms/cameras`. A
-    # recording is homed on a card only if it is that camera's (`refuse_recording`): the card's recorder writes the
+    # recording is homed on a card only if it is that camera's (`must_match` on `home`): the card's recorder writes the
     # frames of its own camera's ring, whatever the recording's row says (the review's sixth pass, major).
     cam: str = ""
 
@@ -115,145 +115,44 @@ class Volume:
                 "quota_bytes": self.quota_bytes, "access_secret": self.access_secret, "access_key": self.access_key,
                 "enabled": "true" if self.enabled else "false",
                 **({"shrink_confirmed": self.shrink_confirmed} if self.shrink_confirmed else {}),
-                **({"cam": self.cam} if self.cam else {})}
+                **({"cam": self.cam} if self.cam else {}),
+                # the word the platform's placement reads (`affinity`): an incidents volume takes no recording
+                **({"admits": "false"} if self.kind == "incidents" else {})}
 
 
 def key(name: str) -> str:
     return f"{SUB}/{TABLE}/{name}"
 
 
-# The same door the units have (`SpecController.create`): a name is a name and not a path, because from
-# here it becomes a key, an ACL prefix, a directory under the archive root and the `home` of a row. And
-# two rules the kinds do not share: a local volume names its server, a network one names a ceiling.
-def refuse(fields: dict) -> None:
-    name = str(fields.get("name", "") or "")
-    if not name:
-        raise Refused("a volume needs a name")
-    if "/" in name or name in (".", ".."):
-        raise Refused(f"a volume name is a name, not a path: {name!r}")
-    unknown = [k for k in fields if k not in FIELDS and k != "name"]
-    if unknown:
-        raise Refused(f"a volume has no field {unknown[0]!r}")
-    # …and its key is not the mask every reply shows it as (the thirteenth round; `SubsystemSpec.refuse`'s rule): a page
-    # that sent `***` back stored it as the archive's secret, and the recorder could not open the volume
-    from w2cplatform.spec import is_mask
-    if is_mask(fields.get("access_secret")):
-        raise Refused("access_secret: a secret was sent as its mask; leave the field out to keep it")
-    kind = str(fields.get("kind", "local"))
-    if kind not in KINDS:
-        raise Refused(f"a volume is {' or '.join(KINDS)}, not {kind!r}")
-    if kind == "local" and not str(fields.get("server", "")):
-        raise Refused("a local volume is a disk on one server: name it")
-    if kind == "edge" and not str(fields.get("server", "")):
-        raise Refused("an edge volume is the card in one camera: name it")
-    # …and names the camera too — `cam`, its id among this cluster's cameras; `server` is the box the card's recorder
-    # runs on, which says nothing of whose frames it writes (the review's sixth pass, major: a recording of camera 1
-    # homed on camera 2's card was written from camera 2's ring). No other kind is a camera's.
-    if kind == "edge" and not str(fields.get("cam", "") or ""):
-        raise Refused("an edge volume is the card in one camera: say which — `cam`, the camera's id here; only that "
-                      "camera's recordings are homed on it")
-    if kind != "edge" and str(fields.get("cam", "") or ""):
-        raise Refused(f"`cam` is an edge volume's — the camera whose card it is; a {kind} volume is no camera's")
-    # A card is a directory on the camera, written by the camera's recorder without an engine (`vms/card.py`): an
-    # address — a bucket, a share — or a key to one is something no card reader can open.
-    if kind == "edge" and ("://" in str(fields.get("url", "")).replace("file://", "", 1)
-                           or fields.get("access_secret") or fields.get("access_key")):
-        raise Refused("an edge volume is the card in a camera — a directory on it, with no key: an address is a "
-                      "local or network volume")
-    if kind == "network" and str(fields.get("server", "")):
-        raise Refused("a network volume is served by whichever box takes it — leave `server` empty")
-    # EVERY declared volume has a size, local ones included, and that is what lets a disk hold more than one:
-    # the engine formats a ring of exactly that many bytes. "This whole filesystem" twice on one partition
-    # would be two rings each believing the disk is theirs. The console offers the size the box's own volume
-    # already has when it declares the first one, so the ordinary answer is a number the operator can change.
-    #
-    # The numbers are checked AS numbers here, at the door (the review's seventh pass): `"1e12"` or `"64M"` raised a bare
-    # `ValueError` out of this check — nothing was written, and the console answered with an error that was not a
-    # refusal. `shrink_confirmed` was not checked at all and raised on the way to the row.
-    for f in ("quota_bytes", "shrink_confirmed"):
-        try:
-            int(fields.get(f, 0) or 0)
-        except (ValueError, TypeError, OverflowError):   # `1e999` in a body: `int(inf)` (the tenth round)
-            raise Refused(f"`{f}` is a whole number of bytes, not {fields.get(f)!r}") from None
-    if int(fields.get("quota_bytes", 0) or 0) <= 0:
-        raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
-                      "(the console offers the size the box's own volume already has)")
-    url = str(fields.get("url", ""))
-    if not url:
-        raise Refused("a volume needs a url: the directory it is, or the address it is at")
-    # The key never goes in the address, and this is the one place that can still say so. A url is
-    # printed on the page, carried in the recorder's heartbeat as `archive`, and written into the row —
-    # so `s3://KEY:SECRET@host/bucket` is the same secret in three public places, and the `*_secret`
-    # rule cannot help because the field it guards is not the one carrying it. The secret is a VALUE
-    # among values (`access_secret`), assembled only by the process that opens the volume.
-    #
-    # The rule is the address rule (`secrets.address_refusal`), whatever the characters of the key (the twelfth review,
-    # blocker 10; a run): the `@` was looked for before the first `/` only, and AWS secret keys hold `/` —
-    # `s3://AKIA:…/x@h/bucket` was taken and printed on `/volumes`. An `@` anywhere after the `://`, a port that is no
-    # number (`KEY:SECRET` with no host, or a `?` or `#` in the secret), a credential pair in the query or the path
-    # (`…/bucket?X-Amz-Credential=…`, `?secret=…`: the eleventh review's sibling of a camera's `?pwd=`) — refused, in
-    # words that never repeat the url. A local directory has no `://`, and its name is a name.
-    from w2cplatform.secrets import address_refusal
-    why = address_refusal(url)
-    if why:
-        raise Refused(f"a volume's url names the archive, never the key to it ({why}): the credentials go in "
-                      f"`access_key` / `access_secret` — this string is printed on the page and published in heartbeats")
-
-
+# DECLARED BY THE PLATFORM'S RULES (the boundary's step 6). What a volume row may be — a name, a kind of five, a local
+# disk naming its server, a network one naming none, a card in one camera saying which and holding no key, a size, an
+# address that never carries the key to it, a key kept only for the address it was given for, an incidents volume that
+# admits nobody — is `tables.volumes` in rec.subsystem.yaml, and the platform's console writes it (`tables.write_row`).
+# The rules were here (`refuse`, `_kept_key`), called by the VMS's route on the console. This is the same write for the
+# VMS's own code that declares one (a camera declaring its card: `card.py`) — one set of rules, the spec's.
 def write(vars_, fields: dict, sealer=None) -> Volume:
-    """Create or replace a declaration. Last write wins on purpose: this is a
-    list of archives, not a unit with an epoch — nobody is writing into two
-    versions of it at once, and the hold is what makes it exclusive.
+    """Declare a volume, or declare it again — by the spec's rules. `sealer`: the key that seals `access_secret`."""
+    from w2cplatform.tables import write_row
+    from .config import REC_SPEC
+    if str(fields.get("kind", "")) == "incidents":
+        fields = {"admits": False, **fields}          # a place for what somebody kept: it admits no recording (`affinity`)
+    name, items = write_row(REC_SPEC, TABLE, vars_, fields, "", 0.0, sealer, lambda: _recordings(vars_))
+    return Volume.from_items(name, items)
 
-    `sealer`: the console's key (`w2cplatform/sealing.py`) — `access_secret` goes into the store sealed, as a
-    camera's password does (feedback CD: the product's volumes have the same field and the same rule), bound to
-    this row. The recorder that takes the volume opens it, with the same key and the same row (`RecWorker.
-    _write_into`), and hands it to the daemon among the volume's parameters — obsd takes credentials only that way."""
-    from w2cplatform.sealing import seal_items
-    refuse(fields)
-    name = str(fields["name"])
-    old, idx = vars_.get(key(name))
-    fields = _kept_key(fields, old)
-    vol = Volume.from_items(name, {k: v for k, v in fields.items() if k != "name"})
-    # The other order of `refuse_recording`: a card declared — or declared again as another camera's — under a name
-    # recordings are homed on already. They are that camera's, or the declaration is refused.
-    if vol.kind == "edge":
-        for path in vars_.list(f"{SUB}/recordings/"):
-            row, _ = vars_.get(path)
-            if row and row.get("deleted") != "true" and str(row.get("home") or "") == name and str(row.get("cam") or "") != vol.cam:
-                raise Refused(f"{path.rsplit('/', 1)[1]} is homed on {name} and is camera {row.get('cam')}'s: a card "
-                              f"holds its own camera's recordings — move that recording first")
-    vars_.put(key(name), seal_items(sealer, vol.to_items(), key(name)), cas=idx)
-    return vol
+
+def _recordings(vars_) -> list[dict]:
+    out = []
+    for path in vars_.list(f"{SUB}/recordings/"):
+        row, _ = vars_.get(path)
+        if row and row.get("deleted") != "true":
+            out.append({**row, "id": path.rsplit("/", 1)[1]})
+    return out
 
 
 def delete(vars_, name: str) -> None:
-    vars_.delete(key(name))
-
-
-# The key is the key to ONE address (`bound_to`, as a unit's field says it — `cred_secret: {bound_to: [source]}` — and
-# as the product's volume says it): `access_secret` to the `url`.
-BOUND_TO = {"access_secret": ("url",)}
-
-
-def _kept_key(fields: dict, old: dict | None) -> dict:
-    """A write over a declared volume (the thirteenth round; the product's rule). The key not sent — left out, empty or
-    null — is the key kept: the page does not show it, and a page that saved the form without it wiped the archive's
-    key. Unless the address changed: the old key would go to whatever host the new url names — refused, in words. A
-    card has no key (`refuse`): one declared as a card drops it."""
-    from w2cplatform.spec import unbound_secret
-    sent = fields.get("access_secret")
-    if sent is not None and sent != "":
-        return fields
-    out = {k: v for k, v in fields.items() if k != "access_secret"}
-    if not old or str(out.get("kind", "local")) == "edge":
-        return out
-    why = unbound_secret("access_secret", BOUND_TO["access_secret"], old, out)
-    if why:
-        raise Refused(why)
-    if old.get("access_secret"):
-        out["access_secret"] = old["access_secret"]            # as stored: sealed, to this row, and `seal_items` leaves it
-    return out
+    from w2cplatform.tables import delete_row
+    from .config import REC_SPEC
+    delete_row(REC_SPEC, TABLE, vars_, name)
 
 
 # A VOLUME ROW THAT DOES NOT PARSE IS THAT VOLUME'S TROUBLE (the review's seventh pass, part 2, blocker 1). `quota_bytes:
@@ -496,7 +395,7 @@ def backups(vars_) -> set[str]:
 # when its turn comes. So a keep is not a flag on footage in place — it is a COPY, into a volume of its own kind,
 # `incidents`, which only keeps go into. The recorder that holds it copies every keep's minutes out of whichever
 # recorder's door holds them (`RecWorker.keep_pass`), and nothing is ever recorded into it: it is a place for
-# evidence, not a place to put a camera (`admit_recording`).
+# evidence, not a place to put a camera (`admits: false` in its row, read by the platform's `affinity`).
 def incidents(vars_) -> set[str]:
     """The names of the enabled incidents volumes."""
     return {v.name for v in declared(vars_) if v.kind == "incidents" and v.enabled}
@@ -513,63 +412,27 @@ def is_backup(row: dict, vars_=None, names: set[str] | None = None) -> bool:
     return str(row.get("home") or "") in names
 
 
-# `home` is a preference everywhere else, and for a backup volume that is wrong in both directions. A
-# primary recording moved onto the backup volume while its own server rebooted leaves ONE copy where the
-# operator paid for two (and on a card, eats the camera's uplink); a backup recording moved off it is not a
-# copy at all. So for `rec` it is a filter: a recording homed on a backup volume goes to that volume or
-# nowhere, and nothing else goes to a backup volume. `/unplaceable` then says so, which is the honest
-# answer to "the card is gone".
-def admit_recording(ctl, row: dict, worker: str) -> bool:
-    names, kept = backups(ctl.vars), incidents(ctl.vars)
-    if not names and not kept:
-        return True
-    place = ctl.place_of(worker)
-    if place in kept:
-        return False                                  # a place for what somebody kept, never one to record into
-    home = str(row.get("home") or "")
-    if home in names:
-        return place == home
-    return place not in names
-
-
-# A camera with two recordings has its worker placed beside one of them (`near: {sub: rec, of: cam}`).
-# Beside the PRIMARY is the obvious choice and the wrong one: when the primary's server falls, it takes the
-# worker with it, and the backup loses its stream at exactly the moment it exists for. Beside the backup,
-# the worker survives the primary's server, the backup keeps recording, and the primary backfills its move
-# from the backup.
+# -- what the platform reads of these rows, instead of the VMS's code (the boundary's step 6) ----------------------------
+# Three rules about a recording and its volume were the VMS's code called inside the platform's controller — an admit,
+# a near rank, a refusal of a row. They are declarations now, in the specs, and these rows are what the platform reads:
 #
-# Which volumes are backups is read once per look at the recorders' heartbeats (`memo`, `spec.NearIndex`), not once per
-# recording ranked (the scaling pass); each recording's own row is read once, when it is ranked.
-def rank_near_recording(ctl, recording_id: str, memo: dict | None = None) -> int:
-    memo = {} if memo is None else memo
-    if "backups" not in memo:
-        memo["backups"] = backups(ctl.vars)
-    names = memo["backups"]
-    if not names:
-        return 0
-    items, _ = ctl.vars.get(f"{SUB}/recordings/{recording_id}")
-    return 0 if items and str(items.get("home") or "") in names else 1
-
-
-# -- what a row may point at (the review's sixth pass, two majors of one class) -----------------------------------------
-# The gate checks the camera a row is ABOUT. Two fields point at something else, and through each an administrator of
-# one camera reached another:
+#     a standby is a filter     `home` is a preference everywhere else, and for a backup or edge volume that is wrong in
+#                               both directions (М10B Lesson 26): a primary moved onto the backup while its server
+#                               rebooted is ONE copy where the operator paid for two, and a backup moved off it is no
+#                               copy at all. `placement.affinity` in rec.subsystem.yaml: an enabled backup or edge row
+#                               (`strict`) binds the recordings homed on it, and takes no other
+#     incidents take nobody     a place for what somebody kept, never one to record into: its row says `admits: false`
+#                               (`Volume.to_items`), and the platform reads that word, not the kind
+#     beside the standby        a camera with two recordings has its worker beside the BACKUP one, which must survive the
+#                               primary's server: `near.prefer` in vms.subsystem.yaml (`home.kind`, through `ref`)
+#     a card is its camera's    `home: {ref: rec/volumes, must_match: {cam: cam}}`: the platform refuses a recording of
+#                               another camera homed on a card (the review's sixth pass, major — through a scenario's
+#                               `record` with `archive: card2` as much as an operator's PUT); and a row that does not
+#                               parse is no row to point at. The other order — a card declared as another camera's under
+#                               a name recordings are homed on already — is `write` above.
 #
-#     rec.home      `PUT /rec/recordings/1-b {"home": "card2"}` with `admin` on camera 1 — and the card in camera 2,
-#                   whose recorder writes the frames of ITS camera's ring whatever the row says, wrote camera 2 into
-#                   camera 1's recording and spent its own budget on it. The same through a scenario's `record`
-#                   with `archive: card2` (`jobs.record_on_request`, the console's token)
-#     vms.source    `PUT /cameras/1 {"source": "…/ch/2"}` — the credentials are the device's, so the holder opened
-#                   channel 2 as camera 1: its viewers and its archive got camera 2's picture
-#
-# Rights on the camera are not enough for either, and the rule is in two places because it has two halves. WHAT MAY BE
-# is here, at the one door every writer of rows goes through (`spec.register_refuse`): a card holds only its own
-# camera's recordings; a channel is one camera. WHO MAY is the gate's: the camera a recording is about (its spec's
-# `about`), and every camera of the device a `source` leaves or moves to (`vms/console.py`, `source_cams`).
-#
-# A row that does not parse is not "no volume" here (the review's seventh pass): read as None, a card whose row was
-# garbled would take any camera's recording. `volume_named` raises `Unreadable` for it, and a recording is not homed
-# on a volume nobody can read.
+# A row that does not parse is not "no volume" (the review's seventh pass): `volume_named` raises `Unreadable` for it —
+# the console's gate asks whose card a volume is through it (`vms/console.py`, `volume_cam`).
 class Unreadable(Refused):
     """The volume's row does not parse."""
 
@@ -584,76 +447,13 @@ def volume_named(vars_, name: str) -> "Volume | None":
     return vol
 
 
-def refuse_recording(ctl, uid, old: dict | None, new: dict) -> None:
-    home = str(new.get("home") or "")
-    vol = volume_named(ctl.vars, home) if home else None      # `Unreadable` is a refusal: nothing is homed on it
-    if vol is None or vol.kind != "edge":
-        return
-    if not vol.cam:
-        # A card declared before cards named their camera: what is homed on it stays as it was; nothing new is.
-        if old is None or str(old.get("home") or "") != home:
-            raise Refused(f"{home} is a camera's card that does not say whose it is: declare it again with `cam`, "
-                          f"and then home that camera's recording on it")
-        return
-    if str(new.get("cam") or "") != vol.cam:
-        raise Refused(f"{home} is the card in camera {vol.cam}: only that camera's recordings are homed on it, and "
-                      f"{uid} is camera {new.get('cam')}'s")
-
-
-# What two sources are the same camera by: the device and the channel on it, as the holder groups them
-# (`config.device_of`, `channel_key`) — `…/ch/2` and `…/ch/2/` are one channel; so are `…/10.0.0.50:80/ch/02` and
-# `…/10.0.0.50/ch/2` (the review's eighth pass: one device, one spelling). By the KEY, not by what the device says it
-# is (the owner's decision on the ninth pass: a serial number is not unique): whether a source moved (`source_cams`) and
-# whether a channel is taken (`refuse_camera`). The device's own word groups devices for the rights a move asks, and
-# only there (`config.one_device`).
+# What two sources are the same camera by, for the RIGHTS a move asks (`vms/console.py`, `source_cams`): the device and
+# the channel on it, as the holder groups them (`config.device_of`, `channel_key`) — `…/ch/2` and `…/ch/2/` are one
+# channel; so are `…/10.0.0.50:80/ch/02` and `…/10.0.0.50/ch/2` (the review's eighth pass: one device, one spelling).
+# By the KEY, not by what the device says it is (the owner's decision on the ninth pass: a serial number is not unique).
+# Whether a channel is TAKEN is no longer asked here: the platform refuses the same address in its one spelling
+# (`source: {unique: canonical}`), and the twin only the VMS can see — `…/ch/02` beside `…/ch/2` — is the holder's to
+# find (`VmsWorker`, «device busy» in its heartbeat; the owner's decision on the boundary's step 6).
 def source_key(source: str) -> tuple:
     from .config import channel_key, device_of
     return device_of(str(source)), channel_key(str(source))
-
-
-# A camera's `source` is nobody else's. Asked only when the source is new to this row — a camera being created, or
-# moved — so rows that were doubles before this rule stay editable in everything else. One read of every camera per
-# such write; two administrators filing the same channel in the same instant can still both pass — they are not
-# checked against each other, only against what is written.
-#
-# …and so is its `ref`, the name the layer above knows it by (М12): the domain's book of primaries, the edits it keeps
-# for a cluster that is off and its directory all find a camera by it, so two cameras under one `ref` are one camera
-# to the domain — and whichever it finds first gets the other's edits. The same rule, for the same reason.
-#
-# …BY THE KEY, NOT BY THE DEVICE'S WORD (the owner's decision on the review's ninth pass): a serial number is not unique
-# — firmware clones say the same one — so `identity` is no ground to refuse. Compared by it, the camera of a clone was
-# "camera 1 is that source already" for as long as the other clone stood, and a second name of one device is a matter
-# of rights, which the gate asks (`source_cams`: a device nobody has opened is the cluster's grant). It reads no device
-# row either (the same pass, minor: every device row on every move).
-def refuse_camera(ctl, uid, old: dict | None, new: dict) -> None:
-    src, ref = str(new.get("source") or ""), str(new.get("ref") or "")
-    moved = bool(src) and (old is None or str(old.get("source") or "") != src)    # as typed: nothing to look up
-    new_src = moved and (old is None or source_key(str(old.get("source") or "")) != source_key(src))
-    new_ref = bool(ref) and (old is None or str(old.get("ref") or "") != ref)
-    if not new_src and not new_ref:
-        return
-    if moved:
-        from .config import source_refusal               # a port or channel nobody can read (the review's tenth pass)
-        why = source_refusal(src)
-        if why:
-            raise Refused(why)
-    mine = source_key(src)
-    for row in ctl.units():
-        if str(row["id"]) == str(uid):
-            continue
-        if new_src and row.get("source") and source_key(str(row["source"])) == mine:
-            raise Refused(f"camera {row['id']} is that source already: one channel of a device is one camera — "
-                          f"change that camera, or delete it first")
-        if new_ref and str(row.get("ref") or "") == ref:
-            raise Refused(f"camera {row['id']} is `ref` {ref} already: the layer above knows one camera by one name")
-
-
-def _register() -> None:
-    from w2cplatform.spec import register_admit, register_near_rank, register_refuse
-    register_admit(SUB, admit_recording)
-    register_near_rank("vms", rank_near_recording)
-    register_refuse(SUB, refuse_recording)
-    register_refuse("vms", refuse_camera)
-
-
-_register()

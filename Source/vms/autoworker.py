@@ -37,7 +37,7 @@ from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
 
-from .auto import Catalog, fires
+from .auto import Catalog, fires, refusal
 from .config import AUTO_SPEC
 from .scan import Frontier
 from w2cplatform.rows import PARSE_ERRORS
@@ -218,29 +218,35 @@ class AutoWorker(Worker):
                 self.held_from.pop(unit, None)
                 self.said_without.discard(unit)
                 continue
-            try:
-                n = self.evaluate(row, now)
-            except Exception as e:                   # noqa: BLE001 — a resource that stopped answering mid-pass
-                self.status_by_unit[unit] = {"id": unit, "phase": "waiting", "why": str(e)}
-                log.warning("%s: %s not evaluated: %s", self.name, unit, e)
-                continue
-            # A scenario that no longer fits still runs: its trigger may be fine and its other actions too,
-            # and the one that cannot be done is refused by the holder, on the unit, where it is seen. What
-            # changes is that the scenario SAYS so, on every pass — never a scenario silently half-working.
-            # …checked on the ordinary pass, and an early one says what that found: the check reads the catalog — every
-            # camera, for a trigger that names none — and four times a second it would be the costliest part of a pass
-            # that exists to be short.
+            # WHAT ONLY THIS EVALUATOR CAN SAY OF A SCENARIO (the boundary's step 6, the owner's decision 3): the shape is
+            # the spec's JSON Schema, checked at the door; that two triggers need `within`, and that what it asks of a
+            # device the device can do (`auto.refusal`, `Catalog.check`), is judged here — on the ordinary pass, and an
+            # early one says what that found (the check reads the catalog: every camera, for a trigger that names none).
+            # Such a scenario is REFUSED — not fired, `refused` with why in the heartbeat — where it was refused at the
+            # door by a controller of the VMS's own. What the catalog cannot check yet stays `unchecked`, and runs.
             if only is None or unit not in self._fit:
                 real = getattr(self.catalog, "vars", None)
                 if real is not None:
                     self._pass_reads = self._pass_reads or _OnePass(real)
                     self.catalog.vars = self._pass_reads
                 try:
-                    self._fit[unit] = self.catalog.check(row)
+                    misfit, unsure = self.catalog.check(row)
+                    self._fit[unit] = (refusal(row) + misfit, unsure)
                 finally:
                     if real is not None:
                         self.catalog.vars = real
             misfit, unsure = self._fit[unit]
+            if misfit:
+                self.status_by_unit[unit] = {"id": unit, "phase": "refused", "why": "; ".join(misfit), "unfit": misfit,
+                                             **({"unchecked": unsure} if unsure else {})}
+                self.holes.pop(unit, None)
+                continue
+            try:
+                n = self.evaluate(row, now)
+            except Exception as e:                   # noqa: BLE001 — a resource that stopped answering mid-pass
+                self.status_by_unit[unit] = {"id": unit, "phase": "waiting", "why": str(e)}
+                log.warning("%s: %s not evaluated: %s", self.name, unit, e)
+                continue
             holes = self.holes.get(unit) or {}
             self._refused = self._refused or any(str(why).startswith("did not answer") for why in holes.values())
             self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n,
@@ -249,7 +255,6 @@ class AutoWorker(Worker):
                                          **({"late": self.late_by_unit[unit]} if self.late_by_unit.get(unit) else {}),
                                          **({"suppressed": self.suppressed_by_unit[unit]} if self.suppressed_by_unit.get(unit) else {}),
                                          **({"decided_without": self.gave_up.pop(unit)} if unit in self.gave_up else {}),
-                                         **({"unfit": misfit} if misfit else {}),
                                          **({"unchecked": unsure} if unsure else {})}
             if n:
                 acted.append(unit)

@@ -14,7 +14,7 @@ from w2cplatform.resource import serve as serve_resource
 from vms.console import serve
 from vms.controller import VmsController
 from vms.config import SPEC
-from vms.resource import vms_resource
+from w2cplatform.resource import platform_resource
 from tests.conftest import Box, door, footage, store
 
 
@@ -35,7 +35,7 @@ def _put(url, body, headers):
 
 
 def _resource(box):
-    res = vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
     srv = serve_resource(res, "127.0.0.1", 0)
     return f"http://127.0.0.1:{srv.server_address[1]}", srv
 
@@ -96,18 +96,23 @@ def test_a_recorders_archive_door_names_a_recording_and_nothing_else():
         d.shutdown()
 
 
-def test_the_consoles_export_asks_for_an_interval_and_never_a_path():
+def test_an_export_asks_for_an_interval_and_never_a_path():
+    """The console serves no file, and nothing of a unit's bytes (the boundary's step 6: its holder does, at its door);
+    the holder's export takes an interval, never a path."""
+    from tests.conftest import page_door
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     srv = serve(ctl, box.archive, "127.0.0.1", 0)
-    url = f"http://127.0.0.1:{srv.server_address[1]}"
+    pd = page_door(box)
+    url, page = f"http://127.0.0.1:{srv.server_address[1]}", pd.base + "/door"
     try:
         secret = os.path.join(box.root, "secret.txt")
         with open(secret, "w") as f:
             f.write("cred")
         assert _get(f"{url}/segment/{secret}")[0] == 404              # no file is served by path any more
-        assert _get(f"{url}/export/7?from=100&to=50")[0] == 400       # an interval, ends in order
-        assert _get(f"{url}/export/7?from=0&to=99999999")[0] == 400   # and of a bounded length: an hour
-        assert _get(f"{url}/export/7?from=100&to=160")[0] == 404      # nothing recorded there: said, not an empty file
+        assert _get(f"{page}/export/{secret}?from=100&to=160")[0] == 404   # …nor at a holder's door
+        assert _get(f"{page}/export/7?from=100&to=50")[0] == 400      # an interval, ends in order
+        assert _get(f"{page}/export/7?from=0&to=99999999")[0] == 400  # and of a bounded length: an hour
+        assert _get(f"{page}/export/7?from=100&to=160")[0] == 404     # nothing recorded there: said, not an empty file
     finally:
-        srv.shutdown()
+        srv.shutdown(); pd.shutdown()

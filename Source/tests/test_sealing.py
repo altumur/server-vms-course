@@ -296,8 +296,9 @@ def test_a_secret_sent_empty_on_an_edit_keeps_the_stored_one_and_an_address_chan
 def test_a_volumes_key_not_sent_is_kept_and_a_new_address_needs_a_new_one():
     """The same rule for a volume (`volumes.BOUND_TO`: `access_secret` to its `url`). A write over a declared volume is
     the whole declaration — and the key left out (or sent empty, or null) wiped the archive's key. It is kept now, as
-    stored; a mask is refused; another url without a new key is refused; another url with one takes it; a card drops
-    the key it cannot have."""
+    stored; a mask is refused; another url without a new key is refused; another url with one takes it. A volume
+    turned into a card is another address too, and refused the same way (the platform's table since the boundary's
+    step 6: it dropped the key, by a rule of the subsystem's own); declared again as a card, it has no key."""
     from vms import volumes
     key = _key("k1")
     sealer = Sealer.from_file(key)
@@ -316,10 +317,11 @@ def test_a_volumes_key_not_sent_is_kept_and_a_new_address_needs_a_new_one():
     assert box.vars.get("rec/volumes/s3")[0]["url"] == vol["url"] and opened() == "xyz"
     volumes.write(box.vars, {**vol, "url": "s3://other.example/bucket", "access_secret": "abc"}, sealer=sealer)
     assert opened() == "abc"
-    volumes.write(box.vars, {"name": "s3", "kind": "edge", "cam": "1", "server": "cam-1", "url": "/mnt/card",
-                             "quota_bytes": 10 ** 9},
-                  sealer=sealer)
-    assert box.vars.get("rec/volumes/s3")[0]["access_secret"] == ""
+    card = {"name": "s3", "kind": "edge", "cam": "1", "server": "cam-1", "url": "/mnt/card", "quota_bytes": 10 ** 9}
+    _refused(lambda: volumes.write(box.vars, card, sealer=sealer), "send the one for the new address")
+    box.vars.delete(volumes.key("s3"))
+    volumes.write(box.vars, card, sealer=sealer)
+    assert not box.vars.get("rec/volumes/s3")[0].get("access_secret")
 
 
 def test_bound_to_is_read_at_load_and_a_name_it_does_not_know_is_refused():

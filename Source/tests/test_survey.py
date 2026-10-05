@@ -187,9 +187,12 @@ def test_the_box_actually_runs_a_survey():
     import inspect
     import vms.__main__ as m
     assert "surveyworker" in inspect.getsource(m).split("__main__")[-1]
-    assert "SURVEY_SPEC.acl_console()" in inspect.getsource(m.console), "the console cannot write a watch"
-    assert '"survey": SpecController(SURVEY_SPEC' in inspect.getsource(m.console), "no /survey on the console"
-    assert "survey_ctl" in inspect.getsource(m.console)
+    assert "SURVEY_SPEC" in inspect.getsource(m.jobs) and "acl_console()" in inspect.getsource(m.jobs), "the jobs cannot write a watch"
+    # …and the console is the platform's (the boundary's step 6): it mounts every spec the image carries, the survey's
+    # among them (`test_deploy_units.py::test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name`)
+    import os
+    assert os.path.exists(os.path.join(os.path.dirname(m.__file__), "survey.subsystem.yaml")), "no /survey on the console"
+    assert "survey_ctl" in inspect.getsource(m.jobs)
 
 
 # -- keep: hits — watch everything, copy what a model liked ---------------------------------------
@@ -269,7 +272,7 @@ def test_the_console_process_keeps_what_fired():
     import vms.__main__ as m
     assert "keep_what_fired(survey_ctl, rec_ctl)" in (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn)), \
         "everything a model liked would stay on the device"
-    assert "survey_ctl" in inspect.getsource(m.console)
+    assert "survey_ctl" in inspect.getsource(m.jobs)
 
 
 def test_one_watch_failing_is_that_watchs_trouble_and_not_the_passs():

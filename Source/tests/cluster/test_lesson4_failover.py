@@ -331,7 +331,7 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     on srv-a stays in srv-a's volume under e1 — unavailable until it returns, never rebuilt, never lost; the timeline
     names it."""
     import time
-    from cluster.console import cluster_routes
+    from vms.footage import footage_routes
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC, live_shm, live_url
     from tests.cluster.conftest import VMS_TESTS
@@ -349,8 +349,8 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     t = c.wall()
     assert r1.actuator.feed("1", t - 600, t, step=10) == {"OK": 60}                           # ten minutes into srv-a's volume, as 1/e1
     r1.heartbeat_once(); rec.workers_seen()
-    routes = cluster_routes(ctl)
-    routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})       # the console looks, as its page does (r29)
+    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)   # the recording's holder's door (step 6)
+    routes(None, "GET", "/door/timeline/1", {"from": t - 2000, "to": t + 1})  # the door looks, as the page asks it (r29)
     # srv-a dies: w-srv-a-1, r-srv-a-1 and srv-a's resource silent
     r1.session.vanish()                                                                         # no BYE: the writer is left detached
     _silence(c, "srv-a", 93, alive=[b, r2])
@@ -368,14 +368,14 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     assert live_url("srv-b", 1) == "rtsp://srv-b:8554/1"                                        # what r-srv-b-1 would read had the camera landed on srv-c
     # the timeline: e1 in srv-a's volume unavailable by name — and srv-a's footage comes back with its disks; silent by
     # what the console saw: r-srv-a-1's heartbeat has stood still since its look (the product's r29-writers2)
-    _, tl = routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})
+    _, tl = routes(None, "GET", "/door/timeline/1", {"from": t - 2000, "to": t + 1})
     assert [s for s in tl["segments"] if s["epoch"] == 1] == []
     assert [(g["volume"], g["server"]) for g in tl["unavailable"]] == [("srv-a", "srv-a")] and "not lost" in tl["note"]
     time.sleep(VMS_TESTS.OBSD_LINGER_MS / 1000 + 0.3)                                            # the daemon notices r-srv-a-1's session is gone
     a2 = c.recorder("srv-a"); a2.lease_pass(); a2.serve_archive(); a2.heartbeat_once()          # srv-a is back: its recorder's unit again, on its own disks
     assert a2.name == "r-srv-a-1" and a2.store.reattached                                       # the writer the dead one left, picked up whole
     a2.store.seal()
-    _, tl = routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})
+    _, tl = routes(None, "GET", "/door/timeline/1", {"from": t - 2000, "to": t + 1})
     spans = tl if isinstance(tl, list) else tl["segments"]
     assert [(s["volume"], s["epoch"], s["fenced"]) for s in spans] == [("srv-a", 1, True)]      # e1, kept and told apart: e2 is the writer now
     assert a2.reconcile_once() == [] and rec.redistribute() == [] and rec.where("1") == "r-srv-b-1"  # a place to record returned; nothing moves back

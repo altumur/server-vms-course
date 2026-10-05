@@ -1,10 +1,15 @@
 """Lesson 8 — live video as the second subsystem. A gateway is a worker
 whose unit is a camera's fan-out and whose capacity is viewers; the unit is
 created by the first viewer and deleted after the last; one subscription per
-camera whatever the audience; the worker never learns a viewer exists."""
+camera whatever the audience; the worker never learns a viewer exists.
+
+Since the boundary's step 6 the console carries none of it (the owner's decision 1): the page creates the stream's
+row (`POST /live/streams`, a `view` of the camera), asks its place (`GET /live/where/<cam>` → the gateway's door and a
+token) and makes its offer at the gateway itself. `_whep` below is that page."""
 import json
 import threading
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from w2cplatform.resource import Resource
@@ -39,19 +44,61 @@ def _box():
 def _gateway(box, name, capacity=100, labels="", url=""):
     g = LiveWorker(name, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects,
                     ctl=SpecController(LIVE_SPEC, box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"]), box.objects, wall=box.wall),
-                    capacity=capacity, clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": labels})
+                    capacity=capacity, clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": labels},
+                    archive_root=box.archive)
     g.serve("127.0.0.1", 0); g.heartbeat_once()
     return g
 
 
-def _whep(base, cam, headers=None, method="POST", path=None):
-    req = urllib.request.Request(base + (path or f"/whep/{cam}"), data=OFFER.encode() if method == "POST" else None, method=method,
-                                 headers={"Content-Type": "application/sdp", **(headers or {})})
+def _http(url, method="GET", data=None, headers=None):
+    req = urllib.request.Request(url, data=data, method=method, headers=headers or {})
     try:
         with urllib.request.urlopen(req) as r:
             return r.status, r.read().decode(), r.headers.get("Location", "")
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode(), ""
+
+
+_keys = [0]
+
+
+def _door(base, cam, headers=None):
+    """`GET /live/where/<cam>`: the gateway's door and its token, or None while nobody holds the stream."""
+    code, body, _ = _http(f"{base}/live/where/{cam}", headers=headers)
+    return json.loads(body).get("door") if code in (200, 404) else None
+
+
+def _whep(base, cam, headers=None, method="POST", path=None):
+    """What the page does to watch (`startLive`): the stream's row — its first viewer makes it, `labels` from the path's
+    query as the old door took them — then its door, then the offer AT the gateway, with the door's token. Nobody
+    holding it yet is 503 with `retry_after`, as the page waits; a hang-up (`DELETE`, `path` the session's address the
+    offer answered) goes to the gateway too, with a door token asked for again."""
+    headers = dict(headers or {})
+    if method == "DELETE":
+        door = _door(base, cam, headers)
+        auth = {"Authorization": f"Bearer {door['token']}"} if door and door.get("token") else {}
+        return _http(path, "DELETE", headers=auth)
+    q = urllib.parse.parse_qs(urllib.parse.urlsplit(path or "").query)
+    labels = [l for l in (q.get("labels", [""])[0]).split(",") if l]
+    _keys[0] += 1
+    code, body, _ = _http(f"{base}/live/streams", "POST", json.dumps({"cam": str(cam), **({"labels": labels} if labels else {})}).encode(),
+                          {"Content-Type": "application/json", "Idempotency-Key": f"w{_keys[0]}", **headers})
+    if code not in (201, 400) or (code == 400 and "exists" not in body):
+        return code, body, ""
+    door = _door(base, cam, headers)
+    if not door:
+        return 503, json.dumps({"error": "no gateway holds this stream yet — retry", "retry_after": 2}), ""
+    auth = {"Authorization": f"Bearer {door['token']}"} if door.get("token") else {}
+    code, body, loc = _http(f"{door['url']}/whep/{cam}", "POST", OFFER.encode(), {"Content-Type": "application/sdp", **auth})
+    if code == 404:                                  # a gateway that has not subscribed yet: the page waits on it too
+        return 503, json.dumps({"error": "the fan-out is not up yet — retry", "detail": body, "retry_after": 2}), ""
+    return code, body, (door["url"] + loc if loc else "")
+
+
+def _stream(base, cam):
+    """The stream's row as the page reads it: the read model of `/live/streams` — its gateway, its phase, its sessions."""
+    rows = json.loads(_http(f"{base}/live/streams")[1])["rows"]
+    return next((r for r in rows if str(r.get("id")) == str(cam)), None)
 
 
 def test_the_first_viewer_creates_the_stream_and_the_controller_places_it():
@@ -61,7 +108,7 @@ def test_the_first_viewer_creates_the_stream_and_the_controller_places_it():
         # the worker's heartbeat says where the stream is — its RTSP fan-out, reachable from any server; nobody asked the worker
         st = [s for s in ctl.workers_seen()["w-1"].status if s["id"] == 1][0]
         assert st["live_url"] == live_url("srv-1", 1) == "rtsp://srv-1:8554/1" and "viewers" not in st
-        # first viewer: the console creates live/streams/1 and says "retry" — placement is the controller's pass
+        # first viewer: the page creates live/streams/1, and nobody holds it yet — placement is the controller's pass
         code, body, _ = _whep(base, 1)
         assert code == 503 and json.loads(body)["retry_after"] == 2
         assert live_ctl.unit("1") == {"id": "1", "cam": "1", "labels": [], "grace": 30, "revision": 1}
@@ -74,14 +121,13 @@ def test_the_first_viewer_creates_the_stream_and_the_controller_places_it():
         assert live_ctl.ensure_placed()[0].worker == "g-1"                              # the live controller's pass
         assert g.reconcile_once() == ["1"] and g.subscriptions == 1 and g.upstreams["1"].url == "rtsp://srv-1:8554/1" and g.upstreams["1"].server == "srv-1"
         g.heartbeat_once()
-        # second try: 201 with the gateway's SDP answer, and a session URL that goes back through the console
+        # second try: the door is the gateway's, and it answers — 201 with its SDP and a session at that door
         code, answer, loc = _whep(base, 1)
-        assert code == 201 and "m=video" in answer and "a=sendonly" in answer and loc.startswith("/whep/session/") and loc.endswith("?gateway=g-1")
+        assert code == 201 and "m=video" in answer and "a=sendonly" in answer and loc.startswith(g.url + "/whep/session/")
+        assert _door(base, 1) == {"url": g.url, "token": None, "expires": None, "routes": ["whep"]}   # no DOOR_KEY: open
         g.heartbeat_once()                                                               # what the page reads: the gateway's word, from its heartbeat
-        st = json.loads(urllib.request.urlopen(f"{base}/whep/1").read())
-        assert st["gateway"] == "g-1" and st["status"]["phase"] == "live" and st["status"]["sessions"] == 1
-        # unknown camera: 404, no unit created
-        assert _whep(base, 9)[0] == 404 and live_ctl.unit("9") is None
+        st = _stream(base, 1)
+        assert st["worker"] == "g-1" and st["phase"] == "live" and st["sessions"] == 1
     finally:
         srv.shutdown(); srv.server_close()
 
@@ -93,17 +139,17 @@ def test_fifty_viewers_one_subscription_and_the_worker_unchanged():
         _whep(base, 1); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
         before = box.objects.get("vms/heartbeats/w-1")
         sessions = [_whep(base, 1)[2] for _ in range(50)]
-        assert all(s.startswith("/whep/session/") for s in sessions) and len(g.sessions) == 50
+        assert all(s.startswith(g.url + "/whep/session/") for s in sessions) and len(g.sessions) == 50
         assert g.subscriptions == 1 and len(g.upstreams) == 1                            # fifty browsers, one tee subscription
         assert g.headroom() == 10                                                        # capacity is viewers: what the autoscaler moves N on
         assert box.objects.get("vms/heartbeats/w-1") == before                            # the worker never learned a viewer exists
-        # full: the sixty-first viewer is refused by the gateway, through the console
+        # full: the sixty-first viewer is refused by the gateway, at its door
         for _ in range(10):
             _whep(base, 1)
         code, body, _ = _whep(base, 1)
-        assert code == 503 and "full" in json.loads(body)["detail"]
-        # hang up one through the console: the session is gone on the gateway
-        sid = sessions[0].split("/")[-1].split("?")[0]
+        assert code == 503 and "full" in json.loads(body)["error"]
+        # hang up one at the gateway's door: the session is gone
+        sid = sessions[0].split("/")[-1]
         assert _whep(base, 1, method="DELETE", path=sessions[0])[0] == 200 and sid not in g.sessions and len(g.sessions) == 59
         assert "live_sessions 59" in urllib.request.urlopen(f"{g.url}/metrics").read().decode()
     finally:
@@ -132,13 +178,11 @@ def test_the_last_viewer_leaves_and_the_gateway_deletes_the_unit_after_grace():
 
 
 def test_the_first_press_of_live_is_answered_with_wait_and_not_with_not_found():
-    """Between the controller placing the fan-out and the gateway's next pass
-    there is a window of one pass, and the FIRST press of Live lands in it: the
-    row exists, the placement exists, the gateway is up — and it has not
-    subscribed yet, so it answers 404. The page retries on 503 and on nothing
-    else, so a 404 forwarded verbatim ends the attempt and the operator is told
-    the stream does not exist. It does. The console turns that one 404 into a
-    503 and keeps the gateway's word in `detail`."""
+    """Between the controller placing the fan-out and the gateway's next pass there is a window of one pass, and the
+    FIRST press of Live lands in it: the row exists, the placement exists, the gateway is up — and it has not
+    subscribed yet. The console turned the gateway's 404 into a 503 while it proxied the offer; the page goes to the
+    gateway itself now (the boundary's step 6), and the door is handed out only by a gateway that SAYS it holds the
+    stream (`holder_of`: its heartbeat's status) — before its pass there is no door, and the page waits."""
     box, ctl, live_ctl, w, srv, base = _box()
     try:
         g = _gateway(box, "g-1")
@@ -147,10 +191,9 @@ def test_the_first_press_of_live_is_answered_with_wait_and_not_with_not_found():
         assert live_ctl.where("1") == "g-1"          # placed, and the gateway has heartbeaten its url
         assert g.upstreams == {}                     # but it has not made its pass yet
         code, body, _ = _whep(base, 1)
-        assert code == 503, "the page retries on 503 only: a 404 here is the operator pressing Live twice"
-        d = json.loads(body)
-        assert "g-1" in d["detail"] and d["retry_after"] == 2
-        g.reconcile_once()                           # the pass happens
+        assert code == 503, "the page waits on no door: a 404 here is the operator pressing Live twice"
+        assert json.loads(body)["retry_after"] == 2
+        g.reconcile_once(); g.heartbeat_once()       # the pass happens, and its heartbeat says so
         assert _whep(base, 1)[0] == 201              # and the same press now succeeds
     finally:
         srv.shutdown(); srv.server_close()
@@ -179,7 +222,7 @@ def test_a_dead_gateway_loses_its_fan_outs_to_the_survivor_and_viewers_reconnect
         assert [m[:3] for m in live_ctl.redistribute()] == [("1", "g-1", "g-2")]
         g2.reconcile_once(); g2.heartbeat_once()
         code, _, loc = _whep(base, 1)
-        assert code == 201 and loc.endswith("?gateway=g-2") and g2.subscriptions == 1
+        assert code == 201 and loc.startswith(g2.url) and g2.subscriptions == 1, (code, loc, g2.url)
         w.reconcile_once(); w.heartbeat_once()
         assert ctl.workers_seen()["w-1"].status[0]["phase"] == "running" and w.actuator.running == {1}   # recording did not notice any of it
     finally:
@@ -198,19 +241,19 @@ def test_placement_by_label_a_stream_for_outside_viewers_needs_a_public_address(
         srv.shutdown(); srv.server_close()
 
 
-def test_a_label_no_gateway_carries_is_refused_and_a_stream_nobody_places_does_not_stand_for_ever():
+def test_a_stream_nobody_places_does_not_stand_for_ever():
     """The review's second pass, major: `POST /whep/7?labels=nowhere` made a row nothing could place, and every next
-    viewer of camera 7 was told 503 "retry" — for ever. Two halves. The console accepts only labels some live
-    gateway carries, and says which it refused and which exist, so the row is never made. And a row that IS
-    unplaced — its controller away, its gateways gone — is deleted by any gateway that has seen it stand so for the
-    row's own `grace`, with the token that deletes idle fan-outs already; the next viewer makes a fresh one."""
+    viewer of camera 7 was told "retry" — for ever. The console refused labels no live gateway carried while it
+    created the row (`LiveFront.offer`); since the boundary's step 6 the viewer writes the row through the platform's
+    console (`POST /live/streams`, a `view` of the camera), and what the row's labels ask is placement's to say — the
+    controller's reason (`unplaceable`) — and a row that IS unplaced, by any cause, is deleted by any gateway that has
+    seen it stand so for the row's own `grace`, with the token that deletes idle fan-outs already; the next viewer
+    makes a fresh one."""
     box, ctl, live_ctl, w, srv, base = _box()
     try:
         g = _gateway(box, "g-1", labels="rack-7")
-        code, body, _ = _whep(base, 1, path="/whep/1?labels=nowhere,rack-7")
-        assert code == 400 and "nowhere" in json.loads(body)["error"] and "rack-7" in json.loads(body)["detail"]
-        assert live_ctl.unit("1") is None                                                # no row: nothing to stand for ever
-        assert _whep(base, 1, path="/whep/1?labels=rack-7")[0] == 503 and live_ctl.unit("1")["labels"] == ["rack-7"]
+        assert _whep(base, 1, path="/whep/1?labels=nowhere,rack-7")[0] == 503          # taken: nobody holds it
+        assert live_ctl.ensure_placed() == [] and live_ctl.placement("1") is None
         # a row the controller never placed (it is away): seen so for `grace`, the gateway deletes it
         box.vars.put("live/streams/2", {"id": "2", "cam": "2", "labels": "nowhere", "grace": "30", "revision": "1"})   # a row from before this rule
         assert g.reconcile_once() == [] and live_ctl.unit("2") is not None               # first seen: the count starts
@@ -225,92 +268,18 @@ def test_a_label_no_gateway_carries_is_refused_and_a_stream_nobody_places_does_n
         srv.shutdown(); srv.server_close()
 
 
-def test_labels_are_taken_only_when_one_gateway_carries_all_of_them():
-    """The review's third pass (Н-M8 and its minor): the labels were checked against the UNION of every gateway's,
-    and placement wants one gateway that covers them all — `public` on one gateway and `eu` on another passed for
-    `public,eu`, and the row was one nothing could place."""
-    box, ctl, live_ctl, w, srv, base = _box()
-    try:
-        _gateway(box, "g-1", labels="public"); _gateway(box, "g-2", labels="eu")
-        code, body, _ = _whep(base, 1, path="/whep/1?labels=public,eu")
-        assert code == 400 and "no one gateway carries all of eu, public" in json.loads(body)["error"]
-        assert "public" in json.loads(body)["detail"] and "eu" in json.loads(body)["detail"]
-        assert live_ctl.unit("1") is None                                                # no row nothing could place
-        _gateway(box, "g-3", labels="eu,public")
-        assert _whep(base, 1, path="/whep/1?labels=public,eu")[0] == 503 and live_ctl.unit("1")["labels"] == ["public", "eu"]
-    finally:
-        srv.shutdown(); srv.server_close()
-
-
-def test_the_labels_a_viewer_may_ask_for_are_what_placement_reads_the_consoles_row_over_the_gateways_own():
-    """Feedback DQ, the sibling of placement: what a gateway carries may be set from the console (`live/servers/<server>`)
-    over its heartbeat's `LABELS`. The check of a viewer's `?labels=` read the heartbeat alone — it would have refused a
-    label the administrator gave the server and taken one he took away, making a row nothing places. It asks
-    `labels_of`, what placement asks."""
-    box, ctl, live_ctl, w, srv, base = _box()
-    try:
-        _gateway(box, "g-1", labels="rack-7")                                            # its node says rack-7, on srv-1
-        SpecController(LIVE_SPEC, box.vars.as_writer("console", LIVE_SPEC.acl_console()), box.objects,
-                       wall=box.wall).set_server_labels("srv-1", ["public"])             # the administrator: srv-1 reaches public
-        code, body, _ = _whep(base, 1, path="/whep/1?labels=rack-7")
-        assert code == 400 and "rack-7" in json.loads(body)["error"], body
-        assert live_ctl.unit("1") is None
-        assert _whep(base, 1, path="/whep/1?labels=public")[0] == 503 and live_ctl.unit("1")["labels"] == ["public"]
-        live_ctl.ensure_placed()
-        assert live_ctl.where("1") == "g-1"                                              # …and placement agrees
-    finally:
-        srv.shutdown(); srv.server_close()
-
-
-def test_a_session_is_hung_up_through_another_console_or_after_a_restart():
-    """The review's fourth pass, minor: who opened a live session lived in one console's memory — through another
-    replica, or after a restart, the hang-up was 404 and the session lived until the gateway's sweep. A session this
-    console does not remember is found where every console says it handed one out: `live.view` in the journal, which
-    the event index merges across servers. Still only its viewer's to hang up."""
-    from tests.test_console_gate import Tokens
-    from w2cplatform.eventdatabase import EventIndex
-    from vms.console import make_console
-    box, ctl, live_ctl, w, srv, base = _box()
-    srv.shutdown(); srv.server_close()
-    con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
-    access = Tokens({"anna": [("view", "vms/1", ())], "boris": [("view", "vms/1", ())]})
-
-    def console():
-        m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.archive, box.wall,
-                         live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall),
-                         index=EventIndex(box.archive, "srv-1", wall=box.wall))
-        for con in (m.root, *m.mounts.values()):
-            con.gate.impl = access
-        s = m.serve("127.0.0.1", 0)
-        return s, f"http://127.0.0.1:{s.server_address[1]}"
-    a, b = console(), console()
-    as_ = lambda who: {"Authorization": f"Bearer {who}"}
-    try:
-        g = _gateway(box, "g-1")
-        _whep(a[1], 1, headers=as_("anna")); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
-        code, _, loc = _whep(a[1], 1, headers=as_("anna"))
-        assert code == 201 and len(g.sessions) == 1
-        assert _whep(b[1], 1, headers=as_("boris"), method="DELETE", path=loc)[0] == 403     # the other console knows whose it is
-        assert _whep(b[1], 1, headers=as_("anna"), method="DELETE", path=loc)[0] in (200, 204)
-        assert g.sessions == {}                                                              # hung up, on the gateway it was on
-    finally:
-        a[0].shutdown(); b[0].shutdown()
-
-
-def test_a_second_viewer_asking_for_other_labels_is_told_whose_labels_the_stream_has():
-    """The review's second pass (Н-M8), unchanged until the fourth: the labels of the FIRST viewer applied to every next
-    viewer of the camera — one fan-out per camera, placed by its row — and a second viewer's `?labels=` was dropped
-    without a word. Labels are the stream row's: a viewer asking for labels the row does not carry is 409, naming the
-    row's; asking for none, or for some of the row's, watches the stream that exists."""
+def test_a_second_viewer_watches_the_stream_that_exists():
+    """The review's second pass (Н-M8): the labels of the FIRST viewer applied to every next viewer of the camera — one
+    fan-out per camera, placed by its row — and a second viewer's `?labels=` was dropped without a word; the console
+    answered 409 naming the row's while it created the row. Since the boundary's step 6 the row is written through the
+    platform's console: a second viewer's create is "exists" — the row as it was — and that viewer watches the stream
+    that exists; another fan-out is the row's to change, by whoever may."""
     box, ctl, live_ctl, w, srv, base = _box()
     try:
         _gateway(box, "g-1", labels=""); _gateway(box, "g-2", labels="public,eu")
         assert _whep(base, 1, path="/whep/1?labels=public,eu")[0] == 503 and live_ctl.unit("1")["labels"] == ["public", "eu"]
-        code, body, _ = _whep(base, 1, path="/whep/1?labels=rack-7")
-        assert code == 409 and json.loads(body)["labels"] == ["eu", "public"] and "eu,public" in json.loads(body)["error"]
+        assert _whep(base, 1, path="/whep/1?labels=rack-7")[0] == 503                   # nobody holds it yet: the same row
         assert live_ctl.unit("1")["labels"] == ["public", "eu"] and live_ctl.unit("1")["revision"] == 1   # the row as it was
-        assert _whep(base, 1)[0] == 503                                  # no labels: the stream that exists
-        assert _whep(base, 1, path="/whep/1?labels=public")[0] == 503   # a subset of the row's: the same stream serves it
     finally:
         srv.shutdown(); srv.server_close()
 
@@ -530,116 +499,81 @@ def test_the_pass_reads_the_store_outside_the_lock_a_viewer_waits_for():
 def test_who_watched_a_camera_live_is_a_line_in_the_journal():
     """Feedback CL. Reading the archive was journalled; watching the camera NOW was not — and that is one of the
     two things authentication exists for. A viewer the gateway admitted is `live.view`: who, which camera, the
-    session, the gateway, from where. The viewer who hangs up is `live.view.ended`. A console with no resource
-    root writes no journal, so this one is served over the box's."""
+    session, the gateway, from where; the viewer who hangs up is `live.view.ended`. Said by the gateway, where the
+    stream is given since the boundary's step 6 (`audit/liveworker` on its server), with the name the console gave
+    the door token to — and the console says whom it gave the door (`door.issued`)."""
     import json
     import os
+    from tests.conftest import door_keys
+    from tests.test_console_gate import Tokens
     from w2cplatform.events import buckets_under
+    from vms.console import make_console
     box, ctl, live_ctl, w, srv, base = _box()
     srv.shutdown(); srv.server_close()
-    con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
-    srv = serve(VmsController(con_vars, box.objects, wall=box.wall), box.archive, port=0, wall=box.wall,
-                live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
-    base = f"http://127.0.0.1:{srv.server_address[1]}"
 
-    def said():
-        return [{k: e[k] for k in ("kind", "user", "target", "session", "gateway") if k in e}
-                for b in buckets_under(box.archive, "audit", "console", 600)
-                for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith("live.view")]
-    try:
-        g = _gateway(box, "g-1")
-        _whep(base, 1); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
-        code, _, loc = _whep(base, 1, headers={"X-User": "anna"})
-        assert code == 201
-        sid = loc.rsplit("/", 1)[-1].split("?")[0]
-        assert said() == [{"kind": "live.view", "user": "anna", "target": "1", "session": sid, "gateway": "g-1"}]
-        assert _whep(base, 1, headers={"X-User": "anna"}, method="DELETE", path=loc)[0] in (200, 204)
-        assert [e["kind"] for e in said()] == ["live.view", "live.view.ended"] and said()[1]["user"] == "anna"
-    finally:
-        srv.shutdown(); srv.server_close()
+    def said(role="liveworker", kind="live.view"):
+        return [{k: e[k] for k in ("kind", "user", "target", "session", "gateway", "holder") if k in e}
+                for b in buckets_under(box.archive, "audit", role, 600)
+                for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith(kind)]
+    with door_keys():
+        con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
+        m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.archive, box.wall,
+                         live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
+        for con in (m.root, *m.mounts.values()):
+            con.gate.impl = Tokens({"anna": [("view", "vms/1", ())]})
+        srv = m.serve("127.0.0.1", 0)
+        base = f"http://127.0.0.1:{srv.server_address[1]}"
+        anna = {"Authorization": "Bearer anna"}
+        try:
+            g = _gateway(box, "g-1")
+            _whep(base, 1, headers=anna); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
+            code, _, loc = _whep(base, 1, headers=anna)
+            assert code == 201
+            sid = loc.rsplit("/", 1)[-1]
+            assert said() == [{"kind": "live.view", "user": "anna", "target": "1", "session": sid, "gateway": "g-1"}]
+            assert {"kind": "door.issued", "user": "anna", "target": "1", "holder": "g-1"} in said("console", "door.")
+            assert _whep(base, 1, headers=anna, method="DELETE", path=loc)[0] in (200, 204)
+            assert [e["kind"] for e in said()] == ["live.view", "live.view.ended"] and said()[1]["user"] == "anna"
+        finally:
+            srv.shutdown(); srv.server_close()
 
 
 def test_a_viewer_granted_one_camera_hangs_up_its_own_session_and_nobody_elses():
-    """The review's third pass, minor: `/whep/session/<id>` was a unit route, the gate read `session` as the camera,
-    and a viewer granted camera 1 got 403 hanging up. A session names no camera: the gate asks for a grant, and the
-    console checks the session is one it handed out — to this caller, on the gateway it named then."""
+    """The review's third pass, minor: a viewer granted camera 1 could not hang up (the gate read the session as the
+    camera), and then it was the console's table of who opened what. The gateway holds the session now, and knows who
+    opened it — the name in the door token the offer came with (the boundary's step 6): a hang-up needs a door token
+    for that stream, given to that viewer. Without a token, 401; another viewer's, 403; an unknown session, 404."""
+    from tests.conftest import door_keys
     from tests.test_console_gate import Tokens
     from vms.console import make_console
     box, ctl, live_ctl, w, srv, base = _box()
     srv.shutdown(); srv.server_close()
-    con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
-    m = make_console(VmsController(con_vars, box.objects, wall=box.wall), None, box.wall,
-                     live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
-    access = Tokens({"anna": [("view", "vms/1", ())], "boris": [("view", "vms/1", ())]})
-    for con in (m.root, *m.mounts.values()):
-        con.gate.impl = access
-    srv = m.serve("127.0.0.1", 0)
-    base = f"http://127.0.0.1:{srv.server_address[1]}"
-    as_ = lambda who: {"Authorization": f"Bearer {who}"}
-    try:
-        g = _gateway(box, "g-1")
-        _whep(base, 1, headers=as_("anna")); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
-        code, _, loc = _whep(base, 1, headers=as_("anna"))
-        assert code == 201
-        assert _whep(base, 1, headers=as_("boris"), method="DELETE", path=loc)[0] == 403        # not his session
-        assert _whep(base, 1, headers=as_("anna"), method="DELETE", path="/whep/session/nope?gateway=g-1")[0] == 404
-        assert _whep(base, 1, method="DELETE", path=loc)[0] == 401                               # nobody proved who they are
-        assert _whep(base, 1, headers=as_("anna"), method="DELETE", path=loc)[0] in (200, 204)   # hers: hung up
-    finally:
-        srv.shutdown(); srv.server_close()
-
-
-def test_a_hang_up_of_an_unknown_session_reads_the_whole_day_once_and_then_asks_nobody():
-    """The review's fifth pass, minor: `DELETE /whep/session/<any id>` asked the journals of every server for a day, each
-    time, and past `MAX_LIMIT` views a day an old session was 404. The day is read a window at a time, newest first,
-    until the session is found — the oldest of more views than a window holds is found; an id that was not found is
-    not looked up again for `SESSION_MISS_TTL`; and one caller's look-ups are `SESSION_MISSES` a minute.
-
-    The review's sixth pass, minor (a run: thirty DELETEs of somebody else's old session were six hundred windows):
-    only look-ups that found NOTHING were kept and counted. A session found — the caller's or not — is kept in the
-    console's table and not looked for again; and every look-up that asks the journal spends the caller's budget,
-    whatever it finds: past it the answer is 429, not "no such session" — the journal was not asked."""
-    from w2cplatform.doors import MAX_LIMIT
-    from vms import console as vc
-    box = Box()
-    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    now = box.wall()
-    views = [{"t": now - 86000 + i, "kind": "live.view", "user": "anna", "target": "1", "session": f"s{i}", "gateway": "g-1"}
-             for i in range(MAX_LIMIT * 2 + 500)]                    # more views in a day than one window holds
-
-    class Index:
-        asked = 0
-
-        def query(self, t0, t1, kind=None, subsystem=None, limit=1000, keep="newest", **kw):
-            Index.asked += 1
-            got = [e for e in views if t0 <= e["t"] < t1]
-            return {"events": got[-limit:], "truncated": len(got) > limit}
-
-    class Live:
-        hung = []
-
-        def hangup(self, sid, g, token=None):
-            Live.hung.append((sid, g))
-            return 200, {}
-
-    class H:
-        def __init__(self, who):
-            self.headers, self.sees, self.client_address = {"X-User": who}, (lambda u, l: True), ("1.2.3.4", 0)
-    route = vc.vms_routes(True, Live(), ctl, None)
-    route.index, route.journal = Index(), None
-    assert route(H("anna"), "DELETE", "/whep/session/s0", {})[0] == 200 and Live.hung == [("s0", "g-1")]   # the oldest
-    assert Index.asked == 3                                           # three windows, newest first
-    Index.asked = 0
-    assert route(H("boris"), "DELETE", "/whep/session/s5", {})[0] == 403             # found, and not his
-    Index.asked = 0
-    assert all(route(H("boris"), "DELETE", "/whep/session/s5", {})[0] == 403 for _ in range(30))
-    assert Index.asked == 0                                           # found once: thirty more refusals ask nobody
-    assert route(H("boris"), "DELETE", "/whep/session/nope", {})[0] == 404 and Index.asked == 3
-    assert route(H("boris"), "DELETE", "/whep/session/nope", {})[0] == 404 and Index.asked == 3   # not asked again
-    for i in range(vc.SESSION_MISSES - 2):                            # with `s5` and `nope`: his ten look-ups of the minute
-        assert route(H("boris"), "DELETE", f"/whep/session/x{i}", {})[0] == 404
-    before = Index.asked
-    for sid in ("x-more", "s7"):                                      # past the budget nothing is asked: not a miss, not a hit
-        r = route(H("boris"), "DELETE", f"/whep/session/{sid}", {})
-        assert r[0] == 429 and dict(r[2])["Retry-After"] == "60" and Index.asked == before
-    assert route(H("anna"), "DELETE", "/whep/session/y", {})[0] == 404 and Index.asked > before         # hers is not
+    with door_keys():
+        con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
+        m = make_console(VmsController(con_vars, box.objects, wall=box.wall), None, box.wall,
+                         live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
+        access = Tokens({"anna": [("view", "vms/1", ())], "boris": [("view", "vms/1", ())], "carl": [("view", "vms/2", ())]})
+        for con in (m.root, *m.mounts.values()):
+            con.gate.impl = access
+        srv = m.serve("127.0.0.1", 0)
+        base = f"http://127.0.0.1:{srv.server_address[1]}"
+        as_ = lambda who: {"Authorization": f"Bearer {who}"}
+        try:
+            g = _gateway(box, "g-1")
+            _whep(base, 1, headers=as_("anna")); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
+            code, _, loc = _whep(base, 1, headers=as_("anna"))
+            assert code == 201
+            assert _http(f"{base}/live/where/1", headers=as_("carl"))[0] == 403          # no grant on camera 1: no door
+            assert _http(loc, "DELETE")[0] == 401                                      # no token: the gateway asks
+            assert _whep(base, 1, headers=as_("boris"), method="DELETE", path=loc)[0] == 403     # not his session
+            assert _whep(base, 1, headers=as_("anna"), method="DELETE", path=g.url + "/whep/session/nope")[0] == 404
+            assert _whep(base, 1, headers=as_("anna"), method="DELETE", path=loc)[0] in (200, 204)   # hers: hung up
+            assert g.sessions == {}
+            # asking for a stream is a viewer's — of THAT camera — and changing the stream's row is not (`rights.routes`)
+            ask = lambda who, key: _http(f"{base}/live/streams", "POST", json.dumps({"cam": "1"}).encode(),   # noqa: E731
+                                         {"Content-Type": "application/json", "Idempotency-Key": key, **as_(who)})[0]
+            assert ask("carl", "c1") == 403 and ask("anna", "a1") == 400           # carl sees camera 2; anna: it exists
+            assert _http(f"{base}/live/streams/1", "PUT", json.dumps({"grace": 5}).encode(),
+                         {"Content-Type": "application/json", **as_("anna")})[0] == 403
+        finally:
+            srv.shutdown(); srv.server_close()

@@ -4,6 +4,7 @@ that builds them from a directory of specs (`python3 -m w2cplatform`, `__main__.
 
     python3 -m w2cplatform controller <sub>   the placement pass of <sub>, every five seconds, from its spec alone
     python3 -m w2cplatform resource           this server's resource: its door, its heartbeat, the policy pass, restore
+    python3 -m w2cplatform console            the console: every spec's rows, tables, requests and doors, one process
 
     SPEC_DIR          the directory of `<sub>.subsystem.yaml` this process runs from (`catalog.py`) — required
     PLATFORM_DIR      the platform's state (`config/`, `objects/`, `events/`); `PLATFORM_STORE` the store as a URL
@@ -11,6 +12,8 @@ that builds them from a directory of specs (`python3 -m w2cplatform`, `__main__.
     HUNG_MOVE_AFTER   controller: how long a hung worker keeps its units (`Controller.hung_move_after`)
     REACH_BUDGET      controller: units one pass moves to a server that reaches them (`spec.reach_budget`)
     RESOURCE_HOST, RESOURCE_PORT, RESOURCE_URL   resource: what its door binds, and the address its heartbeat says
+    CONSOLE_ROOT      console: the subsystem at `/` (the deployment's word); every other spec is mounted under its name
+    CONSOLE_HOST, CONSOLE_PORT   console: what it binds (`CONSOLE_UNIX`, `DOOR_KEY`, `SECRETS_KEY`: the console's own)
 
 The loops were a subsystem's (its `__main__`: the controller's loop, the blob sweep's, the resource's; and again in
 М11's `cluster/__main__.py`), and the platform ran only as a library under its `__main__`. They are here, once; a
@@ -40,6 +43,9 @@ loops over the objects it builds.
 #   loop — a heartbeat every 10 s, the policy pass every 600 s, what the restore left asked again.
 # - `box_stores(env, writer, acl)` — a box's two stores: the store by `PLATFORM_STORE` (else the file store under
 #   `PLATFORM_DIR`), the objects as files under it.
+# - `console(env)` — the console of every spec in `SPEC_DIR` (the boundary's step 6: it was a subsystem's verb, with
+#   routes of its own): `CONSOLE_ROOT` at `/`, the others mounted by name, one token — every spec's console grant — one
+#   journal, the rows sealed that were written before a key, and the blob sweep.
 # - `main(argv, env)` — the verbs above, from `SPEC_DIR`.
 # ================================================================================================
 from __future__ import annotations
@@ -186,17 +192,59 @@ def controller(name: str, env: dict) -> None:
 
 
 def resource(env: dict) -> None:
-    from .eventdatabase import EventIndex
-    from .resource import Resource, serve
+    from .resource import platform_resource, serve
     vars_, objects = box_stores(env)
     host, port = env.get("RESOURCE_HOST", "127.0.0.1"), int(env.get("RESOURCE_PORT", "8090"))
-    root = runtime.events_root(env)
-    res = Resource(root, runtime.server(env), env.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
-    res.index = EventIndex(root, res.server, time.time)
+    res = platform_resource(runtime.events_root(env), runtime.server(env), env.get("RESOURCE_URL", f"http://{host}:{port}"),
+                            vars_, objects)
     run_resource(res, serve(res, host, port))
 
 
-USAGE = "python3 -m w2cplatform controller <sub> | resource   (SPEC_DIR: the directory of <sub>.subsystem.yaml)"
+# THE CONSOLE, FROM THE SPECS ALONE (the boundary's step 6: it was a subsystem's verb, with its own routes and its own
+# list of what it fronts). Which subsystem is at `/` is the deployment's word (`CONSOLE_ROOT`), every other spec of
+# `SPEC_DIR` is mounted under its name; one store token — the console grant of every spec (`acl_console`) — one journal,
+# one index (the resources', merged). Rows written before this console had a key are sealed now, not at their next write
+# (feedback CD): every spec's rows, and its tables that keep a secret. The blob sweep is the console's (the ACL says so).
+def build_console(env: dict):
+    """The console's `Mount` and its controllers, from `SPEC_DIR` and `CONSOLE_ROOT` — not served yet."""
+    from .console import Mount, SpecConsole
+    from .eventdatabase import MergedIndex
+    from .sealing import Sealer, seal_stored
+    from .secrets import is_secret_field
+    from .spec import SpecController
+    specs = {s.name: s for s in catalog.load_dir(env[catalog.SPEC_DIR])}   # the deployment's directory: what this console fronts
+    root_name = env.get("CONSOLE_ROOT", "")
+    if root_name not in specs:
+        raise ValueError(f"CONSOLE_ROOT={root_name!r} names no spec of {env.get(catalog.SPEC_DIR)} "
+                         f"({', '.join(sorted(specs))}): the subsystem at `/` is the deployment's to say")
+    vars_, objects = box_stores(env, "console", [a for s in specs.values() for a in s.acl_console()])
+    ctls = {n: SpecController(s, vars_, objects) for n, s in specs.items()}
+    index = MergedIndex(objects)
+    media = any(s.door_routes for s in specs.values())              # something a holder serves a page: the player is drawn
+    root = SpecConsole(ctls[root_name], marks_root=runtime.events_root(env), media=media, index=index)
+    m = Mount(root)
+    for n, c in ctls.items():
+        if n != root_name:
+            m.mount(n, SpecConsole(c, index=index))
+            m.mounts[n].journal = root.journal                    # one journal for the process
+    seal_stored(Sealer.from_env(env), vars_,
+                [s.sub.config(s.rows, "") for s in specs.values()]
+                + [s.sub.config(t, "") for s in specs.values() for t, ts in s.table_specs.items()
+                   if any(is_secret_field(f) for f in ts.fields)])
+    return m, ctls
+
+
+def console(env: dict) -> None:
+    m, ctls = build_console(env)
+    srv = m.serve(env.get("CONSOLE_HOST", "127.0.0.1"), int(env.get("CONSOLE_PORT", "8080")))
+    log.info("console of %s on %s, with %s", m.root.spec.name, srv.server_address,
+             ", ".join(m.mounts) or "nothing else")
+    threading.Thread(target=sweep_loop, args=(list(ctls.values()),), daemon=True).start()
+    stop.wait()
+    srv.shutdown()
+
+
+USAGE = "python3 -m w2cplatform controller <sub> | resource | console   (SPEC_DIR: the directory of <sub>.subsystem.yaml)"
 
 
 def main(argv: list[str], env: dict | None = None) -> int:
@@ -211,6 +259,13 @@ def main(argv: list[str], env: dict | None = None) -> int:
         return 0
     if argv == ["resource"]:
         resource(env)
+        return 0
+    if argv == ["console"]:
+        try:
+            console(env)
+        except ValueError as e:                          # what is at `/` the deployment did not say: said, not a trace
+            log.error("%s", e)
+            return 2
         return 0
     log.error("%s", USAGE)
     return 2

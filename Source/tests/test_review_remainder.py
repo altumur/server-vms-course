@@ -23,7 +23,7 @@ from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import FileVariables, Forbidden, StoreBusy, cas_pause
 from vms import keeps
 from vms.config import REC_SPEC, SPEC
-from tests.conftest import Box, door, footage, recorder, store
+from tests.conftest import Box, Served, door, footage, recorder, store
 from tests.test_group_by import _ctl, _holder, _worker
 from tests.test_store_outage import Flaky
 
@@ -142,7 +142,7 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
 
     box.vars.put("vms/retention/7", {"days": 1}); box.vars.put("vms/retention/8", {"days": 1})
     keeps.write(box.vars, {"cam": "8", "from": t, "to": t + 60}, ["8"], "anna", box.wall())
-    res["srv-b"].kept = res["srv-a"].kept = __import__("vms.resource", fromlist=["kept_buckets"]).kept_buckets(box.vars)
+    # (what a keep holds is the spec's `holds:`, read by every resource itself — the boundary's step 6)
     box.wall.advance(DAY - 5000)                                       # the two early buckets are past their day…
     assert res["srv-a"].retain() == 1                                  # the original of camera 7 goes; 8's is kept
     assert res["srv-b"].retain() == 0 and res["srv-b"].mirror_removed == 0   # …and the copy waits out the grace
@@ -164,14 +164,18 @@ def test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days()
     # the watermark: never read -> "unknown", and nothing freed; read once -> the last settings stand
     res = Resource(box.archive, "srv-1", "http://srv-1", flaky, box.objects, wall=box.wall,
                    space_probe=lambda root: (1_000_000, 100_000))
-    asked = []
-    res.register("rec", type("Hook", (), {"pass_": lambda s, now: {}, "free": lambda s, need, now, min_days, volume=None: (asked.append(need), {"freed": need})[1]})())
+    from vms.config import REC_SPEC                                    # it frees by a request row (`requests: {free}`)
+    [vol] = list(res.volumes)
+    asked = lambda: box.vars.get(res._free_key(REC_SPEC, vol))[0]
     flaky.down = True
-    assert res.relieve()["space"] == "unknown" and asked == []
+    assert res.relieve()["space"] == "unknown" and asked() is None
     flaky.down = False
-    assert res.relieve()["space"] == "over" and asked == [150_000]
+    assert res.relieve()["space"] == "over" and asked()["free"] == "150000"
+    box.vars.delete(res._free_key(REC_SPEC, vol))
     flaky.down = True
-    assert res.relieve()["space"] == "over" and asked == [150_000, 150_000]      # on what it read last
+    assert res.relieve()["space"] == "over"                             # on what it read last (the ask itself waits for the store)
+    flaky.down = False
+    assert res.relieve()["space"] == "over" and asked()["free"] == "150000"
 
     # the recording's days: a row not READ is not a row that is absent. Forty days of footage of 7 and of 8; 7 is
     # shown for ninety, 8 has no row and is shown for thirty — and a store that blinks changes neither.
@@ -225,29 +229,28 @@ def test_a_command_carries_a_deadline_and_a_near_one():
     assert done["c-fine"]["action"] == "output" and w.devices["acme/10.0.0.90"].did == [("output", 1, "pulse", 0)]
     assert w.commands == {"performed": 1, "refused": 2, "expired": 0, "unknown": 0}
 
-    # the console says it at the door, and a scenario cannot ask for more either
+    # the console says it at the door (the spec's `requests.most_valid`), and a scenario cannot ask for more either
     from vms.auto import MAX_VALID_FOR
-    from vms.console import vms_routes
     from vms.worker import VmsWorker
-    route = vms_routes(None, None, con)
-    far = json.dumps({"unit": f"vms/{door}", "action": "output", "port": 1, "valid_until": now + 601}).encode()
-    body = type("H", (), {"headers": {"Content-Length": str(len(far)), "Idempotency-Key": "far-1"}, "rfile": io.BytesIO(far)})()
-    assert route(body, "POST", "/requests", {})[1]["error"] == "too far" and MAX_VALID_FOR == VmsWorker.MAX_VALID
+    from w2cplatform.console import SpecConsole
+    with Served(SpecConsole(con, wall=box.wall)) as call:
+        far = {"unit": f"vms/{door}", "action": "output", "port": 1, "valid_until": now + 601}
+        assert call("POST", "/requests", far, key="far-1")[1]["error"] == "too far"
+    assert MAX_VALID_FOR == VmsWorker.MAX_VALID == SPEC.requests["most_valid"]
 
 
 def test_a_command_retried_is_one_command():
     """M17 of the platform review, left open in its second pass: `POST /requests` named the row by the clock, so a
     retried click — the page's, a proxy's — filed a second command and the door pulsed twice. The `Idempotency-Key`
     is required and is the row's name (unless the body names one); the row is written create-only, and the retry
-    finds it and is answered the same 202. Without the key: 400, before anything is looked at."""
-    from vms.console import vms_routes
+    finds it and is answered the same 202. Without the key: 400, before anything is looked at. (The platform's route
+    since the boundary's step 6, the spec's `requests:`.)"""
+    from w2cplatform.console import SpecConsole
     box = Box(); con, door, w = _door(box)
-    route = vms_routes(None, None, con)
+    served = Served(SpecConsole(con, wall=box.wall))
 
     def post(key, **fields):
-        data = json.dumps({"unit": f"vms/{door}", "action": "output", "port": 1, **fields}).encode()
-        headers = {"Content-Length": str(len(data)), **({"Idempotency-Key": key} if key else {})}
-        return route(type("H", (), {"headers": headers, "rfile": io.BytesIO(data)})(), "POST", "/requests", {})
+        return served("POST", "/requests", {"unit": f"vms/{door}", "action": "output", "port": 1, **fields}, key=key or False)
 
     assert post(None)[0] == 400 and post(None)[1]["error"] == "Idempotency-Key required"
     assert box.vars.list("vms/requests/") == []
@@ -257,8 +260,9 @@ def test_a_command_retried_is_one_command():
     assert post("click-1") == first                                       # the same request: the row it filed, not a second one
     assert box.vars.list("vms/requests/") == [SPEC.sub.request_key("click-1")]
     assert post("click-2")[0] == 202 and len(box.vars.list("vms/requests/")) == 2   # another click is another command
-    assert post("a/b")[1]["error"] == "bad id"                            # a key is a name, not a path
+    assert post("a/b")[0] == 400                                          # a key is a name, not a path (one segment)
     assert post("click-3", id="by-name")[1]["queued"]["id"] == "by-name"  # a body may still name its request
+    served.close()
     assert [d["request"] for d in w.requests()] == ["by-name", "click-1", "click-2"] and w.commands["performed"] == 3
 
 
@@ -352,15 +356,14 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     with an action nobody serves, in another family; a `record` and a young backfill are not this pass's."""
     from vms import jobs
     from vms.__main__ import _reap_turn
-    from vms.console import vms_metrics, vms_routes
+    from w2cplatform.metrics import text as spec_metrics
+    from w2cplatform.console import SpecConsole
     box = Box(); ctl, con = _ctl(box)
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.93/ch/1"})["id"]
     assert ctl.placement(gate) is None                                    # no worker anywhere: nobody holds it
-    route = vms_routes(None, None, con)
-    data = json.dumps({"unit": f"vms/{gate}", "action": "output", "port": 1}).encode()
-    filed = route(type("H", (), {"headers": {"Content-Length": str(len(data)), "Idempotency-Key": "open-gate"},
-                                 "rfile": io.BytesIO(data)})(), "POST", "/requests", {})
+    with Served(SpecConsole(con, wall=box.wall)) as call:
+        filed = call("POST", "/requests", {"unit": f"vms/{gate}", "action": "output", "port": 1}, key="open-gate")
     assert filed[0] == 202
     until = float(filed[1]["queued"]["valid_until"])
     now = box.wall()
@@ -391,7 +394,7 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     box.wall.advance(jobs.COMMAND_MAX_VALID)
     _reap_turn([], [rec, con])
     assert standing(con, SPEC) == [] and jobs.expired["vms"] == was.get("vms", 0) + 2
-    text = "\n".join(vms_metrics(con)())
+    text = "\n".join(jobs.metrics_lines())                               # the request loops' process's own numbers
     assert f'vms_requests_expired_total{{sub="vms"}} {jobs.expired["vms"]}' in text, text
 
 
@@ -402,7 +405,7 @@ def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_ho
     as NOT KNOWN — `vms_requests_unknown_total`, not `vms_requests_expired_total`."""
     from vms import jobs
     from vms.__main__ import _reap_turn
-    from vms.console import vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box(); ctl, con = _ctl(box)
     gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.94/ch/1"})["id"]
     now = box.wall()
@@ -420,7 +423,7 @@ def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_ho
     _reap_turn([], [con])
     assert box.vars.get(SPEC.sub.request_key("slow"))[0] is None
     assert jobs.expired.get("vms", 0) == was.get("vms", 0) and jobs.unknown["vms"] == unknown.get("vms", 0) + 1
-    text = "\n".join(vms_metrics(con)())
+    text = "\n".join(jobs.metrics_lines())
     assert f'vms_requests_unknown_total{{sub="vms"}} {jobs.unknown["vms"]}' in text, text
 
 
@@ -558,7 +561,7 @@ def test_a_clock_running_behind_is_a_number_too():
 # -- what is seen -----------------------------------------------------------------------------------------
 
 def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
-    from vms.console import _recorders
+    from w2cplatform.metrics import text as spec_metrics
     from vms.worker import FakeActuator
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
@@ -575,29 +578,28 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [
         {"id": "7", "phase": "running", "last_frame_at": t0 + 5}, {"id": "8", "phase": "running"}], {"server": "srv-1"}).to_bytes())
     box.wall.advance(15)                                                         # …and the recorder goes silent too
-    text = "\n".join(_recorders(rec))
+    text = spec_metrics(rec)
     assert 'rec_last_frame_age_seconds{unit="7"} 55.0' in text and 'rec_last_frame_age_seconds{unit="8"}' not in text
     r.reconciler.actual = {}; r.writer_pass()
     assert r.fed == {}                                                           # stopped: nothing is said about it
 
 
 def test_who_read_the_archive_is_an_event_and_once_a_minute():
-    """Footage that leaves through the console is said: who, which interval, and — the piece having left whole
-    — its sha256 (feedback BI, BU). A whole file is said every time it leaves (the review's fourth pass, minor: the
-    second file of the same minute need not be the first); a part — a player that moved on — once a minute."""
-    from vms.console import serve
-    from vms.controller import VmsController
+    """Footage that leaves is said: who, which interval, and — the piece having left whole — its sha256 (feedback BI,
+    BU). A whole file is said every time it leaves (the review's fourth pass, minor: the second file of the same minute
+    need not be the first); a part — a player that moved on — once a minute. Said by the recording's holder, whose door
+    it leaves through since the boundary's step 6 (`audit/door-<recorder>`), with the name the door token was given to."""
+    from tests.conftest import page_door
     box = Box()
-    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     st = store()
     start = box.wall() - 3600
     footage(st, "7", 3, start, start + 600)
     rec_door = door(box, st)
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    srv = page_door(box)
     port = srv.server_address[1]
 
     def read(user, a, b):
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/export/7?rec=7&from={start + a}&to={start + b}",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/door/export/7?from={start + a}&to={start + b}",
                                      headers={"X-User": user})
         with urllib.request.urlopen(req) as r:
             return r.read()
@@ -612,8 +614,8 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         return got
 
     def _said():
-        return [(e["user"], e["media"], e["recording"], e.get("sha256"))   # in the journal: `audit/console/…` (feedback BN)
-                for b in buckets_under(box.archive, "audit", "console", 600)
+        return [(e["user"], e["media"], e["recording"], e.get("sha256"))   # in the journal: the door's (feedback BN)
+                for b in buckets_under(box.archive, "audit", "door-r-page", 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
 
     try:
@@ -629,25 +631,31 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
 
 
 def test_the_door_to_a_devices_own_footage_is_said_when_it_is_handed_out():
-    """The review's third pass (Н-B1's remainder, and its minor): `/segment?unit=vms/<id>` hands out the holder's playback
-    door, the footage then goes holder → browser, and nothing said so. The console never sees those bytes; it says
-    what it gave — `archive.read` with `source: device`, who, which camera, which minutes."""
+    """The review's third pass (Н-B1's remainder, and its minor): the console handed out the holder's playback door, the
+    footage then went holder → browser, and nothing said so. Since the boundary's step 6 every holder's door is handed
+    out with the unit's place (`/where/<id>` → `door`) and the console never sees those bytes; it says what it gave —
+    `door.issued`: who, which unit, which holder, which routes, until when — and the door says what was read."""
+    from tests.conftest import door_keys
     from vms.console import serve
     from vms.controller import VmsController
     box = Box()
-    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    box.objects.put(SPEC.sub.heartbeat_key("w-1"),
-                    Heartbeat("w-1", box.wall(), [{"id": "7", "phase": "running", "playback_url": "http://h:1/playback/7"}],
-                              {"server": "srv-1"}).to_bytes())
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    with door_keys():
+        con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+        srv = serve(con, box.archive, port=0, wall=box.wall)
     try:
-        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/segment?unit=vms/7&from=100&to=200",
-                                     headers={"X-User": "anna"})
+        cam = con.create_camera({"source": "driverpack://file/7.mp4"})["id"]
+        box.objects.put(SPEC.sub.heartbeat_key("w-1"),
+                        Heartbeat("w-1", box.wall(), [{"id": cam, "phase": "running"}],
+                                  {"server": "srv-1", "capacity": 4, "headroom": 4, "door_url": "http://h:1/door"}).to_bytes())
+        VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/where/{cam}", headers={"X-User": "anna"})
         with urllib.request.urlopen(req) as r:
-            assert json.loads(r.read())["playback"] == "http://h:1/playback/7?from=100&to=200"
+            d = json.loads(r.read())["door"]
+        assert d["url"] == "http://h:1/door" and d["routes"] == ["timeline", "segment"] and d["token"]
         lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
-                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
-        assert [(e["user"], e["source"], e["target"], e["from"], e["to"]) for e in lines] == [("anna", "device", "7", "100", "200")]
+                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "door.issued"]
+        assert [(e["user"], e["target"], e["holder"], e["routes"], e["until"]) for e in lines] == [
+            ("anna", str(cam), "w-1", "timeline,segment", round(d["expires"]))]
     finally:
         srv.shutdown()
 
@@ -691,10 +699,12 @@ def test_a_read_starts_on_the_key_frame_before_the_moment_asked_for():
 
 def test_a_shrink_is_requested_until_the_recorder_applies_it_and_an_uncopied_keep_is_a_number():
     """The review's fourth pass, two majors, the console's half. A smaller quota declared without `shrink_confirmed`
-    left the ring as it was, while the page showed the new size and the journal said `shrunk`: the volumes list now
-    carries the size the RING has and the shrink pending, from the recorder holding it; the write is journalled
-    `archive.volume.shrink_requested`, confirmed or not, and an unconfirmed one says so in the reply. And a keep the
-    recorder could not copy is `rec_keep_missing_seconds{keep}` on `/metrics`, from the recorder's `keep_missing`."""
+    left the ring as it was, while the page showed the new size and the journal said `shrunk`. The volume is the spec's
+    table since the boundary's step 6: the journal says what the write changed and from what (`changed`, `was`), and
+    the recorder holding the volume says the shrink pending — `quota_note` in its heartbeat, `rec_volume_shrink_pending`
+    on `/metrics` — until the operator's second word. (The console's volumes view, which joined the two, went with the
+    VMS's route.) And a keep the recorder could not copy is `rec_keep_missing_seconds{keep}` on `/metrics`, from the
+    recorder's `keep_missing`."""
     from vms.console import serve
     from vms.controller import VmsController
     box = Box()
@@ -712,21 +722,22 @@ def test_a_shrink_is_requested_until_the_recorder_applies_it_and_an_uncopied_kee
     try:
         vol = {"name": "big", "kind": "local", "url": "/data/big", "server": "srv-1", "quota_bytes": 8 * T}
         call("POST", "/rec/volumes", vol)
+        said = lambda text: [x for x in text.splitlines() if x.startswith("rec_volume_shrink_pending")]   # noqa: E731
+        assert said(call("GET", "/rec/metrics")) == []                                    # nobody holds it: nobody says
+        out = call("POST", "/rec/volumes", {**vol, "quota_bytes": 4 * T})
+        assert out["row"]["quota_bytes"] == 4 * T                                           # declared: the recorder applies it
         box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [], {
             "server": "srv-1", "volume": "big", "archive": "/data/big", "archive_quota": 8 * T,
             "quota_note": "big is 8000000000000 bytes and declared 4000000000000: not done until shrink_confirmed",
             "keep_missing": {"7-100-200": 100.0, "8-1-2": 0}}).to_bytes())
-        out = call("POST", "/rec/volumes", {**vol, "quota_bytes": 4 * T})
-        assert "keeps its size" in out["warning"]
-        row = next(v for v in call("GET", "/rec/volumes")["volumes"] if v["name"] == "big")
-        assert row["quota_bytes"] == 4 * T and row["size_bytes"] == 8 * T and row["shrink_pending"] is True
-        assert "shrink_confirmed" in row["quota_note"]
-        assert "warning" not in call("POST", "/rec/volumes", {**vol, "quota_bytes": 2 * T, "shrink_confirmed": 2 * T})
+        call("POST", "/rec/volumes", {**vol, "quota_bytes": 2 * T, "shrink_confirmed": 2 * T})
         lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
                  for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith("archive.volume")]
-        assert [(e["kind"], e["quota_bytes"], e["confirmed"]) for e in lines] == [
-            ("archive.volume.shrink_requested", 4 * T, False), ("archive.volume.shrink_requested", 2 * T, True)]
+        assert [(e.get("changed"), e.get("was")) for e in lines] == [
+            (None, None), ("quota_bytes", {"quota_bytes": 8 * T}), ("quota_bytes,shrink_confirmed", {"quota_bytes": 4 * T, "shrink_confirmed": 0})]
         metrics = call("GET", "/rec/metrics")
+        [pending] = said(metrics)
+        assert pending.endswith(" 1"), metrics                                              # r-1 says it
         assert 'rec_keep_missing_seconds{keep="7-100-200"} 100.0' in metrics and 'keep="8-1-2"' not in metrics
     finally:
         srv.shutdown()

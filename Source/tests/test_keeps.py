@@ -16,17 +16,10 @@ from w2cplatform.spec import SpecController
 from vms import keeps, volumes
 from vms.archive import event_log
 from vms.config import REC_SPEC
-from vms.console import rec_routes
 from vms.worker import fake_samples
 from tests.conftest import TEST_QUOTA, Box, door, footage, recorder, store
 
 DAY = 86400.0
-
-
-class _Body:
-    def __init__(self, payload: dict, user: str = ""):
-        raw = json.dumps(payload).encode()
-        self.headers, self.rfile = {"Content-Length": str(len(raw)), **({"X-User": user} if user else {})}, io.BytesIO(raw)
 
 
 def _site(quota: int = TEST_QUOTA, source: bool = True, held: dict | None = None):
@@ -288,9 +281,9 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
     """`{days: 0}` is what a deleted unit's retention becomes: its buckets go on the next pass. The ones
     under a keep do not."""
     from w2cplatform.events import buckets_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     t0 = box.wall() - 5 * DAY
     log = event_log(box.archive, 7, 3)
     log.append(t0 + 10, "alarm", zone="gate"); log.append(t0 + 3000, "motion")     # two buckets, fifty minutes apart
@@ -306,14 +299,15 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
 def test_a_keep_holds_every_subsystems_events_about_its_camera():
     """The review's fourth pass (B10 of the first review). Only the `vms` and `rec` trees were held: the detector's
     alarm at the gate, a scan's hits, a survey's, the scenario that fired — inside the keep, and deleted by their own
-    days. Each unit's ROW says which camera it is about: a detector, a watch and a scan by `cam` (a deleted row too),
-    a scenario by the units its triggers and actions name. A unit whose camera cannot be told is held by any keep;
-    another camera's units go."""
+    days. Each unit's ROW says which camera it is about: a detector, a watch and a scan by `cam` (a deleted row too) —
+    their specs' `about`, read by the platform since the boundary's step 6 (`holds:`). A unit whose camera cannot be
+    told is held by any keep; another camera's units go; and a scenario is about nobody — its triggers name cameras,
+    and nothing a spec declares reads them — so no keep holds it."""
     import json as _json
     from w2cplatform.events import ALARM, EventLog, subsystems_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     t0 = box.wall() - 5 * DAY
     box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "deleted": "true"})  # deleted: {days: 0}
     box.vars.put("det/units/8-motion", {"name": "8-motion", "cam": "8", "kind": "motion"})
@@ -337,68 +331,66 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     res.retain()
     left = {(sub, u) for sub, us in subsystems_under(box.archive).items() for u in us if sub != "audit"   # the pass's own journal
             if any(f.endswith(".events.jsonl") for _, _, fs in __import__("os").walk(f"{box.archive}/{sub}/{u}") for f in fs)}
-    held = {("det", "7-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"), ("auto", "gate"),
-            ("auto", "anywhere"), ("det", "orphan")}
+    held = {("det", "7-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"), ("det", "orphan")}
     assert left == held | {(s + ".alarms", u) for s, u in held}                 # camera 8's, in both trees, are gone
 
 
 def test_the_console_sets_a_keep_lists_it_and_lifts_it():
+    """The spec's table (`tables.keeps`), served by the platform's console since the boundary's step 6 (it was the VMS's
+    route, `rec_routes`): set by its camera and interval — the same interval again is the same row, written again —
+    stamped with who and when, listed, lifted; refused in words what is no keep; and with no incidents volume declared
+    a keep is ONLY a mark, counted on `/metrics` (the review's second pass, B10)."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.metrics import text as spec_metrics
+    from tests.conftest import Served
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    route = rec_routes(rec)
     assert "rec/keeps/*" in REC_SPEC.acl_console()
     rec.create({"name": "7", "cam": "7"}); rec.create({"name": "7-cloud", "cam": "7"}); rec.create({"name": "9", "cam": "9"})
-
     t = box.wall()
     body = {"cam": "7", "from": t - 900, "to": t - 300, "note": "the gate, 14:10"}
-    status, made = route(_Body(body, user="anna"), "POST", "/keeps", {})
-    assert status == 201 and made["keep"]["id"] == f"7-{int(t - 900)}-{int(t - 300)}"
-    assert (made["keep"]["by"], made["keep"]["at"], made["keep"]["recordings"]) == ("anna", t, ["7", "7-cloud"])
-    # …and with no incidents volume declared it is ONLY a mark (the review's second pass, B10): said in the
-    # answer, counted on `/metrics`, and 201 all the same — the mark is valid, nothing copies it yet.
-    from vms.console import rec_metrics
-    assert "no incidents volume" in made["warning"] and "rec_keeps_unprotected 1" in rec_metrics(rec)()
-    volumes.write(box.vars, {"name": "evidence", "kind": "incidents", "server": "srv-1", "url": tempfile.mkdtemp(prefix="evidence-"),
-                             "quota_bytes": TEST_QUOTA})
-    status, again = route(_Body(body, user="boris"), "POST", "/keeps", {})        # the same interval: the same row
-    assert status == 201 and "warning" not in again and "rec_keeps_unprotected 0" in rec_metrics(rec)()
-    status, view = route(None, "GET", "/keeps", {})
-    assert status == 200 and [k["id"] for k in view["keeps"]] == [made["keep"]["id"]]
+    with Served(SpecConsole(rec, wall=box.wall)) as call:
+        status, made = call("POST", "/keeps", body, headers={"X-User": "anna"})
+        name = f"7-{int(t - 900)}-{int(t - 300)}"
+        assert status == 201 and made["row"]["name"] == name
+        assert (made["row"]["by"], float(made["row"]["at"])) == ("anna", t)
+        assert "rec_keeps_unprotected 1" in spec_metrics(rec)
+        volumes.write(box.vars, {"name": "evidence", "kind": "incidents", "server": "srv-1", "admits": False,
+                                 "url": tempfile.mkdtemp(prefix="evidence-"), "quota_bytes": TEST_QUOTA})
+        status, again = call("POST", "/keeps", body, headers={"X-User": "boris"})   # the same interval: the same row
+        assert status == 201 and again["row"]["by"] == "boris" and "rec_keeps_unprotected 0" in spec_metrics(rec)
+        status, view = call("GET", "/keeps")
+        assert status == 200 and [k["name"] for k in view["keeps"]] == [name]
 
-    for bad in ({"from": 1, "to": 2}, {"cam": "7", "from": t, "to": t - 1}, {"cam": "7", "from": "yesterday", "to": t},
-                {"cam": "../7", "from": 1, "to": 2}, {"cam": "7", "from": 1, "to": 2, "forever": True},
-                {"cam": "7", "from": 1, "to": 2, "note": "x" * 501}):
-        assert route(_Body(bad), "POST", "/keeps", {})[0] == 400, bad
+        for bad in ({"from": 1, "to": 2}, {"cam": "7", "from": "yesterday", "to": t}, {"cam": "../7", "from": 1, "to": 2},
+                    {"cam": "7", "from": 1, "to": 2, "forever": True}, {"cam": "7", "from": 1, "to": 2, "note": "x" * 501},
+                    {"cam": "7", "from": 0, "to": 2}):
+            assert call("POST", "/keeps", bad)[0] == 400, bad
 
-    assert route(None, "DELETE", "/keeps/nope", {})[0] == 404
-    assert route(None, "DELETE", "/keeps/" + made["keep"]["id"], {})[0] == 200
-    assert route(None, "GET", "/keeps", {})[1]["keeps"] == []
+        assert call("DELETE", "/keeps/nope")[0] == 404
+        assert call("DELETE", "/keeps/" + name)[0] == 200
+        assert call("GET", "/keeps")[1]["keeps"] == []
 
 
-def test_a_garbled_keep_is_shown_as_it_holds_and_a_recorder_waiting_for_its_volume_is_on_the_volumes_page():
-    """The review's eighth pass. Part 4: a keep whose row does not parse holds its camera as far as its interval reads,
-    and `GET /keeps` did not list it — a hold nobody could see or lift. It is listed now, `garbled`, with the interval
-    it holds and since when this console has seen it so. Part 2: a recorder pinned to a volume whose hold is another's
-    says why only in its heartbeat (`volume_wait`); the volumes page names it, on the volume it waits for."""
-    from w2cplatform.contract import Heartbeat
+def test_a_garbled_keep_is_shown_as_it_holds():
+    """The review's eighth pass, part 4: a keep whose row does not parse holds its camera as far as its interval reads,
+    and `GET /keeps` did not list it — a hold nobody could see or lift. The platform's list says every row, `garbled`
+    where the store cannot read it; one whose bounds are words is listed as written, and the resources hold its camera
+    as far as it reads (`holds.py`). (Who waits for a volume — a recorder's `volume_wait` — is its heartbeat's: the
+    console's view of it went with the VMS's route, at the boundary's step 6.)"""
+    from w2cplatform.console import SpecConsole
+    from tests.conftest import Served
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    route = rec_routes(rec)
     t = box.wall()
-    box.vars.put("rec/keeps/7-bad", {"cam": "7", "from": "yesterday", "to": str(t), "note": "", "by": "anna", "recordings": '["7"]'})
+    box.vars.put("rec/keeps/7-bad", {"cam": "7", "from": "yesterday", "to": str(t), "note": "", "by": "anna"})
     _keep(box, "9", t - 900, t - 300)
-    status, view = route(None, "GET", "/keeps", {})
-    by = {k["id"]: k for k in view["keeps"]}
+    with Served(SpecConsole(rec, wall=box.wall)) as call:
+        status, view = call("GET", "/keeps")
+    by = {k["name"]: k for k in view["keeps"]}
     assert status == 200 and set(by) == {"7-bad", f"9-{int(t - 900)}-{int(t - 300)}"}
-    bad = by["7-bad"]
-    assert bad["garbled"] is True and bad["from"] == 0.0 and bad["to"] == t and bad["garbled_since"] == t
+    assert by["7-bad"]["from"] == "yesterday" and by["7-bad"]["cam"] == "7"   # as written: whose, and what it says
     assert json.dumps(view)                                              # no `Infinity` in the answer
-    volumes.write(box.vars, {"name": "net", "kind": "network", "url": "s3://bucket/net", "quota_bytes": TEST_QUOTA})
-    box.objects.put(REC_SPEC.sub.heartbeat_key("r-9"), Heartbeat("r-9", t, [], {
-        "server": "srv-9", "volume": "", "volume_wait": "net is being written by r-2: this recorder is pinned to it"}).to_bytes())
-    status, page = route(None, "GET", "/volumes", {})
-    net = next(v for v in page["volumes"] if v["name"] == "net")
-    assert net["waiting"] == ["r-9"] and page["waiting"][0]["recorder"] == "r-9"
 
 
 def test_a_keep_that_stays_garbled_for_an_hour_is_an_alarm_once_per_episode_and_again_once_a_day():
@@ -450,24 +442,22 @@ def test_a_keep_written_before_its_fields_were_renamed_still_holds():
 
 def test_the_list_of_keeps_is_what_the_caller_may_see():
     """Feedback CG: a keep says which camera, which minutes and why. Lifting or checking one asked by its camera;
-    the LIST did not, and showed every keep to whoever could see one camera."""
-    from types import SimpleNamespace
-    from w2cplatform.spec import SpecController
-    from vms import keeps as K
-    from vms.config import REC_SPEC
-    from vms.console import rec_routes
-    from tests.conftest import Box
+    the LIST did not, and showed every keep to whoever could see one camera. The platform's list of a table whose rows
+    say whose they are (`rights.unit_of`) is what the caller may see — by a grant on the camera, or by its labels."""
+    from tests.test_console_gate import Tokens, _call, _console
     box = Box()
-    rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
-    for cam in ("1", "3", "ref:SN-A"):
-        K.write(box.vars, {"cam": cam, "from": 100.0, "to": 200.0}, [], "anna", box.wall())
-    route = rec_routes(rec)
-    labels = {"vms/3": ["hall"]}                                        # a camera as the platform names a unit: vms/<id>
-    boris = SimpleNamespace(headers={}, sees=lambda unit, lab: unit == "vms/1", labels_for=lambda u: labels.get(u, []))
-    vera = SimpleNamespace(headers={}, sees=lambda unit, lab: "hall" in lab, labels_for=lambda u: labels.get(u, []))
-    open_ = SimpleNamespace(headers={}, sees=None, labels_for=lambda u: [])
-    cams = lambda h: sorted(k["cam"] for k in route(h, "GET", "/keeps", {})[1]["keeps"])   # noqa: E731
-    assert cams(boris) == ["1"] and cams(vera) == ["3"] and cams(open_) == ["1", "3", "ref:SN-A"]
+    access = Tokens({"boris": [("view", "vms/1", ())], "vera": [("view", None, ("hall",))], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        for cam, labels in (("1", []), ("3", ["hall"])):
+            ctl.create_camera({"source": f"driverpack://file/{cam}.mp4", "labels": labels})
+        box.vars.put("vms/cameras/3", {**box.vars.get("vms/cameras/2")[0], "id": "3"})
+        for cam in ("1", "3", "ref:SN-A"):
+            keeps.write(box.vars, {"cam": cam, "from": 100.0, "to": 200.0}, [], "anna", box.wall())
+        cams = lambda who: sorted(k["cam"] for k in _call(base, "GET", "/rec/keeps", token=who)[1]["keeps"])   # noqa: E731
+        assert cams("boris") == ["1"] and cams("vera") == ["3"] and cams("admin") == ["1", "3", "ref:SN-A"]
+    finally:
+        srv.shutdown()
 
 
 def test_a_restarted_recorder_starts_from_what_the_incidents_volume_holds_for_every_recording_of_a_keep():

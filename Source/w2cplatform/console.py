@@ -30,11 +30,10 @@ show them. So the console is one class, run from the same spec:
                                  (platform/decommission/<server>): 409 while the server answers; the controllers release
                                  its slots and move their units; DELETE withdraws it, or brings the machine back
 
-What a subsystem adds is registered, not subclassed: `extra(handler, method,
-path, query) -> reply | None` gets every request the routes above do not
-claim (the VMS: /timeline and /export); a reply is `(status, dict)`,
-`(status, bytes)`, `(status, bytes, headers)` or `()` when the extra wrote
-it itself. The console holds the subsystem's
+A subsystem adds no routes: what it serves beyond its rows is declared in its spec — `tables:`, `requests:` —
+and what its holders serve a page themselves is `door:`, handed out with the unit's place at `/where` (the
+boundary's step 6: it was `extra(handler, method, path, query)`, a subsystem's function every request fell to). The
+console holds the subsystem's
 SpecController with the console's token — the operator's rows, never
 placement — so a write it should not make is a 403 from the store, not a
 rule in this file.
@@ -43,7 +42,7 @@ rule in this file.
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
 # # console.py — the console as data: SpecConsole over the same spec, with idempotent writes and the
-# subsystem's registered extra routes
+# spec's declared tables, requests and doors
 #
 # **Role in the module.** Lesson 6, the other half of `spec.py`. A subsystem's YAML already says what its
 # units are, which fields the operator owns and what leaves the cluster; that is everything a console needs
@@ -51,8 +50,8 @@ rule in this file.
 # `/spec` (what the page reads first), the rows with the read model, `/where`, `/resources`, `/unplaceable`,
 # `/events` (if a `MergedIndex` — anything with `query(t0, t1, kind, subsystem, unit, current_epochs)` — is behind it), `/metrics`, and the writes — POST/PUT/DELETE on the rows and
 # POST `/marks` — with idempotency keys stored in Variables so a retry answered by another console instance
-# is the same request. What a subsystem adds is registered, not subclassed: `extra(handler, method, path,
-# query)` gets every request the built-in routes do not claim (the VMS: `/timeline` and `/export`). The
+# is the same request. A subsystem adds no routes of its own: its tables and requests are its spec's, and the bytes
+# its holders serve go holder → browser through the door `/where` hands out (`door.py`; the boundary's step 6). The
 # console holds the subsystem's `SpecController` with the *console's* token (the operator's rows, never
 # placement), so a write it should not make is a 403 from the store, not a rule in this file.
 # `vms/console.py` builds it via `make_console`; the deploy unit `console.container` runs it as its own
@@ -61,12 +60,12 @@ rule in this file.
 # ## Module-level names
 # - `PAGE` — absolute path of `console.html` beside this file; served at `/`.
 #
-# ### `__init__(self, ctl, marks_root=None, index=None, worst_failover=0.0, wall=None, extra=None,
+# ### `__init__(self, ctl, marks_root=None, index=None, worst_failover=0.0, wall=None,
 # media=False, lost_after=45.0)` `ctl` is the subsystem's `SpecController` holding the console's token;
 # `marks_root` is this server's resource root — if given, `self.marks` is an `EventLog(marks_root,
 # "console", <hostname:pid>, epoch 1)` (the console's own log; one writer, so epoch 1 forever); `index` is
-# an optional `MergedIndex` (anything with `query(...)`); `worst_failover` is a number exported on `/metrics`; `extra` is the subsystem's
-# route function; `media` tells the page it may draw a timeline and play. `seen` is the `IdempotencyKeys`
+# an optional `MergedIndex` (anything with `query(...)`); `worst_failover` is a number exported on `/metrics`;
+# `media` tells the page it may draw a timeline and play, from the holders' doors. `seen` is the `IdempotencyKeys`
 # over `<sub>/idem/`. `_scan` caches the assignment directory; `scans` counts cache refreshes.
 #
 # ## Notes
@@ -75,7 +74,7 @@ rule in this file.
 #   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras,
 #   media true`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
 #   the page mentions `/spec`, `/timeline/`, `<video>` and never the word camera outside its comment;
-#   `/timeline/1` and an `/export` of it come from the VMS extra, through a recorder's door; PUT `{"enabled": false}` bumps
+#   what the holders serve is read at the doors `/where` hands out, never here; PUT `{"enabled": false}` bumps
 #   revision to 2; DELETE marks the row and the placement waits for `unplace_deleted`.
 # - Idempotency covers POST always, PUT optionally, DELETE never; the page sends a fresh key with every
 #   request (including DELETE, where it is ignored).
@@ -94,7 +93,7 @@ rule in this file.
 #   request line and headers have `CONSOLE_HEADER_TIMEOUT`, not the socket's timeout (`Deadlined`). RIGHTS BEFORE THE
 #   BODY (`dispatch`): everything the path decides is asked first, the body read after, and only a blob route of the
 #   spec reads up to `MAX_BLOB`, `BLOBS_AT_ONCE` at a time (`blob_route`). A CHANGE that reaches other units says so
-#   (`moved_units`, `body_units`). And the same server, deadline and bounded body are every door's, not the
+#   (the spec's `rights.reach`, `rights.names`). And the same server, deadline and bounded body are every door's, not the
 #   console's alone: `door_server`, `Deadlined`, `read_body`, and for what a door streams `Paced` and `start_stream`.
 # ================================================================================================
 from __future__ import annotations
@@ -1354,20 +1353,14 @@ def _labels(row: dict | None) -> list:
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
     holding the console's token; `media` says the page may draw a timeline and
-    play (the subsystem's `extra` serves /timeline and a media route)."""
+    play, from the doors of the units' holders (`door:` in a spec)."""
 
     def __init__(self, ctl: SpecController, marks_root: str | None = None, index=None, worst_failover: float = 0.0,
-                 wall=None, extra=None, media: bool = False, lost_after: float = 45.0, metrics_extra=None,
-                 per_minute: float = 0.0):
+                 wall=None, media: bool = False, lost_after: float = 45.0, per_minute: float = 0.0):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
-        self.worst_failover, self.wall, self.extra, self.media, self.lost_after = worst_failover, wall or ctl.wall, extra, media, lost_after
+        self.worst_failover, self.wall, self.media, self.lost_after = worst_failover, wall or ctl.wall, media, lost_after
         self.instance = f"{socket.gethostname()}:{os.getpid()}"
         self.marks_root = marks_root
-        # The second seam of the same shape as `extra`. A subsystem may have a number nobody else has —
-        # `rec` knows how many archives are declared and how many nobody is writing into — and `/metrics`
-        # is where a scaling policy can see it. Called with no arguments, returns Prometheus lines; the
-        # platform never learns what it counted.
-        self.metrics_extra = metrics_extra
         # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
         # does; in a `Mount` only the root does (`Mount._adopt`), so a scrape of every page says each fact once.
         self.says_platform = True
@@ -1379,6 +1372,8 @@ class SpecConsole:
         self.per_minute = float(os.environ.get("EVENTS_PER_MINUTE", per_minute) or PER_MINUTE)
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
         self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
+        from .door import Signer
+        self.door_signer = Signer.from_env()             # signs the holders' door tokens (`DOOR_KEY`); None: open doors
         self.gate = Gate(ctl.vars, self.wall, lambda: self.journal)   # who is calling, and may they (`access.py`)
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall,   # in the store: any instance answers a retry
                                     sealer=getattr(ctl, "sealer", None))                 # its digests under the cluster's key
@@ -1439,6 +1434,12 @@ class SpecConsole:
                             **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
                             **({"fixed": True} if f.fixed else {})} for f in s.fields.values()],
                 **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
+                # the page's words and what it shows under a server, as the spec wrote them; the gauges it reads on
+                # `/metrics` by name (the boundary's step 6; the product's keys)
+                **({"display": s.display} if s.display else {}),
+                **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
+                **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
+                "running_gauge": f"{s.name}_{s.running_gauge}", "workers_gauge": f"{s.name}_workers_live",
                 "metrics": {"prefix": s.name, "running": s.running_gauge}}
 
     # -- the directory: where is unit N, in one scan of the assignments ---------------------------
@@ -1503,6 +1504,34 @@ class SpecConsole:
                 out[(sub, unit)] = e
         return out
 
+    # THE HOLDER'S DOOR, HANDED OUT WITH THE UNIT'S PLACE (the boundary's step 6, the owner's decision 1: the bytes do not
+    # go through the console). For a spec that declares `door: {routes}`, `/where/<id>` says `door: {url, token, expires,
+    # routes}` — the door the holder announces in its heartbeat (`door_url`), and a token for those routes, this unit,
+    # this holder, `door.TTL` seconds, signed by this console's key (`DOOR_KEY`; none: the door's open mode, `token:
+    # null`). The gate asked `view` on the unit before this line: that is the grant the token carries. THE holder is the
+    # worker the unit is placed on, live, saying in its heartbeat that it holds the unit — not any heartbeat that
+    # still lists it (a dead holder's last word, read for the first time, looks new). Nobody holding it so, or a holder
+    # that announces no door: `door: null`, and the page asks again. Each token handed out is a
+    # line `door.issued` — who, which unit, which holder, until when: what the console can say of bytes it never sees.
+    def door_of(self, h, uid) -> dict:
+        routes = self.spec.door_routes
+        if not routes:
+            return {}
+        pl = self.ctl.placement(uid)
+        hb = holders(self.ctl.objects, f"{self.spec.name}/", self.wall(), self.lost_after, self.ctl.eyes).get(pl.worker) if pl else None
+        holds = hb is not None and any(str(st.get("id")) == str(uid) for st in hb.status)
+        url = str(hb.extra.get("door_url") or "") if holds else ""
+        if not url:
+            return {"door": None}
+        found = (pl.worker, hb)
+        if self.door_signer is None:
+            return {"door": {"url": url, "token": None, "expires": None, "routes": list(routes)}}
+        user, unit = h.headers.get("X-User", "operator"), self.spec.ref(uid)
+        token, exp = self.door_signer.issue(user, unit, found[0], routes, self.wall())
+        self.journal.say("door.issued", sub=self.spec.name, target=str(uid), user=user, holder=found[0],
+                         routes=",".join(routes), until=round(exp))
+        return {"door": {"url": url, "token": token, "expires": exp, "routes": list(routes)}}
+
     # Every worker whose assignment lists the unit, joined with `+` — a reassignment window shows as both.
     # Compared against the placement row in `/where`.
     def where(self, uid) -> str | None:
@@ -1556,9 +1585,9 @@ class SpecConsole:
         ctl, now = self.ctl, self.wall()
         out: dict[str, dict] = {}
         for w, hb in heartbeats(ctl.objects, ctl.sub.name + "/").items():
-            s = out.setdefault(hb.extra.get("server", "?"), {"archive": None, "resource": "unknown", "workers": []})
-            if hb.extra.get("archive"):
-                s["archive"] = hb.extra["archive"]
+            # (No `archive` here any more: what a server holds of a subsystem's tables is the spec's `servers.show`, which
+            # the page reads with `/spec` — the boundary's step 6; it was one subsystem's heartbeat field, read here.)
+            s = out.setdefault(hb.extra.get("server", "?"), {"resource": "unknown", "workers": []})
             s["workers"].append({"worker": w, "load": ctl.load(w), "capacity": ctl.capacity_of(w), "labels": hb.extra.get("labels", ""),
                                  # WHERE this worker is, in whatever the spec counts places in (`place_by`): the server
                                  # for almost everyone, the volume for the recorder. The page needs it to offer the
@@ -1585,16 +1614,16 @@ class SpecConsole:
                 cs, holder = contended.get(row["worker"]), row.pop("_holder", "")
                 row["name_conflict"] = name_conflict(holder or cs[0].get("holder") or "", cs, now) if cs else None
         for server in resources_seen(ctl.objects):
-            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+            out.setdefault(server, {"resource": "unknown", "workers": []})
         # What the server reaches (feedback DQ): the node's word (its workers' heartbeats), the administrator's when there
         # is a row, and which of the two placement reads — both shown, so a node and an administrator who disagree are
         # seen to. A server with a row and no worker is listed too: the row is still the administrator's word on it.
         rows = ctl.server_labels() or {}
         for server in rows:
-            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+            out.setdefault(server, {"resource": "unknown", "workers": []})
         drains, asked, marks = ctl.draining(), ctl.decommission_requests(), ctl.decommission_marks()
         for server in {*asked, *marks}:
-            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+            out.setdefault(server, {"resource": "unknown", "workers": []})
         res, held = ctl._resources(), ctl.holds_by()
         for server, s in out.items():
             node = sorted({l for row in s["workers"] for l in str(row["labels"]).split(",") if l})
@@ -1867,8 +1896,8 @@ class SpecConsole:
                       f"{p}_blobs_marked {len(marked)}"]
         if self.spec.offers:
             lines += self.spares_lines(rep, now, hbs)
-        if self.metrics_extra is not None:
-            lines += list(self.metrics_extra())                # the subsystem's own numbers, in its own words
+        from . import metrics
+        lines += metrics.lines(self.spec, self.ctl, hbs, live, now)   # the subsystem's own numbers, as its spec declares them
         if self.says_platform:
             lines += self.platform_metrics(now)                # the platform's, once per console process
         return "\n".join(lines) + "\n"
@@ -2091,9 +2120,6 @@ class SpecConsole:
     # - `_send(status, body, raw=False)` — JSON (or raw text) with `Content-Type` and `Content-Length`.
     # - `_body()` — the JSON request body, `{}` if empty.
     # - `_uid()` — the id segment (`path_id`: the one after the family, the one the gate checked) through `spec.parse_id`.
-    # - `_extra(method, path, q) -> bool` — call the subsystem's `extra`; `None` means not ours (return
-    #   False). `()` means the extra wrote the reply itself (`send_file`). `(status, dict|list)` is sent as
-    #   JSON; `(status, bytes)` raw; `(status, bytes, headers)` raw with headers.
     # - `do_GET` — routes, in order:
     #   - `GET /` or `/index.html` — `console.html`.
     #   - `GET /spec` — `describe()`.
@@ -2112,7 +2138,7 @@ class SpecConsole:
     #       `refence`), read by name. `keep` is "newest" (default) or "oldest", 400 if it is neither; the reply
     #       carries `truncated` when the window did not fit.
     #   - `GET /metrics` — `metrics_text()` as `text/plain`.
-    #   - otherwise `_extra("GET", …)`; then 404 `{detail, error}`.
+    #   - otherwise a declared table or request (`_declared`); then 404 `{detail, error}`.
     # - `_idem() -> key | None` — for POST: 400 if `Idempotency-Key` is missing or malformed; if `claim`
     #   returns a prior reply, send it and return `None`; else return the key.
     # - `do_POST`:
@@ -2120,7 +2146,7 @@ class SpecConsole:
     #     and sent.
     #         - `POST /marks` (Idempotency-Key required; `X-User` header, default `operator`) — `mark(body,
     #       user)`; stored and sent.
-    #   - any other path — `_extra("POST", …)` or 404.
+    #   - any other path — a declared table or request (`_declared`), or 404.
     # - `do_PUT`:
     #         - `PUT /<rows>/<id>` — `update(uid, body)`; `Idempotency-Key` is optional here: if present the
     #       same claim/store dance applies. Any other path is 404.
@@ -2139,19 +2165,15 @@ class SpecConsole:
     # route with a third segment, `PUT /<rows>/<id>/<blob>`. Every route reads its id through `path_id`, the same
     # function the gate reads it through.
     #
-    # The families: the rows, `UNIT_ROUTES` (the id IS a unit: `/where`, and a subsystem's — `/timeline`,
-    # `/export`, `/whep`) and `ID_ROUTES` (an id that is not a unit: a keep, a volume). `NO_UNIT`: paths inside a
-    # unit family that name something else — a live session is not a unit.
+    # The families: the rows, `UNIT_ROUTES` (the id IS a unit: `/where`) and `ID_ROUTES` (an id that is not a unit),
+    # and the spec's tables (a row's name).
     ID_ROUTES: tuple = ()
-    NO_UNIT: tuple = ()
 
     def route_id(self, method: str, path: str) -> tuple[str | None, str | None]:
         """`(family, id)` when the path is `/<family>/<id>` of a family that takes one, else `(None, None)`.
         `NoSuchRoute` for a path with more after the id."""
-        if self.NO_UNIT and path.startswith(self.NO_UNIT):
-            return None, None
         segs = path.split("/")
-        if len(segs) < 3 or segs[1] not in (self.spec.rows, *self.UNIT_ROUTES, *self.ID_ROUTES):
+        if len(segs) < 3 or segs[1] not in (self.spec.rows, *self.UNIT_ROUTES, *self.ID_ROUTES, *self.spec.table_specs):
             return None, None
         if len(segs) > 3 and not (method == "PUT" and segs[1] == self.spec.rows and len(segs) == 4 and segs[3]):
             raise NoSuchRoute(f"{path}: one id after /{segs[1]}/, and nothing after it")
@@ -2208,8 +2230,7 @@ class SpecConsole:
 
     # What a route needs: `(capability, unit, labels, of)` — what `Gate.admit` takes.
     #
-    #   view    every GET, and whatever a subsystem says changes nothing though it is a POST (`VIEW_POSTS` —
-    #           the VMS: asking for a live stream)
+    #   view    every GET, and a write the spec says changes nothing (`rights.routes.view` — asking for a stream)
     #   edit    acting through the system without changing what it IS — a mark, a command to a device, a
     #           backfill, a keep
     #   admin   everything else that writes: units, volumes, policy, drain, a server decommissioned
@@ -2219,14 +2240,11 @@ class SpecConsole:
     # A unit ABOUT another (its spec's `about`) is asked with what it is about: a grant on either is enough, and the
     # labels are the about-unit's (`target`).
     #
-    # The three lists are the platform's own routes; a subsystem adds its own to the console it builds, because
-    # only it knows that a backfill acts and a volume configures. `CLUSTER_ROWS`: the rows of this console are the
-    # whole cluster's business — a write to one needs the cluster's grant, whatever the row names (a subsystem whose
-    # rows reach many units of others, and whose own labels say where it runs, not whose it is).
+    # The lists are the platform's own routes; what a subsystem's families need beyond them its spec says, because
+    # only it knows that a backfill acts and a volume configures (`rights.routes`), and that its rows are the whole
+    # cluster's business — a write to one needs the cluster's grant, whatever the row names (`rights.cluster_rows`).
     EDIT_ROUTES: tuple = ("/marks", "/requests")
     UNIT_ROUTES: tuple = ("where",)
-    VIEW_POSTS: tuple = ()
-    CLUSTER_ROWS: bool = False
 
     # The unit an ACTION names in its body (`unit`, `<sub>/<id>`): a mark, a command and a keep are about one unit,
     # and an operator granted that unit must be able to make them. The body is read here and put back, so whoever
@@ -2266,11 +2284,16 @@ class SpecConsole:
             return None
 
     def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list, str | None]:
-        cap = "view" if method == "GET" or (self.VIEW_POSTS and path.startswith(self.VIEW_POSTS)) else \
-              "edit" if path.startswith(self.EDIT_ROUTES) else "admin"
+        head = path.strip("/").split("/")[0]
+        # `rights.routes`: a family's writes that need less than admin. Of the unit rows, the CREATE alone — asking for a
+        # stream is a viewer's; changing what a row is stays the administrator's
+        caps = self.spec.route_caps if head != self.spec.rows or method == "POST" else {}
+        cap = "view" if method == "GET" \
+            or head in caps.get("view", ()) else \
+              "edit" if path.startswith(self.EDIT_ROUTES) or head in caps.get("edit", ()) else "admin"
         family, pid = self.route_id(method, path)
         if pid and family in (self.spec.rows, *self.UNIT_ROUTES):
-            if self.CLUSTER_ROWS and family == self.spec.rows and method != "GET":
+            if self.spec.cluster_rows and family == self.spec.rows and method != "GET":
                 return cap, None, [], None
             return (cap, *self.target_in(self, pid))
         if named is None:
@@ -2308,26 +2331,6 @@ class SpecConsole:
             return self.ctl.unit(self.spec.parse_id(pid))
         except (ValueError, OSError, *PARSE_ERRORS):   # a store that did not answer for it: no row, so no label grant
             return None
-
-    def _extra(self, h, method, path, q):
-        # What a subsystem's own routes need to filter a LIST the way this console filters its rows (the product,
-        # feedback CG): `h.sees(unit, labels)`, None when the console is open, and `h.labels_for(unit)`.
-        h.sees, h.labels_for = self._visible(h), (lambda unit: self.target(str(unit))[1])
-        r = self.extra(h, method, path, q) if self.extra else None
-        if r is None:
-            return False
-        if r == ():                                                  # the extra wrote the reply itself (send_file)
-            return True
-        if len(r) == 2 and isinstance(r[1], (dict, list)):
-            h._send(*r)
-        elif len(r) == 2:
-            h.send_response(r[0]); h.send_header("Content-Length", str(len(r[1]))); h.end_headers(); h.wfile.write(r[1])
-        else:
-            status, data, headers = r
-            h.send_response(status); h.send_header("Content-Length", str(len(data)))
-            for k, v in headers: h.send_header(k, v)
-            h.end_headers(); h.wfile.write(data)
-        return True
 
     # The claim names the caller (`X-User` — the name the gate proved, where there is a gate) and the body, so a
     # replay by anybody else, or of anything else, is 422 and not the first caller's reply. The body is read here
@@ -2461,15 +2464,9 @@ class SpecConsole:
     #   unit_of       a row of one of its tables is its unit's (`rights.unit_of`): whoever writes it needs on that unit
     #                 what the route needs — on both, when a write moves it from one to another (`_table_targets`)
     #
-    # And two the subsystem says, because they are about what its routes DO, not whose a row is: `moved_units(old,
-    # new) -> {<sub>/<id> | "*"}` — every unit a CHANGE of one of its rows reaches beyond the row itself (for the VMS: a
-    # camera's `source` moved to another channel of a recorder shows that channel's picture under this camera's name,
-    # the review's sixth pass); `body_units(path, body) -> {…}` — every unit an ACTION in a body reaches beyond the unit
-    # it names (for the VMS: a command to a device reaches every camera of the device, the seventh). `"*"` is "any
-    # unit", which only a grant on the whole cluster covers. They are the subsystem's word on its own routes — what the
-    # product's VMS says in its gate's `Needs` — and step 6 of the boundary plan moves them into its spec and worker.
-    moved_units = None
-    body_units = None
+    # And what a CHANGE of a row, or a request, reaches beyond the unit itself — the spec's `rights.reach` and
+    # `rights.names` (`reach_of_change`, `reach_of_request`; the boundary's step 6: it was the subsystem's code set on
+    # this console, `moved_units` and `body_units`). `"*"` is "any unit", which only a grant on the whole cluster covers.
 
     # `(table, id or None)` for a write to a row of one of this subsystem's tables that `rights.unit_of` says whose —
     # `(None, None)` for anything else.
@@ -2527,21 +2524,19 @@ class SpecConsole:
         asked = set() if asked is None else asked
         sent = self._sent(h) if body and method != "DELETE" else None
         refs = self._table_targets(method, path, sent if body else None)
-        if body and self.moved_units is not None and isinstance(sent, dict):
+        # a unit row a viewer or an operator may create (`rights.routes` names the rows): asked on the unit it is ABOUT,
+        # as the body names it — or the cluster's, when it names none. The gate before the body asked any grant at all.
+        if body and method == "POST" and path.rstrip("/") == "/" + self.spec.rows and isinstance(sent, dict) \
+                and any(self.spec.rows in v for v in self.spec.route_caps.values()):
+            refs.add(self.spec.of_row(sent) or "*")
+        if body and self.spec.reach and isinstance(sent, dict):
             old, written = self._row_written(method, path)
             if written and old is not None and method == "PUT":
                 try:
-                    refs |= {str(u) for u in (self.moved_units(old, {**old, **sent}) or ())}
+                    refs |= self.reach_of_change(old, {**old, **sent})
                 except Exception:                        # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
                     refs.add("*")
         self._admit_each(h, self.needs(method, path)[0], refs, asked)
-
-    def admit_body_units(self, h, path: str, cap: str, asked: set) -> None:
-        try:
-            refs = {str(u) for u in (self.body_units(path, self._sent(h)) or ())}
-        except Exception:                                # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
-            refs = {"*"}
-        self._admit_each(h, cap, refs, asked)
 
     def _admit_each(self, h, cap: str, refs: set, asked: set) -> None:
         for ref in sorted(refs):
@@ -2550,6 +2545,247 @@ class SpecConsole:
                 continue
             self.gate.admit(h.headers, cap, unit, labels, of)
             asked.add((cap, unit))
+
+    # -- what the spec declares, served (the boundary's step 6) --------------------------------------------------------
+    # A subsystem's tables and its requests were its own routes on this console (`extra`, a hook gone at step 6); they are its spec's declarations now (`tables:`, `requests:`), and this console serves
+    # them. True: the request was one of them, and its reply is sent.
+    def _declared(self, h, method: str, path: str, q: dict) -> bool:
+        segs = path.strip("/").split("/")
+        if segs and segs[0] in self.spec.table_specs and len(segs) <= 2:
+            self._table_route(h, method, segs[0], segs[1] if len(segs) == 2 and segs[1] else None)
+            return True
+        if path.rstrip("/") == "/requests" and method == "POST" and self.spec.requests:
+            self._request_route(h)
+            return True
+        return False
+
+    # `/<table>[/<name>]` (`tables.py`): the list as this caller may see it, one row, a row written whole, a row deleted.
+    def _table_route(self, h, method: str, table: str, name: str | None) -> None:
+        ctl, user = self.ctl, h.headers.get("X-User", "operator")
+        t = self.spec.table_specs[table]
+        if method == "GET":
+            rows = ctl.table_rows_shown(table)
+            sees = self._visible(h)
+            if sees is not None and table in self.spec.unit_of:   # gated: the rows whose unit this caller may see
+                keep = []
+                for r in rows:
+                    ref, _ = self.spec.table_unit(table, r)
+                    if r.get("garbled") or not ref or sees(*self.target(ref)):
+                        keep.append(r)
+                rows = keep
+            if table == self.spec.affinity.get("table"):              # a table of places: who holds each, now
+                held = ctl.live_holds()
+                rows = [{**r, "held_by": held.get(r["name"])} for r in rows]
+            if name is not None:
+                one = next((r for r in rows if r["name"] == name), None)
+                return h._send(200 if one else 404, one or {"detail": f"no {table} row {name}", "error": "no such row"})
+            return h._send(200, {table: rows})
+        if method == "POST" and name is None:
+            try:
+                body, said = object_body(h), {}
+                rid, items = ctl.write_table_row(table, body, user, said)
+            except Refused as e:
+                return h._send(400, {"detail": str(e), "error": "refused"})
+            except TooLarge as e:
+                return h._send(413, {"detail": str(e), "error": str(e)})
+            except Forbidden as e:
+                return h._send(403, {"detail": str(e), "error": str(e)})
+            except (Conflict, OSError) as e:
+                log.warning("%s: a row of %s was not written: %s", self.spec.name, table, e)
+                return h._send(503, {"detail": "the store did not take it: try again", "error": "store unavailable"})
+            from .tables import shown
+            changed = {"changed": ",".join(said["changed"]), "was": said["was"]} if said else {}
+            self.journal.say(t.journal.get("written", f"{table}.written"), sub=self.spec.name, target=rid, user=user,
+                             table=table, fields=",".join(sorted(str(k) for k in body)), **changed)
+            return h._send(201, {"row": {**shown(items, t.fields), "name": rid}})
+        if method == "DELETE" and name is not None:
+            try:
+                gone = ctl.delete_table_row(table, name)
+            except (Forbidden, OSError) as e:
+                return h._send(503 if isinstance(e, OSError) else 403, {"detail": str(e), "error": "not deleted"})
+            if not gone:
+                return h._send(404, {"detail": f"no {table} row {name}", "error": "no such row"})
+            self.journal.say(t.journal.get("deleted", f"{table}.deleted"), sub=self.spec.name, target=name, user=user,
+                             table=table)
+            return h._send(200, {"deleted": name})
+        return h._send(405, {"detail": f"/{table} takes GET, POST and DELETE of one row", "error": "method"})
+
+    # `POST /requests` (`requests:` in the spec): a request filed as a row of this subsystem's family, for whoever holds
+    # its unit to perform and answer in its heartbeat. A request is not idempotent by nature — the same relay pulsed
+    # twice IS two pulses — so its NAME makes a retry the same request: the spec's `key` (a template of its fields), the
+    # body's `id`, or the `Idempotency-Key`, written create-only; and the key is kept where every key is (`_idem`), so a
+    # retry after the row was answered and cleared is answered the same. What only the holder can judge — that a range
+    # is longer than it fetches, that an argument is past what its unit has — is the holder's, said in its heartbeat.
+    def _request_route(self, h) -> None:
+        key = self._idem(h)
+        if key is None:
+            return
+        try:
+            resp = self._file_request(h, key)
+        except Exception as e:                                       # noqa: BLE001
+            return h._send(*self._failed(key, e))
+        if resp[0] == 202:
+            self._remember(key, resp)
+        else:
+            self.seen.release(key)                                  # a refusal is not a request: the key is not spent
+        return h._send(*resp)
+
+    def _file_request(self, h, key: str) -> tuple:
+        import hashlib
+        ctl, spec, req = self.ctl, self.spec, self.spec.requests
+        user, now = h.headers.get("X-User", "operator"), self.wall()
+        try:
+            body = object_body(h)
+        except Refused as e:
+            return 400, {"detail": str(e), "error": "bad body"}
+        if "schema" in req:
+            from .schema import Invalid, check
+            try:
+                check(req["schema"], body, "the request")
+            except Invalid as e:
+                return 400, {"detail": str(e), "error": "refused"}
+            except RecursionError:
+                return 400, {"detail": "the request is nested past what is read", "error": "refused"}
+        ref = str(body.get("unit", ""))
+        got = parse_ref(ref)
+        if got is None or got[0] != spec.name:
+            return 400, {"detail": f"a request names its unit as {spec.name}/<id>, not {ref[:80]!r}", "error": "bad unit"}
+        try:
+            row = ctl.unit(spec.parse_id(got[1]))
+        except (ValueError, *PARSE_ERRORS):
+            row = None
+        if row is None:
+            return 404, {"detail": f"no unit {ref}", "error": "no such unit"}
+        uid = str(row["id"])
+        if "key" in req:
+            from .tables import KEY_TEMPLATE
+            try:
+                rid = KEY_TEMPLATE.sub(lambda m: str(int(float(({**body, "unit": uid})[m.group(1)]))) if m.group(2)
+                                       else str(({**body, "unit": uid})[m.group(1)]), req["key"])
+            except (KeyError, *PARSE_ERRORS, OverflowError):
+                return 400, {"detail": f"a request is named {req['key']}, and the body does not fill it in", "error": "bad id"}
+        else:
+            rid = str(body.get("id") or key)
+        from .doors import unnamable
+        if "/" in rid or rid in (".", "..") or len(rid) > 200 or unnamable(rid):
+            return 400, {"detail": "a request's id is a name, not a path, and holds no quote, bar or control character",
+                         "error": "bad id"}
+        out = {k: (json.dumps(v) if isinstance(v, (dict, list)) else str(v)) for k, v in body.items()
+               if k not in ("unit", "id", "valid_until")}
+        out.update(unit=uid)
+        if "valid_for" in req:
+            # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity`
+            # reached the row as `nan`/`inf`, and a holder performed such a request hours late.
+            try:
+                until = finite(body.get("valid_until") or now + req["valid_for"])
+            except (TypeError, ValueError):
+                return 400, {"detail": f"`valid_until` is a time in seconds, not {body.get('valid_until')!r}", "error": "bad deadline"}
+            if until - now > req.get("most_valid", float("inf")):
+                return 400, {"detail": f"a request's `valid_until` is at most {req['most_valid']:.0f} s away", "error": "too far"}
+            out["valid_until"] = str(until)
+        stamp = set(req.get("stamp") or ())
+        if "by" in stamp:
+            out["by"] = user
+        if "at" in stamp:
+            out["at"] = str(now)
+        if "group" in stamp and spec.group_by:               # what the rights were asked on: the holder performs it there only
+            out["group"] = ctl.group_value(row)
+        if "about" in stamp and spec.about_field and row.get(spec.about_field) not in (None, ""):
+            out[spec.about_field] = str(row[spec.about_field])
+        if "per_person" in req:
+            # ONE PERSON'S OPEN REQUESTS, COUNTED BY CAS, NOT BY LOOKING (the review's sixth pass, minor; a run: forty
+            # POSTs at once left fifteen rows). A person's open requests are ONE row — `<sub>/requests/asks-<sha256 of
+            # the person, 16 hex>`, the list of their ids — changed by CAS; an id stays in it while its row stands, and
+            # for `settle` seconds after it was added, row or no row (the list is written before the request is), and
+            # never past `ttl`. The same request again is the same id, and is not counted twice.
+            ledger = spec.sub.request_key("asks-" + hashlib.sha256(user.encode()).hexdigest()[:16])
+            settle, ttl = req.get("settle", 60.0), req.get("ttl", 86400.0)
+            for _ in range(50):
+                it, idx = ctl.vars.get(ledger)
+                try:
+                    held = [(str(r), float(at)) for r, at in json.loads((it or {}).get("asks", "[]"))]
+                except PARSE_ERRORS:
+                    held = []
+                held = [(r, at) for r, at in held if now - at <= ttl
+                        and (now - at < settle or ctl.vars.get(spec.sub.request_key(r))[0])]
+                if rid not in [r for r, _ in held]:
+                    if len(held) >= req["per_person"]:
+                        return 429, {"detail": f"{user} has {len(held)} requests nobody has answered yet, as many as one "
+                                               f"person files at once — wait for some to be answered", "error": "too many"}
+                    held.append((rid, now))
+                try:
+                    ctl.vars.put(ledger, {"asks": json.dumps(held), "by": user, "at": str(now)}, cas=idx)
+                    break
+                except Conflict:
+                    continue                                  # another request of this person's got there first
+            else:
+                return 503, {"detail": "this person's list of requests would not settle — retry", "error": "busy"}
+        try:
+            ctl.vars.put(spec.sub.request_key(rid), out, cas=0)
+        except Conflict:
+            out = ctl.vars.get(spec.sub.request_key(rid))[0] or out   # the same request, filed already: its row is the answer
+        if req.get("journal"):
+            self.journal.say(str(req["journal"]), user=user, target=ref, request=rid,
+                             **{k: v for k, v in out.items() if k in ("from", "to", "action")})
+        return 202, {"queued": {"id": rid, **out},
+                     "detail": "whoever holds the unit answers it on its next look at the requests, in its heartbeat"
+                               + ("; after valid_until it expires unperformed" if "valid_for" in req else "")}
+
+    # -- what a change reaches (`rights.reach`, `rights.names`; the boundary's step 6) ---------------------------------
+    # It was the subsystem's code, set on this console by its wiring (`moved_units`, `body_units`). A change of a field
+    # `reach.group` names reaches every OTHER unit of the group the unit leaves and of the group it joins — one
+    # connection is one group (`placement.group_by`), and moving a unit within a group shows that unit another's input;
+    # a group no other unit is in yet is nobody's to open but the cluster's (`"*"`: a name nobody can say whose it is, a
+    # host nobody holds); and moved to another group, every unit named by a row that names it (`rights.names` of any
+    # subsystem served here — a scenario that commands it answers for every unit it reaches). A change of a field
+    # `reach.cluster` names is the cluster's. A request whose action `reach.requests` names reaches every unit of its
+    # unit's group: what it does is done to the one connection.
+    def reach_of_change(self, old: dict, new: dict) -> set:
+        ctl, reach, out = self.ctl, self.spec.reach, set()
+        norm = lambda v: ",".join(sorted(str(x) for x in v)) if isinstance(v, (list, tuple)) else str(v or "")
+        if any(norm(old.get(f)) != norm(new.get(f)) for f in reach.get("cluster", ()) if f in new):
+            out.add("*")
+        if not any(f in new and norm(old.get(f)) != norm(new.get(f)) for f in reach.get("group", ())):
+            return out
+        g_old, g_new, me = ctl.group_value(old), ctl.group_value(new), str(old.get("id"))
+        members = lambda g: {self.spec.ref(u["id"]) for u in ctl.units() if g and str(u["id"]) != me and ctl.group_value(u) == g}
+        out |= members(g_old) | members(g_new)
+        if g_new != g_old:
+            if g_new and not members(g_new):
+                out.add("*")
+            out |= self.named_with(self.spec.ref(me))
+        return out
+
+    def reach_of_request(self, path: str, body) -> set:
+        acts = self.spec.reach.get("requests", ())
+        if path.rstrip("/") != "/requests" or not isinstance(body, dict) or str(body.get("action", "")) not in acts:
+            return set()
+        got = parse_ref(str(body.get("unit", "")))
+        row = self.row_of(got[1]) if got is not None and got[0] == self.spec.name else None
+        if row is None:
+            return set()
+        g = self.ctl.group_value(row)
+        return {self.spec.ref(row["id"])} | ({self.spec.ref(u["id"]) for u in self.ctl.units() if self.ctl.group_value(u) == g}
+                                              if g else set())
+
+    # Every unit named — `rights.names` — by a row of a subsystem served here that names `ref`: what a row naming the
+    # unit answers for when the unit moves. A row nobody can read names anybody: `"*"`.
+    def named_with(self, ref: str) -> set:
+        out = set()
+        for con in self.units.values():
+            if not con.spec.names:
+                continue
+            for row in con.ctl.units():
+                named = names_in(con.spec, row)
+                if ref in named or "*" in named:
+                    out |= named
+        return out
+
+    def _sent_reach(self, h, path: str) -> set:
+        try:
+            return self.reach_of_request(path, self._sent(h))
+        except Exception:                                # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
+            return {"*"}
 
     # `PUT /<rows>/<id>/<field>`: the bytes of a blob. Reached only by a caller already admitted on the unit (`dispatch`).
     # What is not a blob field of this spec, or names no unit, is 404 without its body; `BLOBS_AT_ONCE` of them are
@@ -2600,7 +2836,9 @@ class SpecConsole:
         # the path names, the cameras the row reaches as it is. Only a route whose unit is IN the body (`EDIT_ROUTES`:
         # a mark, a command, a keep) waits for it — and is first asked for any grant at all, so a stranger's body is
         # not read. After the body: that unit, and the row as it will be.
-        in_body = method in ("POST", "PUT") and path.startswith(self.EDIT_ROUTES)
+        # …and a write to a row of a table whose rows say whose they are (`rights.unit_of`): its unit is in the body too
+        in_body = method in ("POST", "PUT") and (path.startswith(self.EDIT_ROUTES)
+                                                 or path.strip("/").split("/")[0] in self.spec.unit_of)
         asked: set = set()
         if path not in OPEN_ROUTES:                     # the gate: open while this cluster has no key set, shut when it cannot check
             try:
@@ -2632,8 +2870,8 @@ class SpecConsole:
                     if need[:2] not in asked and not (need[1] is None and self._table_targets(method, path, self._sent(h))):
                         self.gate.admit(h.headers, *need)
                         asked.add(need[:2])
-                    if self.body_units is not None:
-                        self.admit_body_units(h, path, need[0], asked)
+                    if self.spec.reach.get("requests"):
+                        self._admit_each(h, need[0], self._sent_reach(h, path), asked)
                 self.admit_rows(h, method, path, asked)
             except Denied as e:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
@@ -2660,7 +2898,8 @@ class SpecConsole:
                 pl = ctl.placement(uid)
                 return h._send(200 if pl else 404, {"worker": pl.worker if pl else None,
                                                     "reason": pl.reason if pl else ctl.unplaced_reason(uid),   # nowhere, and why (DQ)
-                                                    "directory": con.where(uid), "scans": con.scans})
+                                                    "directory": con.where(uid), "scans": con.scans,
+                                                    **con.door_of(h, uid)})
             if path == "/resources":
                 now = con.wall()
                 return h._send(200, {s: {**hb, "state": "live" if ctl.resource_state(s, con.lost_after) == "live" else "silent"}
@@ -2770,12 +3009,12 @@ class SpecConsole:
                     return h._send(400, {"error": str(e)})
             if path == "/metrics":
                 return h._send(200, con.metrics_text(), raw=True)
-            if self._extra(h, "GET", path, q):
+            if self._declared(h, "GET", path, q):
                 return
             return h._send(404, {"detail": "no such route", "error": "no such path"})
         if method == "POST":
             if path not in (rows_path, "/marks"):
-                if self._extra(h, "POST", path, q):
+                if self._declared(h, "POST", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
             key = self._idem(h)
@@ -2804,7 +3043,7 @@ class SpecConsole:
                                 policy=json.dumps(body, sort_keys=True))
                 return h._send(200, out)
             if not path.startswith(rows_path + "/"):
-                if self._extra(h, "PUT", path, q):
+                if self._declared(h, "PUT", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
             key = self._idem(h, required=False)                         # optional here: a PUT is its own retry
@@ -2818,7 +3057,7 @@ class SpecConsole:
             return h._send(*resp)
         if method == "DELETE":
             if not path.startswith(rows_path + "/"):
-                if self._extra(h, "DELETE", path, q):
+                if self._declared(h, "DELETE", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
             try:
@@ -2830,6 +3069,36 @@ class SpecConsole:
     # Starts the server in a daemon thread and returns it (tests use `port=0` and read `server_address`).
     def serve(self, host: str = "127.0.0.1", port: int = 8080) -> ThreadingHTTPServer:
         return open_doors(host, port, self.handler())
+
+
+# The units a row names inside its json fields, as its spec's `rights.names` says (`{field, unit, sub | of}`): `<sub>/<id>`
+# each — the subsystem from the entry's own key (`sub`) or said once (`of`). An entry of a field that names nothing by any
+# of the declarations — a trigger on any unit — names anybody: `"*"`; and so does a field nobody can read.
+def names_in(spec, row: dict) -> set:
+    out: set = set()
+    by_field: dict = {}
+    for e in spec.names:
+        by_field.setdefault(e["field"], []).append(e)
+    for fld, entries in by_field.items():
+        v = row.get(fld)
+        try:
+            v = json.loads(v) if isinstance(v, (str, bytes)) else v
+        except PARSE_ERRORS:
+            return {"*"}
+        if v is None:
+            continue
+        if not isinstance(v, list):
+            return {"*"}
+        for x in v:
+            if not isinstance(x, dict):
+                continue
+            found = set()
+            for e in entries:
+                u = x.get(e["unit"])
+                if u not in (None, ""):
+                    found.add(f"{x.get(e['sub']) if 'sub' in e else e['of']}/{u}")
+            out |= found or {"*"}
+    return out
 
 
 class Mount:

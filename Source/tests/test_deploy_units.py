@@ -37,29 +37,35 @@ def _list(v):
 
 
 def test_the_units_run_the_entrypoints_the_package_has():
-    """The VMS's verbs (`python3 -m vms`: its workers, and the three processes that still run a hook of its own) and the
-    platform's (`python3 -m w2cplatform controller <sub>`: every other subsystem's controller, from the spec the image
-    carries in `SPEC_DIR` — the boundary's step 5). Each unit runs one, and each verb is a unit's."""
+    """The VMS's verbs (`python3 -m vms`: its workers, and its housekeeping, `jobs`) and the platform's (`python3 -m
+    w2cplatform controller <sub>`: every subsystem's controller, the VMS's included since the boundary's step 6, from
+    the spec the image carries in `SPEC_DIR`; `resource`; `console`, the VMS's at `/` by the unit's `CONSOLE_ROOT`).
+    Each unit runs one, and each verb is a unit's."""
     from vms import __main__ as m  # noqa: F401  (imports the module without running it: no __name__ == "__main__")
     from w2cplatform import host
     entrypoints = set(re.findall(r'"(\w+)": \w+', open(os.path.join(HERE, "vms", "__main__.py")).read().split("__main__")[-1]))
     assert entrypoints == {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker",
-                           "controller", "console", "resource"}
-    platform = {"reccontroller.container": "rec", "livecontroller.container": "live", "detcontroller.container": "det",
+                           "jobs"}
+    platform = {"vmscontroller.container": "vms", "reccontroller.container": "rec", "livecontroller.container": "live", "detcontroller.container": "det",
                 "detjobcontroller.container": "detjob", "surveycontroller.container": "survey",
                 "autocontroller.container": "auto"}
     image = open(os.path.join(DEPLOY, "Containerfile")).read()
     assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
-    assert "controller <sub>" in host.USAGE
-    for name, entry in [("vmsworker@.container", "worker"), ("vmscontroller.container", "controller"),
-                        ("console.container", "console"), ("w2c-resource.container", "resource"),
+    assert "controller <sub>" in host.USAGE and "console" in host.USAGE
+    for name, entry in [("vmsworker@.container", "worker"), ("w2c-resource.container", "resource"),
+                        ("console.container", "console"), ("vmsjobs.container", "jobs"),
                         ("recworker@.container", "recorder"), ("liveworker@.container", "gateway"),
                         ("detworker@.container", "detworker"), ("detjobworker@.container", "detjobworker"),
                         ("surveyworker@.container", "surveyworker"), ("autoworker@.container", "autoworker"),
                         *platform.items()]:
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
-        if name in platform:
+        if name == "w2c-resource.container":
+            assert u["Container"]["Exec"] == "python3 -m w2cplatform resource"         # the platform's own (step 6)
+        elif name == "console.container":
+            assert u["Container"]["Exec"] == "python3 -m w2cplatform console"          # the platform's own (step 6)
+            assert "CONSOLE_ROOT=vms" in u["Container"]["Environment"]                 # the deployment says what is at `/`
+        elif name in platform:
             assert u["Container"]["Exec"] == f"python3 -m w2cplatform controller {entry}"
             assert os.path.exists(os.path.join(HERE, "vms", f"{entry}.subsystem.yaml"))   # what `SPEC_DIR` gives it
         else:
@@ -296,7 +302,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
     import sys
     import tempfile
     from vms.archive import event_log
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from w2cplatform import runtime
     from w2cplatform.events import EventLog
     from tests.conftest import Box
@@ -335,7 +341,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
         st = os.stat(f)
         assert st.st_gid == group and st.st_mode & 0o060 == 0o060, (f, oct(st.st_mode))
         assert _may_unlink(f, *resource) and _may(f, *resource, 4), f
-    res = vms_resource(events, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(events, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     box.vars.put("vms/retention/7", {"days": "1"})
     assert res.retain() == 1                                                 # the resource deletes the client's old bucket
     assert sum(1 for f in files if os.path.exists(f)) == 2
@@ -813,3 +819,19 @@ def test_a_bundle_copied_to_a_server_is_given_to_the_daemons_user_who_can_then_r
     m11 = open(os.path.join(DEPLOY, "cluster", "install.sh"), encoding="utf-8").read()
     linux = m11.split("systemd-sysusers /etc/sysusers.d/w2c-cluster.conf", 1)[1]           # after the user is made
     assert 'w2c-ca.sh" own /etc/w2c/tls configstore' in linux
+
+
+def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_its_name():
+    """`console.container` runs the platform's console (`python3 -m w2cplatform console`; the boundary's step 6: it was
+    `python3 -m vms console`, with the VMS's own routes and its own list of what it fronts): over the specs the image
+    carries (`SPEC_DIR=/app/vms`, here the package's directory), the VMS at `/` by the unit's `CONSOLE_ROOT`, and the
+    recorder, the live gateways, the detectors, the scans, the survey and automation under their names — one token."""
+    import tempfile
+    from w2cplatform import host
+    env = {"SPEC_DIR": os.path.join(HERE, "vms"), "PLATFORM_DIR": tempfile.mkdtemp(prefix="platform-"), "CONSOLE_ROOT": "vms"}
+    m, ctls = host.build_console(env)
+    assert m.root.spec.name == "vms" and set(m.mounts) == {"rec", "live", "det", "detjob", "survey", "auto"}
+    assert m.root.media and m.root.describe()["door"] == {"routes": ["timeline", "segment"]}
+    assert m.mounts["rec"].describe()["door"] == {"routes": ["timeline", "export"]}
+    assert m.mounts["live"].describe()["door"] == {"routes": ["whep"]}
+

@@ -1,7 +1,7 @@
 # Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera's
 # live fan-out — "camera 7 is being watched, from gateway g-2" — one per camera,
-# created by the console on the first viewer and deleted by the gateway a grace
-# period after the last one leaves. Its workers are gateways (vms/liveworker.py):
+# created by its first viewer (`POST /live/streams`, a `view` of the camera — `rights.routes`) and deleted by the
+# gateway a grace period after the last one leaves. Its workers are gateways (vms/liveworker.py):
 # stateless, count = N by demand, capacity in VIEWERS, not cameras. Same
 # controller class, same console class, same ACL shape as the VMS; nothing
 # about video in the platform.
@@ -25,5 +25,13 @@ placement:
   offers:     g                                 # a gateway short on a label set is offered to a spare (`live_workers_needed`)
   rebalance:  {dead_band: 0.10}
 snapshot: [cam, labels]
+# Asking for a camera's stream is watching it, not changing it: `view` on the camera creates the row (it was the
+# console's `POST /whep/<cam>`, which created it on the first viewer — the boundary's step 6).
+rights:
+  routes: {view: [streams]}
+# The gateway's door, opened to a page itself (the owner's decision 1: the bytes — here the offer and the stream — go
+# gateway ↔ browser): `POST /whep/<cam>` with the console's door token, `DELETE /whep/session/<id>` to hang up.
+# `GET /live/where/<cam>` hands it out.
+door: {routes: [whep]}
 console:
   running: streams_live                # live_streams_live: fan-outs with a subscription up

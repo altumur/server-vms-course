@@ -196,19 +196,21 @@ def test_the_console_over_http():
         assert ev == [{"t": box.wall(), "kind": "mark", "of": "vms/1", "user": "murat", "note": "left the bag"}]   # about camera 1
         # not in vms/1/: that bucket has one writer. (`audit/console`: the journal — who created camera 1, the third pass)
         assert subsystems_under(box.archive) == {"audit": ["console"], "console": [m["unit"]]}
-        # the page, and what it plays: the timeline from the recorders' doors, and an interval of it as an MP4
+        # the page, and what it plays: the spans a recording's holder says at its door — handed out with the recording's
+        # place (`/rec/where/<name>`; the boundary's step 6: it was the console's `/timeline/<cam>`) — and an interval of
+        # them as an MP4, from the same door; the console carries none of it
         page = urllib.request.urlopen(f"http://127.0.0.1:{port}/").read().decode()
-        assert "/spec" in page and "/timeline/" in page and "<video" in page and "camera" not in page.rsplit("-->", 1)[1].lower()   # the page (after its comments) is the spec's, not the VMS's
+        assert "/spec" in page and "/where/" in page and "<video" in page and "camera" not in page.rsplit("-->", 1)[1].lower()   # the page (after its comments) is the spec's, not the VMS's
         st = store()
         t = box.wall() - 3600
         footage(st, "1", 1, t, t + 600)
         rec_door = door(box, st)                                                                 # a recorder serving its volume
-        tl = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/timeline/1"))
-        assert [(s["start"], s["end"], s["media"]) for s in tl] == [(t, t + 600, "/export/1?rec=1")]
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}{tl[0]['media']}&from={t + 60}&to={t + 120}") as r:
+        tl = json.load(urllib.request.urlopen(f"{rec_door.page}/timeline/1"))
+        assert [(s["start"], s["end"], s["media"]) for s in tl] == [(t, t + 600, "export/1")]
+        with urllib.request.urlopen(f"{rec_door.page}/{tl[0]['media']}?from={t + 60}&to={t + 120}") as r:
             assert r.status == 200 and r.headers["Content-Type"] == "video/mp4" and r.read()[4:8] == b"ftyp"
         try:
-            urllib.request.urlopen(f"http://127.0.0.1:{port}/export/1?rec=1&from={t - 900}&to={t - 600}"); raise AssertionError()
+            urllib.request.urlopen(f"{rec_door.page}/export/1?from={t - 900}&to={t - 600}"); raise AssertionError()
         except urllib.error.HTTPError as e:
             assert e.code == 404                                                                 # nothing recorded there
         # the page's writes: disable, then delete — through the controller, refused where the controller refuses
@@ -263,9 +265,9 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
         box.wall.advance(90000); box.clock.advance(61)
         assert keys.prune() == 2 and box.vars.list("vms/idem/") == [] and keys.prune() == 0
         # a forgotten key is a new request, by design — and what stops the second camera then is the rule about
-        # sources (`volumes.refuse_camera`, the review's sixth pass): camera 1 is that channel already
+        # sources (`source: {unique: canonical}`, the platform's since the boundary's step 6): camera 1 is that address
         code, body = post(p2, "k-1")
-        assert code == 400 and "camera 1 is that source already" in body["detail"] and len(a.cameras()) == 1
+        assert code == 400 and "vms 1 has that source already" in body["detail"] and len(a.cameras()) == 1
     finally:
         s1.shutdown(); s1.server_close(); s2.shutdown(); s2.server_close()
 

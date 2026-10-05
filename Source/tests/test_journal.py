@@ -29,10 +29,10 @@ def _audit(box, role="console"):
 def test_who_deleted_it_who_kept_it_and_who_took_the_volume_away():
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    mounted = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     cam = ctl.create_camera({"source": "driverpack://file/1.mp4"})["id"]
-    rec.create({"name": "1", "cam": "1"})
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    mounted.create({"name": "1", "cam": "1"})
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": mounted})
     base = f"http://127.0.0.1:{srv.server_address[1]}"
 
     def call(method, path, body=None, user="anna"):
@@ -43,7 +43,7 @@ def test_who_deleted_it_who_kept_it_and_who_took_the_volume_away():
 
     try:
         t = box.wall()
-        keep = call("POST", "/rec/keeps", {"cam": "1", "from": t - 900, "to": t - 300})["keep"]["id"]
+        keep = call("POST", "/rec/keeps", {"cam": "1", "from": t - 900, "to": t - 300})["row"]["name"]
         call("DELETE", f"/rec/keeps/{keep}", user="boris")
         vol = {"name": "cold", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12}
         call("POST", "/rec/volumes", vol)
@@ -54,11 +54,14 @@ def test_who_deleted_it_who_kept_it_and_who_took_the_volume_away():
     finally:
         srv.shutdown()
     said = _audit(box)
+    put, gone = (mounted.spec.table_specs["volumes"].journal[k] for k in ("written", "deleted"))   # the spec's words
     assert [(e["kind"], e["user"]) for e in said] == [
-        ("archive.keep.made", "anna"), ("archive.keep.lifted", "boris"), ("archive.volume.shrink_requested", "boris"),
-        ("archive.volume.withdrawn", "anna"), ("unit.deleted", "boris"), ("unit.deleted", "anna")]
-    assert said[2]["quota_bytes"] == 10 ** 11 and said[2]["was"] == 10 ** 12   # requested: the recorder applies it (the review's fourth pass)
-    assert said[2]["confirmed"] is False
+        ("archive.keep.made", "anna"), ("archive.keep.lifted", "boris"), (put, "anna"), (put, "boris"), (gone, "anna"),
+        ("unit.deleted", "boris"), ("unit.deleted", "anna")]
+    # what a write changed, and from what — the spec's table, written by the platform since the boundary's step 6; a
+    # smaller quota is applied by whoever holds the row, on the operator's second word (the review's fourth pass)
+    assert said[3]["changed"] == "quota_bytes" and said[3]["was"] == {"quota_bytes": 10 ** 12}
+    assert "changed" not in said[2]                                                  # a new row: nothing was
     gone = [e for e in _raw(box) if e["kind"] == "unit.deleted"]
     assert [(e["subsystem"], e["unit"]) for e in gone] == [("audit", "audit/console")] * 2       # whose line it is…
     assert [(e["sub"], e["target"]) for e in gone] == [("rec", "1"), ("vms", str(cam))]     # …and what it is about

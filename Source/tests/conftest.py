@@ -29,6 +29,60 @@ class Box:
         self.clock, self.wall = Clock(), Clock(1_757_500_000.0)
 
 
+class Served:
+    """A console — a `SpecConsole` or a `Mount` — serving on a free port, and `call(method, path, body, headers)` →
+    `(status, reply)`: the platform's routes as a page or a `curl` reach them. A POST carries an `Idempotency-Key` of
+    its own unless one is given (`key`; `False` sends none). `with Served(con) as call: …` shuts it down after."""
+    _n = 0
+
+    def __init__(self, console):
+        self.srv = console.serve("127.0.0.1", 0)
+        self.base = f"http://127.0.0.1:{self.srv.server_address[1]}"
+
+    def __call__(self, method, path, body=None, headers=None, key=None, raw=None):
+        import urllib.error
+        import urllib.request
+        Served._n += 1
+        h = {"Content-Type": "application/json", **(headers or {})}
+        if method == "POST" and "Idempotency-Key" not in h and key is not False:   # `key=False`: sent without one
+            h["Idempotency-Key"] = key or f"served-{Served._n}"
+        data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
+        req = urllib.request.Request(self.base + path, method=method, data=data, headers=h)
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, json.loads(r.read() or b"null")
+        except urllib.error.HTTPError as e:
+            out = e.read()
+            try:
+                return e.code, json.loads(out or b"null")
+            except ValueError:
+                return e.code, out
+
+    def close(self):
+        self.srv.shutdown()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.close()
+
+
+def as_kept(step):
+    """A long step of a resource's pass, as the one step a test may give it since the boundary's step 6 took the
+    subsystems' hooks out of the resource: `Resource.kept` — called once a pass, handed the pulse (`progressed`), and
+    holding nothing. `step.pass_(now[, progressed])` is what a hook's pass was."""
+    import inspect
+
+    def kept(progressed=None):
+        if "progressed" in inspect.signature(step.pass_).parameters:
+            step.pass_(0, progressed or (lambda: None))
+        else:
+            step.pass_(0)
+        return lambda *a: False
+    return kept
+
+
 def published_snapshot(objects, sub: str, rows: str = "cameras") -> dict:
     """The snapshot as a READER sees it: list `<sub>/snapshot/`, get each shard, merge.
     One object per worker is the published shape, so a test that reads one key is
@@ -211,22 +265,104 @@ def footage(st, unit, epoch: int, t0: float, t1: float, step: float = 1.0, backf
         st.seal()
 
 
-def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | None = None, held: dict | None = None):
-    """A recorder's archive door over `st`, served, and a heartbeat that announces it — what the console and a
-    scan find a recording's footage by. `held`: `{recording: since}` its recorder writes into `st` (`held_since`).
-    Returns the server; shut it down when done."""
+class door_keys:
+    """`with door_keys():` — a cluster's door key pair for a test (`w2cplatform/door.py`): `DOOR_KEY` for the consoles
+    made inside, `DOOR_RING` for the holders, both files of a fresh Ed25519 key; the environment as it was after."""
+
+    def __enter__(self):
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        k = Ed25519PrivateKey.generate()
+        seed = k.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption())
+        pub = k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+        d = tempfile.mkdtemp(prefix="door-keys-")
+        self.was = {n: os.environ.get(n) for n in ("DOOR_KEY", "DOOR_RING")}
+        for n, line in (("DOOR_KEY", f"k1 {seed.hex()}"), ("DOOR_RING", f"k1 {pub.hex()}")):
+            path = os.path.join(d, n.lower())
+            with open(path, "w") as f:
+                f.write(line + "\n")
+            os.environ[n] = path
+        return self
+
+    def __exit__(self, *a):
+        for n, v in self.was.items():
+            if v is None:
+                os.environ.pop(n, None)
+            else:
+                os.environ[n] = v
+
+
+class ByName:
+    """A door keeper for a test (`w2cplatform/door.py`'s `DoorKeeper` in the open mode, but naming the caller): lets
+    everybody in, under the name the request gives (`X-User`), as a token names who it was given to (`sub`)."""
+
+    def admit(self, handler, route, unit):
+        return {"sub": (getattr(handler, "headers", None) or {}).get("X-User", "anybody")}
+
+    def headers(self, handler):
+        return []
+
+    def preflight(self, handler):
+        handler.send_response(204); handler.send_header("Content-Length", "0"); handler.end_headers()
+
+
+def page_door(box, name: str = "r-page", keeper=None):
+    """A recording's holder's page door alone (`vms/footage.py`: `/door/timeline/<recording>`, `/door/export/<recording>`)
+    over every recorder's archive door announced in the store — what a recorder serves beside its archive. Its journal is
+    `audit/door-<name>` under `box.archive`; `keeper` defaults to `ByName`. Returns the server; `srv.base` is its URL."""
+    import threading
+    from http.server import BaseHTTPRequestHandler
+    from urllib.parse import parse_qs, urlsplit
+    from w2cplatform.console import Deadlined, door_server
+    from w2cplatform.journal import Journal
+    from vms.footage import answer, footage_routes
+    page = footage_routes(box.objects, box.vars, box.wall, Journal(box.archive, f"door-{name}", box.wall),
+                          keeper if keeper is not None else ByName())
+
+    class H(Deadlined, BaseHTTPRequestHandler):
+        timeout = float(os.environ.get("CONSOLE_TIMEOUT", 30.0))   # a client that reads nothing is let go, as a recorder's door does
+
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            u = urlsplit(self.path)
+            got = page(self, "GET", u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
+            answer(self, got if got is not None else (404, {"error": "no such path"}))
+
+    srv = door_server(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    srv.base = f"http://127.0.0.1:{srv.server_address[1]}"
+    return srv
+
+
+def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | None = None, held: dict | None = None,
+         keeper=None):
+    """A recorder's archive door over `st`, served, and a heartbeat that announces it — what a recording's holder and
+    a scan find a recording's footage by. `held`: `{recording: since}` its recorder writes into `st` (`held_since`).
+    It serves the page's door too, as a recorder does (`/door/timeline/<recording>`, `/door/export/<recording>`:
+    `vms/footage.py`), open — no `DOOR_RING` — unless `keeper` says otherwise; its journal is `audit/door-<name>`
+    under `box.archive`. Returns the server (`srv.page` — the door's base URL); shut it down when done."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import parse_qs, urlsplit
     from w2cplatform.contract import Heartbeat
+    from w2cplatform.journal import Journal
     from vms.config import REC_SPEC
+    from vms.footage import answer, footage_routes
     from vms.recworker import archive_routes, send_route
     routes = archive_routes(lambda: st, box.wall, held_since=lambda unit: (held or {}).get(unit))
+    page = footage_routes(box.objects, box.vars, box.wall, Journal(box.archive, f"door-{name}", box.wall), keeper)
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
             pass
 
         def do_GET(self):
+            if self.path.startswith("/door/"):
+                u = urlsplit(self.path)
+                got = page(self, "GET", u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
+                return answer(self, got if got is not None else (404, {"error": "no such path"}))
             send_route(self, routes(self.path))                 # frames are streamed, as the recorder's own door does
 
     srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
@@ -235,7 +371,8 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
 
     def announce():                                  # a heartbeat, now: a test that moves the clock says it again
         box.objects.put(REC_SPEC.sub.heartbeat_key(name),
-                        Heartbeat(name, box.wall(), status or [], {"server": server, "archive_url": url, "volume": st.name}).to_bytes())
+                        Heartbeat(name, box.wall(), status or [], {"server": server, "archive_url": url, "volume": st.name,
+                                                                   "door_url": url + "/door"}).to_bytes())
     announce()
-    srv.announce, srv.url = announce, url
+    srv.announce, srv.url, srv.page = announce, url, url + "/door"
     return srv

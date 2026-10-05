@@ -709,9 +709,6 @@ def test_what_a_camera_recorder_says_of_its_card_and_its_frames():
     assert hb.extra["feed"]["frames_connected"] is True and hb.extra["feed"]["ring_samples"] == 60
     assert not hb.extra["archive"] and not {"archive_quota", "volume_quota", "writer", "archive_url"} & set(hb.extra)
     assert volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall()) == []      # nothing to "declare" on a camera
-    from vms.console import as_held
-    vol = next(v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"])
-    assert as_held(rec_ctl, vol, box.wall())["card"]["state"] == "recording"
 
 
 def test_a_camera_whose_card_does_not_open_works_without_it_says_why_and_tries_again():
@@ -895,7 +892,7 @@ def test_a_card_write_that_hangs_holds_neither_the_heartbeat_nor_a_range_and_the
     import threading
     import time
     from vms.card import Stalled
-    from vms.console import _recorders
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import heartbeats
     box, rec, ring, act, rec_ctl = _camera(when=None)
     card, gate = rec.card, threading.Event()
@@ -926,7 +923,7 @@ def test_a_card_write_that_hangs_holds_neither_the_heartbeat_nor_a_range_and_the
         assert hb.extra["volume_error"].startswith("the card does not answer: a write to it has not returned for")
         assert "check or replace the card" in hb.extra["volume_error"]
         assert hb.extra["writer"]["state"] == "stuck"
-        lines = _recorders(rec_ctl)
+        lines = spec_metrics(rec_ctl).splitlines()
         assert 'rec_writer{worker="r-1",state="stuck"} 1' in lines and 'rec_volume_error{worker="r-1"} 1' in lines
         rec.gate_pass()
         assert _alarms(box, "card.failing") == []                        # a slow write is not yet the alarm (the eighth review)…
@@ -1007,7 +1004,7 @@ def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_a
     `rec_stream_behind_seconds`, `rec_stream_lagging` and `rec_stream_skipped_seconds_total{why}`, and a stream that
     lags — the uplink does not carry it — is the alarm `camera.uplink.short`, one an episode: a lagging stream is cut to
     the live edge, lags no more for a minute or two and lags again, and that is not a new alarm each time."""
-    from vms.console import _recorders
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import heartbeats
     box, rec, ring, act, rec_ctl = _camera()
     said = {"state": "pushing", "road": "primary", "behind_s": 31.5, "lagging": True, "cut_s": 61.0, "left_s": 4.0,
@@ -1015,7 +1012,7 @@ def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_a
     rec.stream_said, rec.stream_owed = lambda: dict(said), lambda: []   # (wired whole, as М12 `tie` wires it)
     rec.heartbeat_once()
     assert heartbeats(box.objects, "rec/")["r-1"].extra["stream"] == said
-    lines = _recorders(rec_ctl)
+    lines = spec_metrics(rec_ctl).splitlines()
     assert 'rec_stream_behind_seconds{worker="r-1"} 31.5' in lines and 'rec_stream_lagging{worker="r-1"} 1' in lines
     assert 'rec_stream_skipped_seconds_total{worker="r-1",why="cut"} 61.0' in lines
     assert 'rec_stream_skipped_seconds_total{worker="r-1",why="left"} 4.0' in lines
@@ -1036,13 +1033,15 @@ def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_a
     assert "ZeroDivisionError" in heartbeats(box.objects, "rec/")["r-1"].extra["stream"]["error"]
     """A card is opened by the camera's recorder as files — a bucket or a share is something no card reader opens,
     and a key to one has nowhere to go. That is a `local` or `network` volume, with an engine."""
-    volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "url": "/media/sd", "quota_bytes": 1})
-    for bad in ({"url": "s3://cards/cam-7"}, {"url": "/media/sd", "access_secret": "x"}):
-        try:
-            volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "quota_bytes": 1, **bad})
+    from w2cplatform.memvariables import MemVariables
+    from w2cplatform.spec import Refused
+    volumes.write(MemVariables(), {"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "url": "/media/sd", "quota_bytes": 1})
+    for bad, words in (({"url": "s3://cards/cam-7"}, "may not match"), ({"url": "/media/sd", "access_secret": "x"}, "may not have")):
+        try:                                                               # the table's schema, in its words (step 6)
+            volumes.write(MemVariables(), {"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "quota_bytes": 1, **bad})
             raise AssertionError(f"{bad} was taken for a card")
-        except Exception as e:                                             # Refused
-            assert "card in a camera" in str(e)
+        except Refused as e:
+            assert words in str(e), e
 
 
 def test_a_recorder_of_the_engine_never_takes_a_cameras_card():
@@ -1288,7 +1287,7 @@ def test_footage_on_no_copy_is_one_alarm_an_episode_and_what_the_card_let_go_of_
     before the server had it was nowhere. Their sum growing is the alarm `camera.footage.lost`, one an episode; the
     card's count is the stream's `evicted_s` in the heartbeat, `rec_stream_skipped_seconds_total{why="evicted"}`, and
     the card opened by the recorder asks the pusher what it owes (`stream_owed`)."""
-    from vms.console import _recorders
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import heartbeats
     box, rec, ring, act, rec_ctl = _camera()
     said = {"state": "pushing", "lagging": False, "cut_s": 0.0, "left_s": 0.0, "failed_s": 0.0, "failed": 0}
@@ -1307,7 +1306,7 @@ def test_footage_on_no_copy_is_one_alarm_an_episode_and_what_the_card_let_go_of_
     rec.heartbeat_once()
     hb = heartbeats(box.objects, "rec/")["r-1"].extra
     assert hb["stream"]["evicted_s"] == 12.5 and hb["card"]["evicted_s"] == 12.5
-    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="evicted"} 12.5' in _recorders(rec_ctl)
+    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="evicted"} 12.5' in spec_metrics(rec_ctl)
     box.wall.advance(rec.WELL_FOR); rec.gate_pass()                       # nothing more lost for long enough: over
     said["failed_s"] = 5.0
     rec.gate_pass()
@@ -1421,7 +1420,7 @@ def test_what_a_cameras_stream_says_of_its_card_and_its_clock_is_on_metrics_not_
     past its clock (`clock_back_s`, `clock_forward_s`, `clock_set`, `ahead` — the pusher's `said`). On `/metrics` now:
     `rec_stream_owed_unknown`, `rec_stream_evicted_unknown_seconds_total`, `rec_camera_clock_stepped_seconds_total{way}`,
     `rec_camera_clock_set_total`, `rec_camera_frames_ahead_total`; a word in one of them is nought there, counted."""
-    from vms.console import _recorders
+    from w2cplatform.metrics import text as spec_metrics
     box, rec, ring, act, rec_ctl = _camera(when=None, budget=20_000)
     rec.card.segment_span = 10.0
     said = {"state": "pushing", "lagging": False, "cut_s": 0.0, "left_s": 0.0, "failed_s": 0.0, "failed": 0,
@@ -1430,7 +1429,7 @@ def test_what_a_cameras_stream_says_of_its_card_and_its_clock_is_on_metrics_not_
     t = box.wall()
     _film(ring, t, t + 100, act=act)
     rec.heartbeat_once()
-    lines = _recorders(rec_ctl)
+    lines = spec_metrics(rec_ctl).splitlines()
     unknown = [ln for ln in lines if ln.startswith('rec_stream_evicted_unknown_seconds_total{worker="r-1"}')]
     assert 'rec_stream_owed_unknown{worker="r-1"} 1' in lines
     assert unknown and float(unknown[0].split()[-1]) >= 50.0
@@ -1440,7 +1439,7 @@ def test_what_a_cameras_stream_says_of_its_card_and_its_clock_is_on_metrics_not_
     rec.stream_owed = lambda: [(t + 90, float("inf"))]                    # wired whole
     said["ahead"] = "four"
     rec.heartbeat_once()
-    lines = _recorders(rec_ctl)
+    lines = spec_metrics(rec_ctl).splitlines()
     assert 'rec_stream_owed_unknown{worker="r-1"} 0' in lines and 'rec_camera_frames_ahead_total{worker="r-1"} 0' in lines
 
 

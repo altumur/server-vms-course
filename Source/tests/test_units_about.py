@@ -40,7 +40,9 @@ TALLY = {"name": "tally", "about": {"sub": "testsub", "field": "counter"},
                   "fields": {"name": {"type": "string", "required": True},
                              "counter": {"type": "string", "required": True, "fixed": True},
                              "labels": {"type": "list"}}},
-         "tables": ["notes"], "rights": {"unit_of": {"notes": "counter"}},
+         "tables": {"notes": {"key": "{name}", "fields": {"name": {"type": "string", "required": True},
+                                                       "counter": {"type": "string", "required": True}}}},
+         "rights": {"unit_of": {"notes": "counter"}, "routes": {"edit": ["notes"]}},
          "placement": {"capacity": {"from": "capacity", "default": 4}}}
 
 
@@ -128,7 +130,7 @@ def test_about_names_another_subsystem_and_a_fixed_field_of_the_row_and_nothing_
     refused(lambda d: d.update(about="testsub"), "`about:` is")
     refused(lambda d: d["about"].update(sub="../x"), "`about:` is")
     refused(lambda d: d["rights"]["unit_of"].update(volumes="counter"), "not one of its tables")
-    refused(lambda d: d.update(rights={"routes": {}}), "`rights:` takes")
+    refused(lambda d: d.update(rights={"colour": {}}), "`rights:` takes")
     refused(lambda d: d["unit"]["fields"]["counter"].update(fixed="yes"), "`fixed` is true or false")
 
 
@@ -214,7 +216,8 @@ def test_the_merge_refuses_a_bare_unit_before_it_asks_anybody():
 
 def _consoles(access=None):
     """A process that fronts testsub at `/` and tally at `/tally`, its index over one tree, its journal beside it —
-    and, for tally's table of notes, the route a subsystem would add (`extra`): the platform serves no table."""
+    and tally's table of notes, served by the platform from the spec (`tables:`; the boundary's step 6: it was a route
+    the subsystem added, `extra`), written with `edit` on the counter a note names (`rights.routes`)."""
     root, vars_, objects, wall = _box()
     tree = os.path.join(root, "events")
     base_spec, tally_spec = SubsystemSpec.load(TESTSUB), SubsystemSpec.from_dict(TALLY)
@@ -222,19 +225,8 @@ def _consoles(access=None):
     ctl = SpecController(base_spec, vars_.as_writer("console", acl), objects, wall=wall)
     tally = SpecController(tally_spec, vars_.as_writer("console", acl), objects, wall=wall)
 
-    def notes(h, method, path, q):
-        if method == "POST" and path == "/notes":
-            body = json.loads(h.rfile.read(int(h.headers.get("Content-Length", 0))) or b"{}")
-            tally.vars.put(tally_spec.sub.config("notes", body["id"]), {"counter": body["counter"]})
-            return 201, {"note": body["id"]}
-        if method == "DELETE" and path.startswith("/notes/"):
-            tally.vars.delete(tally_spec.sub.config("notes", path.split("/")[2]))
-            return 200, {"deleted": True}
-        return None
     root_con = SpecConsole(ctl, marks_root=tree, index=EventIndex(tree, "srv-1", wall=wall), wall=wall)
-    tally_con = SpecConsole(tally, index=root_con.index, wall=wall, extra=notes)
-    tally_con.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/notes",)
-    tally_con.ID_ROUTES = ("notes",)
+    tally_con = SpecConsole(tally, index=root_con.index, wall=wall)
     m = Mount(root_con, {"tally": tally_con})
     if access is not None:
         for c in (root_con, tally_con):
@@ -317,9 +309,9 @@ def test_a_row_of_a_table_is_its_units_and_whoever_writes_it_needs_that_unit():
     srv, base, ctl, tally, tree, con = _consoles(access)
     try:
         ctl.create({"name": "c1"}); ctl.create({"name": "c2"})
-        assert _http(base, "POST", "/tally/notes", {"id": "n1", "counter": "c1"}, token="ann")[0] == 201
-        assert _http(base, "POST", "/tally/notes", {"id": "n2", "counter": "c2"}, token="ann")[0] == 403
-        assert _http(base, "POST", "/tally/notes", {"id": "n2", "counter": "c2"}, token="root")[0] == 201
+        assert _http(base, "POST", "/tally/notes", {"name": "n1", "counter": "c1"}, token="ann")[0] == 201
+        assert _http(base, "POST", "/tally/notes", {"name": "n2", "counter": "c2"}, token="ann")[0] == 403
+        assert _http(base, "POST", "/tally/notes", {"name": "n2", "counter": "c2"}, token="root")[0] == 201
         assert _http(base, "DELETE", "/tally/notes/n2", token="ann")[0] == 403          # the stored note is c2's
         assert ("edit", "testsub/c2", ()) in access.asked
         assert _http(base, "DELETE", "/tally/notes/n1", token="ann")[0] == 200

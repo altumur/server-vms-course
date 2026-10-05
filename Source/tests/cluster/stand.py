@@ -351,7 +351,7 @@ def a_timeline_across_two_volumes() -> str:
     epoch 4. The console's timeline asks every live recorder's archive door; srv-a's recorder goes silent and its
     volume is NAMED unavailable; it comes back and nothing was rebuilt. Not a store trace: what the recorders say
     of their volumes, then what `/timeline/7` answers, three times."""
-    from cluster.console import cluster_routes
+    from vms.footage import footage_routes
     from tests.cluster.conftest import footage
     s = Stand()
     t = s.wall()
@@ -368,11 +368,12 @@ def a_timeline_across_two_volumes() -> str:
     for server, r in recs.items():
         hb = r.heartbeat_extra()
         out.append(f"{r.name} on {server}: volume {hb['volume']!r}, archive {hb['archive']!r}, writer {hb['writer']}")
-    routes = cluster_routes(s.controller())
+    ctl = s.controller()
+    routes = footage_routes(ctl.objects, ctl.vars, ctl.wall, eyes=ctl.eyes)     # the recording's holder's door (step 6)
     keep = ("start", "end", "epoch", "fenced", "recording", "recorder", "volume", "media")
 
     def ask():
-        _, body = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
+        _, body = routes(None, "GET", "/door/timeline/7", {"from": t - 2000, "to": t})
         if isinstance(body, list):
             return [{k: sp[k] for k in keep} for sp in body]
         return {**body, "segments": [{k: sp[k] for k in keep} for sp in body["segments"]]}

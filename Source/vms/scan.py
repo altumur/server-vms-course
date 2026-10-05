@@ -208,7 +208,7 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
     unread = []
     if vars_ is not None:
         from . import volumes
-        from .console import unserved_volumes          # the timeline's rule, read and not copied
+        from .footage import unserved_volumes          # the timeline's rule, read and not copied
         off = {v.name for v in volumes.declared(vars_) if not v.enabled}
 
         def held_it(recorder: str) -> bool:

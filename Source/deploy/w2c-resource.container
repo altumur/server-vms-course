@@ -55,7 +55,7 @@ After=network.target
 Image=localhost/vmsserver:latest
 # the `resource` verb of `vms/__main__.py`: the platform's Resource with the VMS registered on it, served,
 # heartbeating, its event index answering /events.
-Exec=python3 -m vms resource
+Exec=python3 -m w2cplatform resource
 # the platform's user and its primary group, by number: the container has no /etc/passwd of the host's.
 User=2100
 Group=2100

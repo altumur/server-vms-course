@@ -1,9 +1,10 @@
-"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|controller|console|resource —
-the VMS's processes on a box. The controllers of the other subsystems are the platform's, run from their specs
-(`python3 -m w2cplatform controller rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the boundary's step 5);
-the loops of `controller`, `console` and `resource` here are the platform's too (`host.controller_loop`,
-`host.sweep_loop`, `host.every`, `host.run_resource`) — run over the VMS's own controller (a device is one group),
-console (its routes) and resource (its keeps) until the boundary's step 6 turns those into declarations.
+"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|jobs —
+the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
+(`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
+the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: ch}`), and so are the
+resource (`python3 -m w2cplatform resource`: what a keep holds is the spec's `holds:`) and the console (`python3 -m
+w2cplatform console`, `CONSOLE_ROOT=vms`: the specs' rows, tables, requests and doors). What is left of the VMS's own
+beside its workers is its housekeeping, `jobs`: the requests turned into work and the work into closed rows.
 
     PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
     ARCHIVE=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
@@ -13,10 +14,10 @@ console (its routes) and resource (its keeps) until the boundary's step 6 turns 
                                      neither: the first free slot, a lapsed one first
     CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
     RECORDER_NAME=r-1                a recorder's slot (systemd: %i); CAPACITY here is recordings — this server's disks and NIC
-    CONSOLE_PORT=8080                the console (its own process, its own token: the operator's rows, never placement)
+    JOBS_PORT=8095                   `jobs`: its own numbers on /metrics (the console is the platform's: `CONSOLE_PORT`)
     RESOURCE_PORT=8090  RESOURCE_URL the resource process: heartbeat, the policy pass, the event index served as /events
     GATEWAY_PORT=8082  GATEWAY_URL   a live gateway: WHEP on this port (`auto` — ask the OS, which is what a
-                                     SECOND gateway on one box needs); the URL the console proxies to
+                                     SECOND gateway on one box needs); the URL its door is handed out at
     RTSP_PORT=8554  PLAYBACK_PORT=8083   the worker's two doors, `auto` likewise: a template that fixes a
                                      number is a door only the first instance on the box can open
     GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
@@ -30,13 +31,13 @@ console (its routes) and resource (its keeps) until the boundary's step 6 turns 
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # __main__.py — `python3 -m vms worker | controller | console | resource | …`: the box's processes
+# # __main__.py — `python3 -m vms worker | console | …`: the box's processes
 #
 # **Role in the module.** The entrypoint of the VMS's units (`deploy/*.container` say `Exec=python3 -m vms <verb>`,
 # the controllers of the other subsystems `Exec=python3 -m w2cplatform controller <sub>`; the Containerfile's default
 # `CMD` is `worker`). It reads the environment, opens the two
 # file-backed stores under `$PLATFORM_DIR` with the *right token for the verb*, builds the process's object
-# from `worker.py` / `controller.py` / `console.py` / `resource.py` / …, and runs it until SIGTERM/SIGINT. It is
+# from `worker.py` / `controller.py` / `console.py` / …, and runs it until SIGTERM/SIGINT. It is
 # glue and nothing else: no logic of its own beyond wiring, and each verb's token is deliberately narrower
 # than the whole `vms/*` prefix. `tests/test_deploy_units.py` imports this module (without running it) and
 # checks that the verbs in the dispatch table are exactly the ones the units invoke.
@@ -69,9 +70,10 @@ console (its routes) and resource (its keeps) until the boundary's step 6 turns 
 #
 # ### `if __name__ == "__main__"`
 # Dispatch table on `sys.argv[1]`: the workers (worker, recorder, gateway, detworker, detjobworker, surveyworker,
-# autoworker) and the three processes of the platform that still run a hook of the VMS's (controller, console,
-# resource). `test_the_units_run_the_entrypoints_the_package_has` regex-extracts the names and matches them against
-# the `Exec=` lines of the Quadlet units — `python3 -m vms <verb>` and `python3 -m w2cplatform controller <sub>`.
+# autoworker) and the VMS's housekeeping (jobs); the controller, the resource and the console are the platform's since
+# the boundary's step 6. `test_the_units_run_the_entrypoints_the_package_has`
+# regex-extracts the names and matches them against the `Exec=` lines of the Quadlet units — `python3 -m vms <verb>`,
+# `python3 -m w2cplatform controller <sub>`, `python3 -m w2cplatform resource` and `python3 -m w2cplatform console`.
 #
 # ## Notes
 # - Three tokens, three processes: `vmsworker` (epochs, slots), `vmscontroller` (placement), `console`
@@ -80,10 +82,6 @@ console (its routes) and resource (its keeps) until the boundary's step 6 turns 
 # - `CAPACITY` means two different things depending on the verb: the worker's own number (what it heartbeats
 #   and places by) versus the controller's fallback for a worker that has not spoken yet
 #   (`test_capacity_is_the_workers_word_not_the_controllers`).
-# - `resource` runs the platform's `Resource` as a process on the box exactly as М11 runs it as a job:
-#   heartbeat, HTTP, the policy pass (the VMS's hook first, then bucket retention, then the mirror — off on
-#   one box), and the `EventIndex` over the tree. The old `retain` verb and its timer are gone: a pass
-#   every 600 s from the process's loop is the same pass, and a oneshot could not hold an index's cache.
 # ================================================================================================
 from __future__ import annotations
 
@@ -219,24 +217,6 @@ def _present(w) -> None:
     w.present(runtime.events_root(os.environ))
 
 
-# Builds `vmscontroller` and runs the platform's placement loop over it (`host.controller_loop`), every 5 s — the VMS's
-# own controller because a device is one group (`VmsController.group_value`: the hook the boundary's step 6 turns into
-# a declaration); every other subsystem's controller is the platform's, from its spec (`python3 -m w2cplatform`):
-# - Variables as writer `vmscontroller` with `SPEC.acl_controller()` — `vms/workers/*`, `vms/placement/*`,
-#   `vms/slots/*`; never a camera's row (see `w2cplatform/spec.py`).
-# - `VmsController(vars_, objects, capacity=$CAPACITY)`.
-# - Each pass: `ensure_placed()` (deleted rows unplaced first, then every unplaced camera onto the workers
-#   it currently sees by their heartbeats), `redistribute()` (only the cameras of a *released* slot —
-#   scale-in — move; a merely silent slot is a crash and is left for the scheduler), `publish_snapshot()`
-#   (one object per worker under `vms/snapshot/` in the object store) — each in a try of its own, said once a
-#   spell (`host.step`). No port, no state: the process can be restarted at any moment, and two of them agree by CAS.
-def controller() -> None:
-    from .config import SPEC
-    vars_ = open_vars(STORE_URL, writer="vmscontroller", acl={"vmscontroller": SPEC.acl_controller()})
-    objects = FsObjectStore(os.path.join(root, "objects"))
-    host.controller_loop(VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50"))))
-
-
 def detworker() -> None:
     """A detector worker: a worker of the `det` subsystem. Its token writes its slot, its epochs and its
     heartbeat; its events go into det/<unit>/e<epoch>/ on this server's resource."""
@@ -329,19 +309,16 @@ def gateway() -> None:
     srv.shutdown()
 
 
-# The screen and the API, as its own process ("count as many as you like"):
-# - Variables as writer `console` with `SPEC.acl_console()` — `vms/cameras/*`, `vms/next_id`,
-#   `vms/idem/*`, `vms/retention/*`; never placement. It holds a `VmsController` over that token, so a write
-#   it must not make (`place`) is a `Forbidden` from the store, not a rule in the console.
-# - `$ARCHIVE` for the operator marks it writes into its own bucket. Footage it does not hold: `/timeline/<cam>`
-#   and `/export/<cam>` ask the recorders' archive doors, found by their heartbeats.
-# - `serve(ctl, archive, $CONSOLE_HOST, $CONSOLE_PORT)` from `vms/console.py` starts the
-#   `ThreadingHTTPServer` in a daemon thread; the main thread waits on `stop`, then `srv.shutdown()`.
-# Housekeeping the console owns BECAUSE THE ACL SAYS SO. `<sub>/blobs/*` is the console's to write
-# (Lesson 27), so it is the console's to collect: the platform's sweep (`host.sweep_loop`), in a loop and a log
-# line of its own (Lesson 28) — a sweep that fails inside somebody else's `try` would be reported as somebody else's
-# failure, and blobs accumulating with nothing reclaiming them shows up as a disk full a year later.
-# The console's second pass, beside the sweep: a job's row follows the worker that finished it. The worker
+# THE VMS'S HOUSEKEEPING, AS ITS OWN PROCESS (the boundary's step 6: the loops below ran inside the VMS's console,
+# `python3 -m vms console`; the console is the platform's now, `python3 -m w2cplatform console`, run from the specs
+# alone). `python3 -m vms jobs`: what turns a request into work and work into a closed row — the reaper's turn, the
+# answered requests cleared, what automation asked for turned into rows — with the token that writes configuration
+# (the console's grant of the families it touches: a worker writes none, a controller writes placement), and its own
+# numbers on `/metrics` (`jobs.metrics_lines`: what the request loops expired, `vms_requests_expired_total`), at
+# `JOBS_HOST:JOBS_PORT`.
+# (The blob sweep is the platform console's own, `host.sweep_loop`: `<sub>/blobs/*` is the console's to write, Lesson 27,
+# so it is the console's to collect.)
+# The reaper's pass: a job's row follows the worker that finished it. The worker
 # cannot write the row (its ACL forbids configuration) and the controller must not (one row, one writer),
 # so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
 def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
@@ -482,41 +459,33 @@ def _requests_turn(rec_ctl=None, det_ctl=None, job_ctl=None, mem=None, now=None)
                 logging.exception("ending timed detectors failed — a finished one may still be running")
 
 
-def console() -> None:
-    """The screen and the API: its own process, count as many as you like, a
-    token for the operator's rows and nothing else."""
-    from .config import SPEC
-    from .console import serve
+def jobs() -> None:
+    """The VMS's housekeeping: the reaper, the answered requests, automation's requests turned into rows — its own
+    process (the boundary's step 6: it ran inside the VMS's console), with its own `/metrics`."""
+    from http.server import BaseHTTPRequestHandler
+    from w2cplatform.console import Deadlined, SendMixin, door_server
     from w2cplatform.spec import SpecController
-    from .auto import AutoController
-    from .config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, REC_SPEC, SURVEY_SPEC
-    from .jobs import DetJobController
-    vars_ = open_vars(STORE_URL, writer="console",
-                          acl={"console": SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console()
-                               + REC_SPEC.acl_console() + DETJOB_SPEC.acl_console()
-                               + SURVEY_SPEC.acl_console() + AUTO_SPEC.acl_console()})   # the operator's rows of EVERY subsystem it fronts
+    from .config import DET_SPEC, DETJOB_SPEC, REC_SPEC, SPEC, SURVEY_SPEC
+    from .jobs import metrics_lines
+    families = (SPEC, REC_SPEC, DET_SPEC, DETJOB_SPEC, SURVEY_SPEC)
+    vars_ = open_vars(STORE_URL, writer="console",                # the console's grant of the families it touches
+                      acl={"console": [a for s in families for a in s.acl_console()]})
     objects = FsObjectStore(os.path.join(root, "objects"))
     ctl = VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")))
-    archive = runtime.events_root(os.environ)                    # its resource tree: where the operator's marks go
-    srv = serve(ctl, archive, os.environ.get("CONSOLE_HOST", "127.0.0.1"), int(os.environ.get("CONSOLE_PORT", "8080")),
-                live_ctl=SpecController(LIVE_SPEC, vars_, objects),
-                mounts={"det": SpecController(DET_SPEC, vars_, objects), "rec": SpecController(REC_SPEC, vars_, objects),
-                        "detjob": DetJobController(vars_, objects),     # a scan's recording is its camera's (`jobs.refuse_job`)
-                        "survey": SpecController(SURVEY_SPEC, vars_, objects),
-                        # `AutoController` and not the platform's class: a scenario is refused where it is
-                        # written, which is here, and the refusal has to be the subsystem's own words.
-                        "auto": AutoController(vars_, objects)})
-    logging.info("console on %s", srv.server_address)                     # no event index here: /events asks the resource process
-    # Rows written before this console had a key: sealed now, not at their next write — a camera nobody edits is
-    # never written again (feedback CD). Every subsystem's rows this console writes, and the declared volumes.
-    from w2cplatform.sealing import Sealer, seal_stored
-    seal_stored(Sealer.from_env(), vars_, [s.sub.config(s.rows, "") for s in
-                                           (SPEC, LIVE_SPEC, DET_SPEC, REC_SPEC, DETJOB_SPEC, SURVEY_SPEC, AUTO_SPEC)]
-                + ["rec/volumes/"])
-    det_ctl, rec_ctl = SpecController(DET_SPEC, vars_, objects), SpecController(REC_SPEC, vars_, objects)
-    job_ctl = SpecController(DETJOB_SPEC, vars_, objects)
-    survey_ctl = SpecController(SURVEY_SPEC, vars_, objects)
-    threading.Thread(target=host.sweep_loop, args=([ctl, det_ctl, rec_ctl, job_ctl, survey_ctl],), daemon=True).start()
+    rec_ctl, det_ctl = SpecController(REC_SPEC, vars_, objects), SpecController(DET_SPEC, vars_, objects)
+    job_ctl, survey_ctl = SpecController(DETJOB_SPEC, vars_, objects), SpecController(SURVEY_SPEC, vars_, objects)
+
+    class H(SendMixin, Deadlined, BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            if self.path != "/metrics":
+                return self._send(404, {"error": "no such path"})
+            self._send(200, "\n".join(metrics_lines()) + "\n", raw=True)
+    srv = door_server((os.environ.get("JOBS_HOST", "127.0.0.1"), int(os.environ.get("JOBS_PORT", "8095"))), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    logging.info("the VMS's jobs; their numbers on %s/metrics", srv.server_address)
     # `[rec_ctl, ctl]`: two families of requests to clear now — footage a person asked for, and commands
     # somebody sent a device (a relay, a preset). Same division as everywhere: the worker performs and
     # says so in its heartbeat, the controller removes the row, because a worker writes no configuration.
@@ -525,30 +494,6 @@ def console() -> None:
     threading.Thread(target=_requests_loop, args=(rec_ctl, det_ctl, job_ctl), daemon=True).start()   # a request lives 30 s: looked at every 2
     stop.wait()
     srv.shutdown()
-
-
-# The resource process — the platform's resource job on one box, the same as М11's `resource` job:
-# - its tree, `$ARCHIVE`: EVENTS — the camera's buckets, a recorder's, the alarms', the journal's. Footage is
-#   not here: it is in volumes of ObjectStorage, through the host's `obsd`, each written by the recorder that
-#   holds it (`vms/archive.py`). Variables opened with *no* writer and no ACL — the resource only reads rows.
-# - `vms_resource(root, hostname, $RESOURCE_URL, vars_, objects)` — the platform's `Resource` with an
-#   `EventIndex` over the tree and the VMS's keeps for its bucket retention.
-# - `serve(res, $RESOURCE_HOST, $RESOURCE_PORT)` — `/buckets`, `/events`, `/mirrored`, `PUT /mirror`.
-# - one heartbeat (`platform/resources/<server>/heartbeat` — how the console finds this process), then
-#   `restore()` — and the loop: a heartbeat every 10 s, the policy pass every 600 s (retain buckets by each
-#   subsystem's row, the watermark over the tree, the mirror).
-def resource() -> None:
-    """The resource process: no controller — a policy pass, a heartbeat, its HTTP,
-    and the event index over its own tree."""
-    import socket
-    from w2cplatform.resource import serve
-    from .resource import vms_resource
-    vars_ = open_vars(STORE_URL)
-    objects = FsObjectStore(os.path.join(root, "objects"))
-    bind, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
-    res = vms_resource(runtime.events_root(os.environ), socket.gethostname(),
-                       os.environ.get("RESOURCE_URL", f"http://{bind}:{port}"), vars_, objects)
-    host.run_resource(res, serve(res, bind, port))     # the platform's loop: heartbeat, beat, restore, policy pass
 
 
 if __name__ == "__main__":
@@ -561,4 +506,4 @@ if __name__ == "__main__":
         signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "recorder": recorder, "gateway": gateway, "detworker": detworker, "detjobworker": detjobworker,
      "surveyworker": surveyworker, "autoworker": autoworker,
-     "controller": controller, "console": console, "resource": resource}[sys.argv[1]]()
+     "jobs": jobs}[sys.argv[1]]()

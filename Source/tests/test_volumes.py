@@ -14,7 +14,6 @@ from w2cplatform.contract import Heartbeat, Slot
 from w2cplatform.spec import Refused, SpecController
 from vms import volumes
 from vms.config import REC_SPEC
-from vms.console import rec_routes
 from tests.conftest import Box, footage, recorder
 
 
@@ -49,7 +48,7 @@ def test_a_network_volume_needs_a_quota_and_a_local_one_needs_a_server():
     box = Box()
     for bad, why in (({"name": "vol-a", "kind": "local", "url": "/data/a", "quota_bytes": 1}, "server"),
                      ({"name": "s3", "kind": "network", "url": "s3://b/p"}, "quota_bytes"),
-                     ({"name": "s3", "kind": "network", "url": "s3://b/p", "quota_bytes": 1, "server": "srv-a"}, "server"),
+                     ({"name": "s3", "kind": "network", "url": "s3://b/p", "quota_bytes": 1, "server": "srv-a"}, "may not have 'server'"),
                      ({"name": "../etc", "kind": "local", "url": "/data/a", "server": "srv-a",
                        "quota_bytes": 1}, "not a path"),
                      ({"name": "vol-a", "kind": "local", "url": "/data/a", "server": "srv-a"}, "quota_bytes")):
@@ -234,83 +233,58 @@ def test_the_console_says_which_archives_nobody_is_writing_into():
     assert volumes.served(box.vars, REC_SPEC.sub, box.wall())["serving"] == 2
 
 
-class _Body:
-    """The two things the extra route reads off a handler: a length and a stream."""
-    def __init__(self, payload: bytes):
-        self.headers, self.rfile = {"Content-Length": str(len(payload))}, io.BytesIO(payload)
+def _route(rec):
+    """The platform's console over the recorder's spec, as the page calls it: `route(method, path, body)` →
+    `(status, reply)`. The tables are the spec's (`tables:`), served by the platform since the boundary's step 6."""
+    import urllib.error
+    import urllib.request
+    from w2cplatform.console import SpecConsole
+    srv = SpecConsole(rec, wall=rec.wall).serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def call(method, path, body=None):
+        req = urllib.request.Request(base + path, method=method, data=json.dumps(body).encode() if body is not None else None,
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, json.loads(r.read() or b"null")
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"null")
+    call.server = srv
+    return call
 
 
-def test_the_console_declares_a_volume_and_says_who_serves_it():
-    """The operator's side, over the route the page calls: declare an archive,
-    see it unserved, see a recorder take it, and delete the declaration without
-    deleting a byte of footage."""
+def test_the_console_declares_a_volume_and_says_who_holds_it():
+    """The operator's side, over the route the page calls — the spec's table, served by the platform (the boundary's
+    step 6: it was the VMS's route, `rec_routes`): declare an archive, see it unheld, see a recorder take it, and
+    delete the declaration without deleting a byte of footage. The reply never carries the secret back."""
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    route = rec_routes(rec)
+    route = _route(rec)
+    try:
+        assert "rec/volumes/*" in REC_SPEC.acl_console()                   # `tables: {volumes}`, and nothing else granted
+        status, body = route("POST", "/volumes", {"name": "s3-main", "kind": "network", "url": tempfile.mkdtemp(),
+                                                  "quota_bytes": 64 << 20, "access_secret": "AKIA"})
+        assert status == 201 and "access_secret" not in body["row"] and body["row"]["name"] == "s3-main"
+        status, view = route("GET", "/volumes")
+        assert status == 200 and [(v["name"], v["held_by"]) for v in view["volumes"]] == [("s3-main", None)]
 
-    assert "rec/volumes/*" in REC_SPEC.acl_console()                   # `tables: [volumes]`, and nothing else granted
+        r = _recorder(box, "r-1", "srv-a"); r.volume_pass(); r.heartbeat_once()
+        _, view = route("GET", "/volumes")
+        assert view["volumes"][0]["held_by"] == r.instance                 # who holds the place: the platform's hold
+        assert "access_secret" not in view["volumes"][0]
 
-    status, body = route(_Body(json.dumps({"name": "s3-main", "kind": "network", "url": tempfile.mkdtemp(),
-                                           "quota_bytes": 64 << 20, "access_secret": "AKIA"}).encode()),
-                         "POST", "/volumes", {})
-    assert status == 201 and "access_secret" not in body["volume"]     # the reply never carries it back
+        status, body = route("DELETE", "/volumes/s3-main")
+        assert status == 200 and body == {"deleted": "s3-main"}
+        assert route("DELETE", "/volumes/s3-main")[0] == 404
 
-    status, view = route(None, "GET", "/volumes", {})
-    assert status == 200 and view["wanted"] == 1 and view["serving"] == 0 and view["spare"] == 0
-
-    r = _recorder(box, "r-1", "srv-a"); r.volume_pass(); r.heartbeat_once()
-    _, view = route(None, "GET", "/volumes", {})
-    assert view["serving"] == 1 and view["spare"] == 0
-
-    s = _recorder(box, "r-2", "srv-a"); s.volume_pass(); s.heartbeat_once()
-    _, view = route(None, "GET", "/volumes", {})
-    assert view["spare"] == 1 and view["spares"] == ["r-2"]            # one process ready for the next archive declared
-
-    status, body = route(None, "DELETE", "/volumes/s3-main", {})
-    assert status == 200 and "footage already written is untouched" in body["detail"]
-    assert route(None, "DELETE", "/volumes/s3-main", {})[0] == 404
-
-    # a bad declaration is a 400 to the person who typed it, not a 500 from the store
-    status, body = route(_Body(json.dumps({"name": "s3-x", "kind": "network", "url": "s3://vms/y"}).encode()),
-                         "POST", "/volumes", {})
-    assert status == 400 and "quota_bytes" in body["detail"]
-
-
-def test_the_console_offers_the_disk_this_box_already_records_into():
-    """The first volume an operator ever declares should not be typed out. The
-    box already says where it records (the recorder's heartbeat) and how big
-    that filesystem is (the resource's), so the console offers exactly that,
-    with the partition's own size as the capacity — a number the operator can
-    then make smaller to fit a second volume on the same disk beside it.
-
-    It is an OFFER: nothing here writes configuration on a process's behalf."""
-    box = Box()
-    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    route = rec_routes(rec)
-    _resource(box, "srv-a", total=4 * 10 ** 12)
-    r = _recorder(box, "r-1", "srv-a"); r.volume_pass(); r.heartbeat_once()
-
-    _, view = route(None, "GET", "/volumes", {})
-    own = f"file://{box.root}/volume"                               # the volume it formatted for itself, beside the resource's tree
-    assert view["wanted"] == 0 and view["suggested"] == [
-        {"name": "srv-a", "kind": "local", "url": own, "server": "srv-a", "quota_bytes": 64 << 20,   # the size it has
-         "why": "this box records here and the disk is not declared as a volume"}]
-
-    offer = {k: v for k, v in view["suggested"][0].items() if k != "why"}   # `why` is for the operator, not the row
-    assert route(_Body(json.dumps(offer).encode()), "POST", "/volumes", {})[0] == 201
-    _, view = route(None, "GET", "/volumes", {})
-    assert view["wanted"] == 1 and view["suggested"] == []          # declared: nothing left to offer
-    # …and declaring it moved nothing: the same volume, under the same name, so the same owner — the recorder
-    # takes the declared row and goes on writing where it wrote
-    first = r.store
-    assert r.volume_pass() == "srv-a" and r.hold == "srv-a" and r.store is first and first.url == own
-
-    # and now the disk can be split: half of it to a second volume beside the first
-    status, _ = route(_Body(json.dumps({"name": "cold", "kind": "local", "url": box.archive + "/cold",
-                                        "server": "srv-a", "quota_bytes": 2 * 10 ** 12}).encode()),
-                      "POST", "/volumes", {})
-    assert status == 201
-    assert [v["name"] for v in route(None, "GET", "/volumes", {})[1]["volumes"]] == ["cold", "srv-a"]
+        # a bad declaration is a 400 to the person who typed it, in the spec's words, not a 500 from the store
+        status, body = route("POST", "/volumes", {"name": "s3-x", "kind": "network", "url": "s3://vms/y"})
+        assert status == 400 and "quota_bytes" in body["detail"]
+        status, body = route("POST", "/volumes", {"name": "vol-a", "kind": "local", "url": "/data/a", "quota_bytes": 1})
+        assert status == 400 and "volumes needs 'server'" in body["detail"], body
+    finally:
+        route.server.shutdown()
 
 
 def test_a_quota_is_a_ceiling_and_not_a_reservation():
@@ -337,58 +311,6 @@ def test_a_quota_is_a_ceiling_and_not_a_reservation():
     assert res.space("vol-b")["free"] == 250
 
 
-def test_the_console_writes_out_the_command_and_does_not_run_it():
-    """The operator's knob, and the shape it is allowed to have.
-
-    A button that started a recorder would need a token to the orchestrator in
-    the console — the one thing the platform keeps out of itself. What the
-    console can do instead is stop making the operator translate: it knows how
-    many processes are missing and which orchestrator started IT, so it writes
-    the line out in that orchestrator's words. Running it stays a person's act."""
-    box = Box()
-    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    route = rec_routes(rec)
-    for n in ("s3-a", "s3-b"):
-        _net(box, n)
-
-    r = _recorder(box, "r-1", "srv-a"); r.volume_pass(); r.heartbeat_once()
-    _, view = route(None, "GET", "/volumes", {})
-    assert view["needed"] == 1 and view["how"] == "systemctl start recworker@r-2"   # the next slot nobody holds
-    # `live` rides along so that whatever acts on `needed` — the timer on a box, the scaler on a cluster —
-    # gets both numbers from one reply and never asks the orchestrator for a second opinion
-    assert view["live"] == 1
-
-    # a spare covers the gap, so nothing is needed and nothing is suggested
-    s = _recorder(box, "r-2", "srv-a"); s.volume_pass(); s.heartbeat_once()
-    _, view = route(None, "GET", "/volumes", {})
-    assert view["needed"] == 0 and view["how"] is None
-
-    # on a cluster the same number comes out in the scheduler's words
-    _net(box, "s3-c")
-    os.environ["NOMAD_ALLOC_ID"] = "alloc-1"
-    try:
-        _, view = route(None, "GET", "/volumes", {})
-        assert view["needed"] == 1 and view["how"] == "nomad job scale recworker 3"
-    finally:
-        del os.environ["NOMAD_ALLOC_ID"]
-
-    # and on a cluster of М11, with no orchestrator, in the spares script's (the twelfth review: `recworker@` is no
-    # unit there — a spare recorder is `vms-recworker-spare@<n>`, its role's template, which the script starts)
-    os.environ["PLATFORM_STORE"] = "configstore:///run/configstore/console.sock"
-    try:
-        _, view = route(None, "GET", "/volumes", {})
-        assert view["needed"] == 1 and view["how"] == "w2c-spares.sh recworker"
-        # …but М11 under Nomad (the appendix) opens the same configstore socket, and its console is a Nomad
-        # allocation: the scheduler's words (the thirteenth review, minor — it advised the spares script, which an
-        # appendix site does not run)
-        os.environ["NOMAD_ALLOC_ID"] = "alloc-1"
-        _, view = route(None, "GET", "/volumes", {})
-        assert view["needed"] == 1 and view["how"].startswith("nomad job scale recworker "), view["how"]
-    finally:
-        del os.environ["PLATFORM_STORE"]
-        os.environ.pop("NOMAD_ALLOC_ID", None)
-
-
 def test_the_numbers_a_scaling_policy_reads():
     """`spare: 0` while something is declared and unserved is the one state that
     needs a person — so it has to be a number a machine can read too, or the
@@ -398,7 +320,7 @@ def test_the_numbers_a_scaling_policy_reads():
     load gauge would read as FULLY LOADED. Left in, one spare would demand the
     next one for ever."""
     from w2cplatform.console import SpecConsole
-    from vms.console import rec_metrics
+    from w2cplatform.metrics import text as spec_metrics
 
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
@@ -409,7 +331,7 @@ def test_the_numbers_a_scaling_policy_reads():
     spare.volume_pass(); spare.heartbeat_once()
     assert (r.volume, spare.volume) == ("s3-cold", "s3-main")
 
-    con = SpecConsole(rec, wall=box.wall, metrics_extra=rec_metrics(rec))
+    con = SpecConsole(rec, wall=box.wall, )
     text = con.metrics_text()
     assert "rec_volumes_declared 2" in text and "rec_volumes_unserved 0" in text
 
@@ -501,7 +423,7 @@ def test_a_volume_held_and_unwritable_is_not_served():
 
 
 def test_the_key_never_goes_into_the_address():
-    """`volumes.py` says it handles no credentials beyond the suffix rule — and
+    """The spec's table (`tables.volumes`) says it handles no credentials beyond the suffix rule — and
     the one thing it can still do is refuse the obvious way to lose them. A url
     is printed on the page, published in the recorder's heartbeat as `archive`
     and written into the row; a key inside it is the same secret in three public
@@ -513,18 +435,18 @@ def test_the_key_never_goes_into_the_address():
                                  "url": "s3://AKIAEXAMPLE:wJalrXUtnFEMI@s3.example.com/vms"})
         raise AssertionError("a url with credentials in it was accepted")
     except Refused as e:
-        assert "never the key to it" in str(e)
+        assert ("url may not be stored as typed" in str(e) or "url is not an address" in str(e))
 
     for ok in ("/data/archive/cold", "file:///data/archive/cold", "s3://s3.example.com/vms/site-7",
                "https://s3.example.com/vms?region=eu-1"):
-        volumes.refuse({"name": "v", "kind": "network", "url": ok, "quota_bytes": 1})
+        volumes.write(Box().vars, {"name": "v", "kind": "network", "url": ok, "quota_bytes": 1})
     # …nor in its parameters (the eleventh review's sibling of a camera's `?pwd=`): refused, the value not repeated
     for bad in ("https://s3.example.com/vms?X-Amz-Credential=AKIAEXAMPLE", "s3://s3.example.com/vms?secret=wJalrXUtnFEMI"):
         try:
-            volumes.refuse({"name": "v", "kind": "network", "url": bad, "quota_bytes": 1})
+            volumes.write(Box().vars, {"name": "v", "kind": "network", "url": bad, "quota_bytes": 1})
             raise AssertionError(f"a url with credentials in its parameters was accepted: {bad}")
         except Refused as e:
-            assert "never the key to it" in str(e) and "AKIAEXAMPLE" not in str(e) and "wJalr" not in str(e), str(e)
+            assert ("url may not be stored as typed" in str(e) or "url is not an address" in str(e)) and "AKIAEXAMPLE" not in str(e) and "wJalr" not in str(e), str(e)
 
 
 # A bucket's key written into a volume's url every way the twelfth review (blocker 10) and the product's cross-check (7 of
@@ -564,10 +486,10 @@ def test_a_key_in_a_volumes_url_is_refused_whatever_its_characters_and_an_old_ro
     box = Box()
     for url in KEY_FORMS:
         try:
-            volumes.refuse({"name": "v", "kind": "network", "url": url, "quota_bytes": 1})
+            volumes.write(Box().vars, {"name": "v", "kind": "network", "url": url, "quota_bytes": 1})
             raise AssertionError(f"a key rode in on a volume's url: {url}")
         except Refused as e:
-            assert "never the key to it" in str(e) and "wJalr" not in str(e) and "XUtn" not in str(e), (url, str(e))
+            assert ("url may not be stored as typed" in str(e) or "url is not an address" in str(e)) and "wJalr" not in str(e) and "XUtn" not in str(e), (url, str(e))
     said = []
     h = logging.Handler()
     h.emit = lambda r: said.append(r.getMessage())
@@ -597,11 +519,12 @@ def test_a_recorder_that_holds_an_archive_is_not_a_spare():
     counted spare in that gap is a spare the operator is promised and the
     scaling policy will not ask to replace — and both numbers heal themselves,
     which is exactly when nobody notices."""
-    from vms.console import spare_workers
+    from w2cplatform.console import heartbeats
 
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     _net(box, "s3-main")
+    spare_workers = lambda c: c.placeless_live(heartbeats(c.objects, "rec/"))   # the platform's: no place, no hold (`minus: placeless`)
 
     r, s = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
     r.volume_pass(); s.volume_pass()
@@ -779,9 +702,12 @@ def test_a_network_volumes_secret_sealed_by_the_console_is_opened_by_the_recorde
         rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     finally:
         del os.environ["SECRETS_KEY"]
-    status, _ = rec_routes(rec)(_Body(json.dumps({"name": "s3", "kind": "network", "url": tempfile.mkdtemp(),
-                                                  "quota_bytes": 64 << 20, "access_key": "AKIA",
-                                                  "access_secret": "wJalr"}).encode()), "POST", "/volumes", {})
+    route = _route(rec)
+    try:
+        status, _ = route("POST", "/volumes", {"name": "s3", "kind": "network", "url": tempfile.mkdtemp(),
+                                               "quota_bytes": 64 << 20, "access_key": "AKIA", "access_secret": "wJalr"})
+    finally:
+        route.server.shutdown()
     assert status == 201 and is_sealed(box.vars.get("rec/volumes/s3")[0]["access_secret"])
 
     nokey = _recorder(box, "r-1", "srv-a")                             # `env={}`: no SECRETS_KEY
