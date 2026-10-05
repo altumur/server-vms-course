@@ -23,6 +23,7 @@ is nobody's catalogue.
 #   told to run from an empty directory runs nothing, and says so at its start rather than idling.
 # - `specs()` / `spec(name)` — what is loaded; with nothing loaded, the directory `SPEC_DIR` names first.
 # - `object_rows()` — the objects that are rows of the store (`objects.rows` of every spec, under its name).
+# - `heartbeat_strings(sub)` — the fields of a subsystem's heartbeats that are strings (`heartbeat.strings`).
 # - `secret_rules()` — how an address carries a login (`secret_in` of every url field of every spec, together).
 # ================================================================================================
 from __future__ import annotations
@@ -85,6 +86,12 @@ def _derive(what: str, make):
 # store, not as files (`w2cplatform/cluster/objectstore.py`).
 def object_rows() -> tuple[str, ...]:
     return _derive("rows", lambda: tuple(f"{s.name}/{p}" for s in specs() for p in s.object_rows))
+
+
+# `heartbeat.strings` of the subsystem `sub`: the fields of its heartbeats a reader takes as strings, or the heartbeat
+# is garbled (`contract.parse_heartbeat`). A subsystem no spec here names has none but the platform's.
+def heartbeat_strings(sub: str) -> tuple[str, ...]:
+    return _derive("heartbeat_strings", lambda: {s.name: s.heartbeat_strings for s in specs()}).get(sub, ())
 
 
 # The `secret_in` of every url field of every spec, as one set of rules: what hides an address wherever one is said

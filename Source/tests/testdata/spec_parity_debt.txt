@@ -195,16 +195,12 @@ product-only auto.subsystem.yaml heartbeat
 product-only auto.subsystem.yaml heartbeat.strings
 product-only live.subsystem.yaml secrets
 product-only live.subsystem.yaml secrets.reads
-product-only rec.subsystem.yaml heartbeat
-product-only rec.subsystem.yaml heartbeat.strings
 product-only rec.subsystem.yaml objects.door
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window
-product-only vms.subsystem.yaml heartbeat
-product-only vms.subsystem.yaml heartbeat.strings
 product-only vms.subsystem.yaml secrets
 product-only vms.subsystem.yaml secrets.readers
 product-only vms.subsystem.yaml tables

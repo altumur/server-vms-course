@@ -74,6 +74,33 @@ def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
     _refused(lambda: catalog.spec("nobody"), "no subsystem 'nobody'")
 
 
+def test_a_heartbeat_field_its_spec_says_is_a_string_and_is_not_garbles_the_heartbeat():
+    """`heartbeat: {strings: [...]}` (the product's key, the course implements it): the fields of a subsystem's
+    heartbeats that are strings by contract and that something decides by. A worker's heartbeat holding one of them as
+    anything but a string is garbled — skipped and counted (`<sub>_heartbeats_garbled`), as one that does not parse;
+    absent is not garbled, and another subsystem's heartbeat is not this spec's business. The platform's own fields are
+    not a spec's to name, and a field is named once."""
+    from w2cplatform.contract import GARBLED, Heartbeat, parse_heartbeat
+    root = tempfile.mkdtemp(prefix="specs-")
+    with open(os.path.join(root, "beater.subsystem.yaml"), "w") as f:
+        f.write("name: beater\nunit: {rows: items, id: name, fields: {name: {type: string}}}\n"
+                "placement: {capacity: {from: capacity, default: 2}}\nheartbeat: {strings: [shelf, shelf_error]}\n")
+    catalog.load_dir(root)
+    assert catalog.spec("beater").heartbeat_strings == ("shelf", "shelf_error")
+    key = "beater/heartbeats/w-1"
+    beat = lambda **extra: Heartbeat("w-1", 1.0, [], extra).to_bytes()      # noqa: E731
+    assert parse_heartbeat(key, beat(shelf="a", shelf_error="")).extra["shelf"] == "a"
+    assert parse_heartbeat(key, beat()) is not None                         # not said: nobody is sent by it
+    before = GARBLED.get("beater", 0)
+    for bad in (beat(shelf=5), beat(shelf="a", shelf_error=None), beat(shelf=["a"])):
+        assert parse_heartbeat(key, bad) is None
+    assert GARBLED["beater"] == before + 3
+    assert parse_heartbeat("nobody/heartbeats/w-1", beat(shelf=5)) is not None
+    _refused(lambda: _spec(heartbeat={"strings": ["server"]}), "heartbeat.strings: 'server' is no field of its own")
+    _refused(lambda: _spec(heartbeat={"strings": ["a", "a"]}), "or is said twice")
+    _refused(lambda: _spec(heartbeat={"strings": "a"}), "`heartbeat:` is {strings:")
+
+
 # A url field the way a subsystem says how its addresses carry a login.
 TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
           "credentials": {"login": "account_name", "secret": "pass_secret"},
@@ -163,14 +190,13 @@ def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
 
 def test_a_key_the_platform_does_not_read_is_refused_at_any_level_and_named_where_it_stands():
     """The key sets are closed (the architect, 2026-10-05): a key nobody reads — a typo, another team's word — is a
-    refusal at load naming it with its path, at the top, in a section, in a field, in an item of a list. The product's
-    `objects.door`, `heartbeat.strings` and `secrets` are such keys in the course: refused, not passed over. Where the
+    refusal at load naming it with its path, at the top, in a section, in a field, in an item of a list. Where the
     spec writes names (a field, an event kind) or words (`display.kinds`), anything stands."""
     plain = _testsub()
-    _refused(lambda: SubsystemSpec.from_dict({**plain, "objects": {"rows": [], "door": ["taken/*"]}}), "`objects:` is {rows:")
-    for where, add in (("heartbeat", {"heartbeat": {"strings": ["events"]}}),
-                       ("secrets", {"secrets": {"reads": ["domain/member-key"]}}),
-                       ("placement.requries", {"placement": {**plain["placement"], "requries": "resource"}}),
+    for words, add in (("`heartbeat:` is {strings:", {"heartbeat": {"strings": ["jam"], "beats": 1}}),
+                       ("`objects:` is {rows:", {"objects": {"rows": ["marks/*"], "files": ["x/*"]}})):
+        _refused(lambda add=add: SubsystemSpec.from_dict({**plain, **add}), words)     # …by the section's own reader
+    for where, add in (("placement.requries", {"placement": {**plain["placement"], "requries": "resource"}}),
                        ("console.gauge", {"console": {"gauge": "x"}}),
                        ("events.suppress.tick.windw", {"events": {"suppress": {"tick": {"window": 5, "windw": 6}}}}),
                        ("unit.fields.name.requird", {"unit": {**plain["unit"], "fields": {

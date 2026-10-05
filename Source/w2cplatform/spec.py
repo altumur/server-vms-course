@@ -562,6 +562,28 @@ def _object_rows(name, objects) -> tuple:
     return tuple(out)
 
 
+# `heartbeat: {strings: [<field>]}` — the fields of this subsystem's heartbeats that are strings by contract and that
+# something decides by (the product's key: the field it places by, say — the place a worker is counted in). A heartbeat
+# in which one of them is not a string is garbled — skipped and counted, as one that does not parse
+# (`contract.parse_heartbeat`): a reader that keyed or compared by it raised, or took `5` for a place. The platform's
+# own (`worker`, `server`, `url`, `instance`, `labels`) are not a spec's to say.
+PLATFORM_HEARTBEAT_STRINGS = ("worker", "server", "url", "instance", "labels")
+
+
+def _heartbeat_strings(name, hb) -> tuple:
+    if hb is None:
+        return ()
+    got = hb.get("strings") if isinstance(hb, dict) and set(hb) == {"strings"} else None
+    if not isinstance(got, list) or not got:
+        raise ValueError(f"spec {name}: `heartbeat:` is {{strings: [<a field of its heartbeats>, …]}}, not {hb!r}")
+    word = re.compile(r"[a-z][a-z0-9_]*")
+    for i, f in enumerate(got):
+        if not isinstance(f, str) or not word.fullmatch(f) or f in PLATFORM_HEARTBEAT_STRINGS or f in got[:i]:
+            raise ValueError(f"spec {name}: heartbeat.strings: {f!r} is no field of its own heartbeats (the "
+                             f"platform's are {', '.join(PLATFORM_HEARTBEAT_STRINGS)}), or is said twice")
+    return tuple(got)
+
+
 # `worker: {writes: [<table>], reads: [<key>], requests: [<sub>]}` — what this subsystem's WORKER may touch beyond its
 # epochs, its slot and its place (`Subsystem.acl_worker`): rows of its own tables it writes (what it found a thing to
 # be — a discovery, not a decision), keys of the store outside its subsystem it reads, and the subsystems whose
@@ -938,6 +960,8 @@ class SubsystemSpec:
     # it acts) or read where the place it names is gone. The cluster's object store asks the loaded specs for them
     # (`catalog.object_rows`; it was a constant of the platform's, naming one subsystem's family).
     object_rows: tuple = ()
+    # `heartbeat: {strings: [...]}` (`_heartbeat_strings`): read where a heartbeat is (`catalog.heartbeat_strings`)
+    heartbeat_strings: tuple = ()
     # `slot: {prefix: w, name_env: WORKER_NAME}` — what a slot this subsystem's worker has to MAKE is called
     # (`<prefix>-<n>`), and the environment variable naming the slot it is started under beside `WORKER_NAME`
     # (`runtime.slot`). It was each worker's class saying it.
@@ -1030,6 +1054,7 @@ class SubsystemSpec:
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}),
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
+                   heartbeat_strings=_heartbeat_strings(d.get("name"), d.get("heartbeat")),
                    slot_prefix=slot[0], slot_name_env=slot[1],
                    worker_writes=worker[0], worker_reads=worker[1], worker_requests=worker[2])
         spec._about_and_rights(d)

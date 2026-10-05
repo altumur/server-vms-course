@@ -1,14 +1,11 @@
 # spec_load_debt.txt — the key paths of the product's specs the course's loader refuses (test_spec_parity.py),
 # `<spec>:<key path>`. A line goes when the course reads the key or the product drops it; none is ever added.
 auto:console.running
-auto:heartbeat
 live:console.running
 live:secrets
 rec:console.running
-rec:heartbeat
 rec:objects.door
 rec:secrets
 vms:console.running
-vms:heartbeat
 vms:secrets
 vms:tables
