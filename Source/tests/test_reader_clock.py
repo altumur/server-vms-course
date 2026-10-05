@@ -31,7 +31,7 @@ def test_a_recorder_dead_with_its_clock_ahead_stops_being_a_door_and_one_behind_
     """The console's timeline, export and the keeps' copier ask `recorder_doors`; the timeline names the volumes nobody
     serves (`unserved_volumes`). Both read `now - hb.ts`, with no bound ahead: r-ahead, dead, stayed a door for an hour
     and its volume was never named unavailable; r-behind, alive, was no door and its volume "unserved"."""
-    from vms.console import recorder_doors, unserved_volumes
+    from vms.footage import recorder_doors, unserved_volumes
     box, eyes = Box(), None
     eyes = _eyes(box)
     _beat(box, REC_SPEC, "r-ahead", AHEAD, archive_url="http://127.0.0.1:9", volume="va", server="srv-a")

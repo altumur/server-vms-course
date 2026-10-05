@@ -234,13 +234,18 @@ def test_the_console_over_http():
     m = json.loads(out); assert st == 201 and m["bucket"].startswith(f"console/{m['unit']}/e1/")
     st, out = call("GET", "/events?unit=vms/1"); ev = json.loads(out)
     assert st == 200 and [(e["subsystem"], e["kind"], e["user"], e["server"]) for e in ev["events"]] == [("console", "mark", "murat", "srv-a")] and ev["state"] == "live"
-    # the page, and playback across the cluster: footage in srv-a's volume, through its recorder's door and the console
+    # the page, and playback across the cluster: footage in srv-a's volume, at its recorder's door — the console hands
+    # the door out with the recording's place and carries none of it (the boundary's step 6)
     assert "<video" in call("GET", "/")[1]
-    st, out = call("GET", "/timeline/1"); tl = json.loads(out)
-    assert st == 200 and [(s["recorder"], s["volume"]) for s in tl] == [(rec_a.name, "srv-a")]
-    with urllib.request.urlopen(f"{base}{tl[0]['media']}&from={t - 120}&to={t - 60}") as r:
+    page = rec_a.archive_url + "/door"
+    tl = json.loads(urllib.request.urlopen(f"{page}/timeline/1").read())
+    assert [(s["recorder"], s["volume"]) for s in tl] == [(rec_a.name, "srv-a")]
+    with urllib.request.urlopen(f"{page}/{tl[0]['media']}?from={t - 120}&to={t - 60}") as r:
         assert r.status == 200 and r.headers["Content-Type"] == "video/mp4" and r.read()[4:8] == b"ftyp"   # read to its end: the last chunk comes when its slot is free again
-    st, out = call("GET", f"/export/1?rec=1&from={t - 3000}&to={t - 2000}"); assert st == 404, (st, out)   # nothing recorded there
+    try:
+        urllib.request.urlopen(f"{page}/export/1?from={t - 3000}&to={t - 2000}"); raise AssertionError("a file of nothing")
+    except urllib.error.HTTPError as e:
+        assert e.code == 404                                                       # nothing recorded there
     assert call("PUT", "/cameras/1", {"enabled": False})[0] == 200 and ctl.camera(1)["enabled"] is False
     assert call("DELETE", "/cameras/1")[0] == 200 and ctl.cameras() == [] and call("DELETE", "/cameras/1")[0] == 404
     assert ctl.unplace_deleted() == [1] and ctl.assignment(placed).units == []   # the controller takes the placement back
@@ -254,7 +259,8 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
     were not routes that name a camera, so in a cluster that asks who is calling a viewer of camera 1 was given camera
     2's timeline and footage for any grant at all; a backfill was an administrator's, not an operator's; the
     recorder's mount served neither the archives nor the number its scaling check asks for. One function wires a
-    console of the VMS, whoever builds it (`vms.console.wire_vms`)."""
+    console of the VMS, whoever builds it (`vms.console.wire_vms`) — and since the boundary's step 6 the footage is a
+    holder's door, handed out with the unit's place to whoever may view it: `/where/<cam>`, `/rec/where/<recording>`."""
     from cluster.console import make_console
     from w2cplatform.access import Denied
     from w2cplatform.spec import SpecController
@@ -296,9 +302,9 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
             assert call("POST", "/cameras", "admin", {"source": f"driverpack://file/{i}.mp4"})[0] == 201
             assert call("POST", "/rec/recordings", "admin", {"name": str(i), "cam": str(i)})[0] == 201
         t = c.wall()
-        assert call("GET", "/timeline/1", "viewer")[0] == 200
-        assert call("GET", "/timeline/2", "viewer")[0] == 403                           # it was 200: any grant at all
-        assert call("GET", f"/export/2?from={t - 120}&to={t - 60}", "viewer")[0] == 403    # …and the footage with it
+        assert call("GET", "/rec/where/1", "viewer")[0] in (200, 404)                  # her camera's recording: its door
+        assert call("GET", "/rec/where/2", "viewer")[0] == 403                          # it was 200: any grant at all
+        assert call("GET", "/where/2", "viewer")[0] == 403                              # …and the device's own with it
         ask = lambda rec: {"unit": f"rec/{rec}", "from": t - 120, "to": t - 60}          # noqa: E731 — a backfill (step 6)
         assert call("POST", "/rec/requests", "viewer", ask(1))[0] == 403                # to act, `edit`
         assert call("POST", "/rec/requests", "guard", ask(1))[0] == 202                 # …on her camera
@@ -306,7 +312,7 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
         assert call("PUT", "/rec/recordings/2", "guard", {"retention_days": 1})[0] == 403
         assert call("GET", "/rec/volumes", "admin")[0] == 200                           # the archives, as on a box
         assert "rec_recorders_needed" in call("GET", "/rec/metrics", "admin")[1]        # what `w2c-spares.sh` reads for recorders
-        assert m.root.extra.journal is m.root.journal and m.mounts["rec"].spec.about_sub == "vms"   # a recording is about its camera
+        assert m.mounts["rec"].journal is m.root.journal and m.mounts["rec"].spec.about_sub == "vms"   # a recording is about its camera
     finally:
         srv.shutdown()
 

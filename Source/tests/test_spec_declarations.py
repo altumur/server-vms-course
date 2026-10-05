@@ -17,6 +17,9 @@
     requests: {schema, key, …}        `POST /requests`, a row for a worker to answer (it was a subsystem's route)
     rights: {reach, names, …}         what a change or a request reaches beyond its unit (it was a subsystem's code in
                                       the console: `moved_units`, `body_units`, `CLUSTER_ROWS`)
+    door: {routes}                    what a unit's holder serves a page itself, handed out with the unit's place and a
+                                      token the console signs and the holder checks (it was a subsystem's routes on the
+                                      console, `extra`; `door.py`)
 
 A test of the platform alone: two subsystems invented here, `bin` and `pick`; no subsystem's package is imported.
 """
@@ -447,3 +450,114 @@ def test_what_a_change_or_a_request_reaches_is_the_specs_group_the_cluster_or_th
     assert names_in(plan_spec, {"steps": "[{\"tool\": \"c\"}]"}) == {"shed/c"}
     assert names_in(plan_spec, {"steps": "{torn"}) == {"*"} and names_in(plan_spec, {"steps": "[{}]"}) == {"*"}
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "rights": {"reach": {"group": ["nope"]}}}), "rights.reach is")
+
+
+def _door_files():
+    """A cluster's door key pair as the deployment gives it (`DOOR_KEY` to the consoles, `DOOR_RING` to the holders)."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    k = Ed25519PrivateKey.generate()
+    seed = k.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption())
+    pub = k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    d = tempfile.mkdtemp(prefix="door-")
+    for name, line in (("key", f"k1 {seed.hex()}"), ("ring", f"k1 {pub.hex()}")):
+        with open(os.path.join(d, name), "w") as f:
+            f.write(line + "\n")
+    return {"DOOR_KEY": os.path.join(d, "key"), "DOOR_RING": os.path.join(d, "ring")}
+
+
+def test_a_door_token_opens_one_holders_door_to_one_unit_for_its_routes_until_it_ends():
+    """`door.py`: the console signs (`Signer`, from `DOOR_KEY`), the holder checks by the public key (`Ring`, from
+    `DOOR_RING`) — this holder, this unit, this route, not past its time, a signature that holds; anything else is 401
+    or 403 in words. A token in a query is masked wherever a path is logged; a page's origin is answered only when it is
+    a console's (`DOOR_ORIGINS`). A spec's `door:` is a list of words."""
+    from w2cplatform.door import DoorRefused, Ring, Signer, cors, masked, origins, parse_routes, token_in
+    env = _door_files()
+    sign, ring = Signer.from_env(env), Ring.from_env(env)
+    assert Signer.from_env({}) is None and Ring.from_env({}) is None            # no files: the open mode
+    tok, exp = sign.issue("ann", "bin/a", "w-1", ("read",), 1000.0)
+    assert exp == 1000.0 + 120 and ring.check(tok, unit="bin/a", holder="w-1", route="read", now=1100.0)["sub"] == "ann"
+    for kw, status, words in (({"unit": "bin/b"}, 403, "opens 'bin/a'"), ({"holder": "w-2"}, 403, "the unit moved"),
+                              ({"route": "write"}, 403, "does not open 'write'"), ({"now": 1121.0}, 401, "has ended")):
+        args = {"unit": "bin/a", "holder": "w-1", "route": "read", "now": 1100.0, **kw}
+        try:
+            ring.check(tok, **args); raise AssertionError(kw)
+        except DoorRefused as e:
+            assert e.status == status and words in e.why, (kw, e.why)
+    other = Signer.from_env(_door_files()).issue("ann", "bin/a", "w-1", ("read",), 1000.0)[0]
+    for bad in (None, "", "x.y", tok[:-3] + "AAA", other):                    # none; not one; tampered; another key's kid
+        try:
+            ring.check(bad, unit="bin/a", holder="w-1", route="read", now=1100.0); raise AssertionError(bad)
+        except DoorRefused as e:
+            assert e.status == 401
+    assert token_in({"Authorization": "Bearer abc"}, "/x") == "abc" and token_in({}, "/x?t=def&from=1") == "def"
+    assert masked("/door/read/a?from=1&t=secret&to=2") == "/door/read/a?from=1&t=***&to=2"
+    allowed = origins({"DOOR_ORIGINS": "https://console.example, http://10.0.0.5:8080/"})
+    assert allowed == ("https://console.example", "http://10.0.0.5:8080")
+    assert cors("https://evil.example", allowed) == [] and ("Access-Control-Allow-Origin", "https://console.example") in cors("https://console.example", allowed)
+    assert not any(k == "Access-Control-Allow-Credentials" for k, _ in cors("https://console.example", allowed))
+    assert parse_routes("x", {"routes": ["read", "play"]}) == ("read", "play") and parse_routes("x", None) == ()
+    for bad in ({"routes": []}, {"routes": ["../x"]}, {"routes": ["read"], "url": "x"}, ["read"]):
+        _refused(lambda: parse_routes("spec x", bad), "`door:` is")
+
+
+def test_where_hands_out_the_holders_door_with_a_token_and_only_the_placed_live_holder_has_one():
+    """`GET /where/<id>` for a spec that declares `door: {routes}`: the door the unit's holder announces (`door_url` in its
+    heartbeat) — the worker it is PLACED on, live, saying it holds the unit — and a token for those routes, this unit,
+    this holder (none without `DOOR_KEY`: the door's open mode); a line `door.issued` names who got it. Nobody holding
+    the unit so: `door: null`. A spec with no `door:` says nothing of one."""
+    import json
+    import urllib.request
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.door import Ring
+    from w2cplatform.eventdatabase import EventIndex
+    vars_, objects, wall = _box()
+    spec = SubsystemSpec.from_dict({**BIN, "door": {"routes": ["read"]}})
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    ctl.create({"name": "a"})
+    env = _door_files()
+    was = {k: os.environ.get(k) for k in env}
+    os.environ.update(env)
+    marks = tempfile.mkdtemp(prefix="marks-")
+    try:
+        con = SpecConsole(ctl, marks_root=marks, wall=wall)
+    finally:
+        for k, v in was.items():
+            os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+    srv = con.serve("127.0.0.1", 0)
+    def where():
+        import urllib.error
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/where/a", headers={"X-User": "ann"})
+        try:
+            return json.loads(urllib.request.urlopen(req).read())
+        except urllib.error.HTTPError as e:                                  # 404: placed nowhere — and said so
+            return json.loads(e.read())
+    try:
+        assert where()["door"] is None                                         # nobody holds it
+        objects.put(spec.sub.heartbeat_key("w-1"), Heartbeat("w-1", wall(), [{"id": "a"}], {
+            "server": "s1", "bay": "", "capacity": 4, "headroom": 4, "door_url": "http://w-1:9/door"}).to_bytes())
+        objects.put(spec.sub.heartbeat_key("w-2"), Heartbeat("w-2", wall(), [{"id": "a"}], {
+            "server": "s2", "bay": "", "capacity": 4, "headroom": 0, "door_url": "http://w-2:9/door"}).to_bytes())
+        SpecController(spec, vars_, objects, wall=wall).ensure_placed()
+        placed = ctl.placement("a").worker
+        d = where()["door"]
+        assert d["url"] == f"http://{placed}:9/door" and d["routes"] == ["read"] and d["expires"] == wall() + 120
+        assert Ring.from_env(env).check(d["token"], unit="bin/a", holder=placed, route="read", now=wall())["sub"] == "ann"
+        lines = [e for e in EventIndex(marks, "", wall=wall).query(0, wall() + 1, subsystem="audit")["events"] if e["kind"] == "door.issued"]
+        assert [(e["user"], e["target"], e["holder"], e["routes"]) for e in lines] == [("ann", "a", placed, "read")]
+        objects.put(spec.sub.heartbeat_key(placed), Heartbeat(placed, wall(), [], {"server": "s1", "door_url": "x"}).to_bytes())
+        assert where()["door"] is None                                         # its holder no longer says it holds it
+    finally:
+        srv.shutdown()
+    plain = SpecConsole(SpecController(SubsystemSpec.from_dict(BIN), vars_, objects, wall=wall), wall=wall)
+    srv = plain.serve("127.0.0.1", 0)
+    try:
+        import urllib.error
+        try:
+            got = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/where/a").read())
+        except urllib.error.HTTPError as e:
+            got = json.loads(e.read())
+        assert "door" not in got
+        assert "door" not in plain.describe() and con.describe()["door"] == {"routes": ["read"]}
+    finally:
+        srv.shutdown()

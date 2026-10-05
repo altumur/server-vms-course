@@ -2634,7 +2634,11 @@ class VmsWorker(Worker):
                 # The playback door's key, once the door is open (`vms/playback.py`): what the console signs a viewer's
                 # address with, and what a process derives its capability from. Here and not in a camera's status:
                 # statuses are the read model the page shows.
-                **({"playback_key": self.playback_key} if getattr(self, "playback_key", None) else {})}
+                **({"playback_key": self.playback_key} if getattr(self, "playback_key", None) else {}),
+                # …and the door a page reads a device's own archive at (`door_url`, the platform's word: `/where` hands it
+                # out with a token for the spec's `door: {routes}` — the boundary's step 6; it was the console's `/segment`)
+                **({"door_url": f"http://{announce_host(self.playback_host, self.server)}:{self.playback_port}/door"}
+                   if getattr(self, "playback_key", None) else {})}
 
     # -- the playback door ---------------------------------------------------------------------------
     # The holder's second surface, and the reason it is HTTP and not the RTSP fan-out: a browser has to
@@ -2734,8 +2738,13 @@ class VmsWorker(Worker):
                 except OSError:
                     pass
 
+            def do_OPTIONS(self):
+                gw.door_keeper().preflight(self)
+
             def do_GET(self):
                 u = urlsplit(self.path); q = {k: v[0] for k, v in parse_qs(u.query).items()}
+                if u.path.startswith("/door/"):
+                    return self._door(u.path, q)
                 if u.path == "/devices":
                     return self._send(200, gw.device_status())
                 if u.path.startswith("/recordings/"):
@@ -2782,6 +2791,58 @@ class VmsWorker(Worker):
                     if who is not None:
                         gw.playback_person(who, -1)
 
+            # THE PAGE'S DOOR TO THE DEVICE'S OWN ARCHIVE (the boundary's step 6: it was the console's `/segment`, which
+            # signed an address to this door; the bytes went holder → browser then too). Opened by the console's door
+            # token for this holder and camera (`w2cplatform/door.py`):
+            #   GET /door/timeline/<cam>?from&to   what the device holds, from the coverage this holder announces
+            #   GET /door/segment/<cam>?from&to    those minutes — CUT to the coverage and held to `SEGMENT_MAX`, as the
+            #                                      console held them (the review's fifth pass, major: a day of a card read
+            #                                      whole into the holder's memory), then served as `/playback/` serves,
+            #                                      under the viewer's share (`PLAYBACK_PER_PERSON`: the token's name)
+            def _door(self, path, q):
+                from .footage import SEGMENT_MAX, answer, coverage_of
+                from w2cplatform.console import holder_of
+                keeper = gw.door_keeper()
+                segs = path.split("/")                       # "", "door", <route>, <cam>
+                if len(segs) != 4 or segs[2] not in ("timeline", "segment") or not segs[3]:
+                    return answer(self, (404, {"error": "no such path"}), keeper.headers(self))
+                cam = segs[3]
+                admitted = keeper.admit(self, segs[2], f"vms/{cam}")
+                if admitted is None:
+                    return
+                try:
+                    t0, t1 = finite(q.get("from", 0)), finite(q.get("to", 1e12))
+                except ValueError:
+                    return answer(self, (400, {"detail": "from and to are unix seconds", "error": "bad range"}), keeper.headers(self))
+                found = holder_of(gw.objects, "vms/", cam, gw.wall(), field="coverage")
+                cov = coverage_of(found) if found is not None and found[0] == gw.name else None
+                lo, hi = (max(t0, cov[0]), min(t1, cov[1])) if cov is not None else (t0, t1)
+                # What the DEVICE has, drawn only where our own footage does not cover it (`yields`: the page cuts it
+                # by every other span — the same subtraction the recorder fetches by, Lesson 16). A span like this is
+                # the one that will disappear: our archive keeps thirty days, a card keeps three.
+                if segs[2] == "timeline":
+                    spans = [{"start": lo, "end": hi, "epoch": 0, "source": "device", "fenced": False, "device": True,
+                              "yields": True, "media": f"segment/{cam}"}] if cov is not None and hi > lo else []
+                    return answer(self, (200, spans), keeper.headers(self))
+                if cov is not None and hi <= lo:
+                    return answer(self, (404, {"detail": f"the device holds nothing of camera {cam} in that interval (it holds "
+                                                         f"{cov[0]:.0f}..{cov[1]:.0f})", "error": "nothing there"}), keeper.headers(self))
+                if hi - lo > SEGMENT_MAX:
+                    return answer(self, (400, {"detail": f"a piece of the device's footage is at most {SEGMENT_MAX:.0f} s; this one "
+                                                         f"is {hi - lo:.0f} s of what the device holds — ask for less",
+                                               "error": "range too long"}), keeper.headers(self))
+                who = str(admitted.get("sub") or "anybody")
+                if not gw.playback_person(who, +1):
+                    return answer(self, (503, {"detail": f"{who} is reading {gw.PLAYBACK_PER_PERSON} pieces of footage at "
+                                                         f"once already — close one first", "error": "busy"}), keeper.headers(self))
+                try:
+                    gw.playback_journal().say("archive.read", user=who, source="device", target=cam,
+                                              addr=str(self.client_address[0]), worker=gw.name, **{"from": lo, "to": hi})
+                    self._cors = keeper.headers(self)
+                    return self._play(cam, {"from": lo, "to": hi}, who)
+                finally:
+                    gw.playback_person(who, -1)
+
             def _play(self, cam, q, who=None):
                 try:
                     pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)), who)
@@ -2801,7 +2862,8 @@ class VmsWorker(Worker):
                 # piece of the wire's size at a time, to a client that keeps the pace (`Paced`).
                 # A piece is let go before the next is read — by this loop as by `playback_pieces` — so a connection
                 # holds one, as the door's budget counts it.
-                out = Paced(self, start_stream(self, 200, "video/mp4"), gw.PLAYBACK_MIN_RATE, gw.PLAYBACK_GRACE)
+                out = Paced(self, start_stream(self, 200, "video/mp4", getattr(self, "_cors", ())), gw.PLAYBACK_MIN_RATE,
+                            gw.PLAYBACK_GRACE)
                 piece, first = first, None
                 try:
                     while piece is not None:
@@ -2821,6 +2883,13 @@ class VmsWorker(Worker):
     # `port=0` the number is invented by the kernel, so it is read back and kept: from this moment
     # `playback_url` says the truth, and a second worker on the same box is an ordinary thing rather than
     # a crash loop every two seconds.
+    # The platform's keeper of this holder's page door (`w2cplatform/door.py`): the console's token, checked here.
+    def door_keeper(self):
+        from w2cplatform.door import DoorKeeper
+        if getattr(self, "_door_keeper", None) is None:
+            self._door_keeper = DoorKeeper(self.name, self.wall)
+        return self._door_keeper
+
     def serve_playback(self, host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
         from .config import opened_beyond_loopback
         from .playback import new_key

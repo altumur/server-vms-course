@@ -152,22 +152,36 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
     """`float(cov["from"])` bare in three routes (the ninth answer's open list): one holder announcing `{"from": "x"}`
     was no reply at all for the camera's `/timeline`, and for its `/segment`. The coverage is read once
     (`coverage_of`): one that does not read is a holder that announces none — no device spans, a segment held to the
-    ceiling alone — counted once as that holder's field."""
+    ceiling alone — counted once as that holder's field. (The holder's own door says both since the boundary's step 6:
+    `/door/timeline/<cam>`, `/door/segment/<cam>`.)"""
+    import urllib.error
+    import urllib.request
     from w2cplatform.rows import FIELDS
-    from vms.console import vms_routes
+    from vms.worker import FakeActuator, VmsWorker
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(1)
     t = box.wall()
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-a")
+    door = w.serve_playback("127.0.0.1", 0)
     box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", t, [
         {"id": 1, "phase": "running", "coverage": {"from": "x", "to": "y"}, "playback_url": "http://w-1/play/1"}],
         {"server": "srv-a"}).to_bytes())
-    extra = vms_routes(media=True, ctl=ctl)
-    h = types.SimpleNamespace(headers={}, client_address=("10.0.0.1", 0))
-    assert extra(h, "GET", "/timeline/1", {"from": str(t - 60), "to": str(t)}) == (200, [])
-    status, rep = extra(h, "GET", "/segment", {"unit": "vms/1", "from": str(t - 60), "to": str(t)})
-    assert status == 200 and rep["playback"].startswith("http://w-1/play/1?"), rep
-    assert "vms/heartbeats/w-1#coverage" in FIELDS.bad
-    assert extra(h, "GET", "/timeline/1", {"from": "yesterday"})[0] == 400       # a word in the query: 400, not no reply
+    base = f"http://127.0.0.1:{door.server_address[1]}/door"
+
+    def get(path):
+        try:
+            with urllib.request.urlopen(base + path) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+    try:
+        assert get(f"/timeline/1?from={t - 60}&to={t}") == (200, [])                 # no device spans
+        status, rep = get(f"/segment/1?from={t - 60}&to={t}")
+        assert status == 404 and rep["error"] == "no device archive", rep            # held to the ceiling, and answered
+        assert "vms/heartbeats/w-1#coverage" in FIELDS.bad
+        assert get("/timeline/1?from=yesterday")[0] == 400                          # a word in the query: 400, not no reply
+    finally:
+        door.shutdown()
     _forget_garbled()
 
 
@@ -188,9 +202,14 @@ def test_a_body_that_is_no_json_object_is_refused_on_every_write_route():
                 assert _raw(base, method, path, data, f"k{n}") == 400, (method, path, data[:12])
         assert _raw(base, "POST", "/marks", json.dumps({"cam": "seven"}).encode(), "km") == 400
         assert [r["id"] for r in ctl.units()] == [1]
-        assert _raw(base, "GET", "/export/1?from=nan&to=60", None) == 400
     finally:
         srv.shutdown()
+    from tests.conftest import page_door
+    pd = page_door(box)
+    try:
+        assert _raw(pd.base, "GET", "/door/export/1?from=nan&to=60", None) == 400   # a recording's export, at its holder's door
+    finally:
+        pd.shutdown()
 
 
 def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_labels_and_an_offer_that_is_no_text_too():
@@ -198,9 +217,10 @@ def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_la
     JSON reads) and `PUT /servers/<s>/labels` (nested) dropped the connection with no answer — they read the body bare,
     beside the routes the tenth round had closed. Through `object_body` now: 400, in words, nothing written. The sibling
     of the same class: an offer of a live view that is no text (bytes that are not UTF-8), at the console and at the
-    gateway, was the same dropped connection; 400 now."""
+    gateway, was the same dropped connection; 400 now — at the gateway, where the page makes its offer since the
+    boundary's step 6."""
     from tests.test_console_gate import _console
-    from tests.test_lesson8_live import OFFER, _box as _live_box, _gateway
+    from tests.test_lesson8_live import OFFER, _box as _live_box, _gateway, _whep
     box = Box()
     ctl, rec, m, srv, base = _console(box)
     try:
@@ -215,12 +235,11 @@ def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_la
     box, ctl, live_ctl, w, srv, base = _live_box()
     try:
         g = _gateway(box, "g-1")
-        assert _raw(base, "POST", "/whep/1", OFFER.encode()) == 503    # the first offer makes the stream: placed next
+        assert _whep(base, 1)[0] == 503                                # the first viewer makes the stream: placed next
         live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
         bad = b"v=0\r\n\xff\xfe\xfa"
-        assert _raw(base, "POST", "/whep/1", bad) == 400               # the console's
         assert _raw(g.url, "POST", "/whep/1", bad) == 400              # the gateway's own
-        assert _raw(base, "POST", "/whep/1", OFFER.encode()) == 201 and len(g.sessions) == 1
+        assert _raw(g.url, "POST", "/whep/1", OFFER.encode()) == 201 and len(g.sessions) == 1
     finally:
         srv.shutdown()
 

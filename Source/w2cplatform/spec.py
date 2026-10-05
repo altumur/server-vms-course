@@ -724,6 +724,10 @@ class SubsystemSpec:
     # their server: `<sub>/requests/free-<server>-<volume> {free, volume, server, at}`, the answer in their heartbeat's
     # `freed: {<volume>: bytes}` (`Resource.relieve`; it was the subsystem's hook the resource called, `free`).
     requests_free: bool = False
+    # `door: {routes: [<route>]}` — what a unit's holder opens to a page itself, the bytes going holder → browser and
+    # never through the console (the boundary's step 6, the owner's decision 1): `/where/<id>` hands out the door —
+    # the holder's `door_url`, a token for these routes (`door.py`). It was the console's `extra`, a subsystem's routes.
+    door_routes: tuple = ()
 
     # Builds the spec from the YAML dict, tolerating absent sections. Field defaults are parsed to their
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
@@ -923,6 +927,8 @@ class SubsystemSpec:
         from . import holds, metrics
         self.metrics = metrics.parse(self.name, d.get("metrics"), self.tables)
         self.holds = holds.parse(self.name, d.get("holds"), tables=self.tables)
+        from .door import parse_routes
+        self.door_routes = parse_routes(f"spec {self.name}", d.get("door"))
         req = d.get("requests")
         if req is not None:
             known = {"free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal"}

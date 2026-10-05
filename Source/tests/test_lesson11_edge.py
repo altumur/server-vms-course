@@ -21,7 +21,7 @@ from w2cplatform.spec import Refused, SpecController
 
 from vms.archive import subtract
 from vms.config import DET_SPEC, LIVE_SPEC, REC_SPEC, SPEC, device_of, channel_of
-from vms.console import device_spans, serve
+from vms.console import serve
 from vms.controller import VmsController
 from vms.worker import FakeActuator, FakeDevice, VmsWorker
 from tests.conftest import Box, door, footage, recorder
@@ -137,34 +137,31 @@ def test_the_devices_ceiling_is_the_devices_not_the_workers():
         srv.shutdown()
 
 
-def test_the_console_draws_the_device_only_where_we_have_nothing():
-    """Our footage wins; the device's coverage is drawn in the holes. The same
-    subtraction the recorder fetches by — one rule, two uses. A span that exists only
-    on the device is the one that will disappear when the ring wraps."""
+def test_the_device_says_what_it_holds_and_yields_to_our_footage():
+    """Our footage wins; the device's coverage is drawn in the holes. The same subtraction the recorder fetches by —
+    one rule, two uses. A span that exists only on the device is the one that will disappear when the ring wraps.
+    Since the boundary's step 6 the camera's holder says it at its own door (`/door/timeline/<cam>`, handed out with
+    the camera's place), as a span that YIELDS — the page draws it only where no recording's span is — and plays it
+    from the same door (`/door/segment/<cam>`)."""
+    import json
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000.0, 7)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
-
-    ours = [{"start": 200.0, "end": 400.0}, {"start": 600.0, "end": 700.0}]
-    spans = device_spans(box.objects, 1, ours, 0.0, 1000.0, box.wall())
-    assert [(s["start"], s["end"]) for s in spans] == [(0.0, 200.0), (400.0, 600.0), (700.0, 1000.0)]
-    assert all(s["source"] == "device" and s["media"] is None for s in spans)
-
-    # and the whole timeline over HTTP: ours and the device's, sorted, in one answer
+    door = w.serve_playback("127.0.0.1", 0)
+    w.heartbeat_once()
     srv = serve(con, box.archive, port=0, wall=box.wall)
     try:
-        port = srv.server_address[1]
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/timeline/1?from=0&to=1000") as r:
-            import json
-            got = json.loads(r.read())
-        assert [s["source"] for s in got] == ["device"]                     # nothing of ours yet: all of it is theirs
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/segment?unit=vms/1&from=10&to=20") as r:
-            import json
-            assert json.loads(r.read())["playback"] == "http://srv-1:8083/playback/1?from=10&to=20"
+        where = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/where/1").read())
+        d = where["door"]
+        assert d["url"] == f"http://127.0.0.1:{door.server_address[1]}/door" and d["routes"] == ["timeline", "segment"]
+        got = json.loads(urllib.request.urlopen(f"{d['url']}/timeline/1?from=0&to=1000").read())
+        assert [(s["start"], s["end"], s["yields"], s["media"]) for s in got] == [(0.0, 1000.0, True, "segment/1")]
+        got = json.loads(urllib.request.urlopen(f"{d['url']}/timeline/1?from=100&to=300").read())
+        assert [(s["start"], s["end"]) for s in got] == [(100.0, 300.0)]   # what was asked, of what it holds
     finally:
-        srv.shutdown()
+        srv.shutdown(); door.shutdown()
 
 
 def _ours(box, r, unit, spans, step: float = 10.0):
@@ -370,7 +367,6 @@ def test_two_recordings_of_one_camera_are_a_yaml_edit():
     would not pass, and until the unit-keyed tree it would not have."""
     from w2cplatform.contract import Heartbeat
     from vms.config import REC_SPEC
-    from vms.console import recordings_of
     from tests.conftest import store
 
     box, ctl, con, con_vars = _box()
@@ -403,9 +399,11 @@ def test_two_recordings_of_one_camera_are_a_yaml_edit():
     assert st.units() == ["1-backup", "1-main"]                                    # two recordings, not one
     assert len(st.coverage("1-main")) == 1 and len(st.coverage("1-backup")) == 1
 
-    # and the camera's timeline is both of them: the console resolves camera -> recordings
-    assert sorted(recordings_of(rec, 1)) == ["1-backup", "1-main"]
-    spans = [sp for unit in recordings_of(rec, 1) for sp in st.timeline(unit, 0, 1e12)]
+    # and the camera's timeline is both of them: the page reads the recordings ABOUT the camera (their `cam`), each
+    # at its holder's door
+    recordings_of = lambda cam: sorted(r["id"] for r in rec.units() if r["cam"] == str(cam))   # noqa: E731
+    assert recordings_of(1) == ["1-backup", "1-main"]
+    spans = [sp for unit in recordings_of(1) for sp in st.timeline(unit, 0, 1e12)]
     assert len(spans) == 2
 
     # retention is per recording, because the row is per recording
@@ -420,7 +418,7 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     so long, and why the first `7-cloud` would have found all four at once. They are reachable
     now, in the shipped spec; here each one answers instead of raising."""
     import json
-    from vms.console import vms_routes as console_routes
+    from vms.footage import footage_routes
     from vms.recworker import archive_routes
     from tests.conftest import store
 
@@ -447,11 +445,12 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     status, body, _ = archive_routes(lambda: st, box.wall)("/timeline/1-backup")
     assert status == 200 and json.loads(body)["unit"] == "1-backup"
 
-    # 2. the console's timeline: the CAMERA's id, and both of its recordings under it
+    # 2. a recording's timeline at its holder's door (the console's `/timeline/<cam>` until the boundary's step 6): a
+    # named recording, read from every recorder's archive door
     srv = door(box, st, "r-door", "srv-1")
     try:
-        status, spans = console_routes(True, None, ctl, rec)(None, "GET", "/timeline/1", {})
-        assert status == 200 and len(spans) == 2
+        status, spans = footage_routes(box.objects, box.vars, box.wall)(None, "GET", "/door/timeline/1-backup", {})
+        assert status == 200 and len(spans) == 1 and spans[0]["recording"] == "1-backup"
     finally:
         srv.shutdown()
 
@@ -582,10 +581,9 @@ def test_one_camera_written_to_two_archives_is_two_recordings_on_one_box():
     assert rec.unit("7")["cam"] == rec.unit("7-cloud")["cam"] == "7"            # one camera behind both
     assert rec.unit("7")["retention_days"] == 7 and rec.unit("7-cloud")["retention_days"] == 365
 
-    # the console still answers "where is camera 7's footage" — with both of them, and the page
+    # "where is camera 7's footage" is still both of them — the recordings about it — and the page
     # composed those two names from the one field the operator filled in: the archive.
-    from vms.console import recordings_of
-    assert sorted(recordings_of(rec, 7)) == ["7", "7-cloud"]
+    assert sorted(r["id"] for r in rec.units() if r["cam"] == "7") == ["7", "7-cloud"]
 
     # the simple installation is untouched: with one archive the name IS the camera, and the row,
     # the tree and every path in the lessons read exactly as they did before.

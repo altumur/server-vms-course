@@ -1157,6 +1157,9 @@ class RecWorker(VmsWorker):
                 "closed": ",".join(self.closed),
                 # Lesson 26: the door this recorder serves its archive at, for a primary backfilling from it.
                 **({"archive_url": self.archive_url} if self.archive_url else {}),
+                # …and the door a page reads a recording at (`door_url`, the platform's word: `/where` hands it out with a
+                # token for the spec's `door: {routes}`; `vms/footage.py`) — the same server, under `/door/`
+                **({"door_url": self.archive_url + "/door"} if self.archive_url else {}),
                 # Lesson 16: what a clean fetch found nowhere — ours missing it, the source missing it too.
                 # A number the operator wants on its own: "of what we lost, 519 s were not on the card either".
                 "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans)),
@@ -2508,8 +2511,13 @@ class RecWorker(VmsWorker):
         return self._epoch_at.get(str(unit))
 
     # This recorder's archive, served: `/timeline/<unit>` and `/samples/<unit>?from&to` over the volume THIS
-    # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; the console
-    # reads every recorder's to draw a camera's timeline and play it; any recorder may.
+    # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; a recording's holder
+    # reads every recorder's to answer a page; any recorder may.
+    #
+    # …AND A PAGE'S DOOR BESIDE IT (the boundary's step 6: the bytes do not go through the console): `/door/timeline/
+    # <recording>` and `/door/export/<recording>` (`vms/footage.py`), each opened by the token the console gave with the
+    # recording's place, for this recorder and that recording (`w2cplatform/door.py`, `DoorKeeper`); `OPTIONS` answered
+    # for a page of a console's origin (`DOOR_ORIGINS`). Who read what is this recorder's journal, `audit/door-<name>`.
     #
     # Bounded like every door (the review's sixth pass: the protections were the console's alone): so many
     # connections at once and so many to one address, the next answered 503 (`door_server`); the request line and
@@ -2518,15 +2526,33 @@ class RecWorker(VmsWorker):
     def serve_archive(self, host: str = "127.0.0.1", port: int = 0):
         from http.server import BaseHTTPRequestHandler
         from w2cplatform.console import Deadlined, door_server
+        from urllib.parse import parse_qs, urlsplit
+        from w2cplatform.door import DoorKeeper
+        from w2cplatform.journal import Journal
+        from .footage import answer, footage_routes
         routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
                                 self._kept_of, self._held_since)
+        keeper = DoorKeeper(self.name, self.wall)
+        page = footage_routes(self.objects, self.vars, self.wall, Journal(self.archive_root, f"door-{self.name}", self.wall),
+                              keeper, self.eyes)
 
         class H(Deadlined, BaseHTTPRequestHandler):
+            # A socket that reads nothing is let go (`CONSOLE_TIMEOUT`, the timeout of every door a page reaches — the
+            # review's fourth pass: two clients that asked for an export and read nothing held both its slots)
+            timeout = float(os.environ.get("CONSOLE_TIMEOUT", 30.0))
+
             def log_message(self, *a):
                 pass
 
             def do_GET(self):
+                if self.path.startswith("/door/"):
+                    u = urlsplit(self.path)
+                    got = page(self, "GET", u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
+                    return answer(self, got if got is not None else (404, {"error": "no such path"}), keeper.headers(self))
                 send_route(self, routes(self.path))
+
+            def do_OPTIONS(self):
+                keeper.preflight(self)
 
         srv = door_server((host, port), H)
         threading.Thread(target=srv.serve_forever, daemon=True, name="archive-door").start()
@@ -2991,7 +3017,7 @@ class RecWorker(VmsWorker):
         import hashlib
         from w2cplatform.events import ALARM, EventLog
         from . import keeps
-        from .console import recorder_doors
+        from .footage import recorder_doors
         if not self.incidents or self.store is None:
             return {}
         now = self.wall() if now is None else now

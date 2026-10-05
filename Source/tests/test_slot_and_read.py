@@ -13,7 +13,7 @@ from vms.config import SPEC
 from vms.console import serve
 from vms.controller import VmsController
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box, door, footage, recorder, store
+from tests.conftest import Box, door, footage, page_door, recorder, store
 
 
 def test_a_slot_a_worker_has_to_make_is_named_after_its_kind():
@@ -39,8 +39,8 @@ def test_a_slot_a_worker_has_to_make_is_named_after_its_kind():
 
 
 def test_archive_read_says_what_left_and_the_digest_of_what_left():
-    """An export is an interval turned into an MP4 (`/export/<cam>`), and the line `archive.read` is written
-    AFTER it left, with the sha256 of the bytes — what whoever holds the file compares against. The same
+    """An export is an interval turned into an MP4 (`/door/export/<recording>` at the recording's holder since the
+    boundary's step 6; it was the console's `/export/<cam>`), and the line `archive.read` is written AFTER it left, with the sha256 of the bytes — what whoever holds the file compares against. The same
     person asking for the same interval within a minute is one line; another person is another, with the same
     digest: the same frames make the same file."""
     box = Box()
@@ -49,11 +49,11 @@ def test_archive_read_says_what_left_and_the_digest_of_what_left():
     t = box.wall()
     footage(st, "7", 3, t - 3600, t - 3000)
     dsrv = door(box, st)
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
-    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    srv = page_door(box)
+    base = srv.base
 
     def get(user="anna"):
-        req = urllib.request.Request(f"{base}/export/7?from={t - 3600}&to={t - 3300}", headers={"X-User": user})
+        req = urllib.request.Request(f"{base}/door/export/7?from={t - 3600}&to={t - 3300}", headers={"X-User": user})
         with urllib.request.urlopen(req) as r:
             return r.status, r.headers.get("Content-Type"), r.read()
 
@@ -68,7 +68,7 @@ def test_archive_read_says_what_left_and_the_digest_of_what_left():
 
     def _said():
         return [(e["user"], e["status"], e["bytes"], e.get("sha256"))
-                for b in buckets_under(box.archive, "audit", "console", 600)
+                for b in buckets_under(box.archive, "audit", "door-r-page", 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
 
     try:
@@ -102,8 +102,8 @@ def test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_
     for smp in fake_samples(t + 300, t + 600, step=10, size=4096):    # the survivor's e2, in volume b — bigger frames
         new.put("7", 2, smp)
     new.finish("7", 2); new.seal()
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
-    url = f"http://127.0.0.1:{srv.server_address[1]}/export/7?rec=7&from={t}&to={t + 600}"
+    srv = page_door(box)
+    url = f"{srv.base}/door/export/7?from={t}&to={t + 600}"
     da = door(box, old, "r-a", "srv-a")
     try:
         only_old = len(urllib.request.urlopen(url).read())
@@ -123,18 +123,18 @@ def test_an_export_is_read_a_minute_at_a_time_and_written_as_it_is_made():
     all of it — an hour of a camera, twice, in the console's memory. It reads each stretch in pieces of
     `EXPORT_PIECE`, cut at a key frame, and writes fragments as they come: the same file, byte for byte, as the one
     made in one piece, its sha256 in the journal; asked of the door ten times instead of once."""
-    from vms import console as vc
+    from vms import footage as vc
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     t = box.wall() - 3600
     st = store("a")
     footage(st, "7", 1, t, t + 600, step=1)
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    srv = page_door(box)
     da = door(box, st, "r-a", "srv-a")
     asked = []
     real = vc._door
     vc._door = lambda url, timeout, *limit: (asked.append(url), real(url, timeout, *limit))[1]
-    url = f"http://127.0.0.1:{srv.server_address[1]}/export/7?rec=7&from={t}&to={t + 600}"
+    url = f"{srv.base}/door/export/7?from={t}&to={t + 600}"
     try:
         piece = vc.EXPORT_PIECE
         vc.EXPORT_PIECE = 1e9
@@ -149,7 +149,7 @@ def test_an_export_is_read_a_minute_at_a_time_and_written_as_it_is_made():
         assert r.headers.get("Content-Length") is None and r.headers["Content-Type"] == "video/mp4"   # written as it is made
         assert streamed == whole and len(streamed) > 600 * 200                                       # the same file
         assert sum("/samples/" in u for u in asked) >= 10                                            # a minute at a time
-        digests = [json.loads(line).get("sha256") for b in buckets_under(box.archive, "audit", "console", 600)
+        digests = [json.loads(line).get("sha256") for b in buckets_under(box.archive, "audit", "door-r-page", 600)
                    for line in open(os.path.join(box.archive, b.path)) if json.loads(line)["kind"] == "archive.read"]
         assert hashlib.sha256(streamed).hexdigest() in digests
     finally:
@@ -159,10 +159,11 @@ def test_an_export_is_read_a_minute_at_a_time_and_written_as_it_is_made():
 def test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_when_to_come_back():
     """The review's third pass, major: an export holds its interval in memory, an hour of a camera is gigabytes, and
     nothing bounded how many ran at once — two or three from anybody with `view` took the console down. Past
-    `EXPORTS_AT_ONCE` the next is 503 with `Retry-After`; when one finishes, the next is served."""
+    `EXPORTS_AT_ONCE` the next is 503 with `Retry-After`; when one finishes, the next is served — on each holder's
+    door now, as it was on the console."""
     import threading
     from w2cplatform.contract import Heartbeat
-    from vms import console as vc
+    from vms import footage as vc
     from vms.config import REC_SPEC
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
@@ -174,22 +175,23 @@ def test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_whe
         entered.release(); held.wait(10)
         raise OSError("not answering")
     door_, vc._door = vc._door, slow_door
-    route = vc.vms_routes(True, None, ctl, None)
+    from tests.conftest import ByName
+    route = vc.footage_routes(box.objects, box.vars, box.wall, keeper=ByName())
     t = box.wall()
     out = []
     class As:                                                        # a caller, by name: one person makes one export at a time
         def __init__(self, who): self.headers = {"X-User": who}
     try:
-        busy = [threading.Thread(target=lambda i=i: out.append(route(As(f"u{i}"), "GET", "/export/7", {"from": t - 60, "to": t})[0]))
+        busy = [threading.Thread(target=lambda i=i: out.append(route(As(f"u{i}"), "GET", "/door/export/7", {"from": t - 60, "to": t})[0]))
                 for i in range(vc.EXPORTS_AT_ONCE)]
         [b.start() for b in busy]
         for _ in busy:
             assert entered.acquire(timeout=5)                         # both in flight
-        status, body, headers = route(None, "GET", "/export/7", {"from": t - 60, "to": t})
+        status, body, headers = route(As("w"), "GET", "/door/export/7", {"from": t - 60, "to": t})
         assert status == 503 and json.loads(body)["error"] == "busy" and ("Retry-After", "5") in headers
         held.set(); [b.join(5) for b in busy]
         assert out == [404] * vc.EXPORTS_AT_ONCE                     # nothing recorded there: the door did not answer
-        assert route(None, "GET", "/export/7", {"from": t - 60, "to": t})[0] == 404   # a place again
+        assert route(As("w"), "GET", "/door/export/7", {"from": t - 60, "to": t})[0] == 404   # a place again
     finally:
         vc._door = door_; held.set()
 
@@ -214,25 +216,25 @@ def _export_box(size=256):
 
 
 def _journal(box):
-    return [json.loads(line) for b in buckets_under(box.archive, "audit", "console", 600)
+    return [json.loads(line) for b in buckets_under(box.archive, "audit", "door-r-page", 600)
             for line in open(os.path.join(box.archive, b.path))]
 
 
-def test_an_export_of_a_camera_with_two_recordings_and_no_rec_is_both_of_them():
+def test_each_recording_of_a_camera_is_an_export_of_its_own():
     """The review's fourth pass, major: `GET /export/7` with recordings `7` and `7-cloud` and no `rec` broke the
-    connection — the merge ran a generator that looked every recording's stretches up in the LAST recording's map
-    (`KeyError`), and there was no reply and no line. Each recording's stream binds its own name and map now: the
-    file is both recordings' minutes, merged by time, and the journal names both."""
+    connection — the merge looked every recording's stretches up in the LAST recording's map. Since the boundary's step
+    6 an export is ONE recording's, at its holder's door (`/door/export/<recording>`): the camera's two recordings are
+    two exports, each its own minutes, and each a line of its own."""
     box, ctl, rec, st, t = _export_box()
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    srv = page_door(box)
     da = door(box, st, "r-a", "srv-a")
-    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    base = srv.base
     try:
-        whole = urllib.request.urlopen(f"{base}/export/7?from={t}&to={t + 600}").read()
-        first = urllib.request.urlopen(f"{base}/export/7?rec=7&from={t}&to={t + 600}").read()
-        second = urllib.request.urlopen(f"{base}/export/7?rec=7-cloud&from={t}&to={t + 600}").read()
-        assert whole[4:8] == b"ftyp" and len(whole) > max(len(first), len(second)) + 250 * 200   # both halves
-        assert f"rec/7,7-cloud/{t:.0f}-{t + 600:.0f}" in [e.get("media") for e in _journal(box) if e["kind"] == "archive.read"]
+        first = urllib.request.urlopen(f"{base}/door/export/7?from={t}&to={t + 600}").read()
+        second = urllib.request.urlopen(f"{base}/door/export/7-cloud?from={t}&to={t + 600}").read()
+        assert first[4:8] == second[4:8] == b"ftyp"
+        media = [e.get("media") for e in _journal(box) if e["kind"] == "archive.read"]
+        assert f"rec/7/{t:.0f}-{t + 600:.0f}" in media and f"rec/7-cloud/{t:.0f}-{t + 600:.0f}" in media
     finally:
         da.shutdown(); srv.shutdown()
 
@@ -249,7 +251,7 @@ def test_an_honest_slow_client_gets_the_whole_export_and_a_cut_one_is_seen_as_cu
     box, ctl, rec, st, t = _export_box(size=8192)                    # some 2.5 MB for recording 7's five minutes
     was = {k: os.environ.get(k) for k in ("EXPORT_GRACE", "EXPORT_MIN_RATE")}
     os.environ["EXPORT_GRACE"], os.environ["EXPORT_MIN_RATE"] = "0.3", "500000"
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    srv = page_door(box)
     da = door(box, st, "r-a", "srv-a")
     port = srv.server_address[1]
 
@@ -257,7 +259,7 @@ def test_an_honest_slow_client_gets_the_whole_export_and_a_cut_one_is_seen_as_cu
         s = socket.socket()
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192)
         s.connect(("127.0.0.1", port))
-        s.sendall(f"GET /export/7?rec=7&from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: {who}\r\n\r\n".encode())
+        s.sendall(f"GET /door/export/7?from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: {who}\r\n\r\n".encode())
         data, began = b"", time.monotonic()
         s.settimeout(10)
         while True:
@@ -294,9 +296,9 @@ def test_every_download_cut_off_after_real_footage_is_a_line_of_its_own():
     is a player's scrub, under `READ_NOTE_BYTES`; two cut downloads past it are two lines, each with its bytes."""
     import socket
     import time
-    from vms import console as vc
+    from vms import footage as vc
     box, ctl, rec, st, t = _export_box(size=32768)                   # some 10 MB for recording 7's five minutes
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    srv = page_door(box)
     da = door(box, st, "r-a", "srv-a")
     port = srv.server_address[1]
 
@@ -308,7 +310,7 @@ def test_every_download_cut_off_after_real_footage_is_a_line_of_its_own():
     def cut_after(n: int) -> None:
         for _ in range(200):
             s = socket.create_connection(("127.0.0.1", port))
-            s.sendall(f"GET /export/7?rec=7&from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: hana\r\n\r\n".encode())
+            s.sendall(f"GET /door/export/7?from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: hana\r\n\r\n".encode())
             got, head = 0, b""
             while got < n:
                 b = s.recv(65536)
@@ -352,7 +354,7 @@ def test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one
     box, ctl, rec, st, t = _export_box(size=32768)                   # some 20 MB: more than any socket's buffers hold
     was = {k: os.environ.get(k) for k in ("CONSOLE_TIMEOUT", "EXPORT_GRACE", "EXPORT_MIN_RATE")}
     os.environ["CONSOLE_TIMEOUT"] = "1"
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    srv = page_door(box)
     da = door(box, st, "r-a", "srv-a")
     port = srv.server_address[1]
 
@@ -360,11 +362,11 @@ def test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one
         s = socket.socket()
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
         s.connect(("127.0.0.1", port))
-        s.sendall(f"GET /export/7?from={t}&to={t + 600} HTTP/1.1\r\nHost: x\r\nX-User: {who}\r\n\r\n".encode())
+        s.sendall(f"GET /door/export/7?from={t}&to={t + 600} HTTP/1.1\r\nHost: x\r\nX-User: {who}\r\n\r\n".encode())
         return s
 
     def export(who):
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/export/7?rec=7&from={t}&to={t + 60}", headers={"X-User": who})
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/door/export/7?from={t}&to={t + 60}", headers={"X-User": who})
         try:
             with urllib.request.urlopen(req) as r:
                 return r.status, r.read()
@@ -398,7 +400,7 @@ def test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one
         time.sleep(1.5)
         os.environ["EXPORT_GRACE"], os.environ["EXPORT_MIN_RATE"] = "0", "1e12"   # …and a client slower than the floor is cut
         import http.client
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/export/7?rec=7&from={t}&to={t + 60}", headers={"X-User": "erin"})
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/door/export/7?from={t}&to={t + 60}", headers={"X-User": "erin"})
         with urllib.request.urlopen(req) as r:
             assert r.status == 200 and r.headers.get("Transfer-Encoding") == "chunked"
             try:
@@ -427,9 +429,9 @@ def test_a_door_that_stops_answering_after_the_first_byte_breaks_the_export_and_
     carries no digest."""
     import http.client
     import time
-    from vms import console as vc
+    from vms import footage as vc
     box, ctl, rec, st, t = _export_box(size=8192)                    # five pieces of a minute for recording 7
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    srv = page_door(box)
     da = door(box, st, "r-a", "srv-a")
     real, asked = vc._door, []
 
@@ -442,7 +444,7 @@ def test_a_door_that_stops_answering_after_the_first_byte_breaks_the_export_and_
     vc._door = gone_after_two
     try:
         c = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=30)
-        c.request("GET", f"/export/7?rec=7&from={t}&to={t + 300}", headers={"X-User": "ivan"})
+        c.request("GET", f"/door/export/7?from={t}&to={t + 300}", headers={"X-User": "ivan"})
         r = c.getresponse()
         assert r.status == 200 and r.getheader("Transfer-Encoding") == "chunked"
         try:
@@ -469,7 +471,7 @@ def test_a_recorders_door_cut_between_two_sequences_is_an_error_to_its_readers_n
     stream ended whole (`send_route`), and both readers take an answer without it for what it is."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-    from vms import console as vc
+    from vms import footage as vc
     from vms.recworker import RecWorker, send_route
     from vms.worker import fake_samples
     first = b"".join(s.encode() for s in fake_samples(1000.0, 1002.0))          # one whole sequence
@@ -514,7 +516,7 @@ def test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one
     out of them (`framed`)."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-    from vms import console as vc
+    from vms import footage as vc
     from vms.recworker import RecWorker
     from vms.worker import fake_samples
     frames = b"".join(s.encode() for s in fake_samples(1000.0, 1004.0))
@@ -565,16 +567,17 @@ def test_one_recordings_torn_epoch_row_does_not_take_the_cameras_timeline_away()
     """The review's sixth pass, minor: a `rec/epoch/<recording>` row that does not parse was a `ValueError` out of the
     timeline's handler — the page got no timeline of the camera at all, every other recording of it included. Read as
     `SpecConsole.epochs_of` reads it: that recording's spans stand as their door marked them, the others are fenced
-    by their own rows."""
+    by their own rows (each recording's timeline at its holder's door since the boundary's step 6)."""
     box, ctl, rec, st, t = _export_box()
-    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    srv = page_door(box)
     da = door(box, st, "r-a", "srv-a")
     try:
         box.vars.put("rec/epoch/7", {"epoch": "not a number"})
         box.vars.put("rec/epoch/7-cloud", {"epoch": "2"})
-        with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/timeline/7?from={t}&to={t + 600}") as r:
-            spans = json.load(r)
-        by = {s["recording"]: s for s in spans}
+        by = {}
+        for unit in ("7", "7-cloud"):
+            with urllib.request.urlopen(f"{srv.base}/door/timeline/{unit}?from={t}&to={t + 600}") as r:
+                by.update({s["recording"]: s for s in json.load(r)})
         assert set(by) == {"7", "7-cloud"}                            # both drawn
         assert by["7"]["fenced"] is False and by["7-cloud"]["fenced"] is True   # …the torn one by its door's word, the other by its row
     finally:
@@ -612,17 +615,17 @@ def test_a_span_a_door_answered_that_does_not_parse_costs_that_door_and_not_the_
     threading.Thread(target=bad.serve_forever, daemon=True).start()
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-bad"), Heartbeat("r-bad", box.wall(), [], {
         "server": "srv-9", "archive_url": f"http://127.0.0.1:{bad.server_address[1]}", "volume": "other"}).to_bytes())
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
-    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    srv = page_door(box)
+    base = srv.base
     try:
-        with urllib.request.urlopen(f"{base}/timeline/7?from={t - 3600}&to={t - 3000}") as r:
+        with urllib.request.urlopen(f"{base}/door/timeline/7?from={t - 3600}&to={t - 3000}") as r:
             tl = json.loads(r.read())
         assert tl["unreachable"] == ["r-bad"] and tl["segments"] and all(s["recorder"] == "r-door" for s in tl["segments"])
-        with urllib.request.urlopen(f"{base}/export/7?from={t - 3600}&to={t - 3300}") as r:
+        with urllib.request.urlopen(f"{base}/door/export/7?from={t - 3600}&to={t - 3300}") as r:
             assert r.status == 200 and r.read()[4:8] == b"ftyp" and r.headers.get("X-Archive-Unreachable") == "r-bad"
         was, rows.ANSWER_MAX = rows.ANSWER_MAX, 64                    # an answer past the bound: not read, that door silent
         try:
-            with urllib.request.urlopen(f"{base}/timeline/7?from={t - 3600}&to={t - 3000}") as r:
+            with urllib.request.urlopen(f"{base}/door/timeline/7?from={t - 3600}&to={t - 3000}") as r:
                 tl = json.loads(r.read())
         finally:
             rows.ANSWER_MAX = was
@@ -659,13 +662,13 @@ def test_a_door_whose_timeline_is_brackets_past_the_parsers_depth_is_a_door_that
     threading.Thread(target=deep.serve_forever, daemon=True).start()
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-deep"), Heartbeat("r-deep", box.wall(), [], {
         "server": "srv-9", "archive_url": f"http://127.0.0.1:{deep.server_address[1]}", "volume": "other"}).to_bytes())
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
-    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    srv = page_door(box)
+    base = srv.base
     try:
-        with urllib.request.urlopen(f"{base}/timeline/7?from={t - 3600}&to={t - 3000}") as r:
+        with urllib.request.urlopen(f"{base}/door/timeline/7?from={t - 3600}&to={t - 3000}") as r:
             tl = json.loads(r.read())
         assert tl["unreachable"] == ["r-deep"] and tl["segments"] and all(s["recorder"] == "r-door" for s in tl["segments"])
-        with urllib.request.urlopen(f"{base}/export/7?from={t - 3600}&to={t - 3300}") as r:
+        with urllib.request.urlopen(f"{base}/door/export/7?from={t - 3600}&to={t - 3300}") as r:
             assert r.status == 200 and r.read()[4:8] == b"ftyp" and r.headers.get("X-Archive-Unreachable") == "r-deep"
     finally:
         srv.shutdown(); dsrv.shutdown(); deep.shutdown()

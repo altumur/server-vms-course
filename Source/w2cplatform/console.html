@@ -101,8 +101,10 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 ## Routes the page uses
 - `GET /spec`, `GET /<rows>`, `GET /metrics`, `GET /where/<id>` — the platform console.
 - `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
-- `GET /timeline/<id>?from&to`, and each span's `media` with `from&to` (the VMS: `/export/<id>?rec=…`) — only
-  when `spec.media`; registered by the subsystem.
+- the holders' doors, only when `spec.media` (the boundary's step 6: the bytes do not go through the console): `GET
+  <base>/where/<id>` → `door: {url, token, expires, routes}` for the unit and for every unit of a mounted subsystem
+  ABOUT it whose spec declares `door: {routes}`; then `<url>/<route>/<id>` at the holder, the token as a header (a
+  media element's `src`: `?t=`).
 - `GET /events?from&to&unit=<spec.name>/<id>` — the resources' event databases, merged by the console, tolerated when absent;
   `POST /marks` — the operator's event; `GET /servers`, `GET /mounts` — the servers as placement sees them, and what this process fronts.
 - `POST /servers/<name>/decommission {why}` — a machine gone for good (on the Mount, as `/drain`): 409 while the server
@@ -405,9 +407,28 @@ async function select(id) {
   if (spec.media && streams) await loadTimeline();
 }
 
-// -- media: only when the spec says so (the subsystem registered /timeline and its media route) ------
-// `GET /timeline/<current>?from&to` (the subsystem's route). Accepts a plain list (one box) or `{segments,
-// unreachable, note}` (a cluster), showing `note` in `#note`. Normalises spans; tries `GET
+// -- the holders' doors (the boundary's step 6: what a unit's holder serves, it serves the page itself) ----
+// `GET <base>/where/<id>` hands out the door with the place: `{url, token, expires, routes}`, or null while nobody
+// holds the unit. A read goes to `<url>/<route>/<id>` with the token as a header; a media element's `src` carries it
+// as `?t=`. A token lives two minutes: a door is asked for again when its token is about to end.
+let fronted = null;                                                   // `/mounts`: what this process fronts, with each spec
+async function subsAbout() {
+  if (!fronted) { try { fronted = (await (await fetch('/mounts')).json()).mounts || {}; } catch (_) { fronted = {}; } }
+  return Object.entries(fronted).filter(([, s]) => s.about && s.about.sub === spec.name && s.door);
+}
+async function doorOf(base, id) {
+  try { return (await (await fetch(`${base}/where/${encodeURIComponent(id)}`)).json()).door || null; } catch (_) { return null; }
+}
+const bearer = d => d && d.token ? { Authorization: `Bearer ${d.token}` } : {};
+async function freshDoor(m) {                                         // a span's door, asked again near its token's end
+  if (m.door.expires && Date.now() / 1000 > m.door.expires - 15) m.door = (await doorOf(m.base, m.id)) || m.door;
+  return m.door;
+}
+
+// -- media: only when the spec says so — the spans every holder's door says for this unit ---------------------
+// For the unit itself (its holder, when its spec declares a door with spans) and for every row of a mounted
+// subsystem about it whose spec does: `<door>/<route>/<id>?from&to`. Accepts a plain list or `{segments,
+// unreachable, note}`, showing the notes in `#note`. Normalises spans; tries `GET
 // /events?from&to&unit=<spec.name>/<current>` and ignores a failure (503 without an index). Computes the visible range:
 // the window if set, else from the earliest span/event (or now − 1 h) to the latest (or now). Draws each
 // span as a `div.span` positioned by percentage — `events-only` when it has no media, `fenced` when fenced
@@ -417,11 +438,38 @@ async function select(id) {
 async function loadTimeline() {
   const now = Date.now() / 1000;
   const [from, to] = window_ || [0, 1e12];
-  const d = await (await fetch(`/timeline/${current}?from=${from}&to=${to}`)).json();
-  const raw = Array.isArray(d) ? d : (d.segments || []);          // one box: a list; a cluster: {segments, unreachable, note}
-  $('#note').textContent = (!Array.isArray(d) && d.note) ? d.note : '';
+  const SPANS = 'timeline';                                        // the route of a door that says what it holds
+  const raw = [], notes = [], asks = [];
+  const ask = async (base, id) => {
+    const door = await doorOf(base, id);
+    if (!door || !door.routes.includes(SPANS)) return;
+    let d;
+    try { const r = await fetch(`${door.url}/${SPANS}/${encodeURIComponent(id)}?from=${from}&to=${to}`, { headers: bearer(door) });
+          if (!r.ok) throw new Error(r.status); d = await r.json(); }
+    catch (_) { notes.push(`the door of ${base || ''}/${id} did not answer`); return; }
+    if (!Array.isArray(d) && d.note) notes.push(d.note);
+    (Array.isArray(d) ? d : (d.segments || [])).forEach(s => raw.push({ ...s, m: s.media ? { base, id, door, path: s.media } : null }));
+  };
+  if (spec.door && spec.door.routes.includes(SPANS)) asks.push(ask('', current));
+  for (const [name, s] of await subsAbout()) {
+    if (!s.door.routes.includes(SPANS)) continue;
+    let rows = [];
+    try { rows = (await (await fetch(`/${name}/${s.rows}`)).json()).configured || []; } catch (_) {}
+    rows.filter(r => String(r[s.about.field]) === String(current)).forEach(r => asks.push(ask(`/${name}`, r.id)));
+  }
+  await Promise.all(asks);
+  // A span its door says YIELDS (`yields: true` — what a holder knows OF and does not hold) is drawn only where no
+  // other span is: cut by every one of them.
+  const solid = raw.filter(s => !s.yields);
+  const holes = (a, b) => { const out = []; let at = a;
+    for (const o of solid.filter(o => o.end > a && o.start < b).sort((x, y) => x.start - y.start)) {
+      if (o.start > at) out.push([at, Math.min(o.start, b)]); at = Math.max(at, o.end); }
+    if (at < b) out.push([at, b]); return out; };
+  raw.splice(0, raw.length, ...solid, ...raw.filter(s => s.yields).flatMap(s => holes(s.start, s.end).map(([a, b]) => ({ ...s, start: a, end: b }))));
+  raw.sort((a, b) => a.start - b.start);
+  $('#note').textContent = notes.join('; ');
   spans = raw.map(s => ({ start: s.start, end: s.end, epoch: s.epoch, fenced: !!s.fenced, events: s.events || 0,
-                          media: s.media ?? null, server: s.server || null, recorder: s.recorder || null }));
+                          media: s.m, server: s.server || null, recorder: s.recorder || null }));
   await fetchEvents(from, to);
   const lo = window_ ? from : Math.min(...spans.map(s => s.start), ...events.map(e => e.t), now - 3600);
   const hi = window_ ? to : Math.max(...spans.map(s => s.end), ...events.map(e => e.t), now);
@@ -597,10 +645,11 @@ function fillEdit(c) {
   if (hasEnabled()) $('#toggle').textContent = c.enabled === false ? 'Enable' : 'Disable';
 }
 
-// What to play a piece by: the span's `media` is a route (`/export/<id>?rec=…`, the subsystem's), asked for the
-// minutes of the piece.
-function segmentURL(s, p) {
-  return `${s.media}${s.media.includes('?') ? '&' : '?'}from=${p.from}&to=${p.to}`;
+// What to play a piece by: the span's `media` is a route of its holder's door, asked for the minutes of the piece,
+// the token in the query — a media element sets no header.
+async function segmentURL(s, p) {
+  const d = await freshDoor(s.media);
+  return `${d.url}/${s.media.path}?from=${p.from}&to=${p.to}${d.token ? '&t=' + encodeURIComponent(d.token) : ''}`;
 }
 
 // One piece at a time, the next when this one ends — a span cut into pieces of at most ten minutes, each an
@@ -627,20 +676,20 @@ function play(i, at) {
 // Pop the next index, outline that span as playing, write the caption (times, epoch, "from <recorder>"), set
 // the video source to `segmentURL` and play. One segment at a time, the next when this one ends; gapless
 // MSE playback of fragmented MP4 is the gateway's job (М12) — the console plays what the archive hands it.
-function next() {
+async function next() {
   if (!queue.length) return;
   stopLive();
   const p = playing = queue.shift(); const i = p.i; const s = spans[i];
   [...$('#timeline').children].forEach((el, j) => el.classList.toggle('playing', j === i));
   $('#playing small').textContent = `${fmt(p.from)} – ${fmt(p.to)} · epoch ${s.epoch}${s.recorder ? ' · from ' + s.recorder : s.server ? ' · from ' + s.server : ''}`;
-  const v = $('#player'); v.src = segmentURL(s, p); v.play().catch(() => {});
+  const v = $('#player'); v.src = await segmentURL(s, p); v.play().catch(() => {});
 }
 $('#player').onended = next;
 
-// -- live: WebRTC through the console's WHEP door. The browser makes an offer; the console creates the
-// fan-out unit on the first viewer, the live controller places it on a gateway, the console proxies the
-// offer there and the gateway answers. Media then flows gateway → browser; the console and the worker
-// carry none of it. A 503 means "not placed yet" — retry a few times, then say so.
+// -- watching now: WebRTC at the door of the subsystem about this unit whose spec says it opens a stream. The page
+// creates the stream's row (its first viewer; somebody watching already is "exists"), waits for its place and door
+// (`/<sub>/where/<id>`), and makes its offer at the door itself, with the token; the answer comes from there and so
+// does the picture. The console carries none of it (the boundary's step 6). Not placed yet — retry a few times.
 let live = null;                                                      // {pc, session, timer, since, seen} while watching
 async function startLive() {
   stopLive();
@@ -648,18 +697,24 @@ async function startLive() {
   pc.addTransceiver('video', { direction: 'recvonly' });
   pc.ontrack = e => { const v = $('#player'); v.src = ''; v.srcObject = e.streams[0]; v.play().catch(() => {}); };
   await pc.setLocalDescription(await pc.createOffer());
-  let r, tries = 0;
+  const OFFER = 'whep';                                             // the route of a door that takes an offer
+  const [name, s] = (await subsAbout()).find(([, s]) => s.door.routes.includes(OFFER)) || [];
+  if (!name) { $('#playing small').textContent = 'nothing here opens a stream'; pc.close(); return; }
+  try { await send('POST', `/${name}/${s.rows}`, { [s.about.field]: current }); } catch (_) {}   // "exists": watched already
+  let r = null, door = null, tries = 0;
   for (;;) {
-    r = await fetch(`/whep/${current}`, { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp });
-    if (r.status !== 503 || ++tries > 8) break;
-    $('#playing small').textContent = 'live: waiting for a gateway…';
-    await new Promise(res => setTimeout(res, 1500));                    // the live controller's next pass
+    door = await doorOf(`/${name}`, current);
+    if (door) r = await fetch(`${door.url}/${OFFER}/${encodeURIComponent(current)}`,
+                              { method: 'POST', headers: { 'Content-Type': 'application/sdp', ...bearer(door) }, body: pc.localDescription.sdp });
+    if ((r && ![404, 503].includes(r.status)) || ++tries > 8) break;
+    $('#playing small').textContent = 'waiting for its place…';
+    await new Promise(res => setTimeout(res, 1500));                    // the controller's next pass, the holder's next look
   }
-  if (r.status !== 201) { let d = {}; try { d = await r.json(); } catch (_) {} $('#playing small').textContent = 'live refused: ' + (d.detail || d.error || r.status); pc.close(); return; }
+  if (!r || r.status !== 201) { let d = {}; try { d = await r.json(); } catch (_) {} $('#playing small').textContent = 'refused: ' + (d.detail || d.error || (r ? r.status : 'nobody holds it')); pc.close(); return; }
   await pc.setRemoteDescription({ type: 'answer', sdp: await r.text() });
-  live = { pc, session: r.headers.get('Location'), since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
+  live = { pc, session: door.url + r.headers.get('Location'), door, since: Date.now() / 1000 - 30, seen: new Set(), timer: null };
   [...$('#timeline').children].forEach(el => el.classList.remove('playing'));
-  $('#playing small').textContent = `live · via ${new URLSearchParams(live.session.split('?')[1]).get('gateway')}`;
+  $('#playing small').textContent = `watching · via ${door.url}`;
   const feed = $('#livefeed'); feed.style.display = 'block'; feed.innerHTML = '<small>live events — what every subsystem observes on this unit while you watch</small>';
   live.timer = setInterval(pollLive, 3000); pollLive();
 }
@@ -684,7 +739,7 @@ async function pollLive() {
 }
 function stopLive() {
   if (!live) return;
-  fetch(live.session, { method: 'DELETE' }).catch(() => {});        // the viewer hangs up; the gateway drops the peer
+  fetch(live.session, { method: 'DELETE', headers: bearer(live.door) }).catch(() => {});   // the viewer hangs up, at the door
   clearInterval(live.timer);
   live.pc.close(); live = null;
   const v = $('#player'); v.srcObject = null;

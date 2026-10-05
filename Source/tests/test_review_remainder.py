@@ -585,22 +585,21 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
 
 
 def test_who_read_the_archive_is_an_event_and_once_a_minute():
-    """Footage that leaves through the console is said: who, which interval, and — the piece having left whole
-    — its sha256 (feedback BI, BU). A whole file is said every time it leaves (the review's fourth pass, minor: the
-    second file of the same minute need not be the first); a part — a player that moved on — once a minute."""
-    from vms.console import serve
-    from vms.controller import VmsController
+    """Footage that leaves is said: who, which interval, and — the piece having left whole — its sha256 (feedback BI,
+    BU). A whole file is said every time it leaves (the review's fourth pass, minor: the second file of the same minute
+    need not be the first); a part — a player that moved on — once a minute. Said by the recording's holder, whose door
+    it leaves through since the boundary's step 6 (`audit/door-<recorder>`), with the name the door token was given to."""
+    from tests.conftest import page_door
     box = Box()
-    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     st = store()
     start = box.wall() - 3600
     footage(st, "7", 3, start, start + 600)
     rec_door = door(box, st)
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    srv = page_door(box)
     port = srv.server_address[1]
 
     def read(user, a, b):
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/export/7?rec=7&from={start + a}&to={start + b}",
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/door/export/7?from={start + a}&to={start + b}",
                                      headers={"X-User": user})
         with urllib.request.urlopen(req) as r:
             return r.read()
@@ -615,8 +614,8 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         return got
 
     def _said():
-        return [(e["user"], e["media"], e["recording"], e.get("sha256"))   # in the journal: `audit/console/…` (feedback BN)
-                for b in buckets_under(box.archive, "audit", "console", 600)
+        return [(e["user"], e["media"], e["recording"], e.get("sha256"))   # in the journal: the door's (feedback BN)
+                for b in buckets_under(box.archive, "audit", "door-r-page", 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
 
     try:
@@ -632,25 +631,31 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
 
 
 def test_the_door_to_a_devices_own_footage_is_said_when_it_is_handed_out():
-    """The review's third pass (Н-B1's remainder, and its minor): `/segment?unit=vms/<id>` hands out the holder's playback
-    door, the footage then goes holder → browser, and nothing said so. The console never sees those bytes; it says
-    what it gave — `archive.read` with `source: device`, who, which camera, which minutes."""
+    """The review's third pass (Н-B1's remainder, and its minor): the console handed out the holder's playback door, the
+    footage then went holder → browser, and nothing said so. Since the boundary's step 6 every holder's door is handed
+    out with the unit's place (`/where/<id>` → `door`) and the console never sees those bytes; it says what it gave —
+    `door.issued`: who, which unit, which holder, which routes, until when — and the door says what was read."""
+    from tests.conftest import door_keys
     from vms.console import serve
     from vms.controller import VmsController
     box = Box()
-    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    box.objects.put(SPEC.sub.heartbeat_key("w-1"),
-                    Heartbeat("w-1", box.wall(), [{"id": "7", "phase": "running", "playback_url": "http://h:1/playback/7"}],
-                              {"server": "srv-1"}).to_bytes())
-    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    with door_keys():
+        con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+        srv = serve(con, box.archive, port=0, wall=box.wall)
     try:
-        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/segment?unit=vms/7&from=100&to=200",
-                                     headers={"X-User": "anna"})
+        cam = con.create_camera({"source": "driverpack://file/7.mp4"})["id"]
+        box.objects.put(SPEC.sub.heartbeat_key("w-1"),
+                        Heartbeat("w-1", box.wall(), [{"id": cam, "phase": "running"}],
+                                  {"server": "srv-1", "capacity": 4, "headroom": 4, "door_url": "http://h:1/door"}).to_bytes())
+        VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/where/{cam}", headers={"X-User": "anna"})
         with urllib.request.urlopen(req) as r:
-            assert json.loads(r.read())["playback"] == "http://h:1/playback/7?from=100&to=200"
+            d = json.loads(r.read())["door"]
+        assert d["url"] == "http://h:1/door" and d["routes"] == ["timeline", "segment"] and d["token"]
         lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
-                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
-        assert [(e["user"], e["source"], e["target"], e["from"], e["to"]) for e in lines] == [("anna", "device", "7", "100", "200")]
+                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "door.issued"]
+        assert [(e["user"], e["target"], e["holder"], e["routes"], e["until"]) for e in lines] == [
+            ("anna", str(cam), "w-1", "timeline,segment", round(d["expires"]))]
     finally:
         srv.shutdown()
 
