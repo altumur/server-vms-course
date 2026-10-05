@@ -20,6 +20,7 @@
     en: {
       // the frame: header, rail, panel, footer, sign-in
       unsaved: "Unsaved changes of the selected object", discarded: "Cancelled",
+      serverUnsaid: "server not named",
       newRoot: "group", newSub: "subgroup", newGroupTop: "A new group", newGroupIn: "A new group inside «{p}»", groupNameEmpty: "Give the group a name",
       groupExists: "There is such a group already", newGroupNoteT: "The group is made — put a {u} in it, or it will not be kept", addHereT: "Add a {u} here",
       noRows: "No rows",
@@ -146,6 +147,7 @@
     },
     ru: {
       unsaved: "Несохранённые изменения выбранного объекта", discarded: "Отменено",
+      serverUnsaid: "сервер не назван",
       newRoot: "группа", newSub: "подгруппа", newGroupTop: "Новая группа", newGroupIn: "Новая группа внутри «{p}»", groupNameEmpty: "Укажите имя группы",
       groupExists: "Такая группа уже есть", newGroupNoteT: "Группа создана — добавьте в неё: {u}, иначе она не сохранится", addHereT: "Добавить сюда: {u}",
       noRows: "Нет строк",
@@ -806,7 +808,7 @@
           const wref = "worker:" + w.worker, list = carried(w.worker), vis = list.filter(x => !filtering() || unitMatches(x.s, x.u));
           if (filtering() && !String(w.worker).toLowerCase().includes(q) && !vis.length) return "";
           const open = list.length > 0 && (st.open.has(wref) || filtering());
-          return nrow({ ref: wref, depth: depth + 1, icon: "svcs", name: w.worker, tags: tagHtml(`${w.load}/${w.capacity}`, W.loadCap), cnt: list.length, has: list.length > 0, open, off: w.state === "stale" })
+          return nrow({ ref: wref, depth: depth + 1, icon: "svcs", name: w.worker, tags: tagHtml(`${w.load}/${w.capacity}`, W.loadCap) + (w.server_unsaid ? tagHtml(W.serverUnsaid, w.server_unsaid) : ""), cnt: list.length, has: list.length > 0, open, off: w.state === "stale" })
             + (open ? (filtering() ? vis : list).map(x => unitRow(x.s, x.u, depth + 2)).join("") : "");
         }).join("") + extraRows(nodesOf("server", ref, s), depth + 1);
         if (filtering() && !n.toLowerCase().includes(q) && !workers) return "";
@@ -1542,7 +1544,8 @@
         ${card(h(cap(W.worker)), `<span class="bd${info.state === "live" ? "" : " off"}">${h(info.state)}</span>
           <div class="mx" style="margin-top:10px">${mc(W.loadW, info.load)}${mc(W.capW, info.capacity)}${mc(W.freeW, Math.max(0, info.capacity - info.load))}</div>
           <div class="g" style="margin-top:10px">${fldRo(cap(W.server), server || "—")}${fldRo(W.labelsW, info.labels || "—")}</div>
-          ${info.idle_by_policy ? `<p class="sub">${h(W.idleNote.replace("{p}", (st.policy && st.policy.servers) || ""))}</p>` : ""}`)}
+          ${info.idle_by_policy ? `<p class="sub">${h(W.idleNote.replace("{p}", (st.policy && st.policy.servers) || ""))}</p>` : ""}
+          ${info.server_unsaid ? `<div class="nt err" style="margin-top:8px">${h(W.serverUnsaid)}: ${h(info.server_unsaid)}</div>` : ""}`)}
         ${slotHtml(info)}
         ${card(h(W.holdsW + " " + (r0 ? unitWord(r0, true) : W.units)), units.map(x => `<div class="it" data-ref="${h(unitRef(x.s, x.u.id))}"><span>${decorOf(unitRef(x.s, x.u.id)).iconHtml || ic("x")}</span><span>${h(label(x.s, x.u))}<small>${h(stateOf(x.u)[0])}</small></span>${stateBadge(x.u)}</div>`).join("") || `<p class="sub">${h(W.carriesNone)}</p>`, `<span class="sub" style="font-weight:400">${units.length}</span>`)}`;
       el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); });
