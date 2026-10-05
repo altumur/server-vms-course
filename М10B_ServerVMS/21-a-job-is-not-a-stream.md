@@ -61,7 +61,7 @@
 
 ```yaml
   near:       {sub: rec, by: rec}                # An affinity, never a filter: be beside the recorder holding the
-                                                 # recording this scan reads.
+                                                 # recording this scan reads. …
 ```
 
 Регистратор держит том записи и отдаёт его кадры через свою дверь (урок 10, `/samples/<запись>`). Скан, который декодирует часы видео, на том же сервере берёт их у этой двери по петле, а не по сети. Но это предпочтение, а не фильтр: где рядом места нет, скан встанет на любой сервер с GPU и пойдёт к той же двери по сети. Дороже, но работает. (Модель в курсе подставная и кадров не просит — она получает метку времени. `near` написан для настоящей.)
@@ -305,9 +305,10 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
     # A job whose interval reaches past what is RECORDED follows the recording: the footage of its last
     # minutes is written while it runs. Done is when the footage has reached the end (`written_through`),
     # or — the recorder stopped, the camera went dark — when the end is older than this many LAGS: a reader sees a
-    # block once it is closed, and a block closes when the next one starts, so the footage of `to` is at most one
-    # block's worth of time behind (`VISIBLE_LAG_SECONDS`: the block size over the bitrate — the product's worst
-    # path from a frame to an answer).
+    # block once it is written, and a block is written when it fills or `BLOCK_FLUSH_S` after its sequence was
+    # finished, so the footage of `to` is at most one block's worth of time behind (`VISIBLE_LAG_SECONDS`: the block
+    # size over the bitrate, for a stream that fills blocks faster than the flush period — the worst path from a
+    # frame to an answer; feedback CP).
     FOLLOW_LAGS = 2
 ```
 

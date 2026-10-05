@@ -372,12 +372,18 @@ camera 7 has 5 preset(s), not 9
 ## Шаг 8 — Заявка, а не строка, и право через границу
 
 ```python
-    def file(self, row: dict, fid: str, at: float) -> None:
+    def file(self, row: dict, fid: str, at: float) -> bool:
+        unit = str(row["id"])
+        valid_until = at + (float(row.get("valid_for") or 0) or 30.0)
+        …
         for i, action in enumerate(row["then"]):
             sub, name = str(action.get("sub", "")), str(action.get("action", ""))
-            self.vars.put(f"{sub}/requests/{fid}-{i}",
-                          {**fields, "action": name, "at": str(at), "by": f"auto/{unit}",
-                           "valid_until": str(at + (float(row.get("valid_for") or 0) or 30.0))})
+            rid = f"{fid}-{i}"
+            fields = {k: str(v) for k, v in action.items() if k not in ("sub", "action")}
+            …
+            self.vars.put(f"{sub}/requests/{rid}",
+                          {**fields, "action": name, "at": str(at), "by": f"auto/{unit}", "valid_until": str(valid_until),
+                           "filed": str(self.wall())})
 ```
 
 **Срок заявки — `valid_for`, а не `within`.** Первая версия брала срок из `within`, а это другое: насколько далеко друг от друга могут быть два триггера. Сценарий с `within: 5` подавал заявки, живущие пять секунд. Дорога от события до держателя без всякой нагрузки занимала тогда до семи (три секунды «хвоста» ресурса и два прохода по две; хвоста нет с 28 сентября, и оба прохода с 2 октября — потолок, а не длина, шаг 10), и на простаивающей коробке часть срабатываний кончалась `expired`, а оператор искал ошибку в настройке сценария. Теперь срок — отдельное поле, 30 секунд по умолчанию. Меньше пяти не принимает схема поля у двери (`minimum: 5`): такая заявка истекла бы в пути.

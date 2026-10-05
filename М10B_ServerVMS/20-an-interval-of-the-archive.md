@@ -272,9 +272,14 @@ class ScanLog:
 
 ```python
 # The plan minus what the log says is behind us — what a restarted worker picks up, and what a follower scans
-# next. By TIME, per stream, not by key: the index draws a stream's sequences that touch as ONE span, so the span a
-# follower scanned up to 10:05 is, a block later, a span to 10:10 — a different stretch with a different key, and
-# matching keys would scan its first five minutes again and count every car in them twice.
+# next. By TIME, not by key: the index draws a stream's sequences that touch as ONE span, so the span a follower
+# scanned up to 10:05 is, a block later, a span to 10:10 — a different stretch with a different key, and matching
+# keys would scan its first five minutes again and count every car in them twice.
+#
+# And by time over the whole RECORDING, not per stream (the review's third pass). An epoch takeover moves the
+# minutes of the overlap from the old stream to the new one once the new one is visible: per stream, minutes
+# already scanned under `7/e1` were scanned again under `7/e2`, every car in them counted twice. The minutes are
+# the camera's whichever writer won them; scanned once is the point.
 def remaining(scans: list[Scan], log: ScanLog) -> list[Scan]:
     from .archive import parse_stream, subtract
     done: dict[str, list[tuple[float, float]]] = {}
