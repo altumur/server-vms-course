@@ -160,8 +160,13 @@
     "platform/doors/*",
     "platform/mirror",
     "platform/space",
-    "rec/recordings/*",
     "rec/keeps/*",
+    "live/streams/*",
+    "det/units/*",
+    "rec/recordings/*",
+    "detjob/jobs/*",
+    "survey/watches/*",
+    "rec/requests/free-*",
     "audit/retention",
     "audit/retention/*",
     "audit/alarms_retention",
@@ -200,10 +205,12 @@
     "vms/alarms_retention/*"
    ],
    "write": [
-    "platform/doors/*"
+    "platform/doors/*",
+    "rec/requests/free-*"
    ],
    "delete": [
-    "platform/doors/*"
+    "platform/doors/*",
+    "rec/requests/free-*"
    ]
   },
   "domainagent": {

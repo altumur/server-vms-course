@@ -1662,7 +1662,7 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
     from types import SimpleNamespace
     from tests.test_lesson8_live import OFFER, _gateway
     from vms.recworker import RecWorker
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from vms.worker import FakeActuator, VmsWorker
     from w2cplatform.access import GLASS_COOKIE
     from w2cplatform.resource import serve as serve_resource
@@ -1678,7 +1678,7 @@ def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_ent
     rec_door = RecWorker.serve_archive(SimpleNamespace(store=None, wall=box.wall, epochs={}, server="srv-1",
                                                        _visible_from=lambda *a: None, _kept_of=lambda *a: None,
                                                        _held_since=lambda *a: None), "127.0.0.1", 0)
-    res = serve_resource(vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
+    res = serve_resource(platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
     doors = {"holder": f"http://127.0.0.1:{holder.server_address[1]}", "gateway": g.url,
              "recorder": f"http://127.0.0.1:{rec_door.server_address[1]}", "resource": f"http://127.0.0.1:{res.server_address[1]}"}
     entry = json.dumps({"glass": {"who": "carol", "why": "the domain is down", "password": "open-sesame"}}).encode()

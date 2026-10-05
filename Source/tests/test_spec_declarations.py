@@ -216,3 +216,68 @@ def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "count": "table nope"}]}), "count is `table")
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "display": {"logic": "if"}}), "words for a page, no logic")
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "servers": {"show": [{"table": "nope", "by": "server"}]}}), "`servers:` is")
+
+
+def test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_about_it():
+    """`holds:` (it was a subsystem's function the resource called, `kept`): a row of the spec's table holds its unit's
+    buckets — and those of every unit about it, read through that unit's spec's `about` — for its stretch, at most
+    `longest` from its start; a row whose bounds do not read holds its unit as far as they read; a unit whose row does
+    not read, or names nobody, is held by every hold that reads; another unit's buckets go by their days."""
+    from w2cplatform import holds
+    from w2cplatform.events import EventLog, bucket_names_under
+    from w2cplatform.resource import platform_resource
+    vars_, objects, wall = _box()
+    root = tempfile.mkdtemp(prefix="held-")
+    owner = SubsystemSpec.from_dict({"name": "shelf", "unit": {"rows": "items", "id": "name",
+                                                              "fields": {"name": {"type": "string"}}},
+                                     "tables": ["pins"], "placement": CAP,
+                                     "holds": {"table": "pins", "unit": "item", "since": "a", "until": "b", "longest": 3600}})
+    about = SubsystemSpec.from_dict({"name": "label", "about": {"sub": "shelf", "field": "item"},
+                                     "unit": {"rows": "tags", "id": "name", "fields": {"name": {"type": "string"},
+                                                                                      "item": {"type": "string", "fixed": True}}},
+                                     "placement": CAP})
+    old = wall() - 40 * 86400
+    for sub, unit in (("shelf", "1"), ("shelf", "2"), ("label", "t1"), ("label", "t2"), ("label", "torn")):
+        EventLog(root, sub, unit, 1).append(old + 10, "seen")
+        EventLog(root, sub, unit, 1).append(old + 7200, "seen")                   # past `longest` from the pin's start
+        vars_.put(f"{sub}/retention/{unit}", {"days": "30"})
+    vars_.put("label/tags/t1", {"name": "t1", "item": "1"})
+    vars_.put("label/tags/t2", {"name": "t2", "item": "2"})
+    vars_.put("shelf/pins/p", {"item": "1", "a": str(old), "b": str(old + 86400)})
+    vars_.put("shelf/pins/q", {"item": "2", "a": "soon", "b": str(old + 60)})     # its start lost: from the start of time
+    real = vars_.get
+    vars_.get = lambda k, *a, **kw: (_ for _ in ()).throw(ValueError("torn")) if k == "label/tags/torn" else real(k, *a, **kw)
+    res = platform_resource(root, "s1", "http://s1", vars_, objects, wall=wall)
+    res.kept = lambda progressed=None: holds.kept(vars_, [owner, about], progressed)
+    res.retain()
+    left = lambda sub, unit: len(bucket_names_under(root, sub, unit, 600))
+    assert (left("shelf", "1"), left("label", "t1")) == (1, 1)            # the pin's hour: the unit and the unit about it
+    assert (left("shelf", "2"), left("label", "t2")) == (1, 1)            # as far as it reads: up to its end
+    assert left("label", "torn") == 1                                     # nobody can say whose: the sound pin holds it
+    vars_.get = real
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "holds": {"table": "nope", "unit": "u", "since": "a", "until": "b"}}),
+             "`holds:` is")
+
+
+def test_the_resource_asks_a_subsystem_that_frees_by_a_request_row_and_reads_its_answer():
+    """`requests: {free: true}` (it was a subsystem's hook the resource called, `free`): over the high mark the resource
+    writes `<sub>/requests/free-<server>-<volume> {free, volume, server}` and reads what the subsystem's live workers
+    on its server say they freed (`freed` in their heartbeats); back under the mark, the row is taken away. Nothing of
+    the subsystem's runs in the resource."""
+    from w2cplatform.resource import SPACE_KEY, Resource
+    vars_, objects, wall = _box()
+    spec = SubsystemSpec.from_dict({**BIN, "requests": {"free": True}})
+    catalog.register(spec)
+    full = {"used": 98}
+    res = Resource(tempfile.mkdtemp(prefix="full-"), "s1", "http://s1", vars_, objects, wall=wall,
+                   space_probe=lambda path: (100, 100 - full["used"]))
+    [vol] = list(res.volumes)
+    key = spec.sub.request_key(f"free-s1-{vol}")
+    vars_.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
+    out = res.relieve()
+    assert out["space"] == "over" and vars_.get(key)[0]["free"] == "48" and vars_.get(key)[0]["volume"] == vol
+    objects.put(spec.sub.heartbeat_key("w-1"), Heartbeat("w-1", wall(), [], {"server": "s1", "bay": "", "freed": {vol: 40}}).to_bytes())
+    out = res.relieve()
+    assert out["freed"] == 40 and out["short"] == 8 and vars_.get(key)[0]["free"] == "8"   # what is left, asked again
+    full["used"] = 10
+    assert res.relieve()["space"] == "ok" and vars_.get(key)[0] is None                # under the mark: nothing asked

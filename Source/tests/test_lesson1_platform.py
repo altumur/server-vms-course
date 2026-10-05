@@ -265,53 +265,58 @@ def test_a_subscriber_is_not_handed_a_holder_that_has_gone_silent():
     assert holder_of(box.objects, "vms/", 1, box.wall(), phase="running", field="live_url") is None
 
 
+def _counter(name: str = "counter"):
+    """A subsystem that frees — `requests: {free: true}` — registered in this process's catalogue, as a loaded spec is."""
+    from w2cplatform import catalog
+    spec = SubsystemSpec.from_dict({"name": name, "unit": {"rows": "ticks", "id": "name", "fields": {"name": {"type": "string"}}},
+                                    "placement": {"capacity": {"from": "capacity", "default": 4}}, "requests": {"free": True}})
+    catalog.register(spec)
+    return spec
+
+
 def test_the_watermark_asks_and_never_deletes():
     """Lesson 21. The resource measures the DISK (a test cannot fill one, so the probe
     is a seam), and over the high mark it says how many bytes to free — down to the LOW
     mark, or the next write puts it straight back over. What to give up is the
-    subsystem's to decide: the platform calls `free` and touches nothing itself.
+    subsystem's to decide: the platform ASKS, by a request row of the subsystem's own
+    family (`requests: {free: true}`: `<sub>/requests/free-<server>-<volume>`), reads
+    what its workers on this server say they freed, and touches nothing itself (the
+    boundary's step 6: it called the subsystem's `free`, code of the subsystem's in the
+    resource's pass).
 
     The subsystem here keeps no video and no buckets — it counts. Nothing in this test
-    knows what a camera is, which is the point of the door being a method name."""
+    knows what a camera is, which is the point of the door being a row."""
     import tempfile
     from w2cplatform.resource import SPACE_KEY, Resource
 
-    class Counter:
-        """A subsystem hook: a pass that does nothing, and a `free` that gives up ticks."""
-        def __init__(self): self.asked, self.ticks = [], 10 * [50_000]
-
-        def pass_(self, now): return {"ticks": len(self.ticks)}
-
-        def free(self, need, now, min_days=3.0):
-            self.asked.append(need)
-            freed = 0
-            while self.ticks and freed < need:                 # one tick at a time, like a segment
-                freed += self.ticks.pop(0)
-            return {"freed": freed, "dropped": 10 - len(self.ticks)}
-
+    spec = _counter()
     box = Box()
-    hook = Counter()
     res = Resource(tempfile.mkdtemp(prefix="space-"), "srv-1", "http://srv-1", box.vars, box.objects,
                    wall=box.wall, space_probe=lambda root: (1_000_000, 500_000))
-    res.register("counter", hook)
+    [vol] = list(res.volumes)
+    asked = lambda: box.vars.get(spec.sub.request_key(f"free-srv-1-{vol}"))[0]
 
     assert res.relieve() == {"space": "off"}                   # a knob, and it is off until an operator says otherwise
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"}, cas=0)
-    assert res.relieve() == {"space": "ok", "full": 0.5} and hook.asked == []
+    assert res.relieve() == {"space": "ok", "full": 0.5} and asked() is None
     assert res.heartbeat()["space"] == {"total": 1_000_000, "free": 500_000, "used": 500_000, "full": 0.5}
 
     res.space_probe = lambda root: (1_000_000, 100_000)        # 90 % full
     rep = res.relieve()
-    assert hook.asked == [150_000]                             # to the LOW mark, not to the high one
-    assert rep["space"] == "over" and rep["need"] == 150_000 and rep["freed"] == 150_000 and rep["short"] == 0
-    assert rep["counter.dropped"] == 3 and len(hook.ticks) == 7   # three ticks of fifty kB, and not one more
-
-    # and a subsystem with no `free` is simply not asked: `retain` by days is its whole policy
-    class Bucketsonly:
-        def pass_(self, now): return {}
-    res.hooks = {"other": Bucketsonly()}
+    assert asked()["free"] == "150000" and asked()["volume"] == vol   # to the LOW mark, not to the high one
+    assert rep["space"] == "over" and rep["need"] == 150_000 and rep["freed"] == 0 and rep["short"] == 150_000
+    # its worker on this server gave up three ticks of fifty kB, and says so in its heartbeat
+    box.objects.put(spec.sub.heartbeat_key("t-1"), Heartbeat("t-1", box.wall(), [], {"server": "srv-1",
+                                                                                     "freed": {vol: 150_000}}).to_bytes())
     rep = res.relieve()
-    assert rep["short"] == rep["need"] > 0                     # nobody could give anything: said, not hidden
+    assert rep["freed"] == 150_000 and rep["short"] == 0 and rep["counter.freed"] == 150_000
+
+    # and a subsystem that does not free is simply not asked: `retain` by days is its whole policy
+    other = SubsystemSpec.from_dict({"name": "other", "unit": {"rows": "units", "id": "name", "fields": {}},
+                                     "placement": {"capacity": {"from": "capacity", "default": 4}}})
+    assert box.vars.list(other.sub.requests_prefix()) == []
+    res.space_probe = lambda root: (1_000_000, 500_000)        # back under the mark: nothing asked of anybody
+    assert res.relieve()["space"] == "ok" and asked() is None
 
 
 def test_the_tree_is_walked_once_a_pass_and_never_on_a_heartbeat():
@@ -352,28 +357,19 @@ def test_space_does_not_average_across_volumes():
 
     Half full across two volumes, one of them at 98%, is a box that stops recording:
     the unit that cannot write is on the full one, and bytes freed on the empty one
-    close nothing. So the watermark is per volume, and the volume goes to the hook —
+    close nothing. So the watermark is per volume, and the volume goes into the ask —
     only the subsystem knows which of its files are where, only the resource knows
     which disk is short."""
     import tempfile
     from w2cplatform.resource import SPACE_KEY, Resource
 
-    class Counter:
-        def __init__(self): self.asked = []
-
-        def pass_(self, now): return {}
-
-        def free(self, need, now, min_days=3.0, volume=None):
-            self.asked.append((volume, need))
-            return {"freed": need, "volume": volume}
-
-    box, hook = Box(), Counter()
+    spec = _counter()
+    box = Box()
     roots = {"vol-a": tempfile.mkdtemp(prefix="vol-a-"), "vol-b": tempfile.mkdtemp(prefix="vol-b-")}
     sizes = {roots["vol-a"]: (1_000_000, 20_000),              # 98 % full
              roots["vol-b"]: (1_000_000, 980_000)}             # all but empty
     res = Resource(None, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall,
                    volumes=roots, space_probe=lambda root: sizes[root])
-    res.register("counter", hook)
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"}, cas=0)
 
     summed = res.space()
@@ -381,9 +377,10 @@ def test_space_does_not_average_across_volumes():
     assert res.spaces()["vol-a"]["full"] == 0.98 and res.spaces()["vol-b"]["full"] == 0.02
 
     rep = res.relieve()
-    assert hook.asked == [("vol-a", 230_000)], "asked on the full volume, and only there"
+    asked = lambda v: box.vars.get(spec.sub.request_key(f"free-srv-1-{v}"))[0]
+    assert asked("vol-a")["free"] == "230000" and asked("vol-b") is None, "asked on the full volume, and only there"
     assert rep["space"] == "over" and [v["volume"] for v in rep["volumes"]] == ["vol-a"]
-    assert rep["counter.vol-a.volume"] == "vol-a"              # the report says which disk it was about
+    assert rep["counter.vol-a.freed"] == 0                     # the report says which disk it was about
     assert res.heartbeat()["volumes"]["vol-a"]["full"] == 0.98
 
 

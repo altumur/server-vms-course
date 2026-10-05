@@ -1,9 +1,10 @@
-"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|console|resource —
+"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|console —
 the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
 (`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
-the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: ch}`); the loops of
-`console` and `resource` here are the platform's too (`host.sweep_loop`, `host.every`, `host.run_resource`) — run
-over the console's routes and the resource's keeps until the rest of step 6 turns those into declarations.
+the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: ch}`), and so is the
+resource (`python3 -m w2cplatform resource`: what a keep holds is the spec's `holds:`); the loops of `console` here
+are the platform's too (`host.sweep_loop`, `host.every`) — run over the console's routes until the rest of step 6
+turns those into declarations.
 
     PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
     ARCHIVE=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
@@ -30,13 +31,13 @@ over the console's routes and the resource's keeps until the rest of step 6 turn
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # __main__.py — `python3 -m vms worker | console | resource | …`: the box's processes
+# # __main__.py — `python3 -m vms worker | console | …`: the box's processes
 #
 # **Role in the module.** The entrypoint of the VMS's units (`deploy/*.container` say `Exec=python3 -m vms <verb>`,
 # the controllers of the other subsystems `Exec=python3 -m w2cplatform controller <sub>`; the Containerfile's default
 # `CMD` is `worker`). It reads the environment, opens the two
 # file-backed stores under `$PLATFORM_DIR` with the *right token for the verb*, builds the process's object
-# from `worker.py` / `controller.py` / `console.py` / `resource.py` / …, and runs it until SIGTERM/SIGINT. It is
+# from `worker.py` / `controller.py` / `console.py` / …, and runs it until SIGTERM/SIGINT. It is
 # glue and nothing else: no logic of its own beyond wiring, and each verb's token is deliberately narrower
 # than the whole `vms/*` prefix. `tests/test_deploy_units.py` imports this module (without running it) and
 # checks that the verbs in the dispatch table are exactly the ones the units invoke.
@@ -69,9 +70,10 @@ over the console's routes and the resource's keeps until the rest of step 6 turn
 #
 # ### `if __name__ == "__main__"`
 # Dispatch table on `sys.argv[1]`: the workers (worker, recorder, gateway, detworker, detjobworker, surveyworker,
-# autoworker) and the two processes of the platform that still run a hook of the VMS's (console, resource); the
-# controller is the platform's since the boundary's step 6. `test_the_units_run_the_entrypoints_the_package_has` regex-extracts the names and matches them against
-# the `Exec=` lines of the Quadlet units — `python3 -m vms <verb>` and `python3 -m w2cplatform controller <sub>`.
+# autoworker) and the one process of the platform that still runs a hook of the VMS's (console); the controller
+# and the resource are the platform's since the boundary's step 6. `test_the_units_run_the_entrypoints_the_package_has`
+# regex-extracts the names and matches them against the `Exec=` lines of the Quadlet units — `python3 -m vms <verb>`,
+# `python3 -m w2cplatform controller <sub>` and `python3 -m w2cplatform resource`.
 #
 # ## Notes
 # - Three tokens, three processes: `vmsworker` (epochs, slots), `vmscontroller` (placement), `console`
@@ -80,10 +82,6 @@ over the console's routes and the resource's keeps until the rest of step 6 turn
 # - `CAPACITY` means two different things depending on the verb: the worker's own number (what it heartbeats
 #   and places by) versus the controller's fallback for a worker that has not spoken yet
 #   (`test_capacity_is_the_workers_word_not_the_controllers`).
-# - `resource` runs the platform's `Resource` as a process on the box exactly as М11 runs it as a job:
-#   heartbeat, HTTP, the policy pass (the VMS's hook first, then bucket retention, then the mirror — off on
-#   one box), and the `EventIndex` over the tree. The old `retain` verb and its timer are gone: a pass
-#   every 600 s from the process's loop is the same pass, and a oneshot could not hold an index's cache.
 # ================================================================================================
 from __future__ import annotations
 
@@ -508,30 +506,6 @@ def console() -> None:
     srv.shutdown()
 
 
-# The resource process — the platform's resource job on one box, the same as М11's `resource` job:
-# - its tree, `$ARCHIVE`: EVENTS — the camera's buckets, a recorder's, the alarms', the journal's. Footage is
-#   not here: it is in volumes of ObjectStorage, through the host's `obsd`, each written by the recorder that
-#   holds it (`vms/archive.py`). Variables opened with *no* writer and no ACL — the resource only reads rows.
-# - `vms_resource(root, hostname, $RESOURCE_URL, vars_, objects)` — the platform's `Resource` with an
-#   `EventIndex` over the tree and the VMS's keeps for its bucket retention.
-# - `serve(res, $RESOURCE_HOST, $RESOURCE_PORT)` — `/buckets`, `/events`, `/mirrored`, `PUT /mirror`.
-# - one heartbeat (`platform/resources/<server>/heartbeat` — how the console finds this process), then
-#   `restore()` — and the loop: a heartbeat every 10 s, the policy pass every 600 s (retain buckets by each
-#   subsystem's row, the watermark over the tree, the mirror).
-def resource() -> None:
-    """The resource process: no controller — a policy pass, a heartbeat, its HTTP,
-    and the event index over its own tree."""
-    import socket
-    from w2cplatform.resource import serve
-    from .resource import vms_resource
-    vars_ = open_vars(STORE_URL)
-    objects = FsObjectStore(os.path.join(root, "objects"))
-    bind, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
-    res = vms_resource(runtime.events_root(os.environ), socket.gethostname(),
-                       os.environ.get("RESOURCE_URL", f"http://{bind}:{port}"), vars_, objects)
-    host.run_resource(res, serve(res, bind, port))     # the platform's loop: heartbeat, beat, restore, policy pass
-
-
 if __name__ == "__main__":
     # Only when run: a module imported (the tests) must not take the process's signals. Installed at import, the
     # handler swallowed a SIGTERM or SIGINT sent to the test run itself: the run went on with `stop` set, and the first
@@ -542,4 +516,4 @@ if __name__ == "__main__":
         signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "recorder": recorder, "gateway": gateway, "detworker": detworker, "detjobworker": detjobworker,
      "surveyworker": surveyworker, "autoworker": autoworker,
-     "console": console, "resource": resource}[sys.argv[1]]()
+     "console": console}[sys.argv[1]]()

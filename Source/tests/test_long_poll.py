@@ -53,9 +53,9 @@ def _real_box() -> Box:
 
 def _resource(box, server: str = "srv-a"):
     """The resource of one server, over HTTP, heartbeating its address: `(resource, http server)`."""
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from w2cplatform.resource import serve
-    res = vms_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
     srv = serve(res, "127.0.0.1", 0)
     res.url = f"http://127.0.0.1:{srv.server_address[1]}"
     res.heartbeat()

@@ -9,7 +9,8 @@
 #   the footage    is COPIED into an incidents volume by the recorder that holds it (`RecWorker.keep_pass`),
 #                  out of whichever recorder's door has it, and stays there after the recording's own ring has
 #                  moved on. What was copied is an event with its sha256 (`archive.keep.copied`)
-#   the events     retention skips the camera's event buckets that overlap it (`vms/resource.kept_buckets`)
+#   the events     retention skips the camera's event buckets that overlap it — its spec's `holds:`, which every
+#                  resource reads itself (`w2cplatform/holds.py`; the boundary's step 6)
 #
 # …and that is all it promises. It is NOT "never deleted": the incidents volume is a ring too, only one that
 # nothing but keeps writes into. When it is full the oldest kept footage goes — and that is an alarm,
@@ -123,7 +124,7 @@ def delete(vars_, id_: str) -> None:
 
 # A KEEP WHOSE ROW DOES NOT PARSE IS THAT KEEP'S TROUBLE (the review's seventh pass, part 2). `from: "yesterday"` in
 # one keep raised out of `declared`, and `declared` is under the resource's retention of every unit on every server
-# (`vms/resource.kept_buckets`: "not knowing what is kept is not nothing is", so nothing was swept and the disks
+# (it was `vms/resource.kept_buckets` then: "not knowing what is kept is not nothing is", so nothing was swept and the disks
 # filled), under the incidents recorder's copying of every keep, and under each recorder's door. Now it is skipped
 # where keeps are listed, counted once until it parses again (`KEEPS`; `keeps_garbled`), logged once — and handed to
 # whoever must not read it as "no keep" through `garbled`, held AS FAR AS IT READS (`as_far_as_read`). A row that does

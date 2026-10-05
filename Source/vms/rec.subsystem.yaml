@@ -129,6 +129,14 @@ tables: [volumes, keeps]
 # needs on that camera what the route needs — on both, if a write ever moved it.
 rights:
   unit_of: {keeps: cam}
+# What a keep HOLDS on every resource past its days (the boundary's step 6: it was the VMS's function the resource called,
+# `kept_buckets`): the events of its camera's units — the camera's own and every unit about it — for its stretch, at
+# most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).
+holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800}
+# The resource asks this subsystem to free bytes on a volume of its server by a request row (`free-<server>-<volume>`),
+# and the recorder decides (the boundary's step 6: it was a hook). The footage is in rings of a fixed size: the recorder
+# answers that it frees nothing (`RecWorker.requests`, `freed` in its heartbeat).
+requests: {free: true}
 snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's

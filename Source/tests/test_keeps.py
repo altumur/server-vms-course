@@ -288,9 +288,9 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
     """`{days: 0}` is what a deleted unit's retention becomes: its buckets go on the next pass. The ones
     under a keep do not."""
     from w2cplatform.events import buckets_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     t0 = box.wall() - 5 * DAY
     log = event_log(box.archive, 7, 3)
     log.append(t0 + 10, "alarm", zone="gate"); log.append(t0 + 3000, "motion")     # two buckets, fifty minutes apart
@@ -306,14 +306,15 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
 def test_a_keep_holds_every_subsystems_events_about_its_camera():
     """The review's fourth pass (B10 of the first review). Only the `vms` and `rec` trees were held: the detector's
     alarm at the gate, a scan's hits, a survey's, the scenario that fired — inside the keep, and deleted by their own
-    days. Each unit's ROW says which camera it is about: a detector, a watch and a scan by `cam` (a deleted row too),
-    a scenario by the units its triggers and actions name. A unit whose camera cannot be told is held by any keep;
-    another camera's units go."""
+    days. Each unit's ROW says which camera it is about: a detector, a watch and a scan by `cam` (a deleted row too) —
+    their specs' `about`, read by the platform since the boundary's step 6 (`holds:`). A unit whose camera cannot be
+    told is held by any keep; another camera's units go; and a scenario is about nobody — its triggers name cameras,
+    and nothing a spec declares reads them — so no keep holds it."""
     import json as _json
     from w2cplatform.events import ALARM, EventLog, subsystems_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     t0 = box.wall() - 5 * DAY
     box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "deleted": "true"})  # deleted: {days: 0}
     box.vars.put("det/units/8-motion", {"name": "8-motion", "cam": "8", "kind": "motion"})
@@ -337,8 +338,7 @@ def test_a_keep_holds_every_subsystems_events_about_its_camera():
     res.retain()
     left = {(sub, u) for sub, us in subsystems_under(box.archive).items() for u in us if sub != "audit"   # the pass's own journal
             if any(f.endswith(".events.jsonl") for _, _, fs in __import__("os").walk(f"{box.archive}/{sub}/{u}") for f in fs)}
-    held = {("det", "7-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"), ("auto", "gate"),
-            ("auto", "anywhere"), ("det", "orphan")}
+    held = {("det", "7-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"), ("det", "orphan")}
     assert left == held | {(s + ".alarms", u) for s, u in held}                 # camera 8's, in both trees, are gone
 
 

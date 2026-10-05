@@ -53,9 +53,10 @@ home. No controller is involved in any of it.
 # own beside its buckets (a scan's progress) and the resource neither reads nor names them. Footage is not
 # here at all: the VMS writes it into volumes of ObjectStorage, through the host's daemon. It writes its own heartbeat
 # object (`platform/resources/<server>/heartbeat`), serves buckets over HTTP, and runs a policy pass on a
-# timer: each subsystem's registered hook first (a subsystem with files of its own registers its pass via
-# `Resource.register`), then bucket retention by each subsystem's own `<sub>/retention[/<unit>]` row, then
-# the mirror. Mirroring is a knob (`platform/mirror`), and peers are chosen by a rule — the next `copies`
+# timer: bucket retention by each subsystem's own `<sub>/retention[/<unit>]` row — less what a spec's `holds` keeps
+# (`holds.py`) — then the watermark, which asks the subsystems whose spec says `requests: {free: true}` to free bytes by
+# a request row, then the mirror. No subsystem's code is called here (the boundary's step 6: it was `register`, a hook
+# with a pass of its own and a `free`, and `kept`, set by a subsystem's builder of the resource). Mirroring is a knob (`platform/mirror`), and peers are chosen by a rule — the next `copies`
 # live resources after mine in sorted order — so nobody assigns them. `restore` is the reverse, run by the
 # owner at start. No controller is involved in any of it. `eventdatabase.EventIndex` is the index the job
 # runs over this tree (`Resource.index`), served as `GET /events` and told by `retain` what it removed;
@@ -72,7 +73,7 @@ home. No controller is involved in any of it.
 #
 # ### `__init__(self, root, server, url, vars_, objects, bucket_seconds=600, wall=time.time, peers=None,
 # lost_after=45.0)` `root` is the tree (created), `server` the name that goes into heartbeats and peer
-# selection, `url` how others reach this resource's HTTP. `hooks` starts empty. `lost_after` is how old a
+# selection, `url` how others reach this resource's HTTP. `lost_after` is how old a
 # peer's heartbeat may be to count as live.
 #
 # ## Notes
@@ -103,7 +104,7 @@ from .doors import MAX_LIMIT, safe_rel, safe_segment
 log = logging.getLogger(__name__)
 
 from .contract import ALIVE_EVERY, BUILD, PRESENCE, SCHEMA, Eyes, check_schema, judge_clock, parse_heartbeat
-from .rows import PARSE_ERRORS, Table, answer, counts as garbled_by_table, finite
+from .rows import PARSE_ERRORS, Table, answer, counts as garbled_by_table, finite, number
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
@@ -686,12 +687,10 @@ class PeerClient:
         return isinstance(d, dict) and isinstance(d.get("deleted"), dict) and any(d["deleted"].values())
 
 
-# A subsystem's hook is called with what it takes of the optional words, and nothing it does not: `volume` (the
-# disk that is short — older hooks do not take one) and `progressed` (the pass's pulse: a hook that works for
-# minutes says it is moving, or the pulse calls it stuck — the review's fourth pass). Both are right to leave out:
-# a subsystem whose files are all on one disk has nothing to choose, and a hook that returns in a second has
-# nothing to say. Asked by the signature and not by trying: a `TypeError` raised INSIDE a hook used to be read
-# as "it does not take a volume", and the hook was run a second time.
+# A callable of the pass is called with what it takes of the optional words, and nothing it does not: `progressed`
+# (the pass's pulse: a step that works for minutes says it is moving, or the pulse calls it stuck — the review's fourth
+# pass). Asked by the signature and not by trying: a `TypeError` raised INSIDE one used to be read as "it does not take
+# the word", and it was run a second time.
 def _call_hook(fn, *args, **optional):
     import inspect
     try:
@@ -703,8 +702,23 @@ def _call_hook(fn, *args, **optional):
     return fn(*args, **{k: v for k, v in optional.items() if k in params})
 
 
-def _ask_to_free(free, need: int, now: float, min_days: float, volume: str, progressed=None) -> dict:
-    return _call_hook(free, need, now, min_days, volume=volume, progressed=progressed or (lambda: None))
+# THE RESOURCE OF A SERVER, AS THE PLATFORM BUILDS IT (`python3 -m w2cplatform resource`, `host.resource`): the job over
+# its tree with the event index attached, and what is kept read from the loaded specs (`holds`). Nothing of a subsystem's
+# is installed on it (the boundary's step 6: it was a subsystem's builder of the resource, which set what it keeps).
+def platform_resource(root: str, server: str, url: str, vars_, objects, wall=None, peers=None,
+                      bucket_seconds: int = 600, **kw) -> "Resource":
+    from .eventdatabase import EventIndex
+    wall = wall or time.time
+    r = Resource(root, server, url, vars_, objects, bucket_seconds, wall, peers, **kw)
+    r.index = EventIndex(root, server, wall, bucket_seconds)
+    return r
+
+
+# What the loaded specs' `holds:` keep, for one pass (`holds.kept` over the catalogue: the specs this process loaded, or
+# the directory `SPEC_DIR` names).
+def kept_by_specs(vars_, progressed=None):
+    from . import catalog, holds
+    return holds.kept(vars_, catalog.specs(), progressed)
 
 
 # THE OBJECT DOOR SAYS WHAT WENT WRONG, NOT WHERE (the review's thirteenth pass, minors; the product's cross-check (c)).
@@ -797,7 +811,6 @@ class Resource:
         self._probes: dict[str, tuple] = {}
         self._looked: dict[str, object] = {}
         self._stuck: dict[str, float] = {}
-        self.hooks: dict[str, object] = {}         # subsystem -> object with .pass_(now) -> dict: its own policy on ITS part of the tree
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
         # What the last pass could NOT free, in bytes, by volume. Over the mark and nothing left to give up is
         # the one state the watermark cannot mend, and it used to be a number in a log line: said in the
@@ -824,7 +837,9 @@ class Resource:
         self.retention_garbled: list[str] = []     # `<sub>/<unit>` whose days the last `retain` could not read: kept, not swept
         self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
         self.space_garbled = ""                    # what the watermark acts on while its row does not parse (`relieve`), for the heartbeat
-        self.kept = None                           # `() -> (subsystem, unit, start, end) -> bool`: buckets `retain` must leave, if anybody says so
+        # `(progressed) -> (subsystem, unit, start, end) -> bool`: the buckets `retain` must leave — what the loaded specs'
+        # `holds` say (`holds.py`), read once a pass. A test may give its own.
+        self.kept = lambda progressed=None: kept_by_specs(self.vars, progressed)
         # How many `/events` it answers AT ONCE. The server starts a thread per request and never says no, so
         # without a limit a burst of readers is a queue with no end: every answer later, memory growing, and a
         # reader that times out cannot tell "slow" from "gone". Past the limit the answer is 503 with
@@ -880,12 +895,6 @@ class Resource:
             if os.path.exists(full):
                 return full
         return os.path.join(self.volumes[self.place_volume()], rel)
-
-    # A subsystem installs an object with `pass_(now) -> dict` for its own part of the tree — the same "code
-    # under a name" door `spec.register_constraint` opens. A hook that may run long takes `progressed` too —
-    # `pass_(now, progressed)`, `free(…, progressed=…)` — and calls it as it goes (`_call_hook`).
-    def register(self, subsystem: str, hook) -> None:
-        self.hooks[subsystem] = hook
 
     # -- what is here -------------------------------------------------------------------
     # `subsystems_under(root)` — what is here, from the directories.
@@ -1479,12 +1488,12 @@ class Resource:
                 days_of[(sub, unit)] = self._days(sub, unit, garbled)
                 self._progressed()                                      # a row read per unit: each is a step
         floor = console_floor({k: d for k, d in days_of.items() if d != float("inf")})
-        # What somebody said to keep (feedback BH). The resource does not know what a keep is: whoever built
-        # it may set `self.kept` — called once a pass, it returns `(subsystem, unit, start, end) -> bool`.
-        # It matters most for `{days: 0}`, which is what a deleted unit's retention becomes: without this,
-        # deleting the unit erased the very events somebody had marked. If it raises, the pass fails and
-        # nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by row, so it is
-        # handed `progressed` like a subsystem's pass, if it takes one (the review's sixth pass).
+        # What somebody said to keep (feedback BH). The resource does not know what a keep is: the specs say which rows
+        # HOLD a unit for a stretch (`holds:`), and `self.kept` — called once a pass — reads them and returns
+        # `(subsystem, unit, start, end) -> bool`. It matters most for `{days: 0}`, which is what a deleted unit's
+        # retention becomes: without this, deleting the unit erased the very events somebody had marked. If it raises,
+        # the pass fails and nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by
+        # row, so it is handed `progressed` (the review's sixth pass).
         kept = _call_hook(self.kept, progressed=self._progressed) if self.kept is not None else None
         self._progressed()
         self._retain_failed_pass = False
@@ -1656,8 +1665,7 @@ class Resource:
         return {"enabled": True, "mirrored": n, "peers": peers, **({"peers_failed": failed} if failed else {})}
 
     # The reverse, run by the owner: for every live peer whose heartbeat lists me under `mirrors`, pull each
-    # of my buckets it holds that I do not have (tmp + rename), then, if anything came back, run every
-    # registered hook once so the subsystem re-indexes. Returns `{pulled, <sub>.<key>: …}`. In the test,
+    # of my buckets it holds that I do not have (tmp + rename). Returns `{pulled, …}`. In the test,
     # `srv-a` with a wiped disk pulls 2 buckets; the open bucket that was never mirrored is the RPO.
     #
     # UNDER THE SAME PULSE AS THE PASS (the review's seventh pass, M4). It runs before the loop's first heartbeat after
@@ -1687,8 +1695,7 @@ class Resource:
     # `RESTORE_RETRY_MAX`); a peer that gave everything (`_restored_from`) is not asked again: what it holds of this
     # server since came from this server.
     def restore(self) -> dict:
-        """The reverse, run by the owner: pull my buckets from whoever holds
-        copies, then let each subsystem's hook re-index what came back."""
+        """The reverse, run by the owner: pull my buckets from whoever holds copies."""
         with self._pulsing():
             try:
                 return self._restore()
@@ -1760,12 +1767,9 @@ class Resource:
                         "%.0f s", self.server, wait)
         else:
             self._restore_tries, self._restore_next = 0, self.clock() + RESTORE_RETRY_MAX   # the next look for a late peer
-        hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
-                 for sub, h in self.hooks.items()} if pulled else {}
         return {"pulled": pulled,
                 **({"left": left, "failed": failed} if left or failed else {}),
-                **({"peers_failed": peers_failed} if peers_failed else {}),
-                **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+                **({"peers_failed": peers_failed} if peers_failed else {})}
 
     # A live peer that says it holds copies of this server, at an address.
     def _holds_mine(self, peer: str, hb: dict) -> bool:
@@ -1827,18 +1831,22 @@ class Resource:
     # decides what to give up, because only it knows what its files mean. Nothing here knows what a camera
     # is, and nothing here deletes a subsystem's file.
     #
-    # Over `high`, free down to `low`. Slowness resolves itself: a hook that can only start something (a move
-    # to another disk, say) returns what it managed and is asked again on the next pass — which is why there is
-    # no third, "critical" mark and no separate schedule. With nothing registered to answer — the VMS's footage
-    # is in rings that never outgrow their quota — what is short is said as a shortfall, and nothing is cut.
+    # Over `high`, free down to `low`. The resource does not free a subsystem's bytes and does not call its code: it ASKS,
+    # by a request row of the subsystem's own family — `<sub>/requests/free-<server>-<volume> {free, volume, server, at}`,
+    # for each subsystem whose spec says `requests: {free: true}` — and the subsystem's worker on this server decides
+    # what to give up and says what it gave in its heartbeat (`freed: {<volume>: bytes}`), read on the next pass (the
+    # boundary's step 6: it was a hook of the subsystem's, `free`, run on this thread). Slowness resolves itself: the row
+    # stands while the volume is over and is written again each pass; a volume back under its mark has its rows taken
+    # away. With nobody declared to answer — the VMS's footage is in rings that never outgrow their quota — what is short
+    # is said as a shortfall, and nothing is cut.
     def relieve(self) -> dict:
-        """Over the high mark, ask each subsystem to free bytes down to the low one.
+        """Over the high mark, ask each subsystem that frees to free bytes down to the low one.
 
         Per VOLUME, and that is the whole difference from the single-disk case:
         space does not average. A box that is 50% full across two disks, one of
         them at 98%, is a box that stops recording — and freeing bytes on the
         empty one closes nothing, because the unit that cannot write is on the
-        full one. So the loop is over volumes, and the volume goes to the hook:
+        full one. So the loop is over volumes, and the volume goes into the request:
         only the subsystem knows which of its files are where, but only the
         resource knows which disk is short.
         """
@@ -1864,25 +1872,25 @@ class Resource:
         if not knob["enabled"]:
             self.short = {}
             return {"space": "off"}
+        from . import catalog
+        frees = [s for s in catalog.specs() if s.requests_free]
         out, worst, over = {}, 0.0, []
         for name in self.volumes:
             self._progressed()                               # a volume measured is a step (the review's fourth pass)
             sp = self.space(name)
             worst = max(worst, sp["full"])
             if not sp["total"] or sp["used"] <= sp["total"] * knob["high"]:
+                for spec in frees:
+                    self._unask(spec, name)                  # under the mark: nothing asked of anybody
                 continue
             need, freed = int(sp["used"] - sp["total"] * knob["low"]), 0
-            for sub, h in self.hooks.items():
-                free = getattr(h, "free", None)
-                if free is None:
-                    continue                                 # a subsystem that keeps only buckets: `retain` is its whole policy
-                rep = _ask_to_free(free, need - freed, self.wall(), knob["min_days"], name, self._progressed)
+            for spec in frees:
+                said = self._freed(spec, name)               # what its workers here say they gave, since the last ask
                 self._progressed()                           # …and so is each subsystem's answer
-                freed += int(rep.get("freed", 0))
-                out.update({f"{sub}.{k}": v for k, v in rep.items()} if len(self.volumes) == 1
-                           else {f"{sub}.{name}.{k}": v for k, v in rep.items()})
-                if freed >= need:
-                    break
+                freed += said
+                out.update({f"{spec.name}.freed": said} if len(self.volumes) == 1 else {f"{spec.name}.{name}.freed": said})
+                if freed < need:
+                    self._ask(spec, name, need - freed)
             over.append({"volume": name, "full": round(sp["full"], 3), "need": need, "freed": freed,
                          "short": max(0, need - freed)})
         self.short = {v["volume"]: v["short"] for v in over if v["short"]}
@@ -1892,9 +1900,40 @@ class Resource:
         return {"space": "over", "full": first["full"], "need": first["need"], "freed": first["freed"],
                 "short": first["short"], "volumes": over, **out}
 
-    # The timer's body, in order: each subsystem's hook (it may index or drop lines), then `retain`, then
-    # `relieve` — the promise first, the watermark only for what the promise left behind — then `mirror`;
-    # results flattened into one dict (`<sub>.<key>`, `removed`, `space`, `enabled`, `mirrored`, `peers`).
+    # The request row of a subsystem for one of this server's volumes: written while it is over its mark (one row, its
+    # bytes as of this pass), taken away when it is not. A store that does not take it is this pass's trouble only.
+    def _free_key(self, spec, volume: str) -> str:
+        return spec.sub.request_key(f"free-{self.server}-{volume}")
+
+    def _ask(self, spec, volume: str, need: int) -> None:
+        try:
+            self.vars.put(self._free_key(spec, volume), {"free": str(int(need)), "volume": volume, "server": self.server,
+                                                         "at": str(self.wall())})
+        except OSError as e:
+            log.warning("%s: %s was not asked to free %d bytes on %s: %s", self.server, spec.name, need, volume, e)
+
+    def _unask(self, spec, volume: str) -> None:
+        try:
+            if self.vars.get(self._free_key(spec, volume))[0] is not None:
+                self.vars.delete(self._free_key(spec, volume))
+        except OSError:
+            pass                                             # asked again or taken away on the next pass
+
+    # What the subsystem's live workers on this server say they freed on the volume (`freed: {<volume>: bytes}` in
+    # their heartbeats) — a word there is 0, counted (`rows.number`).
+    def _freed(self, spec, volume: str) -> int:
+        from .console import heard_live, heartbeats
+        total = 0
+        for w, hb in heartbeats(self.objects, spec.name + "/").items():
+            if str(hb.extra.get("server", "")) != self.server or not heard_live(spec.name, w, hb, self.wall(), self.lost_after, self.eyes):
+                continue
+            freed = hb.extra.get("freed")
+            if isinstance(freed, dict):
+                total += int(number(f"{spec.sub.heartbeat_key(w)}#freed.{volume}", freed.get(volume), float, 0))
+        return total
+
+    # The timer's body, in order: `retain`, then `relieve` — the promise first, the watermark only for what the promise
+    # left behind — then `mirror`; results flattened into one dict (`removed`, `space`, `enabled`, `mirrored`, `peers`).
     #
     # THE PASS CARRIES ITS OWN PULSE (feedback BE). It runs on the thread that heartbeats, and it reads every
     # bucket it keeps: on a year of archive it takes longer than `lost_after`, the resource is called silent,
@@ -1918,8 +1957,8 @@ class Resource:
     # they moved (`_progressed`).
     #
     # …and every part says it, not only the walk and the retention (the review's fourth pass): the mirror marks
-    # each bucket a peer took, `relieve` each volume and each subsystem's answer, and a subsystem's hook is handed
-    # `progressed` to call as it goes.
+    # each bucket a peer took, `relieve` each volume and each subsystem's answer, and `kept` is handed `progressed` to
+    # call as it goes.
     PULSE_LIMIT = 4
 
     # The pulse itself, around whatever long step runs on the heartbeat's thread: `pass_`, and `restore` (the seventh
@@ -1971,9 +2010,6 @@ class Resource:
             self._volume_usage = {n: self.usage(n) for n in self.quotas}   # …and the same for the volumes with a ceiling
             self.last_usage, self.usage_at = usage, self.wall()
             return usage
-        for sub, h in self.hooks.items():                        # a subsystem's own pass first: it may index or drop lines
-            part(sub, lambda h=h, sub=sub: {f"{sub}.{k}": v for k, v in
-                                            _call_hook(h.pass_, self.wall(), progressed=self._progressed).items()})
         part("retain", self.retain, "removed")
         part("usage", measure, "usage")
         part("relieve", self.relieve)

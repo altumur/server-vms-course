@@ -477,6 +477,7 @@ class RecWorker(VmsWorker):
         self.backfill_budget = 0                    # ranges per pass; 0 = only what an operator asks for
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
+        self.freed: dict[str, int] = {}             # what it gave up when the resource asked, by volume (`requests`)
         self.behind_loopback: dict = {}             # camera -> the server whose fan-out is bound to loopback, and is not ours
         self.depths: dict = {}                      # recording -> days of footage it has here (`depth_pass`)
         self.shallow: dict = {}                     # recording -> when its `archive.shallow` alarm was last raised
@@ -1108,6 +1109,7 @@ class RecWorker(VmsWorker):
         # configuration — so it says which ones are done and the console removes them.
         return {**super().heartbeat_extra(),         # `fetched`: the same answer every worker gives
                 "volume": self.volume,
+                **({"freed": dict(self.freed)} if self.freed else {}),   # the resource's ask to free bytes, answered
                 # The box's own volume — where this recorder writes when nothing is declared. What the console
                 # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
                 "archive": hide_in_url(self.default_url),    # as a page says it (the twelfth review, major 15)
@@ -2567,6 +2569,15 @@ class RecWorker(VmsWorker):
             it, _ = self.vars.get(key)
             if it:
                 self._requests_read[key.rsplit("/", 1)[1]] = (str(it.get("unit", "")), None)
+            # THE RESOURCE ASKS TO FREE BYTES on a volume of its server (`free-<server>-<volume>`; the boundary's step 6: it
+            # was a hook of the VMS's the resource called). The recorder holding that volume decides, and answers in its
+            # heartbeat (`freed`): its footage is a ring of the size the volume was given, which gives up its oldest
+            # minutes by itself — nothing on the disk is the recorder's to give up early. Nought, said, and the row closed.
+            if it and key.rsplit("/", 1)[1].startswith("free-") and "free" in it:
+                if str(it.get("server", "")) == str(self.server) and str(it.get("volume", "")) == str(self.volume or ""):
+                    self.freed[str(it["volume"])] = 0
+                    self.fetched.append(key.rsplit("/", 1)[1])
+                continue
             if not it or str(it.get("unit", "")) not in mine or key.rsplit("/", 1)[1] in self.fetched:
                 continue                                     # another recorder's recording, or answered already
             # One family, two kinds of asking. A backfill names a RANGE and this worker fetches it; a

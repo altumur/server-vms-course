@@ -29,6 +29,21 @@ class Box:
         self.clock, self.wall = Clock(), Clock(1_757_500_000.0)
 
 
+def as_kept(step):
+    """A long step of a resource's pass, as the one step a test may give it since the boundary's step 6 took the
+    subsystems' hooks out of the resource: `Resource.kept` — called once a pass, handed the pulse (`progressed`), and
+    holding nothing. `step.pass_(now[, progressed])` is what a hook's pass was."""
+    import inspect
+
+    def kept(progressed=None):
+        if "progressed" in inspect.signature(step.pass_).parameters:
+            step.pass_(0, progressed or (lambda: None))
+        else:
+            step.pass_(0)
+        return lambda *a: False
+    return kept
+
+
 def published_snapshot(objects, sub: str, rows: str = "cameras") -> dict:
     """The snapshot as a READER sees it: list `<sub>/snapshot/`, get each shard, merge.
     One object per worker is the published shape, so a test that reads one key is

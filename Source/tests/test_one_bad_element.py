@@ -259,12 +259,13 @@ def test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_eva
     """Reproduced (the tenth pass, major): a scenario whose `when` is nested a hundred thousand deep raised
     `RecursionError` past `vms/resource.py`'s own tuple of exceptions — out of `kept_buckets`, and the whole server's
     `retain` swept nothing. And past the evaluator's (`AutoWorker.reconcile_once`): no scenario after it was decided.
-    Through `PARSE_ERRORS` now: the scenario is a unit of no one camera to the retain, and `failed` to the evaluator."""
+    The retain reads no scenario now (what is kept is the specs' `holds:`, and a scenario is about nobody — the
+    boundary's step 6), and the evaluator says `failed` of it."""
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from tests.test_autoworker import DOOR, _Log, _assigned, _scenario, _worker as _auto, ev
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     EventLog(box.archive, "vms", "8", 1).append(old, "motion")
     box.vars.put("vms/retention/8", {"days": "30"})

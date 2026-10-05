@@ -17,9 +17,9 @@ from vms.config import DET_SPEC, LIVE_SPEC, SPEC
 from vms.console import serve
 from vms.controller import VmsController
 from vms.detworker import DetWorker
-from vms.resource import vms_resource
+from w2cplatform.resource import platform_resource
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.conftest import Box, as_kept
 
 
 def call(base, method, path, body=None, headers=None):
@@ -40,9 +40,9 @@ def _console_over(box, db, per_minute: float = 0.0):
 
 
 def _resource_process(box):
-    """What `python3 -m vms resource` does: the platform's Resource with the VMS registered,
+    """What `python3 -m w2cplatform resource` does: the platform's Resource with what the specs hold,
     served over HTTP, heartbeating so the console can find it, its index over the tree."""
-    res = vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
     rsrv = serve_resource(res, "127.0.0.1", 0)
     res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"
     res.heartbeat()
@@ -107,7 +107,7 @@ def test_the_index_is_the_tree_and_retention_takes_the_events_with_the_file():
     box = Box(); t = box.wall() - 3 * 86400
     event_log(box.archive, 7, 1).append(t + 10, "motion", zone="gate")                  # three days old: past a 1-day policy
     event_log(box.archive, 7, 1).append(box.wall() - 100, "motion")                      # fresh
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     res.heartbeat()
     assert res.index.listing() == {"units": 1, "buckets": 2, "mirrored": [], "cached": 0} and res.index.state == "live"
     again = EventIndex(box.archive, "srv-1", wall=box.wall)
@@ -604,7 +604,7 @@ def test_a_burst_of_timeline_requests_lists_the_resources_once_in_two_seconds():
     from w2cplatform.resource import RESOURCES
     box = Box()
     for server in ("srv-1", "srv-2"):
-        res = vms_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
+        res = platform_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
         res.url = f"http://{server}"
         res.heartbeat()
 
@@ -633,7 +633,7 @@ def test_a_burst_of_timeline_requests_lists_the_resources_once_in_two_seconds():
     box.clock.advance(m.SEEN_FOR)
     assert ask()[0] == 200 and (objects.lists, objects.reads) == (2, 4)        # past the window: listed again
     # a resource that appears inside the window is seen once the window is over
-    late = vms_resource(box.archive, "srv-3", "", box.vars, box.objects, wall=box.wall)
+    late = platform_resource(box.archive, "srv-3", "", box.vars, box.objects, wall=box.wall)
     late.url = "http://srv-3"; late.heartbeat()
     ask()
     assert "http://srv-3" not in asked
@@ -665,7 +665,7 @@ def test_the_consoles_records_outlive_what_they_refer_to():
     mark = marks.append(old, "mark", user="anna", note="checked")  # …and the record written the same day
     box.vars.put("vms/retention/7", {"days": "730"})
 
-    res = vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 0                                       # neither is old enough yet
     assert os.path.exists(mark)
 
@@ -796,7 +796,7 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
                 time.sleep(0.2)
                 return {}
 
-        res.register("slow", Slow())
+        res.kept = as_kept(Slow())                                    # a long step of the pass (the hooks are gone: step 6)
         seen = {}
         mirror = res.mirror
         res.mirror = lambda: seen.update(resources_seen(box.objects)) or mirror()     # the last step of the pass
@@ -814,7 +814,7 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
                 time.sleep(0.2)
                 return {}
 
-        res.register("slow", Stuck())
+        res.kept = as_kept(Stuck())
         res.pass_()
         assert seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()
         assert seen["srv-1"]["pass_stuck"] > res.PULSE_LIMIT * res.lost_after
@@ -853,7 +853,7 @@ def test_the_pulse_survives_a_failed_beat_and_stops_on_no_progress_not_on_a_long
                     time.sleep(0.1)
                 return {}
 
-        res.register("long", Long())
+        res.kept = as_kept(Long())
         seen = {}
         mirror = res.mirror
         res.mirror = lambda: seen.update(resources_seen(box.objects)) or mirror()
@@ -868,7 +868,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
     """The review's fourth pass (Т-M13's remainder). Only the walk and the retention said they moved: the mirror, a
     subsystem's own hook and `relieve` did not, so a part that worked the whole time — the FIRST mirroring of a
     server, a year of buckets to its peer — was "stuck" to the pulse after four `lost_after`, and the resource went
-    silent with its recordings moved off it. Now each bucket a peer took is progress, a hook is handed `progressed`,
+    silent with its recordings moved off it. Now each bucket a peer took is progress, `kept` is handed `progressed`,
     and `relieve` marks each volume and each answer. A peer that hangs on one bucket is said (`pass_stuck`), and the
     beat goes on (the review's thirteenth pass, blocker 5: it stopped the pulse, and a hung worker was moved)."""
     import time
@@ -906,7 +906,8 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
         res.pass_()
         assert len(peer.took) == 8 and seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()
 
-        # a hook and the watermark's `free` that work long, and say so as they go
+        # what is kept read long, and said as it goes (`kept`, handed `progressed`: the one step of the pass a spec's
+        # declaration leaves long — the hooks, a subsystem's pass and its `free`, are gone since the boundary's step 6)
         class Long:
             def pass_(self, now, progressed):
                 for _ in range(6):
@@ -915,21 +916,12 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
                 seen["hook"] = (resources_seen(box.objects)["srv-1"]["ts"], box.wall())
                 return {}
 
-            def free(self, need, now, min_days, volume=None, progressed=None):
-                for _ in range(6):
-                    box.wall.advance(limit / 3); box.clock.advance(limit / 3)
-                    progressed(); time.sleep(0.05)
-                seen["free"] = (resources_seen(box.objects)["srv-1"]["ts"], box.wall())
-                return {"freed": need}
-
         box.vars.put("platform/mirror", {"enabled": "false"})
-        box.vars.put("platform/space", {"enabled": "true", "high": "0.5", "low": "0.4"})
-        res.space_probe = lambda path: (1000, 100)                    # 90% full: `relieve` asks the hook
-        res.register("long", Long())
+        res.kept = as_kept(Long())
         res.pass_()
-        assert seen["hook"][0] == seen["hook"][1] and seen["free"][0] == seen["free"][1]   # fresh at the end of each
+        assert seen["hook"][0] == seen["hook"][1]                     # fresh at its end
         assert "srv-1" in res.live_resources()
-        del res.hooks["long"]
+        res.kept = lambda progressed=None: (lambda *a: False)
 
         # …and a peer that hangs on its first bucket is a stuck pass, said — the beat goes on
         box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
@@ -1074,14 +1066,14 @@ def test_measuring_the_tree_and_removing_what_is_old_keep_the_pulse_with_a_mark_
 
 
 def test_reading_what_is_kept_marks_every_row_it_reads():
-    """The sibling in the VMS's own hook (`vms/resource.py`). Before anything is swept the retention asks what
-    somebody said to keep, and the answer is read from the store row by row — the keeps, and the rows of every
-    subsystem whose units are about a camera — with no mark between them: on a store that takes its time, a part of
-    the pass that moved the whole while and looked stuck. The hook is handed `progressed`, as a subsystem's pass is."""
+    """The sibling in what is kept (the specs' `holds:`, `w2cplatform/holds.py`; it was the VMS's own hook). Before
+    anything is swept the retention asks what somebody said to keep, and the answer is read from the store row by row —
+    the holds, and the rows of every unit about one — with no mark between them: on a store that takes its time, a
+    part of the pass that moved the whole while and looked stuck. `kept` is handed `progressed`."""
     from vms import keeps
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     res.clock, res.lost_after = box.clock, 0.5
     limit = res.PULSE_LIMIT * res.lost_after
     t = box.wall()
@@ -1130,12 +1122,12 @@ def test_a_file_that_vanishes_under_the_walk_and_a_part_that_raises_end_only_the
 
         class Buggy:
             def pass_(self, now):
-                raise KeyError("a bug in a subsystem's own pass")
-        res.register("buggy", Buggy())
+                raise KeyError("a bug in reading what is kept")
+        res.kept = as_kept(Buggy())
         ran = []
         res.mirror = lambda: ran.append("mirror") or {"enabled": False, "mirrored": 0, "peers": []}
         out = res.pass_()
-        assert ran == ["mirror"] and "usage" in out and any(e.startswith("buggy:") for e in out["errors"])
+        assert ran == ["mirror"] and "usage" in out and any(e.startswith("retain:") for e in out["errors"])
     finally:
         rsrv.shutdown()
 

@@ -142,7 +142,7 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
 
     box.vars.put("vms/retention/7", {"days": 1}); box.vars.put("vms/retention/8", {"days": 1})
     keeps.write(box.vars, {"cam": "8", "from": t, "to": t + 60}, ["8"], "anna", box.wall())
-    res["srv-b"].kept = res["srv-a"].kept = __import__("vms.resource", fromlist=["kept_buckets"]).kept_buckets(box.vars)
+    # (what a keep holds is the spec's `holds:`, read by every resource itself — the boundary's step 6)
     box.wall.advance(DAY - 5000)                                       # the two early buckets are past their day…
     assert res["srv-a"].retain() == 1                                  # the original of camera 7 goes; 8's is kept
     assert res["srv-b"].retain() == 0 and res["srv-b"].mirror_removed == 0   # …and the copy waits out the grace
@@ -164,14 +164,18 @@ def test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days()
     # the watermark: never read -> "unknown", and nothing freed; read once -> the last settings stand
     res = Resource(box.archive, "srv-1", "http://srv-1", flaky, box.objects, wall=box.wall,
                    space_probe=lambda root: (1_000_000, 100_000))
-    asked = []
-    res.register("rec", type("Hook", (), {"pass_": lambda s, now: {}, "free": lambda s, need, now, min_days, volume=None: (asked.append(need), {"freed": need})[1]})())
+    from vms.config import REC_SPEC                                    # it frees by a request row (`requests: {free}`)
+    [vol] = list(res.volumes)
+    asked = lambda: box.vars.get(res._free_key(REC_SPEC, vol))[0]
     flaky.down = True
-    assert res.relieve()["space"] == "unknown" and asked == []
+    assert res.relieve()["space"] == "unknown" and asked() is None
     flaky.down = False
-    assert res.relieve()["space"] == "over" and asked == [150_000]
+    assert res.relieve()["space"] == "over" and asked()["free"] == "150000"
+    box.vars.delete(res._free_key(REC_SPEC, vol))
     flaky.down = True
-    assert res.relieve()["space"] == "over" and asked == [150_000, 150_000]      # on what it read last
+    assert res.relieve()["space"] == "over"                             # on what it read last (the ask itself waits for the store)
+    flaky.down = False
+    assert res.relieve()["space"] == "over" and asked()["free"] == "150000"
 
     # the recording's days: a row not READ is not a row that is absent. Forty days of footage of 7 and of 8; 7 is
     # shown for ninety, 8 has no row and is shown for thirty — and a store that blinks changes neither.

@@ -644,6 +644,13 @@ class SubsystemSpec:
     # their `by` field names (a disk under its server). Handed to `/spec`; it was a field the console's `/servers` read
     # out of one subsystem's heartbeat until the boundary's step 6.
     servers_show: list = field(default_factory=list)
+    # `holds: {table, unit, since, until, longest}` — rows of a table that hold a unit's buckets on every resource past
+    # their days (`holds.py`; it was a subsystem's function the resource called, `kept`).
+    holds: dict = field(default_factory=dict)
+    # `requests: {free: true}` — this subsystem's workers answer the resource's request to free bytes on a volume of
+    # their server: `<sub>/requests/free-<server>-<volume> {free, volume, server, at}`, the answer in their heartbeat's
+    # `freed: {<volume>: bytes}` (`Resource.relieve`; it was the subsystem's hook the resource called, `free`).
+    requests_free: bool = False
 
     # Builds the spec from the YAML dict, tolerating absent sections. Field defaults are parsed to their
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
@@ -836,8 +843,14 @@ class SubsystemSpec:
     STATUS_COLUMNS = ("phase", "worker", "server", "revision", "observed_revision")
 
     def _page_words(self, d: dict) -> None:
-        from . import metrics
+        from . import holds, metrics
         self.metrics = metrics.parse(self.name, d.get("metrics"), self.tables)
+        self.holds = holds.parse(self.name, d.get("holds"), tables=self.tables)
+        req = d.get("requests")
+        if req is not None:
+            if not isinstance(req, dict) or set(req) - {"free"} or not isinstance(req.get("free", False), bool):
+                raise ValueError(f"spec {self.name}: `requests:` is {{free: true|false}}, not {req!r}")
+            self.requests_free = req.get("free", False)
         disp = d.get("display")
         if disp is not None:
             if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree"}:

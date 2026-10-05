@@ -21,7 +21,7 @@ from w2cplatform.resource import Resource, resources_seen, workers_here
 from vms.config import SPEC
 from vms.controller import VmsController
 from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from tests.conftest import Box, as_kept
 from tests.test_console_gate import _call, _console
 from tests.test_slot_fence import _forget_garbled
 
@@ -726,7 +726,7 @@ def test_the_resources_pulse_during_a_long_pass_says_who_runs_now():
             seen["keep"] = again
             return {}
     ctl.look()                                                               # the controller has seen the pass begin
-    res.register("slow", Slow())
+    res.kept = as_kept(Slow())
     res.pass_()
     assert seen["running"] == {"vms": ["w-1"]} and seen["fate"] == "hung", seen
     seen["keep"].absent()
@@ -979,7 +979,7 @@ def test_a_resource_whose_pass_hangs_beats_on_and_its_hung_worker_is_not_moved()
         def pass_(self, now):
             release.wait(60)
             return {}
-    res.register("hung", Hung())
+    res.kept = as_kept(Hung())
     site.up.discard("srv-1")                                                 # its loop is in the pass: no heartbeat of its own
     passing = threading.Thread(target=res.pass_, daemon=True)
     passing.start()

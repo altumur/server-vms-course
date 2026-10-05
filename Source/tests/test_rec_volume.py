@@ -1534,3 +1534,29 @@ def test_a_new_quota_is_a_write_into_the_volume_and_goes_under_the_same_fence():
         raise AssertionError("a resize went out with the engine's lock another writer's")
     except Fenced:
         assert st.writer.sizes == [128 << 20]
+
+
+def test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_ring_frees_nothing():
+    """The boundary's step 6: the resource's watermark called the subsystem's hook (`free`); it files a request row now
+    (`rec.subsystem.yaml`: `requests: {free: true}`), and the recorder holding that volume decides. Its footage is a ring
+    of the size the volume was given — nothing on the disk is the recorder's to give up early — so it answers nought in
+    its heartbeat (`freed`) and closes the row; another server's ask is not its to answer."""
+    from w2cplatform.resource import SPACE_KEY, Resource
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=lambda p: (100, 2))
+    res.volumes = {r.volume: box.archive}                                 # the resource's disk is the recorder's volume
+    assert res.relieve()["space"] == "over"
+    rid = f"free-srv-1-{r.volume}"
+    box.vars.put(REC_SPEC.sub.request_key("free-srv-9-other"), {"free": "1", "volume": "other", "server": "srv-9", "at": "0"})
+    r.requests()
+    r.heartbeat_once()
+    from w2cplatform.contract import Heartbeat
+    hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key(r.name)))
+    assert hb.extra["freed"] == {r.volume: 0} and rid in hb.extra["fetched"].split(",")
+    assert "free-srv-9-other" not in hb.extra["fetched"]
+    out = res.relieve()
+    assert out["freed"] == 0 and out["short"] == 48                       # said as a shortfall, and nothing is cut

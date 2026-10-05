@@ -125,13 +125,13 @@ def serve_resources(roots: dict, now: float):
     """Three resource processes over HTTP, each over its own tree, heartbeating into one object store."""
     from tests.conftest import Box
     from vms.archive import ArchiveResource
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from w2cplatform.resource import serve
     box = Box()
     rs, srvs = {}, []
     for name, root in roots.items():
         arch = ArchiveResource(os.path.join(box.root, f"spool-{name}"), root)
-        r = vms_resource(arch, name, "", box.vars, box.objects, wall=time.time)
+        r = platform_resource(arch, name, "", box.vars, box.objects, wall=time.time)
         srv = serve(r, "127.0.0.1", 0)
         r.url = f"http://127.0.0.1:{srv.server_address[1]}"
         r.heartbeat()

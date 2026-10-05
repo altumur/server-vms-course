@@ -292,30 +292,23 @@ def test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so():
     """`high: "85%"` raised out of `relieve` on every pass: a disk at 98 % freed nothing, with the settings read last in
     hand. They are used — or, never read, the defaults — and the heartbeat says which."""
     from w2cplatform.resource import SPACE_KEY, Resource
+    from vms.config import REC_SPEC                                     # `requests: {free: true}`: asked by a row (step 6)
     box = Box()
-    asked = []
-
-    class Frees:
-        def pass_(self, now):
-            return {}
-
-        def free(self, need, now, min_days, volume=None):
-            asked.append(need)
-            return {"freed": need}
 
     def full(path):
         return 100, 2                                                   # 98 % used
     res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
-    res.register("vms", Frees())
+    [vol] = list(res.volumes)
+    asked = lambda: box.vars.get(res._free_key(REC_SPEC, vol))[0]
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
-    assert res.relieve()["space"] == "over" and asked == [48]
+    assert res.relieve()["space"] == "over" and asked()["free"] == "48"
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "85%", "low": "0.5"})
     out = res.relieve()
-    assert out["space"] == "over" and asked == [48, 48] and "(high)" in res.heartbeat()["space_garbled"]
+    assert out["space"] == "over" and asked()["free"] == "48" and "(high)" in res.heartbeat()["space_garbled"]
     assert "settings read last" in res.space_garbled
     fresh = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, space_probe=full)
-    fresh.register("vms", Frees())
-    assert fresh.relieve()["space"] == "over" and asked[-1] == 48 and "the defaults" in fresh.space_garbled   # the row's `low` stands
+    box.vars.delete(res._free_key(REC_SPEC, vol))
+    assert fresh.relieve()["space"] == "over" and asked()["free"] == "48" and "the defaults" in fresh.space_garbled   # the row's `low` stands
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
     fresh.relieve()
     assert "space_garbled" not in fresh.heartbeat()                    # mended: said no more
@@ -337,9 +330,9 @@ def test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept():
     twenty of twenty old buckets: the disk fills. Not knowing which minutes are kept is "all of camera 9's"; the rest are
     swept by their days, the row is counted once and nothing is copied for it."""
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     for cam in ("7", "8", "9"):
         EventLog(box.archive, "vms", cam, 1).append(old, "motion")
@@ -349,7 +342,7 @@ def test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept():
         res.retain()
     assert bucket_names_under(box.archive, "vms", "7", 600) == [] and bucket_names_under(box.archive, "vms", "8", 600) == []
     assert len(bucket_names_under(box.archive, "vms", "9", 600)) == 1
-    assert keeps.KEEPS.counts.get("rec") == 1 and keeps.declared(box.vars) == []
+    assert keeps.declared(box.vars) == [] and keeps.KEEPS.counts.get("rec") == 1
     assert "rows_garbled" in res.heartbeat()
     _forget_garbled()
 
@@ -888,11 +881,12 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
     whole, from 0 to infinity, and every unit of no one camera (a scenario on any camera) whole too: 10 buckets removed
     where a sound keep let 37 go. Now `at` is metadata, read as not said; a bound that parses is kept and the lost one is
     open on its side; such a keep holds its camera's buckets and nothing of the units of no camera — those are held by
-    the keeps that read."""
+    the keeps that read. (A scenario is about nobody since the boundary's step 6 — what a keep holds is the spec's
+    `holds:` through `about` — so no keep holds it.)"""
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     now = box.wall()
     day = lambda d: now - d * 86400
     for d in (40, 35, 32):
@@ -909,7 +903,7 @@ def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_u
     left = lambda sub, unit: sorted(round((now - b.start) / 86400) for b in bucket_names_under(box.archive, sub, unit, 600))
     assert left("vms", "7") == [35]                                    # its interval, and no more
     assert left("vms", "8") == [32]                                    # from its start on: 40 and 35 go
-    assert left("auto", "any-door") == [35]                            # held by the keep that reads, not by the open one
+    assert left("auto", "any-door") == []                              # about nobody (the spec's `holds:`, step 6): no keep holds it
     garbled: list = []
     keeps.declared(box.vars, garbled)
     [k8] = garbled
@@ -1069,12 +1063,15 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
     `rec/recordings/r9` raised out of `kept_buckets` — `removed=None` and every unit of the server kept, every pass, and
     `rows_garbled` did not count it. Now each row is read alone: the others are swept by their days, the torn row is
     counted once (`unit_rows_garbled`), and its unit is a unit of no one camera — held where a keep that reads holds,
-    and swept outside it."""
+    and swept outside it. Since the boundary's step 6 what a keep holds is the spec's (`holds:`, `w2cplatform/holds.py`):
+    a unit is held through its spec's `about`, and a scenario is about nobody — its row is not read, and a keep on a
+    camera holds none of its buckets."""
     import os
     from w2cplatform.events import EventLog, bucket_names_under
-    from vms.resource import UNIT_ROWS, vms_resource
+    from w2cplatform.holds import UNITS as UNIT_ROWS
+    from w2cplatform.resource import platform_resource
     box = Box()
-    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     old = box.wall() - 40 * 86400
     for sub, unit in (("vms", "7"), ("vms", "8"), ("det", "55"), ("auto", "s1"), ("rec", "r9")):
         EventLog(box.archive, sub, unit, 1).append(old, "motion")                     # inside the keep below
@@ -1090,11 +1087,12 @@ def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_th
         assert "errors" not in out, out
     assert bucket_names_under(box.archive, "vms", "8", 600) == []                      # swept by its days
     assert len(bucket_names_under(box.archive, "vms", "7", 600)) == 1                  # the kept minutes, and only them
-    for sub, unit in (("det", "55"), ("auto", "s1"), ("rec", "r9")):
+    for sub, unit in (("det", "55"), ("rec", "r9")):
         left = bucket_names_under(box.archive, sub, unit, 600)
         assert len(left) == 1 and left[0].start <= old < left[0].end, (sub, unit, left)   # held as ANY, the rest swept
-    assert UNIT_ROWS.counts == {"det": 1, "auto": 1, "rec": 1}, UNIT_ROWS.counts      # once each, not once per read
-    assert res.heartbeat()["rows_garbled"]["unit_row"] == 3
+    assert bucket_names_under(box.archive, "auto", "s1", 600) == []                    # about nobody: held by no keep
+    assert UNIT_ROWS.counts == {"det": 1, "rec": 1}, UNIT_ROWS.counts                 # once each, not once per read
+    assert res.heartbeat()["rows_garbled"]["unit_row"] == 2
     os.remove(box.vars._file("det/units/55"))
     _forget_garbled()
 

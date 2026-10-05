@@ -186,13 +186,11 @@ def controller(name: str, env: dict) -> None:
 
 
 def resource(env: dict) -> None:
-    from .eventdatabase import EventIndex
-    from .resource import Resource, serve
+    from .resource import platform_resource, serve
     vars_, objects = box_stores(env)
     host, port = env.get("RESOURCE_HOST", "127.0.0.1"), int(env.get("RESOURCE_PORT", "8090"))
-    root = runtime.events_root(env)
-    res = Resource(root, runtime.server(env), env.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
-    res.index = EventIndex(root, res.server, time.time)
+    res = platform_resource(runtime.events_root(env), runtime.server(env), env.get("RESOURCE_URL", f"http://{host}:{port}"),
+                            vars_, objects)
     run_resource(res, serve(res, host, port))
 
 

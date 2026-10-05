@@ -14,7 +14,7 @@ from w2cplatform.resource import serve as serve_resource
 from vms.console import serve
 from vms.controller import VmsController
 from vms.config import SPEC
-from vms.resource import vms_resource
+from w2cplatform.resource import platform_resource
 from tests.conftest import Box, door, footage, store
 
 
@@ -35,7 +35,7 @@ def _put(url, body, headers):
 
 
 def _resource(box):
-    res = vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
     srv = serve_resource(res, "127.0.0.1", 0)
     return f"http://127.0.0.1:{srv.server_address[1]}", srv
 

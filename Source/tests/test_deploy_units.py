@@ -44,22 +44,24 @@ def test_the_units_run_the_entrypoints_the_package_has():
     from w2cplatform import host
     entrypoints = set(re.findall(r'"(\w+)": \w+', open(os.path.join(HERE, "vms", "__main__.py")).read().split("__main__")[-1]))
     assert entrypoints == {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker",
-                           "console", "resource"}
+                           "console"}
     platform = {"vmscontroller.container": "vms", "reccontroller.container": "rec", "livecontroller.container": "live", "detcontroller.container": "det",
                 "detjobcontroller.container": "detjob", "surveycontroller.container": "survey",
                 "autocontroller.container": "auto"}
     image = open(os.path.join(DEPLOY, "Containerfile")).read()
     assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
     assert "controller <sub>" in host.USAGE
-    for name, entry in [("vmsworker@.container", "worker"),
-                        ("console.container", "console"), ("w2c-resource.container", "resource"),
+    for name, entry in [("vmsworker@.container", "worker"), ("w2c-resource.container", "resource"),
+                        ("console.container", "console"),
                         ("recworker@.container", "recorder"), ("liveworker@.container", "gateway"),
                         ("detworker@.container", "detworker"), ("detjobworker@.container", "detjobworker"),
                         ("surveyworker@.container", "surveyworker"), ("autoworker@.container", "autoworker"),
                         *platform.items()]:
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
-        if name in platform:
+        if name == "w2c-resource.container":
+            assert u["Container"]["Exec"] == "python3 -m w2cplatform resource"         # the platform's own (step 6)
+        elif name in platform:
             assert u["Container"]["Exec"] == f"python3 -m w2cplatform controller {entry}"
             assert os.path.exists(os.path.join(HERE, "vms", f"{entry}.subsystem.yaml"))   # what `SPEC_DIR` gives it
         else:
@@ -296,7 +298,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
     import sys
     import tempfile
     from vms.archive import event_log
-    from vms.resource import vms_resource
+    from w2cplatform.resource import platform_resource
     from w2cplatform import runtime
     from w2cplatform.events import EventLog
     from tests.conftest import Box
@@ -335,7 +337,7 @@ def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
         st = os.stat(f)
         assert st.st_gid == group and st.st_mode & 0o060 == 0o060, (f, oct(st.st_mode))
         assert _may_unlink(f, *resource) and _may(f, *resource, 4), f
-    res = vms_resource(events, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(events, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     box.vars.put("vms/retention/7", {"days": "1"})
     assert res.retain() == 1                                                 # the resource deletes the client's old bucket
     assert sum(1 for f in files if os.path.exists(f)) == 2

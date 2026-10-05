@@ -54,8 +54,8 @@ def _rows(objects: list[str]) -> list[str]:
 # The subsystems whose buckets a resource may hold — and so whose days it reads (`resource.retention_days`): every
 # spec of the VMS, the console's marks, the audit journal. A rights file says keys and prefixes, not `*/retention`,
 # so the names are said.
-TREES = sorted({s.name for s in (SPEC, LIVE_SPEC, DET_SPEC, REC_SPEC, DETJOB_SPEC, AUTO_SPEC, SURVEY_SPEC)}
-               | {"console", "audit"})
+SPECS = (SPEC, LIVE_SPEC, DET_SPEC, REC_SPEC, DETJOB_SPEC, AUTO_SPEC, SURVEY_SPEC)
+TREES = sorted({s.name for s in SPECS} | {"console", "audit"})
 
 
 def _gate() -> list[str]:
@@ -94,10 +94,15 @@ def roles() -> dict[str, dict]:
         # records; its own), whether its server is decommissioned, and where a camera's primary is (М12).
         "recworker": role("recworker", REC_SPEC.sub.acl_worker() + rec_rows,
                           [SCHEMA_KEY, "rec/*", "vms/*", DECOMMISSION + "*", PRIMARIES, *rec_rows]),
-        # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`); reads
-        # the others' doors, the mirror and the watermark's knobs, every subsystem's days, and what a keep holds.
-        "resource": role("resource", [DOORS + "/*"],
-                         [SCHEMA_KEY, DOORS + "/*", MIRROR_KEY, SPACE_KEY, "rec/recordings/*", "rec/keeps/*"]
+        # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its
+        # ask to free bytes, a request row of each subsystem whose spec says it frees (`requests: {free: true}`; the
+        # boundary's step 6); reads the others' doors, the mirror and the watermark's knobs, every subsystem's days, what
+        # a spec's `holds:` table holds and the rows of every unit ABOUT another (whose its buckets are).
+        "resource": role("resource", [DOORS + "/*"] + [s.sub.request_key("free-*") for s in SPECS if s.requests_free],
+                         [SCHEMA_KEY, DOORS + "/*", MIRROR_KEY, SPACE_KEY]
+                         + [s.sub.config(s.holds["table"], "*") for s in SPECS if s.holds]
+                         + [s.sub.config(s.rows, "*") for s in SPECS if s.about_sub]
+                         + [s.sub.request_key("free-*") for s in SPECS if s.requests_free]
                          + [f"{t}/{family}{tail}" for t in TREES for family in ("retention", "alarms_retention")
                             for tail in ("", "/*")]),
         # М12, in a member cluster's store: the domain's agent writes the domain's rows and the relay's, and is the one
