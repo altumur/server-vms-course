@@ -9,7 +9,7 @@ const PAGE=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","domain",
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"holder-page-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`)
-  .replace('{ sections: ["domain"] }','{ sections: ["domain"], poll_s: 0, lang: "ru" }'));
+  .replace('{ sections: ["domain"], lang: "ru" }','{ sections: ["domain"], lang: "ru", poll_s: 0 }'));
 process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 
@@ -19,7 +19,7 @@ function fixtures(P,deposed){
   b.FIX["/session"]={open:false,user:p("u"),login_url:"/api/login"};
   b.FIX["/spec"]={name:"",rows:null};
   b.FIX["/mounts"]={root:"",mounts:{testsub:{name:"testsub",rows:"things",id:"name",fields:[{name:"name",type:"string"},{name:"start",type:"bool"}],
-    display:{unit:"штука",units:"штуки",fields:{start:"Пуск"}},domain:{edit:["start"],view:["start"],shared:["tags","depth","on"]}}}};
+    display:{unit:"штука",units:"штуки",fields:{start:"Пуск"},kinds:{"thing.lost":"штука потеряна"}},domain:{edit:["start"],view:["start"],shared:["tags","depth","on"]}}}};
   b.FIX["/domain"]={holder:"hold",as_of:1,age:0,complete:false,url:"http://hold/"+P,
     members:[{name:"hold",holder:true,state:"ok"},{name:p("m"),state:P,age:2,error:P,reaches:[P]},{name:"quiet",state:"silent",age:99}],
     term:deposed?{term:3,deposed:true,deposed_by:{holder:p("new"),term:4,url:P},
@@ -31,7 +31,9 @@ function fixtures(P,deposed){
                     {sub:"testsub",id:"2",ref:"cold",cluster:"quiet",phase:"",age:50,state:"silent",view:{start:false}}],[p("sub")]:[{ref:P,cluster:P,state:P,view:{[P]:P}}]},
     pending:{[p("m")]:[{what:P,at:1}]},outcomes:{[p("m")]:[{what:P,id:P,status:409,at:1,error:P}],quiet:[{what:"ok",status:200,at:2}]},
     topology:{rev:1,centre:"hold",star:[],via:{}},knocking:[],member_list:{rev:1,members:{}}};
-  b.FIX["/domain/alarms"]={events:[{kind:P,member:p("m"),of:"testsub/1",t:1,subsystem:P,unit:P}],complete:false,sentence:P};
+  b.FIX["/domain/alarms"]={events:[{kind:"session.debug_open",member:"hold",unit:"console",t:9,person:"stand-admin",id:"x1"},{kind:"session.debug_open",member:"quiet",unit:"console",t:8,person:"stand-admin",id:"x2"},
+    {kind:"session.debug_open",member:"hold",unit:"domain",t:3,person:"stand-admin",id:"x3"},{kind:P,member:p("m"),of:"testsub/1",t:1,subsystem:P,unit:P},
+    {kind:"thing.lost",subsystem:"audit",unit:"audit/worker",of:"testsub/2",member:"quiet",t:0}],complete:false,sentence:P};
   b.FIX["/domain/shared"]={doc:{rev:7,term:3,at:1,by:P,shared:{testsub:{tags:[P,"b"],depth:3,on:true}}},delivery:{sentence:P,refused:{[p("m")]:P}},
     declared:{testsub:[{name:"tags",type:"list"},{name:"depth",type:"int"},{name:"on",type:"bool"}],[p("sub")]:[{name:P,type:"string"}]}};
   b.FIX["/domain/handover"]={sentence:"handed"};
@@ -55,7 +57,11 @@ async function run(tag,P,deposed){
     const tr=cardOf(/Доверие/);
     out[T("trustRotationFlagged")]=!!tr&&tr.querySelectorAll(".bd.off").length===2&&/ротация не закончена/.test(tr.textContent);
     const un=cardOf(/Единицы/);
-    out[T("unitsBySubsystemInItsWords")]=!!un&&/Штуки/.test(un.textContent)&&/Пуск: true/.test(un.textContent)&&/кластер молчит/.test(un.textContent);
+    out[T("unitsBySubsystemInItsWords")]=!!un&&/Штуки/.test(un.textContent)&&/Пуск: да/.test(un.textContent)&&/Пуск: нет/.test(un.textContent)&&/кластер молчит/.test(un.textContent);
+    const al=cardOf(/Тревоги/),rows=al?[...al.querySelectorAll(".it")]:[];
+    out[T("alarmsOneLinePerKindAndAbout")]=rows.length===4&&/×2/.test(rows[0].textContent)&&/· console/.test(rows[0].textContent)&&/hold, quiet/.test(rows[0].textContent)&&/как stand-admin/.test(rows[0].textContent)&&!/id=/.test(rows[0].textContent)&&/· domain/.test(rows[1].textContent)&&!/×/.test(rows[1].textContent);
+    out[T("relayedKindInAnySpecsWords")]=/штука потеряна/.test(rows[3]?rows[3].textContent:"");
+    out[T("holderHeaderNoWorkersNoFooter")]=d.querySelector(".pc-hworkers").parentElement.style.display==="none"&&d.querySelector("footer").style.display==="none"&&d.querySelector(".pc-hunits-l").textContent==="Кластеры";
     const ed=cardOf(/Правки для кластеров/);
     out[T("editsPendingAndOutcomes")]=!!ed&&/ждёт публикации/.test(ed.textContent)&&/отказ 409/.test(ed.textContent)&&/применена/.test(ed.textContent);
     // «вкл/выкл» по domain.edit: PUT /domain/testsub/things/<ref> {start: false}
