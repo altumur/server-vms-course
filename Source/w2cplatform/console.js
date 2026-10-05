@@ -139,6 +139,7 @@
         "worker.name_taken": "a worker's name was taken", "worker.name_back": "a worker got its name back", "worker.name_conflict": "worker name conflict",
         "worker.presence_unknown": "whether a worker is alive is unknown", "worker.presence_unknown_moved": "the units of a worker without a pulse moved",
         "worker.slot_ahead": "a worker's slot lease ran ahead",
+        "session.debug_open": "debug sign-in without a password is on",
       },
       // the domain's holder: its term, its trust, the units on the domain, the shared settings, the edits (§10a)
       domTerm: "Holding", heldOn: "The domain is held on", restoredFrom: "restored from backup rev {r} of {f}", backupAtW: "backup copy at",
@@ -161,7 +162,8 @@
       publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
       editsW: "Edits for the clusters", editsNote: "The domain calls no cluster: an edit waits here, the cluster's agent takes it on its next publication, applies it and sends back the outcome.",
       waitsPub: "waits for publication", appliedW: "applied", refusedStatus: "refused {s}", takenAt: "taken", appliedAt: "applied", noEdits: "no edits",
-      n: { on: "on", silent: "silent", unitsN: "units", noTwoWriters: "not moved, so that there are never two writers", movedAfter: "moved after",
+      debugBadge: "debug: no sign-in", debugTip: "The door let you in without a password: a request from this machine, W2C_DEBUG_PERSON is set (a stand only, ADR-0050). Your rights are this person's.",
+      n: { asPerson: "as", on: "on", silent: "silent", unitsN: "units", noTwoWriters: "not moved, so that there are never two writers", movedAfter: "moved after",
         holds: "held by", leaseUntil: "lease until", pastLimit: "past the limit of", server: "server", lost: "lost",
         nameHeld: "the name is held by", waits: "this process waits for its name", namedAgain: "has its name again", after: "after", nameless: "without a name",
         refused: "refused", min: "min", s: "s" },
@@ -287,6 +289,7 @@
         "worker.name_taken": "имя воркера забрали", "worker.name_back": "воркер вернул себе имя", "worker.name_conflict": "конфликт имени воркера",
         "worker.presence_unknown": "жив ли воркер — неизвестно", "worker.presence_unknown_moved": "единицы воркера без пульса перенесены",
         "worker.slot_ahead": "аренда слота воркера ушла вперёд",
+        "session.debug_open": "отладочный вход без пароля включён",
       },
       domTerm: "Размещение", heldOn: "Домен размещён на", restoredFrom: "восстановлен из копии rev {r} с {f}", backupAtW: "резервная копия у",
       noBackupYet: "пока ни у кого", handOver: "Передать домен…", handTo: "Кому", handBtn: "Передать",
@@ -308,7 +311,8 @@
       publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
       editsW: "Правки для кластеров", editsNote: "Домен не звонит кластерам: правка ждёт здесь, агент кластера забирает её при следующей публикации, применяет у себя и присылает исход.",
       waitsPub: "ждёт публикации", appliedW: "применена", refusedStatus: "отказ {s}", takenAt: "принята", appliedAt: "применена", noEdits: "правок нет",
-      n: { on: "на", silent: "молчит", unitsN: "единиц", noTwoWriters: "не переносятся, чтобы не было двух писателей", movedAfter: "перенесены через",
+      debugBadge: "отладка: вход без пароля", debugTip: "Дверь впустила без пароля: запрос с этой машины, задан W2C_DEBUG_PERSON (только стенд, ADR-0050). Права — этого человека.",
+      n: { asPerson: "как", on: "на", silent: "молчит", unitsN: "единиц", noTwoWriters: "не переносятся, чтобы не было двух писателей", movedAfter: "перенесены через",
         holds: "держит", leaseUntil: "аренда до", pastLimit: "дальше предела", server: "сервер", lost: "утрачены",
         nameHeld: "имя держит", waits: "этот процесс ждёт своё имя", namedAgain: "снова с именем", after: "после", nameless: "без имени",
         refused: "отказал", min: "мин", s: "с" },
@@ -433,6 +437,7 @@
       if (k === "worker.slot_ahead")
         return j([e.worker ?? "?", e.holder ? n.holds + " " + e.holder : "", e.until ? n.leaseUntil + " " + fmt(e.until) : "",
           e.limit_s != null ? n.pastLimit + " " + dur(e.limit_s) : "", e.units != null ? n.unitsN + ": " + e.units : ""]);
+      if (k === "session.debug_open") return e.person ? n.asPerson + " " + e.person : "";
       if (k === "worker.name_taken") return j([`${e.worker ?? "?"}: ${n.nameHeld} ${e.holder ?? "?"}${e.holder_box ? " (" + e.holder_box + ")" : ""}`, n.waits + (e.box ? " (" + e.box + ")" : "")]);
       if (k === "worker.name_back") return `${e.worker ?? ""} ${n.namedAgain}${e.nameless_s != null ? " " + n.after + " " + dur(e.nameless_s) + " " + n.nameless : ""}`.trim();
       if (k === "worker.name_conflict")
@@ -523,6 +528,7 @@
         <div class="hr-tools">
           <div class="hload pc-hload"><span class="hmet"><span class="hlab pc-hunits-l">—</span><b class="pc-hunits">—</b></span><span class="hmet"><span class="hlab">${h(W.workersCap)}</span><b class="pc-hworkers">—</b></span><span class="hsrv pc-hsrv"></span></div>
           <div class="umenu pc-umenu"><button type="button" class="ubtn pc-ubtn" aria-expanded="false"><span class="uav">◐</span><span class="uname pc-uname">—</span><span class="uchev">▾</span></button>
+            <span class="bd off pc-debug" hidden>${h(W.debugBadge)}</span>
             <div class="upop pc-upop"><div class="uhead"><span class="uav">◐</span><b class="pc-uinst">—</b></div>
               <label>${h(W.theme)}<select class="pc-theme"><option value="dark">${h(W.dark)}</option><option value="light">${h(W.light)}</option></select></label>
               <label>${h(W.pollW)}<select class="pc-poll"><option value="5">${h(W.pollEvery.replace("{n}", 5))}</option><option value="15">${h(W.pollEvery.replace("{n}", 15))}</option><option value="0">${h(W.manual)}</option></select></label>
@@ -632,9 +638,15 @@
       $(".pc-uinst").textContent = r0 ? W.subsystemW + " " + r0.name : "—";
       const s = st.session || {};
       $(".pc-uname").textContent = s.user ? s.user + (s.glass ? " · " + W.glass : "") : s.open ? W.open : "—";
-      $(".pc-logout").style.display = s.user ? "block" : "none";
+      paintDebug(s);
     }
 
+    // A door that let the person in without a password (ADR-0050: W2C_DEBUG_PERSON, loopback, a stand only) is said in
+    // the header for as long as it is so; there is nothing to sign out of.
+    function paintDebug(s) {
+      const b = $(".pc-debug"); b.hidden = !s.debug; b.title = W.debugTip;
+      $(".pc-logout").style.display = s.user && !s.debug ? "block" : "none";
+    }
     // at the holder: the members and how many publish, the holder's name
     function paintHolderHeader() {
       const ms = (st.dom && st.dom.members) || [];
@@ -644,7 +656,7 @@
       $(".pc-uinst").textContent = cap(W.domainWord) + (st.dom && st.dom.holder ? " · " + st.dom.holder : "");
       const s = st.session || {};
       $(".pc-uname").textContent = s.user ? s.user : s.open ? W.open : "—";
-      $(".pc-logout").style.display = s.user ? "block" : "none";
+      paintDebug(s);
     }
 
     // -- the rail -------------------------------------------------------------------------------------------------
