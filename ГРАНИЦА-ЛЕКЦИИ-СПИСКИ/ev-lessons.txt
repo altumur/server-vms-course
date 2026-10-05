@@ -1,0 +1,47 @@
+ev — lesson lines made untrue by: (1) the event log refuses a subsystem line naming `of`; (2) a place goes through a
+silence only if its row names THIS worker's server (ADR 0012, ADR 0029); `server_unsaid` in the heartbeat.
+Format: file:line — what is untrue — what is true now. Lesson files were NOT edited.
+
+== М10A, урок 12 (События) ==
+М10A_Platform/12-Events.md:114 — листинг `EventLog.__init__(…, of: str = "")` — параметра `of` больше нет. Конструктор `(root, subsystem, unit, epoch, bucket_seconds=600)`, поле `self._of = ""`. Его ставит только база: `Worker.event_log(unit, epoch)` (бывший `_event_log`, имя продукта `Worker.EventLog`) пишет `log_._of = self.of(unit)`.
+М10A_Platform/12-Events.md:116 — `self.of = of` — теперь `self._of = ""`. Публичного `of` у лога нет.
+М10A_Platform/12-Events.md:153 — «`of`, если есть, обязан быть ссылкой <sub>/<id>» — неполно. Сначала `append` отказывает строке подсистемы, в которой есть `of`, даже пустой: `events.refuse_own_of`, текст «`of` is the platform's to write: what <sub>/<unit> is about is read from its row by its spec's `about` (Worker.event_log), and a line does not say its own». Проверка ссылки остаётся для `_of`, поставленного базой, и для отметок консоли.
+М10A_Platform/12-Events.md:161 — «Писатель … отдаёт её логу: `EventLog(…, of=spec.of_row(row))`. Дальше `append` кладёт её в каждую строку, если строка не назвала свою, а пустую не пишет вовсе» — неверно. `of` ставит база при взятии эпохи (`Worker.of`, `abouts`) через `Worker.event_log`. Строка, которая называет своё `of` (пустое тоже), — отказ в самом логе, кто бы его ни открыл: и `write_event`/`observe`, и `EventLog`, открытый мимо воркера (раньше отказ был только в `Worker.write_event`/`observe`, и в обход можно было пройти). Своё `of` называет только отметка консоли — дерево `CONSOLE_MARKS = "console"` (имя продукта `ConsoleMarks`), там пустое `of` по-прежнему не пишется. Подсистема с именем `console` (и `audit`, см. добавку в конце) не загружается (`SubsystemSpec.from_dict`). «В тестах платформы так пишет `tally`» — `tally` в `test_units_about.py` теперь получает `of` через `tests.conftest.stamped` (так, как ставит база), а пример базы — `tests/test_base_worker.py::test_the_base_writes_of_and_a_line_that_says_its_own_is_refused` на `testsub2`.
+М10A_Platform/12-Events.md:486 — «`append` требует ссылку <sub>/<id>» — для строки подсистемы `append` теперь вообще не принимает `of`. Ссылку он требует от `of` базы и от отметки консоли.
+
+== М10A, урок 13 (EventDatabase) ==
+М10A_Platform/13-EventDatabase.md:390 — «Писатель не передал `of` (`EventLog(…, of=spec.of_row(row))`)» — передать `of` писатель больше не может. Строку не находит потому, что спека не объявила `about` или строка единицы не прочиталась при взятии эпохи (тогда `of` дочитывается на строке). Отказ на своё `of` виден сразу, а не в запросе.
+
+== М10A, урок 14 (Resource) ==
+М10A_Platform/14-Resource.md:148 — в листинге `tree_owner(sub)[0] != CONSOLE` — константа переименована: `CONSOLE_MARKS` (events.py, имя продукта `ConsoleMarks`). Старого имени нет.
+
+== М10A, урок 15 (SpecConsole) ==
+М10A_Platform/15-SpecConsole.md:63 — `EventLog(marks_root, "console", self.instance, 1)` — теперь `EventLog(marks_root, CONSOLE_MARKS, self.instance, 1)`. Это единственное дерево, чьи строки называют своё `of`.
+М10A_Platform/15-SpecConsole.md:95 — то же.
+
+== М10A, урок 8 (Controller-and-Worker) ==
+М10A_Platform/08-Controller-and-Worker.md:916-928 — листинг `observe`. Теперь первая строка тела — `refuse_own_of(self.sub.name, str(unit), fields)`: отказ сразу, и строка, которую проглотил бы подавитель, тоже отказана. В листинге не было и прежнего `self._refuse_of(fields)`. `_write_lines` зовёт `self.event_log(unit, epoch)` вместо `_event_log`.
+М10A_Platform/08-Controller-and-Worker.md:664-665 — листинг `heartbeat` после `presence_unsaid`. Теперь в нём ещё `server_unsaid`. Если у воркера нет сервера (`Worker.server`) и спека называет `placement.places.server_field`, heartbeat несёт `server_unsaid: "this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"` (константа `worker.SERVER_UNSAID`, один текст с продуктом). Иначе поля нет. Платформа по нему ничего не решает, в `/metrics` его нет. Тест: `test_base_worker.py::test_a_worker_without_its_server_says_so_in_its_heartbeat`.
+
+== М10A, урок 7 (Slot-and-Runtime) ==
+М10A_Platform/07-Slot-and-Runtime.md:665 — листинг `claim_hold`. После `_place_where[got] = where` теперь есть строка лога: воркер без сервера, взявший место сервера, пишет ОДНУ строку `took <place>, a place of server <s>, naming no server of its own: it is let go when its hold goes unconfirmed, not kept through a silence (ADR 0029)`.
+М10A_Platform/07-Slot-and-Runtime.md:711 — «`lease: strict` — о месте, которое пишет любая коробка» — неполно. Строгое теперь всё, кроме места, чья строка называет сервер ЭТОГО воркера. Это место любой коробки; место ДРУГОГО сервера (чужое, сквозь молчание в него не пишут); место, чью строку не прочли при взятии; место спеки без `server_field`; любое место воркера без сервера. Основание — ADR 0012 (отсечение ослабляется только при доказательстве, что место наше) и ADR 0029. `held_strictly(place, row)` возвращает `where != self.server`. Раньше было `not where`: место чужого сервера держалось сквозь молчание.
+М10A_Platform/07-Slot-and-Runtime.md:744 — «Общая форма правила: любое умолчание платформы, которое ослабляет отсечение…» — верно. Стоит добавить второй пример той же формы: место держится сквозь молчание только по строке, которая называет свой сервер, — молчание по чужой строке не ослабляет отсечения.
+(новый абзац, нет строки) — место не строгое (строка называет свой сервер, или `lease` не `strict`) держится сквозь молчание по потолку единиц `lease.unconfirmed_max` после конца удержания, а не бесконечно. С `forever` (регистратор) — как раньше, сколько длится молчание. После потолка `_strict_place_pass` спрашивает хранилище ещё раз и отпускает место («past the units' ceiling»). Раньше нестрогое место оставалось за воркером на всё молчание при любом потолке.
+
+== М10A, урок 9 (SubsystemSpec) ==
+М10A_Platform/09-SubsystemSpec.md:846 — «`lease: strict` — место, которое не называет сервера, отпускается…» — неполно. Отпускается всякое место, чья строка не называет сервер ЭТОГО воркера: и место любой коробки, и место другого сервера, и место воркера без сервера. Нестрогое место держится по потолку `lease.unconfirmed_max`.
+
+== М10A, урок 11 (SpecController-placement) ==
+М10A_Platform/11-SpecController-placement.md:922 — «`lease: strict` — для такого общего места: база воркера отпускает его…» — неполно, по той же причине. Строгое — всё, кроме места своего сервера. Нестрогое держится по потолку единиц, а не всё молчание.
+
+== М10B ==
+М10B_ServerVMS/10-recworker.md:397 — «диск этого сервера | остаётся за регистратором, сколько бы молчание ни длилось» — верно, только если строка тома называет сервер этого регистратора (`SERVER_NAME` → `Worker.server`; у регистратора `unconfirmed_max: forever`). Том другого сервера и любой том регистратора без `SERVER_NAME` теперь отпускаются после окна, как том по адресу. Регистратор без сервера говорит это в heartbeat'е (`server_unsaid`) и один раз в логе при взятии тома.
+М10B_ServerVMS/10-recworker.md:400 — «Это единственный случай, когда молчание хранилища всё ещё останавливает запись» — уже не единственный: так же останавливается запись в чужой том и в любой том регистратора, который не назвал своего сервера.
+М10B_ServerVMS/27-volumes.md:423-429 — та же таблица словами («локальный том при регистраторе») — верно при условии, что том называет сервер этого регистратора.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:130-140 — листинг `VmsWorker.observe` устарел ещё до этого шага: в коде он отдаёт строку `super().observe` (`vms/worker.py:1091`). Отказ на `of` теперь делает сам лог (`events.refuse_own_of`), а не воркер.
+(детектор, урок 14, и `test_lesson10_events.py`) — `det/7-motion` несёт `of: vms/7` от базы (`DetWorker` пишет через `observe`). Тестовая раскладка строк детектора ставит `of` через `tests.conftest.stamped`, а не `EventLog(…, of=)`.
+
+== Добавка: журнал (дерево `audit`) тоже называет своё `of` ==
+М10A_Platform/15-SpecConsole.md:541 — листинг `AUDIT = "audit"` в `journal.py`. Константа переехала в `events.py`: `AUDIT = "audit"` (имя продукта `AuditSubsystem`) рядом с `CONSOLE_MARKS` и `OWN_OF_TREES = (CONSOLE_MARKS, AUDIT)`. `journal.py` берёт её оттуда (`from .events import AUDIT, OBSERVATION, EventLog`), и `journal.AUDIT` по-прежнему импортируется.
+М10A_Platform/12-Events.md:161 (поправка к пункту выше) — своё `of` называют ДВА дерева платформы, а не одно: отметки консоли (`console`) и журнал (`audit`, `Journal.say(..., of=...)`). Строка подсистемы с `of` — отказ, как сказано выше. Подсистема с именем `console` или `audit` не загружается (`SubsystemSpec.from_dict`). Тест: `test_base_worker.py::test_the_base_writes_of_and_a_line_that_says_its_own_is_refused` (строка журнала с `of` записана и несёт его) и `::test_only_the_base_says_what_a_log_is_about`.

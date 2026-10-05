@@ -1,0 +1,89 @@
+wc — lesson lines that name the console's old unit/group/directory (ADR 0014: the console is a platform process,
+`python3 -m w2cplatform console`; group `w2c-console`, platform names). Lessons NOT edited.
+Format: file:line — what is untrue — what is true now.
+
+М11_Cluster/03-units-on-every-server.md:40 — table row «**`vms-console.service`** … `vms`; `vms-console`, `w2c-events`, …»
+  — the unit is `w2c-console.service`; it joins `w2c-console` (see the second section: user `w2c`, groups `w2c-console w2c-store w2c-secrets`).
+М11_Cluster/03-units-on-every-server.md:306 — `systemctl status configstore w2c-resource vms-console vms-vmscontroller …`
+  — `systemctl status configstore w2c-resource w2c-console vms-vmscontroller …` (install.sh UNITS: `… w2c-console vms-jobs …`).
+М11_Cluster/10-the-controller.md:307 — «свой юнит (`vms-console.service`, урок 3)»
+  — `w2c-console.service` (and the console is the platform's process, `python3 -m w2cplatform console`, ADR 0014).
+М11_Cluster/orchestrator-as-a-delivery-form.md:42 — table: `console.nomad.hcl` | `system` | `vms-console.service`
+  — its twin is `w2c-console.service`; the job's Consul service is named `w2c-console`, `CONSOLE_UNIX=/run/w2c-console/console.sock`,
+  and `vms-nomad.sysusers` puts `vms` into `w2c-console` (was `vms-console`).
+  (No М11 lesson names the launchd label; if one is added: `com.w2c.console.plist`, log `__BOX__/state/logs/com.w2c.console.log`,
+  socket dir `__BOX__/state/run/w2c-console`.)
+
+М10B_ServerVMS/17-on-the-box.md:333 — «`deploy/vms.tmpfiles` → … каталоги **VMS** — … `/run/vms-console` 0700 root (сокет консоли) …»
+  — `/run/vms-console` is gone from `vms.tmpfiles`; the console's door is `/run/w2c-console` 0700 `w2c:w2c` (the console
+  runs as `w2c` and makes its socket there) and lives in `deploy/w2c.tmpfiles` (the platform's directories).
+М10B_ServerVMS/17-on-the-box.md:587 — quoted test line `… "/run/vms-obsd:", "/run/vms-console:", …`
+  — `tests/test_deploy_units.py` now says `"/run/w2c-console:"`.
+М10B_ServerVMS/17-on-the-box.md:597 — «каждый том начинается с `/data/`, `/run/vms:`, `/run/vms-obsd:`, `/run/vms-console:` …»
+  — `/run/w2c-console:`.
+  (Same lesson: the quoted body of `test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_files`, if quoted,
+  now has `"/run/w2c-console": ("d", "0700", "w2c", "w2c")` in the `w2c.tmpfiles` dict.)
+М10B_ServerVMS/module-design.md:97 — «`CONSOLE_UNIX=/run/vms-console/console.sock`, каталог 0700 root (`vms.tmpfiles`) … `curl --unix-socket
+  /run/vms-console/console.sock …`; `ssh -L 8080:/run/vms-console/console.sock root@box`»
+  — `/run/w2c-console/console.sock`, the directory made by `w2c.tmpfiles`, 0700 `w2c` (not root): who is «on the box» is now
+  root and the platform's own processes (user `w2c`); the console.container Description is «w2c console — …».
+  The same line also says the domain console's and signer's sockets are `/run/vms-console/domain-console.sock` and
+  `/run/vms-console/signer.sock` — already stale before this step: the code says `SIGNER_UNIX=/run/w2c-domain/signer.sock`
+  (deploy/domain/systemd/w2c-domain.service).
+
+М12_DomainVMS/03-the-api-and-what-it-refuses.md:144 — «`/run/vms-console/domain-console.sock` и `/run/vms-console/signer.sock`, в каталоге,
+  который хост делает при загрузке (`vms.tmpfiles`)» — already stale before this step (signer: `/run/w2c-domain/signer.sock`);
+  and the host directory `/run/vms-console` no longer exists in any tmpfiles: the console's is `/run/w2c-console` (`w2c.tmpfiles`).
+М12_DomainVMS/04-who-may-call-it.md:261 — «`CONSOLE_UNIX` (`/run/vms-console/console.sock` в `console.container` и в `console.nomad.hcl`;
+  каталог 0700 root делает `vms.tmpfiles`, …)» — `/run/w2c-console/console.sock` in both; the directory is made by `w2c.tmpfiles`,
+  0700 `w2c` (the console's user), so «на коробке» = root and the platform's processes.
+
+М10A_Platform — no line names `vms-console`, `com.w2c.vms.console` or `/run/vms-console` (checked: grep over М10A_Platform).
+
+False positives skipped: every `12-the-vms-console.md` link (М10B README:35, 08:401, 11:70/474, 24:25/237, 27:704) — the lesson's file
+name, not the unit.
+
+
+=== Second commit (ADR 0023, boundary note §5b item 3): platform processes run as `w2c`; controllers are `w2c-controller@<sub>` ===
+
+М11_Cluster/03-units-on-every-server.md:40 (again) — the console's row: user `vms` → `w2c`; groups now `w2c-console`, `w2c-store`,
+  `w2c-secrets` (no `w2c-events`: the events archive is `w2c`'s own).
+М11_Cluster/03-units-on-every-server.md:41 — «**`vms-vmscontroller.service`** | `w2c-run.sh controller` | `vms`; `vms-vmscontroller`, `w2c-store`»
+  — the unit is the template instance `w2c-controller@vms` (file `w2c-controller@.service`), `w2c-run.sh controller vms`, user `w2c`;
+  groups `w2c-vmscontroller`, `w2c-store`.
+М11_Cluster/03-units-on-every-server.md:42 — «**`vms-reccontroller.service`** | `w2c-run.sh reccontroller` | `vms`; `vms-reccontroller`, `w2c-store`»
+  — `w2c-controller@rec`, `w2c-run.sh controller rec`, user `w2c`; groups `w2c-reccontroller`, `w2c-store`.
+М11_Cluster/03-units-on-every-server.md:306 (again) — `systemctl status configstore w2c-resource w2c-console w2c-controller@vms
+  w2c-controller@rec vms-vmsworker vms-recworker`.
+М11_Cluster/10-the-controller.md:123 — «Контроллер — юнит `vms-vmscontroller.service`» — `w2c-controller@vms` (an instance of the platform's
+  template `w2c-controller@.service`), run as `w2c`.
+М11_Cluster/10-the-controller.md:301 — «`systemctl disable --now vms-vmscontroller vms-reccontroller`» — `systemctl disable --now
+  w2c-controller@vms w2c-controller@rec`.
+М11_Cluster/orchestrator-as-a-delivery-form.md:61 — «пользователь `vms` узла состоит в группах всех своих ролей, и любой процесс `vms` может
+  открыть любой сокет `vms-*`» — still true of the workers' tasks; the console's task now runs as `w2c` (`user = "w2c"`), and
+  `vms-nomad.sysusers` puts `w2c` (not `vms`) into `w2c-console` and `w2c-secrets`.
+М10A_Platform/09-SubsystemSpec.md:752 — quoted rights file: `"group": "vms-vmscontroller"` — now `"group": "w2c-vmscontroller"` (every
+  controller's socket group is the platform's, `w2c-<sub>controller`; the role name stays `vmscontroller`).
+М10B_ServerVMS/17-on-the-box.md:124 — quoted test `vols("vmscontroller.container")` — `vols("w2c-controller@.container")`.
+М10B_ServerVMS/17-on-the-box.md:141 — quoted test `vols("reccontroller.container")` — the line is gone (one template for every controller).
+М10B_ServerVMS/17-on-the-box.md:580 — quoted test `("vmscontroller.container", "controller")` — the box's controllers are one Quadlet template
+  `w2c-controller@.container` (`Exec=python3 -m w2cplatform controller %i`, `User=2100`, `Group=2100`, `GroupAdd=2103`), one instance
+  per spec of the image (`w2c-controller@vms`, `@rec`, `@live`, `@det`, `@detjob`, `@survey`, `@auto`); the seven
+  `<sub>controller.container` files are gone.
+М10B_ServerVMS/17-on-the-box.md:413 — «Ресурс работает от `w2c`, а не от root» and the test docstring it paraphrases («the one unit of the
+  box that names a user») — now the resource, the console (`console.container`) and every controller (`w2c-controller@.container`)
+  run as `User=2100`/`Group=2100`; the console no longer joins `w2c-events` (`GroupAdd=2102` dropped).
+М10B_ServerVMS/17-on-the-box.md:417 — «Процессы VMS по-прежнему root в своих контейнерах» — still true of the VMS's processes; the console
+  and the controllers are no longer among the root containers (they are the platform's, `w2c`).
+
+=== Third commit (ADR 0030): the spares' script and timers run as `w2c`; no user `w2c-spares` ===
+
+М11_Cluster/03-units-on-every-server.md:47 — «`w2c-spares[-<роль>].timer` … `w2c-spares`, ни в одной группе, кроме своей: polkit …» — the
+  services run as `User=w2c`/`Group=w2c` (no `SupplementaryGroups`); `w2c-cluster.sysusers` makes no `w2c-spares` user; polkit lets `w2c`
+  start a spare template's instance and nothing else (so the resource, the console and the controllers could too: one platform user).
+М11_Cluster/04-a-name-is-a-slot.md:338 and :342 — the quoted rule `if (subject.user !== "w2c-spares")` — now `"w2c"`; the text around it
+  («свой пользователь», «ни в одной группе, кроме своей») — the platform's user `w2c` (ADR 0030).
+М11_Cluster/04-a-name-is-a-slot.md:380 — «Пользователь `w2c-spares` по-прежнему может поднять запасного …» — the user is `w2c` (and with it
+  every platform process).
+М11_Cluster/05-rights-by-who-is-calling.md:345, М11_Cluster/module-design.md:51 — if they name the spares' own user: it is `w2c` now.
+М10B_ServerVMS/17-on-the-box.md:417 — «Скрипт запасных на хосте — уже не root … своего пользователя» — it runs as `w2c`.
