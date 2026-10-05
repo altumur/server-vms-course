@@ -551,6 +551,32 @@ def test_a_host_in_the_path_is_read_for_its_port_and_neither_a_refusal_nor_a_dev
     assert kept and not _leaks(json.dumps(kept))
 
 
+def _only_the_deployments_specs():
+    """The catalogue for a while holds the specs of the VMS's directory alone, as a deployment's process holds them."""
+    import contextlib
+    import os
+    from w2cplatform import catalog
+    here = os.path.dirname(catalog._files[SPEC.name])             # where the VMS's spec was loaded from
+
+    @contextlib.contextmanager
+    def scope():
+        with catalog._lock:
+            saved = dict(catalog._loaded)
+            for n in [n for n in catalog._loaded if os.path.dirname(catalog._files.get(n, "")) != here]:
+                del catalog._loaded[n]
+            catalog.version += 1
+            catalog._derived.clear()
+        try:
+            yield
+        finally:
+            with catalog._lock:
+                catalog._loaded.clear()
+                catalog._loaded.update(saved)
+                catalog.version += 1
+                catalog._derived.clear()
+    return scope()
+
+
 def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_the_right_way():
     """The thirteenth review, minor — a run: the stems of the rule were matched anywhere in a name, and 8 of the review's
     38 ordinary addresses were refused (`?token_bucket=`, `/passage=north_channel=1`, `?authmode=`, `?bypass=`,
@@ -561,29 +587,33 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
     from w2cplatform.secrets import address_refusal, hide_in_url, is_credential_param, is_login_param
     bad = LOGIN_FORMS + NESTED_FORMS + HOST_IN_PATH_FORMS
     good = FALSE_FRIENDS + PLAIN_FORMS
-    refused = [s for s in bad if address_refusal(s)]
-    taken = [s for s in good if address_refusal(s) is None and hide_in_url(s) == s]
-    assert (len(refused), len(taken)) == (len(bad), len(good)) == (57, 50), \
-        (sorted(set(bad) - set(refused)), sorted(set(good) - set(taken)))
-    box = Box()
-    con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    for i, s in enumerate(good):                                 # one at a time: two of them are one channel spelt twice
-        made = con.create_camera({"name": f"f{i}", "source": s})
-        assert made["source"] == s
-        con.delete(made["id"])
-    # the names, word by word: a credential's — and a word that only begins a name, or `pass` glued at its end, is not
-    for n in ("pwd", "PassWord", "pass_word", "access_token", "authToken", "X-Amz-Signature",
-              "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
-              "Authorization", "session_id", "passcode", "loginpas"):
-        assert is_credential_param(n) and not is_login_param(n), n
-    # …a login's: refused, said — an access key's id among them (the product's decision: the id of a key is no key)
-    for n in ("user_id", "usr", "user", "User-Name", "loginuse", "login", "account", "AWSAccessKeyId", "accessKeyId",
-              "uname"):
-        assert is_login_param(n) and not is_credential_param(n), n
-    for n in ("token_bucket", "passage", "authmode", "auth_mode", "bypass", "compass", "passthrough", "monkey", "hotkey",
-              "keyframe", "key_frame_interval", "apikey_required", "sid_hint", "usrname_hint", "user_stream", "authority",
-              "sessiontimeout", "accountless", "channel", "u"):
-        assert not is_credential_param(n), n
+    # The rule is the loaded specs' together (`catalog.secret_rules`): asked of the deployment's own — the specs beside
+    # the VMS's — and not of a test subsystem an earlier module of the suite loaded (testsub2 names `token*` and `*key`
+    # its credentials, and `?token_bucket=`, `?hotkey=` would be refused by ITS word)
+    with _only_the_deployments_specs():
+        refused = [s for s in bad if address_refusal(s)]
+        taken = [s for s in good if address_refusal(s) is None and hide_in_url(s) == s]
+        assert (len(refused), len(taken)) == (len(bad), len(good)) == (57, 50), \
+            (sorted(set(bad) - set(refused)), sorted(set(good) - set(taken)))
+        box = Box()
+        con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+        for i, s in enumerate(good):                                 # one at a time: two of them are one channel spelt twice
+            made = con.create_camera({"name": f"f{i}", "source": s})
+            assert made["source"] == s
+            con.delete(made["id"])
+        # the names, word by word: a credential's — and a word that only begins a name, or `pass` glued at its end, is not
+        for n in ("pwd", "PassWord", "pass_word", "access_token", "authToken", "X-Amz-Signature",
+                  "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
+                  "Authorization", "session_id", "passcode", "loginpas"):
+            assert is_credential_param(n) and not is_login_param(n), n
+        # …a login's: refused, said — an access key's id among them (the product's decision: the id of a key is no key)
+        for n in ("user_id", "usr", "user", "User-Name", "loginuse", "login", "account", "AWSAccessKeyId", "accessKeyId",
+                  "uname"):
+            assert is_login_param(n) and not is_credential_param(n), n
+        for n in ("token_bucket", "passage", "authmode", "auth_mode", "bypass", "compass", "passthrough", "monkey", "hotkey",
+                  "keyframe", "key_frame_interval", "apikey_required", "sid_hint", "usrname_hint", "user_stream", "authority",
+                  "sessiontimeout", "accountless", "channel", "u"):
+            assert not is_credential_param(n), n
 
 
 def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_the_password():
