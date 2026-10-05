@@ -140,20 +140,25 @@ FACTORY = "( udpsrc port={port} caps=\"{caps}\" ! rtpjitterbuffer latency=100 ! 
 
 
 class FanOut:
-    def __init__(self, port: int = 8554):
+    def __init__(self, port: int = 8554, address: str = "127.0.0.1"):
         self.server = GstRtspServer.RTSPServer()
+        self.server.set_address(address)
         self.server.set_service(str(port))
         self.mounts = self.server.get_mount_points()
         self.published: dict[str, GstRtspServer.RTSPMediaFactory] = {}
         self.server.attach(None)
+        self.port = int(self.server.get_bound_port()) if port == 0 else port
         self.loop = GLib.MainLoop()
         import threading
         threading.Thread(target=self.loop.run, daemon=True).start()
+        log.info("RTSP fan-out on :%d", self.port)
 ```
 
 Один сервер на процесс воркера, порт 8554 (стандартный для RTSP).
 
-**В продукте это отдельный процесс.** В курсе медиастек — DriverPack, конвейер камеры, раздача — живёт в процессе воркера, и так же он жил в продукте до 1 октября 2026. Теперь там хост драйверов `ipintd`: C++-процесс на сервер, юнит ОС; воркер говорит с ним по unix-сокету командами `CAM_START`/`CAM_STOP` и получает события `started`, `dead`, `stopped`, и через воркер не проходит ни одного кадра (обратная связь CM) — та же развилка, что у архива с `obsd` (урок 6). Цикл воркера, эпохи, аренды и heartbeat от этого не меняются: актуатор из шага 6 — тот же шов, за ним другой процесс. Меняются отказы: упавший воркер не роняет камер — хост держит их 15 секунд и отдаёт вернувшемуся процессу того же слота без перезапуска, меняется только эпоха; упавший хост воркер замечает по сокету и объявляет его камеры мёртвыми, когда ОС его поднимет. Пятнадцать секунд — число, которое надо сверять с платформой (урок 4).
+**Слушает петлю, если не сказано иначе.** Умолчание GStreamer — все интерфейсы: живой поток каждой камеры воркера открыт сети, и никто не спрашивает, кто смотрит. Поэтому `address` по умолчанию `127.0.0.1`, а другой адрес называет вызывающий (`RTSP_HOST`; почему и что объявляет heartbeat — `vms/config.py`). **`port=0`** — порт выбирает ОС, а сервер потом спрашивают, какой выбран (`get_bound_port`): число, зашитое в шаблон юнита, — дверь, которую откроет только первый экземпляр на коробке, а адрес всё равно публикуется в heartbeat'е.
+
+**В продукте это отдельный процесс.** В курсе медиастек — DriverPack, конвейер камеры, раздача — живёт в процессе воркера. В продукте его держит хост драйверов `ipintd`: C++-процесс на сервер, юнит ОС; воркер говорит с ним по unix-сокету командами `CAM_START`/`CAM_STOP` и получает события `started`, `dead`, `stopped`, и через воркер не проходит ни одного кадра (обратная связь CM) — та же развилка, что у архива с `obsd` (урок 6). Цикл воркера, эпохи, аренды и heartbeat от этого не меняются: актуатор из шага 6 — тот же шов, за ним другой процесс. Меняются отказы: упавший воркер не роняет камер — хост держит их 15 секунд и отдаёт вернувшемуся процессу того же слота без перезапуска, меняется только эпоха; упавший хост воркер замечает по сокету и объявляет его камеры мёртвыми, когда ОС его поднимет. Пятнадцать секунд — число, которое надо сверять с платформой (урок 4).
 
 `GLib.MainLoop` в **отдельном демоническом потоке**: `GstRtspServer` требует крутящийся главный цикл GLib, а у воркера свой цикл (урок 4), никак с GLib не связанный. Два цикла в одном процессе, каждый в своём потоке.
 
@@ -197,10 +202,11 @@ class FanOut:
 class GstActuator:
     """The worker's: holds the camera, serves the fan-out, records nothing."""
 
-    def __init__(self, watchdog_ms: int = 8000, rtsp_port: int = 8554):
+    def __init__(self, watchdog_ms: int = 8000, rtsp_port: int = 8554, rtsp_address: str = "127.0.0.1"):
         self.watchdog = watchdog_ms
         from .livesrv import FanOut
-        self.fanout = FanOut(rtsp_port)
+        self.fanout = FanOut(rtsp_port, rtsp_address)
+        self.rtsp_port = self.fanout.port                # what the OS gave, when `rtsp_port` was 0
         self.pipelines: dict[int, Gst.Pipeline] = {}
         self.dead: list[int] = []
         self.posted: list[tuple[int, str, dict]] = []
@@ -224,7 +230,7 @@ class GstActuator:
 
 **EOS перед `NULL`** — сигнал конвейеру, что поток кончился, чтобы последние кадры дошли до стока. `NULL` без EOS обрывает конвейер мгновенно.
 
-В воркерском конвейере стока в том нет — но `GstRecActuator` наследует этот метод, и там он есть. Регистратор к тому же, прежде чем звать этот метод, закрывает открытую последовательность своего стока (шаг 9). Одна строка обслуживает обоих.
+В воркерском конвейере стока в том нет. У регистратора он есть, и регистратор, прежде чем звать этот метод, сам сливает конвейер, ставит `NULL` и закрывает открытую последовательность стока (шаг 9): базовому глаголу останавливать уже нечего.
 
 `stop` снимает публикацию раздачи. Камера остановлена — её монтирования быть не должно.
 
@@ -250,6 +256,7 @@ class GstActuator:
 
 ```python
         self._watch_bus(p, cid)
+        self._before_play(p, cam)
         if p.set_state(Gst.State.PLAYING) == Gst.StateChangeReturn.FAILURE:
             return False
         self.pipelines[cid] = p
@@ -263,7 +270,9 @@ class GstActuator:
         bus.connect("message::element", lambda b, m, c=cid: self._posted(c, m))
 ```
 
-**Сигнальный сторож работает только при живом цикле GLib.** У воркера он есть — раздача требует `GLib.MainLoop` (шаг 5), и сообщения шины доставляются из него. У `GstRecActuator` раздачи нет и цикла нет — и `add_signal_watch` там не срабатывал никогда: ошибка конвейера и `watchdog` ложились на шину, `dead` оставался пустым, заглохшая запись не перезапускалась (ревью платформы, B5). Поэтому шину читают по-разному: `_watch_bus` у регистратора пуст, а его `pump` на каждом проходе **опрашивает** шину каждого конвейера — `bus.pop_filtered(ERROR | ELEMENT)` до пустоты, ошибка — в `dead`, сообщение элемента — в `_posted`, — и только потом отдаёт списки базе. Без GStreamer в прогоне это не проверить; проверяется на коробке: оборванный поток регистратора через `watchdog_ms` даёт `dead` и перезапуск.
+**Сигнальный сторож работает только при живом цикле GLib.** У воркера он есть — раздача требует `GLib.MainLoop` (шаг 5), и сообщения шины доставляются из него. У `GstRecActuator` раздачи нет и цикла нет — и `add_signal_watch` там не срабатывал никогда: ошибка конвейера и `watchdog` ложились на шину, `dead` оставался пустым, заглохшая запись не перезапускалась (ревью платформы, B5). Поэтому шину читают по-разному: `_watch_bus` у регистратора пуст, а его `pump` (`RecEnding.pump`, `gstvms/ending.py`) на каждом проходе **опрашивает** шину каждого конвейера — `bus.pop_filtered(ERROR | EOS | ELEMENT)` до пустоты, ошибка или EOS — в `dead`, сообщение элемента — в `_posted`. Модуль `ending.py` GStreamer не импортирует, и тест `test_rec_pipeline_end.py` держит его на поддельных конвейере и шине. Коробка доказывает остальное: оборванный поток регистратора через `watchdog_ms` даёт `dead` и перезапуск.
+
+`_before_play` — крючок между сборкой и `PLAYING`; у воркера он пуст. Регистратор подключает в нём сток и ставит блок кольца (шаг 9).
 
 `c=cid` в лямбдах — связывание значения на момент создания. Без него все лямбды захватили бы одну переменную цикла, и все сообщения приписались бы последней камере. Классическая ловушка замыканий, и здесь она стоила бы часов отладки.
 
@@ -310,6 +319,7 @@ PLUMBING = ("GstBinForwarded",)
 
 
 def observes(factory: str, name: str, extra: tuple = ()) -> bool:
+    """Is a bus message `name`, posted by an element of `factory`, an observation of the camera?"""
     ours = OUR_ELEMENTS + tuple(extra) + tuple(f for f in os.environ.get("EVENT_ELEMENTS", "").split(",") if f)
     return factory in ours and name not in PLUMBING
 ```
@@ -345,7 +355,7 @@ def observes(factory: str, name: str, extra: tuple = ()) -> bool:
 
 Мёртвые конвейеры останавливаются здесь, а не в обратном вызове: обратный вызов шины выполняется в контексте GLib, менять состояние конвейера оттуда — просить о взаимоблокировке.
 
-Примечание к файлу честно отмечает слабое место: *обратные вызовы шины выполняются в главном контексте GLib; поскольку воркер не крутит цикл GLib, доставка `add_signal_watch` зависит от того, что контекст по умолчанию итерируется.* Здесь это работает благодаря циклу, запущенному раздачей, — и это то место, которое стоит знать, если сообщения вдруг перестанут приходить.
+Примечание к файлу говорит, на чём это держится: обратные вызовы шины воркера доставляет цикл GLib, который запустила раздача (шаг 5). Регистратор цикла не крутит и шину опрашивает (шаг 6). Если сообщения воркера вдруг перестанут приходить, смотреть надо сюда.
 
 ## Шаг 9 — Регистратор: строка, которая кончается на `appsink`
 
@@ -384,40 +394,55 @@ REC_SHM_DESC = "shmsrc socket-path={path} is-live=true do-timestamp=true name=sr
 ### Класс
 
 ```python
-class GstRecActuator(GstActuator):
+class GstRecActuator(RecEnding, GstActuator):
     """The recorder's: `rtspsrc` on the camera's fan-out URL — or `shmsrc` on the worker's shared-memory
     branch when the worker is on this server — then `appsink`, each access unit a sample into the volume's
     writer under the recorder's epoch. No fan-out of its own; nothing here reads a camera."""
+
+    gst = Gst
 
     def __init__(self, watchdog_ms: int = 8000):
         self.watchdog = watchdog_ms
         self.fanout = None
         self.range_error = ""                            # why the last range pipeline failed, if it did (Lesson 16)
         self.pipelines, self.dead, self.posted = {}, [], []
+        self.sinks, self.blocks, self.released, self.offered_bytes = {}, {}, set(), {}
 
-    # `release` opens a held pipeline's ring; every other verb is the worker's.
+    # No GLib loop here: the buses are POLLED on every pump (`RecEnding.pump`) — …
+    def _watch_bus(self, p, cid) -> None:
+        pass
+
+    # `release` opens a held pipeline's ring; `stop` and `restart` end the running pipeline the recorder's way —
+    # drained, NULL, its open sequence closed (`RecEnding._end`): what was taken is kept, and a restart (back on
+    # hold, a new source) must not let the next frames continue a sequence after a gap — a hole inside a
+    # sequence is drawn as footage. Then the worker's verb, with nothing left to stop.
     def __call__(self, verb: str, cam: dict) -> bool:
         if verb == "release":
             return self._release(cam["id"])
-        if verb in ("stop", "restart") and cam["id"] in getattr(self, "sinks", {}):
-            # The open sequence closed: what was taken is kept — and a restart (back on hold, a new source) must not
-            # let the next frames continue it after a gap: a hole inside a sequence is drawn as footage.
-            sink = self.sinks.pop(cam["id"])
-            ok = super().__call__(verb, cam)              # the pipeline down first…
-            sink.finish()                                 # …then the sequence closed: nothing arrives after this
-            return ok
+        if verb in ("stop", "restart"):
+            self._end([cam["id"]])
         return super().__call__(verb, cam)
 ```
 
-Порядок — сначала конвейер в `NULL`, потом `finish` — не случаен: ключевой кадр, пришедший в сток между `finish` и `NULL`, открыл бы последовательность, которую никто не закроет (ревью платформы, B4, в его форме для `obsd`).
+Половина, которая кончает конвейеры, — `RecEnding` из `gstvms/ending.py`, без GStreamer в импорте: `gst = Gst` ей подставляет актуатор, тест подставляет поддельный. `_end` сливает конвейеры (EOS и ожидание EOS на шине), ставит `NULL` и только потом зовёт `finish` стока:
 
-**Конструктору больше нечего знать.** Ни каталога спула, ни архива, ни длины сегмента: куда писать, приходит в строке записи (`cam["sink"]`) от регистратора, который держит том. Актуатор не знает, какой это том и открыт ли он; знает регистратор (урок 10, шаги 6 и 8).
+```python
+    def _end(self, cids) -> None:
+        items = [(cid, self.pipelines.pop(cid)) for cid in cids if cid in self.pipelines]
+        drain([(p, self._budget(cid)) for cid, p in items], self.gst, self.clock)
+        for cid, _ in items:
+            self._finish(cid)
+```
+
+Порядок — сначала конвейер в `NULL`, потом `finish` — не случаен: ключевой кадр, пришедший в сток между `finish` и `NULL`, открыл бы последовательность, которую никто не закроет (ревью платформы, B4, в его форме для `obsd`). Базовый глагол после `_end` конвейера уже не находит, и его EOS и `NULL` не повторяются.
+
+**Конструктору нечего знать.** Ни каталога, ни тома, ни длины сегмента: куда писать, приходит в строке записи (`cam["sink"]`) от регистратора, который держит том. Актуатор не знает, какой это том и открыт ли он; знает регистратор (урок 10, шаги 6 и 8).
 
 `self.fanout = None` — у регистратора нет своей раздачи. Он подписчик, не источник; `_publish` и `_unpublish` в базовом классе проверяют `None` и ничего не делают.
 
-**EOS — и ждать его.** У регистратора EOS и сразу `NULL` выбрасывали то, что ещё было в очереди: кольцо, выпущенное перед остановкой (переезд держателя, обновление во время отсрочки), успевало отдать стоку горстку кадров из тридцати секунд (третье ревью). Теперь `GstRecActuator` останавливает через `RecEnding.drain` (`gstvms/ending.py`, без GStreamer в импорте, чтобы его можно было проверить): EOS во все конвейеры, ожидание EOS **на шине** — 10 с для выпущенного кольца, 2 с для живой записи, ноль для кольца, которое ещё держат, — потом `NULL`, потом `finish` стока; `stop_all` сливает все конвейеры одновременно, не дольше самого долгого бюджета. И `pump` опрашивает не только ERROR и сообщения элементов, но и EOS: источник, закрывший поток сам, — мёртвый конвейер, и его открытая последовательность закрывается (`finish`) после `NULL` — без этого последние до десяти секунд перед обрывом кабеля не были видны до закрытия писателя, а при падении демона пропадали. Тесты: `test_rec_pipeline_end.py` (поддельные конвейер и шина). Что доказывает только коробка: что `rtspsrc`/`shmsrc` ставят EOS за последним буфером и что десяти секунд хватает, чтобы шестидесятисекундное кольцо дошло до настоящего `obsd`.
+**EOS — и ждать его.** EOS и сразу `NULL` выбросили бы то, что ещё в очереди: кольцо, выпущенное перед остановкой (переезд держателя, обновление во время отсрочки), успевало бы отдать стоку горстку кадров из тридцати секунд (третье ревью). Поэтому `drain`: EOS во все конвейеры, ожидание EOS **на шине** — 10 с для выпущенного кольца, 2 с для живой записи, ноль для кольца, которое ещё держат, — потом `NULL`, потом `finish` стока; `stop_all` сливает все конвейеры одновременно, не дольше самого долгого бюджета. И `pump` опрашивает не только ERROR и сообщения элементов, но и EOS: источник, закрывший поток сам, — мёртвый конвейер, и его открытая последовательность закрывается (`finish`) после `NULL` — без этого последние до десяти секунд перед обрывом кабеля не были видны до закрытия писателя, а при падении демона пропадали. Тесты: `test_rec_pipeline_end.py` (поддельные конвейер и шина). Что доказывает только коробка: что `rtspsrc`/`shmsrc` ставят EOS за последним буфером и что десяти секунд хватает, чтобы шестидесятисекундное кольцо дошло до настоящего `obsd`.
 
-`stop` и `restart` **сначала закрывают открытую последовательность** стока (`finish`), и только потом зовут воркерский глагол с его EOS и `NULL`. Комментарий называет две причины. Первая — для `stop`: взятое движком остаётся на томе. Вторая — для `restart`: конвейер возвращается на удержание или меняет источник, и между последним кадром до перезапуска и первым после проходит время. Продолжи новые кадры ту же последовательность, дыра оказалась бы внутри неё, а таймлайн рисует последовательность как запись без разрывов.
+`stop` и `restart` **кончают конвейер по-регистраторски** — слит, `NULL`, последовательность закрыта, — и только потом зовут воркерский глагол, которому останавливать уже нечего. Комментарий называет две причины закрыть последовательность. Первая — для `stop`: взятое движком остаётся на томе. Вторая — для `restart`: конвейер возвращается на удержание или меняет источник, и между последним кадром до перезапуска и первым после проходит время. Продолжи новые кадры ту же последовательность, дыра оказалась бы внутри неё, а таймлайн рисует последовательность как запись без разрывов.
 
 `release` — глагол, которого у воркера нет: открыть кольцо резервной записи. Регистратор зовёт его, когда основная запись пропала (урок 26).
 
@@ -428,12 +453,10 @@ class GstRecActuator(GstActuator):
 ```python
     def _before_play(self, p, cam: dict) -> None:
         import time as _time
-        from w2cplatform.obsd import ObsdError, archive_ms, video
+        from vms.obsd import ObsdError, archive_ms, video
         sink = p.get_by_name("sink")
         if sink is not None and cam.get("sink") is not None:
-            self.offered_bytes = getattr(self, "offered_bytes", {})
             self.offered_bytes.setdefault(cam["id"], 0)
-            self.sinks = getattr(self, "sinks", {})
             self.sinks[cam["id"]] = writer = cam["sink"]
             skipping = {"until_key": False}
 
@@ -478,7 +501,6 @@ class GstRecActuator(GstActuator):
 ```python
         if cam.get("hold"):
             pad = p.get_by_name("ring").get_static_pad("src")
-            self.blocks = getattr(self, "blocks", {})
             self.blocks[cam["id"]] = pad.add_probe(Gst.PadProbeType.BLOCK_DOWNSTREAM, lambda *_: Gst.PadProbeReturn.OK)
 ```
 
@@ -488,8 +510,15 @@ class GstRecActuator(GstActuator):
     # Unblock — and drop what the ring pushes until its first KEYFRAME: the leaky queue dropped its oldest
     # buffers one at a time, so it may begin mid-GOP, and the engine opens a sequence only on a key frame. The
     # product measured the result on a box: recording began 28.5 s before the hold was lifted.
+    # …
     def _release(self, cid) -> bool:
-        …
+        p = self.pipelines.get(cid)
+        probe = self.blocks.pop(cid, None)
+        if p is None or probe is None:
+            return False
+        self.released.add(cid)
+        pad = p.get_by_name("ring").get_static_pad("src")
+
         def to_keyframe(pad_, info):
             if info.get_buffer().has_flags(Gst.BufferFlags.DELTA_UNIT):
                 return Gst.PadProbeReturn.DROP
@@ -500,7 +529,7 @@ class GstRecActuator(GstActuator):
         return True
 ```
 
-Протекающая очередь выбрасывает старое по одному буферу, поэтому кольцо может начинаться с середины группы кадров. Отдай его писателю как есть — и первые кадры получат отказ до ближайшего ключевого. Проба сама выбрасывает всё до первого ключевого кадра и снимает себя. Дальше кадры идут в писатель тем же `on_sample` — со временем съёмки, то есть на полминуты назад. На ящике продукта запись началась за 28,5 секунды до того, как удержание сняли.
+Протекающая очередь выбрасывает старое по одному буферу, поэтому кольцо может начинаться с середины группы кадров. Отдай его писателю как есть — и первые кадры получат отказ до ближайшего ключевого. Проба сама выбрасывает всё до первого ключевого кадра и снимает себя. Конвейер запоминается как выпущенный (`released`): кольцо сливается в темпе писателя, и остановка в том же проходе ждёт его слива (`RecEnding._budget`, 10 с), а не выбрасывает остаток. Дальше кадры идут в писатель тем же `on_sample` — со временем съёмки, то есть на полминуты назад. На ящике продукта запись началась за 28,5 секунды до того, как удержание сняли.
 
 ### Диапазон с карты устройства
 
@@ -529,7 +558,7 @@ REC_RANGE_DESC = ("souphttpsrc location={source} ! qtdemux ! h264parse config-in
 
 Ровно то правило из урока 4: *выбирает подписчик.* И выбор сводится к одной проверке префикса, потому что воркер опубликовал оба адреса и не пытался решать за других.
 
-Заметьте, чего в строке **больше нет**: эпохи. Раньше она стояла свойством элемента записи и решала, в какой каталог лягут сегменты. Теперь эпоха — в имени потока, и её знает сток: `RecSink(lambda: self.store, unit, epoch)`, собранный регистратором из эпох *этого* процесса (урок 10, шаг 6). Видео ляжет в поток `<запись>/e<эпоха регистратора>`, и с эпохой воркера это никак не связано.
+Заметьте, чего в строке **нет**: эпохи. Эпоха — в имени потока, и её знает сток: `RecSink(lambda: self.store, unit, epoch)`, собранный регистратором из эпох *этого* процесса (урок 10, шаг 6). Видео ляжет в поток `<запись>/e<эпоха регистратора>`, и с эпохой воркера это никак не связано.
 
 ## Результат
 
@@ -609,7 +638,7 @@ rtspsrc location=rtsp://box-a:8554/7 latency=200 protocols=tcp name=src ! rtph26
 5. Снимите `set_shared(True)`. Подключитесь к раздаче двумя клиентами и найдите, кто из них получает поток.
 6. Уберите `config-interval` у `rtph264pay`. Подключитесь через тридцать секунд после старта и засеките, когда появится картинка.
 7. Уберите `c=cid` из лямбд. Поднимите три камеры, уроните вторую и скажите, какую из них воркер сочтёт мёртвой.
-8. Замените EOS на прямой `NULL` и уберите `finish` из `GstRecActuator.__call__`. Остановите запись штатно и сравните таймлайн с тем, что отдавал конвейер.
+8. Поставьте регистратору бюджет EOS ноль (`EOS_BUDGET = 0`) и уберите `finish` из `RecEnding._finish`. Остановите запись штатно и сравните таймлайн с тем, что отдавал конвейер.
 9. Уберите `watchdog`. Замените источник на такой, который перестаёт отдавать кадры через минуту, и посмотрите на `phase` через час.
 10. Опишите, что понадобится для multicast-раздачи между двумя стойками: какие протоколы, на каком оборудовании, кто это настраивает.
 11. Берите время кадра как `time.time()` в момент `new-sample`. Снимите удержание резервной записи и найдите на таймлайне, где легло кольцо.
