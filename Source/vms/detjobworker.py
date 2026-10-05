@@ -78,13 +78,12 @@ class DetJobWorker(Worker):
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  resource_root: str | None = None, env: dict | None = None, step: float | None = None):
         env = dict(os.environ if env is None else env)
-        super().__init__(DETJOB, None, vars_, objects, clock=clock, wall=wall)
+        super().__init__(DETJOB, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, DETJOB_SPEC.slot_name_env, DETJOB_SPEC.slot_prefix))
         self.models = models if models is not None else {"motion": FakeModel, "linecross": FakeModel, "lpr": FakeModel}
         self.capacity = capacity if capacity is not None else int(env.get("SCAN_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.resource_root = runtime.events_root(env, resource_root)
         self.step = self.STEP if step is None else float(step)
         self.lag = float(env.get("VISIBLE_LAG_SECONDS", "600"))   # how far behind the visible footage runs: a block's worth
         self.wait_max = float(env.get("SCAN_WAIT_SECONDS", self.WAIT_MAX))

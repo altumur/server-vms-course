@@ -22,7 +22,8 @@ is nobody's catalogue.
 # - `load_dir(path)` — every `*.subsystem.yaml` of a directory, in name order; refused when there is none: a process
 #   told to run from an empty directory runs nothing, and says so at its start rather than idling.
 # - `specs()` / `spec(name)` — what is loaded; with nothing loaded, the directory `SPEC_DIR` names first.
-# - `object_rows()` — the objects that are rows of the store (`objects.rows` of every spec, under its name).
+# - `object_rows()` — the objects that are rows of the store (`rows_of` every spec, under its name: its `objects.rows`,
+#   and `commands/*` for a spec whose units take requests).
 # - `secret_rules()` — how an address carries a login (`secret_in` of every url field of every spec, together).
 # ================================================================================================
 from __future__ import annotations
@@ -81,10 +82,20 @@ def _derive(what: str, make):
     return got
 
 
-# `objects.rows` of every spec, each under its subsystem's name: `<sub>/commands/*` — the objects kept as rows of the
-# store, not as files (`w2cplatform/cluster/objectstore.py`).
+# `objects.rows` of every spec, each under its subsystem's name — the objects kept as rows of the store, not as files
+# (`w2cplatform/cluster/objectstore.py`) — and, for a spec whose units take requests (`requests:`), the marks its worker
+# writes before it performs one (`commands/*`, `Worker._mark`): create-only ACROSS servers, which only a row is. The
+# family is the platform's, and the spec does not have to repeat it: without it a spec that took requests and named no
+# rows had its marks as files on each server — two holders on two servers could both perform a request — and on a
+# cluster every look that reached a mark raised (`ClusterObjectStore.put_new` refuses a key that is no row).
+def rows_of(spec) -> tuple[str, ...]:
+    from .contract import COMMANDS
+    derived = (f"{COMMANDS}/*",) if spec.requests or spec.requests_free else ()
+    return tuple(dict.fromkeys(tuple(spec.object_rows) + derived))
+
+
 def object_rows() -> tuple[str, ...]:
-    return _derive("rows", lambda: tuple(f"{s.name}/{p}" for s in specs() for p in s.object_rows))
+    return _derive("rows", lambda: tuple(f"{s.name}/{p}" for s in specs() for p in rows_of(s)))
 
 
 # The `secret_in` of every url field of every spec, as one set of rules: what hides an address wherever one is said

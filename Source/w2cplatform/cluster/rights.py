@@ -60,8 +60,8 @@ def _gate() -> list[str]:
 
 
 def _worker_objects(spec) -> list[str]:
-    """A worker's objects that are rows: its marks before it acts, the places it opened (`objects.rows`)."""
-    return _rows(spec.sub.acl_objects_worker() + [spec.sub.config(p) for p in spec.object_rows])
+    """A worker's objects that are rows: its marks before it acts, the places it opened (`catalog.rows_of`)."""
+    return _rows(list(dict.fromkeys(spec.sub.acl_objects_worker() + [spec.sub.config(p) for p in catalog.rows_of(spec)])))
 
 
 # The subsystems a controller of `spec` reads beside its own: what its units are about, what it places near, what a

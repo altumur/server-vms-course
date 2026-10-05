@@ -69,13 +69,12 @@ class SurveyWorker(Worker):
                  resource_root: str | None = None, env: dict | None = None, step: float | None = None,
                  fetch=None, index=None):
         env = dict(os.environ if env is None else env)
-        super().__init__(SURVEY_SUB, None, vars_, objects, clock=clock, wall=wall)
+        super().__init__(SURVEY_SUB, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, SURVEY_SPEC.slot_name_env, SURVEY_SPEC.slot_prefix))
         self.models = models if models is not None else {"motion": FakeModel, "linecross": FakeModel, "lpr": FakeModel}
         self.capacity = capacity if capacity is not None else int(env.get("SURVEY_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.resource_root = runtime.events_root(env, resource_root)
         self.step = self.STEP if step is None else float(step)
         self.fetch = fetch or _fetch_bytes           # the door: reading, and what costs a session
         self.index = index or device_recordings      # the listing: where the footage is, and it costs none

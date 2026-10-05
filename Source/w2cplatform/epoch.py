@@ -5,7 +5,8 @@ platform only promises that it comes from one issuer and increases.
     next_epoch(vars, key)   issue the next epoch for `key` by check-and-set: two callers
                             racing get two different numbers, in order
     Lease                   may_act while now − last_renewal < TTL − margin, on a
-                            monotonic clock; renew = read the key and find it still mine
+                            monotonic clock (may_write: also through a silent store, up to
+                            its ceiling); renew = read the key and find it still mine
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -72,9 +73,10 @@ def current_epoch(vars_: Variables, key: str) -> int:
     return int(items["epoch"]) if items else 0
 
 
-# What a worker holds per unit once it has taken the epoch. It answers one question — `may_act()` — from a
-# monotonic clock, not from the store: writing is allowed while `now − last_renewal < ttl − margin` and the
-# lease has not been fenced. Renewal is "read the key and find it still mine". The store being unreachable
+# What a worker holds per unit once it has taken the epoch. It answers two questions from a monotonic clock, not
+# from the store — `may_act()`, what an action asks: the store confirmed this epoch less than `ttl − margin` ago and
+# the lease has not been fenced; and `may_write()`, what data asks: also for `unconfirmed_max` past that while the
+# store is silent (below). Renewal is "read the key and find it still mine". The store being unreachable
 # does not by itself stop writing; the TTL does. Created by `Worker.take_epoch`; `Worker.renew_leases`
 # renews all of them and reports the ones lost.
 class Lease:
@@ -178,8 +180,8 @@ class Lease:
                 return 0.0
             return max(0.0, (self.clock() - self.last_renewal) - (self.ttl - self.margin))
 
-    # `not fenced and (clock() − last_renewal) < ttl − margin`. The one line the actuator asks before a
-    # write.
+    # `not fenced and (clock() − last_renewal) < ttl − margin`. What an ACTION asks before it is done — a request's
+    # call into its target; data asks `may_write`.
     def may_act(self) -> bool:
         with self._lock:
             return not self.fenced and (self.clock() - self.last_renewal) < (self.ttl - self.margin)

@@ -106,12 +106,11 @@ class AutoWorker(Worker):
                  clock=time.monotonic, wall=time.time, server: str | None = None,
                  resource_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
         env = dict(os.environ if env is None else env)
-        super().__init__(AUTO, None, vars_, objects, clock=clock, wall=wall)
+        super().__init__(AUTO, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self.claim_at_start(name if name is not None else runtime.slot(env, AUTO_SPEC.slot_name_env, AUTO_SPEC.slot_prefix), env)   # a spare: an offer
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env)
-        self.resource_root = runtime.events_root(env, resource_root)
         # The same reader the console uses, for the same reason: a scenario watches what an operator would
         # see on the timeline. One merge, one definition of "the events of the last minute".
         self.index = index or MergedIndex(objects, wall=wall)
@@ -139,7 +138,6 @@ class AutoWorker(Worker):
         self.wants_folded = 0                         # triples folded to their kinds for the long poll (`wants`), 0: none
         self._keys_of: dict[str, set] = {}            # scenario -> its triggers' keys (last full pass): what an answer touches
         self._fit: dict[str, tuple] = {}              # scenario -> (misfit, unchecked), as of the last full pass
-        self._refused = False                         # a resource did not answer this pass: early passes back off (`Wake.pace`)
         self._pass_reads = None
         self.pass_stats = {"pass_seconds": 0.0, "queries": 0, "lag_seconds": 0.0, "latency_seconds": 0.0}
         self.latency = {"buckets": [0] * len(self.LATENCY_BUCKETS), "sum": 0.0, "count": 0}
@@ -191,7 +189,7 @@ class AutoWorker(Worker):
                 self.status_by_unit[u] = {"id": u, "phase": "failed", "why": self.row_garbled(u, e)}
         self._plan(rows, now, partial=only is not None)
         self.pass_stats.update(queries=0, lag_seconds=0.0, latency_seconds=0.0)
-        self._refused = False
+        self.pass_refused = False
         self._pass_reads = None                      # the catalog's reads of this pass (`_OnePass`), made on first use
         for unit in units:
             row = rows[unit]
@@ -248,7 +246,7 @@ class AutoWorker(Worker):
                 log.warning("%s: %s not evaluated: %s", self.name, unit, e)
                 continue
             holes = self.holes.get(unit) or {}
-            self._refused = self._refused or any(str(why).startswith("did not answer") for why in holes.values())
+            self.pass_refused = self.pass_refused or any(str(why).startswith("did not answer") for why in holes.values())
             self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n,
                                          **({"holding": holes} if holes else {}),
                                          **({"cut": self.cut[unit]} if self.cut.get(unit) else {}),
@@ -582,11 +580,11 @@ class AutoWorker(Worker):
     def headroom(self) -> int:
         return max(0, self.capacity - len(self.assignment().units))
 
-    def heartbeat_once(self) -> None:
-        self.heartbeat(self.status(), server=self.server, instance=self.instance,
-                       labels=",".join(self.labels), capacity=self.capacity, headroom=self.headroom(),
-                       filed=self.filed, late=self.late, suppressed=self.suppressed, latency=self.latency,
-                       pass_failures=self.pass_failures, **self.pass_stats, **self.long_poll_stats())
+    # Beside the platform's own fields (`Worker.platform_fields`): what it filed, late and over its ceiling, the road's
+    # latency, its passes and the long poll.
+    def heartbeat_fields(self) -> dict:
+        return {"filed": self.filed, "late": self.late, "suppressed": self.suppressed, "latency": self.latency,
+                "pass_failures": self.pass_failures, **self.pass_stats, **self.long_poll_stats()}
 
     # The long poll, counted since this process started — and nothing at all when it is off: requests it opened at
     # the resources (`waits`), those answered "changed" (`woken`), passes begun early for them (`early_passes`),
@@ -601,93 +599,38 @@ class AutoWorker(Worker):
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines
 
-    # The loop — which this worker did not have: `python -m vms autoworker` called `run` and fell over, and no
-    # test noticed, because every test drives `reconcile_once` by hand (feedback on the event log's load).
+    # The loop is the platform's (`Worker.run`): the pass, the lease step from its start and at once after one the store
+    # did not answer, the heartbeat, each in a try of its own, the stand-in for a step that hangs, an orderly stop. This
+    # worker had none — `python -m vms autoworker` called `run` and fell over — and then a copy of it.
     #
     # The period is not a habit copied from the neighbours. It is one link of the road from an event to an
     # action — this period, then the holder's own pass — and it multiplies the load:
     # every pass asks every scenario's window. Two seconds is the same as the holder's pass, so neither
-    # dominates; `PASS_SECONDS` changes it, and the latency it costs is the operator's to accept.
+    # dominates; `PASS_SECONDS` changes it, and the latency it costs is the operator's to accept. The heartbeat goes
+    # out once per `poll`, as it always did.
     #
     # Since 2 October 2026 the period is the road's CEILING and not its length. The evaluator holds a request at
     # every resource it asks (`watch_events`, `w2cplatform/longpoll.py`), answered when a line of a kind its
-    # scenarios watch is appended there, and the wait below ends at that answer — never sooner than `WAKE_GAP`
-    # after the last pass began, so a storm of events is four passes a second and not a pass per event. The answer
-    # decides nothing: the pass is this same pass — the same window, cursor, `SETTLE` and firing ids. With no
-    # answer — a resource away, its waiters' room full, the long poll switched off (`LONG_POLL=0`), a line
-    # written into an old bucket, which no resource watches — the pass comes at the end of the period, as before.
-    # Since the seventh review an early pass evaluates the scenarios the answer touched and no others, the ordinary
-    # pass over all of them still comes every `poll`, and the gap widens with a long pass and with a resource that
-    # refused (`Wake.pace`): the long poll speeds up the road and is never what loads the resources.
-    # Staying itself. The loop used to pass and heartbeat and renew NOTHING: thirty seconds after it started the
-    # leases on its scenarios ran out, `may_act` said no for every one of them, and the evaluator went on
-    # heartbeating and decided nothing, for ever; fifteen seconds later its slot lapsed and another process could
-    # take its name (the product noticed the slot; the leases were worse — feedback BC). No test saw it: they move
-    # the wall clock, and a lease runs on the monotonic one.
-    #
-    # The rules are the worker's (`VmsWorker.lease_pass`): a store that did not answer is not "no"; a lost lease
-    # is one scenario's — its epoch is given up and the next pass takes a new one; a slot held by another
-    # instance means this one is nobody, and it takes a free slot and starts from nothing — by `keep_slot`, the
-    # platform's, and no copy of it here (the review's fifth pass, blocker 3: the copy left the evaluator under
-    # the other instance's name when the claim of a free slot failed). Nothing runs here to stop: what it decided
-    # is filed.
+    # scenarios watch is appended there, and the platform's wait ends at that answer — never sooner than `WAKE_GAP`
+    # after the last pass began. The answer decides nothing: the pass is this same pass — the same window, cursor,
+    # `SETTLE` and firing ids — over the scenarios the answer touched (`early_pass`); the ordinary pass over all of
+    # them still comes every `poll`, and the gap widens with a long pass and with a resource that refused
+    # (`pass_refused`, `Wake.pace`).
+    def run(self, poll: float | None = None, stop=None) -> None:
+        poll = float(os.environ.get("PASS_SECONDS", "2")) if poll is None else poll
+        self.HEARTBEAT_EVERY = poll
+        super().run(poll, stop)
+
+    def early_pass(self, touched: set) -> None:
+        self.reconcile_once(only=touched)
+
+    # Staying itself: the platform's rules (`Worker.lease_pass`'s) — a store that did not answer is not "no"; a lost
+    # lease is one scenario's, its epoch given up and a new one taken by the next pass — by the platform's `keep_slot`:
+    # a slot held by another instance means this one is nobody, and it takes a free slot and starts from nothing, with
+    # nothing running to stop (what it decided is filed).
     def lease_pass(self) -> list[str]:
         gone = self.keep_slot(lambda: None)
         lost = self.renew_leases()
         for unit in lost:
             self.release(unit)                        # the next pass takes a new epoch for it, if it is still mine
         return gone + lost
-
-    def run(self, poll: float | None = None, stop=None) -> None:
-        import threading
-        poll = float(os.environ.get("PASS_SECONDS", "2")) if poll is None else poll
-        stop = stop or threading.Event()
-        lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)
-        last_lease = last_hb = self.clock()
-        again = False                               # the last lease step had a renewal the store did not answer
-        last_full = -math.inf                       # when the last ordinary pass — over every scenario — began
-        woken = False                               # whether this pass began early, at a resource's answer (`Worker.wait_next`)
-        touched: set | None = None                  # …and what the answers said changed: the scenarios it evaluates
-        stand_in = self.start_stand_in()            # renews for a step that hangs, for a while (feedback DD)
-        while not stop.is_set():
-            # The ordinary pass at least every `poll`, woken or not: an early pass evaluates only what was touched, and
-            # a resource whose events never wake anybody — away, refused, an old bucket — is found by this one.
-            full = not woken or touched is None or self.clock() - last_full >= poll
-            began = self.clock()
-            try:
-                with self.guarded("pass"):
-                    self.reconcile_once(only=None if full else touched)
-                if full:
-                    last_full = began
-            except Exception:                         # noqa: BLE001 — one bad pass is a late decision, not a dead evaluator
-                self.pass_failures += 1
-                log.exception("%s: pass failed", self.name)
-            if self.wake is not None:                 # the next early pass no sooner than the load allows (`Wake.pace`)
-                self.wake.pace(self.clock() - began, self._refused)
-            try:                                      # in a try of its own: a pass that raises still holds its scenarios
-                # from the step's START, and at the next look after one the store did not answer (`VmsWorker.run`)
-                if again or self.clock() - last_lease >= lease_every:
-                    unanswered, started = self.unanswered, self.clock()
-                    with self.guarded("lease"):
-                        self.lease_pass()
-                    last_lease, again = started, self.unanswered > unanswered
-            except Exception:                         # noqa: BLE001
-                log.exception("%s: the lease step failed; the heartbeat goes all the same", self.name)
-            # …and the heartbeat in one of ITS own (the review's seventh pass, part 2): they shared a `try`, so a lease
-            # step that raised took the heartbeat with it — the same shape that silenced every recorder.
-            #
-            # The heartbeat goes out once per ordinary pass, as it always did — and an EARLY pass does not add one:
-            # woken four times a second, the evaluator still says it is alive every `poll`, not every quarter of a
-            # second. The lease step above is by the clock already.
-            try:
-                if not woken or self.clock() - last_hb >= poll:
-                    with self.guarded("heartbeat"):
-                        self.heartbeat_once()
-                    last_hb = self.clock()
-            except Exception:                         # noqa: BLE001
-                log.exception("%s: heartbeat failed", self.name)
-            woken = self.wait_next(poll, stop)        # `stop.wait(poll)` — or sooner, when an event a scenario watches was written
-            touched = self.long_poll.take_touched() if woken and self.long_poll is not None else None
-        stand_in.set()
-        self.stop_polling()                           # no request is held at a resource for a loop that ended
-        self.release_slot()
