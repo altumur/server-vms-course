@@ -27,7 +27,8 @@ OPERATORS = {"metrics.agg", "metrics.type"}
 
 # A field's own words, of a unit's row and of a table's alike.
 FIELD = ("type", "default", "required", "inherit", "merge", "bound_to", "fixed", "enum", "schema", "ref", "must_match",
-         "unique", "schemes", "credentials.login", "credentials.secret", "secret_in.param", "secret_in.login",
+         "unique", "schemes.*.host", "schemes.*.fragment", "schemes.*.none", "credentials.login", "credentials.secret",
+         "secret_in.param", "secret_in.login",
          "secret_in.regex", "secret_in.in", "secret_in.schemes", "secret_in.decoded", "secret_in.nested")
 TABLE_FIELD = tuple(k for k in FIELD if k not in ("inherit", "merge", "fixed", "unique"))   # a row written whole
 # What the platform reads, key by key (`spec.py`, `metrics.py`, `tables.py`, `holds.py`, `door.py`): asserted below to be

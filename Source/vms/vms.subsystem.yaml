@@ -64,7 +64,11 @@ unit:
     # of that, found one review at a time; the platform refuses a `source` that carries one (`SubsystemSpec.refuse`, in
     # words naming `credentials`) and hides it wherever a stored one is said, by these rules.
     #
-    # `schemes` — what a camera is reached by; `credentials` — where the login and the password go instead.
+    # `schemes` — what a camera is reached by, and how each scheme writes its address in the platform's closed words
+    # (ADR 0053; `{}` — by RFC 3986): `driverpack://<vendor>/<host>/…` has its host in the path's first segment and
+    # `driverpack://file/…` names none (a file, no device); `ipint://` (the product's) has no fragment — a `#` is a
+    # character, the host after the last `@`. The refusal of a source and its group (`placement.group_by`) read an
+    # address by these same words. `credentials` — where the login and the password go instead.
     # `secret_in` (the form the architect approved for the course and the product alike; the product's lines, word for
     # word — one table of addresses for both, tests/testdata/secret_in.tsv):
     # - `param`: the names a camera gives a credential parameter (the eleventh review, blocker 4: `?usr=admin&pwd=…`)
@@ -96,7 +100,7 @@ unit:
     source:
       type: url
       required: true
-      schemes: [driverpack, rtsp, rtsps, http, https, onvif]
+      schemes: {driverpack: {host: path, none: [file]}, ipint: {fragment: none}, rtsp: {}, rtsps: {}, http: {}, https: {}, onvif: {}}
       # One channel, one camera: no two cameras hold the same address in its one spelling (RFC 3986 — the platform's;
       # the review's sixth pass, major: `PUT /cameras/1 {"source": "…/ch/2"}` opened channel 2 as camera 1). Two
       # spellings the platform cannot tell apart — `…/ch/02` and `…/ch/2` — are the worker's to find: it opens the
@@ -277,13 +281,15 @@ placement:
   # sessions", a channel that will not start, a stream that drops when the fifth is added — and nothing
   # in it points at a placement decision made on another server an hour earlier.
   #
-  # `device` is not a field: `VmsController.group_value` parses it out of `driverpack://<device>/<channel>`,
-  # because the scheme is the subsystem's business and not the platform's. A row with no source groups
-  # with nothing, which is what a half-created camera should do.
-  # Channels of one device go to ONE worker — it is one connection: the source in its one spelling up to `/ch/`
-  # (`driverpack://acme/10.0.0.50/ch/17` and `…/ch/18` are one device). It was `VmsController.group_value`, the VMS's
-  # parser of its addresses, until the boundary's step 6; two spellings of one host are two groups — one spelling.
-  group_by:   {field: source, cut_at: ch}
+  # `device` is not a field: the device is the HOST the source names (`cut_at: host`, the platform's rule; «Архитектор»,
+  # 2026-10-06, one wire with the product): `rtsp://Nvr50:554/ch/1` and `onvif://nvr50./x` are one box, whatever the
+  # scheme, the port or the path; an IP in its one spelling (`[0:0::1]` is `::1`); a host that is neither a name nor an
+  # IP (`nvr%2Ecorp`, `nvr_50`), like a row with no source, groups with nothing — what a half-created camera should do.
+  # How a scheme of ours writes its host is the source field's `schemes`: `driverpack://acme/10.0.0.50/ch/17` and
+  # `driverpack://other/10.0.0.50/ch/1` are one NVR, `driverpack://acme` with no address is the vendor's, and
+  # `driverpack://file/…` is a file — the only source with no group; a host nobody can tell is refused (ADR 0053). It was
+  # `VmsController.group_value`, the VMS's parser of its addresses, until the boundary's step 6, and `cut_at: ch` after.
+  group_by:   {field: source, cut_at: host}
   # a worker records into the resource on its own server: every server runs its resource (`w2c-resource`) beside its
   # worker, and this is the live fact — a worker whose server's resource has gone silent is
   # not placed on, and its cameras are moved off on the controller's next pass (`redistribute`).

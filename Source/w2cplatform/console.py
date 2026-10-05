@@ -380,6 +380,13 @@ def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
     return newest(found)
 
 
+# The kind of a refusal, for a 400's body: `{"fault": <word>}` when the refusal says one (`AddressRefused`: `bad_url`;
+# the closed dictionary is `canonical.FAULTS`), nothing otherwise — the reason is always the body's `detail`.
+def _fault(e) -> dict:
+    word = getattr(e, "fault", "")
+    return {"fault": word} if word else {}
+
+
 def _epoch(st) -> int:
     try:
         return int(st.get("epoch") or 0)
@@ -2218,7 +2225,7 @@ class SpecConsole:
         except Exists as e:
             return 409, {"detail": str(e), "error": "exists"}
         except Refused as e:
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **_fault(e)}
         except TooLarge as e:
             return 413, {"detail": str(e), "error": str(e)}
         except ClaimLost as e:                                        # taken over while this console stood still: the
@@ -2241,7 +2248,7 @@ class SpecConsole:
                              fields=",".join(sorted(str(k) for k in body)), revision=row.get("revision"))
             return 200, mask_secrets([row])[0]
         except Refused as e:
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **_fault(e)}
         # 413, and to the person who typed it. The store's ceiling used to be a number in a document and a
         # surprise in production; now the edit that does not fit is refused at the console, with the size
         # and the limit in the sentence, before anything is written.
@@ -2264,7 +2271,7 @@ class SpecConsole:
             d = self.ctl.put_blob(data)                       # 1. the object
             row = self.ctl.update(uid, {field: d})            # 2. the row that names it
         except Refused as e:
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **_fault(e)}
         except TooLarge as e:
             # The blob is bigger than the STORE will hold — which is the one case where changing the store
             # is the answer, because a blob is exactly the class of data an object store exists for. The cluster's
@@ -2589,7 +2596,7 @@ class SpecConsole:
         if key:
             self.seen.release(key)
         if isinstance(e, Refused):                       # a body that is no object (`object_body`): the sender's, 400
-            return 400, {"detail": str(e), "error": str(e)}
+            return 400, {"detail": str(e), "error": str(e), **_fault(e)}
         if isinstance(e, OSError):
             log.warning("%s: a write was not taken by the store: %s", self.spec.name, e)
             return 503, {"detail": f"the store did not answer: {no_paths(e)}", "error": "store unavailable"}
@@ -2817,7 +2824,7 @@ class SpecConsole:
                 body, said = object_body(h), {}
                 rid, items = ctl.write_table_row(table, body, user, said)
             except Refused as e:
-                return h._send(400, {"detail": str(e), "error": "refused"})
+                return h._send(400, {"detail": str(e), "error": "refused", **_fault(e)})
             except TooLarge as e:
                 return h._send(413, {"detail": str(e), "error": str(e)})
             except Forbidden as e:

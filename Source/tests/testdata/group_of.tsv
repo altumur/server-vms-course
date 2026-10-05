@@ -1,0 +1,89 @@
+# group_of.tsv — an address and the group the platform puts it in (ADR 0053), read by tests/test_group_of_table.py, which
+# builds the field and the grouping from the two declarations below — nothing of any subsystem's spec.
+# The group is the HOST the address names, in one spelling: neither the scheme nor the port is part of it; lower case, no
+# trailing dot; an IP as written once (IPv6 unbracketed, RFC 5952, no zone; IPv4-mapped as IPv4); a percent-escape in a
+# host is not decoded; the host read by the field's `schemes` (a scheme outside the map has none). (none): no group.
+# The only addresses without a group that are taken are the `none` ones; a host nobody can tell is refused, 400.
+# This is the course's seed of the table, until «Паритет» replaces it with the table shared with the product.
+#
+# source: {type: url, schemes: {rtsp: {}, http: {}, file: {}, ipint: {fragment: none}, driverpack: {host: path, none: [file]}, mirror: {host: path, fragment: none, none: [local]}}}
+# group_by: {field: source, cut_at: host}
+#
+# Columns, tab-separated: the source; its group, or (none); the fault of a write of it — empty (taken) or `bad_url`.
+#
+# one host, whatever the scheme and the port
+rtsp://nvr50/ch/1	nvr50
+http://nvr50:8080/snap.jpg	nvr50
+ipint://nvr50/Acme/N8	nvr50
+rtsp://nvr50:554/ch/2	nvr50
+rtsp://nvr50	nvr50
+rtsp://nvr50?channel=1	nvr50
+rtsp://nvr50:/ch/1	nvr50
+# one spelling
+rtsp://NVR50/ch/1	nvr50
+RTSP://Nvr50/ch/1	nvr50
+rtsp://nvr50./ch/1	nvr50
+http://Cam.Example.COM.:80	cam.example.com
+rtsp://10.0.0.50/ch/1	10.0.0.50
+rtsp://10.0.0.50./ch/1	10.0.0.50
+rtsp://[::1]/ch/1	::1
+rtsp://[0:0::1]:554/ch/1	::1
+rtsp://[2001:DB8:0:0::1]/x	2001:db8::1
+rtsp://[::ffff:10.0.0.50]/x	10.0.0.50
+rtsp://[fe80::1%25eth0]/x	fe80::1
+# a login is not the host: refused, and on its host all the same
+rtsp://admin:hunter2@nvr50/ch/1	nvr50	bad_url
+ipint://cam7#@nvr50/Acme/N8	nvr50	bad_url
+ipint://admin:pa@ss@nvr50/Acme/N8	nvr50	bad_url
+rtsp://cam7#@nvr50/ch/1	cam7	bad_url
+# no host to tell: no group, refused
+rtsp://nvr%2Ecorp/ch/1	(none)	bad_url
+rtsp://nvr%2ecorp/ch/1	(none)	bad_url
+rtsp://nvr_50/ch/1	(none)	bad_url
+rtsp://nvr 50/ch/1	(none)	bad_url
+rtsp://-nvr/ch/1	(none)	bad_url
+rtsp://nvr..corp/ch/1	(none)	bad_url
+rtsp://nvré/ch/1	(none)	bad_url
+rtsp://010.0.0.50/ch/1	(none)	bad_url
+rtsp://10.1/ch/1	(none)	bad_url
+rtsp://0x0a.0.0.1/ch/1	(none)	bad_url
+rtsp://256.0.0.1/ch/1	(none)	bad_url
+rtsp://[10.0.0.1]/ch/1	(none)	bad_url
+rtsp://[fe80::1%eth0]/ch/1	(none)	bad_url
+rtsp://[::1/ch/1	(none)	bad_url
+rtsp://[::1]x/ch/1	(none)	bad_url
+rtsp://cam:hunter2/ch/1	(none)	bad_url
+rtsp://nvr50/ch/%zz	(none)	bad_url
+rtsp:///ch/1	(none)	bad_url
+nvr50	(none)	bad_url
+file:///media/a.mp4	(none)	bad_url
+/media/a.mp4	(none)	bad_url
+# a scheme outside the map: no host is read for it, refused
+onvif://10.0.0.5/	(none)	bad_url
+ftp://nvr50/a	(none)	bad_url
+# driverpack://<vendor>/<address>/…: the host is the path's first segment, and the vendor no part of it
+driverpack://acme/10.0.0.50/ch/17	10.0.0.50
+driverpack://acme/10.0.0.50/ch/18	10.0.0.50
+driverpack://other/10.0.0.50/ch/1	10.0.0.50
+driverpack://acme/10.0.0.50:8080/ch/1	10.0.0.50
+driverpack://acme/NVR-1./ch/1	nvr-1
+driverpack://acme/[fe80::1%25eth0]/ch/1	fe80::1
+driverpack://acme	acme
+driverpack://acme/	acme
+driverpack://acme?x/10.0.0.5	acme
+driverpack://acme/[::1]x/ch/1	(none)	bad_url
+driverpack://file/clips/a.mp4	(none)
+driverpack://file	(none)
+driverpack://FILE./clips/a.mp4	(none)
+driverpack://acme/nvr%2Ecorp/ch/1	(none)	bad_url
+driverpack://acme/admin:Hunter2@10.0.0.5/ch/1	10.0.0.5	bad_url
+driverpack://acme/admin:pa/ss@10.0.0.5/ch/1	10.0.0.5	bad_url
+driverpack://acme/admin:X%40nvr%2Ecorp/ch/1	(none)	bad_url
+# mirror://<hub>/<host>/…: the host in the path, `#` a character, `mirror://local/…` no host
+mirror://hub1/Feed.Example/a	feed.example
+mirror://hub2/feed.example:21/b	feed.example
+mirror://hub1/feed.example/c#d	feed.example
+mirror://hub1	hub1
+mirror://local/x	(none)
+mirror://LOCAL./x	(none)
+mirror://hub1/h%2Ecorp/x	(none)	bad_url

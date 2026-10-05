@@ -24,5 +24,5 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
   "index": 1009
 }
 
-# … and 67 GET requests, omitted
+# … and 59 GET requests, omitted
 # where(1) = w-srv-a-1; placement reason: 'most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live'

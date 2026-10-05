@@ -36,7 +36,9 @@ unit:
     feed:
       type: url
       unique: canonical
-      schemes: [https, sftp]
+      # mirror://<hub>/<host>/…: a copy kept on a hub — the host in the path (the hub is no part of it), `#` a character
+      # there, and `mirror://local/…` — the shelf's own copy — no host at all
+      schemes: {https: {}, sftp: {}, mirror: {host: path, fragment: none, none: [local]}}
       credentials: {login: feed_user, secret: feed_secret}
       secret_in:
         - {param: [token*, "*key", =who], login: [=who]}
@@ -64,7 +66,7 @@ tables:
       # where the shelf's own goods come from, and the shelf it overflows to — a table's field says what a unit's does
       feed:
         type: url
-        schemes: [https]
+        schemes: {https: {}, mirror: {host: path, fragment: none, none: [local]}}
         credentials: {login: feed_user, secret: feed_secret}
         secret_in:
           - {param: [token*, =who], login: [=who]}
@@ -95,7 +97,8 @@ placement:
   tie_break:   most-free-capacity
   near:        {sub: testsub, by: of, of: name, prefer: {start: [0, 1]}}
   spread_by:   zone
-  group_by:    {field: feed, cut_at: part}
+  # tallies whose feeds name one host go to one worker, the host read by the feed's `schemes`
+  group_by:    {field: feed, cut_at: host}
   place_by:    shelf
   places:      {table: shelves, where: {enabled: true}, server_field: server, lease: strict}   # a shared shelf: strict
   offers:      true

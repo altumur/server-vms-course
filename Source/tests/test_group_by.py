@@ -59,7 +59,7 @@ def test_channels_of_one_device_go_to_one_worker():
     ctl.ensure_placed()
 
     assert ctl.where(a) == ctl.where(b), "two channels of one recorder, two sessions"
-    assert ctl.group_value(ctl.camera(a)) == "driverpack://acme/10.0.0.50" == ctl.group_value(ctl.camera(b))   # the spec's `cut_at: ch`
+    assert ctl.group_value(ctl.camera(a)) == "10.0.0.50" == ctl.group_value(ctl.camera(b))   # the spec's `cut_at: host`
     assert ctl.where(other) != ctl.where(a)          # a different device is free to balance away
 
     # and a channel added later joins them rather than the emptier worker
@@ -404,7 +404,7 @@ def test_the_console_files_a_command_and_refuses_the_ones_it_cannot():
         status, body = call("POST", "/requests", {"unit": f"vms/{door}", "action": "output", "port": 2,
                                                   "state": "pulse", "pulse_ms": 500})
         assert status == 202 and float(body["queued"]["valid_until"]) == box.wall() + 30   # thirty seconds by default
-        assert body["queued"]["group"] == "driverpack://acme/10.0.0.90"                     # what its rights were asked on
+        assert body["queued"]["group"] == "10.0.0.90"                                          # what its rights were asked on
         assert box.vars.list(SPEC.sub.requests_prefix())
 
         for bad, why in (({"unit": "vms/999", "action": "output"}, "no such unit"),

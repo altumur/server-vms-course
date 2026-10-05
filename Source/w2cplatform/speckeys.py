@@ -24,7 +24,8 @@ from .spec import TREE_WORDS
 from .tables import TABLE_KEYS
 
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
-         "domain.tokens", "domain.names", "secrets.readers"}
+         "domain.tokens", "domain.names", "secrets.readers", "unit.fields.*.schemes",
+         "tables.*.fields.*.schemes"}
 OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
           "placement.near.prefer", "placement.affinity.strict", "rights.unit_of", "placement.places.where",
@@ -33,7 +34,8 @@ OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fie
 
 # A field's own words — of a unit's row and of a table's alike.
 FIELD_KEYS = ("type", "default", "required", "inherit", "merge", "bound_to", "fixed", "enum", "schema", "ref",
-              "must_match", "unique", "schemes", "credentials.login", "credentials.secret", "secret_in.param",
+              "must_match", "unique", "schemes.*.host", "schemes.*.fragment", "schemes.*.none", "credentials.login",
+              "credentials.secret", "secret_in.param",
               "secret_in.login", "secret_in.regex", "secret_in.in", "secret_in.schemes", "secret_in.decoded",
               "secret_in.nested")
 # …of a table's: what a row written whole says (`tables.py`) — no `inherit`/`merge` (nothing above a table's row), no
