@@ -1,10 +1,10 @@
 # spec_load_debt.txt — the key paths of the product's specs the course's loader refuses (test_spec_parity.py),
-# `<spec>:<key path>`. A line goes when the course reads the key or the product drops it; one is added only where a
-# decision (its ADR number on the line) brings a key to one side first, naming the other side's owner (the architect,
-# 2026-10-06).
-auto:console.running
-live:console.running
-rec:console.running
-rec:domain.witness   # ADR-0010/0032: the product's `witness: <name>`, the course's {report, member_field}; the product's side — «Платформа»
-vms:console.running
-vms:tables
+# `<spec>:<key path>   # ADR-NNNN «owner»`. A line goes when the course reads the key or the product drops it;
+# one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
+# side, who closes it (СЕССИИ.md §1.7).
+auto:console.running   # ADR-0019 «Сборка»
+live:console.running   # ADR-0019 «Сборка»
+rec:console.running   # ADR-0019 «Сборка»
+rec:domain.witness   # ADR-0010 «Платформа»
+vms:console.running   # ADR-0019 «Сборка»
+vms:tables   # ADR-0012 «Платформа»

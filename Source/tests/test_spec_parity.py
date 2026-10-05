@@ -33,7 +33,14 @@ LOAD_DEBT = os.path.join(TESTDATA, "spec_load_debt.txt")
 PARITY_HEAD = ("# spec_parity_debt.txt — the keys the course's specs and the product's differ by (spec_parity_test.go).\n"
                "# A line goes when both sides have the key, or neither; a new difference is not written here but made good.\n")
 LOAD_HEAD = ("# spec_load_debt.txt — the key paths of the product's specs the course's loader refuses (test_spec_parity.py),\n"
-             "# `<spec>:<key path>`. A line goes when the course reads the key or the product drops it; none is ever added.\n")
+             "# `<spec>:<key path>   # ADR-NNNN «owner»`. A line goes when the course reads the key or the product drops it;\n"
+             "# one is added only where a decision brings a key to one side first: its ADR number and the owner of the other\n"
+             "# side, who closes it (СЕССИИ.md §1.7).\n")
+# СЕССИИ.md §1.7: every line of either debt carries its decision and the other side's owner — `# ADR-NNNN «owner»` after
+# the key. The bridge until «Паритет» marks the old lines up: a bare line is taken only if the debts held it on the day
+# of §1.7 (8bb36dfd) — `testdata/debt_bare_1_7.txt`, deleted once no bare line is left; a new bare line is a failure.
+_TAIL = re.compile(r"#\s*ADR-\d{4}\b[^«]*«[^»]+»")
+BARE_1_7 = os.path.join(TESTDATA, "debt_bare_1_7.txt")
 
 # The product's reading of a spec, line by line — its regular expressions, its order (`specKeyPaths`).
 _KEY = re.compile(r"^([A-Za-z0-9_.\-\"']+)\s*:\s*(.*)$")
@@ -99,12 +106,21 @@ def _debt(path: str, text: str | None = None) -> set[str]:
     return {ln for ln in lines if ln and not ln.startswith("#")}
 
 
+def _lines(path: str) -> list[tuple[str, str]]:
+    """`(key, the line as written)` for every debt line of the file — its tail kept."""
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return [(_COMMENT.sub("", ln).strip(), ln) for ln in f.read().split("\n")
+                if _COMMENT.sub("", ln).strip() and not ln.startswith("#")]
+
+
 def _hold(found: set[str], path: str, head: str, what: str) -> None:
     debt = _debt(path)
     fresh, gone = sorted(found - debt), sorted(debt - found)
     if gone and os.environ.get("W2C_SPEC_SHRINK"):
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(head + "".join(f"{ln}\n" for ln in sorted(debt & found)))
+        with open(path, "w", encoding="utf-8") as f:            # the lines still true, as written: their tails stay
+            f.write(head + "".join(f"{ln}\n" for k, ln in _lines(path) if k in found))
         gone = []
     assert not fresh, (f"{len(fresh)} new {what} — give the other side the key, or agree another; the debt is not "
                        f"added to:\n  " + "\n  ".join(fresh))
@@ -118,6 +134,19 @@ def test_the_specs_keys_are_the_products_but_for_the_debt_and_the_debt_only_shri
     `kinds`, `field_help`. A path on one side alone is a failure unless the debt names it; a debt line no longer true is
     a failure until it is struck."""
     _hold(_differences(), PARITY_DEBT, PARITY_HEAD, "differences of the specs' keys from the product's")
+
+
+def test_every_debt_line_names_its_decision_and_the_other_sides_owner():
+    """СЕССИИ.md §1.7: a debt line exists only by a decision that brought a key to one side first — `# ADR-NNNN
+    «owner»` after it, the owner of the side that closes it. A bare line is taken only from the bridge (the debts on
+    the day of §1.7), and the bridge goes when no bare line is left."""
+    bridge = _debt(BARE_1_7) if os.path.exists(BARE_1_7) else set()
+    bare = [f"{os.path.basename(p)}: {ln}" for p in (PARITY_DEBT, LOAD_DEBT) for k, ln in _lines(p)
+            if not _TAIL.search(ln) and k not in bridge]
+    assert not bare, ("a debt line with no decision — `   # ADR-NNNN «owner»` after the key (СЕССИИ.md §1.7):\n  "
+                      + "\n  ".join(bare))
+    left = {k for p in (PARITY_DEBT, LOAD_DEBT) for k, ln in _lines(p) if not _TAIL.search(ln)}
+    assert not bridge or left, ("no bare line is left in the debts: delete testdata/debt_bare_1_7.txt and its reading")
 
 
 def test_the_parity_debt_is_the_products_file_byte_for_byte():
