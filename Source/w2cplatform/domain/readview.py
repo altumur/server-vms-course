@@ -327,7 +327,7 @@ class ReadView:
         shown = {s.name: set(s.domain.view) for s in declared.directory()}
 
         # a unit as the product lists it (`id`, `state` — live | stale | configured | silent —, `age`, the `view`
-        # fields by name), and the course's words beside them, which the VMS's page reads (`unit`, `worker_state`)
+        # fields by name), and the course's words beside them, which a subsystem's page reads (`unit`, `worker_state`)
         def unit(r: Row) -> dict:
             d = r.to_json()
             row = self._configured_row(r)
