@@ -199,6 +199,15 @@ def test_the_request_marks_are_rows_for_every_spec_whose_units_take_requests():
         assert "objects/testsub/commands/*" in roles["testsubworker"]["write"], roles["testsubworker"]
         assert "objects/testsub2/commands/*" in roles["testsub2worker"]["write"]
         assert not is_row("testsub/heartbeats/w-1")
+    # …and a spec that names them itself is refused: one family, the platform's (as the product's loader refuses it)
+    from w2cplatform.spec import SubsystemSpec
+    try:
+        SubsystemSpec.from_dict({"name": "shed", "unit": {"rows": "sheds", "id": "name", "fields": {}},
+                                 "objects": {"rows": ["commands/*"]}})
+    except ValueError as e:
+        assert "the platform's family" in str(e), e
+    else:
+        raise AssertionError("objects.rows naming commands/* was taken")
 
 
 def test_a_create_under_a_name_a_unit_has_is_409_exists():
