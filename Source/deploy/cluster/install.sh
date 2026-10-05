@@ -51,7 +51,7 @@ else
   OS=other
 fi
 
-UNITS="configstore w2c-resource vms-console vms-jobs vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker"
+UNITS="configstore w2c-resource w2c-console vms-jobs vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker"
 # A spare is its role's unit but the name (the twelfth review, blocker 6): installed with the spares, never enabled —
 # `w2c-spares.sh` starts `vms-<role>-spare@<n>`.
 SPARE_UNITS="vms-vmsworker-spare@ vms-recworker-spare@"
@@ -73,7 +73,7 @@ if [ "$OS" = macos ]; then
   [ "${#sock}" -lt 104 ] || { echo "--box $BOX is too long: $sock is ${#sock} bytes, a unix socket's path is under 104" >&2; exit 2; }
   W2C_HOME="$BOX"
   mkdir -p "$BOX/bin" "$BOX/state/configstore" "$BOX/state/objects" "$BOX/state/events" "$BOX/state/logs" \
-           "$BOX/state/run/configstore" "$BOX/state/run/vms-console" "$BOX/state/run/vms-obsd" "$BOX/state/run/vms" \
+           "$BOX/state/run/configstore" "$BOX/state/run/w2c-console" "$BOX/state/run/vms-obsd" "$BOX/state/run/vms" \
            "$BOX/state/run/w2c-spares" "$BOX/state/vms/obsd/volume"
   chmod 0700 "$BOX/state/configstore"
 elif [ "$OS" = linux ]; then

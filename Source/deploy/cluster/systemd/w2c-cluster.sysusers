@@ -4,8 +4,8 @@
 # numbered otherwise. w2c runs the resource; its events archive is setgid `w2c-events`, its objects `w2c-store`, the
 # key ring `w2c-secrets` — a unit that writes there or reads the key joins the group (`SupplementaryGroups=`).
 # configstore runs the store's member, and owns its journal alone. vms runs the subsystem's processes. Each role of
-# the store's rights file — a controller and a worker of every subsystem of the catalogue, the console, the platform's
-# own — has a group of the same name as its socket's (`vms-<role>`, the platform's `w2c-<role>`):
+# the store's rights file — a controller and a worker of every subsystem of the catalogue, the platform's own (the
+# console among them, ADR 0014) — has a group of the same name as its socket's (`vms-<role>`, the platform's `w2c-<role>`):
 # a unit joins its own and opens no other socket; the daemon chowns every socket to its group, so configstore is a
 # member of each. vms-obsd (М10's `obsd.sysusers`, gid 2101) is the group the archive's engine lets in.
 # w2c-spares runs `w2c-spares.sh` (`install.sh --spares`): a user in no group but its own — no socket, no key, no archive — whom
@@ -24,7 +24,7 @@ u w2c-spares        -     "w2c spares (starts spare units, by polkit)"         -
 g w2c-resource      -
 g w2c-domain        -
 g w2c-domainagent   -
-g vms-console       -
+g w2c-console       -
 g vms-vmscontroller -
 g vms-reccontroller -
 g vms-vmsworker     -
@@ -43,7 +43,7 @@ g vms-vmsdomain   -
 m configstore w2c-resource
 m configstore w2c-domain
 m configstore w2c-domainagent
-m configstore vms-console
+m configstore w2c-console
 m configstore vms-vmscontroller
 m configstore vms-reccontroller
 m configstore vms-vmsworker

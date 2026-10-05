@@ -54,10 +54,11 @@ def test_the_committed_file_is_what_the_spec_generates():
 
 def test_each_role_says_its_sockets_group_in_the_products_format():
     """The product's format (its configstore round 2): each role carries its socket's `group` — a VMS subsystem's
-    `vms-<role>`, the platform's `w2c-<role>` — which is what a unit joins (`SupplementaryGroups=`)."""
+    `vms-<role>`, the platform's `w2c-<role>` — which is what a unit joins (`SupplementaryGroups=`). The console is the
+    platform's process (ADR 0014), so its group is `w2c-console`."""
     r = rights()
     for role in doc()["roles"]:
-        platform = role in ("resource", "domain", "domainagent")
+        platform = role in ("resource", "console", "domain", "domainagent")
         assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
     assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
 
@@ -319,7 +320,7 @@ def test_the_clusters_key_is_a_credential_of_the_three_units_that_open_a_passwor
     deploy = os.path.join(os.path.dirname(RIGHTS), "systemd")
     loaders = {f for f in os.listdir(deploy) if f.endswith(".service")
                and "LoadCredential=platform.key:/etc/w2c/secrets/platform.key" in open(os.path.join(deploy, f)).read()}
-    assert loaders == {"vms-console.service", "vms-vmsworker.service", "vms-recworker.service",
+    assert loaders == {"w2c-console.service", "vms-vmsworker.service", "vms-recworker.service",
                        "vms-vmsworker-spare@.service", "vms-recworker-spare@.service"}
 
 

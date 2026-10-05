@@ -6,7 +6,7 @@ The format is the product's: `{"comment": …, "roles": {"<role>": {"group": "..
 
 ## Module-level names
 - `OBJECTS` — `objects/`, the prefix of the create-only object rows.
-- `PLATFORM` — the platform's own roles (`resource`, `domain`, `domainagent`, `member`): their group is `w2c-<role>`; every other role's is `<deployment>-<role>` (`group`), the deployment being `ROLE_GROUP` or the name of the directory the specs ship in.
+- `PLATFORM` — the platform's own roles (`resource`, `console` (ADR 0014), `domain`, `domainagent`, `member`): their group is `w2c-<role>`; every other role's is `<deployment>-<role>` (`group`), the deployment being `ROLE_GROUP` or the name of the directory the specs ship in.
 - `SIGNER_KEYS` — the domain's keys, read and written by the domain's own role alone.
 
 ## Functions

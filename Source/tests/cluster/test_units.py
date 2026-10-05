@@ -20,11 +20,11 @@ HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 DEPLOY = os.path.join(HERE, "deploy", "cluster")
 # The role each unit runs as, and what `w2c-run.sh` is told to run: the platform's verbs (`python3 -m w2cplatform.cluster`)
 # and the VMS's processes (`python3 -m vms`).
-UNITS = {"w2c-resource": ("resource", "resource"), "vms-console": ("console", "console"),
+UNITS = {"w2c-resource": ("resource", "resource"), "w2c-console": ("console", "console"),
          "vms-jobs": ("console", "vms jobs"),
          "vms-vmscontroller": ("vmscontroller", "controller vms"), "vms-reccontroller": ("reccontroller", "controller rec"),
          "vms-vmsworker": ("vmsworker", "vms worker"), "vms-recworker": ("recworker", "vms recorder")}
-PLISTS = {"com.w2c.resource": "w2c-resource", "com.w2c.vms.console": "vms-console", "com.w2c.vms.jobs": "vms-jobs",
+PLISTS = {"com.w2c.resource": "w2c-resource", "com.w2c.console": "w2c-console", "com.w2c.vms.jobs": "vms-jobs",
           "com.w2c.vms.vmscontroller": "vms-vmscontroller", "com.w2c.vms.reccontroller": "vms-reccontroller",
           "com.w2c.vms.vmsworker": "vms-vmsworker", "com.w2c.vms.recworker": "vms-recworker"}
 
@@ -37,7 +37,9 @@ def test_every_unit_opens_its_roles_socket_and_joins_its_group():
         assert u["SupplementaryGroups"][0].split()[0] == groups[role], name
         assert u["ExecStart"] == [f"/opt/w2c/bin/w2c-run.sh {verb}"], name
         assert "configstore.service" in u["After"][0], name                         # the store's member first
-        assert u["User"] == (["w2c"] if role == "resource" else ["vms"]), name       # the platform's user, the subsystem's
+        # the platform's user for the resource; the deployment's for the rest — the console too (the product's unit),
+        # which is the platform's by its group and its name (ADR 0014), not by its user
+        assert u["User"] == (["w2c"] if role == "resource" else ["vms"]), name
         assert "EnvironmentFile" not in u, f"{name}: a file would override what the unit says"
     store = unit(os.path.join(DEPLOY, "systemd", "configstore.service"))
     assert store["ExecStart"] == ["/opt/w2c/bin/w2c-run.sh configstore"] and store["RuntimeDirectory"] == ["configstore"]
@@ -443,8 +445,8 @@ def test_every_unit_writes_as_its_groups_and_sees_the_rest_of_the_system_read_on
     `ProtectSystem=strict` with what it writes said, `ProtectHome`, `PrivateTmp`. The objects' group for every
     process that opens them, the events archive's for the resource and its writers, the key ring's for the three
     that open a password — the console, the holder, the recorder — and no other."""
-    events = {"w2c-resource", "vms-console", "vms-vmsworker", "vms-recworker"}
-    secrets = {"vms-console", "vms-vmsworker", "vms-recworker"}
+    events = {"w2c-resource", "w2c-console", "vms-vmsworker", "vms-recworker"}
+    secrets = {"w2c-console", "vms-vmsworker", "vms-recworker"}
     for f in sorted(os.listdir(SYSTEMD)):
         if not f.endswith(".service"):
             continue

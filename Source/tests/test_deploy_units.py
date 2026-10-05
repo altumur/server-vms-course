@@ -75,7 +75,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it
         assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env"]
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
-            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/vms-console:",   # sockets on a tmpfs, not state
+            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/w2c-console:",   # sockets on a tmpfs, not state
                                    f"{KEY}:")), vol                                              # the key ring: one file
 
 
@@ -228,7 +228,8 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     """The review's fourth pass, blocker 2. `obsd.service` ran as a user nobody created and owned a volume nobody
     handed it; /run/vms was made only by that unit, so without the daemon neither the holder nor the recorder started.
     Every user and group a unit names is in `obsd.sysusers` — the clients' group with the number the recorders join it
-    by — every host directory under /run a container mounts is in `vms.tmpfiles`, the box's own volume is the daemon's,
+    by — every host directory under /run a container mounts is in `vms.tmpfiles` (the console's in `w2c.tmpfiles`: the
+    platform's process, ADR 0014), the box's own volume is the daemon's,
     and `install-obsd.sh` installs both files, checks the number and hands an old ring over. Since the platform's names
     (3 October): the platform's directories — its stores, its secrets — are `w2c.tmpfiles`, installed beside it, and
     the daemon's user and group are the product's `vms-obsd`. Since the owner's decisions of 4 October: the platform's
@@ -240,7 +241,8 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     assert w2c == {"/data/platform": ("d", "0755", "root", "root"), "/data/platform/etc": ("d", "0755", "root", "root"),
                    "/data/platform/etc/secrets": ("d", "2710", "root", "w2c-secrets"),
                    CONFIG: ("d", "2770", "w2c", "w2c-store"), OBJECTS: ("d", "2770", "w2c", "w2c-store"),
-                   EVENTS: ("d", "2770", "w2c", "w2c-events")}, w2c
+                   EVENTS: ("d", "2770", "w2c", "w2c-events"),
+                   "/run/w2c-console": ("d", "0700", "root", "root")}, w2c   # the console is the platform's (ADR 0014)
     assert os.path.dirname(KEY) == "/etc/w2c/secrets"                                     # = /data/platform/etc/secrets
     assert not any(p.startswith("/data/platform") for p in _tmpfiles("vms.tmpfiles"))
     users, groups, members = _sysusers()

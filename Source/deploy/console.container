@@ -23,7 +23,7 @@
 # archive is writable because an operator's marks are the console's own buckets, `console/<instance>/…`, on it.
 # Checked by `tests/test_deploy_units.py`.
 #
-# - `Description=VMS console — the operator's rows, the read model, the page`
+# - `Description=w2c console — the operator's rows, the read model, the page`: the platform's process (ADR 0014).
 #
 # - `Image=localhost/vmsserver:latest`
 #
@@ -39,7 +39,7 @@
 #   `test_a_retry_that_lands_on_another_console_is_one_camera`.
 # ================================================================================================
 [Unit]
-Description=VMS console — the operator's rows, the read model, the page
+Description=w2c console — the operator's rows, the read model, the page
 # it listens on a port, so it waits for the network.
 After=network.target
 
@@ -61,13 +61,13 @@ Environment=CONSOLE_PORT=8080
 # THE BOX'S OWN DOOR (the review's sixth pass): the same console on a unix socket, beside the port. Who is "on the
 # box" — for the emergency entry's own turns (`Gate.open_glass`) and for connections of its own when the port is
 # flooded (`w2cplatform/console.py`, `Bounds`) — is whoever came through this socket, and who may is the mode of
-# the directory (0700 root, `vms.tmpfiles`) and of the socket (0660): no caller on the network, no proxy, and no
-# process of the box that is not root. On the box: `curl --unix-socket /run/vms-console/console.sock
+# the directory (0700 root, `w2c.tmpfiles`) and of the socket (0660): no caller on the network, no proxy, and no
+# process of the box that is not root. On the box: `curl --unix-socket /run/w2c-console/console.sock
 # http://console/session/break-glass -d '{"who": …, "why": …, "password": …}'`; from the operator's machine:
-# `ssh -L 8080:/run/vms-console/console.sock root@box`, and a browser at http://localhost:8080. A TCP peer of
+# `ssh -L 8080:/run/w2c-console/console.sock root@box`, and a browser at http://localhost:8080. A TCP peer of
 # 127.0.0.1 is the network's, like any other.
-Environment=CONSOLE_UNIX=/run/vms-console/console.sock
-Volume=/run/vms-console:/run/vms-console:z
+Environment=CONSOLE_UNIX=/run/w2c-console/console.sock
+Volume=/run/w2c-console:/run/w2c-console:z
 # Who scrapes `/metrics` (the review's seventh pass): addresses or networks, comma-separated. They get four
 # connections of their own, which a flood from the network cannot take; anyone else is answered `/metrics` only from
 # the common slots. Set it to Prometheus's address in `vms.env` (`CONSOLE_MONITORS=10.0.0.5`); unset — no lane.

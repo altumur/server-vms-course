@@ -315,5 +315,5 @@ class Cluster:
         return ctl
 
     def console(self, server: str = "srv-a", who: str | None = None, **kw):
-        """`vms-console` on `server`: the operator's rows and nothing else."""
+        """`w2c-console` on `server`: the operator's rows and nothing else."""
         return self.controller(server, who or f"console on {server}", role="console", **kw)
