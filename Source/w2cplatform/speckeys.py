@@ -29,7 +29,7 @@ OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fie
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
           "placement.near.prefer", "placement.affinity.strict", "rights.unit_of", "placement.places.where",
           "metrics.where", "metrics.unless.where", "metrics.labels", "unit.derived.items", "unit.derived.on_delete",
-          "unit.fields.*.must_match", "tables.*.fields.*.must_match"}
+          "unit.fields.*.must_match", "tables.*.fields.*.must_match", "domain.shared.schema"}
 
 # A field's own words — of a unit's row and of a table's alike.
 FIELD_KEYS = ("type", "default", "required", "inherit", "merge", "bound_to", "fixed", "enum", "schema", "ref",
@@ -72,9 +72,11 @@ KEYS = {
     "display.general", "display.fields", "display.options.*", "display.form.title", "display.form.state",
     "display.form.placement", "display.form.fields", "display.form.status.field", "display.form.status.since",
     "display.form.status.title", "display.form.note",
-    "domain.ref", "domain.view", "domain.reports", "domain.witness", "domain.books", "domain.kept", "domain.tables",
+    "domain.ref", "domain.view", "domain.reports", "domain.witness.report", "domain.witness.member_field",
+    "domain.books", "domain.kept", "domain.tables",
     "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
-    "domain.keys.prefix", "domain.shared", "domain.names.*.exclusive_with", "domain.names.*.grant",
+    "domain.keys.prefix", "domain.shared", "domain.shared.name", "domain.shared.type", "domain.shared.schema",
+    "domain.names.*.exclusive_with", "domain.names.*.grant",
     "domain.edit",
 }
 _TAKEN = KEYS | {p.rsplit(".", i)[0] for p in KEYS for i in range(1, p.count(".") + 1)}

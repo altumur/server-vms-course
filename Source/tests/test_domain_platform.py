@@ -197,7 +197,7 @@ def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_t
         assert m["root"] == "" and m["mounts"]["testsub"]["domain"] == {
             "keys": [{"id": "tallies", "keys": ["domain/testsub/tallies"], "prefix": "domain/testsub/tallies/"},
                      {"id": "ledger", "keys": ["domain/testsub/ledger"]}],
-            "shared": ["step", "marks"], "edit": ["start", "labels"], "view": ["start"]}
+            "shared": ["step", "marks", "rounds"], "edit": ["start", "labels"], "view": ["start"]}
         assert get(door, "/domain/testsub/ledger") == (200, {"s1": "seen"})
         assert get(door, "/domain/members")[0] == 200 and get(door, "/domain/topology")[0] == 200
         for old in ("/api/members", "/api/topology", "/api/testsub/ledger", "/api/where/s1"):
@@ -389,8 +389,8 @@ def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_whic
     """ADR-0032: the signer performs the edit whole — a person of the domain with `admin` on it, the revision the edit
     was made against, the specs' declarations — and signs the document itself; the domain's console has no key, serves
     `GET /domain/shared` (`{doc, delivery, declared}`) from the store and hands `PUT /domain/shared` to the signer as it
-    came. A stale revision, a field nobody declared, no token or no `admin` is refused and nothing is signed; there is
-    no route that signs what it is given."""
+    came. A stale revision (409), a field nobody declared (400: wrong by the specs alone), no token or no `admin` is
+    refused and nothing is signed; there is no route that signs what it is given."""
     import threading
     import urllib.error
     import urllib.request
@@ -416,7 +416,7 @@ def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_whic
         return edit_shared(north.vars, north.objects, signer.tokens, signer.tokens.keyset(), set(), token, body, wall())
     assert edit(None, {"base_rev": 0, "shared": {"testsub": {"step": 2}}})[0] == 401
     assert edit(vera, {"base_rev": 0, "shared": {"testsub": {"step": 2}}})[0] == 403
-    assert edit(anna, {"base_rev": 0, "shared": {"testsub": {"start": 2}}})[0] == 409          # not declared shared
+    assert edit(anna, {"base_rev": 0, "shared": {"testsub": {"start": 2}}})[0] == 400          # not declared shared
     assert edit(anna, {"base_rev": 0, "shared": "step=2"})[0] == 400
     assert north.vars.get(POINTER)[0] is None                                                  # nothing signed
     assert edit(anna, {"base_rev": 0, "shared": {"testsub": {"step": 2, "marks": ["a"]}}}) == (200, {"rev": 1, "by": "anna"})
@@ -461,7 +461,9 @@ def test_a_shared_settings_edit_goes_from_the_keyless_console_to_the_signer_whic
     try:
         st, sh = call("GET", "/domain/shared")
         assert st == 200 and sh["doc"]["rev"] == 1 and sh["doc"]["shared"] == {"testsub": {"step": 2, "marks": ["a"]}}
-        assert sh["declared"]["testsub"] == [{"name": "step", "type": "int"}, {"name": "marks", "type": "list"}]
+        assert sh["declared"]["testsub"][:2] == [{"name": "step", "type": "int"}, {"name": "marks", "type": "list"}]
+        assert sh["declared"]["testsub"][2]["name"] == "rounds" and sh["declared"]["testsub"][2]["type"] == "json"
+        assert sh["declared"]["testsub"][2]["schema"]["items"]["required"] == ["counter", "every"]
         assert "south" in sh["delivery"]["behind"]
         assert call("PUT", "/domain/shared", {"base_rev": 1, "shared": {"testsub": {"marks": None}}}, anna) == \
             (200, {"rev": 2, "by": "anna"})
@@ -500,8 +502,9 @@ def test_a_shared_field_takes_the_domains_value_where_the_unit_set_none_and_a_un
 def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared_one_is_refused():
     """The door answers the fields `domain.shared` names and nothing else — not `start`, not `labels`, whatever the
     document holds; a subsystem that shares nothing is a 404; and the document never takes a field nobody declared,
-    or a subsystem not on the domain: the edit is refused whole, nothing written. The spec refuses a shared field that
-    is not one of the unit's, is a secret, or neither inherits nor is the field the page groups by."""
+    or a subsystem not on the domain, or anything beside `shared`: the edit is refused whole (400 — wrong by the specs
+    on its own), nothing written. The spec refuses a shared field that is not one of the unit's, is a secret, or neither
+    inherits nor is the field the page groups by."""
     import yaml
     from w2cplatform.domain.api import ApiError
     from w2cplatform.spec import SubsystemSpec
@@ -512,13 +515,19 @@ def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared
             shared.edit(lambda s, bad=bad: s.update(shared=bad), base_rev=1)
             raise AssertionError(f"taken: {bad}")
         except ApiError as e:
-            assert e.status == 409, e
+            assert e.status == 400, e
+    try:
+        shared.edit(lambda s: s.update(scenarios=[]), base_rev=1)                  # nothing beside `shared`
+        raise AssertionError("taken: a key beside shared")
+    except ApiError as e:
+        assert e.status == 400 and "settings.scenarios" in e.detail, e
     assert shared.current()[0]["rev"] == 1
     agent.sync()
     st, body = con.shared_route("testsub", {})
-    assert st == 200 and sorted(body["fields"]) == ["marks", "step"]
+    assert st == 200 and sorted(body["fields"]) == ["marks", "rounds", "step"]
+    assert body["fields"]["rounds"] == {"value": None, "from": None}
     assert con.shared_route("nobody", {})[0] == 404
-    assert con.describe()["domain"]["shared"] == ["step", "marks"]
+    assert con.describe()["domain"]["shared"] == ["step", "marks", "rounds"]
     base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
     for bad in (["nope"], ["start"], ["labels"]):
         try:
@@ -528,6 +537,73 @@ def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared
             pass
 
 
+def test_a_document_the_domain_holds_whole_is_checked_by_its_schema_at_the_signers_one_operation():
+    """ADR-0010/0032: `domain.shared` carries a document of type `json` with a schema — testsub's `rounds`, no counter's
+    field. The signer's `shared` is one operation over whatever the specs declare: the document is checked by its
+    schema (400, the schema's words), taken as an object or as the text of one (a form's text box), signed with the
+    rest, and served at the cluster console's one door as it is. The operation knows no document by its name."""
+    from w2cplatform.domain.agent import DomainPublisher
+    from w2cplatform.domain.grants import Grant, set_domain_grants
+    from w2cplatform.domain.shared import POINTER, published
+    from w2cplatform.domain.signer_service import edit_shared
+    from w2cplatform.trust.signer import Signer
+    from w2cplatform.trust.tokens import PERSON
+    shared, agent, ctl, con = _shared_site()
+    north_vars, north_objects = shared.vars, shared.objects
+    signer = Signer("acme", north_vars, now=shared.wall)
+    DomainPublisher(north_vars).publish_keys(signer.tokens.keyset())
+    set_domain_grants(north_vars, [Grant("anna", "admin", None, 0)], shared.wall())
+    anna = signer.tokens.issue("anna", 900, now=shared.wall(), kind=PERSON)
+
+    def edit(body):
+        return edit_shared(north_vars, north_objects, signer.tokens, signer.tokens.keyset(), set(), anna, body,
+                           shared.wall())
+    for bad, words in (([{"counter": "s1"}], "every"), ([{"counter": "s1", "every": 0}], "every"),
+                       ([{"counter": "s1", "every": 2, "colour": "red"}], "colour"), ({"counter": "s1"}, "array"),
+                       ("[{\"counter\": \"s1\", \"every\": \"two\"}]", "every"), ("not json at all", "not JSON")):
+        st, out = edit({"base_rev": 0, "shared": {"testsub": {"rounds": bad}}})
+        assert st == 400 and words in out["detail"], (bad, st, out)
+    assert north_vars.get(POINTER)[0] is None                                                  # nothing signed
+    assert edit({"base_rev": 0, "shared": {"testsub": {"rounds": [{"counter": "s1", "every": 5}], "step": 2}}})[0] == 200
+    assert edit({"base_rev": 1, "shared": {"testsub": {"rounds": "[{\"counter\": \"n1\", \"every\": 3}]"}}})[0] == 200
+    assert published(north_vars, north_objects)["shared"]["testsub"] == {"rounds": [{"counter": "n1", "every": 3}], "step": 2}
+    assert agent.sync()
+    assert con.shared_route("testsub", {})[1]["fields"]["rounds"] == {"value": [{"counter": "n1", "every": 3}],
+                                                                      "from": "domain rev 2"}
+    st, _ = edit({"base_rev": 2, "shared": {"testsub": {"rounds": None}}})                     # null takes it away
+    assert st == 200 and "rounds" not in published(north_vars, north_objects)["shared"]["testsub"]
+    import ast
+    src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "w2cplatform", "domain",
+                            "signer_service.py"), encoding="utf-8").read()
+    assert "rounds" not in src and "scenario" not in src                                       # no document by its name
+    ast.parse(src)
+
+
+def test_a_shared_document_is_declared_with_its_schema_or_the_spec_does_not_load():
+    """`{name, type: json, schema}` and nothing else: another type, no schema, a schema with a word the platform does not
+    read, a name that is a field of the unit (a document is no unit's), a secret's name, or one name twice — refused."""
+    import yaml
+    from w2cplatform.spec import SubsystemSpec
+    base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
+    d = spec().domain
+    assert d.shared == ("step", "marks", "rounds") and sorted(d.documents) == ["rounds"]
+    assert d.documents["rounds"].type == "json" and d.documents["rounds"].schema["maxItems"] == 16
+    ok = {"name": "plan", "type": "json", "schema": {"type": "object"}}
+    SubsystemSpec.from_dict({**base, "domain": {**base["domain"], "shared": ["step", ok]}})
+    for bad in ({"name": "plan", "type": "list", "schema": {"type": "array"}}, {"name": "plan", "type": "json"},
+                {"name": "plan", "type": "json", "schema": {"tpye": "object"}},
+                {"name": "start", "type": "json", "schema": {}}, {"name": "plan_secret", "type": "json", "schema": {}},
+                {"name": "plan", "type": "json", "schema": {}, "inherit": []}):
+        try:
+            SubsystemSpec.from_dict({**base, "domain": {**base["domain"], "shared": ["step", bad]}})
+            raise AssertionError(f"taken: {bad}")
+        except ValueError:
+            pass
+    try:
+        SubsystemSpec.from_dict({**base, "domain": {**base["domain"], "shared": [ok, ok]}})
+        raise AssertionError("taken: one document twice")
+    except ValueError:
+        pass
 
 
 def test_the_spec_reads_a_kept_family_of_subjects_their_grant_and_the_fields_an_edit_carries():
@@ -667,4 +743,233 @@ def test_an_edit_through_the_domains_door_carries_only_the_fields_its_spec_lets_
         assert asked[-1] == ("n1", {"labels": ["b"]}) and len(asked) == 3
     finally:
         con.stop(srv)
+
+
+def test_a_refusal_is_409_when_it_depends_on_rows_that_exist_and_400_when_the_request_is_wrong_by_the_spec():
+    """The architect's rule for the codes, at the doors: a person under the name of a subject of a family (testsub's
+    badge `bob`) is a conflict with a row that exists — 409 at the signer's people; a grant to the badge wider than
+    the family's declared `grant: view` is wrong by the spec on its own — 400 at the domain console's
+    `PUT /domain/grants/<cluster>`, nothing written. A grant within it goes through."""
+    from w2cplatform.domain.agent import DomainPublisher
+    from w2cplatform.domain.api import ConsoleAPI
+    from w2cplatform.domain.console import Console
+    from w2cplatform.domain.declared import guarded
+    from w2cplatform.domain.federation import DomainDirectory
+    from w2cplatform.domain.grants import Grant, grants_from_items, set_domain_grants
+    from w2cplatform.domain.identity import IdentityStore
+    from w2cplatform.domain.readview import ReadView
+    from w2cplatform.domain.signer_service import Holder
+    from w2cplatform.trust.signer import Signer
+    from w2cplatform.trust.tokens import PERSON, RevocationList
+    fed, wall = site()
+    north = fed.clusters["north"]
+    spec()
+    guarded(north.vars).put("domain/testsub/badges/bob", {"since": "1"})
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    set_domain_grants(north.vars, [Grant("anna", "admin", None, 0.0)], wall())
+    h = Holder(north.vars, north.objects, signer, ids=IdentityStore(signer, north.vars, north.objects, publish_floor=0,
+               now=wall), revoked=RevocationList(), wall=wall)
+    anna = signer.tokens.issue("anna", 900, now=wall(), kind=PERSON)
+    st, out = h.people("POST", "users", anna, {"name": "bob", "password": "a long password"})
+    assert st == 409 and "domain/testsub/badges/bob" in out["detail"], out
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda c: None),
+                  refresh_interval=60, holder_vars=north.vars)
+    door = con.serve(port=0)
+    base = f"http://127.0.0.1:{door.server_address[1]}"
+    try:
+        st, out = _call(base, "PUT", "/domain/grants/south", {"lines": [{"subject": "bob", "cap": "edit", "scope": "*"}]})
+        assert st == 400 and "granted at most 'view'" in out["detail"], out
+        assert north.vars.get("domain/grants/south")[0] is None                       # nothing written
+        assert _call(base, "PUT", "/domain/grants/south", {"lines": [{"subject": "bob", "cap": "view", "scope": "*"}]})[0] == 200
+        assert [(g.subject, g.capability) for g in grants_from_items(north.vars.get("domain/grants/south")[0])] == \
+            [("bob", "view")]
+    finally:
+        con.stop(door)
+
+
+# -- the fifth operation: the domain moved onto a member, on the NEW holder, by the recovery file ---------------------
+def _call(base, method, path, body=None, token=None):
+    import urllib.error
+    import urllib.request
+    req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method,
+                                 headers={"Content-Type": "application/json",
+                                          **({"Authorization": f"Bearer {token}"} if token else {})})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return r.status, json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+
+
+def _moving_site(root=None):
+    """testsub's site with a term: north holds the domain — its signer's own root, or one `root` issued (Lesson 15,
+    step 9) — keeps a ledger, and south keeps its backup. Then SOUTH's signer, as it runs on a member: its own process,
+    its own store (a signer of its own, made at its start as on any box), the domain as south reads it — south the
+    would-be holder, north one of the clusters it reaches — and a console beside it. Returns
+    `(north_holder, south, holder, console, signer_url, console_url, lines, wall, stop)`."""
+    from w2cplatform.console import open_doors
+    from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+    from w2cplatform.domain.api import ConsoleAPI
+    from w2cplatform.domain.console import Console
+    from w2cplatform.domain.federation import Cluster, DomainDirectory, Federation
+    from w2cplatform.domain.identity import IdentityStore
+    from w2cplatform.domain.readview import ReadView
+    from w2cplatform.domain.signer_service import Holder
+    from w2cplatform.domain.term import DomainHolder, install
+    from w2cplatform.trust.signer import Signer
+    from w2cplatform.trust.tokens import RevocationList
+    fed, wall = site()
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    if root is None:
+        signer = Signer("acme", north.vars, now=wall)
+        DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+        north_holder = DomainHolder(fed, "north", signer, 1, wall, objects=north.objects)
+        north_holder.claim()
+    else:
+        north_holder = install(fed, "north", "acme", root, wall, objects=north.objects)
+    north.vars.put("domain/testsub/ledger", {"s1": "seen"})
+    north_holder.backup(["south"], north.objects)
+    assert DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
+                       cluster_objects=south.objects).sync()
+    mine = Federation()
+    mine.add(Cluster("south", south.vars, south.objects, is_domain_holder=True))
+    mine.add(Cluster("north", north.vars, north.objects))
+    lines = []
+
+    class Lines:
+        def say(self, kind, cls="observation", **fields):
+            lines.append((kind, fields))
+    own = Signer("acme", south.vars, now=wall)                  # what any box's signer makes at its start
+    holder = Holder(south.vars, south.objects, own, ids=IdentityStore(own, south.vars, south.objects, publish_floor=0,
+                    now=wall), revoked=RevocationList(), fed=mine, journal=Lines(), signer_url="http://south.site:8445",
+                    wall=wall)
+    srv = open_doors("127.0.0.1", 0, holder.handler(), unix_env="DW_NO_SUCH_SOCKET", say=False)
+    signer_url = f"http://127.0.0.1:{srv.server_address[1]}"
+    con = Console(DomainDirectory(mine), ReadView(mine, wall=wall), ConsoleAPI(DomainDirectory(mine), lambda c: None),
+                  refresh_interval=60, holder_vars=south.vars, signer_url=signer_url)
+    door = con.serve(port=0)
+
+    def stop():
+        con.stop(door)
+        srv.shutdown()
+    return north_holder, south, holder, con, signer_url, f"http://127.0.0.1:{door.server_address[1]}", lines, wall, stop
+
+
+def test_a_move_is_made_on_the_new_holder_by_its_signer_through_the_door_and_checked_by_the_recovery_file():
+    """ADR-0032's fifth operation: north is gone, and the operator moves the domain onto south — at SOUTH's door,
+    `POST /domain/move {recovery}` (`w2cctl domain move` calls that door; there is no second road), handed to south's
+    signer, which checks the file — not a grant: the holder that kept the grants is the one that is gone — and makes
+    the move (`term.move_domain`). A file that is not this domain's is 403, a body that is not the move's 400, a theft
+    answered by the signer's backup 400 (it holds the stolen keys themselves); then the move: term 2 on south, the
+    ledger the spec keeps restored, the record saying where south's signer answers, a line of the journal — and a second
+    move is 409: south holds the domain."""
+    import tempfile
+    from w2cplatform import w2cctl
+    from w2cplatform.trust.signer import Signer
+    from w2cplatform.cluster.variables import FakeVariables
+    north_holder, south, holder, con, signer_url, base, lines, wall, stop = _moving_site()
+    d = tempfile.mkdtemp(prefix="recovery-")
+    right, wrong = os.path.join(d, "right.json"), os.path.join(d, "wrong.json")
+    open(right, "wb").write(north_holder.signer.backup())
+    open(wrong, "wb").write(Signer("acme", FakeVariables(), now=wall).backup())
+    try:
+        assert w2cctl.move(base, wrong)[0] == 403                                    # not this domain's signer
+        assert w2cctl.main(["domain", "move", base, wrong]) == 1
+        assert _call(base, "POST", "/domain/move", {})[0] == 400
+        assert _call(base, "POST", "/domain/move", {"recovery": open(right).read(), "stolen": "yes"})[0] == 400
+        st, out = w2cctl.move(base, right, stolen=True)
+        assert st == 400 and "recovery file" in out["detail"], out
+        assert south.vars.get("domain/testsub/ledger")[0] is None and holder.term is None   # nothing moved yet
+        assert w2cctl.main(["domain", "move", base, right]) == 0
+        assert holder.term.term == 2 and holder.term.name == "south" and holder.signer is holder.term.signer
+        assert south.vars.get("domain/testsub/ledger")[0] == {"s1": "seen"}
+        said = _call(signer_url, "GET", "/api/holder")[1]
+        assert said["term"] == 2 and said["record"]["holder"] == "south" and said["record"]["url"] == "http://south.site:8445"
+        assert lines[-1][0] == "domain.moved" and lines[-1][1]["term"] == 2 and lines[-1][1]["target"] == "south"
+        st, out = w2cctl.move(base, right)
+        assert st == 409 and "south holds the domain at term 2" in out["detail"], out
+        assert holder.hand_to is not None                                            # its own root: it can hand on
+    finally:
+        stop()
+
+
+def test_after_a_theft_the_move_through_the_door_drops_the_old_keys_and_a_wrong_root_is_refused():
+    """Lesson 15, step 9, through the door: the root is off the holder, north is stolen, and the operator moves the
+    domain onto south with the root's recovery file, saying so (`stolen`). Another root's file is 403 — no member holds
+    a key set it signed. The move gives south keys of its own, the root signs the next key set without north's token
+    key, and south's signer signs the people's tokens with the new key from then on."""
+    from w2cplatform.domain.agent import ClusterTrust
+    from w2cplatform.trust.signer import DomainRoot
+    from w2cplatform.trust.tokens import TokenError, verify
+    wall = Clock()
+    root = DomainRoot("acme", now=wall)
+    north_holder, south, holder, con, signer_url, base, lines, wall, stop = _moving_site(root)
+    old_kid = north_holder.signer.tokens.kid
+    stolen_token = north_holder.signer.tokens.issue("mallory", 900, now=wall(), kind="person")
+    try:
+        st, out = _call(base, "POST", "/domain/move", {"recovery": DomainRoot("acme", now=wall).recovery().decode(),
+                                                       "stolen": True})
+        assert st == 403 and "not this domain's recovery file" in out["detail"], out
+        st, out = _call(base, "POST", "/domain/move", {"recovery": root.recovery().decode(), "stolen": True})
+        assert st == 200 and out["term"] == 2 and out["stolen"] and out["keys_rev"] > 1, out
+        keys = ClusterTrust(south.vars).keyset()
+        assert keys.rev == out["keys_rev"] and old_kid not in keys.keys
+        try:
+            verify(stolen_token, keys, now=wall())
+            raise AssertionError("the stolen key must be refused")
+        except TokenError:
+            pass
+        assert holder.ids.signer is holder.signer and holder.signer.tokens.kid in keys.keys
+        assert holder.hand_to is None                                                # an issued signer: the file moves it
+        assert lines[-1][1]["stolen"] is True
+    finally:
+        stop()
+
+
+# -- the witness: a member matched by its own name, the field that carries it declared ---------------------------------
+def test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spec_must_declare_it_fixed():
+    """`domain.witness: {report, member_field}` — testsub2's `{report: seen, member_field: of}`: the witness objects are
+    `testsub2/seen/*`, and the field is the unit's, declared `fixed: true` (ADR-0010). A spec whose witness names no
+    field, a field that is not the unit's, one that is not fixed, or the bare family of before, does not load. The domain
+    matches a member by its own name — no `ref_of` handed in: one a witness heard of after its last report is
+    `not_reporting`, another is `silent`."""
+    import yaml
+    from w2cplatform.domain import declared
+    from w2cplatform.domain.alarms import DomainAlarms
+    from w2cplatform.spec import SubsystemSpec
+    t2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml")
+    s2 = SubsystemSpec.load(t2)
+    assert (s2.domain.witness, s2.domain.member_field) == ("seen", "of")
+    assert "testsub2/seen/" in declared.witnesses()
+    base = yaml.safe_load(open(t2, encoding="utf-8"))
+    for bad in ("seen", {"report": "seen"}, {"report": "seen", "member_field": "nope"},
+                {"report": "seen", "member_field": "mode"}, {"report": "Seen!", "member_field": "of"},
+                {"report": "seen", "member_field": "of", "via": "x"}):
+        try:
+            SubsystemSpec.from_dict({**base, "domain": {**base["domain"], "witness": bad}})
+            raise AssertionError(f"taken: {bad}")
+        except ValueError:
+            pass
+    fed, wall = site()
+    north = fed.clusters["north"]
+
+    class Silent:                                             # each member's door: its last report, an hour old
+        def __init__(self, name):
+            self.name = name
+
+        def alarms(self, since, until, limit):
+            from w2cplatform.domain.federation import Unreachable
+            raise Unreachable(self.name)
+
+        def last(self, since, until, limit):
+            return {"events": [], "truncated": False, "known_until": wall() - 3600}
+    north.objects.put("testsub2/seen/w-1", json.dumps({"ts": wall(), "cluster": "north",
+                                                       "units": {"south": 5.0, "s1": 1.0}}).encode())
+    SubsystemSpec.load(t2)
+    out = DomainAlarms(fed, Silent, wall).list(since=wall() - 7200)
+    assert out["members"]["south"]["alive_at"] == wall() - 5 and out["members"]["south"]["alive_via"] == "north"
+    assert [e["kind"] for e in out["events"] if e["member"] == "south"] == ["not_reporting"]
+    assert DomainAlarms(fed, Silent, wall).alive_at("s1") == (wall() - 1, "north")    # by name, whatever it names
+    assert DomainAlarms(fed, Silent, wall).alive_at("nobody") is None
 

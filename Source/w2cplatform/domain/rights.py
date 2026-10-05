@@ -32,6 +32,15 @@ SIGNER_KEYS = "!domain/signer*"
 CONSOLE_WRITES = ("domain/members", "domain/topology", "domain/grants/*", "domain/pending/*")
 
 
+# THE TOKENS SOCKET HAS A GROUP OF ITS OWN (ADR-0031). The signer's socket for a subsystem's books (`tokendoor.py`) was
+# the worker's store role's group, `<deployment>-<sub>domain` — and a role group has whoever opens that store socket for
+# members, configstore among them: who could ask the domain's key for a token hung on the purity of another file. Its
+# own group, by the platform's rule — written by hand nowhere — with ONE member, the subsystem's domain worker.
+def tokens_group(sub: str, deployment: str) -> str:
+    """The group of the signer's tokens socket for `sub`'s domain worker: `<deployment>-<sub>domaintokens`."""
+    return f"{deployment}-{sub}domaintokens"
+
+
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
     out = [SIGNER_KEYS, "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",

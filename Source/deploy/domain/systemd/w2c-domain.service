@@ -2,8 +2,9 @@
 # (`w2c-run.sh signer` → `python3 -m w2cplatform.domain.signer_service`): the people's door in (/api/login), the members'
 # carry door (/api/carry/<member> — each member's own rows, signed by its key, secrets sealed to it), and on a socket of
 # the holder's own the tokens a subsystem's books carry (`tokendoor.py`). Its keys and the people's and the emergency
-# hashes are sealed under the ring (the key below). The one process with the domain's keys (ADR-0032): the four
-# operations that need them (/api/shared, /api/handover, /api/people/…, the backup sealed) and the holder's whole pass —
+# hashes are sealed under the ring (the key below). The one process with the domain's keys (ADR-0032): the five
+# operations that need them (/api/shared, /api/handover, /api/people/…, the backup sealed, /api/move — the domain moved
+# here from the recovery file, when the holder is gone: `w2cctl domain move`) and the holder's whole pass —
 # the view it leaves in the objects, the week of alarms, the backup — and its own lines of the journal (`domain`). The
 # view names the domain console's address: `CONSOLE_URL` (w2c.env).
 [Unit]
@@ -22,8 +23,9 @@ Environment=SIGNER_UNIX=/run/w2c-domain/signer.sock
 Environment=CONSOLE_MONITORS=127.0.0.1
 RuntimeDirectory=w2c-domain
 RuntimeDirectoryMode=0700
-# The tokens' socket: in `/run/w2c-signer` (2750 w2c:vms-vmsdomain, `w2c-domain.tmpfiles`) — the socket takes the
-# directory's group, so the books' worker opens it and no other process of the box does.
+# The tokens' socket: in `/run/w2c-signer` (2750 w2c:vms-vmsdomaintokens, `w2c-domain.tmpfiles`) — the socket takes the
+# directory's group, the tokens socket's own (ADR-0031: `<deployment>-<sub>domaintokens`, one member, the books' worker),
+# so the books' worker opens it and no other process of the box does — whoever else joins a store role's group.
 Environment=SIGNER_TOKENS_UNIX=/run/w2c-signer/tokens.sock
 LoadCredential=platform.key:/etc/w2c/secrets/platform.key
 Environment=SECRETS_KEY=%d/platform.key

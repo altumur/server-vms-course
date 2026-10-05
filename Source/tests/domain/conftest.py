@@ -139,3 +139,40 @@ def heartbeat(cluster: Cluster, worker: str, cams: list[int], ts: float, server:
         "worker": worker, "ts": ts, "server": server, "instance": f"{worker}-i", "capacity": 50, "headroom": 50 - len(cams),
         "status": [{"id": c, "name": f"cam{c}", "enabled": True, "phase": phase, "position": "converged",
                     "revision": revision, "observed_revision": revision if observed is None else observed, "epoch": epoch} for c in cams]}).encode())
+
+
+class SharedDoor:
+    """The shared settings as a person edits them (ADR-0032): through the signer's one operation, `PUT /api/shared`
+    (`signer_service.edit_shared`), with a token of the domain for `who` — made an admin of the domain here — against
+    the revision the document is at. No test writes the document past it. A refusal raises `ApiError`."""
+
+    def __init__(self, vars_, objects, signer, wall, who: str = "anna"):
+        self.vars, self.objects, self.signer, self.wall, self.who = vars_, objects, signer, wall, who
+
+    def current(self):
+        from w2cplatform.domain.shared import SharedSettings
+        return SharedSettings(self.vars, self.objects, None).current()
+
+    def put(self, shared: dict) -> int:
+        """`{<sub>: {<field>: value | None}}` — the edit as the page sends it; the new revision."""
+        from w2cplatform.domain.api import ApiError
+        from w2cplatform.domain.grants import DOMAIN_GRANTS, Grant, domain_may, grants_from_items, set_domain_grants
+        from w2cplatform.domain.signer_service import edit_shared
+        from w2cplatform.trust.tokens import PERSON
+        if not domain_may(self.vars, self.who, "admin", self.wall()):
+            had = grants_from_items(self.vars.get(DOMAIN_GRANTS)[0])
+            set_domain_grants(self.vars, [*had, Grant(self.who, "admin", None, 0.0)], self.wall())
+        token = self.signer.tokens.issue(self.who, 900, now=self.wall(), kind=PERSON)
+        st, out = edit_shared(self.vars, self.objects, self.signer.tokens, self.signer.tokens.keyset(), set(), token,
+                              {"base_rev": int(self.current()[0]["rev"]), "shared": shared}, self.wall())
+        if st != 200:
+            raise ApiError(st, out["detail"])
+        return out["rev"]
+
+    # `auto`'s document there: the scenarios between cameras (`auto.subsystem.yaml`, `domain.shared`)
+    def scenarios(self) -> list:
+        held = ((self.current()[0].get("settings") or {}).get("shared") or {}).get("auto") or {}
+        return list(held.get("scenarios") or [])
+
+    def set_scenarios(self, scenarios: list) -> int:
+        return self.put({"auto": {"scenarios": scenarios}})

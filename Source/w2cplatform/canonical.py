@@ -10,8 +10,8 @@ reader in Go and one in Python disagreed on what a row said. Every JSON value a 
                        whole-valued float as integer digits (`5.0` → `5`, `1e20` → `100000000000000000000`); any other
                        in the shortest decimal that reads back as the same float, no exponent (`1e-07` → `0.0000001`);
                        zero has no sign (`-0.0` and `-0` → `0`: equal values, one text — the architect, 2026-10-06)
-    parse_json(text)   `json.loads`, refusing what is not JSON though Python reads it (`NaN`, `Infinity`, `1e999`);
-                       an integer exactly (`exact_int`)
+    parse_json(text)   `json.loads`, refusing what is not JSON though Python reads it — `NotJson` (`NaN`, `Infinity`,
+                       a lone surrogate), `NotNumber` (`1e999`); an integer exactly (`exact_int`)
     field_text(v)      a value as one field of a row: a string as it is (the schema tells a word from a number), the
                        rest `canonical_json` (`true`, `5`, `{"a":1}`); `None` is no text — the field is absent
 
@@ -79,8 +79,26 @@ def canonical_json(v) -> str:
     return "".join(out)
 
 
+# What a refusal is, by its kind — the words of the shared table (`requests_body.tsv`, column `fault`; the architect with
+# «Паритет», 2026-10-06), the same on both sides: each a `ValueError`, so `rows.PARSE_ERRORS` holds them all.
+class Fault(ValueError):
+    fault = ""
+
+
+class NotJson(Fault):
+    fault = "not_json"          # not JSON at all: `NaN`, `Infinity`, a cut text, a lone surrogate
+
+
+class NotNumber(Fault):
+    fault = "not_number"        # a number JSON writes and no float holds: `1e400`
+
+
+class TooLong(Fault):
+    fault = "too_long"          # past the schema's `maxLength` of the written text, or `JSON_CEILING` in bytes
+
+
 def _no_constant(name: str):
-    raise ValueError(f"{name} is no JSON")
+    raise NotJson(f"{name} is no JSON")
 
 
 def exact_int(text: str):
@@ -91,14 +109,35 @@ def exact_int(text: str):
 def _finite_float(text: str) -> float:
     f = float(text)
     if not math.isfinite(f):
-        raise ValueError(f"{text[:40]} is past what a JSON number holds here")
+        raise NotNumber(f"{text[:40]} is past what a JSON number holds here")
     return f
 
 
+def _whole_text(v):
+    """A string is Unicode text: `\\ud800` alone (JSON's escape lets one through) is no character, and no UTF-8."""
+    if isinstance(v, str):
+        if any("\ud800" <= c <= "\udfff" for c in v):
+            raise NotJson("a lone surrogate is no character")
+    elif isinstance(v, dict):
+        for k, x in v.items():
+            _whole_text(k)
+            _whole_text(x)
+    elif isinstance(v, list):
+        for x in v:
+            _whole_text(x)
+    return v
+
+
 def parse_json(text):
-    if isinstance(text, (bytes, bytearray)):
-        text = bytes(text).decode("utf-8")
-    return json.loads(text, parse_constant=_no_constant, parse_float=_finite_float, parse_int=exact_int)
+    try:
+        if isinstance(text, (bytes, bytearray)):
+            text = bytes(text).decode("utf-8")
+        v = json.loads(text, parse_constant=_no_constant, parse_float=_finite_float, parse_int=exact_int)
+    except Fault:
+        raise
+    except ValueError as e:                             # `JSONDecodeError`, `UnicodeDecodeError`
+        raise NotJson(str(e)) from None
+    return _whole_text(v)
 
 
 def field_text(v) -> str | None:
