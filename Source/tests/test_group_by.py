@@ -489,7 +489,7 @@ def test_what_became_of_the_commands_is_counted_and_exported():
     """Performed, refused by the device, or arrived after its moment: each is counted in the holder's heartbeat,
     and the console sums them into `vms_commands_total`. A share of `expired` that grows is the road from an
     event to the holder getting longer than the requests live."""
-    from vms.console import vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box(); ctl, con = _ctl(box)
     door = con.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
     _worker(box, "w-1", "srv-a"); ctl.ensure_placed()
@@ -499,6 +499,6 @@ def test_what_became_of_the_commands_is_counted_and_exported():
         con.vars.put(SPEC.sub.request_key(rid), {"unit": str(door), "action": "output",
                                                  "valid_until": str(box.wall() + 30), **fields})
     w.requests(); w.heartbeat_once()
-    text = "\n".join(vms_metrics(ctl)())
+    text = spec_metrics(ctl)
     assert 'vms_commands_total{outcome="performed"} 1' in text
     assert 'vms_commands_total{outcome="refused"} 1' in text and 'vms_commands_total{outcome="expired"} 1' in text

@@ -352,7 +352,8 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     with an action nobody serves, in another family; a `record` and a young backfill are not this pass's."""
     from vms import jobs
     from vms.__main__ import _reap_turn
-    from vms.console import vms_metrics, vms_routes
+    from w2cplatform.metrics import text as spec_metrics
+    from vms.console import vms_routes
     box = Box(); ctl, con = _ctl(box)
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.93/ch/1"})["id"]
@@ -391,7 +392,7 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     box.wall.advance(jobs.COMMAND_MAX_VALID)
     _reap_turn([], [rec, con])
     assert standing(con, SPEC) == [] and jobs.expired["vms"] == was.get("vms", 0) + 2
-    text = "\n".join(vms_metrics(con)())
+    text = "\n".join(jobs.metrics_lines())                               # the request loops' process's own numbers
     assert f'vms_requests_expired_total{{sub="vms"}} {jobs.expired["vms"]}' in text, text
 
 
@@ -402,7 +403,7 @@ def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_ho
     as NOT KNOWN — `vms_requests_unknown_total`, not `vms_requests_expired_total`."""
     from vms import jobs
     from vms.__main__ import _reap_turn
-    from vms.console import vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box(); ctl, con = _ctl(box)
     gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.94/ch/1"})["id"]
     now = box.wall()
@@ -420,7 +421,7 @@ def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_ho
     _reap_turn([], [con])
     assert box.vars.get(SPEC.sub.request_key("slow"))[0] is None
     assert jobs.expired.get("vms", 0) == was.get("vms", 0) and jobs.unknown["vms"] == unknown.get("vms", 0) + 1
-    text = "\n".join(vms_metrics(con)())
+    text = "\n".join(jobs.metrics_lines())
     assert f'vms_requests_unknown_total{{sub="vms"}} {jobs.unknown["vms"]}' in text, text
 
 
@@ -558,7 +559,7 @@ def test_a_clock_running_behind_is_a_number_too():
 # -- what is seen -----------------------------------------------------------------------------------------
 
 def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
-    from vms.console import _recorders
+    from w2cplatform.metrics import text as spec_metrics
     from vms.worker import FakeActuator
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
@@ -575,7 +576,7 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [
         {"id": "7", "phase": "running", "last_frame_at": t0 + 5}, {"id": "8", "phase": "running"}], {"server": "srv-1"}).to_bytes())
     box.wall.advance(15)                                                         # …and the recorder goes silent too
-    text = "\n".join(_recorders(rec))
+    text = spec_metrics(rec)
     assert 'rec_last_frame_age_seconds{unit="7"} 55.0' in text and 'rec_last_frame_age_seconds{unit="8"}' not in text
     r.reconciler.actual = {}; r.writer_pass()
     assert r.fed == {}                                                           # stopped: nothing is said about it

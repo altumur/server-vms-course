@@ -288,6 +288,54 @@ placement:
 # copy that leaves the cluster (М12), never the rows themselves. `publish_snapshot` runs in every controller
 # pass.
 snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
+# The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
+# functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
+metrics:
+  # The commands the holders performed, refused, let expire or could not say about, summed over their heartbeats.
+  - {name: commands_total, from: "heartbeat.command_counts.<outcome>", agg: sum, type: counter}
+  # The road to the device, where it ends (`VmsWorker._measure`), per holder and by who asked (`by`: `auto` or
+  # `operator`): from the event's moment and from the row's filing to the call, with the times the two clocks visibly
+  # disagreed; and from the holder's first sight of the row, by its clock alone (the review's seventh pass, minor).
+  - {name: event_to_device_seconds, from: "heartbeat.command_road.<by>", agg: histogram,
+     buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+  - {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.ahead", labels: {direction: ahead}, type: counter}
+  - {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.behind", labels: {direction: behind}, type: counter}
+  - {name: request_to_device_seconds, from: "heartbeat.command_request.<by>", agg: histogram,
+     buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+  - {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.ahead", labels: {direction: ahead}, type: counter}
+  - {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.behind", labels: {direction: behind}, type: counter}
+  - {name: request_seen_to_device_seconds, from: heartbeat.command_wait, agg: histogram,
+     buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+  # What a holder's beat waits on (the review's eighth pass, minor) and what it found of its devices: a line for every
+  # holder, 0 when unsaid.
+  - {name: devices_slow, from: heartbeat.devices_slow, default: 0}
+  - {name: commands_in_flight, from: heartbeat.commands_in_flight, default: 0}
+  - {name: device_identity_coincidences, from: heartbeat.identity_coincidences, default: 0}   # the ninth pass
+  - {name: devices_opening, from: heartbeat.devices_opening, default: 0}                      # the tenth pass
+  - {name: device_identity_changes_total, from: heartbeat.identity_changes, default: 0, type: counter}
+  - {name: device_events_refused_total, from: heartbeat.events_refused, default: 0, type: counter}
+  - {name: commands_reanswered_total, from: heartbeat.commands_reanswered, default: 0, type: counter}
+  - {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                    # the thirteenth pass, major 18
+# What a page calls things (the console module reads it from /spec; the platform reads none of it).
+display:
+  unit: камера
+  units: камеры
+  field_help:
+    source: "адрес устройства (driverpack://производитель/адрес/ch/канал)"
+    labels: "сети, в которых виден адрес камеры (vlan:cctv-a)"
+    folders: папки, в которых камера показана
+    cred_username: логин устройства
+    cred_secret: пароль устройства
+    live: "живой поток: держать всегда или по требованию"
+  kinds:
+    io.input: вход устройства
+    silent: камера молчит
+    command: команда выполнена
+    command.failed: команда не выполнена
+  tree:
+    group_by: folders
+    nested_by: "/"
+
 console:
   # the name of the running gauge: `metrics_text()` emits `vms_cameras_running <n>` for status entries in
   # phase `running` on live workers (`test_the_console_over_http` sees `vms_cameras_running 1`); `/spec`

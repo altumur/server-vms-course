@@ -134,7 +134,7 @@ def test_requests_are_looked_at_far_more_often_than_they_live():
     the drops that still happen are a number on `/metrics`, not a line in a log."""
     import vms.__main__ as m
     from vms import jobs
-    from vms.console import vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from vms.controller import VmsController
     from vms.config import SPEC
     assert inspect.signature(m._requests_loop).parameters["every"].default <= 2.0
@@ -148,7 +148,7 @@ def test_requests_are_looked_at_far_more_often_than_they_live():
     box.wall.advance(31)
     assert detect_on_request(det, job, rec, box.wall()) == 0 and jobs.expired["det"] == before + 1
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    assert f'vms_requests_expired_total{{sub="det"}} {before + 1}' in vms_metrics(ctl)()
+    assert f'vms_requests_expired_total{{sub="det"}} {before + 1}' in jobs.metrics_lines()   # the loop's process's own numbers
 
 
 def test_firings_that_overlap_widen_one_job_instead_of_making_a_job_each():

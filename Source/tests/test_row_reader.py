@@ -35,7 +35,7 @@ def test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_pa
     recorder heartbeat for 150 s. The row is skipped where volumes are listed and counted ONCE however often it is
     read; the recorder takes its own disk; the volumes page names the row and what to do; `/metrics` is whole."""
     from tests.test_volumes import _disk, _recorder
-    from vms.console import rec_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     _disk(box, "a-good")
     box.vars.put(volumes.key("s3-main"), {"kind": "network", "url": "s3://vms/site", "quota_bytes": "1e12",
@@ -52,7 +52,7 @@ def test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_pa
     assert rows["a-good"]["served_by"] and rows["s3-main"]["garbled"] and "does not parse" in rows["s3-main"]["why"]
     assert view["wanted"] == 2 and view["serving"] == 1
     rec_ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
-    text = "\n".join(rec_metrics(rec_ctl)())
+    text = spec_metrics(rec_ctl)
     assert "rec_volumes_declared 2" in text and "rec_volumes_unserved 1" in text
     # …and the console does not write such a row: the door refuses it in words (it raised a bare `ValueError`)
     from w2cplatform.spec import Refused
@@ -362,7 +362,7 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
     numbers — a recorder's `archive_away_since`, a holder's `command_counts`, a histogram, an evaluator's gauges. Each
     is read as not said, and every line of the page is a number Prometheus takes."""
     from vms.config import AUTO_SPEC, DET_SPEC, SPEC
-    from vms.console import auto_metrics, rec_metrics, vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import SpecConsole
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(2)
@@ -380,7 +380,7 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
     _prometheus(text)
     assert "vms_reconcile_last_pass_age_seconds -1" in text and 'w2c_resource_full{server="srv-b"} 0' in text
     assert 'vms_worker_holds_garbled{worker="w-2"} 0' in text                # the holds, on the page (a minor)
-    _prometheus("\n".join(vms_metrics(ctl)()))
+    _prometheus(spec_metrics(ctl))
 
     det = SpecController(DET_SPEC, box.vars, box.objects, wall=box.wall)
     box.vars.put(DET_SPEC.sub.sweep_key(), {"at": "then", "digests": '["sha256-'})
@@ -391,12 +391,12 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
         {"id": "1", "phase": "running", "last_frame_at": "x", "depth_days": "deep", "samples_refused": {"BAD": "many"},
          "lease": "unconfirmed", "unconfirmed_s": "long"}], {
         "server": "srv-b", "archive_away_since": "then", "keep_missing": {"k-1": "lots"}}).to_bytes())
-    _prometheus("\n".join(rec_metrics(rec)()))
+    _prometheus(spec_metrics(rec))
 
     auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put("auto/heartbeats/a-1", Heartbeat("a-1", t, [], {
         "pass_seconds": "slow", "late": "lots", "waits": "w", "latency": {"buckets": [1], "count": "c", "sum": 0}}).to_bytes())
-    _prometheus("\n".join(auto_metrics(auto)()))
+    _prometheus(spec_metrics(auto))
     assert SPEC.name == "vms"
     _forget_garbled()
 
@@ -464,7 +464,7 @@ def test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader()
     heartbeats are read; the entry with no id says nothing about a unit."""
     from vms import jobs
     from vms.config import DETJOB_SPEC
-    from vms.console import rec_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     t = box.wall()
     job = SpecController(DETJOB_SPEC, box.vars, box.objects, wall=box.wall)
@@ -475,7 +475,7 @@ def test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader()
     rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put("rec/heartbeats/r-9", Heartbeat("r-9", t, [{"phase": "running", "last_frame_at": t, "depth_days": 1}],
                                                     {"writer": "stuck"}).to_bytes())
-    _prometheus("\n".join(rec_metrics(rec)()))
+    _prometheus(spec_metrics(rec))
     _forget_garbled()
 
 
@@ -571,7 +571,7 @@ def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
     Every label value of every metrics function goes through one escaping (`w2cplatform.console.label`): the platform's
     page (workers, servers, tables), the recorders', the holders', the evaluators', and a recorder's own."""
     from vms.config import AUTO_SPEC
-    from vms.console import auto_metrics, rec_metrics, vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.console import SpecConsole, label
     from tests.test_lesson4_worker import _box_with_cameras
     assert label('7"x\\y\nz') == '7\\"x\\\\y\\nz'
@@ -584,19 +584,19 @@ def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
     box.objects.put('platform/resources/s"1/heartbeat', json.dumps(
         {"server": 's"1\n', "ts": t, "url": "http://s1", "space": {"full": 0.5}, "rows_garbled": {'ke"ep\n': 2}}).encode())
     _prometheus_strict(SpecConsole(ctl, wall=box.wall).metrics_text())
-    _prometheus_strict("\n".join(vms_metrics(ctl)()))
+    _prometheus_strict(spec_metrics(ctl))
     rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put(f"rec/heartbeats/{bad}", Heartbeat(bad, t, [
         {"id": bad, "phase": 'run"ning', "last_frame_at": t - 5, "depth_days": 1, "samples_refused": {'B"AD\n': 2},
          "lease": "unconfirmed", "unconfirmed_s": 3}], {
         "server": "srv-b", "archive_failure": 'aw"ay', "writer": {"state": 's"t'}, "keep_missing": {bad: 5},
         "volume_wait": "net is being written by r-1"}).to_bytes())
-    text = "\n".join(rec_metrics(rec)())
+    text = spec_metrics(rec)
     _prometheus_strict(text)
     assert 'rec_last_frame_age_seconds{unit="7\\"x\\nnew"} 5.0' in text and 'rec_volume_wait{worker="7\\"x\\nnew"} 1' in text
     auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put(f"auto/heartbeats/{bad}", Heartbeat(bad, t, [], {"pass_seconds": 1, "late": 0, "wants_folded": 70}).to_bytes())
-    text = "\n".join(auto_metrics(auto)())
+    text = spec_metrics(auto)
     _prometheus_strict(text)
     assert 'auto_wants_folded{worker="7\\"x\\nnew"} 70' in text
     r = type("R", (), {"keep_state": {bad: {"missing": 5}}, "reconciler": type("C", (), {"actual": {}})(), "backfilled": 0,

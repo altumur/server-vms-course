@@ -1357,17 +1357,11 @@ class SpecConsole:
     play (the subsystem's `extra` serves /timeline and a media route)."""
 
     def __init__(self, ctl: SpecController, marks_root: str | None = None, index=None, worst_failover: float = 0.0,
-                 wall=None, extra=None, media: bool = False, lost_after: float = 45.0, metrics_extra=None,
-                 per_minute: float = 0.0):
+                 wall=None, extra=None, media: bool = False, lost_after: float = 45.0, per_minute: float = 0.0):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
         self.worst_failover, self.wall, self.extra, self.media, self.lost_after = worst_failover, wall or ctl.wall, extra, media, lost_after
         self.instance = f"{socket.gethostname()}:{os.getpid()}"
         self.marks_root = marks_root
-        # The second seam of the same shape as `extra`. A subsystem may have a number nobody else has —
-        # `rec` knows how many archives are declared and how many nobody is writing into — and `/metrics`
-        # is where a scaling policy can see it. Called with no arguments, returns Prometheus lines; the
-        # platform never learns what it counted.
-        self.metrics_extra = metrics_extra
         # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
         # does; in a `Mount` only the root does (`Mount._adopt`), so a scrape of every page says each fact once.
         self.says_platform = True
@@ -1439,6 +1433,11 @@ class SpecConsole:
                             **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
                             **({"fixed": True} if f.fixed else {})} for f in s.fields.values()],
                 **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
+                # the page's words and what it shows under a server, as the spec wrote them; the gauges it reads on
+                # `/metrics` by name (the boundary's step 6; the product's keys)
+                **({"display": s.display} if s.display else {}),
+                **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
+                "running_gauge": f"{s.name}_{s.running_gauge}", "workers_gauge": f"{s.name}_workers_live",
                 "metrics": {"prefix": s.name, "running": s.running_gauge}}
 
     # -- the directory: where is unit N, in one scan of the assignments ---------------------------
@@ -1556,9 +1555,9 @@ class SpecConsole:
         ctl, now = self.ctl, self.wall()
         out: dict[str, dict] = {}
         for w, hb in heartbeats(ctl.objects, ctl.sub.name + "/").items():
-            s = out.setdefault(hb.extra.get("server", "?"), {"archive": None, "resource": "unknown", "workers": []})
-            if hb.extra.get("archive"):
-                s["archive"] = hb.extra["archive"]
+            # (No `archive` here any more: what a server holds of a subsystem's tables is the spec's `servers.show`, which
+            # the page reads with `/spec` — the boundary's step 6; it was one subsystem's heartbeat field, read here.)
+            s = out.setdefault(hb.extra.get("server", "?"), {"resource": "unknown", "workers": []})
             s["workers"].append({"worker": w, "load": ctl.load(w), "capacity": ctl.capacity_of(w), "labels": hb.extra.get("labels", ""),
                                  # WHERE this worker is, in whatever the spec counts places in (`place_by`): the server
                                  # for almost everyone, the volume for the recorder. The page needs it to offer the
@@ -1585,16 +1584,16 @@ class SpecConsole:
                 cs, holder = contended.get(row["worker"]), row.pop("_holder", "")
                 row["name_conflict"] = name_conflict(holder or cs[0].get("holder") or "", cs, now) if cs else None
         for server in resources_seen(ctl.objects):
-            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+            out.setdefault(server, {"resource": "unknown", "workers": []})
         # What the server reaches (feedback DQ): the node's word (its workers' heartbeats), the administrator's when there
         # is a row, and which of the two placement reads — both shown, so a node and an administrator who disagree are
         # seen to. A server with a row and no worker is listed too: the row is still the administrator's word on it.
         rows = ctl.server_labels() or {}
         for server in rows:
-            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+            out.setdefault(server, {"resource": "unknown", "workers": []})
         drains, asked, marks = ctl.draining(), ctl.decommission_requests(), ctl.decommission_marks()
         for server in {*asked, *marks}:
-            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+            out.setdefault(server, {"resource": "unknown", "workers": []})
         res, held = ctl._resources(), ctl.holds_by()
         for server, s in out.items():
             node = sorted({l for row in s["workers"] for l in str(row["labels"]).split(",") if l})
@@ -1867,8 +1866,8 @@ class SpecConsole:
                       f"{p}_blobs_marked {len(marked)}"]
         if self.spec.offers:
             lines += self.spares_lines(rep, now, hbs)
-        if self.metrics_extra is not None:
-            lines += list(self.metrics_extra())                # the subsystem's own numbers, in its own words
+        from . import metrics
+        lines += metrics.lines(self.spec, self.ctl, hbs, live, now)   # the subsystem's own numbers, as its spec declares them
         if self.says_platform:
             lines += self.platform_metrics(now)                # the platform's, once per console process
         return "\n".join(lines) + "\n"

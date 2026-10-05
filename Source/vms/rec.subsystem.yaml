@@ -130,5 +130,66 @@ tables: [volumes, keeps]
 rights:
   unit_of: {keeps: cam}
 snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
+# WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
+# function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
+# (`w2cplatform/metrics.py`): a count of a table's rows, or a field of the recorders' heartbeats and status entries.
+metrics:
+  - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
+  - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds
+  # The number a scaling policy must use, and why it is not `unserved` itself: a volume nobody CAN take does not become
+  # takeable by starting processes; one spare running proves the shortage is not of processes (`minus: placeless`).
+  - {name: recorders_needed, count: table volumes, where: {enabled: true}, unheld: true, minus: placeless}
+  # Keeps that nothing copies: marks set while no incidents volume is declared (the review's second pass, B10).
+  - {name: keeps_unprotected, count: table keeps, unless: {table: volumes, where: {kind: incidents, enabled: true}}}
+  # The seconds of each keep not in the incidents volume yet, the largest a live recorder says (the fourth pass, major).
+  - {name: keep_missing_seconds, from: "heartbeat.keep_missing.<keep>", agg: max, live: true}
+  # What each recorder says of itself (feedback BG): its recordings by phase; a volume that would not open; a pin to a
+  # volume another holds (the eighth pass); how long the archive has been away; why it stopped taking samples; its writer.
+  - {name: recordings, from: status.phase, agg: count}
+  - {name: volume_error, from: heartbeat.volume_error, agg: flag, default: 0}
+  - {name: volume_wait, from: heartbeat.volume_wait, agg: flag, default: 0}
+  - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0}
+  - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind}
+  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, default: ok}
+  # Per recording: how long since it last took anything from its source (feedback BI); what the engine refused of its
+  # samples, by answer (the third pass); how deep it goes and whether its ring closed inside the floor (feedback BM);
+  # and how long it has gone on under an epoch the store has not confirmed.
+  - {name: last_frame_age_seconds, from: status.last_frame_at, agg: age}
+  - {name: samples_refused_total, from: "status.samples_refused.<status>", type: counter}
+  - {name: archive_depth_days, from: status.depth_days}
+  - {name: archive_shallow, from: status.shallow, agg: flag, when: depth_days}
+  - {name: unconfirmed_seconds, from: status.unconfirmed_s}
+  # A camera's stream as its pusher says it in the camera recorder's heartbeat (`stream`; the eighth to eleventh reviews).
+  - {name: stream_behind_seconds, from: heartbeat.stream.behind_s}
+  - {name: stream_lagging, from: heartbeat.stream.lagging, agg: flag, equals: true}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.cut_s, labels: {why: cut}, type: counter}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.left_s, labels: {why: left}, type: counter}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.failed_s, labels: {why: failed}, type: counter}
+  - {name: stream_skipped_seconds_total, from: heartbeat.stream.evicted_s, labels: {why: evicted}, type: counter}
+  - {name: stream_owed_unknown, from: heartbeat.stream.owed, agg: flag, equals: unknown}
+  - {name: stream_evicted_unknown_seconds_total, from: heartbeat.stream.evicted_unknown_s, type: counter}
+  - {name: camera_clock_stepped_seconds_total, from: heartbeat.stream.clock_back_s, labels: {way: back}, type: counter}
+  - {name: camera_clock_stepped_seconds_total, from: heartbeat.stream.clock_forward_s, labels: {way: forward}, type: counter}
+  - {name: camera_clock_set_total, from: heartbeat.stream.clock_set, type: counter}
+  - {name: camera_frames_ahead_total, from: heartbeat.stream.ahead, type: counter}
+# What a page shows under a server: the volumes whose `server` names it (the boundary's step 6; it was the recorder's
+# heartbeat field `archive`, read by the platform's `/servers`).
+servers:
+  show:
+    - {table: volumes, by: server, title: тома, columns: [name, kind, url, quota_bytes, enabled]}
+# What a page calls things (the console module reads it from /spec; the platform reads none of it).
+display:
+  unit: запись
+  units: записи
+  field_help:
+    cam: камера, которую пишет запись
+    home: том, в котором лежит запись
+    retention_days: сколько дней показывать
+    min_depth_days: сколько дней должно быть не меньше
+    when: "резервная запись: всегда или только когда основная не пишется"
+  kinds:
+    archive.shallow: архив мельче обещанного
+    keep.copied: сохранённое скопировано
+    keep.lost: сохранённое не удалось скопировать
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

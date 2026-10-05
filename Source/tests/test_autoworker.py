@@ -183,7 +183,7 @@ def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
     counted them, and the scenario's own log did not mention them. Each is marked decided, so a pass over the
     same window does not count it again; the worker says how many; the scenario's log gets one line with the
     number and the span."""
-    from vms.console import auto_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.eventdatabase import EventIndex
     box = Box()
     t = box.wall()
@@ -199,7 +199,7 @@ def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
              if e["kind"] == "suppressed"]
     assert [(e["count"], e["since"], e["until"]) for e in lines] == [(47, bounce[3]["t"], bounce[49]["t"])]
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
-    assert 'auto_firings_suppressed_total{worker="a-1"} 47' in "\n".join(auto_metrics(con)())
+    assert 'auto_firings_suppressed_total{worker="a-1"} 47' in spec_metrics(con)
 
 
 def test_a_scenario_that_is_off_decides_nothing():
@@ -652,7 +652,7 @@ def test_a_pass_says_what_it_cost_in_its_heartbeat_and_the_console_exports_it():
     """A slow pass and a held cursor were visible nowhere. The evaluator's heartbeat now carries its last
     pass — seconds, queries, how far the furthest cursor trails `now`, the longest road from an event to the
     request it filed — and the console's `/metrics` exports them per evaluator."""
-    from vms.console import auto_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.contract import Heartbeat
     box = Box()
     t = box.wall()
@@ -664,12 +664,12 @@ def test_a_pass_says_what_it_cost_in_its_heartbeat_and_the_console_exports_it():
     hb = Heartbeat.from_bytes(box.objects.get(AUTO_SPEC.sub.heartbeat_key("a-1")))
     assert hb.extra["queries"] == 1 and hb.extra["latency_seconds"] == 4.0 and hb.extra["lag_seconds"] == w.COLD_START
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
-    text = "\n".join(auto_metrics(con)())
+    text = spec_metrics(con)
     assert 'auto_firing_latency_seconds{worker="a-1"} 4.0' in text and 'auto_queries_per_pass{worker="a-1"} 1' in text
     # …and the road as a histogram since the process started: the pass after this one files nothing and its
     # gauge says 0, but a scrape between the two still sees the four-second road (feedback AY).
     box.wall.advance(2); w.reconcile_once(); w.heartbeat_once()
-    text = "\n".join(auto_metrics(con)())
+    text = spec_metrics(con)
     assert 'auto_firing_latency_seconds{worker="a-1"} 0.0' in text
     assert 'auto_event_to_request_seconds_bucket{worker="a-1",le="2"} 0' in text
     assert 'auto_event_to_request_seconds_bucket{worker="a-1",le="5"} 1' in text
@@ -682,7 +682,7 @@ def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_
     that says the road from event to device grew longer, so every start of the evaluator said so, falsely
     (feedback AY). A request that would be expired before it leaves is not filed. The firing is still a
     firing: the scenario's event says it fired, and how late; the status and the heartbeat count it apart."""
-    from vms.console import auto_metrics
+    from w2cplatform.metrics import text as spec_metrics
     from w2cplatform.eventdatabase import EventIndex
     box = Box()
     t = box.wall()
@@ -701,7 +701,7 @@ def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_
     # written NOW, about THEN (feedback BL): `t` files the line, `occurred` is the cause's moment
     assert sorted((e["occurred"], e.get("late"), e["t"]) for e in fired) == [(t - 120, 120.0, t), (t - 3, None, t)]
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
-    assert 'auto_fired_late_total{worker="a-1"} 1' in "\n".join(auto_metrics(con)())
+    assert 'auto_fired_late_total{worker="a-1"} 1' in spec_metrics(con)
     w.reconcile_once()
     assert len(box.vars.list("vms/requests/")) == 1 and w.late == 1      # remembered: not late twice
 

@@ -162,3 +162,57 @@ def test_of_several_followed_units_the_one_the_spec_prefers_is_stood_beside():
     assert ctl.holder_near("ann") == ("w-2", "s2")                        # beside the reserve, not the smaller id
     vars_.put("bin/items/a2", {"name": "a2", "owner": "ann", "home": "plain"})
     assert ctl.holder_near("ann") == ("w-1", "s1")                        # none preferred: the smaller id
+
+
+def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_the_store_and_the_heartbeats():
+    """`metrics:` (it was a function of the subsystem's the console called, `metrics_extra`): a count of a table's rows
+    — matching, unheld, less the workers holding no place, nothing while another table has a row — and a field of the
+    heartbeats or of each status entry: its value, a flag, an age, a label, a count by value, a sum or max over the
+    workers by a wildcard's keys, a histogram. A word where a number goes is 0, never the page's end. And `/spec`
+    carries `display`, `servers.show` and the gauges' names, which the platform reads none of."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.metrics import text
+    vars_, objects, wall = _box()
+    spec = SubsystemSpec.from_dict({**BIN, "metrics": [
+        {"name": "bays_open", "count": "table bays", "where": {"enabled": True}, "unheld": True},
+        {"name": "bays_wanted", "count": "table bays", "where": {"enabled": True}, "unheld": True, "minus": "placeless"},
+        {"name": "unguarded", "count": "table bays", "unless": {"table": "bays", "where": {"kind": "guard"}}},
+        {"name": "jam", "from": "heartbeat.jam", "agg": "flag", "default": 0},
+        {"name": "away_seconds", "from": "heartbeat.away_since", "agg": "age", "default": 0},
+        {"name": "belt", "from": "heartbeat.belt.state", "agg": "label", "label": "state", "default": "ok"},
+        {"name": "moves_total", "from": "heartbeat.moves.<outcome>", "agg": "sum", "type": "counter"},
+        {"name": "items", "from": "status.phase", "agg": "count"},
+        {"name": "depth", "from": "status.depth"},
+        {"name": "wait_seconds", "from": "heartbeat.wait", "agg": "histogram", "buckets": [1, 5]}],
+        "display": {"unit": "ящик", "tree": {"group_by": "owner", "nested_by": "/"}},
+        "servers": {"show": [{"table": "bays", "by": "server", "title": "места"}]}})
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    vars_.put("bin/bays/b1", {"enabled": "true"})
+    vars_.put("bin/bays/b2", {"enabled": "true"})
+    vars_.put("bin/bays/b3", {"enabled": "false"})
+    objects.put(spec.sub.heartbeat_key("w-1"), Heartbeat("w-1", wall(), [{"id": "a", "phase": "running", "depth": 3},
+                                                                        {"id": "b", "phase": "pending", "depth": "deep"}],
+                                                         {"server": "s1", "bay": "", "jam": "stuck", "away_since": wall() - 30,
+                                                          "belt": {}, "moves": {"done": 2, "failed": 1},
+                                                          "wait": {"buckets": [1, 2], "count": 3, "sum": 7.5}}).to_bytes())
+    objects.put(spec.sub.heartbeat_key("w-2"), Heartbeat("w-2", wall(), [], {"server": "s2", "bay": "b1", "belt": {"state": "slow"},
+                                                                          "moves": {"done": 5}}).to_bytes())
+    lines = text(ctl).splitlines()
+    for want in ("bin_bays_open 2", "bin_bays_wanted 1", "bin_unguarded 3",
+                 'bin_jam{worker="w-1"} 1', 'bin_jam{worker="w-2"} 0',
+                 'bin_away_seconds{worker="w-1"} 30.0', 'bin_away_seconds{worker="w-2"} 0',
+                 'bin_belt{worker="w-1",state="ok"} 1', 'bin_belt{worker="w-2",state="slow"} 1',
+                 'bin_moves_total{outcome="done"} 7', 'bin_moves_total{outcome="failed"} 1',
+                 'bin_items{worker="w-1",phase="pending"} 1', 'bin_items{worker="w-1",phase="running"} 1',
+                 'bin_depth{unit="a"} 3', 'bin_depth{unit="b"} 0',
+                 '# TYPE bin_wait_seconds histogram', 'bin_wait_seconds_bucket{worker="w-1",le="1"} 1',
+                 'bin_wait_seconds_bucket{worker="w-1",le="+Inf"} 3', 'bin_wait_seconds_sum{worker="w-1"} 7.5'):
+        assert want in lines, (want, lines)
+    vars_.put("bin/bays/g", {"kind": "guard"})
+    assert "bin_unguarded 0" in text(ctl).splitlines()
+    got = SpecConsole(ctl, wall=wall).describe()
+    assert got["display"]["unit"] == "ящик" and got["servers"] == {"show": [{"table": "bays", "by": "server", "title": "места"}]}
+    assert got["running_gauge"] == "bin_units_running" and got["workers_gauge"] == "bin_workers_live"
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "count": "table nope"}]}), "count is `table")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "display": {"logic": "if"}}), "words for a page, no logic")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "servers": {"show": [{"table": "nope", "by": "server"}]}}), "`servers:` is")

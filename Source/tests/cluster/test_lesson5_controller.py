@@ -142,12 +142,12 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     assert sorted(m[1] for m in moves) == [A] * len(on_a) and all(m[2] == B for m in moves)   # off srv-a, onto srv-b (cctv-a reaches it; srv-c cannot)
     assert ctl.assignment(A).units == [] and ctl.placement(a).reason.startswith("resource on srv-a silent; ")
     assert ctl.placement(a).reason.endswith("; on srv-b")
-    # the console shows the label beside the fact: what each server's workers record into, and whether its resource answers
+    # the console shows the label beside the fact: whether each server's resource answers
     from cluster.console import make_console
     sv = make_console(ctl).root.servers()["servers"]
     assert sv["srv-a"]["resource"] == "silent" and sv["srv-a"]["placeable"] is False and sv["srv-a"]["why"] == "resource on srv-a silent"
     assert sv["srv-b"]["resource"] == "live" and sv["srv-b"]["placeable"] is True and [w["worker"] for w in sv["srv-b"]["workers"]] == [B]
-    assert sv["srv-a"]["archive"] == c.servers["srv-a"].resource                                   # the worker's $ARCHIVE: its server's events archive (`w2c.env`)
+    assert "archive" not in sv["srv-a"]          # what a server holds of a subsystem's tables is its spec's `servers.show` (step 6)
     x = ctl.create_camera({"source": "driverpack://file/x.mp4", "labels": ["vlan:cctv-a"]})["id"]
     assert ctl.place(x).worker == B                                                                # never w-srv-a-1 while srv-a's resource is silent
     assert ctl.unplaceable() == []                                                                 # srv-b reaches cctv-a too; nothing waits

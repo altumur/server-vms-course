@@ -718,7 +718,7 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
     skew is counted in both directions: AHEAD, a moment after ours, is a road of zero; BEHIND, a filing before our
     previous listing that did not have the row. After a restart the request's road is measured from its filing, not
     zero. All of it leaves in the heartbeat and is on the console's `/metrics`."""
-    from vms.console import vms_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
@@ -764,7 +764,7 @@ def test_the_holder_measures_the_road_by_two_clocks_and_its_own_link_by_one():
 
     holder.heartbeat_once()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
-    text = "\n".join(vms_metrics(con)())
+    text = spec_metrics(con)
     for line in ('vms_event_to_device_seconds_bucket{worker="w-1",by="auto",le="0.25"} 2',
                  'vms_event_to_device_seconds_count{worker="w-1",by="auto"} 4',
                  'vms_event_to_device_seconds_count{worker="w-1",by="operator"} 1',
@@ -792,7 +792,7 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     asks: live by their heartbeats, at the address `/events` is asked at. And how the long poll went is in its
     heartbeat and on the console's `/metrics` — where a wait that fails, and breaks nothing, is seen."""
     from tests.test_autoworker import _Log, _assigned, _scenario, _worker, ev
-    from vms.console import auto_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     t = box.wall()
     log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
@@ -803,7 +803,7 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     assert w.wants() == [("det", "motion", "7-motion"), ("vms", "io.input", "12")]   # the unit is in the want (M8)
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     w.heartbeat_once()
-    assert "auto_waits_total{" not in "\n".join(auto_metrics(con)())                 # the long poll was not asked for
+    assert "auto_waits_total{" not in spec_metrics(con)                 # the long poll was not asked for
 
     from tests.conftest import Clock
     looks = Clock()                                                  # the index's cache of the listing: its own clock
@@ -824,7 +824,7 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     lp.sync()
     _until(lambda: lp.errors == 1, 2.0, "the refused wait to be counted")
     w.heartbeat_once()
-    text = "\n".join(auto_metrics(con)())
+    text = spec_metrics(con)
     for line in ('auto_waits_total{worker="a-1"} 1', 'auto_woken_total{worker="a-1"} 0',
                  'auto_early_passes_total{worker="a-1"} 0', 'auto_wait_errors_total{worker="a-1"} 1'):
         assert line in text, line
@@ -973,8 +973,8 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     said it (`_confirm`); one write the store refused, and a restart in the ten seconds after, and the next instance
     found the bare mark — `unknown`, a `command.failed`. The answer is owed now (`_marks_owed`) and written again at
     every look until the store takes it. And what the beat waits on is on `/metrics`: slow devices, calls in flight,
-    answers said again (`beat_lines`)."""
-    from vms.console import vms_metrics
+    answers said again (`metrics:` in vms.subsystem.yaml)."""
+    from w2cplatform.metrics import text as spec_metrics
     box = Box()
     holder, cid, dev, _called = _holder(box)
     holder.reconcile_once()
@@ -1003,7 +1003,7 @@ def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declare
     assert "command.failed" not in [k for _, _, k in again.observed]
     again.heartbeat_once()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
-    text = "\n".join(vms_metrics(con)())
+    text = spec_metrics(con)
     for line in ('vms_commands_reanswered_total{worker="w-1"} 1', 'vms_devices_slow{worker="w-1"} 0',
                  'vms_commands_in_flight{worker="w-1"} 0'):
         assert line in text, line
@@ -1538,7 +1538,7 @@ def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_po
     their kinds on any unit: the request is held, a line of any camera answers it and says which camera it was (`touched`
     — the early pass still evaluates only what it touches), and the folding is on the pulse and on `/metrics`. And an
     answer of another shape costs that one wait, not the thread."""
-    from vms.console import auto_metrics
+    from w2cplatform.metrics import text as spec_metrics
     box = _real_box()
     res, srv = _resource(box)
     holder, cid, _dev, _called = _holder(box)
@@ -1559,7 +1559,7 @@ def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_po
         hb = Heartbeat.from_bytes(box.objects.get(AUTO_SPEC.sub.heartbeat_key("a-1")))
         assert hb.extra["wants_folded"] == 70 and hb.extra["wait_errors"] == 0
         from w2cplatform.spec import SpecController
-        text = "\n".join(auto_metrics(SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall))())
+        text = spec_metrics(SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall))
         assert 'auto_wants_folded{worker="a-1"} 70' in text
     finally:
         evaluator.stop_polling(); srv.shutdown()
@@ -1811,8 +1811,8 @@ def test_a_device_that_has_not_opened_is_in_the_heartbeat_as_opening_and_one_tha
         st = {s["id"]: s for s in hb.status}
         assert st[hung].get("device_state") == "opening" and "device_state" not in st[cams[0]]
         assert [d["device"] for d in holder.device_status()] == sorted(by)          # the door says the same
-        from vms.console import beat_lines
-        assert 'vms_devices_opening{worker="w-1"} 1' in beat_lines("vms", {"w-1": hb})
+        from w2cplatform.metrics import text as spec_metrics
+        assert 'vms_devices_opening{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
     finally:
         gate.set()
     _until(lambda: (holder.reconcile_once(), "acme/10.0.0.51" in holder.devices)[1], 5.0, "the late open to be held")
@@ -1874,8 +1874,8 @@ def test_another_serial_number_under_the_same_key_is_said_and_counted():
         holder.heartbeat_once()
         hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
         assert hb.extra["identity_changes"] == 1
-        from vms.console import beat_lines
-        assert 'vms_device_identity_changes_total{worker="w-1"} 1' in beat_lines("vms", {"w-1": hb})
+        from w2cplatform.metrics import text as spec_metrics
+        assert 'vms_device_identity_changes_total{worker="w-1"} 1' in spec_metrics(VmsController(box.vars, box.objects, wall=box.wall)).splitlines()
         nvr.identity = "SN-THIRD"                                     # and a holder started on the row of the second
         fresh = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(),
                           clock=box.clock, wall=box.wall, server="srv-a", env={}, archive_root=box.archive,
@@ -2142,10 +2142,10 @@ def test_one_cameras_hung_read_closes_the_door_to_that_camera_not_to_its_nvr_and
         st = next(d for d in holder.device_status() if d["device"] == key)
         assert st["reads_stuck"] == [str(cams[0])] and st["state"] == "slow", st
         assert holder.heartbeat_extra()["door_reads_stuck"] == 1
-        from vms.console import beat_lines                                     # …and on `/metrics` (the thirteenth pass)
+        from w2cplatform.metrics import text as spec_metrics                       # …and on `/metrics` (the thirteenth pass)
         from w2cplatform.console import heartbeats
         holder.heartbeat_once()
-        assert f'vms_door_reads_stuck{{worker="{holder.name}"}} 1' in beat_lines("vms", heartbeats(holder.objects, "vms/"))
+        assert f'vms_door_reads_stuck{{worker="{holder.name}"}} 1' in spec_metrics(VmsController(holder.vars, holder.objects)).splitlines()
         hang.add(str(cams[2]))                                                 # a second camera of it hangs too
         try:
             holder.playback(cams[2], 0, 2)

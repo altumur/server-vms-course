@@ -1998,6 +1998,25 @@ class Controller:
     def holds_of(self, worker: str) -> list[str]:
         return self.holds_by().get(worker, [])
 
+    # `{place: holder instance}` for the places whose hold is live — by what this process saw change on its clock (`Eyes`,
+    # `SLOT_TERM`; the thirteenth pass), not by the holder's `until` — what a metric counts as taken (`metrics.py`).
+    def live_holds(self) -> dict[str, str]:
+        prefix, out = self.sub.name + "/holds/", {}
+        for path in self.vars.list(prefix):
+            h = read_hold(path, path[len(prefix):], stored(self.vars, path, HOLDS)[0])
+            if h is None or h.released or not h.holder:
+                continue
+            if self.eyes.age(path, (h.holder, h.until, h.gen)) <= SLOT_TERM:
+                out[path[len(prefix):]] = h.holder
+        return out
+
+    # The workers of `live` that hold no place (their place field said empty: a spare) and whose instance holds none
+    # either — taking is not opening, and a process that took a place is no spare whatever its heartbeat says yet.
+    def placeless_live(self, live: dict) -> list[str]:
+        holding = set(self.live_holds().values())
+        return sorted(w for w, hb in live.items()
+                      if self.place_of(w) == "" and str(hb.extra.get("instance", "")) not in holding)
+
     def holds_by(self) -> dict[str, list[str]]:
         prefix, out = self.sub.name + "/holds/", {}
         for path in self.vars.list(prefix):

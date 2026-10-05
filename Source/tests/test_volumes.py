@@ -398,7 +398,7 @@ def test_the_numbers_a_scaling_policy_reads():
     load gauge would read as FULLY LOADED. Left in, one spare would demand the
     next one for ever."""
     from w2cplatform.console import SpecConsole
-    from vms.console import rec_metrics
+    from w2cplatform.metrics import text as spec_metrics
 
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
@@ -409,7 +409,7 @@ def test_the_numbers_a_scaling_policy_reads():
     spare.volume_pass(); spare.heartbeat_once()
     assert (r.volume, spare.volume) == ("s3-cold", "s3-main")
 
-    con = SpecConsole(rec, wall=box.wall, metrics_extra=rec_metrics(rec))
+    con = SpecConsole(rec, wall=box.wall, )
     text = con.metrics_text()
     assert "rec_volumes_declared 2" in text and "rec_volumes_unserved 0" in text
 

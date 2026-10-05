@@ -7,7 +7,7 @@ put an alert on. Nobody calls a recorder: the console reads what it published, a
 from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import SpecController
 from vms.config import REC_SPEC
-from vms.console import _recorders
+from w2cplatform.metrics import text as spec_metrics
 from tests.conftest import Box
 
 
@@ -22,7 +22,7 @@ def test_a_recorders_troubles_are_numbers_not_only_a_heartbeat():
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-2"), Heartbeat("r-2", now, [],
         {"server": "srv-2", "volume": "vol-b", "volume_error": "read-only file system", "writer": {"state": "ok"},
          "archive_away_since": 0.0, "archive_failure": "", "fenced": True}).to_bytes())
-    text = "\n".join(_recorders(rec))                                # the recorders' part of `rec_metrics`
+    text = spec_metrics(rec)                                # the recorders' part of `rec_metrics`
     for line in ('rec_recordings{worker="r-1",phase="running"} 2', 'rec_recordings{worker="r-1",phase="failed"} 1',
                  'rec_volume_error{worker="r-1"} 0', 'rec_volume_error{worker="r-2"} 1',
                  'rec_archive_away_seconds{worker="r-1"} 360.0', 'rec_archive_away_seconds{worker="r-2"} 0',
@@ -68,7 +68,7 @@ def test_a_recording_the_engine_refuses_is_counted_by_itself_and_its_last_frame_
     assert st["8"].get("last_frame_at") is None and st["8"]["samples_refused"] == {"SEQUENCE_TOO_LARGE": 10}
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [
         {"id": u, "phase": "running", **st[u]} for u in ("7", "8")], {"server": "srv-1"}).to_bytes())
-    text = "\n".join(_recorders(rec))
+    text = spec_metrics(rec)
     assert 'rec_samples_refused_total{unit="8",status="SEQUENCE_TOO_LARGE"} 10' in text
     assert 'rec_samples_refused_total{unit="7"' not in text
     assert 'rec_last_frame_age_seconds{unit="7"} 0.0' in text

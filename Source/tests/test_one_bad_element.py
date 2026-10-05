@@ -516,7 +516,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
     from w2cplatform import rows
     from w2cplatform.console import heartbeats
     from w2cplatform.events import read_bucket
-    from vms.console import beat_lines
+    from w2cplatform.metrics import text as spec_metrics
     from vms.controller import VmsController
     from vms.worker import FakeActuator, VmsWorker
     box = Box()
@@ -541,7 +541,7 @@ def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_
     assert any(e["kind"] == "io.input" and e.get("port") == "3" for e in lines[2])
     assert rows.counts()["field"].get("vms") == 1                      # both moments: one spell of camera 1's `occurred`
     w.heartbeat_once()
-    assert 'vms_device_events_refused_total{worker="w-1"} 2' in beat_lines("vms", heartbeats(box.objects, "vms/"))
+    assert 'vms_device_events_refused_total{worker="w-1"} 2' in spec_metrics(ctl).splitlines()
     _forget_garbled()
 
 

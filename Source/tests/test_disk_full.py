@@ -12,7 +12,7 @@ import os
 from w2cplatform.console import SpecConsole
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.resource import SPACE_KEY, Resource, space_settings
-from vms.console import _recorders
+from w2cplatform.metrics import text as spec_metrics
 from vms.controller import VmsController
 from vms.worker import fake_samples
 from tests.conftest import Box, footage, recorder
@@ -121,7 +121,7 @@ def test_a_recording_cut_inside_its_floor_raises_an_alarm_and_a_young_ring_does_
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [
         {"id": "7", "phase": "running", "depth_days": 5.0, "shallow": True},
         {"id": "8", "phase": "running", "depth_days": 2.0}], {"server": "srv-a"}).to_bytes())
-    text = "\n".join(_recorders(rec))
+    text = spec_metrics(rec)
     for line in ('rec_archive_depth_days{unit="7"} 5.0', 'rec_archive_shallow{unit="7"} 1', 'rec_archive_shallow{unit="8"} 0'):
         assert line in text, line
     assert rec.create({"name": "9", "cam": "9", "min_depth_days": 14})["min_depth_days"] == 14.0     # a field of the row

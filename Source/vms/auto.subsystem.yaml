@@ -66,5 +66,23 @@ placement:
 # М12's directory has never wanted to know which relay a site pulses, and a `then` carrying a preset number
 # for somebody else's camera is nobody's business up there.
 snapshot: [name, enabled]
+# Each evaluator's last pass and what it counted since it started, from its heartbeat (the boundary's step 6: it was
+# `vms/console.py`'s `auto_metrics`). `auto_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
+metrics:
+  - {name: pass_seconds, from: heartbeat.pass_seconds}
+  - {name: queries_per_pass, from: heartbeat.queries}
+  - {name: cursor_lag_seconds, from: heartbeat.lag_seconds}
+  - {name: firing_latency_seconds, from: heartbeat.latency_seconds}
+  - {name: event_to_request_seconds, from: heartbeat.latency, agg: histogram, buckets: [1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+  - {name: fired_late_total, from: heartbeat.late, type: counter}
+  - {name: firings_suppressed_total, from: heartbeat.suppressed, type: counter}     # refused by a scenario's own ceiling
+  # the long poll of the resources (`AutoWorker.long_poll_stats`): a wait that fails breaks nothing, so here is where it
+  # is seen — `auto_wait_errors_total` growing is the road back at two seconds
+  - {name: waits_total, from: heartbeat.waits, type: counter}
+  - {name: woken_total, from: heartbeat.woken, type: counter}
+  - {name: early_passes_total, from: heartbeat.early_passes, type: counter}
+  - {name: wait_errors_total, from: heartbeat.wait_errors, type: counter}
+  - {name: wants_folded, from: heartbeat.wants_folded}                              # triggers folded to their kinds (the eighth pass)
+
 console:
   running: scenarios_running         # auto_scenarios_running: scenarios an evaluator is actually watching

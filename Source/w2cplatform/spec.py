@@ -634,6 +634,16 @@ class SubsystemSpec:
     # (`runtime.slot`). It was each worker's class saying it.
     slot_prefix: str = "w"
     slot_name_env: str = "WORKER_NAME"
+    # `metrics: [...]` — the subsystem's own numbers on `/metrics`, declared (`metrics.py`; the boundary's step 6 — it
+    # was a function of the subsystem's the console called, `metrics_extra`).
+    metrics: list = field(default_factory=list)
+    # `display: {unit, units, field_help, kinds, actions, tree: {group_by, nested_by, columns}}` — what a page calls
+    # things; a dictionary the platform hands to `/spec` and reads none of (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §6–§8).
+    display: dict = field(default_factory=dict)
+    # `servers: {show: [{table, by, title, columns}]}` — rows of this subsystem's tables a page shows under the server
+    # their `by` field names (a disk under its server). Handed to `/spec`; it was a field the console's `/servers` read
+    # out of one subsystem's heartbeat until the boundary's step 6.
+    servers_show: list = field(default_factory=list)
 
     # Builds the spec from the YAML dict, tolerating absent sections. Field defaults are parsed to their
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
@@ -712,6 +722,7 @@ class SubsystemSpec:
                    slot_prefix=slot[0], slot_name_env=slot[1])
         spec._about_and_rights(d)
         spec._placement_words(pl)
+        spec._page_words(d)
         if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
             raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
         if spec.offers and d.get("slot") is not None and spec.offers != spec.slot_prefix:
@@ -818,6 +829,38 @@ class SubsystemSpec:
             if not isinstance(fld, str) or not fld:
                 raise ValueError(f"spec {self.name}: rights.unit_of.{table} names no field")
         self.unit_of = {str(t): str(f) for t, f in unit_of.items()}
+
+    # What a console and a page read and do not act on, checked at load (the boundary's step 6): `metrics` (`metrics.py`),
+    # `display` — a dictionary of words, its tree's columns naming fields of the row or the unit's status — and
+    # `servers.show`, each entry a table of this spec and a field of its rows.
+    STATUS_COLUMNS = ("phase", "worker", "server", "revision", "observed_revision")
+
+    def _page_words(self, d: dict) -> None:
+        from . import metrics
+        self.metrics = metrics.parse(self.name, d.get("metrics"), self.tables)
+        disp = d.get("display")
+        if disp is not None:
+            if not isinstance(disp, dict) or set(disp) - {"unit", "units", "field_help", "kinds", "actions", "tree"}:
+                raise ValueError(f"spec {self.name}: `display:` is {{unit, units, field_help, kinds, actions, tree}} — words "
+                                 f"for a page, no logic — not {disp!r}")
+            tree = disp.get("tree") or {}
+            if not isinstance(tree, dict) or set(tree) - {"group_by", "nested_by", "columns"} \
+                    or (tree.get("group_by") and tree["group_by"] not in self.fields):
+                raise ValueError(f"spec {self.name}: display.tree is {{group_by: <a field>, nested_by, columns}}, not {tree!r}")
+            for c in tree.get("columns") or []:
+                if not isinstance(c, dict) or (c.get("field") not in self.fields and c.get("field") not in self.STATUS_COLUMNS):
+                    raise ValueError(f"spec {self.name}: display.tree.columns names a field of the row or of the unit's "
+                                     f"status ({', '.join(self.STATUS_COLUMNS)}), not {c!r}")
+            self.display = disp
+        servers = d.get("servers")
+        if servers is not None:
+            show = servers.get("show") if isinstance(servers, dict) and not set(servers) - {"show"} else None
+            if not isinstance(show, list) or not all(isinstance(e, dict) and e.get("table") in self.tables
+                                                      and isinstance(e.get("by"), str) and e["by"]
+                                                      and not set(e) - {"table", "by", "title", "columns"} for e in show):
+                raise ValueError(f"spec {self.name}: `servers:` is {{show: [{{table: <one of its tables>, by: <its rows' "
+                                 f"field naming the server>, title, columns}}]}}, not {servers!r}")
+            self.servers_show = show
 
     # The placement's words that are a vocabulary or a declaration, checked at load (the boundary's step 6): the
     # constraint and the tie-break are names from the closed catalogue; `group_by` is a field, or `{field, cut_at}` over

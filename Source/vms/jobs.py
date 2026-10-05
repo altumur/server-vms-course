@@ -42,8 +42,8 @@ log = logging.getLogger("vms.jobs")
 
 # Requests that reached the console after their `valid_until` — dropped, and COUNTED, per family. A line in
 # a log is read by nobody; this number climbing says the requests' loop is running late, which is how it was
-# found (the review's second pass: a thirty-second request read every thirty seconds). One tally per process:
-# the console's loops and its `/metrics` are the same process (`vms.console.vms_metrics`).
+# found (the review's second pass: a thirty-second request read every thirty seconds). One tally per process, said
+# by `metrics_lines` below.
 expired: dict[str, int] = {"rec": 0, "det": 0}
 
 
@@ -55,6 +55,19 @@ def _expired(sub: str) -> None:
 # holder that began one (its mark, no outcome) is gone, and what its call did nobody can say. Not "expired" — that is a
 # command never begun — counted apart: `vms_requests_unknown_total`.
 unknown: dict[str, int] = {}
+
+
+# The two counters above as `/metrics` lines — the request loops' process's own numbers (the boundary's step 6: they
+# were lines of the console's `/metrics` while the loops ran inside the console's process). `vms_requests_expired_total`:
+# the requests of automation dropped as too old — a scenario said `fired` and nothing happened; climbing, the loop is
+# late (the review's second pass). `sub="vms"`: commands the reaper ended because no holder did. `…_unknown_total`: the
+# commands ended whose holder began them and went without saying how (the thirteenth pass).
+def metrics_lines() -> list[str]:
+    from w2cplatform.console import label
+    return (["# TYPE vms_requests_expired_total counter"]
+            + [f'vms_requests_expired_total{{sub="{label(s)}"}} {n}' for s, n in sorted(expired.items())]
+            + ["# TYPE vms_requests_unknown_total counter"]
+            + [f'vms_requests_unknown_total{{sub="{label(s)}"}} {n}' for s, n in sorted(unknown.items())])
 
 
 # ONE REQUEST ROW THAT DOES NOT PARSE IS THAT REQUEST'S (the review's seventh pass, M2). `valid_until: "soon"` in one

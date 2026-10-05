@@ -44,8 +44,7 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
   - `#status` — "N workers live · M <running gauge>" from `/metrics`.
   - `#policy` — the administrator's knob from `/servers`' `policy`: a select, servers `shared` | `distinct`,
     `PUT /policy` on change, with one line saying what the choice means.
-  - `#servers` — one line per server from `/servers`: the archive its workers record into (on a cluster
-    Nomad's `meta.archive`, the label the scheduler placed by), its resource (`live`, `silent`, `unknown` —
+  - `#servers` — one line per server from `/servers`: its resource (`live`, `silent`, `unknown` —
     the fact), its workers with load/capacity, and *not placeable: …* in red when the controller would not
     place there now; what the server reaches (`labels`, and whether they were set here or are the node's), with
     *edit* — `PUT /servers/<name>/labels` after naming the cameras that will move (`GET …/labels?labels=`) — and
@@ -936,9 +935,8 @@ function renderPolicy(p) {
 }
 
 // -- the servers, as placement sees them -------------------------------------------------------------
-// `GET /servers` → one block per server: `archive` (what its workers say they record into — on a cluster the
-// value of Nomad's `meta.archive`, i.e. the label the scheduler's constraint placed by), `resource` (the
-// fact: the resource job's heartbeat — live / silent / unknown), the workers with load/capacity, and
+// `GET /servers` → one block per server: `resource` (the fact: the resource job's heartbeat — live / silent /
+// unknown), the workers with load/capacity, and
 // `placeable` with `why` when the controller would not place there now. Then `GET /mounts`: what this
 // process fronts.
 async function loadResources() {
@@ -954,7 +952,7 @@ async function loadResources() {
                      (w.slot_garbled ? h` · <span class="bad">its slot row does not parse</span>` : '')).join(', ') || 'no workers');
       const off = s.decommission, done = s.decommissioned;
       const lab = (s.labels || []).join(', ') || 'nothing', node = (s.labels_node || []).join(', ') || 'nothing';
-      el.innerHTML = h`<strong>${name}</strong> <small>archive ${s.archive || '—'} · resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
+      el.innerHTML = h`<strong>${name}</strong> <small>resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
                      h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`) +
                      h`<small>reaches ${lab} (${s.labels_source === 'console' ? 'set here; the node says ' + node : 'the node\'s'}) <a href="#" class="lab-edit">edit</a>` +
                      (s.labels_unread ? h` · <span class="bad">its row here could not be read: nothing is moved off it until it is written again</span>` : '') +
