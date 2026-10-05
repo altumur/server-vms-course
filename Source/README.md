@@ -17,11 +17,15 @@ Source/
     longpoll.py                М10B L25  a hint the reader pulls: Watch — the requests a resource holds until a watched line is appended (GET /events/wait);
                                LongPoll — one held request per resource; Wake — a loop's early pass, never sooner than a quarter of a second
     spec.py                    Lesson 6  the controller as data: SubsystemSpec (rows, fields, derived rows, placement by name — requires, servers, near — snapshot, the two ACLs) and SpecController, the one controller every subsystem runs
+    speckeys.py                the closed key sets of a spec: every key the platform reads, at every level — any other is
+                               refused at load, named where it stands (no key is accepted and passed over)
     console.py                 Lesson 7  the console as data: SpecConsole over the same spec — the page, /spec, /<rows>, /where, /metrics with the subsystem's prefix, /marks, the writes with the spec's refusals; a subsystem registers extra routes;
                                Mount — one process fronting several subsystems, the root at / and the others under their names (/live/…, /det/…)
     secrets.py                 Lesson 23  the `*_secret` rule: mask_secrets on the way out of the console, and a spec that
                                names a secret in its snapshot does not load; an address read as RFC 3986 writes one, and how a
-                               subsystem's addresses carry a login besides that from its url field's `secret_in`
+                               subsystem's addresses carry a login besides that from its url field's `secret_in` (`param`/`login`
+                               names, regexes by part, scheme and decoded text, `nested` pairs); a refusal names the field of
+                               `credentials` for what it found
     catalog.py                 the specs this process loaded (or `SPEC_DIR` names): which objects are rows, how an address
                                carries a login — what the platform used to know by name (the boundary's step 4)
     host.py, __main__.py       the platform's own processes for any subsystem (the boundary's step 5): `python3 -m w2cplatform

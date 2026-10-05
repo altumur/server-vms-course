@@ -1,6 +1,6 @@
 """What the platform used to know by name and reads from the specs now (the boundary's step 4, ГРАНИЦА-ПЛАТФОРМЫ-И-
 ПОДСИСТЕМЫ.md §2.4; the keys agreed with the product): `placement.capacity.default`, `slot`, `objects.rows`, and a url
-field's `schemes`, `credentials` and `secret_in`. A test of the platform alone: its specs are made up here and in
+field's `schemes`, `credentials` and `secret_in` — and that no other key loads. A test of the platform alone: its specs are made up here and in
 `testdata/testsub.subsystem.yaml`, and no subsystem's package is imported."""
 from __future__ import annotations
 
@@ -77,9 +77,10 @@ def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
 # A url field the way a subsystem says how its addresses carry a login.
 TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
           "credentials": {"login": "account_name", "secret": "pass_secret"},
-          "secret_in": [{"param": ["pwd", "token*", "*key", "=auth"]},
+          "secret_in": [{"param": ["pwd", "token*", "*key", "=auth"], "login": ["user", "*name"]},
                         {"regex": r"(?:^|/)~(?P<login>[^:/]+):(?P<secret>[^/]+)", "in": "path"},
-                        {"nested": "via"}]}
+                        {"regex": r"^(?P<name>code)=(?P<secret>.+)$", "in": "fragment", "schemes": ["sftp"]},
+                        {"nested": ["via"]}]}
 
 
 def _target_spec(target=None):
@@ -92,7 +93,9 @@ def test_how_an_address_carries_a_login_is_the_specs_and_the_platform_keeps_no_l
     """The forms a credential takes in an address — the names of its parameters, a login spelt in the path, a parameter
     holding another address — were lists in `secrets.py`. They are a url field's `secret_in` now: with no rules the
     platform refuses only what RFC 3986 says is a login (an `@`, a port that is no number); with the field's rules it
-    refuses and hides what they find, and the refusal names the field's `credentials`, never the value."""
+    refuses what they find and hides the passwords — a login is said as written —, and the refusal names the field of
+    `credentials` for what it found (a password the secret's, a login alone the login's), never the value. A regex reads
+    the part it names of an address of the schemes it names, its escapes undone; its `name` is what the refusal says."""
     for plain in ("https://h/x?pwd=Hunter2", "https://h/~me:Hunter2/x", "https://h/x?via=https%3A%2F%2Fh2%2F%3Fpwd%3DHunter2"):
         assert address_refusal(plain, NO_RULES) is None and hide_in_url(plain, NO_RULES) == plain
     assert address_refusal("https://me:Hunter2@h/x", NO_RULES) and address_refusal("https://h:Hunter2/x", NO_RULES)
@@ -106,12 +109,25 @@ def test_how_an_address_carries_a_login_is_the_specs_and_the_platform_keeps_no_l
     for bad in ("https://h/x?pwd=Hunter2", "https://h/~me:Hunter2/x", "https://h/x?via=https%3A%2F%2Fh2%2F%3Fpwd%3DHunter2"):
         assert "Hunter2" not in hide_in_url(bad, rules), bad
     spec = _target_spec()
-    for bad in ("https://h/x?pwd=Hunter2", "https://h/~me:Hunter2/x"):
+    for bad, named, unnamed in (("https://h/x?pwd=Hunter2", "pass_secret", "account_name"),
+                                ("https://h/~me:Hunter2/x", "account_name and the password or token in pass_secret", None),
+                                ("https://h/x?user=me", "Put the login in account_name", "pass_secret"),
+                                ("https://h/x?user=me&pwd=Hunter2", "account_name and the password or token in pass_secret",
+                                 None)):
         try:
             spec.refuse({"target": bad})
             raise AssertionError(f"taken: {bad}")
         except Refused as e:
-            assert "account_name" in str(e) and "pass_secret" in str(e) and "Hunter2" not in str(e), str(e)
+            assert named in str(e) and (unnamed is None or unnamed not in str(e)) and "Hunter2" not in str(e), str(e)
+    # a login is refused and said; a regex's part, scheme and escapes; its `name` in the words
+    assert "a login in its parameters (user)" in address_refusal("https://h/x?user=me", rules)
+    assert hide_in_url("https://h/x?user=me&nick_name=you", rules) == "https://h/x?user=me&nick_name=you"
+    assert hide_in_url("https://h/~me:Hunter2/x", rules) == "https://h/~me:***/x"
+    assert hide_in_url("sftp://h/x#code=Hunter2", rules) == "sftp://h/x#code=***"
+    assert "a password in its fragment (code)" in address_refusal("sftp://h/x#code=Hunter2", rules)
+    assert address_refusal("https://h/x#code=Hunter2", rules) is None                     # not of its schemes
+    assert hide_in_url("https://h/%7Eme%3AHunter2/x", rules) == "https://h/%7Eme%3A***/x"  # decoded, hidden as written
+    assert "'via'" in address_refusal("https://h/x?via=ffmpeg:https%3A%2F%2Fme%3AHunter2%40h2%2F", rules)
     try:
         spec.refuse({"target": "ftp://h/x"})
         raise AssertionError("a scheme the field does not take was taken")
@@ -129,32 +145,58 @@ def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
     _refused(lambda: _target_spec({**TARGET, "credentials": {"secret": "account_name"}}), "credentials.secret")
     _refused(lambda: _target_spec({**TARGET, "schemes": ["HTTPS"]}), "`schemes` is a list of schemes")
     for bad, words in (({"param": "pwd"}, "`param` is a list of names"), ({"param": ["*pwd*"]}, "a name, `=name`, `name*` or `*name`"), ({"param": ["=pwd*"]}, "a name, `=name`"),
-                       ({"regex": "x(?P<secret>.)"}, "`in: path` or `in: query`"),
+                       ({"login": []}, "`login` is a list of names"), ({"login": ["us er"]}, "in `login` is a name"),
+                       ({"regex": "x(?P<secret>.)"}, "`in:` path, query, authority, fragment"),
+                       ({"regex": "x(?P<secret>.)", "in": "host"}, "`in:` path, query"),
+                       ({"regex": "x(?P<secret>.)", "in": "path", "schemes": "https"}, "`schemes` is a list of schemes"),
+                       ({"regex": "x(?P<secret>.)", "in": "path", "decoded": "yes"}, "`decoded` is true or false"),
+                       ({"regex": "x(?P<secret>.)", "in": "path", "where": 1}, "an entry of `secret_in` is one of"),
                        ({"regex": "x(.)", "in": "path"}, "names what it finds"),
+                       ({"regex": "x(?P<secret>.)(?P<other>.)", "in": "path"}, "no other"),
                        ({"regex": "(", "in": "query"}, "no regular expression"),
-                       ({"nested": []}, "`nested` names the pair"), ({"other": 1}, "param, regex or nested"),
-                       ({"param": ["a"], "nested": "b"}, "an entry of `secret_in` is one of")):
+                       ({"nested": []}, "`nested` names the pairs"), ({"nested": "via"}, "`nested` names the pairs"),
+                       ({"other": 1}, "param, regex or nested"),
+                       ({"param": ["a"], "nested": ["b"]}, "an entry of `secret_in` is one of")):
         _refused(lambda bad=bad: SecretRules.parse([bad], "field t"), words)
     _refused(lambda: SecretRules.parse({"param": ["a"]}, "field t"), "`secret_in` is a list")
 
 
-def test_the_products_keys_the_course_does_not_read_load_and_change_nothing():
-    """A product spec loads as it is (the coordinator's word): `objects.door` (files a resource's door hands between
-    servers), `heartbeat.strings` (what the Go heartbeat carries as a string) and `secrets` (`readers`, `reads`: who opens
-    which sealed row — in the course the rights file and the specs' `worker`/`about` say it) are accepted and not read.
-    The spec they are added to is the same spec: its rights, its words to the page, its object rows."""
-    import yaml
-    with open(os.path.join(TESTDATA, "testsub.subsystem.yaml")) as f:
-        plain = yaml.safe_load(f)
-    product = {**plain,
-               "objects": {**(plain.get("objects") or {"rows": []}), "door": ["taken/*"]},
-               "heartbeat": {"strings": ["events", "volume"]},
-               "secrets": {"readers": {"door/signer": ["console"]}, "reads": ["domain/member-key"]}}
-    a, b = SubsystemSpec.from_dict(plain), SubsystemSpec.from_dict(product)
-    assert a.acl_console() == b.acl_console() and a.acl_controller() == b.acl_controller()
-    assert a.acl_worker_role() == b.acl_worker_role() and a.object_rows == b.object_rows
-    assert a.describe() == b.describe() if hasattr(a, "describe") else True
-    assert {k: v for k, v in vars(a).items() if not callable(v)} == {k: v for k, v in vars(b).items() if not callable(v)}
+def test_a_key_the_platform_does_not_read_is_refused_at_any_level_and_named_where_it_stands():
+    """The key sets are closed (the architect, 2026-10-05): a key nobody reads — a typo, another team's word — is a
+    refusal at load naming it with its path, at the top, in a section, in a field, in an item of a list. The product's
+    `objects.door`, `heartbeat.strings` and `secrets` are such keys in the course: refused, not passed over. Where the
+    spec writes names (a field, an event kind) or words (`display.kinds`), anything stands."""
+    plain = _testsub()
+    _refused(lambda: SubsystemSpec.from_dict({**plain, "objects": {"rows": [], "door": ["taken/*"]}}), "`objects:` is {rows:")
+    for where, add in (("heartbeat", {"heartbeat": {"strings": ["events"]}}),
+                       ("secrets", {"secrets": {"reads": ["domain/member-key"]}}),
+                       ("placement.requries", {"placement": {**plain["placement"], "requries": "resource"}}),
+                       ("console.gauge", {"console": {"gauge": "x"}}),
+                       ("events.suppress.tick.windw", {"events": {"suppress": {"tick": {"window": 5, "windw": 6}}}}),
+                       ("unit.fields.name.requird", {"unit": {**plain["unit"], "fields": {
+                           **plain["unit"]["fields"], "name": {**plain["unit"]["fields"]["name"], "requird": True}}}}),
+                       ("unit.derived.rows", {"unit": {**plain["unit"], "derived": [{"row": "r/{id}", "items": {},
+                                                                                       "rows": 1}]}})):
+        _refused(lambda add=add: SubsystemSpec.from_dict({**plain, **add}), f"`{where}`")
+    from w2cplatform.speckeys import unknown
+    assert unknown({**plain, "display": {"kinds": {"any.kind": "слово"}, "fields": {"x": "y"}},
+                    "events": {"suppress": {"any-kind": {"window": 1}}}}) == []
+    assert unknown({"metrics": [{"name": "m", "from": "status.phase", "agg": "count", "where": {"a": 1}, "colour": 2}]}) \
+        == ["metrics.colour"]
+
+
+def test_a_units_card_is_words_naming_its_fields():
+    """`display.general`, `fields`, `options`, `form` — the card's words, the product's: passed to the page, checked at load
+    to name fields of the row (and `id`), values of a field's `enum`, blocks `{title, state?, placement?, fields, note?}`."""
+    spec = SubsystemSpec.from_dict(_testsub2())
+    assert spec.display["form"][0]["fields"] == ["name", "mode"] and spec.display["options"]["mode"]["loud"] == "громко"
+    d2 = _testsub2()
+    for bad, words in (({"fields": {"nothing": "x"}}, "display.fields is"), ({"options": {"name": {"a": "b"}}}, "display.options is"),
+                       ({"options": {"mode": {"quiet": "тихо"}}}, "display.options is"),
+                       ({"form": [{"title": "t", "fields": ["nothing"]}]}, "display.form is"),
+                       ({"form": [{"title": "t", "fields": ["name"], "tab": 1}]}, "display.form is"),
+                       ({"general": 1}, "display.general is a word")):
+        _refused(lambda bad=bad: SubsystemSpec.from_dict({**d2, "display": {**d2["display"], **bad}}), words)
 
 
 def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
@@ -178,4 +220,10 @@ def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
 def _testsub() -> dict:
     import yaml
     with open(os.path.join(TESTDATA, "testsub.subsystem.yaml")) as f:
+        return yaml.safe_load(f)
+
+
+def _testsub2() -> dict:
+    import yaml
+    with open(os.path.join(TESTDATA, "testsub2.subsystem.yaml")) as f:
         return yaml.safe_load(f)

@@ -197,7 +197,8 @@ def test_a_credential_in_an_addresss_parameters_is_refused_and_a_stored_one_is_s
         one = urllib.request.urlopen(upd).read().decode()            # the reply to an edit, kept for a retry
     finally:
         srv.shutdown()
-    assert "Hunter2" not in page and "Hunter2" not in one and "videostream.cgi?usr=***&pwd=***" in page
+    # the password hidden, the login said: it identifies (`secret_in.login`, the final form)
+    assert "Hunter2" not in page and "Hunter2" not in one and "videostream.cgi?usr=admin&pwd=***" in page
     ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
     ctl.publish_snapshot()
     assert "Hunter2" not in json.dumps(published_snapshot(box.objects, "vms"))
@@ -557,7 +558,7 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
     name is read as words now (`secrets.is_credential_param`). Both ways, counted: every form of `LOGIN_FORMS`,
     `NESTED_FORMS` and `HOST_IN_PATH_FORMS` refused, every form of `FALSE_FRIENDS` and `PLAIN_FORMS` taken and said as
     typed — at the rule and at a camera's create."""
-    from w2cplatform.secrets import address_refusal, hide_in_url, is_credential_param
+    from w2cplatform.secrets import address_refusal, hide_in_url, is_credential_param, is_login_param
     bad = LOGIN_FORMS + NESTED_FORMS + HOST_IN_PATH_FORMS
     good = FALSE_FRIENDS + PLAIN_FORMS
     refused = [s for s in bad if address_refusal(s)]
@@ -571,10 +572,12 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
         assert made["source"] == s
         con.delete(made["id"])
     # the names, word by word: a credential's — and a word that only begins a name, or `pass` glued at its end, is not
-    for n in ("pwd", "PassWord", "pass_word", "user_id", "access_token", "authToken", "X-Amz-Signature",
+    for n in ("pwd", "PassWord", "pass_word", "access_token", "authToken", "X-Amz-Signature",
               "AWSAccessKeyId", "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
-              "Authorization", "session_id", "passcode"):
-        assert is_credential_param(n), n
+              "Authorization", "session_id", "passcode", "loginpas"):
+        assert is_credential_param(n) and not is_login_param(n), n
+    for n in ("user_id", "usr", "user", "User-Name", "loginuse", "login", "account"):     # a login's: refused, said
+        assert is_login_param(n) and not is_credential_param(n), n
     for n in ("token_bucket", "passage", "authmode", "auth_mode", "bypass", "compass", "passthrough", "monkey", "hotkey",
               "keyframe", "key_frame_interval", "apikey_required", "sid_hint", "usrname_hint", "user_stream", "authority",
               "sessiontimeout", "accountless", "channel", "u"):
@@ -792,7 +795,8 @@ def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_fr
     """The boundary's step 4: the name lists, the XMeye chain, a password's name segment, DriverPack's host in the path
     and go2rtc's `?src=` were `secrets.py`'s own; they are the `secret_in` of `source` in `vms.subsystem.yaml` now, with
     `schemes` and `credentials`. Without those rules the platform refuses only an `@` and a port that is no number — the
-    forms below stand; with them every one is refused, hidden, and the refusal names `cred_username`/`cred_secret`."""
+    forms below stand; with them every one is refused, its password hidden, and the refusal names `cred_secret` — and
+    `cred_username` beside it where a login was found too."""
     from w2cplatform.secrets import NO_RULES, address_refusal, hide_in_url
     source = SPEC.fields["source"]
     assert source.credentials == {"login": "cred_username", "secret": "cred_secret"} and "driverpack" in source.schemes
@@ -808,7 +812,8 @@ def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_fr
             SPEC.refuse({"source": src})
             raise AssertionError(f"taken: {src}")
         except Refused as e:
-            assert "cred_username" in str(e) and "cred_secret" in str(e) and not _leaks(str(e)), str(e)
+            assert "cred_secret" in str(e) and not _leaks(str(e)), str(e)
+            assert ("cred_username" in str(e)) == ("login" in str(e).split(".")[0]), str(e)
     try:
         SPEC.refuse({"source": "gopher://10.0.0.5/live"})
         raise AssertionError("a scheme no camera is reached by was taken")

@@ -1914,8 +1914,8 @@ class SpecConsole:
             if field != "slots_garbled":                                  # above, under the name it always had
                 lines += [f"# TYPE {p}_worker_{field} counter",
                           *[f'{p}_worker_{field}{{worker="{label(w)}"}} {n(w, field, int)}' for w in hbs]]
-        # …and this console's own: the rows of this subsystem IT could not read (the requests it files, the keeps it
-        # shows, the fields of heartbeats read as not said just above), by table.
+        # …and this console's own: the rows of this subsystem IT could not read (the request rows it reads and reaps, the
+        # rows of the tables it serves, the fields of heartbeats read as not said just above), by table.
         lines += [f"# TYPE {p}_console_rows_garbled counter",
                   *[f'{p}_console_rows_garbled{{table="{label(name)}"}} {tables[name].get(p, 0)}' for name in sorted(tables)]]
         # The sweep's backlog, for subsystems that have blobs to collect. Two cheap reads — a prefix
