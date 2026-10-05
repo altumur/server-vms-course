@@ -33,16 +33,6 @@ course-only rec.subsystem.yaml placement.affinity.kind
 course-only rec.subsystem.yaml placement.affinity.server_field
 course-only rec.subsystem.yaml placement.affinity.strict
 course-only rec.subsystem.yaml placement.affinity.table
-course-only rec.subsystem.yaml requests
-course-only rec.subsystem.yaml requests.elsewhere
-course-only rec.subsystem.yaml requests.free
-course-only rec.subsystem.yaml requests.journal
-course-only rec.subsystem.yaml requests.key
-course-only rec.subsystem.yaml requests.per_person
-course-only rec.subsystem.yaml requests.schema
-course-only rec.subsystem.yaml requests.settle
-course-only rec.subsystem.yaml requests.stamp
-course-only rec.subsystem.yaml requests.ttl
 course-only rec.subsystem.yaml rights.routes
 course-only rec.subsystem.yaml rights.routes.edit
 course-only rec.subsystem.yaml servers
@@ -124,6 +114,8 @@ course-only rec.subsystem.yaml unit.fields.home.must_match
 course-only rec.subsystem.yaml unit.fields.home.ref
 course-only rec.subsystem.yaml worker.reads
 course-only vms.subsystem.yaml metrics
+course-only vms.subsystem.yaml objects   # the product's loader refuses `commands/*`: the platform's family for a spec with `requests:` (the course derives it too); the course drops it
+course-only vms.subsystem.yaml objects.rows   # the same
 course-only vms.subsystem.yaml placement.group_by
 course-only vms.subsystem.yaml placement.group_by.cut_at
 course-only vms.subsystem.yaml placement.group_by.field
@@ -131,11 +123,6 @@ course-only vms.subsystem.yaml placement.near.enabled
 course-only vms.subsystem.yaml placement.near.kind
 course-only vms.subsystem.yaml placement.near.prefer
 course-only vms.subsystem.yaml placement.offers
-course-only vms.subsystem.yaml requests
-course-only vms.subsystem.yaml requests.most_valid
-course-only vms.subsystem.yaml requests.schema
-course-only vms.subsystem.yaml requests.stamp
-course-only vms.subsystem.yaml requests.valid_for
 course-only vms.subsystem.yaml rights
 course-only vms.subsystem.yaml rights.reach
 course-only vms.subsystem.yaml rights.reach.cluster
