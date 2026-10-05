@@ -229,7 +229,7 @@ def test_an_answered_request_is_not_fetched_again_and_is_forgotten_with_its_row(
     assert r.requests(now=NOW) and r.fetched == ["1-x"]
     asked = len(act.fetched)
     assert r.requests(now=NOW) == [] and len(act.fetched) == asked          # the row stands: answered, not fetched again
-    assert r.heartbeat_extra()["fetched"] == "1-x"
+    assert r.requests_fields()["fetched"] == "1-x"                         # the base says it (`Worker.requests_fields`)
     con_rec.vars.delete(key)                                                # the console reaped it
     r.requests(now=NOW)
     assert r.fetched == []

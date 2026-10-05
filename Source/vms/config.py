@@ -55,6 +55,7 @@ import os
 import re
 
 from w2cplatform.doors import numeric
+from w2cplatform.events import COMMAND, COMMAND_FAILED
 from w2cplatform.spec import SubsystemSpec
 
 SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vms.subsystem.yaml"))
@@ -225,9 +226,10 @@ def device_identities(vars_) -> dict[str, str]:
 # controller is rebooting.
 DEVICES = "devices"
 
-# What a holder writes about ANY unit it holds, whatever the device: it went quiet, a command was done to it,
-# a command was refused (`VmsWorker.pump_once`, `requests`). Every unit raises these; the device adds its own.
-HOLDER_EVENTS = ("command", "command.failed", "silent")
+# What a holder writes about ANY unit it holds, whatever the device: it went quiet (`VmsWorker.pump_once`), a command
+# was done to it, a command was refused — the platform's two kinds of its requests family, written by the base worker
+# (`events.COMMAND`). Every unit raises these; the device adds its own.
+HOLDER_EVENTS = (COMMAND, COMMAND_FAILED, "silent")
 
 
 # The holder's token, from the spec (`worker: {writes: [devices]}`): the platform's grant for any worker, plus the one
