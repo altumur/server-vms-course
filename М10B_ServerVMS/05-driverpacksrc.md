@@ -56,10 +56,19 @@ so the worker and the tests can resolve and refuse without a media stack."""
 def resolve(uri: str, media_dir: str | None = None) -> str:
     """Anything but driverpack://file/<name> is the real DriverPack's."""
     media_dir = media_dir or os.environ.get("MEDIA_DIR", "/data/media")
-    u = urlsplit(uri)
+    from w2cplatform.secrets import NOT_AN_ADDRESS, hide_in_url    # pure too: `re` and `urllib`
+    try:
+        u = urlsplit(uri)
+    except ValueError:                               # its words quote the host, a login and all (the twelfth review)
+        raise ValueError(f"not an address: {NOT_AN_ADDRESS}") from None
+    shown = re.sub(r"(?<![^/@])[^/@]*@", "…@", str(uri))
+    …
+    shown = hide_in_url(shown)
     if u.scheme != "driverpack":
-        raise ValueError(f"not a driverpack URI: {uri}")
+        raise ValueError(f"not a driverpack URI: {shown}")
 ```
+
+Прежде отказов — **как отказ назовёт адрес**. Сообщение уйдёт в лог актуатора (шаг 3), а в адресе камеры бывает логин и пароль. Поэтому в словах ошибки стоит не `uri`, а `shown`: то, что перед `@`, заменено на `…`, параметры после `?` или `;` отрезаны, остальное прошло через платформенное `hide_in_url` (как оно прячет пару в пути — М10A, урок 18). Адрес, который `urlsplit` не читает вовсе, отказывается словами `NOT_AN_ADDRESS`: слова самого `urlsplit` цитируют «порт», а пароль с неэкранированным `/` читается как порт. Импорт из `w2cplatform.secrets` чистоты не нарушает: там только `re` и `urllib`. Откуда в адресе учётные данные и почему их там быть не должно — [урок 19](19-the-cameras-credential.md).
 
 Первый отказ: схема не `driverpack`. И сюда попадает то, что кажется очевидно правильным, — `rtsp://10.0.0.7/stream`.
 
@@ -67,10 +76,10 @@ def resolve(uri: str, media_dir: str | None = None) -> str:
 
 ```python
     if u.netloc != "file":
-        raise ValueError(f"driverpack://{u.netloc}/… names a vendor driver; this course ships only driverpack://file/<name>")
+        raise ValueError(f"{hide_in_url('driverpack://' + u.netloc.rsplit('@', 1)[-1])}/… names a vendor driver; this course ships only driverpack://file/<name>")
 ```
 
-Второй отказ, и он самый интересный в модуле. `driverpack://hikvision/10.0.0.7` — **правильный URI**, который курс не умеет открыть. Сообщение это и говорит: «называет вендорский драйвер; курс поставляет только `driverpack://file/<имя>`».
+Второй отказ, и он самый интересный в модуле. `driverpack://hikvision/10.0.0.7` — **правильный URI**, который курс не умеет открыть. Сообщение это и говорит: «называет вендорский драйвер; курс поставляет только `driverpack://file/<имя>`». Драйвер в словах назван без логина: от `netloc` остаётся то, что после последнего `@`.
 
 Примечание к файлу договаривает мысль:
 
@@ -83,7 +92,7 @@ def resolve(uri: str, media_dir: str | None = None) -> str:
 ```python
     name = u.path.lstrip("/")
     if not name or "/" in name or ".." in name:
-        raise ValueError(f"bad media name in {uri}")
+        raise ValueError(f"bad media name in {shown}")
     return os.path.join(media_dir, name)
 ```
 
@@ -98,14 +107,17 @@ def resolve(uri: str, media_dir: str | None = None) -> str:
 ```python
 class DriverPackSrc(Gst.Bin):
     __gstmetadata__ = ("DriverPack source", "Source/Video", "Plays a media file as if it were a camera", "edge-vms-course")
-    __gproperties__ = {"uri": (str, "uri", "driverpack://file/<name>", "", GObject.ParamFlags.READWRITE)}
+    __gproperties__ = {
+        "uri": (str, "uri", "driverpack://file/<name>", "", GObject.ParamFlags.READWRITE),
+        …
+    }
 ```
 
 Элемент GStreamer на Python — это класс, унаследованный от `Gst.Bin`, с двумя магическими атрибутами.
 
 `__gstmetadata__` — четвёрка: имя, класс (`Source/Video` — по нему элемент находят в каталоге), описание, автор. Это то, что покажет `gst-inspect-1.0 driverpacksrc`.
 
-`__gproperties__` — свойства. Одно: строка `uri`, чтение и запись. Всё, что снаружи можно настроить.
+`__gproperties__` — свойства. Этому уроку нужно одно: строка `uri`, чтение и запись. Ещё два, `user` и `password`, в файле стоят рядом: их объявляет [урок 19](19-the-cameras-credential.md), и файл ими не пользуется — у файла нет логина.
 
 **Бин, а не элемент.** Разница существенна: бин — это контейнер, внутри которого живут другие элементы, а снаружи он выглядит одним. Наш источник внутри — четыре элемента, снаружи — один с одним выходом. Писать источник с нуля (выделять буферы, реализовывать `create`) было бы в разы длиннее и ничем не лучше: всё, что нужно, уже есть в готовых элементах.
 
@@ -113,6 +125,7 @@ class DriverPackSrc(Gst.Bin):
     def __init__(self):
         super().__init__()
         self.uri = ""
+        self.user = self.password = ""
         self.src = Gst.ElementFactory.make("filesrc", "file")
         self.demux = Gst.ElementFactory.make("qtdemux", "demux")
         self.parse = Gst.ElementFactory.make("h264parse", "parse")
@@ -159,13 +172,16 @@ class DriverPackSrc(Gst.Bin):
 
 ```python
     def do_set_property(self, prop, value):
+        if prop.name in ("user", "password"):
+            setattr(self, prop.name, value)
+            return
         self.uri = value
         self.src.set_property("location", resolve(value))
 ```
 
-Две строки, и в них — способ, которым отказ из шага 1 доходит до системы.
+Первая ветка — учётные данные из урока 19: их только запоминают. Для `uri` — две строки, и в них способ, которым отказ из шага 1 доходит до системы.
 
-`resolve(value)` может выбросить `ValueError`. Она выбрасывает его **из установки свойства**, то есть в момент, когда актуатор собирает конвейер строкой `Gst.parse_launch(...)`. Разбор строки падает, актуатор ловит, логирует и возвращает `False`, цикл сверки засчитывает неудачу и уходит в откат (урок 2).
+`resolve(value)` может выбросить `ValueError`. Она выбрасывает его **из установки свойства**, то есть в момент, когда актуатор, собрав конвейер строкой `Gst.parse_launch(...)`, ставит источнику `uri` (URI в строку запуска не входит — почему, говорит урок 19). Разбор и установка свойств стоят в одном `try`: актуатор ловит, логирует и возвращает `False`, цикл сверки засчитывает неудачу и уходит в откат (урок 2).
 
 Проследите путь целиком: оператор ввёл `driverpack://hikvision/10.0.0.7` → контроллер сохранил и разместил → воркер взял эпоху и аренду → актуатор собрал конвейер → свойство `uri` отказало → `False` → неудача → откат → через три неудачи камера на экране `stalled`.
 
