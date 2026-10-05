@@ -546,20 +546,36 @@ def _slot(name, slot) -> tuple[str, str]:
     return prefix, env
 
 
-# `objects: {rows: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a segment `*`.
-def _object_rows(name, objects) -> tuple:
+# `objects: {rows: […], door: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a
+# segment `*`. `rows`: the objects that are rows of the store, never files; `door`: the files of its that a resource's
+# door gives the other servers (`resource.door_readable`; the product's key) — any other file of its is read on the server
+# that wrote it alone. The platform's own families (`resource.PLATFORM_DOOR`: heartbeats, contenders, used, snapshot,
+# controller, blobs) are not a spec's to name, nor every family at once.
+PLATFORM_FAMILIES = ("heartbeats", "contenders", "used", "snapshot", "controller", "blobs")
+
+
+def _object_patterns(name, objects, family: str) -> tuple:
     if objects is None:
         return ()
-    if not isinstance(objects, dict) or set(objects) - {"rows"} or not isinstance(objects.get("rows", []), list):
-        raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …]}}, not {objects!r}")
+    if not isinstance(objects, dict) or not objects or set(objects) - {"rows", "door"} \
+            or not all(isinstance(v, list) for v in objects.values()):
+        raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …], door: [<key pattern>, …]}}, not "
+                         f"{objects!r}")
     out = []
-    for p in objects.get("rows") or []:
+    for p in objects.get(family) or []:
         segs = str(p).split("/")
         if not p or any(not x or x == ".." or ("*" in x and x != "*") for x in segs):
-            raise ValueError(f"spec {name}: objects.rows takes key patterns under the subsystem's name — names "
+            raise ValueError(f"spec {name}: objects.{family} takes key patterns under the subsystem's name — names "
                              f"separated by '/', a whole segment '*' — not {p!r}")
+        if family == "door" and segs[0] in ("*", *PLATFORM_FAMILIES):
+            raise ValueError(f"spec {name}: objects.door: {p!r} names a family of the platform's own "
+                             f"({', '.join(PLATFORM_FAMILIES)}) or every one — a door gives those out unasked")
         out.append(str(p))
     return tuple(out)
+
+
+def _object_rows(name, objects) -> tuple:
+    return _object_patterns(name, objects, "rows")
 
 
 # `heartbeat: {strings: [<field>]}` — the fields of this subsystem's heartbeats that are strings by contract and that
@@ -988,6 +1004,8 @@ class SubsystemSpec:
     # it acts) or read where the place it names is gone. The cluster's object store asks the loaded specs for them
     # (`catalog.object_rows`; it was a constant of the platform's, naming one subsystem's family).
     object_rows: tuple = ()
+    # `objects: {door: [...]}` — its files a resource's door gives the other servers (`catalog.door_objects`)
+    object_door: tuple = ()
     # `heartbeat: {strings: [...]}` (`_heartbeat_strings`): read where a heartbeat is (`catalog.heartbeat_strings`)
     heartbeat_strings: tuple = ()
     # `secrets: {readers, reads}` (`_secrets`): held to the rights the specs make (`cluster.rights.check_secrets`)
@@ -1085,6 +1103,7 @@ class SubsystemSpec:
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}),
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
+                   object_door=_object_patterns(d.get("name"), d.get("objects"), "door"),
                    heartbeat_strings=_heartbeat_strings(d.get("name"), d.get("heartbeat")),
                    secret_readers=_secrets(d.get("name"), d.get("secrets"))[0],
                    secret_reads=_secrets(d.get("name"), d.get("secrets"))[1],

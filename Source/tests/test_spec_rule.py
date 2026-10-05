@@ -34,7 +34,7 @@ TABLE_FIELD = tuple(k for k in FIELD if k not in ("inherit", "merge", "fixed", "
 # exactly the keys the loader takes (`speckeys.KEYS`) — a key added to the code and not here fails, and the other way.
 IMPLEMENTED = {
     "name", "about.sub", "about.field", "slot.prefix", "slot.name_env", "worker.writes", "worker.reads", "worker.requests",
-    "objects.rows", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "snapshot", "door.routes",
+    "objects.rows", "objects.door", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "snapshot", "door.routes",
     "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *{f"unit.fields.*.{k}" for k in FIELD},
     "unit.derived.row", "unit.derived.items", "unit.derived.on_delete",

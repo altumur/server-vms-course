@@ -42,7 +42,7 @@ TABLE_FIELD_KEYS = tuple(k for k in FIELD_KEYS if k not in ("inherit", "merge", 
 
 KEYS = {
     "name", "about.sub", "about.field", "slot.prefix", "slot.name_env", "worker.writes", "worker.reads",
-    "worker.requests", "objects.rows", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "snapshot",
+    "worker.requests", "objects.rows", "objects.door", "heartbeat.strings", "secrets.readers.*", "secrets.reads", "snapshot",
     "door.routes", "console.running", "events.older_epochs", "events.suppress.*.window", "events.suppress.*.by",
     "unit.rows", "unit.id", *(f"unit.fields.*.{k}" for k in FIELD_KEYS),
     "unit.derived.row", "unit.derived.items", "unit.derived.on_delete",

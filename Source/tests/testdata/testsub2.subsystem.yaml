@@ -8,7 +8,9 @@
 name: testsub2
 slot: {prefix: t, name_env: TALLY_NAME}
 worker: {writes: [shelves], reads: [testsub/counters], requests: [testsub]}
-objects: {rows: [marks/*]}
+# its marks are rows of the store; the tickets a holder leaves for the holder of the counter, on another server, are
+# files its resource's door gives out (`resource.door_readable`)
+objects: {rows: [marks/*], door: [tickets/*]}
 # its heartbeat's `jam` is a word a metric compares (`metrics: jam`): a number there is a garbled heartbeat
 heartbeat: {strings: [jam]}
 # the seed of its door's tokens is read by its console alone; its worker reads testsub's counters (`worker.reads`)

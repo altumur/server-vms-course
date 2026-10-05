@@ -3,6 +3,5 @@
 auto:console.running
 live:console.running
 rec:console.running
-rec:objects.door
 vms:console.running
 vms:tables
