@@ -32,8 +32,10 @@ unit:
     keep_days:   {inherit: 7, type: int, merge: override}
     flags:       {type: list, inherit: [], merge: union}
     state:       {type: string, default: open}
+    alarm_days:  {type: int, inherit: 1095}                    # the days of its alarms' tree (`<sub>.alarms/<id>`)
   derived:
     - {row: "retention/{id}", items: {days: keep_days}, on_delete: {days: "0"}}
+    - {row: "alarms_retention/{id}", items: {days: alarm_days}}   # no on_delete: its alarms outlive the tally
 tables:
   shelves:
     key: name
@@ -69,7 +71,7 @@ placement:
   places:      {table: shelves, where: {enabled: true}, server_field: server}
   offers:      true
   home:        shelf
-  retire_when: {field: state, in: [done]}
+  retire_when: {field: state, in: [done, failed]}   # two ends, and the placement's reason says which
   rebalance:   {dead_band: 0.2}
   affinity:    {field: shelf, table: shelves, server_field: server, strict: {kind: [reserve], enabled: true}}
 holds: {table: marks, unit: of, since: from, until: to, longest: 86400}

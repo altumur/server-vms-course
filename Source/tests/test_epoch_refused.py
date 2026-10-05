@@ -88,9 +88,9 @@ def test_the_evaluator_refuses_one_scenario_and_decides_the_next():
 
 
 def test_the_gateway_refuses_one_camera_and_subscribes_the_next():
-    from tests.test_pass_failures import _workers
+    from tests.vmsconftest import four_workers
     box = Box()
-    gw = _workers(box)[3]
+    gw = four_workers(box)[3]
     gw.rtp_source = lambda cam: ("srv-1", f"rtsp://srv-1/{cam}", 1)
     box.vars.put(LIVE_SPEC.sub.assignment("g-1"), {"units": "7,8", "rev": 1})
     box.vars.put("live/epoch/7", GARBLED)

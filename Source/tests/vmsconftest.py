@@ -262,3 +262,23 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
     announce()
     srv.announce, srv.url, srv.page = announce, url, url
     return srv
+
+
+def four_workers(box):
+    """The four VMS workers that renewed their leases at the end of the pass, before the platform's loop did it for
+    them — det `d-1`, detjob `j-1`, survey `s-1`, live `g-1` — on the box, each with its own role's rights, a GPU label."""
+    from w2cplatform.spec import SpecController
+    from vms.config import DETJOB_SPEC, LIVE_SPEC, SURVEY_SPEC
+    from vms.detjobworker import DetJobWorker
+    from vms.detworker import DetWorker
+    from vms.liveworker import LiveWorker
+    from vms.surveyworker import SurveyWorker
+    common = dict(clock=box.clock, wall=box.wall, server="srv-1", env={"LABELS": "gpu"})
+    live_vars = box.vars.as_writer("liveworker", ["live/epoch/*", "live/slots/*", "live/streams/*"])
+    return [DetWorker("d-1", box.vars.as_writer("detworker", ["det/epoch/*", "det/slots/*"]), box.objects,
+                      resource_root=box.archive, **common),
+            DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
+                         resource_root=box.archive, **common),
+            SurveyWorker("s-1", box.vars.as_writer("surveyworker", SURVEY_SPEC.sub.acl_worker()), box.objects,
+                         resource_root=box.archive, **common),
+            LiveWorker("g-1", live_vars, box.objects, ctl=SpecController(LIVE_SPEC, live_vars, box.objects, wall=box.wall), **common)]

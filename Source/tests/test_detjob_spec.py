@@ -72,3 +72,13 @@ def test_the_mask_is_a_digest_here_too():
 def test_a_new_job_starts_queued_and_on_a_gpu():
     r = DETJOB_SPEC.row({"id": "7-lpr-1", "name": "7-lpr-1", "cam": "7", "rec": "7", "kind": "lpr", "from": "100", "to": "200"})
     assert r["state"] == "queued" and r["labels"] == ["gpu"] and r["from"] == 100.0 and r["to"] == 200.0
+
+
+# Moved from `test_near_by.py` (the boundary's step 5): which of the VMS's subsystems has a home is the VMS's spec.
+def test_neither_detectors_nor_scans_have_a_home():
+    """A recording has one because an operator can answer "which disk"; these have
+    nobody to answer "which server", and a preference nobody sets is a field nobody
+    maintains."""
+    assert REC_SPEC.home == "home"
+    assert DET_SPEC.home == "" and DETJOB_SPEC.home == ""
+    assert "home" not in DETJOB_SPEC.fields and "home" not in DET_SPEC.fields

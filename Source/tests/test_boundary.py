@@ -66,7 +66,7 @@ PLATFORM_TESTS = (
     "tests/test_store_durable.py", "tests/test_storemachine.py", "tests/test_variables_contract.py",
     # a mechanism of the platform as the subject, a subsystem brought up to drive it
     "tests/test_lesson1_platform.py", "tests/test_alarm_tree.py", "tests/test_blobs.py", "tests/test_doors.py",
-    "tests/test_doors_shut.py", "tests/test_epoch_meaning.py", "tests/test_event_line.py", "tests/test_journal.py",
+    "tests/test_epoch_meaning.py", "tests/test_event_line.py", "tests/test_journal.py",
     "tests/test_lease_step.py", "tests/test_limits.py", "tests/test_names.py", "tests/test_near_by.py",
     "tests/test_pass_failures.py", "tests/test_placement_decides.py", "tests/test_retire.py", "tests/test_sealing.py",
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",

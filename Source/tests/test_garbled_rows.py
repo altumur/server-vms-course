@@ -341,9 +341,9 @@ def test_the_detector_the_scan_the_survey_the_evaluator_and_the_gateway_each_pas
     assert a.status_by_unit["a-door"]["phase"] == "failed" and "row does not parse" in a.status_by_unit["a-door"]["why"]
 
     # the gateway: an idle fan-out whose row stopped parsing is kept — nobody can say its grace has run out
-    from tests.test_pass_failures import _workers
+    from tests.vmsconftest import four_workers
     box = Box()
-    gw = _workers(box)[3]
+    gw = four_workers(box)[3]
     gw.rtp_source = lambda cam: ("srv-1", f"rtsp://srv-1/{cam}", 1)
     for cam in ("7", "8"):
         gw.ctl.create({"cam": cam})

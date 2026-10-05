@@ -365,3 +365,32 @@ def test_a_request_to_record_is_kept_when_the_recording_could_not_be_made_this_p
     assert record_on_request(rec, now + 4) == 0
     assert box.vars.get("rec/requests/f2-0")[0] is None                # refused: an answer, and it goes
 
+
+# Moved from `test_retire.py` (the boundary's step 5): the platform's half of it — the row keeps a unit finished — is
+# there on testsub2; this is the whole cycle through the VMS's reaper.
+def test_the_whole_cycle_does_not_start_the_scan_over():
+    """The failure this design exists to avoid, walked end to end. The worker says
+    done; the reaper writes the row; the controller takes the assignment back; the
+    worker drops the job and its next heartbeat does not mention it — and the
+    evidence of `done` is gone from the heartbeats. The ROW is what keeps it
+    finished."""
+    box = Box(); con, adm = _ctls(box)
+    _worker(box, "j-1", "srv-1")
+    a = _job(con, "a"); adm.ensure_placed()
+    assert adm.placement(a).worker == "j-1"
+
+    _worker(box, "j-1", "srv-1", {"id": a, "phase": "done", "covered": 600.0})     # the worker finished it
+    assert reap(con)["done"] == 1
+    adm.ensure_placed()
+    assert adm.placement(a) is None                                                # the assignment is back
+
+    _worker(box, "j-1", "srv-1")                                                   # the worker dropped it: silence
+    assert [st for st in adm.read_model() if st["id"] == a] == []                   # no heartbeat says done any more
+    for _ in range(3):
+        adm.ensure_placed()
+    assert adm.placement(a) is None                                                # and it is still not running
+
+    con.update(a, {"state": "queued"})                                             # the operator asks again
+    adm.ensure_placed()
+    assert adm.placement(a) is not None                                            # the row decides, and only the row
+
