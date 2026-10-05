@@ -22,7 +22,7 @@ def _audit(box, role="console"):
     return [{k: v for k, v in r.items() if k not in ("id", "t", "server", "bucket", "epoch", "epoch_is", "fenced", "class", "subsystem", "unit")} for r in rows]
 
 
-def test_who_deleted_it_who_shelved_it_and_who_took_the_shelf_away():
+def test_who_deleted_it_who_held_it_and_who_took_the_shelf_away():
     box = Box()
     ctl = console_ctl(box)
     mounted = console_ctl(box, testsub2())
@@ -39,9 +39,8 @@ def test_who_deleted_it_who_shelved_it_and_who_took_the_shelf_away():
 
     try:
         t = box.wall()
-        # (a table named `marks` is not written through the console: `POST /marks` is the operator's marks route)
-        warm = call("POST", "/testsub2/shelves", {"name": "warm", "server": "srv-a"})["row"]["name"]
-        call("DELETE", f"/testsub2/shelves/{warm}", user="boris")
+        notch = call("POST", "/testsub2/notches", {"of": "t1", "from": t - 900, "to": t - 300})["row"]["name"]
+        call("DELETE", f"/testsub2/notches/{notch}", user="boris")
         shelf = {"name": "cold", "zone": "a", "server": "srv-a"}
         call("POST", "/testsub2/shelves", shelf)
         call("POST", "/testsub2/shelves", {**shelf, "zone": "b"}, user="boris")            # "move this shelf"
@@ -51,9 +50,10 @@ def test_who_deleted_it_who_shelved_it_and_who_took_the_shelf_away():
     finally:
         srv.shutdown()
     said = _audit(box)
-    put, gone = (mounted.spec.table_specs["shelves"].journal[k] for k in ("written", "deleted"))   # the spec's words
+    cut, cleared = (mounted.spec.table_specs["notches"].journal[k] for k in ("written", "deleted"))   # the spec's words
+    put, gone = (mounted.spec.table_specs["shelves"].journal[k] for k in ("written", "deleted"))
     assert [(e["kind"], e["user"]) for e in said] == [
-        (put, "anna"), (gone, "boris"), (put, "anna"), (put, "boris"), (gone, "anna"),
+        (cut, "anna"), (cleared, "boris"), (put, "anna"), (put, "boris"), (gone, "anna"),
         ("unit.deleted", "boris"), ("unit.deleted", "anna")]
     # what a write changed, and from what — the spec's table, written by the platform since the boundary's step 6
     assert said[3]["changed"] == "zone" and said[3]["was"] == {"zone": "a"}

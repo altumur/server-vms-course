@@ -117,7 +117,7 @@ def test_a_places_holder_is_found_and_its_door_opens_for_the_unit_asked_and_that
         assert st == 200 and got["worker"] == "t-1" and got["door"] is None, got        # a token is one unit's
         assert _get(base, "/testsub2/where/shelves/s1?unit=testsub/c1")[0] == 400       # another subsystem's unit
         assert _get(base, "/testsub2/where/shelves/s1?unit=t1")[0] == 400               # a bare id names nobody's unit
-        assert _get(base, "/testsub2/where/marks/x")[0] == 404                          # not the table of places
+        assert _get(base, "/testsub2/where/notches/x")[0] == 404                          # not the table of places
         assert _get(base, "/testsub2/where/shelves/s1/x")[0] == 404
         st, got, _ = _get(base, "/testsub2/where/shelves/s3?unit=testsub2/t1")
         assert st == 404 and got["error"] == "no such place", got                       # not enabled: no place

@@ -727,7 +727,7 @@ def _piece_two_specs():
             "adds": {"done": 3}, "queue": {"a": 4, "b": 1}, "wait": {"buckets": [1, 2], "count": 2, "sum": 3.0}}).to_bytes())
         with urllib.request.urlopen(base + "/testsub2/metrics", timeout=10) as r:
             text = r.read().decode()
-        for name in ("tallies_running", "shelves_open", "marks_unshelved", "phases", "depth", "jam", "away_seconds",
+        for name in ("tallies_running", "shelves_open", "notches_unshelved", "phases", "depth", "jam", "away_seconds",
                      "belt", "adds_total", "queue_max", "wait_seconds_bucket"):
             assert f"testsub2_{name}" in text, (name, text[-2000:])
         assert 'testsub2_workers_needed{labels=""}' in text                                # `placement.places`

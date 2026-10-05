@@ -80,7 +80,7 @@ def test_deleting_a_unit_ends_its_observations_and_not_the_record_of_what_happen
 
 
 def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
-    """A hold (testsub2's `holds:`, a row of its `marks` naming a counter) keeps the counter's alarms past their days,
+    """A hold (testsub2's `holds:`, a row of its `notches` naming a counter) keeps the counter's alarms past their days,
     as it keeps its observations."""
     from w2cplatform.resource import platform_resource
     from w2cplatform.tables import write_row
@@ -90,7 +90,7 @@ def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
     EventLog(box.tree, "testsub", "c8", 1).append(t + 10, "lane.jam", ALARM, lane="1")
     for unit in ("c7", "c8"):
         box.vars.put(f"testsub/alarms_retention/{unit}", {"days": 1})
-    write_row(testsub2(), "marks", box.vars, {"of": "c7", "from": t, "to": t + 60}, "anna", box.wall())
+    write_row(testsub2(), "notches", box.vars, {"of": "c7", "from": t, "to": t + 60}, "anna", box.wall())
     res = platform_resource(box.tree, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     with in_catalogue(testsub2()):                                     # the resource reads the holds testsub2 declares
         assert res.retain() == 1

@@ -60,12 +60,13 @@ tables:
       then: {properties: {admits: {const: false}}, required: [admits]}
     stamp: [by, at]
     journal: {written: shelf.declared, deleted: shelf.withdrawn}
-  marks:
+  notches:                            # not `marks`: `/marks` is the console's own route (spec.CONSOLE_ROUTES)
     key: "{of}-{from:int}-{to:int}"
     fields:
       of:   {type: string, required: true}
       from: {type: float, required: true}
       to:   {type: float, required: true}
+    journal: {written: notch.cut, deleted: notch.cleared}
 placement:
   capacity:    {from: capacity, default: 8}
   headroom:    {from: headroom}
@@ -83,7 +84,7 @@ placement:
   retire_when: {field: state, in: [done, failed]}   # two ends, and the placement's reason says which
   rebalance:   {dead_band: 0.2}
   affinity:    {field: shelf, table: shelves, server_field: server, strict: {kind: [reserve], enabled: true}}
-holds: {table: marks, unit: of, since: from, until: to, longest: 86400}
+holds: {table: notches, unit: of, since: from, until: to, longest: 86400}
 requests:
   free: true
   schema:
@@ -102,8 +103,8 @@ requests:
   elsewhere: [recount]
 door: {routes: [read, play]}
 rights:
-  unit_of: {marks: of}
-  routes: {view: [marks], edit: [shelves]}
+  unit_of: {notches: of}
+  routes: {view: [notches], edit: [shelves]}
   cluster_rows: true
   reach:
     group: [feed]
@@ -122,7 +123,7 @@ domain: {reports: [counts/], witness: seen}
 metrics:
   - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
   - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}
-  - {name: marks_unshelved, count: table marks, unless: {table: shelves, where: {kind: reserve}}}
+  - {name: notches_unshelved, count: table notches, unless: {table: shelves, where: {kind: reserve}}}
   - {name: phases, from: status.phase, agg: count, when: phase}
   - {name: depth, from: status.depth, agg: value, type: gauge, default: 0}
   - {name: jam, from: heartbeat.jam, agg: flag, equals: [stuck, "yes"]}

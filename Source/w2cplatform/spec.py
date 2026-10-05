@@ -164,6 +164,12 @@ REQUEST_KEYS = ("free", "schema", "valid_for", "most_valid", "per_person", "sett
                 "elsewhere")
 # What a spec's `display:` says: words for a page (`SubsystemSpec._page_words`, `_card_words`).
 DISPLAY_KEYS = ("unit", "units", "field_help", "kinds", "actions", "tree", "keys", "general", "fields", "options", "form")
+# THE CONSOLE'S OWN ROUTES: the first segment of every path `SpecConsole.dispatch` and `Mount` answer themselves, before a
+# spec's rows and tables are looked at. A spec whose rows or a declared table is named so is a family no request reaches
+# — a table `marks` was never written over HTTP: `POST /marks` is the operator's mark. Refused at load; a closed set, held
+# to the dispatch by `test_spec_declarations.py`.
+CONSOLE_ROUTES = frozenset({"session", "healthz", "index.html", "spec", "where", "resources", "servers", "domain",
+                            "policy", "unplaceable", "events", "metrics", "marks", "requests", "mounts", "drain", "schema"})
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
                     "mended; the other units are judged", "unit's row")
 # What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
@@ -1196,6 +1202,13 @@ class SubsystemSpec:
                     raise ValueError(f"spec {self.name}: requests.{k} is a positive number, not {req[k]!r}")
         from .tables import parse as _tables
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
+        # …a table the console SERVES (declared, `{key, fields}`) and the rows: a table only named (`tables: [x]`) is a
+        # family the console's token may write and nobody serves — no route of its own to collide
+        for where, n in [("unit.rows", self.rows)] + [(f"tables.{t}", t) for t in self.table_specs]:
+            if str(n) in CONSOLE_ROUTES:
+                raise ValueError(f"spec {self.name}: {where} is {n!r}, a route the console answers itself "
+                                 f"(`/{n}`) — no request would reach that family; name it otherwise "
+                                 f"(the console's routes: {', '.join(sorted(CONSOLE_ROUTES))})")
         disp = d.get("display")
         if disp is not None:
             if not isinstance(disp, dict) or set(disp) - set(DISPLAY_KEYS):
