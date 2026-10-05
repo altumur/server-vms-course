@@ -89,7 +89,7 @@ unit:
     source:
       type: url
       required: true
-      schemes: [driverpack, rtsp, rtsps, http, https, onvif]
+      schemes: {driverpack: {host: path, none: [file]}, ipint: {fragment: none}, rtsp: {}, rtsps: {}, http: {}, https: {}, onvif: {}}
       unique: canonical
       credentials: {login: cred_username, secret: cred_secret}
       secret_in: …
@@ -180,7 +180,7 @@ placement:
   capacity:   {from: capacity, default: 50}    # the worker's word, from its heartbeat; the default for one that said nothing
   headroom:   {from: headroom}                  # what the autoscaler sums
   constraint: labels-subset                     # the camera's labels ⊆ the worker's server's labels
-  group_by:   {field: source, cut_at: ch}
+  group_by:   {field: source, cut_at: host}
   requires:   resource                          # the worker's server must have a resource that answers
   tie_break:  most-free-capacity
   offers:     true
@@ -189,7 +189,7 @@ placement:
   rebalance:  {dead_band: 0.10}
 ```
 
-Десять строк, и за каждой — механизм из М10A, выбранный **по имени** (урок 11). Шесть разберём здесь. Остальные — со своими уроками: `group_by` (каналы одного устройства — на одном воркере) — урок 4, шаг 1; `near` и `home` (камера идёт за своей записью) — урок 4, шаг 2, и урок 26; `offers` (то, чему нет места у живых, предлагается запасному) — М10A, урок 11.
+Десять строк, и за каждой — механизм из М10A, выбранный **по имени** (урок 11). Шесть разберём здесь. Остальные — со своими уроками: `group_by` (каналы одного устройства — на одном воркере: устройство — хост, который называет `source`, прочитанный по его `schemes`) — урок 4, шаг 1; `near` и `home` (камера идёт за своей записью) — урок 4, шаг 2, и урок 26; `offers` (то, чему нет места у живых, предлагается запасному) — М10A, урок 11.
 
 `capacity: {from: capacity, default: 50}` — ёмкость берётся из heartbeat'а воркера, поле `capacity`. Правило из урока 11 М10A: *ёмкость — слово воркера, не контроллера.* Воркер измерил её на своём железе (М9, урок 7: базовая нагрузка плюс `n × инкремент`); контроллер, сидящий на другой машине, не может знать этого числа.
 
@@ -306,7 +306,7 @@ class VmsController(SpecController):
     cameras = SpecController.units
 ```
 
-Весь контроллер VMS. Конструктор, вбивающий спецификацию, и пять псевдонимов. (Пропущенное место — комментарий о том, чего здесь больше нет: устройство для размещения — слово спеки `group_by: {field: source, cut_at: ch}`, и читает его платформа.)
+Весь контроллер VMS. Конструктор, вбивающий спецификацию, и пять псевдонимов. (Пропущенное место — комментарий о том, чего здесь больше нет: устройство для размещения — слово спеки `group_by: {field: source, cut_at: host}` с картой `schemes` у `source`, и читает его платформа, `SubsystemSpec.group_of`.)
 
 Псевдонимы — не сахар. Они делают читаемыми тесты и консоль: `ctl.create_camera({...})` в тесте VMS говорит то, что происходит, а `ctl.create({...})` не говорит ничего. При этом **новой функции не появилось**: `create_camera` — это буквально `SpecController.create`, тот же объект функции под другим именем.
 
