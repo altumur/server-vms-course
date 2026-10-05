@@ -1115,7 +1115,7 @@ class SendMixin:
 
     def _body(self):
         n = int(self.headers.get("Content-Length", 0))
-        return json.loads(self.rfile.read(n) or b"{}", parse_int=exact_int)   # its digits, `-0` too (`canonical.py`)
+        return json.loads(self.rfile.read(n) or b"{}", parse_int=exact_int)   # its digits, exactly (`canonical.py`)
 
 
 # A REQUEST'S BODY IS A JSON OBJECT, OR A REFUSAL (the review's tenth round, the routes that failed whole). A body that

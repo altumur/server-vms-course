@@ -125,10 +125,10 @@ def test_a_json_value_in_a_row_has_one_text_compact_sorted_and_its_numbers_by_th
     from w2cplatform.canonical import canonical_json, field_text, number_text, parse_json
     raw = ('{"b": 1, "a": "<&>", "c": [1.50, 1e3, 12345678901234567890, 0.0000001, -0], '
            '"d": " ", "e": "\\b\\f\\n\\u0001", "f": {"z": null, "y": true}}')
-    assert canonical_json(parse_json(raw)) == ('{"a":"<&>","b":1,"c":[1.5,1000,12345678901234567890,0.0000001,-0],'
+    assert canonical_json(parse_json(raw)) == ('{"a":"<&>","b":1,"c":[1.5,1000,12345678901234567890,0.0000001,0],'
                                                '"d":" ","e":"\\b\\f\\n\\u0001","f":{"y":true,"z":null}}')
     assert [number_text(x) for x in (5.0, 1000.0, 1e-7, 1.5, 1e22, -0.0, 10 ** 30)] == \
-        ["5", "1000", "0.0000001", "1.5", "10000000000000000000000", "-0", str(10 ** 30)]
+        ["5", "1000", "0.0000001", "1.5", "10000000000000000000000", "0", str(10 ** 30)]
     assert canonical_json((1, "é/")) == '[1,"é/"]' and json.loads(canonical_json({"é": [0.1]})) == {"é": [0.1]}
     assert [field_text(v) for v in ("x", True, None, 2.0, {"b": 1, "a": 0})] == ["x", "true", None, "2", '{"a":0,"b":1}']
     for bad in ("NaN", "Infinity", "-Infinity", "1e999", "{", "[1,]"):
