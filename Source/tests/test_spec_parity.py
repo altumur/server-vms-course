@@ -182,6 +182,9 @@ def refused_paths(d: dict) -> list[str]:
             return out
         except ValueError as e:
             m = re.match(r"spec \S+: `?([a-z_]+(?:\.[a-z0-9_*\-]+)*)", str(e))
+            f = re.match(r"(?:spec \S+: )?(?:(tables\.[a-z0-9_]+): )?field ([a-z0-9_]+): `?([a-z_]+)`?", str(e))
+            if f:                                        # a field's own word: `unit.fields.<f>.<key>` (or the table's)
+                m = re.match(r"(.*)", f"{f.group(1) or 'unit'}.fields.{f.group(2)}.{f.group(3)}")
             if not m or m.group(1) in out:
                 return out + [f"(refused: {e})"]
             out.append(m.group(1))

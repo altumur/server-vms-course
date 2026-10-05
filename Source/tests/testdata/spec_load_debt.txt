@@ -8,3 +8,4 @@ rec:console.running   # ADR-0019 «Сборка»
 rec:domain.witness   # ADR-0010 «Платформа»
 vms:console.running   # ADR-0019 «Сборка»
 vms:tables   # ADR-0012 «Платформа»
+vms:unit.fields.source.schemes   # ADR-0053 «Сборка»
