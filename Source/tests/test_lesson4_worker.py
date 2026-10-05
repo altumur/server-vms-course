@@ -3,70 +3,93 @@ lease; the restart with the controller stopped; the zombie on one box."""
 import json
 import os
 from vms.controller import VmsController
-from vms.reconciler import CONVERGED, LAGGING, STALLED, Reconciler
+from w2cplatform.reconcile import CONVERGED, LAGGING, STALLED, Pass, Reconciler, Want
 from vms.worker import FakeActuator, VmsWorker
 from tests.conftest import Clock
-from tests.vmsconftest import Box, FakeStore, cam
+from tests.vmsconftest import Box, cam
 
 
-# -- М9 Lesson 6's seven, unchanged in meaning ------------------------------------------
+# -- М9 Lesson 6's seven, unchanged in meaning, on the platform's helper (ADR 0033) ----------------------------------
+
+def _m9(act, clock=None):
+    """М9's loop: the platform's reconcile helper over an actuator's three verbs."""
+    r = Reconciler(lambda k, w: act("start", w.body), lambda k: act("stop", {"id": k}),
+                   restart=lambda k, w: act("restart", w.body))
+    if clock is not None:
+        r.now = clock
+    return r
+
+
+def _wants(rows):
+    """What the loop is asked to run: the enabled rows, by id, at their revision."""
+    return {c["id"]: Want(c["revision"], c) for c in rows if c["enabled"]}
+
 
 def test_1_converge_then_idle():
-    store, act = FakeStore([cam(1), cam(2)]), FakeActuator()
-    r = Reconciler(store, act)
-    assert r.reconcile() == [("start", 1), ("start", 2)] and r.reconcile() == [] and r.reconcile() == []
+    rows, act = [cam(1), cam(2)], FakeActuator()
+    r = _m9(act)
+    assert r.once(_wants(rows)).started == [1, 2] and r.once(_wants(rows)) == Pass() and r.once(_wants(rows)) == Pass()
 
 
 def test_2_revision_bump_restarts():
-    store, act = FakeStore([cam(1)]), FakeActuator()
-    r = Reconciler(store, act); r.reconcile()
-    store.rows[0]["revision"] = 2
-    assert r.reconcile() == [("restart", 1)] and r.reconcile() == [] and r.actual[1]["revision"] == 2
+    rows, act = [cam(1)], FakeActuator()
+    r = _m9(act); r.once(_wants(rows))
+    rows[0]["revision"] = 2
+    assert r.once(_wants(rows)).restarted == [1] and r.once(_wants(rows)).restarted == [] and r.running()[1] == 2
+    assert act.calls[-1] == ("restart", 1)
 
 
 def test_3_disable_and_delete():
-    store, act = FakeStore([cam(1), cam(2)]), FakeActuator()
-    r = Reconciler(store, act); r.reconcile()
-    store.rows[0]["enabled"] = False
-    assert r.reconcile() == [("stop", 1)]
-    del store.rows[1]
-    assert r.reconcile() == [("stop", 2)] and r.actual == {}
+    rows, act = [cam(1), cam(2)], FakeActuator()
+    r = _m9(act); r.once(_wants(rows))
+    rows[0]["enabled"] = False
+    assert r.once(_wants(rows)).stopped == [1]
+    del rows[1]
+    assert r.once(_wants(rows)).stopped == [2] and r.running() == {}
 
 
 def test_4_restart_re_derives_actual():
-    store = FakeStore([cam(1)])
-    Reconciler(store, FakeActuator()).reconcile()
-    r2 = Reconciler(store, FakeActuator())
-    assert r2.actual == {} and r2.reconcile() == [("start", 1)]
+    rows = [cam(1)]
+    _m9(FakeActuator()).once(_wants(rows))
+    r2 = _m9(FakeActuator())
+    assert r2.running() == {} and r2.once(_wants(rows)).started == [1]
 
 
 def test_5_persisted_actual_is_a_cache_that_lies():
     class Persisted(Reconciler):
         def __init__(self, *a, saved=None, **k):
-            super().__init__(*a, **k); self.actual = saved or {}
-    store, act = FakeStore([cam(1, revision=2)]), FakeActuator()
-    liar = Persisted(store, act, saved={1: {"revision": 2}})
-    assert liar.reconcile() == [] and liar.status()[1][0] == CONVERGED and act.running == set()
+            super().__init__(*a, **k); self._running = dict(saved or {})
+    rows, act = [cam(1, revision=2)], FakeActuator()
+    liar = Persisted(lambda k, w: act("start", w.body), lambda k: act("stop", {"id": k}), saved={1: 2})
+    p = liar.once(_wants(rows))
+    assert not (p.started or p.restarted) and liar.status()[1].state == CONVERGED and act.running == set()
 
 
 def test_6_backoff_with_jitter_spreads_200_cameras():
-    r = Reconciler(FakeStore([cam(i) for i in range(200)]), FakeActuator(failing=lambda cid: True))
-    r.reconcile(now=0)
-    retries = sorted(f["retry_at"] for f in r.failures.values())
-    assert 1.0 <= retries[0] and retries[-1] <= 2.0 and retries[-1] - retries[0] > 0.5
-    assert r.reconcile(now=0.5) == [] and len(r.reconcile(now=2.0)) == 200
+    t = [0.0]
+    r = _m9(FakeActuator(failing=lambda cid: True), clock=lambda: t[0])
+    rows = [cam(i) for i in range(200)]
+    assert len(r.once(_wants(rows)).failed) == 200
+    retries = sorted(p.retry_at for p in r.status().values())
+    assert 0.5 <= retries[0] and retries[-1] <= 1.5 and retries[-1] - retries[0] > 0.5   # the first delay: 1 s × [0.5, 1.5]
+    t[0] = 0.49
+    assert len(r.once(_wants(rows)).waiting) == 200
+    t[0] = 1.5
+    assert len(r.once(_wants(rows)).failed) == 200
 
 
 def test_7_lagging_vs_stalled():
-    store = FakeStore([cam(1), cam(2)])
-    r = Reconciler(store, FakeActuator(failing={2}), stall_failures=3)
-    r.reconcile(now=0)
-    assert r.status()[1] == (CONVERGED, 0) and r.status()[2] == (LAGGING, 1)
-    now = 0.0
-    for _ in range(3):
-        now = r.failures[2]["retry_at"] + 0.01; r.reconcile(now=now)
-    assert r.status()[2] == (STALLED, 1)
-    r.lost(1, now); assert 1 not in r.actual and r.status()[1][0] == LAGGING
+    t = [0.0]
+    rows = [cam(1), cam(2)]
+    r = _m9(FakeActuator(failing={2}), clock=lambda: t[0])
+    r.stall_failures = 3
+    r.once(_wants(rows))
+    st = r.status()
+    assert (st[1].state, st[1].lag) == (CONVERGED, 0) and (st[2].state, st[2].lag) == (LAGGING, 1)
+    for _ in range(2):
+        t[0] = r.status()[2].retry_at + 0.01; r.once(_wants(rows))
+    assert (r.status()[2].state, r.status()[2].failures) == (STALLED, 3)
+    r.forget(1); assert 1 not in r.running() and r.status()[1].state == LAGGING
 
 
 # -- the worker over an assignment ---------------------------------------------------------
@@ -107,7 +130,7 @@ def test_restart_with_the_controller_stopped():
     del ctl                                                   # the controller is gone
     act2 = FakeActuator()
     w2 = VmsWorker("w-1", box.vars, box.objects, act2, clock=box.clock, wall=box.wall)   # kill -9, restart
-    assert w2.reconciler.actual == {}                         # a fresh process knows nothing
+    assert w2.reconciler.running() == {}                         # a fresh process knows nothing
     assert w2.reconcile_once() == [("start", 1), ("start", 2), ("start", 3)]
     assert act2.epochs == {1: 2, 2: 2, 3: 2}                  # the next epoch for each: the old instance is fenced by construction
 
@@ -238,7 +261,7 @@ def test_the_worker_observes_what_it_holds_recording_or_not():
     w.pump_once()                                                  # ...and the worker, holding the epoch, made it a line
     act.dead = [1]                                                 # the pipeline died
     w.pump_once()
-    assert [e["kind"] for e in read_bucket(p)] == ["motion", "person", "silent"] and w.reconciler.actual.get(1) is None
+    assert [e["kind"] for e in read_bucket(p)] == ["motion", "person", "silent"] and 1 not in w.reconciler.running()
     assert read_bucket(p)[1]["score"] == 0.91
     w.fence("test"); act.post(1, "motion"); w.pump_once()
     assert len(read_bucket(p)) == 3                                # a fenced instance's bus still posts; observe drops it
@@ -252,7 +275,7 @@ def test_a_reassignment_is_not_a_zombie():
     w1 = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall); w1.reconcile_once()
     ctl.move(1, "w-2", "operator asked")
     w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall); w2.reconcile_once()
-    assert w1.lease_pass() == ["1"] and w1.writing_allowed and w1.reconciler.actual == {}   # released, not fenced
+    assert w1.lease_pass() == ["1"] and w1.writing_allowed and w1.reconciler.running() == {}   # released, not fenced
     assert w1.reconcile_once() == []
 
 
@@ -264,7 +287,7 @@ def test_lease_expiry_without_renewal_stops_starts():
     w.reconcile_once()
     box.clock.advance(26)
     assert not w.may_act("1")
-    w.reconciler.lost(1, w.now())                             # the pipeline died meanwhile
+    w.reconciler.forget(1)                             # the pipeline died meanwhile
     box.clock.advance(5)                                      # past its backoff
     assert w.reconcile_once() == [("start", 1)] and act.epochs[1] == 2     # a start takes a fresh epoch and lease
 

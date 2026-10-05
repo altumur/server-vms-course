@@ -50,7 +50,7 @@ administrator's list, and the claim that makes one of them served."""
 from dataclasses import dataclass
 
 from w2cplatform.contract import HOLDS, Slot, Subsystem, read_hold
-from w2cplatform.rows import FIELDS as NUMBERS, PARSE_ERRORS, Table, number
+from w2cplatform.rows import FIELDS as NUMBERS, PARSE_ERRORS, Table
 from w2cplatform.secrets import hide_in_url, is_secret_field
 from w2cplatform.spec import Refused
 
@@ -204,38 +204,10 @@ def servable(vols: list[Volume], server: str) -> list[str]:
     return mine + net
 
 
-# What to offer an operator who has never declared anything. Every server whose recorder says which
-# archive root it writes into, and whose resource says how big that filesystem is, and for which no local
-# volume is declared yet: one proposal, named after the server, sized to the partition. A PROPOSAL and not
-# a row — nothing here writes configuration on a process's behalf. The operator presses the button, and
-# from that moment the disk is a volume with a number on it, which is the whole point: the number can be
-# made smaller, and a second volume can have the rest.
-#
-# Who is live — here and in `served`'s three readers below — by what the asker saw CHANGE (`eyes`, its long-lived
+# Who is live — in `served`'s three readers below — by what the asker saw CHANGE (`eyes`, its long-lived
 # `Eyes`; the product's r29-writers2): `now - hb.ts` was the recorder's clock against the console's, with no bound ahead.
 # Without eyes, `is_live` (bounded both ways). A hold is live likewise: renewed within a slot's term of the asker's clock,
 # not before the `until` its holder's clock wrote (`_hold_live`).
-def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0, eyes=None) -> list[dict]:
-    from w2cplatform.console import heard_live, heartbeats
-    from w2cplatform.resource import resources_seen, space_total
-    have = {v.server for v in declared(vars_) if on_a_box(v)}
-    res = resources_seen(objects)
-    out = {}
-    for name, hb in heartbeats(objects, sub.name + "/").items():
-        server, root = str(hb.extra.get("server", "")), str(hb.extra.get("archive", ""))
-        if not server or not root or server in have or not heard_live(sub.name, name, hb, now, lost_after, eyes):
-            continue
-        # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
-        # with the resource's events: declared at the partition's size, the ring would be resized past the room.
-        # Through `rows.number` (the review's seventh pass): a word in one recorder's `archive_quota` raised out of the
-        # whole page of volumes. Not said, the partition's size; neither said, 0, as before.
-        total = number(f"{sub.heartbeat_key(name)}#archive_quota", hb.extra.get("archive_quota") or None, int, None) or \
-            space_total(res, server)                     # the platform's reading of its resource (the boundary's step 5)
-        out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
-                       "why": "this box records here and the disk is not declared as a volume"}
-    return [out[k] for k in sorted(out)]
-
-
 def holders(vars_, sub: Subsystem, garbled: set | None = None) -> dict[str, Slot]:
     """`{volume: Slot}` from `rec/holds/*` — who took what, lapsed holds included. A row that does not parse is not
     in it (`contract.read_hold`: one garbled hold failed the whole list — the review's sixth pass); its volume's name

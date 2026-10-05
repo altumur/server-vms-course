@@ -33,6 +33,8 @@ const words=/\b(vms|cams?|cameras?|rec|det|auto|recordings?|recorders?|detectors
 const hit=src.split("\n").map((l,i)=>[i+1,l]).filter(([,l])=>words.test(l.replace(/^\s*\/\/.*$/,"")));
 out.vocabularyClean=hit.length===0;
 out.liveRuleIsByToken=["live_url","LIVE_NAME","/live/","livecontroller"].every(x=>words.test(x))&&!["state === \"live\"","workers_live","live/silent"].some(x=>words.test(x));out.hits=hit.slice(0,3).map(([n,l])=>n+": "+l.trim().slice(0,80)).join(" | ");
+// spec(name): копия спеки для кода страницы — правка копии модуль не трогает; неизвестная подсистема — null
+{const sp=pc.spec("testsub");out.specCopy=!!sp&&sp.rows==="things"&&(sp.rows="x",pc.spec("testsub").rows==="things")&&pc.spec("nope")===null;}
 out.version=pc.version===1&&w.PlatformConsole.version===1;
 const tree=()=>d.querySelector(".pc-tree").textContent;
 out.displayWords=d.querySelector(".pc-hunits-l").textContent==="Things";

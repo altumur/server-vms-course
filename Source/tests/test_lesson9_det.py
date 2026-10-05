@@ -42,6 +42,25 @@ def _det(box, name, labels="gpu", capacity=8):
     return d
 
 
+def test_a_detectors_heartbeat_carries_the_platforms_fields():
+    """The detector's heartbeat is the platform's (ADR 0013): it wrote its own, and said no `started`, no `previous_*`
+    — its failover went unmeasured — no `fenced` and no `fetched`. Now the base writes them, with what the detector adds
+    (`events`), and a second instance under the name says the first one it replaced."""
+    from w2cplatform.contract import Heartbeat
+    box = Box()
+    d = _det(box, "d-1")
+    hb = Heartbeat.from_bytes(box.objects.get(DET_SPEC.sub.heartbeat_key("d-1")))
+    assert hb.extra["started"] and hb.extra["server"] == "srv-1" and hb.extra["events"] == 0 and "fenced" not in hb.extra
+    assert hb.extra["previous_hb"] == 0.0 and hb.extra["capacity"] == 8 and hb.extra["labels"] == "gpu"
+    d.fence("test"); d.heartbeat_once()
+    assert Heartbeat.from_bytes(box.objects.get(DET_SPEC.sub.heartbeat_key("d-1"))).extra["fenced"] is True
+    box.wall.advance(60)
+    again = _det(box, "d-1")
+    hb2 = Heartbeat.from_bytes(box.objects.get(DET_SPEC.sub.heartbeat_key("d-1")))
+    assert hb2.extra["previous_instance"] == d.instance and hb2.extra["previous_hb"] == hb.ts
+    assert again.instance != d.instance
+
+
 def call(base, method, path, body=None, headers=None):
     req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method, headers=headers or {})
     try:

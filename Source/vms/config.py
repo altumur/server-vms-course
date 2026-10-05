@@ -34,32 +34,28 @@ here is controller-derived status — that is in the worker's heartbeat.
 #
 # "A camera row is small, rare and must be consistent: raft's shape. Nothing here is controller-derived
 # status — that is in the worker's heartbeat." Used by `worker.py` (`row` on every refresh), `controller.py`
-# (`SPEC`), `console.py` via the controller, `__main__.py` (`SPEC.acl_*`, `row` in `retain`) and the tests
-# (`SPEC.acl_console()` / `acl_controller()` to build the two tokens).
+# (`SPEC`), `console.py` via the controller, `__main__.py` (the specs and their worker grants, `acl_worker_role`) and
+# the tests (`SPEC.acl_console()` / `acl_controller()` to build the two tokens).
 #
 # ## Module-level names
 # - `SPEC` — `SubsystemSpec.load(<this directory>/vms.subsystem.yaml)`, parsed once at import. PyYAML is
 #   imported lazily inside `load`, so this is the one import in the VMS that needs it.
-# - `OPERATOR_FIELDS` — `tuple(SPEC.fields)`: the field names the operator owns (`name, source, enabled,
-#   retention_days, events_retention_days, priority, labels, ref`), in YAML order.
-# - `FORBIDDEN_FIELDS` — an alias of `w2cplatform.spec.PLATFORM_FIELDS` (`worker, placement, epoch,
-#   revision, observed_revision, phase, id`): what `SubsystemSpec.refuse` rejects in a create/update body.
-#   Kept under the VMS's old name for readers of earlier lessons.
+# - `OPERATOR_FIELDS` — `tuple(SPEC.fields)`: the field names the operator owns, in YAML order, whatever they are
+#   now (`vms.subsystem.yaml` is the list; this follows it). What the operator may never send is the platform's
+#   `PLATFORM_FIELDS`, refused by `SubsystemSpec.refuse`.
 #
 # ## Notes
 # - Neither function filters the `deleted` marker: a row the controller marked `deleted: "true"` converts
-#   like any other. `VmsWorker.refresh` checks the marker itself before calling `row`; `__main__.retain`
-#   does not.
+#   like any other. `VmsWorker.refresh` checks the marker itself before calling `row`.
 # - Changing a field's type or default is a YAML edit, not a Python one; this module has nothing to change.
 # ================================================================================================
 from __future__ import annotations
 
 import os
 import re
-import time
 
 from w2cplatform.doors import numeric
-from w2cplatform.spec import PLATFORM_FIELDS, SubsystemSpec
+from w2cplatform.spec import SubsystemSpec
 
 SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vms.subsystem.yaml"))
 LIVE_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "live.subsystem.yaml"))   # the second subsystem: live fan-outs
@@ -108,7 +104,7 @@ def live_shm(cid, shm_dir: str = SHM_DIR) -> str:
 # — what `inet_aton` and `ipaddress` say they are), the scheme's own port dropped (`DEFAULT_PORTS`), credentials never
 # part of it. The row keeps what the
 # operator typed; what is compared, grouped and keyed by is this. What syntax cannot say — a DNS name and the address
-# it resolves to are one device — the device says itself, once a holder has opened it (`one_device` below).
+# it resolves to are one device — the device says itself, once a holder has opened it (`device_identities` below).
 DEFAULT_PORTS = {"driverpack": 80, "rtsp": 554, "rtsps": 322, "http": 80, "https": 443}   # driverpack: the device's web port
 
 
@@ -198,22 +194,14 @@ def device_of(source: str) -> str:
 
 # WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
 # is (`identity` in its row, `vms/devices/<device>`: a serial number, a MAC; the driver's word). A DNS name and the
-# address it resolves to are two keys and one identity. `one_device(vars_)(key)` is a token: equal tokens, one device
-# for the rights asked of it. A spelling no holder has opened yet has no identity, and is its key alone until a holder
-# opens it (М10B Lesson 15).
+# address it resolves to are two keys and one identity. A spelling no holder has opened yet has no identity, and is its
+# key alone until a holder opens it (М10B Lesson 15).
 #
-# A HOLDER'S WORD IS NOT A REFUSAL, AND NOT KNOWING IS A GRANT ON THE CLUSTER (the owner's decisions on the review's
-# ninth pass). An identity is the driver's word, and firmware clones say the same serial number: the holder that finds
-# its device's identity under another key says so and goes on (`VmsWorker.describe_devices`), it refuses nothing. So
-# the bypass the eighth pass closed at the holder is closed here, where rights are asked: a camera moved onto a device
-# no holder has learned the identity of — a DNS name, a spelling nothing reads as one (`010.000.000.050`, full-width
-# digits), any key in the course's build, which has no device factory — needs a grant on the whole cluster
-# (`vms/console.py`, `source_cams`), until a holder opens the device and says what it is. The identity groups devices
-# for rights only, where two devices taken for one ask for MORE: a camera is still one channel of ONE key (the holder's
-# «device busy», `VmsWorker.held_back`), so two clones' cameras are two cameras.
-#
-# …and across vendors: the token is the identity alone (the review's ninth pass, (д)) — one recorder under two drivers
-# is one recorder, and two vendors' equal strings only ask for more.
+# A HOLDER'S WORD IS NOT A REFUSAL (the owner's decisions on the review's ninth pass). An identity is the driver's word,
+# and firmware clones say the same serial number: the holder that finds its device's identity under another key says so
+# and goes on (`VmsWorker.describe_devices`), it refuses nothing; a camera is still one channel of ONE key (the holder's
+# «device busy», `VmsWorker.held_back`), so two clones' cameras are two cameras. Who may move a camera onto a device is
+# the platform's to say from the spec (`rights.reach.group`, the boundary's step 6): it reads no device row.
 def device_identities(vars_) -> dict[str, str]:
     prefix = SPEC.sub.config(DEVICES, "")
     out = {}
@@ -223,64 +211,6 @@ def device_identities(vars_) -> dict[str, str]:
         if ident:
             out[path[len(prefix):]] = ident
     return out
-
-
-# READ BY KEY, ONCE (the review's ninth pass, minor; a count): `one_device` read every device row there is on every
-# command, every move and every scenario edit — rows are never removed, and 1000 of them were 1009 reads for one press
-# of a relay (in М11, a thousand reads through the store's leader). It reads the row of a device it is asked about, the first time it
-# is asked, and nothing else: one instance per request, so what it says is the store's at that request.
-#
-# KNOWN IS NOW, NOT ONCE (the review's tenth pass, major; a run). A row says what the device under that key WAS when a
-# holder last held it, and rows are never removed: `nvr50.local`, a recorder replaced since, its cameras deleted, kept
-# its row `SN-OLD`; the name led to the new recorder, which the configuration holds by its address — and `admin` on
-# camera 3 pointed it at `nvr50.local/ch/2` (200: "known"), the holder opened the new recorder, and camera 3 showed and
-# recorded a channel of a recorder that was not hers. So a key is known while a holder that is alive HOLDS that device
-# and has heard it describe itself in this process (`can` in its heartbeat's `devices`, `VmsWorker.device_status`):
-# what that holder hears, it writes into the row in the same pass (`describe_devices`). A row nobody holds now is
-# the past — a grant on the cluster again, as for a key nobody has opened. The heartbeats are read once a request, at
-# the first `known` (`objects`; without them nothing is known).
-#
-# …AND "ALIVE" IS WHAT THE CONSOLE SAW CHANGE (the product's r29-writers2): the holders were judged by their `ts`
-# against the console's clock — a holder dead an hour whose clock ran ahead kept its devices "known", and a box 100 s
-# behind made every device it holds unknown, a grant on the cluster to move a camera within it. `eyes` — the console's
-# long-lived `Eyes` — judge them (`holders(eyes=)`); without them, `is_live`.
-class Devices:
-    def __init__(self, vars_, objects=None, now=None, eyes=None):
-        self.vars, self.ids = vars_, {}
-        self.objects, self.now, self.eyes = objects, now, eyes
-        self._held: set[str] | None = None
-
-    def identity(self, key: str) -> str:
-        if key not in self.ids:
-            items, _ = self.vars.get(SPEC.sub.config(DEVICES, key))
-            self.ids[key] = str((items or {}).get("identity") or "").strip() if isinstance(items, dict) else ""
-        return self.ids[key]
-
-    def held(self) -> set[str]:
-        """The devices live holders hold and have heard describe themselves, by their heartbeats."""
-        if self._held is None:
-            self._held = set()
-            if self.objects is not None:
-                from w2cplatform.console import holders
-                now = self.now() if callable(self.now) else (time.time() if self.now is None else self.now)
-                for hb in holders(self.objects, SPEC.sub.name + "/", now, eyes=self.eyes).values():
-                    devs = hb.extra.get("devices")
-                    for d in devs if isinstance(devs, list) else ():
-                        if isinstance(d, dict) and isinstance(d.get("device"), str) and d.get("can"):
-                            self._held.add(d["device"])
-        return self._held
-
-    def known(self, key: str) -> bool:
-        """Whether a live holder holds the device under this key now and has learned what it is."""
-        return bool(self.identity(key)) and key in self.held()
-
-    def __call__(self, key: str) -> tuple:
-        ident = self.identity(key)
-        return ("id", ident) if ident else ("at", key)
-
-
-def one_device(vars_, objects=None, now=None, eyes=None) -> Devices:
-    return Devices(vars_, objects, now, eyes)
 
 
 # -- the device row: what the holder found the device to be -----------------------------------------------
@@ -324,7 +254,7 @@ def describe(caps: dict | None) -> dict | None:
 def device_row(desc: dict, identity: str = "") -> dict:
     """The description as a row: strings, a list comma-joined — the store's shape (М10A Lesson 9). And what the device
     says it IS, when it says (`identity_of`): not a capability — it is not in `can`, it does not leave the cluster —
-    but what the console tells two spellings of one device apart by (`one_device`)."""
+    but what tells two spellings of one device apart (`device_identities`, `VmsWorker.describe_devices`)."""
     return {"events": ",".join(desc["events"]), "rays": str(desc["rays"]), "relays": str(desc["relays"]),
             "ptz": "true" if desc["ptz"] else "false", "presets": str(desc["presets"]),
             **({"identity": identity} if identity else {})}
@@ -425,22 +355,11 @@ def source_refusal(source: str) -> str | None:
     return None
 
 
-# How a holder says a request it answered, in its heartbeat's `fetched` (`VmsWorker.fetched_said`), and how the console
-# matches it (`jobs.clear_requests`): the id itself when it is short and plain; else `#` and a digest of it — an id of
-# 200 characters, or one with a comma (the list's separator), a quote or a control character in it, costs 21 bytes
-# like any other (the review's eighth pass).
 # The longest a command's argument may be — `port`, `state`, `pulse_ms`, `n`: a number or a word (the product's
-# cross-check of the eleventh review: an argument had no size). The console refuses longer at its door
-# (`vms/console.py`, `file_request`), the holder refuses a row that holds one anyway (`VmsWorker.perform`).
+# cross-check of the eleventh review: an argument had no size). The console refuses longer at its door by the spec's
+# schema (`requests.schema` in `vms.subsystem.yaml`: `maxLength: 32`), the holder refuses a row that holds one anyway
+# (`VmsWorker.perform`).
 COMMAND_ARG_MAX = 32
-
-
-def said_id(rid: str) -> str:
-    rid = str(rid)
-    if len(rid) <= 40 and not rid.startswith("#") and rid.isprintable() and not any(c in rid for c in ',"\\'):
-        return rid
-    import hashlib
-    return "#" + hashlib.sha256(rid.encode()).hexdigest()[:20]
 
 
 # A port an instance was told, where `auto` (or `0`) means "ask the operating system for a free one".
@@ -543,7 +462,6 @@ def rec_row(items: dict) -> dict:
     `id: name` cost no Python here when a second archive made a camera's recordings two."""
     return REC_SPEC.row(items)
 OPERATOR_FIELDS = tuple(SPEC.fields)
-FORBIDDEN_FIELDS = PLATFORM_FIELDS
 
 
 # `SPEC.row(items)`: Variables items (all strings) to a typed dict with `id`, every spec field (its default

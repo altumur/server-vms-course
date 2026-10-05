@@ -1,6 +1,7 @@
-"""vmscontroller — the only writer of vms/*. It is the platform's
-SpecController run from vms.subsystem.yaml; this module is the VMS's
-vocabulary over it (camera, not unit) and nothing else.
+"""The VMS's words over the platform's controller. There is no VMS controller process: the controller of `vms` is the
+platform's, `python3 -m w2cplatform controller vms` (`w2c-controller@vms`, `w2cplatform/host.py`), run from
+vms.subsystem.yaml, and it is the only writer of placement and the assignment. This module is the VMS's vocabulary
+over the same `SpecController` (camera, not unit) for the tests, the lessons and the one-box console, and nothing else.
 
     cameras       CRUD by CAS; revision bumps on every operator edit; refuses controller-owned fields
     placement     which worker runs a camera — by the workers' own capacity, under the label constraint,
@@ -8,18 +9,18 @@ vocabulary over it (camera, not unit) and nothing else.
     assignment    vms/workers/<worker> — what each worker reads
     the snapshot  vms/snapshot/<worker> — cameras and placement, one object per worker, for М12
 
-It holds nothing. Two instances are harmless. It is never on the recovery
-path. On one box it is a cluster of one: the snapshot still says which
-server, and it is the hostname.
-"""
-# ================================================================================================
+Which of these a process may complete is its token's to say: the console's token writes the operator's rows, the
+controller's places. It holds nothing. Two instances are harmless. It is never on the recovery path. On one box it
+is a cluster of one: the snapshot still says which server, and it is the hostname.
+"""# ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
 # # controller.py — vmscontroller: the platform's SpecController run from `vms.subsystem.yaml`, in the VMS's
 # words
 #
-# **Role in the module.** Lesson 6. The VMS controller is not written here; it is
-# `w2cplatform.spec.SpecController` (see `w2cplatform/spec.py`) instantiated with the VMS's spec. This
+# **Role in the module.** Lesson 6. The VMS controller is not written here, nor run from here: the process is the
+# platform's `w2c-controller@vms`, and the class is `w2cplatform.spec.SpecController` (see `w2cplatform/spec.py`)
+# instantiated with the VMS's spec. This
 # module contributes only vocabulary: the class `VmsController` whose constructor bakes in `SPEC`, and five
 # aliases so the tests and the console can say *camera* where the platform says *unit*. The docstring is the
 # controller's contract restated for the VMS: cameras are CRUD by CAS with `revision` bumped on every
@@ -28,9 +29,9 @@ server, and it is the hostname.
 # nothing, rebalance only when asked; the assignment `vms/workers/<worker>` is what each worker reads; the
 # snapshot `vms/snapshot/<worker>` is cameras and placement, one object per worker, for the layer above
 # (М12) — the heartbeat's shape, so it stays small however large the cluster gets. It holds
-# nothing, two instances are harmless, and it is never on the recovery path. Used by `__main__.controller`
-# (with the controller's token), `__main__.console` and `vms/console.py` (with the console's token), and
-# every Lesson 4/5 test.
+# nothing, two instances are harmless, and it is never on the recovery path. Used by `vms/console.py` (with the
+# console's token: the one-box console of the tests and the lessons), the cluster's and the domain's stands, and
+# every Lesson 4/5 test (with the controller's token where a test places).
 #
 # ## Module-level names
 # - `VMS` — `SPEC.sub`, the `Subsystem("vms")` key layout (`vms/workers/<w>`, `vms/epoch/<id>`,
@@ -74,8 +75,8 @@ VMS = SPEC.sub
 # `unplace_deleted`, `place`, `ensure_placed`, `redistribute`, `rebalance`, `move`, `read_model`,
 # `snapshot`, `publish_snapshot`, `headroom`, `capacity_of`, `failover_seconds`, … — is the platform's and
 # is documented in `w2cplatform/spec.py`. Which of them a given process may actually complete is decided by
-# the token its `vars_` carries, not by this class: the same class holds the controller's token in
-# `vmscontroller` and the console's token in `console`.
+# the token its `vars_` carries, not by this class: a test hands it the controller's token to place, the one-box
+# console (`vms/console.py`) the console's.
 class VmsController(SpecController):
     # `super().__init__(SPEC, vars_, objects, capacity, wall, cluster)`. `capacity` is only the fallback for
     # a worker whose heartbeat has not said its own number (the spec's `placement.capacity.fallback` is also

@@ -15,7 +15,7 @@
 # exception in it. So the controller publishes NUMBERS and OFFERS (`SpecController.offer_spares`) and this script,
 # which the operator installed deliberately, does the starting.
 #
-# NOT AS ROOT on Linux (the product's cross-check, 4 Oct): as `w2c-spares`, a user in no group but its own, whom
+# NOT AS ROOT on Linux (the product's cross-check, 4 Oct): as `w2c`, the platform's user, whom
 # polkit lets do one thing — `systemctl start` of an instance of a spare template (М11's `w2c-spares.rules`: the verb
 # `start`, the units `vms-vmsworker-spare@<n>`, `vms-recworker-spare@<n>`) — and nothing else: no stop, no other
 # unit, no `reset-failed`. What it writes for a spare is read by the spare's runner one line deep (`w2c-run.sh`: `SPARE_FOR=`,

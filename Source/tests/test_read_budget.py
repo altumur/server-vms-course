@@ -463,13 +463,14 @@ def test_an_end_is_kept_on_time_and_one_moved_by_another_console_is_read_before_
     assert rec.unit("5") is None
 
 
-def test_an_end_given_at_the_consoles_door_takes_effect_at_the_next_turn_not_at_the_next_whole_read():
-    """The eleventh review, the tenth's `REREAD` not fixed — a run: `until = now + 1` given to a recording through the
-    console's door ended it 23 s later, and the tenth's answer said "an end this console writes is noted at once". It
-    was noted only when the request loop itself wrote it; the door writes through another controller of the process.
-    Every `create` and `update` of the process notes its unit now (`spec.wrote`), and the loop's next turn reads those
-    rows (`take_written`): the recording ends at the first turn after its end — and costs that row's read, not a whole
-    read. A remembered end that is near is read every turn, so one another console moved earlier is seen in a turn."""
+def test_an_end_this_process_writes_takes_effect_at_the_next_turn_and_one_from_the_consoles_door_by_the_next_read():
+    """The eleventh review, the tenth's `REREAD` not fixed — a run: `until = now + 1` given to a recording ended it 23 s
+    later; it was noted only when the request loop itself wrote it. Every `create` and `update` of the process notes its
+    unit now (`spec.wrote`), and the loop's next turn reads those rows (`take_written`): an end written through another
+    controller of the jobs process ends the recording at the first turn after it — and costs that row's read, not a
+    whole read. The console's door is ANOTHER process since the boundary's step 6 (the platform's console): what it
+    writes is no note here. A remembered end that is near is read every turn, so one the door moved earlier is seen in a
+    turn; an end the loop has not seen is seen at its next whole read, within `REREAD`."""
     from vms import jobs
     from w2cplatform import requests
     from vms.jobs import Remembered
@@ -477,18 +478,22 @@ def test_an_end_given_at_the_consoles_door_takes_effect_at_the_next_turn_not_at_
     from vms.config import REC_SPEC
     vars_, objects = cluster(10, 2, 2)
     c, mem = _console(vars_, objects), Remembered()
-    rec, door = c["rec"], SpecController(REC_SPEC, vars_, objects)
+    rec, mine = c["rec"], SpecController(REC_SPEC, vars_, objects)   # another controller of the jobs process
     assert jobs.expire(rec, NOW, mem) == 0                    # the whole read: no row has an end
-    door.update("5", {"until": NOW + 1})                       # the console's door, the same process
+    mine.update("5", {"until": NOW + 1})                       # written by this process
     v = Reads(vars_)
     rec.vars = v
     assert jobs.expire(rec, NOW + 2, mem) == 1 and rec.unit("5") is None
     assert v.n <= 4, v.n                                       # that row, and the delete's own CAS: no whole read
-    door.update("6", {"until": NOW + 8})
+    mine.update("6", {"until": NOW + 8})
     assert jobs.expire(rec, NOW + 4, mem) == 0                 # noted: 6 ends at NOW + 8
-    door.update("6", {"until": NOW + 5})
-    take_written("rec")                                        # moved earlier by ANOTHER process's console
+    mine.update("6", {"until": NOW + 5})
+    take_written("rec")                                        # …as the console's door writes it: another process, no note
     assert jobs.expire(rec, NOW + 6, mem) == 1 and rec.unit("6") is None   # near: read every turn, seen in one
+    mine.update("7", {"until": NOW + 7})
+    take_written("rec")                                        # the console's door, an end this loop never saw
+    assert jobs.expire(rec, NOW + 8, mem) == 0 and rec.unit("7") is not None   # not at the next turn…
+    assert jobs.expire(rec, NOW + Remembered.REREAD, mem) == 1 and rec.unit("7") is None   # …at the next whole read
 
 
 def _waiting(vars_, objects, sub: str, k: int) -> None:

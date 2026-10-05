@@ -33,10 +33,11 @@ Source/
                                runs — `controller_loop`, `placement_pass`, `step` (said once a spell), `sweep_loop`, `run_resource`
     console.js, console.css    Lesson 16 the console module every page is built from (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, version 1, the product's file):
                                the tree, the forms, servers, the domain, rights, the journal — from /spec and the platform's doors
+    reconcile.py               Lesson 4  the reconcile helper (ADR 0033): М9 Lesson 6's loop — desired persisted, running derived,
+                               backoff that doubles to a ceiling, spread by jitter — for any worker with a set of pipelines
     console.html               Lesson 16 the platform's page: the module and its mount, nothing else — `/` for a root subsystem with no page
                                of its own (`<sub>.shell.html` beside its spec); only the console's root serves a page
   vms/                         the VMS — the first subsystem
-    reconciler.py              Lesson 4  М9 Lesson 6's loop, copied unchanged: the contract
     obsd.py                    М10B L6  the client (the VMS's: the platform knows no archive engine) of ObjectStorage's daemon: frames over a unix socket, Session/Volume/Writer/Reader, SMPL samples,
                                archive time; a silence is `Unavailable` after a timeout and is not asked twice
     archive.py                 М10B L7  the course's vocabulary over obsd: streams <recording>/e<epoch> (…/backfill, e0 for a keep's copy), Span,
@@ -87,7 +88,7 @@ Source/
                                each access unit a sample into the volume's writer
   deploy/                      Quadlet, on М9's box: Containerfile (localhost/vmsserver:latest, the image М11 builds FROM), obsd.service (the host's archive engine),
                                vmsworker@.container, recworker@.container (the only writer of footage), w2c-controller@.container (every subsystem's
-                               controller, one instance per spec, as `w2c`), console.container, w2c-resource.container,
+                               controller, one instance per spec, as `w2c`), w2c-console.container, w2c-resource.container,
                                liveworker@.container, detworker@.container, w2c.env.example + vms.env.example, check-quadlet.sh
   tests/                       the suite: no GStreamer, but the archive's tests start a real obsd (OBSD_BIN); every runner keeps the run's
                                temp dirs under a root of its own (/tmp/w2c-tests-<pid> on macOS), removed at exit (runroot.py)

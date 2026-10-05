@@ -15,8 +15,8 @@ The worker that holds the camera may be anywhere, `servers: shared`; the
 recorder must be where its volume can be served — `requires: resource`,
 one per volume — and when its server dies the controller moves its
 recordings to a recorder that holds a volume. Footage from before the move
-stays in the volume it was written to, under the old epoch; the console's
-timeline merges the two.
+stays in the volume it was written to, under the old epoch; the page merges
+the two, reading each recorder's door (ADR 0015: the bytes bypass the console).
 
     RECORDER_NAME / SLOT_INDEX     -> the slot to claim: r-<index>
     SERVER_NAME (or the hostname)  -> `server` in the heartbeat
@@ -724,7 +724,7 @@ class RecWorker(VmsWorker):
     def status_extra(self, cam: dict) -> dict:
         src = self.source(cam["cam"])
         out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": (None if src is None else "shm" if src[1].startswith("shm://") else "rtsp")}
-        if cam["id"] in self.waiting and cam["id"] not in self.reconciler.actual:
+        if cam["id"] in self.waiting and cam["id"] not in self.reconciler.running():
             out["why"] = "camera held by nobody"
             if str(cam["cam"]) in self.behind_loopback:
                 out["why"] = (f"the camera's stream is served on loopback on {self.behind_loopback[str(cam['cam'])]}: "
@@ -789,7 +789,7 @@ class RecWorker(VmsWorker):
     # An orderly stop goes through `stop_all`, past `_actuate`: the rings held through a break are written first here
     # (the review's second pass) — the ring is the only copy of the break, and the restart would not have it.
     def before_stop_all(self) -> None:
-        for uid in list(self.reconciler.actual):
+        for uid in list(self.reconciler.running()):
             self._release_if_broken(uid)
 
     # -- a backup that records only for a primary that is down (Lesson 26) -----------------------------
@@ -814,7 +814,7 @@ class RecWorker(VmsWorker):
     def gate_pass(self, now: float | None = None) -> list[tuple[str, str]]:
         now = self.wall() if now is None else now
         done = []
-        running = {str(u) for u in self.reconciler.actual}       # once, not once per row (the scaling pass)
+        running = {str(u) for u in self.reconciler.running()}       # once, not once per row (the scaling pass)
         for row in self.rows:
             uid = str(row["id"])
             if not self._offline_backup(row) or uid not in running:
@@ -986,8 +986,9 @@ class RecWorker(VmsWorker):
 
     # -- the passes: the worker's, plus a re-subscription when the camera's holder moved -------------------
     # The camera's worker moved: the source is another server's fan-out now — or, if it moved HERE, the
-    # shared-memory branch. The pipeline reading the old source is stopped and counted lost, so the
-    # reconciler starts it again on the new one, under a new rec epoch (a start is a new writer).
+    # shared-memory branch. The pipeline reading the old source is stopped and dropped from the loop — moved, not
+    # failed — so the reconciler starts it again on the new one in the same pass, under a new rec epoch (a start is a new
+    # writer).
     @one_look
     def resubscribe(self, now: float | None = None) -> list[int]:
         now = self.now() if now is None else now
@@ -995,12 +996,12 @@ class RecWorker(VmsWorker):
         # Whose fan-out: the RECORDING's camera (`cam`), not the recording's own id — the two are the same string
         # only while the recording is named after its camera, and `7-cloud` moved with its camera too.
         cams = {str(r["id"]): str(r.get("cam") or r["id"]) for r in self.rows}
-        for cid in list(self.reconciler.actual):
+        for cid in list(self.reconciler.running()):
             src = self.source(cams.get(str(cid), cid))
             if src is not None and self.sources.get(cid) not in (None, src[1]):
                 self._release_if_broken(cid)                      # the ring is the only copy of the break (CB): written before the stop
                 self.actuator("stop", {"id": cid})
-                self.reconciler.lost(cid, now)
+                self.reconciler.drop(cid)                 # moved, not failed: started on the new source this pass
                 self.sources.pop(cid, None)
                 moved.append(cid)
                 log.info("%s: camera %s is held elsewhere now (%s): re-subscribing", self.name, cid, src[1])
@@ -1034,7 +1035,7 @@ class RecWorker(VmsWorker):
     def writer_pass(self, now: float | None = None) -> dict:
         wall = self.wall() if now is None else now
         measure = getattr(self.actuator, "offered", None)
-        running = list(self.reconciler.actual)
+        running = list(self.reconciler.running())
         vals = [measure(c) for c in running] if measure else []
         # Per recording: when what it was offered last GREW. A pipeline that is up and fed nothing — a source
         # that stalled, a fan-out that stopped — is `running` for ever; `last_frame_at` is the number that says
@@ -1077,7 +1078,7 @@ class RecWorker(VmsWorker):
             for cid in running:
                 self._release_if_broken(cid)
                 self.actuator("stop", {"id": cid})
-                self.reconciler.lost(cid, self.now())
+                self.reconciler.forget(cid)
             self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
             self._lost_why, self._lost_at = f"the writer was {state['state']}: reopened", wall
         return state
@@ -1099,10 +1100,10 @@ class RecWorker(VmsWorker):
                 "volume": self.volume,
                 **({"freed": dict(self.freed)} if self.freed else {}),   # the resource's ask to free bytes, answered
                 **({"requests_refused": dict(self.requests_refused)} if self.requests_refused else {}),
-                # The box's own volume — where this recorder writes when nothing is declared. What the console
-                # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
+                # The box's own volume — where this recorder writes when nothing is declared: what a page may offer to
+                # declare, with its size.
                 "archive": hide_in_url(self.default_url),    # as a page says it (the twelfth review, major 15)
-                # …and its size: what the console offers to declare it at. The size it HAS once it was opened — read
+                # …and its size: what a page offers to declare it at. The size it HAS once it was opened — read
                 # from the volume — and only before that the share of the disk it would be formatted at (the review's
                 # third pass: recomputed at every start, the number grew and shrank with the disk's free space, and an
                 # operator who declared it shrank a volume of eight terabytes to the one gigabyte offered).
@@ -1968,10 +1969,10 @@ class RecWorker(VmsWorker):
     # running, and may take another volume on the next pass.
     def leave_volume(self, why: str) -> None:
         logging.warning("%s: %s — stopping its recordings", self.name, why)
-        for uid in list(self.reconciler.actual):
+        for uid in list(self.reconciler.running()):
             self._release_if_broken(uid)
             self.actuator("stop", {"id": uid})
-            self.reconciler.actual.pop(uid, None)
+            self.reconciler.drop(uid)
             self.release(str(uid))
         # A fetch in flight lands into the volume it STARTED on (`_land` checks) and finds it gone; it is given a
         # moment to finish its group rather than be cut in the middle of one.
@@ -2076,8 +2077,10 @@ class RecWorker(VmsWorker):
     #
     # How long that lasts depends on whose the place is:
     #
-    #   a disk of this server     stays this recorder's for as long as the silence lasts. Nobody else can write
-    #                             to it: it is here
+    #   a disk of this server     stays this recorder's for as long as the silence lasts — where its row names THIS
+    #                             recorder's server (`server_field: server`; ADR 0029, `Worker.held_strictly`): this
+    #                             server's daemon keeps one writer there. A row that names another server, or that
+    #                             could not be read, and a recorder that names no server, are strict as below
     #   a network archive         any box may serve it, and one that can reach the store will take the hold when
     #                             it lapses. Two writers in one archive is not a duplicate, it is damage — so
     #                             when the hold has gone `slot_ttl − margin` unconfirmed, it is let go, and its
@@ -2546,7 +2549,11 @@ class RecWorker(VmsWorker):
                 continue
             it, _ = self.vars.get(key)
             if it:
-                self._requests_read[key.rsplit("/", 1)[1]] = (str(it.get("unit", "")), None)
+                # The unit as its id or as `rec/<id>`, the family's two forms (М10A 14): the console's door writes the
+                # id, the VMS's jobs the reference (`jobs._ask_recorder`).
+                ref = str(it.get("unit", ""))
+                it = {**it, "unit": ref.split("/", 1)[1] if ref.startswith(f"{REC.name}/") else ref}
+                self._requests_read[key.rsplit("/", 1)[1]] = (str(it["unit"]), None)
             # THE RESOURCE ASKS TO FREE BYTES on a volume of its server (`free-<server>-<volume>`; the boundary's step 6: it
             # was a hook of the VMS's the resource called). The recorder holding that volume decides, and answers in its
             # heartbeat (`freed`): its footage is a ring of the size the volume was given, which gives up its oldest
@@ -2568,6 +2575,21 @@ class RecWorker(VmsWorker):
             rid = key.rsplit("/", 1)[1]
             if not self.may_act(unit):
                 continue                                     # a lease that lapsed answers nothing, a refusal neither
+            # A DEADLINE, WHERE THE ASKER GAVE ONE (the family's `valid_until`; the console's door gives none for `rec`,
+            # whose rows end after the spec's `ttl`): one not begun by then is answered expired, not fetched — the
+            # asker asks again if it still wants it. One begun is performed to its end. A deadline that is not a time is
+            # this request's refusal.
+            if it.get("valid_until") not in (None, "") and rid not in self._requested:
+                try:
+                    until = finite(it["valid_until"])
+                except (TypeError, ValueError):
+                    self._refuse_request(rid, unit, cam, f"`valid_until` is not a time: {it['valid_until']!r}", done)
+                    continue
+                if now > until:
+                    self.fetched.append(rid)
+                    done.append({"request": rid, "unit": unit, "cam": cam, "expired": True})
+                    log.warning("%s: request %s expired unbegun (%.0fs late)", self.name, rid, now - until)
+                    continue
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
             # …and a range that does not parse is THIS request's refusal (the review's sixth pass, the class of the
@@ -2592,7 +2614,7 @@ class RecWorker(VmsWorker):
                 self._refuse_request(rid, unit, cam, why, done)
                 continue
             ours = self.our_coverage(unit)
-            if unit in self.reconciler.actual:
+            if unit in self.reconciler.running():
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
             # `RANGE_CAP` of it a pass, from where the last pass stopped: a request for a day is not a day in one go
             # (blocker 6). Done — reported, and the console removes the row — when the last piece of it is.
@@ -3290,7 +3312,7 @@ class RecWorker(VmsWorker):
         from w2cplatform.console import label
         keeps = "".join(f'rec_keep_missing_seconds{{keep="{label(kid)}"}} {e.get("missing", 0)}\n'
                         for kid, e in sorted(self.keep_state.items()))
-        return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
+        return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.running())}\n"
                 f"# TYPE rec_volume_wait gauge\nrec_volume_wait {1 if self.volume_wait else 0}\n"
                 f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n"
                 f"# TYPE rec_footage_dropped_seconds_total counter\nrec_footage_dropped_seconds_total {self.dropped_seconds:.1f}\n"

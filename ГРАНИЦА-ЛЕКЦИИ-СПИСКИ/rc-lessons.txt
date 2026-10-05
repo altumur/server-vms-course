@@ -1,0 +1,66 @@
+rc agent (STEP7) — lesson lines that are now untrue. Line numbers as on local `main` (2409ff47). Format:
+file:line — what is untrue — what is true now.
+
+== The reconcile helper (ADR 0033): vms/reconciler.py is gone; w2cplatform/reconcile.py ==
+М10B_ServerVMS/02-the-reconcile-loop.md:4 — «Вы напишете: vms/reconciler.py — Reconciler целиком: reconcile, _fail, lost, clear, status. Перенос из М9 без единого изменения» — the loop is the platform's common helper `w2cplatform/reconcile.py` (ADR 0033): `Backoff(base, max, jitter)` (delay `min(max, base·2^(n−1))·[1−j, 1+j]`, jitter 0 refused; defaults 1 s/60 s/0.5), `Want(rev, body)`, `Pass(started, stopped, restarted, waiting, failed)`, `Position(state, lag, failures, retry_at)`, `Reconciler(start, stop, backoff, restart=None)` with `once(desired) -> Pass`, `running()`, `forget`, `drop`, `clear`, `reset_backoff(*keys)`, `status()`, fields `now`, `rand`, `stall_failures`. Not "copied unchanged": the pass order is stops, restarts, starts; a success clears the failure count only after the unit stayed up `backoff.max`; the old delay `min(2^n, 60)·[0.5, 1.0]` is now `min(60, 1·2^(n−1))·[0.5, 1.5]`.
+М10B_ServerVMS/02-the-reconcile-loop.md:58 — «Общим для платформы он от этого не становится… `Reconciler` — то, чем VMS реализует проход» — it IS the platform's now (needed by vms and rec, ADR 0002 rule); `reconcile_once` stays the base worker's abstract step, the helper is optional (det does not use it). Lesson 02 is platform work presented as VMS (ГРАНИЦА-ЛЕКЦИИ-ПОСТРОЧНО).
+М10B_ServerVMS/02-the-reconcile-loop.md:65 and the whole code (Store/Actuator/`reconcile(now)`/`_fail`/`lost`/`clear`/`status`) — the API is the ADR's (see above); there is no `Store` protocol: the worker passes `{id: Want(rev, row)}` of its enabled rows to `once`.
+М10B_ServerVMS/02-the-reconcile-loop.md:241, :250 — `Reconciler(FakeStore(rows), fake_actuator)` / `.reconcile(0)` — `Reconciler(start, stop, restart=…)`, `once({...})`; `tests/vmsconftest.FakeStore` was deleted.
+М10B_ServerVMS/README.md:27 — «Перенести `Reconciler` из М9 без единого изменения» — the helper is the platform's (ADR 0033), its form changed (above).
+М10B_ServerVMS/13-live-video.md:178 — «Своя сверка вместо `Reconciler`» — the helper is `w2cplatform.reconcile.Reconciler`; the remark still holds in substance (the gateway does not use it).
+М10B_ServerVMS/03-vmsworker-the-process.md:104, :125 — `self.reconciler = Reconciler(self, self._actuate)` — `self.reconciler = self.new_reconciler()`: `Reconciler(start → _actuate("start"), stop → _actuate("stop", {"id"}), restart=_actuate("restart"))`, its `now` the worker's clock; `reconcile_once` builds `{id: Want(revision, row)}` of `desired()`'s enabled rows and maps the `Pass` back to the old `(verb, id)` list (stops first).
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:401, :410 — `self.reconciler.lost(cid, now)` / «`reconciler.lost` — забыть и оштрафовать» — `self.reconciler.forget(cid)` (a death is a failure: started again after its delay).
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:422–431, :450 — `reconciler.status()`, `reconciler.actual`, `reconciler.failures` — `status()` returns `Position(state, lag, failures, retry_at)` per wanted key; phase `failed` = `status()[cid].failures`; `observed_revision` = `reconciler.running().get(cid, 0)`; `CONVERGED` comes from `w2cplatform.reconcile`.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:572–574 — `stop_unit` pops `reconciler.actual` — `stop_unit` calls `self.reconciler.drop(uid)` (stopped by its lease: no failure).
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:616, :620 — `reconciler.clear()` in `fence_units`/`forget_units` — still `clear()` (failures stay); `forget_units` also `reset_backoff()` (another name).
+М10B_ServerVMS/10-recworker.md:647–652 — `resubscribe`: `reconciler.lost(cid, now)` — `reconciler.drop(cid)` (moved, not failed: started on the new source in the same pass, under a new epoch).
+М10B_ServerVMS/10-recworker.md:671 — «`reconciler.actual` держит id записей» — `reconciler.running()`.
+М10B_ServerVMS/10-recworker.md:1035–1038 — `leave_volume`: `reconciler.actual.pop(uid)` — `reconciler.drop(uid)`.
+М10B_ServerVMS/10-recworker.md:1186 — writer reopened: `reconciler.lost(cid, self.now())` — `reconciler.forget(cid)`.
+М10B_ServerVMS/10-recworker.md:1204 — `len(self.reconciler.actual)` — `len(self.reconciler.running())`.
+М10B_ServerVMS/16-backfill-from-the-edge.md:352 — `unit in self.reconciler.actual` — `unit in self.reconciler.running()`.
+М10B_ServerVMS/26-a-backup-archive-of-our-own.md:783–785 — card failing: `reconciler.actual` / `reconciler.lost(uid, now)` — `running()` / `forget(uid)`; and the card reopened resets the backoff of its not-running recordings by `reconciler.reset_backoff(*ids)` (no more `reconciler.failures.pop`).
+М10A_Platform/08-Controller-and-Worker.md:693 (+ the paragraph after it) and :713 — `reconcile_once` abstract, «Что делать с единицей работы, база не знает» — still true; add: the platform also offers the optional reconcile helper `w2cplatform/reconcile.py` (ADR 0033) for a worker whose units are a set of pipelines, and testsub's worker (`tests/conftest.CounterWorker`) and testsub2's (`tests/test_reconcile.TallyWorker`) reconcile through it.
+
+== The holder's playback door: the signed viewer is gone (dead since ADR 0015/0018) ==
+М10B_ServerVMS/15-the-archive-we-did-not-write.md:154 — `PLAYBACK_PER_SIGNATURE = 2` — `PLAYBACK_PER_CAPABILITY = 2` (one camera's capability, `playback_capability`).
+М10B_ServerVMS/15-the-archive-we-did-not-write.md:188, :273–276 — `ByteBudget.take_share`, a person's share — removed; `ByteBudget` is `room(most, wait)`, `take`, `force`, `give` (the door's readers are processes); a person's share lives at the recording's door (`vms/footage.py`, `bounded`).
+М10B_ServerVMS/15-the-archive-we-did-not-write.md:256–271 — «Бюджет делится на людей…», `playback_signature`, `playback_person`, `PLAYBACK_PER_PERSON` — removed; the door bounds connections per capability only.
+М10B_ServerVMS/15-the-archive-we-did-not-write.md:296 — «Подпись зрителя и доля человека стоят на адресе, который консоль подписывала» — gone: `vms/playback.py` has `new_key`, `capability`, `process_url` only; `check_signed`/`signed_query`/`TTL`/`SKEW` deleted with their tests.
+М10B_ServerVMS/module-design.md:142 — «Подписанный зритель — `PLAYBACK_PER_PERSON` (4) соединений сразу, поверх 2 на подпись» — no signed viewer; 2 connections per capability.
+
+== vms/config.py ==
+М10B_ServerVMS/module-design.md:159 — «`one_device` — объект `Devices` (`vms/config.py`)…» — `one_device` and `Devices` are deleted (no caller since step 6: the platform asks rights by `rights.reach.group` and reads no device row); `device_identities` stays (the holder's `describe_devices`).
+(`config.said_id`, `FORBIDDEN_FIELDS` were not quoted by any lesson; `said_id` is `w2cplatform.requests.said_id`.)
+
+== Dead code removed (ADR 0003) ==
+М10B_ServerVMS/24-an-interval-in-the-browser.md:4, :193–234, :266, :377, :386 — step 7 «`from_samples`» — `fmp4.from_samples` is deleted (no caller anywhere); the export/segment path writes with `fmp4.Writer` directly.
+М10B_ServerVMS/27-volumes.md:194, :209 — `suggest`, «Комментарий над `suggest`» — `volumes.suggest` is deleted (no caller since step 6); the recorder still says `archive`/`archive_quota` in its heartbeat for a page to offer.
+М10B_ServerVMS/10-recworker.md:395 — «Первый том страница томов предлагает сама (`volumes.suggest`)» — no such function; a page may offer it from the heartbeat's `archive`/`archive_quota`.
+М10B_ServerVMS/28-vms-on-the-cluster.md:126 — `archive` | `volumes.suggest` — no reader in the code; what a page may offer.
+М11_Cluster/06-what-stays-on-the-server.md:274 — «консоль: … (`volumes.suggest`)» — same.
+М10B_ServerVMS/18-what-the-archive-gives-up-first.md — (no line quotes it, but if the keep's old names are told anywhere) `keeps.py` no longer reads `since`/`until`; the test `test_a_keep_written_before_its_fields_were_renamed_still_holds` is deleted.
+
+== Requests the VMS files to the recorder ==
+М10B_ServerVMS/21-a-job-is-not-a-stream.md:269 (ask_for_footage's code) — the row was `{"unit": <recording>, …}` with no deadline — filed as the family files one (М10A 14) by `jobs._ask_recorder`: `unit: rec/<recording>`, `valid_until` = now + the spec's `most_valid` (600 s default); a recorder that has not begun it by then answers it expired.
+М10B_ServerVMS/23-an-archive-we-do-not-own.md:212 (keep_what_fired) — same change.
+М10B_ServerVMS/16-backfill-from-the-edge.md:312 — «`valid_until` у дозаписи нет» — true for a backfill filed at the console's door (rec's spec has no `valid_for`; the row ends after `ttl`), not for one the VMS's jobs file (they carry a deadline); `RecWorker.requests` reads both unit forms and honours a deadline.
+
+== Detector heartbeat ==
+М10B_ServerVMS/14-detectors.md:266–271 — `DetWorker.heartbeat_once` writes its own heartbeat, «Чего нет по сравнению с воркером VMS: … полей, которые база кладёт» — the base writes it (`Worker.heartbeat_once`, ADR 0013): DetWorker gives `status()` and `heartbeat_fields() -> {"events": …}`; the detector now says `started`, `previous_*`, `fenced`, `fetched`.
+
+== The box (М10A 21 steps 3 and 9, М10B 17) ==
+М10A_Platform/21-Platform-on-the-Box.md:138, :182 — `console.container`, «служба — `console.service`» — `deploy/w2c-console.container`, service `w2c-console.service` (ADR 0023), the same name as in the cluster.
+М10A_Platform/21-Platform-on-the-Box.md:216, :310 — test excerpts with "console.container" — "w2c-console.container"; and :216's rule now: `w2c-events` is joined by every unit that mounts the archive except the console (the controller joins it).
+М10A_Platform/21-Platform-on-the-Box.md:437 — «Одно открытое место: строки журнала контроллера ложатся в архив событий, который назвал RESOURCE_ROOT…» — closed: `w2c-controller@.container` mounts `/data/platform/events` with `GroupAdd=2102`; `test_who_may_write_where_is_in_the_mounts_too` asserts it.
+М10A_Platform/21-Platform-on-the-Box.md:442, :462, :464, :470 — `console` in `systemctl restart/start/status`, `cp … deploy/console.container` — `w2c-console`, `deploy/w2c-console.container`.
+М10A_Platform/21-Platform-on-the-Box.md:416, :514 — «Долг границы… таблица ролей в самом скрипте» — still open (not done in this step; plan in the report).
+М10B_ServerVMS/17-on-the-box.md:134 — `assert EVENTS not in vols("w2c-controller@.container")` — the controller mounts the archive (its journal) with `w2c-events`.
+М10B_ServerVMS/17-on-the-box.md:163 — «У контроллера нет архива» — it has: its journal (`units.left_on_leaving`, a slot it frees) goes into `audit/controller/` of the events archive.
+М10B_ServerVMS/17-on-the-box.md:549 — `("console.container", "console")` — `("w2c-console.container", "console")`.
+М10B_ServerVMS/17-on-the-box.md:598 — `systemctl start w2c-resource console …` — `w2c-console`.
+М10B_ServerVMS/17-on-the-box.md (vmsjobs) — if it says `vms_requests_expired_total` or `_clear_loop`: `w2c_requests_expired_total`, and the answered requests are cleared by the platform's console.
+М10A_Platform/18-Secrets.md:221, М10B_ServerVMS/12-the-vms-console.md:54 — if they name `console.container`: `w2c-console.container`.
+
+== Other comments fixed in code that lessons may quote ==
+М10B_ServerVMS/01-the-first-subsystem.md:337 — the token name `"vmscontroller"` in a test — fine as a test's writer name; there is no VMS controller PROCESS (the controller is `w2c-controller@vms`).

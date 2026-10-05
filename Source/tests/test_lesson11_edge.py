@@ -239,8 +239,8 @@ def test_backfill_closes_our_gaps_and_what_it_fetches_is_ours():
 
 
 def test_subtraction_is_one_rule():
-    """The console draws with it and the recorder fetches with it; if they were two
-    functions they would drift."""
+    """The recorder fetches with it, fills its keeps with it and says what is missing with
+    it; if they were several functions they would drift."""
     assert subtract((0, 100), []) == [(0, 100)]
     assert subtract((0, 100), [(0, 100)]) == []
     assert subtract((0, 100), [(20, 40), (60, 80)]) == [(0, 20), (40, 60), (80, 100)]
@@ -464,13 +464,13 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     # 3. the lost lease: a reassignment names the unit the way the lease does — as text
     r1 = recorder(box, "r-1", "srv-1", acl=False)
     r1.lease_pass(); r1.reconcile_once()
-    held = sorted(r1.reconciler.actual)
+    held = sorted(r1.reconciler.running())
     assert held and all(not str(u).isdigit() for u in held)                # the point: nothing here is a number
     rec.move(held[0], "r-2", "operator asked")
     r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.resource_root + "-2"})
     r2.lease_pass(); r2.reconcile_once()
     assert r1.lease_pass() == [held[0]] and r1.writing_allowed        # released, not fenced — and no ValueError
-    assert held[0] not in r1.reconciler.actual
+    assert held[0] not in r1.reconciler.running()
 
 
 # -- a full disk: nothing for the recorder to watch ---------------------------------------------------

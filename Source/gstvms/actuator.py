@@ -198,7 +198,7 @@ class GstActuator:
         self.posted.append((cid, st.get_name(), fields))
 
     # Returns and clears both lists; every dead camera's pipeline is popped and set to `NULL`. The worker
-    # then calls `reconciler.lost(cid)` (restart after backoff) and writes a `silent` event for it.
+    # then calls `reconciler.forget(cid)` (restart after backoff) and writes a `silent` event for it.
     def pump(self) -> tuple[list[int], list[tuple[int, str, dict]]]:
         """(dead cameras, posted observations) since the last pump. The element
         never knows about buckets or epochs: it posts what it saw; the worker,

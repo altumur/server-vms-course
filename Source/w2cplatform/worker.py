@@ -1484,7 +1484,9 @@ class Worker:
         return 0
 
     # what a subsystem implements
-    # Abstract: what a subsystem implements (one subsystem's is М9 Lesson 6's loop).
+    # Abstract: what a subsystem implements. A worker whose units are a set of pipelines calls the platform's reconcile
+    # helper from it (`reconcile.py`, ADR 0033: backoff with jitter, which the contract owes); one whose work is not
+    # need not.
     # `now` is optional: the loop (`run`) calls it with none, a test may pass its own.
     def reconcile_once(self, now: float | None = None) -> list:
         raise NotImplementedError
@@ -2200,7 +2202,7 @@ class Worker:
                     continue
                 unit_of = str(it.get("unit", ""))
                 if "/" in unit_of and unit_of.split("/", 1)[0] == self.sub.name:
-                    unit_of = unit_of.split("/", 1)[1]   # `<sub>/<id>`, as the console files it
+                    unit_of = unit_of.split("/", 1)[1]   # `<sub>/<id>`, as a subsystem's worker may file it
                 got = self._requests_read[rid] = (unit_of, it if unit_of in mine else None)
             row = mine.get(got[0])
             if row is None:

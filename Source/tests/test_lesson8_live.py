@@ -387,7 +387,7 @@ def test_a_camera_that_moved_hangs_up_its_viewers_and_the_subscription_takes_the
         peer, before = g.sessions[sid][1], g.upstreams["1"]
         g.reconcile_once()
         assert sid in g.sessions and g.resets == 0                     # nothing changed: nothing reopened
-        w.actuator("stop", {"id": 1}); w.reconciler.actual.pop(1, None); w.release("1")
+        w.actuator("stop", {"id": 1}); w.reconciler.drop(1); w.release("1")
         w.reconcile_once(); w.heartbeat_once()                         # the worker started it again: epoch 2
         g.reconcile_once()
         up = g.upstreams["1"]

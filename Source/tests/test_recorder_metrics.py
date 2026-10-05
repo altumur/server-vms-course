@@ -54,7 +54,9 @@ def test_a_recording_the_engine_refuses_is_counted_by_itself_and_its_last_frame_
             return "OK"
     sinks = {u: RecSink(Volume(), u, 1, tally=r._tally) for u in ("7", "8")}
     r.rows = [{"id": u, "cam": u, "name": u, "enabled": True, "revision": 1} for u in ("7", "8")]
-    r.reconciler.actual = {u: {"revision": 1} for u in ("7", "8")}
+    from w2cplatform.reconcile import Reconciler, Want
+    r.reconciler = Reconciler(lambda k, w: True, lambda k: None)      # both running, as far as the loop knows
+    r.reconciler.once({u: Want(1) for u in ("7", "8")})
     t0 = box.wall(); r.writer_pass()
     box.wall.advance(30)
     for sink in sinks.values():

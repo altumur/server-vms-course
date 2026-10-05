@@ -161,7 +161,8 @@
       sharedRev: "rev {r} · term {t} · {a}", neverPub: "never published yet", onePerLine: "one a line", publishW: "Publish",
       publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
       editsW: "Edits for the clusters", editsNote: "The domain calls no cluster: an edit waits here, the cluster's agent takes it on its next publication, applies it and sends back the outcome.",
-      waitsPub: "waits for publication", appliedW: "applied", refusedStatus: "refused {s}", takenAt: "taken", appliedAt: "applied", noEdits: "no edits",
+      alarmTimesTip: "how many times in the day",
+      waitsPub: "waits for publication", appliedW: "applied", refusedStatus: "refused {s}", takenAt: "taken", noEdits: "no edits",
       debugBadge: "debug: no sign-in", debugTip: "The door let you in without a password: a request from this machine, W2C_DEBUG_PERSON is set (a stand only, ADR-0050). Your rights are this person's.",
       n: { asPerson: "as", on: "on", silent: "silent", unitsN: "units", noTwoWriters: "not moved, so that there are never two writers", movedAfter: "moved after",
         holds: "held by", leaseUntil: "lease until", pastLimit: "past the limit of", server: "server", lost: "lost",
@@ -310,7 +311,8 @@
       sharedRev: "rev {r} · срок {t} · {a}", neverPub: "ещё ни разу не публиковались", onePerLine: "по одному на строку", publishW: "Опубликовать",
       publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
       editsW: "Правки для кластеров", editsNote: "Домен не звонит кластерам: правка ждёт здесь, агент кластера забирает её при следующей публикации, применяет у себя и присылает исход.",
-      waitsPub: "ждёт публикации", appliedW: "применена", refusedStatus: "отказ {s}", takenAt: "принята", appliedAt: "применена", noEdits: "правок нет",
+      alarmTimesTip: "сколько раз за сутки",
+      waitsPub: "ждёт публикации", appliedW: "применена", refusedStatus: "отказ {s}", takenAt: "принята", noEdits: "правок нет",
       debugBadge: "отладка: вход без пароля", debugTip: "Дверь впустила без пароля: запрос с этой машины, задан W2C_DEBUG_PERSON (только стенд, ADR-0050). Права — этого человека.",
       n: { asPerson: "как", on: "на", silent: "молчит", unitsN: "единиц", noTwoWriters: "не переносятся, чтобы не было двух писателей", movedAfter: "перенесены через",
         holds: "держит", leaseUntil: "аренда до", pastLimit: "дальше предела", server: "сервер", lost: "утрачены",
@@ -426,7 +428,9 @@
     C.display = name => { const s = st.subs.find(x => x.name === name); return s ? display(s) : {}; };
     // [course leads] the spec as /spec gave it, a copy — for the page's own reading of it (its places' table, spec.places)
     C.spec = name => { const s = st.subs.find(x => x.name === name); return s ? JSON.parse(JSON.stringify(s.spec)) : null; };
-    const kindWord = e => { const s = st.subs.find(x => x.name === e.subsystem); const k = s && display(s).kinds; return (k && k[e.kind]) || W.kinds[e.kind] || e.kind; };
+    // A kind's words: its subsystem's display.kinds; a line relayed under another name (an audit line, an alarm from a
+    // member) by any spec that names the kind; then the platform's own.
+    const kindWord = e => { const s = st.subs.find(x => x.name === e.subsystem); const k = s && display(s).kinds; return (k && k[e.kind]) || st.subs.map(x => (display(x).kinds || {})[e.kind]).find(Boolean) || W.kinds[e.kind] || e.kind; };
     // What a platform event says beyond its kind, from its fields; a subsystem's events say it in their note.
     const dur = sec => { sec = Math.round(+sec || 0); const m = Math.floor(sec / 60), r = sec % 60; return m ? `${m} ${W.n.min}${r ? " " + r + " " + W.n.s : ""}` : `${r} ${W.n.s}`; };
     const eventNote = e => {
@@ -650,7 +654,8 @@
     // at the holder: the members and how many publish, the holder's name
     function paintHolderHeader() {
       const ms = (st.dom && st.dom.members) || [];
-      $(".pc-hunits-l").textContent = cap(W.clusters); $(".pc-hunits").textContent = st.dom ? ms.length : "—"; $(".pc-hworkers").textContent = "—";
+      $(".pc-hunits-l").textContent = cap(W.clusters); $(".pc-hunits").textContent = st.dom ? ms.length : "—";
+      $(".pc-hworkers").parentElement.style.display = "none"; root.querySelector("footer").style.display = "none";   // no workers, nothing saved by the footer
       $(".pc-hsrv").textContent = st.loadErr && !st.dom ? W.noLink : st.dom ? ms.filter(m => m.holder || m.state === "ok").length + "/" + ms.length + " " + W.publishes : "";
       $(".pc-hload").classList.toggle("stale", !st.dom);
       $(".pc-uinst").textContent = cap(W.domainWord) + (st.dom && st.dom.holder ? " · " + st.dom.holder : "");
@@ -1707,6 +1712,19 @@
       if (v.complete === false) { const down = (v.members || []).filter(m => !m.holder && m.state !== "ok").map(m => m.name); return `<div class="nt err">${h(W.listIncomplete.replace("{m}", down.join(", ")))}</div>`; }
       return "";
     }
+    // The alarms of a day, one line per kind and what it is about (of; without it, the unit that said it): the
+    // newest of them, how many, since when, from which members — a storm of one kind does not hide the others.
+    function alarmGroups(events) {
+      const out = [], by = new Map();
+      for (const e of events) {   // newest first
+        const k = (e.kind || "") + "\u0001" + (e.of || e.unit || "");
+        let g = by.get(k);
+        if (!g) { g = { e, n: 0, first: e.t, members: [] }; by.set(k, g); out.push(g); }
+        g.n++; g.first = Math.min(g.first, e.t);
+        if (e.member && !g.members.includes(e.member)) g.members.push(e.member);
+      }
+      return out;
+    }
     // The domain: its holder in the head; the overview (who knocks, the alarms, the members, the topology, the
     // domain's page), its access, its keys.
     function paintDomain(el, ref) {
@@ -1716,12 +1734,12 @@
       if (!domainOnly && st.domShared == null) loadDomShared().then(() => { if (st.sel === "domain") refreshMain(); });
       const list = v.member_list || { rev: 0 }, ms = v.members || [];
       const ks = v.knocking || [], a = st.alarms;
-      const skip = ["t", "kind", "subsystem", "unit", "of", "member", "from_history", "class", "ongoing", "last_report", "alive_at", "alive_via"];
+      const skip = ["t", "kind", "subsystem", "unit", "of", "member", "from_history", "class", "ongoing", "last_report", "alive_at", "alive_via", "id", "person", "detail"];
       el.innerHTML = `<h1>${h(cap(W.domainWord))}</h1><p class="sub pc-hdsub">${h(W.holderIs)} ${h(v.holder || "—")}; ${h(W.viewAge)} ${v.age != null ? Math.round(v.age) + " " + h(W.n.s) + " " + h(W.ago) : "—"}</p>
         <div class="pc-general">${domAgeNote()}${termCard(v)}
         ${ks.length ? card(h(cap(W.knocking)), ks.map((k, i) => `<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(k.name)}<small>${h(W.knockTimes.replace("{n}", k.times).replace("{t}", fmt(k.last)))}${k.fingerprint ? " · " + h(W.fingerprint) + " <b>" + h(k.fingerprint) + "</b>" : ""}</small></span>${admin ? `<button type="button" class="btn s" data-admit="${i}">${h(W.admit)}</button>` : ""}</div>`).join("") + `<p class="sub">${h(W.knockNote)}</p>`) : ""}
         ${a ? card(`${h(cap(W.alarms))} <small class="sub" style="font-weight:400">· ${h(W.alarmsDay)}</small>`, (a.complete ? "" : `<p class="sub" style="color:var(--rd)">${h(a.sentence || "")}</p>`)
-          + ((a.events || []).slice(0, 50).map(e => `<div class="it" style="cursor:default"><span>${ic("bell")}</span><span><b title="${h(e.kind)}">${h(kindWord(e))}</b> · ${h(e.of || e.unit || "")}<small>${h(fmt(e.t))} · ${h(e.member)}${eventNote(e) ? " · " + h(eventNote(e)) : ""} · ${h(Object.entries(e).filter(([k]) => !skip.includes(k)).map(([k, x]) => k + "=" + (typeof x === "object" ? JSON.stringify(x) : x)).join(" "))}</small></span></div>`).join("") || `<p class="sub">${h(cap(W.noAlarms))}.</p>`)) : ""}
+          + (alarmGroups(a.events || []).slice(0, 50).map(({ e, n, first, members }) => `<div class="it" style="cursor:default"><span>${ic("bell")}</span><span><b title="${h(e.kind)}">${h(kindWord(e))}</b>${e.of || e.unit ? " · " + h(e.of || e.unit) : ""}${n > 1 ? ` <span class="tag" title="${h(W.alarmTimesTip)}">×${n}</span>` : ""}<small>${h(fmt(e.t))}${n > 1 ? " (" + h(W.sinceW) + " " + h(fmt(first)) + ")" : ""} · ${h(members.join(", "))}${eventNote(e) ? " · " + h(eventNote(e)) : ""}${(() => { const r = Object.entries(e).filter(([k]) => !skip.includes(k)).map(([k, x]) => k + "=" + (typeof x === "object" ? JSON.stringify(x) : x)).join(" "); return r ? " · " + h(r) : ""; })()}</small></span></div>`).join("") || `<p class="sub">${h(cap(W.noAlarms))}.</p>`)) : ""}
         ${card(`${h(cap(W.members))} <small class="sub" style="font-weight:400">· ${h(list.rev ? W.byList + " " + list.rev : W.byConfig)}</small>`, ms.map(m => `<div class="it" data-ref="${m.holder ? "" : "member:" + h(m.name)}"><span>${decorOf("member:" + m.name).iconHtml || ic("server")}</span><span>${h(m.name)}${m.holder ? " · " + h(W.holderHere) : ""} ${topoTags(m.name)}<small>${h(m.holder ? W.readHere : m.state === "never" ? W.never : W.lastPub + " " + Math.round(m.age || 0) + " " + W.n.s + " " + W.ago)}</small></span>${memberBadge(m)}</div>`).join(""))}
         ${trustCard(v)}${unitsCard(v)}<div class="pc-shared">${sharedCard()}</div>${editsCard(v)}
         <div class="pc-topo"></div></div>`;
@@ -1793,7 +1811,7 @@
         const edit = sub ? (((sub.spec.domain || {}).edit) || []).filter(f => ((sub.spec.fields || []).find(x => x.name === f) || {}).type === "bool") : [];
         return `<div class="pc-g" style="margin-top:10px">${h(title)} <span class="sub">${(list || []).length}</span></div>` + ((list || []).map(u => {
           const [w, c] = S[u.state] || [u.state || "—", ""], vw = u.view || {};
-          const vals = Object.entries(vw).map(([k, x]) => (sub ? fieldTitle(sub, k) : k) + ": " + (typeof x === "object" ? JSON.stringify(x) : x)).join(" · ");
+          const vals = Object.entries(vw).map(([k, x]) => (sub ? fieldTitle(sub, k) : k) + ": " + (typeof x === "boolean" ? (x ? W.yesW : W.noW) : typeof x === "object" ? JSON.stringify(x) : x)).join(" · ");
           const may = sub && C.may("edit", "unit:" + name + "/" + u.ref);
           const btns = edit.filter(f => typeof vw[f] === "boolean" && may && u.ref).map(f => `<button type="button" class="btn s" data-uedit="${h(JSON.stringify([name, u.ref, f, !vw[f]]))}">${h(vw[f] ? W.turnOff : W.turnOn)}${edit.length > 1 ? " · " + h(fieldTitle(sub, f)) : ""}</button>`).join("");
           return `<div class="it" style="cursor:default"><span>${ic("x")}</span><span>${h(u.ref || "—")}<small>${h(u.cluster)}${u.worker ? " · " + h(u.worker) : ""}${u.server ? " · " + h(u.server) : ""}${u.phase ? " · " + h(u.phase) : ""}${u.age != null ? " · " + h(Math.round(u.age)) + " " + h(W.n.s) : ""}${vals ? " · " + h(vals) : ""}</small></span><span style="display:flex;gap:6px;align-items:center">${btns}<span class="bd${c ? " " + c : ""}">${h(w)}</span></span></div>`;
@@ -1851,7 +1869,7 @@
       const rows = [];
       for (const [c, list] of Object.entries(v.pending || {})) for (const e of list || []) rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)} · ${h(e.what || e.id || "")}<small>${h(W.takenAt)} ${h(fmt(e.at))}</small></span><span class="bd wait">${h(W.waitsPub)}</span></div>`);
       for (const [c, list] of Object.entries(v.outcomes || {})) for (const o of list || []) { const ok = o.status >= 200 && o.status < 300;
-        rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)} · ${h(o.what || o.id || "")}<small>${h(W.appliedAt)} ${h(fmt(o.at))}${o.error ? " · " + h(o.error) : ""}</small></span><span class="bd${ok ? "" : " off"}">${h(ok ? W.appliedW : W.refusedStatus.replace("{s}", o.status))}</span></div>`); }
+        rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)} · ${h(o.what || o.id || "")}<small>${h(fmt(o.at))}${o.error ? " · " + h(o.error) : ""}</small></span><span class="bd${ok ? "" : " off"}">${h(ok ? W.appliedW : W.refusedStatus.replace("{s}", o.status))}</span></div>`); }
       return card(h(W.editsW), `<p class="sub">${h(W.editsNote)}</p>` + (rows.join("") || `<p class="sub">${h(W.noEdits)}</p>`));
     }
     // The domain's access at a glance: its people and the clusters they have grants on; each opens in «Rights».

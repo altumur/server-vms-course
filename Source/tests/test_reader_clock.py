@@ -46,9 +46,8 @@ def test_a_recorder_dead_with_its_clock_ahead_stops_being_a_door_and_one_behind_
 
 def test_a_volume_is_served_by_a_holder_behind_and_no_longer_by_a_dead_one_ahead():
     """`volumes.served` (the console's `/volumes`, `rec_volumes_unserved`) read a hold live while `now <= until` — the
-    holder's clock — and a recorder's word by `now - ts`; `volumes.suggest` offered a disk by the same. A hold renewed
-    by a recorder an hour behind was "the recorder that held it went silent", and its disk never offered; a dead one an
-    hour ahead held its volume for that hour. Now a hold is live while the reader has seen it renewed within a slot's
+    holder's clock — and a recorder's word by `now - ts`. A hold renewed by a recorder an hour behind was "the recorder
+    that held it went silent"; a dead one an hour ahead held its volume for that hour. Now a hold is live while the reader has seen it renewed within a slot's
     term, a recorder's word while its heartbeat changes."""
     from vms import volumes
     box = Box()
@@ -73,11 +72,6 @@ def test_a_volume_is_served_by_a_holder_behind_and_no_longer_by_a_dead_one_ahead
     rows = {v["name"]: v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects, eyes=eyes)["volumes"]}
     assert rows["vb"]["served_by"] == "inst-b" and rows["vb"]["why"] is None, rows["vb"]
     assert rows["va"]["served_by"] is None and rows["va"]["why"] == "the recorder that held it went silent", rows["va"]
-    assert volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall(), eyes=eyes) == []   # both disks declared
-    for name in ("va", "vb"):                                         # …and with none declared, the disk of the live one
-        volumes.delete(box.vars, name)
-    beat_b()
-    assert [s["server"] for s in volumes.suggest(box.vars, box.objects, REC_SPEC.sub, box.wall(), eyes=eyes)] == ["srv-b"]
 
 
 def test_a_scan_asks_the_door_of_a_recorder_behind_and_not_of_a_dead_one_ahead():
@@ -109,24 +103,6 @@ def test_a_scan_asks_the_door_of_a_recorder_behind_and_not_of_a_dead_one_ahead()
         assert got.answered and [(s.start, s.end) for s in got.spans] == [(100.0, 160.0)] and got.silent == [], got
     finally:
         srv.shutdown()
-
-
-def test_a_device_is_known_through_a_holder_behind_and_not_through_a_dead_one_ahead():
-    """`config.Devices.held` — what makes a device known, and moving a camera within it a grant on that camera, not on
-    the cluster — took the holders live by `ts`: a holder an hour behind made its devices unknown, one dead an hour
-    ahead kept a replaced recorder's identity known (the tenth pass's hole, by a clock)."""
-    from vms.config import one_device
-    box = Box()
-    eyes = _eyes(box)
-    for dev, ident in (("acme/10.0.0.5", "SN5"), ("acme/10.0.0.6", "SN6")):
-        box.vars.put(SPEC.sub.config("devices", dev), {"identity": ident})
-    _beat(box, SPEC, "w-ahead", AHEAD, devices=[{"device": "acme/10.0.0.6", "can": True}])
-    _beat(box, SPEC, "w-behind", BEHIND, devices=[{"device": "acme/10.0.0.5", "can": True}])
-    one_device(box.vars, box.objects, box.wall, eyes).held()                                # the first look
-    box.wall.advance(46)
-    _beat(box, SPEC, "w-behind", BEHIND, devices=[{"device": "acme/10.0.0.5", "can": True}])
-    same = one_device(box.vars, box.objects, box.wall, eyes)
-    assert same.known("acme/10.0.0.5") and not same.known("acme/10.0.0.6")
 
 
 def test_a_contender_is_fresh_while_it_asks_whatever_its_clock_and_not_after():
