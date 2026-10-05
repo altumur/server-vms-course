@@ -239,7 +239,7 @@ class Assignment:
 ```python
     sub = Subsystem("thing")
     ctl = Controller(sub, box.vars, box.objects, wall=box.wall)
-    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall)
+    w = Worker(sub, "t-1", box.vars, box.objects, clock=box.clock, wall=box.wall, spec=spec_named("thing"))
     ...
     a = ctl.assign("t-1", ["3", "1", "2"])
     assert a.units == ["1", "2", "3"] and a.rev == 1 and w.assignment().units == ["1", "2", "3"]

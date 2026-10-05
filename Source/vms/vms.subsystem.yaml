@@ -5,9 +5,10 @@
 # `vms/idem/<key>`, `vms/retention/<id>`, `vms/devices/<device>` (what a held device raises and can do — its
 # holder's, Lesson 25), and the object-store keys `vms/<w>/heartbeat` and `vms/snapshot`.
 # It also prefixes every `/metrics` line (`vms_…`) and is the `<subsystem>` directory on the resource
-# (`<archive>/vms/<cam>/…`). The two ACLs are cut from it: the console's token gets `vms/cameras/*`,
-# `vms/next_id`, `vms/idem/*`, `vms/retention/*`; the controller's gets `vms/workers/*`, `vms/placement/*`,
-# `vms/slots/*`.
+# (`<archive>/vms/<cam>/…`). The grants are cut from it (`SubsystemSpec.acl_console`, `acl_controller`,
+# `acl_worker_role`): the console's token gets `vms/cameras/*`, `vms/next_id`, `vms/idem/*`, `vms/requests/*`, …;
+# the controller's `vms/workers/*`, `vms/placement/*`, `vms/slots/*`, `vms/decommissioned/*`; a worker's its epochs,
+# slot and place, and the rows of its own tables (`worker.writes`: `vms/devices/*`).
 name: vms
 # The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
@@ -40,7 +41,7 @@ unit:
   # carrying `id` is refused (it is a platform field). `parse_id` turns the URL's last segment into an
   # `int`; sort order is numeric.
   id: numeric                        # vms/next_id
-  # the operator's eleven fields. `SubsystemSpec.refuse` rejects any key not in this list and any of
+  # the operator's fields. `SubsystemSpec.refuse` rejects any key not in this list and any of
   # `PLATFORM_FIELDS`; `new_row` applies the defaults; `row()`/`items()` convert by type; `/spec` sends
   # `{name, type, default, required}` for each so the page builds its forms without knowing the VMS.
   fields:
@@ -326,7 +327,7 @@ placement:
 # the row; the holder performs it on its next look, says so in its heartbeat, and the row is cleared. Named by its
 # `Idempotency-Key` (or the body's `id`): a retried click is the same command, not a second pulse (the platform review,
 # M17). Thirty seconds by default (`valid_for`): a door opened a minute after the button is an incident; at most ten
-# minutes — what the holder accepts (`VmsWorker.MAX_VALID`). The console stamps the group the rights were asked on
+# minutes — what the holder accepts (`most_valid`, read by `Worker.most_valid`). The console stamps the group the rights were asked on
 # (`group`, the source up to `/ch/`): the holder performs it only there — a camera moved onto a recorder in the ten
 # minutes a command may wait is not the camera the person had the right to command (the review's eighth pass).
 requests:
@@ -406,7 +407,7 @@ metrics:
   - {name: cameras_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   # The commands the holders performed, refused, let expire or could not say about, summed over their heartbeats.
   - {name: commands_total, from: "heartbeat.command_counts.<outcome>", agg: sum, type: counter}
-  # The road to the device, where it ends (`VmsWorker._measure`), per holder and by who asked (`by`: `auto` or
+  # The road to the device, where it ends (`Worker._measure`), per holder and by who asked (`by`: `auto` or
   # `operator`): from the event's moment and from the row's filing to the call, with the times the two clocks visibly
   # disagreed; and from the holder's first sight of the row, by its clock alone (the review's seventh pass, minor).
   - {name: event_to_device_seconds, from: "heartbeat.command_road.<by>", agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}

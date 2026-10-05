@@ -508,18 +508,23 @@ def forget_finished(ctl, now: float) -> int:
 # The request id is the range, so a job asking every thirty seconds writes one row, not a queue.
 #
 # FILED AS THE PLATFORM'S REQUEST FAMILY FILES ONE (М10A 14): the unit as `rec/<recording>`, and a deadline —
-# `valid_until`, the spec's `most_valid` away (the family's `MOST_VALID` where it says none). A recorder that has not
+# `valid_until`, `FETCH_WAIT` away (never past the spec's `most_valid` where it says one; `rec`'s family is `free` and
+# says none, so the deadline is the job's: how long it waits for a recorder to begin). A recorder that has not
 # begun it by then answers it expired and the reaper ends the row; a job still fetching asks again on its next turn,
 # and the recorder goes on from the first moment its volume does not show (`RecWorker.requests`).
+FETCH_WAIT = 600.0
+
+
 def _ask_recorder(rec_ctl, unit: str, cam: str, t0: float, t1: float, now: float, by: str) -> bool:
+    from w2cplatform.canonical import number_text
     from w2cplatform.doors import unit_ref
-    from w2cplatform.requests import MOST_VALID
     key = rec_ctl.sub.request_key(f"{unit}-{int(t0)}-{int(t1)}")
     if rec_ctl.vars.get(key)[0]:
         return False                                    # already asked; the recorder says when it is fetched
-    most = float(rec_ctl.spec.requests.get("most_valid") or MOST_VALID)
-    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": str(t0), "to": str(t1),
-                           "at": str(now), "by": by, "valid_until": str(now + most)})
+    most = min(FETCH_WAIT, float(rec_ctl.spec.requests.get("most_valid", FETCH_WAIT)))
+    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": number_text(t0),
+                           "to": number_text(t1), "at": number_text(now), "by": by,
+                           "valid_until": number_text(now + most)})            # numbers by the platform's one rule
     return True
 
 
