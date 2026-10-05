@@ -29,7 +29,7 @@ class _Daemon:
 
     def __init__(self):
         self.machine, self.seen, self.lock = StoreMachine(1000), [], threading.Lock()
-        self.dir = tempfile.mkdtemp(prefix="cs-", dir="/tmp")             # a socket's path is at most 104 bytes on macOS
+        self.dir = tempfile.mkdtemp(prefix="cs-")             # the run's root is short: a socket's path is at most 104 bytes on macOS
         self.path = os.path.join(self.dir, "console.sock")
         me = self
 

@@ -7,6 +7,7 @@ edit and what became of it, the delivery of shared settings, the alarms, the boo
 the reports, and a member's silence is the age of its last one.
 """
 import json
+import tempfile
 
 from w2cplatform.cluster.variables import FakeVariables
 
@@ -38,7 +39,7 @@ def _site(wall, n=2, nets=None):
     for i in range(n):
         d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall, reaches=((nets or ["vlan:a"] * n)[i],))
         d.boot(first_name=f"gate-{i}")
-        cards[d.name] = Card("vms")
+        cards[d.name] = Card("vms", tempfile.mkdtemp(prefix="card-"))
         fed.add(member_copy(d.name, north.objects, d.reaches, wall=wall))
         devices[d.name] = d
         agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=d, current=d.current,

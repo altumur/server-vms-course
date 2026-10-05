@@ -6,7 +6,7 @@
 - `BUCKET = 600` — М10A's bucket span. `WINDOW = 86400` — a page's span.
 - `HISTORY = "domain/alarm-history"` — in the domain's object store: one object per member, a rolling week.
 
-## `class Card(sub, root=None, unit="1", ...)` — a member's events of subsystem `sub` on its card, as М10A's buckets. `observe(...)`, and on an alarm `on_alarm()` (the agent's `wake`); `alarms(since, until, limit)`; `waiting(since)` for an agent in another process.
+## `class Card(sub, root, unit="1", ...)` — a member's events of subsystem `sub` on its card (`root`, the caller's: an empty one is refused), as М10A's buckets. `observe(...)`, and on an alarm `on_alarm()` (the agent's `wake`); `alarms(since, until, limit)`; `waiting(since)` for an agent in another process.
 
 ## `pages(card, now, per_member=100, window=WINDOW)` — the page the agent puts in its report: `{"alarms": …}`.
 

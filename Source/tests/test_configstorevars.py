@@ -3,7 +3,8 @@ on real unix sockets and a real mutual-TLS door, with the state machine applied 
 (`LocalBackend`) instead of through raft. Needs no raft library, so it runs in every suite; what raft adds — a
 group, joins, a leader killed — is `test_configstore.py`, where `pysyncobj` is installed.
 
-Socket directories are short ones under /tmp: a unix socket's path is at most 104 bytes on macOS."""
+Socket directories are under the run's root, a short one (`tests/runroot.py`): a unix socket's path is at most 104
+bytes on macOS."""
 from __future__ import annotations
 
 import contextlib
@@ -48,7 +49,7 @@ def refused(words: str):
 
 
 def short_dir() -> str:
-    d = tempfile.mkdtemp(prefix="cs", dir="/tmp")
+    d = tempfile.mkdtemp(prefix="cs")
     assert len(os.path.join(d, "testsubcontroller.sock")) < 104, d
     return d
 
