@@ -83,7 +83,7 @@ def _whep(base, cam, headers=None, method="POST", path=None):
     _keys[0] += 1
     code, body, _ = _http(f"{base}/live/streams", "POST", json.dumps({"cam": str(cam), **({"labels": labels} if labels else {})}).encode(),
                           {"Content-Type": "application/json", "Idempotency-Key": f"w{_keys[0]}", **headers})
-    if code not in (201, 400) or (code == 400 and "exists" not in body):
+    if code not in (201, 409) or (code == 409 and "exists" not in body):
         return code, body, ""
     door = _door(base, cam, headers)
     if not door:
@@ -572,7 +572,7 @@ def test_a_viewer_granted_one_camera_hangs_up_its_own_session_and_nobody_elses()
             # asking for a stream is a viewer's — of THAT camera — and changing the stream's row is not (`rights.routes`)
             ask = lambda who, key: _http(f"{base}/live/streams", "POST", json.dumps({"cam": "1"}).encode(),   # noqa: E731
                                          {"Content-Type": "application/json", "Idempotency-Key": key, **as_(who)})[0]
-            assert ask("carl", "c1") == 403 and ask("anna", "a1") == 400           # carl sees camera 2; anna: it exists
+            assert ask("carl", "c1") == 403 and ask("anna", "a1") == 409           # carl sees camera 2; anna: it exists
             assert _http(f"{base}/live/streams/1", "PUT", json.dumps({"grace": 5}).encode(),
                          {"Content-Type": "application/json", **as_("anna")})[0] == 403
         finally:

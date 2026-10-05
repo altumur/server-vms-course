@@ -744,7 +744,7 @@ async function startLive() {
   const OFFER = 'whep';                                             // the route of a door that takes an offer
   const [name, s] = (await subsAbout()).find(([, s]) => s.door.routes.includes(OFFER)) || [];
   if (!name) { $('#playing small').textContent = 'nothing here opens a stream'; pc.close(); return; }
-  try { await send('POST', `/${name}/${s.rows}`, { [s.about.field]: current }); } catch (_) {}   // "exists": watched already
+  try { await send('POST', `/${name}/${s.rows}`, { [s.about.field]: current }); } catch (_) {}   // 409 "exists": watched already — the door says the rest
   let r = null, door = null, tries = 0, refused = 0;
   for (;;) {
     door = await doorOf(`/${name}`, current);

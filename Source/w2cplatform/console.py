@@ -134,6 +134,7 @@ from .events import ALARM, CONSOLE, OF, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
+LEDGER = "asks-"              # `<sub>/requests/asks-<sha256 of the person, 16 hex>`: one person's open requests (`_file_request`)
 CONSOLE_TIMEOUT = 30.0        # seconds a console's socket waits on a client that sends or reads nothing (`CONSOLE_TIMEOUT`)
                               # — and the most a request's line and headers may take, whole (`Mount.handler`)
 CONSOLE_CONNECTIONS = 64      # connections one console serves at once (`CONSOLE_CONNECTIONS`): past it, 503 at once
@@ -155,7 +156,7 @@ from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate,
 from .journal import AUDIT, Journal
 from .resource import resources_seen
 from .limits import TooLarge
-from .spec import GARBLED_ROW, LABEL_WORD, Refused, SpecController, server_name
+from .spec import GARBLED_ROW, LABEL_WORD, Exists, Refused, SpecController, server_name
 
 # A unit's row the timeline's gate reads for its labels (`SpecConsole.dispatch`, `/events`): one that does not parse is
 # that unit's events withheld from a grant by label, and nobody else's timeline (the scaling pass after the eighth review).
@@ -1383,6 +1384,7 @@ class SpecConsole:
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall,   # in the store: any instance answers a retry
                                     sealer=getattr(ctl, "sealer", None))                 # its digests under the cluster's key
         self.epoch_policy: dict[str, str] = {self.spec.name: self.spec.older_epochs}   # replaced by the Mount's shared one
+        self.ledgers_garbled: set[str] = set()           # people's request ledgers this console found unreadable (`_file_request`)
         self.clock = time.monotonic                      # ages the caches below; a test sets its own
         self._scan: tuple[float, dict] = (-1e9, {})
         self.scans = 0
@@ -1983,10 +1985,14 @@ class SpecConsole:
             if field != "slots_garbled":                                  # above, under the name it always had
                 lines += [f"# TYPE {p}_worker_{field} counter",
                           *[f'{p}_worker_{field}{{worker="{label(w)}"}} {n(w, field, int)}' for w in hbs]]
-        # …and this console's own: the rows of this subsystem IT could not read (the request rows it reads and reaps, the
-        # rows of the tables it serves, the fields of heartbeats read as not said just above), by table.
+        # …and the same counters as this process counted them for this subsystem, by table (`rows.Table`): what its
+        # readers in this process could not read — the rows of the tables it serves, a subsystem's own tables it reads.
         lines += [f"# TYPE {p}_console_rows_garbled counter",
                   *[f'{p}_console_rows_garbled{{table="{label(name)}"}} {tables[name].get(p, 0)}' for name in sorted(tables)]]
+        # …and the people's request ledgers this console found unreadable, now (`_file_request`): each a person who
+        # files nothing until an administrator deletes the row.
+        if "per_person" in self.spec.requests:
+            lines += [f"# TYPE {p}_requests_ledger_garbled gauge", f"{p}_requests_ledger_garbled {len(self.ledgers_garbled)}"]
         # The sweep's backlog, for subsystems that have blobs to collect. Two cheap reads — a prefix
         # listing and one row — deliberately NOT `blobs_referenced()`, which walks every unit's row: a
         # gauge scraped every fifteen seconds must not cost a full scan of the configuration.
@@ -1997,10 +2003,9 @@ class SpecConsole:
                       f"{p}_blobs_total {len(self.ctl.objects.list(self.ctl.sub.blobs_prefix()))}",
                       f"# TYPE {p}_blobs_marked gauge",
                       f"{p}_blobs_marked {len(marked)}"]
-        if self.spec.offers:
-            lines += self.spares_lines(rep, now, hbs)
-        if self.spec.places:
-            lines += self.places_lines(live)
+        places = self.places_needed(live) if self.spec.places else None
+        spares = self.spares_lines(rep, now, hbs, places or 0) if self.spec.offers else []
+        lines += spares or (self.places_lines(places) if places is not None else [])   # one `workers_needed` series
         from . import metrics
         lines += metrics.lines(self.spec, self.ctl, hbs, live, now)   # the subsystem's own numbers, as its spec declares them
         if self.says_platform:
@@ -2081,15 +2086,23 @@ class SpecConsole:
     # …and for a subsystem placed by its rows (`placement.places`): `<p>_workers_needed{labels=""}` — the places that say
     # `where` and that no live hold names, less the live workers that hold no place. Read here, on every scrape, from the
     # store and the heartbeats this console reads anyway: no offer is written (a spare takes a free place by itself).
-    def places_lines(self, live: dict) -> list[str]:
+    #
+    # ONE SERIES, WHATEVER SAYS IT (a spec with both `offers` and `places`): the spares' empty set and the free places were
+    # each `<p>_workers_needed{labels=""}` with a TYPE line of its own — two TYPE lines and a duplicate series, and
+    # Prometheus refuses the whole scrape. The places' number is added to the empty set's row of the spares' lines, and
+    # said alone only when those are not said (a stale pass, or no `offers`).
+    def places_needed(self, live: dict) -> int:
         from .metrics import matches
-        p, t = self.spec.name, self.spec.places
+        t = self.spec.places
         held = self.ctl.live_holds()
         free = [n for n, it in self.ctl.table_rows(t["table"]).items() if matches(it, t["where"]) and n not in held]
-        needed = max(0, len(free) - len(self.ctl.placeless_live(live)))
+        return max(0, len(free) - len(self.ctl.placeless_live(live)))
+
+    def places_lines(self, needed: int) -> list[str]:
+        p = self.spec.name
         return [f"# TYPE {p}_workers_needed gauge", f'{p}_workers_needed{{labels=""}} {needed}']
 
-    def spares_lines(self, rep: dict, now: float, hbs: dict) -> list[str]:
+    def spares_lines(self, rep: dict, now: float, hbs: dict, places_needed: int = 0) -> list[str]:
         p, rk = self.spec.name, f"{self.spec.name}/controller/pass"
         ts = number(f"{rk}#ts", rep.get("ts"), float, None)
         if ts is None or now - ts > self.SPARES_FRESH:
@@ -2103,8 +2116,9 @@ class SpecConsole:
                               ("spare_offers", "spare_offers"), ("spares_withheld_n", "spares_withheld")):
             said = rep.get(field) if isinstance(rep.get(field), dict) else {}
             sets = {"": 0, **{str(k): v for k, v in said.items()}} if field == "workers_needed" else said
+            extra = {"": places_needed} if field == "workers_needed" else {}      # the free places, on the empty set's row
             lines += [f"# TYPE {p}_{metric} gauge",
-                      *[f'{p}_{metric}{{labels="{label(s)}"}} {number(f"{rk}#{field}.{s}", v, int, 0)}'
+                      *[f'{p}_{metric}{{labels="{label(s)}"}} {number(f"{rk}#{field}.{s}", v, int, 0) + extra.get(s, 0)}'
                         for s, v in sorted(sets.items(), key=lambda x: str(x[0]))]]
         rows = self.ctl.server_labels() or {}
         node: dict[str, set] = {}
@@ -2119,8 +2133,9 @@ class SpecConsole:
 
     # -- writes ---------------------------------------------------------------------------------
     # `ctl.create(body)` → 201 with the row plus `worker: None` (placed by the controller's next pass, never
-    # by the console); `Refused` → 400 `{detail, error}`. Under `key`, the new id goes into the claim first,
-    # and a claim taken over creates under the id it names (`IdempotencyKeys.reserve`).
+    # by the console); `Exists` — the id is a unit's already — → 409 `{detail, error: "exists"}`, the product's answer,
+    # which a page reads as "there already" (`startLive`); `Refused` → 400 `{detail, error}`. Under `key`, the new id
+    # goes into the claim first, and a claim taken over creates under the id it names (`IdempotencyKeys.reserve`).
     #
     # WHO MADE IT AND WHO CHANGED IT (the review's third pass, minor): the journal knew who deleted a unit and not
     # who created or edited it. `unit.created` and `unit.changed` — with the NAMES of the fields, never their values
@@ -2136,6 +2151,8 @@ class SpecConsole:
             # retry, so an unmasked one puts a second copy of the secret in the config store under a key
             # nobody thinks to look at — which is exactly how this was got wrong the first time.
             return 201, {**mask_secrets([r])[0], "worker": None}      # placed by the controller's next pass, never by the console
+        except Exists as e:
+            return 409, {"detail": str(e), "error": "exists"}
         except Refused as e:
             return 400, {"detail": str(e), "error": str(e)}
         except TooLarge as e:
@@ -2418,9 +2435,10 @@ class SpecConsole:
         # `rights.routes`: a family's writes that need less than admin. Of the unit rows, the CREATE alone — asking for a
         # stream is a viewer's; changing what a row is stays the administrator's
         caps = self.spec.route_caps if head != self.spec.rows or method == "POST" else {}
+        ledger = method == "DELETE" and path.startswith(f"/requests/{LEDGER}")   # a person's ledger: the administrator's
         cap = "view" if method == "GET" \
             or head in caps.get("view", ()) else \
-              "edit" if path.startswith(self.EDIT_ROUTES) or head in caps.get("edit", ()) else "admin"
+              "edit" if (path.startswith(self.EDIT_ROUTES) and not ledger) or head in caps.get("edit", ()) else "admin"
         family, pid = self.route_id(method, path)
         if pid and family in (self.spec.rows, *self.UNIT_ROUTES):
             if self.spec.cluster_rows and family == self.spec.rows and method != "GET":
@@ -2687,6 +2705,10 @@ class SpecConsole:
         if path.rstrip("/") == "/requests" and method == "POST" and self.spec.requests:
             self._request_route(h)
             return True
+        if method == "DELETE" and len(segs) == 2 and segs[0] == "requests" and segs[1].startswith(LEDGER) \
+                and "per_person" in self.spec.requests:
+            h._send(*self._delete_ledger(segs[1], h.headers.get("X-User", "operator")))
+            return True
         return False
 
     # `/<table>[/<name>]` (`tables.py`): the list as this caller may see it, one row, a row written whole, a row deleted.
@@ -2828,14 +2850,22 @@ class SpecConsole:
             # the person, 16 hex>`, the list of their ids — changed by CAS; an id stays in it while its row stands, and
             # for `settle` seconds after it was added, row or no row (the list is written before the request is), and
             # never past `ttl`. The same request again is the same id, and is not counted twice.
-            ledger = spec.sub.request_key("asks-" + hashlib.sha256(user.encode()).hexdigest()[:16])
+            #
+            # A LEDGER THAT DOES NOT READ STOPS THAT PERSON, AND SAYS SO (the architect's decision after step 7). It was read
+            # as an empty list and written over by CAS: the person's limit silently reset, nothing counted. Now it is 429
+            # «учёт не читается» to that person and nobody else, `<sub>_requests_ledger_garbled` on `/metrics`, the journal
+            # once per row (not per request); an administrator deletes the row (`DELETE /<sub>/requests/asks-…`), and
+            # the ledger starts anew.
+            name = LEDGER + hashlib.sha256(user.encode()).hexdigest()[:16]
+            ledger = spec.sub.request_key(name)
             settle, ttl = req.get("settle", 60.0), req.get("ttl", 86400.0)
             for _ in range(50):
-                it, idx = ctl.vars.get(ledger)
                 try:
-                    held = [(str(r), float(at)) for r, at in json.loads((it or {}).get("asks", "[]"))]
-                except PARSE_ERRORS:
-                    held = []
+                    it, idx = ctl.vars.get(ledger)
+                    held = [(str(r), finite(at)) for r, at in json.loads((it or {}).get("asks", "[]"))]
+                except PARSE_ERRORS as e:                 # `Garbled` too: a row the store holds and cannot read
+                    return self._ledger_garbled(name, user, e)
+                self._ledger_read(name)
                 held = [(r, at) for r, at in held if now - at <= ttl
                         and (now - at < settle or ctl.vars.get(spec.sub.request_key(r))[0])]
                 if rid not in [r for r, _ in held]:
@@ -2860,6 +2890,38 @@ class SpecConsole:
         return 202, {"queued": {"id": rid, **out},
                      "detail": "whoever holds the unit answers it on its next look at the requests, in its heartbeat"
                                + ("; after valid_until it expires unperformed" if "valid_for" in req else "")}
+
+    # A person's ledger that does not read: 429 to that person, said in the journal once per row — again only after it
+    # read once more, or was deleted.
+    def _ledger_garbled(self, name: str, user: str, e: Exception) -> tuple:
+        if name not in self.ledgers_garbled:
+            self.ledgers_garbled.add(name)
+            log.error("%s: the request ledger %s of %s does not read (%s): that person files nothing until an administrator "
+                      "deletes it (DELETE /%s/requests/%s)", self.spec.name, name, user, e, self.spec.name, name)
+            self.journal.say("request.ledger_garbled", ALARM, sub=self.spec.name, target=name, user=user, error=str(e)[:200])
+        return 429, {"detail": f"учёт не читается: the list of {user}'s open requests ({self.spec.name}/requests/{name}) "
+                               f"does not read, and nothing is filed for {user} until an administrator deletes it",
+                     "error": "учёт не читается"}
+
+    def _ledger_read(self, name: str) -> None:
+        self.ledgers_garbled.discard(name)
+
+    # `DELETE /requests/asks-<…>` — an administrator removes a person's ledger (one that does not read, as a rule): the
+    # person's next request starts it anew. Only a ledger: a request row is its holder's to answer and the console's to
+    # clear (`requests.py`).
+    def _delete_ledger(self, name: str, user: str) -> tuple:
+        key = self.spec.sub.request_key(name)
+        try:
+            there = bool(self.ctl.vars.get(key)[0])
+        except PARSE_ERRORS:
+            there = True                                  # garbled is there: the row is what is deleted
+        if not there:
+            self._ledger_read(name)
+            return 404, {"detail": f"no ledger {name}", "error": "no such ledger"}
+        self.ctl.vars.delete(key)
+        self._ledger_read(name)
+        self.journal.say("request.ledger_deleted", sub=self.spec.name, target=name, user=user)
+        return 200, {"deleted": name}
 
     # -- what a change reaches (`rights.reach`, `rights.names`; the boundary's step 6) ---------------------------------
     # It was the subsystem's code, set on this console by its wiring (`moved_units`, `body_units`). A change of a field

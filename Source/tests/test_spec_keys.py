@@ -212,7 +212,8 @@ def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
     assert spec.acl_controller() == ["testsub/workers/*", "testsub/placement/*", "testsub/slots/*",
                                      "testsub/decommissioned/*"]
     assert spec.acl_worker_role() == spec.sub.acl_worker() == ["testsub/epoch/*", "testsub/slots/*", "testsub/holds/*"]
-    assert spec.sub.acl_objects_worker() == ["testsub/heartbeats/*", "testsub/contenders/*", "testsub/used/*"]
+    assert spec.sub.acl_objects_worker() == ["testsub/heartbeats/*", "testsub/contenders/*", "testsub/used/*",
+                                         "testsub/commands/*"]   # its marks before it performs a request
     assert spec.sub.acl_objects_controller() == ["testsub/snapshot/*", "testsub/controller/pass"]
     assert spec.sub.acl_objects_console() == ["testsub/blobs/*"]
 
