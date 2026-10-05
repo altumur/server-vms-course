@@ -1,4 +1,4 @@
-"""The page draws what operators typed — a mark's note, a camera's name — and what cameras said. It draws it as TEXT
+"""The page draws what operators typed — a mark's note, a unit's name — and what its units said. It draws it as TEXT
 (the platform review, second pass, blocker 2): every `innerHTML` goes through the escaping template `h`, and the
 console sends a Content-Security-Policy that names the page's own script by its hash and allows no other.
 """
@@ -7,9 +7,8 @@ import hashlib
 import re
 import urllib.request
 
-from w2cplatform.console import PAGE, page_csp
-from tests.conftest import Box
-from tests.test_console_gate import _console
+from w2cplatform.console import PAGE, SpecConsole, page_csp
+from tests.conftest import Box, Served, console_ctl
 
 
 def test_every_innerhtml_of_the_page_is_drawn_through_the_escaping_template():
@@ -33,10 +32,7 @@ def test_the_console_names_its_own_script_in_a_content_security_policy_and_no_ot
     digest = "'sha256-" + base64.b64encode(hashlib.sha256(scripts[0].encode()).digest()).decode() + "'"
     assert page_csp() == f"script-src {digest}; object-src 'none'; base-uri 'none'"
     box = Box()
-    ctl, rec, m, srv, base = _console(box)
-    try:
-        with urllib.request.urlopen(base + "/") as r:
+    with Served(SpecConsole(console_ctl(box), marks_root=box.tree, wall=box.wall)) as call:
+        with urllib.request.urlopen(call.base + "/") as r:
             assert r.headers["Content-Security-Policy"] == page_csp()
             assert "text/html" in r.headers["Content-Type"]
-    finally:
-        srv.shutdown()

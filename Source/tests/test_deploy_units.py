@@ -837,3 +837,11 @@ def test_the_console_unit_builds_the_vms_at_its_root_and_every_other_spec_under_
     assert m.mounts["rec"].describe()["door"] == {"routes": ["timeline", "segment"]}
     assert m.mounts["live"].describe()["door"] == {"routes": ["whep"]}
 
+
+def test_the_vms_processes_open_their_stores_through_the_platforms_one_function():
+    """What the VMS's entry point does with the platform's rule (`test_configstorevars.py`,
+    `test_a_process_reads_platform_store_and_no_other_name`: `PLATFORM_STORE`, never `CONFIG_URL`): its processes open
+    their stores through the platform's `host.stores`, and the older name is nowhere in it."""
+    entry = open(os.path.join(HERE, "vms", "__main__.py"), encoding="utf-8").read()
+    assert "host.stores(os.environ" in entry and "CONFIG_URL" not in entry
+

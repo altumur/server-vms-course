@@ -163,13 +163,13 @@ def test_a_writer_is_refused_outside_its_prefixes():
 def test_a_key_has_one_spelling():
     """Refused, not repaired, and by every backend — because the same text becomes three
     things: the key, the prefix an ACL is matched against, and (through `events.unit_dir`)
-    a directory on a resource's disk. Un-normalised, `vms/a/../b` and `vms/b` are two keys
+    a directory on a resource's disk. Un-normalised, `testsub/a/../b` and `testsub/b` are two keys
     one person reads as one, each with its own index, so two writers both win their CAS.
     Normalised downstream — a URL, a tree — they collapse into one, and the ACL was matched
     against the string BEFORE that. A store that silently accepts either shape cannot keep
     one-writer-per-prefix, whatever its ACL says."""
     v = _store()
-    for bad in ("vms/a/../b", "../etc/passwd", "/vms/a", ""):
+    for bad in ("testsub/a/../b", "../etc/passwd", "/testsub/a", ""):
         try:
             v.put(bad, {"x": "1"}, cas=0)
             assert False, f"a store accepted {bad!r} as a key"
@@ -177,8 +177,8 @@ def test_a_key_has_one_spelling():
             pass
         except Exception as e:                       # a remote store may refuse it its own way
             assert "not a key" in str(e) or "400" in str(e) or "404" in str(e), e
-    v.put("vms/..foo", {"x": "1"}, cas=0)            # dots that are not a segment are just a name
-    assert v.get("vms/..foo")[0] == {"x": "1"}
+    v.put("testsub/..foo", {"x": "1"}, cas=0)            # dots that are not a segment are just a name
+    assert v.get("testsub/..foo")[0] == {"x": "1"}
 
 
 def test_two_spellings_are_never_one_place():

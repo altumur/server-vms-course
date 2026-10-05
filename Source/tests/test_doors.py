@@ -32,7 +32,7 @@ def _put(url, body, headers):
 
 
 def _resource(box):
-    res = platform_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = platform_resource(box.tree, "srv-1", "", box.vars, box.objects, wall=box.wall)
     srv = serve_resource(res, "127.0.0.1", 0)
     return f"http://127.0.0.1:{srv.server_address[1]}", srv
 
@@ -41,8 +41,8 @@ def test_a_name_is_one_segment_and_a_path_is_relative():
     assert safe_segment("7") and safe_segment("7-backup") and safe_segment("srv-1")
     for bad in ("", ".", "..", "a/b", "a\\b", "a\0b"):
         assert not safe_segment(bad), bad
-    assert safe_rel("vms/7/e1/x.events.jsonl")
-    for bad in ("", "/etc/hosts", "vms/../x", "../x", "vms//x", "vms/./x", "vms/7/"):
+    assert safe_rel("testsub/7/e1/x.events.jsonl")
+    for bad in ("", "/etc/hosts", "testsub/../x", "../x", "testsub//x", "testsub/./x", "testsub/7/"):
         assert not safe_rel(bad), bad
 
 
@@ -65,11 +65,11 @@ def test_the_resources_doors_name_nothing_outside_the_tree():
         with open(secret, "w") as f:
             f.write('{"t": 1, "kind": "cred"}\n')
         assert _get(f"{url}/events/{secret}")[0] == 404
-        assert _get(f"{url}/events/vms/7/../../../secret.events.jsonl")[0] == 404
+        assert _get(f"{url}/events/testsub/7/../../../secret.events.jsonl")[0] == 404
         assert _get(f"{url}/mirrored/../..")[0] == 404                 # no check at all, before
-        assert _get(f"{url}/buckets/vms/../..")[0] == 404
-        assert _get(f"{url}/buckets/vms")[0] == 404                    # and a short path is a 404, not a crash
-        assert _get(f"{url}/segment/{secret}")[0] == 404               # and footage is not a resource's any more
+        assert _get(f"{url}/buckets/testsub/../..")[0] == 404
+        assert _get(f"{url}/buckets/testsub")[0] == 404                    # and a short path is a 404, not a crash
+        assert _get(f"{url}/segment/{secret}")[0] == 404               # and a subsystem's own door is not the resource's
         assert _put(f"{url}/mirror/../x.events.jsonl", b"{}", {}) == 400
         assert _put(f"{url}/mirror/srv-2/../../x.events.jsonl", b"{}", {}) == 400
     finally:

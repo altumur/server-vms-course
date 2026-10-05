@@ -44,8 +44,8 @@ for _name in NAMES:
     os.chmod(os.path.join(TLS, _name, "raft.secret"), 0o600)
 RIGHTS = Rights.parse({"roles": {
     # `platform/schema` too: a worker checks the store's schema version before it runs (`contract.check_schema`).
-    "vmsworker": {"read": ["vms/*", "platform/schema"], "write": ["vms/epoch/*", "vms/slots/*"],
-                  "delete": ["vms/slots/*"]},
+    "testsubworker": {"read": ["testsub/*", "platform/schema"], "write": ["testsub/epoch/*", "testsub/slots/*"],
+                  "delete": ["testsub/slots/*"]},
 }})
 
 
@@ -192,7 +192,7 @@ def test_a_server_that_joins_a_running_group_gets_its_data():
     g = Group(1, index_base=5000)
     try:
         box = open_vars(g.members[0].url())
-        written = {f"vms/cameras/{k}": box.put(f"vms/cameras/{k}", {"k": k}, cas=0) for k in range(50)}
+        written = {f"testsub/counters/{k}": box.put(f"testsub/counters/{k}", {"k": k}, cas=0) for k in range(50)}
         assert min(written.values()) > 5000
         for k in (1, 2):
             m = Member(g, k, g.members[k - 1].adv)                  # the third joins through the second
@@ -208,9 +208,9 @@ def test_a_server_that_joins_a_running_group_gets_its_data():
         g.members[0].stop()                                         # the server that started it all
         v3 = open_vars(third.url())
         _ready(third)
-        i = v3.put("vms/cameras/0", {"k": "moved"}, cas=written["vms/cameras/0"])
-        assert v3.get("vms/cameras/0") == ({"k": "moved"}, i)
-        assert open_vars(g.members[1].url()).get("vms/cameras/0") == ({"k": "moved"}, i)
+        i = v3.put("testsub/counters/0", {"k": "moved"}, cas=written["testsub/counters/0"])
+        assert v3.get("testsub/counters/0") == ({"k": "moved"}, i)
+        assert open_vars(g.members[1].url()).get("testsub/counters/0") == ({"k": "moved"}, i)
     finally:
         g.stop()
 
@@ -223,8 +223,8 @@ def test_the_leader_killed_the_group_keeps_writing():
     try:
         leader = g.leader()
         survivors = [m for m in g.members if m is not leader]
-        hs = {m.name: open_vars(m.url("vmsworker")) for m in survivors}
-        idx = {n: h.put(f"vms/slots/w-{n}", {"holder": n, "n": 0}, cas=0) for n, h in hs.items()}
+        hs = {m.name: open_vars(m.url("testsubworker")) for m in survivors}
+        idx = {n: h.put(f"testsub/slots/w-{n}", {"holder": n, "n": 0}, cas=0) for n, h in hs.items()}
         stop, errors, gaps = threading.Event(), [], []
 
         def renew(n, h):
@@ -232,7 +232,7 @@ def test_the_leader_killed_the_group_keeps_writing():
             while not stop.is_set():
                 k += 1
                 try:
-                    idx[n] = h.put(f"vms/slots/w-{n}", {"holder": n, "n": k}, cas=idx[n])
+                    idx[n] = h.put(f"testsub/slots/w-{n}", {"holder": n, "n": k}, cas=idx[n])
                     now = time.monotonic()
                     gaps.append(now - last_ok)
                     last_ok = now
@@ -256,7 +256,7 @@ def test_the_leader_killed_the_group_keeps_writing():
         assert g.leader() in survivors
         assert max(gaps) < 5.0, f"a renewal waited {max(gaps):.2f} s"
         for n, h in hs.items():
-            items, version = h.get(f"vms/slots/w-{n}")
+            items, version = h.get(f"testsub/slots/w-{n}")
             assert version == idx[n], "the last answered renewal is not what the group holds"
     finally:
         g.stop()
@@ -272,7 +272,7 @@ def test_cas_conflicts_across_servers():
 
         def go(k):
             try:
-                hs[k].put("vms/slots/w-1", {"holder": f"on-{k}"}, cas=0)
+                hs[k].put("testsub/slots/w-1", {"holder": f"on-{k}"}, cas=0)
                 won.append(k)
             except Conflict:
                 refused.append(k)
@@ -283,15 +283,15 @@ def test_cas_conflicts_across_servers():
         for t in ts:
             t.join()
         assert len(won) == 1 and len(refused) == 2, (won, refused)
-        items, idx = hs[(won[0] + 1) % 3].get("vms/slots/w-1")      # read on ANOTHER server, at once
+        items, idx = hs[(won[0] + 1) % 3].get("testsub/slots/w-1")      # read on ANOTHER server, at once
         assert items == {"holder": f"on-{won[0]}"}
-        j = hs[1].put("vms/slots/w-1", {"holder": "renewed"}, cas=idx)
+        j = hs[1].put("testsub/slots/w-1", {"holder": "renewed"}, cas=idx)
         for k in (0, 2):
             with pytest.raises(Conflict):
-                hs[k].put("vms/slots/w-1", {"holder": f"late-{k}"}, cas=idx)
-        assert hs[0].get("vms/slots/w-1") == ({"holder": "renewed"}, j)
-        hs[2].delete("vms/slots/w-1", cas=j)
-        assert hs[0].get("vms/slots/w-1") == (None, 0)
+                hs[k].put("testsub/slots/w-1", {"holder": f"late-{k}"}, cas=idx)
+        assert hs[0].get("testsub/slots/w-1") == ({"holder": "renewed"}, j)
+        hs[2].delete("testsub/slots/w-1", cas=j)
+        assert hs[0].get("testsub/slots/w-1") == (None, 0)
     finally:
         g.stop()
 
@@ -303,15 +303,15 @@ def test_a_write_retried_with_its_id_after_its_first_copy_landed_is_applied_once
     g = Group(3)
     try:
         v = open_vars(g.members[1].url())
-        idx = v.put("vms/slots/w-2", {"holder": "a"}, cas=0)
-        body = {"op": "put", "key": "vms/slots/w-2", "items": {"holder": "a", "until": "1"}, "cas": idx,
+        idx = v.put("testsub/slots/w-2", {"holder": "a"}, cas=0)
+        body = {"op": "put", "key": "testsub/slots/w-2", "items": {"holder": "a", "until": "1"}, "cas": idx,
                 "id": uuid.uuid4().hex}
         first = v._call("POST", "/v1/write", body)
         again = open_vars(g.members[2].url())._call("POST", "/v1/write", body)
         assert first == again, (first, again)
-        assert v.get("vms/slots/w-2") == ({"holder": "a", "until": "1"}, first["index"])
+        assert v.get("testsub/slots/w-2") == ({"holder": "a", "until": "1"}, first["index"])
         with pytest.raises(Conflict):                                 # a DIFFERENT write against the same version
-            v.put("vms/slots/w-2", {"holder": "b"}, cas=idx)
+            v.put("testsub/slots/w-2", {"holder": "b"}, cas=idx)
     finally:
         g.stop()
 
@@ -325,14 +325,14 @@ def test_a_group_without_a_majority_does_not_answer_and_does_not_refuse():
     try:
         last = g.members[0]
         v = open_vars(last.url(query="timeout=1.5"))
-        idx = v.put("vms/epoch/9", {"epoch": 1}, cas=0)
+        idx = v.put("testsub/epoch/9", {"epoch": 1}, cas=0)
         for m in g.members[1:]:
             m.stop()
         t0 = time.monotonic()
         with pytest.raises(StoreUnavailable):
-            v.put("vms/epoch/9", {"epoch": 2}, cas=idx)
+            v.put("testsub/epoch/9", {"epoch": 2}, cas=idx)
         try:
-            v.get("vms/epoch/9")
+            v.get("testsub/epoch/9")
             raise AssertionError("a read was answered without a majority")
         except StoreUnavailable as e:
             assert not isinstance(e, StoreAmbiguous), "a read was answered as «maybe done»"
@@ -342,20 +342,20 @@ def test_a_group_without_a_majority_does_not_answer_and_does_not_refuse():
 
 
 def test_a_role_socket_on_a_follower_refuses_before_anything_is_forwarded():
-    """The rights are the RECEIVING daemon's: a worker on a follower writing a camera row gets 403 from its own
+    """The rights are the RECEIVING daemon's: a worker on a follower writing a counter row gets 403 from its own
     server's daemon, and the leader's log does not move — the request never left the follower."""
     g = Group(3)
     try:
         leader = g.leader()
         follower = next(m for m in g.members if m is not leader)
-        w = open_vars(follower.url("vmsworker"))
-        w.put("vms/slots/w-1", {"holder": "x"}, cas=0)
+        w = open_vars(follower.url("testsubworker"))
+        w.put("testsub/slots/w-1", {"holder": "x"}, cas=0)
         _caught_up(follower, leader)
         before = leader.status()["commit"]
         with pytest.raises(Forbidden):
-            w.put("vms/cameras/7", {"name": "gate"})
+            w.put("testsub/counters/7", {"name": "gate"})
         with pytest.raises(Forbidden):
-            w.delete("vms/epoch/7")
+            w.delete("testsub/epoch/7")
         time.sleep(0.3)
         assert leader.status()["commit"] == before, "a refused request reached the leader's log"
     finally:
@@ -364,7 +364,7 @@ def test_a_role_socket_on_a_follower_refuses_before_anything_is_forwarded():
 
 def test_a_join_is_refused_without_a_daemons_certificate():
     """The join door of a running group: no client certificate — the handshake fails; a certificate of the
-    installation's CA for another role (a recorder's) — 403; either way the group's members do not change."""
+    installation's CA for another role (a worker's) — 403; either way the group's members do not change."""
     g = Group(1)
     try:
         box = g.members[0]
@@ -373,7 +373,7 @@ def test_a_join_is_refused_without_a_daemons_certificate():
         bare = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         bare.load_verify_locations(os.path.join(TLS, "ca.pem"))
         import http.client
-        for ctx, expect in ((bare, None), (tls.client_context(os.path.join(TLS, "srv-a"), "recworker"), 403)):
+        for ctx, expect in ((bare, None), (tls.client_context(os.path.join(TLS, "srv-a"), "testsub2worker"), 403)):
             try:
                 s = ctx.wrap_socket(socket.create_connection((host, port), timeout=5), server_hostname="srv-a")
                 conn = http.client.HTTPConnection(host, port, timeout=5)
@@ -503,7 +503,7 @@ def test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a
         a = g.leader()
         v = open_vars(a.url())
         for i in range(20):
-            v.put(f"vms/epoch/cam{i}", {"epoch": "7"}, cas=0)
+            v.put(f"testsub/epoch/c{i}", {"epoch": "7"}, cas=0)
         c = Member(g, 2, a.adv)
         g.members.append(c)
         joined = configstore.RaftBackend.member_doc(c.data)
@@ -515,9 +515,9 @@ def test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a
         _caught_up(c, g.leader())
         st = _in_its_group(c, g)
         assert sorted(m["id"] for m in st["members"]) == list(NAMES), st
-        assert c.daemon.backend.rep.m.rows["vms/epoch/cam5"][0] == {"epoch": "7"}
+        assert c.daemon.backend.rep.m.rows["testsub/epoch/c5"][0] == {"epoch": "7"}
         with pytest.raises(Conflict):
-            open_vars(c.url("vmsworker")).put("vms/epoch/cam5", {"epoch": "1"}, cas=0)
+            open_vars(c.url("testsubworker")).put("testsub/epoch/c5", {"epoch": "1"}, cas=0)
         c.stop()
         with open(os.path.join(c.data, "member.json"), "w") as f:  # a member.json from before the partners were in it
             json.dump({"id": c.name, "raft": c.raft}, f)
@@ -604,11 +604,11 @@ def test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_ref
         code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"localhost:{c_port}"})
         assert (code, said["kind"]) == (409, "refused") and f"127.0.0.1:{c_port}" in said["error"], (code, said)
         assert [m["id"] for m in a.status()["members"]] == ["srv-a"] and not a.daemon.backend.raft.otherNodes
-        v.put("vms/cameras/after-the-refusals", {"name": "x"}, cas=0)          # the group of one still writes
+        v.put("testsub/counters/after-the-refusals", {"name": "x"}, cas=0)          # the group of one still writes
         code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"127.0.0.1:{c_port}"})
         assert code == 200, said
         assert sorted(m["id"] for m in a.status()["members"]) == ["srv-a", "srv-c"]
-        v.put("vms/cameras/with-srv-c", {"name": "y"}, cas=0)                  # a majority of two answers
+        v.put("testsub/counters/with-srv-c", {"name": "y"}, cas=0)                  # a majority of two answers
     finally:
         silent.close()
         for b in backends:
@@ -627,15 +627,15 @@ def test_a_member_restarted_on_its_journal_comes_back_with_its_rows():
         leader = g.leader()
         m = next(x for x in g.members if x is not leader)
         v = open_vars(leader.url())
-        a = v.put("vms/cameras/1", {"name": "before"}, cas=0)
+        a = v.put("testsub/counters/1", {"name": "before"}, cas=0)
         _caught_up(m, leader)
         m.stop()
-        b = v.put("vms/cameras/1", {"name": "while down"}, cas=a)
+        b = v.put("testsub/counters/1", {"name": "while down"}, cas=a)
         m.start(join="nobody@127.0.0.1:1")                           # a join that could not be answered: not asked
         _ready(m)
         _caught_up(m, g.leader())
-        assert m.daemon.backend.rep.m.rows["vms/cameras/1"] == ({"name": "while down"}, b)
-        assert open_vars(m.url()).get("vms/cameras/1") == ({"name": "while down"}, b)
+        assert m.daemon.backend.rep.m.rows["testsub/counters/1"] == ({"name": "while down"}, b)
+        assert open_vars(m.url()).get("testsub/counters/1") == ({"name": "while down"}, b)
     finally:
         g.stop()
 
@@ -659,15 +659,15 @@ def test_the_platforms_cas_loops_run_on_configstore_unchanged():
 
     g = Group(3)
     try:
-        sub = Subsystem("vms")
-        a = _W(sub, None, open_vars(g.members[1].url("vmsworker")), _Objects())
-        b = _W(sub, None, open_vars(g.members[2].url("vmsworker")), _Objects())
+        sub = Subsystem("testsub")
+        a = _W(sub, None, open_vars(g.members[1].url("testsubworker")), _Objects())
+        b = _W(sub, None, open_vars(g.members[2].url("testsubworker")), _Objects())
         assert a.claim_slot() == "w-1" and b.claim_slot() == "w-2"   # w-1 is taken by CAS, on another server
         assert a.take_epoch("7") == 1 and a.renew_slot() and a.renew_leases() == []
         assert b.take_epoch("7") == 2                                 # somebody else started the unit
         assert a.renew_leases() == ["7"] and a.leases["7"].fenced
         assert b.renew_leases() == [] and b.renew_slot()
         a.release_slot()
-        assert open_vars(g.members[0].url()).get("vms/slots/w-1")[0]["released"] == "true"
+        assert open_vars(g.members[0].url()).get("testsub/slots/w-1")[0]["released"] == "true"
     finally:
         g.stop()
