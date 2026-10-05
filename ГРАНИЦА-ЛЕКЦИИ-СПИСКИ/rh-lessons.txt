@@ -1,0 +1,105 @@
+rh — lesson lines made untrue by "the holder side of the requests family is the base's" (ADR 0013; w2cplatform/worker.py,
+vms/worker.py, vms/config.py, vms.subsystem.yaml). Format: file:line — what is untrue — what is true now.
+
+М10A_Platform/08-Controller-and-Worker.md:721 — listing of `lease_pass` starts with `self._life()` — gone: the life
+  state (`writing_allowed`, `lost_to_epoch`, counters, requests) is made once in `__init__` (`_life()` called there
+  only, no "already made?" guard); `lease_pass`, `rejoin`, `fence`, `heartbeat_once`, `run`, `requests` no longer call it.
+М10A_Platform/08-Controller-and-Worker.md:779 — `fence` listing: `self._life()` first line — gone (same reason).
+М10A_Platform/08-Controller-and-Worker.md:791 — `rejoin` listing: `self._life()` first line — gone (same reason).
+М10A_Platform/08-Controller-and-Worker.md:820 — `run` listing: `self._life()` — gone (same reason).
+М10A_Platform/08-Controller-and-Worker.md:897 — `heartbeat_once` listing: `self._life()` — gone (same reason).
+М10A_Platform/08-Controller-and-Worker.md:906 — `platform_fields` ends with `**({"fetched": self.fetched_said()} if
+  self.fetched else {})` — it ends with `**self.requests_fields()`: `fetched`, `command_counts`, `commands_reanswered`,
+  `commands_in_flight`, `command_road`/`command_request`/`command_wait` are all platform fields now (each only when
+  there is something to say). The paragraph after it (line 908, "на какие просьбы ответил") should name the family's
+  numbers too.
+М10A_Platform/08-Controller-and-Worker.md:919 — `observe` listing: `not self.__dict__.get("writing_allowed", True)` —
+  now `not self.writing_allowed` (the state always exists).
+М10A_Platform/08-Controller-and-Worker.md:758 — "отпущенная единица запоминается (`lost_to_epoch`), и `requests` её не
+  берёт" — the rule is the EPOCH's now: `take_epoch` raises `NotReadThisPass` for a unit in `lost_to_epoch`, whoever
+  asks (the requests, a subsystem's gate, any pass); `requests` only skips on that `NotReadThisPass`. A new test on
+  testsub: `test_holder_requests.py::test_a_unit_the_lease_step_let_go_is_not_taken_back_by_a_request_before_the_assignment_is_read_again`.
+М10A_Platform/08-Controller-and-Worker.md:1018 — table: "Взгляд на просьбы взял эпоху единице из `lost_to_epoch`" —
+  the cause to name is "`take_epoch` не отказывает единице из `lost_to_epoch`" (the guard lives there).
+
+М10A_Platform/14-Resource.md:977 — "От подсистемы нужно четыре ответа … во что идёт вызов (`request_target`; по
+  умолчанию — своя цель на каждую единицу)" — `request_target` returns a comparable KEY (compared, never called; one call
+  at a time into each key), the unit id itself by default (`str(row["id"])`), None — not open yet; `perform(target, row,
+  it)` is handed that key. `request_targets()` is gone (the base prunes its slow keys by the targets of `held_rows`).
+  Optional fifth: `request_group(row)` (the spec's `group_by` by default).
+М10A_Platform/14-Resource.md:1001 — "Единицу, которую шаг аренды только что отпустил … взгляд между проходами обратно не
+  берёт (`lost_to_epoch`)" — still true, but by `take_epoch`'s refusal (`NotReadThisPass`), not a check of `requests`.
+М10A_Platform/14-Resource.md:1018 — "`observe(unit, "command", …)` … `command.failed`" — still true in effect; the two
+  kinds are platform constants now, `events.COMMAND`/`events.COMMAND_FAILED`, and no spec's `display.kinds` names them
+  (the console module has their words, contract §5).
+М10A_Platform/14-Resource.md:1075 — "Держит их платформа, а говорит подсистема — в своём `heartbeat_fields`" — the
+  platform says them too: `Worker.requests_fields()` inside `platform_fields` (`command_counts`, `commands_reanswered`,
+  `commands_in_flight`, `command_road`, `command_request`, `command_wait`, `fetched`); the subsystem only declares the
+  metrics in its spec.
+
+М10B_ServerVMS/03-vmsworker-the-process.md:198-199 — `_actuate` listing: `if unit in self.lost_to_epoch: raise
+  NotReadThisPass(…)` — gone: `take_epoch` raises it itself; `_actuate` keeps `except (OSError, NotReadThisPass)`.
+М10B_ServerVMS/03-vmsworker-the-process.md:256 — "Камеру, которую шаг аренд отпустил … проход назад не берёт
+  (`lost_to_epoch`…)" — still true; by `take_epoch` (М10A, урок 8, шаг 9), not by VMS code.
+
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:213-217 — listing `request_target` returns `self.device_of_row(row)`
+  and `request_targets` returns the open devices — now `request_target` returns the DEVICE KEY (`device_of(row["source"])`)
+  while that device is open (`key in self.devices`), else None; `request_targets` is gone.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:224 — "`request_target` — во что идёт вызов: устройство" — the device's
+  key; the base compares keys, so two rows of one device (two objects) are one target.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:231 — `def perform(self, dev, row, it)` — `def perform(self, device: str,
+  row, it)`: looks the session up (`self.devices.get(device)`), a device closed between the look and the call is that
+  command's refusal ("device … is not open now").
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:253 — "(`HOLDER_EVENTS` в `config.py` …)" — still true, but `command`,
+  `command.failed` in it are the platform's words (`events.COMMAND`, `COMMAND_FAILED`), written by the base.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:257 — "Счётчики ведёт платформа …, а говорит их держатель — в своих
+  полях heartbeat'а (шаг 7)" — the platform says them too (`Worker.requests_fields`); the holder declares the metrics in
+  its spec and says only `devices_slow` of its own.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:291 — "VMS держит вторую половину того же правила — в своём проходе:
+  `_actuate` не берёт новую эпоху на камеру из `lost_to_epoch`" — no VMS half any more: `take_epoch` refuses for every
+  caller, the pass's gate included.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:520 — `platform_fields` list ends with `fetched` — it also carries
+  `command_counts`, `commands_reanswered`, `commands_in_flight`, `command_road`, `command_request`, `command_wait`.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:531-540 — `heartbeat_extra` listing with `fetched`, `command_counts`,
+  `commands_reanswered`, `commands_in_flight`, the road histograms and `len(self._slow | self._slow_asks)` — those are the
+  base's now; `heartbeat_extra` starts with `slow = self._slow_devices()` and `devices_slow: len(slow)`;
+  `_slow_devices()` = `_slow_asks | {id(d) for k, d in self.devices.items() if k in self._slow}` (the base's `_slow` is by
+  device key).
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:556 — table row "`command_counts`, `command_road`, … | метрики спеки VMS"
+  — still read by the VMS spec's metrics, but written by the platform (`platform_fields`), not the holder.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:560 — "`fetched` держатель говорит всегда, даже пустым" — untrue: the
+  base says `fetched` only when something is answered (absent = nothing; the console reads `.get("fetched", "")`).
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:710 — exercise 7 "Сделайте `request_target` камерой … (`return row`)" —
+  a row dict is not hashable as a key now; "`return str(row["id"])`" says the same.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:312 — "у команд — свой, `_slow` платформы" — still true; its members
+  are device KEYS now (strings), `_slow_asks` is by session (`id(dev)`).
+
+М10B_ServerVMS/15-the-archive-we-did-not-write.md:333 — `slow = self._slow | self._slow_asks` — `slow = self._slow_devices()`.
+
+М10A_Platform/15-SpecConsole.md:855 — "`vms_commands_in_flight` — … числа, которые подсистема объявила сама … платформа
+  только печатает" — still declared by the VMS spec; the number itself (`commands_in_flight`) is the platform worker's
+  heartbeat field now.
+
+-- second pass (late answer, most_valid, command line fields, canonical marks) --
+М10A_Platform/14-Resource.md:999 — "`most_valid` (из спеки, иначе `MAX_VALID`, 600 с)" — no fallback: `MAX_VALID` is
+  gone, `Worker.most_valid()` is the spec's `requests.most_valid` only (the loader requires it with `valid_for`); a family
+  that declares none refuses every request ("this family declares no `requests.most_valid`: no deadline can be judged near").
+М10A_Platform/14-Resource.md:1008-1011 — `_mark` listing writes `json.dumps({...})` — now `canonical_json({...})`
+  (`w2cplatform/canonical.py`: compact, keys sorted), assigned to `mark` and then `put_new(self.command_key(rid),
+  mark.encode())`; the answer written by `_confirm` and the contender row (`_contend`) are canonical too.
+М10A_Platform/14-Resource.md:1016 — `_confirm` fields "`instance`, `slot`, `unit`, `outcome`, `action`, `at`" — plus
+  `of` (already) and `late: true` when the target answered after `PERFORM_TIMEOUT`.
+М10A_Platform/14-Resource.md:1018 — "через `PERFORM_TIMEOUT` (10 с) просьба получает ответ «did not answer»" — still
+  true, and now: a target that answers after that keeps the request's answer and its row untouched, but its real outcome
+  goes into the mark with `late: true` (the next instance says it again, not `unknown`), and a `command` (or
+  `command.failed`) line with `late: true` is written on the unit. Same line: "`observe(unit, "command", …)`" — the line
+  is `_command_line`: platform fields on top — `outcome` (performed | refused | unknown), `action`, `by`, `late`, `error`
+  — and what `perform` returned whole under `reply`.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:253 — "Выполненная команда — строка `command`, отказ — `command.failed`"
+  — the line's fields are the platform's (`outcome`, `action`, `by`, `late`, `error`); what `perform` returned
+  (`{"action", "port", "state"}` / `{"action", "n"}`) is under `reply`, not at the top.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:251 — "событие `command.failed` на камере" — its `outcome` is
+  `refused` and `error` the driver's words.
+М11_Cluster/06-what-stays-on-the-server.md:148,155 — the trace quotes the holder's heartbeat as 479 bytes (`"size": 479`,
+  `"bytes": 479`) — 464 now (Source/traces/06-objects-across-servers.txt regenerated): the base says `fetched` only when
+  something is answered, and the VMS holder no longer adds `"fetched": ""` of its own.
