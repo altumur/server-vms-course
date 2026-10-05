@@ -1,0 +1,10 @@
+gh — lesson lines made untrue by placement.group_by `cut_at: host` + `group_by.schemes` (М10A 09 and М11 10:156 already fixed in the branch)
+
+М10A_Platform/11-SpecController-placement.md:25, :128, :154 — `cut_at: ch` / the group as the source up to `/ch/` — now the HOST of the address (`cut_at: host`, `SubsystemSpec.group_of`, `url_host`).
+М10A_Platform/11-SpecController-placement.md:358–371 — the main teaching: quotes old `group_value`/`url_cut` and `cut_at: ch` — rewrite to `group_of` (one place the controller's `group_value` and the worker's `request_group` ask), the host rule (no scheme, no port, lower case, no trailing dot, canonical IP, IPv6 without brackets, no percent decoding; not RFC 1123 and not IP → no group), `schemes` words `host` (authority|path), `fragment` (keep|none), `none: [...]`; `cut_at: <segment>` still exists (`url_cut`).
+М10A_Platform/11-SpecController-placement.md:1496, :1515 — lists `group_by.cut_at` — add `group_by.schemes`.
+М10A_Platform/README.md:38 — `cut_at` mention.
+М10A_Platform/15-SpecConsole.md:1343 — «a non-address is its own group», `spec.url_cut` — now «no group»; a unit moved onto an unreadable host asks the cluster grant (`console.reach_of_change`, `group_unreadable`).
+М10B_ServerVMS/01-the-first-subsystem.md:183, :309 — `cut_at: ch` → `cut_at: host, schemes: {ipint: {fragment: none}, driverpack: {host: path, none: [file]}}`.
+М10B_ServerVMS/04-vmsworker-holding-the-camera.md:66 (`cut_at: ch`), :201 («источник до `/ch/`») — the device's host.
+М10B_ServerVMS/15-the-archive-we-did-not-write.md:65 — `cut_at: ch`, and the renamed test `test_console_gate.py::test_every_spelling_of_a_devices_host_is_its_group_and_a_host_nobody_can_read_is_the_clusters`.
