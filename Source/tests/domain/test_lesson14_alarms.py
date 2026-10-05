@@ -7,6 +7,7 @@ agent and leaves at once; a silent member is answered from its last report; its 
 and the ingest it polls says whether it is alive; and the domain keeps what it read, a week of it.
 """
 import json
+import tempfile
 
 from w2cplatform.cluster.variables import FakeVariables
 
@@ -34,7 +35,7 @@ def _site(wall, nets=("vlan:a", "vlan:a", "vlan:b")):
         agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects,
                                      published=d.local_objects(),
                                      pages=lambda d=d: pages(cards[d.name], wall()))
-        cards[d.name] = Card("vms", on_alarm=agents[d.name].wake)
+        cards[d.name] = Card("vms", tempfile.mkdtemp(prefix="card-"), on_alarm=agents[d.name].wake)
 
     def report(skip=()):                                               # every camera that is on: one pass of its agent
         for name, a in agents.items():
@@ -82,13 +83,30 @@ def test_an_alarm_wakes_the_agent_and_leaves_at_once_and_a_storm_is_one_report_a
     assert not agent.due()
 
 
+def test_a_card_is_where_its_caller_says_and_nowhere_made_up():
+    """A card is the member's events where its agent reads them. One made up in a temp dir when the caller named
+    none was alarms written where nobody reads them, and never removed — a temp dir per card, hundreds of thousands
+    of them left by the suites. So the root is the caller's to give, and an empty one is refused."""
+    for root in ("", None):
+        try:
+            Card("vms", root)
+        except ValueError as e:
+            assert "root" in str(e)
+        else:
+            raise AssertionError(f"a card on {root!r} was made")
+    d = tempfile.mkdtemp(prefix="card-")
+    card = Card("vms", d)
+    card.observe(1, NOW, "door.forced", alarm=True)
+    assert card.root == d and card.alarms(NOW - 1, NOW + 1, 10)["events"][0]["kind"] == "door.forced"
+
+
 def test_an_agent_the_card_cannot_wake_asks_it_once_a_second():
     """The card wakes the agent when both are one process. The product's agent is a process of its own, and so is
     the course's in production — nothing can wake it (feedback AZ). So it asks: is there an alarm on the card
     newer than the last page it reported? Asked by the loop with `due`, once a second; the report goes at once."""
     wall = Clock(NOW)
     fed, north, devices, cards, agents, report, reported = _site(wall)
-    card, d = Card("vms"), devices["cam-SN0"]                                   # no `on_alarm`: another process
+    card, d = Card("vms", tempfile.mkdtemp(prefix="card-")), devices["cam-SN0"]  # no `on_alarm`: another process
     agent = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects,
                         published=d.local_objects(), pages=lambda: pages(card, wall()), alarm_waiting=card.waiting)
     agent.sync()

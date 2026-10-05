@@ -500,7 +500,7 @@ def test_the_signer_opens_its_store_through_its_roles_socket_under_the_clusters_
     assert units["w2c-domain"]["env"]["PLATFORM_STORE"] == own                           # the unit says the signer's default
     books = units["vms-domainpart"]["env"]["PLATFORM_STORE"]
     assert books == "configstore:///run/configstore/vmsdomain.sock"                     # the books: the VMS worker's role
-    d = tempfile.mkdtemp(prefix="cs", dir="/tmp")                                          # a socket's path is short
+    d = tempfile.mkdtemp(prefix="cs")                                  # a socket's path is short: the run's root is
     daemon = StoreDaemon(LocalBackend("north", 1000), node_id="north", sockets=d, rights=rights)
     try:
         assert os.path.exists(own.replace("configstore://", "").replace("/run/configstore", d)), sorted(os.listdir(d))

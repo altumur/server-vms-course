@@ -159,7 +159,7 @@ def test_every_bounded_door_queues_as_many_connections_as_it_serves_before_it_ac
         assert _queued(socket.AF_INET, tcp.server_address, 20) == 20
     finally:
         tcp.server_close()
-    d = tempfile.mkdtemp(prefix="cq", dir="/tmp")
+    d = tempfile.mkdtemp(prefix="cq")
     path = os.path.join(d, "console.sock")
     lanes = Bounds(limit=12, per_address=12, reserve=3, box=4, monitor=5, monitors=())
     unix = UnixConsoleServer(path, socketserver.BaseRequestHandler, lanes)

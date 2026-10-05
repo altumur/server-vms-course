@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Run the millisecond suite without pytest (the appliance image has none):
-    python3 tests/cluster/run.py          # from Source/
+    python3 tests/cluster/run.py [test_module …]          # from Source/; no names: every module
 Discovers test_* functions in tests/cluster/test_*.py, runs coroutines with
 asyncio.run, prints one line per test like М9 Lesson 6 does."""
 from __future__ import annotations
@@ -20,6 +20,11 @@ os.environ.setdefault("STORE_VOLATILE", "1")
 os.environ.setdefault("WATERMARK_DEFAULT", "off")     # a suite runs on a disk as full as it happens to be: no cutting fixtures for that
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # Source/
+
+# THE RUN'S TEMP ROOT (`tests/runroot.py`): made before any test module is imported, so that every `mkdtemp` of the run
+# — and every child's, through TMPDIR — lands under it; removed at exit, a dead run's reaped by the next.
+from tests import runroot  # noqa: E402
+RUN_ROOT = runroot.enter()
 
 try:
     import pydantic  # noqa: F401
@@ -77,6 +82,11 @@ def _signals_taken(ours: dict) -> list[str]:
 def main() -> int:
     here = os.path.dirname(os.path.abspath(__file__))
     files = sorted(f for f in os.listdir(here) if f.startswith("test_") and f.endswith(".py"))
+    want = set(sys.argv[1:])                                 # `run.py test_a test_b`: those modules only
+    if want - {f[:-3] for f in files}:
+        print(f"no such module here: {', '.join(sorted(want - {f[:-3] for f in files}))}"); return 2
+    files = [f for f in files if not want or f[:-3] in want]
+    print(f"temp: {RUN_ROOT}")
     passed = failed = skipped = 0
     ours = {s: signal.getsignal(s) for s in (signal.SIGTERM, signal.SIGINT)}
     for f in files:
