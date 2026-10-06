@@ -108,6 +108,32 @@ def test_two_triggers_inside_the_window_fire_once_and_file_what_was_asked():
     assert w.epochs["door-on-badge"] >= 1
 
 
+def test_an_actions_values_are_filed_in_the_bases_one_text_not_pythons():
+    """The base writes each value in its one text (`canonical.field_text`, ADR 0012): `5.0` is `5`, a JSON object is its
+    canonical JSON — which the detector's job reads back as JSON (`jobs._settings`) — and a number is a number's text.
+    The evaluator used to turn every value into text itself with `str(v)`: `"5.0"`, and the Python repr
+    `"{'thr': 0.5}"` that no JSON reader takes (review 14, minor 8; the product's `RequestValue` has no such step)."""
+    import json
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"),
+                ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    _scenario(box, then=[{"sub": "rec", "action": "record", "cam": 7, "minutes": 5.0},
+                         {"sub": "det", "action": "detect", "cam": "7", "kind": "motion", "minutes": 2.5,
+                          "params": {"thr": 0.5}}])
+    _assigned(box, "door-on-badge")
+    vars_ = box.vars.as_writer("autoworker", AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det"))
+    w = AutoWorker("a-1", vars_, box.objects, index=log, clock=box.clock, wall=box.wall,
+                   server="srv-a", resource_root=box.resource_root, env={})
+    assert w.reconcile_once() == ["door-on-badge"]
+    (key,) = box.vars.list("rec/requests/")
+    rec, _ = box.vars.get(key)
+    assert rec["minutes"] == "5" and rec["cam"] == rec["unit"] == "7", rec
+    (key,) = box.vars.list("det/requests/")
+    det, _ = box.vars.get(key)
+    assert det["minutes"] == "2.5" and det["params"] == '{"thr":0.5}' and json.loads(det["params"]) == {"thr": 0.5}, det
+
+
 def test_the_same_log_read_again_files_nothing_new():
     """At-least-once by construction: the window is re-read every pass, and the
     events that fired are still in it. The cursor says they were considered; the
