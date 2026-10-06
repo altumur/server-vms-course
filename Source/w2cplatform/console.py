@@ -2765,11 +2765,15 @@ class SpecConsole:
         if body and method == "POST" and path.rstrip("/") == "/" + self.spec.rows and isinstance(sent, dict) \
                 and any(self.spec.rows in v for v in self.spec.route_caps.values()):
             refs.add(self.spec.of_row(sent) or "*")
+        # What the row reaches as it will be: an edit from the row as stored, a CREATE — `POST /<rows>`, or a `PUT` of a
+        # row that is not there — from no row at all (`old = {}`: a move from "no group" into the group it names, the
+        # same question as an edit's `will != was`). The sixth review closed it for an edit only, and a create put a
+        # unit on a host where other people's units stand past them («Платформа», «Архитектор» 2026-10-06).
         if body and self.spec.reach and isinstance(sent, dict):
             old, written = self._row_written(method, path)
-            if written and old is not None and method == "PUT":
+            if written and method in ("POST", "PUT"):
                 try:
-                    refs |= self.reach_of_change(old, {**old, **sent})
+                    refs |= self.reach_of_change(old or {}, {**(old or {}), **sent})
                 except Exception:                        # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
                     refs.add("*")
         self._admit_each(h, self.needs(method, path)[0], refs, asked)
@@ -3046,20 +3050,31 @@ class SpecConsole:
     # subsystem served here — a scenario that commands it answers for every unit it reaches). A change of a field
     # `reach.cluster` names is the cluster's. A request whose action `reach.requests` names reaches every unit of its
     # unit's group: what it does is done to the one connection.
+    #
+    # A CREATE is `old = {}` (`admit_rows`): a move from no group into the one the row names — it reaches every unit of
+    # that group (none is the new one: it is not there yet), and a group of nobody's is `"*"`, as a move into it is; a
+    # `reach.cluster` field it is created with is the cluster's (a row created with a value there, ADR 0057). What the
+    # spec's `default` puts in a field nobody sent is what the row will have, and is asked as if it was sent. No row
+    # names a unit that does not exist yet: a create asks no `rights.names`.
     def reach_of_change(self, old: dict, new: dict) -> set:
         ctl, reach, out = self.ctl, self.spec.reach, set()
+        created = not old
+        if created:
+            new = {**{f: self.spec.fields[f].default for f in (*reach.get("group", ()), *reach.get("cluster", ()))
+                      if self.spec.fields[f].default is not None}, **new}
         norm = lambda v: ",".join(sorted(str(x) for x in v)) if isinstance(v, (list, tuple)) else str(v or "")
         if any(norm(old.get(f)) != norm(new.get(f)) for f in reach.get("cluster", ()) if f in new):
             out.add("*")
         if not any(f in new and norm(old.get(f)) != norm(new.get(f)) for f in reach.get("group", ())):
             return out
-        g_old, g_new, me = ctl.group_value(old), ctl.group_value(new), str(old.get("id"))
+        g_old, g_new, me = ctl.group_value(old), ctl.group_value(new), None if created else str(old.get("id"))
         members = lambda g: {self.spec.ref(u["id"]) for u in ctl.units() if g and str(u["id"]) != me and ctl.group_value(u) == g}
         out |= members(g_old) | members(g_new)
         if g_new != g_old:
             if g_new and not members(g_new):
                 out.add("*")
-            out |= self.named_with(self.spec.ref(me))
+            if not created:
+                out |= self.named_with(self.spec.ref(me))
         return out
 
     def reach_of_request(self, path: str, body) -> set:
