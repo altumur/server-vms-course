@@ -3053,7 +3053,7 @@ class SpecConsole:
     #
     # A CREATE is `old = {}` (`admit_rows`): a move from no group into the one the row names — it reaches every unit of
     # that group (none is the new one: it is not there yet), and a group of nobody's is `"*"`, as a move into it is; a
-    # `reach.cluster` field it is created with is the cluster's (a recording created with a `home`, ADR 0057). What the
+    # `reach.cluster` field it is created with is the cluster's (a row created with a value there, ADR 0057). What the
     # spec's `default` puts in a field nobody sent is what the row will have, and is asked as if it was sent. No row
     # names a unit that does not exist yet: a create asks no `rights.names`.
     def reach_of_change(self, old: dict, new: dict) -> set:
