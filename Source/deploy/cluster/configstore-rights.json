@@ -83,6 +83,8 @@
     "vms/servers/*",
     "vms/retention/*",
     "vms/alarms_retention/*",
+    "objects/rec/commands/*",
+    "objects/vms/commands/*",
     "door/signer",
     "door/keys"
    ],
@@ -143,6 +145,8 @@
     "vms/servers/*",
     "vms/retention/*",
     "vms/alarms_retention/*",
+    "objects/rec/commands/*",
+    "objects/vms/commands/*",
     "door/signer",
     "door/keys"
    ]

@@ -93,8 +93,11 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # platform's (drain, decommission, the doors /servers shows), the gate's — and every worker's mark before it
         # acts (a create-only row): the reaper reads it to tell a request its holder answered from one nobody performed.
         # And the cluster's door key (`door.py`): it makes it the first time it is asked for a door — the seed, sealed,
-        # read by the console alone; the public halves every holder reads.
-        "console": role("console", [a for s in specs for a in s.acl_console()] + [SIGNER_KEY, KEYS_KEY],
+        # read by the console alone; the public halves every holder reads. It writes the end of a request into its mark
+        # (ADR-0054: the reaper's `expired` create-only, `unknown` into a mark whose holder is gone) — the objects of
+        # `acl_objects_console` that are rows.
+        "console": role("console", [a for s in specs for a in s.acl_console()]
+                        + [r for s in specs for r in _rows(s.sub.acl_objects_console())] + [SIGNER_KEY, KEYS_KEY],
                         [SCHEMA_KEY, *every, "platform/*", *_gate(), *[r for s in specs for r in _worker_objects(s)],
                          SIGNER_KEY, KEYS_KEY]),
     }

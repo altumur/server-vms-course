@@ -33,15 +33,42 @@ whole or not at all."""
 # ================================================================================================
 from __future__ import annotations
 
+import hashlib
 import os
+from contextlib import contextmanager
 from typing import Protocol
 
 from .events import durable_dir, durably, new_temp
 from .limits import NO_CEILING, check
 
+# The directory's lock, taken by EVERY write of the file store (`put`, `put_new`, `put_at`, `delete`): what makes
+# `put_at`'s compare and write one step against every other writer of the directory. A `.tmp` name, so no listing
+# shows it (`list` skips `.tmp`, as it skips a write in flight).
+DIR_LOCK = ".lock.tmp"
+
+
+# The index a file store writes by (`get_at`/`put_at`): a digest of the bytes; `""` for no object at all.
+def bytes_index(data: bytes | None) -> str:
+    return "" if data is None else hashlib.sha256(data).hexdigest()
+
+
+# The directory's lock (`DIR_LOCK`), exclusive, for one write: let go when the descriptor closes. Made under the
+# process's umask, as every file of the store is; taken through the platform's one lock seam (`variables._lock_exclusive`:
+# `flock`, or `msvcrt` on Windows), which says `StoreBusy` past its wait rather than waiting for ever.
+@contextmanager
+def dir_lock(d: str):
+    from .variables import _lock_exclusive
+    os.makedirs(d, exist_ok=True)
+    with os.fdopen(os.open(os.path.join(d, DIR_LOCK), os.O_RDWR | os.O_CREAT, 0o666), "r+b") as f:
+        _lock_exclusive(f)
+        yield
+
 
 # A `typing.Protocol` with `put(key, data: bytes)`, `get(key) -> bytes | None`, `list(prefix) -> list[str]`.
-# No CAS, no index — objects are last-writer-wins by design; anything needing ordering goes in Variables.
+# Objects are last-writer-wins by design; anything needing ordering goes in Variables — but for two promises asked for
+# by name: create-only (`put_new`, a request's mark before its call) and a write BY THE INDEX READ (`get_at`/`put_at`,
+# the product's `IndexPutter`): whoever closes a mark it did not begin writes it by the index it read, and a conflict
+# means somebody else wrote it meanwhile (ADR-0054). Both object stores have it, and there is no path without it.
 class ObjectStore(Protocol):
     # What one object may weigh, in bytes; `NO_CEILING` (0) when the store has none. Declared, not
     # guessed — see `limits.py`. A write over it raises `TooLarge` and leaves the previous object alone.
@@ -56,6 +83,11 @@ class ObjectStore(Protocol):
     # the seam, and policy lives with the caller that has it (`SpecController.sweep_blobs`) and with the
     # store's rights, which are the only place that can actually enforce it.
     def delete(self, key: str) -> bool: ...
+
+    # The object and the index it stands at (`None` and the index of no object when there is none); and the write that
+    # takes only while the object still stands at `index` — `True` when it took, `False` when somebody wrote meanwhile.
+    def get_at(self, key: str) -> tuple[bytes | None, object]: ...
+    def put_at(self, key: str, data: bytes, index) -> bool: ...
 
 
 # Implements `ObjectStore` over a directory tree; a key with `/` becomes nested directories.
@@ -80,7 +112,13 @@ class FsObjectStore:
     def put(self, key: str, data: bytes, durable: bool = False) -> None:
         check(key, len(data), self.max_bytes)      # refused before the write: the old object survives intact
         p = self._p(key)
-        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with self._locked(os.path.dirname(p)):
+            self._write(p, data, durable)
+
+    def _locked(self, d: str):
+        return dir_lock(d)
+
+    def _write(self, p: str, data: bytes, durable: bool) -> None:
         # A name of its OWN for the file in flight (feedback BD). `<path>.tmp` was shared by every writer of the
         # key: a zombie and its replacement writing one heartbeat wrote into one file, and what was renamed into
         # place was the two of them interleaved — a heartbeat that does not parse, read by a controller's pass.
@@ -118,7 +156,25 @@ class FsObjectStore:
     def put_new(self, key: str, data: bytes) -> bool:
         check(key, len(data), self.max_bytes)
         p = self._p(key)
-        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with self._locked(os.path.dirname(p)):
+            return self._link_new(p, data)
+
+    # By the index read (`get_at`): the object as it stands and its digest; the write, under the directory's lock, only
+    # while the bytes there still have that digest — none at all for `""`. What a closer of a mark writes by (ADR-0054).
+    def get_at(self, key: str) -> tuple[bytes | None, str]:
+        data = self.get(key)
+        return data, bytes_index(data)
+
+    def put_at(self, key: str, data: bytes, index: str) -> bool:
+        check(key, len(data), self.max_bytes)
+        p = self._p(key)
+        with self._locked(os.path.dirname(p)):
+            if bytes_index(self.get(key)) != index:
+                return False
+            self._write(p, data, True)
+            return True
+
+    def _link_new(self, p: str, data: bytes) -> bool:
         fd, tmp = new_temp(os.path.dirname(p), os.path.basename(p) + ".")
         try:
             with os.fdopen(fd, "wb") as f:
@@ -139,11 +195,15 @@ class FsObjectStore:
     # Removes the file; a missing key is not an error, so a sweep that runs twice on the same candidate —
     # two consoles, a retry — does the same thing the second time.
     def delete(self, key: str) -> bool:
-        try:
-            os.remove(self._p(key))
-            return True
-        except FileNotFoundError:
-            return False
+        p = self._p(key)
+        if not os.path.isdir(os.path.dirname(p)):
+            return False                           # no directory, no object: no lock made to say so
+        with self._locked(os.path.dirname(p)):
+            try:
+                os.remove(p)
+                return True
+            except FileNotFoundError:
+                return False
 
     # Reads the file; a missing key returns `None` rather than raising, so callers such as
     # `Controller.workers_seen` can simply skip it.

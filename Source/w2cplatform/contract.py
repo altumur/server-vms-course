@@ -808,9 +808,12 @@ class Subsystem:
         """The controller publishes the snapshot shards — the only thing that leaves the cluster — and its pass report."""
         return [f"{self.name}/snapshot/*", f"{self.name}/{CONTROLLER_PASS}"]
 
+    # …and the console's reaper writes the end of a request into its mark (ADR-0054): `expired` create-only for one nobody
+    # began, `unknown` into one whose holder is gone — the marks' second writer by that decision, never over an outcome.
     def acl_objects_console(self) -> list[str]:
-        """The console stores the bytes of a `blob` field, beside the row that names them."""
-        return [f"{self.name}/{BLOBS}/*"]
+        """The console stores the bytes of a `blob` field, beside the row that names them, and ends requests in their
+        marks."""
+        return [f"{self.name}/{BLOBS}/*", f"{self.name}/{COMMANDS}/*"]
 
 
 # THE CONTROLLER'S LIMIT, AS IT SAID IT (the product's alignment of the owner's decision on hung workers). A spare asks
@@ -1128,6 +1131,13 @@ class _PassStore:
 
     def put_new(self, key, data):
         return self._wrote(self.real.put_new, key, data)
+
+    # A write by the index read reads the store, never the pass's copy: the index is the store's now (ADR-0054).
+    def get_at(self, key):
+        return self.real.get_at(key)
+
+    def put_at(self, key, data, index):
+        return self._wrote(self.real.put_at, key, data, index)
 
     def __getattr__(self, name):
         return getattr(self.real, name)
