@@ -26,6 +26,8 @@ from w2cplatform.speckeys import NAMED, OPAQUE  # noqa: E402
 OPERATORS = {"metrics.agg", "metrics.type"}
 # Scalars whose value has a FORM the platform reads beside the plain one: a `servers.status` field that is a path into
 # the heartbeat's maps by its dots (`servers.status.field=path`, «Архитектор» 2026-10-06) — a reading a spec must use.
+# (What the value there IS — a map or a list put whole, ADR-0064 — the heartbeat says, not the spec: no form to count;
+# the spec's word for it is `servers.status.of`, a key like any.)
 PATHS = {"servers.status.field"}
 
 # A field's own words, of a unit's row and of a table's alike.
@@ -60,7 +62,7 @@ IMPLEMENTED = {
     "rights.reach.cluster", "rights.reach.requests", "rights.names.field", "rights.names.unit", "rights.names.sub",
     "rights.names.of",
     "servers.show.table", "servers.show.by", "servers.show.title", "servers.show.columns", "servers.status.field",
-    "servers.status.field=path", "servers.status.title",
+    "servers.status.field=path", "servers.status.title", "servers.status.of",
     "display.unit", "display.units", "display.units_count", "display.section", "display.events", "display.field_help",
     "display.kinds", "display.actions", "display.tree.group_by", "display.tree.nested_by", "display.tree.columns.field",
     "display.tree.columns.title", "display.tree.columns.width", "display.tree.children", "display.tree.group_title",
@@ -134,4 +136,5 @@ def test_a_key_no_spec_uses_is_found_by_the_walk():
     assert {"unit.fields.*.type", "unit.fields.*.schema", "metrics.agg=count", "metrics.where"} <= got
     assert "servers.status.field=path" in _paths({"servers": {"status": [{"field": "belt.state", "title": "x"}]}})
     assert "servers.status.field=path" not in _paths({"servers": {"status": [{"field": "jam", "title": "x"}]}})
+    assert "servers.status.of" in _paths({"servers": {"status": [{"field": "keeps", "title": "x", "of": "keeps"}]}})
     assert "unit.fields.*.schema.minimum" not in got and "metrics.where.a" not in got
