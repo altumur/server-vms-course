@@ -94,20 +94,43 @@ class FsObjectStore:
         self.root = root
         os.makedirs(root, exist_ok=True)
 
+    # Every write under the directory's lock, as М10's (`objects.dir_lock`): what makes `put_at` one step.
     def put(self, key: str, data: bytes) -> None:
+        from w2cplatform.objects import dir_lock
         p = os.path.join(self.root, key)
-        os.makedirs(os.path.dirname(p), exist_ok=True)
-        with open(p + ".tmp", "wb") as f:
-            f.write(data)
-        os.replace(p + ".tmp", p)                  # an object appears whole or not at all
+        with dir_lock(os.path.dirname(p)):
+            with open(p + ".tmp", "wb") as f:
+                f.write(data)
+            os.replace(p + ".tmp", p)              # an object appears whole or not at all
+
+    # By the index read, as М10's: the bytes' digest, compared and written under the directory's lock (ADR-0054).
+    def get_at(self, key: str) -> tuple[bytes | None, str]:
+        from w2cplatform.objects import bytes_index
+        data = self.get(key)
+        return data, bytes_index(data)
+
+    def put_at(self, key: str, data: bytes, index: str) -> bool:
+        from w2cplatform.objects import bytes_index, dir_lock
+        p = os.path.join(self.root, key)
+        with dir_lock(os.path.dirname(p)):
+            if bytes_index(self.get(key)) != index:
+                return False
+            with open(p + ".tmp", "wb") as f:
+                f.write(data)
+            os.replace(p + ".tmp", p)
+            return True
 
     # Create-only, as М10's `FsObjectStore.put_new` does it: `link` onto a name that is taken fails. Without it a
     # worker on a bench store refuses its actions (`Worker` marks an action before it acts; the platform review's third pass).
     def put_new(self, key: str, data: bytes) -> bool:
+        from w2cplatform.objects import dir_lock
+        p = os.path.join(self.root, key)
+        with dir_lock(os.path.dirname(p)):
+            return self._link_new(p, data)
+
+    def _link_new(self, p: str, data: bytes) -> bool:
         import tempfile
         from w2cplatform.events import durable_dir, durably
-        p = os.path.join(self.root, key)
-        os.makedirs(os.path.dirname(p), exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=os.path.basename(p) + ".", suffix=".tmp")
         try:
             with os.fdopen(fd, "wb") as f:
@@ -173,8 +196,21 @@ class VariablesObjectStore:
         self.vars.put(self._path(key), {"data": data.decode("utf-8")})       # no cas: the last heartbeat wins, as it should
 
     def get(self, key: str) -> bytes | None:
-        items, _ = self.vars.get(self._path(key))
-        return items["data"].encode("utf-8") if items and "data" in items else None
+        return self.get_at(key)[0]
+
+    # By the index read (the product's `IndexPutter` on `RowObjects`): the row's own index, and the write by CAS on it —
+    # 0, no row, is create-only. `False` when somebody wrote the row meanwhile (ADR-0054: a closer re-reads).
+    def get_at(self, key: str) -> tuple[bytes | None, int]:
+        items, idx = self.vars.get(self._path(key))
+        return (items["data"].encode("utf-8") if items and "data" in items else None), idx
+
+    def put_at(self, key: str, data: bytes, index: int) -> bool:
+        check(key, len(data), self.max_bytes)
+        try:
+            self.vars.put(self._path(key), {"data": data.decode("utf-8")}, cas=index)
+        except Conflict:
+            return False
+        return True
 
     def list(self, prefix: str) -> list[str]:
         base = f"{self.prefix}/"
@@ -349,6 +385,25 @@ class ClusterObjectStore:
         made = self.rows.put_new(key, data)
         self._seen(key, True)
         return made
+
+    # By the index read: the row's (`VariablesObjectStore.get_at`/`put_at`) — for a key a spec names a row only, as
+    # `put_new`: a file has one writer, and its index on one server is nobody's on another.
+    def get_at(self, key: str) -> tuple[bytes | None, int]:
+        self._row_only(key, "a write by the index read")
+        return self.rows.get_at(key)
+
+    def put_at(self, key: str, data: bytes, index: int) -> bool:
+        self._row_only(key, "a write by the index read")
+        took = self.rows.put_at(key, data, index)
+        self._seen(key, True)
+        return took
+
+    @staticmethod
+    def _row_only(key: str, what: str) -> None:
+        if not is_row(key):
+            raise ValueError(f"{key}: {what} is of a row of the store, one of "
+                             f"{', '.join(row_patterns()) or 'none: no spec loaded here names one'} — its subsystem's "
+                             f"spec names it in `objects.rows`")
 
     # A blob from this server's file when it hashes to its name; anything else — and a blob whose copy here does not —
     # the freshest copy among every server's, asked of the resource here (`scope=cluster`). `None` when nobody that

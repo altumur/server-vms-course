@@ -151,7 +151,14 @@ def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_
     requests.clear_requests(con)
     assert con.vars.list("vms/requests/") == ["vms/requests/x1"], con.vars.list("vms/requests/")
     assert requests.expired.get("vms", 0) - before == 1
+    # …and each end is in its mark, written by the console's own socket (ADR-0054): nobody began x2 — `expired`, the
+    # reaper's word, create-only; x3's answer is the holder's and stays as it was
+    x2 = json.loads(con.objects.get("vms/commands/x2"))
+    assert (x2["outcome"], x2["ended_by"], x2["unit"], x2["action"]) == ("expired", "reaper", "1", "output"), x2
+    assert json.loads(con.objects.get("vms/commands/x3")) == {"instance": w.instance, "outcome": "performed"}
     w.release_slot()                                                                   # the holder went
     requests.clear_requests(con)
     assert con.vars.list("vms/requests/") == [], con.vars.list("vms/requests/")
     assert requests.expired.get("vms", 0) - before == 1 and requests.unknown.get("vms", 0) - unknown == 1
+    x1 = json.loads(con.objects.get("vms/commands/x1"))                               # completed, its beginner kept
+    assert (x1["outcome"], x1["instance"], x1["slot"]) == ("unknown", w.instance, w.name) and "ended_by" not in x1, x1

@@ -87,7 +87,9 @@ def test_a_command_mark_is_create_only_across_the_cluster():
     """The platform review's third pass. A worker marks a device command BEFORE it calls the device, and two holders
     of one device in the same two seconds must not both believe they were first — and they may be on two servers,
     where two directories each say "first" (`link` is create-only on ONE disk). So the mark is a row: `put_new` is a
-    row written with `cas=""`, the store's create-only, through the worker's own socket."""
+    row written with `cas=""`, the store's create-only, through the worker's own socket. The console's reaper is the
+    marks' second writer (ADR-0054: `expired` for a request nobody began), by its own socket and create-only too: a mark
+    a holder made first is not written over."""
     c = Cluster()
     v = c.door("vmsworker")
     a, b = c.objects_on("srv-a", v), c.objects_on("srv-b", v)
@@ -95,10 +97,10 @@ def test_a_command_mark_is_create_only_across_the_cluster():
     assert not b.put_new("vms/commands/r1", json.dumps({"instance": "b"}).encode())
     assert json.loads(b.get("vms/commands/r1"))["instance"] == "a"             # …and not written over
     assert c.vars.list("objects/") == ["objects/vms/commands/r1"]
-    try:
-        c.objects_on("srv-a", c.door("console")).put_new("vms/commands/r2", b"{}"); assert False
-    except Forbidden:
-        pass                                                                    # the console's socket has no such grant
+    console = c.objects_on("srv-a", c.door("console"))
+    assert not console.put_new("vms/commands/r1", b'{"ended_by":"reaper"}')     # the holder's mark stands
+    assert json.loads(a.get("vms/commands/r1"))["instance"] == "a"
+    assert console.put_new("vms/commands/r2", b'{"ended_by":"reaper"}')         # nobody began r2: the reaper's word
 
 
 def test_every_writer_sees_one_log():
