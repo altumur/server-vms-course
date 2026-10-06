@@ -22,7 +22,7 @@ def _tokens():
     return t, {
         "person": t.issue("alice", 900, now=NOW, kind="person"),
         "stream": t.issue("cam-SN5001", 900, now=NOW, aud=audience("south"), ref="SN5001", kind="stream"),
-        "ask": t.issue("cam-SN5002", 900, now=NOW, aud=audience("south"), ask="SN5001", by="SN5002", acts=[], kind="ask"),
+        "ask": t.issue("cam-SN5002", 900, now=NOW, aud=audience("south"), ref="SN5001", by="SN5002", acts=[], kind="ask"),
         "relay": t.issue("south", 900, now=NOW, aud=audience("north"), ref="SN5001", kind="stream"),
     }
 
@@ -41,7 +41,7 @@ def test_every_token_says_what_it_is_for_and_one_that_does_not_is_no_doors():
                 pass
     # A token that does not say its kind is read by no door: its shape is not read for one (the owner's decision, Q6).
     legacy = {"person": t.issue("bob", 900, now=NOW), "stream": t.issue("cam-1", 900, now=NOW, aud="x", ref="1"),
-              "ask": t.issue("cam-2", 900, now=NOW, aud="x", ask="1")}
+              "ask": t.issue("cam-2", 900, now=NOW, aud="x", ref="1")}
     for kind, v in legacy.items():
         assert kind_of(verify(v, ks, now=NOW)) == ""
         try:
