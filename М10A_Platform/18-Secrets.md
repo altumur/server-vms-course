@@ -139,7 +139,7 @@ driverpack://root:hunter2@10.0.0.7/cam
 
 Пароль оказался в поле адреса (в М10B — `source` камеры). Это обычное поле, маска смотрит только на `*_secret`, а снимок его содержит. Пароль уезжает в М12 и светится в каждой консоли.
 
-Отсюда — тип поля `url`. Первая версия смотрела на `u.username`, `u.password` и `@` в `netloc`; ревью за ревью к ней добавлялись логин в пути, пары учётных данных, хост, который не прочесть, — и с тринадцатого ревью спека не держит своей копии, а зовёт общее правило адресов (`secrets.address_fault`, урок 9), то же, что спрашивают строки таблиц спеки и дверь домена. В `refuse` это одна строка — `why = f.refusal(fields[name])`, — а слова отказа собирает поле:
+Отсюда — тип поля `url`. Первая версия смотрела на `u.username`, `u.password` и `@` в `netloc`; ревью за ревью к ней добавлялись логин в пути, пары учётных данных, хост, который не прочесть, — и с тринадцатого ревью спека не держит своей копии, а зовёт общее правило адресов (`secrets.address_fault`, урок 9), то же, что спрашивают строки таблиц спеки и дверь домена. В `refuse` это одна строка — `why = f.refusal(fields[name])`, — а слова отказа собирает поле (логин в пути схемы, которая пишет там хост, `host: path`, — отдельная строка рядом, `path_login(written, f.schemes)`: он отказан при любом `secret_in`, ADR 0053, урок 9, шаг 11):
 
 ```python
     def refusal(self, value) -> str | None:
@@ -172,9 +172,16 @@ driverpack://root:hunter2@10.0.0.7/cam
 Каждый вид по разу — у поля `feed` подсистемы `testsub2`, на которой платформа гоняет свои тесты:
 
 ```yaml
-    feed:     {type: url, unique: canonical, schemes: [https, sftp], credentials: {login: feed_user, secret: feed_secret},
-               secret_in: [{param: [token*, "*key", =who], login: [=who]}, {nested: [via]},
-                           {regex: '^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$', in: fragment, schemes: [sftp], decoded: false}]}
+    feed:
+      type: url
+      unique: canonical
+      …
+      schemes: {https: {}, sftp: {}, mirror: {host: path, fragment: none, none: [local]}}
+      credentials: {login: feed_user, secret: feed_secret}
+      secret_in:
+        - {param: [token*, "*key", =who], login: [=who]}
+        - {nested: [via]}
+        - {regex: '^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$', in: fragment, schemes: [sftp], decoded: false}
 ```
 
 Имя пары читается так, как его прочёл бы тот, кто его принимает: экраны раскрыты, буквы приведены (NFKC: полноширинное `ｐｗｄ` — это `pwd`; невидимые знаки вроде U+200B выброшены), после последней `.` (`dev.adminPassword`), по словам — слово кончается на `_`, `-`, `+`, пробеле и там, где меняется регистр, и хвостовые цифры в него не входят (`apiKey2`, `api_key_2` — это `key`). `pwd` в списке — целое имя или его последнее слово, `=auth` — только целое имя (последним словом длинного оно называет режим: `enable_auth`), `pwd*` — какое-то слово с него начинается, `*pwd` — последнее слово им кончается. Имя пароля спрашивается раньше имени логина. Без `secret_in` платформа отказывает `@`, порту-не-числу и своим общим именам. Страница, ответ и дверь, которая не поле спеки, прячут адрес по правилам всех загруженных спек сразу (`catalog.secret_rules`). Таблица адресов — одна у курса и продукта, байт в байт (`tests/testdata/secret_in.tsv`, у каждой строки — как адрес показывается и какое поле называет его отказ: `cred_secret`, `cred_username` или никакое; `test_secret_in_table.py::test_every_address_of_the_shared_table_is_masked_and_refused_as_the_table_says`).

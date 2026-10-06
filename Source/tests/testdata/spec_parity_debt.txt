@@ -121,32 +121,16 @@ course-only rec.subsystem.yaml unit.fields.home.must_match
 course-only rec.subsystem.yaml unit.fields.home.ref
 course-only rec.subsystem.yaml worker.reads
 course-only vms.subsystem.yaml metrics
-course-only vms.subsystem.yaml placement.group_by
-course-only vms.subsystem.yaml placement.group_by.cut_at
-course-only vms.subsystem.yaml placement.group_by.field
 course-only vms.subsystem.yaml placement.near.enabled
 course-only vms.subsystem.yaml placement.near.kind
 course-only vms.subsystem.yaml placement.near.prefer
 course-only vms.subsystem.yaml placement.offers
-course-only vms.subsystem.yaml rights
-course-only vms.subsystem.yaml rights.reach
 course-only vms.subsystem.yaml rights.reach.cluster
 course-only vms.subsystem.yaml rights.reach.group
-course-only vms.subsystem.yaml rights.reach.requests
 course-only vms.subsystem.yaml unit.fields.kind
 course-only vms.subsystem.yaml unit.fields.kind.default
 course-only vms.subsystem.yaml unit.fields.kind.type
 course-only vms.subsystem.yaml unit.fields.ref.unique
-course-only vms.subsystem.yaml unit.fields.source.schemes.driverpack   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.fragment   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.host   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.http   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.https   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.ipint   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.none   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.onvif   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.rtsp   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml unit.fields.source.schemes.rtsps   # ADR-0053: the url field declares its schemes as a map, the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml unit.fields.source.unique
 course-only vms.subsystem.yaml worker
 course-only vms.subsystem.yaml worker.writes

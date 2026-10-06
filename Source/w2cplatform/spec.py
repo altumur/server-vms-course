@@ -374,6 +374,14 @@ class Field:
             return parse_json(v) if isinstance(v, (str, bytes)) else v
         return str(v)
 
+    # A value as a body or a caller gives it (`parse` reads a stored item): a `json` field takes it AS IT IS — a string is
+    # a document that is a string, never JSON text read again (the architect with «Паритет», 2026-10-06, (б): reading a
+    # text box is the page's work before it sends; the double reading reached a 500 on `"\"s\""`); the rest as `parse`.
+    def take(self, v):
+        if self.type == "json" and v is not None and not self.inherits:
+            return v
+        return self.parse(v)
+
     # The declared default, else the type's zero (`0`, `0.0`, `False`, `[]`, `""`).
     def default_value(self):
         if self.inherits:
@@ -382,16 +390,16 @@ class Field:
             return self.default
         return {"int": 0, "float": 0.0, "bool": False, "list": [], "json": None}.get(self.type, "")
 
-    # The Variables form: bools as `"true"/"false"`, lists comma-joined, else `str`. A `json` field is its canonical text
-    # (`canonical.py`: sorted keys, `5` for `5.0` — the product's `CanonicalJSON`, the architect 2026-10-05); a string
-    # given is JSON text, parsed first — stored as typed, it was another row than the same value given parsed.
+    # The Variables form: bools as `"true"/"false"`, lists comma-joined, else `str`. A `json` field is its value's canonical
+    # text (`canonical.py`: sorted keys, `5` for `5.0` — the product's `CanonicalJSON`, the architect 2026-10-05); a string
+    # is a document that is a string (`"s"` is written `"\"s\""`), as `take` holds it.
     def to_item(self, v) -> str:
         if self.type == "bool":
             return "true" if v else "false"
         if self.type == "list":
             return ",".join(v)
         if self.type == "json":
-            return canonical_json(parse_json(v) if isinstance(v, (str, bytes)) else v)
+            return canonical_json(v)
         return str(v)
 
 
@@ -1416,6 +1424,11 @@ class SubsystemSpec:
             raise ValueError(f"spec {self.name}: rights.reach is {{group: [<field>], cluster: [<field>], requests: "
                              f"[<action>]}}, not {reach!r}")
         self.reach = {k: tuple(v) for k, v in reach.items()}
+        # a change of a `reach.group` field reaches the unit's GROUP: with no `placement.group_by` there is none to reach,
+        # and the declaration would ask nothing (ADR 0012; the product's `reach-names`)
+        if self.reach.get("group") and not self.group_by:
+            raise ValueError(f"spec {self.name}: rights.reach.group names fields whose change reaches the unit's group, "
+                             f"and the spec says no placement.group_by — there is no group to reach")
         names = rights.get("names") or []
         if not isinstance(names, list) or not all(
                 isinstance(e, dict) and not set(e) - {"field", "unit", "sub", "of"} and e.get("field") in self.fields
@@ -1423,6 +1436,11 @@ class SubsystemSpec:
                 for e in names):
             raise ValueError(f"spec {self.name}: rights.names is [{{field: <a json field>, unit: <key>, sub: <key> | of: "
                              f"<subsystem>}}], not {names!r}")
+        # …and a name is read from a `json` field: any other answered "*" for a text it could not read, hiding a typo
+        wrong = [e["field"] for e in names if self.fields[e["field"]].type != "json"]
+        if wrong:
+            raise ValueError(f"spec {self.name}: rights.names reads names from a json field, and {wrong[0]} is "
+                             f"{self.fields[wrong[0]].type}")
         self.names = tuple(dict(e) for e in names)
 
     # What a console and a page read and do not act on, checked at load (the boundary's step 6): `metrics` (`metrics.py`),
@@ -1713,7 +1731,7 @@ class SubsystemSpec:
             if not f.fixed or n not in fields or not was or was.get(n) in (None, ""):
                 continue
             try:
-                same = str(f.parse(fields[n])) == str(f.parse(was[n]))
+                same = str(f.take(fields[n])) == str(f.take(was[n]))
             except PARSE_ERRORS:
                 same = False
             if not same:
@@ -1793,8 +1811,10 @@ class SubsystemSpec:
         out = {"id": str(row["id"]), "revision": str(row.get("revision", 1))}
         for n, f in self.fields.items():
             v = row.get(n, f.default_value())
-            if f.inherits and v is None:
-                continue                                 # not set is ABSENT — never a stored "None"
+            if v is None and (f.inherits or f.type == "json"):
+                # not set is ABSENT — never a stored "None"; and a json field's `null` is no field, its default given
+                # (none declared: absent — never the text `null`; the architect, 2026-10-06), as a table row's is
+                continue
             out[n] = f.to_item(v)
         return out
 
@@ -1854,7 +1874,7 @@ class SubsystemSpec:
             if f.type == "json" and fields.get(name) is not None:
                 raw = fields[name]
                 try:                                     # the text measured is the text stored (`Field.to_item`)
-                    doc = parse_json(raw) if isinstance(raw, (str, bytes)) else raw
+                    doc = raw                            # the value as given: a string is a document (`Field.take`)
                     text = canonical_json(doc)
                 except PARSE_ERRORS as e:                # nested past JSON's depth too: 400, not 500 (the tenth round)
                     r = Refused(f"{name} is not JSON: {e}")
@@ -1875,7 +1895,7 @@ class SubsystemSpec:
                 self._schema_refusal(name, f, value)
             if f.enum and fields.get(name) is not None:
                 try:
-                    value = f.parse(fields[name]) if f.type != "string" else str(fields[name])
+                    value = f.take(fields[name]) if f.type != "string" else str(fields[name])
                 except PARSE_ERRORS:
                     value = None
                 if value not in f.enum:
@@ -1912,6 +1932,12 @@ class SubsystemSpec:
                 if f.schemes and scheme not in f.schemes:
                     raise AddressRefused(f"{name} is reached by {', '.join(f.schemes)}, not by "
                                   f"{repr(scheme) if scheme else 'an address with no scheme'}")
+                # …and no login where the scheme writes its host in the path (`host: path`): `x://vendor/admin:
+                # …%40host/ch/1` — the url rule's, at any url field, whatever its `secret_in` (ADR 0053; the group is
+                # still read: `host`, refused)
+                if path_login(written, f.schemes):
+                    raise AddressRefused(f"{name} holds a login where its scheme writes the host (in the path): the "
+                                         f"login and the password are the spec's own fields, not the address")
                 # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/dev7#@nvr50/ch/1` is
                 # device `dev7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
                 # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
@@ -1945,8 +1971,8 @@ class SubsystemSpec:
             if f.required and not fields.get(n):
                 raise Refused(f"a {self.name} unit needs a {n}")
             v = fields.get(n)
-            r[n] = f.parse(v) if v is not None else f.default_value()
-            if isinstance(r[n], str) and "{id}" in r[n]:
+            r[n] = f.take(v) if v is not None else f.default_value()
+            if isinstance(r[n], str) and "{id}" in r[n] and f.type != "json":
                 r[n] = r[n].replace("{id}", str(uid))
         r["revision"] = 1
         return r
@@ -2194,12 +2220,33 @@ def _authority_host(a: str, *, host: bool = True) -> str | None:
     return "ok" if ok else ""
 
 
+def _path_login(path: str) -> bool:
+    """A login written in the first segment of `path` (`host: path`): an `@` in it, escaped or not, or a password where
+    the port goes (`10.0.0.5:hunter2`, or past a password holding a `/`)."""
+    seg = path[1:].split("/", 1)[0]
+    rest, plain = path[1 + len(seg):], _unescaped(seg)
+    port = (_split_port(plain) or (plain, None))[1]
+    return "@" in plain or (port is not None and (port != "" and not _digits(port) or "@" in _unescaped(rest)))
+
+
+def path_login(v, schemes: dict | None = None) -> bool:
+    """Whether the address `v`, of a scheme whose host stands in its path (`host: path`), writes a login there — the
+    url rule's refusal at any url field (ADR 0053; the product's c13c25f), whatever the field's `secret_in` says."""
+    s = "" if v is None else str(v)
+    scheme, sep, rest = s.partition("://")
+    opts = (schemes or {}).get(scheme.lower()) or {}
+    if not sep or opts.get("host", "authority") != "path":
+        return False
+    cut = min([i for i in (rest.find("/"), rest.find("?")) if i >= 0], default=len(rest))
+    path = rest[cut:].partition("?")[0]
+    return bool(path[1:].split("/", 1)[0]) and _path_login(path)
+
+
 def _host_in_path(path: str) -> str:
     """The host written in the first segment of `path` (`host: path`), in its one spelling, or ""."""
     seg = path[1:].split("/", 1)[0]
     rest, plain = path[1 + len(seg):], _unescaped(seg)
-    port = (_split_port(plain) or (plain, None))[1]
-    login = "@" in plain or (port is not None and (port != "" and not _digits(port) or "@" in _unescaped(rest)))
+    login = _path_login(path)
     if not login:
         written = _split_port(seg)
         return host_spelling(written[0]) if written else ""
@@ -2792,7 +2839,7 @@ class SpecController(Controller):
                               f"for {fields[moved]} under another name (this one stays {r[moved]}'s, deleted or not)")
             was = dict(r)
             for k, v in fields.items():
-                r[k] = self.spec.fields[k].parse(v)
+                r[k] = self.spec.fields[k].take(v)
             for k, f in self.spec.fields.items():
                 why = unbound_secret(k, f.bound_to, was, r) if f.bound_to and k not in fields else None
                 if why:

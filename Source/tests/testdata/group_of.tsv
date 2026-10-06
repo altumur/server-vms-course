@@ -59,7 +59,6 @@ nvr50	(none)	bad_url
 file:///media/a.mp4	(none)	bad_url
 /media/a.mp4	(none)	bad_url
 # a scheme outside the map: no host is read for it, refused
-onvif://10.0.0.5/	(none)	bad_url
 ftp://nvr50/a	(none)	bad_url
 # driverpack://<vendor>/<address>/…: the host is the path's first segment, and the vendor no part of it
 driverpack://acme/10.0.0.50/ch/17	10.0.0.50
@@ -77,6 +76,8 @@ driverpack://file	(none)
 driverpack://FILE./clips/a.mp4	(none)
 driverpack://acme/nvr%2Ecorp/ch/1	(none)	bad_url
 driverpack://acme/admin:Hunter2@10.0.0.5/ch/1	10.0.0.5	bad_url
+driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1	10.0.0.5	bad_url
+driverpack://acme/10.0.0.5:hunter2/ch/1	10.0.0.5	bad_url
 driverpack://acme/admin:pa/ss@10.0.0.5/ch/1	10.0.0.5	bad_url
 driverpack://acme/admin:X%40nvr%2Ecorp/ch/1	(none)	bad_url
 # mirror://<hub>/<host>/…: the host in the path, `#` a character, `mirror://local/…` no host
