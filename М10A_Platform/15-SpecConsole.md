@@ -1388,10 +1388,12 @@ def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, inde
         head = path.split("/", 2)
         if len(head) >= 2 and head[1] in self.mounts:
             return self.mounts[head[1]], "/" + (head[2] if len(head) > 2 else "")
+        if len(head) >= 2 and self.root.spec.name and head[1] == self.root.spec.name:
+            return self.root, "/" + (head[2] if len(head) > 2 else "")
         return self.root, path
 ```
 
-Вся маршрутизация — семь строк. `split("/", 2)` с ограничением: `/pick/where/a` даёт `["", "pick", "where/a"]`. Если второй элемент — имя смонтированной подсистемы, отдаём её консоль и остаток пути, начатый со слэша; иначе — корень и путь целиком.
+Вся маршрутизация — девять строк. `split("/", 2)` с ограничением: `/pick/where/a` даёт `["", "pick", "where/a"]`. Если второй элемент — имя смонтированной подсистемы, отдаём её консоль и остаток пути, начатый со слэша. Если это имя самого корня, отдаём корень и тот же остаток: `/vms/where/7` у консоли с корнем `vms` — ровно `/where/7`, для любого маршрута корня. Так консоль другого кластера, которая раскладки этой не знает, всегда может спросить `/<sub>/where/…` ([М12A, урок 3](../М12A_Domain/03-the-api-and-what-it-refuses.md), шаг 8; ADR-0061, дополнение п. 3; тест `test_where_place.py::test_the_root_answers_under_its_own_name_as_at_its_root_and_another_name_is_no_route`). Иначе — корень и путь целиком, и имя, которое не корень и не маунт, — 404.
 
 `/pick` без остатка даёт `"/"` подсистемы `pick` — и 404 «pick is mounted: the page is the console root's»: своей страницы у смонтированной подсистемы нет, её единицы показывает модуль на странице корня, читая её `/pick/spec` (`test_only_the_consoles_root_serves_a_page_and_a_mounted_subsystem_none`).
 
