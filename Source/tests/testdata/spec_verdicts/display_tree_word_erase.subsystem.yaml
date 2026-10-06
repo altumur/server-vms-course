@@ -23,7 +23,7 @@ requests:
 snapshot: [name, start]
 display:
   unit: counter
-  tree: {group_by: kind, remove: Remove}
+  tree: {group_by: kind, erase: X}
   units: counters
   fields: {name: Name, start: Start}
   options:

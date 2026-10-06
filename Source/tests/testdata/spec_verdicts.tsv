@@ -47,7 +47,7 @@ display_options_status_field	ok
 display_options_yes_key	ok
 display_tree_column_unknown	refused
 display_tree_group_by_unknown	refused
-display_tree_word_remove	refused
+display_tree_word_erase	refused
 display_unknown_section	refused
 display_word_On_Off_unquoted	ok
 display_word_not_string	refused
