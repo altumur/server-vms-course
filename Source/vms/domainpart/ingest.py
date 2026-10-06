@@ -1993,12 +1993,17 @@ class CameraPusher:
         """Whether a break of this stream may be left to memory (`RecWorker.resumes`): not while it lags."""
         return not self.lag
 
+    # `up`: an ingest takes the stream now — the last piece it was offered was taken, on the road it goes to (`pushing`,
+    # set in `_took`, cleared when no road answers or nobody wants the stream). The console's `rec_stream_up` (the spec's
+    # `stream_up`, «Архитектор» 2026-10-06): a camera polling, idle or broken off says 0.
     def said(self) -> dict:
-        """What the camera's recorder says of the stream in its heartbeat (`CardRecorder.stream_said`): where it goes,
-        how far behind, whether the uplink carries it, and the seconds of it the stream did not carry (`continued`)."""
+        """What the camera's recorder says of the stream in its heartbeat (`CardRecorder.stream_said`): whether it goes,
+        where, how far behind, whether the uplink carries it, and the seconds of it the stream did not carry
+        (`continued`)."""
         c = dict(self.continued)
         steps = {k: v for k, v in self.frames.steps().items() if v}     # the camera's clock, taken up (`_timed`)
-        return {"state": self.state, "road": self.road, "behind_s": round(self.behind(), 1), "lagging": self.lag,
+        return {"state": self.state, "up": self.pushing is not None, "road": self.road,
+                "behind_s": round(self.behind(), 1), "lagging": self.lag,
                 "cut_s": c["cut_s"], "left_s": c["left_s"], "failed_s": c["failed_s"], "failed": c["failed"],
                 **({"failed_why": c["failed_why"]} if c["failed_why"] else {}), **steps}
 

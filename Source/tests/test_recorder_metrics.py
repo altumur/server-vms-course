@@ -74,3 +74,40 @@ def test_a_recording_the_engine_refuses_is_counted_by_itself_and_its_last_frame_
     assert 'rec_samples_refused_total{unit="8",status="SEQUENCE_TOO_LARGE"} 10' in text
     assert 'rec_samples_refused_total{unit="7"' not in text
     assert 'rec_last_frame_age_seconds{unit="7"} 0' in text
+
+
+def test_a_cameras_stream_beyond_its_gaps_is_twelve_numbers_said_or_their_default():
+    """The camera's numbers beyond its gaps («Прошивка», «Архитектор» 2026-10-06: the spec's `stream_up` …
+    `card_state`). The course's camera recorder says `stream.up`, `stream.owed_s`, `stream.owed_gaps` and `card.state`;
+    the leaves it cannot measure — live frames dropped, frames back in time, uploads held and their wait, the clock's
+    shift, video on no clock line, live the card skipped, and what the card holds for the centre alone while a relay
+    has not sent it up (`stream_owed_up_seconds`: the course does not count the card's relay chain) — stay out of its
+    heartbeat, and the declaration's `default` prints them 0 (`card_state`: `recording`). Each by its value (ADR 0055): `12.5`, `0`, never `0.0`. The default
+    stands for a leaf of a map that is there: a camera whose stream nobody says (no `stream` map) has no stream line, and
+    a server's recorder — no card, no stream — none of the eleven."""
+    box = Box()
+    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    now = box.wall()
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-cam"), Heartbeat("r-cam", now, [], {
+        "server": "cam-1", "card": {"state": "stalled", "tries": 0, "since": now},
+        "stream": {"state": "pushing", "up": True, "lagging": False, "owed_s": 12.5, "owed_gaps": 2}}).to_bytes())
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-mute"), Heartbeat("r-mute", now, [], {
+        "server": "cam-2", "card": {"state": "", "tries": 0, "since": now}}).to_bytes())
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-srv"), Heartbeat("r-srv", now, [], {"server": "srv-1"}).to_bytes())
+    lines = spec_metrics(rec).splitlines()
+    said = {"stream_up": "1", "stream_owed_seconds": "12.5", "stream_owed_gaps": "2"}
+    stream = ("stream_up", "stream_owed_seconds", "stream_owed_gaps", "stream_owed_up_seconds",   # (no relay chain: 0)
+              "stream_live_drops_total", "stream_frames_back_total",
+              "stream_uploads_held", "stream_upload_wait_seconds_total", "camera_clock_shift_seconds",
+              "camera_clock_unplaceable_seconds_total")
+    for name in stream:
+        line = f'rec_{name}{{worker="r-cam"}} {said.get(name, "0")}'
+        assert line in lines, line
+        assert not any(ln.startswith(f'rec_{name}{{worker="r-mute"}}') for ln in lines), name   # no stream map: no line
+    for w, state in (("r-cam", "stalled"), ("r-mute", "recording")):              # r-mute's empty word: the `default`
+        assert f'rec_card_live_skipped_seconds_total{{worker="{w}"}} 0' in lines, w
+        assert f'rec_card_state{{worker="{w}",state="{state}"}} 1' in lines, w
+    assert not any('worker="r-srv"' in ln for ln in lines
+                   if ln.split("{")[0][4:] in stream + ("card_live_skipped_seconds_total", "card_state"))   # none of them
+    for name in ("stream_up", "stream_owed_seconds", "stream_live_drops_total", "card_live_skipped_seconds_total"):
+        assert sum(1 for ln in lines if ln.startswith(f"# TYPE rec_{name} ")) == 1, name
