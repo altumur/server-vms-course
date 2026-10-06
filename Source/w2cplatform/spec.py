@@ -1937,6 +1937,11 @@ class SubsystemSpec:
                     u.port
                 except ValueError:                       # its words quote the port it could not read: a password
                     raise AddressRefused(f"{name} is not an address: {NOT_AN_ADDRESS}") from None   # (the twelfth review, major 16)
+                # …nor a '%' that escapes nothing (`…/ch/%zz`): RFC 3986 has no such address, and one reader would take
+                # it as it stands, another refuse or mend it. The url rule's refusal alone: the host it names is still its
+                # group (`url_host`; ADR 0053, «Архитектор» 2026-10-06)
+                if _BROKEN_ESCAPE.search(rfc):
+                    raise AddressRefused(f"{name} is not an address: a '%' in it is not followed by two hex digits")
                 # …A LOGIN NOR A CREDENTIAL ANYWHERE IN IT — the platform's one rule (`secrets.address_refusal`), the one a
                 # volume's url and the domain's door ask. This was a copy of it, and the copy fell behind (the thirteenth
                 # review, blocker 6): it read the `@` of the netloc and the path only, and `…/relay?src=rtsp%3A%2F%2Fadmin
@@ -2265,25 +2270,21 @@ def path_login(v, schemes: dict | None = None) -> bool:
     return bool(path[1:].split("/", 1)[0]) and _path_login(path)
 
 
+# An `@` in a path segment, written or escaped once or more (`%40`, `%2540`): where a login in it ends.
+_PATH_AT = re.compile(r"@|%(?:25)*40", re.IGNORECASE)
+
+
 def _host_in_path(path: str) -> str:
-    """The host written in the first segment of `path` (`host: path`), in its one spelling, or ""."""
+    """The host written in the first segment of `path` (`host: path`), in its one spelling, or "". The segment is read
+    up to its `/` and no further; a login in it (an `@`, written or escaped) ends at its last `@`, the host after it is
+    read all the same — refusing the login is the url rule's (`path_login`), the group is the host's. A port after the
+    host that is no number makes it unreadable (`10.0.0.5:hunter2`; `admin:pa/ss@h`, whose «host» is `admin:pa`): the
+    host is then a login's, and a group by it would put strangers' rows together (ADR 0053, «Архитектор» 2026-10-06)."""
     seg = path[1:].split("/", 1)[0]
-    rest, plain = path[1 + len(seg):], _unescaped(seg)
-    login = _path_login(path)
-    if not login:
-        written = _split_port(seg)
-        return host_spelling(written[0]) if written else ""
-    # a login in the segment — its `@` escaped, or past a password holding a `/` — or a password where the port goes:
-    # the host is after the last `@`, before a port of digits
-    if "@" in plain:
-        hp = plain[plain.rfind("@") + 1:]
-    elif "@" in _unescaped(rest):
-        hp = _unescaped(rest)
-        hp = hp[hp.rfind("@") + 1:].split("/", 1)[0]
-    else:
-        hp = plain
+    ats = list(_PATH_AT.finditer(seg))
+    hp = seg[ats[-1].end():] if ats else seg
     split = _split_port(hp)
-    if split is None or not split[0] or split[0] not in path:      # only decoding made it: no host written there
+    if split is None or not split[0] or (split[1] and not _digits(split[1])):
         return ""
     return host_spelling(split[0])
 
@@ -2295,10 +2296,15 @@ def url_host(v, schemes: dict | None = None) -> str:
 
 def host_of_url(v, schemes: dict | None = None) -> str | None:
     """`url_host`, saying why there is none: "" when the spec says the address names none (its authority is one of the
-    scheme's `none`, compared in the host's one spelling), and None when no host can be told — it is no address with an
-    authority, its scheme is not among `schemes` (when they are said), it does not parse, or its host is neither a name
-    nor an IP. With `cut_at: host` declared, None is a value
-    the field refuses (`SubsystemSpec.group_refusal`; ADR 0053): `none` says the only addresses without a group."""
+    scheme's `none`, compared AS WRITTEN — port and login and all — in the host's one spelling: lowercased, no trailing
+    dot; `file:1` is not `file`), and None when no host can be told — it is no address with an authority, its scheme is
+    not among `schemes` (when they are said), it does not parse, or its host is neither a name nor an IP. With
+    `cut_at: host` declared, None is a value the field refuses (`SubsystemSpec.group_refusal`; ADR 0053): `none` says
+    the only addresses without a group. What the url rule refuses elsewhere in the address — a broken escape in the
+    path, a fragment, a login — hides no host: refusing is the rule's, the group is the host's.
+
+    A scheme whose host stands in its path (`host: path`) may have an empty authority (`x:///10.0.0.5/y`, legal by RFC
+    3986): that its vendor is never empty is the subsystem's to say in the field's `schema`, not the platform's."""
     s = "" if v is None else str(v)
     if any(ord(c) < 0x20 or ord(c) == 0x7F for c in s):
         return None
@@ -2309,21 +2315,24 @@ def host_of_url(v, schemes: dict | None = None) -> str | None:
         return None                                      # a scheme the field is not reached by: no host is read for it
     opts = schemes.get(scheme.lower()) or {} if schemes else {}
     if opts.get("fragment", "keep") == "keep":
-        rest, _, fragment = rest.partition("#")
-        if _BROKEN_ESCAPE.search(fragment):
-            return None
+        rest = rest.partition("#")[0]
     cut = min([i for i in (rest.find("/"), rest.find("?")) if i >= 0], default=len(rest))
     authority, path = rest[:cut], rest[cut:].partition("?")[0]
-    if not authority or _BROKEN_ESCAPE.search(path):
-        return None
-    if opts.get("none") and (_authority_host(authority) or authority.lower()) in {
-            host_spelling(a) or a.lower() for a in opts["none"]}:
+    if opts.get("none") and _authority_spelling(authority) in {_authority_spelling(a) for a in opts["none"]}:
         return ""
     if opts.get("host", "authority") == "path" and path[1:].split("/", 1)[0]:
-        host = _host_in_path(path) if _authority_host(authority, host=False) else ""
+        host = _host_in_path(path) if not authority or _authority_host(authority, host=False) else ""
+    elif not authority:
+        return None
     else:
         host = _authority_host(authority)
     return host or None
+
+
+def _authority_spelling(a: str) -> str:
+    """An authority as written, in the host's one spelling where it is a host alone (`FILE.` is `file`), else lowercased
+    as it stands (`file:1`, `u@file`): what a scheme's `none` is compared in."""
+    return host_spelling(a) or a.lower()
 
 
 # THE ROWS THIS PROCESS WROTE, FOR A READER IN THE SAME PROCESS THAT REMEMBERS BETWEEN ITS TURNS (the eleventh review: the
