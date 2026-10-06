@@ -1778,7 +1778,7 @@ class CameraPusher:
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
         asks, never told to push (step 8)."""
-        from .keys import POLL_PATH, PRIMARIES_PATH, opened
+        from .keys import POLLS_PATH, PRIMARIES_PATH, opened
         items = opened(self.flash.get(PRIMARIES_PATH)[0], PRIMARIES_PATH, self.sealer)
         raw = (items or {}).get(self.serial)
         if raw:
@@ -1791,11 +1791,11 @@ class CameraPusher:
             road = {k: p[k] for k in ("urls", "token_secret", "until")}
             _a_road(road)
             return {"cluster": str(p["cluster"]), "polls_only": True, "ingest": road}
-        items = opened(self.flash.get(POLL_PATH)[0], POLL_PATH, self.sealer)
+        items = opened(self.flash.get(POLLS_PATH)[0], POLLS_PATH, self.sealer)
         raw = (items or {}).get(self.serial)
         if not raw:
             return None
-        e = BOOKS.read(f"{POLL_PATH}/{self.serial}", lambda: polls(json.loads(raw)))
+        e = BOOKS.read(f"{POLLS_PATH}/{self.serial}", lambda: polls(json.loads(raw)))
         if e is not None:
             self._entry = e
         return e if e is not None else self._entry

@@ -5,7 +5,7 @@ row the spec does not: a book renamed in the spec and not here fails at import, 
     books (one per member at the holder, `<book>/<member>`; carried home to the member as `<book>`)
         SOURCES_PATH     for each recording cluster: where its cameras of other clusters were last seen (Lesson 13)
         PRIMARIES_PATH   for each camera cluster: who records it, whether written, and where to push (Lessons 13, 16)
-        POLL_PATH        for a pushing camera nobody records: the ingest it polls for asks (Lesson 16)
+        POLLS_PATH       for a pushing camera nobody records: the ingest it polls for asks (Lesson 16)
         UPSTREAM_PATH    for each relay: the centre's ingest, per camera (Lesson 17)
         ASKS_PATH        for each camera a scenario makes a trigger: whom it may ask, by which roads (Lesson 16)
     kept at the holder for the whole domain
@@ -86,7 +86,7 @@ class OpenedVars:
 
 SOURCES_PATH = _book("sources")
 PRIMARIES_PATH = _book("primaries")
-POLL_PATH = _book("poll")
+POLLS_PATH = _book("polls")
 UPSTREAM_PATH = _book("upstream")
 ASKS_PATH = _book("asks")
 CROSSINGS = _kept("crossings")
