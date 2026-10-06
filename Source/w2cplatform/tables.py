@@ -110,6 +110,7 @@ def refusal_of_name(name: str) -> str | None:
 def shown(items: dict, fields: dict) -> dict:
     """A stored row as a page may see it: values parsed, secrets left out, every address said as `hide_in_url` says it;
     the stamp `at` a number, as every time on a page is."""
+    from .catalog import secret_rules
     from .secrets import hide_in_url, is_secret_field
     out = {}
     for k, v in items.items():
@@ -120,7 +121,10 @@ def shown(items: dict, fields: dict) -> dict:
             v = f.parse(v) if f is not None else float(v) if k == "at" else v
         except PARSE_ERRORS:
             pass
-        out[k] = hide_in_url(v) if isinstance(v, str) and "://" in v else v
+        # …a url field's by its own rule and every loaded spec's: what its write refuses, never shown (ADR-0053, addendum
+        # of 2026-10-06 — a show masks never less than a write refuses), a value with no `://` too (`KEY:***@host/…`)
+        rules = (f.rules | secret_rules()) if f is not None and f.rules is not None else None
+        out[k] = hide_in_url(v, rules) if isinstance(v, str) else v
     return out
 
 

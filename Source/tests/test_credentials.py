@@ -840,7 +840,9 @@ def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_fr
              "driverpack://acme/admin:Hunter2/ch/1", "driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1",
              "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"]
     for src in spelt:
-        assert address_refusal(src, NO_RULES) is None, src                  # the platform's own names: no vendor's
+        # the platform's own names: no vendor's — but a pair holding an address (`?src=`) is read by every loaded spec's
+        # `nested`, whatever the field's rule (ADR-0053, addendum of 2026-10-06): the VMS's spec is loaded here
+        assert (address_refusal(src, NO_RULES) is None) == ("src=" not in src), src
         assert address_refusal(src, source.rules) and not _leaks(hide_in_url(src, source.rules)), src
         try:
             SPEC.refuse({"source": src})
@@ -853,3 +855,72 @@ def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_fr
         raise AssertionError("a scheme no camera is reached by was taken")
     except Refused as e:
         assert "gopher" in str(e) and "driverpack" in str(e)
+
+
+def _testsub2():
+    """`testsub2`'s spec, built here from its file: nobody's catalogue (`SubsystemSpec.from_dict`)."""
+    import os
+    import yaml
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml"),
+              encoding="utf-8") as f:
+        return SubsystemSpec.from_dict(yaml.safe_load(f))
+
+
+def test_an_at_where_no_address_reads_one_is_refused_and_a_stored_one_is_said_masked():
+    """ADR-0053, addendum of 2026-10-06 (the finding of «Сборка» at the tables' door): a url field's value with no
+    `://` — `AKIA:pw@s3.example.com/…`, `s3:AKIA:pw/a+b@…` — was taken as opaque and shown on `/volumes` whole. An `@`
+    there, or before an address's first `://`, is refused in the words of an `@` after the `://` (a path writes one
+    `%40`: `/mnt/a@b` is refused, `/mnt/a%40b` taken), at a volume's url through the table's door and at `testsub2`'s
+    url fields alike; and a row stored before is said with what follows its first `:` up to the `@` masked — a page
+    masks never less than a write refuses."""
+    from vms.config import REC_SPEC
+    from vms.volumes import write as declare_volume
+    from w2cplatform.secrets import hide_in_url
+    from w2cplatform.tables import shown
+    bad = {"AKIA:Hunter2@s3.example.com/eu/bucket": "AKIA:***@s3.example.com/eu/bucket",
+           "s3:AKIA:Hunter2/a+b@s3.example.com/eu": "s3:***@s3.example.com/eu",
+           "AKIA:Hunter2@https://s3.example.com/eu": "AKIA:***@https://s3.example.com/eu",
+           "/mnt/a@b": "/mnt/a@b"}
+    for raw, said in bad.items():
+        try:
+            declare_volume(Box().vars, {"name": "cold", "kind": "network", "url": raw, "quota_bytes": 1})
+            raise AssertionError(f"a volume took {raw}")
+        except Refused as e:
+            assert "an '@' the url needs is written %40" in str(e) and not _leaks(e), (raw, str(e))
+            assert ("access_secret" in str(e)) == (":" in raw.split("@")[0]), (raw, str(e))
+        assert shown({"url": raw}, REC_SPEC.table_specs["volumes"].fields)["url"] == said == hide_in_url(raw), raw
+    assert declare_volume(Box().vars, {"name": "here", "kind": "local", "server": "s1", "url": "/mnt/a%40b",
+                                       "quota_bytes": 1}).url == "/mnt/a%40b"
+    sub2 = _testsub2()
+    for fld in (sub2.fields["feed"], sub2.table_specs["shelves"].fields["feed"]):
+        for raw in bad:
+            assert "written %40" in (fld.refusal(raw) or ""), (fld.name, raw)
+        assert fld.refusal("https://hub/x/a%40b") is None
+
+
+def test_an_address_nested_in_a_fields_is_read_by_every_loaded_specs_rule_and_its_own_pairs_by_its_own():
+    """ADR-0053, addendum of 2026-10-06 on `nested`: a field knows the words its own addresses spell a secret by, not
+    whose address lies inside one. On `testsub2` (its spec built here — nobody's catalogue), beside the deployment's
+    specs: `?url=` holding a camera's address with a login is refused by the VMS's rule (its `nested: [src, url]`), and
+    so is one holding the VMS's word `session=`; the field's own `session=` — no word of `testsub2`'s — is taken. The
+    volume's url (its own words, `nested: [src, url]`) refuses the sixth nested form — a camera's CGI in `src=`
+    (`NESTED_FORMS`) — by the VMS's regex its own rule has not, and takes its own `session=`; a stored one is said
+    with the inner address masked whole."""
+    from vms.config import REC_SPEC
+    from w2cplatform.secrets import hide_in_url
+    feed = _testsub2().fields["feed"]
+    volume = REC_SPEC.table_specs["volumes"].fields["url"]
+    with _only_the_deployments_specs():
+        login = "mirror://acme/x?url=rtsp%3A%2F%2Fadmin%3Apw%40h%2F"
+        why = feed.refusal(login)
+        assert why and "holds an address in 'url'" in why and "admin" not in why, why
+        assert hide_in_url(login, feed.rules) == "mirror://acme/x?url=***"
+        word = "mirror://acme/x?url=rtsp%3A%2F%2Fh%2Fs%3Fsession%3Dabc"
+        assert "session" in (feed.refusal(word) or ""), feed.refusal(word)
+        assert hide_in_url(word, feed.rules) == "mirror://acme/x?url=***"
+        assert feed.refusal("mirror://acme/x?session=abc") is None
+        assert hide_in_url("mirror://acme/x?session=abc", feed.rules) == "mirror://acme/x?session=abc"
+        sixth = NESTED_FORMS[5]
+        assert volume.refusal(sixth) and not _leaks(volume.refusal(sixth)), sixth
+        assert not _leaks(hide_in_url(sixth, volume.rules)), hide_in_url(sixth, volume.rules)
+        assert volume.refusal("s3://h/eu/bucket?session=abc") is None
