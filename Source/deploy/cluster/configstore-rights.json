@@ -361,6 +361,7 @@
     "rec/epoch/*",
     "rec/slots/*",
     "rec/holds/*",
+    "vms/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*"
    ],
@@ -368,6 +369,7 @@
     "rec/epoch/*",
     "rec/slots/*",
     "rec/holds/*",
+    "vms/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*"
    ]
