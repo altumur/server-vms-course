@@ -82,8 +82,9 @@ placement:
   headroom:   {from: headroom}
   constraint: labels-subset
   # STILL `requires: resource` with the footage in obsd (the review's third pass asked why). The footage no longer
-  # needs the resource; two other things do. The recorder's EVENTS — `archive.shallow`, `keep.copied`/`keep.lost`,
-  # what it fetched — go into the resource's tree (`RESOURCE_ROOT`), and the resource's door is how anybody reads them.
+  # needs the resource; two other things do. The recorder's EVENTS — `archive.shallow`, `archive.keep.copied`/
+  # `archive.keep.lost`, what it fetched — go into the resource's tree (`RESOURCE_ROOT`), and the resource's door is how
+  # anybody reads them.
   # And the resource's heartbeat is the second witness that a SERVER is gone: `gone_servers` moves the recordings
   # of a slot that lapsed only when the resource of its server is silent too (one silence is a crash, two are the
   # server — М11 Lesson 4); without `requires` that move never happens, and the recordings of a box that lost its
@@ -321,8 +322,10 @@ display:
     when: "резервная запись: всегда или только когда основная не пишется"
   kinds:
     archive.shallow: архив мельче обещанного
-    keep.copied: сохранённое скопировано
-    keep.lost: сохранённое не удалось скопировать
+    archive.keep.sealed: сохранённое запечатано
+    archive.keep.verified: сохранённое проверено
+    archive.keep.copied: сохранённое скопировано
+    archive.keep.lost: сохранённое не удалось скопировать
 # The recorders on the domain: a member reports, beside its heartbeats and snapshot, where its ingest takes streams
 # (`rec/ingest`) and when each camera last polled it (`rec/polled/<ingest>`) — the domain's witness that a camera is
 # alive while its agent is silent. The witness names each camera it heard of by whose it is, `cam` — fixed, as the
