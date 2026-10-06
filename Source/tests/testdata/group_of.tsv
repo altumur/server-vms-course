@@ -17,6 +17,8 @@
 #   writes it — IPv6 unbracketed, zero runs folded, zone dropped; IPv4-mapped as the IPv4 address
 #   the scheme and the port are no part of it: rtsp:// and ipint:// to one host, :554 and no port, are one group
 #   ipint: '#' is a character, not a fragment (ipintd reads it so): the host is after the LAST '@'
+#   a '#' under a scheme read by the RFC ({}) is bad_url: a fragment names one place to the rights and another to a
+#   driver that reads '#' as a character (rtsp://h/x#@evil/); `fragment: none` is the one word both read alike
 #   driverpack (`host: path`): the device's address is the path's first segment; the authority is the vendor — the
 #   driver, not the device — and no part of the group; with the path empty the authority serves as the host, so
 #   driverpack://<vendor> is the whole vendor's group; `none: [file]`: driverpack://file/… is a file and in no group
@@ -95,7 +97,7 @@ mirror://acme/010.0.0.5/y	<none>	bad_url
 mirror://acme/[::1]x/y	<none>	bad_url
 mirror:///10.0.0.5/y	10.0.0.5	
 rtsp://local/x	local	
-rtsp://h/x#frag	h	
+rtsp://h/x#frag	h	bad_url
 nosuch://10.0.0.5/	<none>	bad_url
 rtsp://admin:pw/x@h/	<none>	bad_url
 rtsp://nvr50/ch/1	nvr50	
@@ -157,3 +159,4 @@ mirror://hub1/feed.example/c#d	feed.example
 mirror://hub1	hub1	
 mirror://LOCAL./x	<none>	
 mirror://hub1/h%2Ecorp/x	<none>	bad_url
+rtsp://h/x#@evil/	h	bad_url
