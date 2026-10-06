@@ -30,8 +30,6 @@ course-only live.subsystem.yaml placement.offers
 course-only live.subsystem.yaml rights
 course-only live.subsystem.yaml rights.routes
 course-only live.subsystem.yaml rights.routes.view
-course-only rec.subsystem.yaml domain.witness.member_field   # ADR-0010/0032: the course first; the product's side — «Платформа»
-course-only rec.subsystem.yaml domain.witness.report   # ADR-0010/0032: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml metrics
 course-only rec.subsystem.yaml placement.affinity
 course-only rec.subsystem.yaml placement.affinity.enabled

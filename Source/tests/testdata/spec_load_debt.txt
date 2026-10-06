@@ -5,6 +5,5 @@
 auto:console.running   # ADR-0019 «Сборка»
 live:console.running   # ADR-0019 «Сборка»
 rec:console.running   # ADR-0019 «Сборка»
-rec:domain.witness   # ADR-0010 «Платформа»
 vms:console.running   # ADR-0019 «Сборка»
 vms:tables   # ADR-0012 «Платформа»
