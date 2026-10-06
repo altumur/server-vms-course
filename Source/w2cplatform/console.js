@@ -48,7 +48,7 @@
       knockNote: "The domain reads only its members. These clusters published through its agent but are not on the list: the domain does not read them until they are admitted.",
       alarmsDay: "for a day, newest first", holderHere: "the domain's holder (this console)", domainPage: "The domain's page",
       domainPageNote: "Edits of other clusters' units and decisions on which cluster carries what are the domain's:", accessTab: "Access",
-      keysAsking: "Asking the console what the domain keeps in the store.", keysFailed: "Did not work", bW: "B", kbW: "KB", kVar: "variable", kItems: "items",
+      keysAsking: "Asking the console what the domain keeps in the store.", keysFailed: "Did not work", bW: "B", kbW: "KB", kVar: "variable", kFields: "fields", kWithheld: "kept back",
       kIndex: "index", kEmpty: "The row is empty.", kObj: "object", kKeys: "keys", kNone: "no record", kNowEmpty: "Empty now",
       keysIntro: "Everything the domain keeps in its holder's store under domain/: variables — its decisions and books; objects — its view and what members sent. Read only.",
       kfMembers: "Members of the domain", kfMembersAbout: "The domain's member list: who is admitted, how and since when.",
@@ -203,7 +203,7 @@
       knockNote: "Домен читает только своих членов. Эти кластеры его агентом публиковались, но в списке их нет: домен их не читает, пока их не примут.",
       alarmsDay: "за сутки, новые сверху", holderHere: "держатель домена (эта консоль)", domainPage: "Страница домена",
       domainPageNote: "Правки единиц других кластеров и решения «какой кластер что несёт» принимает домен:", accessTab: "Доступ",
-      keysAsking: "Спрашиваем консоль, что домен держит в хранилище.", keysFailed: "Не получилось", bW: "Б", kbW: "КБ", kVar: "переменная", kItems: "строк",
+      keysAsking: "Спрашиваем консоль, что домен держит в хранилище.", keysFailed: "Не получилось", bW: "Б", kbW: "КБ", kVar: "переменная", kFields: "поля", kWithheld: "не показана",
       kIndex: "индекс", kEmpty: "Строка пуста.", kObj: "объект", kKeys: "ключ(ей)", kNone: "строки нет", kNowEmpty: "Сейчас пусто",
       keysIntro: "Всё, что домен держит в хранилище держателя домена под domain/: переменные — его решения и книги, объекты — его вид и то, что прислали члены. Только чтение.",
       kfMembers: "Члены домена", kfMembersAbout: "Список членов домена: кто принят, как и с какого времени.",
@@ -1986,9 +1986,14 @@
       if (d.error && !(d.vars || []).length && !(d.objects || []).length) { box.innerHTML = card(h(W.keysFailed), `<div class="nt err">${h(d.error)}</div>`); return; }
       const FAMS = keyFamilies(), famOf = k => (FAMS.find(f => (f.keys || []).includes(k) || (f.prefix && k.startsWith(f.prefix))) || { id: "other" }).id;
       const kb = n => n < 1024 ? n + " " + W.bW : (n / 1024).toFixed(1) + " " + W.kbW;
-      const rows = [...(d.vars || []).map(v => { const items = Object.entries(v.items || {}).sort(([x], [y]) => x.localeCompare(y)), text = items.map(([, x]) => pretty(x)).join("\n");
-          return { key: v.key, html: `<details class="dk-key"${text.length < 1500 ? " open" : ""}><summary><code>${h(v.key)}</code> <span class="sub">${h(W.kVar)} · ${h(W.kItems)}: ${items.length} · ${h(W.kIndex)} ${h(v.index || "—")}</span></summary>${items.length ? items.map(([k, x]) => `<div class="dk-item"><code>${h(k)}</code><pre class="dk-pre">${h(pretty(x))}</pre></div>`).join("") : `<p class="sub dk-item">${h(W.kEmpty)}</p>`}</details>` }; }),
-        ...(d.objects || []).map(o => ({ key: o.key, html: `<details class="dk-key"${pretty(o.body).length < 1500 ? " open" : ""}><summary><code>${h(o.key)}</code> <span class="sub">${h(W.kObj)} · ${kb(o.size || 0)}${o.age != null ? " · " + h(o.age) + " " + h(W.n.s) + " " + h(W.ago) : ""}</span></summary><pre class="dk-pre" style="margin-left:14px">${h(pretty(o.body))}</pre></details>` }))];
+      // what the holder keeps, as the view gives it (ADR-0062): a row by its key and the NAMES of its fields — a value only
+      // where it is a public half of the domain's keys (public); a row the view keeps back says why (withheld); an object
+      // by its key, size and age. What a row holds is not the page's: a book's fields are /domain/<sub>/books/<book>.
+      const rows = [...(d.vars || []).map(v => {
+          if (v.withheld) return { key: v.key, html: `<div class="dk-key"><code>${h(v.key)}</code> <span class="sub">${h(W.kVar)} · ${h(W.kWithheld)}: ${h(v.withheld)}</span></div>` };
+          const fields = Array.isArray(v.fields) ? v.fields : [], pub = v.public || {}, shown = fields.filter(f => Object.prototype.hasOwnProperty.call(pub, f));
+          return { key: v.key, html: `<details class="dk-key"${shown.length ? " open" : ""}><summary><code>${h(v.key)}</code> <span class="sub">${h(W.kVar)} · ${h(W.kFields)}: ${fields.length} · ${h(W.kIndex)} ${h(v.index || "—")}</span></summary>${fields.length ? fields.map(f => `<div class="dk-item"><code>${h(f)}</code>${Object.prototype.hasOwnProperty.call(pub, f) ? `<pre class="dk-pre">${h(pretty(pub[f]))}</pre>` : ""}</div>`).join("") : `<p class="sub dk-item">${h(W.kEmpty)}</p>`}</details>` }; }),
+        ...(d.objects || []).map(o => ({ key: o.key, html: `<div class="dk-key"><code>${h(o.key)}</code> <span class="sub">${h(W.kObj)} · ${kb(o.size || 0)}${o.age != null ? " · " + h(o.age) + " " + h(W.n.s) + " " + h(W.ago) : ""}</span></div>` }))];
       const fams = [...FAMS, { id: "other", title: W.kfOther, about: W.kfOtherAbout }].map(f => ({ ...f, rows: rows.filter(r => famOf(r.key) === f.id).sort((x, y) => x.key.localeCompare(y.key)) }));
       const shown = fams.filter(f => f.rows.length || f.absent), empty = fams.filter(f => !f.rows.length && !f.absent && f.id !== "other");
       box.innerHTML = `<p class="sub" style="margin:0 0 10px">${h(W.keysIntro)}</p>${d.error ? `<div class="nt err" style="margin-bottom:10px">${h(d.error)}</div>` : ""}

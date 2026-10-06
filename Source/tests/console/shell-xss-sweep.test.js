@@ -41,7 +41,7 @@ b.FIX["/domain"]={holder:"srv",url:"http://srv/"+P,as_of:1,age:1,complete:false,
   term:{term:P,record:{holder:"srv"},backup_holders:[p("m")],backup:{term:P,rev:P},copies:{[p("m")]:{term:P,rev:P},[p("cam")]:{garbled:P}}}};
 b.FIX["/domain/alarms"]={events:[{kind:P,member:p("m"),of:"vms/1",t:1,subsystem:P,unit:P,alive_via:P}],complete:false,sentence:P};
 b.FIX["/api/held"]={cluster:"srv",holder:{holder:P,term:P,url:P},term:P,keys:{current:P},backup:{term:P,rev:P}};
-b.FIX["/domain/keys"]={vars:[{key:"domain/"+P,items:{[P]:P},index:P}],objects:[{key:"domain/members/"+P,size:1,body:{x:P}}],error:P};
+b.FIX["/domain/keys"]={vars:[{key:"domain/"+P,fields:[P,"pub"],public:{pub:P},index:P},{key:"domain/w/"+P,withheld:P}],objects:[{key:"domain/members/"+P,size:1,age:P}],error:P};
 b.FIX["/domain/users"]={users:[{name:p("u"),how:"password",by:P,at:1},{name:p("u2"),how:"oidc",disabled:true}]};
 b.FIX["/domain/grants"]={grants:{domain:[{subject:p("u"),cap:"admin",scope:"*",by:P}],[p("m")]:[{subject:p("u"),cap:"view",scope:"unit:vms/"+P,by:P}]}};
 b.FIX["/domain/break-glass"]={clusters:{[p("m")]:{set_at:1}}};
