@@ -87,9 +87,7 @@ IMPLEMENTED = {
 # A key a decision brought to the loader before a spec says it — the spec bytes are «Паритет»'s since the lessons'
 # signal —, each with what goes in and where. The debt only shrinks: a key here that a spec now uses fails as a key
 # unused does, and the line goes.
-WAITING = {f"display.tree.{w}": "the loader's verdicts, «Архитектор» 2026-10-06: the groups box's words the module reads "
-                                 "(`groupsBox`) — testsub2's `display.tree` says them — «Паритет»"
-           for w in ("remove", "not_in", "add_to", "no_others", "new_group")}
+WAITING: dict[str, str] = {}
 
 
 def _paths(d, at: str = "") -> set[str]:
