@@ -352,6 +352,26 @@ def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
                                           "testsub/commands/*"]   # the reaper ends a request in its mark (ADR-0054)
 
 
+def test_a_worker_writes_its_units_rows_or_its_declared_tables_and_any_other_family_does_not_load():
+    """ADR 0012 («Архитектор» with «Паритет», 2026-10-06): `worker.writes` names the subsystem's own unit rows or one of
+    its DECLARED tables — a family whose form the spec says (`{key, fields}`) and whose rows a write goes through
+    (`tables.write_row`). The course took any family under `<sub>/`: `writes: [devices]` with no `devices` declared was
+    a token writing rows of no form that nobody served. Now such a family is refused at load, named, and so is a table
+    only NAMED (`tables: [x]`): named is not declared. testsub2 (`writes: [shelves]`, a declared table) loads."""
+    shelf = {"tables": {"shelves": {"key": "name", "fields": {"name": {"type": "string", "required": True}}}}}
+    assert _spec(worker={"writes": ["items"]}).acl_worker_role()[-1] == "probe/items/*"      # its units' rows
+    assert _spec(worker={"writes": ["shelves"]}, **shelf).acl_worker_role()[-1] == "probe/shelves/*"
+    _refused(lambda: _spec(worker={"writes": ["devices"]}),
+             "worker.writes names devices — neither its units' rows (items) nor one of its declared tables (none)")
+    _refused(lambda: _spec(worker={"writes": ["shelves", "devices"]}, **shelf),
+             "worker.writes names devices — neither its units' rows (items) nor one of its declared tables (shelves)")
+    _refused(lambda: _spec(worker={"writes": ["notes"]}, tables=["notes"]), "worker.writes names notes")
+    with open(os.path.join(TESTDATA, "testsub2.subsystem.yaml"), encoding="utf-8") as f:
+        import yaml
+        two = SubsystemSpec.from_dict(yaml.safe_load(f))
+    assert two.worker_writes == ("shelves",) and "testsub2/shelves/*" in two.acl_worker_role()
+
+
 def _testsub() -> dict:
     import yaml
     with open(os.path.join(TESTDATA, "testsub.subsystem.yaml")) as f:
