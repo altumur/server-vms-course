@@ -26,6 +26,10 @@ show them. So the console is one class, run from the same spec:
                                  this cluster's verified copy of the shared document: value and where it came from, the
                                  groups the domain offers for the field the page groups by; nothing undeclared
     GET  /domain/keys            every key under `domain/` in this cluster's stores, secrets masked (`domain.keysview`)
+    GET  /domain/<sub>/books/<book>   the fields a spec shows of a book (`domain.books.<book>.show`), of every entry of
+                                 this cluster's own copy — `{<item>: {<field>: value}}`; an item to whoever may view the
+                                 unit whose `domain.ref` is its key, every item to a view of the whole cluster; 404 for a
+                                 book not shown (`SpecConsole.book_route`; ADR-0010, the addition of 2026-10-06)
     …    /domain/<any other>     handed to the domain holder's door at the same path, unrewritten (`Mount.domain_forward`:
                                  the view's `url`), with the person's token and the edit's Idempotency-Key
     GET/PUT /policy             the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
@@ -132,7 +136,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from .doors import MAX_LIMIT, byte_range, parse_ref, ref_fault
 
-from .secrets import hide_in_reply, mask_secrets
+from .secrets import hide_in_reply, is_secret_field, mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
                        DecommissionRefused, SchemaTooNew, builds, contenders, is_live, label_set, name_conflict,
                        parse_heartbeat, read_slot, schema_version)
@@ -265,6 +269,22 @@ def send_file(handler, path: str, content_type: str, headers=()) -> dict:
 # page says "the domain is silent" rather than showing a short list as if it were current (Lesson 1's rule,
 # applied to the console itself). Read only: edits go through the domain, the door of Lesson 3.
 DOMAIN_VIEW = "domain/view"
+
+
+# `/domain/<sub>/books/<book>` of a spec on the domain: `(spec, book)`, else None — what this console answers itself, any
+# method (a write is 405 here, never handed to the holder), before the route goes to the domain's door. The product's
+# `ConsoleDoor.Handle`: `books/` after a known subsystem's name, whatever follows it.
+def book_path(path: str):
+    from .domain import declared
+    parts = path[len("/domain/"):].split("/", 1) if path.startswith("/domain/") else []
+    if len(parts) < 2 or not parts[1].startswith("books/"):
+        return None
+    s = declared.spec(parts[0])
+    return (s, parts[1][len("books/"):]) if s is not None else None
+
+
+# What a book's entry that is no JSON object is: counted and logged once, its bytes never (an entry carries tokens).
+BOOK_ENTRIES = Table("book entry", "left out of what the page is shown", "entry of a book")
 
 
 # A JSON number as it is (`5` stays `5`, `0.5` stays `0.5`): `true` is no number and neither is the word `"5"` — a
@@ -1569,6 +1589,63 @@ class SpecConsole:
             if row is None:
                 return 404, {"error": "no such unit", "detail": f"{sub} has no unit {q['unit']!r}"}
         return 200, door(s, SharedView(self.ctl.vars, self.ctl.objects, self.wall).document(), row)
+
+    # A BOOK SHOWN (ADR-0010, the addition of 2026-10-06; ADR-0061): of each entry of this cluster's own copy of the book
+    # (`domain/<sub>/<book>`, which the agent carried home), the fields the spec's `show` names, and nothing else — the
+    # rest of an entry (the roads, and the tokens on them) is in the same JSON and stays in this process; so does a
+    # `*_secret` item, and an entry that is no JSON object. WHO SEES AN ITEM («Архитектор» 2026-10-06): an item whose key
+    # is the `domain.ref` of a unit of this cluster, whoever may `view` that unit; a view of the whole cluster, every item;
+    # an item no unit here is keyed by, only that view. The operator of one unit sees where it is kept, wherever
+    # that is. The gate before this asked for any grant at all (`needs`: a GET naming no unit): nobody with no view gets
+    # here — 403. A member answers its own book and no other: what another member's book says is that cluster's to tell,
+    # through `/domain/at/…`. The product's `ConsoleDoor.book`, word for word.
+    def book_route(self, h, method: str, s, book: str) -> tuple[int, dict]:
+        if method != "GET":
+            return 405, {"error": f"GET /domain/{s.name}/books/<book>"}
+        show = s.domain.show.get(book)
+        if not show:
+            detail = f"{s.name} declares no book {book}"
+            if book in s.domain.books:
+                detail = f"{s.name}'s book {book} is carried and not shown: its spec names no field of it to show"
+            return 404, {"error": "no such book shown", "detail": detail}
+        key = f"{s.domain_prefix}{book}"
+        sees = self._visible(h)
+        every = sees is None or sees("*", [])
+        try:
+            items, _ = self.ctl.vars.get(key)
+            units = {} if every else self.units_by_ref(s)
+        except OSError as e:
+            return 503, {"error": "the store did not answer", "detail": no_paths(e)}
+        out = {}
+        for item, raw in sorted((items or {}).items()):
+            if is_secret_field(item):
+                continue
+            if not every and (item not in units or not sees(*units[item])):
+                continue
+            try:
+                entry = json.loads(raw)
+                if not isinstance(entry, dict):
+                    raise TypeError(f"not a JSON object ({len(str(raw))} bytes)")
+            except PARSE_ERRORS as e:                    # what it holds is not said: an entry carries tokens
+                BOOK_ENTRIES.garbled(f"{key}#{item}", e if isinstance(e, TypeError) else type(e).__name__)
+                continue
+            BOOK_ENTRIES.parsed(f"{key}#{item}")
+            out[item] = {f: entry[f] for f in show if f in entry}
+        return 200, out
+
+    # This cluster's units of `s` by their `domain.ref` (`id`: the id itself), each as a grant is asked about it
+    # (`target_of_row`: its labels, the unit it is about) — for a book whose items are keyed by the ref. A subsystem this
+    # process does not serve has none here: its items are a view of the whole cluster's.
+    def units_by_ref(self, s) -> dict:
+        con = self.units.get(s.name)
+        if con is None or not s.domain.ref:
+            return {}
+        out = {}
+        for row in con.ctl.units():
+            ref = row.get("id") if s.domain.ref == "id" else row.get(s.domain.ref)
+            if ref not in (None, ""):
+                out[str(ref)] = self.target_of_row(con, row, con.spec.ref(row["id"]))
+        return out
 
     def describe(self) -> dict:
         return describe(self.spec)
@@ -3219,6 +3296,9 @@ class SpecConsole:
                 self.admit_rows(h, method, path, asked)
             except Denied as e:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
+        book = book_path(path)
+        if book is not None:                             # a book shown: any method, answered here (`book_route`)
+            return h._send(*con.book_route(h, method, *book))
         if method == "GET":
             if path in ("/", "/index.html"):
                 if not self.serves_page:
@@ -3787,7 +3867,8 @@ class Mount:
 
     @staticmethod
     def domain_local(method: str, path: str) -> bool:
-        return method == "GET" and (path in ("/domain", "/domain/keys") or path.startswith("/domain/shared/"))
+        return (method == "GET" and (path in ("/domain", "/domain/keys") or path.startswith("/domain/shared/"))) \
+            or book_path(path) is not None                # a book of this cluster's own copy (`book_route`), any method
 
     def domain_forward(self, h, method: str, path: str, query: str) -> None:
         import urllib.error
