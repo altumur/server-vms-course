@@ -23,6 +23,7 @@ b.FIX["/cameras"]={configured:[{id:1,name:P,source:"driverpack://"+encodeURIComp
 b.FIX["/servers"]={servers:{[p("s")]:{resource:P,resource_url:P,labels:[P],labels_source:"console",space:{total:9e9,free:1e9},workers:[{worker:p("w"),capacity:50,load:1,labels:P,state:P,released:false,slot_until:1,holds:[P],hung:true,hung_since:1,presence_unknown:P,
   name_conflict:{holder:P,holder_box:P,contenders:[{state:P,box:P,hostname:P,server:P,for_s:1}]}}],
   decommission:{by:P,at:1,why:P},decommission_refusal:P,decommission_warning:P,decommissionable:false,lost:[{place:P,worker:P}]}},policy:{servers:"shared"}};
+b.FIX["/rec/servers"]=b.FIX["/servers"];
 b.FIX["/schema"]={can_raise_to:P,builds:[P],processes:{[P]:{live:false}}};
 b.FIX["/unplaceable"]=[{id:2,labels:[P],workers_live:1}];
 b.FIX["/rec/volumes"]={volumes:[{name:p("v"),server:p("s"),kind:"local",url:P,enabled:true,held_by:P,quota_bytes:1e9,access_key:P},{name:p("n"),kind:"network",url:P,enabled:true,quota_bytes:1e9},{name:p("b"),server:p("s"),kind:"backup",url:P,enabled:true,quota_bytes:1e9}]};
