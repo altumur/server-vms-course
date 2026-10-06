@@ -3096,7 +3096,8 @@ class RecWorker(VmsWorker):
                 missing += short
                 if held > 0 and short <= 0:
                     whole.append(rec)                    # the copy of this recording is whole: what may be sealed
-            entry = {"copied": round(got, 1), "missing": round(missing, 1)}
+            # …and over which minutes: a seal is bound to the interval it was taken over (`jobs.seal_keeps`)
+            entry = {"copied": round(got, 1), "missing": round(missing, 1), "from": k.since, "to": k.until}
             self._keep_uncopied(k, entry, missing, now)
             for rec in sorted(set(touched)):
                 digest, _, size = keep_digest(self.store, rec, k.since, k.until)
@@ -3108,10 +3109,13 @@ class RecWorker(VmsWorker):
                                  volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
             # What was said of the recordings not copied this pass is carried, each — it was the whole map, and only
-            # when this pass copied nothing, so a pass that copied one recording dropped the others' digests. A whole
-            # copy with no digest known (a recorder started again) is read once: `vms jobs` seals what is whole and
-            # has a digest (`jobs.seal_keeps`; ADR-0057, addendum p. 3).
-            sums = {**self.keep_state.get(k.id, {}).get("sha256", {}), **entry.get("sha256", {})}
+            # when this pass copied nothing, so a pass that copied one recording dropped the others' digests — while the
+            # keep says the same interval: the digest of other minutes is not this keep's. A whole copy with no digest
+            # known (a recorder started again) is read once: `vms jobs` seals what is whole and has a digest
+            # (`jobs.seal_keeps`; ADR-0057, дополнение п. 3).
+            was = self.keep_state.get(k.id, {})
+            carried = was.get("sha256", {}) if (was.get("from"), was.get("to")) == (k.since, k.until) else {}
+            sums = {**carried, **entry.get("sha256", {})}
             for rec in whole:
                 if rec not in sums:
                     try:
@@ -3324,11 +3328,13 @@ class RecWorker(VmsWorker):
     # naming `keeps`) — and only that recording is checked. A door with no key in the store (its open mode) and no
     # `?recording=` checks every recording of the keep.
     #
-    # THE SEAL is in the keep's row, set ONCE per recording (`sealed`, `sealed_at`; ADR-0057, addendum p. 3): the digest
-    # of the copy when the incidents volume first held it whole, written by `vms jobs` (`jobs.seal_keeps`) — not by this
-    # recorder, so the archive that holds the footage is not the one that vouches for it. A seal that moved with every
-    # pass, or aged out with an event, would prove nothing. The digest now is `keep_digest`'s, the same function that
-    # made the one sealed. The answer, the product's words:
+    # THE SEAL is the subsystem's own record, `rec/sealed/<keep>` (`keeps.Seal`; ADR-0057, дополнение п. 3), set ONCE
+    # per recording — the digest of the copy when the incidents volume first held it whole — by `vms jobs`
+    # (`jobs.seal_keeps`), not by this recorder: the archive that holds the footage is not the one that vouches for it,
+    # and no table door serves the family. A seal that moved with every pass, or aged out with an event, would prove
+    # nothing. It is bound to the interval it was taken over: a keep whose row says other minutes now is not sealed by it
+    # (`Seal.of`) — "not sealed yet" — until the next turn seals it anew. The digest now is `keep_digest`'s, the same
+    # function that made the one sealed. The answer, the product's words:
     #
     #   {keep, integrity: "ok" | "broken: <why>" | "unknown: <why>", ok, recordings: {<rec>: {sealed, now, samples,
     #    result: ok | damaged | pending | unverified, detail?}}}
@@ -3337,7 +3343,7 @@ class RecWorker(VmsWorker):
     # nothing contradicts the seal and something is not known yet — a recording never copied (not sealed yet), one the
     # volume cannot read and that was never sealed. 404: no such keep, or a recording it does not hold; 409: a keep any
     # part of whose interval does not read — nothing of it was copied, nothing sealed, and the hash of half an interval
-    # is a guess (`keeps.as_far_as_read`; ADR-0057, addendum p. 3); 503: this recorder holds no incidents volume, or the
+    # is a guess (`keeps.as_far_as_read`; ADR-0057, дополнение п. 3); 503: this recorder holds no incidents volume, or the
     # store does not answer — said as the product's `StoreFault`, no path of this box (`console.store_fault`). Each answer is a line `archive.keep.verified` in this
     # recorder's door journal (`audit/door-<recorder>`), with whom the token was given to.
     @one_look
@@ -3373,7 +3379,12 @@ class RecWorker(VmsWorker):
                 return 404, {"detail": f"keep {keep_id} holds no recording {recording}",
                              "error": "no such recording in the keep"}
             names = [recording]
-        seals = keep.seals()
+        try:
+            seal = keeps.read_seal(self.objects, keep_id)
+        except OSError as e:                             # unread is not "not sealed"
+            log.warning("%s: keep %s cannot be verified, its seal cannot be read: %s", self.name, keep_id, e)
+            return 503, {"error": "cannot verify", "detail": store_fault(e)}
+        seals = seal.of(keep) if seal is not None else {}
         out, every = {}, True
         broken, unknown = [], []
         for rec in names:

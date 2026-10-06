@@ -9,8 +9,9 @@
 #   the footage    is COPIED into an incidents volume by the recorder that holds it (`RecWorker.keep_pass`),
 #                  out of whichever recorder's door has it, and stays there after the recording's own ring has
 #                  moved on. What was copied is an event with its sha256 (`archive.keep.copied`). The digest of
-#                  a copy first whole is the keep's SEAL, set once in the row by `vms jobs` (`jobs.seal_keeps`;
-#                  ADR-0057, addendum p. 3), and checked at the door of the recorder that holds the copy:
+#                  a copy first whole is the keep's SEAL, set once by `vms jobs` in rec's own record of its
+#                  archive, `rec/sealed/<keep>` — not in the keep's row (`Seal`, `jobs.seal_keeps`;
+#                  ADR-0057, дополнение п. 3), and checked at the door of the recorder that holds the copy:
 #                  `POST <door>/keeps/<keep>/verify?recording=<id>` (`RecWorker.verify_keep`; ADR-0015, ADR-0057)
 #   the events     retention skips the camera's event buckets that overlap it — its spec's `holds:`, which every
 #                  resource reads itself (`w2cplatform/holds.py`; the boundary's step 6)
@@ -56,15 +57,6 @@ class Keep:
     at: float = 0.0               # when
     recordings: tuple = ()        # the names of the camera's recordings when it was set
     garbled: bool = False         # its interval did not parse whole: held as far as it reads (`as_far_as_read`)
-    # THE SEAL (ADR-0057, addendum p. 3; the product's `Keep.Sealed`): `((recording, sha256), …)` — the digest of each
-    # recording's copy as the incidents volume first held it WHOLE, written into the row ONCE by `vms jobs`
-    # (`jobs.seal_keeps`), never by the recorder that holds the copy, and when (`sealed_at`). What the copy is compared
-    # with for as long as the keep lasts (`RecWorker.verify_keep`).
-    sealed: tuple = ()
-    sealed_at: float = 0.0
-
-    def seals(self) -> dict:
-        return dict(self.sealed)
 
     # Only the INTERVAL can make a keep unreadable (the review's eighth pass, part 4): `at` — when it was set — is
     # metadata, and `at: "yesterday"` made the whole keep garbled, its camera held from the start of time to its end.
@@ -74,8 +66,7 @@ class Keep:
         # `finite`: a `nan` bound passes no comparison, so such a keep held nothing while it looked set (the seventh pass)
         return cls(id_, str(d.get("cam", "")), finite(d.get("from", 0) or 0), finite(d.get("to", 0) or 0),
                    str(d.get("note", "")), str(d.get("by", "")), number(f"{key(id_)}#at", d.get("at") or None, float, 0.0),
-                   tuple(str(r) for r in _names(d.get("recordings"))), sealed=seal_pairs(d.get("sealed")),
-                   sealed_at=number(f"{key(id_)}#sealed_at", d.get("sealed_at") or None, float, 0.0))
+                   tuple(str(r) for r in _names(d.get("recordings"))))
 
     def to_items(self) -> dict:
         return {"cam": self.cam, "from": self.since, "to": self.until, "note": self.note, "by": self.by,
@@ -101,9 +92,43 @@ def _names(raw) -> list:
     return out if isinstance(out, list) else []
 
 
-# `sealed` in the row: a list of `<recording>=<sha256>`, written as the list of recordings is (`_names` reads both forms,
-# the product's `p.SplitNames` too). Cut at the LAST `=`: a sha256 never holds one, a recording's name may (the product's
-# ninth-review fix). A pair that is not one is passed by: that recording reads as not sealed yet.
+# THE SEAL OF A KEEP — not in its row (ADR-0057, дополнение п. 3). It is this subsystem's own record of its archive, as
+# a request's mark is: `rec/sealed/<keep>`, an object of rec's `objects.rows` — a row of the store on a cluster, written
+# create-only and then by CAS (`jobs.seal_keeps`, by `vms jobs`, ONCE per recording, when the incidents volume first
+# holds the copy whole). No table door serves it: an operator cannot write a seal by construction, and a declared field
+# would have opened it to anyone who may edit the camera; an undeclared key in the keep's row would have been a row not
+# by its spec (ADR-0012). The door's check reads it (`RecWorker.verify_keep`).
+#
+#   {"recordings": "<recording>=<sha256>,…", "from": <unix s>, "to": <unix s>, "sealed_at": <unix s>}
+#
+# BOUND TO THE INTERVAL: a seal is of the minutes it was taken over. A keep whose row says another interval now — an
+# operator rewrote it — is not sealed by it (`Seal.of`): the check says "not sealed yet", and the next turn seals it anew.
+SEALED = "sealed"
+
+
+def seal_key(id_: str) -> str:
+    return f"{SUB}/{SEALED}/{id_}"
+
+
+@dataclass(frozen=True)
+class Seal:
+    recordings: tuple             # ((recording, sha256), …)
+    since: float
+    until: float
+    sealed_at: float = 0.0
+
+    def of(self, keep: "Keep") -> dict:
+        """`{recording: sha256}` of this seal for `keep` — nothing when the keep's interval is not the one sealed."""
+        return dict(self.recordings) if (self.since, self.until) == (keep.since, keep.until) else {}
+
+    def to_bytes(self) -> bytes:
+        return json.dumps({"recordings": ",".join(f"{r}={d}" for r, d in self.recordings), "from": self.since,
+                           "to": self.until, "sealed_at": self.sealed_at}, sort_keys=True).encode()
+
+
+# `recordings` of a seal: `<recording>=<sha256>` joined by `,` (the product's `p.JoinNames`; a unit's name holds no `,`,
+# `unnamable`). Cut at the LAST `=`: a sha256 never holds one, a recording's name may (the product's ninth-review fix). A
+# pair that is not one is passed by: that recording reads as not sealed yet.
 def seal_pairs(raw) -> tuple:
     out = {}
     for pair in _names(raw):
@@ -111,6 +136,27 @@ def seal_pairs(raw) -> tuple:
         if sep and rec and digest:
             out[rec] = digest
     return tuple(sorted(out.items()))
+
+
+def parse_seal(raw: bytes | None) -> Seal | None:
+    """The seal as stored, None when there is none; a `ValueError` (one of `PARSE_ERRORS`) when it does not read."""
+    if not raw:
+        return None
+    d = json.loads(raw)
+    if not isinstance(d, dict):
+        raise ValueError("a seal is a JSON object")
+    return Seal(seal_pairs(d.get("recordings")), finite(d["from"]), finite(d["to"]), finite(d.get("sealed_at", 0) or 0))
+
+
+SEALS = Table("seal", "read as no seal: its keep is not sealed until the next turn of `vms jobs` seals it anew")
+
+
+def read_seal(objects, id_: str) -> Seal | None:
+    """The keep's seal, or None — none written, or one that does not read (counted, `SEALS`). A store that does not
+    answer RAISES: unread is not "not sealed"."""
+    path = seal_key(id_)
+    raw = objects.get(path)
+    return SEALS.read(path, lambda: parse_seal(raw))
 
 
 def key(id_: str) -> str:

@@ -639,17 +639,20 @@ def keep_what_fired(survey_ctl, rec_ctl) -> int:
     return asked
 
 
-# THE SEAL OF A KEEP, SET ONCE (ADR-0057, addendum p. 3; the product's `SealKeeps` in vms/keeps.go). A keep is evidence,
-# and the question asked of evidence is whether it is what it was. The recorder holding the incidents volume says, per
-# keep, the digest of each recording's copy (`sha256`) and which copies are WHOLE (`whole`: held, and short of nothing
-# a source has) in its heartbeat (`RecWorker.keep_pass`). The first time a recording's copy is whole, this pass writes
-# that digest into the keep's row — `sealed: [<recording>=<sha256>, …]`, `sealed_at` — and never again for that
-# recording: a seal that moved with every pass, or aged out with an event, would vouch for whatever the volume holds
-# now. The row is written with the console's grant, which no recorder has, so the archive that holds the footage is not
-# the one that vouches for it; the copy is compared with the seal at that recorder's door (`RecWorker.verify_keep`).
-# Each seal is a line `archive.keep.sealed` in this process's journal. Written by CAS on the row as read: somebody who
-# wrote it meanwhile wins, and the next turn seals. A keep whose interval does not read is sealed never — nothing of it
-# is copied (`keeps.as_far_as_read`). Returns how many recordings were sealed.
+# THE SEAL OF A KEEP, SET ONCE (ADR-0057, дополнение п. 3; the product's `SealKeeps` in vms/keeps.go). A keep is
+# evidence, and the question asked of evidence is whether it is what it was. The recorder holding the incidents volume
+# says, per keep, the interval it copied (`from`, `to`), the digest of each recording's copy (`sha256`) and which copies
+# are WHOLE (`whole`: held, and short of nothing a source has) in its heartbeat (`RecWorker.keep_pass`). The first time a
+# recording's copy is whole, this pass writes that digest into the keep's seal — `rec/sealed/<keep>`, the subsystem's own
+# record of its archive (`keeps.Seal`: `recordings`, `from`, `to`, `sealed_at`), not a field of the keep's row — and
+# never again for that recording: a seal that moved with every pass, or aged out with an event, would vouch for whatever
+# the volume holds now. Created create-only (`put_new`), added to by CAS on the bytes read (`put_at`); somebody who wrote
+# it meanwhile wins, and the next turn seals. A seal of another interval than the keep's row says now (an operator
+# rewrote the keep) seals nothing of it: it is REPLACED, by CAS, with a seal of the interval as it stands. Written with
+# this process's grant; no table door serves the family, and the recorder that holds the footage does not vouch for it —
+# the copy is compared with the seal at that recorder's door (`RecWorker.verify_keep`). Each seal is a line
+# `archive.keep.sealed` in this process's journal. A keep whose interval does not read is sealed never — nothing of it is
+# copied (`keeps.as_far_as_read`). Returns how many recordings were sealed.
 #
 # What it does not cover, as in the product: the footage before the copy was whole, and somebody who can write both the
 # incidents volume and the store.
@@ -658,42 +661,52 @@ _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 def seal_keeps(rec_ctl, now: float, journal=None, lost_after: float = 45.0) -> int:
     from w2cplatform.console import heard_live, heartbeats
-    from w2cplatform.variables import Conflict
     from . import keeps
-    said: dict[str, dict[str, str]] = {}
+    said: dict[str, tuple[tuple, dict[str, str]]] = {}         # keep -> ((from, to) copied, {recording: sha256})
     for w, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.name + "/").items():
         if not heard_live(rec_ctl.spec.name, w, hb, now, lost_after, getattr(rec_ctl, "eyes", None)):
             continue                                 # a silent recorder's last word is not what its volume holds now
         by = hb.extra.get("keeps")
         for kid, st in (by.items() if isinstance(by, dict) else ()):
-            sums, whole = (st.get("sha256"), st.get("whole")) if isinstance(st, dict) else (None, None)
-            if not isinstance(sums, dict) or not isinstance(whole, list):
+            if not isinstance(st, dict) or not isinstance(st.get("sha256"), dict) or not isinstance(st.get("whole"), list):
                 continue
-            for rec in whole:
-                digest = sums.get(rec)
+            try:
+                span = (finite(st["from"]), finite(st["to"]))
+            except (*PARSE_ERRORS,):
+                continue                             # which minutes it copied is not said: nothing to seal by
+            for rec in st["whole"]:
+                digest = st["sha256"].get(rec)
                 if isinstance(digest, str) and _SHA256.match(digest):
-                    said.setdefault(str(kid), {})[str(rec)] = digest
+                    said.setdefault(str(kid), (span, {}))[1][str(rec)] = digest
     sealed = 0
-    for kid, sums in sorted(said.items()):
-        path = keeps.key(kid)
+    for kid, (span, sums) in sorted(said.items()):
         try:
-            items, idx = rec_ctl.vars.get(path)
+            items, _ = rec_ctl.vars.get(keeps.key(kid))
             k = keeps.Keep.from_items(kid, items) if isinstance(items, dict) and items else None
         except (OSError, *PARSE_ERRORS):
             continue                                 # not read, or its interval does not read: nothing to vouch for
-        if k is None or not k.since < k.until:
-            continue                                 # lifted meanwhile, or an interval that ends before it starts
-        have = k.seals()
+        if k is None or not k.since < k.until or span != (k.since, k.until):
+            continue                                 # lifted, garbled, or copied over another interval than it says now
+        path = keeps.seal_key(kid)
+        try:
+            raw, index = rec_ctl.objects.get_at(path)
+        except (OSError, AttributeError) as e:
+            log.info("keep %s: its seal cannot be read now (%s): the next turn seals", kid, e)
+            continue
+        seal = keeps.SEALS.read(path, lambda: keeps.parse_seal(raw))
+        have = seal.of(k) if seal is not None else {}
         fresh = {rec: d for rec, d in sums.items() if rec not in have}
         if not fresh:
             continue
-        # the spec's list form (`Field.to_item`, the product's `p.JoinNames`): a unit's name holds no `,` (`unnamable`)
-        row = {**items, "sealed": ",".join(f"{r}={d}" for r, d in sorted({**have, **fresh}.items())),
-               "sealed_at": f"{now:.3f}"}
+        data = keeps.Seal(tuple(sorted({**have, **fresh}.items())), k.since, k.until, round(now, 3)).to_bytes()
         try:
-            rec_ctl.vars.put(path, row, cas=idx)
-        except (Conflict, OSError) as e:
+            # none yet: create-only; one there (of this interval, or another, or unreadable): by CAS on what was read
+            done = rec_ctl.objects.put_new(path, data) if raw is None else rec_ctl.objects.put_at(path, data, index)
+        except (OSError, AttributeError) as e:
             log.info("keep %s: not sealed this turn (%s): the next turn seals", kid, e)
+            continue
+        if not done:
+            log.info("keep %s: its seal was written meanwhile: the next turn seals what is left", kid)
             continue
         for rec, digest in sorted(fresh.items()):
             if journal is not None:

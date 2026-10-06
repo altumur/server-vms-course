@@ -1183,7 +1183,7 @@ def fault_of(e) -> dict:
     return {"fault": f} if f else {}
 
 
-# A STORE'S ERROR AS A DOOR SAYS IT (the product's `StoreFault`; ADR-0057, addendum p. 3): without a path on this server's
+# A STORE'S ERROR AS A DOOR SAYS IT (the product's `StoreFault`; ADR-0057, дополнение п. 3): without a path on this server's
 # disk — an `OSError`'s file (`[Errno 13] Permission denied: '/var/lib/…/vars/a%2Fb.json'`) is said as `<store>`,
 # and whatever else in the text reads as an absolute path is too. The whole error is for the log; a door's answer goes
 # to whoever asked, and the box's directories are nothing of theirs.
