@@ -283,8 +283,9 @@ def book_path(path: str):
     return (s, parts[1][len("books/"):]) if s is not None else None
 
 
-# What a book's entry that is no JSON object is: counted and logged once, its bytes never (an entry carries tokens).
-BOOK_ENTRIES = Table("book entry", "left out of what the page is shown", "entry of a book")
+# What a book's entry that is no JSON object is: counted (`books_garbled` on the metrics page, as every table of rows) and
+# logged once, its bytes never (an entry carries tokens).
+BOOK_ENTRIES = Table("book", "left out of what the page is shown", "entry of a book")   # `books_garbled`
 
 
 # A JSON number as it is (`5` stays `5`, `0.5` stays `0.5`): `true` is no number and neither is the word `"5"` — a
