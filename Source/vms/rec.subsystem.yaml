@@ -146,7 +146,7 @@ tables:
       kind:             {type: string, default: local, schema: {enum: [local, network, backup, edge, incidents]}}
       # the directory it is, or the address it is at — never the key to it: a login or a credential anywhere in it is
       # refused (the platform's address rule; the twelfth review, blocker 10)
-      url:              {type: url, required: true, credentials: {login: access_key, secret: access_secret}}
+      url:              {type: url, required: true, credentials: {login: access_key, secret: access_secret}, secret_in: [{param: [sig, signature]}]}
       server:           {type: string}               # local, edge, a backup or incidents disk: whose; network: empty
       # its SIZE: the ring the engine formats it as — what lets one partition hold two volumes
       quota_bytes:      {type: int, required: true, schema: {minimum: 1}}
