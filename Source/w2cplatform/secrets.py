@@ -112,8 +112,10 @@ def is_secret_field(name: str) -> bool:
 #                                        is what a refusal calls it. `decoded` (true unless said): matched on the part
 #                                        with its `%`-escapes undone, hidden in the address as written
 #   {nested: [names]}                    the value of a pair of these names is read as an address once unescaped (a
-#                                        `<scheme>:` before its own `scheme://` aside: `ffmpeg:https://…`), by the
-#                                        same rules, three levels deep (`_NESTED`)
+#                                        `<scheme>:` before its own `scheme://` aside: `ffmpeg:https://…`), three
+#                                        levels deep (`_NESTED`) — by the rules of every loaded spec together, this
+#                                        field's beside them: whose address it is the field does not know
+#                                        (`_inner_rules`, ADR-0053)
 #
 # BY WORD, NOT BY SUBSTRING (the thirteenth review, minor): a word that only BEGINS a name (`token` of `token_bucket`,
 # `auth` of `authmode`) names what the parameter is about, not what it holds — which is why a name is matched whole,
@@ -278,6 +280,24 @@ def _rules(rules: SecretRules | None) -> SecretRules:
         from .catalog import secret_rules
         rules = secret_rules()
     return _with_common(rules)
+
+
+# AN ADDRESS INSIDE A FIELD'S ADDRESS IS NOBODY'S THAT THE FIELD KNOWS (ADR-0053, addendum of 2026-10-06 on `nested`):
+# a field knows the words its own addresses spell a secret by, not whose address lies inside one of them — a table's
+# url may hold in its `?src=` another subsystem's address with `user=admin_password=…` in it, which no word of the
+# table's field says. So an address nested in another (a pair's value, `nested`, behind its `<scheme>:`; one escaped
+# into a path segment) is read by the rules of every loaded spec together (`catalog.secret_rules`), the field's own
+# beside them — and so is an address nested deeper in that one. Which of the field's own pairs hold an address is the
+# field's to say (its `nested`), and its own pairs stay its own rule's: a word of another subsystem's (`session`) does
+# not narrow it.
+@functools.lru_cache(maxsize=64)
+def _joined(own: SecretRules, every: SecretRules) -> SecretRules:
+    return _with_common(own | every)
+
+
+def _inner_rules(rules: SecretRules) -> SecretRules:
+    from .catalog import secret_rules
+    return _joined(rules, secret_rules())
 
 
 # Copies of `rows` with every secret field masked. Empty stays empty. An address keeps its host and path and loses
@@ -659,13 +679,17 @@ def hide_in_url(value, rules: SecretRules | None = None, _depth: int = 0):
     if not isinstance(value, str):
         return value
     if "://" not in value:
-        return SECRET_MASK if _escaped_whole(value) and address_refusal(value, rules, _depth) else value
+        if _escaped_whole(value) and address_refusal(value, rules, _depth):
+            return SECRET_MASK
+        return _mask(value, _opaque_spans(value))
     rules = _rules(rules)
-    # the addresses wrapped in it, masked whole when one carries a password — and the rest read with them masked
+    # the addresses wrapped in it, masked whole when one carries a password (read by every loaded spec's rules: whose
+    # address it is the field does not know, `_inner_rules`) — and the rest read with them masked
+    deep = _inner_rules(rules)
     wrapped = [(a, b) for _, a, b, inner in _nested(value, rules)
-               if "secret" in ((address_fault(inner, rules, _depth + 1) or ("", frozenset()))[1])]
+               if "secret" in ((address_fault(inner, deep, _depth + 1) or ("", frozenset()))[1])]
     s = _mask(value, wrapped)
-    spans = _userinfo_spans(s) + _port_spans(s)
+    spans = _userinfo_spans(s) + _port_spans(s) + _opaque_spans(s)
     spans += [(a, b) for kind, a, b, _ in _found(s, rules) if kind == "secret"]    # a login is said as written
     for name, a, b in _pairs(s):
         if b <= a or not (is_credential_param(name, rules) or _hides(s[a:b], rules)):
@@ -696,6 +720,39 @@ def hide_in_url(value, rules: SecretRules | None = None, _depth: int = 0):
 # 'Hunter2'") quote the password, and they went into the reply, the journal and the idempotency copy (major 16).
 NOT_AN_ADDRESS = ("its host or port cannot be read — a password with an unescaped '/', '?' or '#' in it reads that way; "
                   "the login goes in its own field")
+# …and the words for an `@` (the product's, `secrets.FaultAt`): one an address or a path needs is written `%40`.
+AT_LOGIN = "it carries a login (what stands before an '@'; an '@' the url needs is written %40)"
+
+
+# AN `@` WHERE NO ADDRESS READS ONE (ADR-0053, addendum of 2026-10-06; the finding of «Сборка» at the tables' door): a
+# url field's value with no `://` — a local path, `KEY:pw@store.example/…`, `x:KEY:pw/a+b@…` — or the part of one
+# before its first `://` has no userinfo by RFC 3986, and was taken as opaque and shown whole; a reader that dials it
+# takes what stands before the `@` for a login and a password. A url field refuses an `@` there in the words of an `@`
+# after the `://` (`opaque_fault`, asked by `Field.refusal` — a field's value, never a door's free text, where
+# `ops@site` is a mail), `/mnt/a@b` too: a local path's `@` is written `%40`. A password where it stood: from the last
+# `:` before the `@` on, `/` and all (the product's reading, one table: `s3:KEY:pw/a+b@…` is `s3:KEY:***@…`). What is
+# said of one stored before is masked there (`_opaque_spans`, `hide_in_url`): a page masks never less than a write
+# refuses (ADR-0053).
+def _opaque_at(s: str) -> tuple[int, int] | None:
+    """`(colon, at)` of the `@` before `s`'s first `://` (all of `s` with none): its last such `@`, and the last `:`
+    before it (-1 for none) — None when there is no `@` there."""
+    head = s[:s.find("://")] if "://" in s else s
+    at = head.rfind("@")
+    return None if at < 0 else (head.rfind(":", 0, at), at)
+
+
+def _opaque_spans(s: str) -> list[tuple[int, int]]:
+    got = _opaque_at(s)
+    return [(got[0] + 1, got[1])] if got and got[0] >= 0 and got[1] > got[0] + 1 else []
+
+
+def opaque_fault(value) -> tuple[str, frozenset] | None:
+    """Why a url field may not store `value` for an `@` where no address reads one, and what it carries — None when
+    it may (`address_fault` asks the rest)."""
+    got = _opaque_at(str(value))
+    if got is None:
+        return None
+    return AT_LOGIN, (_BOTH if got[0] >= 0 else _LOGIN)
 
 
 # AN ADDRESS ESCAPED WHOLE (the product's r28-secrets2, the domain's door): `["x%3A%2F%2Fadmin%3A…%40h2"]` has no
@@ -742,7 +799,7 @@ def address_fault(value, rules: SecretRules | None = None, _depth: int = 0) -> t
         # (`acme/admin@10.0.0.5:…/ch/1`: a login, and the password where its host's port stands)
         found = () if a_file else _found(s, rules)
         both = _password_before_at(s, u) or any(k == "secret" for k, _, _, _ in found)
-        return "it carries a login (what stands before an '@')", (_BOTH if both else _LOGIN)
+        return AT_LOGIN, (_BOTH if both else _LOGIN)
     # …what its pairs and the spec's regexes find, said together: a login in a pair and a password the chain beside it
     # spells (`/user=admin_password=…`) is a password to the refusal, whichever was read first.
     creds, logins = credential_params(s, rules), login_params(s, rules)
@@ -762,8 +819,9 @@ def address_fault(value, rules: SecretRules | None = None, _depth: int = 0) -> t
         kinds |= set(what)
     if said:
         return f"it carries {' and '.join(said)}", frozenset(kinds)
+    deep = _inner_rules(rules)                           # whose address is inside, the field does not know
     for name, _, _, inner in ([] if a_file else _nested(s, rules)):
-        got = address_fault(inner, rules, _depth + 1)
+        got = address_fault(inner, deep, _depth + 1)
         if got:
             return (f"it holds an address in {name if name == 'a path segment' else repr(name)} that may not be "
                     f"stored: {got[0]}", got[1])

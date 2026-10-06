@@ -89,7 +89,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 from .doors import numeric, unnamable
-from .secrets import NOT_AN_ADDRESS, SecretRules, address_fault, hide_in_url, is_secret_field
+from .secrets import NOT_AN_ADDRESS, SecretRules, address_fault, hide_in_url, is_secret_field, opaque_fault
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES, SCHEMA_KEY,
                        SERVERS_PREFIX, OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
@@ -360,9 +360,11 @@ class Field:
     # Why a url field may not store `value` as typed, None when it may: a login or a credential anywhere in it, by the
     # platform's one rule (`secrets.address_fault`) and THIS field's `secret_in`; the words name the field its
     # `credentials` gives what was found — a password the secret's, a login with no password the login's — and never
-    # the value.
+    # the value. An `@` where no address reads one — a value with no `://`, or before its first — first, in the same
+    # words (`secrets.opaque_fault`; ADR-0053, addendum of 2026-10-06): `KEY:pw@store.example/…` was taken as opaque
+    # and shown whole, and a local path's `@` is written `%40`.
     def refusal(self, value) -> str | None:
-        got = address_fault(str(value), self.rules)
+        got = opaque_fault(str(value)) or address_fault(str(value), self.rules)
         if not got:
             return None
         why, kinds = got

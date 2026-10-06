@@ -33,7 +33,8 @@ is nobody's catalogue.
 #   and `commands/*` for a spec whose units take requests).
 # - `door_objects()` — the files a resource's door gives the other servers (`objects.door`, `domain.reports`).
 # - `heartbeat_strings(sub)` — the fields of a subsystem's heartbeats that are strings (`heartbeat.strings`).
-# - `secret_rules()` — how an address carries a login (`secret_in` of every url field of every spec, together).
+# - `secret_rules()` — how an address carries a login (`secret_in` of every url field of every spec, a table's too,
+#   together).
 # ================================================================================================
 from __future__ import annotations
 
@@ -187,13 +188,16 @@ def heartbeat_strings(sub: str) -> tuple[str, ...]:
 
 
 # The `secret_in` of every url field of every spec, as one set of rules: what hides an address wherever one is said
-# (`secrets.hide_in_url`), and what a door that is no spec's field asks (`secrets.address_refusal`).
+# (`secrets.hide_in_url`), what a door that is no spec's field asks (`secrets.address_refusal`), and what an address
+# nested in a field's is read by (`secrets._inner_rules`). A table's url field among them (`tables.<t>.fields`): what
+# a table's url is refused for at its write, a page that says a stored one masks (ADR-0053, addendum of 2026-10-06 —
+# a show masks never less than a write refuses).
 def secret_rules():
     from .secrets import NO_RULES
     def make():
         out = NO_RULES
         for s in specs():
-            for f in s.fields.values():
+            for f in [*s.fields.values(), *(g for t in s.table_specs.values() for g in t.fields.values())]:
                 if f.rules is not None:
                     out = out | f.rules
         return out
