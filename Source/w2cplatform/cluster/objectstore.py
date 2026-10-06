@@ -145,6 +145,22 @@ class FsObjectStore:
         finally:
             os.remove(tmp)
 
+    # Removes the object under the directory's lock, as М10's `FsObjectStore.delete` does (ADR-0054: a delete between a
+    # `get_at` and its `put_at` is one step or the other, never inside). A missing key is `False`, not an error — a
+    # sweep that meets one candidate twice does the same thing twice; no directory, no lock made to say so. Without it a
+    # worker on `OBJECTS=file://` raised `AttributeError` at every `MARK_SWEEP` (the review's fourteenth pass, minor 19).
+    def delete(self, key: str) -> bool:
+        from w2cplatform.objects import dir_lock
+        p = os.path.join(self.root, key)
+        if not os.path.isdir(os.path.dirname(p)):
+            return False
+        with dir_lock(os.path.dirname(p)):
+            try:
+                os.remove(p)
+                return True
+            except FileNotFoundError:
+                return False
+
     def get(self, key: str) -> bytes | None:
         p = os.path.join(self.root, key)
         if not os.path.exists(p):

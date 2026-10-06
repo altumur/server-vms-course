@@ -657,6 +657,9 @@ def test_a_camera_the_lease_step_let_go_is_not_taken_back_by_a_pass_whose_assign
         unit, key = str(cid), VMS.sub.epoch_key(str(cid))
         theirs, _ = next_epoch(box.vars, key)                        # the camera's new holder took the next epoch
         assert unit in holder.lease_pass() and unit not in holder.leases
+        # the camera is still in its assignment: the loss is a failure (`stop_unit`, ADR 0033 with its additions) — its
+        # first delay waited out here, so that what keeps the start back below is the read, not the backoff
+        box.clock.advance(2)
         real_refresh, real_assignment, real_get = holder.refresh, holder.assignment, holder.vars.get
         if fails == "the whole refresh":
             holder.refresh = lambda: (_ for _ in ()).throw(OSError("one read timed out"))

@@ -202,6 +202,14 @@ SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of
 # What a spec's `requests:` says (`SubsystemSpec._page_words`).
 REQUEST_KEYS = ("free", "schema", "valid_for", "most_valid", "per_person", "settle", "ttl", "key", "stamp", "journal",
                 "elsewhere")
+# …its numbers: name -> (a whole number?, may it be 0?, what it is) — every one finite (the fourteenth review, minor 5).
+REQUEST_NUMBERS = {
+    "valid_for": (False, False, "a finite number of seconds above 0"),
+    "most_valid": (False, False, "a finite number of seconds above 0"),
+    "per_person": (True, False, "a whole number above 0 — how many of one person's may stand"),
+    "settle": (False, True, "a finite number of seconds, 0 or more"),
+    "ttl": (False, True, "a finite number of seconds, or 0: no limit"),
+}
 # What a spec's `display:` says: words for a page (`SubsystemSpec._page_words`, `_card_words`) — closed by sections (the
 # architect, 5 Oct): what a section holds is free words, and the one thing checked is that a word for a field names one.
 DISPLAY_KEYS = ("unit", "units", "units_count", "section", "general", "fields", "field_help", "options", "form", "events",
@@ -218,7 +226,7 @@ TREE_WORDS = ("nested_by", "group_title", "group_hint", "filter", "no_group", "c
 # — a table `marks` was never written over HTTP: `POST /marks` is the operator's mark. Refused at load; a closed set, held
 # to the dispatch by `test_spec_declarations.py`.
 CONSOLE_ROUTES = frozenset({"session", "healthz", "index.html", "spec", "where", "resources", "servers", "domain",
-                            "policy", "unplaceable", "events", "metrics", "marks", "requests", "mounts", "drain", "schema",
+                            "policy", "unplaceable", "events", "metrics", "marks", "requests", "asked", "mounts", "drain", "schema",
                             "platform",    # `/platform/console.js`: the console module every page is built from
                             "api"})        # `/api/held`, `/api/backup`, `/api/prepare`, `/api/take`: the processes' doors
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
@@ -659,23 +667,23 @@ def _heartbeat_strings(name, hb) -> tuple:
 # is off until the spec turns it on). `forever` — for as long as the silence lasts: what its units write carries the
 # epoch in its name, and a second writer is a duplicate, not damage; `<seconds>` — up to that long; `off` (the default)
 # — not at all: a lease not confirmed in time stops the unit — where the work is actions, done twice if done by two.
-# Typed: a number of seconds or one of the two words, nothing else (a word `"90"` lifted the ceiling unseen in the
-# product). `off` written bare, as the product's specs write it, is what YAML 1.1 reads as false: the same word.
+# Typed (ADR-0012; «Архитектор», 2026-10-06, after the fourteenth review): `forever`, `off`, or a WHOLE number of seconds
+# above 0 — one thing, one spelling. Not `0` (zero seconds is `off`), not `"90"` (a word lifted the ceiling unseen in
+# the product), not `1e308` or `90.5`, not `false`/`no`/`OFF` — a spec is YAML 1.2 (`specyaml.py`), where `off` is the
+# word itself and no boolean — and not an empty `lease:`: a key said says something.
 LEASE_WORDS = {"forever": None, "off": 0.0}
 
 
-def _lease(name, lease) -> float | None:
-    if lease is None:
+def _lease(name, lease, said: bool = False) -> float | None:
+    if lease is None and not said:
         return 0.0
     got = lease.get("unconfirmed_max") if isinstance(lease, dict) and set(lease) == {"unconfirmed_max"} else None
-    if got is False:
-        got = "off"
     if isinstance(got, str) and got in LEASE_WORDS:
         return LEASE_WORDS[got]
-    if isinstance(got, (int, float)) and not isinstance(got, bool) and math.isfinite(got) and got > 0:
+    if isinstance(got, int) and not isinstance(got, bool) and got > 0:
         return float(got)
-    raise ValueError(f"spec {name}: lease.unconfirmed_max is forever, off or a number of seconds — `lease:` is "
-                     f"{{unconfirmed_max: forever | off | <seconds>}}, not {lease!r}")
+    raise ValueError(f"spec {name}: lease.unconfirmed_max is forever, off or a whole number of seconds above 0 — "
+                     f"`lease:` is {{unconfirmed_max: forever | off | <seconds>}}, not {lease!r}")
 
 
 # `secrets: {readers: {<row or prefix>: [<role>]}, reads: [<row or prefix>]}` — the product's key, the course checks it:
@@ -1260,6 +1268,8 @@ class SubsystemSpec:
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
     @classmethod
     def from_dict(cls, d: dict) -> "SubsystemSpec":
+        if not isinstance(d, dict):                     # a list, a word, an empty file: a refusal, never an AttributeError
+            raise ValueError(f"a spec is a mapping of keys, not {type(d).__name__}")
         if d.get("name") in RESERVED_NAMES:
             raise ValueError(f"spec {d['name']}: `{d['name']}` is a name of the platform's own (one of "
                              f"{', '.join(sorted(RESERVED_NAMES))}), not a subsystem's")
@@ -1313,7 +1323,7 @@ class SubsystemSpec:
                    heartbeat_strings=_heartbeat_strings(d.get("name"), d.get("heartbeat")),
                    secret_readers=_secrets(d.get("name"), d.get("secrets"))[0],
                    secret_reads=_secrets(d.get("name"), d.get("secrets"))[1],
-                   unconfirmed_max=_lease(d.get("name"), d.get("lease")),
+                   unconfirmed_max=_lease(d.get("name"), d.get("lease"), "lease" in d),
                    slot_prefix=slot[0], slot_name_env=slot[1],
                    worker_writes=worker[0], worker_reads=worker[1], worker_requests=worker[2])
         spec._about_and_rights(d)
@@ -1334,7 +1344,7 @@ class SubsystemSpec:
         # A table's name becomes a key family and an ACL prefix, so it is a name and not a path, and it may
         # not be the unit rows under another spelling — two writers on one family with different rules.
         for t in spec.tables:
-            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "servers", "decommissioned"):
+            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "asked", "servers", "decommissioned"):
                 raise ValueError(f"spec {spec.name}: `tables:` takes a fresh row family name, not {t!r}")
         leaks = [n for n in spec.snapshot if is_secret_field(n)]
         if leaks:
@@ -1500,11 +1510,14 @@ class SubsystemSpec:
             self.requests = {k: v for k, v in req.items() if k != "free"}
             if "schema" in req:
                 self.requests["schema"] = _schema.load(req["schema"], f"spec {self.name}: requests.schema")
-            for k in ("valid_for", "most_valid", "per_person", "settle", "ttl"):
-                if k in req and (isinstance(req[k], bool) or not isinstance(req[k], (int, float))
-                                 or req[k] < 0 or (req[k] == 0 and k != "ttl")):
-                    raise ValueError(f"spec {self.name}: requests.{k} is a positive number"
-                                     + (" (or 0: no limit)" if k == "ttl" else "") + f", not {req[k]!r}")
+            # Every number of the family, FINITE (ADR-0012; the fourteenth review, minor 5): `ttl: .nan` loaded — `< 0` is
+            # false for NaN — and then the filter dropped every row, `per_person` limited nothing and the reaper ended
+            # nothing by age; `per_person: 2.5` let a person stand three. A count is a whole number; seconds are finite.
+            for k, (whole, zero, what) in REQUEST_NUMBERS.items():
+                v = req.get(k)
+                if k in req and (isinstance(v, bool) or not isinstance(v, int if whole else (int, float))
+                                 or not math.isfinite(v) or v < 0 or (v == 0 and not zero)):
+                    raise ValueError(f"spec {self.name}: requests.{k} is {what}, not {v!r}")
             # HOW LONG A REQUEST STANDS IS DECLARED, NEVER ASSUMED (the architect, 2026-10-05, ADR 0012): ending a row by
             # age is destructive, and a ledger's assumed day silently lifts a person's quota. A family that frees (or
             # counts per person) says `ttl` — `0` for no limit, said so; any other says `valid_for`, its rows' deadline.
@@ -1529,6 +1542,14 @@ class SubsystemSpec:
             if "about" in (req.get("stamp") or []) and not self.about_field:
                 raise ValueError(f"spec {self.name}: requests.stamp names `about`, and the spec says no `about:` — "
                                  f"declare {{sub, field}}, or stamp without it")
+            # …and of the group, the group the placement groups by (ADR-0012; the fourteenth review, minor 26): without
+            # `placement.group_by` the stamp stamped nothing, and the holder's "performed in the group it was filed for"
+            # held for no request.
+            if "group" in (req.get("stamp") or []) and not self.group_by:
+                raise ValueError(f"spec {self.name}: requests.stamp names `group`, and placement says no `group_by` — "
+                                 f"declare it, or stamp without it")
+            if "key" in req:
+                self._request_key(req)
         from .tables import parse as _tables
         self.table_specs = _tables(self.name, d.get("tables"), lambda t, raw: read_fields(f"spec {self.name}: tables.{t}", raw))[1]
         # …a table the console SERVES (declared, `{key, fields}`) and the rows: a table only named (`tables: [x]`) is a
@@ -1671,9 +1692,28 @@ class SubsystemSpec:
             raise ValueError(f"spec {self.name}: display.form is [{{title, state?, placement?, fields: [<a field of the "
                              f"row>], status?, note?}}], not {form!r}")
 
+    # `requests.key` — the name a request is filed under, from its body (`"{unit}-{from:int}-{to:int}"`): every brace
+    # closed, and — where the family declares its body (`requests.schema`) — every name in it `unit` or a property of
+    # that schema (ADR-0012; the fourteenth review, minor 26). A name the schema does not declare was a family whose
+    # every request the door answered 400 «bad id»; a brace left open was a name of the request that said the brace. A
+    # family without a schema declares no body, and its names are the door's to fill in or refuse.
+    def _request_key(self, req: dict) -> None:
+        from .tables import KEY_TEMPLATE
+        key = req["key"]
+        schema = req.get("schema") if isinstance(req.get("schema"), dict) else None
+        props = schema.get("properties") if schema is not None and isinstance(schema.get("properties"), dict) else {}
+        if not isinstance(key, str) or not key or "{" in KEY_TEMPLATE.sub("", key) or "}" in KEY_TEMPLATE.sub("", key):
+            raise ValueError(f"spec {self.name}: requests.key is a name with {{<field>}} or {{<field>:int}} in it, every "
+                             f"brace closed — not {key!r}")
+        stray = [m.group(1) for m in KEY_TEMPLATE.finditer(key)
+                 if schema is not None and m.group(1) != "unit" and m.group(1) not in props]
+        if stray:
+            raise ValueError(f"spec {self.name}: requests.key names {', '.join(stray)}, which requests.schema does not "
+                             f"declare (its properties: {', '.join(props) or 'none'}) — no request would fill it in")
+
     # The placement's words that are a vocabulary or a declaration, checked at load (the boundary's step 6): the
     # constraint and the tie-break are names from the closed catalogue; `group_by` is a field, or `{field, cut_at}` over
-    # a url field, with `schemes` beside `cut_at: host` only and in the words of `GROUP_SCHEME_WORDS`; `near.prefer` one key `<their field>[.<field>]` and a value or a list of them; `affinity` names a
+    # a url field, with `schemes` beside `cut_at: host` only and in the words of `GROUP_SCHEME_WORDS`; `spread_by` a field; `near.prefer` one key `<their field>[.<field>]` and a value or a list of them; `affinity` names a
     # field of the row and a table of this spec, and `strict` is `{<field of the table's row>: <value or values>}`.
     def _placement_words(self, pl: dict) -> None:
         if self.constraint not in CONSTRAINTS:
@@ -1696,6 +1736,16 @@ class SubsystemSpec:
                 raise ValueError(f"spec {self.name}: group_by.cut_at reads a url field — its host (`host`) or its path "
                                  f"up to a segment — {self.group_by} is {self.fields[self.group_by].type}, the segment "
                                  f"{self.group_cut!r}")
+        # …and in its string form the same: a FIELD (ADR-0012; the fourteenth review, major 5). `group_by: sourcee` loaded,
+        # every unit's group was empty, and sixteen units of one group went to four workers, the group's one holder
+        # split four ways. `spread_by` alike (major 11): a name of no field, or no name at all (`spread_by: 5`), put every
+        # unit's taken servers at none, and the filter it promised was gone without a word.
+        elif "group_by" in pl and (not isinstance(g, str) or g not in self.fields):
+            raise ValueError(f"spec {self.name}: placement.group_by is a field of the row ({', '.join(self.fields)}), or "
+                             f"{{field: <a field>, cut_at: …}} — not {g!r}")
+        if "spread_by" in pl and (not isinstance(pl["spread_by"], str) or pl["spread_by"] not in self.fields):
+            raise ValueError(f"spec {self.name}: placement.spread_by is a field of the row ({', '.join(self.fields)}) — "
+                             f"not {pl['spread_by']!r}")
         near = pl.get("near")
         prefer = near.get("prefer") if isinstance(near, dict) else None
         if prefer is not None:
@@ -1810,14 +1860,21 @@ class SubsystemSpec:
                 return n
         return None
 
-    # `yaml.safe_load` then `from_dict`. PyYAML is imported lazily so the rest of the platform has no
-    # dependency on it.
+    # The file read by the spec's YAML (`specyaml.load`: YAML 1.2 core, a subset — no duplicate key, no anchor, alias or
+    # tag; ADR-0012, the fourteenth review's major 9), then `from_dict`. PyYAML is imported lazily so the rest of the
+    # platform has no dependency on it. Every refusal is a ValueError naming the file — a section of the wrong shape
+    # that tripped a reader (`placement: [x]`) as well, never an AttributeError out of a load (minor 25).
     @classmethod
     def load(cls, path: str) -> "SubsystemSpec":
-        import yaml
-        from . import catalog
-        with open(path) as f:
-            spec = cls.from_dict(yaml.safe_load(f))
+        from . import catalog, specyaml
+        d = specyaml.load(path)
+        try:
+            spec = cls.from_dict(d)
+        except ValueError as e:
+            raise ValueError(f"{path}: {e}") from None
+        except (AttributeError, TypeError, KeyError, IndexError, RecursionError) as e:
+            raise ValueError(f"{path}: not a spec — a section of another shape than its key takes "
+                             f"({type(e).__name__}: {e})") from None
         catalog.register(spec, path)            # a spec this process loaded is one it knows (`catalog.py`)
         return spec
 
@@ -1836,6 +1893,7 @@ class SubsystemSpec:
                f"{self.name}/policy",                                                         # the administrator's knobs: servers distinct | shared
                f"{self.name}/sweep",                                                          # what the blob sweep marked, and when
                f"{self.name}/requests/*",                                                     # bounded work an operator asked a worker for, outside its ordinary pass
+               *([f"{self.name}/asked/*"] if "per_person" in (self.requests or {}) else []),   # each person's open requests (ADR 0060)
                SERVERS_PREFIX + "*",                                                          # what a server reaches, as the administrator says it: one row a server, every subsystem's (ADR-0026)
                DRAIN_KEY,                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
                DECOMMISSION + "*",                                                            # "this machine is gone for good": the operator's, every subsystem reads it
@@ -2488,6 +2546,7 @@ class SpecController(Controller):
                  wall=time.time, cluster: str | None = None):
         from . import catalog
         catalog.near_known(spec)                         # its neighbour's spec, loaded by now — or no controller (ADR 0056)
+        catalog.requests_known(spec)                     # …and the families its worker files to (ADR-0012, ADR-0054)
         super().__init__(spec.sub, vars_, objects, wall)
         self.spec = spec
         self.capacity = capacity if capacity is not None else spec.capacity_default   # the FALLBACK for a worker whose heartbeat says nothing

@@ -38,6 +38,31 @@ def count_expired(sub: str) -> None:
     expired[sub] = expired.get(sub, 0) + 1
 
 
+# THE SAME REQUEST, ONE DEFINITION FOR EVERY FILER (ADR-0013: filing is idempotent, PERFORMING is not more than once; the
+# fourteenth review, major 1). When a request's id is taken, the row standing under it is read and compared with the one
+# being filed — the same text, byte for byte, on one form (`canonical_json` over the items as the store holds them),
+# leaving out only the filer's own moments, `moment`: what a retry of the same request cannot say the same — a worker's
+# `filed` (`Worker.file_request`); at the console's door `at` when it stamps it and a deadline it gave itself
+# (`SpecConsole._file_request`). Who filed it (`by`), for which unit, in which group, with what values — all compared:
+# under one id, another person's request is ANOTHER request. The door answered it 202 with the stranger's row, and the
+# person's own command was not filed; a worker's filing was refused. Now both are refused, by this one function.
+#
+# `(kind, why)`: `same` — the same request, filed before; `gone` — no row stands now (answered or ended meanwhile);
+# `other` — a different request; `garbled` — a row that does not parse, never overwritten; `store` — not read.
+def filed_already(vars_, key: str, out: dict, moment=("filed",)) -> tuple[str, str]:
+    try:
+        standing, _ = vars_.get(key)
+    except PARSE_ERRORS as e:                               # a torn row (`Garbled`)
+        return "garbled", f"the row standing under this rid does not parse ({e}); it is left as it is"
+    except Exception as e:                                  # noqa: BLE001 — a store that did not answer
+        return "store", f"the row standing under this rid cannot be read ({type(e).__name__}: {e}); it is left as it is"
+    if standing is None:
+        return "gone", "the row that stood under this rid is gone (performed or expired meanwhile); file under a new rid"
+    same = (canonical_json({k: v for k, v in standing.items() if k not in moment}) ==
+            canonical_json({k: v for k, v in out.items() if k not in moment}))
+    return ("same", "") if same else ("other", "under this rid stands a different request")
+
+
 # How a holder says a request it answered, in its heartbeat's `fetched` (`Worker.fetched_said`), and how the console
 # matches it: the id itself when it is short and plain; else `#` and a digest of it — an id of 200 characters, or one with
 # a comma (the list's separator), a quote or a control character in it, costs 21 bytes like any other (the review's
@@ -50,9 +75,9 @@ def said_id(rid: str) -> str:
 
 
 # EVERY REQUEST ENDS WITH ITS OUTCOME IN ITS MARK (ADR-0054): `<sub>/commands/<id>`, where whoever asked reads how it
-# went — `performed`, `refused`, `unknown` or `expired`; beside a refusal and `unknown` its reason, `error`, cut to
-# `MARK_ERROR` characters (a mark is read by every holder of the unit and by whoever asked: a reason is a sentence, not a
-# payload — cut, never refused); `late: true` on an answer that came after the request was answered "did not answer";
+# went — `performed`, `refused`, `unknown` or `expired`; beside a refusal and `unknown` its reason, `error`, at most
+# `MARK_ERROR` characters, `…` the last of them where it was cut (a mark is read by every holder of the unit and by whoever
+# asked: a reason is a sentence, not a payload — cut, never refused); `late: true` on an answer that came after the request was answered "did not answer";
 # `ended_by: reaper` on the console's `expired`. Who writes what, and whose word wins:
 #
 #   the holder   its begun mark create-only before the call, its answer over it after (`Worker._confirm`) — over another
@@ -78,9 +103,10 @@ MARK_ERROR = 200
 
 
 def mark_error(why: str) -> str:
-    """A reason as a mark keeps it: at most `MARK_ERROR` characters, and `…` where it was cut."""
+    """A reason as a mark keeps it: at most `MARK_ERROR` characters, `…` among them where it was cut (ADR-0054: «not
+    longer than 200» — it was 200 and `…`, 201; the fourteenth review, minor 15: 199 and `…`)."""
     why = str(why)
-    return why if len(why) <= MARK_ERROR else why[:MARK_ERROR] + "…"
+    return why if len(why) <= MARK_ERROR else why[:MARK_ERROR - 1] + "…"
 
 
 # WHAT A REQUEST IS, as its mark keeps it: the sha256 of the row's one text without the filer's own `filed` stamp — the
@@ -257,16 +283,24 @@ def _close(ctl, key: str, it: dict, idx, now: float, how: str) -> bool:
     try:
         said = json.loads(mark) if mark else None
     except PARSE_ERRORS:
-        said = {}
+        said = None
     begun = mark is not None and not (isinstance(said, dict) and said.get("outcome"))
-    if begun and holder_still_there(ctl, said):
+    # A MARK THAT DOES NOT READ IS NOBODY'S (the fourteenth review, minor 12; ADR-0054, 0012): not JSON, not an object, or
+    # one that names no instance — whose it is cannot be read, so no holder is there to wait for. It was read as `{}`,
+    # whose holder `holder_still_there` takes for "still there", and the row stood for good (five hours on, a probe).
+    # Past the deadline it ends NOT KNOWN like any begun request whose holder went: its mark completed `unknown` by the
+    # index it read (a mark that does not parse is `instance: ?` to `complete_mark`), then the row deleted by CAS —
+    # whoever asked reads an outcome; the beginner's answer, if one comes, still wins.
+    nobodys = begun and not (isinstance(said, dict) and said.get("instance"))
+    if begun and not nobodys and holder_still_there(ctl, said):
         return False
     # THE MARK FIRST, THEN THE ROW (the review's fourteenth pass, major 6): the row deleted and the mark not completed —
     # the store did not answer — left a request no turn would look at again, and its mark was swept with no outcome ever.
     # Completed first, a mark the store did not take leaves the row standing, and the next turn writes it again.
     wrote = False
     if begun:
-        why = "its holder began it and is gone without saying how it went"
+        why = ("its mark does not read: whoever began it is not known, nor how it went" if nobodys
+               else "its holder began it and is gone without saying how it went")
         try:
             wrote = complete_mark(ctl.objects, ctl.sub.command_key(rid), "unknown", why, now)   # by the index it reads
         except Exception as e:                              # noqa: BLE001 — not written: the row stands, the next turn
@@ -284,8 +318,7 @@ def _close(ctl, key: str, it: dict, idx, now: float, how: str) -> bool:
     if begun:
         if wrote:                                           # not written: answered meanwhile — its beginner's word stands
             unknown[ctl.spec.name] = unknown.get(ctl.spec.name, 0) + 1
-            log.warning("%s: request %s for %s ended %s NOT KNOWN: %s", ctl.spec.name, rid, it.get("unit", "?"), how,
-                        "its holder began it and is gone without saying how it went")
+            log.warning("%s: request %s for %s ended %s NOT KNOWN: %s", ctl.spec.name, rid, it.get("unit", "?"), how, why)
         return True
     count_expired(ctl.spec.name)
     _ended_mark(ctl, rid, it, "expired", now)
@@ -298,10 +331,13 @@ def _close(ctl, key: str, it: dict, idx, now: float, how: str) -> bool:
 # deadline (`valid_until`; in a family with no `ttl`, any action) nobody performed (`_end`), and a row with none older
 # than the spec's `ttl` (an ask nobody could answer holds one of its person's places for good otherwise — the review's
 # sixth pass); `ttl: 0` ends none by age — the spec said so, nothing assumed it (2026-10-05); a row that names no unit
-# is a list, not a request, and goes uncounted. Rows whose `action` the spec says another process serves
-# (`requests.elsewhere`) are that process's to end.
+# (the resource's `free-…`) has no mark to read, and goes uncounted. Rows whose `action` the spec says another process
+# serves (`requests.elsewhere`) are that process's to end. A person's ledger is no row of this family (ADR 0060): it is
+# `<sub>/asked/…`, and on the same slower turn one nobody has written for `ttl` goes (`clear_asked`).
 def clear_requests(ctl, sweep: bool = True) -> int:
     from .console import heartbeats
+    if sweep:
+        clear_asked(ctl)
     keys = ctl.vars.list(ctl.sub.requests_prefix())
     if not keys:
         return 0
@@ -339,8 +375,34 @@ def clear_requests(ctl, sweep: bool = True) -> int:
             _close(ctl, key, it, idx, now, f"standing past its ttl ({ttl} s)")   # the mark read first, as by deadline
             continue
         try:
-            ctl.vars.delete(key, cas=idx)                   # a row naming no unit is a list, not a request: no mark
+            ctl.vars.delete(key, cas=idx)                   # a row naming no unit (`free-…`) has no mark to read
         except Exception:                                   # noqa: BLE001 — changed meanwhile, or the store: the next pass
+            continue
+    return gone
+
+
+# THE PEOPLE'S LEDGERS, `<sub>/asked/<sha256 of the person, 16 hex>` (`per_person`, the console's; ADR 0060): one nobody
+# has written for the spec's `ttl` names no request that still counts — every entry is older — and goes, by CAS (a
+# ledger written meanwhile is a new one). `ttl: 0`: none goes by age, as no request does. A ledger that does not read
+# is the administrator's to delete (`DELETE /asked/<name>`): it stops its person, said on `/metrics`; it is not swept.
+def clear_asked(ctl) -> int:
+    declared = ctl.spec.requests or {}
+    ttl = declared.get("ttl")
+    if "per_person" not in declared or not ttl:
+        return 0
+    gone, now = 0, ctl.wall()
+    for key in ctl.vars.list(ctl.sub.asked_prefix()):
+        try:
+            it, idx = ctl.vars.get(key)
+            old = bool(it) and now - finite(it.get("at")) > ttl
+        except (*PARSE_ERRORS, OSError):
+            continue                                        # not read, or not known when it was written: it stays
+        if not old:
+            continue
+        try:
+            ctl.vars.delete(key, cas=idx)
+            gone += 1
+        except Exception:                                   # noqa: BLE001 — written meanwhile, or the store: the next turn
             continue
     return gone
 

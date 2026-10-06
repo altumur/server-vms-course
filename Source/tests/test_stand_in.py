@@ -95,7 +95,7 @@ def test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go():
         ctl.look()
         _tick(box, SLOT_LOST_AFTER + HUNG_MOVE_AFTER + 1)           # …the margin past the lapse, and the limit
         assert "w-1" in ctl.publish_names()["names_given"]
-        spare = _holder(box, name=None, instance="spare:1")         # a nameless process takes a given slot first
+        spare = _holder(box, name=None, instance="spare:1:aaaaaa")         # a nameless process takes a given slot first
         assert spare.name == "w-1"
     assert w.lease_pass() == ["c1"]
     assert not w.writing_allowed and "held by another instance" in w.fenced_reason
@@ -220,19 +220,19 @@ def test_the_stand_in_renews_the_place_only_while_it_is_this_instances():
     loop's."""
     box = Box()
     sub = Subsystem("t")
-    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1", spec=spec_named("t"))
+    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1:aaaaaa", spec=spec_named("t"))
     w.claim_slot(prefer="t-1")
     assert w.claim_hold(["shelf"]) == "shelf"
     with w.guarded("pass"):
         _tick(box, 30)
         assert w.stand_in_once()
         row = Slot.from_items("shelf", box.vars.get(sub.hold_key("shelf"))[0])
-        assert row.holder == "me:1" and row.until == box.wall() + w.slot_ttl
+        assert row.holder == "me:1:aaaaaa" and row.until == box.wall() + w.slot_ttl
         items, idx = box.vars.get(sub.hold_key("shelf"))
-        box.vars.put(sub.hold_key("shelf"), Slot("shelf", "other:1", box.wall() + 45, False, row.gen + 1).to_items(), cas=idx)
+        box.vars.put(sub.hold_key("shelf"), Slot("shelf", "other:1:bbbbbb", box.wall() + 45, False, row.gen + 1).to_items(), cas=idx)
         _tick(box, 10)
         assert w.stand_in_once()
-        assert Slot.from_items("shelf", box.vars.get(sub.hold_key("shelf"))[0]).holder == "other:1"
+        assert Slot.from_items("shelf", box.vars.get(sub.hold_key("shelf"))[0]).holder == "other:1:bbbbbb"
         assert w.hold == "shelf"                                     # the loop's renew_hold finds out, not the stand-in
 
 
@@ -244,7 +244,7 @@ def test_the_stand_in_does_not_hold_the_place_for_a_step_on_a_silent_engine_and_
     (`note_hold_confirmed`) — what a worker fences every write to the place by."""
     box = Box()
     sub = Subsystem("t")
-    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1", spec=spec_named("t"))
+    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1:aaaaaa", spec=spec_named("t"))
     w.claim_slot(prefer="t-1")
     assert w.claim_hold(["shelf"]) == "shelf"
     told, silent = [], [True]
@@ -574,7 +574,7 @@ def test_a_step_that_comes_back_after_its_units_went_takes_no_epoch_from_their_n
         while not w.step_abandoned():
             _tick(box, 5)
             w.stand_in_once()
-        other = _holder(box, name="w-2", instance="srv-2:1")              # counter c2 moved to w-2 meanwhile
+        other = _holder(box, name="w-2", instance="srv-2:1:cccccc")              # counter c2 moved to w-2 meanwhile
         theirs = other.take_epoch("c2")
         w.reconcile_once()                                                  # the step goes on with its list…
         assert "c2" not in w.running and "outlived its stand-in" in w.epoch_errors["c2"]

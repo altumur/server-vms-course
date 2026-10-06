@@ -178,10 +178,10 @@ def _read(path: str):
     objects are rows — are every loaded spec's together. A test of the platform that loaded testsub2 would change
     them for every test after it in the same run; a test that needs a spec in the catalogue registers it itself."""
     if path not in _SPECS:
-        import yaml
+        from w2cplatform import specyaml
         from w2cplatform.spec import SubsystemSpec
         with open(path, encoding="utf-8") as f:
-            _SPECS[path] = SubsystemSpec.from_dict(yaml.safe_load(f))
+            _SPECS[path] = SubsystemSpec.from_dict(specyaml.loads(f))
     return _SPECS[path]
 
 
@@ -253,6 +253,8 @@ def controller_ctl(box, spec=None, **kw):
     return controller(box, box.vars.as_writer(f"{spec.name}controller", spec.acl_controller()), spec, **kw)
 
 
+# A counter worker's incarnation, in the one form of an instance name, `box:pid:rnd` (`runtime.instance_on_box`; ADR 0003,
+# the fourteenth review, minor 27): the server is the box, a running number the pid, the same in hex the tail.
 _INSTANCES = iter(range(1, 1 << 30))
 
 
@@ -278,7 +280,7 @@ class CounterWorker(Worker):
                  slot_ttl: float = 45.0, env: dict | None = None, spec=None):
         spec = spec or testsub()
         super().__init__(spec.sub, None, vars_, objects, lease_ttl, lease_margin, clock, wall,
-                         instance or f"{server}:{next(_INSTANCES)}", slot_ttl, spec=spec)
+                         instance or (lambda n: f"{server}:{n}:{n:06x}")(next(_INSTANCES)), slot_ttl, spec=spec)
         self.server, self.capacity, self.labels = server, capacity, list(labels)
         self.resource_root = resource_root
         self.rows: dict[str, dict] = {}

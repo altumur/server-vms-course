@@ -107,10 +107,13 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
                         delete=[a for s in specs for a in s.acl_console()] + [SIGNER_KEY, KEYS_KEY]),
     }
     for s in specs:
+        # The people's ledgers (`<sub>/asked/*`, ADR 0060) are the console's alone: read by neither the controller nor
+        # the holder of the subsystem whose tree they are in — a denial before `<sub>/*`.
+        asked = [f"!{s.sub.asked_prefix()}*"] if "per_person" in (s.requests or {}) else []
         # Placement, one pass at a time and safe at two: its prefixes; reads its subsystem, the ones it refers to, the
         # platform's rows (decommission, the drain, what each server reaches: `platform/servers/*`).
         out[f"{s.name}controller"] = role(f"{s.name}controller", s.acl_controller(),
-                                          [SCHEMA_KEY, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"],
+                                          [SCHEMA_KEY, *asked, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"],
                                           platform=True)
         # The holder: its claims, what its spec says it writes, its marks; reads its subsystem, what its units are about,
         # whether its server is decommissioned (`Worker._claim_slot`), what a holder's door asks (`Gate.gated`: the key
@@ -123,7 +126,7 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         rows = _worker_objects(s)
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
-                                      [SCHEMA_KEY, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
+                                      [SCHEMA_KEY, *asked, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
                                        DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads, *rows,
                                        *filed_to])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to

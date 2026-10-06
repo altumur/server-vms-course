@@ -13,7 +13,7 @@ from __future__ import annotations
 import copy
 import os
 
-import yaml
+from w2cplatform import specyaml
 
 from tests.productdir import SOURCE
 
@@ -32,7 +32,7 @@ def _table() -> tuple[dict, dict, list]:
                 key, sep, value = line[1:].strip().partition(":")
                 if sep and key in ("source", "group_by") and not rows:
                     assert key not in decl, f"line {i}: `{key}` declared twice"
-                    decl[key] = yaml.safe_load(value)
+                    decl[key] = specyaml.loads(value)
                 continue
             if not line:
                 continue
@@ -89,7 +89,7 @@ def test_the_vms_and_testsub2_read_the_table_alike_where_they_declare_the_same_w
     from w2cplatform.spec import SubsystemSpec
     source, group_by, rows = _table()
     with open(TESTSUB2, encoding="utf-8") as f:
-        two = yaml.safe_load(f)
+        two = specyaml.loads(f)
     two = copy.deepcopy(two)
     two["unit"]["fields"]["feed"]["schemes"] = copy.deepcopy(source["schemes"])
     assert two["placement"]["group_by"] == {"field": "feed", "cut_at": "host"}

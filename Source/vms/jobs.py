@@ -88,7 +88,7 @@ def recording_cam(vars_, name: str) -> str:
 #
 #   seen         the request rows a turn found to be the recorder's: not read again while they stay listed. Every
 #                `REREAD` seconds the family is read whole, as every turn read it — a writer never files a scenario's
-#                `record` under a backfill's id (`<unit>-<from>-<to>`, `asks-…`; a scenario's is `<firing>-<i>`), and the
+#                `record` under a backfill's id (`<unit>-<from>-<to>`; a scenario's is `<firing>-<i>`), and the
 #                whole read is what would notice if one did
 #   retry_at     a request the store did not answer for (not a refusal: a conflict, a store away, a row over the
 #                ceiling): tried again after a pause that doubles from two seconds to `RETRY_MAX`, not every turn — one

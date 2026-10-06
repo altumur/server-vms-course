@@ -6,7 +6,7 @@ GET /v1/get?key=platform/schema
 GET /v1/get?key=vms/slots/w-srv-a-1
 → 200 {
   "items": {
-    "holder": "srv-a:4101",
+    "holder": "srv-a:4101:001005",
     "until": "1757500045.0",
     "released": "false",
     "gen": "1",
@@ -17,7 +17,7 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1010, "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500138.0",
   "released": "false",
   "gen": "1",
@@ -36,6 +36,10 @@ GET /v1/get?key=vms/epoch/2
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/epoch/3
 → 200 {"items": {"epoch": "2"}, "index": 1041}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/workers/w-srv-a-1
+→ 200 {"items": {"units": "", "rev": "6"}, "index": 1037}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/workers/w-srv-a-1

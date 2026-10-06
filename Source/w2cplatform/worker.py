@@ -858,8 +858,9 @@ class Worker:
     # Confirmed late is confirmed: by CAS on the row this worker wrote last, so nobody took it meanwhile (a claimant's
     # take would have changed it), and the fence opens again. A place not held strictly — its row names this worker's
     # server — stays this worker's through the silence by the units' ceiling (`lease.unconfirmed_max`, past the hold's
-    # end; `forever`: for as long as the silence lasts). Nothing is held through a silence longer than the spec says:
-    # past the ceiling it is asked for and let go the same way.
+    # write window `slot_ttl − lease_margin`, as a unit's lease counts it past its own; `forever`: for as long as the
+    # silence lasts — ADR 0033 with its additions, the product's `RenewHold`). Nothing is held through a silence longer
+    # than the spec says: past the ceiling it is asked for and let go the same way.
     def _strict_place_pass(self) -> None:
         place = self.hold
         if place is None:
@@ -869,7 +870,7 @@ class Worker:
         if strict:
             if quiet < self.slot_ttl - self.lease_margin:
                 return
-        elif self.unconfirmed_max is None or quiet < self.slot_ttl + self.unconfirmed_max:
+        elif self.unconfirmed_max is None or quiet < self.slot_ttl - self.lease_margin + self.unconfirmed_max:
             return
         try:
             if self.renew_hold():
@@ -2046,7 +2047,7 @@ class Worker:
 
     def file_request(self, sub: str, rid: str, row: dict, *, unit=None, at: float | None = None) -> bool:
         from .canonical import field_text, number_text
-        from .doors import unnamable
+        from .doors import rid_fault
         sub, rid = str(sub), str(rid)
         why = None
         if sub not in self.spec.worker_requests:
@@ -2054,13 +2055,17 @@ class Worker:
                    f"({', '.join(self.spec.worker_requests) or 'none'}): a worker files only where its spec says")
         elif not self.writing_allowed:
             why = f"this instance is fenced ({self.fenced_reason or 'it is nobody'}): a fenced instance files nothing"
-        elif not rid or "/" in rid or rid in (".", "..") or len(rid) > 200 or unnamable(rid):
-            why = f"a request's id is a name, not a path, and holds no quote, bar or control character: {rid[:80]!r}"
+        elif rid_fault(rid):                             # ONE TABLE OF NAMES, the door's too (ADR 0060; `rid.tsv`)
+            why = f"{rid_fault(rid)}: {rid[:80]!r}"
         elif set(row) & set(self.STAMPED):
             why = f"{', '.join(sorted(set(row) & set(self.STAMPED)))} is the platform's to stamp, not the row's"
+        elif at is not None and not self._finite(at):
+            # A MOMENT IS A FINITE NUMBER (the fourteenth review, minor 10; ADR 0012): `float("nan")` passed, and
+            # `number_text` raised a bare `ValueError` — not `RequestRefused`, not counted, and a scenario waited on it.
+            why = f"`at` is the moment the request is about, a finite number of seconds, not {at!r:.40}"
         if why is not None:
             self.filings["refused"] += 1
-            log.warning("%s: request %s/%s refused: %s", self.name or self.instance, sub, rid, why)
+            log.warning("%s: request %s/%r refused: %s", self.name or self.instance, sub, rid[:80], why)   # a name as data
             raise RequestRefused(f"request {sub}/{rid} refused: {why}")
         now = self.wall()
         out = {k: t for k, v in row.items() if (t := field_text(v)) is not None}
@@ -2083,7 +2088,7 @@ class Worker:
                 self.filings["again"] += 1
                 return False                             # this call wrote nothing: the repeat is seen in `again` alone
             self.filings["refused"] += 1
-            log.warning("%s: request %s/%s refused: %s", self.name or self.instance, sub, rid, why)
+            log.warning("%s: request %s/%r refused: %s", self.name or self.instance, sub, rid[:80], why)   # a name as data
             raise RequestRefused(f"request {sub}/{rid} refused: {why}") from None
         self.filings["filed"] += 1
         return True
@@ -2092,18 +2097,20 @@ class Worker:
     # not more than once): `None` when it is — the same text, byte for byte, on one form (`canonical_json` over the items
     # as the store holds them), leaving out only the base's own stamp `filed`; else why not. A row that cannot be read or
     # does not parse is not the same request either: it is said, and never overwritten.
+    # One definition for every filer, the console's door too (`requests.filed_already`; the fourteenth review, major 1).
     def _filed_already(self, key: str, out: dict) -> str | None:
+        from .requests import filed_already
+        kind, why = filed_already(self.vars, key, out, ("filed",))
+        return None if kind == "same" else why
+
+    @staticmethod
+    def _finite(x) -> bool:
+        from .rows import finite
         try:
-            standing, _ = self.vars.get(key)
-        except PARSE_ERRORS as e:                        # a torn row (`Garbled`)
-            return f"the row standing under this rid does not parse ({e}); it is left as it is"
-        except Exception as e:                           # noqa: BLE001 — a store that did not answer
-            return f"the row standing under this rid cannot be read ({type(e).__name__}: {e}); it is left as it is"
-        if standing is None:
-            return "the row that stood under this rid is gone (performed or expired meanwhile); file under a new rid"
-        same = (canonical_json({k: v for k, v in standing.items() if k != "filed"}) ==
-                canonical_json({k: v for k, v in out.items() if k != "filed"}))
-        return None if same else "under this rid stands a different request"
+            finite(x)
+        except (TypeError, ValueError):
+            return False
+        return not isinstance(x, bool)
 
     # AN ID IS SPENT WHILE ITS MARK STANDS («Архитектор», 2026-10-06, after the review's fourteenth pass, major 2): the row
     # goes seconds after the answer, the mark stays until the request could no longer be performed (`sweep_marks`). A

@@ -97,6 +97,21 @@ def test_a_backoff_without_jitter_is_refused():
     Backoff(1.0, 60.0, 1.0)
 
 
+def test_a_backoff_without_a_positive_base_or_with_a_ceiling_under_it_is_refused():
+    """A base of zero or less makes every delay zero or less — a failing unit is retried on every pass, the very thing a
+    backoff is for; a ceiling under the base makes the first delay the ceiling and doubling nothing (ADR 0033, review 14,
+    minor 22; the product's `Backoff.Check` refuses both). The constructor refuses them, and a NaN in either."""
+    for base, top, word in ((0, 60.0, "base"), (-1.0, 60.0, "base"), (float("nan"), 60.0, "base"),
+                            (10.0, 1.0, "max"), (1.0, float("nan"), "max")):
+        try:
+            Backoff(base, top, 0.5)
+        except ValueError as e:
+            assert word in str(e), e
+        else:
+            raise AssertionError(f"backoff base {base}, max {top} was taken")
+    Backoff(2.0, 2.0, 0.5)
+
+
 # -- on testsub: the counters of `CounterWorker` ------------------------------------------------------------------------
 
 def _counters(box, n=2, name="w-1"):
@@ -178,6 +193,50 @@ def test_a_unit_that_dies_after_every_start_waits_longer_and_one_that_stays_up_e
     assert w.reconciler.status()["a"].failures == 0
     w.reconciler.forget("a")
     assert w.reconciler.status()["a"].retry_at - box.clock() == 1
+
+
+def test_a_unit_that_held_past_max_and_then_fails_its_restart_counts_waits_longer_and_stalls():
+    """A tally has run for an hour (longer than `max`), the operator edits its row, and the restart in place fails
+    every time: each failure adds to the count, the delay doubles, and at `stall_failures` the unit is `stalled`. The
+    hour it held earned back the failures BEFORE it, not the ones of the restart that keeps failing: a key behind its
+    revision has not held anything (ADR 0033, review 14, major 7: the count was wiped on every pass, the restart retried
+    on every pass, and `stalled` never came)."""
+    box = Box()
+    w = TallyWorker(box, backoff=Backoff(1.0, 60.0, 0.5))
+    w.reconciler.rand = lambda: 0.5                      # the middle of the spread: the delays themselves
+    _tallies(box, ["a"])
+    assert w.reconcile_once().started == ["a"]
+    _tick(box, 100.0)                                    # up longer than `max`
+    w.failing.add("a")
+    _tallies(box, ["a"], revision=2)
+    seen = []
+    for _ in range(3):
+        p = w.reconcile_once()
+        st = w.reconciler.status()["a"]
+        assert p.failed == ["a"], p
+        seen.append((st.failures, st.retry_at - box.clock(), st.state))
+        _tick(box, 0.1)
+        assert w.reconcile_once().waiting == ["a"]       # not tried again before its delay
+        box.clock.t = st.retry_at
+    assert seen == [(1, 1, LAGGING), (2, 2, LAGGING), (3, 4, STALLED)], seen
+    assert w.calls.count(("restart", "a")) == 3, w.calls
+
+
+def test_a_unit_that_does_not_run_is_never_converged_whatever_its_revision():
+    """A row without a revision is wanted at 0; a key at 0 whose every start fails runs nothing and is not `converged`
+    because nothing is behind 0 — it is `lagging`, then `stalled` (ADR 0033, review 14, minor 21)."""
+    r = Reconciler(lambda k, w: False, lambda k: None, Backoff(1.0, 60.0, 0.5))
+    t = [0.0]
+    r.now = lambda: t[0]
+    r.once({"z": Want(0)})
+    assert r.status()["z"].state == LAGGING, r.status()
+    for _ in range(4):
+        t[0] += 100.0
+        r.once({"z": Want(0)})
+    assert r.status()["z"].state == STALLED and r.status()["z"].failures == 5, r.status()
+    ok = Reconciler(lambda k, w: True, lambda k: None)
+    ok.once({"z": Want(0)})
+    assert ok.status()["z"] == Position(CONVERGED, 0, 0, 0.0)
 
 
 def test_a_pass_stops_first_then_restarts_then_starts():

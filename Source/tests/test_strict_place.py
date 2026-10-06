@@ -129,3 +129,24 @@ def test_a_strict_place_another_worker_took_is_let_go_by_the_lease_step():
     assert other.claim_hold(["net"]) == "net"                            # the row stood still: taken
     w.lease_pass()
     assert w.hold is None and not w.may_write_place("net")
+
+
+def test_a_place_of_this_servers_own_is_kept_through_a_silence_by_the_ceiling_counted_from_its_write_window():
+    """The own-server shelf, a finite ceiling (ten minutes on testsub2): kept while the hold has gone unconfirmed less
+    than its write window plus the ceiling — `slot_ttl − lease_margin + unconfirmed_max`, the same count the units'
+    leases make past their own window — and let go past it. Not `slot_ttl + unconfirmed_max`: the margin is the
+    window's, and the product counts it (`RenewHold`; ADR 0033 with its additions, review 14, minor 22)."""
+    box = Box()
+    spec = _spec("strict")
+    assert spec.unconfirmed_max == 600.0
+    _shelf(box, spec, "s1", "srv-1")
+    w = _worker(box, spec)
+    assert w.claim_hold(["s1"]) == "s1"
+    w.vars = _Silent(box.vars)
+    edge = w.slot_ttl - w.lease_margin + spec.unconfirmed_max
+    _tick(box, edge - 1)
+    w.lease_pass()
+    assert w.hold == "s1"
+    _tick(box, 2)                                                        # past the edge, still inside `slot_ttl + 600`
+    w.lease_pass()
+    assert w.hold is None

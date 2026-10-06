@@ -148,20 +148,23 @@ def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to
 def test_how_long_data_goes_on_past_an_unconfirmed_lease_is_the_specs_and_typed():
     """`lease: {unconfirmed_max: forever | off | <seconds>}` (the architect, 5 Oct; it was `UNCONFIRMED_MAX` in a
     subsystem's environment): `forever` is no ceiling, `off` — the platform's default — none at all, a number that many
-    seconds; the worker takes it from its spec (`Worker.unconfirmed_max`, and every lease it opens). Typed: a word
-    `"90"`, a zero, a negative, a flag are refused at load with the path — but `off` written bare, which YAML reads as
-    false, is the word `off`. And a place any box may write is let go
+    seconds; the worker takes it from its spec (`Worker.unconfirmed_max`, and every lease it opens). Typed (the architect
+    after the fourteenth review, 2026-10-06): a whole number of seconds above 0 or one of the two words — a word `"90"`,
+    a zero, a negative, a flag, `false`/`no`/`OFF`, `90.5`, `1e308`, an empty `lease:` are refused at load with the
+    path; `off` written bare is the word `off` (a spec is YAML 1.2, `specyaml.py`). And a place any box may write is let go
     unconfirmed when the spec says so next to it (`placement.places.lease: strict`), nothing else."""
     from tests.conftest import Box
+    from w2cplatform import specyaml
     from w2cplatform.worker import Worker
     said = lambda v: _spec(lease={"unconfirmed_max": v}).unconfirmed_max     # noqa: E731
     assert (_spec().unconfirmed_max, said("forever"), said("off"), said(90)) == (0.0, None, 0.0, 90.0)
-    import yaml
-    bare = yaml.safe_load("lease: {unconfirmed_max: off}")["lease"]          # the product's spelling: YAML reads false
-    assert _spec(lease=bare).unconfirmed_max == 0.0
+    bare = specyaml.loads("lease: {unconfirmed_max: off}")["lease"]          # the product's spelling: the word itself
+    assert bare == {"unconfirmed_max": "off"} and _spec(lease=bare).unconfirmed_max == 0.0
     for bad in ({"unconfirmed_max": "90"}, {"unconfirmed_max": 0}, {"unconfirmed_max": -5}, {"unconfirmed_max": True},
-                {"unconfirmed_max": "always"}, {}, {"unconfirmed_max": 90, "strict": True}, "forever"):
-        _refused(lambda bad=bad: _spec(lease=bad), "lease.unconfirmed_max is forever, off or a number of seconds")
+                {"unconfirmed_max": False}, {"unconfirmed_max": "no"}, {"unconfirmed_max": "OFF"},
+                {"unconfirmed_max": 90.5}, {"unconfirmed_max": 1e308}, {"unconfirmed_max": float("nan")},
+                {"unconfirmed_max": "always"}, {}, {"unconfirmed_max": 90, "strict": True}, "forever", None):
+        _refused(lambda bad=bad: _spec(lease=bad), "lease.unconfirmed_max is forever, off or a whole number of seconds")
     box = Box()
     for said, want in (("forever", None), (90, 90.0), ("off", 0.0)):
         spec = _spec(lease={"unconfirmed_max": said})
@@ -366,19 +369,102 @@ def test_a_worker_writes_its_units_rows_or_its_declared_tables_and_any_other_fam
     _refused(lambda: _spec(worker={"writes": ["shelves", "finds"]}, **shelf),
              "worker.writes names finds — neither its units' rows (items) nor one of its declared tables (shelves)")
     _refused(lambda: _spec(worker={"writes": ["notes"]}, tables=["notes"]), "worker.writes names notes")
-    with open(os.path.join(TESTDATA, "testsub2.subsystem.yaml"), encoding="utf-8") as f:
-        import yaml
-        two = SubsystemSpec.from_dict(yaml.safe_load(f))
+    two = SubsystemSpec.from_dict(_testsub2())
     assert two.worker_writes == ("shelves",) and "testsub2/shelves/*" in two.acl_worker_role()
 
 
+def test_group_by_and_spread_by_name_a_field_of_the_row_in_every_form():
+    """The fourteenth review, majors 5 and 11 (ADR-0012): `placement.group_by` in its string form was not checked
+    against `fields:` — `group_by: sourcee` loaded, every unit's group was empty, and sixteen units of one group went
+    to four workers; `spread_by` naming no field, or not a string, loaded and dropped the filter (`servers_taken`
+    of none), a second copy on the same server. Both are refused with the fields named."""
+    zone = {"name": {"type": "string", "required": True}, "zone": {"type": "string"}}
+    spec = lambda **pl: _spec(unit={"rows": "items", "id": "name", "fields": zone}, placement={**CAP, **pl})  # noqa: E731
+    assert (spec(group_by="zone").group_by, spec(spread_by="zone").spread_by) == ("zone", "zone")
+    for bad in ("zonee", "", 5, None, ["zone"]):
+        _refused(lambda bad=bad: spec(group_by=bad), "placement.group_by is a field of the row (name, zone)")
+        _refused(lambda bad=bad: spec(spread_by=bad), "placement.spread_by is a field of the row (name, zone)")
+
+
+def test_every_number_of_a_request_family_is_finite_and_a_count_is_whole():
+    """The fourteenth review, minor 5 (ADR-0012): `ttl: .nan` loaded (`< 0` is false for NaN) — the filter then dropped
+    every row, `per_person` limited nothing and the reaper ended nothing by age; `.inf` and `per_person: 2.5` loaded
+    too. `ttl` and `settle` are finite seconds, 0 or more; `valid_for` and `most_valid` finite above 0; `per_person` a
+    whole number above 0."""
+    base = {"schema": {"type": "object", "properties": {"unit": {"type": "string"}}}, "valid_for": 30, "most_valid": 600,
+            "per_person": 3, "settle": 0, "ttl": 0}
+    got = _spec(requests=base).requests
+    assert (got["valid_for"], got["most_valid"], got["per_person"], got["settle"], got["ttl"]) == (30, 600, 3, 0, 0)
+    nan, inf = float("nan"), float("inf")
+    for k, bads in (("ttl", (nan, inf, -1, "60", True)), ("settle", (nan, inf, -1, "1")),
+                    ("valid_for", (nan, inf, 0, -1, "30")), ("most_valid", (nan, inf, 0, "600")),
+                    ("per_person", (2.5, 0, -1, nan, inf, 3.0, "3", True))):
+        for bad in bads:
+            _refused(lambda k=k, bad=bad: _spec(requests={**base, k: bad}), f"requests.{k} is ")
+    from w2cplatform import specyaml
+    for text in ("ttl: .nan", "ttl: .inf", "per_person: 2.5"):         # the review's three, as a file writes them
+        _refused(lambda text=text: _spec(requests={**base, **specyaml.loads(text)}), "requests.")
+
+
+def test_a_request_key_names_fields_of_the_requests_schema_and_closes_its_braces_and_a_group_stamp_needs_a_group():
+    """The fourteenth review, minor 26, the loader's side (ADR-0012): `requests.key` with a name the request's schema
+    does not declare made every request a 400 «bad id»; `"x-{unit"` left a brace open; `stamp: [group]` without
+    `placement.group_by` stamped nothing. Each is refused at load."""
+    fields = {"name": {"type": "string", "required": True}, "zone": {"type": "string"}}
+    req = {"schema": {"type": "object", "properties": {"unit": {"type": "string"}, "add": {"type": "integer"}}},
+           "valid_for": 30, "most_valid": 600}
+    spec = lambda pl=None, **r: _spec(unit={"rows": "items", "id": "name", "fields": fields},  # noqa: E731
+                                      placement={**CAP, **(pl or {})}, requests={**req, **r})
+    assert spec(key="{unit}-{add:int}").requests["key"] == "{unit}-{add:int}"
+    assert spec({"group_by": "zone"}, stamp=["by", "group"]).requests["stamp"] == ["by", "group"]
+    _refused(lambda: spec(key="{nosuch}"), "requests.key names nosuch, which requests.schema does not declare")
+    for bad in ("x-{unit", "x-unit}", "{unit:float}", "", 5):
+        _refused(lambda bad=bad: spec(key=bad), "every brace closed")
+    _refused(lambda: spec(stamp=["group"]), "requests.stamp names `group`, and placement says no `group_by`")
+
+
+def test_worker_requests_names_subsystems_of_the_catalogue_that_take_requests():
+    """The fourteenth review, minor 9 (ADR-0012, ADR-0054): `worker.requests` was not checked against the catalogue —
+    a typo (`recc`), the subsystem itself, a subsystem with no `requests:` all loaded, every filing returned True, no
+    holder served the row and no reaper ended it. Asked where the catalogue is whole (`catalog.requests_known`): the end
+    of `load_dir`, and a controller's start — as `near_known`."""
+    import shutil
+    from tests.conftest import Box, in_catalogue
+    from w2cplatform.spec import SpecController
+    one = SubsystemSpec.from_dict(_testsub())
+    plain = _spec(name="plain")                                                 # a subsystem of no family
+    for names, words in ((["recc"], "names 'recc', which is no subsystem this process loaded"),
+                         (["probe"], "names 'probe', which is the spec itself"),
+                         (["plain"], "names 'plain', which declares no `requests:`")):
+        spec = _spec(worker={"requests": names})
+        with in_catalogue(one, plain, spec):
+            _refused(lambda spec=spec: catalog.requests_known(spec), words)
+            box = Box()
+            _refused(lambda spec=spec: SpecController(spec, box.vars, box.objects, wall=box.wall), words)
+    with in_catalogue(one):
+        catalog.requests_known(_spec(worker={"requests": ["testsub"]}))          # a family there: it files to it
+    d, files = tempfile.mkdtemp(), dict(catalog._files)
+    with open(os.path.join(d, "filer.subsystem.yaml"), "w", encoding="utf-8") as f:     # a filer to testsub…
+        f.write("name: filer\nworker: {requests: [testsub]}\nunit: {rows: items, id: name, fields: {name: {type: string, "
+                "required: true}}}\nplacement: {capacity: {from: capacity, default: 4}}\n")
+    try:
+        with in_catalogue():
+            catalog._loaded.clear()
+            _refused(lambda: catalog.load_dir(d), "worker.requests names 'testsub', which is no subsystem")
+        shutil.copy(os.path.join(TESTDATA, "testsub.subsystem.yaml"), d)       # …and with testsub beside, loads
+        with in_catalogue():
+            catalog._loaded.clear()
+            assert [s.name for s in catalog.load_dir(d)] == ["filer", "testsub"]
+    finally:
+        catalog._files.clear()
+        catalog._files.update(files)
+
+
 def _testsub() -> dict:
-    import yaml
-    with open(os.path.join(TESTDATA, "testsub.subsystem.yaml")) as f:
-        return yaml.safe_load(f)
+    from w2cplatform import specyaml
+    return specyaml.load(os.path.join(TESTDATA, "testsub.subsystem.yaml"))
 
 
 def _testsub2() -> dict:
-    import yaml
-    with open(os.path.join(TESTDATA, "testsub2.subsystem.yaml")) as f:
-        return yaml.safe_load(f)
+    from w2cplatform import specyaml
+    return specyaml.load(os.path.join(TESTDATA, "testsub2.subsystem.yaml"))

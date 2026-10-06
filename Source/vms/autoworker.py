@@ -538,7 +538,10 @@ class AutoWorker(Worker):
         for i, action in enumerate(row["then"]):
             sub, name = str(action.get("sub", "")), str(action.get("action", ""))
             rid = f"{fid}-{i}"
-            fields = {k: str(v) for k, v in action.items() if k not in ("sub", "action")}
+            # Each value AS IT IS: the base writes it in its one text (`canonical.field_text`, ADR 0012) — `5.0` is `5`, an
+            # object its canonical JSON, which the detector's job reads back. `str(v)` here was a second text beside the
+            # base's: `"5.0"`, a Python repr of a dict (the review's fourteenth pass, minor 8).
+            fields = {k: v for k, v in action.items() if k not in ("sub", "action")}
             if name == "record":                     # the recorder's own words for "record this from now"
                 fields = {"unit": fields.get("cam", ""), **fields}
             # Filed by the base (`Worker.file_request`, ADR-0013): only to a subsystem this spec's `worker.requests`

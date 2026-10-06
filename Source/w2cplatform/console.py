@@ -133,7 +133,7 @@ from urllib.parse import parse_qs, urlsplit
 from .doors import MAX_LIMIT, byte_range, parse_ref, ref_fault
 
 from .secrets import hide_in_reply, mask_secrets
-from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
+from .contract import (ASKED, GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
                        DecommissionRefused, SchemaTooNew, builds, contenders, is_live, label_set, name_conflict,
                        parse_heartbeat, read_slot, schema_version)
 from .epoch import current_epoch
@@ -151,7 +151,6 @@ from .events import ALARM, CONSOLE_MARKS, OF, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
-LEDGER = "asks-"              # `<sub>/requests/asks-<sha256 of the person, 16 hex>`: one person's open requests (`_file_request`)
 CONSOLE_TIMEOUT = 30.0        # seconds a console's socket waits on a client that sends or reads nothing (`CONSOLE_TIMEOUT`)
                               # — and the most a request's line and headers may take, whole (`Mount.handler`)
 CONSOLE_CONNECTIONS = 64      # connections one console serves at once (`CONSOLE_CONNECTIONS`): past it, 503 at once
@@ -172,6 +171,7 @@ from .access import (COOKIE, GLASS_COOKIE, MODULE_ROUTES, OPEN_ROUTES, UNIX_PEER
                      session_cookie, token_of)
 from .journal import AUDIT, Journal
 from .resource import resources_seen
+from . import runtime
 from .limits import TooLarge
 from .spec import GARBLED_ROW, LABEL_WORD, Exists, Refused, SpecController, server_name
 
@@ -179,6 +179,13 @@ from .spec import GARBLED_ROW, LABEL_WORD, Exists, Refused, SpecController, serv
 # that unit's events withheld from a grant by label, and nobody else's timeline (the scaling pass after the eighth review).
 UNIT_LABELS = Table("unit", "its events are shown only to a grant that needs no labels: the unit's own, or the whole "
                     "cluster's", "unit's row, read for its labels")
+# A request row a person's ledger names, read to tell whether it still stands (`_file_request`, `per_person`): one that
+# does not parse stands — it keeps its place in that person's ledger until it is mended or `ttl` passes (the fourteenth
+# review, minor 2: it was a 500 to every request that person filed; the product's `requests.go` keeps the entry too).
+LEDGER_ROWS = Table("request_row", "it keeps its place in its person's ledger until it is mended or its ttl passes",
+                    "request row a ledger names")
+# A person's ledger by name (`DELETE /asked/<name>`): 16 hex of the sha256 of the person (`Subsystem.asked_key`, ADR 0060).
+LEDGER_NAME = re.compile(r"[0-9a-f]{16}")
 from .variables import Conflict, Forbidden
 
 log = logging.getLogger(__name__)
@@ -1324,13 +1331,19 @@ class IdempotencyKeys:
 
     # A key is a name for ONE request by ONE caller. Replayed by somebody else, or with another body, it used to be
     # answered with the first caller's reply — a stranger got anna's 201, and anna's own second mark under a reused
-    # key was silently not written (the review's second pass, minor). A claim that carries no tag — written before
-    # tags, or by a test — matches anybody, as it did.
+    # key was silently not written (the review's second pass, minor). A CLAIM THAT DOES NOT SAY WHAT THE ASKER SAYS — no
+    # `sub` beside one, no `digest` beside a body — names nobody's request, and is refused like another's (the fourteenth
+    # review, minor 6; ADR 0003): it "matched anybody, as it did" — a branch for claims written before tags, which no
+    # console writes now (every claim carries what it was asked with), and a row put there by hand answered any caller.
     #
     # A `mac` made under another kid of the ring (a console a rotation ahead or behind) is asked again under that kid;
     # one this console cannot make — the kid is not in its ring, removed since — is judged by the `digest` beside it, and
     # without one is another body: refused, not answered.
     def _mismatch(self, items: dict, tag: dict, body=None):
+        untagged = [k for k in ("sub", "digest") if k in tag and k not in items]
+        if untagged:
+            return 422, {"detail": f"this Idempotency-Key's claim says no {untagged[0]}: it names nobody's request, and "
+                                   f"answers none — a key is one caller's, for one body", "error": "key reused"}
         for k in ("sub", "mac", "digest"):
             if k in items and k in tag and items[k] != tag[k]:
                 if k == "mac" and self.sealer is not None and body is not None:
@@ -1498,7 +1511,9 @@ class SpecConsole:
                  wall=None, lost_after: float = 45.0, per_minute: float = 0.0):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
         self.worst_failover, self.wall, self.lost_after = worst_failover, wall or ctl.wall, lost_after
-        self.instance = f"{socket.gethostname()}:{os.getpid()}"
+        # This incarnation's name in the ONE form every instance name has, `box:pid:rnd` (`runtime.instance_on_box`;
+        # ADR 0003, the review's fourteenth pass, minor 27: it was `host:pid`, a second format `box_of` read beside it).
+        self.instance = runtime.instance_on_box(os.environ)
         self.marks_root = marks_root
         # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
         # does; in a `Mount` only the root does (`Mount._adopt`), so a scrape of every page says each fact once.
@@ -2540,10 +2555,10 @@ class SpecConsole:
         # `rights.routes`: a family's writes that need less than admin. Of the unit rows, the CREATE alone — asking for a
         # stream is a viewer's; changing what a row is stays the administrator's
         caps = self.spec.route_caps if head != self.spec.rows or method == "POST" else {}
-        ledger = method == "DELETE" and path.startswith(f"/requests/{LEDGER}")   # a person's ledger: the administrator's
+        ledger = head == ASKED                            # a person's ledger (`DELETE /asked/<name>`): the administrator's
         cap = "view" if method == "GET" \
             or head in caps.get("view", ()) else \
-              "edit" if (path.startswith(self.EDIT_ROUTES) and not ledger) or head in caps.get("edit", ()) else "admin"
+              "edit" if not ledger and (path.startswith(self.EDIT_ROUTES) or head in caps.get("edit", ())) else "admin"
         family, pid = self.route_id(method, path)
         if pid and family in (self.spec.rows, *self.UNIT_ROUTES):
             if self.spec.cluster_rows and family == self.spec.rows and method != "GET":
@@ -2833,8 +2848,7 @@ class SpecConsole:
         if path.rstrip("/") == "/requests" and method == "POST" and self.spec.requests:
             self._request_route(h)
             return True
-        if method == "DELETE" and len(segs) == 2 and segs[0] == "requests" and segs[1].startswith(LEDGER) \
-                and "per_person" in self.spec.requests:
+        if method == "DELETE" and path.startswith("/asked/") and len(segs) == 2 and "per_person" in self.spec.requests:
             h._send(*self._delete_ledger(segs[1], h.headers.get("X-User", "operator")))
             return True
         return False
@@ -2913,7 +2927,6 @@ class SpecConsole:
         return h._send(*resp)
 
     def _file_request(self, h, key: str) -> tuple:
-        import hashlib
         ctl, spec, req = self.ctl, self.spec, self.spec.requests
         user, now = h.headers.get("X-User", "operator"), self.wall()
         try:
@@ -2956,10 +2969,10 @@ class SpecConsole:
                 return 400, {"detail": f"a request is named {req['key']}, and the body does not fill it in", "error": "bad id"}
         else:
             rid = str(body.get("id") or key)
-        from .doors import unnamable
-        if "/" in rid or rid in (".", "..") or len(rid) > 200 or unnamable(rid):
-            return 400, {"detail": "a request's id is a name, not a path, and holds no quote, bar or control character",
-                         "error": "bad id"}
+        from .doors import rid_fault
+        why = rid_fault(rid)                                 # ONE TABLE OF NAMES, the worker's too (ADR 0060; `rid.tsv`)
+        if why:
+            return 400, {"detail": why, "error": "bad id"}
         # A ROW'S VALUE IS ITS JSON TEXT, ONE FORM FOR THE COURSE AND THE PRODUCT (the architect, 2026-10-05, ADR 0012;
         # «Паритет»'s `testdata/requests_body.tsv`): a string as it is, `true`/`false`, a whole number as its digits, any
         # other the shortest decimal — `str()` wrote Python's `True` and `5.0`, and a holder in Go read another value
@@ -2998,20 +3011,25 @@ class SpecConsole:
             out["group"] = ctl.group_value(row)
         if "about" in stamp and spec.about_field and row.get(spec.about_field) not in (None, ""):
             out[spec.about_field] = str(row[spec.about_field])
+        added = False
         if "per_person" in req:
             # ONE PERSON'S OPEN REQUESTS, COUNTED BY CAS, NOT BY LOOKING (the review's sixth pass, minor; a run: forty
-            # POSTs at once left fifteen rows). A person's open requests are ONE row — `<sub>/requests/asks-<sha256 of
-            # the person, 16 hex>`, the list of their ids — changed by CAS; an id stays in it while its row stands, and
+            # POSTs at once left fifteen rows). A person's open requests are ONE row — `<sub>/asked/<sha256 of the
+            # person, 16 hex>`, the list of their ids — changed by CAS; an id stays in it while its row stands, and
             # for `settle` seconds after it was added, row or no row (the list is written before the request is), and
             # never past the spec's `ttl` (`0`: no limit). The same request again is the same id, and is not counted twice.
+            # BESIDE THE FAMILY, NOT IN IT (ADR 0060): it was `<sub>/requests/asks-…`, and a request named so read that
+            # person's list; the holder, the reaper and a worker's filing know nothing of it now, and no `rid` is refused
+            # for a prefix.
             #
             # A LEDGER THAT DOES NOT READ STOPS THAT PERSON, AND SAYS SO (the architect's decision after step 7). It was read
             # as an empty list and written over by CAS: the person's limit silently reset, nothing counted. Now it is 429
             # «учёт не читается» to that person and nobody else, `<sub>_requests_ledger_garbled` on `/metrics`, the journal
-            # once per row (not per request); an administrator deletes the row (`DELETE /<sub>/requests/asks-…`), and
-            # the ledger starts anew.
-            name = LEDGER + hashlib.sha256(user.encode()).hexdigest()[:16]
-            ledger = spec.sub.request_key(name)
+            # once per row (not per request); an administrator deletes the row (`DELETE /<sub>/asked/<name>`), and
+            # the ledger starts anew. A REQUEST ROW IT NAMES THAT DOES NOT READ stands (`LEDGER_ROWS`): its entry is kept and
+            # counted, the row counted garbled on `/metrics` — it was a 500 to every request of that person's.
+            ledger = spec.sub.asked_key(user)
+            name = ledger.rsplit("/", 1)[1]
             settle, ttl = req.get("settle", 60.0), req["ttl"]   # the loader requires it with `per_person`; 0: no limit
             for _ in range(50):
                 try:
@@ -3021,8 +3039,9 @@ class SpecConsole:
                     return self._ledger_garbled(name, user, e)
                 self._ledger_read(name)
                 held = [(r, at) for r, at in held if (not ttl or now - at <= ttl)
-                        and (now - at < settle or ctl.vars.get(spec.sub.request_key(r))[0])]
-                if rid not in [r for r, _ in held]:
+                        and (now - at < settle or self._stands(spec.sub.request_key(r)))]
+                added = rid not in [r for r, _ in held]
+                if added:
                     if len(held) >= req["per_person"]:
                         return 429, {"detail": f"{user} has {len(held)} requests nobody has answered yet, as many as one "
                                                f"person files at once — wait for some to be answered", "error": "too many"}
@@ -3037,7 +3056,27 @@ class SpecConsole:
         try:
             ctl.vars.put(spec.sub.request_key(rid), out, cas=0)
         except Conflict:
-            out = ctl.vars.get(spec.sub.request_key(rid))[0] or out   # the same request, filed already: its row is the answer
+            # THE ID IS TAKEN: THE SAME REQUEST, OR ANOTHER (the fourteenth review, major 1; ADR 0013, 0031). The standing
+            # row was the answer whatever it was: boris's `{unit: t2, id: r1}` after anna's `{unit: t1, id: r1}` was 202
+            # with anna's row — his command not filed, a row of t1 shown to a person without rights on it, a place of his
+            # quota spent. Now it is compared as a worker's filing compares it (`requests.filed_already`, one function),
+            # without the door's own stamps — `by` and `at` when it stamps them, a deadline it gave itself: WHAT is asked
+            # decides, not who asked it when — two people asking for one thing the spec's `key` names (one range) ask for
+            # one fetch. The same request → its row, 202, as before; another (unit, values, a deadline the person gave)
+            # or one that does not parse → 409 `exists`, and the place this call took in its person's ledger is given
+            # back; not read → 503.
+            from .requests import filed_already
+            moment = ("filed", *(k for k in ("by", "at") if k in stamp),
+                      *(("valid_until",) if "valid_for" in req and body.get("valid_until") in (None, "", 0) else ()))
+            kind, why = filed_already(ctl.vars, spec.sub.request_key(rid), out, moment)
+            if kind in ("other", "garbled", "store"):
+                if added:
+                    self._ledger_release(ledger, rid, now)
+                if kind == "store":
+                    return 503, {"detail": f"request {rid}: {why}", "error": "store unavailable"}
+                return 409, {"detail": f"request {rid}: {why} — name yours otherwise", "error": "exists"}
+            if kind == "same":
+                out = ctl.vars.get(spec.sub.request_key(rid))[0] or out   # the same request, filed already: its row is the answer
         if req.get("journal"):
             self.journal.say(str(req["journal"]), user=user, target=ref, request=rid,
                              **{k: v for k, v in out.items() if k in ("from", "to", "action")})
@@ -3045,26 +3084,58 @@ class SpecConsole:
                      "detail": "whoever holds the unit answers it on its next look at the requests, in its heartbeat"
                                + ("; after valid_until it expires unperformed" if "valid_for" in req else "")}
 
+    # Whether a request row a person's ledger names still stands: one that does not parse does (`LEDGER_ROWS`, counted).
+    def _stands(self, key: str) -> bool:
+        try:
+            it = self.ctl.vars.get(key)[0]
+        except PARSE_ERRORS as e:                         # `Garbled` too: held by the store, and not read
+            LEDGER_ROWS.garbled(key, e)
+            return True
+        LEDGER_ROWS.parsed(key)
+        return bool(it)
+
+    # The place a refused request took in its person's ledger, given back by CAS (the fourteenth review, major 1): the id
+    # under which another request stands would otherwise count against this person until `ttl` — that row stands.
+    def _ledger_release(self, ledger: str, rid: str, at: float) -> None:
+        for _ in range(50):
+            try:
+                it, idx = self.ctl.vars.get(ledger)
+                held = [(str(r), finite(t)) for r, t in parse_json((it or {}).get("asks", "[]"))]
+            except PARSE_ERRORS:
+                return                                    # torn meanwhile: the next request says so
+            kept = [(r, t) for r, t in held if not (r == rid and t == at)]
+            if len(kept) == len(held):
+                return
+            try:
+                self.ctl.vars.put(ledger, {**it, "asks": canonical_json(kept)}, cas=idx)
+                return
+            except Conflict:
+                continue
+        log.warning("%s: the place request %s took in %s would not be given back: it counts until the ledger's ttl",
+                    self.spec.name, rid, ledger)
+
     # A person's ledger that does not read: 429 to that person, said in the journal once per row — again only after it
     # read once more, or was deleted.
     def _ledger_garbled(self, name: str, user: str, e: Exception) -> tuple:
         if name not in self.ledgers_garbled:
             self.ledgers_garbled.add(name)
             log.error("%s: the request ledger %s of %s does not read (%s): that person files nothing until an administrator "
-                      "deletes it (DELETE /%s/requests/%s)", self.spec.name, name, user, e, self.spec.name, name)
+                      "deletes it (DELETE /%s/asked/%s)", self.spec.name, name, user, e, self.spec.name, name)
             self.journal.say("request.ledger_garbled", ALARM, sub=self.spec.name, target=name, user=user, error=str(e)[:200])
-        return 429, {"detail": f"учёт не читается: the list of {user}'s open requests ({self.spec.name}/requests/{name}) "
+        return 429, {"detail": f"учёт не читается: the list of {user}'s open requests ({self.spec.name}/asked/{name}) "
                                f"does not read, and nothing is filed for {user} until an administrator deletes it",
                      "error": "учёт не читается"}
 
     def _ledger_read(self, name: str) -> None:
         self.ledgers_garbled.discard(name)
 
-    # `DELETE /requests/asks-<…>` — an administrator removes a person's ledger (one that does not read, as a rule): the
-    # person's next request starts it anew. Only a ledger: a request row is its holder's to answer and the console's to
-    # clear (`requests.py`).
+    # `DELETE /asked/<name>` — an administrator removes a person's ledger (one that does not read, as a rule): the
+    # person's next request starts it anew. Only a ledger (`<sub>/asked/`, ADR 0060): a request row is its holder's to
+    # answer and the console's to clear (`requests.py`).
     def _delete_ledger(self, name: str, user: str) -> tuple:
-        key = self.spec.sub.request_key(name)
+        if not LEDGER_NAME.fullmatch(name):
+            return 404, {"detail": f"a ledger is named by 16 hex digits, not {name[:80]!r}", "error": "no such ledger"}
+        key = self.spec.sub.asked_prefix() + name
         try:
             there = bool(self.ctl.vars.get(key)[0])
         except PARSE_ERRORS:

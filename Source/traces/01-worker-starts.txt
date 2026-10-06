@@ -16,7 +16,7 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": "", "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",

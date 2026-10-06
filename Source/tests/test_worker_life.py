@@ -157,16 +157,16 @@ def test_every_workers_failover_is_measured_from_the_heartbeat_its_name_left():
     constructor, and every other subsystem's failover went unmeasured. The platform reads it, before an instance's first
     heartbeat under its name, and says it in every heartbeat (`previous_hb`, `previous_instance`, `previous_server`)."""
     box = Box()
-    old = counter_worker(box, "w-1", instance="srv-1:101", resource_root=box.resource_root)
+    old = counter_worker(box, "w-1", instance="srv-1:101:aaaaaa", resource_root=box.resource_root)
     old.heartbeat_once()
     was = Heartbeat.from_bytes(box.objects.get(old.sub.heartbeat_key("w-1")))
     assert was.extra["previous_hb"] == 0.0 and was.extra["started"] == old.started_wall   # nobody before it
     old.release_slot()
     box.wall.advance(20)
-    new = counter_worker(box, "w-1", instance="srv-1:102", resource_root=box.resource_root)
+    new = counter_worker(box, "w-1", instance="srv-1:102:bbbbbb", resource_root=box.resource_root)
     new.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(new.sub.heartbeat_key("w-1")))
-    assert (hb.extra["previous_hb"], hb.extra["previous_instance"], hb.extra["previous_server"]) == (was.ts, "srv-1:101", "srv-1")
+    assert (hb.extra["previous_hb"], hb.extra["previous_instance"], hb.extra["previous_server"]) == (was.ts, "srv-1:101:aaaaaa", "srv-1")
     assert controller(box).failover_seconds() == {"w-1": 20.0}
 
 
@@ -223,11 +223,11 @@ def test_a_create_under_a_name_a_unit_has_is_409_exists():
 
 
 def test_a_persons_request_ledger_that_does_not_read_stops_that_person_and_says_so_once():
-    """A person's open requests are one row (`<sub>/requests/asks-<sha>`, `per_person`). One that did not parse was read
+    """A person's open requests are one row (`<sub>/asked/<sha>`, `per_person`; ADR 0060). One that did not parse was read
     as an empty list and written over: the limit silently reset, nothing counted. Now that person is refused — 429,
     «учёт не читается» — the row is not written over, `<sub>_requests_ledger_garbled` says it on `/metrics`, the journal
     says it once for the row (not per request); another person files as before; an administrator deletes the row
-    (`DELETE /requests/asks-…`) and the ledger starts anew."""
+    (`DELETE /asked/<name>`) and the ledger starts anew."""
     from w2cplatform.console import SpecConsole
     box = Box()
     spec = testsub2()
@@ -239,7 +239,8 @@ def test_a_persons_request_ledger_that_does_not_read_stops_that_person_and_says_
     as_ = lambda who: {"X-User": who}                                            # noqa: E731
     with Served(con) as call:
         assert call("POST", "/requests", {"unit": "testsub2/t1", "add": 1}, headers=as_("anna"))[0] == 202
-        [ledger] = [k for k in box.vars.list(spec.sub.requests_prefix()) if k.rsplit("/", 1)[1].startswith("asks-")]
+        [ledger] = box.vars.list(spec.sub.asked_prefix())
+        assert ledger == spec.sub.asked_key("anna") and box.vars.list(spec.sub.requests_prefix()) == [spec.sub.request_key("t1-1")]
         box.vars.put(ledger, {"asks": "[[\"t1-1\"", "by": "anna"})                # torn
         for add in (2, 3):
             code, body = call("POST", "/requests", {"unit": "testsub2/t1", "add": add}, headers=as_("anna"))
@@ -247,11 +248,11 @@ def test_a_persons_request_ledger_that_does_not_read_stops_that_person_and_says_
         assert box.vars.get(ledger)[0]["asks"] == "[[\"t1-1\"" and said.count("request.ledger_garbled") == 1
         assert "testsub2_requests_ledger_garbled 1" in con.metrics_text().splitlines()
         assert call("POST", "/requests", {"unit": "testsub2/t1", "add": 5}, headers=as_("boris"))[0] == 202
-        assert call("DELETE", "/requests/" + ledger.rsplit("/", 1)[1], headers=as_("admin"))[0] == 200
+        assert call("DELETE", "/asked/" + ledger.rsplit("/", 1)[1], headers=as_("admin"))[0] == 200
         assert call("POST", "/requests", {"unit": "testsub2/t1", "add": 4}, headers=as_("anna"))[0] == 202
         assert "testsub2_requests_ledger_garbled 0" in con.metrics_text().splitlines()
         assert json.loads(box.vars.get(ledger)[0]["asks"])[0][0] == "t1-4"        # anew
-    assert con.needs("DELETE", "/requests/" + ledger.rsplit("/", 1)[1])[0] == "admin"
+    assert con.needs("DELETE", "/asked/" + ledger.rsplit("/", 1)[1])[0] == "admin"
 
 
 def test_workers_needed_is_one_series_when_a_spec_has_both_spares_and_places():

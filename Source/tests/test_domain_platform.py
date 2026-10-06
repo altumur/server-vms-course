@@ -332,9 +332,9 @@ def test_a_domain_section_that_names_what_is_not_there_is_refused_when_the_spec_
     kept, a kind the platform owns, a claim the token itself writes, or a key it does not know — and for a family served
     as a table, a subject family that is not kept with its `/`, held apart from anything but the people or granted a
     word that is no grant, a token kind that says a grant (a token carries no rights), an edit of what is no field."""
-    import yaml
+    from w2cplatform import specyaml
     from w2cplatform.spec import SubsystemSpec
-    base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
+    base = specyaml.loads(open(TESTSUB, encoding="utf-8"))
     for bad in ({"ref": "labels"}, {"view": ["labels"]}, {"kept": ["a"], "tables": ["b"]},
                 {"tokens": {"person": {"lifetime": 1}}}, {"tokens": {"t": {"lifetime": 1, "claims": ["exp"]}}},
                 {"tokens": {"t": {"lifetime": 0}}}, {"books": ["a"], "kept": ["a"]}, {"carried": ["x"]},
@@ -364,7 +364,7 @@ def test_the_key_families_are_read_passed_through_spec_and_their_words_must_name
     key under the subsystem's own prefix; the words are `display.keys`, merged by id on the page. The reader takes it,
     a key falls into its family by an exact key or a prefix, `/spec` carries it as written — and a family with words in
     it, a key outside `domain/<sub>/`, a family with no key, or words for a family nobody declared are refused."""
-    import yaml
+    from w2cplatform import specyaml
     from w2cplatform.console import SpecConsole
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.spec import SpecController, SubsystemSpec
@@ -381,7 +381,7 @@ def test_the_key_families_are_read_passed_through_spec_and_their_words_must_name
                                      {"id": "ledger", "keys": ["domain/testsub/ledger"]}]
     assert got["display"]["keys"]["ledger"] == {"title": "ledger", "about": "the ledger the holder keeps for the domain",
                                                 "absent": "nothing ledgered yet"}
-    base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
+    base = specyaml.loads(open(TESTSUB, encoding="utf-8"))
     for bad in ([{"id": "a", "keys": ["domain/testsub/a"], "title": "A"}],          # words belong in display.keys
                 [{"id": "a", "keys": ["domain/members"]}],                           # the platform's own family
                 [{"id": "a", "prefix": "domain/other/"}], [{"id": "a"}],
@@ -536,7 +536,7 @@ def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared
     or a subsystem not on the domain, or anything beside `shared`: the edit is refused whole (400 — wrong by the specs
     on its own), nothing written. The spec refuses a shared field that is not one of the unit's, is a secret, or neither
     inherits nor is the field the page groups by."""
-    import yaml
+    from w2cplatform import specyaml
     from w2cplatform.domain.api import ApiError
     from w2cplatform.spec import SubsystemSpec
     shared, agent, ctl, con = _shared_site()
@@ -559,7 +559,7 @@ def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared
     assert body["fields"]["rounds"] == {"value": None, "from": None}
     assert con.shared_route("nobody", {})[0] == 404
     assert con.describe()["domain"]["shared"] == ["step", "marks", "rounds"]
-    base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
+    base = specyaml.loads(open(TESTSUB, encoding="utf-8"))
     for bad in (["nope"], ["start"], ["labels"]):
         try:
             SubsystemSpec.from_dict({**base, "domain": {**base["domain"], "shared": bad}})
@@ -615,9 +615,9 @@ def test_a_document_the_domain_holds_whole_is_checked_by_its_schema_at_the_signe
 def test_a_shared_document_is_declared_with_its_schema_or_the_spec_does_not_load():
     """`{name, type: json, schema}` and nothing else: another type, no schema, a schema with a word the platform does not
     read, a name that is a field of the unit (a document is no unit's), a secret's name, or one name twice — refused."""
-    import yaml
+    from w2cplatform import specyaml
     from w2cplatform.spec import SubsystemSpec
-    base = yaml.safe_load(open(TESTSUB, encoding="utf-8"))
+    base = specyaml.loads(open(TESTSUB, encoding="utf-8"))
     d = spec().domain
     assert d.shared == ("step", "marks", "rounds") and sorted(d.documents) == ["rounds"]
     assert d.documents["rounds"].type == "json" and d.documents["rounds"].schema["maxItems"] == 16
@@ -1148,7 +1148,7 @@ def test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spe
     field, a field that is not the unit's, one that is not fixed, or the bare family of before, does not load. The domain
     matches a member by its own name — no `ref_of` handed in: one a witness heard of after its last report is
     `not_reporting`, another is `silent`."""
-    import yaml
+    from w2cplatform import specyaml
     from w2cplatform.domain import declared
     from w2cplatform.domain.alarms import DomainAlarms
     from w2cplatform.spec import SubsystemSpec
@@ -1156,7 +1156,7 @@ def test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spe
     s2 = SubsystemSpec.load(t2)
     assert (s2.domain.witness, s2.domain.member_field) == ("seen", "of")
     assert "testsub2/seen/" in declared.witnesses()
-    base = yaml.safe_load(open(t2, encoding="utf-8"))
+    base = specyaml.loads(open(t2, encoding="utf-8"))
     for bad in ("seen", {"report": "seen"}, {"report": "seen", "member_field": "nope"},
                 {"report": "seen", "member_field": "mode"}, {"report": "Seen!", "member_field": "of"},
                 {"report": "seen", "member_field": "of", "via": "x"}):

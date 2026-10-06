@@ -116,7 +116,7 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": "", "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -143,7 +143,7 @@ GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
 
 **Запись с `"cas": ""`** — «только создать». Если бы кто-то успел создать эту строку раньше, хранилище ответило бы `409 {"kind": "conflict", …}`, и процесс перешёл бы к следующему кандидату (с именем из юнита кандидат один, и он попробует его снова). Когда строка уже есть, в `cas` идёт её прочитанный `index`. Ответ — новая версия ключа, `{"index": 1004}`.
 
-**`holder`** — какой экземпляр держит имя. В юните `INSTANCE_ID` не задан, и процесс называет себя `машина:pid:шесть-знаков` (`runtime.instance_on_box`), где машина — `/etc/machine-id` (или `BOX_ID`, если его задали), а не имя хоста; на стенде `INSTANCE_ID` задаёт сам стенд, и значение короче — `srv-a:4101`. `until` — сейчас плюс 45 секунд (`slot_ttl`); `gen` — поколение имени, растёт на единицу с каждым новым держателем.
+**`holder`** — какой экземпляр держит имя. В юните `INSTANCE_ID` не задан, и процесс называет себя `машина:pid:шесть-знаков` (`runtime.instance_on_box`), где машина — `/etc/machine-id` (или `BOX_ID`, если его задали), а не имя хоста; на стенде `INSTANCE_ID` задаёт сам стенд в той же форме — `srv-a:4101:001005`: сервер, номер процесса стенда, шесть знаков. `until` — сейчас плюс 45 секунд (`slot_ttl`); `gen` — поколение имени, растёт на единицу с каждым новым держателем.
 
 **`server`** — на каком сервере работает держатель (`Slot.server`); воркер пишет его в каждое продление, не только здесь. Это один из двух фактов о сервере, которые лежат в хранилище, а не в файлах на самом сервере: если сервер умрёт целиком, его heartbeat'ы умрут вместе с ним, и контроллер, запущенный уже после этого, иначе не узнал бы, чьим был слот и чей ресурс спрашивать. Второй факт — отметка `at` в строке двери ресурса (раздел 2.4). Как контроллер судит по обоим — в разделе [8.6](08-failures.md).
 
@@ -171,12 +171,12 @@ GET /v1/list?prefix=vms/slots/
 → 200 {"keys": {"vms/slots/w-srv-a-1": 1004}}
 
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}, "index": 1004}
+→ 200 {"items": {"holder": "srv-a:4101:001005", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}, "index": 1004}
 
 GET /v1/get?key=vms/slots/w-srv-b-1
 → 200 {"items": null, "index": ""}
 
-POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": "", "items": {"holder": "srv-b:4102", …, "gen": "1", "server": "srv-b"}}
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": "", "items": {"holder": "srv-b:4102:001006", …, "gen": "1", "server": "srv-b"}}
 → 200 {"index": 1005}
 ```
 
@@ -226,8 +226,8 @@ vms/heartbeats/w-srv-a-1 (509 байт в юните; на стенде 570):
   "ts": 1757500000.0,
   "status": [],
   "server": "srv-a",
-  "instance": "srv-a:4101",
-  "alloc": "srv-a:4101",
+  "instance": "srv-a:4101:001005",
+  "alloc": "srv-a:4101:001005",
   "labels": "vlan:cctv",
   "assignment_rev": 0,
   "fenced": false,
@@ -320,7 +320,7 @@ platform/resources/srv-a/heartbeat (649 байт):
   "running": {
     "vms": ["w-srv-a-1"]
   },
-  "running_instances": ["srv-a_4101"],
+  "running_instances": ["srv-a_4101_001005"],
   "short": 0,
   "waits": {
     "waiting": 0,
@@ -349,7 +349,7 @@ platform/resources/srv-a/heartbeat (649 байт):
 Четыре поля новые.
 
 - `workers` и `running` — какие воркеры зарегистрированы на этом сервере и чьи процессы сейчас живы, по подсистемам (`presence_here`): ресурс читает каталог `.workers/` и пробует каждый замок — занятый значит, что процесс жив (раздел 2.3). Здесь у каждого сервера по одному воркеру, и он жив.
-- `running_instances` — то же «жив», но по имени самого замка, то есть по экземпляру (`srv-a:4101` → `srv-a_4101`), а не по `.json` рядом с ним. Контроллер сверяет его с `holder` из строки слота (`Controller.holder_runs`): держатель жив, даже если его `.json` не прочитался. По этим трём полям контроллер отличает зависший воркер от мёртвого (`Controller.slot_fate`, раздел [8.6](08-failures.md)). Если каталог не читается или замок не открывается, ресурс не делает вид, что воркеров нет: пишет `presence_error` или `presence_unread`, и тогда никого на этом сервере по отсутствию в списках не судят.
+- `running_instances` — то же «жив», но по имени самого замка, то есть по экземпляру (`srv-a:4101:001005` → `srv-a_4101_001005`), а не по `.json` рядом с ним. Контроллер сверяет его с `holder` из строки слота (`Controller.holder_runs`): держатель жив, даже если его `.json` не прочитался. По этим трём полям контроллер отличает зависший воркер от мёртвого (`Controller.slot_fate`, раздел [8.6](08-failures.md)). Если каталог не читается или замок не открывается, ресурс не делает вид, что воркеров нет: пишет `presence_error` или `presence_unread`, и тогда никого на этом сервере по отсутствию в списках не судят.
 - `restore` — состояние возврата своих данных с других серверов, пока он не прошёл до конца хоть раз. `left: -1` значит «неизвестно: ещё никого не спрашивали». Процесс ресурса пишет первый heartbeat и сразу после него запускает восстановление (`res.restore()`); когда оно пройдёт, поле из heartbeat'а уйдёт.
 
 Кроме файла, ресурс пишет одну строку в хранилище — **свою дверь**:
@@ -398,7 +398,7 @@ GET /v1/list?prefix=vms/decommissioned/                  → {}
 
 # release_unlisted — 4 чтения и 3 запроса к ресурсу
 GET /v1/list?prefix=vms/slots/                           → w-srv-a-1, w-srv-b-1, w-srv-c-1
-GET /v1/get?key=vms/slots/w-srv-a-1                      → holder srv-a:4101, until …045, released false, server srv-a
+GET /v1/get?key=vms/slots/w-srv-a-1                      → holder srv-a:4101:001005, until …045, released false, server srv-a
 GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster   → 200, 570 байт, X-Server: srv-a
   … то же для w-srv-b-1 и w-srv-c-1
 

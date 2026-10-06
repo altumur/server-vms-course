@@ -20,6 +20,7 @@
     "domain/revoked",
     "domain/break_glass",
     "domain/grants/*",
+    "objects/det/commands/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
     "objects/vms/commands/*",
@@ -61,6 +62,7 @@
     "rec/policy",
     "rec/sweep",
     "rec/requests/*",
+    "rec/asked/*",
     "rec/volumes/*",
     "rec/keeps/*",
     "survey/watches/*",
@@ -78,6 +80,7 @@
     "vms/retention/*",
     "vms/alarms_retention/*",
     "vms/devices/*",
+    "objects/det/commands/*",
     "objects/rec/commands/*",
     "objects/vms/commands/*",
     "door/signer",
@@ -118,6 +121,7 @@
     "rec/policy",
     "rec/sweep",
     "rec/requests/*",
+    "rec/asked/*",
     "rec/volumes/*",
     "rec/keeps/*",
     "survey/watches/*",
@@ -173,7 +177,8 @@
     "objects/vms/commands/*",
     "rec/requests/*",
     "objects/rec/commands/*",
-    "det/requests/*"
+    "det/requests/*",
+    "objects/det/commands/*"
    ],
    "write": [
     "auto/epoch/*",
@@ -224,17 +229,20 @@
     "platform/servers/*",
     "domain/keys",
     "domain/member",
-    "door/keys"
+    "door/keys",
+    "objects/det/commands/*"
    ],
    "write": [
     "det/epoch/*",
     "det/slots/*",
-    "det/holds/*"
+    "det/holds/*",
+    "objects/det/commands/*"
    ],
    "delete": [
     "det/epoch/*",
     "det/slots/*",
-    "det/holds/*"
+    "det/holds/*",
+    "objects/det/commands/*"
    ]
   },
   "detjobcontroller": {
@@ -332,6 +340,7 @@
    "group": "w2c-reccontroller",
    "read": [
     "platform/schema",
+    "!rec/asked/*",
     "rec/*",
     "vms/*",
     "platform/*"
@@ -353,6 +362,7 @@
    "group": "vms-recworker",
    "read": [
     "platform/schema",
+    "!rec/asked/*",
     "rec/*",
     "vms/*",
     "platform/decommission/*",

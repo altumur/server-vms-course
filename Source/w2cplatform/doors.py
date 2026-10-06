@@ -50,6 +50,33 @@ def unnamable(name: str, unit: bool = False) -> list[str]:
                    or (unit and (c == LIST_SEPARATOR or (c.isdigit() and not "0" <= c <= "9")))})
 
 
+# A REQUEST'S ID (`rid`: the name of `<sub>/requests/<rid>` and of its mark `<sub>/commands/<rid>`) — ONE TABLE FOR THE
+# COURSE AND THE PRODUCT («Архитектор», 2026-10-06, ADR 0060; «Паритет»'s `testdata/rid.tsv`): at most `RID_BYTES` bytes
+# of UTF-8, not empty, not `.` or `..`; no `/`, `\`, `"`, `'`, and no character of Unicode's Cc, Zl or Zp. It counted
+# characters: 150 × «я» passed it and the store refused the 300-byte key with a 500, and `a\u0085b` was a 500 too. One
+# function for both who name a request: the console's door (`SpecConsole._file_request`, 400) and a worker's
+# (`Worker.file_request`, `RequestRefused`). No prefix means anything: a person's ledger is not in this family (ADR 0060).
+RID_BYTES = 200
+
+
+def rid_fault(rid) -> str | None:
+    """Why `rid` is not a request's id, in words — None when it is one."""
+    import unicodedata
+    rid = str(rid)
+    if not rid or rid in (".", ".."):
+        return "a request's id is a name, not empty, `.` or `..`"
+    try:
+        size = len(rid.encode("utf-8"))
+    except UnicodeEncodeError:                    # a lone surrogate (`"\ud800"` in JSON): no UTF-8 at all
+        return "a request's id is text that UTF-8 can write, and a lone surrogate is none"
+    if size > RID_BYTES:
+        return f"a request's id is at most {RID_BYTES} bytes of UTF-8, not {size}"
+    bad = sorted({c for c in rid if c in "/\\\"'" or unicodedata.category(c) in ("Cc", "Zl", "Zp")})
+    if bad:
+        return f"a request's id is a name, not a path, and holds no slash, backslash, quote or control character ({bad[0]!r})"
+    return None
+
+
 # A UNIT NAMED OUTSIDE ITS OWN SUBSYSTEM'S ROUTES: `<sub>/<id>` — `testsub/c1`, `other/a-b` — one string, wherever the
 # platform names a unit: `/events?unit=`, a mark's `unit`, an event line's `of`, a grant's `unit:` scope (the boundary's
 # step 2, ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md §2.1). A bare id names nothing — whose `7` would it be? — and the id has no

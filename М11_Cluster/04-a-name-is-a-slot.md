@@ -36,12 +36,12 @@
 Имя воркера — это строка в хранилище, `<sub>/slots/<имя>`:
 
 ```
-vms/slots/w-srv-a-1   {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}
+vms/slots/w-srv-a-1   {"holder": "srv-a:4101:001005", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}
 ```
 
 | Поле | Что значит |
 |---|---|
-| `holder` | какой экземпляр держит имя — `хост:pid:…` процесса (на стенде короче: `srv-a:4101`) |
+| `holder` | какой экземпляр держит имя — `хост:pid:…` процесса (на стенде `srv-a:4101:001005`: сервер, номер процесса стенда, шесть знаков) |
 | `until` | до какого момента держит; держатель продлевает его каждый шаг аренд |
 | `released` | отпустил ли держатель имя сам, при плановой остановке |
 | `gen` | поколение: растёт на единицу каждый раз, когда имя берёт новый экземпляр |
@@ -105,7 +105,7 @@ vms/slots/w-srv-a-1   {"holder": "srv-a:4101", "until": "1757500045.0", "release
 
 Это случается не только по ошибке. Юнит перезапустили, а старый процесс ещё жив: завис так, что не дослушал `SIGTERM`, или заморожен, или до него не дошла остановка. Или оператор запустил вторую копию руками, с тем же окружением. Для слота все случаи одинаковы.
 
-Трасса — [`Source/traces/04-two-processes-one-name.txt`](../Source/traces/04-two-processes-one-name.txt). На стенде `w-srv-a-1` держит процесс `srv-a:4101`, у него единицы (камеры стенда) 1 и 2, эпохи 1. Приходит второй процесс, `srv-a:4102`, с тем же именем — и строка `#` у них одна и та же, `vmsworker w-srv-a-1 on srv-a`: отличить их можно только по `holder`.
+Трасса — [`Source/traces/04-two-processes-one-name.txt`](../Source/traces/04-two-processes-one-name.txt). На стенде `w-srv-a-1` держит процесс `srv-a:4101:001005`, у него единицы (камеры стенда) 1 и 2, эпохи 1. Приходит второй процесс, `srv-a:4102:001006`, с тем же именем — и строка `#` у них одна и та же, `vmsworker w-srv-a-1 on srv-a`: отличить их можно только по `holder`.
 
 Второй читает слот — его держит первый — и берёт его всё равно, по CAS с версией, которую прочитал:
 
@@ -114,7 +114,7 @@ vms/slots/w-srv-a-1   {"holder": "srv-a:4101", "until": "1757500045.0", "release
 GET /v1/get?key=vms/slots/w-srv-a-1
 → 200 {
   "items": {
-    "holder": "srv-a:4101",
+    "holder": "srv-a:4101:001005",
     "until": "1757500045.0",
     "released": "false",
     "gen": "1",
@@ -125,7 +125,7 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items": {
-  "holder": "srv-a:4102",
+  "holder": "srv-a:4102:001006",
   "until": "1757500045.0",
   "released": "false",
   "gen": "2",
@@ -141,7 +141,7 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items":
 GET /v1/get?key=vms/slots/w-srv-a-1
 → 200 {
   "items": {
-    "holder": "srv-a:4102",
+    "holder": "srv-a:4102:001006",
     "until": "1757500045.0",
     "released": "false",
     "gen": "2",
@@ -407,7 +407,7 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": "", "items": {
 ```
 # vmsworker spare on srv-c → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1048, "items": {
-  "holder": "srv-c:4103",
+  "holder": "srv-c:4103:001007",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -451,7 +451,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/9", "cas": "", "items": {"epoch":
 ```
 # vmsworker spare on srv-c → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1049, "items": {
-  "holder": "srv-c:4103",
+  "holder": "srv-c:4103:001007",
   "until": "1757500000.0",
   "released": "true",
   "gen": "1"
@@ -499,7 +499,7 @@ POST /v1/write {"op": "delete", "key": "vms/slots/w-2", "cas": 1048}
 GET /v1/get?key=vms/slots/w-srv-c-1
 → 200 {
   "items": {
-    "holder": "srv-c:4101",
+    "holder": "srv-c:4101:001005",
     "until": "1757500045.0",
     "released": "false",
     "gen": "1",
@@ -516,7 +516,7 @@ GET /v1/get?key=vms/slots/w-srv-c-1
 ```
 # vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items": {
-  "holder": "srv-c:4102",
+  "holder": "srv-c:4102:001006",
   "until": "1757500047.0",
   "released": "false",
   "gen": "2",
@@ -567,7 +567,7 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items": {
-  "holder": "srv-c:4102",
+  "holder": "srv-c:4102:001006",
   "until": "1757500045.0",
   "released": "true",
   "gen": "1"

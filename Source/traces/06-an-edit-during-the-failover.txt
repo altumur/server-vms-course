@@ -34,7 +34,7 @@ POST /v1/write {"op": "put", "key": "platform/doors/srv-c", "cas": null, "items"
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1007, "items": {
-  "holder": "srv-b:4102",
+  "holder": "srv-b:4102:001006",
   "until": "1757500095.0",
   "released": "false",
   "gen": "1",
@@ -60,7 +60,7 @@ POST /v1/write {"op": "put", "key": "platform/doors/srv-c", "cas": null, "items"
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1014, "items": {
-  "holder": "srv-b:4102",
+  "holder": "srv-b:4102:001006",
   "until": "1757500125.0",
   "released": "false",
   "gen": "1",
@@ -86,7 +86,7 @@ POST /v1/write {"op": "put", "key": "platform/doors/srv-c", "cas": null, "items"
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1017, "items": {
-  "holder": "srv-b:4102",
+  "holder": "srv-b:4102:001006",
   "until": "1757500158.0",
   "released": "false",
   "gen": "1",

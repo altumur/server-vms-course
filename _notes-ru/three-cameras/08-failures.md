@@ -268,7 +268,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/2", "cas": 1020, "items": {"epoch
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1033, "items": {
-  "holder": "srv-b:4102",
+  "holder": "srv-b:4102:001006",
   "until": "1757500095.0",
   "released": "false",
   "gen": "1",
@@ -304,7 +304,7 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1033, "items":
 ```
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1004, "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500060.0",
   "released": "false",
   "gen": "1",
@@ -363,7 +363,7 @@ GET /v1/get?key=vms/slots/w-srv-b-1            → until 1757500045.0, в про
 GET /v1/get?key=vms/slots/w-srv-c-1
 GET /v1/get?key=vms/slots/w-srv-b-1            ← чтение под CAS
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1005, "items": {
-  "holder": "srv-b:4104",
+  "holder": "srv-b:4104:001008",
   "until": "1757500140.0",
   "released": "false",
   "gen": "2",
@@ -418,7 +418,7 @@ GET /v1/objects?prefix=platform/resources/&scope=cluster
 ```
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 GET /v1/get?key=vms/slots/w-srv-b-1
-→ 200 {"items": {"holder": "srv-b:4102", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-b"},
+→ 200 {"items": {"holder": "srv-b:4102:001006", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-b"},
        "index": 1005}
 
 GET /v1/get?key=platform/doors/srv-b
@@ -459,9 +459,9 @@ t+950  hung_moved  "w-srv-b-1 has been hung on srv-b for 905 s, longer than 900 
 ```
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 GET /v1/get?key=platform/schema
-GET /v1/get?key=vms/slots/w-srv-b-1            → holder srv-b:4102, until 1757500045.0 — имя никто не взял
+GET /v1/get?key=vms/slots/w-srv-b-1            → holder srv-b:4102:001006, until 1757500045.0 — имя никто не взял
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1005, "items": {
-  "holder": "srv-b:4102",
+  "holder": "srv-b:4102:001006",
   "until": "1757500995.0",
   "released": "false",
   "gen": "1",
@@ -498,7 +498,7 @@ GET /v1/get?key=vms/workers/w-srv-b-1          → {"units": "", "rev": "2"}
 
 | Поле | Что значит |
 |---|---|
-| `holder` | какой именно процесс держит имя. Это `INSTANCE_ID` из окружения, если он задан, а иначе процесс называет себя сам: `хост:pid:шесть-случайных-знаков`. Юнит курса `INSTANCE_ID` не задаёт; стенд задаёт его как `сервер:номер`, отсюда `srv-b:4102` в трассах |
+| `holder` | какой именно процесс держит имя. Это `INSTANCE_ID` из окружения, если он задан, а иначе процесс называет себя сам: `хост:pid:шесть-случайных-знаков`. Юнит курса `INSTANCE_ID` не задаёт; стенд задаёт его в той же форме, `сервер:номер:шесть знаков`, отсюда `srv-b:4102:001006` в трассах |
 | `until` | до какого момента по стенным часам аренда действует |
 | `released` | попрощался ли прежний держатель по-хорошему — или слот освободил контроллер |
 | `gen` | сколько раз это имя вообще захватывали |
@@ -524,12 +524,12 @@ GET /v1/get?key=platform/schema
 
 # 1. Прочитать строку — заодно узнать, моё ли ещё имя
 GET /v1/get?key=vms/slots/w-srv-b-1
-→ 200 {"items": {"holder": "srv-b:4102", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-b"},
+→ 200 {"items": {"holder": "srv-b:4102:001006", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-b"},
        "index": 1005}
 
 # 2. Переписать с тем же holder и отодвинутым сроком
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1005, "items": {
-  "holder": "srv-b:4102",
+  "holder": "srv-b:4102:001006",
   "until": "1757500055.0",                     ← единственное изменение: теперь + 45 с
   "released": "false",
   "gen": "1",
@@ -606,7 +606,7 @@ Heartbeat и продление слота легко спутать, но эт�
 
 Для четвёртой правило простое: процесс не имеет права действовать по одной только своей памяти. Аренда на камеру считается по внутренним часам и кончается за пять секунд до того, как кто-то снаружи успеет её перехватить.
 
-С третьей строкой есть оговорка (`Lease.may_record` в `w2cplatform/epoch.py`). Аренда, которая истекла, пока хранилище **молчало**, — это не аренда, которую кто-то забрал: сказать «эпоха кончилась» было некому. Поэтому **данные** — поток камеры и её события — идут дальше под той же эпохой. **Действия** — щёлкнуть реле, повернуть камеру — останавливаются строго через 25 секунд. На кластере данные идут не дольше `UNCONFIRMED_MAX = 90` секунд сверх этих 25 (так задано в юните `vms-vmsworker.service`). Подробнее — в разделах [5.2](05-workers-and-epochs.md) и 8.7.
+С третьей строкой есть оговорка (`Lease.may_record` в `w2cplatform/epoch.py`). Аренда, которая истекла, пока хранилище **молчало**, — это не аренда, которую кто-то забрал: сказать «эпоха кончилась» было некому. Поэтому **данные** — поток камеры и её события — идут дальше под той же эпохой. **Действия** — щёлкнуть реле, повернуть камеру — останавливаются строго через 25 секунд. Сколько данные идут сверх этих 25, говорит спека подсистемы, ключ `lease.unconfirmed_max` (ADR 0012): у `vms` и `rec` это `forever` — сколько длится молчание, на коробке и на кластере одинаково. Подробнее — в разделах [5.2](05-workers-and-epochs.md) и 8.7.
 
 ### Когда именно слот становится просроченным
 
@@ -658,16 +658,16 @@ T+90.0   прошёл запас SLOT_LOST_AFTER: «процесс, может �
 Такое бывает при перезапуске, когда старый процесс не умер, а завис (остановлен `SIGSTOP`, приостановлена виртуалка), или когда второй экземпляр запустили руками с тем же `WORKER_NAME`. Вторая копия берёт имя `w-srv-a-1` — условной записью поверх живого ещё держателя, как разобрано в разделе 8.6, — читает назначение и поднимает камеру 1, а значит берёт новую эпоху:
 
 ```
-# vmsworker w-srv-a-1 on srv-a (вторая копия, srv-a:4104) → /run/configstore/vmsworker.sock
+# vmsworker w-srv-a-1 on srv-a (вторая копия, srv-a:4104:001008) → /run/configstore/vmsworker.sock
 GET /v1/get?key=platform/schema
 GET /v1/get?key=platform/decommission/srv-a
 GET /v1/list?prefix=vms/slots/
-GET /v1/get?key=vms/slots/w-srv-a-1           → holder srv-a:4101, until 1757500045.0 — срок ещё не вышел
+GET /v1/get?key=vms/slots/w-srv-a-1           → holder srv-a:4101:001005, until 1757500045.0 — срок ещё не вышел
 GET /v1/get?key=vms/slots/w-srv-b-1
 GET /v1/get?key=vms/slots/w-srv-c-1
 GET /v1/get?key=vms/slots/w-srv-a-1           ← чтение под CAS
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1004, "items": {
-  "holder": "srv-a:4104",
+  "holder": "srv-a:4104:001008",
   "until": "1757500045.0",
   "released": "false",
   "gen": "2",
@@ -696,8 +696,8 @@ GET /v1/get?key=platform/schema
 → 200 {"items": null, "index": ""}
 
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4104", "until": "1757500045.0", "released": "false", "gen": "2", "server": "srv-a"},
-       "index": 1022}                         ← а держатель был srv-a:4101
+→ 200 {"items": {"holder": "srv-a:4104:001008", "until": "1757500045.0", "released": "false", "gen": "2", "server": "srv-a"},
+       "index": 1022}                         ← а держатель был srv-a:4101:001005
 ```
 
 Это всё, что она прочитала на этом шаге. Чужой держатель в строке слота значит одно: имя отобрали, и этот экземпляр — лишний. С этой строки он **никто** (`VmsWorker.lease_pass`: `give_up_name`, затем `fence`):
@@ -709,12 +709,12 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 Отсечённый экземпляр не стоит так вечно, но и чужого имени не берёт. systemd не перезапускает процесс, который не умер, поэтому на каждом следующем проходе экземпляр пробует вернуться (`VmsWorker.rejoin`, а через него `Worker._seek_slot`). Процесс, которому имя дал юнит, просит **только это имя**. Взять его он может, лишь когда слот свободен или просрочен, а у живого держателя не отбирает (`_claim_slot(…, steal=False)`): два живых процесса одного имени на одной машине отбирали бы его друг у друга бесконечно. Пока имя занято, экземпляр — никто. Этого шага в трассе 08-7 нет; я прогнал его на том же стенде отдельно:
 
 ```
-# vmsworker w-srv-a-1 on srv-a (старая копия, srv-a:4101) → /run/configstore/vmsworker.sock
+# vmsworker w-srv-a-1 on srv-a (старая копия, srv-a:4101:001005) → /run/configstore/vmsworker.sock
 GET /v1/get?key=platform/schema
 GET /v1/get?key=platform/schema
 GET /v1/get?key=platform/decommission/srv-a
 GET /v1/list?prefix=vms/slots/                → w-srv-a-1, w-srv-b-1, w-srv-c-1
-GET /v1/get?key=vms/slots/w-srv-a-1           → holder srv-a:4104, gen 2
+GET /v1/get?key=vms/slots/w-srv-a-1           → holder srv-a:4104:001008, gen 2
 GET /v1/get?key=vms/slots/w-srv-b-1
 GET /v1/get?key=vms/slots/w-srv-c-1
 GET /v1/get?key=vms/slots/w-srv-a-1           → держатель жив: имя не берётся
@@ -722,7 +722,7 @@ GET /v1/get?key=vms/slots/w-srv-a-1           → держатель жив: и�
 # vmsworker w-srv-a-1 on srv-a (старая копия) → its own files on srv-a
 PUT vms/contenders/w-srv-a-1/machine-id-srv-a
 {"name": "w-srv-a-1", "state": "nameless", "box": "machine-id-srv-a", "hostname": "…", "server": "srv-a",
- "instance": "srv-a:4101", "holder": "srv-a:4104", "holder_box": "", "since": 1757500000.0, "at": 1757500000.0}
+ "instance": "srv-a:4101:001005", "holder": "srv-a:4104:001008", "holder_box": "", "since": 1757500000.0, "at": 1757500000.0}
 ```
 
 Записи в хранилище нет, heartbeat'а нет. Есть только **метка претендента** — файл `vms/contenders/<имя>/<машина>` на своём сервере (`Worker._contend`): кто хочет имя, с какой машины, кто его держит и с какого времени. Метка переписывается, а не копится: раз в 10 секунд, пока экземпляр остаётся никем (`CONTEND_EVERY`), и читается, пока ей не больше 5 минут (`CONTENDER_FRESH`). Один раз за эпизод экземпляр поднимает тревогу `worker.name_taken` в журнал своего сервера. Контроллер на каждом проходе читает метки (`GET /v1/objects?prefix=vms/contenders/&scope=cluster` — тот самый новый объектный запрос прохода) и считает имена, на которые есть претенденты: в отчёте `name_conflicts: 1`, на `/metrics` — `vms_name_conflicts`. Освободится имя — экземпляр возьмёт его обратно, скажет `worker.name_back` и уберёт метку (`Worker._uncontend`; это и есть чтение `contenders` → `404` в начале сцены у второй копии).
@@ -746,9 +746,9 @@ GET /v1/get?key=vms/epoch/2
 Если же он жив, но **не достаёт до хранилища**, узнать ему не у кого. Тогда работают два предела, и оба он соблюдает сам, по своим монотонным часам:
 
 - **Действия** — команды устройству — он перестаёт выполнять через `30 − 5 = 25` секунд после последнего подтверждения. Их проверяет строгий `may_write`.
-- **Данные** — поток и события камеры — идут под эпохой 1 ещё до `UNCONFIRMED_MAX = 90` секунд сверх этих 25, то есть до 115 секунд после последнего подтверждения (`Lease.may_record`, `Lease.unconfirmed`). Условие одно: молчание хранилища должно начаться, пока аренда ещё действовала. Такую цену выбрали в обратной связи BK: остановка стоит дыры в данных, а лишняя запись под старой эпохой — только дубля. Эпоха стоит в пути каждой корзины событий, и то, что писал отсечённый экземпляр, видно и потом.
+- **Данные** — поток и события камеры — идут под эпохой 1 и после этих 25 секунд, сколько длится молчание: спека `vms` говорит `lease: {unconfirmed_max: forever}` (`Lease.may_record`, `Lease.unconfirmed`; ADR 0012). Условие одно: молчание хранилища должно начаться, пока аренда ещё действовала. Такую цену выбрали в обратной связи BK: остановка стоит дыры в данных, а лишняя запись под старой эпохой — только дубля. Эпоха стоит в пути каждой корзины событий, и то, что писал отсечённый экземпляр, видно и потом.
 
-Третьего, внешнего предела нет. Под Nomad его ставил клиент, потерявший связь с серверами (`stop_on_client_after`); у юнита systemd такого нет, он про хранилище ничего не знает. Так ведёт себя и сервер на стороне меньшинства raft: его `configstore` отвечает `unavailable`, а воркеры останавливают действия на 25-й секунде и запись на 115-й сами (урок 9 М11, шаг 3).
+Третьего, внешнего предела нет. Под Nomad его ставил клиент, потерявший связь с серверами (`stop_on_client_after`); у юнита systemd такого нет, он про хранилище ничего не знает. Так ведёт себя и сервер на стороне меньшинства raft: его `configstore` отвечает `unavailable`, а воркеры останавливают действия на 25-й секунде сами, а запись продолжают под своей эпохой (урок 9 М11, шаг 3).
 
 ## 8.8. Камер больше, чем ёмкости: кто запускает второй воркер
 
@@ -844,7 +844,7 @@ vms_server_labels{server="srv-c",labels="vlan:cctv",source="node"} 1
 ```
 # vmsworker spare on srv-c → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1024, "items": {
-  "holder": "srv-c:4104",
+  "holder": "srv-c:4104:001008",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -978,10 +978,10 @@ PUT vms/heartbeats/w-srv-b-1
 ```
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-b-1
-→ 200 {"items": {"holder": "srv-b:4102", "until": "завтра", "released": "false", "gen": "1", "server": "srv-b"}, "index": 1022}
+→ 200 {"items": {"holder": "srv-b:4102:001006", "until": "завтра", "released": "false", "gen": "1", "server": "srv-b"}, "index": 1022}
 
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1022, "items": {
-  "holder": "srv-b:4102",
+  "holder": "srv-b:4102:001006",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -1050,7 +1050,7 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
 ```
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items": {
-  "holder": "srv-c:4103",
+  "holder": "srv-c:4103:001007",
   "until": "1757500045.0",
   "released": "true",
   "gen": "1"

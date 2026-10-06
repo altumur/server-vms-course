@@ -878,7 +878,7 @@ def test_a_backfill_is_two_finite_numbers_a_handful_at_a_time_and_a_line():
 def test_forty_backfills_asked_at_once_are_seven():
     """The review's sixth pass, minor — a run: forty POSTs at once left fifteen rows where seven is the bound. The bound
     was a count of rows read before the write, and requests in flight all counted the same ones. A person's open asks are
-    one row now, changed by CAS (`<sub>/requests/asks-<sha256 of the person, 16 hex>`, the platform's `per_person`):
+    one row now, changed by CAS (`<sub>/asked/<sha256 of the person, 16 hex>`, the platform's `per_person`, ADR 0060):
     forty at once are seven asks and thirty-three refusals, never an eighth; a place comes back when an ask is answered.
     (An ask no recorder could ever answer is refused by the recorder since the boundary's step 6.)"""
     import threading
@@ -1319,7 +1319,7 @@ def test_every_spelling_of_a_devices_host_is_its_group_and_a_host_nobody_can_rea
         for cmd in cmds:
             assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 202, cmd   # a file: camera 3's alone
             assert _call(base, "POST", "/requests", {**cmd, "unit": "vms/1"}, token="guard")[0] == 403, cmd
-        for bad in ('r"2', "r|2", "r\n2"):                                               # a name's rule (`doors.unnamable`)
+        for bad in ('r"2', "r'2", "r\\2", "r\n2"):                                      # a request's name (`doors.rid_fault`, rid.tsv)
             assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1, "id": bad}, token="admin")[0] == 400
     finally:
         srv.shutdown()
@@ -1547,11 +1547,11 @@ def test_a_row_a_viewer_creates_reaches_the_units_of_its_group_through_the_door(
     `live`'s stream). The spec is built here — `live` with a `source` grouped by its host and `rights.reach.group` — so
     that a viewer of camera 1 creating a stream on a host where the streams of cameras 2 and 3 stand needs a grant on
     each of them; on a host nobody's stream is at, the cluster's; on a host where every stream is hers, her own."""
-    import yaml
+    from w2cplatform import specyaml
     from vms.config import LIVE_SPEC
     from w2cplatform.spec import SubsystemSpec
     with open(os.path.join(os.path.dirname(os.path.abspath(sys.modules["vms.config"].__file__)), "live.subsystem.yaml")) as f:
-        d = yaml.safe_load(f)
+        d = specyaml.loads(f)
     d["unit"]["fields"]["source"] = {"type": "url", "schemes": {"driverpack": {"host": "path", "none": ["file"]}}}
     d["placement"]["group_by"] = {"field": "source", "cut_at": "host"}
     d["rights"] = {"routes": {"view": ["streams"]}, "reach": {"group": ["source"]}}

@@ -26,6 +26,8 @@ is nobody's catalogue.
 #   `near.of`/`near.prefer` neighbour the directory lacks is refused there (`near_known`, ADR 0056).
 # - `near_known(spec)` — refuses a spec whose neighbour (`near` with `of` or `prefer`) this catalogue does not hold; the
 #   end of `load_dir` and `SpecController`'s start ask it, where the catalogue is whole.
+# - `requests_known(spec)` — refuses a spec whose `worker.requests` names a subsystem this catalogue does not hold, its
+#   own name, or one that declares no `requests:`; asked where `near_known` is (ADR-0012, ADR-0054).
 # - `specs()` / `spec(name)` — what is loaded; with nothing loaded, the directory `SPEC_DIR` names first.
 # - `object_rows()` — the objects that are rows of the store (`rows_of` every spec, under its name: its `objects.rows`,
 #   and `commands/*` for a spec whose units take requests).
@@ -67,6 +69,7 @@ def load_dir(path: str) -> list:
     loaded = [SubsystemSpec.load(f) for f in files]
     for s in loaded:             # the directory is the catalogue whole: a neighbour it lacks is refused here (ADR 0056)
         near_known(s)
+        requests_known(s)        # …and a family its worker files to (ADR-0012, ADR-0054)
     return loaded
 
 
@@ -105,6 +108,26 @@ def near_known(spec) -> None:
         key = "near.prefer" if spec.near_prefer else "near.of"
         raise ValueError(f"spec {spec.name}: {key} reads the spec of {spec.near!r}, and this process loaded none "
                          f"(it loaded {', '.join(names) or 'nothing'}; {SPEC_DIR}) — load {spec.near}'s spec beside it")
+
+
+# The families a spec's worker files to (`worker: {requests: [<sub>, …]}`, `Worker.file_request`), each a subsystem this
+# catalogue holds, not the spec's own, and one that declares `requests:` (ADR-0012, ADR-0054; the fourteenth review,
+# minor 9). A typo (`recc`), the subsystem itself, or one with no family loaded as they were: every filing returned True,
+# no holder served the row, no reaper ended it (`requests.turn` passes a spec without `requests:`), and rows piled up for
+# ever. Asked where the catalogue is whole, as `near_known`: the end of `load_dir`, and a controller's start.
+def requests_known(spec) -> None:
+    if not spec.worker_requests:
+        return
+    held = {s.name: s for s in specs()}
+    for sub in spec.worker_requests:
+        target = held.get(sub)
+        why = ("is the spec itself — a worker performs its own units' work, it files to others" if sub == spec.name else
+               f"is no subsystem this process loaded (it loaded {', '.join(held) or 'nothing'}; {SPEC_DIR})"
+               if target is None else
+               "declares no `requests:` — no family there takes a request: none is served, none is ended"
+               if not (target.requests or target.requests_free) else None)
+        if why:
+            raise ValueError(f"spec {spec.name}: worker.requests names {sub!r}, which {why}")
 
 
 def _derive(what: str, make):

@@ -16,7 +16,7 @@ GET /v1/get?key=rec/slots/r-srv-a-1
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": "", "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -44,7 +44,7 @@ GET /v1/get?key=platform/schema
 GET /v1/get?key=rec/slots/r-srv-a-1
 → 200 {
   "items": {
-    "holder": "srv-a:4101",
+    "holder": "srv-a:4101:001005",
     "until": "1757500045.0",
     "released": "false",
     "gen": "1",
@@ -55,7 +55,7 @@ GET /v1/get?key=rec/slots/r-srv-a-1
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": 1005, "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -89,7 +89,7 @@ GET /v1/get?key=rec/holds/disks-a
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": "", "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -121,7 +121,7 @@ GET /v1/get?key=objects/rec/used/disks-a
 GET /v1/get?key=rec/holds/disks-a
 → 200 {
   "items": {
-    "holder": "srv-a:4101",
+    "holder": "srv-a:4101:001005",
     "until": "1757500045.0",
     "released": "false",
     "gen": "1",
@@ -132,7 +132,7 @@ GET /v1/get?key=rec/holds/disks-a
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": 1007, "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -162,6 +162,6 @@ GET /v1/get?key=objects/rec/used/disks-a
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "objects/rec/used/disks-a", "cas": null, "items": {
-  "data": "{\"url\": \"/data/srv-a/disks\", \"at\": 1757500000.0, \"by\": \"r-srv-a-1\", \"instance\": \"srv-a:4101\", \"server\": \"srv-a\"}"
+  "data": "{\"url\": \"/data/srv-a/disks\", \"at\": 1757500000.0, \"by\": \"r-srv-a-1\", \"instance\": \"srv-a:4101:001005\", \"server\": \"srv-a\"}"
 }}
 → 200 {"index": 1009}

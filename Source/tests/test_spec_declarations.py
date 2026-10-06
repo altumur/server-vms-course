@@ -580,7 +580,8 @@ def test_a_request_is_a_row_named_by_its_key_stamped_with_its_group_and_held_to_
             st, out = call("POST", "/requests", bad)
             assert (st, out["error"]) == (code, err), (bad, st, out)
         assert call("POST", "/requests", {"unit": "shed/drill", "action": "poke"}, key=False)[0] == 400
-    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": -1}}), "requests.valid_for is a positive number")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": -1}}),
+             "requests.valid_for is a finite number of seconds above 0")
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"stamp": ["colour"]}}), "`requests:` is")
 
 
@@ -592,8 +593,10 @@ def test_how_long_a_request_stands_is_declared_and_a_spec_that_does_not_say_it_d
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"stamp": ["by"]}}), "requests.valid_for is required")
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 20, "per_person": 3}}),
              "requests.ttl is required with `per_person`")
-    _refused(lambda: SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": -1}}), "requests.ttl is a positive number (or 0")
-    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 0}}), "requests.valid_for is a positive number")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": -1}}),
+             "requests.ttl is a finite number of seconds, or 0: no limit")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "requests": {"valid_for": 0}}),
+             "requests.valid_for is a finite number of seconds above 0")
     assert SubsystemSpec.from_dict({**BIN, "requests": {"free": True, "ttl": 0}}).requests["ttl"] == 0
 
 
