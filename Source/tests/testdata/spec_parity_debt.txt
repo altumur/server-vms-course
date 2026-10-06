@@ -38,6 +38,8 @@ course-only rec.subsystem.yaml placement.affinity.kind
 course-only rec.subsystem.yaml placement.affinity.server_field
 course-only rec.subsystem.yaml placement.affinity.strict
 course-only rec.subsystem.yaml placement.affinity.table
+course-only rec.subsystem.yaml rights.reach   # ADR-0057: the course first; the product's side — «Сборка»
+course-only rec.subsystem.yaml rights.reach.cluster   # ADR-0057: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml rights.routes
 course-only rec.subsystem.yaml rights.routes.edit
 course-only rec.subsystem.yaml servers
