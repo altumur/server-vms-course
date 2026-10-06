@@ -148,3 +148,34 @@ def test_every_spec_of_the_course_loads_and_writes_only_re2():
                 assert re2_fault(rx) == "", (os.path.basename(p), where, re2_fault(rx))
                 seen += 1
     assert seen >= 10, seen
+
+
+def _matches(pattern: str, value: str) -> bool:
+    """Through the one door a value meets a schema's pattern at: `schema.load`, then `schema.check`."""
+    from w2cplatform import schema
+    try:
+        schema.check(schema.load({"type": "string", "pattern": pattern}, "probe"), value)
+        return True
+    except schema.Invalid:
+        return False
+
+
+def test_a_pattern_is_read_as_go_reads_it_ascii_classes_and_dollar_the_end_of_the_text():
+    """What both compile but read apart is read Go's way, not refused (the architect, 6 Oct): `$` is the end of the
+    text — `abc` and a newline is not `^abc$` — but under `(?m)` the end of a line, as to both; `\\d`, `\\w`, `\\b` are
+    ASCII — Arabic-Indic digits are no `\\d` — and `\\s` is Go's, without the vertical tab; `\\$` and `[$]` a dollar."""
+    arabic = chr(0x663) + chr(0x664)                     # ٣٤
+    nl, vt, tab = chr(10), chr(11), chr(9)
+    assert _matches("^abc$", "abc") and not _matches("^abc$", "abc" + nl)
+    assert _matches("^" + BS + "d+$", "34") and not _matches("^" + BS + "d+$", arabic)
+    assert not _matches("^" + BS + "w+$", "é") and not _matches(BS + "bé", "é")
+    assert _matches(BS + "s", " ") and not _matches(BS + "s", vt) and not _matches("[" + BS + "s]", vt)
+    assert _matches(BS + "S", vt) and not _matches(BS + "S", tab)
+    assert _matches("^a" + BS + "$", "a$") and not _matches("^a" + BS + "$", "a")
+    assert _matches("^[$]$", "$") and not _matches("^[$]$", "$" + nl)
+    assert _matches("(?m)^a$", "a" + nl + "b") and _matches("(?m:^a$)", "b" + nl + "a" + nl + "c")
+    assert not _matches("(?m)a(?-m:$)", "a" + nl + "b")
+    from w2cplatform.secrets import SecretRules, hide_in_url
+    rules = SecretRules.parse([{"regex": "^/pin/(?P<secret>" + BS + "d+)$", "in": "path"}], "field t")
+    assert hide_in_url("https://h/pin/34", rules) == "https://h/pin/***"
+    assert hide_in_url("https://h/pin/" + arabic, rules) == "https://h/pin/" + arabic    # no `\d` to Go, nor here
