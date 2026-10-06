@@ -140,7 +140,6 @@ product-only live.subsystem.yaml secrets
 product-only live.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
-product-only rec.subsystem.yaml worker.requests   # the recorder files a device's ask to the VMS (recproc's asker): the course's rec.subsystem.yaml says it next
 product-only vms.subsystem.yaml domain.names   # ADR-0031: только у продукта — у курса нет учёток RTSP (stream-clients/)
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
