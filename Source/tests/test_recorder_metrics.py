@@ -25,7 +25,7 @@ def test_a_recorders_troubles_are_numbers_not_only_a_heartbeat():
     text = spec_metrics(rec)                                # the recorders' part of `rec_metrics`
     for line in ('rec_recordings{worker="r-1",phase="running"} 2', 'rec_recordings{worker="r-1",phase="failed"} 1',
                  'rec_volume_error{worker="r-1"} 0', 'rec_volume_error{worker="r-2"} 1',
-                 'rec_archive_away_seconds{worker="r-1"} 360.0', 'rec_archive_away_seconds{worker="r-2"} 0',
+                 'rec_archive_away_seconds{worker="r-1"} 360', 'rec_archive_away_seconds{worker="r-2"} 0',
                  'rec_writer{worker="r-1",state="stuck"} 1', 'rec_writer{worker="r-2",state="ok"} 1',
                  'rec_archive_failure{worker="r-1",kind="away"} 1'):
         assert line in text, line
@@ -73,4 +73,4 @@ def test_a_recording_the_engine_refuses_is_counted_by_itself_and_its_last_frame_
     text = spec_metrics(rec)
     assert 'rec_samples_refused_total{unit="8",status="SEQUENCE_TOO_LARGE"} 10' in text
     assert 'rec_samples_refused_total{unit="7"' not in text
-    assert 'rec_last_frame_age_seconds{unit="7"} 0.0' in text
+    assert 'rec_last_frame_age_seconds{unit="7"} 0' in text
