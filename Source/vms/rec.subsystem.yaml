@@ -36,7 +36,7 @@ slot: {prefix: r, name_env: RECORDER_NAME}
 objects: {rows: [used/*], door: [forwarded/*]}
 # The fields of a recorder's heartbeat that are strings and that something decides by: the volume it is counted in
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare (`volumes.py`).
-heartbeat: {strings: [volume, volume_error, archive]}
+heartbeat: {strings: [volume, volume_error, archive, volume_missing]}
 # A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
@@ -281,6 +281,9 @@ metrics:
 servers:
   show:
     - {table: volumes, by: server, title: тома, columns: [name, kind, url, quota_bytes, enabled]}
+  status:
+    - {field: volume_missing, title: том не найден}
+    - {field: shrink_pending, title: уменьшение квоты не подтверждено}
 # What a page calls things (the console module reads it from /spec; the platform reads none of it).
 display:
   unit: запись
