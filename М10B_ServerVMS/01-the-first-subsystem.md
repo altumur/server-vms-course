@@ -57,7 +57,7 @@ slot: {prefix: w, name_env: WORKER_NAME}
 | `vms/epoch/<id>` | эпоха камеры |
 | `vms/idem/<key>` | заявки идемпотентности |
 | `vms/retention/<id>`, `vms/alarms_retention/<id>` | сроки хранения наблюдений и тревог (шаг 4) |
-| `vms/devices/<device>` | что держатель узнал об устройстве (урок 25) |
+| `vms/devices/<host>` | что держатель узнал об устройстве: объявленная таблица `devices`, строка по хосту устройства (урок 25) |
 | `vms/heartbeats/<w>` | объект: heartbeat воркера |
 | `vms/snapshot/<w>` | объекты: снимок для М12A, по одному на воркера |
 
@@ -232,7 +232,8 @@ Python view of the same thing, for the worker and the tests:
     vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
     vms/retention/<id>    days — derived from events_retention_days       (the console writes, with the row; the resource reads)
     vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
-    vms/devices/<device>  events, rays, relays, ptz, presets — what it says and does   (its holder, on a change)
+    vms/devices/<host>    device, events, rays, relays, ptz, presets, identity — what it says and does
+                          (its holder, on a change: the declared table `devices`, through its field rules)
     vms/next_id           n                                               (the controller)
 
 A camera row is small, rare and must be consistent: raft's shape. Nothing
