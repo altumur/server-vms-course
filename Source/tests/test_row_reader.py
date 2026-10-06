@@ -589,7 +589,7 @@ def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
         "volume_wait": "net is being written by r-1"}).to_bytes())
     text = spec_metrics(rec)
     _prometheus_strict(text)
-    assert 'rec_last_frame_age_seconds{unit="7\\"x\\nnew"} 5.0' in text and 'rec_volume_wait{worker="7\\"x\\nnew"} 1' in text
+    assert 'rec_last_frame_age_seconds{unit="7\\"x\\nnew"} 5' in text and 'rec_volume_wait{worker="7\\"x\\nnew"} 1' in text
     auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put(f"auto/heartbeats/{bad}", Heartbeat(bad, t, [], {"pass_seconds": 1, "late": 0, "wants_folded": 70}).to_bytes())
     text = spec_metrics(auto)

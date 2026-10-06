@@ -583,7 +583,7 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
         {"id": "7", "phase": "running", "last_frame_at": t0 + 5}, {"id": "8", "phase": "running"}], {"server": "srv-1"}).to_bytes())
     box.wall.advance(15)                                                         # …and the recorder goes silent too
     text = spec_metrics(rec)
-    assert 'rec_last_frame_age_seconds{unit="7"} 55.0' in text and 'rec_last_frame_age_seconds{unit="8"}' not in text
+    assert 'rec_last_frame_age_seconds{unit="7"} 55' in text and 'rec_last_frame_age_seconds{unit="8"}' not in text
     r.reconciler.clear(); r.writer_pass()
     assert r.fed == {}                                                           # stopped: nothing is said about it
 
@@ -747,6 +747,6 @@ def test_a_shrink_is_requested_until_the_recorder_applies_it_and_an_uncopied_kee
         metrics = call("GET", "/rec/metrics")
         [pending] = said(metrics)
         assert pending.endswith(" 1"), metrics                                              # r-1 says it
-        assert 'rec_keep_missing_seconds{keep="7-100-200"} 100.0' in metrics and 'keep="8-1-2"' not in metrics
+        assert 'rec_keep_missing_seconds{keep="7-100-200"} 100' in metrics and 'keep="8-1-2"' not in metrics
     finally:
         srv.shutdown()

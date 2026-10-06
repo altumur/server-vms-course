@@ -1013,8 +1013,8 @@ def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_a
     assert heartbeats(box.objects, "rec/")["r-1"].extra["stream"] == said
     lines = spec_metrics(rec_ctl).splitlines()
     assert 'rec_stream_behind_seconds{worker="r-1"} 31.5' in lines and 'rec_stream_lagging{worker="r-1"} 1' in lines
-    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="cut"} 61.0' in lines
-    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="left"} 4.0' in lines
+    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="cut"} 61' in lines
+    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="left"} 4' in lines
     rec.gate_pass(); rec.gate_pass()
     [alarm] = _alarms(box, "camera.uplink.short")
     assert alarm["class"] == "alarm" and alarm["behind_s"] == 31.5 and alarm["cut_s"] == 61.0
@@ -1432,7 +1432,7 @@ def test_what_a_cameras_stream_says_of_its_card_and_its_clock_is_on_metrics_not_
     unknown = [ln for ln in lines if ln.startswith('rec_stream_evicted_unknown_seconds_total{worker="r-1"}')]
     assert 'rec_stream_owed_unknown{worker="r-1"} 1' in lines
     assert unknown and float(unknown[0].split()[-1]) >= 50.0
-    assert 'rec_camera_clock_stepped_seconds_total{worker="r-1",way="back"} 30.0' in lines
+    assert 'rec_camera_clock_stepped_seconds_total{worker="r-1",way="back"} 30' in lines
     assert 'rec_camera_clock_stepped_seconds_total{worker="r-1",way="forward"} 2.5' in lines
     assert 'rec_camera_clock_set_total{worker="r-1"} 1' in lines and 'rec_camera_frames_ahead_total{worker="r-1"} 4' in lines
     rec.stream_owed = lambda: [(t + 90, float("inf"))]                    # wired whole

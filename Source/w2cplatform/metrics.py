@@ -29,7 +29,9 @@ seventh pass, the metrics of a console). Declared, read at load (`parse`), and n
 """
 from __future__ import annotations
 
+import math
 import re
+from decimal import Decimal
 
 from .rows import FIELDS, PARSE_ERRORS, finite, number
 
@@ -44,8 +46,16 @@ def _label(value) -> str:
     return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
 
+def _word(x) -> str:
+    """A value compared as a word: a bool as `true`/`false`, a number by its value (`value_text`, ADR 0055: `61` and
+    `61.0` are one), anything else as it is."""
+    if isinstance(x, bool):
+        return str(x).lower()
+    return value_text(x) if isinstance(x, (int, float)) else str(x)
+
+
 def _values(v) -> tuple:
-    return tuple(str(x).lower() if isinstance(x, bool) else str(x) for x in (v if isinstance(v, list) else [v]))
+    return tuple(_word(x) for x in (v if isinstance(v, list) else [v]))
 
 
 def _where(name: str, w, what: str) -> dict:
@@ -119,7 +129,7 @@ def _walk(d, path: list, labels: dict | None = None) -> list[tuple[dict, object]
 
 def _said(v, equals) -> bool:
     if equals is not None:
-        return (str(v).lower() if isinstance(v, bool) else str(v)) in equals
+        return _word(v) in equals
     return v not in (None, "", 0, False) and str(v).lower() != "false"
 
 
@@ -138,7 +148,7 @@ def lines(spec, ctl, hbs: dict, live: dict, now: float) -> list[str]:
             out.append(f"# TYPE {p}_{m['name']} {m['type']}")
 
     def say(m, labels: dict, value):
-        out.append(f"{p}_{m['name']}{_lbl({**labels, **m['labels']})} {value}")
+        out.append(f"{p}_{m['name']}{_lbl({**labels, **m['labels']})} {_word(value)}")   # `default` too: `metricText`
 
     for m in spec.metrics:
         typeline(m)
@@ -151,16 +161,14 @@ def lines(spec, ctl, hbs: dict, live: dict, now: float) -> list[str]:
             per = [(w, labels, v) for w, hb in sorted(workers.items()) for labels, v in _walk(hb.extra, m["path"])]
             if m["agg"] in ("sum", "max"):
                 acc: dict[tuple, float] = {}
-                whole = True
                 for w, labels, v in per:
                     n = number(key(w, ".".join(m["path"])), v, float, 0.0)
-                    whole = whole and isinstance(v, int) and not isinstance(v, bool)
                     k = tuple(labels.items())
                     acc[k] = (acc.get(k, 0.0) + n) if m["agg"] == "sum" else max(acc.get(k, 0.0), n)
                 for k, n in sorted(acc.items()):
                     if m["agg"] == "max" and m["default"] is None and not n:
                         continue                            # a max nobody has: no line, as before
-                    say(m, dict(k), int(n) if whole else round(n, 1) if m["agg"] == "max" else n)
+                    say(m, dict(k), round(n, 1) if m["agg"] == "max" else n)   # by value (ADR 0055)
                 continue
             for w, labels, v in per:
                 _one(m, say, {"worker": w, **labels}, v, now, key(w, ".".join(m["path"])))
@@ -195,16 +203,27 @@ def text(ctl, lost_after: float = 45.0) -> str:
     return "\n".join(lines(ctl.spec, ctl, hbs, live, now))
 
 
-def _num(n: float):
-    return int(n) if float(n).is_integer() else round(n, 3)
-
-
-# A number as its worker said it: a whole number it wrote as one stays one (`4`), a float a float (`61.0`) — the line a
-# dashboard already matches.
-def _as_said(v, n):
-    if isinstance(v, int) and not isinstance(v, bool) or v is None and isinstance(n, int):
-        return int(n)
-    return n
+# A number in `/metrics` BY ITS VALUE, on both sides (ADR 0055): a whole value whole (`61`, an age of `10`), any other
+# in the shortest text that reads back as it (`7.5`; an exponent where that is the shorter, `1e-07`, `1.2345675e+06`,
+# `1e+21` — Prometheus reads it); one rule for a sample, a bucket's `le` and a value compared with `equals`. Prometheus
+# holds a float64; how a heartbeat happened to spell it (`61` or `61.0`, which the product's reader cannot tell apart)
+# does not leak into the line. The product's `sampleText` to the letter: digits for a whole value under 1e15, else Go's
+# shortest `%g` (`strconv.FormatFloat(f, 'g', -1, 64)`: the exponent below 1e-4 and from 1e6 up).
+def value_text(n) -> str:
+    f = float(n)
+    if math.isnan(f):
+        return "NaN"
+    if math.isinf(f):
+        return "+Inf" if f > 0 else "-Inf"
+    if f.is_integer() and abs(f) < 1e15:
+        return str(int(f))
+    d = Decimal(repr(f)).normalize()                           # repr: the shortest digits that read back as `f`
+    e = d.adjusted()
+    if -4 <= e < 6:
+        return repr(f)
+    sign, digits, _ = d.as_tuple()
+    m = str(digits[0]) + ("." + "".join(map(str, digits[1:])) if len(digits) > 1 else "")
+    return f"{'-' if sign else ''}{m}e{'+' if e >= 0 else '-'}{abs(e):02d}"
 
 
 def _one(m, say, labels: dict, v, now: float, key: str) -> None:
@@ -233,7 +252,7 @@ def _one(m, say, labels: dict, v, now: float, key: str) -> None:
         name = m["name"]
         bucket = {**m, "name": f"{name}_bucket"}
         for le, n in zip(m["buckets"], counts):
-            say(bucket, {**labels, "le": f"{le:g}"}, n)
+            say(bucket, {**labels, "le": value_text(le)}, n)      # one rule for a sample, `le` and `equals` (ADR 0055)
         say(bucket, {**labels, "le": "+Inf"}, count)
         say({**m, "name": f"{name}_sum"}, labels, round(total, 3))
         say({**m, "name": f"{name}_count"}, labels, count)
@@ -245,7 +264,7 @@ def _one(m, say, labels: dict, v, now: float, key: str) -> None:
         if n is None:
             n = m["default"]
         if n is not None:
-            say(m, labels, _as_said(v, n))
+            say(m, labels, n)
 
 
 # A row of a table that says every `where` field's value (one of them; words compared as words). Read here and by the

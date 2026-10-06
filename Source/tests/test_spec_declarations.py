@@ -206,6 +206,12 @@ def test_a_row_points_only_at_what_agrees_with_it_and_a_unique_value_is_one_unit
     real = vars_.get
     vars_.get = lambda k, *a, **kw: (_ for _ in ()).throw(Garbled(k, "torn")) if k == "bin/bays/b3" else real(k, *a, **kw)
     _refused(lambda: ctl.create({"name": "d", "owner": "ann", "home": "b3"}), "whose row does not parse")
+    from w2cplatform.console import refused_status as _st
+    from w2cplatform.spec import RefGarbled
+    try:                                                                 # the rows standing: 409, `garbled` (ADR 0031)
+        ctl.create({"name": "d", "owner": "ann", "home": "b3"})
+    except RefGarbled as e:
+        assert _st(e) == 409 and e.fault == "garbled" and "mend it first" in str(e)
     vars_.get = real
     _refused(lambda: ctl.create({"name": "t", "tag": "t1"}), "bin a has that tag already")
     _refused(lambda: ctl.create({"name": "u", "addr": "X://H/part/./1"}), "bin a has that addr already")
@@ -294,7 +300,7 @@ def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_
     lines = text(ctl).splitlines()
     for want in ("bin_units_running 1", "bin_bays_open 2", "bin_unguarded 3",
                  'bin_jam{worker="w-1"} 1', 'bin_jam{worker="w-2"} 0',
-                 'bin_away_seconds{worker="w-1"} 30.0', 'bin_away_seconds{worker="w-2"} 0',
+                 'bin_away_seconds{worker="w-1"} 30', 'bin_away_seconds{worker="w-2"} 0',
                  'bin_belt{worker="w-1",state="ok"} 1', 'bin_belt{worker="w-2",state="slow"} 1',
                  'bin_moves_total{outcome="done"} 7', 'bin_moves_total{outcome="failed"} 1',
                  'bin_items{worker="w-1",phase="pending"} 1', 'bin_items{worker="w-1",phase="running"} 1',
@@ -319,6 +325,35 @@ def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "display": {"logic": "if"}}), "words for a page, no logic")
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "servers": {"show": [{"table": "nope", "by": "server"}]}}), "`servers:` is")
 
+
+
+def test_a_metric_number_is_printed_by_its_value_and_not_by_how_the_heartbeat_spelled_it():
+    """ADR 0055: a number on `/metrics` by its value, on both sides — a whole value whole (`61` whether the heartbeat
+    wrote `61` or `61.0`, an age `10`), any other the shortest text that reads back as it, an exponent where Go's
+    shortest `%g` writes one; one rule for a sample, a bucket's `le` and a word `equals` compares. The table is the
+    product's `sampleText_internal_test.go`, to the letter."""
+    from w2cplatform.metrics import text, value_text
+    for n, want in {61: "61", 61.0: "61", -3: "-3", 0: "0", -0.0: "0", 10.0: "10", 7.5: "7.5", 0.1: "0.1", 10.25: "10.25",
+                    1e21: "1e+21", 1e-7: "1e-07", 1234567.5: "1.2345675e+06", 1e6: "1000000", 1e15: "1e+15",
+                    0.0001: "0.0001", float("inf"): "+Inf"}.items():
+        assert value_text(n) == want, (n, value_text(n), want)
+    vars_, objects, wall = _box()
+    spec = SubsystemSpec.from_dict({**BIN, "metrics": [
+        {"name": "depth", "from": "heartbeat.depth"},
+        {"name": "level_hit", "from": "heartbeat.level", "agg": "flag", "equals": [1]},
+        {"name": "moves_total", "from": "heartbeat.moves", "agg": "sum", "type": "counter"},
+        {"name": "wait_seconds", "from": "heartbeat.wait", "agg": "histogram", "buckets": [0.5, 1.0, 1e6]}]})
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    for w, said in (("w-1", 61), ("w-2", 61.0)):
+        objects.put(spec.sub.heartbeat_key(w), Heartbeat(w, wall(), [], {"server": "s1", "depth": said, "level": said / 61,
+                                                                         "moves": said, "wait": {"buckets": [0, 1, 2],
+                                                                                                 "count": 2, "sum": 2.0}}).to_bytes())
+    lines = text(ctl).splitlines()
+    for want in ('bin_depth{worker="w-1"} 61', 'bin_depth{worker="w-2"} 61',
+                 'bin_level_hit{worker="w-1"} 1', 'bin_level_hit{worker="w-2"} 1', "bin_moves_total 122",
+                 'bin_wait_seconds_bucket{worker="w-1",le="0.5"} 0', 'bin_wait_seconds_bucket{worker="w-1",le="1"} 1',
+                 'bin_wait_seconds_bucket{worker="w-1",le="1000000"} 2', 'bin_wait_seconds_sum{worker="w-1"} 2'):
+        assert want in lines, (want, lines)
 
 def test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_about_it():
     """`holds:` (it was a subsystem's function the resource called, `kept`): a row of the spec's table holds its unit's

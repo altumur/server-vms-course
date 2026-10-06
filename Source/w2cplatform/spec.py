@@ -97,7 +97,7 @@ from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMM
 from .events import OWN_OF_TREES, Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
-from .canonical import MUST_MATCH, UNIQUE, BadUrl, canonical_json, number_text, parse_json
+from .canonical import GARBLED, MUST_MATCH, UNIQUE, BadUrl, canonical_json, number_text, parse_json
 from .rows import PARSE_ERRORS, Table, finite
 from .variables import Conflict, Garbled, Variables
 
@@ -145,6 +145,13 @@ class NotUnique(Refused):
     refusal that depends on the rows standing — 409 with `fault: unique` (ADR 0031's rule), the other unit in `detail`."""
     status = 409
     fault = UNIQUE
+
+
+class RefGarbled(Refused):
+    """A write whose `ref` names a row that does not parse: right by the spec, stopped by a row standing — 409 with
+    `fault: garbled` (ADR 0031's rule), the row's name and «mend it first» in `detail`."""
+    status = 409
+    fault = GARBLED
 
 
 class Exists(Refused):
@@ -2799,7 +2806,7 @@ class SpecController(Controller):
                     if items is not None and not isinstance(items, dict):
                         raise TypeError(type(items).__name__)
                 except (Garbled, *PARSE_ERRORS):
-                    raise Refused(f"{n} names {f.ref}/{v}, whose row does not parse: mend it first — nothing points "
+                    raise RefGarbled(f"{n} names {f.ref}/{v}, whose row does not parse: mend it first — nothing points "
                                   f"at a row nobody can read") from None
                 if items and items.get("deleted") != "true":
                     for theirs, mine in f.must_match.items():

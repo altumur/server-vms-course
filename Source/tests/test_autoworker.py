@@ -666,12 +666,12 @@ def test_a_pass_says_what_it_cost_in_its_heartbeat_and_the_console_exports_it():
     assert hb.extra["queries"] == 1 and hb.extra["latency_seconds"] == 4.0 and hb.extra["lag_seconds"] == w.COLD_START
     con = SpecController(AUTO_SPEC, box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     text = spec_metrics(con)
-    assert 'auto_firing_latency_seconds{worker="a-1"} 4.0' in text and 'auto_queries_per_pass{worker="a-1"} 1' in text
+    assert 'auto_firing_latency_seconds{worker="a-1"} 4' in text and 'auto_queries_per_pass{worker="a-1"} 1' in text
     # …and the road as a histogram since the process started: the pass after this one files nothing and its
     # gauge says 0, but a scrape between the two still sees the four-second road (feedback AY).
     box.wall.advance(2); w.reconcile_once(); w.heartbeat_once()
     text = spec_metrics(con)
-    assert 'auto_firing_latency_seconds{worker="a-1"} 0.0' in text
+    assert 'auto_firing_latency_seconds{worker="a-1"} 0' in text
     assert 'auto_event_to_request_seconds_bucket{worker="a-1",le="2"} 0' in text
     assert 'auto_event_to_request_seconds_bucket{worker="a-1",le="5"} 1' in text
     assert 'auto_event_to_request_seconds_count{worker="a-1"} 1' in text

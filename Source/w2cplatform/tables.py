@@ -137,7 +137,7 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
               said: dict | None = None) -> tuple[str, dict]:
     from .sealing import seal_items
     from .secrets import is_secret_field
-    from .spec import Mismatched, Refused, SubsystemSpec, unbound_secret
+    from .spec import Mismatched, RefGarbled, Refused, SubsystemSpec, unbound_secret
     from .variables import Garbled
     t = spec.table_specs[table]
     if not isinstance(body, dict):
@@ -198,7 +198,7 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
                 if there is not None and not isinstance(there, dict):
                     raise TypeError(type(there).__name__)
             except (Garbled, *PARSE_ERRORS):
-                raise Refused(f"{n} names {f.ref}/{v}, whose row does not parse: mend it first — nothing points at a "
+                raise RefGarbled(f"{n} names {f.ref}/{v}, whose row does not parse: mend it first — nothing points at a "
                               f"row nobody can read") from None
         if there and there.get("deleted") != "true":
             for theirs, mine in f.must_match.items():
