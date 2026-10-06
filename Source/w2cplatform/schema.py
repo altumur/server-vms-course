@@ -11,7 +11,8 @@ rule that silently holds nothing):
     enum, const
     properties, required, additionalProperties (true, false or a schema), propertyNames, minProperties, maxProperties
     items (a schema), minItems, maxItems, uniqueItems
-    minLength, maxLength, pattern (searched, as the standard says: anchor it to mean the whole; RE2 only, `re2_fault`)
+    minLength, maxLength, pattern (searched, as the standard says: anchor it to mean the whole; RE2 only, `re2_fault`,
+                         and read as Go reads it, `go_regex`)
     minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf
     allOf, anyOf, oneOf, not, if/then/else
     title, description, $comment   words for a reader, checked nothing
@@ -20,6 +21,7 @@ rule that silently holds nothing):
 """
 from __future__ import annotations
 
+import functools
 import math
 import re
 
@@ -81,6 +83,7 @@ def load(schema, what: str, depth: int = 0):
         fault = re2_fault(schema["pattern"])
         if fault:
             raise ValueError(f"{what}: pattern {schema['pattern']!r} {fault}")
+        go_regex(schema["pattern"])                  # …and read as Go reads it, the one way it is matched
     for k in ("minLength", "maxLength", "minItems", "maxItems", "minProperties", "maxProperties"):
         if k in schema and (isinstance(schema[k], bool) or not isinstance(schema[k], int) or schema[k] < 0):
             raise ValueError(f"{what}: `{k}` is a whole number")
@@ -189,6 +192,72 @@ def re2_fault(p) -> str:
     return ""
 
 
+# …AND THE COURSE READS IT AS GO DOES (the architect, 6 Oct): what both compile but read apart is read Go's way here,
+# not refused. `\d`, `\w`, `\b` are ASCII (`re.ASCII`); `\s` is Go's `[\t\n\f\r ]` (Python's ASCII one adds `\v`); `$`
+# outside a class is the end of the text (`\Z`: Python's `$` takes a newline before it too) — but not under the `m`
+# flag, `(?m)` or `(?m:…)`, where it is the end of a line to both. `\$` and `[$]` are a dollar, untouched.
+_GO_SPACE, _GO_NOT_SPACE, _GO_SPACE_IN_CLASS = r"[\t\n\f\r ]", r"[^\t\n\f\r ]", r"\t\n\f\r "
+
+
+def as_go(p: str) -> str:
+    """`p` (one `re2_fault` passed) as Python must be told it to read it as Go's RE2 does — compiled with `re.ASCII`."""
+    out, i, n, klass, multi = [], 0, len(p), False, [False]   # `multi`: the `m` flag, one entry per open group
+    while i < n:
+        c = p[i]
+        if c == "\\" and i + 1 < n:
+            e = p[i + 1]
+            if e == "s":
+                out.append(_GO_SPACE_IN_CLASS if klass else _GO_SPACE)
+            elif e == "S" and not klass:
+                out.append(_GO_NOT_SPACE)
+            else:
+                out.append(p[i:i + 2])
+            i += 2
+            continue
+        if klass:
+            klass = c != "]"
+            out.append(c)
+            i += 1
+            continue
+        if c == "[":
+            j = i + 1 + (p[i + 1:i + 2] == "^")
+            j += p[j:j + 1] == "]"                           # `[]…]`, `[^]…]`: the first `]` is a character
+            out.append(p[i:j])
+            klass, i = True, j
+            continue
+        if c == "(":
+            j = i + 2
+            if p.startswith("(?", i):
+                while j < n and (p[j].isalpha() or p[j] == "-"):
+                    j += 1
+            flags = p[i + 2:j] if p.startswith("(?", i) else ""
+            if flags and not flags.startswith("P") and p[j:j + 1] in (")", ":"):
+                on, _, off = flags.partition("-")
+                m = True if "m" in on else False if "m" in off else multi[-1]
+                if p[j] == ")":
+                    multi[-1] = m                            # `(?m)`: the rest of this group
+                else:
+                    multi.append(m)                          # `(?m:…)`: this group
+                out.append(p[i:j + 1])
+                i = j + 1
+                continue
+            multi.append(multi[-1])
+            out.append(c)
+            i += 1
+            continue
+        if c == ")" and len(multi) > 1:
+            multi.pop()
+        out.append("\\Z" if c == "$" and not multi[-1] else c)
+        i += 1
+    return "".join(out)
+
+
+@functools.lru_cache(maxsize=1024)
+def go_regex(p: str) -> "re.Pattern":
+    """A spec's pattern compiled to read as Go reads it (`as_go`, `re.ASCII`): every match of one goes through here."""
+    return re.compile(as_go(p), re.ASCII)
+
+
 def _type_of(v) -> str:
     if v is None:
         return "null"
@@ -269,7 +338,7 @@ def check(schema, v, where: str = "") -> None:
             raise Invalid(f"{at} is at least {schema['minLength']} characters" if schema["minLength"] > 1 else f"{at} is not empty")
         if "maxLength" in schema and len(v) > schema["maxLength"]:
             raise Invalid(f"{at} is at most {schema['maxLength']} characters, not {len(v)}", "maxLength")
-        if "pattern" in schema and not re.search(schema["pattern"], v):
+        if "pattern" in schema and not go_regex(schema["pattern"]).search(v):
             raise Invalid(f"{at} does not match {schema['pattern']!r}")
     if isinstance(v, (list, tuple)):
         if "minItems" in schema and len(v) < schema["minItems"]:

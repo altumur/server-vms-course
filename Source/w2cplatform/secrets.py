@@ -82,7 +82,7 @@ import unicodedata
 from dataclasses import dataclass
 from urllib.parse import unquote_plus
 
-from .schema import re2_fault
+from .schema import go_regex, re2_fault
 
 SECRET_MASK = "***"
 
@@ -242,12 +242,13 @@ def _pattern(entry: dict, keys: set, where: str, at: str) -> Pattern:
     if not isinstance(entry.get("decoded", True), bool):
         raise ValueError(f"{where}: a `regex`'s `decoded` is true or false, not {entry['decoded']!r}")
     try:
-        rx = re.compile(str(entry["regex"]))
+        re.compile(str(entry["regex"]))            # Python's words first, for what it cannot read at all
     except re.error as e:
         raise ValueError(f"{where}: `regex` {entry['regex']!r} is no regular expression: {e}") from None
     fault = re2_fault(str(entry["regex"]))         # a subset of RE2, as every pattern of a spec (ADR 0019, 0012)
     if fault:
         raise ValueError(f"{at}.regex {entry['regex']!r} {fault}")
+    rx = go_regex(str(entry["regex"]))             # …read as Go reads it: ASCII classes, `$` the end of the text
     if not {"login", "secret"} & set(rx.groupindex) or set(rx.groupindex) - {"login", "secret", "name"}:
         raise ValueError(f"{where}: `regex` {entry['regex']!r} names what it finds — a group `(?P<login>…)` or "
                          f"`(?P<secret>…)`, and maybe `(?P<name>…)`, no other")
