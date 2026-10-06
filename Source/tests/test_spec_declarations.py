@@ -206,6 +206,12 @@ def test_a_row_points_only_at_what_agrees_with_it_and_a_unique_value_is_one_unit
     real = vars_.get
     vars_.get = lambda k, *a, **kw: (_ for _ in ()).throw(Garbled(k, "torn")) if k == "bin/bays/b3" else real(k, *a, **kw)
     _refused(lambda: ctl.create({"name": "d", "owner": "ann", "home": "b3"}), "whose row does not parse")
+    from w2cplatform.console import refused_status as _st
+    from w2cplatform.spec import RefGarbled
+    try:                                                                 # the rows standing: 409, `garbled` (ADR 0031)
+        ctl.create({"name": "d", "owner": "ann", "home": "b3"})
+    except RefGarbled as e:
+        assert _st(e) == 409 and e.fault == "garbled" and "mend it first" in str(e)
     vars_.get = real
     _refused(lambda: ctl.create({"name": "t", "tag": "t1"}), "bin a has that tag already")
     _refused(lambda: ctl.create({"name": "u", "addr": "X://H/part/./1"}), "bin a has that addr already")
