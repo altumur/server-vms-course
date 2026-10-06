@@ -7,8 +7,7 @@ the boundary note — the family whole in the platform, driven by the spec's `re
                 `<sub>/commands/<id>` (`Worker.requests`)
     cleared     here: a row a holder answered goes (`clear_requests`, every `CLEAR_EVERY`, no row read); and on the reaper's
                 slower turn (`sweep`) a row with a deadline nobody performed is ended `REAP_AFTER` past it — counted as
-                expired, or as not known when a holder began it and went, and said so in its mark (ADR-0054) — and a row
-                with none ends after the spec's `ttl`
+                expired, or as not known when a holder began it and went — and a row with none ends after the spec's `ttl`
 
 A worker writes no configuration, so it cannot delete what it has done, only say that it did it; the console, which
 reads the heartbeats already, removes the row — one writer per row.

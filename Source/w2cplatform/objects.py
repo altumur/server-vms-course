@@ -33,7 +33,6 @@ whole or not at all."""
 # ================================================================================================
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import os
 from contextlib import contextmanager
@@ -54,16 +53,15 @@ def bytes_index(data: bytes | None) -> str:
 
 
 # The directory's lock (`DIR_LOCK`), exclusive, for one write: let go when the descriptor closes. Made under the
-# process's umask, as every file of the store is.
+# process's umask, as every file of the store is; taken through the platform's one lock seam (`variables._lock_exclusive`:
+# `flock`, or `msvcrt` on Windows), which says `StoreBusy` past its wait rather than waiting for ever.
 @contextmanager
 def dir_lock(d: str):
+    from .variables import _lock_exclusive
     os.makedirs(d, exist_ok=True)
-    fd = os.open(os.path.join(d, DIR_LOCK), os.O_RDWR | os.O_CREAT, 0o666)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+    with os.fdopen(os.open(os.path.join(d, DIR_LOCK), os.O_RDWR | os.O_CREAT, 0o666), "r+b") as f:
+        _lock_exclusive(f)
         yield
-    finally:
-        os.close(fd)
 
 
 # A `typing.Protocol` with `put(key, data: bytes)`, `get(key) -> bytes | None`, `list(prefix) -> list[str]`.

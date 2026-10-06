@@ -2133,11 +2133,6 @@ class Worker:
     def command_key(self, rid: str) -> str:
         return self.sub.command_key(rid)
 
-    def began_by(self, rid: str) -> str | None:
-        """The instance that said it was about to perform this request, or None."""
-        mark = self.mark_of(rid)
-        return None if mark is None else (str(mark.get("instance", "")) or "?")
-
     def mark_of(self, rid: str) -> dict | None:
         """The mark of this request as it stands, or None. Raises if the store does not answer."""
         raw = self.objects.get(self.command_key(rid))
