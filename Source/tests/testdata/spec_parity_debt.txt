@@ -21,14 +21,9 @@ course-only rec.subsystem.yaml servers.status   # ADR-0057: the course first; th
 course-only rec.subsystem.yaml servers.status[shrink_pending]   # ADR-0057: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml servers.status[volume_missing]   # ADR-0057: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml servers.status[writer.state]   # ADR-0057: the course first; the product's side — «Сборка»
-course-only rec.subsystem.yaml snapshot[min_depth_days]   # ADR-0010: the course first; the product's side — «Лекции»
-course-only vms.subsystem.yaml domain.books[poll]   # ADR-0003: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[acts]   # ADR-0010: the course first; the product's side — «Лекции»
-course-only vms.subsystem.yaml domain.tokens.ask.claims[ask]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[up]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0019: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml snapshot[alarms]   # ADR-0010: the course first; the product's side — «Лекции»
-course-only vms.subsystem.yaml snapshot[kind]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml tables   # ADR-0012: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml tables.devices   # ADR-0012: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml tables.devices.fields   # ADR-0012: the course first; the product's side — «Сборка»
@@ -59,16 +54,16 @@ course-only vms.subsystem.yaml worker.writes
 course-only vms.subsystem.yaml worker.writes[devices]   # ADR-0012: the course first; the product's side — «Сборка»
 product-only auto.subsystem.yaml heartbeat
 product-only auto.subsystem.yaml heartbeat.strings
-product-only auto.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product first; the course's side — «Лекции»
+product-only auto.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
 product-only auto.subsystem.yaml metrics[filings_total]   # ADR-0013: the product first; the course's side — «Лекции»
 product-only live.subsystem.yaml secrets
 product-only live.subsystem.yaml secrets.reads
 product-only live.subsystem.yaml secrets.reads[domain/vms/stream-accounts]   # ADR-0024: the product first; the course's side — «Лекции»
 product-only live.subsystem.yaml secrets.reads[domain/vms/stream-clients/]   # ADR-0024: the product first; the course's side — «Лекции»
-product-only live.subsystem.yaml snapshot[grace]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only rec.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product first; the course's side — «Лекции»
+product-only live.subsystem.yaml snapshot[grace]   # ADR-0010: the product drops it — «Сборка»
+product-only rec.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
 product-only rec.subsystem.yaml heartbeat.strings[ingest]   # ADR-0019: the product first; the course's side — «Лекции»
-product-only rec.subsystem.yaml heartbeat.strings[ingest_rtsp]   # ADR-0019: the product first; the course's side — «Лекции»
+product-only rec.subsystem.yaml heartbeat.strings[ingest_rtsp]   # ADR-0019: the product drops it — «Сборка»
 product-only rec.subsystem.yaml metrics[filings_total]   # ADR-0013: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.door[taken/*]   # ADR-0057: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/clock/*]   # ADR-0019: the product first; the course's side — «Лекции»
@@ -77,27 +72,25 @@ product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0024: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books[lifts]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books[polls]   # ADR-0003: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books[receiver]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books[stream-accounts]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[ask-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[ingest-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[lift-keys]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.kept[scenarios]   # ADR-0010: the product first; the course's side — «Лекции»
+product-only vms.subsystem.yaml domain.kept[scenarios]   # ADR-0010: the product moves it to auto's domain.shared — «Платформа»
 product-only vms.subsystem.yaml domain.kept[stream-clients/]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[upstream-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.names   # ADR-0031: только у продукта — у курса нет учёток RTSP (stream-clients/)
-product-only vms.subsystem.yaml domain.tokens.ask.claims[ref]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by[depth]   # ADR-0019: the product first; the course's side — «Сборка»
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by[dropped]   # ADR-0019: the product first; the course's side — «Сборка»
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window
-product-only vms.subsystem.yaml heartbeat.strings[device_url]   # ADR-0019: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product first; the course's side — «Лекции»
+product-only vms.subsystem.yaml heartbeat.strings[device_url]   # ADR-0019: the product drops it — «Сборка»
+product-only vms.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
 product-only vms.subsystem.yaml secrets.readers.domain/vms/stream-accounts[domain]   # ADR-0024: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml secrets.readers.domain/vms/stream-accounts[domainagent]   # ADR-0024: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml secrets.readers.domain/vms/stream-accounts[domainpart]   # ADR-0024: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml secrets.readers.domain/vms/stream-clients/[domainpart]   # ADR-0024: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml snapshot[alarms_retention_days]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml snapshot[folders]   # ADR-0010: the product first; the course's side — «Лекции»
+product-only vms.subsystem.yaml snapshot[alarms_retention_days]   # ADR-0010: the product drops it — «Сборка»
+product-only vms.subsystem.yaml snapshot[folders]   # ADR-0010: the product drops it — «Сборка»
