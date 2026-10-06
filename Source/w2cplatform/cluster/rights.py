@@ -26,7 +26,7 @@ import sys
 
 from w2cplatform import catalog
 from w2cplatform.access import DOMAIN_MARKS, MEMBER_MARK, TRUST_KEYS
-from w2cplatform.contract import DECOMMISSION, SCHEMA_KEY, SERVERS_PREFIX
+from w2cplatform.contract import COMMANDS, DECOMMISSION, REQUESTS, SCHEMA_KEY, SERVERS_PREFIX
 from w2cplatform.door import KEYS_KEY, SIGNER_KEY
 from w2cplatform.resource import DOORS, MIRROR_KEY, SPACE_KEY
 
@@ -117,10 +117,15 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # set, and `domain/member` while there is none), the door keys its page door checks a token by (`door/keys`) and
         # what its spec says it reads — never the grants — and what each server reaches, the administrator's word
         # (`platform/servers/*`, one row a server; ADR-0026's addition: the console writes it, controllers and workers read it).
+        # A worker that files requests (`worker.requests`) reads, of each subsystem it files to, the row standing under an
+        # id it files again (`Worker._filed_already`) and the mark that says the id is spent (`Worker._spent_by`; the
+        # review's fourteenth pass, major 2): writing them alone, it read neither, and every filing again was refused.
         rows = _worker_objects(s)
+        filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
                                       [SCHEMA_KEY, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
-                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads, *rows])
+                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads, *rows,
+                                       *filed_to])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to
     # free bytes, a request row of each subsystem whose spec says it frees (`requests: {free: true}`); reads the others'
     # doors, the mirror and the watermark's knobs, every subsystem's days, what a spec's `holds:` table holds and the rows

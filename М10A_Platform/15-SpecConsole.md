@@ -844,6 +844,7 @@ console:
 
 ```yaml
 metrics:
+  - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}
   - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
   - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}
   - {name: notches_unshelved, count: table notches, unless: {table: shelves, where: {kind: reserve}}}
@@ -854,6 +855,8 @@ metrics:
   …
   - {name: wait_seconds, from: heartbeat.wait, agg: histogram, type: histogram, buckets: [1.0, 5.0]}
 ```
+
+Первая строка — поле, которое кладёт в heartbeat база, а не подсистема: `filings` (`filed`, `again`, `refused`), заявки, поданные воркерами этой подсистемы другим (`Worker.file_request`, урок 14). Платформенной строки метрик для него нет: подсистема, чьи воркеры подают (`worker.requests` — у `testsub2`, `auto`, `rec`), объявляет его сама, и консоль печатает `testsub2_filings_total{outcome="filed"} 1` — строку на исход, сумму по воркерам (четырнадцатое ревью, major 3; `test_worker_files_requests.py::test_the_filings_are_on_metrics_by_the_specs_own_line`).
 
 **Число печатается по значению, а не по тому, как его написал воркер** (ADR 0055). У Prometheus отсчёт — float64, и `61` и `61.0` для него одно число. Продукт читает heartbeat во float64 и этих двух написаний не различает. Курс же печатал число так, как его написал воркер: целое в JSON — целым, дробное — дробным, `61.0` оставалось `61.0`. Так одно значение получало в двух деревьях два текста, а то, как heartbeat записал число, просачивалось в строку метрики. Теперь правило одно (`metrics.value_text`, в продукте `sampleText`):
 

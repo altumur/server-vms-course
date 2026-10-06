@@ -109,6 +109,31 @@ def test_the_same_request_filed_again_stands_and_a_different_one_under_its_id_is
     assert w.filings == {"filed": 1, "again": 1, "refused": 5}
 
 
+def test_the_filings_are_on_metrics_by_the_specs_own_line():
+    """The review's fourteenth pass, major 3: `filings` were in the heartbeat alone, and a filing refused again and again
+    raised no alert. The spec of a subsystem whose workers file says it (`filings_total`, from
+    `heartbeat.filings.<outcome>`, summed over its workers — «Паритет»'s line in testsub2, `auto`, `rec`): one line per
+    outcome, each number by its value (ADR 0055)."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.spec import SpecController
+    box = Box()
+    spec = testsub2()
+    assert any(m["name"] == "filings_total" and m["path"] == ["filings", "<outcome>"] for m in spec.metrics)
+    w = _worker(box, spec, "t-1")
+    w.server = "srv-1"                                                  # a heartbeat names its server, or does not parse
+    row = {"unit": "testsub/c1", "add": 1, "valid_until": box.wall() + 30}
+    assert w.file_request("testsub", "f-1", row, unit="t1") is True
+    assert w.file_request("testsub", "f-1", dict(row), unit="t1") is False
+    _refused(lambda: w.file_request("testsub", "f-1", {**row, "add": 2}, unit="t1"), "a different request")
+    assert w.platform_fields()["filings"] == {"filed": 1, "again": 1, "refused": 1}
+    w.heartbeat_once()
+    text = SpecConsole(SpecController(spec, box.vars, box.objects, wall=box.wall)).metrics_text()
+    said = [ln for ln in text.splitlines() if ln.startswith("testsub2_filings_total")]
+    assert said == ['testsub2_filings_total{outcome="again"} 1', 'testsub2_filings_total{outcome="filed"} 1',
+                    'testsub2_filings_total{outcome="refused"} 1'], said
+    assert "# TYPE testsub2_filings_total counter" in text.splitlines()
+
+
 def test_a_standing_row_that_does_not_read_is_refused_and_never_overwritten():
     box = Box()
     w = _worker(box, testsub2(), "t-1")

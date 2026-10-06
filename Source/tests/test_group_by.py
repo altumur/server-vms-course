@@ -308,7 +308,8 @@ def test_a_device_that_does_not_come_back_from_a_command_does_not_hold_the_loop(
     away with its session held kept `requests` — and the loop, the slot, the leases and the heartbeat of every
     camera of the worker — for as long as the vendor's SDK waited (the product's `Perform`, feedback BE). The call
     is made on a thread of its own: the pass waits 0.2 s for it; the camera next to it gets its command; no second
-    call goes into the busy device; and after ten seconds the request is answered "the device did not answer"."""
+    call goes into the busy device; and after ten seconds the request is answered "the device did not answer" — `unknown`
+    (the review's fourteenth pass, major 6: whether the device acted is not known)."""
     import threading
     import time
     box = Box(); ctl, con = _ctl(box)
@@ -331,13 +332,13 @@ def test_a_device_that_does_not_come_back_from_a_command_does_not_hold_the_loop(
     assert w.requests() == [] and calls == [1]
     box.clock.advance(11)                                              # PERFORM_TIMEOUT
     done = w.requests()
-    assert done == [{"request": "r1", "unit": stuck, "error": "the device did not answer"}] and w.commands["refused"] == 1
+    assert done == [{"request": "r1", "unit": stuck, "error": "the device did not answer"}] and w.commands["unknown"] == 1
     assert calls == [1]                                                # r2 still waits: the driver has not returned
     release.set()
     time.sleep(0.1)
     done = w.requests()                                                # the driver came back: the next in line goes
     assert [d["request"] for d in done] == ["r2"] and calls == [1, 2]
-    assert w.commands == {"performed": 2, "refused": 1, "expired": 0, "unknown": 0}  # r1 is not counted twice for coming back late
+    assert w.commands == {"performed": 2, "refused": 0, "expired": 0, "unknown": 1}  # r1: not known, not counted twice for coming back late
 
 
 def test_a_worker_that_may_no_longer_write_does_not_act_on_the_device():
