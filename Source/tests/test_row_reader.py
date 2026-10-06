@@ -501,9 +501,9 @@ def test_a_book_of_primaries_nobody_can_read_makes_the_backup_record():
     box = Box()
     r = recorder(box)
     box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())
-    box.vars.put(PRIMARIES, {"SN1": '{"should": tru'})
+    box.vars.put(PRIMARIES, {"SN1": '{"enabled": tru'})
     assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
-    box.vars.put(PRIMARIES, {"SN1": json.dumps({"should": True, "written": True})})
+    box.vars.put(PRIMARIES, {"SN1": json.dumps({"enabled": True, "running": True})})
     box.objects.put(DOMAIN_SEEN, b'{"ts": "now"}')
     assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
     box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())

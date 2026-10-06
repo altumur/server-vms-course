@@ -127,7 +127,10 @@ def test_while_a_writes_the_camera_sends_one_stream_to_a_and_neither_standby_rec
     wall = Clock()
     o = _office(wall)
     e = o.pusher.entry()
-    assert e["backup"]["cluster"] == "srv-b" and e["backup"]["ingest"]["urls"] == B_URLS     # its second road
+    assert e["backup_on"] == "srv-b" and e["backup"]["urls"] == B_URLS     # its second road: the road itself
+    # B's copy, in the product's shape too (`PrimaryEntry`): the same facts, its cluster as `backup_on`, no road, no token
+    there = json.loads(o.b.vars.get("domain/vms/primaries/srv-b")[0][SERIAL])
+    assert there["backup_on"] == "srv-b" and there["recorded_by"] == "srv-a" and not {"backup", "ingest"} & set(there)
     assert o.pusher.pass_once(_frames(wall, 5))["road"] == "primary"
     assert len(o.q["srv-a"].drain()) == 5 and o.q["srv-b"].drain() == []                    # one stream, to A
     assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())                     # the card holds
@@ -213,7 +216,7 @@ def test_a_viewer_opens_the_camera_where_its_one_stream_is_going():
 
 # -- failover without the domain: what the stream says -----------------------------------------------------------
 def test_a_whose_recorder_let_go_is_left_at_once_on_its_own_ingests_word_no_domain_asked():
-    """A's recorder stops taking the stream. The book still says "written" — no domain pass has run. A's ingest
+    """A's recorder stops taking the stream. The book still says "running" — no domain pass has run. A's ingest
     says it on the next poll: it should record the camera and no recorder takes it. The camera goes to B on
     that word, and both standbys know it from the stream: the card because its camera did not hand the stream
     on, the backup because the camera came to it."""
@@ -224,12 +227,12 @@ def test_a_whose_recorder_let_go_is_left_at_once_on_its_own_ingests_word_no_doma
     o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")          # A's recorder let go
     out = o.pusher.pass_once(_frames(wall, 3, start=3))
     assert out["road"] == "backup" and [f["n"] for f in o.q["srv-b"].drain()] == [3, 4, 5]
-    assert json.loads(o.cam.flash.get("domain/vms/primaries")[0][SERIAL])["written"] is True   # the book: behind
+    assert json.loads(o.cam.flash.get("domain/vms/primaries")[0][SERIAL])["running"] is True   # the book: behind
     assert edge_gate(o.pusher)(EDGE) is True and backup_gate(o.ing["srv-b"])(BACKUP) is True
 
 
 def test_the_domain_dies_with_a_and_both_standbys_start_at_once_anyway():
-    """Suppose the domain lived on A and died with it. No book will say "not written" until it goes stale — 45 s.
+    """Suppose the domain lived on A and died with it. No book will say "not running" until it goes stale — 45 s.
     Nothing waits for it: the camera cannot reach A's ingest and goes to B; the card and the backup start from
     what the stream says; the book, stale or not, is only the fallback."""
     from vms.domainpart.ingest import backup_gate, edge_gate
@@ -239,7 +242,7 @@ def test_the_domain_dies_with_a_and_both_standbys_start_at_once_anyway():
     o.down.add("srv-a"); o.a_link.up = False                           # A is gone; no domain pass runs after
     wall.advance(2)
     assert o.pusher.pass_once(_frames(wall, 3, start=3))["road"] == "backup"
-    assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())          # the book still says written
+    assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())          # the book still says running
     assert edge_gate(o.pusher)(EDGE) is True                                        # the stream says otherwise
     assert backup_gate(o.ing["srv-b"])(BACKUP) is True
 

@@ -33,8 +33,8 @@ recording goes on with the domain switched off, from the address last carried.
 The book of primaries is the source book the other way round. A backup on the camera's card with
 `when: offline` records while its primary should be written and is not (М10B Lesson 26) — and its primary
 is here, in the recording cluster, where the camera's cluster cannot look. So the domain says, per camera,
-who records it, whether that recording SHOULD be written (enabled, its `until` not passed) and whether it IS
-(a recorder's fresh heartbeat reports it running). No time in it: a book that changed on every pass would
+who records it (`recorded_by`), whether that recording SHOULD be written (`enabled`: enabled, its `until` not
+passed) and whether it IS (`running`: a recorder's fresh heartbeat reports it running). No time in it: a book that changed on every pass would
 be rewritten on the camera's flash every few seconds. How current it is, the camera learns from its agent's
 last contact with the domain, which lives in RAM.
 """
@@ -302,7 +302,7 @@ class Crossings:
     # Each camera cluster's book of primaries: for every camera of it that another cluster records, what the
     # recording cluster's own objects say — its rec snapshot (desired: enabled, until) and its recorders'
     # heartbeats (actual: running). Read, like the source book, from what the recording cluster publishes and
-    # nothing else. A recording cluster that does not answer is a primary nobody can vouch for: `written` is
+    # nothing else. A recording cluster that does not answer is a primary nobody can vouch for: `running` is
     # false, and the card covers after its grace — which is right when the room is down, and only costs a
     # card's worth of writing when merely the domain cannot see it.
     def publish_primaries(self, lost_after: float = 45.0) -> dict[str, dict]:
@@ -321,22 +321,26 @@ class Crossings:
             if backup is not None:
                 # For the backup's cluster: the same facts about the primary, so its recorder's gate knows when
                 # to cover (`carried_primary`, by `ref:`) — the book of primaries, for the other side.
+                # `backup_on` names the backup's cluster in both copies; `backup` is only ever the camera's second
+                # road itself — the product's form (`PrimaryEntry.Backup`, `BackupOn`): one name, one meaning.
                 facts = {k: v for k, v in entry.items() if k != "ingest"}     # not the camera's stream token
-                books.setdefault(backup, {})[ref] = json.dumps({**facts, "backup": backup}, sort_keys=True)
-                there = self._ingest(ref, backup, known[0], now, (was.get("backup") or {}).get("ingest"))
+                books.setdefault(backup, {})[ref] = json.dumps({**facts, "backup_on": backup}, sort_keys=True)
+                there = self._ingest(ref, backup, known[0], now, was.get("backup"))
                 if there and ingest:                          # the camera's second road: only for one that pushes
-                    entry["backup"] = {"cluster": backup, "ingest": there}
+                    entry["backup"], entry["backup_on"] = there, backup
             books.setdefault(known[0], {})[ref] = json.dumps(entry, sort_keys=True)
         self._write_books(PRIMARIES_PATH, books)
         return books
 
     def _primary(self, ref: str, on: str, now: float, lost_after: float) -> dict:
-        # `starting` (feedback AB): the recording should be written and no recorder of its cluster has NAMED it
-        # yet — a start, which gets the card's grace. Named and not written, or the cluster silent — a stop,
-        # covered at once. It changes when a recording starts and when a recorder first reports it: rarely.
-        # `recorded_by`: the cluster that records it — the product's name too (`PrimaryEntry.RecordedBy`), one name on
-        # both sides, and the one the spec's `primaries.show` names (renamed from `cluster`, no alias: ADR-0003).
-        entry = {"recorded_by": on, "recording": "", "should": True, "written": False, "starting": False}
+        # `starting` (feedback AB): the recording is wanted and no recorder of its cluster has NAMED it yet — a
+        # start, which gets the card's grace. Named and not running, or the cluster silent — a stop, covered at
+        # once. It changes when a recording starts and when a recorder first reports it: rarely. Written only when
+        # true, as the product writes it (`omitempty`); a reader takes it absent as false.
+        # The product's names, one name on both sides (`PrimaryEntry`; renamed, no alias: ADR-0003): `recorded_by`
+        # the cluster that records it — the one the spec's `primaries.show` names —, `enabled` wanted (enabled, its
+        # `until` not passed), `running` a recorder the domain hears from reports it running.
+        entry = {"recorded_by": on, "recording": "", "enabled": True, "running": False}
         c = self.view.fed.clusters.get(on)
         try:
             if c is None:
@@ -358,10 +362,10 @@ class Crossings:
         except Unreachable:
             return entry
         until_ok = lambda r: _until(r) == 0 or _until(r) > now      # an `until` nobody can read: no end known (`_until`)
-        should = any(bool(r.get("enabled", True)) and until_ok(r) for r in rows)
-        return {**entry, "recording": ",".join(names), "should": should,
-                "written": any(n in running for n in names),
-                "starting": should and not any(n in named for n in names)}
+        enabled = any(bool(r.get("enabled", True)) and until_ok(r) for r in rows)
+        starting = enabled and not any(n in named for n in names)
+        return {**entry, "recording": ",".join(names), "enabled": enabled,
+                "running": any(n in running for n in names), **({"starting": True} if starting else {})}
 
     # Lesson 16: where the camera pushes, and the token that lets it. The addresses are what the recording
     # cluster's ingest announced (`rec/ingest`). The token is re-issued only when the one the book already

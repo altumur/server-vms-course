@@ -172,13 +172,15 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
         return json.loads(items[SERIAL])
 
     rec.publish_snapshot()                                            # the row, and no recorder has named it yet
-    assert pass_() == {"recorded_by": "south", "recording": SERIAL, "should": True, "written": False, "starting": True}
-    # The entry at the holder, as published: the cluster that records it under the product's name (`recorded_by`, one
-    # name on both sides — the spec's `primaries.show`), and the recording; `cluster` is gone, no alias (ADR-0003).
+    assert pass_() == {"recorded_by": "south", "recording": SERIAL, "enabled": True, "running": False, "starting": True}
+    # The entry at the holder, as published, in the product's shape (`PrimaryEntry`, one name on both sides): the
+    # cluster that records it (`recorded_by` — the spec's `primaries.show`), the recording, `enabled`, `running`, and
+    # `starting` only while true; the old names are gone, no alias (ADR-0003).
     published = json.loads(crossings.publish_primaries()[cam.name][SERIAL])
-    assert published["recorded_by"] == "south" and published["recording"] == SERIAL and "cluster" not in published
+    assert published["recorded_by"] == "south" and published["recording"] == SERIAL
+    assert not {"cluster", "should", "written"} & set(published)
     room(True)
-    assert pass_() == {"recorded_by": "south", "recording": SERIAL, "should": True, "written": True, "starting": False}
+    assert pass_() == {"recorded_by": "south", "recording": SERIAL, "enabled": True, "running": True}   # no `starting`
     assert json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] == wall()      # freshness: in RAM
     writes = cam.flash.writes
     for _ in range(10):
@@ -187,15 +189,15 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
 
     room(False)
     e = pass_()
-    assert e["written"] is False and e["starting"] is False and cam.flash.writes == writes + 1   # a stop, not a start (AB)
+    assert e["running"] is False and "starting" not in e and cam.flash.writes == writes + 1   # a stop, not a start (AB)
 
     rec.update(SERIAL, {"enabled": False}); room(False)
-    assert pass_()["should"] is False                                 # the operator's decision: nothing to cover
+    assert pass_()["enabled"] is False                                # the operator's decision: nothing to cover
 
     rec.update(SERIAL, {"enabled": True}); room(True); pass_()
     south_link.up = False                                             # the room does not answer the domain
     wall.advance(5)
-    assert pass_() == {"recorded_by": "south", "recording": "", "should": True, "written": False, "starting": False}
+    assert pass_() == {"recorded_by": "south", "recording": "", "enabled": True, "running": False}
 
 
 def test_a_recording_moves_to_another_cluster_and_the_books_follow():
