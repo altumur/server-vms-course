@@ -750,6 +750,12 @@ def _piece_two_specs():
             st, why = _http(base, "POST", path, body)
             assert st == 400 and why.get("fault") == "bad_url" and why.get("detail"), (path, st, why)
         assert _http(base, "POST", "/testsub2/shelves", {"name": "s1", "zone": "a", "server": "srv-1"})[0] in (200, 201)
+        # a table's own `ref` + `must_match` is asked of its row (ADR 0012): a shelf overflowing to a shelf of another
+        # zone is refused — 409 `must_match`, the rows standing (ADR 0031); to one of its own zone, taken
+        st, why = _http(base, "POST", "/testsub2/shelves", {"name": "s2", "zone": "b", "server": "srv-1", "over": "s1"})
+        assert st == 409 and why.get("fault") == "must_match" and "over s1 is zone a's" in why.get("detail", ""), (st, why)
+        assert _http(base, "POST", "/testsub2/shelves", {"name": "s3", "zone": "a", "server": "srv-1", "over": "s1"})[0] \
+            in (200, 201)
         objects = ctls["testsub2"].objects
         now = ctls["testsub2"].wall()
         objects.put("testsub2/heartbeats/t-1", Heartbeat("t-1", now, [{"id": "t1", "phase": "running", "depth": 2}], {

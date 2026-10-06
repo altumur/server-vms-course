@@ -186,6 +186,26 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
             check(t.schema, {k: v for k, v in row.items() if v not in (None, "")}, table)
         except Invalid as e:
             raise Refused(str(e)) from None
+    for n, f in t.fields.items():                         # what the row points at agrees with it (`ref` + `must_match`):
+        v = str(row.get(n) or "")                         # the same check `refuse_refs` asks of a unit (ADR 0012)
+        if not f.ref or not f.must_match or not v:
+            continue
+        if f.ref == f"{spec.name}/{table}" and v == name:
+            there = row                                   # the row pointing at itself: what it says now
+        else:
+            try:
+                there, _ = vars_.get(f"{f.ref}/{v}")
+                if there is not None and not isinstance(there, dict):
+                    raise TypeError(type(there).__name__)
+            except (Garbled, *PARSE_ERRORS):
+                raise Refused(f"{n} names {f.ref}/{v}, whose row does not parse: mend it first — nothing points at a "
+                              f"row nobody can read") from None
+        if there and there.get("deleted") != "true":
+            for theirs, mine in f.must_match.items():
+                want = str(there.get(theirs) or "")
+                if want and str(row.get(mine) or "") != want:
+                    raise Mismatched(f"{n} {v} is {theirs} {want}'s: only that {theirs}'s rows point at it, and {table} "
+                                     f"{name} is {mine} {row.get(mine)}'s")
     ref = f"{spec.name}/{table}"
     for n, f in spec.fields.items():                      # the units pointing at it still agree (`must_match`)
         if f.ref != ref or not f.must_match:
