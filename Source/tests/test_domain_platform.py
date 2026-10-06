@@ -310,6 +310,263 @@ def test_the_keys_view_shows_the_public_halves_the_domain_publishes_and_never_a_
         v = keys(_Store({row: hidden}), None, 0.0)["vars"][0]
         assert "public" not in v and "e-1" not in json.dumps(v), v
 
+
+# -- a member's `where`, asked at this cluster's console (ADR-0061) ----------------------------------------------------
+TESTSUB2 = os.path.join(os.path.dirname(TESTSUB), "testsub2.subsystem.yaml")
+
+
+class _FakeConsole:
+    """A member's console as the forwarding one sees it: every request it gets, kept — method, path with its query, and
+    headers — and the reply `answer(path)` gives: `(status, raw bytes, headers)`."""
+
+    def __init__(self, answer):
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        seen = self.seen = []
+
+        class H(BaseHTTPRequestHandler):
+            def log_message(self, *a): pass
+
+            def _any(self):
+                seen.append((self.command, self.path, dict(self.headers)))
+                status, raw, headers = answer(self.path)
+                self.send_response(status)
+                for k, v in headers.items():
+                    self.send_header(k, v)
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+            do_GET = do_POST = do_PUT = do_DELETE = _any
+        self.srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+        import threading
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{self.srv.server_address[1]}"
+
+    def stop(self):
+        self.srv.shutdown()
+        self.srv.server_close()
+        if getattr(self, "sock", None) is not None:
+            self.sock.close()
+
+
+class _Said:
+    """A console's journal, as lines: what `say` was given."""
+    def __init__(self): self.lines = []
+    def say(self, kind, cls=None, **fields): self.lines.append((kind, fields))
+
+
+class _Env:
+    """An environment variable for as long as a test needs it (`CLUSTERS` of this deployment)."""
+    def __init__(self, name, value): self.name, self.value, self.saved = name, value, os.environ.get(name)
+    def __enter__(self): os.environ[self.name] = self.value
+    def __exit__(self, *a): os.environ.pop(self.name) if self.saved is None else os.environ.__setitem__(self.name, self.saved)
+
+
+def _call_raw(base, method, path, headers=None):
+    import urllib.error
+    import urllib.request
+    req = urllib.request.Request(base + path, method=method, headers=headers or {},
+                                 data=b"{}" if method in ("POST", "PUT") else None)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status, r.read(), dict(r.headers)
+    except urllib.error.HTTPError as e:
+        return e.code, e.read(), dict(e.headers)
+
+
+def _at_site():
+    """north's console — testsub its root, testsub2 known to the process too (its spec loaded) — and the list of members
+    north's agent carried home (`domain/member-list`: south, east, gone). The deployment's `CLUSTERS` gives south a
+    console (a fake one, which keeps what it is asked), `gone` a console nobody answers at, and east none (`report`)."""
+    import socket
+    from w2cplatform.console import Mount, SpecConsole
+    from w2cplatform.domain.term import MEMBER_LIST
+    from w2cplatform.spec import SpecController, SubsystemSpec
+    SubsystemSpec.load(TESTSUB2)                         # in this process's catalogue, as its spec directory would put it
+    fed, wall = site()
+    north = fed.clusters["north"]
+    north.vars.put(MEMBER_LIST, {"doc": json.dumps({"rev": 3, "members": {n: {"how": "voucher"} for n in
+                                                                          ("south", "east", "gone")}})})
+
+    def answer(path):
+        if path.startswith("/testsub/where/s1"):
+            return 200, b'{"worker":  "south-I1", "door": {"url": "http://south-srv:9000", "token": "door1.x"}}', {}
+        if path.startswith("/testsub2/where/shelves/"):
+            return 404, b'{"door": null, "unreachable": "s9@srv-2"}', {"X-Unreachable": "s9@srv-2"}
+        if path.startswith(("/testsub/where/big", "/domain/big")):                 # one byte over the limit of a reply
+            return 200, b'"' + b"x" * ((1 << 20) - 1) + b'"', {}
+        if path.startswith("/testsub/where/locked"):
+            return 403, b'{"detail": "ann may not view testsub/locked", "error": "denied"}', {}
+        return 200, b'{"topology": {}}', {}
+    member = _FakeConsole(answer)
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))                          # bound and never listening, for the run: nobody else takes the
+    closed = f"http://127.0.0.1:{sock.getsockname()[1]}"  # port, and a call to it is refused — a console out of reach
+    member.sock = sock
+    mnt = Mount(SpecConsole(SpecController(spec(), north.vars, north.objects, wall=wall, cluster="north"), wall=wall))
+    mnt.root.journal = _Said()
+    srv = mnt.serve(port=0)
+    clusters = f"north,south={member.url},east=report,gone={closed}"
+    return fed, wall, mnt, srv, f"http://127.0.0.1:{srv.server_address[1]}", member, clusters
+
+
+def test_a_where_asked_at_this_console_goes_to_the_members_console_with_the_token_once_and_comes_back_as_it_came():
+    """ADR-0061: `GET /domain/at/south/testsub/where/s1` is `GET <south's console>/testsub/where/s1` — whether testsub is
+    the root there is south's console's to know (дополнение п. 3) — and `…/testsub2/where/shelves/s9?unit=…` is
+    `/testsub2/where/shelves/s9?unit=…`, the query as it came.
+    The person's token goes with it, `X-W2C-Via: north` says it was handed once; the reply comes back as it came — its
+    status, its bytes (the door south signed), `X-Unreachable`, and a 403 in the words of south's gate. Each hop is a
+    journal line `domain.forwarded {cluster, path, user, status}`. A `X-W2C-Via` the person sends on a route handed to the
+    holder is not passed on."""
+    from w2cplatform.console import DOMAIN_VIEW
+    fed, wall, mnt, srv, base, member, clusters = _at_site()
+    fed.clusters["north"].objects.put(DOMAIN_VIEW, json.dumps({"ts": wall(), "url": member.url}).encode())
+    try:
+        with _Env("CLUSTERS", clusters):
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/s1", {"Authorization": "Bearer tok-ann"})
+            assert st == 200 and raw == b'{"worker":  "south-I1", "door": {"url": "http://south-srv:9000", "token": "door1.x"}}'
+            method, path, headers = member.seen[-1]
+            assert (method, path) == ("GET", "/testsub/where/s1"), member.seen
+            assert headers["Authorization"] == "Bearer tok-ann" and headers["X-W2C-Via"] == "north", headers
+            st, raw, h = _call_raw(base, "GET", "/domain/at/south/testsub2/where/shelves/s9?unit=testsub2/t1")
+            assert member.seen[-1][1] == "/testsub2/where/shelves/s9?unit=testsub2/t1", member.seen[-1]
+            assert st == 404 and h["X-Unreachable"] == "s9@srv-2" and json.loads(raw)["unreachable"] == "s9@srv-2"
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/locked")
+            assert st == 403 and json.loads(raw) == {"detail": "ann may not view testsub/locked", "error": "denied"}
+            assert mnt.root.journal.lines == [
+                ("domain.forwarded", {"cluster": "south", "path": p, "user": "operator", "status": s})
+                for p, s in (("/domain/at/south/testsub/where/s1", 200), ("/domain/at/south/testsub2/where/shelves/s9", 404),
+                             ("/domain/at/south/testsub/where/locked", 403))], mnt.root.journal.lines
+            n = len(member.seen)
+            assert _call_raw(base, "GET", "/domain/topology", {"X-W2C-Via": "east"})[0] == 200   # the holder's route…
+            assert member.seen[n][1] == "/domain/topology" and "X-W2C-Via" not in member.seen[n][2], member.seen[n]
+    finally:
+        srv.shutdown(); srv.server_close(); member.stop()
+
+
+def test_a_where_is_handed_to_a_member_only_a_get_of_a_known_spec_to_a_member_with_a_console_and_only_once():
+    """Refused before dialing, each in words (ADR-0061): not `GET`, not a `where`, a spec this process does not know, a
+    table that is not the spec's places — 404 «not a route handed to a member»; a cluster off the carried list, and this
+    cluster itself — 404; a member with no console in `CLUSTERS` — 404 «no console of east is known here (CLUSTERS)»; a
+    request that already carries `X-W2C-Via` — 400 «one hop», at this console and at a real member's console. A member's
+    console the network does not reach: 502 in words, a hop made and journalled. The fake member heard none of the rest."""
+    fed, wall, mnt, srv, base, member, clusters = _at_site()
+    south = fed.clusters["south"]
+    there, there_url = _cluster_console(south, wall)
+    try:
+        with _Env("CLUSTERS", clusters):
+            for method, path in (("POST", "/domain/at/south/testsub/where/s1"), ("PUT", "/domain/at/south/testsub/where/s1"),
+                                 ("DELETE", "/domain/at/south/testsub/counters/s1"), ("GET", "/domain/at/south/testsub/counters"),
+                                 ("GET", "/domain/at/south/testsub/where/s1/x"), ("GET", "/domain/at/south/testsub/where/"),
+                                 ("GET", "/domain/at/south/nobody/where/1"), ("GET", "/domain/at/south/testsub2/where/notches/x"),
+                                 ("GET", "/domain/at/south"), ("GET", "/domain/at/")):
+                st, raw, _ = _call_raw(base, method, path)
+                assert st == 404 and json.loads(raw)["error"] == "not a route handed to a member", (method, path, st, raw)
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/west/testsub/where/s1")
+            assert st == 404 and json.loads(raw)["error"] == "not a member" and "west" in json.loads(raw)["detail"], raw
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/north/testsub/where/n1")
+            assert st == 404 and "this cluster" in json.loads(raw)["detail"], raw
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/east/testsub/where/e1")
+            assert st == 404 and json.loads(raw)["detail"] == "no console of east is known here (CLUSTERS)", raw
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/s1", {"X-W2C-Via": "east"})
+            assert st == 400 and json.loads(raw)["error"] == "one hop", raw
+            assert member.seen == [] and mnt.root.journal.lines == [], (member.seen, mnt.root.journal.lines)
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/gone/testsub/where/g1")
+            assert st == 502 and json.loads(raw)["error"] == "gone's console did not answer", raw
+            assert mnt.root.journal.lines == [("domain.forwarded", {"cluster": "gone", "path": "/domain/at/gone/testsub/where/g1",
+                                                                    "user": "operator", "status": 502})]
+            # a real member's console: `/testsub/where/s1` is its root's `/where/s1` (дополнение п. 3); a hop onwards
+            # from it is refused there
+            with _Env("CLUSTERS", f"north,south={there_url}"):
+                st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/s1")
+                assert st == 200 and json.loads(raw)["server"] == "south-srv", raw
+            st, raw, _ = _call_raw(there_url, "GET", "/domain/at/north/testsub/where/n1", {"X-W2C-Via": "north"})
+            assert st == 400 and json.loads(raw)["error"] == "one hop", raw
+    finally:
+        srv.shutdown(); srv.server_close(); member.stop(); there.shutdown(); there.server_close()
+
+
+def test_the_holders_cluster_is_a_member_for_a_hop_by_its_verified_record_and_a_forged_one_names_nobody():
+    """The holder is on no list of members (`Members`): it is one for a hop by the carried record `domain/holder` as THIS
+    cluster's key set verifies it (ADR-0061, дополнение, 1). The record north's agent carried names hq — the hop to hq
+    is made. The same record with another holder written in, its signature unchanged, verifies nothing: rogue is 404,
+    and hq is no member any more either; nothing more was dialed."""
+    from w2cplatform.domain.agent import DomainPublisher
+    from w2cplatform.domain.term import HOLDER
+    from w2cplatform.trust.documents import sign
+    from w2cplatform.trust.signer import Signer
+    fed, wall, mnt, srv, base, member, clusters = _at_site()
+    north = fed.clusters["north"]
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())         # the key set north's agent carried home
+    record = sign({"term": 2, "holder": "hq", "at": wall()}, signer.tokens)
+    north.vars.put(HOLDER, {"doc": json.dumps(record, sort_keys=True)})
+
+    class Anybody:                                       # north holds a key set now: its gate asks; anybody is somebody
+        def who(self, token): return {"sub": token or "ann"}
+        def may(self, payload, capability, unit, labels): return True
+        def by_labels(self, payload, capability): return False
+    mnt.root.gate.impl = Anybody()
+    try:
+        with _Env("CLUSTERS", clusters + f",hq={member.url},rogue={member.url}"):
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/hq/testsub/where/s1", {"Authorization": "Bearer ann"})
+            assert st == 200 and member.seen[-1][1] == "/testsub/where/s1", (st, raw, member.seen)
+            n = len(member.seen)
+            north.vars.put(HOLDER, {"doc": json.dumps({**record, "holder": "rogue"}, sort_keys=True)})
+            for who in ("rogue", "hq"):
+                st, raw, _ = _call_raw(base, "GET", f"/domain/at/{who}/testsub/where/s1", {"Authorization": "Bearer ann"})
+                assert st == 404 and json.loads(raw)["error"] == "not a member", (who, st, raw)
+            assert len(member.seen) == n, member.seen[n:]
+    finally:
+        srv.shutdown(); srv.server_close(); member.stop()
+
+
+def test_an_answer_over_one_mib_is_502_on_both_forwardings_and_nothing_of_it_is_passed():
+    """A reply longer than 1 MiB (ADR-0061, дополнение, 2) — from a member's console and from the holder's door alike —
+    is 502 «answer too large» in a few words, and none of its bytes reach the page."""
+    from w2cplatform.console import DOMAIN_VIEW
+    fed, wall, mnt, srv, base, member, clusters = _at_site()
+    fed.clusters["north"].objects.put(DOMAIN_VIEW, json.dumps({"ts": wall(), "url": member.url}).encode())
+    try:
+        with _Env("CLUSTERS", clusters):
+            for path in ("/domain/at/south/testsub/where/big", "/domain/big"):
+                st, raw, _ = _call_raw(base, "GET", path)
+                assert st == 502 and json.loads(raw)["error"] == "answer too large" and len(raw) < 512, (path, st, raw[:200])
+            assert [p for _, p, _ in member.seen] == ["/testsub/where/big", "/domain/big"], member.seen
+            assert mnt.root.journal.lines[-1][1]["status"] == 502, mnt.root.journal.lines
+    finally:
+        srv.shutdown(); srv.server_close(); member.stop()
+
+
+def test_the_forwarding_console_asks_only_who_is_calling_and_the_members_gate_decides():
+    """The gate here asks who is calling — no token: 401, nothing dialed; a person granted one unit of this cluster and
+    nothing wider is somebody, and the hop is made: what they may see there is south's gate's to say (ADR-0061, 6)."""
+    fed, wall, mnt, srv, base, member, clusters = _at_site()
+
+    class Grants:                                        # a token is a name, a grant a unit (`test_where_place._Grants`)
+        def who(self, token):
+            from w2cplatform.access import Denied
+            if token != "ann":
+                raise Denied(401, "token refused: nobody's")
+            return {"sub": token}
+
+        def may(self, payload, capability, unit, labels):
+            return capability == "view" and unit in (None, "testsub/n1")
+
+        def by_labels(self, payload, capability):
+            return False
+    mnt.root.gate.impl = Grants()
+    try:
+        with _Env("CLUSTERS", clusters):
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/s1")
+            assert st == 401 and member.seen == [], (st, raw)
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/s1", {"Authorization": "Bearer ann"})
+            assert st == 200 and member.seen[-1][2]["Authorization"] == "Bearer ann", (st, raw)
+            assert mnt.root.journal.lines[-1] == ("domain.forwarded", {"cluster": "south", "user": "ann", "status": 200,
+                                                                       "path": "/domain/at/south/testsub/where/s1"})
+    finally:
+        srv.shutdown(); srv.server_close(); member.stop()
+
+
 def test_a_member_carries_home_the_books_its_spec_declares_and_nothing_it_does_not():
     """The holder keeps a book for each member under `domain/<sub>/<book>/<member>`; the member's agent carries its own
     home as `domain/<sub>/<book>`, as it is. A row of the domain's prefix no spec declares is not carried."""
