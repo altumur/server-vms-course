@@ -223,7 +223,7 @@ def labels(env: dict, default: str = "") -> list[str]:
 ```
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": "", "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -261,7 +261,7 @@ GET /v1/get?key=rec/holds/disks-a
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
 POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": "", "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -281,7 +281,7 @@ POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": "", "items": {
 GET /v1/get?key=rec/holds/disks-a
 → 200 {
   "items": {
-    "holder": "srv-a:4101",
+    "holder": "srv-a:4101:001005",
     "until": "1757500045.0",
     "released": "false",
     "gen": "1",
