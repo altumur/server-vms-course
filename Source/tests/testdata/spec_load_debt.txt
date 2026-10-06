@@ -2,8 +2,4 @@
 # `<spec>:<key path>   # ADR-NNNN «owner»`. A line goes when the course reads the key or the product drops it;
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
 # side, who closes it (СЕССИИ.md §1.7).
-auto:console.running   # ADR-0019 «Сборка»
-live:console.running   # ADR-0019 «Сборка»
-rec:console.running   # ADR-0019 «Сборка»
-vms:console.running   # ADR-0019 «Сборка»
 vms:tables   # ADR-0012 «Платформа»
