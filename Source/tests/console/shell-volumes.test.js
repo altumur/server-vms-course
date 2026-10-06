@@ -2,6 +2,8 @@
 // сетевые — отдельным узлом «Сетевые архивы» на верхнем уровне; карточка тома — вид, путь, квота, кто обслуживает
 // (held_by: объявлен и обслуживается — разные вещи), записи в нём; объявить (POST /rec/<таблица>, строка целиком),
 // меньшая квота — только после подтверждения и с shrink_confirmed, равным ей; отозвать (DELETE) после подтверждения.
+// Пропавший каталог тома — слово регистратора (volume_missing в его строке /rec/servers; корневой /servers знает только
+// своих воркеров): в блоке «Архивы сервера» его сервера, имя — путь к карточке тома.
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -19,7 +21,9 @@ b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk-a",retention_da
 b.FIX["/rec/volumes"]={volumes:[{name:"disk-a",server:"box-a",kind:"local",url:"file:///a",quota_bytes:100*G,enabled:true,held_by:"r-1"},
   {name:"cold",server:"box-a",kind:"backup",url:"file:///c",quota_bytes:50*G,enabled:true},{name:"nas",kind:"network",url:"s3://bucket/vms",quota_bytes:1000*G,enabled:true,access_key:"AK1",access_secret:"***"}]};
 b.FIX["/rec/keeps"]={keeps:[]};
-b.FIX["/servers"]={servers:{"box-a":{resource:"live",workers:[]}},policy:{}};
+b.FIX["/servers"]={servers:{"box-a":{resource:"live",workers:[{worker:"w-1",capacity:5,load:1,state:"live",status:{volume_missing:"root-says"}}]}},policy:{}};
+b.FIX["/rec/servers"]={servers:{"box-a":{resource:"live",workers:[{worker:"r-1",capacity:1,load:1,state:"live",status:{volume_missing:"cold"}}]},
+  "box-b":{resource:"live",workers:[{worker:"r-9",capacity:1,load:1,state:"live",status:{volume_missing:"far"}}]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
@@ -66,6 +70,10 @@ pc.select("server:box-a");await b.ready(60);
 main().querySelector('.pc-block[data-block="vols"] [data-act="add"]').click();await b.ready(40);
 out.serverAddPrefilled=f().elements.server.value==="box-a"&&[...f().elements.kind.options].map(o=>o.value).join(",")==="local,backup,incidents";
 d.querySelector(".pc-dialog-no").click();
+const blk=()=>main().querySelector('.pc-block[data-block="vols"]');
+out.missingSaid=/Пропал каталог тома: cold\. Записи ушли на другие тома/.test(blk().textContent)&&!/root-says|far/.test(blk().textContent);
+blk().querySelector('a[data-vol="cold"]').click();await b.ready(60);
+out.missingLeadsToCard=pc.selected()==="vol:cold";
 out.errors=errs;
 b.report(out,["errors"]);
 try{fs.unlinkSync(TMP)}catch(e){}

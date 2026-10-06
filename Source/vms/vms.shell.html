@@ -37,11 +37,14 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
   camera and every place a recording may have left footage on, the events on it, the operator's mark, «Закрепить»
   (what is only in a backup: `POST /rec/requests` for the primary recording), «Удержать показанное».
   The timeline holds the camera's recordings in the other clusters of the domain too (ADR-0061): the book of
-  primaries the domain carries here names them by the camera's ref, their doors are asked at this console
+  primaries this cluster carries names them by the camera's ref — the primary and each of its `backups` —, at a member
+  and at the holder alike, their doors are asked at this console
   (`/domain/at/<cluster>/rec/where/…`), a refusal said in words (403, 404, 502, 503).
   «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a backup) and
-  its keeps (`/rec/keeps`: make, lift; check at the incidents holder's door; the state from its beat — `servers.status`
-  with `of: keeps`, ADR-0064 —, «нет кадров, запечатывать нечего» for a recording with no footage in the stretch).
+  its keeps (`/rec/keeps`: make, lift; check at the incidents holder's door; the state in the recorders' own words, from
+  their beat — `servers.status` of their rows at `/rec/servers` with `of: keeps`, ADR-0064: here, pushing, pushed,
+  at risk, lost of the recording's writer; kept, released, garbled of the incidents holder —, «нет кадров,
+  запечатывать нечего» for a recording with no footage in the stretch).
 - Volumes (`/rec/<places table>`): `addTreeNodes("server")` (a server's own), `addTreeNodes("servers")` («Сетевые
   архивы»), `addCard("vol"|"netvols")`, `addBlock("server", {covers: "rec/volumes"})` «Архивы сервера»; declaring
   (`POST`, a smaller quota only with `shrink_confirmed`) and withdrawing (`DELETE`).
@@ -55,7 +58,7 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
 - `addMenu("unit")` — «Смотреть видео», «Архив».
 
 ## Routes the page itself uses
-`/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/live/streams`, `/auto/scenarios`,
+`/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/rec/servers`, `/live/streams`, `/auto/scenarios`,
 `/events`, `/marks` (writes through `pc.api`), `/domain/vms/books/primaries`; the holders' doors from
 `/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
@@ -137,21 +140,24 @@ const camName=id=>{const c=camById(id);return c?(c.name||"камера "+c.id):"
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
 // The camera's recordings in the other clusters of the domain (ADR-0061): {cluster, id, home, backup} — read at their
 // cluster's console through this one (GET /domain/at/<cluster>/rec/where/…, `member_forward`), the bytes from the
-// holder's door. Where this console learns them: the book of primaries the domain carries into this cluster
-// (GET /domain/vms/books/primaries: {<ref>: {recorded_by, recording}}, the fields the spec lets show — never its
-// tokens; ADR-0010), by the camera's ref. The product's page asks the VMS's state of the domain first at the holder's
-// cluster (/domain/vms/state); the course's domain part serves no such state, and the book is where both learn it here.
+// holder's door. Where this console learns them: the book of primaries its own cluster carries (ADR-0010, 2026-10-06),
+// the same at a member and at the holder — GET /domain/vms/books/primaries: {<ref>: {recorded_by, recording, backups:
+// [{cluster, recording}]}}, the fields the spec lets show, never its tokens. The domain's state is not read for this.
 let PRIMARIES=null;
 pc.on("refresh",async d=>{
   if(!(d&&"domain" in d))return;
   try{const r=await fetch("/domain/vms/books/primaries");PRIMARIES=r.ok?await r.json():null}catch(e){PRIMARIES=null}
 });
 function farRecsOfCam(id){
-  const c=camById(id),ref=c&&c.ref;if(!ref)return[];
-  const p=PRIMARIES&&PRIMARIES[ref];
+  const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref];if(!p)return[];
   // a recording this cluster holds itself is one of its own already (the book names this cluster too, then)
-  if(!p||!p.recorded_by||!p.recording||recsOfCam(id).some(r=>String(r.id)===String(p.recording)))return[];
-  return[{id:String(p.recording),cluster:String(p.recorded_by),home:"",backup:false,cam:String(id)}];
+  const own=new Set(recsOfCam(id).map(r=>String(r.id))),out=[],seen=new Set();
+  const add=(cluster,rec,backup)=>{if(!cluster||!rec)return;const k=cluster+"|"+rec;
+    if(own.has(String(rec))||seen.has(k))return;seen.add(k);
+    out.push({id:String(rec),cluster:String(cluster),home:"",backup,cam:String(id)})};
+  add(p.recorded_by,p.recording,false);
+  for(const x of Array.isArray(p.backups)?p.backups:[])if(x&&typeof x==="object")add(x.cluster,x.recording,true);
+  return out;
 }
 // where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
 const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+"/rec/where/"+encodeURIComponent(rec.id);
@@ -644,6 +650,9 @@ async function loadRec(){
     recs=(r.configured||[]).map(c=>({...c,id:String(c.id),row:byId[String(c.id)]||null}));
     vols=((v||{})[T_PLACES]||[]).filter(x=>!x.garbled).map(x=>({...x,quota_bytes:+x.quota_bytes||0,enabled:String(x.enabled)!=="false"}));
     keeps=(k||{}).keeps||[];
+    // what the recorders say in their beat: rec's own servers (`/rec/servers`) — the root /servers lists only the
+    // workers of the root subsystem
+    try{REC_SERVERS=(await getJSON("/rec/servers")).servers||{}}catch(e){REC_SERVERS={}}
     recOn=true;
   }catch(e){if(recOn===null)recOn=false}
 }
@@ -700,36 +709,53 @@ function camRecCardHtml(cam){
   return card("Запись камеры",body,`<button type="button" class="btn s" data-act="addRec">＋ Запись</button>`)+keepCardHtml(cam);
 }
 const camKeeps=cam=>keeps.filter(k=>String(k.cam)===String(cam)).sort((a,b)=>b.from-a.from);
-// the servers as the module last read them (refresh): what the recorders say in their beat (servers.status in the
-// worker's row) — [{server, worker, status}]
-let SERVERS={};
-pc.on("refresh",d=>{if(d&&d.servers)SERVERS=d.servers});
-const recWorkers=()=>Object.entries(SERVERS||{}).flatMap(([server,s])=>(s.workers||[]).map(w=>({server,worker:w.worker,status:w.status||{}})));
+// what the recorders say (servers.status in their worker rows): rec's own servers, read at /rec/servers with the rest
+// of rec (loadRec) — the root /servers lists only the workers of the root subsystem. [{server, worker, status}]
+let REC_SERVERS={};
+const recWorkers=()=>Object.entries(REC_SERVERS||{}).flatMap(([server,s])=>(s.workers||[]).map(w=>({server,worker:w.worker,status:w.status||{}})));
 const incidentsVol=()=>vols.find(v=>v.enabled&&v.kind==="incidents")||null;
 // the holder's door answers the checks of a keep only when rec's spec opens that route on it
 const keepVerifyOn=()=>(((pc.spec("rec")||{}).door||{}).routes||[]).includes("keeps");
-// What the incidents archive's holder says of the keeps, in its beat (servers.status of rec with `of: keeps`, ADR-0064):
+// What the recorders say of the keeps, in their beat (servers.status of rec with `of: keeps`, ADR-0064):
 // keeps {<keep>: {state, …}}, incidents_lost {<keep>: seconds}, incidents_at_risk [<keep>] — matched to the keep's row
-// by its key. Only the fields rec's spec names with of: keeps are read; nothing named — nothing said.
-const KEEP_STATE={kept:"в архиве инцидентов",pushed:"вытолкнуто в архив инцидентов",pending:"ждёт выталкивания",released:"отпущено",lost:"потеряно"};
+// by its key. Only the fields rec's spec names with of: keeps are read; nothing named — nothing said. Each recorder
+// says its own part: the one writing a recording — here, pushing, pushed, at risk, lost (with recording); the holder
+// of the incident archive — kept, released, garbled.
+const KEEP_STATE={
+  here:{said:"в архиве записи",cls:"wait"},pushing:{said:"копируется в архив инцидентов",cls:"wait"},
+  pushed:{said:"скопировано в архив инцидентов",cls:""},"at risk":{said:"под угрозой",cls:"off"},
+  lost:{said:"потеряно",cls:"off"},kept:{said:"в архиве инцидентов",cls:""},
+  released:{said:"отпущено",cls:"wait"},garbled:{said:"не читается",cls:"off"}};
 function keepSaid(name){
   const fields=new Set((((pc.spec("rec")||{}).servers||{}).status||[]).filter(x=>x.of==="keeps").map(x=>x.field));
-  const out={};
+  const out={said:[]};
   for(const w of recWorkers()){const st=w.status||{};
-    if(fields.has("keeps")&&st.keeps&&typeof st.keeps==="object"&&st.keeps[name])out.keep=st.keeps[name];
+    if(fields.has("keeps")&&st.keeps&&typeof st.keeps==="object"&&st.keeps[name]&&typeof st.keeps[name]==="object")out.said.push({...st.keeps[name],worker:w.worker});
     if(fields.has("incidents_lost")&&st.incidents_lost&&st.incidents_lost[name]!=null)out.lost=+st.incidents_lost[name];
     if(fields.has("incidents_at_risk")&&Array.isArray(st.incidents_at_risk)&&st.incidents_at_risk.map(String).includes(name))out.risk=true}
+  // the holder's word first, then the recordings by name
+  out.said.sort((x,y)=>(x.recording?1:0)-(y.recording?1:0)||String(x.recording||"").localeCompare(String(y.recording||"")));
   return out;
 }
+const daysHours=s=>{s=Math.max(0,Math.round(+s||0));const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);
+  return d?`${d} д ${h} ч`:h?`${h} ч ${m} мин`:`${m} мин`};
 function keepStateHtml(name){
-  const s2=keepSaid(name),k=s2.keep||{},parts=[];
-  if(k.state)parts.push(`<span class="bd${k.state==="lost"?" off":k.state==="kept"||k.state==="pushed"?"":" wait"}">${esc(KEEP_STATE[k.state]||k.state)}</span>`);
-  if(k.state==="released"&&k.why)parts.push(`<small>${esc(k.why)}</small>`);
-  // the recordings that hold no footage in the keep's stretch (the holder's keeps.<id>.empty): nothing to seal there
-  if(Array.isArray(k.empty)&&k.empty.length)parts.push(`<small class="sub">в отрезке нет кадров у ${esc(k.empty.join(", "))} — запечатывать нечего</small>`);
-  if(k.state==="lost"&&k.lost_seconds!=null)parts.push(`<small style="color:var(--rd)">${esc(k.recording||"")}: потеряно ${Math.round(+k.lost_seconds)} с</small>`);
+  const s2=keepSaid(name),parts=[];
+  for(const k of s2.said){
+    const st=KEEP_STATE[k.state]||{said:String(k.state||"—"),cls:"wait"},who=k.recording?esc(k.recording)+": ":"";
+    const more=[];
+    if(k.seconds!=null&&k.state!=="lost")more.push(`${Math.round(+k.seconds)} с`);
+    if(k.state==="here"&&k.leaves_in_s!=null)more.push(`кольцо заберёт через ${daysHours(k.leaves_in_s)}`);
+    if(k.state==="lost"&&k.lost_seconds!=null)more.push(`${Math.round(+k.lost_seconds)} с`);
+    parts.push(`<span class="bd${st.cls?" "+st.cls:""}">${who}${esc(st.said)}${more.length?" · "+esc(more.join(" · ")):""}</span>`);
+    if(k.why&&(k.state==="at risk"||k.state==="lost"||k.state==="released"||k.state==="garbled"))parts.push(`<small${k.state==="released"?"":' style="color:var(--rd)"'}>${esc(k.why)}</small>`);
+    if(k.garbled)parts.push(`<small class="sub">границы прочитаны не полностью: ${esc(k.garbled)}</small>`);
+    if(k.error)parts.push(`<small style="color:var(--rd)">${esc(k.error)}</small>`);
+    // the recordings that hold no footage in the keep's stretch (the holder's keeps.<id>.empty): nothing to seal there
+    if(Array.isArray(k.empty)&&k.empty.length)parts.push(`<small class="sub">в отрезке нет кадров у ${esc(k.empty.join(", "))} — запечатывать нечего</small>`);
+  }
   if(s2.lost)parts.push(`<small style="color:var(--rd)">архив инцидентов потерял ${Math.round(s2.lost)} с из удержанного</small>`);
-  if(s2.risk)parts.push(`<span class="bd off">под угрозой: кольцо записи заберёт раньше, чем вытолкнет</span>`);
+  if(s2.risk)parts.push(`<span class="bd off">под угрозой: кольцо записи заберёт раньше, чем скопирует</span>`);
   return parts.length?`<span style="display:flex;flex-direction:column;gap:2px;align-items:flex-end">${parts.join("")}</span>`:"";
 }
 // a keep is a row of rec/keeps, named by its key (`name`): its camera, its stretch, why, who and when
@@ -929,7 +955,11 @@ pc.addCard("netvols",host=>{CARD_HOST=host;netVolumesCard(host)});
 pc.addBlock("server",{id:"vols",covers:"rec/volumes",render:(host,ref)=>{
   const name=ref.slice(7);
   if(!recOn){host.innerHTML=offCard("Архивы сервера","подсистема записи не подключена","Консоль не монтирует <code>rec</code>.");return}
-  host.innerHTML=card("Архивы сервера",serverVolumes(name).map(v=>{const st2=volState(v);
+  // a volume whose directory is gone on this server, as its recorders say it (servers.status volume_missing in their
+  // rows at /rec/servers): named, each a way to its card
+  const miss=[...new Set(recWorkers().filter(x=>x.server===name).map(x=>x.status.volume_missing).filter(Boolean))];
+  const gone=miss.length?`<div class="nt err">Пропал каталог ${miss.length>1?"томов":"тома"}: ${miss.map(x=>`<a href="#" data-act="vol" data-vol="${esc(x)}">${esc(x)}</a>`).join(", ")}. Записи ушли на другие тома.</div>`:"";
+  host.innerHTML=gone+card("Архивы сервера",serverVolumes(name).map(v=>{const st2=volState(v);
     return`<div class="it" data-act="vol" data-vol="${esc(v.name)}"><span>${pc.icon("storage")}</span><span>${esc(v.name)}<small>${esc(volKind(v,true))} · ${esc(v.url||"—")} · ${gbytes(v.quota_bytes)} · записей: ${volRecs(v.name).length}</small></span><span class="bd ${st2.bad?"off":""}">${esc(st2.label)}</span></div>`}).join("")
     ||`<p class="sub">На этом сервере нет объявленных архивов</p>`,
     `<button type="button" class="btn s" data-act="arc">＋ Камеру в архив</button> <button type="button" class="btn s" data-act="add">＋ Архив</button>`);
