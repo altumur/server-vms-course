@@ -214,7 +214,7 @@ door: {routes: [timeline, segment]}
 # past a day — `requests.ttl`, the platform's `clear_requests`). What only the recorder can judge — a range longer than a day, shorter than a
 # second, in the future, older than the recording shows — it refuses, in its heartbeat (`RecWorker.requests`).
 # And the resource asks it to free bytes on a volume of its server (`free-<server>-<volume>`); the recorder decides:
-# the footage is in rings of a fixed size, and it answers that it frees nothing (`freed` in its heartbeat).
+# the footage is in rings of a fixed size, and it answers that it frees nothing (`freeing: 0` in its heartbeat — no deletion it waits to see).
 requests:
   free: true
   schema:
