@@ -99,7 +99,11 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         "console": role("console", [a for s in specs for a in s.acl_console()]
                         + [r for s in specs for r in _rows(s.sub.acl_objects_console())] + [SIGNER_KEY, KEYS_KEY],
                         [SCHEMA_KEY, *every, "platform/*", *_gate(), *[r for s in specs for r in _worker_objects(s)],
-                         SIGNER_KEY, KEYS_KEY]),
+                         SIGNER_KEY, KEYS_KEY],
+                        # …and deletes what it writes but a mark: a mark is «not more than once» (ADR 0013), and taking
+                        # one away opens a second performing — only the holder sweeps marks (`Worker.sweep_marks`) once
+                        # the request's row is gone (ADR 0054: the console writes a mark and never deletes one)
+                        delete=[a for s in specs for a in s.acl_console()] + [SIGNER_KEY, KEYS_KEY]),
     }
     for s in specs:
         # Placement, one pass at a time and safe at two: its prefixes; reads its subsystem, the ones it refers to, the

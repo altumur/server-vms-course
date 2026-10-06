@@ -85,7 +85,9 @@ def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_
     got = {role: set(g["write"]) for role, g in doc()["roles"].items()}
     assert got == _expected_writes()
     for role, g in doc()["roles"].items():
-        assert set(g["delete"]) == set(g["write"]), role                         # a role deletes what it writes
+        marks = {p for p in g["write"] if p.startswith(OBJECTS) and p.endswith("/commands/*")} if role == "console" else set()
+        assert set(g["delete"]) == set(g["write"]) - marks, role                 # a role deletes what it writes — but the
+        # console a mark: it writes the end of a request into one (the second writer) and never takes one away (ADR 0054)
         assert all(not p.startswith(OBJECTS) or is_row(p[len(OBJECTS):]) for p in g["write"]), role
 
 
@@ -113,11 +115,12 @@ def test_nothing_writes_what_it_has_no_business_writing():
 def test_the_console_writes_the_marks_of_requests_and_no_other_object_of_a_worker():
     """ADR 0054: the console's reaper ends a request in its mark — `expired` create-only, `unknown` by the index it read —
     so the console's role writes `objects/<sub>/commands/*` of every spec with `requests:`, and nothing else a worker
-    writes (heartbeats, contenders, used). Create-only and by-index are the code's, not the grant's (a role deletes what it
-    writes, as every role here)."""
+    writes (heartbeats, contenders, used); it never deletes a mark — only the holder sweeps one (`Worker.sweep_marks`), a
+    mark being «not more than once» (ADR 0013). Create-only and by-index are the code's, not the grant's."""
     r = rights()
     for k in ("vms/commands/r-1", "rec/commands/r-1"):
         assert r.allows("console", "write", OBJECTS + k), k
+        assert not r.allows("console", "delete", OBJECTS + k), k                 # only the holder sweeps a mark
     for k in ("vms/heartbeats/w-1", "vms/contenders/7", "vms/used/srv-a", "rec/used/srv-a"):
         assert not r.allows("console", "write", OBJECTS + k), k
     written = [p for p in roles(SPECS, "vms")["console"]["write"] if p.startswith(OBJECTS)]
