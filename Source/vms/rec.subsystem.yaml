@@ -292,6 +292,8 @@ metrics:
   - {name: camera_clock_shift_seconds, from: heartbeat.stream.clock_shift_s, default: 0}
   - {name: camera_clock_unplaceable_seconds_total, from: heartbeat.stream.unplaceable_s, default: 0, type: counter}
   - {name: card_live_skipped_seconds_total, from: heartbeat.card.live_skipped_s, default: 0, type: counter}
+  # card.state is a closed set, the same words on both sides: opening, recording, failing, stalled, failed, unavailable (an
+  # accident: a card that would not open or refused), none (no card by the camera's own setting — no accident)
   - {name: card_state, from: heartbeat.card.state, agg: label, label: state, default: recording}
 # What a page shows under a server: the volumes whose `server` names it (the boundary's step 6; it was the recorder's
 # heartbeat field `archive`, read by the platform's `/servers`).
