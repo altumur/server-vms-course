@@ -84,6 +84,33 @@ def spec_key_paths(path: str, text: str | None = None) -> set[str]:
     return out
 
 
+def spec_list_values(text: str) -> set[str]:
+    """The words a spec's lists hold, as `path[word]` — the values the key paths do not see (ADR-0019, its addition:
+    `door.routes`, `heartbeat.strings`, `objects.rows`, `snapshot`, `domain.*`, `worker.*`). A list of words gives each
+    word; a list of maps gives each map's `name`, or else its `field` (`metrics[].name`, `servers.status[].field`);
+    what is no string is no word; nothing under data is read (`_DATA`). As the product reads it
+    (`specListValues`, with its own YAML reader)."""
+    out: set[str] = set()
+
+    def walk(x, p: str) -> None:
+        if isinstance(x, dict):
+            for k, v in x.items():
+                q = f"{p}.{k}" if p else str(k)
+                if not _DATA.search(q):
+                    walk(v, q)
+        elif isinstance(x, list):
+            for e in x:
+                if isinstance(e, str):
+                    out.add(f"{p}[{e}]")
+                elif isinstance(e, dict):
+                    w = e.get("name", e.get("field"))
+                    if isinstance(w, str):
+                        out.add(f"{p}[{w}]")
+
+    walk(yaml.safe_load(text) or {}, "")
+    return out
+
+
 def _differences() -> set[str]:
     found = set()
     for c in sorted(glob.glob(os.path.join(COURSE_SPECS, "*.subsystem.yaml"))):
@@ -91,7 +118,10 @@ def _differences() -> set[str]:
         theirs = product_file(f"{PRODUCT_SPECS}/{name}")
         if theirs is None:
             continue                                     # a subsystem only the course has
-        a, b = spec_key_paths(c), spec_key_paths(name, theirs.decode("utf-8"))
+        with open(c, encoding="utf-8") as f:
+            mine = f.read()
+        a = spec_key_paths(c) | spec_list_values(mine)
+        b = spec_key_paths(name, theirs.decode("utf-8")) | spec_list_values(theirs.decode("utf-8"))
         found |= {f"course-only {name} {p}" for p in a - b} | {f"product-only {name} {p}" for p in b - a}
     return found
 
@@ -213,6 +243,16 @@ def test_every_spec_of_the_product_loads_with_the_courses_loader_but_for_the_deb
         d = yaml.safe_load(product_file(p).decode("utf-8"))
         found |= {f"{d.get('name')}:{k}" for k in refused_paths(d)}
     _hold(found, LOAD_DEBT, LOAD_HEAD, "key paths of the product's specs the course's loader refuses")
+
+
+def test_the_lists_words_are_read_as_the_products_test_does():
+    """A list of words gives each word, a list of maps its maps' `name` (else `field`), a number or a boolean nothing,
+    and nothing under data."""
+    text = ("door: {routes: [timeline, keeps]}\nheartbeat: {strings: [volume]}\nsnapshot: [name, 5, true]\n"
+            "metrics:\n  - {name: m, from: f}\nservers:\n  status:\n    - {field: a.b, title: T}\n"
+            "display:\n  tree: {columns: [x]}\nunit:\n  fields:\n    a: {type: url, schema: {enum: [z]}}\n")
+    assert spec_list_values(text) == {"door.routes[timeline]", "door.routes[keeps]", "heartbeat.strings[volume]",
+                                      "snapshot[name]", "metrics[m]", "servers.status[a.b]"}, sorted(spec_list_values(text))
 
 
 def test_the_walk_reads_a_spec_as_the_products_test_does():
