@@ -710,6 +710,26 @@ def test_a_server_known_to_any_subsystem_takes_a_row():
         srv.shutdown()
 
 
+def test_a_labels_body_with_any_key_but_labels_is_refused_and_writes_nothing():
+    """ADR 0012, strict, as the product (`len(body) != 1`): `{"labels": [...], "label": ...}` — a misspelt key beside the
+    right one, or a `server` the path already names — was taken and the extra key meant nothing. A 400 in words, naming
+    the key, and no row; `{"labels": [...]}` alone is written."""
+    box = Box()
+    _site(box, srv_a="vlan:a")
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        for body, key in (({"labels": ["vlan:a"], "label": ["vlan:b"]}, "label"),
+                          ({"labels": [], "server": "srv-b"}, "server"), ({"label": ["vlan:a"]}, "label")):
+            code, out = _call(base, "PUT", "/servers/srv-a/labels", body)
+            assert code == 400 and f"not {key!r}" in out["detail"] and out["error"] == "refused", (body, code, out)
+        assert box.vars.get("platform/servers/srv-a")[0] is None
+        assert not [k for k in _audit(box) if k[0].startswith("server.labels")]
+        assert _call(base, "PUT", "/servers/srv-a/labels", {"labels": ["vlan:a"]})[0] == 200
+        assert box.vars.get("platform/servers/srv-a")[0] == {"labels": "vlan:a"}
+    finally:
+        srv.shutdown()
+
+
 def test_a_process_that_never_read_the_rows_knows_no_servers_labels():
     """ADR-0026's addition («Архитектор»; the product's 59808df): a controller whose listing of `platform/servers/*` has
     failed since it started placed by the node's `LABELS` — a guess, and the very word a row may have been written to

@@ -3617,6 +3617,12 @@ class Mount:
                 # Through `object_body` (the eleventh review, a minor): `ValueError` alone let a body nested past what
                 # JSON reads (`RecursionError`) through, and the connection dropped with no answer.
                 body = object_body(h)
+                # …and `labels` alone (ADR 0012, strict; the product's `len(body) != 1`): a key beside it — `label`
+                # misspelt, a `server` the path already names — was taken silently and meant nothing
+                stray = sorted(k for k in body if k != "labels")
+                if stray:
+                    raise Refused(f'the labels are {{"labels": ["vlan:cctv-a", …]}}, each a string; [] for none — '
+                                  f'and nothing else: not {stray[0]!r}')
                 labels = ctl.set_server_labels(server, body.get("labels"), self.servers_known())
                 self.root.journal.say("server.labels.set", server=server, labels=",".join(labels), user=user)
                 return 200, {"server": server, "labels": labels, "labels_source": "console",
