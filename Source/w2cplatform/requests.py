@@ -165,6 +165,13 @@ def _end(ctl, key: str, it: dict, idx, now: float, most_valid) -> bool:
             return False                                    # not known when it was filed either: not known to be over
     if now - until < REAP_AFTER:
         return False                                        # its holder's to end, if it has one
+    return _close(ctl, key, it, idx, now, f"{now - until:.0f} s past its deadline")
+
+
+# ONE RULE FOR BOTH OF THE REAPER'S PATHS (ADR 0054; the product's 1315207 found the second going past the mark): a
+# deadline passed, or a row with none older than `ttl`. The mark not read — wait; an outcome in it — the row is cleared;
+# no outcome and its holder still there — wait; its holder gone — `unknown`; no mark — `expired`.
+def _close(ctl, key: str, it: dict, idx, now: float, how: str) -> bool:
     rid = key.rsplit("/", 1)[1]
     try:
         mark = ctl.objects.get(ctl.sub.command_key(rid))
@@ -193,13 +200,12 @@ def _end(ctl, key: str, it: dict, idx, now: float, most_valid) -> bool:
             complete_mark(ctl.objects, ctl.sub.command_key(rid), "unknown", why, now)   # by the index it reads
         except Exception as e:                              # noqa: BLE001 — the row is ended; its mark says less
             log.warning("%s: request %s ended not known, and its mark was not completed (%s)", ctl.spec.name, rid, e)
-        log.warning("%s: request %s for %s ended %.0f s past its deadline NOT KNOWN: %s", ctl.spec.name, rid,
-                    it.get("unit", "?"), now - until, why)
+        log.warning("%s: request %s for %s ended %s NOT KNOWN: %s", ctl.spec.name, rid, it.get("unit", "?"), how, why)
         return True
     count_expired(ctl.spec.name)
     _ended_mark(ctl, rid, it, "expired", now)
-    log.warning("%s: request %s for %s ended unperformed %.0f s past its deadline — no worker held its unit to perform it",
-                ctl.spec.name, rid, it.get("unit", "?"), now - until)
+    log.warning("%s: request %s for %s ended unperformed %s — no worker held its unit to perform it",
+                ctl.spec.name, rid, it.get("unit", "?"), how)
     return True
 
 
@@ -244,14 +250,13 @@ def clear_requests(ctl, sweep: bool = True) -> int:
             old = False                                     # `nan` too: not known to be old (the seventh pass)
         if not old:
             continue
+        if it.get("unit"):
+            _close(ctl, key, it, idx, now, f"standing past its ttl ({ttl} s)")   # the mark read first, as by deadline
+            continue
         try:
-            ctl.vars.delete(key, cas=idx)                   # by CAS: asked again this instant, it is a new ask
+            ctl.vars.delete(key, cas=idx)                   # a row naming no unit is a list, not a request: no mark
         except Exception:                                   # noqa: BLE001 — changed meanwhile, or the store: the next pass
             continue
-        if it.get("unit"):
-            count_expired(ctl.spec.name)
-            _ended_mark(ctl, rid, it, "expired", now)
-            log.warning("%s: request %s stood for %.0f s unanswered and was ended", ctl.spec.name, rid, ttl)
     return gone
 
 
