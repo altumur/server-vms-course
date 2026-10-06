@@ -310,21 +310,25 @@ async function loadTimeline(id){
 
 Без этого страница нарисовала бы дыру там, где лежит видео выключенного сервера, и оператор искал бы запись на карте камеры или списал бы её как потерянную. Тест: регистратор тома `old` замолчал — место отвечает 404 с `X-Unreachable: old@srv-1`, на шкале минуты `new`, а `old@srv-1` назван рядом с `gone@srv-3` (`test_where_volume.py::test_a_volume_whose_recorder_went_silent_is_named_and_its_minutes_are_missing_not_drawn`).
 
-**Запись в другом кластере домена — тоже на шкале.** Камеру этого кластера может писать другой (пересечение, [М12B](../М12B_DomainVMS/README.md)). Тогда её минуты лежат там, и дверь к ним выдаёт консоль **того** кластера своим ключом (ADR-0015). Страница узнаёт такие записи из книги primaries, которую домен приносит в кластер камеры: `GET /domain/vms/books/primaries` отдаёт по `ref` камеры только поля, которые спека разрешает показать (`primaries: {show: [recorded_by, recording]}`; ADR-0010), без токенов дорог. `where` страница спрашивает у своей консоли, а та передаёт его консоли того кластера ровно один раз (`member_forward`, ADR-0061):
+**Запись в другом кластере домена — тоже на шкале.** Камеру этого кластера может писать другой (пересечение, [М12B](../М12B_DomainVMS/README.md)). Тогда её минуты лежат там, и дверь к ним выдаёт консоль **того** кластера своим ключом (ADR-0015). Страница узнаёт такие записи из книги primaries, которую несёт её собственный кластер, — у члена и у держателя домена одинаково (ADR-0010, дополнение 2026-10-06): `GET /domain/vms/books/primaries` отдаёт по `ref` камеры только поля, которые спека разрешает показать (`primaries: {show: […]}`), без токенов дорог. Книга перечитывается на каждом `refresh`, в котором модуль принёс ключ `domain`. Из записи о камере страница берёт основную запись (`recorded_by`, `recording`) и каждый резерв из списка `backups` (`[{cluster, recording}]`) — со знаком `backup: true`, своей строкой на шкале. `where` страница спрашивает у своей консоли, а та передаёт его консоли того кластера ровно один раз (`member_forward`, ADR-0061):
 
 ```js
 function farRecsOfCam(id){
-  const c=camById(id),ref=c&&c.ref;if(!ref)return[];
-  const p=PRIMARIES&&PRIMARIES[ref];
+  const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref];if(!p)return[];
   // a recording this cluster holds itself is one of its own already (the book names this cluster too, then)
-  if(!p||!p.recorded_by||!p.recording||recsOfCam(id).some(r=>String(r.id)===String(p.recording)))return[];
-  return[{id:String(p.recording),cluster:String(p.recorded_by),home:"",backup:false,cam:String(id)}];
+  const own=new Set(recsOfCam(id).map(r=>String(r.id))),out=[],seen=new Set();
+  const add=(cluster,rec,backup)=>{if(!cluster||!rec)return;const k=cluster+"|"+rec;
+    if(own.has(String(rec))||seen.has(k))return;seen.add(k);
+    out.push({id:String(rec),cluster:String(cluster),home:"",backup,cam:String(id)})};
+  add(p.recorded_by,p.recording,false);
+  for(const x of Array.isArray(p.backups)?p.backups:[])if(x&&typeof x==="object")add(x.cluster,x.recording,true);
+  return out;
 }
 // where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
 const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+"/rec/where/"+encodeURIComponent(rec.id);
 ```
 
-`farRecsOfCam`, `recWhere` и `placeWhere` стоят вне ядра. Продукт у кластера держателя домена берёт записи сначала из состояния VMS в домене (`/domain/vms/state`). В курсе такого маршрута нет, и книга — источник для обоих. Близнецов ключ различает по кластеру. Отказ того кластера — не «недоступно», а слова о том, почему: 403 — его привратник вас не знает, 502 — его консоль не видна по сети, 404 — такого члена отсюда не видно, 503 — список членов здесь не читается. Кусок идёт прямо с двери держателя, мимо обеих консолей (`shell-far-recordings.test.js`).
+`farRecsOfCam`, `recWhere` и `placeWhere` стоят вне ядра; они те же, что у продукта. Вид домена для этого не читается: держатель знает то же, что несёт книга его кластера. Запись, которую этот кластер держит сам, уже есть среди своих и через `/domain/at` не спрашивается; элемент `backups`, который не читается (не объект, без кластера или без записи), отброшен. Пока книга курса `backups` не несёт, страница видит в ней только основную. Близнецов ключ различает по кластеру. Отказ того кластера — не «недоступно», а слова о том, почему: 403 — его привратник вас не знает, 502 — его консоль не видна по сети, 404 — такого члена отсюда не видно, 503 — список членов здесь не читается. Кусок идёт прямо с двери держателя, мимо обеих консолей (`shell-far-recordings.test.js`).
 
 **Что отвечает дверь.** На стороне регистратора `/timeline/<запись>` — `footage_routes` в `vms/footage.py`:
 
@@ -570,7 +574,7 @@ GET  /                                  → vms/vms.shell.html над /platform/
 GET  /rec/where/7                       → {worker, server, door: {url, token: "door1.…", expires, routes: [timeline, segment, keeps]}}
 GET  /rec/where/volumes/old?unit=rec/7  → дверь держателя тома для записи 7
                                           или 404, door: null, X-Unreachable: old@srv-1
-GET  /domain/vms/books/primaries        → {<ref>: {recorded_by, recording}} — кто пишет камеру в другом кластере
+GET  /domain/vms/books/primaries        → {<ref>: {recorded_by, recording, backups?: [{cluster, recording}]}} — кто пишет камеру в другом кластере
 GET  /domain/at/east/rec/where/SN-7     → дверь записи кластера east, выданная его консолью (ADR-0061);
                                           403/404/502/503 — словами в подписи шкалы
 GET  <door>/timeline/7?from&to          → [{start_ms, end_ms, epoch, source?, fenced?, yields?}]   (Bearer)
@@ -607,7 +611,7 @@ GET  /timeline/7, /segment/…, /whep/7  → 404: у консоли байтов
 - Под CSP ни одного обработчика в разметке: `data-act` и `wire`; всё из данных — через `esc`.
 - Ядро — двери, шкала, куски, живое — копия продуктового, сверенная по функциям; долг пуст.
 - Дверь — `{url, token, expires}`: токен `door1.` на единицу и держателя, Bearer для `fetch`, `?t=` для плеера, заново за 20 с до конца и один раз на 401.
-- Шкала — двери каждой записи и каждого места, близнецы сливаются, своя дверь впереди; место без держателя названо по `X-Unreachable`: недоступно, не утрачено. Участки с `yields` и резервные уступают основным. Запись камеры в другом кластере домена — из книги primaries, её `where` через свою консоль (`/domain/at/…`, ADR-0061), отказ того кластера — словами.
+- Шкала — двери каждой записи и каждого места, близнецы сливаются, своя дверь впереди; место без держателя названо по `X-Unreachable`: недоступно, не утрачено. Участки с `yields` и резервные уступают основным. Запись камеры в другом кластере домена — основная и каждый резерв из книги primaries своего кластера, у члена и у держателя одинаково, её `where` через свою консоль (`/domain/at/…`, ADR-0061), отказ того кластера — словами.
 - Куски по 60 с с той же двери, каждый момент один раз; чтение — строка `archive.read` в журнале регистратора, консоль пишет только `door.issued`.
 - Живое: первый зритель заводит поток строкой, предложение — на дверь шлюза, повтор на 404 и 503, трубка — `DELETE` со свежим токеном.
 - «Архив», тома, «Камеру в архив», «Сценарии», домен глазами VMS — каждое через `pc.api` и вызовы модуля.
