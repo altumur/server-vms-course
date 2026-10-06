@@ -1353,7 +1353,7 @@ def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, inde
 | Маршрут | Что делал один плохой элемент | Теперь |
 |---|---|---|
 | `/servers` | `"server": ["srv-x"]` в пульсе воркера — `TypeError` (ключ словаря); `5` среди строк — `TypeError` в `sorted` | пульс не разбирается (`contract._named`), пропущен и посчитан; остальные серверы на месте |
-| `/unplaceable` | тот же пульс; адрес, по которому единицы группируются (`group_by` с `cut_at`), `rtsp://[::1/x` — `ValueError: Invalid IPv6 URL` | пульс — его; адрес, который не адрес, — своя группа (`spec.url_cut`) |
+| `/unplaceable` | тот же пульс; адрес, по которому единицы группируются (`group_by` с `cut_at`), `rtsp://[::1/x` — `ValueError: Invalid IPv6 URL` | пульс — его; адрес, у которого хоста не прочесть, — без группы (`spec.url_host`), ни с кем; записать такой дверь не даст: 400 с `fault: bad_url` (ADR 0053) |
 | `/drain` | то же и `worker` списком — `TypeError` | то же |
 | `/metrics` | `server` списком или числом в пульсе ресурса — `resources_seen` и `sorted(res.items())` | пульс ресурса не разбирается, посчитан в `w2c_resource_heartbeats_garbled`; 400-значный `started` закрыт в девятом (`rows.number`) |
 | `/schema` | `build` списком — `TypeError` (множество сборок); строка `platform/schema` словом — `ValueError`; `schema: 1e999` — процесс пропускался | `build` — `?`; `version: null`; схема `null`, `can_raise_to` не выше хранилища, `set_schema` отказывает |
