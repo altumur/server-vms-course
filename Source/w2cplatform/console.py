@@ -2813,7 +2813,9 @@ class SpecConsole:
                     if r.get("garbled") or not ref or sees(*self.target(ref)):
                         keep.append(r)
                 rows = keep
-            if table == self.spec.affinity.get("table"):              # a table of places: who holds each, now
+            # The table of places (`placement.places.table`): who holds each, now. A hold is of a place only
+            # (`<sub>/holds/<row>`); the `affinity` table without `places` has no holder to say (ADR 0056).
+            if table == self.spec.places.get("table"):
                 held = ctl.live_holds()
                 rows = [{**r, "held_by": held.get(r["name"])} for r in rows]
             if name is not None:

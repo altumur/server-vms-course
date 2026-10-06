@@ -22,7 +22,10 @@ is nobody's catalogue.
 #   derived again. `file_of(name)` — the file the name was last loaded from (a copy registered without one keeps it):
 #   what lies beside it is the subsystem's (its page `<sub>.shell.html`, `console.page_of`).
 # - `load_dir(path)` — every `*.subsystem.yaml` of a directory, in name order; refused when there is none: a process
-#   told to run from an empty directory runs nothing, and says so at its start rather than idling.
+#   told to run from an empty directory runs nothing, and says so at its start rather than idling. A spec of it whose
+#   `near.of`/`near.prefer` neighbour the directory lacks is refused there (`near_known`, ADR 0056).
+# - `near_known(spec)` — refuses a spec whose neighbour (`near` with `of` or `prefer`) this catalogue does not hold; the
+#   end of `load_dir` and `SpecController`'s start ask it, where the catalogue is whole.
 # - `specs()` / `spec(name)` — what is loaded; with nothing loaded, the directory `SPEC_DIR` names first.
 # - `object_rows()` — the objects that are rows of the store (`rows_of` every spec, under its name: its `objects.rows`,
 #   and `commands/*` for a spec whose units take requests).
@@ -61,7 +64,10 @@ def load_dir(path: str) -> list:
     if not files:
         raise ValueError(f"{SPEC_DIR}={path}: no <sub>.subsystem.yaml there — the platform runs from the specs it is "
                          f"given and from nothing else")
-    return [SubsystemSpec.load(f) for f in files]
+    loaded = [SubsystemSpec.load(f) for f in files]
+    for s in loaded:             # the directory is the catalogue whole: a neighbour it lacks is refused here (ADR 0056)
+        near_known(s)
+    return loaded
 
 
 def file_of(name: str) -> str | None:
@@ -84,6 +90,21 @@ def spec(name: str, env: dict | None = None):
             return s
     raise ValueError(f"no subsystem {name!r} among the specs this process loaded "
                      f"({', '.join(s.name for s in specs(env)) or 'none'}; {SPEC_DIR})")
+
+
+# The neighbour a spec reads by ITS spec (ADR 0056): `near.of` names a field of theirs, `near.prefer` reads their rows by
+# their `rows` and a field's `ref`. A spec whose neighbour this catalogue does not hold is refused, naming it — where the
+# catalogue is whole, which is not one file's load (a directory loads in name order, and a follower may come first): the end of
+# `load_dir`, and a controller's start (`SpecController`), after its process loaded what it loads. It was a pass's: the
+# preference read nothing and placed as if nothing were preferred, in silence (ADR 0012).
+def near_known(spec) -> None:
+    if spec.near == "none" or not (spec.near_of or spec.near_prefer):
+        return
+    names = [s.name for s in specs()]
+    if spec.near not in names:
+        key = "near.prefer" if spec.near_prefer else "near.of"
+        raise ValueError(f"spec {spec.name}: {key} reads the spec of {spec.near!r}, and this process loaded none "
+                         f"(it loaded {', '.join(names) or 'nothing'}; {SPEC_DIR}) — load {spec.near}'s spec beside it")
 
 
 def _derive(what: str, make):

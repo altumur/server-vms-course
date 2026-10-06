@@ -12,7 +12,7 @@ from w2cplatform.console import Heartbeat
 from w2cplatform.spec import SpecController, SubsystemSpec
 from tests.conftest import Box, testsub, testsub2
 
-T2 = testsub2()                                                   # near: {sub: testsub, by: of, of: name}
+T2 = testsub2()                                                   # near: {sub: testsub, by: of, of: name}; testsub in the catalogue
 
 
 def _worker(box, spec, worker: str, server: str, capacity: int = 8, status=None):

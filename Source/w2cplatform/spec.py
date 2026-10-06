@@ -1069,12 +1069,15 @@ class SubsystemSpec:
     # units of the followed subsystem (two of theirs about one of mine), the one to stand beside: the one whose row says
     # so — read through their field's `ref` when the key has a dot (`home.kind`: the `kind` of the row their `home`
     # names). Those first, the rest after; ties by their id, so two passes agree. It was a subsystem's ranking code.
+    # Their spec is the process's catalogue's: with `near.of` or `near.prefer`, a neighbour it does not hold is refused
+    # where the catalogue is whole (`catalog.near_known`, ADR 0056).
     near_prefer: dict = field(default_factory=dict)
     # `placement.affinity: {field, table, server_field, strict}` — a row of this subsystem's `table` (one of `tables:`),
     # named in the unit's `field`, may BIND: when the row matches `strict` (every key of it, the row's value one of the
     # values; no `strict` — every row binds), the unit goes only to the place that row is — the worker whose place
     # (`place_by`) is the row's name, on the server the row's `server_field` names when it names one — and that place
-    # takes no unit homed elsewhere. A place whose row says `admits: false` takes no unit at all. A FILTER, beside the
+    # takes no unit homed elsewhere. A place whose row says `admits: false` takes no unit at all, and the live worker on
+    # it gives up the units it has (`admitting_none`, in `leaving`; ADR 0056). A FILTER, beside the
     # labels and `spread_by`, so it beats `home` and `near` the way they do; what a place IS, the rows say. It was a
     # subsystem's admit code (the boundary's step 6).
     affinity: dict = field(default_factory=dict)
@@ -2468,6 +2471,8 @@ class SpecController(Controller):
     # one.
     def __init__(self, spec: SubsystemSpec, vars_: Variables, objects: ObjectStore, capacity: int | None = None,
                  wall=time.time, cluster: str | None = None):
+        from . import catalog
+        catalog.near_known(spec)                         # its neighbour's spec, loaded by now — or no controller (ADR 0056)
         super().__init__(spec.sub, vars_, objects, wall)
         self.spec = spec
         self.capacity = capacity if capacity is not None else spec.capacity_default   # the FALLBACK for a worker whose heartbeat says nothing
@@ -3312,6 +3317,29 @@ class SpecController(Controller):
             return []
         return [w for w in workers if self.place_of(w) == ""]
 
+    # Live workers whose place is a row of the `affinity` table saying `admits: false`, `{worker: place}` (ADR 0056, its
+    # addition; it was the product's `Unfit` hook). A place that takes no unit gives up the ones it has: "no new ones, the
+    # old ones stay" kept units where the administrator closed the place, for ever, and said nothing. A row that does not
+    # read and a table that does not list give nothing up — a unit is not moved on a guess. No spec key: `affinity` says
+    # it already.
+    def admitting_none(self, workers) -> dict[str, str]:
+        if not self.spec.affinity:
+            return {}
+        try:
+            rows = self.table_rows(self.spec.affinity["table"])
+        except Exception as e:                           # noqa: BLE001 — a store that does not answer: nothing moves on it
+            self._failed("admitting_none", f"the places of {self.spec.affinity['table']} could not be read ({e}); "
+                                           f"no unit leaves a place for its `admits` until they are")
+            return {}
+        self._works("admitting_none")
+        out = {}
+        for w in workers:
+            place = self.place_of(w)
+            here = rows.get(place)
+            if here is not None and str(here.get("admits", "true")).lower() == "false":
+                out[w] = place
+        return out
+
     def without_resource(self, workers) -> list[str]:
         if self.spec.requires != "resource":
             return []
@@ -3460,15 +3488,13 @@ class SpecController(Controller):
         return w, server
 
     # `near.prefer` of one of their units: whether its row — or the row its field refs (`home.kind`) — holds one of the
-    # values, for every key. Their spec is the catalogue's (`catalog.py`): a process that loaded none of theirs prefers
-    # nothing. What the second step reads — a table of theirs — is read once a look (`memo`, `NearIndex`), and each of
-    # their rows once.
+    # values, for every key. Their spec is the catalogue's (`catalog.py`): a controller whose process loaded none of
+    # theirs is not built (`catalog.near_known`, ADR 0056) — it preferred nothing, a pass at a time, and said nothing.
+    # What the second step reads — a table of theirs — is read once a look (`memo`, `NearIndex`), and each of their rows
+    # once.
     def _preferred(self, their_id: str, memo: dict) -> bool:
         from . import catalog
-        try:
-            them = catalog.spec(self.spec.near)
-        except ValueError:
-            return False
+        them = catalog.spec(self.spec.near)
         try:
             items, _ = self.vars.get(them.sub.config(them.rows, str(their_id)))
         except (Garbled, *PARSE_ERRORS):
@@ -3951,14 +3977,14 @@ class SpecController(Controller):
     # with the most free capacity, a channel group whole; what has no room waits, listed where it was, counted. Leaving
     # is: a released slot (an orderly stop, or released by the controller — `release_unlisted`, a decommission), a live
     # worker whose server's resource is silent where the spec requires one, one that holds no place where places are
-    # held, one on a drained or decommissioned server, and a slot that stopped renewing whose fate says its units move
+    # held, one whose place admits no unit (`admitting_none`), one on a drained or decommissioned server, and a slot that stopped renewing whose fate says its units move
     # (`slot_fate`: `MOVED_FATES`). A slot that merely lapsed, or whose worker is hung, or that nobody can judge, is not
     # touched — it is waited for, up to `hung_move_after` for the last two. `test_scale_in_releases_a_slot_and_the_controller_redistributes`: a silent `w-3`
     # moves nothing; after `release_slot()` its two cameras go to `w-1`/`w-2` with reason `slot w-3 released; …`.
     def redistribute(self, workers: list[str] | None = None) -> list[tuple]:
         """The controller's one unasked move: the units of a worker that is leaving
-        (`leaving`: a released slot, a drained, decommissioned or silent server, a
-        dead slot by `slot_fate`) go to the workers that are here — a channel group
+        (`leaving`: a released slot, a drained, decommissioned or silent server, no
+        place or one that admits no unit, a dead slot by `slot_fate`) go to the workers that are here — a channel group
         whole, or not at all. A slot that merely lapsed is not touched: its
         process returns under the same name."""
         self.unplace_deleted()
@@ -4052,6 +4078,11 @@ class SpecController(Controller):
         for w in self.placeless(seen):
             if self.assignment(w).units:
                 gone_for.setdefault(w, f"{w} holds no {self.spec.place_by} now")
+        # …and one whose place now admits no unit (`admits: false` in its `affinity` row; ADR 0056): it keeps no new
+        # unit out only — the ones it has go too, or they stay for ever where the administrator closed the place
+        for w, place in self.admitting_none(seen).items():
+            if self.assignment(w).units:
+                gone_for.setdefault(w, f"{w}'s {self.spec.place_by} {place} admits no unit")
         for w in self.on_draining(seen):                               # an operator said this machine is about to stop
             if self.assignment(w).units:
                 gone_for.setdefault(w, f"server {self.server_of(w)} draining")

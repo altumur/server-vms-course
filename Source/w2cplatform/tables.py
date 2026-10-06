@@ -17,7 +17,7 @@ and the console serves it (`SpecConsole`, `_table_route`):
     GET    /<table>               every row, as a page may show it: secrets left out, addresses as `hide_in_url` says
                                   them; a row that does not parse shown as one (`garbled`), whoever wrote it; the rows
                                   whose unit the caller may not see left out (`rights.unit_of`); a table that is the
-                                  spec's PLACES (`placement.affinity.table`) says who holds each row (`held_by`)
+                                  spec's PLACES (`placement.places.table`) says who holds each row (`held_by`; ADR 0056)
     GET    /<table>/<name>        one row
     POST   /<table>               a row written whole: a new one, or one written again (last write wins: a list, not a
                                   unit) — the secret it does not send kept while the address it is bound to is not

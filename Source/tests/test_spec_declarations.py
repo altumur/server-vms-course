@@ -928,3 +928,96 @@ def test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_a
     _refused(status({"field": "jam", "title": "  "}), "servers.status is [{field")
     _refused(status({"field": "jam", "title": "x"}, {"field": "jam", "title": "y"}), "names 'jam' twice")
     _refused(status({"field": "server", "title": "x"}), "the platform's own field")
+
+
+def test_who_holds_a_row_is_said_by_the_table_of_places_and_not_by_the_affinity_table():
+    """ADR 0056: `held_by` in `GET /<table>` belongs to `placement.places.table` — a hold is of a place only
+    (`<sub>/holds/<row>`). The `affinity` table, when it is another table, says no holder: in testsub2 the two are one
+    table, so a condition on the wrong one never showed."""
+    from tests.conftest import Served
+    from w2cplatform.console import SpecConsole
+    vars_, objects, wall = _box()
+    t = {"key": "{name}", "fields": {"name": {"type": "string", "required": True}, "kind": {"type": "string"},
+                                     "server": {"type": "string"}}}
+    spec = SubsystemSpec.from_dict({**BIN, "tables": {"bays": t, "shelves": t},
+                                    "placement": {**BIN["placement"], "places": {"table": "shelves"}}})
+    assert spec.affinity["table"] == "bays" and spec.places["table"] == "shelves"
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    vars_.put("bin/bays/b1", {"name": "b1", "kind": "plain"})
+    vars_.put("bin/shelves/b1", {"name": "b1", "kind": "plain"})
+    vars_.put("bin/holds/b1", {"holder": "i-1", "until": wall() + 30, "released": "false", "gen": 1, "by": "w-1"})
+    with Served(SpecConsole(ctl, wall=wall)) as call:
+        st, out = call("GET", "/shelves")
+        assert st == 200 and [(r["name"], r["held_by"]) for r in out["shelves"]] == [("b1", "i-1")], (st, out)
+        st, out = call("GET", "/shelves/b1")
+        assert st == 200 and out["held_by"] == "i-1", (st, out)
+        st, out = call("GET", "/bays")
+        assert st == 200 and [r["name"] for r in out["bays"]] == ["b1"] and "held_by" not in out["bays"][0], (st, out)
+
+
+def test_a_spec_whose_neighbour_the_catalogue_lacks_is_refused_where_the_catalogue_is_whole():
+    """ADR 0056: `near.of` and `near.prefer` read the neighbour by its spec, from the process's catalogue. One it does not
+    hold is refused, naming it — not one file's load (a directory loads in name order, and `aisle` comes before the
+    `crate` it follows), but where the catalogue is whole: the end of `load_dir`, and a controller's start. It was a
+    pass's: `_preferred` read nothing and preferred nothing, in silence. A bare `near` reads only their heartbeats."""
+    import json
+    vars_, objects, wall = _box()
+    crate = {"name": "crate", "unit": {"rows": "items", "id": "name", "fields": {"name": {"type": "string", "required": True},
+                                                                              "owner": {"type": "string"}}},
+             "placement": CAP}
+    unit = {"rows": "picks", "id": "name", "fields": {"name": {"type": "string", "required": True}}}
+    of = {"name": "aisle", "unit": unit, "placement": {**CAP, "near": {"sub": "crate", "of": "owner"}}}
+    prefer = {"name": "aisle", "unit": unit, "placement": {**CAP, "near": {"sub": "crate", "of": "owner",
+                                                                           "prefer": {"owner": ["ann"]}}}}
+    bare = {"name": "aisle", "unit": unit, "placement": {**CAP, "near": "crate"}}
+    _refused(lambda: SpecController(SubsystemSpec.from_dict(of), vars_, objects, wall=wall),
+             "aisle: near.of reads the spec of 'crate', and this process loaded none")
+    _refused(lambda: SpecController(SubsystemSpec.from_dict(prefer), vars_, objects, wall=wall),
+             "aisle: near.prefer reads the spec of 'crate'")
+    SpecController(SubsystemSpec.from_dict(bare), vars_, objects, wall=wall)           # their heartbeats only: no spec read
+    d = tempfile.mkdtemp(prefix="specs-")
+    with open(os.path.join(d, "aisle.subsystem.yaml"), "w") as f:
+        json.dump(prefer, f)
+    _refused(lambda: catalog.load_dir(d), "near.prefer reads the spec of 'crate'")
+    with open(os.path.join(d, "crate.subsystem.yaml"), "w") as f:
+        json.dump(crate, f)
+    assert [s.name for s in catalog.load_dir(d)] == ["aisle", "crate"]                 # the follower first, and taken
+    SpecController(SubsystemSpec.from_dict(of), vars_, objects, wall=wall)
+
+
+def test_a_place_that_stops_admitting_gives_up_the_units_of_its_live_worker():
+    """ADR 0056, its addition (the product's `Unfit` hook): a live worker whose place is a row of the `affinity` table
+    saying `admits: false` is leaving — its units go, "<w>'s <place_by> <place> admits no unit". "No new ones, the old
+    ones stay" kept them where the administrator closed the place, for ever. A row that does not read and a table that
+    does not list give nothing up; a dead worker is not this rule's (its slot's fate is)."""
+    from w2cplatform.variables import Garbled
+    vars_, objects, wall = _box()
+    spec = SubsystemSpec.from_dict(BIN)
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    vars_.put("bin/bays/b1", {"kind": "plain", "server": "s1"})
+    vars_.put("bin/bays/b2", {"kind": "plain", "server": "s2"})
+    _worker(objects, wall, spec, "w-1", "s1", "b1")
+    _worker(objects, wall, spec, "w-2", "s2", "b2")
+    ctl.create({"name": "a"})
+    ctl.move("a", "w-1", "put there")
+    live = sorted(ctl.workers_seen())
+    assert ctl.leaving(live) == {}
+    vars_.put("bin/bays/b1", {"kind": "plain", "server": "s1", "admits": "false"})
+    assert ctl.leaving(live) == {"w-1": "w-1's bay b1 admits no unit"}
+    real_get, real_list = vars_.get, vars_.list
+    vars_.get = lambda k, *a, **kw: (_ for _ in ()).throw(Garbled(k, "torn")) if k == "bin/bays/b1" else real_get(k, *a, **kw)
+    assert ctl.leaving(live) == {}                                         # a row nobody can read moves nothing
+    vars_.get = real_get
+    vars_.list = lambda p, *a, **kw: (_ for _ in ()).throw(OSError("store away")) if p == "bin/bays/" else real_list(p, *a, **kw)
+    assert ctl.leaving(live) == {}                                         # …nor a table that does not list
+    vars_.list = real_list
+    wall.t += 100                                                          # w-1 falls silent; w-2 speaks on
+    _worker(objects, wall, spec, "w-2", "s2", "b2")
+    assert sorted(ctl.workers_seen()) == ["w-2"]
+    assert "admits no unit" not in str(ctl.leaving(sorted(ctl.workers_seen())))
+    wall.t -= 100                                                          # w-1 alive again: its units go, beside a place that admits
+    _worker(objects, wall, spec, "w-1", "s1", "b1")
+    _worker(objects, wall, spec, "w-2", "s2", "b2")
+    assert ctl.redistribute(sorted(ctl.workers_seen())) == [("a", "w-1", "w-2")]
+    assert ctl.placement("a").worker == "w-2" and ctl.placement("a").reason.startswith("w-1's bay b1 admits no unit")
+
