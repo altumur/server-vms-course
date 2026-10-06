@@ -361,12 +361,13 @@ requests:
       unit:        {type: string}
       id:          {type: string}
       action:      {enum: [output, preset]}
-      # an argument is a number or a word of at most 32 characters (`config.COMMAND_ARG_MAX`; the product's cross-check
-      # of the eleventh review), at the door as at the holder
-      port:        {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
-      state:       {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
-      pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
-      n:           {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
+      # an argument is a word of at most 32 characters or a whole number up to 2^53 − 1 (`config.COMMAND_ARG_MAX`; the
+      # product's cross-check of the eleventh review; integers past 2^53 are no number a spec holds), at the door as
+      # at the holder
+      port:        {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      state:       {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      n:           {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
       valid_until: {type: number}
   valid_for: 30
   most_valid: 600
