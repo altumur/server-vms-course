@@ -14,7 +14,7 @@ course-only live.subsystem.yaml rights.routes.view
 course-only live.subsystem.yaml rights.routes.view[streams]   # ADR-0057: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml domain.reports[ingest]   # ADR-0010: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml heartbeat.strings[volume_missing]   # ADR-0057: the course first; the product's side — «Сборка»
-course-only rec.subsystem.yaml objects.door[forwarded/*]   # ADR-0003: the course first; the product's side — «Лекции»
+course-only rec.subsystem.yaml objects.door[forwarded/*]   # ADR-0019: the course first; the product's side — «Лекции»
 course-only rec.subsystem.yaml servers
 course-only rec.subsystem.yaml servers.show
 course-only rec.subsystem.yaml servers.status   # ADR-0057: the course first; the product's side — «Платформа»
@@ -22,8 +22,6 @@ course-only rec.subsystem.yaml servers.status[shrink_pending]   # ADR-0057: the 
 course-only rec.subsystem.yaml servers.status[volume_missing]   # ADR-0057: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml servers.status[writer.state]   # ADR-0057: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml snapshot[min_depth_days]   # ADR-0010: the course first; the product's side — «Лекции»
-course-only rec.subsystem.yaml worker.reads
-course-only rec.subsystem.yaml worker.reads[domain/vms/primaries]   # ADR-0014: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml domain.books[poll]   # ADR-0003: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[acts]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[ask]   # ADR-0010: the course first; the product's side — «Лекции»
@@ -72,7 +70,7 @@ product-only rec.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the prod
 product-only rec.subsystem.yaml heartbeat.strings[ingest]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml heartbeat.strings[ingest_rtsp]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml metrics[filings_total]   # ADR-0013: the product first; the course's side — «Лекции»
-product-only rec.subsystem.yaml objects.door[taken/*]   # ADR-0003: the product first; the course's side — «Лекции»
+product-only rec.subsystem.yaml objects.door[taken/*]   # ADR-0057: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/clock/*]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/up/*]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml secrets
