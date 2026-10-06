@@ -1966,6 +1966,7 @@ class Worker:
         self._beat_failed = False                        # the look between passes is failing: said once (`beat_once`)
         self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
         self._marks_owed: dict[str, bytes] = {}          # request -> its answered mark, not yet taken by the store (`_confirm`)
+        self._begun_at: dict[str, float] = {}            # request -> when this instance made its mark (`_mark`): its `at`
 
     # Whether this worker's units take requests: its spec declares `requests:`.
     def serves_requests(self) -> bool:
@@ -2391,8 +2392,12 @@ class Worker:
     # late one, `late: true`, over the reaper's `unknown` or `expired` too: it is the truth of what was done to the unit).
     # A store that does not take the write: the mark is OWED (`_marks_owed`) and written again at every look until it
     # does, or the row is gone (the review's eighth pass).
+    # ONE FORM OF A MARK (ADR 0054): `at` — when it was made; `ended_at` — when its outcome was written. The answer keeps
+    # the `at` this instance made the mark at, and says the end beside it.
     def _confirm(self, rid: str, row: dict, outcome: str, it: dict, late: bool = False, why: str = "") -> None:
-        mark = self._mark_body(row["id"], {"outcome": outcome, "action": str(it.get("action", "")), "at": self.wall(),
+        now = self.wall()
+        mark = self._mark_body(row["id"], {"outcome": outcome, "action": str(it.get("action", "")),
+                                           "at": self._begun_at.pop(rid, now), "ended_at": now,
                                            **({"error": mark_error(why)} if why else {}),
                                            **({"late": True} if late else {})})
         try:
@@ -2406,6 +2411,7 @@ class Worker:
 
     def _confirm_owed(self, present: set) -> int:
         self._marks_owed = {r: m for r, m in self._marks_owed.items() if r in present}   # a row gone: its mark is swept
+        self._begun_at = {r: t for r, t in self._begun_at.items() if r in present}
         wrote = 0
         for rid, mark in list(self._marks_owed.items())[:self.MARKS_OWED_PER_LOOK]:
             try:
@@ -2424,7 +2430,10 @@ class Worker:
         put_new = getattr(self.objects, "put_new", None)
         if put_new is None:
             return None
-        return bool(put_new(self.command_key(rid), self._mark_body(unit, {"at": now})))
+        made = bool(put_new(self.command_key(rid), self._mark_body(unit, {"at": now})))
+        if made:
+            self._begun_at[rid] = now
+        return made
 
     # A mark as this instance writes it: who (`instance`, `slot`), the unit and what it is about (`of`), and `fields`;
     # in the one text of a row (`canonical_json`).
@@ -2441,8 +2450,9 @@ class Worker:
         if put_new is None:
             return
         try:
+            now = self.wall()                            # made and ended at once: `at` is `ended_at`
             put_new(self.command_key(rid), self._mark_body(unit, {
-                "outcome": outcome, "action": str(it.get("action", "")), "at": self.wall(),
+                "outcome": outcome, "action": str(it.get("action", "")), "at": now, "ended_at": now,
                 **({"error": mark_error(why)} if why else {})}))
         except Exception as e:                           # noqa: BLE001
             self.store_errors += 1

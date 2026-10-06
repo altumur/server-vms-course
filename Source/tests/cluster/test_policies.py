@@ -110,6 +110,21 @@ def test_nothing_writes_what_it_has_no_business_writing():
         assert (role in ("domain", "domainagent")) == r.allows(role, "delete", "domain/keys"), role
 
 
+def test_the_console_writes_the_marks_of_requests_and_no_other_object_of_a_worker():
+    """ADR 0054: the console's reaper ends a request in its mark — `expired` create-only, `unknown` by the index it read —
+    so the console's role writes `objects/<sub>/commands/*` of every spec with `requests:`, and nothing else a worker
+    writes (heartbeats, contenders, used). Create-only and by-index are the code's, not the grant's (a role deletes what it
+    writes, as every role here)."""
+    r = rights()
+    for k in ("vms/commands/r-1", "rec/commands/r-1"):
+        assert r.allows("console", "write", OBJECTS + k), k
+    for k in ("vms/heartbeats/w-1", "vms/contenders/7", "vms/used/srv-a", "rec/used/srv-a"):
+        assert not r.allows("console", "write", OBJECTS + k), k
+    written = [p for p in roles(SPECS, "vms")["console"]["write"] if p.startswith(OBJECTS)]
+    assert all(p.endswith("/commands/*") for p in written), written
+    assert {p.split("/")[1] for p in written} == {s.name for s in SPECS if s.requests or s.requests_free}, written
+
+
 def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
     """The thirteenth review, major 11: the М12 signer opened `domain.sock`, and no rights file named a role `domain` —
     no daemon opened that socket, the first read was `StoreUnavailable`, the signer went round its restarts. The role

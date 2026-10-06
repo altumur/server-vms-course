@@ -158,7 +158,8 @@ def test_the_reaper_completes_a_gone_holders_mark_unknown_keeping_its_beginner()
 def test_the_holders_answer_is_written_over_the_reapers_and_another_instances_word():
     """The holder's answer is the truth of what was done to the unit: written over another's `unknown` when its call
     comes back, and — late, `late: true` — over the reaper's `expired` too. Its own instance and slot, not the closer's;
-    no `ended_by`, no `ended_at`: the closer's words go with its word."""
+    no `ended_by` and no closer's `error`: the closer's words go with its word. One form of a mark: `at` when this instance
+    made it, `ended_at` when its outcome was written (ADR 0054)."""
     box, spec = Box(), testsub()
     gate = threading.Event()
     w = _holder(box, spec, ["c1"], gate=gate)
@@ -170,7 +171,7 @@ def test_the_holders_answer_is_written_over_the_reapers_and_another_instances_wo
     _look(w, 1)
     m = _mark(box, spec, "r1")
     assert (m["outcome"], m["instance"], m["slot"]) == ("performed", w.instance, w.name), m
-    assert not {"error", "ended_at", "ended_by", "late"} & set(m), m
+    assert not {"error", "ended_by", "late"} & set(m) and m["ended_at"] >= m["at"], m
     # late: answered "did not answer", the reaper's `expired` there meanwhile, the call back after all
     gate.clear()
     _ask(box, spec, "r2", "c1", 5)
@@ -260,3 +261,19 @@ def test_both_object_stores_write_by_the_index_read():
     files = FsObjectStore(Box().root + "/o")
     files.put("testsub/commands/r1", b"x")
     assert files.list("testsub/") == ["testsub/commands/r1"]                            # the lock is no object
+
+
+def test_every_mark_with_an_outcome_says_when_it_was_made_and_when_it_ended():
+    """ADR 0054, one form of a mark: `at` is when the mark was made, `ended_at` when its outcome was written — the holder's
+    answer keeps the `at` it began at; a mark made and ended at once (a refusal before the call) has the two equal."""
+    box, spec = Box(), testsub()
+    gate = threading.Event()
+    w = _holder(box, spec, ["c1"], gate=gate)
+    _ask(box, spec, "r1", "c1", 4)
+    assert w.requests() == []
+    began = _mark(box, spec, "r1")["at"]
+    box.wall.advance(3); box.clock.advance(3)
+    gate.set()
+    _look(w, 1)
+    m = _mark(box, spec, "r1")
+    assert m["outcome"] == "performed" and m["at"] == began and m["ended_at"] == began + 3, m
