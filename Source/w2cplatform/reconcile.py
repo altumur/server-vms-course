@@ -45,6 +45,9 @@ a server or a network that came back is not met by every unit at the same instan
 # - A restart through `restart` that fails leaves the key running at its old revision: the next try is a restart again,
 #   after its delay. Without `restart` the stop has happened: a start that fails leaves the key not running, and the next
 #   try is a start.
+# - A count lives while its key is wanted: `once` drops the failures of every key absent from `desired` at the top of
+#   the pass (the product's `Once` does the same), so a key that leaves and comes back starts at the base delay — a new
+#   life, not the old one's backoff. A key still wanted keeps its count until `_settle` or `reset_backoff` takes it.
 # - Four ways out of `running` past `once`, by why: `forget` — it died, not by command: a failure; `drop` — the worker
 #   stopped it (a lease lost, a place no longer fit): no failure; `clear` — the worker is fenced or lost its slot:
 #   nothing runs, the failures stay; `reset_backoff` — what the failures waited for is back (a place opened, a new
@@ -140,11 +143,16 @@ class Reconciler:
     # has not passed is waiting, under either form of restart. A failure adds to the key's count; a success takes the
     # revision and starts the key's countdown again, and clears its count only once it has stayed up for `backoff.max`
     # AT what is wanted now — a pipeline that dies right after every start waits longer each time, and so does a
-    # restart that keeps failing on a key that had held for hours before its row moved.
+    # restart that keeps failing on a key that had held for hours before its row moved. The count of a key not in
+    # `desired` goes at the top of the pass, before anything is stopped or started: one that comes back is a new life,
+    # its first start at the base delay — the product's `Once`, one rule (ADR 0033). Only the count: a key that still
+    # runs is the stop loop's, and a key still wanted keeps its count.
     def once(self, desired: dict) -> Pass:
         now, p = self.now(), Pass()
         self._wanted = {k: w.rev for k, w in desired.items()}
         self._settle(now)
+        for key in [k for k in self._failures if k not in desired]:
+            del self._failures[key]                   # nobody wants it now: its next start is a first one (ADR 0033)
         for key in list(self._running):
             if key not in desired:
                 self._stop(key)
