@@ -1,18 +1,3 @@
 # console_module_debt.txt — the lines the course's copy of the platform's console module differs from the product's
 # by (test_console_module.py): a change the course leads with, until the product takes it. It only shrinks.
 #   <file> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>
-console.js | - | 3180f0eb | keysAsking: "Asking the console what the domain keeps in the store.", keysFailed: "Did not work", bW
-console.js | + | 311bcdd3 | keysAsking: "Asking the console what the domain keeps in the store.", keysFailed: "Did not work", bW
-console.js | - | 9619f25c | keysAsking: "Спрашиваем консоль, что домен держит в хранилище.", keysFailed: "Не получилось", bW: "Б
-console.js | + | 2daa4390 | keysAsking: "Спрашиваем консоль, что домен держит в хранилище.", keysFailed: "Не получилось", bW: "Б
-console.js | - | db1ad713 | const rows = [...(d.vars || []).map(v => { const items = Object.entries(v.items || {}).sort(([x], [y
-console.js | - | ed86571d | return { key: v.key, html: `<details class="dk-key"${text.length < 1500 ? " open" : ""}><summary><co
-console.js | - | 04a2613e | ...(d.objects || []).map(o => ({ key: o.key, html: `<details class="dk-key"${pretty(o.body).length <
-console.js | + | f2872372 | // what the holder keeps, as the view gives it (ADR-0062): a row by its key and the NAMES of its fie
-console.js | + | f8a9a976 | // where it is a public half of the domain's keys (public); a row the view keeps back says why (with
-console.js | + | aa55c0dd | // by its key, size and age. What a row holds is not the page's: a book's fields are /domain/<sub>/b
-console.js | + | 3cf1d5f6 | const rows = [...(d.vars || []).map(v => {
-console.js | + | ed6daea3 | if (v.withheld) return { key: v.key, html: `<div class="dk-key"><code>${h(v.key)}</code> <span class
-console.js | + | eccfead4 | const fields = Array.isArray(v.fields) ? v.fields : [], pub = v.public || {}, shown = fields.filter(
-console.js | + | c0d11b7b | return { key: v.key, html: `<details class="dk-key"${shown.length ? " open" : ""}><summary><code>${h
-console.js | + | b11d14e4 | ...(d.objects || []).map(o => ({ key: o.key, html: `<div class="dk-key"><code>${h(o.key)}</code> <sp
