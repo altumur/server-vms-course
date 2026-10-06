@@ -930,6 +930,53 @@ def test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_a
     _refused(status({"field": "server", "title": "x"}), "the platform's own field")
 
 
+def test_a_servers_status_field_is_a_path_into_the_heartbeats_maps():
+    """A field of `servers.status` may be a path into the heartbeat's maps by its dots (`writer.state`; «Архитектор»
+    2026-10-06, the product's window 12: the reading of `metrics[].from` without its `heartbeat.`): its leaf is a string
+    or a number, either one (no `heartbeat.strings` names a path), said under the path as the spec writes it; a leaf
+    that is a map, a list, `true` or null is counted as a garbled field and left out; a path the heartbeat does not
+    carry — a key not there, a word where a map should be — is absent, not counted. The loader takes dotted names, plain keys only (no `<k>`: a cell is one value), and refuses an
+    empty segment, other characters, and a path into the platform's own field (ADR 0012)."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.rows import FIELDS
+    declared = [{"field": "belt.state", "title": "лента"}, {"field": "belt.lag_s", "title": "отстаёт"},
+                {"field": "belt.motor.amps", "title": "ток"}]
+    spec = SubsystemSpec.from_dict({**BIN, "servers": {"status": declared}})
+    assert spec.servers_status == declared
+    vars_, objects, wall = _box()
+    for w, extra in (("w-1", {"belt": {"state": "stalled", "lag_s": 3.5, "motor": {"amps": 2}}}),
+                     ("w-2", {"belt": "jammed"}),                               # no map where the path goes
+                     ("w-3", {"belt": {"state": ["x"], "lag_s": {"s": 1}, "motor": {"amps": True}}}),
+                     ("w-4", {}),
+                     ("w-5", {"belt": {"state": "", "lag_s": "slow", "motor": {}}}),
+                     ("w-6", {"belt": {"state": None}})):
+        objects.put(spec.sub.heartbeat_key(w), Heartbeat(w, wall(), [], {"server": "s1", "bay": "", "capacity": 4,
+                                                                         "headroom": 4, **extra}).to_bytes())
+    out = SpecConsole(SpecController(spec, vars_, objects, wall=wall), wall=wall).servers()
+    rows = {w["worker"]: w["status"] for s in out["servers"].values() for w in s["workers"]}
+    assert rows["w-1"] == {"belt.state": "stalled", "belt.lag_s": 3.5, "belt.motor.amps": 2}
+    assert type(rows["w-1"]["belt.motor.amps"]) is int                         # as written: `2`, not `2.0`
+    assert rows["w-2"] == {} and rows["w-4"] == {}                             # not carried: absent…
+    key = spec.sub.heartbeat_key
+    assert not {f"{key(w)}#{f}" for w in ("w-2", "w-4") for f in ("belt.state", "belt.lag_s", "belt.motor.amps")} \
+        & FIELDS.bad                                                           # …and not counted
+    assert rows["w-3"] == {}                                                   # a list, a map, a bool: absent…
+    assert {f"{key('w-3')}#belt.state", f"{key('w-3')}#belt.lag_s", f"{key('w-3')}#belt.motor.amps"} <= FIELDS.bad
+    assert rows["w-6"] == {} and f"{key('w-6')}#belt.state" in FIELDS.bad      # null is said, and is neither
+    # a string leaf, empty too, is said as it is — any leaf: no `heartbeat.strings` names a path, a map's leaf says
+    # what it is (the product's `statusOf`); an empty map on the way says nothing and is not counted
+    assert rows["w-5"] == {"belt.state": "", "belt.lag_s": "slow"}, rows
+    assert not {f"{key('w-5')}#belt.lag_s", f"{key('w-5')}#belt.motor.amps"} & FIELDS.bad
+    assert out["status"] == declared
+
+    def status(field):
+        return lambda: SubsystemSpec.from_dict({**BIN, "servers": {"status": [{"field": field, "title": "x"}]}})
+    for bad in ("belt.", ".belt", "belt..state", "belt.State", "belt.<lane>", "belt state", "belt.9"):
+        _refused(status(bad), "servers.status is [{field")
+    _refused(status("server.name"), "the platform's own field")                # a path into the platform's own
+    _refused(status("labels.zone"), "the platform's own field")
+
+
 def test_who_holds_a_row_is_said_by_the_table_of_places_and_not_by_the_affinity_table():
     """ADR 0056: `held_by` in `GET /<table>` belongs to `placement.places.table` — a hold is of a place only
     (`<sub>/holds/<row>`). The `affinity` table, when it is another table, says no holder: in testsub2 the two are one
