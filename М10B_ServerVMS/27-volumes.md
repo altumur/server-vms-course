@@ -570,6 +570,8 @@ def backups(vars_) -> set[str]:
 
 И том происшествий — тоже кольцо. Отмеченное, которое оно забрало, — тревога `archive.keep.lost` с числом секунд, а в heartbeat'е его регистратора — `incidents_lost` (`{метка: секунды}`), пока метка стоит. Кольцо замкнулось и следующим перезапишет действующую метку — `incidents_at_risk` (`[метка]`). Оба поля — слова продукта, страница видит их в строке сервера на `/servers` рядом с метками (ADR-0064; урок 18). Ответ — квота больше или выгрузка.
 
+Что о метке знает каждая сторона, обе говорят в своих `keeps` словами продукта. Держатель тома происшествий — `kept` (сколько держит, у каких записей кадров нет вовсе — `empty`) или `garbled`. Регистратор тома записи — `here`, `pushing`, `pushed`, `at risk`, `lost`, `garbled` по меткам над своими кадрами (урок 18).
+
 Тесты в `test_keeps.py`: `test_an_incidents_volume_is_a_place_for_evidence_and_never_one_to_record_into` (ёмкость ноль, запись не размещается), `test_a_keep_is_copied_into_the_incidents_volume_and_outlives_the_recordings_ring` и `test_kept_footage_the_incidents_ring_took_is_an_alarm`.
 
 ## Шаг 12 — Что видит оператор
