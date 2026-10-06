@@ -605,8 +605,9 @@ def test_a_keep_line_whose_seconds_or_moment_is_no_number_is_that_lines():
         f.write(json.dumps({**good, "kind": "archive.keep.lost", "t": t + 1, "seconds": 10.0, "id": "d"}) + "\n")
         f.write("5\n")                                                 # a line that is no object
     me = types.SimpleNamespace(resource_root=box.resource_root, volume="v1")
-    held = RecWorker._keeps_held_before(me, [types.SimpleNamespace(id="k1")], lambda k: ["1"], lambda k, rec: 0.0)
+    held, took = RecWorker._keeps_held_before(me, [types.SimpleNamespace(id="k1")], lambda k: ["1"], lambda k, rec: 0.0)
     assert held == {("k1", "1"): 20.0}, held
+    assert took == {("k1", "1"): 30.0}, took                           # the most a copy said, the loss not taken off
     assert rows.counts()["field"].get(REC.name, 0) >= 1                 # both lines: one spell of recording 1's copies
     _forget_garbled()
 

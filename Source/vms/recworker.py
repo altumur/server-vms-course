@@ -40,7 +40,7 @@ import threading
 import time
 
 from w2cplatform import runtime
-from w2cplatform.console import framed, heartbeats
+from w2cplatform.console import framed, heard_live, heartbeats
 from w2cplatform.contract import Subsystem, read_hold
 from vms.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
@@ -527,8 +527,14 @@ class RecWorker(VmsWorker):
         # (`keep_pass`). What each keep holds there, as last seen, and what the last pass found.
         self.incidents = False                       # is the volume this recorder holds an incidents volume
         self.keep_held: dict[tuple[str, str], float] = {}   # (keep, recording) -> seconds of it in the volume
-        self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
-        self._keeps_read = False                     # `keep_held` restored from the volume and its events (`keep_pass`)
+        self.keep_state: dict[str, dict] = {}        # keep -> {state, seconds, missing, sha256, …}: the holder's word (`keep_pass`)
+        self.keep_side: dict[str, dict] = {}         # keep -> {recording, state, …}: the recording's side (`keep_side_pass`)
+        self._keep_prev: dict[tuple[str, str], list] = {}   # (keep, recording) -> what of it the incidents archive did not show
+        self._side_lost_said: dict[tuple[str, str], float] = {}   # (keep, recording) -> when its loss was last an alarm
+        self.keep_took: dict[tuple[str, str], float] = {}   # (keep, recording) -> the most of it the volume ever held
+        self.incidents_lost: dict[str, int] = {}     # keep -> seconds the volume took and its ring wrote over (`_incidents_said`)
+        self.incidents_at_risk: list[str] = []       # keeps whose footage is the oldest of a ring that has closed (`_incidents_said`)
+        self._keeps_read = False                    # `keep_held` restored from the volume and its events (`keep_pass`)
         self._keep_short: dict[str, tuple] = {}      # keep -> (short since, last `archive.keep.uncopied`) — `_keep_uncopied`
         self._keep_garbled: dict[str, tuple] = {}    # keep -> (garbled since, last `archive.keep.garbled`) — `_keep_unreadable`
         self._keep_nowhere: dict[tuple[str, str], list] = {}   # (keep, recording) -> what a door that holds it said it has not
@@ -1163,12 +1169,20 @@ class RecWorker(VmsWorker):
                 # …and what the source HAD and the engine refused `REFUSED_TIMES` times, given up (`_refused`): the
                 # product's `backfill.refused_seconds`. Not "not on the card" — on it, and not something this volume takes.
                 "backfill": {"refused_seconds": int(sum(b - a for spans in list(self.given_up.values()) for a, b in spans))},
-                # A recorder holding an incidents volume: what each keep holds there (`keep_pass`).
-                **({"keeps": self.keep_state} if self.incidents else {}),
+                # Each keep, in the product's words: the holder of an incidents volume says what it holds there
+                # (`keep_pass`: `kept`, `garbled`), any other recorder its recording's side (`keep_side_pass`: `here`,
+                # `pushing`, `pushed`, `at risk`, `lost`, `garbled`). Absent when it says nothing, as in the product.
+                **({"keeps": said} if (said := {kid: e for kid, e in self.keep_state.items() if e.get("state")}
+                                       if self.incidents else dict(self.keep_side)) else {}),
                 # …and what each keep is short of, alone: `{keep: seconds}` — the console's `rec_keep_missing_seconds`
                 # (the review's fourth pass). Empty when every keep is whole.
                 **({"keep_missing": {kid: e["missing"] for kid, e in self.keep_state.items() if e.get("missing")}}
-                   if self.incidents else {})}
+                   if self.incidents else {}),
+                # …what of each keep the volume took and its own ring wrote over, `{keep: seconds}`, and the keeps whose
+                # footage the ring takes next, `[keep]` — the product's words (ADR-0064, its addition; `_incidents_said`).
+                # Absent when empty, as there.
+                **({"incidents_lost": dict(self.incidents_lost)} if self.incidents and self.incidents_lost else {}),
+                **({"incidents_at_risk": list(self.incidents_at_risk)} if self.incidents and self.incidents_at_risk else {})}
 
     # -- which archive this recorder writes into ------------------------------------------------------
     # Run once a pass, after the slot and the leases. Four outcomes, and the one that matters is the last.
@@ -2020,6 +2034,8 @@ class RecWorker(VmsWorker):
         self.archive_error, self.archive_failure, self.archive_away_since, self._busy_since = "", "", 0.0, 0.0
         self.quota_note, self.shrink_pending = "", 0
         self.keep_held, self.keep_state, self._keeps_read, self._keep_nowhere = {}, {}, False, {}
+        self.keep_took, self.incidents_lost, self.incidents_at_risk = {}, {}, []
+        self.keep_side, self._keep_prev, self._side_lost_said = {}, {}, {}
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
     #
@@ -2177,8 +2193,8 @@ class RecWorker(VmsWorker):
         # nothing. The operator's requests go the same way (`serve_requests`).
         if not self.archive_busy():
             self.backfill_in_background()
-        if self.incidents and not self.archive_busy():
-            self.keeps_in_background()
+        if not self.archive_busy():
+            self.keeps_in_background()               # the incidents volume's copier, or the recording's side of a keep
 
     # Not on the loop's thread: an operator's request is a range off the camera's card, minutes long, and it ran
     # where the leases are renewed and the heartbeat goes out (the review's first pass, B3). It is served on the
@@ -3008,6 +3024,7 @@ class RecWorker(VmsWorker):
     KEEP_EVERY = 60.0
     KEEP_UNCOPIED_AFTER = 300.0                      # five passes: a door that blinked had its chance
     KEEP_GARBLED_AFTER = 3600.0                      # an hour: a row being mended by hand had its chance
+    LOST_SLACK = 1.0                                 # seconds of a keep that may be missing before they are called lost
 
     def keeps_in_background(self) -> None:
         if self._keeper is not None and self._keeper.is_alive():
@@ -3031,8 +3048,10 @@ class RecWorker(VmsWorker):
         from w2cplatform.events import ALARM
         from . import keeps
         from .footage import recorder_doors
-        if not self.incidents or self.store is None:
+        if self.store is None:
             return {}
+        if not self.incidents:
+            return self.keep_side_pass(now)
         now = self.wall() if now is None else now
         # A store that does not answer RAISES: unread is not "none". A keep whose row does not parse is skipped and
         # counted (`keeps.KEEPS`; the seventh pass) — it raised out of this pass, and no keep of anybody's was copied —
@@ -3058,16 +3077,25 @@ class RecWorker(VmsWorker):
 
         if not self._keeps_read:
             self._keeps_read = True
-            self.keep_held = {**self._keeps_held_before(declared, recordings_of, inside), **self.keep_held}
+            held_before, took_before = self._keeps_held_before(declared, recordings_of, inside)
+            self.keep_held = {**held_before, **self.keep_held}
+            self.keep_took = {**took_before, **self.keep_took}
+        lost_of: dict[str, float] = {}
         for k in declared:
             got = missing = 0.0
             touched: list[str] = []
             whole: list[str] = []
+            empty: list[str] = []
+            try:                                         # what is sealed of it: a sealed copy is not `empty`, nor waited for
+                seal = keeps.read_seal(self.objects, k.id)
+                sealed = seal.of(k) if seal is not None else {}
+            except OSError:
+                sealed = None                            # not read: nothing said `empty` by it this pass
             for rec in recordings_of(k):
                 # First what is GONE — before anything is copied, or a copy taken again from the recording's own
                 # volume would hide that the incidents ring is too small to hold what it was given.
                 now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
-                if now_in + 1.0 < before:
+                if now_in + self.LOST_SLACK < before:
                     lost = round(before - now_in, 1)
                     self.write_event(rec, now, "archive.keep.lost", ALARM, epoch=0, cam=k.cam, keep=k.id, recording=rec,
                                      seconds=lost, volume=self.volume)
@@ -3091,14 +3119,23 @@ class RecWorker(VmsWorker):
                 if rec in touched:
                     self.store.seal()                    # what was copied is readable now — and counted below
                 self.keep_held[(k.id, rec)] = held = inside(k, rec)
+                took = self.keep_took[(k.id, rec)] = max(self.keep_took.get((k.id, rec), 0.0), held)
+                if took - held > self.LOST_SLACK:              # taken, and not here now: its ring wrote over it
+                    lost_of[k.id] = lost_of.get(k.id, 0.0) + took - held
                 got += held
                 short = self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
                                             speaks)
                 missing += short
                 if held > 0 and short <= 0:
                     whole.append(rec)                    # the copy of this recording is whole: what may be sealed
+                elif held <= 0 and sealed is not None and rec not in sealed and self._empty_of(k, rec, now):
+                    empty.append(rec)                    # no footage in the interval here, nor anywhere, nor to come
             # …and over which minutes: a seal is bound to the interval it was taken over (`_seal`)
-            entry = {"copied": round(got, 1), "missing": round(missing, 1), "from": k.since, "to": k.until}
+            entry = {"seconds": round(got), "missing": round(missing, 1), "from": k.since, "to": k.until}
+            if got > 0 or sealed or empty:
+                entry["state"] = "kept"                  # the product's holder: it holds some, or sealed, or knows none comes
+            if empty:
+                entry["empty"] = sorted(empty)
             self._keep_uncopied(k, entry, missing, now)
             for rec in sorted(set(touched)):
                 digest, _, size = keep_digest(self.store, rec, k.since, k.until)
@@ -3131,15 +3168,172 @@ class RecWorker(VmsWorker):
                 self._seal(k, {rec: sums[rec] for rec in whole if rec in sums}, now)
             state[k.id] = entry
         for k in unread:                                 # not read is not lifted: what it holds stays counted
-            state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}
+            state[k.id] = {**self.keep_state.get(k.id, {}), "state": "garbled", "why": k.note}
             self._keep_unreadable(k, state[k.id], now)
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
+        self.keep_took = {kr: v for kr, v in self.keep_took.items() if kr[0] in state}
+        self._incidents_said(declared, recordings_of, lost_of)
         self._keep_nowhere = {kr: v for kr, v in self._keep_nowhere.items() if kr[0] in state}
         self._keep_short = {kid: v for kid, v in self._keep_short.items() if kid in state}
         # Parsed again, or lifted: that episode is over, and the next garbling is a new one.
-        self._keep_garbled = {kid: v for kid, v in self._keep_garbled.items() if state.get(kid, {}).get("garbled")}
+        self._keep_garbled = {kid: v for kid, v in self._keep_garbled.items() if state.get(kid, {}).get("state") == "garbled"}
         self.keep_state = state
         return state
+
+    # A RECORDING OF A KEEP THAT HOLDS NO FOOTAGE IN ITS INTERVAL AND WILL NOT (the product's `emptyOf`, ffc94a6): the
+    # caller has found none of it in the incidents volume, the interval is over, and no live recorder says, on its side
+    # of the keep (`keep_side_pass`), that it has the recording's footage of it. Then nothing is to seal and nothing will
+    # come: `empty` in the holder's `keeps` and in a verify's answer — not `pending`, a seal waited for for ever (a keep
+    # over a card recording that wrote nothing in that stretch).
+    def _empty_of(self, k, rec: str, now: float) -> bool:
+        if k.until >= now:
+            return False                                 # the interval is not over: footage may still come
+        for name, hb in heartbeats(self.objects, f"{REC.name}/").items():
+            said = hb.extra.get("keeps") if heard_live(REC.name, name, hb, now, eyes=self.eyes) else None
+            st = said.get(k.id) if isinstance(said, dict) else None
+            if isinstance(st, dict) and str(st.get("recording", "")) == rec and st.get("state"):
+                return False
+        return True
+
+    # THE RECORDING'S SIDE OF A KEEP (the product's keeper, its source half; ADR-0064 — the page reads each recorder's
+    # `keeps` on `GET /rec/servers`). The holder of the incidents volume says what IT holds (`keep_pass`: `kept`,
+    # `garbled`); what the recording's own volume holds of a keep, and whether the incidents archive has it yet, only
+    # the recorder of that volume knows. Once a `KEEP_EVERY`, for every keep over a recording its volume holds footage of
+    # in the keep's interval, one entry per keep — the last recording's, as in the product — in the product's words:
+    #
+    #   here      {recording, seconds, leaves_in_s} — in this volume, the incidents archive not showing all of it, and
+    #             not close to going: more than `KEEP_MARGIN` before this volume's ring or the recording's
+    #             `retention_days` reaches it (`leaves_in_s`)
+    #   pushing   the incidents archive is served and does not show all of it yet: its recorder copies it on its own
+    #             pass (`keep_pass` pulls; the product pushes it from here when it is due — the course copies at once)
+    #   pushed    the incidents archive shows all of it
+    #   at risk   {why} — close to going, and nobody to copy it: no incidents archive is served, or its door does not
+    #             answer (`error` beside it, too)
+    #   lost      {recording, lost_seconds, why} — gone from this volume, and the incidents archive never showed it: the
+    #             ring wrote over it first. An alarm, `archive.keep.lost`, when found and once a day while the keep stands
+    #   garbled   {why} — its row does not parse (`keeps.as_far_as_read`): nothing of it is copied
+    #
+    # What the incidents archive shows is asked at its door (`/spans/`), the one the copier reads, not guessed.
+    KEEP_MARGIN = 6 * 3600.0                         # the product's KEEP_MARGIN: how close to going is "due"
+
+    def keep_side_pass(self, now: float | None = None) -> dict:
+        from w2cplatform.events import ALARM
+        from . import keeps
+        from .config import local_only
+        from .footage import recorder_doors
+        now = self.wall() if now is None else now
+        unread: list = []
+        declared = keeps.declared(self.vars, unread)  # unread is not "none": a silent store raises, and nothing changes
+        rows = self._recordings()
+        cams: dict[str, set] = {}
+        for row in rows:
+            cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
+        days = {str(r["id"]): number(f"rec/recordings/{r['id']}#retention_days", r.get("retention_days") or None, float, 0.0)
+                for r in rows}
+        mine = set(self.store.units())
+        places = volumes.incidents(self.vars)
+        target = next((u for n, u, hb in recorder_doors(self.objects, now, eyes=self.eyes)
+                       if n != self.name and str(hb.extra.get("volume", "")) in places
+                       and not local_only(u, str(hb.extra.get("server", "?")), self.server)), None)
+        edge = [self.store.coverage(u)[:1] for u in mine]
+        oldest = min((c[0][0] for c in edge if c), default=None)   # this volume's ring: where it writes over next
+        side: dict[str, dict] = {}
+
+        def theirs(rec, k):                              # what the incidents archive shows of `rec` over the keep
+            spans, _ = self._door_timeline(target, rec, k.since, k.until)
+            return stitch([(sp["start"], sp["end"]) for sp in spans], 0.0)
+
+        def holes(ours, shown) -> list:                  # what of ours it lacks, slivers aside (the product's keepSlack)
+            return [g for o in ours for g in subtract(o, shown) if g[1] - g[0] >= self.LOST_SLACK]
+
+        for k in declared:
+            for rec in sorted(set(k.recordings) | cams.get(k.cam, set())):
+                key = (k.id, rec)
+                ours = [(max(a, k.since), min(b, k.until)) for a, b in (self.store.coverage(rec) if rec in mine else [])
+                        if b > k.since and a < k.until]
+                if not ours:
+                    was = self._keep_prev.get(key)
+                    if not was:
+                        continue                         # not in this volume: nothing of this keep is ours to say
+                    try:
+                        gone = holes(was, theirs(rec, k)) if target else was
+                    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                        continue                         # cannot tell: the next pass asks again
+                    sec = sum(b - a for a, b in gone)
+                    if sec < self.LOST_SLACK:
+                        self._keep_prev.pop(key, None)
+                        continue
+                    why = "the ring wrote over it before the incident archive had a copy"
+                    side[k.id] = {"recording": rec, "state": "lost", "lost_seconds": round(sec), "why": why}
+                    if now - self._side_lost_said.get(key, -1e18) >= self.SHALLOW_AGAIN:
+                        self._side_lost_said[key] = now
+                        self.write_event(rec, now, "archive.keep.lost", ALARM, epoch=0, cam=k.cam, keep=k.id, recording=rec,
+                                         seconds=round(sec), volume=self.volume, why=why, **{"from": k.since, "to": k.until})
+                        logging.error("%s: %.0f s of keep %s (%s) are gone from %s before the incidents archive had them",
+                                      self.name, sec, k.id, rec, self.volume)
+                    continue
+                st: dict = {"recording": rec, "seconds": round(sum(b - a for a, b in ours))}
+                left = [k.since - (now - days[rec] * 86400)] if days.get(rec) else []
+                left += [k.since - oldest] if oldest is not None else []
+                if left:
+                    st["leaves_in_s"] = round(min(left))
+                due = bool(left) and min(left) < self.KEEP_MARGIN
+                missing = ours
+                if target:
+                    try:
+                        missing = holes(ours, theirs(rec, k))
+                    except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+                        st["error"] = f"the incident archive's door did not answer: {e}"
+                if missing:
+                    self._keep_prev[key] = missing
+                else:
+                    self._keep_prev.pop(key, None)
+                    self._side_lost_said.pop(key, None)
+                if not missing:
+                    st["state"] = "pushed"               # the incidents archive shows it all
+                elif target and "error" not in st:
+                    st["state"] = "pushing"              # its recorder copies it on its pass
+                elif not due:
+                    st["state"] = "here"
+                else:
+                    st["state"], st["why"] = "at risk", st.get("error") or "no incident archive is served"
+                side[k.id] = st
+        for k in unread:                                 # over a recording this volume holds: said, nothing copied
+            if mine & (set(k.recordings) | cams.get(k.cam, set())):
+                side[k.id] = {"state": "garbled", "why": k.note}
+        ids = {k.id for k in declared}
+        self._keep_prev = {kr: v for kr, v in self._keep_prev.items() if kr[0] in ids}
+        self._side_lost_said = {kr: v for kr, v in self._side_lost_said.items() if kr[0] in ids}
+        self.keep_side = side
+        return side
+
+    # WHAT THE INCIDENTS RING HAS TAKEN, AND WHAT IT TAKES NEXT (ADR-0064, its addition: the product's words, from its
+    # keeper's `heartbeatExtra`). `archive.keep.lost` is said once, on the pass that found the loss, and `keeps` says
+    # what each keep holds now — neither says, pass after pass, that a keep is SHORT OF WHAT IT WAS GIVEN, nor that the
+    # next thing the ring writes over is kept. Two heartbeat fields do, recomputed every pass:
+    #
+    #   incidents_lost     {keep: seconds} — what this volume took of a keep in force and holds no more: the most of it
+    #                      the volume ever held (`keep_took`, restored at start with `keep_held`) less what it holds now,
+    #                      over each recording past `LOST_SLACK`. A copy taken again makes it smaller; a keep lifted,
+    #                      or one whose row does not parse, is not in it (the product's `lose`)
+    #   incidents_at_risk  [keep] — the ring has CLOSED (`firstBlockId` past nought, as `depth_pass` reads it, or it has
+    #                      lost a keep already) and the OLDEST footage it holds of one of the keep's recordings lies in
+    #                      the keep's interval: the next block it writes over is kept. Footage of keeps that were lifted
+    #                      going first is what a ring is for, and not this (the product's `atRisk`)
+    #
+    # Rounded seconds and a sorted list, absent from the heartbeat when empty, as in the product. A ring that does not
+    # answer says nothing new: what was said stays until it does.
+    def _incidents_said(self, declared, recordings_of, lost_of: dict) -> None:
+        self.incidents_lost = {kid: round(sec) for kid, sec in sorted(lost_of.items())}
+        try:
+            closed = int(self.store.status().get("firstBlockId", 0)) > 0 or bool(self.incidents_lost)
+            oldest = {rec: cov[0][0] for rec in {r for k in declared for r in recordings_of(k)}
+                      if (cov := self.store.coverage(rec))}
+        except (OSError, ObsdError, ArchiveError, *PARSE_ERRORS):
+            return
+        self.incidents_at_risk = sorted(
+            k.id for k in declared if closed and any(
+                rec in oldest and k.since - self.LOST_SLACK <= oldest[rec] <= k.until for rec in recordings_of(k)))
 
     # WHAT A KEEP IS SHORT OF is what a SOURCE has and this volume does not (the review's fifth pass). Every recording
     # of the keep's camera was counted over the keep's whole interval: a camera recorded for an hour as `7` and for a
@@ -3284,6 +3478,7 @@ class RecWorker(VmsWorker):
     # of, and the names the keep wrote down, not the recordings of its camera it was copied from. The incidents
     # volume's own `<recording>/e0` is the truth of what is there: a recorder starts from it for every recording of
     # every keep, and from an event that says MORE — the ring took some while nobody was looking — it raises the alarm.
+    # Returned beside it: the most each copy ever said, losses not taken off — what `incidents_lost` counts from.
     def _keeps_held_before(self, declared, recordings_of, inside) -> dict:
         from w2cplatform.events import alarm_tree, buckets_under, read_bucket
         ids = {k.id for k in declared}
@@ -3302,6 +3497,7 @@ class RecWorker(VmsWorker):
                 except OSError:
                     continue
         said: dict = {}
+        took: dict = {}                                  # the most each copy ever said it held: `keep_took`, before any loss
         # A line whose moment or `seconds` is not a number — a word, `nan`, 400 digits from a hand edit of the bucket —
         # is that line's, read as not said and counted (the review's tenth pass): read bare, it raised out of the keeps'
         # pass, and no keep of this volume was looked at that pass.
@@ -3315,11 +3511,12 @@ class RecWorker(VmsWorker):
             key = (str(e["keep"]), str(e.get("recording", "")))
             if e.get("kind") == "archive.keep.copied" and "seconds" in e:
                 said[key] = seconds
+                took[key] = max(took.get(key, 0.0), seconds)
             elif e.get("kind") == "archive.keep.lost" and key in said:
                 said[key] = max(0.0, said[key] - seconds)
         for key, v in said.items():
             held[key] = max(held.get(key, 0.0), v)
-        return held
+        return held, {key: max(took.get(key, 0.0), v) for key, v in held.items()}
 
     # THE SEAL, WRITTEN ONCE (ADR-0057, дополнение п. 3: пишет рекордер тома incidents; the product's `SealKeeps`). The
     # first time a recording's copy is whole — held, and short of nothing a source has (`keep_pass`'s `whole`) — its
@@ -3377,7 +3574,11 @@ class RecWorker(VmsWorker):
     # function that made the one sealed. The answer, the product's words:
     #
     #   {keep, integrity: "ok" | "broken: <why>" | "unknown: <why>", ok, recordings: {<rec>: {sealed, now, samples,
-    #    result: ok | damaged | pending | unverified, detail?}}}
+    #    result: ok | damaged | pending | unverified | empty, detail?}}}
+    #
+    # `empty`: a recording not sealed that holds no footage in the interval and will not (`_empty_of`) — "<rec> holds no
+    # footage in the interval", and the keep `unknown` for it, without promising a seal; `pending` ("not sealed yet") only
+    # for one whose footage is there, or may still come.
     #
     # `broken` when a recording's copy does not hash to its seal, or cannot be read while it was sealed; `unknown` when
     # nothing contradicts the seal and something is not known yet — a recording never copied (not sealed yet), one the
@@ -3430,6 +3631,18 @@ class RecWorker(VmsWorker):
         for rec in names:
             sealed = seals.get(rec, "")
             row: dict = {"sealed": sealed}
+            if not sealed:
+                # nothing of it in the interval here, nor anywhere, and nothing to come: `empty`, not a seal to wait for
+                try:
+                    has = any(b > keep.since and a < keep.until for a, b in store.coverage(rec))
+                except (OSError, ObsdError, ArchiveError, *PARSE_ERRORS):
+                    has = True                           # not read: not "none" — asked as before, and said what it is
+                if not has and self._empty_of(keep, rec, self.wall()):
+                    why = f"{rec} holds no footage in the interval"
+                    row.update(result="empty", detail=why); every = False
+                    unknown.append(why)
+                    out[rec] = row
+                    continue
             try:
                 now, samples, _ = keep_digest(store, rec, keep.since, keep.until)
                 err = None
