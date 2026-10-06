@@ -61,6 +61,7 @@
     "rec/policy",
     "rec/sweep",
     "rec/requests/*",
+    "rec/asked/*",
     "rec/volumes/*",
     "rec/keeps/*",
     "survey/watches/*",
@@ -118,6 +119,7 @@
     "rec/policy",
     "rec/sweep",
     "rec/requests/*",
+    "rec/asked/*",
     "rec/volumes/*",
     "rec/keeps/*",
     "survey/watches/*",
@@ -332,6 +334,7 @@
    "group": "w2c-reccontroller",
    "read": [
     "platform/schema",
+    "!rec/asked/*",
     "rec/*",
     "vms/*",
     "platform/*"
@@ -353,6 +356,7 @@
    "group": "vms-recworker",
    "read": [
     "platform/schema",
+    "!rec/asked/*",
     "rec/*",
     "vms/*",
     "platform/decommission/*",

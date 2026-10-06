@@ -71,10 +71,11 @@ def test_each_of_the_four_outcomes_ends_in_the_mark():
 
 def test_a_reason_is_cut_at_two_hundred_characters_in_the_mark_and_said_whole_in_the_answer():
     """A mark is read by every holder of the unit and by whoever asked: a reason is a sentence, not a payload — cut at
-    `MARK_ERROR` characters with `…` (the product's `MarkError`, by characters, not bytes), never refused. The answer
-    and the event keep it whole."""
+    `MARK_ERROR` characters, `…` the last of them (the product's `MarkError`, by characters, not bytes), never refused.
+    ADR-0054 says «not longer than 200»: it was 200 and `…`, 201 (the fourteenth review, minor 15) — now 199 and `…`.
+    The answer and the event keep it whole."""
     assert MARK_ERROR == 200 and mark_error("x" * 200) == "x" * 200
-    assert mark_error("я" * 201) == "я" * 200 + "…" and mark_error("") == ""
+    assert mark_error("я" * 201) == "я" * 199 + "…" and len(mark_error("я" * 5000)) == 200 and mark_error("") == ""
     box, spec = Box(), testsub()
     long = "the target says: " + "no " * 300
 
@@ -87,7 +88,7 @@ def test_a_reason_is_cut_at_two_hundred_characters_in_the_mark_and_said_whole_in
     [answer] = _look(w, 1)
     assert answer["error"] == long
     m = _mark(box, spec, "r1")
-    assert m["outcome"] == "refused" and m["error"] == long[:200] + "…" and len(m["error"]) == 201
+    assert m["outcome"] == "refused" and m["error"] == long[:199] + "…" and len(m["error"]) == 200
 
 
 def test_a_begun_request_past_its_deadline_is_unknown_not_expired_and_its_beginner_is_kept():

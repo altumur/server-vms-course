@@ -218,7 +218,7 @@ TREE_WORDS = ("nested_by", "group_title", "group_hint", "filter", "no_group", "c
 # — a table `marks` was never written over HTTP: `POST /marks` is the operator's mark. Refused at load; a closed set, held
 # to the dispatch by `test_spec_declarations.py`.
 CONSOLE_ROUTES = frozenset({"session", "healthz", "index.html", "spec", "where", "resources", "servers", "domain",
-                            "policy", "unplaceable", "events", "metrics", "marks", "requests", "mounts", "drain", "schema",
+                            "policy", "unplaceable", "events", "metrics", "marks", "requests", "asked", "mounts", "drain", "schema",
                             "platform",    # `/platform/console.js`: the console module every page is built from
                             "api"})        # `/api/held`, `/api/backup`, `/api/prepare`, `/api/take`: the processes' doors
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
@@ -1334,7 +1334,7 @@ class SubsystemSpec:
         # A table's name becomes a key family and an ACL prefix, so it is a name and not a path, and it may
         # not be the unit rows under another spelling — two writers on one family with different rules.
         for t in spec.tables:
-            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "servers", "decommissioned"):
+            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "asked", "servers", "decommissioned"):
                 raise ValueError(f"spec {spec.name}: `tables:` takes a fresh row family name, not {t!r}")
         leaks = [n for n in spec.snapshot if is_secret_field(n)]
         if leaks:
@@ -1836,6 +1836,7 @@ class SubsystemSpec:
                f"{self.name}/policy",                                                         # the administrator's knobs: servers distinct | shared
                f"{self.name}/sweep",                                                          # what the blob sweep marked, and when
                f"{self.name}/requests/*",                                                     # bounded work an operator asked a worker for, outside its ordinary pass
+               *([f"{self.name}/asked/*"] if "per_person" in (self.requests or {}) else []),   # each person's open requests (ADR 0060)
                SERVERS_PREFIX + "*",                                                          # what a server reaches, as the administrator says it: one row a server, every subsystem's (ADR-0026)
                DRAIN_KEY,                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
                DECOMMISSION + "*",                                                            # "this machine is gone for good": the operator's, every subsystem reads it
