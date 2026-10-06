@@ -1,7 +1,7 @@
 # Урок 18 — Что архив отдаёт первым
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `Archive.resize` и `Archive.depth_days` в `vms/archive.py`; `RecWorker.depth_pass` — глубину записи и тревогу `archive.shallow`; `vms/keeps.py` и `RecWorker.keep_pass` с `_copy_in` — копию отмеченного в том `incidents`; две метрики в спеке записи.
+**Вы напишете:** `Archive.resize` и `Archive.depth_days` в `vms/archive.py`; `RecWorker.depth_pass` — глубину записи и тревогу `archive.shallow`; `vms/keeps.py` и `RecWorker.keep_pass` с `_copy_in` — копию отмеченного в том `incidents`; `RecWorker.verify_keep` и маршрут двери `keeps` — сверку копии с её печатью; две метрики в спеке записи.
 **Время:** ~60 минут.
 
 ## Зачем этот урок
@@ -440,6 +440,48 @@ class Keep:
 ```
 
 Дайджест считается по кадрам в томе `incidents` после копии, а не по тому, что пришло из двери. Это ответ на вопрос «то ли это, что отметили»: тот, кто через месяц выгрузит интервал, сравнит. Дайджест остаётся и в heartbeat'е регистратора (`keeps`), когда проход ничего нового не копировал.
+
+**Печать проверяют у двери, где лежит копия.** Дайджест из `archive.keep.copied` — печать метки. Сверить с ней то, что том держит сейчас, нужно до того, как видео отдадут следователю: «вчера было в порядке» ему не ответ. Сверку делает регистратор тома `incidents`, у своей двери:
+
+```
+POST <дверь>/keeps/<метка>/verify?recording=<запись>
+```
+
+Консоль такого маршрута не имеет. Байты идут мимо неё без исключений (ADR-0015), и вопрос о байтах тоже: в продукте печать проверяла консоль, теперь это дверь регистратора (ADR-0057, пункт 3). Страница спрашивает у консоли, где держат том, для одной записи — `GET /rec/where/volumes/<том>?unit=rec/<запись>` (урок 12) — и получает дверь с токеном. В токене маршруты спеки, и `keeps` среди них потому, что спека записи его называет:
+
+```yaml
+door: {routes: [timeline, segment, keeps]}
+```
+
+Дверь пускает по тому же правилу, что `timeline` и `segment`. Только метод — POST: сверку спрашивают, а не пишут. Единица — запись из `?recording=`:
+
+```python
+        rec = str(q.get("recording", "") or "")
+        if rec and not safe_segment(rec):
+            return 404, {"detail": f"keep {kid} holds no recording {rec}", "error": "no such recording in the keep"}
+        who = ""
+        if keeper is not None:
+            admitted = keeper.admit(handler, "keeps", f"rec/{rec}")
+```
+
+Токен без `keeps`, токен другой записи, запрос без `?recording=` — 401 с причиной (`route`, `unit`) от сторожа платформы (`w2cplatform/door.py`). GET — 405. Дверь, чья спека `keeps` не называет, такого маршрута не знает вовсе.
+
+Саму сверку делает `RecWorker.verify_keep`. Дайджест «сейчас» считает та же функция, что считала печать, — `keep_digest`, одна на оба случая, чтобы они не разошлись:
+
+```python
+            elif not sealed:
+                row.update(now=now, samples=samples, result="pending"); every = False   # nothing to compare with
+                unknown.append(f"{rec}: not sealed yet")
+            elif now == sealed:
+                row.update(now=now, samples=samples, result="ok")
+            else:
+                row.update(now=now, samples=samples, result="damaged"); every = False
+                broken.append(f"{rec}: the copy does not hash to its seal")
+```
+
+Ответ — слова продукта: `{keep, integrity, ok, recordings: {<запись>: {sealed, now, samples, result}}}`. `integrity` — `ok`, `broken: <почему>` (копия не сходится с печатью или не читается, хотя печать есть) или `unknown: <почему>` (копии ещё нет, сравнивать не с чем). `ok` — только когда сравнили и сошлось. Печать — дайджест последнего `archive.keep.copied` этой метки и записи на этом томе (`keep_seals`): событие долговечное, и перезапущенный регистратор сверяет по нему. Каждый ответ — строка `archive.keep.verified` в журнале двери (`audit/door-<регистратор>`), с тем, кому выдан токен.
+
+Отказы тоже как в продукте. 503 `cannot verify` — регистратор не держит тома `incidents`. Если он держит обычный том, ответ говорит, кого спросить: держателя тома `incidents`. 503 и причина — хранилище не ответило на чтение меток. 409 — интервал метки не разбирается: такой метке ничего не копировали, печати нет. 404 — нет такой метки или такой записи в ней. Тесты — пять последних в `test_keeps.py`, от `test_a_keeps_seal_is_checked_at_the_door_of_the_recorder_that_holds_its_copy` до `test_a_recording_never_copied_is_pending_and_the_keep_unknown`.
 
 **Копия — не «навсегда».** Том `incidents` — тоже кольцо. Отличие одно: в него пишут только метки, поэтому оно крутится так медленно, как ставят метки. Когда и оно полно, самые старые копии уходят — и это тревога:
 
