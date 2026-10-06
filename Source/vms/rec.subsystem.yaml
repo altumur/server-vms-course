@@ -277,6 +277,22 @@ metrics:
   - {name: camera_clock_stepped_seconds_total, from: heartbeat.stream.clock_forward_s, labels: {way: forward}, type: counter}
   - {name: camera_clock_set_total, from: heartbeat.stream.clock_set, type: counter}
   - {name: camera_frames_ahead_total, from: heartbeat.stream.ahead, type: counter}
+  # What the operator reads off a camera's stream beyond its gaps («Прошивка», «Архитектор» 2026-10-06): whether it is
+  # pushing now; the video only the card holds — said to the server, not yet filled back; live frames dropped for want
+  # of room, and frames that came before ones already sent (time went back); card uploads held while the live push
+  # lags; how far the camera's clock line is from the wall now, and video on clock lines no receiver heard; live frames
+  # the card skipped while catching up its writing; and the card's state.
+  - {name: stream_up, from: heartbeat.stream.up, agg: flag, equals: true}
+  - {name: stream_owed_seconds, from: heartbeat.stream.owed_s, default: 0}
+  - {name: stream_owed_gaps, from: heartbeat.stream.owed_gaps, default: 0}
+  - {name: stream_live_drops_total, from: heartbeat.stream.live_drops, default: 0, type: counter}
+  - {name: stream_frames_back_total, from: heartbeat.stream.back_frames, default: 0, type: counter}
+  - {name: stream_uploads_held, from: heartbeat.stream.uploads_held, default: 0}
+  - {name: stream_upload_wait_seconds_total, from: heartbeat.stream.upload_wait_s, default: 0, type: counter}
+  - {name: camera_clock_shift_seconds, from: heartbeat.stream.clock_shift_s, default: 0}
+  - {name: camera_clock_unplaceable_seconds_total, from: heartbeat.stream.unplaceable_s, default: 0, type: counter}
+  - {name: card_live_skipped_seconds_total, from: heartbeat.card.live_skipped_s, default: 0, type: counter}
+  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, default: recording}
 # What a page shows under a server: the volumes whose `server` names it (the boundary's step 6; it was the recorder's
 # heartbeat field `archive`, read by the platform's `/servers`).
 servers:
