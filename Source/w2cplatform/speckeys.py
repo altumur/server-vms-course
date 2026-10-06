@@ -71,7 +71,7 @@ KEYS = {
     "rights.reach.cluster", "rights.reach.requests", "rights.names.field", "rights.names.unit", "rights.names.sub",
     "rights.names.of",
     "servers.show.table", "servers.show.by", "servers.show.title", "servers.show.columns", "servers.status.field",
-    "servers.status.title",
+    "servers.status.title", "servers.status.of",
     *(f"metrics.{k}" for k in metrics.KEYS), "metrics.unless.table", "metrics.unless.where",
     "display.unit", "display.units", "display.units_count", "display.section", "display.events", "display.field_help",
     "display.kinds", "display.actions", "display.tree.group_by", "display.tree.columns.field",

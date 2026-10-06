@@ -280,7 +280,8 @@ DOMAIN_VIEW = "domain/view"
 # A JSON number as it is (`5` stays `5`, `0.5` stays `0.5`): `true` is no number and neither is the word `"5"` — a
 # `TypeError` for both, a `ValueError` for `nan` and `inf` (`finite`).
 # The value at a `servers.status` field in a heartbeat's extra — a field, or a path through its maps by its dots:
-# `(said, value)`; a key not there, or a value on the way that is no map, is not said.
+# `(said, value)`; a key not there, or a value on the way that is no map, is not said. The value at the end is any
+# the heartbeat carries — a map or a list too (ADR-0064); `_status_of` judges it.
 def _status_path(extra: dict, field: str) -> tuple[bool, object]:
     cur = extra
     for seg in field.split("."):
@@ -1896,13 +1897,14 @@ class SpecConsole:
                 **({"status": ctl.spec.servers_status} if ctl.spec.servers_status else {})}
 
     # A worker's heartbeat fields the spec's `servers.status` names, AS THE HEARTBEAT CARRIES THEM: a string of
-    # `heartbeat.strings` (one that is not a string never got here — the heartbeat was garbled, `parse_heartbeat`), any
-    # other a JSON number — a word there (`"5"` too), `true`, a list or an object is counted as a garbled field (the
-    # rows' count, `FIELDS`, as `number` counts it) and left out. A path (`writer.state`) goes into the heartbeat's maps
-    # by its dots (`_status_path`), and its leaf is a string or a number — a map's leaf says what it is, no
-    # `heartbeat.strings` names it —, or it is counted and left out the same way (ADR 0057, «Архитектор» 2026-10-06; the
-    # reading of `metrics[].from`, the product's `statusOf`). A field the heartbeat does not carry — or a map on the way
-    # that is not there — is absent, not null: "nothing said" is not "said nothing".
+    # `heartbeat.strings` (one that is not a string never got here — the heartbeat was garbled, `parse_heartbeat`), a
+    # map or a list put whole — the subsystem's, read by nobody here, so never garbled; `of` tells the page whose rows
+    # its keys are (ADR-0064) —, any other a JSON number: a word there (`"5"` too), `true` or `null` is counted as a
+    # garbled field (the rows' count, `FIELDS`, as `number` counts it) and left out. A path (`writer.state`) goes into
+    # the heartbeat's maps by its dots (`_status_path`), and its leaf is a string, a number, a map or a list — a map's
+    # leaf says what it is, no `heartbeat.strings` names it —, or it is counted and left out the same way (ADR 0057,
+    # «Архитектор» 2026-10-06; the reading of `metrics[].from`, the product's `statusOf`). A field the heartbeat does
+    # not carry — or a map on the way that is not there — is absent, not null: "nothing said" is not "said nothing".
     def _status_of(self, w: str, hb) -> dict:
         spec, out = self.ctl.spec, {}
         for e in spec.servers_status:
@@ -1910,9 +1912,9 @@ class SpecConsole:
             said, v = _status_path(hb.extra, f)
             if not said:
                 continue
-            leaf = "." in f and isinstance(v, str)
+            as_is = isinstance(v, (dict, list)) or ("." in f and isinstance(v, str))
             if f in spec.heartbeat_strings or FIELDS.read(f"{self.ctl.sub.heartbeat_key(w)}#{f}",
-                                                           lambda: v if leaf else _json_number(v), None) is not None:
+                                                           lambda: v if as_is else _json_number(v), None) is not None:
                 out[f] = v
         return out
 
@@ -2369,7 +2371,7 @@ class SpecConsole:
     #   - `GET /servers` — `servers()`: per server, `resource` (`live | silent | unreachable | unknown`), `workers`,
     #     `placeable` and `why` (what of a subsystem's tables a server holds is the spec's `servers.show`, read with `/spec`);
     #     each worker's `status` — the fields of its heartbeat the spec's `servers.status` names, as written — and
-    #     those declarations once, `status: [{field, title}]`, beside `policy`.
+    #     those declarations once, `status: [{field, title, of?}]`, beside `policy` (a map or a list as is, ADR-0064).
     #   - `GET /unplaceable` — `ctl.unplaceable()`.
     #         - `GET /events?from&to&unit&kind&subsystem&limit&keep&class` — 503 if no index; else
     #       `current_epochs` from every `<sub>/epoch/*` row (`epochs`, cached `EPOCH_CACHE` seconds) and

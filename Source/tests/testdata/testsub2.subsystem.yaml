@@ -164,6 +164,7 @@ servers:
   status:
     - {field: jam, title: затор}
     - {field: belt.state, title: лента}
+    - {field: shelved, title: счёты на полках, of: shelves}
 display:
   unit: счёт
   units: счёты

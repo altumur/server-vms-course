@@ -308,6 +308,9 @@ servers:
     - {field: volume_missing, title: том не найден}
     - {field: shrink_pending, title: уменьшение квоты не подтверждено}
     - {field: writer.state, title: запись в архив}
+    - {field: keeps, title: сохранения, of: keeps}
+    - {field: incidents_lost, title: потеряно из сохранений, of: keeps}
+    - {field: incidents_at_risk, title: сохранения под угрозой, of: keeps}
 # What a page calls things (the console module reads it from /spec; the platform reads none of it).
 display:
   unit: запись
