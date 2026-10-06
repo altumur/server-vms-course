@@ -59,7 +59,9 @@ POST /v1/write {"op": "put", "key": "vms/placement/7", "cas": null, "items": {"w
 → 403 {"kind": "forbidden", "error": "vmsworker may not write vms/placement/7"}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
-POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {"holder": "srv-a:4102"}}
+POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {
+  "holder": "srv-a:4102:001006"
+}}
 → 200 {"index": 1005}
 
 # recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
