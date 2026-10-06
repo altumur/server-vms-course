@@ -541,12 +541,11 @@ class AutoWorker(Worker):
             fields = {k: str(v) for k, v in action.items() if k not in ("sub", "action")}
             if name == "record":                     # the recorder's own words for "record this from now"
                 fields = {"unit": fields.get("cam", ""), **fields}
-            # `filed`: when this row was written, by this clock — what the holder measures the request's own road from
-            # (`vms_request_to_device_seconds`, the review's seventh pass); `at` stays the event's moment.
-            self.vars.put(f"{sub}/requests/{rid}",
-                          {**fields, "action": name, "at": str(at), "by": f"auto/{unit}", "valid_until": str(valid_until),
-                           "filed": str(self.wall())})
-            self.filed += 1
+            # Filed by the base (`Worker.file_request`, ADR-0013): only to a subsystem this spec's `worker.requests`
+            # names, create-only, stamped by the platform — `by` `auto/<scenario>`, `at` the event's moment, `filed` now
+            # by this clock (what the holder measures the request's own road from, `vms_request_to_device_seconds`).
+            if self.file_request(sub, rid, {**fields, "action": name, "valid_until": valid_until}, unit=unit, at=at):
+                self.filed += 1
         self.fired[fid] = self.wall()
         self.recent.setdefault(unit, []).append(at)
         road = self.wall() - at

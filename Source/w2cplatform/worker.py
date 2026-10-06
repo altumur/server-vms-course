@@ -4,7 +4,8 @@
 A worker runs its assignment and reports. It claims a name (a slot, by CAS), takes an epoch per unit it starts and
 holds a lease on it, renews both on a period shorter than they last, fences itself when another instance holds its
 name and rejoins under a free one, registers with its server's resource, says what it holds in a heartbeat, and serves
-the request rows of the units it holds — once each, at most once, its answer in the heartbeat. A subsystem's worker
+the request rows of the units it holds — once each, at most once, its answer in the heartbeat — and files its own to
+another subsystem only where its spec's `worker.requests` says (`file_request`, ADR-0013). A subsystem's worker
 subclasses `Worker` and implements its own work: `reconcile_once` (what runs equals what is assigned), `status` (what
 the heartbeat says of each unit), and, for a subsystem whose units take requests, what one holder knows of them:
 `held_rows` (what is open now), `request_target` (the key of what a request goes into) and `perform` (the call). Everything
@@ -37,6 +38,12 @@ from .rows import PARSE_ERRORS, garbled_counts
 from .variables import Conflict, Variables, cas_pause
 
 log = logging.getLogger(__name__)
+
+
+# A request a worker may not file (`Worker.file_request`): to a subsystem its spec's `worker.requests` does not name,
+# from a fenced instance, under an id that is no name, or with a stamp of its own. Nothing was written.
+class RequestRefused(ValueError):
+    pass
 
 
 # A worker whose subsystem has no spec in this process (`Worker.__init__`): it does not start.
@@ -1532,6 +1539,7 @@ class Worker:
         self.lost_to_epoch: set[str] = set()      # units the lease step let go since the last assignment read (`take_epoch`)
         self.epoch_errors: dict[str, str] = {}    # unit -> why its epoch could not be taken (a garbled row)
         self.pass_refused = False                 # a resource did not answer this pass: early passes back off (`run`)
+        self.filings = {"filed": 0, "refused": 0} # requests this worker filed to others, and refused it (`file_request`)
         self._requests_state()
 
     # -- staying itself: the slot, the leases, the fence -------------------------------------------------------
@@ -1682,6 +1690,7 @@ class Worker:
                 **({"capacity": cap, "headroom": self.headroom()} if cap is not None else {}),
                 "conflicts": self.conflicts(), "started": self.started_wall, **self.previous_said(),
                 **({"fenced": True} if not self.writing_allowed else {}),
+                **({"filings": dict(self.filings)} if any(self.filings.values()) else {}),
                 **self.requests_fields()}
 
     # THE INSTANCE BEFORE THIS ONE UNDER ITS NAME: the heartbeat it left — its `ts`, its instance, its server — read once
@@ -1998,6 +2007,54 @@ class Worker:
         if not self.spec.group_by:
             return ""
         return self.spec.group_of(row.get(self.spec.group_by))
+
+    # A WORKER FILES A REQUEST HERE, AND ONLY TO A SUBSYSTEM ITS SPEC NAMES (ADR-0013: the platform executes its own key).
+    # `worker: {requests: [<sub>, …]}` shaped only the store's grant (`acl_worker_role` → `requests_acl`): a cluster's
+    # rights refused a write past it, a box's file store checked nothing, and every worker wrote `<sub>/requests/<id>`
+    # by hand with stamps of its own. Now the base is the one way, and it carries the key out on every store:
+    #
+    #   undeclared     `sub` not in this worker's `worker.requests` — refused (`RequestRefused`), logged, counted in
+    #                  `filings["refused"]`, NOTHING written. A fenced instance files nothing either: a request is an act
+    #   the stamps     the platform's, as the console stamps an operator's (`SpecConsole`): `by` — `<this subsystem>/<unit>`
+    #                  for the unit it is filed for, else `<this subsystem>/<slot>`: the holder reads a `<sub>/…` stamp as
+    #                  a worker's (`_measure`); `at` — the moment it is about (the cause's, where the caller knows it),
+    #                  now by default; `filed` — now, by this clock, what the holder measures the request's own road from.
+    #                  A row that says its own `by`, `at` or `filed` is refused, as a line that says its own `of`
+    #   the row        each value as the holder reads it, in its one text (`canonical.field_text`; numbers by
+    #                  `number_text`), `None` left out; written CREATE-ONLY (`cas=0`, every store has it): the same id filed
+    #                  again is the same request, and the row that stands is the answer — `False`, nothing counted
+    #
+    # `True` when this call wrote the row. The deadline (`valid_until`) and what the request means are the caller's row.
+    STAMPED = ("by", "at", "filed")
+
+    def file_request(self, sub: str, rid: str, row: dict, *, unit=None, at: float | None = None) -> bool:
+        from .canonical import field_text, number_text
+        from .doors import unnamable
+        sub, rid = str(sub), str(rid)
+        why = None
+        if sub not in self.spec.worker_requests:
+            why = (f"{self.sub.name}'s spec does not name {sub!r} in `worker.requests` "
+                   f"({', '.join(self.spec.worker_requests) or 'none'}): a worker files only where its spec says")
+        elif not self.writing_allowed:
+            why = f"this instance is fenced ({self.fenced_reason or 'it is nobody'}): a fenced instance files nothing"
+        elif not rid or "/" in rid or rid in (".", "..") or len(rid) > 200 or unnamable(rid):
+            why = f"a request's id is a name, not a path, and holds no quote, bar or control character: {rid[:80]!r}"
+        elif set(row) & set(self.STAMPED):
+            why = f"{', '.join(sorted(set(row) & set(self.STAMPED)))} is the platform's to stamp, not the row's"
+        if why is not None:
+            self.filings["refused"] += 1
+            log.warning("%s: request %s/%s refused: %s", self.name or self.instance, sub, rid, why)
+            raise RequestRefused(f"request {sub}/{rid} refused: {why}")
+        now = self.wall()
+        out = {k: t for k, v in row.items() if (t := field_text(v)) is not None}
+        out.update(by=f"{self.sub.name}/{unit if unit not in (None, '') else (self.name or self.instance)}",
+                   at=number_text(float(now if at is None else at)), filed=number_text(float(now)))
+        try:
+            self.vars.put(Subsystem(sub).request_key(rid), out, cas=0)
+        except Conflict:
+            return False                                 # filed already: the same request, and the row that stands answers
+        self.filings["filed"] += 1
+        return True
 
     # AN EVENT ABOUT A UNIT, under the epoch this worker holds for it, into the unit's bucket on this server's resource:
     # the platform's line. `None` when no epoch is held for it (not this worker's to speak of), the instance is fenced,

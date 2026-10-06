@@ -2,7 +2,8 @@
 the boundary note — the family whole in the platform, driven by the spec's `requests:`; it was one subsystem's code).
 
     filed       by the console (`POST /<sub>/requests`, the spec's schema, `SpecConsole._request_route`) or by another
-                subsystem's worker (its spec's `worker: {requests: […]}`) — a row, named by its idempotency key
+                subsystem's worker (`Worker.file_request`: only to a subsystem its spec's `worker: {requests: […]}` names,
+                refused otherwise on every store, ADR-0013) — a row, named by its idempotency key, written create-only
     performed   by the worker holding the unit, at most once, its answer in the heartbeat's `fetched` and in its mark
                 `<sub>/commands/<id>` (`Worker.requests`)
     cleared     here: a row a holder answered goes (`clear_requests`, every `CLEAR_EVERY`, no row read); and on the reaper's
