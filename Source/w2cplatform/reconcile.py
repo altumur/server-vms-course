@@ -26,7 +26,8 @@ a server or a network that came back is not met by every unit at the same instan
 # ## Module-level names
 # - `Backoff(base, max, jitter)` — the delay of the n-th failure in a row: `min(max, base·2^(n−1))` times a uniform
 #   factor in `[1−jitter, 1+jitter]`. `jitter ∈ (0, 1]`: zero is refused, because a delay without it is the same
-#   delay for every unit that failed at one instant. Defaults 1 s, 60 s, 0.5.
+#   delay for every unit that failed at one instant. `base > 0` and `max ≥ base`, refused otherwise (the product's
+#   `Backoff.Check`). Defaults 1 s, 60 s, 0.5.
 # - `Want(rev, body)` — one key's desired state: its revision, which is all the helper compares, and what the
 #   worker's `start` needs, opaque here.
 # - `Pass(started, stopped, restarted, waiting, failed)` — what one `once` did, key by key, in the order it did it.
@@ -61,7 +62,9 @@ CONVERGED, LAGGING, STALLED = "converged", "lagging", "stalled"
 
 
 # The delay of the n-th failure in a row. `jitter` spreads it over `[1−jitter, 1+jitter]` of the doubled base; zero is
-# the constructor's refusal (and so is anything past 1, which would make a delay negative).
+# the constructor's refusal (and so is anything past 1, which would make a delay negative). So are a base that is not
+# positive — every delay would be nothing, a failing unit retried on every pass — and a ceiling under the base, which
+# leaves nothing to double (ADR 0033; the product's `Backoff.Check`, one rule).
 @dataclass(frozen=True)
 class Backoff:
     base: float = 1.0
@@ -69,6 +72,10 @@ class Backoff:
     jitter: float = 0.5
 
     def __post_init__(self):
+        if not self.base > 0:
+            raise ValueError(f"backoff base must be positive, not {self.base!r}")
+        if not self.max >= self.base:
+            raise ValueError(f"backoff max ({self.max!r}) is under its base ({self.base!r})")
         if not 0 < self.jitter <= 1:
             raise ValueError(f"backoff jitter must be in (0, 1], not {self.jitter!r}: without it, units that failed "
                              f"together retry together")
@@ -96,7 +103,8 @@ class Pass:
     failed: list = field(default_factory=list)
 
 
-# One wanted key: `lag` its desired revision less the running one (0 for a key not running); `failures` in a row;
+# One wanted key: `lag` its desired revision less the running one (the whole revision for a key not running);
+# `state` is never `converged` for a key not running, whatever its lag; `failures` in a row;
 # `retry_at` when it may be tried again (`now`'s clock; 0 with no failure).
 @dataclass(frozen=True)
 class Position:
@@ -131,11 +139,12 @@ class Reconciler:
     # restarted (`>=` leaves it); then each key not running is started — both in `desired`'s order. A key whose delay
     # has not passed is waiting, under either form of restart. A failure adds to the key's count; a success takes the
     # revision and starts the key's countdown again, and clears its count only once it has stayed up for `backoff.max`
-    # — a pipeline that dies right after every start waits longer each time.
+    # AT what is wanted now — a pipeline that dies right after every start waits longer each time, and so does a
+    # restart that keeps failing on a key that had held for hours before its row moved.
     def once(self, desired: dict) -> Pass:
         now, p = self.now(), Pass()
-        self._settle(now)
         self._wanted = {k: w.rev for k, w in desired.items()}
+        self._settle(now)
         for key in list(self._running):
             if key not in desired:
                 self._stop(key)
@@ -193,15 +202,17 @@ class Reconciler:
         for key in keys:
             self._failures.pop(key, None)
 
-    # Each key of the last pass: `converged` at no lag; else `stalled` once its failures reach `stall_failures`, else
-    # `lagging`.
+    # Each key of the last pass: `converged` when it runs at no lag — a key that runs nothing is never `converged`, not
+    # even one wanted at revision 0 (a row without a revision); else `stalled` once its failures reach
+    # `stall_failures`, else `lagging`.
     def status(self) -> dict:
         self._settle(self.now())
         out = {}
         for key, rev in self._wanted.items():
             lag = max(rev - self._running.get(key, 0), 0)
             n, retry_at = self._failures.get(key, (0, 0.0))
-            state = CONVERGED if lag == 0 else STALLED if n >= self.stall_failures else LAGGING
+            state = (CONVERGED if key in self._running and lag == 0
+                     else STALLED if n >= self.stall_failures else LAGGING)
             out[key] = Position(state, lag, n, retry_at)
         return out
 
@@ -209,7 +220,10 @@ class Reconciler:
         n = self._failures.get(key, (0, 0.0))[0] + 1
         self._failures[key] = (n, now + self._backoff.delay(n, self.rand()))
 
-    # A key up for `backoff.max` since its last start has earned its count back.
+    # A key up for `backoff.max` since its last start, AT its wanted revision, has earned its count back. One behind it
+    # is not: what it held was the old revision, and the failures are its restart's — wiping them would retry a restart
+    # that keeps failing on every pass, with no delay and never `stalled` (ADR 0033; review 14, major 7).
     def _settle(self, now: float) -> None:
-        for key in [k for k in self._failures if k in self._up_since and now - self._up_since[k] >= self._backoff.max]:
+        for key in [k for k in self._failures if k in self._up_since and k in self._wanted
+                    and self._running[k] >= self._wanted[k] and now - self._up_since[k] >= self._backoff.max]:
             del self._failures[key]
