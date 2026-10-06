@@ -261,6 +261,22 @@ unit:
     # the alarms live out their days.
     - row: alarms_retention/{id}     # vms/alarms_retention/<id> {days}
       items: {days: alarms_retention_days}
+# What a holder says of each DEVICE it has open, as the device said it (`config.device_row`): the kinds of event its units
+# raise, its contacts and relays, whether it turns, its presets — what automation may point at (`Catalog`) — and the
+# device's own word for which device it is (`identity`), which tells two spellings of one box apart. A table the
+# worker writes (`worker.writes`) and the console shows (`GET /devices`): two writers, the holder's next word wins
+# (ADR-0012, «Архитектор» 2026-10-06: `writes` names only a unit's rows or a declared table).
+tables:
+  devices:
+    key: device
+    fields:
+      device:   {type: string, required: true}       # the device's key: the host its sources name (`group_by`)
+      events:   {type: list}                         # the event kinds its units raise
+      rays:     {type: int, default: 0}              # inputs (contacts) — `io.input` with a port
+      relays:   {type: int, default: 0}              # outputs it can be asked to switch
+      ptz:      {type: bool, default: false}         # it turns
+      presets:  {type: int, default: 0}              # positions it can be asked to go to
+      identity: {type: string, schema: {maxLength: 200}}   # its serial number, MAC — not a capability, never leaves the cluster
 placement:
   # `SpecController.capacity_of(worker)` reads `extra["capacity"]` from the worker's latest heartbeat (any
   # age); a worker that never said anything counts as 50 (the constructor's `capacity` argument overrides
