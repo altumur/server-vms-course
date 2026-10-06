@@ -231,7 +231,8 @@ class Crossings:
                     for r in shard.get("recordings", []):
                         if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") == "offline" \
                                 and r.get("enabled") is not False:           # switched off: no backup (the product's)
-                            found.add((name, str(r.get("name") or r.get("id"))))
+                            if r.get("id") not in (None, ""):        # by its id, as the product: a name may change
+                                found.add((name, str(r["id"])))      # (ADR-0010, the addition; «Архитектор»)
             except Unreachable:
                 continue
             out += sorted(found)
