@@ -300,6 +300,15 @@ def test_the_keys_view_shows_the_public_halves_the_domain_publishes_and_never_a_
     # a document in a public field that carries a secret is not shown: the check reads into it
     tainted = {"doc": json.dumps({"keys": {}, "root": "ab", "x": {"token_secret": "t"}})}
     assert "public" not in keys(_Store({"domain/keys": tainted}), None, 0.0)["vars"][0]
+    # who the members are is public too: the holder's list and a member's carried copy, by their `doc`
+    listed = {"doc": json.dumps({"rev": 2, "members": {"south": {"how": "admitted", "key": pub.hex(),
+                                                               "console": "https://south:8443"}}})}
+    for row in ("domain/members", "domain/member-list"):
+        v = keys(_Store({row: listed}), None, 0.0)["vars"][0]
+        assert v["fields"] == ["doc"] and v["public"] == listed, v
+        hidden = {"doc": json.dumps({"rev": 3, "members": {"south": {"enroll_secret": "e-1"}}})}
+        v = keys(_Store({row: hidden}), None, 0.0)["vars"][0]
+        assert "public" not in v and "e-1" not in json.dumps(v), v
 
 def test_a_member_carries_home_the_books_its_spec_declares_and_nothing_it_does_not():
     """The holder keeps a book for each member under `domain/<sub>/<book>/<member>`; the member's agent carries its own

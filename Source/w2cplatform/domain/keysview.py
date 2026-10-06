@@ -18,7 +18,8 @@ spec declares to show; a separate ADR), never through this list.
 The one exception is the trust the domain publishes on purpose: the key set (`domain/keys` — the token keys, the
 root's public key, the signed document carrying them and the issuing certificates), the root a member pinned
 (`domain/root`), a member's own public keys (`domain/member-key` — its `seed_secret` never), and a cluster's identity
-certificate (`domain/ldevid/<cluster>`). Those fields, named in `PUBLIC` below, come with their values (`public`) —
+certificate (`domain/ldevid/<cluster>`), and who the members are (`domain/members`, `domain/member-list`: name, console,
+the keys a member is taken by). Those fields, named in `PUBLIC` below, come with their values (`public`) —
 and even there a value sealed, or a document carrying a field named a secret or a sealed value, is not shown. A row
 this process's role may not read (the signer's keys, ADR-0032) is named and `withheld`.
 
@@ -39,6 +40,10 @@ PUBLIC = (
     ("domain/root", lambda f: f == "pub"),                                                      # `agent.ROOT_PATH`
     ("domain/member-key", lambda f: f in ("pub", "seal_pub")),                                  # `memberkey.ROW`
     ("domain/ldevid/", lambda f: f in ("cert", "chain")),                                       # `agent.LDEVID_PATH`
+    # who the members are — name, console, the keys a member is taken by (`members.MEMBERS`, `term.MEMBER_LIST`): public
+    # halves too («Архитектор», 2026-10-06, as the product's view shows them)
+    ("domain/members", lambda f: f == "doc"),
+    ("domain/member-list", lambda f: f == "doc"),
 )
 
 
