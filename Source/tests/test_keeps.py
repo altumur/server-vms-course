@@ -51,7 +51,7 @@ def _events(box, kind):
 
 def test_an_incidents_volume_is_a_place_for_evidence_and_never_one_to_record_into():
     box, k = _site(source=False)
-    assert k.capacity == 0 and k.heartbeat_extra()["keeps"] == {}
+    assert k.capacity == 0 and "keeps" not in k.heartbeat_extra()          # nothing to say of any keep: absent
     from vms.config import REC_SPEC as spec
     rec = SpecController(spec, box.vars, box.objects, wall=box.wall)
     k.heartbeat_once()
@@ -66,11 +66,11 @@ def test_a_keep_is_copied_into_the_incidents_volume_and_outlives_the_recordings_
     footage(box.src, "7", 1, t - 3600, t, step=10)
     kp = _keep(box, "7", t - 1800, t - 1200)
     state = k.keep_pass()
-    assert state[kp.id]["copied"] == 600 and state[kp.id]["missing"] == 0
+    assert state[kp.id]["seconds"] == 600 and state[kp.id]["missing"] == 0
     assert [(s.stream, s.start, s.end) for s in k.store.spans("7")] == [("7/e0", t - 1800, t - 1200)]
     [ev] = _events(box, "archive.keep.copied")
     assert ev["keep"] == kp.id and ev["recording"] == "7" and ev["sha256"] == state[kp.id]["sha256"]["7"]
-    assert k.heartbeat_extra()["keeps"][kp.id]["copied"] == 600
+    assert k.heartbeat_extra()["keeps"][kp.id]["seconds"] == 600
 
     assert k.keep_pass()[kp.id]["sha256"] == state[kp.id]["sha256"]    # nothing new to copy, the digest still said
     assert len(_events(box, "archive.keep.copied")) == 1
@@ -103,7 +103,7 @@ def test_a_keep_holds_a_recording_whose_row_is_gone_and_one_made_after_it():
     [entry] = state.values()
     # …and no door that HOLDS `7` is there to say so: a door of other recordings answering "nothing of it here" is
     # true of every door but the right one (the sixth pass). Short, by all of it, until a door that holds it speaks.
-    assert entry["copied"] == 1200 and entry["missing"] == 600
+    assert entry["seconds"] == 1200 and entry["missing"] == 600
 
 
 def test_a_second_recording_of_the_camera_that_holds_a_minute_of_the_keep_is_not_short_of_the_rest():
@@ -122,7 +122,7 @@ def test_a_second_recording_of_the_camera_that_holds_a_minute_of_the_keep_is_not
     box.src.seal()
     kp = _keep(box, "7", t - 1800, t - 1200)                           # names `7`; `7-ev` is found by its row
     state = k.keep_pass()
-    assert state[kp.id]["copied"] == 660 and state[kp.id]["missing"] == 0
+    assert state[kp.id]["seconds"] == 660 and state[kp.id]["missing"] == 0
     for _ in range(6):                                                 # past KEEP_UNCOPIED_AFTER
         box.wall.advance(k.KEEP_EVERY); box.src_door.announce()
         k.keep_pass()
@@ -146,7 +146,7 @@ def test_a_door_that_does_not_hold_the_recording_does_not_say_its_source_has_non
     down.shutdown(); down.server_close()
     kp = _keep(box, "7", t - 1800, t - 1200)
     state = k.keep_pass()
-    assert state[kp.id]["copied"] == 0 and state[kp.id]["missing"] == 600, state
+    assert state[kp.id]["seconds"] == 0 and state[kp.id]["missing"] == 600, state
     for _ in range(5):                                                 # past KEEP_UNCOPIED_AFTER: said, not swallowed
         box.wall.advance(k.KEEP_EVERY); box.src_door.announce(); down.announce()
         k.keep_pass()
@@ -156,7 +156,7 @@ def test_a_door_that_does_not_hold_the_recording_does_not_say_its_source_has_non
     try:
         box.src_door.announce()
         state = k.keep_pass()
-        assert state[kp.id]["copied"] == 600 and state[kp.id]["missing"] == 0
+        assert state[kp.id]["seconds"] == 600 and state[kp.id]["missing"] == 0
     finally:
         back.shutdown()
 
@@ -182,7 +182,7 @@ def test_the_recordings_own_recorder_saying_it_has_nothing_is_believed_and_remem
         footage(src, "7", 1, t - 3600, t, step=10)                     # `7-ev` has no footage at all
         kp = _keep(box, "7", t - 1800, t - 1200, recordings=["7", "7-ev"])
         state = k.keep_pass()
-        assert state[kp.id]["copied"] == 600 and state[kp.id]["missing"] == 0
+        assert state[kp.id]["seconds"] == 600 and state[kp.id]["missing"] == 0
         srv.shutdown()
         srv = door(box, src, "r-disks", "srv-1", status=names[:1])     # `7-ev` deleted: nobody's heartbeat names it now
         box.vars.put("rec/recordings/7-ev", {"id": "7-ev", "name": "7-ev", "cam": "7", "deleted": "true"})
@@ -214,8 +214,8 @@ def test_a_recording_that_moved_is_not_said_to_be_missing_from_its_source_by_its
         kept = _keep(box, "7", t - 1800, t - 1200)                     # on v1 only
         dark = _keep(box, "7", t - 500, t - 300)                       # in v2's time, over the hole
         state = k.keep_pass()
-        assert state[kept.id]["copied"] == 0 and state[kept.id]["missing"] == 600, state
-        assert state[dark.id]["copied"] == 100 and state[dark.id]["missing"] == 0, state   # the hole: nobody has it
+        assert state[kept.id]["seconds"] == 0 and state[kept.id]["missing"] == 600, state
+        assert state[dark.id]["seconds"] == 100 and state[dark.id]["missing"] == 0, state   # the hole: nobody has it
         for _ in range(5):                                             # past KEEP_UNCOPIED_AFTER: said, not swallowed
             box.wall.advance(k.KEEP_EVERY); now.announce(); down.announce()
             k.keep_pass()
@@ -225,7 +225,7 @@ def test_a_recording_that_moved_is_not_said_to_be_missing_from_its_source_by_its
         try:
             now.announce()
             state = k.keep_pass()
-            assert state[kept.id]["copied"] == 600 and state[kept.id]["missing"] == 0
+            assert state[kept.id]["seconds"] == 600 and state[kept.id]["missing"] == 0
         finally:
             back.shutdown()
     finally:
@@ -319,7 +319,7 @@ def test_nothing_lost_and_nothing_at_risk_is_not_said():
     k.keep_pass()
     assert k.store.status()["firstBlockId"] == 0
     hb = k.heartbeat_extra()
-    assert hb["keeps"][kp.id]["copied"] == 600
+    assert hb["keeps"][kp.id]["seconds"] == 600
     assert "incidents_lost" not in hb and "incidents_at_risk" not in hb
     plain = recorder(box, "r-disks-2", "srv-1", acl=False)
     assert "incidents_lost" not in plain.heartbeat_extra() and "incidents_at_risk" not in plain.heartbeat_extra()
@@ -337,15 +337,106 @@ def test_servers_shows_the_incidents_recorders_keeps_lost_and_at_risk_as_they_ar
     assert hb["incidents_lost"] and hb["incidents_at_risk"]
     declared = {e["field"]: e for e in REC_SPEC.servers_status}
     assert all(declared[f].get("of") == "keeps" for f in ("keeps", "incidents_lost", "incidents_at_risk")), declared
-    srv = SpecConsole(SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall), wall=box.wall).serve("127.0.0.1", 0)
+    # where the page reads it: `GET /rec/servers` of the VMS console that mounts rec — and rec's own console at its root
+    from vms.console import make_console
+    from vms.controller import VmsController
+    rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
+    vms = make_console(VmsController(box.vars, box.objects, wall=box.wall), box.resource_root, box.wall,
+                       mounts={"rec": rec}).serve("127.0.0.1", 0)
+    own = SpecConsole(rec, wall=box.wall).serve("127.0.0.1", 0)
     try:
-        req = ur.Request(f"http://127.0.0.1:{srv.server_address[1]}/servers", headers={"X-User": "ann"})
-        out = json.loads(ur.urlopen(req, timeout=10).read())
-        [row] = [w["status"] for s in out["servers"].values() for w in s["workers"] if w["worker"] == "r-keep"]
-        assert row["incidents_lost"] == hb["incidents_lost"] and row["incidents_at_risk"] == hb["incidents_at_risk"]
-        assert row["keeps"] == json.loads(json.dumps(hb["keeps"]))
+        for url in (f"http://127.0.0.1:{vms.server_address[1]}/rec/servers", f"http://127.0.0.1:{own.server_address[1]}/servers"):
+            out = json.loads(ur.urlopen(ur.Request(url, headers={"X-User": "ann"}), timeout=10).read())
+            [row] = [w["status"] for s in out["servers"].values() for w in s["workers"] if w["worker"] == "r-keep"]
+            assert row["incidents_lost"] == hb["incidents_lost"] and row["incidents_at_risk"] == hb["incidents_at_risk"], url
+            assert row["keeps"] == json.loads(json.dumps(hb["keeps"])), url
     finally:
-        srv.shutdown()
+        vms.shutdown(); own.shutdown()
+
+
+def _source(box, quota: int = 64 << 20):
+    """The recording's own recorder: `r-src` holding the local volume `disks` of srv-1, beside the incidents recorder."""
+    volumes.write(box.vars, {"name": "disks", "kind": "local", "server": "srv-1", "url": tempfile.mkdtemp(prefix="disks-"),
+                             "quota_bytes": quota})
+    src = recorder(box, "r-src", "srv-1", acl=False)
+    src.lease_pass()
+    assert src.volume == "disks" and not src.incidents and src.store is not None
+    return src
+
+
+def test_the_recordings_recorder_says_its_side_of_a_keep_here_at_risk_pushing_pushed():
+    """The product's keeper, its source half: the recorder of the recording's volume says, for each keep over footage
+    it holds, `{recording, seconds, leaves_in_s, state}` — `here` far from going, `at risk` close to going with no
+    incidents archive to copy it (and why), `pushing` while the incidents archive is served and does not show it all
+    yet, `pushed` once it does. What it shows is asked at the incidents recorder's door, not guessed."""
+    box, k = _site(source=False)
+    src = _source(box)
+    t = box.wall()
+    footage(src.store, "7", 1, t - 30000, t, step=10)
+    far = _keep(box, "7", t - 1800, t - 1200)                          # 28200 s from the ring's edge: past KEEP_MARGIN
+    near = _keep(box, "7", t - 29000, t - 28800)                       # 1000 s from it: due
+    side = src.keep_side_pass()
+    assert side[far.id] == {"recording": "7", "seconds": 600, "leaves_in_s": 28200, "state": "here"}, side
+    assert side[near.id] == {"recording": "7", "seconds": 200, "leaves_in_s": 1000, "state": "at risk",
+                             "why": "no incident archive is served"}, side
+    assert "keeps" not in k.heartbeat_extra() or far.id not in k.heartbeat_extra()["keeps"]
+
+    copier = k.serve_archive()                                         # the incidents archive is served now…
+    k.heartbeat_once()
+    door_src = src.serve_archive()
+    src.heartbeat_once()
+    try:
+        side = src.keep_side_pass()
+        assert side[far.id]["state"] == side[near.id]["state"] == "pushing", side   # …and shows none of it yet
+        k.keep_pass()                                                  # its recorder copies both from r-src's door
+        side = src.keep_side_pass()
+        assert side[far.id]["state"] == side[near.id]["state"] == "pushed", side
+        hb = src.heartbeat_extra()
+        assert hb["keeps"] == side and "incidents_lost" not in hb and "keep_missing" not in hb
+        assert k.heartbeat_extra()["keeps"][far.id]["state"] == "kept"  # the holder's word beside it
+    finally:
+        copier.shutdown(); door_src.shutdown()
+
+
+def test_kept_footage_the_recordings_ring_took_before_any_copy_is_lost_and_an_alarm():
+    """`lost` on the recording's side: what of a keep this volume held and the incidents archive never showed is gone
+    from the volume — its ring wrote over it first. Said in the heartbeat with `lost_seconds` and why while the keep
+    stands, and an alarm `archive.keep.lost` once (the course's incidents recorder could not say it: no door has those
+    minutes any more, so nothing is short)."""
+    box, k = _site(source=False)
+    src = _source(box, quota=16 << 20)
+    t = box.wall()
+    for smp in fake_samples(t - 1200, t - 900, step=10, size=256 << 10):
+        src.store.put("7", 1, smp)
+    src.store.finish("7", 1); src.store.seal()
+    kp = _keep(box, "7", t - 1200, t - 900)
+    side = src.keep_side_pass()
+    assert side[kp.id]["state"] == "at risk"                           # at the ring's edge, and nobody to copy it
+    held = side[kp.id]["seconds"]
+    for smp in fake_samples(t - 900, t, step=10, size=256 << 10):     # 22 MB more into a ring of 16
+        src.store.put("7", 1, smp)
+    src.store.finish("7", 1); src.store.seal()
+    assert not [s for s in src.store.coverage("7") if s[0] < t - 900]
+    side = src.keep_side_pass()
+    assert side[kp.id] == {"recording": "7", "state": "lost", "lost_seconds": held,
+                           "why": "the ring wrote over it before the incident archive had a copy"}, side
+    [alarm] = [e for e in _events(box, "archive.keep.lost") if e.get("volume") == "disks"]
+    assert alarm["class"] == "alarm" and alarm["keep"] == kp.id and alarm["recording"] == "7" and alarm["seconds"] == held
+    src.keep_side_pass()
+    assert len([e for e in _events(box, "archive.keep.lost") if e.get("volume") == "disks"]) == 1   # once, not every pass
+    keeps.delete(box.vars, kp.id)                                      # lifted: nothing to say of it
+    assert kp.id not in src.keep_side_pass()
+
+
+def test_a_garbled_keep_over_a_recording_this_volume_holds_is_said_garbled_on_its_side():
+    box, k = _site(source=False)
+    src = _source(box)
+    t = box.wall()
+    footage(src.store, "7", 1, t - 600, t, step=10)
+    box.vars.put("rec/keeps/7-bad", {"cam": "7", "from": "yesterday", "to": str(t), "recordings": '["7"]'})
+    box.vars.put("rec/keeps/9-bad", {"cam": "9", "from": "yesterday", "to": str(t), "recordings": '["9"]'})
+    side = src.keep_side_pass()
+    assert side == {"7-bad": {"state": "garbled", "why": "its row does not parse"}}, side   # not 9's: none of it here
 
 
 def test_not_being_able_to_read_the_keeps_is_not_there_are_none():
@@ -497,7 +588,8 @@ def test_a_keep_that_stays_garbled_for_an_hour_is_an_alarm_once_per_episode_and_
     bad = {"cam": "7", "from": "yesterday", "to": str(t), "note": "", "by": "anna", "recordings": '["7"]'}
     box.vars.put("rec/keeps/7-bad", bad)
     state = k.keep_pass()
-    assert state["7-bad"]["garbled"] is True and state["7-bad"]["garbled_since"] == t
+    assert state["7-bad"]["state"] == "garbled" and state["7-bad"]["garbled_since"] == t
+    assert state["7-bad"]["why"] == "its row does not parse"                  # the product's word, and why
     assert k.heartbeat_extra()["keeps"]["7-bad"]["garbled_since"] == t
     box.wall.advance(k.KEEP_GARBLED_AFTER - 60)
     k.keep_pass()
@@ -587,7 +679,7 @@ def test_a_keep_no_door_from_here_can_fill_is_counted_and_then_an_alarm():
     try:
         kp = _keep(box, "7", t - 1800, t - 1200)
         state = k.keep_pass()
-        assert state[kp.id]["copied"] == 0 and state[kp.id]["missing"] == 600   # not asked: not reachable from srv-1
+        assert state[kp.id]["seconds"] == 0 and state[kp.id]["missing"] == 600   # not asked: not reachable from srv-1
         assert state[kp.id]["missing_since"] == t and f'rec_keep_missing_seconds{{keep="{kp.id}"}} 600' in k.metrics_text()
         assert _events(box, "archive.keep.uncopied") == []
         for _ in range(5):
@@ -599,7 +691,7 @@ def test_a_keep_no_door_from_here_can_fill_is_counted_and_then_an_alarm():
         k.keep_pass()
         assert len(_events(box, "archive.keep.uncopied")) == 1          # said once, not every pass
         hb = k.heartbeat_extra()
-        assert hb["keeps"][kp.id]["missing_since"] == t and hb["keep_missing"] == {kp.id: 600}
+        assert k.keep_state[kp.id]["missing_since"] == t and hb["keep_missing"] == {kp.id: 600}
     finally:
         far.shutdown()
 
@@ -850,10 +942,38 @@ def test_a_recording_never_copied_is_pending_and_the_keep_unknown():
     is `pending`, not sealed yet, and the keep's integrity `unknown`, `ok` false — never `ok` for what was not compared."""
     box, k = _site(source=False)
     t = box.wall()
-    kp = _keep(box, "7", t - 1800, t - 1200)
+    kp = _keep(box, "7", t - 1800, t + 600)                            # the interval is not over: footage may still come
     st, got = k.verify_keep(kp.id)
     assert st == 200 and got["ok"] is False and got["integrity"] == "unknown: 7: not sealed yet", got
     assert got["recordings"]["7"] == {"sealed": "", "now": "", "samples": 0, "result": "pending"}
+    over = _keep(box, "7", t - 1800, t - 1200)                         # over — and a live recorder says it holds it
+    _says(box, "r-src", {over.id: {"recording": "7", "state": "here", "seconds": 600}})
+    assert k.verify_keep(over.id)[1]["recordings"]["7"]["result"] == "pending"
+
+
+def _says(box, worker, keeps_said):
+    """A live recorder's heartbeat saying its side of keeps (`keeps`), as `keep_side_pass` writes it."""
+    from w2cplatform.contract import Heartbeat
+    box.objects.put(REC_SPEC.sub.heartbeat_key(worker),
+                    Heartbeat(worker, box.wall(), [], {"server": "srv-1", "keeps": keeps_said}).to_bytes())
+
+
+def test_a_recording_with_no_footage_in_an_interval_that_is_over_is_empty_not_pending():
+    """The product's `empty` (ffc94a6): a recording not sealed, with no footage in the incidents volume, the interval
+    over, and no live recorder saying it holds the recording's footage of the keep — nothing to seal, and nothing will
+    come. The verify answers `result: empty` with why, apart from a failure (the keep `unknown`, no seal promised), and
+    the holder's `keeps.<id>` says `state: kept` with `empty: [<recording>]`, so that nobody waits for its seal."""
+    box, k = _site(source=False)
+    t = box.wall()
+    kp = _keep(box, "7", t - 1800, t - 1200)
+    _says(box, "r-src", {kp.id: {"state": "garbled", "why": "x"}})    # a word that names no recording is not "I have it"
+    st, got = k.verify_keep(kp.id)
+    assert st == 200 and got["ok"] is False, got
+    assert got["recordings"]["7"] == {"sealed": "", "result": "empty", "detail": "7 holds no footage in the interval"}
+    assert got["integrity"] == "unknown: 7 holds no footage in the interval"
+    state = k.keep_pass()
+    assert state[kp.id]["state"] == "kept" and state[kp.id]["empty"] == ["7"] and state[kp.id]["seconds"] == 0
+    assert k.heartbeat_extra()["keeps"][kp.id]["empty"] == ["7"]
 
 
 def test_nobody_writes_a_seal_through_a_door():

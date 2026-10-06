@@ -844,8 +844,8 @@ def test_a_door_that_answers_a_span_another_build_writes_stops_no_keep_from_bein
         kp = _keep(box, "7", t - 1100, t - 700)
         late = _keep(box, "7", t - 2900, t - 2600)                    # only the odd door "has" it, in a span nobody can read
         state = k.keep_pass()
-        assert state[kp.id]["copied"] == 400 and state[kp.id]["missing"] == 0, state
-        assert state[late.id]["copied"] == 0 and state[late.id]["missing"] == 300, state
+        assert state[kp.id]["seconds"] == 400 and state[kp.id]["missing"] == 0, state
+        assert state[late.id]["seconds"] == 0 and state[late.id]["missing"] == 300, state
     finally:
         odd.shutdown(); box.src_door.shutdown()
     _forget_garbled()
