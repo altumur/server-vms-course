@@ -8,13 +8,11 @@ status to look for it, for the day their entry's id is not the value I hold: an 
 visible."""
 import json
 
-from w2cplatform import catalog
 from w2cplatform.console import Heartbeat
 from w2cplatform.spec import SpecController, SubsystemSpec
 from tests.conftest import Box, testsub, testsub2
 
-T2 = testsub2()                                                   # near: {sub: testsub, by: of, of: name}
-catalog.register(testsub())                                       # …read by its spec: no controller without it (ADR 0056)
+T2 = testsub2()                                                   # near: {sub: testsub, by: of, of: name}; testsub in the catalogue
 
 
 def _worker(box, spec, worker: str, server: str, capacity: int = 8, status=None):

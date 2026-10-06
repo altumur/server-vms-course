@@ -191,7 +191,12 @@ def testsub():
 
 
 def testsub2():
-    """testsub2's spec, read once (`_read`)."""
+    """testsub2's spec, read once (`_read`) — and testsub's put in the catalogue: testsub2 follows it by its spec
+    (`near.of`, `near.prefer`), and no controller is built for a spec whose neighbour its process did not load
+    (`catalog.near_known`, ADR 0056). testsub says no secret and no object row: the derived rules stay as they were."""
+    from w2cplatform import catalog
+    if "testsub" not in [s.name for s in catalog.specs()]:
+        catalog.register(testsub())
     return _read(TESTSUB2)
 
 
