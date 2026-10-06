@@ -100,7 +100,10 @@ unit:
     source:
       type: url
       required: true
-      schemes: {driverpack: {host: path, none: [file]}, ipint: {fragment: none}, rtsp: {}, rtsps: {}, http: {}, https: {}}
+      # cfw://local — the camera's own firmware (vmscam's row, opened by the camera's worker): no device with a host, no
+      # group, as `file` under driverpack; a login in it is refused by the url rule, the rest (local, no path) the
+      # camera's worker checks (ADR-0053, «Архитектор» 2026-10-06; the course writes no such row, the line keeps one spec).
+      schemes: {driverpack: {host: path, none: [file]}, ipint: {fragment: none}, rtsp: {}, rtsps: {}, http: {}, https: {}, cfw: {none: [local]}}
       # One channel, one camera: no two cameras hold the same address in its one spelling (RFC 3986 — the platform's;
       # the review's sixth pass, major: `PUT /cameras/1 {"source": "…/ch/2"}` opened channel 2 as camera 1). Two
       # spellings the platform cannot tell apart — `…/ch/02` and `…/ch/2` — are the worker's to find: it opens the

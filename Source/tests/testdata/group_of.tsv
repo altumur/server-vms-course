@@ -5,7 +5,7 @@
 # testdata/group_of.tsv at the product's root (w2cplatform TestTheSharedTableOfGroups), byte for byte. Owner: «Паритет». ADR-0053 (the group is the device's host, e3fa789); decisions of «Архитектор», 2026-10-06. Seeded from the product's deviceOf (vms/gate.go), its
 # tests, the course's reviews 8, 10, 13, 14 and the course's seed (7fbcbade), merged.
 #
-# source: {type: url, schemes: {rtsp: {}, http: {}, file: {}, ipint: {fragment: none}, driverpack: {host: path, none: [file]}, mirror: {host: path, fragment: none, none: [local]}}}
+# source: {type: url, schemes: {rtsp: {}, http: {}, file: {}, ipint: {fragment: none}, driverpack: {host: path, none: [file]}, mirror: {host: path, fragment: none, none: [local]}, cfw: {none: [local]}}}
 # group_by: {field: source, cut_at: host}
 #
 # THE RULES
@@ -160,3 +160,5 @@ mirror://hub1	hub1
 mirror://LOCAL./x	<none>	
 mirror://hub1/h%2Ecorp/x	<none>	bad_url
 rtsp://h/x#@evil/	h	bad_url
+cfw://local	<none>	
+cfw://user:pw@local	local	bad_url
