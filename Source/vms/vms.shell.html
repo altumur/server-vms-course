@@ -37,7 +37,8 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
   camera and every place a recording may have left footage on, the events on it, the operator's mark, «Закрепить»
   (what is only in a backup: `POST /rec/requests` for the primary recording), «Удержать показанное».
   The timeline holds the camera's recordings in the other clusters of the domain too (ADR-0061): the book of
-  primaries the domain carries here names them by the camera's ref, their doors are asked at this console
+  primaries this cluster carries names them by the camera's ref — the primary and each of its `backups` —, at a member
+  and at the holder alike, their doors are asked at this console
   (`/domain/at/<cluster>/rec/where/…`), a refusal said in words (403, 404, 502, 503).
   «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a backup) and
   its keeps (`/rec/keeps`: make, lift; check at the incidents holder's door; the state in the recorders' own words, from
@@ -139,21 +140,24 @@ const camName=id=>{const c=camById(id);return c?(c.name||"камера "+c.id):"
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
 // The camera's recordings in the other clusters of the domain (ADR-0061): {cluster, id, home, backup} — read at their
 // cluster's console through this one (GET /domain/at/<cluster>/rec/where/…, `member_forward`), the bytes from the
-// holder's door. Where this console learns them: the book of primaries the domain carries into this cluster
-// (GET /domain/vms/books/primaries: {<ref>: {recorded_by, recording}}, the fields the spec lets show — never its
-// tokens; ADR-0010), by the camera's ref. The product's page asks the VMS's state of the domain first at the holder's
-// cluster (/domain/vms/state); the course's domain part serves no such state, and the book is where both learn it here.
+// holder's door. Where this console learns them: the book of primaries its own cluster carries (ADR-0010, 2026-10-06),
+// the same at a member and at the holder — GET /domain/vms/books/primaries: {<ref>: {recorded_by, recording, backups:
+// [{cluster, recording}]}}, the fields the spec lets show, never its tokens. The domain's state is not read for this.
 let PRIMARIES=null;
 pc.on("refresh",async d=>{
   if(!(d&&"domain" in d))return;
   try{const r=await fetch("/domain/vms/books/primaries");PRIMARIES=r.ok?await r.json():null}catch(e){PRIMARIES=null}
 });
 function farRecsOfCam(id){
-  const c=camById(id),ref=c&&c.ref;if(!ref)return[];
-  const p=PRIMARIES&&PRIMARIES[ref];
+  const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref];if(!p)return[];
   // a recording this cluster holds itself is one of its own already (the book names this cluster too, then)
-  if(!p||!p.recorded_by||!p.recording||recsOfCam(id).some(r=>String(r.id)===String(p.recording)))return[];
-  return[{id:String(p.recording),cluster:String(p.recorded_by),home:"",backup:false,cam:String(id)}];
+  const own=new Set(recsOfCam(id).map(r=>String(r.id))),out=[],seen=new Set();
+  const add=(cluster,rec,backup)=>{if(!cluster||!rec)return;const k=cluster+"|"+rec;
+    if(own.has(String(rec))||seen.has(k))return;seen.add(k);
+    out.push({id:String(rec),cluster:String(cluster),home:"",backup,cam:String(id)})};
+  add(p.recorded_by,p.recording,false);
+  for(const x of Array.isArray(p.backups)?p.backups:[])if(x&&typeof x==="object")add(x.cluster,x.recording,true);
+  return out;
 }
 // where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
 const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+"/rec/where/"+encodeURIComponent(rec.id);
