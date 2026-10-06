@@ -267,7 +267,7 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
         # a forgotten key is a new request, by design — and what stops the second camera then is the rule about
         # sources (`source: {unique: canonical}`, the platform's since the boundary's step 6): camera 1 is that address
         code, body = post(p2, "k-1")
-        assert code == 400 and "vms 1 has that source already" in body["detail"] and len(a.cameras()) == 1
+        assert code == 409 and body.get("fault") == "unique" and "vms 1 has that source already" in body["detail"] and len(a.cameras()) == 1
     finally:
         s1.shutdown(); s1.server_close(); s2.shutdown(); s2.server_close()
 

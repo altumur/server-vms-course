@@ -102,8 +102,13 @@ class BadUrl(Fault):
                                 # (ADR 0053), a port that is no number, a scheme the field is not reached by, a `#`
 
 
-# The closed dictionary of `fault`: a 400's body says one of these, or none, and the reason in `detail`.
-FAULTS = (NotJson.fault, NotNumber.fault, TooLong.fault, BadUrl.fault)
+# Refusals that depend on the rows standing, 409 (ADR 0031's rule; `spec.Mismatched`, `spec.NotUnique` carry them):
+MUST_MATCH = "must_match"       # a unit pointing at a row it disagrees with, or a row rewritten so its units would
+UNIQUE = "unique"               # a value a `unique` field holds that another unit holds already
+
+# The closed dictionary of `fault`: a refusal's body says one of these, or none, and the reason in `detail`; the status
+# is apart from the word (400 for the first four, 409 for the last two), and `error` stays the door's word.
+FAULTS = (NotJson.fault, NotNumber.fault, TooLong.fault, BadUrl.fault, MUST_MATCH, UNIQUE)
 
 
 def _no_constant(name: str):

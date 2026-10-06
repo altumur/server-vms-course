@@ -137,7 +137,7 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
               said: dict | None = None) -> tuple[str, dict]:
     from .sealing import seal_items
     from .secrets import is_secret_field
-    from .spec import Refused, SubsystemSpec, unbound_secret
+    from .spec import Mismatched, Refused, SubsystemSpec, unbound_secret
     from .variables import Garbled
     t = spec.table_specs[table]
     if not isinstance(body, dict):
@@ -186,6 +186,26 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
             check(t.schema, {k: v for k, v in row.items() if v not in (None, "")}, table)
         except Invalid as e:
             raise Refused(str(e)) from None
+    for n, f in t.fields.items():                         # what the row points at agrees with it (`ref` + `must_match`):
+        v = str(row.get(n) or "")                         # the same check `refuse_refs` asks of a unit (ADR 0012)
+        if not f.ref or not f.must_match or not v:
+            continue
+        if f.ref == f"{spec.name}/{table}" and v == name:
+            there = row                                   # the row pointing at itself: what it says now
+        else:
+            try:
+                there, _ = vars_.get(f"{f.ref}/{v}")
+                if there is not None and not isinstance(there, dict):
+                    raise TypeError(type(there).__name__)
+            except (Garbled, *PARSE_ERRORS):
+                raise Refused(f"{n} names {f.ref}/{v}, whose row does not parse: mend it first — nothing points at a "
+                              f"row nobody can read") from None
+        if there and there.get("deleted") != "true":
+            for theirs, mine in f.must_match.items():
+                want = str(there.get(theirs) or "")
+                if want and str(row.get(mine) or "") != want:
+                    raise Mismatched(f"{n} {v} is {theirs} {want}'s: only that {theirs}'s rows point at it, and {table} "
+                                     f"{name} is {mine} {row.get(mine)}'s")
     ref = f"{spec.name}/{table}"
     for n, f in spec.fields.items():                      # the units pointing at it still agree (`must_match`)
         if f.ref != ref or not f.must_match:
@@ -196,7 +216,7 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
             for theirs, mine in f.must_match.items():
                 want = str(row.get(theirs) or "")
                 if want and str(unit.get(mine) or "") != want:
-                    raise Refused(f"{unit['id']} has {n} {name} and is {mine} {unit.get(mine)}'s: the row would say "
+                    raise Mismatched(f"{unit['id']} has {n} {name} and is {mine} {unit.get(mine)}'s: the row would say "
                                   f"{theirs} {want} — change {unit['id']} first")
     if said is not None and old:
         blank = lambda v: None if v in (None, "") else v              # noqa: E731 — an empty word is not stored

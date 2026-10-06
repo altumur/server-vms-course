@@ -188,6 +188,19 @@ def test_a_row_points_only_at_what_agrees_with_it_and_a_unique_value_is_one_unit
     _refused(lambda: ctl.create({"name": "b", "owner": "bob", "home": "b1"}), "home b1 is owner ann's")
     ctl.create({"name": "b", "owner": "bob", "home": "b2"})
     _refused(lambda: ctl.update("b", {"home": "b1"}), "home b1 is owner ann's")
+    # …a refusal that depends on the rows standing: 409 with `fault: must_match` (ADR 0031's rule), either way
+    from tests.conftest import Served
+    from w2cplatform.console import SpecConsole, refused_status
+    from w2cplatform.spec import Mismatched
+    try:
+        ctl.update("b", {"home": "b1"})
+    except Mismatched as e:
+        assert refused_status(e) == 409 and e.fault == "must_match"
+    with Served(SpecConsole(ctl, wall=wall)) as call:
+        st, out = call("POST", "/items", {"name": "b-door", "owner": "bob", "home": "b1"})
+        assert st == 409 and out.get("fault") == "must_match" and "owner ann" in out["detail"], (st, out)
+        st, out = call("POST", "/items", {"name": "t-door", "tag": "t1"})                 # `unique`: the rows too
+        assert st == 409 and out.get("fault") == "unique" and "bin a" in out["detail"], (st, out)
     ctl.create({"name": "c", "owner": "bob", "home": "b9"})               # not declared: binds nothing
     from w2cplatform.variables import Garbled
     real = vars_.get
