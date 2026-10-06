@@ -20,7 +20,7 @@ b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type
 b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}],display:{kinds:{[P]:P}}},live:{name:"live",rows:"streams",id:"cam",about:{sub:"vms",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
 b.FIX["/cameras"]={configured:[{id:1,name:P,source:"driverpack://"+encodeURIComponent(P)+"/10.0.0.11/ch/1",enabled:true,labels:[P],folders:[p("f")+"/"+p("g")],ref:p("ref"),cred_secret:"***"},{id:2,name:P,source:P,enabled:false,labels:[],folders:[]}],
   rows:[{id:1,worker:p("w"),phase:"failed",epoch:P,why:P,warning:P,device_state:"opening",live_url:P}]};
-b.FIX["/servers"]={servers:{[p("s")]:{resource:P,resource_url:P,labels:[P],labels_source:"console",space:{total:9e9,free:1e9},workers:[{worker:p("w"),capacity:50,load:1,labels:P,state:P,released:false,slot_until:1,holds:[P],hung:true,hung_since:1,presence_unknown:P,
+b.FIX["/servers"]={servers:{[p("s")]:{resource:P,resource_url:P,labels:[P],labels_source:"console",space:{total:9e9,free:1e9},workers:[{worker:p("w"),status:{volume_missing:p("v"),shrink_pending:5e8,"writer.state":P},capacity:50,load:1,labels:P,state:P,released:false,slot_until:1,holds:[P],hung:true,hung_since:1,presence_unknown:P,
   name_conflict:{holder:P,holder_box:P,contenders:[{state:P,box:P,hostname:P,server:P,for_s:1}]}}],
   decommission:{by:P,at:1,why:P},decommission_refusal:P,decommission_warning:P,decommissionable:false,lost:[{place:P,worker:P}]}},policy:{servers:"shared"}};
 b.FIX["/rec/servers"]=b.FIX["/servers"];
