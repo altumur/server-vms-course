@@ -587,6 +587,15 @@ events:
       window: 60                       # a camera that cannot be reached posts this every pass — once every
                                        # two seconds, for as long as the network is down. The first one is
                                        # the news; the next thirty are the same news.
+    source-stats:
+      window: 60
+      # …and this is the case `by` exists for. The counters in this line GROW — `delivered` and
+      # `received` are different on every pass — so with the default identity two of them are never the
+      # same thing and nothing would ever be suppressed. What actually says "the same news" here is that
+      # nothing was dropped and nothing is queued: a healthy pipeline then writes one line a minute
+      # instead of one every four seconds, and the moment a frame is dropped the line goes out at once,
+      # unchanged and immediately, because that is a different reading.
+      by: [dropped, depth]
 
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
