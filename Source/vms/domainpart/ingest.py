@@ -276,7 +276,8 @@ def _a_road(road) -> None:
 
 def _a_primary(e) -> dict:
     """A camera's entry in the book of primaries: the cluster that records it (`recorded_by`), and — when it pushes —
-    the road to its ingest, and the backup's when it has one: `backup` is that road itself, `backup_on` its cluster."""
+    the road to its ingest, and the backup's when it has one: `backup` is that road itself. Where its backups are
+    (`backups`, `[{cluster, recording}]`) is the page's to read (ADR-0010, the addition): the camera pushes on roads."""
     if not isinstance(e, dict):
         raise TypeError(f"not an object: {type(e).__name__}")
     if e.get("ingest"):

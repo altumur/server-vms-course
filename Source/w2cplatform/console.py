@@ -298,6 +298,19 @@ def book_path(path: str):
     return (s, parts[1][len("books/"):]) if s is not None else None
 
 
+# A field a book shows, as a page is given it: a list or an object as it is (a list of objects without secrets goes out
+# as is: ADR-0010, the addition) — less every `*_secret` key at any depth. A secret is never shown: the spec refuses one
+# named in `show`, and one inside a shown value (a road's `token_secret`) stays in the process too.
+def _without_secrets(v, depth: int = 0):
+    if depth > 64:                                       # a JSON reader stops far sooner; a structure built in code may not
+        return None
+    if isinstance(v, dict):
+        return {k: _without_secrets(x, depth + 1) for k, x in v.items() if not is_secret_field(str(k))}
+    if isinstance(v, list):
+        return [_without_secrets(x, depth + 1) for x in v]
+    return v
+
+
 # What a book's entry that is no JSON object is: counted (`books_garbled` on the metrics page, as every table of rows) and
 # logged once, its bytes never (an entry carries tokens).
 BOOK_ENTRIES = Table("book", "left out of what the page is shown", "entry of a book")   # `books_garbled`
@@ -1639,7 +1652,8 @@ class SpecConsole:
     # A BOOK SHOWN (ADR-0010, the addition of 2026-10-06; ADR-0061): of each entry of this cluster's own copy of the book
     # (`domain/<sub>/<book>`, which the agent carried home), the fields the spec's `show` names, and nothing else — the
     # rest of an entry (the roads, and the tokens on them) is in the same JSON and stays in this process; so does a
-    # `*_secret` item, and an entry that is no JSON object. WHO SEES AN ITEM («Архитектор» 2026-10-06): an item whose key
+    # `*_secret` item, a `*_secret` key inside a shown list or object (`_without_secrets`), and an entry that is no JSON
+    # object. WHO SEES AN ITEM («Архитектор» 2026-10-06): an item whose key
     # is the `domain.ref` of a unit of this cluster, whoever may `view` that unit; a view of the whole cluster, every item;
     # an item no unit here is keyed by, only that view. The operator of one unit sees where it is kept, wherever
     # that is. The gate before this asked for any grant at all (`needs`: a GET naming no unit): nobody with no view gets
@@ -1676,7 +1690,7 @@ class SpecConsole:
                 BOOK_ENTRIES.garbled(f"{key}#{item}", e if isinstance(e, TypeError) else type(e).__name__)
                 continue
             BOOK_ENTRIES.parsed(f"{key}#{item}")
-            out[item] = {f: entry[f] for f in show if f in entry}
+            out[item] = {f: _without_secrets(entry[f]) for f in show if f in entry}
         return 200, out
 
     # This cluster's units of `s` by their `domain.ref` (`id`: the id itself), each as a grant is asked about it
