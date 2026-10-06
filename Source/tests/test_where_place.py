@@ -167,3 +167,21 @@ def test_a_places_door_is_asked_with_the_rights_of_the_unit_it_is_for():
     finally:
         srv.shutdown(); srv.server_close()
 
+
+def test_the_root_answers_under_its_own_name_as_at_its_root_and_another_name_is_no_route():
+    """`/<the root's own name>/<route>` is the root's `/<route>` (ADR-0061, дополнение п. 3; the product's
+    `Mount.rootByName`): a console that hands a `where` to this one does not know its layout and says `/testsub/where/…`
+    whatever testsub is here. Any route of the root — its `where`, its rows, its spec. A mount stays a mount; a name that
+    is neither the root nor a mount is 404 as before."""
+    m, ctls, srv, base, raw = _site()
+    try:
+        here, named = _get(base, "/where/c1"), _get(base, "/testsub/where/c1")
+        assert here[0] == named[0] and "worker" in named[1] and {**here[1], "scans": 0} == {**named[1], "scans": 0}, \
+            (here, named)                                                              # `/where/<id>`'s answer, the same
+        assert _get(base, "/testsub/counters")[:2] == _get(base, "/counters")[:2]
+        assert _get(base, "/testsub/spec")[1]["name"] == "testsub"
+        assert _get(base, "/testsub2/spec")[1]["name"] == "testsub2"                     # a mount is still the mount's
+        assert _get(base, "/nobody/where/c1")[0] == 404 and _get(base, "/testsub3/counters")[0] == 404
+    finally:
+        srv.shutdown(); srv.server_close()
+

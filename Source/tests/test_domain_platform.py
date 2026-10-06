@@ -295,13 +295,13 @@ def _at_site():
                                                                           ("south", "east", "gone")}})})
 
     def answer(path):
-        if path.startswith("/where/s1"):
+        if path.startswith("/testsub/where/s1"):
             return 200, b'{"worker":  "south-I1", "door": {"url": "http://south-srv:9000", "token": "door1.x"}}', {}
         if path.startswith("/testsub2/where/shelves/"):
             return 404, b'{"door": null, "unreachable": "s9@srv-2"}', {"X-Unreachable": "s9@srv-2"}
-        if path.startswith(("/where/big", "/domain/big")):                 # one byte over the limit of a reply
+        if path.startswith(("/testsub/where/big", "/domain/big")):                 # one byte over the limit of a reply
             return 200, b'"' + b"x" * ((1 << 20) - 1) + b'"', {}
-        if path.startswith("/where/locked"):
+        if path.startswith("/testsub/where/locked"):
             return 403, b'{"detail": "ann may not view testsub/locked", "error": "denied"}', {}
         return 200, b'{"topology": {}}', {}
     member = _FakeConsole(answer)
@@ -317,8 +317,9 @@ def _at_site():
 
 
 def test_a_where_asked_at_this_console_goes_to_the_members_console_with_the_token_once_and_comes_back_as_it_came():
-    """ADR-0061: `GET /domain/at/south/testsub/where/s1` is `GET <south's console>/where/s1` — testsub is the root there as
-    it is here — and `…/testsub2/where/shelves/s9?unit=…` is `/testsub2/where/shelves/s9?unit=…`, the query as it came.
+    """ADR-0061: `GET /domain/at/south/testsub/where/s1` is `GET <south's console>/testsub/where/s1` — whether testsub is
+    the root there is south's console's to know (дополнение п. 3) — and `…/testsub2/where/shelves/s9?unit=…` is
+    `/testsub2/where/shelves/s9?unit=…`, the query as it came.
     The person's token goes with it, `X-W2C-Via: north` says it was handed once; the reply comes back as it came — its
     status, its bytes (the door south signed), `X-Unreachable`, and a 403 in the words of south's gate. Each hop is a
     journal line `domain.forwarded {cluster, path, user, status}`. A `X-W2C-Via` the person sends on a route handed to the
@@ -331,7 +332,7 @@ def test_a_where_asked_at_this_console_goes_to_the_members_console_with_the_toke
             st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/s1", {"Authorization": "Bearer tok-ann"})
             assert st == 200 and raw == b'{"worker":  "south-I1", "door": {"url": "http://south-srv:9000", "token": "door1.x"}}'
             method, path, headers = member.seen[-1]
-            assert (method, path) == ("GET", "/where/s1"), member.seen
+            assert (method, path) == ("GET", "/testsub/where/s1"), member.seen
             assert headers["Authorization"] == "Bearer tok-ann" and headers["X-W2C-Via"] == "north", headers
             st, raw, h = _call_raw(base, "GET", "/domain/at/south/testsub2/where/shelves/s9?unit=testsub2/t1")
             assert member.seen[-1][1] == "/testsub2/where/shelves/s9?unit=testsub2/t1", member.seen[-1]
@@ -380,7 +381,8 @@ def test_a_where_is_handed_to_a_member_only_a_get_of_a_known_spec_to_a_member_wi
             assert st == 502 and json.loads(raw)["error"] == "gone's console did not answer", raw
             assert mnt.root.journal.lines == [("domain.forwarded", {"cluster": "gone", "path": "/domain/at/gone/testsub/where/g1",
                                                                     "user": "operator", "status": 502})]
-            # a real member's console: what the hop asks is its own `/where/…`; a hop onwards from it is refused there
+            # a real member's console: `/testsub/where/s1` is its root's `/where/s1` (дополнение п. 3); a hop onwards
+            # from it is refused there
             with _Env("CLUSTERS", f"north,south={there_url}"):
                 st, raw, _ = _call_raw(base, "GET", "/domain/at/south/testsub/where/s1")
                 assert st == 200 and json.loads(raw)["server"] == "south-srv", raw
@@ -414,7 +416,7 @@ def test_the_holders_cluster_is_a_member_for_a_hop_by_its_verified_record_and_a_
     try:
         with _Env("CLUSTERS", clusters + f",hq={member.url},rogue={member.url}"):
             st, raw, _ = _call_raw(base, "GET", "/domain/at/hq/testsub/where/s1", {"Authorization": "Bearer ann"})
-            assert st == 200 and member.seen[-1][1] == "/where/s1", (st, raw, member.seen)
+            assert st == 200 and member.seen[-1][1] == "/testsub/where/s1", (st, raw, member.seen)
             n = len(member.seen)
             north.vars.put(HOLDER, {"doc": json.dumps({**record, "holder": "rogue"}, sort_keys=True)})
             for who in ("rogue", "hq"):
@@ -436,7 +438,7 @@ def test_an_answer_over_one_mib_is_502_on_both_forwardings_and_nothing_of_it_is_
             for path in ("/domain/at/south/testsub/where/big", "/domain/big"):
                 st, raw, _ = _call_raw(base, "GET", path)
                 assert st == 502 and json.loads(raw)["error"] == "answer too large" and len(raw) < 512, (path, st, raw[:200])
-            assert [p for _, p, _ in member.seen] == ["/where/big", "/domain/big"], member.seen
+            assert [p for _, p, _ in member.seen] == ["/testsub/where/big", "/domain/big"], member.seen
             assert mnt.root.journal.lines[-1][1]["status"] == 502, mnt.root.journal.lines
     finally:
         srv.shutdown(); srv.server_close(); member.stop()

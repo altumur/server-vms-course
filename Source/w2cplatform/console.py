@@ -9,6 +9,8 @@ show them. So the console is one class, run from the same spec:
     GET  /platform/console.js[?v=1], /platform/console.css   the console module every page is built from, and its look;
                                  open (it draws the login); another version is 404
     GET/POST/DELETE /session, POST /session/break-glass   the door in (`session`): {open, login_url, user?, until?, via?}
+    …    /<sub>/<route>          a mounted subsystem's route; `/<the root's own name>/<route>` is the root's, served as
+                                 `/<route>` (`Mount.resolve`; ADR-0061, дополнение п. 3)
     GET  /spec                   what the page reads first: name, rows, id rule, fields, door, metric names
     GET  /<rows>                 {rows: the read model from every worker's heartbeat, configured: the units}
     GET  /where/<id>             the stored placement (why, its worker and server) and the assignments' answer (where, one
@@ -3491,10 +3493,16 @@ class Mount:
         self._adopt(console)
         return self
 
+    # `/<sub>/…` is that mount's; and `/<the root's own name>/…` is the root's, served exactly as `/…` (ADR-0061, дополнение
+    # п. 3; the product's `Mount.rootByName`): a console that hands a `where` to another cluster's console does not know
+    # that console's layout and always says `/<sub>/where/…` — the console that receives it knows its own root. Any
+    # route of the root, not only `where`. A name that is neither stays the root's path as it came: 404 as before.
     def resolve(self, path: str) -> tuple[SpecConsole, str]:
         head = path.split("/", 2)
         if len(head) >= 2 and head[1] in self.mounts:
             return self.mounts[head[1]], "/" + (head[2] if len(head) > 2 else "")
+        if len(head) >= 2 and self.root.spec.name and head[1] == self.root.spec.name:
+            return self.root, "/" + (head[2] if len(head) > 2 else "")
         return self.root, path
 
     def describe(self) -> dict:
@@ -3804,12 +3812,12 @@ class Mount:
     # ONE WAY TO HAND A REQUEST ON, WHOEVER IT GOES TO (ADR-0061: «механизм один — меняется только адрес»). The domain
     # holder's door (`domain_forward`) and a member's console (`member_forward`) are reached by this one function: the
     # person's token, the edit's `Idempotency-Key` and `X-Operator: console` go with it, and nothing else of what came in
-    # (ADR-0061, дополнение, 4) — an `X-W2C-Via` the person sent is not passed on; a hop to a member carries this
-    # console's own (`via`). The reply goes back AS IT CAME, the holder's as much as a member's (ADR-0061, дополнение, 6:
+    # (ADR-0061, дополнение п. 4) — an `X-W2C-Via` the person sent is not passed on; a hop to a member carries this
+    # console's own (`via`). The reply goes back AS IT CAME, the holder's as much as a member's (ADR-0061, дополнение п. 6:
     # one function, one behaviour): its status and its bytes, a door in it signed by whoever issued it, a refusal in that
     # gate's words, and `X-Unreachable` when it says what is missing (`where_place`) — never parsed, never wrapped in
     # `{"detail": …}`. It is served as JSON whatever it called itself: a page's reply on this console's origin is never a
-    # page. At most `FORWARD_MAX` of it (1 MiB, ADR-0061, дополнение, 2): a longer one is 502 «answer too large», and
+    # page. At most `FORWARD_MAX` of it (1 MiB, ADR-0061, дополнение п. 2): a longer one is 502 «answer too large», and
     # nothing of its body reaches the page. The status the page got is returned — 502 when the other side did not
     # answer, said in words (`who`).
     VIA = "X-W2C-Via"
@@ -3861,21 +3869,21 @@ class Mount:
     # `GET /domain/at/<cluster>/<sub>/where/<table>/<place>?unit=<sub>/<id>` go to `<that cluster's console>/<sub>/where/…`,
     # the same tail and query, by `forward` — only the address differs. What another cluster holds is looked at from
     # the page the person already has open, and the door to it is issued by THAT cluster's console with its own key
-    # (ADR-0015): this one neither signs nor touches the reply. The path names the subsystem whichever it is there; the
-    # root of that console answers at `/where/…` — by THIS process's layout (ADR-0061, дополнение, 3: one layout of
-    # consoles in a deployment): this process's root spec is the root there, every other spec a mount, `/<sub>/where/…`.
-    # Checked here, before dialing, each refusal in words:
-    #   any `X-W2C-Via` on `/domain/at/…` — a second hop, or a person's     400 «one hop» (ADR-0061, дополнение, 4)
+    # (ADR-0015): this one neither signs nor touches the reply. The path names the subsystem whichever it is there, and
+    # goes on as `/<sub>/where/…` always: whether `<sub>` is that console's root or a mount is the receiving console's
+    # to know (`resolve` strips its root's own name; ADR-0061, дополнение п. 3). Checked here, before dialing, each
+    # refusal in words:
+    #   any `X-W2C-Via` on `/domain/at/…` — a second hop, or a person's     400 «one hop» (ADR-0061, дополнение п. 4)
     #   not `GET`, or not a `where` route of a spec this process knows       404 «not a route handed to a member»:
     #                                                                        edits go through the holder, as before
     #   who is calling                                                       the gate, any grant (`admit`); THAT
     #                                                                        cluster's gate decides by its grants
     #   a member: on this cluster's carried list (`domain/member-list`), or the holder named in the carried record
     #   `domain/holder` VERIFIED by this cluster's key set (`term.read_holder`; the holder is on no list — ADR-0061,
-    #   дополнение, 1); and not this cluster. Otherwise 404. Not known is not "not a member" (дополнение, 5): a list or
+    #   дополнение п. 1); and not this cluster. Otherwise 404. Not known is not "not a member" (дополнение п. 5): a list or
     #   a key set that does not read, a store that does not answer — 503 in words
     #   no console of it in `CLUSTERS` (`domain.runtime.consoles_from_env`; not `/api/held`: that is the holder) — 404;
-    #   `CLUSTERS` that does not read — 503 with its words, not the process's end (дополнение, 5)
+    #   `CLUSTERS` that does not read — 503 with its words, not the process's end (дополнение п. 5)
     #   its console not answering — the network, not a rule                  502
     # A hop that was made is a journal line here, `domain.forwarded {cluster, path, user, status}`; the member's is its
     # own `door.issued`.
@@ -3944,7 +3952,7 @@ class Mount:
             return refuse(503, "CLUSTERS does not read", str(e))
         if not at:
             return refuse(404, "no console known", f"no console of {cluster} is known here (CLUSTERS)")
-        to = at + ("" if sub == self.root.spec.name else f"/{sub}") + f"/{tail}"
+        to = f"{at}/{sub}/{tail}"                        # root or mount: the receiving console's (дополнение п. 3)
         status = self.forward(h, method, to, query, 5.0, via=here, who=f"{cluster}'s console")
         self.root.journal.say("domain.forwarded", cluster=cluster, path=path, user=user, status=status)
 
