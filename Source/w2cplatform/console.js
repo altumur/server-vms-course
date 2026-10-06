@@ -62,7 +62,7 @@
       writeW: "Write", clusterW: "Cluster", toDomain: "To the domain", seesNets: "Sees networks", relayFor: "Relay for", behindBy: "behind by", aheadBy: "ahead by",
       memberNote: "Every connection is opened by the cluster: it publishes its own and takes books and edits. The domain does not dial it.",
       inDomain: "In the domain", byConfigShort: "In the domain by its configuration", memberSub: "A cluster of its own, in the domain",
-      domPlaced: "The domain is held by", termW: "term", backupKept: "This cluster keeps a backup copy of the domain: rev {r}.", noBackupKept: "This cluster keeps no backup copy of the domain.",
+      domPlaced: "The domain is held by", termW: "term", backupKept: "This cluster keeps a backup copy of the domain: rev {r} of term {t}.", noBackupKept: "This cluster keeps no backup copy of the domain.",
       overview: "Overview", serverCap: "Server", resourceIs: "Resource", drainingBd: "being drained", workersN: "Workers", diskFree: "Disk free",
       diskTotal: "Disk total", buildW: "Build", eventsOnDisk: "Events on disk", gbW: "GB", idle: "idle by policy", workerSilent: "The worker does not answer",
       loadW: "Load", capW: "Capacity", freeW: "Free", labelsW: "Labels", idleNote: "Idle by the policy servers: {p}: units are carried by one worker per server.",
@@ -122,7 +122,7 @@
       glassNote: "keep it apart from the site's computers; every use is an alarm in the cluster's journal",
       domain: "domain", noDomain: "this cluster is in no domain", holder: "holder", thisCluster: "this cluster", term: "term", backup: "backup copy",
       noBackup: "this cluster keeps no backup copy of the domain", move: "Move the domain here", moveHelp: "when the holder is dead: the newest copy anyone keeps, on a larger term; a live holder hands it over from its own page",
-      recoveryFile: "The domain's recovery file", moveBtn: "Move here", holderStolen: "The old holder was stolen",
+      lastCopy: "The newest copy", copiesW: "Copies the members keep", oldCopy: "an old copy", notCarried: "the holder no longer updates it", copyGarbled: "its row does not read", recoveryFile: "The domain's recovery file", moveBtn: "Move here", holderStolen: "The old holder was stolen",
       stolenHelp: "yes: what the domain's root issued before is revoked — the stolen holder's keys stop working", noRecovery: "no recovery file chosen",
       members: "members", publishes: "publishes", readHere: "read in place", never: "never published", silentFor: "silent", domSilent: "the domain is silent",
       knocking: "asking to join", admit: "Admit", fingerprint: "key fingerprint", fpCheck: "compare it with the fingerprint the server itself shows (member key in its agent's log); a mismatch means someone else",
@@ -216,7 +216,7 @@
       writeW: "Сохранить", clusterW: "Кластер", toDomain: "К домену", seesNets: "Видит сети", relayFor: "Ретранслятор для", behindBy: "отстают на", aheadBy: "спешат на",
       memberNote: "Все соединения открывает кластер: публикует своё, забирает книги и правки. Домен его не набирает.",
       inDomain: "В домене", byConfigShort: "В домене по конфигурации", memberSub: "Отдельный кластер, в домене",
-      domPlaced: "Домен размещён:", termW: "срок", backupKept: "Этот кластер хранит резервную копию домена: rev {r}.", noBackupKept: "Резервной копии домена этот кластер не хранит.",
+      domPlaced: "Домен размещён:", termW: "срок", backupKept: "Этот кластер хранит резервную копию домена: rev {r} срока {t}.", noBackupKept: "Резервной копии домена этот кластер не хранит.",
       overview: "Обзор", serverCap: "Сервер", resourceIs: "Ресурс", drainingBd: "выводится из эксплуатации", workersN: "Воркеров", diskFree: "Диск свободно",
       diskTotal: "Диск всего", buildW: "Сборка", eventsOnDisk: "События на диске", gbW: "ГБ", idle: "простаивает по политике", workerSilent: "Воркер не отвечает",
       loadW: "Нагрузка", capW: "Ёмкость", freeW: "Свободно", labelsW: "Метки", idleNote: "Простаивает по политике servers: {p}: единицы несёт один воркер на сервер.",
@@ -277,7 +277,7 @@
       glassNote: "храните его отдельно от компьютеров площадки; каждое использование — тревога в журнале кластера",
       domain: "домен", noDomain: "этот кластер не в домене", holder: "держатель", thisCluster: "этот кластер", term: "срок", backup: "резервная копия",
       noBackup: "резервной копии домена этот кластер не держит", move: "Перенести домен сюда", moveHelp: "когда держатель умер: берётся самая новая копия, на новом сроке; живой держатель передаёт домен со своей страницы",
-      recoveryFile: "Файл восстановления домена", moveBtn: "Перенести сюда", holderStolen: "Старый держатель украден",
+      lastCopy: "Новейшая копия", copiesW: "Копии у членов", oldCopy: "старая копия", notCarried: "держатель её больше не обновляет", copyGarbled: "её строка не читается", recoveryFile: "Файл восстановления домена", moveBtn: "Перенести сюда", holderStolen: "Старый держатель украден",
       stolenHelp: "да: всё, что корень домена выдавал раньше, отзывается — ключи украденного держателя перестают действовать", noRecovery: "файл восстановления не выбран",
       members: "члены", publishes: "публикует", readHere: "читается на месте", never: "ещё не публиковал", silentFor: "молчит", domSilent: "домен молчит",
       knocking: "просятся в домен", admit: "Принять", fingerprint: "отпечаток ключа", fpCheck: "сверьте его с отпечатком, который показывает сам сервер (member key в логе его агента); не совпадает — это кто-то другой",
@@ -1515,14 +1515,14 @@
       }
     }
     // Where the domain is held, and whether this cluster keeps a copy; moving it here when its holder is dead.
-    // GET /api/held, its public part: {cluster, holder (the holder's signed record), term, keys, backup: {rev}} — the copy's
-    // number only; what it holds is a member's to read (/api/backup), never the page's. The record's url is where the
+    // GET /api/held, its public part: {cluster, holder (the holder's signed record), term, keys, backup: {term, rev}} — the
+    // copy's term and revision, as they are (a rev compares only within a term); what it holds is a member's to read (/api/backup), never the page's. The record's url is where the
     // agents reach the holder, not a page: no link is made of it (the domain's page is the view's url, on its own card).
     function heldCard() {
       const hd2 = st.held; if (!hd2) return "";
       const r = hd2.holder, b = hd2.backup, here = r && r.holder === hd2.cluster;
       return card(h(cap(W.domainWord)), `<p>${h(W.domPlaced)} ${r ? (here ? `<b>${h(W.thisCluster)}</b> (${h(hd2.cluster)}) · ${h(W.termW)} ${h(hd2.term)}` : `<b>${h(r.holder)}</b> · ${h(W.termW)} ${h(hd2.term)}`) : h(W.none)}</p>
-        <p class="sub">${h(b ? W.backupKept.replace("{r}", b.rev) : W.noBackupKept)}</p>
+        <p class="sub">${h(b ? W.backupKept.replace("{r}", b.rev).replace("{t}", b.term) : W.noBackupKept)}</p>
         ${here || !C.may("admin", "domain") ? "" : `<p class="sub">${h(W.moveHelp)}</p><div style="display:flex;justify-content:flex-end"><button type="button" class="btn s" data-a="move">${h(W.move)}</button></div>`}`);
     }
     // A subsystem's tables under a server (the spec's servers.show: [{table, by, title, columns}]): the rows whose `by` is
@@ -1822,9 +1822,19 @@
             : `<p class="sub">${h(W.nothingStranded.replace("{t}", by.term ?? "?"))}</p>`);
       }
       const r = t.record || {}, to = t.can_hand_to || [];
-      return card(h(W.domTerm), `<div class="g">${fldRo(W.heldOn, r.holder || "—")}${fldRo(cap(W.term), t.term ?? "—")}${fldRo(cap(W.backupAtW), (t.backup_holders || []).join(", ") || W.noBackupYet)}</div>
+      return card(h(W.domTerm), `<div class="g">${fldRo(W.heldOn, r.holder || "—")}${fldRo(cap(W.term), t.term ?? "—")}${fldRo(cap(W.backupAtW), (t.backup_holders || []).join(", ") || W.noBackupYet)}${t.backup ? fldRo(W.lastCopy, "rev " + t.backup.rev + " · " + W.termW + " " + t.backup.term) : ""}</div>
         ${r.restored_from ? `<p class="sub">${h(W.restoredFrom.replace("{r}", r.restored_rev ?? "?").replace("{f}", r.restored_from))}</p>` : ""}
+        ${copiesHtml(t)}
         ${to.length && admin ? `<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn s" data-a="handover">${h(W.handOver)}</button></div>` : ""}`);
+    }
+    // Each member's copy, as it says it keeps it (term.copies), against the copy the holder points at now (term.backup):
+    // older by (term, rev) — «an old copy»; a member the holder no longer carries it to (not in backup_holders) — said
+    // so. The numbers as they are; a copy a former holder keeps is the last way back of a move, never thrown away.
+    function copiesHtml(t) {
+      const cs = Object.entries(t.copies || {}).sort(([a], [b]) => a.localeCompare(b)); if (!cs.length) return "";
+      const now = t.backup, carried = new Set(t.backup_holders || []);
+      const older = c => now && (c.term < now.term || (c.term === now.term && c.rev < now.rev));
+      return `<div style="margin-top:10px"><div class="pc-g">${h(W.copiesW)}</div>${cs.map(([m, c]) => `<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(m)}<small>${c.garbled != null ? h(W.copyGarbled) + ": " + h(c.garbled) : "rev " + h(c.rev) + " · " + h(W.termW) + " " + h(c.term)}</small></span><span style="display:flex;gap:6px">${c.garbled == null && older(c) ? `<span class="bd wait">${h(W.oldCopy)}</span>` : ""}${!carried.has(m) ? `<span class="bd off">${h(W.notCarried)}</span>` : ""}</span></div>`).join("")}</div>`;
     }
     function wireTerm(el, v) {
       const t = v.term || {}, by = t.deposed_by || {};
