@@ -169,7 +169,7 @@ def test_a_card_stops_trusting_the_book_when_its_agent_stops_whatever_the_agents
     `CARRIED_LOST_AFTER`, nobody vouches for the book, and the card records."""
     from tests.test_backup_archive import _camera_cluster
     box, card, row, carry = _camera_cluster()
-    carry(written=True, seen=False)
+    carry(running=True, seen=False)
     box.objects.put("domain/seen", json.dumps({"ts": box.wall() + AHEAD}).encode())       # an agent an hour ahead
     assert not card.primary_needs_cover(row)                                              # the room writes it
     box.wall.advance(card.CARRIED_LOST_AFTER + 1); box.clock.advance(card.CARRIED_LOST_AFTER + 1)

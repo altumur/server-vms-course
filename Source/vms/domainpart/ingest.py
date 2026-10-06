@@ -275,16 +275,14 @@ def _a_road(road) -> None:
 
 
 def _a_primary(e) -> dict:
-    """A camera's entry in the book of primaries: a cluster, and — when it pushes — the road to its ingest, and the
-    backup's when it has one."""
+    """A camera's entry in the book of primaries: the cluster that records it (`recorded_by`), and — when it pushes —
+    the road to its ingest, and the backup's when it has one: `backup` is that road itself, `backup_on` its cluster."""
     if not isinstance(e, dict):
         raise TypeError(f"not an object: {type(e).__name__}")
     if e.get("ingest"):
         _a_road(e["ingest"])
     if e.get("backup"):
-        if not isinstance(e["backup"], dict):
-            raise TypeError("its backup is not an object")
-        _a_road(e["backup"].get("ingest"))
+        _a_road(e["backup"])
     return e
 
 
@@ -2387,9 +2385,9 @@ class CameraPusher:
             if takes and ok:
                 road = ("primary", url, work["push"])
         if road is None and backup:
-            bing, bwork, burl = self._poll(backup["ingest"], "backup", 0.0 if self.busy() else wait)
+            bing, bwork, burl = self._poll(backup, "backup", 0.0 if self.busy() else wait)
             if bing is not None:
-                p, u, a, ok = self._serve(bing, backup["ingest"]["token_secret"], bwork, loose, "backup")
+                p, u, a, ok = self._serve(bing, backup["token_secret"], bwork, loose, "backup")
                 pushed, uploaded, performed = pushed + p, uploaded + u, performed + a
                 if ok:
                     road = ("backup", burl, bwork["push"])
@@ -2406,7 +2404,8 @@ class CameraPusher:
             self.uncovered = True                                      # the card writes what the stream cannot carry
         said = {"continue": dict(self.continued), "behind": round(behind, 1), "lagging": self.lag}
         if road is None:
-            self.state = f"no ingest of {e['cluster']} answered" + (" nor of its backup" if backup else "")
+            at = e["cluster"] if e.get("polls_only") else e["recorded_by"]     # the book of polls, or of primaries
+            self.state = f"no ingest of {at} answered" + (" nor of its backup" if backup else "")
             return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, **said}
         which, where, pushing = road
         self.road = which
@@ -2436,19 +2435,19 @@ def live_road(entry: dict, dial) -> str | None:
     if primary_takes(entry, answers(entry["ingest"])):                 # (the ingest's own word reaches the camera,
         return "primary"                                               # not the gateway: the book stands in for it)
     backup = entry.get("backup")
-    return "backup" if backup and answers(backup["ingest"]) else None
+    return "backup" if backup and answers(backup) else None
 
 
 def primary_takes(entry: dict, answered: bool, work: dict | None = None) -> bool:
     """Whether the camera's primary takes its stream. First what its ingest SAID — no answer, or "uncovered"
     (it should record and no recorder takes it): the primary's own word, fresh, and no domain in it. Only when
-    the ingest says nothing about it, the book: it should be written and is not — a stop, not a start (feedback
-    AB): a start has its grace."""
+    the ingest says nothing about it, the book: it is `enabled` and not `running` — a stop, not a start (feedback
+    AB): a start has its grace (`starting`, absent when false)."""
     if not answered:
         return False
     if work is not None and "uncovered" in work:
         return not work["uncovered"]
-    return not (entry.get("should") and not entry.get("written") and not entry.get("starting") and entry.get("backup"))
+    return not (entry.get("enabled") and not entry.get("running") and not entry.get("starting") and entry.get("backup"))
 
 
 # -- the standbys' gates: what the stream says (vms.recworker.RecWorker.stream_says) -------------------------

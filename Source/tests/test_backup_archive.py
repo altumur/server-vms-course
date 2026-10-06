@@ -356,9 +356,9 @@ def _camera_cluster():
     box, card, ring, act, _ = _camera()
     card.ring_film = lambda seconds: _film_on(box, ring, act, seconds)
 
-    def carry(should=True, written=True, seen=True, starting=False):   # what the camera's agent does on a pass
-        book = {"SN1": json.dumps({"cluster": "room", "recording": "SN1", "should": should, "written": written,
-                                   "starting": starting}, sort_keys=True)}
+    def carry(enabled=True, running=True, seen=True, starting=False):   # what the camera's agent does on a pass
+        book = {"SN1": json.dumps({"recorded_by": "room", "recording": "SN1", "enabled": enabled, "running": running,
+                                   **({"starting": True} if starting else {})}, sort_keys=True)}
         have, idx = box.vars.get("domain/vms/primaries")
         if have != book:
             box.vars.put("domain/vms/primaries", book, cas=idx)
@@ -391,23 +391,23 @@ def test_a_card_learns_about_its_primary_in_another_cluster_from_the_book_its_ag
     box, card, row, carry = _camera_cluster()
     assert not card.primary_needs_cover(row)                  # no book: a camera alone, nothing to stand in for
 
-    carry(written=False, starting=True)
+    carry(running=False, starting=True)
     assert not card.primary_needs_cover(row)                  # a recording starting: not yet
-    box.wall.advance(card.START_GRACE + 1); carry(written=False, starting=True)
+    box.wall.advance(card.START_GRACE + 1); carry(running=False, starting=True)
     assert card.primary_needs_cover(row)                      # …it took longer than a start takes
-    carry(written=True)
+    carry(running=True)
     assert not card.primary_needs_cover(row)                  # the room writes it
-    carry(written=False)
+    carry(running=False)
     assert card.primary_needs_cover(row)                      # it was written and stopped: at once (feedback AB)
 
-    carry(written=True)
+    carry(running=True)
     assert not card.primary_needs_cover(row)
     box.wall.advance(card.CARRIED_LOST_AFTER + 1)             # the agent has not reached the domain since —
     box.clock.advance(card.CARRIED_LOST_AFTER + 1)            # …by the card's own clock (`Eyes`; r29-writers2)
     assert card.primary_needs_cover(row)                      # nobody can vouch for the book: record
 
-    carry(should=False, written=False)                        # the operator switched the room's recording off
-    box.wall.advance(card.START_GRACE + 1); carry(should=False, written=False)
+    carry(enabled=False, running=False)                        # the operator switched the room's recording off
+    box.wall.advance(card.START_GRACE + 1); carry(enabled=False, running=False)
     assert not card.primary_needs_cover(row)
 
 
@@ -421,7 +421,7 @@ def test_the_book_is_written_to_flash_when_it_changes_and_its_freshness_is_not()
     for _ in range(20):
         box.wall.advance(5); carry()
     assert box.vars.get("domain/vms/primaries")[1] == idx         # twenty passes, no write
-    carry(written=False)
+    carry(running=False)
     assert box.vars.get("domain/vms/primaries")[1] != idx         # the room stopped: one write
 
 
@@ -432,11 +432,11 @@ def test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits():
     no recorder of its cluster has named yet is starting — and says it in the book (`starting`), a field
     that changes when a recording starts and when a recorder first reports it."""
     box, card, row, carry = _camera_cluster()
-    carry(written=True)
+    carry(running=True)
     assert not card.primary_needs_cover(row)
-    carry(written=False, starting=False)
+    carry(running=False, starting=False)
     assert card.primary_needs_cover(row)                      # no grace for a stop
-    carry(should=False, written=False)
+    carry(enabled=False, running=False)
     assert not card.primary_needs_cover(row)                  # a decision is still never covered
 
 
@@ -447,23 +447,23 @@ def test_a_backup_of_another_servers_camera_finds_its_primary_by_the_domains_nam
     covers when it stops."""
     box, card, row, carry = _camera_cluster()
     backup = {**row, "id": "SN1-copy", "cam": "ref:SN1"}
-    carry(written=True)
+    carry(running=True)
     assert card.carried_primary(backup, box.wall()) is False       # the first server writes it
-    carry(written=False, starting=False)
+    carry(running=False, starting=False)
     assert card.carried_primary(backup, box.wall()) is True        # it stopped: cover, at once
 
 
 def test_what_the_stream_says_comes_before_the_book():
     """The book of primaries is the domain's, and the domain may be what died with the primary: then the book
-    says "written" until it goes stale. A standby that can tell from its own stream — the camera came here, the
+    says "running" until it goes stale. A standby that can tell from its own stream — the camera came here, the
     card's camera did not hand its stream on — decides by that, at once; when the stream can say nothing, the
     book decides, as before."""
     box, card, row, carry = _camera_cluster()
-    carry(written=True)                                       # the book still says the primary writes
+    carry(running=True)                                       # the book still says the primary writes
     card.stream_says = lambda r: True                         # …but the stream is not being taken
     assert card.primary_needs_cover(row)
     card.stream_says = lambda r: False
-    carry(written=False, starting=False)
+    carry(running=False, starting=False)
     assert not card.primary_needs_cover(row)                  # the stream is taken: the book's word is older
     card.stream_says = lambda r: None
     assert card.primary_needs_cover(row)                      # it cannot say: the book decides
@@ -488,7 +488,7 @@ def test_a_short_break_of_a_pushed_stream_never_touches_the_card():
     """The camera pushes its stream and can continue it after a break. A ten-second drop: the card's gate keeps
     the ring and waits `defer_for`, the stream comes back, and nothing was written — no card wear, no backfill."""
     box, card, row, carry = _camera_cluster()
-    carry(written=True)
+    carry(running=True)
     card.ring_film(30)
     card.resumes = lambda r: True
     card.stream_says = lambda r: True                          # the break: the primary does not take the stream
@@ -505,7 +505,7 @@ def test_a_short_break_of_a_pushed_stream_never_touches_the_card():
 
 def test_a_long_break_releases_the_ring_from_before_the_break():
     box, card, row, carry = _camera_cluster()
-    carry(written=True)
+    carry(running=True)
     card.ring_film(100)                                        # the ring is full: its sixty seconds
     card.resumes = lambda r: True
     card.stream_says = lambda r: True
@@ -520,7 +520,7 @@ def test_a_long_break_releases_the_ring_from_before_the_break():
 
 def test_where_nobody_can_continue_the_stream_the_card_writes_at_once():
     box, card, row, carry = _camera_cluster()
-    carry(written=True)
+    carry(running=True)
     card.ring_film(100)                                        # the ring is full
     card.resumes = lambda r: False                             # a camera a server pulls: nothing to continue
     card.stream_says = lambda r: True
@@ -532,7 +532,7 @@ def test_where_nobody_can_continue_the_stream_the_card_writes_at_once():
 def test_a_card_stopped_during_a_break_writes_what_it_held():
     """Inside the deferral the ring is the ONLY copy of the break. Stopping used to drop it."""
     box, card, row, carry = _camera_cluster()
-    carry(written=True)
+    carry(running=True)
     card.ring_film(100)
     card.resumes = lambda r: True
     card.stream_says = lambda r: True
@@ -553,10 +553,10 @@ def test_a_break_the_book_reports_is_written_at_once_not_deferred():
     noticed late already; deferring on top of it would reach past the ring, and the start of the break — the one
     thing the ring is for — would be gone (the review's second pass)."""
     box, card, row, carry = _camera_cluster()
-    carry(written=True)
+    carry(running=True)
     card.ring_film(100)                                        # the ring is full
     card.resumes = lambda r: True                              # the camera could continue the stream…
-    carry(written=False)                                       # …but it is the book that says the room stopped writing
+    carry(running=False)                                       # …but it is the book that says the room stopped writing
     card.gate_pass()
     assert len(_on_card(card)) == 1 and card.holding["1-card"] is False
 
@@ -564,7 +564,7 @@ def test_a_break_the_book_reports_is_written_at_once_not_deferred():
 def test_an_orderly_stop_writes_the_rings_held_through_a_break():
     """`stop_all` goes past `_actuate`: the hook before it writes what the rings hold (the review's second pass)."""
     box, card, row, carry = _camera_cluster()
-    carry(written=True)
+    carry(running=True)
     card.ring_film(100)
     card.resumes = lambda r: True
     card.stream_says = lambda r: True

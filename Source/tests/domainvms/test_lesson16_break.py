@@ -495,7 +495,7 @@ def test_a_torn_book_entry_snapshot_shard_or_heartbeat_field_is_that_ones_troubl
     south, ingest, pusher, rq, down = _world(wall)
     _second(wall, pusher, 2)
     items, idx = pusher.flash.get(PRIMARIES_PATH)
-    pusher.flash.put(PRIMARIES_PATH, {**items, SERIAL: '{"cluster": "south", "ingest": {"urls": '}, cas=idx)   # half a write
+    pusher.flash.put(PRIMARIES_PATH, {**items, SERIAL: '{"recorded_by": "south", "ingest": {"urls": '}, cas=idx)   # half a write
     _second(wall, pusher, 2)
     assert [f["t"] for f in rq.drain()] == [1001.0, 1002.0, 1003.0, 1004.0] and "pushing" in pusher.state
     assert f"{PRIMARIES_PATH}/{SERIAL}" in BOOKS.bad

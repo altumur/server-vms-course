@@ -85,7 +85,7 @@ def test_the_camera_learns_where_to_push_from_its_book_and_the_book_does_not_chu
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     e = pusher.entry()
-    assert e["cluster"] == "south" and e["ingest"]["urls"] == URLS
+    assert e["recorded_by"] == "south" and e["ingest"]["urls"] == URLS
     ingest.poll(e["ingest"]["token_secret"], SERIAL)                          # the ingest takes the domain's token
     writes = cam.flash.writes
     for _ in range(10):
@@ -623,7 +623,7 @@ def test_every_member_camera_polls_so_a_camera_with_an_open_door_can_be_asked_to
     cams = {n: CameraPusher(n, d.flash, domain_pass.dial, clock=wall, perform=lambda a, n=n: acted[n].append(a) or "performed")
             for n, d in domain_pass.devices.items()}
     assert cams[OPEN].entry()["polls_only"] and cams[OPEN].entry()["ingest"]["urls"] == NORTH_URLS
-    assert cams[PULLED].entry()["cluster"] == "south" and cams[PULLED].entry()["ingest"]["urls"] == URLS
+    assert cams[PULLED].entry()["recorded_by"] == "south" and cams[PULLED].entry()["ingest"]["urls"] == URLS
     assert cams[PULLED].pass_once(["f"])["pushed"] == 0                # polls, never pushes: the recorder pulls
     left = gate_scenarios.on_event("vehicle")
     assert sorted((x["target"], x["state"]) for x in left) == [(OPEN, "asked"), (PULLED, "asked")]

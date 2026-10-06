@@ -932,8 +932,9 @@ class RecWorker(VmsWorker):
     #
     # So the domain, which reads both clusters, writes a BOOK OF PRIMARIES for the camera's cluster, and the
     # camera's agent carries it home like the grants: per camera, by the domain's name for it (`ref`), who
-    # records it, whether it SHOULD be written, whether it IS, and whether it is still STARTING (no recorder
-    # of that cluster has named it yet — the only case that gets the grace). No timestamps in it, on purpose: a book that
+    # records it (`recorded_by`), whether it SHOULD be written (`enabled`), whether it IS (`running`), and whether it
+    # is still STARTING (`starting`, there only when true: no recorder of that cluster has named it yet — the only case
+    # that gets the grace). No timestamps in it, on purpose: a book that
     # changed on every pass of the domain would be rewritten on the camera's flash every few seconds. How
     # current the book is comes separately — the time the agent last reached the domain, an object in the
     # cluster's object store (RAM on a camera). A book the agent has not refreshed for `lost_after` is a book
@@ -976,10 +977,10 @@ class RecWorker(VmsWorker):
         if stale:                                                # the book is as old as the agent's last contact
             self._not_written_since.pop(key, None)
             return True
-        if not e.get("should") or e.get("written"):
+        if not e.get("enabled") or e.get("running"):           # the product's names (`PrimaryEntry`, ADR-0003)
             self._not_written_since.pop(key, None)
             return False
-        if not e.get("starting"):                                # it was written and stopped: cover at once (feedback AB)
+        if not e.get("starting"):                                # absent: it ran and stopped — cover at once (feedback AB)
             self._not_written_since.pop(key, None)
             return True
         since = self._not_written_since.setdefault(key, now)    # still starting: every event begins this way
