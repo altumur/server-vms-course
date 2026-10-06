@@ -16,7 +16,7 @@ b.FIX["/domain"]={holder:"h",age:2,complete:true,member_list:{rev:3},
   members:[{name:"h",holder:true,state:"ok"},{name:"m-1",state:"ok",age:2,reaches:["v:a"],skew:1},{name:"m-2",state:"stale",age:99,error:P}],
   topology:{rev:4,centre:"",star:[],via:{"m-2":"m-1"},by:"ann"},knocking:[{name:"m-9",times:3,last:1,fingerprint:"ab:cd"}]};
 b.FIX["/domain/alarms"]={complete:false,sentence:"m-2 did not answer",events:[{t:1,kind:"silent",subsystem:"testsub",member:"m-1",unit:"7",note:P}]};
-b.FIX["/api/held"]={cluster:"m-1",holder:{holder:"h",term:5,url:"http://h:8070",kid:"k1",sig:"s"},term:5,keys:{doc:"{}"},backup:{rev:9}};
+b.FIX["/api/held"]={cluster:"m-1",holder:{holder:"h",term:5,url:"http://h:8070",kid:"k1",sig:"s"},term:5,keys:{doc:"{}"},backup:{term:4,rev:9}};
 b.FIX["/domain/keys"]={vars:[{key:"domain/x"}]};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
@@ -28,7 +28,7 @@ const btn=re=>[...d.querySelectorAll(".pc-main button")].find(x=>re.test(x.textC
 out.treeMembers=!!d.querySelector('[data-ref="member:m-1"]')&&!!d.querySelector('[data-ref="domain"]');
 pc.select("server:s-1");await b.ready(30);
 // где держатель и копия — из GET /api/held (дверь процесса, §10a), не /domain/held
-out.holderAndBackup=/held by h · term 5/.test(main())&&/backup copy of the domain: rev 9\./.test(main())&&!/of term/.test(main())&&!d.querySelector('.pc-main a[href="http://h:8070"]');   // the record's url is the agents' door, not a page
+out.holderAndBackup=/held by h · term 5/.test(main())&&/backup copy of the domain: rev 9 of term 4\./.test(main())&&!d.querySelector('.pc-main a[href="http://h:8070"]');   // the record's url is the agents' door, not a page
 pc.select("domain");await b.ready(30);
 out.holderInHead=/holder is h/.test(d.querySelector(".pc-hd").textContent);
 const it=n=>[...d.querySelectorAll(".pc-main .it")].find(x=>x.textContent.trim().startsWith(n));

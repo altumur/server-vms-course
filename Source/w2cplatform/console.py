@@ -3711,8 +3711,8 @@ class Mount:
     # `Idempotency-Key` and `X-Operator: console` go with it, and the answer comes back as it came: the domain decides.
     # THE DOMAIN'S DOORS OF THIS CLUSTER, TO PROCESSES (contract §10a; «Архитектор» 2026-10-06; `domain.term`). Asked no
     # person's token — processes call them, each with its own proof:
-    #   GET  /api/held      `{cluster, holder, term, keys, backup: {rev}}`: the holder's record and the key set this
-    #                       cluster holds, as signed, and the number of the backup copy kept here — public, proving
+    #   GET  /api/held      `{cluster, holder, term, keys, backup: {term, rev}}`: the holder's record and the key set this
+    #                       cluster holds, as signed, and which backup copy is kept here, by term and rev — public, proving
     #                       itself: what a member's agent follows the holder by (`domain.agent.HolderFollower`), what a
     #                       move reads the largest term and the keys by, and what the page shows on a server's overview
     #                       (contract §2). Never the backup's content

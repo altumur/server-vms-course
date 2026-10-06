@@ -376,3 +376,50 @@ def test_an_old_holder_that_learns_of_two_moves_from_its_own_agent_starts_depose
     PendingEdits(old.vars, wall).add("cam-SN3", "SN3", {"name": "later"}, {"name": "SN3"}, "anna")   # a write past it
     old.check()
     assert old.stranded_items() == kept                                  # decided once, not re-decided
+
+
+def test_the_holders_card_says_each_members_copy_by_term_and_rev_a_former_holders_and_a_garbled_one_too():
+    """A copy is said by its pair `{term, rev}` — a rev says nothing against another term's — and compared in one
+    place, the holder's card (`term_view`; ADR-0032, «Архитектор» 2026-10-06). At term 1 SN1 kept rev 1 and SN2 rev
+    5. SN0 died with SN2 off, and the domain was moved to SN1 from the newest copy it could reach — SN1's own rev 1:
+    term 2 counts on from rev 1. SN0 came back as a member, and SN1 pointed SN0 and SN3 at rev 2, then SN3 alone at
+    rev 3. The card on SN1 says the last copy it wrote (2, 3), who it points at, and every member's copy from its
+    report: SN3's current; SN0's — the former holder's — older by rev; SN2's, back on, older by term though its rev 5 is
+    the larger number — nobody's dropped; SN4's row does not read and is said so. A member's own `/api/held` says its
+    own pair and nothing of the others."""
+    from w2cplatform.domain.signer_service import Holder
+    from w2cplatform.domain.term import held
+    wall = Clock()
+    fed, devices, signer, offline, holder, agents = _site(wall, n=5)
+    holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door())
+    agents["cam-SN1"].sync()
+    for _ in range(4):
+        holder.backup(["cam-SN2"], devices["cam-SN0"].disk_door())
+    agents["cam-SN2"].sync()
+    devices["cam-SN2"].power_off()
+    devices["cam-SN0"].power_off()
+    new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
+    assert (new.term, new.backup_rev) == (2, 1), (new.term, new.backup_rev)
+    devices["cam-SN0"].boot()
+    assert holder.check() is False                                        # the former holder, a member now
+    devices["cam-SN2"].boot()
+    following = {n: _agent(fed, devices, n, "cam-SN1", wall) for n in ("cam-SN0", "cam-SN2", "cam-SN3", "cam-SN4")}
+    assert new.backup(["cam-SN0", "cam-SN3"], devices["cam-SN1"].disk_door()) == 2
+    following["cam-SN0"].sync(); following["cam-SN3"].sync()
+    assert new.backup(["cam-SN3"], devices["cam-SN1"].disk_door()) == 3
+    following["cam-SN3"].sync()
+    devices["cam-SN4"].flash.put(BACKUP, {"rev": "seven", "term": 2, "sha256": "x"})   # a row nobody can read as a pair
+    following["cam-SN2"].sync(); following["cam-SN4"].sync()
+
+    t = Holder(new.vars, devices["cam-SN1"].disk, new.signer, fed=fed, term=new, wall=wall).term_view()
+    assert t["backup"] == {"term": 2, "rev": 3} and t["backup_holders"] == ["cam-SN0", "cam-SN3"], t
+    copies = t["copies"]
+    assert sorted(copies) == ["cam-SN0", "cam-SN2", "cam-SN3", "cam-SN4"], copies
+    assert copies["cam-SN3"] == {"term": 2, "rev": 3}                     # the current one
+    assert copies["cam-SN0"] == {"term": 2, "rev": 2}                     # the former holder's: older, kept
+    assert copies["cam-SN2"] == {"term": 1, "rev": 5}                     # rev 5 > 3, and older: term first
+    assert "cam-SN2" not in t["backup_holders"]                           # nobody updates it, nobody drops it
+    assert sorted(copies["cam-SN4"]) == ["garbled"] and "seven" in copies["cam-SN4"]["garbled"], copies["cam-SN4"]
+
+    said = held("cam-SN2", devices["cam-SN2"].flash)
+    assert said["backup"] == {"term": 1, "rev": 5} and "copies" not in said    # its own pair, and only that

@@ -24,7 +24,7 @@ function fixtures(P,deposed){
     members:[{name:"hold",holder:true,state:"ok"},{name:p("m"),state:P,age:2,error:P,reaches:[P]},{name:"quiet",state:"silent",age:99}],
     term:deposed?{term:3,deposed:true,deposed_by:{holder:p("new"),term:4,url:P},
         stranded:[{path:"domain/pending/"+p("m"),key:p("k"),value:JSON.stringify({what:P})},{path:"domain/topology",key:"t",value:P}]}
-      :{term:3,record:{holder:"hold",restored_from:P,restored_rev:P},backup_holders:[p("b")],can_hand_to:[p("to"),"quiet"]},
+      :{term:3,record:{holder:"hold",restored_from:P,restored_rev:P},backup_holders:[p("b"),"quiet"],backup:{term:3,rev:7},copies:{[p("b")]:{term:3,rev:7},quiet:{term:2,rev:40},gone:{term:3,rev:5},bad:{garbled:P}},can_hand_to:[p("to"),"quiet"]},
     trust:{installed:true,domain:P,rev:5,root:P,current:P,issuing:[P],revoked_issuing:[P],holder_has_keys:true,
       members:{[p("m")]:{admitted_key:P+"a",presented_key:P+"b",keys_rev:5},quiet:{admitted_key:"aa",presented_key:"aa",keys_rev:4},ok:{admitted_key:"cc",presented_key:"cc",keys_rev:5}}},
     units:{testsub:[{sub:"testsub",id:"1",ref:p("ref"),cluster:p("m"),worker:P,server:P,phase:P,age:1,state:"live",view:{start:true}},
@@ -52,6 +52,11 @@ async function run(tag,P,deposed){
   out[T("onlyDomainRail")]=[...d.querySelectorAll(".pc-rail [data-s]")].map(x=>x.dataset.s).join()==="domain";
   out[T("askedNothingOfACluster")]=!asked.some(u=>/^\/(servers|drain|schema|metrics|unplaceable|things|testsub\/|events|domain\/held|domain\/shared\/)/.test(u));
   if(!deposed){
+    out[T("newestCopyByTermAndRev")]=[...d.querySelectorAll(".pc-main input")].some(x=>x.value==="rev 7 · срок 3");
+    // копии членов против новейшей: (term, rev) — сначала срок; кому держатель её больше не носит — сказано
+    const cp=n=>[...d.querySelectorAll(".pc-main .it")].find(x=>x.textContent.trim().startsWith(n))||{textContent:""};
+    out[T("copiesJudgedByTermThenRev")]=!/старая копия/.test(cp(P+"b").textContent)&&/rev 40 · срок 2/.test(cp("quiet").textContent)&&/старая копия/.test(cp("quiet").textContent)&&!/больше не обновляет/.test(cp("quiet").textContent)
+      &&/старая копия/.test(cp("gone").textContent)&&/держатель её больше не обновляет/.test(cp("gone").textContent)&&/строка не читается/.test(cp("bad").textContent)&&!/старая копия/.test(cp("bad").textContent);
     out[T("cardShownUnselected")]=!!d.querySelector(".pc-hd h1,.pc-main h1")&&!!cardOf(/Размещение/);
     out[T("treeRootDomainHolderAmongMembers")]=!!d.querySelector('.pc-tree [data-ref="domain"]')&&!!d.querySelector('.pc-tree [data-ref="member:hold"]')&&!!d.querySelector('.pc-tree [data-ref="member:quiet"]');
     const tr=cardOf(/Доверие/);
