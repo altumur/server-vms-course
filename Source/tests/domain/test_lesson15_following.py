@@ -168,16 +168,17 @@ def test_a_forged_or_unsigned_larger_term_is_followed_by_nobody():
     assert "refused from cam-SN2, cam-SN3" in a.followed, a.followed
 
 
-def test_held_says_the_record_the_key_set_and_the_number_of_the_backup_and_nothing_of_its_content():
-    """What a cluster's console answers at `/api/held`, for anybody: `{cluster, holder, term, keys, backup: {rev}}` —
-    the record it holds and the key set it carries, both as signed, and the number of the backup copy it keeps; never
-    the copy's content, which is the domain's state (`/api/backup`, a member's)."""
+def test_held_says_the_record_the_key_set_and_which_backup_by_term_and_rev_and_nothing_of_its_content():
+    """What a cluster's console answers at `/api/held`, for anybody: `{cluster, holder, term, keys, backup: {term, rev}}`
+    — the record it holds and the key set it carries, both as signed, and which backup copy it keeps, by the pair its
+    pointer is ordered by (a rev says nothing against another term's: ADR-0032); never the copy's content, which is the
+    domain's state (`/api/backup`, a member's). No `{rev}` alone beside it (ADR-0003)."""
     wall = Clock()
     fed, devices, signer, offline, holder, agents = one._site(wall)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
     agents["cam-SN1"].sync()
     said = held("cam-SN1", devices["cam-SN1"].flash)
     assert sorted(said) == ["backup", "cluster", "holder", "keys", "term"], said
-    assert said["holder"]["term"] == said["term"] == 1 and said["holder"]["sig"] and said["backup"] == {"rev": 1}
+    assert said["holder"]["term"] == said["term"] == 1 and said["holder"]["sig"] and said["backup"] == {"term": 1, "rev": 1}
     assert said["keys"]["current"] == signer.tokens.kid
     assert held("cam-SN2", devices["cam-SN2"].flash)["backup"] is None                 # keeps none

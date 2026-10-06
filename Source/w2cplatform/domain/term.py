@@ -138,10 +138,13 @@ def verified_record(doc, keys, now: float) -> dict | None:
 # THE PROCESS DOORS OF EVERY CLUSTER'S CONSOLE THAT A MOVE AND A FOLLOWING AGENT USE (contract §10a; «Архитектор»
 # 2026-10-06). Each cluster answers for what IT holds; nobody reads another cluster's store.
 #
-#     GET  /api/held      no token: `{cluster, holder, term, keys, backup: {rev}}` — the holder's record this cluster
-#                         holds (the holder's own claim on the holder's cluster, the record its agent carried home on a
-#                         member) as it was signed, its term, the key set it carries as it was signed, and the NUMBER of
-#                         the backup copy kept here (its pointer's `rev`; null — none). Public, and proving itself: read
+#     GET  /api/held      no token: `{cluster, holder, term, keys, backup: {term, rev}}` — the holder's record this
+#                         cluster holds (the holder's own claim on the holder's cluster, the record its agent carried home
+#                         on a member) as it was signed, its term, the key set it carries as it was signed, and WHICH
+#                         backup copy is kept here: its pointer's term and revision, a pair (null — none). A revision
+#                         says nothing against another term's — rev 7 of a new term is newer than rev 255 of the old
+#                         one — so a copy is never said by its `rev` alone (ADR-0032, «Архитектор» 2026-10-06). Public,
+#                         and proving itself: read
 #                         by an agent following the holder (`agent.HolderFollower`), by a move for the largest term and
 #                         the keys, and by the console module on a person's page (contract §2: the one process door it
 #                         reads). Never the backup's content — even its plain part is the domain's state
@@ -176,10 +179,61 @@ def held(cluster: str, vars_) -> dict:
         term = None
     ptr, _ = vars_.get(BACKUP)
     try:
-        backup = {"rev": int(ptr["rev"])} if ptr else None
+        backup = copy_of(ptr)
     except PARSE_ERRORS:
         backup = None
     return {"cluster": cluster, "holder": rec, "term": term, "keys": dict(keys) if keys else None, "backup": backup}
+
+
+def copy_of(ptr) -> dict | None:
+    """Which copy a backup pointer names, `{term, rev}` — the pair it is ordered by, and nothing of what it holds; None
+    for no pointer. Raises one of `PARSE_ERRORS` for a pointer that does not read."""
+    return {"term": int(ptr["term"]), "rev": int(ptr["rev"])} if ptr else None
+
+
+# THE COPIES ON THE HOLDER'S CARD (ADR-0032, «Архитектор» 2026-10-06). A member's console knows its own copy (`held`)
+# and neither the holder's nor anybody else's; the holder knows what it wrote and, from the members' REPORTS, what each
+# says it keeps. So the comparison lives on the holder's card (`signer_service.Holder.term_view`), and only there:
+#
+#     backup    the last copy the holder wrote — the newest by (term, rev) of the pointers it keeps for its backup
+#               holders (`domain/backup/<member>`); a pointer that does not read is left out of the newest
+#     copies    {<member>: {term, rev}} — the copy each member says it keeps: the `domain/backup` row its agent writes
+#               only when the copy it took matched the pointer and verified (`shared.carry`), carried up with every
+#               report (`uplink`). A member that keeps none is not listed; one whose row does not read is
+#               `{garbled: <why>}` — said, not left out. A former backup holder's copy too, and a former holder's:
+#               nobody updates them and nobody drops them — they are a move's last way back (`move_domain` reads the
+#               newest anyone keeps)
+def last_written(vars_) -> dict | None:
+    best = None
+    for path in vars_.list(BACKUP + "/"):
+        try:
+            c = copy_of(vars_.get(path)[0])
+        except PARSE_ERRORS:
+            continue
+        if c and (best is None or (c["term"], c["rev"]) > (best["term"], best["rev"])):
+            best = c
+    return best
+
+
+def copies(holder: "DomainHolder", members) -> dict:
+    out = {}
+    for name in members if holder.objects is not None else ():   # no store for reports: nobody's copy is known here
+        mine = holder.reported(name)
+        try:
+            mine.vars.list(BACKUP)                       # never reported, or its mark does not read: nothing to say
+        except Unreachable:
+            continue
+        try:
+            c = copy_of(mine.vars.get(BACKUP)[0])
+        except Unreachable as e:                         # the report's copy of the row does not parse
+            out[name] = {"garbled": str(e)}
+            continue
+        except PARSE_ERRORS as e:                        # it parses, and is no pointer
+            out[name] = {"garbled": f"{name}'s copy of {BACKUP} is no pointer ({type(e).__name__}: {e})"}
+            continue
+        if c is not None:
+            out[name] = c
+    return out
 
 
 def backup_message(cluster: str, member: str, at: float) -> bytes:

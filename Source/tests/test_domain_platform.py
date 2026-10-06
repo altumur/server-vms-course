@@ -1009,8 +1009,8 @@ def _member_signer(fed, wall, consoles=None):
 
 
 def test_a_clusters_console_says_held_to_anybody_the_backup_to_a_member_and_prepare_to_the_holder_alone():
-    """south's console, to processes: `/api/held` to anybody — exactly `{cluster, holder, term, keys, backup: {rev}}`, the
-    record and the key set south holds, signed, and the number of the backup copy it keeps, never its content;
+    """south's console, to processes: `/api/held` to anybody — exactly `{cluster, holder, term, keys, backup: {term, rev}}`,
+    the record and the key set south holds, signed, and which backup copy it keeps (term and rev), never its content;
     `/api/backup` only to a member that signs its ask with the key it was admitted
     with (unsigned 401, a name off the list 403, a member's name with another key 401, east itself 200); `/api/prepare`
     handed to south's signer, which prepares only for the holder of the current term — north's token key; unsigned,
@@ -1024,7 +1024,7 @@ def test_a_clusters_console_says_held_to_anybody_the_backup_to_a_member_and_prep
         st, said = _signed_get(console, "/api/held", {})
         assert st == 200 and sorted(said) == ["backup", "cluster", "holder", "keys", "term"], said
         assert said["cluster"] == "south" and said["holder"]["holder"] == "north" and said["term"] == 1
-        assert said["keys"]["current"] == signer.tokens.kid and said["backup"] == {"rev": 1}   # its number, no content
+        assert said["keys"]["current"] == signer.tokens.kid and said["backup"] == {"term": 1, "rev": 1}   # its pair, no content
         for path in ("/domain/held", "/domain/prepare"):
             assert _signed_get(console, path, {})[0] in (401, 404), path      # a person's route, no process door
             assert _signed_get(signer_url, path, {})[0] == 404, path

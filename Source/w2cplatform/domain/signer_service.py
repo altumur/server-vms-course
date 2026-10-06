@@ -222,11 +222,18 @@ class Holder:
         return out
 
     def term_view(self) -> dict:
-        """The term as the domain's page shows it (`view.term`): the claim, who keeps the backup, whom it can be
-        handed to."""
-        from .term import BACKUP
+        """The term as the domain's page shows it (`view.term`): the claim, who keeps the backup, the last copy written
+        (`backup: {term, rev}`) and the copy each member says it keeps (`copies`, `term.copies`) — the one place they
+        are compared (ADR-0032) —, whom it can be handed to."""
+        from .term import BACKUP, copies, last_written
         t = self.holder_says()
         t["backup_holders"] = sorted(p[len(BACKUP) + 1:] for p in self.vars.list(BACKUP + "/"))
+        t["backup"] = last_written(self.vars)
+        # every member on the list — a former backup holder, a former holder — and, where no list is kept (the
+        # lessons' site), every cluster of it but this holder
+        names = self.members.names() if self.members is not None else \
+            [n for n in (self.fed.clusters if self.fed is not None else ()) if n != self.term.name]
+        t["copies"] = copies(self.term, names)
         t["can_hand_to"] = self.hand_targets()
         return t
 
