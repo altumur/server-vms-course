@@ -201,15 +201,15 @@ def _held(box, key_source, **devkw):
 
 def test_the_holder_says_what_its_device_raises_and_can_do_once():
     """Only the process that opened the device knows it has one contact, two relays and its own motion
-    analytics. It writes that where automation reads it — `vms/devices/<device>`, keyed by device — and
+    analytics. It writes that where automation reads it — `vms/devices/<host>`, keyed by device — and
     writes it ONCE: on a camera the row is on flash, and a description does not change between passes. The
     same description leaves the cluster in the heartbeat, per camera (`can`), for a domain to read."""
     box = Box()
     w, cid = _held(box, "driverpack://acme/10.0.0.77/ch/1", rays=1, relays=2, presets=5, events=("motion",))
     w.refresh()
-    row, idx = box.vars.get("vms/devices/acme/10.0.0.77")
-    assert row == {"events": "command,command.failed,io.input,motion,silent", "rays": "1", "relays": "2",
-                   "ptz": "true", "presets": "5"}
+    row, idx = box.vars.get("vms/devices/10.0.0.77")
+    assert row == {"device": "10.0.0.77", "events": "command,command.failed,io.input,motion,silent", "rays": "1",
+                   "relays": "2", "ptz": "true", "presets": "5"}                       # a row of the table `devices`
     assert w.describe_devices() == 0                                    # memory, not the store: nothing again
     w.reconcile_once(); w.heartbeat_once()
     from w2cplatform.contract import Heartbeat
@@ -221,7 +221,34 @@ def test_the_holder_says_what_its_device_raises_and_can_do_once():
     w.release_slot()                                                    # a restart: a fresh memory…
     again, _ = _held(box, "driverpack://acme/10.0.0.77/ch/1", rays=1, relays=2, presets=5, events=("motion",))
     again.refresh()
-    assert box.vars.get("vms/devices/acme/10.0.0.77")[1] == idx         # …compared with the store: not rewritten
+    assert box.vars.get("vms/devices/10.0.0.77")[1] == idx         # …compared with the store: not rewritten
+
+
+def test_two_drivers_sessions_on_one_host_are_one_device_row_named_by_the_host():
+    """The row's name is the device's group, the host in its one spelling (ADR 0053; «Архитектор», 2026-10-06), not the
+    driver's session key: `acme/10.0.0.77` and `onvif/10.0.0.77:8000` are two sessions and one box, and one row
+    `vms/devices/10.0.0.77` — what either can do, the device can. Written through the table's field rules (`write_row`):
+    its key field `device` is the host. A file has no host, and no row."""
+    from vms.config import SPEC as VMS
+    from vms.controller import VmsController
+    from vms.worker import FakeDevice
+    box = Box()
+    w, _ = _held(box, "driverpack://acme/10.0.0.77/ch/1")
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    con.create_camera({"name": "gate", "source": "driverpack://onvif/10.0.0.77:8000/ch/2"})
+    con.create_camera({"name": "clip", "source": "driverpack://file/clip.mp4"})
+    devs = {"acme/10.0.0.77": FakeDevice("acme/10.0.0.77", channels=["1"], relays=1, events=("motion",), identity="SN-77"),
+            "onvif/10.0.0.77:8000": FakeDevice("onvif/10.0.0.77:8000", channels=["2"], relays=2, ptz=True),
+            "file/clip.mp4": FakeDevice("file/clip.mp4", channels=["1"], relays=4)}
+    w.device_factory = devs.get
+    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    w.refresh()
+    assert set(w.devices) == set(devs), w.devices                       # three sessions held…
+    assert box.vars.list("vms/devices/") == ["vms/devices/10.0.0.77"]  # …one row: the file has no host
+    row, _ = box.vars.get("vms/devices/10.0.0.77")
+    assert row == {"device": "10.0.0.77", "events": "command,command.failed,motion,silent", "rays": "0", "relays": "2",
+                   "ptz": "true", "presets": "0", "identity": "SN-77"}, row
+    assert w.describe_devices() == 0                                    # one row, written once
 
 
 def test_a_scenario_is_checked_against_what_the_units_are():
@@ -276,9 +303,9 @@ def test_a_device_nobody_has_held_is_not_refused_and_a_scenario_that_stops_fitti
     assert st["unchecked"] == ["camera 20 has not said what it raises — its device has not been held yet; "
                                "'io.input' is not checked"] and "unfit" not in st and st["phase"] != "refused"
 
-    box.vars.put("vms/devices/acme/10.0.0.20", {"events": "command,command.failed,io.input,silent", "rays": "2",
+    box.vars.put("vms/devices/10.0.0.20", {"device": "10.0.0.20", "events": "command,command.failed,io.input,silent", "rays": "2",
                                                 "relays": "0", "ptz": "false", "presets": "0"})   # held, at last
-    box.vars.put("vms/devices/acme/10.0.0.77", {"events": "command,command.failed,silent", "rays": "0",
+    box.vars.put("vms/devices/10.0.0.77", {"device": "10.0.0.77", "events": "command,command.failed,silent", "rays": "0",
                                                 "relays": "0", "ptz": "false", "presets": "0"})   # the lobby, replaced
     w.reconcile_once()
     st = w.status()[0]

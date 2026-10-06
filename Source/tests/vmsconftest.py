@@ -27,10 +27,10 @@ def door_site(box) -> None:
     would have written on its first pass (`VmsWorker.describe_devices`)."""
     box.vars.put("vms/cameras/12", {"id": "12", "name": "front door", "source": "driverpack://acme/10.0.0.90/ch/1",
                                     "kind": "io"})
-    box.vars.put("vms/devices/acme/10.0.0.90", {"events": "command,command.failed,io.input,silent", "rays": "1",
+    box.vars.put("vms/devices/10.0.0.90", {"device": "10.0.0.90", "events": "command,command.failed,io.input,silent", "rays": "1",
                                                 "relays": "2", "ptz": "false", "presets": "0"})
     box.vars.put("vms/cameras/7", {"id": "7", "name": "lobby", "source": "driverpack://acme/10.0.0.77/ch/1"})
-    box.vars.put("vms/devices/acme/10.0.0.77", {"events": "command,command.failed,motion,silent", "rays": "0",
+    box.vars.put("vms/devices/10.0.0.77", {"device": "10.0.0.77", "events": "command,command.failed,motion,silent", "rays": "0",
                                                 "relays": "0", "ptz": "true", "presets": "5"})
     box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "enabled": "true"})
 

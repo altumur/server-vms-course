@@ -691,6 +691,18 @@ set()
 
 Сверх основы — то, что говорит секция спеки `worker:`. `writes: [<таблица>]` — строки своих таблиц, которые воркер пишет сам, потому что нашёл, чем вещь оказалась (открытие, а не решение: у `testsub2` это `shelves`, у VMS в М10B — `devices`). `requests: [<подсистема>]` — строки запросов тех подсистем, которым этот воркер подаёт просьбы (`<подсистема>/requests/*`: у `testsub2` — `testsub`). Третий ключ, `reads`, в этот список не входит: на коробке чтение не ограничено, а в кластере он ложится в список чтения роли (шаг 18). Так что права воркера тоже вырезаны из YAML — только из другой секции, и подсистема без `worker:` получает ровно основу.
 
+Но `writes` называет не любое семейство под `<sub>/`. Воркер пишет строки своих единиц (`unit.rows`) или строки **объявленной** таблицы — той, чью форму спека говорит (`tables.<t>: {key, fields}`, шаг 14), и пишет их через её правила полей (`tables.write_row`), как пишет консоль. Иначе токен воркера писал бы строки без формы, которых никто не обслуживает. Загрузчик проверяет это сразу после таблиц (ADR 0012, решение «Архитектора» с «Паритетом» 2026-10-06):
+
+```python
+        stray = [w for w in self.worker_writes if w != self.rows and w not in self.table_specs]
+        if stray:
+            raise ValueError(f"spec {self.name}: worker.writes names {', '.join(stray)} — neither its units' rows "
+                             f"({self.rows}) nor one of its declared tables ({', '.join(self.table_specs) or 'none'}); "
+                             f"declare it under `tables:` with its key and fields, or write nothing there")
+```
+
+Таблица, только **названная** (`tables: [x]`), — не объявленная: формы у неё нет, и `writes: [x]` тоже отказ. У `testsub2` `writes: [shelves]`, и `shelves` объявлена; у шлюза живого видео `writes: [streams]` — его собственные единицы; у VMS `writes: [devices]` — таблица `devices`, объявленная в её спеке (М10B, урок 25). Тест: `test_spec_keys.py::test_a_worker_writes_its_units_rows_or_its_declared_tables_and_any_other_family_does_not_load`.
+
 ## Шаг 16 — Три токена, выведенные из одного файла
 
 Соберём итог урока в строки, которые стоят в точках входа процессов платформы (`w2cplatform/host.py`):
@@ -1056,6 +1068,7 @@ def refuse_unknown(name, d: dict) -> None:
 | Спецификация не загружается: «console.running names one of its metrics» | `console: {running: …}` называет метрику, которой нет в `metrics:`. Объявите её — `{name, from: status.phase, agg: count, equals: running, live: true}`, — своего счётчика работающих у платформы нет. |
 | Спецификация не загружается: «no spec says `…`» | Ключа с этим путём нет в словаре (шаг 20, `speckeys.KEYS`): опечатка или слово чужого словаря. Сверьте ключ с таблицами — принять и не читать загрузчик не умеет. |
 | Спецификация не загружается: «a route the console answers itself» | Таблица или `unit.rows` названы маршрутом консоли (`marks`, `events`, `servers`, …, `spec.CONSOLE_ROUTES`). Назовите семейство иначе. |
+| Спецификация не загружается: «worker.writes names … — neither its units' rows nor one of its declared tables» | Воркер назвал семейство без формы. Объявите таблицу под `tables:` с `key` и `fields` (только имя в списке `tables: [x]` — не объявление) или не пишите туда. |
 | Воркер получает `Forbidden` на строку своей таблицы или на чужой запрос | Таблица не названа в `worker.writes` или подсистема — в `worker.requests`: права воркера сверх основы приходят только из `worker:`. |
 | Воркер получает `RequestRefused` от `Worker.file_request`: «does not name … in `worker.requests`» | Подсистема не названа в `worker.requests`: база подаёт заявки только туда, что названо, на любом хранилище — и на коробке, где файловое хранилище прав не сверяет (ADR-0013). Назовите её в спеке воркера. |
 

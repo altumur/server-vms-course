@@ -25,7 +25,7 @@ of a scenario it cannot run."""
 #
 # **The catalogue is not the device.** `ACTIONS` says preset is a thing automation may ask for; it does not
 # say camera 12 has a telemetry, or that it raises `io.input`, or that detector `7` exists. That is a FACT,
-# and only the holder of the device knows it: it writes it in `vms/devices/<device>` (`config.describe`).
+# and only the holder of the device knows it: it writes it in `vms/devices/<host>` (`config.describe`, the host ADR 0053).
 # `Catalog` reads those rows beside the operator's own (`vms/cameras/*`, `det/units/*`), and the evaluator checks a
 # scenario against both on its pass. A misfit is refused there; a scenario the fact cannot vouch for yet (the device
 # has never been held) runs and is named on every pass.
@@ -43,7 +43,7 @@ from w2cplatform.doors import numeric, unit_ref
 from w2cplatform.rows import PARSE_ERRORS, Table
 from w2cplatform.variables import Variables
 
-from .config import AUTO_SPEC, DET_SPEC, DEVICES, HOLDER_EVENTS, SPEC as VMS_SPEC, device_of, parse_device_row
+from .config import AUTO_SPEC, DET_SPEC, DEVICES, HOLDER_EVENTS, SPEC as VMS_SPEC, device_row_name, parse_device_row
 
 # A trigger names the subsystem whose events it watches and the kind of event, and may narrow it to one
 # unit and to fields of the event. Four keys and no more: anything a fifth key would express is either a
@@ -118,7 +118,10 @@ class Catalog:
     def device(self, cam: dict) -> dict | None:
         if not cam.get("source"):
             return None
-        it, _ = self.vars.get(VMS_SPEC.sub.config(DEVICES, device_of(str(cam["source"]))))
+        name = device_row_name(str(cam["source"]))      # the row's name is the host (ADR 0053), not the driver's key
+        if not name:
+            return None                                  # a source on no host (a file): no device row, nothing said
+        it, _ = self.vars.get(VMS_SPEC.sub.config(DEVICES, name))
         return parse_device_row(it)
 
     # …and asked from a check: a device row or a source that does not read is that camera's "not said yet".
