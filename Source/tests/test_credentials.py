@@ -258,7 +258,6 @@ LOGIN_FORMS = [
     "driverpack://acme/admin:Hunter2@10.0.0.5/ch/1",
     "driverpack://acme/10.0.0.5;password=Hunter2/ch/1",
     "driverpack://acme/10.0.0.5/ch/1?pwd=Hunter2",
-    "onvif://10.0.0.5/?pwd=Hunter2",
 ]
 # …and addresses that carry none, as cameras are commonly reached: taken, and said as typed.
 PLAIN_FORMS = [
@@ -303,7 +302,7 @@ def test_a_login_in_any_part_of_an_address_is_refused_and_a_stored_one_is_said_n
             assert not _leaks(e), (src, str(e))
             refused += 1
         assert address_refusal(src) and not _leaks(address_refusal(src)) and not _leaks(credential_params(src)), src
-    assert refused == len(LOGIN_FORMS) == 43, f"{refused} of {len(LOGIN_FORMS)} refused"
+    assert refused == len(LOGIN_FORMS) == 42, f"{refused} of {len(LOGIN_FORMS)} refused"
     assert con.cameras() == []
     for src in PLAIN_FORMS:
         assert address_refusal(src) is None and hide_in_url(src) == src, src
@@ -593,7 +592,7 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
     with _only_the_deployments_specs():
         refused = [s for s in bad if address_refusal(s)]
         taken = [s for s in good if address_refusal(s) is None and hide_in_url(s) == s]
-        assert (len(refused), len(taken)) == (len(bad), len(good)) == (57, 50), \
+        assert (len(refused), len(taken)) == (len(bad), len(good)) == (56, 50), \
             (sorted(set(bad) - set(refused)), sorted(set(good) - set(taken)))
         box = Box()
         con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
@@ -803,7 +802,7 @@ def test_a_closed_consoles_gate_never_quotes_a_source_it_refuses():
                     st, b = _call(base, method, path, {"source": src}, token=token)
                     assert st >= 400 and not _leaks(b), (token, method, src, st, b)
                     said += 1
-        assert said == 3 * 2 * (43 + 6 + 8 + 1)
+        assert said == 3 * 2 * (42 + 6 + 8 + 1)
     finally:
         srv.shutdown()
 

@@ -119,8 +119,9 @@ def _hold(found: set[str], path: str, head: str, what: str) -> None:
     debt = _debt(path)
     fresh, gone = sorted(found - debt), sorted(debt - found)
     if gone and os.environ.get("W2C_SPEC_SHRINK"):
-        with open(path, "w", encoding="utf-8") as f:            # the lines still true, as written: their tails stay
-            f.write(head + "".join(f"{ln}\n" for k, ln in _lines(path) if k in found))
+        keep = [ln for k, ln in _lines(path) if k in found]     # the lines still true, as written: their tails stay —
+        with open(path, "w", encoding="utf-8") as f:            # read before the file is opened for writing
+            f.write(head + "".join(f"{ln}\n" for ln in keep))
         gone = []
     assert not fresh, (f"{len(fresh)} new {what} — give the other side the key, or agree another; the debt is not "
                        f"added to:\n  " + "\n  ".join(fresh))
