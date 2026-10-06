@@ -43,12 +43,12 @@ domain:
   ref: ref
   view: [name, enabled]   # what the holder knows of a camera: its name, and whether it is on (domain.edit)
   edit: [enabled]
-  books: [sources, primaries, poll, upstream, asks]
+  books: [sources, primaries, polls, upstream, asks]
   kept: [crossings, roads]
   tables: [crossings]
   tokens:
     stream: {lifetime: 86400, claims: [aud, ref]}
-    ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}
+    ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
   shared: [folders, alarms, events_retention_days]
   keys:
     - {id: roads, keys: [domain/vms/roads]}
@@ -120,13 +120,13 @@ def kept() -> list[str]:
 
 ## Шаг 3 — Книги: строка на каждого члена
 
-**`books: [sources, primaries, poll, upstream, asks]`** — строки, которые у держателя лежат по одной на члена, `domain/vms/<книга>/<член>`, а агент члена уносит домой как `domain/vms/<книга>`. Что в них — дело VMS и следующих уроков:
+**`books: [sources, primaries, polls, upstream, asks]`** — строки, которые у держателя лежат по одной на члена, `domain/vms/<книга>/<член>`, а агент члена уносит домой как `domain/vms/<книга>`. Что в них — дело VMS и следующих уроков:
 
 | Книга | Для кого | Урок |
 |---|---|---|
 | `sources` | кластер записи: где последний раз видели камеры других кластеров, которые он пишет | 2 |
 | `primaries` | кластер камеры: кто её пишет, пишется ли, куда толкать | 2, 3 |
-| `poll` | толкающая камера, которую никто не пишет: приёмник, который она опрашивает | 3 |
+| `polls` | толкающая камера, которую никто не пишет: приёмник, который она опрашивает | 3 |
 | `upstream` | ретранслятор: приёмник центра по каждой камере | 4 |
 | `asks` | камера-триггер сценария: кого и какими дорогами она может просить | 3, 4 |
 
@@ -185,7 +185,7 @@ CROSSINGS = _kept("crossings")
 ```yaml
   tokens:
     stream: {lifetime: 86400, claims: [aud, ref]}
-    ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}
+    ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
 ```
 
 Подписывающий выпускает только объявленное (`trust.tokens.DeclaredIssuer`): вид, которого не объявил никто, и утверждение, которого нет в списке вида, — отказ:
