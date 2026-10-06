@@ -14,6 +14,7 @@ a holder's `unknown`) writes BY THE INDEX IT READ: a conflict is read again — 
 writes again, eight times at most.
 """
 import json
+import logging
 import threading
 import time
 
@@ -22,7 +23,7 @@ from tests.test_holder_requests import Holder, _ask, _holder, _look
 from w2cplatform import requests
 from w2cplatform.canonical import canonical_json
 from w2cplatform.objects import FsObjectStore, bytes_index
-from w2cplatform.requests import CLOSE_ATTEMPTS, MARK_ERROR, complete_mark, mark_error
+from w2cplatform.requests import CLOSE_ATTEMPTS, MARK_ERROR, MARK_TEXT, complete_mark, mark_error, mark_text
 from w2cplatform.spec import SpecController
 
 
@@ -277,3 +278,104 @@ def test_every_mark_with_an_outcome_says_when_it_was_made_and_when_it_ended():
     _look(w, 1)
     m = _mark(box, spec, "r1")
     assert m["outcome"] == "performed" and m["at"] == began and m["ended_at"] == began + 3, m
+
+
+# A garbled or hostile mark another wrote: an `instance` of ten thousand characters, a newline, an escape, a NUL, a
+# carriage return and U+2028 in it — and, as a reader says it, one line of `MARK_TEXT` characters and `…`.
+HOSTILE = "box-b\n\x1b[31m" + "x" * 9980 + "\r\n\x00 \t" + "y" * 5
+SAID = "box-b  [31m" + "x" * 69 + "…"
+
+
+def _one_line_and_short(text: str, clipped: str) -> None:
+    assert clipped in text, (clipped, text[:200])
+    assert text.isprintable() and len(text) < 400, repr(text[:200])                  # no control character, no flood
+
+
+class _Said(logging.Handler):
+    """Every line the platform logs while it stands, as its reader would see it."""
+
+    def __init__(self):
+        super().__init__(logging.DEBUG)
+        self.lines: list[str] = []
+        self.logger = logging.getLogger("w2cplatform")
+
+    def emit(self, record):
+        self.lines.append(record.getMessage())
+
+    def __enter__(self):
+        self.level = self.logger.level
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(self)
+        return self
+
+    def __exit__(self, *exc):
+        self.logger.removeHandler(self)
+        self.logger.setLevel(self.level)
+
+
+def test_a_marks_words_are_said_on_one_line_cut_at_eighty_characters():
+    """The product's `markText` (80 and `…`), and one line: what is not printable is a space. By characters, after the
+    word is a field's text (a string as it is, the rest its JSON); a mark with no such word says ""."""
+    assert MARK_TEXT == 80 and mark_text({"instance": HOSTILE}, "instance") == SAID
+    assert mark_text({"slot": "w-1"}, "slot") == "w-1" and mark_text({"slot": None}, "slot") == ""
+    assert mark_text({}, "slot") == "" and mark_text(None, "slot") == "" and mark_text("garbled", "slot") == ""
+    assert mark_text({"o": "a" * 80}, "o") == "a" * 80 and mark_text({"o": "я" * 81}, "o") == "я" * 80 + "…"
+    assert mark_text({"o": True}, "o") == "true" and mark_text({"o": 5.0}, "o") == "5"
+    assert mark_text({"o": {"b": 1, "a": "\n"}}, "o") == '{"a":"\\n","b":1}'
+    assert mark_text({"o": "a b\u0085c\td"}, "o") == "a b c d"
+    assert mark_text({"o": float("nan")}, "o") == "nan"
+
+
+def test_a_foreign_marks_words_are_clipped_where_they_are_said_and_the_mark_is_kept_whole():
+    """A mark another instance (or the reaper) wrote is another writer's data. Wherever a reader SAYS one of its words —
+    `unknown: an earlier instance (…) began it` in the answer, the `command.failed` event and the log line; the
+    `outcome` and `slot` of an answer said again; the reaper's line of an answer that never reached a heartbeat — it says
+    it on one line and at most 80 characters (`mark_text`, the product's `markText`). The mark itself is not rewritten
+    by the reader: its `instance` stays as its writer wrote it."""
+    box, spec = Box(), testsub()
+    w = _holder(box, spec, ["c1", "c2", "c3"])
+    events: list[tuple] = []
+    real = w.observe
+
+    def observe(unit, kind, **fields):
+        events.append((kind, dict(fields)))
+        return real(unit, kind, **fields)
+
+    w.observe = observe
+    _ask(box, spec, "theirs", "c1", 1)                                                # begun elsewhere, in time
+    _other(box, spec, "theirs", "c1", instance=HOSTILE, slot=HOSTILE)
+    box.vars.put(spec.sub.request_key("late"), {"unit": "c2", "add": "1", "valid_until": str(box.wall() - 1)})
+    _other(box, spec, "late", "c2", instance=HOSTILE)                                 # …and past its deadline
+    _ask(box, spec, "answered", "c3", 1)
+    box.objects.put(spec.sub.command_key("answered"), canonical_json(
+        {"instance": HOSTILE, "slot": HOSTILE, "unit": "c3", "outcome": HOSTILE, "at": box.wall()}).encode())
+    with _Said() as said:
+        done = _look(w, 3)
+    by = {d["request"]: d for d in done}
+    for rid in ("theirs", "late"):
+        _one_line_and_short(by[rid]["error"], f"an earlier instance ({SAID}) began it")
+        m = _mark(box, spec, rid)
+        assert m["instance"] == HOSTILE and m["outcome"] == "unknown", rid              # kept whole: only what is said
+        assert m["error"] == mark_error(by[rid]["error"]) and SAID in m["error"]
+    assert _mark(box, spec, "theirs")["slot"] == HOSTILE
+    assert (by["answered"]["answered"], by["answered"]["by"]) == (SAID, SAID)
+    failed = [f for k, f in events if k == "command.failed"]
+    assert len(failed) == 2 and all(f["outcome"] == "unknown" for f in failed), events
+    for f in failed:
+        _one_line_and_short(f["error"], f"({SAID})")
+    quoting = [line for line in said.lines if "box-b" in line]
+    assert len(quoting) == 3, said.lines                                              # two not performed, one said again
+    for line in quoting:
+        _one_line_and_short(line, SAID)
+    assert json.loads(box.objects.get(spec.sub.command_key("answered")))["outcome"] == HOSTILE   # not rewritten
+    # the reaper: an answer that never reached a heartbeat, its row cleared and its `outcome` said in the line
+    con = SpecController(spec, box.vars, box.objects, wall=box.wall)
+    old = box.wall() - requests.REAP_AFTER - 5
+    box.vars.put(spec.sub.request_key("gone"), {"unit": "c1", "add": "1", "valid_until": str(old)})
+    box.objects.put(spec.sub.command_key("gone"), canonical_json(
+        {"instance": HOSTILE, "slot": "w-9", "unit": "c1", "outcome": HOSTILE, "at": old}).encode())
+    with _Said() as said:
+        requests.clear_requests(con)
+    [line] = [line for line in said.lines if "gone" in line]
+    _one_line_and_short(line, f"was answered ({SAID})")
+    assert json.loads(box.objects.get(spec.sub.command_key("gone")))["outcome"] == HOSTILE

@@ -18,7 +18,7 @@ import hashlib
 import json
 import logging
 
-from .canonical import canonical_json
+from .canonical import canonical_json, field_text
 from .rows import PARSE_ERRORS, finite
 
 log = logging.getLogger(__name__)
@@ -71,6 +71,31 @@ def mark_error(why: str) -> str:
     """A reason as a mark keeps it: at most `MARK_ERROR` characters, and `…` where it was cut."""
     why = str(why)
     return why if len(why) <= MARK_ERROR else why[:MARK_ERROR] + "…"
+
+
+# A FOREIGN MARK'S WORDS ARE CLIPPED WHERE THEY ARE SAID («Сборка», window 3; ADR-0054): a mark is written by another
+# instance or by the reaper, so each of its words is another writer's data. Wherever a reader SAYS one — `instance` in
+# `unknown: an earlier instance (…) began it`, `slot` and `outcome` in an answer said again, `outcome` in the reaper's
+# line — it says `mark_text`: the word as a field says it (`field_text`: a string as it is, the rest its JSON), ONE LINE
+# (every character that is not printable — a newline, a tab, a control character, U+2028 — a space) and at most
+# `MARK_TEXT` characters, `…` where it was cut. A mark of 400 KB, or one with a newline in its `instance`, made every
+# refusal, log line and event that quoted it as long and broke the journal's line (the product's eleventh review: its
+# `markText`, 80 and `…`). What is said is clipped, never what is stored: the mark stays as its writer wrote it.
+MARK_TEXT = 80
+
+
+def mark_text(mark, key: str) -> str:
+    """A word of a mark another wrote, as a reader says it: one line, `MARK_TEXT` characters at most and `…` where it
+    was cut; "" when the mark has none."""
+    v = mark.get(key) if isinstance(mark, dict) else None
+    if v is None:
+        return ""
+    try:
+        text = field_text(v)
+    except PARSE_ERRORS:
+        text = str(v)                                   # `NaN` from a mark that read: said, not refused
+    text = "".join(c if c.isprintable() else " " for c in text[:MARK_TEXT + 1])   # one character for one: cut first
+    return text if len(text) <= MARK_TEXT else text[:MARK_TEXT] + "…"
 
 
 # A CLOSER WRITES BY THE INDEX IT READ (ADR-0054, the architect's amendment): whoever completes a mark it did not begin —
@@ -184,7 +209,7 @@ def _end(ctl, key: str, it: dict, idx, now: float, most_valid) -> bool:
         return False
     if isinstance(said, dict) and said.get("outcome"):
         log.info("%s: request %s was answered (%s) and its answer never reached a heartbeat: its row is cleared",
-                 ctl.spec.name, rid, said.get("outcome"))
+                 ctl.spec.name, rid, mark_text(said, "outcome"))
         return True
     if begun:
         unknown[ctl.spec.name] = unknown.get(ctl.spec.name, 0) + 1

@@ -32,7 +32,7 @@ from .events import ALARM, COMMAND, COMMAND_FAILED, OBSERVATION, OF
 from .journal import Journal
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .objects import ObjectStore
-from .requests import complete_mark, mark_error
+from .requests import complete_mark, mark_error, mark_text
 from .rows import PARSE_ERRORS, garbled_counts
 from .variables import Conflict, Variables, cas_pause
 
@@ -2279,7 +2279,7 @@ class Worker:
                         again += 1
                         continue
                     if mark is not None:
-                        self._not_known(rid, row, it, mark, str(mark.get("instance", "")) or "?", done)
+                        self._not_known(rid, row, it, mark, mark_text(mark, "instance") or "?", done)
                         continue
                 self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
                 done.append({"request": rid, "unit": row["id"], "expired": True})
@@ -2336,14 +2336,14 @@ class Worker:
                 self._answered_before(rid, row, mark, done)      # answered meanwhile — by another holder of the unit
                 again += 1
                 continue
-            before = None if mark is None else (str(mark.get("instance", "")) or "?")
+            before = None if mark is None else (mark_text(mark, "instance") or "?")
             made = self._mark(rid, unit, now) if before is None else False
             if made is None:
                 self._refused(rid, row, it, self.CANNOT_MARK, done)
                 continue
             if before is None and not made:
                 mark = self.mark_of(rid)                 # somebody made the mark between our read and our write
-                before = (None if mark is None else str(mark.get("instance", ""))) or "?"
+                before = (None if mark is None else mark_text(mark, "instance")) or "?"
             if before is not None:
                 self._not_known(rid, row, it, mark, before, done)
                 continue
@@ -2382,10 +2382,9 @@ class Worker:
     def _answered_before(self, rid: str, row: dict, mark: dict, done: list) -> None:
         self.fetched.append(rid)
         self.reanswered += 1
-        done.append({"request": rid, "unit": row["id"], "answered": str(mark.get("outcome")),
-                     "by": str(mark.get("slot") or mark.get("instance") or "?")})
-        log.info("%s: request %s was answered before (%s, by %s): said again, not performed", self.name, rid,
-                 mark.get("outcome"), mark.get("slot") or mark.get("instance"))
+        answered, by = mark_text(mark, "outcome"), mark_text(mark, "slot") or mark_text(mark, "instance") or "?"
+        done.append({"request": rid, "unit": row["id"], "answered": answered, "by": by})   # another's words, clipped
+        log.info("%s: request %s was answered before (%s, by %s): said again, not performed", self.name, rid, answered, by)
 
     # The answer, written into the mark once the target has said it — a refusal's reason as `error` (`mark_error`) —
     # over whatever stands there: its own begun mark, or another's word of it (ADR-0054: the holder's answer wins; a
@@ -2460,7 +2459,8 @@ class Worker:
 
     # A request another instance began and never answered (its mark, `mark`, as read): not known whether it was acted on,
     # said so, and written into that mark — the request's end, its beginner kept (ADR-0054). The beginner's own answer,
-    # if it comes, is written over it and wins.
+    # if it comes, is written over it and wins. `before` is that instance as a reader says another's word (`mark_text`:
+    # one line, 80 characters and `…`): the refusal, the event and the log line carry it clipped, the mark keeps it whole.
     def _not_known(self, rid: str, row: dict, it: dict, mark: dict | None, before: str, done: list) -> None:
         why = f"unknown: an earlier instance ({before}) began it, and whether it was acted on is not known"
         self.fetched.append(rid)
