@@ -160,7 +160,7 @@
       uSilent: "cluster silent — last known", turnOn: "Turn on", turnOff: "Turn off",
       sharedW: "Shared settings", sharedNote: "Settings of the site, not of one unit: one document of the domain each member's agent carries home and keeps — the domain may go, the settings stay where they are read. They are defaults: they are not written into the units' rows.",
       sharedRev: "rev {r} · term {t} · {a}", neverPub: "never published yet", onePerLine: "one a line", publishW: "Publish",
-      notJson: "Not JSON, nothing sent —", publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
+      notJson: "Not JSON, nothing sent —", notJsonField: "not JSON, nothing sent", publishedRev: "Published: rev {r}. The agents carry it on their next pass", noSharedDecl: "no subsystem shares fields with the domain", noShared: "no shared settings here", notSetW: "not set",
       editsW: "Edits for the clusters", editsNote: "The domain calls no cluster: an edit waits here, the cluster's agent takes it on its next publication, applies it and sends back the outcome.",
       alarmTimesTip: "how many times in the day",
       waitsPub: "waits for publication", appliedW: "applied", refusedStatus: "refused {s}", takenAt: "taken", noEdits: "no edits",
@@ -311,7 +311,7 @@
       uSilent: "кластер молчит — последнее известное", turnOn: "Включить", turnOff: "Выключить",
       sharedW: "Общие настройки", sharedNote: "Настройки площадки, а не одной единицы: один документ домена, который агент каждого члена уносит домой и хранит у себя — домен может пропасть, настройки остаются там, где их читают. Это умолчания: в строки единиц они не пишутся.",
       sharedRev: "rev {r} · срок {t} · {a}", neverPub: "ещё ни разу не публиковались", onePerLine: "по одному на строку", publishW: "Опубликовать",
-      notJson: "Не JSON, ничего не отправлено —", publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
+      notJson: "Не JSON, ничего не отправлено —", notJsonField: "не JSON, ничего не отправлено", publishedRev: "Опубликовано: rev {r}. Агенты унесут его на следующем проходе", noSharedDecl: "ни одна подсистема не делит полей с доменом", noShared: "общих настроек здесь нет", notSetW: "не задано",
       editsW: "Правки для кластеров", editsNote: "Домен не звонит кластерам: правка ждёт здесь, агент кластера забирает её при следующей публикации, применяет у себя и присылает исход.",
       alarmTimesTip: "сколько раз за сутки",
       waitsPub: "ждёт публикации", appliedW: "применена", refusedStatus: "отказ {s}", takenAt: "принята", noEdits: "правок нет",
@@ -1202,6 +1202,12 @@
         return `<div class="ln ln-sw"><div>${h(title)}</div><div class="sw${on ? " on" : ""}" data-sw="${h(f.name)}"${tip}></div><input type="checkbox" name="${h(f.name)}" hidden${on ? " checked" : ""}${dis}></div>`;
       }
       if (ed) return `<div class="pc-field" style="grid-column:1/-1"${tip}><input type="hidden" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"><div class="pc-editor" data-editor="${h(f.name)}"></div></div>`;
+      // a json field: its value as indented text; the module reads it back before it is sent (formBody) and says «not
+      // JSON» under the field — the door takes the value, never JSON text in a string
+      if (f.type === "json") {
+        const t = row && row[f.name] != null ? JSON.stringify(row[f.name], null, 2) : "";
+        return `<div style="grid-column:1/-1"><label>${h(title)} — JSON</label><textarea name="${h(f.name)}" rows="6" spellcheck="false" style="width:100%;font-family:ui-monospace,monospace" data-orig="${h(t)}"${tip}${dis}>${h(t)}</textarea><div class="nt err pc-ferr" data-ferr="${h(f.name)}" hidden></div></div>`;
+      }
       if (isSecret(f.name)) return `<div><label>${h(title)}</label><input type="password" name="${h(f.name)}" autocomplete="new-password" placeholder="${row ? h(row[f.name] ? W.setKeeps : W.notSet) : ""}"${tip}${dis}></div>`;
       if (f.type === "list" && f.name === (d.tree || {}).group_by) return groupsBox(sub, f, row, v, dis);
       if (f.type === "list") {
@@ -1271,9 +1277,11 @@
     }
     // A form into a body: bools always; an empty input omitted (default on create, unchanged on edit); on edit a
     // field left as the row showed it is not sent (the row comes with its secrets masked); a secret that reads as
-    // the mask is never sent.
+    // the mask is never sent. A json field is read here: its value goes (an object, a list, a number, a "string"); text
+    // that is not JSON is said under its field and nothing is sent (null back).
     function formBody(sub, form, editing) {
-      const out = {};
+      const out = {}, bad = [];
+      form.querySelectorAll("[data-ferr]").forEach(x => { x.hidden = true; x.textContent = ""; });
       for (const f of sub.spec.fields) {
         const el = form.elements[f.name]; if (!el) continue;
         if (f.type === "bool") { out[f.name] = el.checked; continue; }
@@ -1281,8 +1289,13 @@
         if (v === "") continue;
         if (editing && el.dataset.orig !== undefined && v === el.dataset.orig) continue;
         if (isSecret(f.name) && v === MASK) continue;
+        if (f.type === "json") {
+          try { out[f.name] = JSON.parse(v); } catch (e) { bad.push(f.name); const x = [...form.querySelectorAll("[data-ferr]")].find(y => y.dataset.ferr === f.name); if (x) { x.textContent = W.notJsonField + ": " + e.message; x.hidden = false; } }
+          continue;
+        }
         out[f.name] = f.type === "list" ? v.split(",").map(x => x.trim()).filter(Boolean) : f.type === "int" ? parseInt(v, 10) : f.type === "float" ? Number(v) : v;
       }
+      if (bad.length) { const e = form.querySelector(".pc-err"); if (e) e.textContent = bad.map(n => fieldTitle(sub, n)).join(", ") + ": " + W.notJsonField; return null; }
       return out;
     }
     // A unit's state in a word, and as a badge: running, waiting for a place, switched off, silent, or its phase.
@@ -1373,7 +1386,8 @@
       form.onsubmit = async e => {
         e.preventDefault(); form.querySelector(".pc-err").textContent = "";
         try {
-          const out = await C.api("POST", rowsPath, formBody(sub, form, false));
+          const body = formBody(sub, form, false); if (!body) return;
+          const out = await C.api("POST", rowsPath, body);
           await load(); C.toast(W.created);
           const id = out && (out.id ?? out.ID ?? (out.unit && out.unit.id));
           if (id != null) C.select(unitRef(sub, id)); else paintMain();
@@ -1395,7 +1409,8 @@
         // would refuse to send the one it keeps to the new value.
         const stale = staleSecrets(sub, form, r);
         if (stale.length) { form.querySelector(".pc-err").textContent = stale.map(n => fieldTitle(sub, n)).join(", ") + ": " + W.boundAnew; form.elements[stale[0]].focus(); return; }
-        try { await C.api("PUT", rowsPath + "/" + encodeURIComponent(id), formBody(sub, form, true)); C.toast(W.saved); await load(); paintMain(); }
+        const body = formBody(sub, form, true); if (!body) return;
+        try { await C.api("PUT", rowsPath + "/" + encodeURIComponent(id), body); C.toast(W.saved); await load(); paintMain(); }
         catch (err) { form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; C.toast(W.refused + ": " + err.message); }
       };
       const del = host.querySelector(".pc-del");
