@@ -1176,6 +1176,27 @@ def fault_of(e) -> dict:
     return {"fault": f} if f else {}
 
 
+# A STORE'S ERROR AS A DOOR SAYS IT (the product's `StoreFault`; ADR-0057, addendum p. 3): without a path on this server's
+# disk — an `OSError`'s file (`[Errno 13] Permission denied: '/var/lib/…/vars/a%2Fb.json'`) is said as `<store>`,
+# and whatever else in the text reads as an absolute path is too. The whole error is for the log; a door's answer goes
+# to whoever asked, and the box's directories are nothing of theirs.
+_ABS_PATH = re.compile(r"""(?:^|[\s"'(=])/[^\s"']+""")
+
+
+def store_fault(e) -> str:
+    msg = str(e) or type(e).__name__
+    for p in (getattr(e, "filename", None), getattr(e, "filename2", None)):
+        if p:
+            msg = msg.replace(str(p), "<store>")
+
+    def one(m) -> str:
+        s = m.group(0)
+        lead, rest = ("", s) if s[0] == "/" else (s[0], s[1:])
+        body = rest.rstrip(":,.;)")                       # what closes the sentence is not the path
+        return lead + "<store>" + rest[len(body):]
+    return _ABS_PATH.sub(one, msg)
+
+
 def body_deadline(h, n: int) -> None:
     """Give a body of `n` bytes its deadline, whole: the handler's `timeout` and a second for every `BODY_RATE` bytes —
     and, read through a `DeadlineReader`, a floor on its pace past that grace (`pace`). Every door that reads a body

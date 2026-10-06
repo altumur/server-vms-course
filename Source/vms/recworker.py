@@ -3061,6 +3061,7 @@ class RecWorker(VmsWorker):
         for k in declared:
             got = missing = 0.0
             touched: list[str] = []
+            whole: list[str] = []
             for rec in recordings_of(k):
                 # First what is GONE — before anything is copied, or a copy taken again from the recording's own
                 # volume would hide that the incidents ring is too small to hold what it was given.
@@ -3090,8 +3091,11 @@ class RecWorker(VmsWorker):
                     self.store.seal()                    # what was copied is readable now — and counted below
                 self.keep_held[(k.id, rec)] = held = inside(k, rec)
                 got += held
-                missing += self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
-                                               speaks)
+                short = self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
+                                            speaks)
+                missing += short
+                if held > 0 and short <= 0:
+                    whole.append(rec)                    # the copy of this recording is whole: what may be sealed
             entry = {"copied": round(got, 1), "missing": round(missing, 1)}
             self._keep_uncopied(k, entry, missing, now)
             for rec in sorted(set(touched)):
@@ -3103,8 +3107,22 @@ class RecWorker(VmsWorker):
                                  bytes=size, sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1),
                                  volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
-            if "sha256" not in entry and k.id in self.keep_state and "sha256" in self.keep_state[k.id]:
-                entry["sha256"] = self.keep_state[k.id]["sha256"]
+            # What was said of the recordings not copied this pass is carried, each — it was the whole map, and only
+            # when this pass copied nothing, so a pass that copied one recording dropped the others' digests. A whole
+            # copy with no digest known (a recorder started again) is read once: `vms jobs` seals what is whole and
+            # has a digest (`jobs.seal_keeps`; ADR-0057, addendum p. 3).
+            sums = {**self.keep_state.get(k.id, {}).get("sha256", {}), **entry.get("sha256", {})}
+            for rec in whole:
+                if rec not in sums:
+                    try:
+                        sums[rec] = keep_digest(self.store, rec, k.since, k.until)[0]
+                    except (OSError, ObsdError, ArchiveError, *PARSE_ERRORS):
+                        pass                             # not readable now: no digest said, nothing sealed by it
+            sums = {rec: d for rec, d in sums.items() if d}
+            if sums:
+                entry["sha256"] = sums
+            if whole:
+                entry["whole"] = sorted(whole)
             state[k.id] = entry
         for k in unread:                                 # not read is not lifted: what it holds stays counted
             state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}
@@ -3306,21 +3324,25 @@ class RecWorker(VmsWorker):
     # naming `keeps`) — and only that recording is checked. A door with no key in the store (its open mode) and no
     # `?recording=` checks every recording of the keep.
     #
-    # THE SEAL is the sha256 the copy was recorded with: the last `archive.keep.copied` of that keep and recording on this
-    # volume (`keep_seals`) — the frames as the incidents volume held them after the pass that copied them, hashed by
-    # `keep_digest`, the same function that hashes them now. The answer, the product's words:
+    # THE SEAL is in the keep's row, set ONCE per recording (`sealed`, `sealed_at`; ADR-0057, addendum p. 3): the digest
+    # of the copy when the incidents volume first held it whole, written by `vms jobs` (`jobs.seal_keeps`) — not by this
+    # recorder, so the archive that holds the footage is not the one that vouches for it. A seal that moved with every
+    # pass, or aged out with an event, would prove nothing. The digest now is `keep_digest`'s, the same function that
+    # made the one sealed. The answer, the product's words:
     #
     #   {keep, integrity: "ok" | "broken: <why>" | "unknown: <why>", ok, recordings: {<rec>: {sealed, now, samples,
     #    result: ok | damaged | pending | unverified, detail?}}}
     #
     # `broken` when a recording's copy does not hash to its seal, or cannot be read while it was sealed; `unknown` when
     # nothing contradicts the seal and something is not known yet — a recording never copied (not sealed yet), one the
-    # volume cannot read and that was never sealed. 404: no such keep, or a recording it does not hold; 409: a keep whose
-    # interval is garbled — nothing of it was copied, so nothing was sealed (`keeps.as_far_as_read`); 503: this recorder
-    # holds no incidents volume, or the store does not answer. Each answer is a line `archive.keep.verified` in this
+    # volume cannot read and that was never sealed. 404: no such keep, or a recording it does not hold; 409: a keep any
+    # part of whose interval does not read — nothing of it was copied, nothing sealed, and the hash of half an interval
+    # is a guess (`keeps.as_far_as_read`; ADR-0057, addendum p. 3); 503: this recorder holds no incidents volume, or the
+    # store does not answer — said as the product's `StoreFault`, no path of this box (`console.store_fault`). Each answer is a line `archive.keep.verified` in this
     # recorder's door journal (`audit/door-<recorder>`), with whom the token was given to.
     @one_look
     def verify_keep(self, keep_id: str, recording: str = "", who: str = "", journal=None) -> tuple[int, dict]:
+        from w2cplatform.console import store_fault
         from . import keeps
         store = self.store
         if store is None:
@@ -3336,7 +3358,8 @@ class RecWorker(VmsWorker):
             declared = keeps.declared(self.vars, unread)
             rows = self._recordings()
         except OSError as e:                             # unread is not "none" (`keeps.declared`): said, not guessed
-            return 503, {"error": "cannot verify", "detail": f"the store did not answer ({type(e).__name__})"}
+            log.warning("%s: keep %s cannot be verified, the store did not answer: %s", self.name, keep_id, e)
+            return 503, {"error": "cannot verify", "detail": store_fault(e)}
         keep = next((k for k in declared if k.id == keep_id), None)
         garbled = next((k for k in unread if k.id == keep_id), None)
         if keep is None and garbled is None:
@@ -3350,7 +3373,7 @@ class RecWorker(VmsWorker):
                 return 404, {"detail": f"keep {keep_id} holds no recording {recording}",
                              "error": "no such recording in the keep"}
             names = [recording]
-        seals = self.keep_seals(keep_id, names)
+        seals = keep.seals()
         out, every = {}, True
         broken, unknown = [], []
         for rec in names:
@@ -3387,32 +3410,6 @@ class RecWorker(VmsWorker):
         if journal is not None:
             journal.say("archive.keep.verified", keep=keep_id, ok=every, integrity=integrity, user=who, recordings=out)
         return 200, {"keep": keep_id, "integrity": integrity, "ok": every, "recordings": out}
-
-    # The seal of each of a keep's recordings, `{recording: sha256}`: the sha256 of its last `archive.keep.copied` on this
-    # volume — durable, in the events on this server — and, over it, what this process's last pass said (`keep_state`),
-    # which is the same line's. A recording never copied has none. A line whose moment does not read is passed by and
-    # counted, as `_keeps_held_before` passes it.
-    def keep_seals(self, keep_id: str, recordings) -> dict:
-        from w2cplatform.events import buckets_under, read_bucket
-        dated = []
-        for rec in recordings:
-            try:
-                for b in buckets_under(self.resource_root, REC.name, rec, 600):
-                    for e in read_bucket(os.path.join(self.resource_root, b.path)):
-                        if not (isinstance(e, dict) and e.get("kind") == "archive.keep.copied" and e.get("keep") == keep_id
-                                and e.get("recording") == rec and e.get("volume") == self.volume
-                                and isinstance(e.get("sha256"), str)):
-                            continue
-                        try:
-                            dated.append((finite(e.get("occurred", e["t"])), rec, e["sha256"]))
-                        except PARSE_ERRORS as err:
-                            FIELDS.garbled(f"{REC.name}/{rec}#archive.keep.copied", err)
-            except OSError:
-                continue
-        seals = {rec: sha for _, rec, sha in sorted(dated, key=lambda d: d[0])}
-        said = self.keep_state.get(keep_id, {}).get("sha256", {})
-        seals.update({rec: sha for rec, sha in said.items() if rec in recordings})
-        return seals
 
     # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole
     # inside a sequence would be drawn as footage. What the door handed over starts on a key frame.
