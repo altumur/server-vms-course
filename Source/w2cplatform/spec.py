@@ -444,7 +444,7 @@ def read_fields(where: str, raw: dict) -> dict:
                 raise ValueError(f"field {n}: `enum` is a list of the values a {fields[n].type} field may hold, not "
                                  f"{vals!r}")
             fields[n].enum = tuple(fields[n].parse(x) if fields[n].type != "string" else str(x) for x in vals)
-        _url_words(fields, n, f)
+        _url_words(fields, n, f, where)
         _ref_words(fields, n, f)
         if "schema" in f:
             from . import schema as _schema
@@ -514,7 +514,7 @@ def suppress_rules(events: dict) -> dict[str, Suppress]:
 # `fields.<name>` of `type: url` — `schemes`, `credentials`, `secret_in` (the boundary's step 4) — read into the field;
 # on a field of any other type they are refused, and so is a `credentials` naming no field of the row, a login that is a
 # secret or a secret that is not one.
-def _url_words(fields: dict, name: str, f: dict) -> None:
+def _url_words(fields: dict, name: str, f: dict, where: str) -> None:
     fld = fields[name]
     said = [k for k in ("schemes", "credentials", "secret_in") if k in f]
     if fld.type != "url":
@@ -537,7 +537,7 @@ def _url_words(fields: dict, name: str, f: dict) -> None:
     fld.credentials = {k: v for k, v in (("login", login), ("secret", secret)) if v}
     # …and with none of its own, the loaded specs' together (`catalog.secret_rules`, read when it is asked): a url field
     # that says nothing of how its addresses carry a login is asked every way any subsystem here says one is carried
-    fld.rules = SecretRules.parse(f["secret_in"], f"field {name}") if "secret_in" in f else None
+    fld.rules = SecretRules.parse(f["secret_in"], f"{where}: field {name}") if "secret_in" in f else None
 
 
 # `fields.<name>.ref`, `must_match`, `unique` — read into the field, refused at load when they say nothing that can be
