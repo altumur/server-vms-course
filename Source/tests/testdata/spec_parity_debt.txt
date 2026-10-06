@@ -42,6 +42,7 @@ course-only rec.subsystem.yaml rights.routes
 course-only rec.subsystem.yaml rights.routes.edit
 course-only rec.subsystem.yaml servers
 course-only rec.subsystem.yaml servers.show
+course-only rec.subsystem.yaml servers.status   # ADR-0057: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml tables.keeps
 course-only rec.subsystem.yaml tables.keeps.fields
 course-only rec.subsystem.yaml tables.keeps.fields.cam
