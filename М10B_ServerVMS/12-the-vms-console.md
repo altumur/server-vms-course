@@ -105,9 +105,9 @@ const isCam=ref=>String(ref).startsWith("unit:vms/");
 
 За `/cameras` и `/rec/recordings`-как-единицами страница не ходит: их читает модуль, и каждый опрос отдаёт их ей.
 
-**Чего у страницы нет** — проверено буквально (`shell-page.test.js`): один встроенный скрипт, модуль и его облик по `?v=1`, `mount` один раз с `subsystems:SUBS`; ни своего входа, ни запросов к `/session`, `/servers`, `/domain`, `/policy`, `/drain`, `/mounts`, `/spec`, `/unplaceable`, `/metrics`, `/where/`; в ленте — разделы модуля и «Сценарии» страницы сразу после «Оборудования».
+**Чего у страницы нет** — проверено буквально (`shell-page.test.js`): один встроенный скрипт, модуль и его облик по `?v=1`, `mount` один раз с `subsystems:SUBS`; ни своего входа, ни запросов к `/session`, `/servers`, `/domain`, `/policy`, `/drain`, `/mounts`, `/spec`, `/unplaceable`, `/metrics`, `/where/`; в ленте — разделы модуля и «Сценарии» страницы сразу после «Оборудования». Из `/domain` страница берёт только долю VMS: книгу, поля которой показывает спека (`/domain/vms/books/primaries`, ADR-0010), и `where` записи другого кластера через свою консоль (`/domain/at/…`, ADR-0061; шаг 6).
 
-И нет того, чего курс не отдаёт: страница продукта показывает ещё «Записанное сервером», учётки потребителей потока домена, правки домена, «Видеоускоритель», «Опции», вкладку «Детекторы», проверку удержания и мастер устройств. Мёртвых кнопок под маршруты, которых нет, страница курса не рисует.
+И нет того, чего курс не отдаёт: страница продукта показывает ещё «Записанное сервером», учётки потребителей потока домена, правки домена, «Видеоускоритель», «Опции», вкладку «Детекторы» и мастер устройств. Мёртвых кнопок под маршруты, которых нет, страница курса не рисует.
 
 ## Шаг 3 — Ни одного обработчика в разметке
 
@@ -254,19 +254,23 @@ Cookie консоли к держателю не идёт никогда: две
 async function loadTimeline(id){
   const [from,to]=winRange();
   …
-  const recs=recsOfCam(id);
+  const recs=recsOfCam(id).concat(farRecsOfCam(id));
   // the places a recording may lie on: the rows of the table rec's spec names (spec.places), not a name written here
   const T=((pc.spec("rec")||{}).places||{}).table||"";
   let places=[];
   if(T){try{const d=await (await fetch(`/rec/${encodeURIComponent(T)}`)).json();places=d[T]||[]}catch(e){places=[]}}
-  const asks=[],missing=new Set(),seen=new Set(),spans=[];
-  // a recording on a backup volume: what it has yields to the primary's, and its remainder is «only in the backup»
-  const backupRec=rec=>{const v=places.find(x=>x.name===rec.home);return!!v&&v.kind===VOL_BACKUP};
+  const asks=[],missing=new Set(),refused=new Map(),seen=new Set(),spans=[];
+  // a recording on a backup volume: what it has yields to the primary's, and its remainder is «only in the backup»;
+  // another cluster's recording says it itself (its volumes are that cluster's)
+  const backupRec=rec=>{if(rec.cluster)return!!rec.backup;const v=places.find(x=>x.name===rec.home);return!!v&&v.kind===VOL_BACKUP};
   const take=(rec,where,list)=>{const bk=backupRec(rec);for(const x of list||[]){
-    const k=[rec.id,x.start_ms,x.end_ms,x.epoch,x.source||""].join("|");if(seen.has(k))continue;seen.add(k);
+    const k=[rec.cluster||"",rec.id,x.start_ms,x.end_ms,x.epoch,x.source||""].join("|");if(seen.has(k))continue;seen.add(k);
     spans.push({start:x.start_ms/1000,end:x.end_ms/1000,epoch:x.epoch,fenced:!!x.fenced,events:0,source:x.source||"",recording:rec.id,where,media:true,yields:!!x.yields||bk,backupOnly:bk})}};
   const ask=async(rec,where,place)=>{
     const w=await whereAt(where);
+    // another cluster's answer, in words: its gate does not know you (403), its console is not reached (502), it is not
+    // a member this console can reach (404 from the hop), the members' list does not read here (503)
+    if(!w.door&&rec.cluster&&!place&&[403,404,502,503].includes(w.status)){refused.set(rec.cluster,w.status);return null}
     if(!w.door){if(place&&w.status===404&&w.missing)missing.add(w.missing);return null}   // «no such place»: nothing to say
     try{const r=await doorFetch(where,`/timeline/${encodeURIComponent(rec.id)}?from=${from}&to=${to}`);
       if(!r||!r.ok){missing.add(place||rec.id);return null}
@@ -275,9 +279,11 @@ async function loadTimeline(id){
     catch(e){missing.add(place||rec.id);return null}
   };
   // the recordings' own doors first (theirs win a twin), then the volumes'
-  const own=await Promise.all(recs.map(rec=>ask(rec,"/rec/where/"+encodeURIComponent(rec.id),"")));
-  recs.forEach((rec,i)=>take(rec,"/rec/where/"+encodeURIComponent(rec.id),own[i]));
-  for(const rec of recs)for(const v of places)asks.push((async()=>{const where=`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(v.name)}?unit=${encodeURIComponent("rec/"+rec.id)}`;take(rec,where,await ask(rec,where,v.name))})());
+  const own=await Promise.all(recs.map(rec=>ask(rec,recWhere(rec),"")));
+  recs.forEach((rec,i)=>take(rec,recWhere(rec),own[i]));
+  // the places: this cluster's table for its own recordings; another cluster's recording, its home there
+  for(const rec of recs)for(const name of rec.cluster?(rec.home&&!refused.has(rec.cluster)?[rec.home]:[]):places.map(v=>v.name))
+    asks.push((async()=>{const where=placeWhere(rec,T||"volumes",name);take(rec,where,await ask(rec,where,name))})());
   await Promise.all(asks);
   …
 ```
@@ -288,7 +294,7 @@ async function loadTimeline(id){
 
 **Каждое место — дверью своего держателя.** Запись переезжает: регистратор умер, запись взял другой на другом сервере. То, что она записала на прежнем томе, осталось там, и читается это у того, кто держит **тот** том: `GET /rec/where/volumes/<том>?unit=rec/<запись>` (М10A, урок 15, шаг 12; ADR 0009). Токен этой двери — на эту запись и этого держателя: токен, выданный двери записи, дверь тома не откроет (`test_where_volume.py::test_a_recording_moved_to_another_volume_shows_what_it_left_on_the_first_at_that_volumes_holders_door`).
 
-**Имя таблицы мест — не в коде.** Места — строки таблицы, которую спека `rec` называет в `placement.places` (`spec.places.table` в `/spec`), прочитанные по `/rec/<таблица>`. Слова `volumes` в ядре нет ни у курса, ни у продукта.
+**Имя таблицы мест — не в коде.** Места — строки таблицы, которую спека `rec` называет в `placement.places` (`spec.places.table` в `/spec`), прочитанные по `/rec/<таблица>`. Слово `volumes` в ядре — только запасное имя для места записи другого кластера, когда своя спека таблицы не называет; места своих записей — всегда по спеке, у курса и у продукта.
 
 **Близнецы сливаются, своя дверь впереди.** Двери записи и тома могут сказать одни и те же минуты. Ключ — запись, начало, конец, эпоха, источник; первым побеждает ответ двери самой записи.
 
@@ -296,11 +302,29 @@ async function loadTimeline(id){
 
 ```js
   const unr=[...missing];
-  V.note=unr.length?`Недоступн${unr.length>1?"ы":"о"}: ${unr.join(", ")} — ${unr.length>1?"их архивы недоступны":"его архив недоступен"}, а не утрачен${unr.length>1?"ы":""}; лента может быть неполной.`:"";
+  const WHY={403:c=>`на ${c} вас не знают: его архив не показан`,502:c=>`консоль ${c} не видна по сети: его архив смотрится только там, где её видно`,404:c=>`консоль ${c} отсюда не известна: его архив не показан`,503:c=>`список членов домена здесь не читается: архив ${c} не показан`};
+  V.note=(unr.length?`Недоступн${unr.length>1?"ы":"о"}: ${unr.join(", ")} — ${unr.length>1?"их архивы недоступны":"его архив недоступен"}, а не утрачен${unr.length>1?"ы":""}; лента может быть неполной.`:"")
+    +[...refused].map(([c,st])=>" "+WHY[st](c)+".").join("");V.note=V.note.trim();
   V.spans=yieldCut(spans).sort((a,b)=>a.start-b.start);
 ```
 
 Без этого страница нарисовала бы дыру там, где лежит видео выключенного сервера, и оператор искал бы запись на карте камеры или списал бы её как потерянную. Тест: регистратор тома `old` замолчал — место отвечает 404 с `X-Unreachable: old@srv-1`, на шкале минуты `new`, а `old@srv-1` назван рядом с `gone@srv-3` (`test_where_volume.py::test_a_volume_whose_recorder_went_silent_is_named_and_its_minutes_are_missing_not_drawn`).
+
+**Запись в другом кластере домена — тоже на шкале.** Камеру этого кластера может писать другой (пересечение, [М12B](../М12B_DomainVMS/README.md)). Тогда её минуты лежат там, и дверь к ним выдаёт консоль **того** кластера своим ключом (ADR-0015). Страница узнаёт такие записи из книги primaries, которую домен приносит в кластер камеры: `GET /domain/vms/books/primaries` отдаёт по `ref` камеры только поля, которые спека разрешает показать (`primaries: {show: [recorded_by, recording]}`; ADR-0010), без токенов дорог. `where` страница спрашивает у своей консоли, а та передаёт его консоли того кластера ровно один раз (`member_forward`, ADR-0061):
+
+```js
+function farRecsOfCam(id){
+  const c=camById(id),ref=c&&c.ref;if(!ref)return[];
+  const p=PRIMARIES&&PRIMARIES[ref];
+  // a recording this cluster holds itself is one of its own already (the book names this cluster too, then)
+  if(!p||!p.recorded_by||!p.recording||recsOfCam(id).some(r=>String(r.id)===String(p.recording)))return[];
+  return[{id:String(p.recording),cluster:String(p.recorded_by),home:"",backup:false,cam:String(id)}];
+}
+// where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
+const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+"/rec/where/"+encodeURIComponent(rec.id);
+```
+
+`farRecsOfCam`, `recWhere` и `placeWhere` стоят вне ядра. Продукт у кластера держателя домена берёт записи сначала из состояния VMS в домене (`/domain/vms/state`). В курсе такого маршрута нет, и книга — источник для обоих. Близнецов ключ различает по кластеру. Отказ того кластера — не «недоступно», а слова о том, почему: 403 — его привратник вас не знает, 502 — его консоль не видна по сети, 404 — такого члена отсюда не видно, 503 — список членов здесь не читается. Кусок идёт прямо с двери держателя, мимо обеих консолей (`shell-far-recordings.test.js`).
 
 **Что отвечает дверь.** На стороне регистратора `/timeline/<запись>` — `footage_routes` в `vms/footage.py`:
 
@@ -462,7 +486,9 @@ function recState(r){
 
 **Переключатель — действие, а не поле черновика.** Включить, выключить, сменить том, срок, «когда писать» — каждое сразу записью: `PUT /rec/recordings/<имя>` через `pc.api`, затем перечитать. «Когда писать» есть только у записи на резервном томе. Удаление — после подтверждения, и подтверждение говорит то, чего оператор не знает: записанное видео остаётся в томе до истечения срока хранения. «＋ Запись» — диалог модуля (`pc.dialog`).
 
-**Удержание** — отрезок, который не уходит по сроку хранения: `POST /rec/keeps {cam, from, to, note}` (с — по — зачем), «Снять» — `DELETE` после подтверждения. «Удержать показанное» на вкладке «Видео» подставляет видимое окно шкалы. Нет тома вида «инциденты» — карточка предупреждает: удержанное держится, только пока его хранит архив записи (`shell-archive.test.js`). Без `rec` в консоли — карточка «подсистема записи не подключена», без кнопок.
+**Удержание** — отрезок, который не уходит по сроку хранения: `POST /rec/keeps {cam, from, to, note}` (с — по — зачем), «Снять» — `DELETE` после подтверждения. «Удержать показанное» на вкладке «Видео» подставляет видимое окно шкалы. Том вида «инциденты» никто не обслуживает — карточка предупреждает: удержанное держится, только пока его хранит архив записи (`shell-archive.test.js`).
+
+**Что с удержанием сейчас** — слова держателя тома инцидентов в его биении. Спека `rec` называет в `servers.status` поля с `of: keeps` (ADR-0064): `keeps`, `incidents_lost`, `incidents_at_risk`. `/servers` кладёт их в `status` строки воркера как есть, а страница сопоставляет ключи карты и элементы списка со строками `rec/keeps` по имени удержания (`keepSaid`). Получается «в архиве инцидентов», «ждёт выталкивания», «потеряно N с», «под угрозой». Запись без кадров в отрезке (`keeps.<имя>.empty`) — «в отрезке нет кадров у … — запечатывать нечего». Чего спека не назвала, страница не читает (`shell-keep-states.test.js`). «Проверить» сверяет печать у двери держателя тома инцидентов ([урок 18](18-what-the-archive-gives-up-first.md)): по запросу на запись, `POST <дверь>/keeps/<имя>/verify?recording=<запись>`, с жетоном места этой записи. Кнопка есть, только если спека открывает `keeps` на двери. Ответ `result: empty` — не провал и не ожидание, о нём сказано отдельно: «в этом отрезке у … нет кадров — запечатывать нечего» (`shell-keep-verify.test.js`). Эти слова страница взяла у продукта вместе с его регистратором. Регистратор курса пока пишет в `keeps` только `copied`, `missing`, `from`, `to`, `sha256` и `whole` ([урок 18](18-what-the-archive-gives-up-first.md)). `state`, `empty`, `incidents_lost` и `incidents_at_risk` он не говорит, и `result: empty` сверка у него не отвечает. Поэтому на стенде курса строка удержания молчит о состоянии, а не выдумывает его. Без `rec` в консоли — карточка «подсистема записи не подключена», без кнопок.
 
 ## Шаг 11 — Тома и «Камеру в архив»
 
@@ -532,6 +558,9 @@ GET  /                                  → vms/vms.shell.html над /platform/
 GET  /rec/where/7                       → {worker, server, door: {url, token: "door1.…", expires, routes: [timeline, segment, keeps]}}
 GET  /rec/where/volumes/old?unit=rec/7  → дверь держателя тома для записи 7
                                           или 404, door: null, X-Unreachable: old@srv-1
+GET  /domain/vms/books/primaries        → {<ref>: {recorded_by, recording}} — кто пишет камеру в другом кластере
+GET  /domain/at/east/rec/where/SN-7     → дверь записи кластера east, выданная его консолью (ADR-0061);
+                                          403/404/502/503 — словами в подписи шкалы
 GET  <door>/timeline/7?from&to          → [{start_ms, end_ms, epoch, source?, fenced?, yields?}]   (Bearer)
 GET  <door>/segment/7/e3/<a>-<b>.mp4?t= → кусок одной эпохи, video/mp4
 POST <door>/keeps/<метка>/verify?recording=7 → печать метки сверена с копией (у держателя тома incidents, урок 18)
@@ -566,7 +595,7 @@ GET  /timeline/7, /segment/…, /whep/7  → 404: у консоли байтов
 - Под CSP ни одного обработчика в разметке: `data-act` и `wire`; всё из данных — через `esc`.
 - Ядро — двери, шкала, куски, живое — копия продуктового, сверенная по функциям; долг пуст.
 - Дверь — `{url, token, expires}`: токен `door1.` на единицу и держателя, Bearer для `fetch`, `?t=` для плеера, заново за 20 с до конца и один раз на 401.
-- Шкала — двери каждой записи и каждого места, близнецы сливаются, своя дверь впереди; место без держателя названо по `X-Unreachable`: недоступно, не утрачено. Участки с `yields` и резервные уступают основным.
+- Шкала — двери каждой записи и каждого места, близнецы сливаются, своя дверь впереди; место без держателя названо по `X-Unreachable`: недоступно, не утрачено. Участки с `yields` и резервные уступают основным. Запись камеры в другом кластере домена — из книги primaries, её `where` через свою консоль (`/domain/at/…`, ADR-0061), отказ того кластера — словами.
 - Куски по 60 с с той же двери, каждый момент один раз; чтение — строка `archive.read` в журнале регистратора, консоль пишет только `door.issued`.
 - Живое: первый зритель заводит поток строкой, предложение — на дверь шлюза, повтор на 404 и 503, трубка — `DELETE` со свежим токеном.
 - «Архив», тома, «Камеру в архив», «Сценарии», домен глазами VMS — каждое через `pc.api` и вызовы модуля.
