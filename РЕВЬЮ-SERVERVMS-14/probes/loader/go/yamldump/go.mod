@@ -1,0 +1,3 @@
+module yamldumpprobe
+
+go 1.26.0
