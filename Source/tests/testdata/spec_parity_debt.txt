@@ -122,6 +122,30 @@ course-only vms.subsystem.yaml placement.near.enabled
 course-only vms.subsystem.yaml placement.near.kind
 course-only vms.subsystem.yaml placement.near.prefer
 course-only vms.subsystem.yaml placement.offers
+course-only vms.subsystem.yaml tables.devices   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.device   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.device.required   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.device.type   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.events   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.events.type   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.identity   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.identity.maxLength   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.identity.schema   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.identity.type   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.presets   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.presets.default   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.presets.type   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.ptz   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.ptz.default   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.ptz.type   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.rays   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.rays.default   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.rays.type   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.relays   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.relays.default   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.fields.relays.type   # ADR-0012: the course first; the product's side — «Сборка»
+course-only vms.subsystem.yaml tables.devices.key   # ADR-0012: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml unit.fields.kind
 course-only vms.subsystem.yaml unit.fields.kind.default
 course-only vms.subsystem.yaml unit.fields.kind.type
@@ -139,4 +163,3 @@ product-only vms.subsystem.yaml domain.names   # ADR-0031: только у пр�
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window
-product-only vms.subsystem.yaml tables
