@@ -89,6 +89,7 @@
       labelsNode: "from the node's settings (LABELS / meta.labels): not set in the console", labelsUnknown: "the server's labels row cannot be read: which labels hold is unknown; nothing is moved by labels meanwhile",
       nodeSays: "the node says", noLabels: "none — the server reaches no network", backToNode: "Back to the node's labels",
       labelsMove: "units that need a label it loses move to a server that has it, a few a pass, or are left unplaced", labelsLose: "units on it it will no longer reach",
+      unitsLeft: "units left", pendingWrites: "unsaved writes", pendingUnsaid: "did not say how many writes they hold unsaved", drainUnsafe: "the drain is not safe",
       drain: "Drain", drainOn: "Being drained", drained: "Drained: everything it carried is elsewhere — the machine may be stopped", draining: "Draining: some of it is still here",
       drainHelp: "for a server that comes back (maintenance, upgrade): its units leave and it waits; a server that will not come back is decommissioned (below)",
       undrain: "Back in service", otherDraining: "another server is being drained",
@@ -244,6 +245,7 @@
       labelsNode: "из настройки узла (LABELS / meta.labels): в консоли не задавались", labelsUnknown: "строку меток сервера не прочитать: какие метки действуют, неизвестно; по меткам пока ничего не переносится",
       nodeSays: "узел говорит", noLabels: "нет — сервер не видит ни одной сети", backToNode: "Вернуть метки узла",
       labelsMove: "единицы, которым нужна снятая метка, переедут на сервер с ней — по нескольку за проход — или станут неразмещёнными", labelsLose: "единицы на нём, которых он больше не увидит",
+      unitsLeft: "осталось единиц", pendingWrites: "не сохранено", pendingUnsaid: "не сказали, сколько у них несохранённого", drainUnsafe: "слив не безопасен",
       drain: "Вывести из эксплуатации", drainOn: "Выводится", drained: "Сервер выведен: всё, что он нёс, уже в другом месте — машину можно останавливать", draining: "Сервер выводится: часть ещё на нём",
       drainHelp: "для сервера, который вернётся (обслуживание, обновление): единицы уходят, сервер ждёт возврата; сервер, который не вернётся, списывают (ниже)",
       undrain: "Вернуть в работу", otherDraining: "сейчас выводится другой сервер",
@@ -1620,7 +1622,9 @@
       }
       const parts = Object.values(d.subsystems || {}).filter(p => p && p.draining);
       box.innerHTML = `<h2>${h(W.drainTitle)}</h2><p class="sub">${h(W.drainOn)}</p><p class="${d.safe ? "pc-ok" : "pc-bad"}">${h(d.safe ? W.drained : W.draining)}</p>
-        ${parts.map(p => `<p class="pc-meta">${h(p.subsystem)}: ${h(p.units ?? 0)}${p.pending ? " · " + h(p.pending) : ""}</p>`).join("")}
+        ${parts.map(p => `<p class="pc-meta">${h(p.subsystem)}: ${h(W.unitsLeft)} ${h(p.units ?? 0)}${p.pending_writes ? " · " + h(W.pendingWrites) + " " + h(p.pending_writes) : ""}</p>`
+          // workers that did not say in their beat how many writes they hold unsaved: the drain is not safe while they are
+          + ((p.pending_unsaid || []).length ? `<p class="pc-bad">${h(W.pendingUnsaid)}: ${h(p.pending_unsaid.join(", "))} — ${h(W.drainUnsafe)}</p>` : "")).join("")}
         ${admin ? `<button type="button" class="btn s pc-drain-stop">${h(W.undrain)}</button>` : ""}`;
       const stop = box.querySelector(".pc-drain-stop");
       if (stop) stop.onclick = async () => { try { await C.api("DELETE", "/drain"); await load(); paintMain(); } catch (err) { C.toast(W.refused + ": " + err.message); } };
