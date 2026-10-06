@@ -566,15 +566,33 @@ Heartbeat собирает база: `heartbeat_once` кладёт в один �
 Шаг аренд — платформы: `lease_pass` базы (М10A, урок 8, шаг 9). Строка слота проверяется первой, и чужой экземпляр в ней огораживает весь процесс; потерянная аренда — дело одной единицы, чем бы она ни была потеряна (переназначение, единица в двух назначениях, аренда, истёкшая без установленного молчания хранилища), — её работа останавливается, эпоха отдаётся, остальные идут; молчащее хранилище — не потеря. Почему именно эти три правила и как продукт проверил их на ящике (16 и 36 секунд), разобрано там. Держатель отвечает на один вопрос — что значит «остановить единицу»:
 
 ```python
-    # A lost lease stops ONE pipeline: `lost` names units the way the lease does — as text — and the reconciler keys by
-    # the row's id, which the spec parsed (a number for cameras, a name for recordings): matched, never cast.
+    def lease_pass(self) -> list[str]:
+        self._assigned_at_loss = None
+        try:
+            return super().lease_pass()
+        finally:
+            self._assigned_at_loss = None
+
     def stop_unit(self, unit) -> None:
         uid = next((k for k in self.reconciler.running() if str(k) == str(unit)), unit)
         self.actuator("stop", {"id": uid})
-        self.reconciler.drop(uid)                   # stopped by its lease, not failed: started again, if still mine
+        if self._still_assigned(unit):
+            self.reconciler.forget(uid)             # lost while still mine: a failure, started again after its delay
+        else:
+            self.reconciler.drop(uid)               # moved away: not a failure, and not started again here
+
+    def _still_assigned(self, unit) -> bool:
+        if self._assigned_at_loss is None:
+            key = self.sub.assignment(self.name)
+            try:
+                units = read_assignment(key, self.name, stored(self.vars, key, ASSIGNMENTS)[0]).units
+            except OSError:
+                units = [r.get("id") for r in self.rows]
+            self._assigned_at_loss = frozenset(str(u) for u in units)
+        return str(unit) in self._assigned_at_loss
 ```
 
-Остановить этот конвейер и забыть его в цикле сверки — `drop`, без неудачи (урок 2, шаг 6): камера не виновата в потерянной аренде, — и больше ничего. Эпоху отдаёт база (`release`), она же запоминает камеру в `lost_to_epoch`. Если камера всё ещё моя, следующий проход, перечитав назначение, поднимет её под новой эпохой; если нет — она у другого воркера, и делать нечего. Ключи сравниваются как текст: аренда называет единицу строкой, а цикл — тем, что сделала из id спека (число у камер, имя у записей регистратора). Тесты держателя: «зомби на одной коробке», «зомби отсекается на слоте первым» и «переназначение — не зомби» (`test_lesson4_worker.py::test_the_zombie_on_one_box`, `::test_the_zombie_is_fenced_at_the_slot_first`, `::test_a_reassignment_is_not_a_zombie`).
+Остановить этот конвейер и сказать циклу сверки, почему (урок 2, шаг 6). Почему — решает назначение, каким его говорит хранилище сейчас. Камеры в нём нет — она уехала к другому воркеру: `drop`, без неудачи, камера не виновата в переезде. Камера в нём есть — эпоху взял кто-то другой, а она всё ещё моя, или хранилище не подтвердило аренду: `forget`, неудача. Следующий старт ждёт задержки, а камера, трижды потерявшая эпоху за `Backoff.max`, становится `stalled` — зомби, раз за разом берущий её эпоху, или хранилище, раз за разом теряющее аренду, видны на `/metrics`, а не прячутся за камерой, которую перезапускают сразу и вечно (ADR 0033 с дополнениями, четырнадцатое ревью, minor 22; так же продуктовый `vms/worker.go`: `Forget`, а `Drop` — только единице не из назначения). Назначение читается **один раз на шаг аренд**, при первой потерянной аренде, сколько бы их ни было, и мимо того, что держит проход: `assigned_now` и `lost_to_epoch` — дело чтения прохода (М10A, урок 7, шаг 7), и чтение здесь их не трогает. Хранилище не ответило — решают строки, прочитанные последними. Эпоху отдаёт база (`release`), она же запоминает камеру в `lost_to_epoch`. Если камера всё ещё моя, проход после задержки, перечитав назначение, поднимет её под новой эпохой; если нет — она у другого воркера, и делать нечего. Ключи сравниваются как текст: аренда называет единицу строкой, а цикл — тем, что сделала из id спека (число у камер, имя у записей регистратора). Тесты держателя: «зомби на одной коробке», «зомби отсекается на слоте первым», «переназначение — не зомби» и «своя камера, трижды потерявшая эпоху, — `stalled`» (`test_lesson4_worker.py::test_the_zombie_on_one_box`, `::test_the_zombie_is_fenced_at_the_slot_first`, `::test_a_reassignment_is_not_a_zombie`, `::test_a_camera_still_mine_that_loses_its_epoch_three_times_within_max_is_stalled`).
 
 **Сколько камера пишет сквозь молчание хранилища — слово её спеки.**
 
