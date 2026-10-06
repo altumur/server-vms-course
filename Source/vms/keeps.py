@@ -8,7 +8,9 @@
 #
 #   the footage    is COPIED into an incidents volume by the recorder that holds it (`RecWorker.keep_pass`),
 #                  out of whichever recorder's door has it, and stays there after the recording's own ring has
-#                  moved on. What was copied is an event with its sha256 (`archive.keep.copied`)
+#                  moved on. What was copied is an event with its sha256 (`archive.keep.copied`) — the keep's
+#                  seal, checked at the door of the recorder that holds the copy: `POST <door>/keeps/<keep>/verify
+#                  ?recording=<id>` (`RecWorker.verify_keep`; ADR-0015, ADR-0057)
 #   the events     retention skips the camera's event buckets that overlap it — its spec's `holds:`, which every
 #                  resource reads itself (`w2cplatform/holds.py`; the boundary's step 6)
 #

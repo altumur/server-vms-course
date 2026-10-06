@@ -657,14 +657,14 @@ def test_the_door_to_a_recordings_footage_is_said_when_it_is_handed_out():
                                   {"server": "srv-1", "capacity": 4, "headroom": 4, "url": "http://h:1"}).to_bytes())
         box.vars.put("rec/placement/7", {"worker": "r-1", "reason": "its volume", "at": box.wall(), "rev": 1})   # the controller's word
         base = f"http://127.0.0.1:{srv.server_address[1]}"
-        assert SPEC.door_routes == () and REC_SPEC.door_routes == ("timeline", "segment")   # no door at a camera's holder
+        assert SPEC.door_routes == () and REC_SPEC.door_routes == ("timeline", "segment", "keeps")   # no door at a camera's holder
         with urllib.request.urlopen(urllib.request.Request(f"{base}/rec/where/7", headers={"X-User": "anna"})) as r:
             d = json.loads(r.read())["door"]
-        assert d["url"] == "http://h:1" and d["routes"] == ["timeline", "segment"] and d["token"]
+        assert d["url"] == "http://h:1" and d["routes"] == ["timeline", "segment", "keeps"] and d["token"]
         lines = [e for b in buckets_under(box.resource_root, "audit", "console", 600)
                  for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"] == "door.issued"]
         assert [(e["user"], e["target"], e["holder"], e["routes"], e["until"]) for e in lines] == [
-            ("anna", "7", "r-1", "timeline,segment", round(d["expires"]))]
+            ("anna", "7", "r-1", "timeline,segment,keeps", round(d["expires"]))]
     finally:
         srv.shutdown()
 
