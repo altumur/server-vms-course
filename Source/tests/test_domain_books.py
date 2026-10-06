@@ -41,7 +41,7 @@ def _refusal(books) -> str:
 
 def test_books_are_a_list_carried_or_a_map_each_book_carried_or_shown_by_its_fields():
     from w2cplatform.spec import SubsystemSpec
-    listed = SubsystemSpec.load(TESTSUB).domain                       # testsub's own: `books: [tallies]`
+    listed = SubsystemSpec.from_dict(_with_books(["tallies"])).domain   # the list: carried, none shown
     assert listed.books == ("tallies",) and listed.show == {}
     mapped = SubsystemSpec.from_dict(_with_books({"tallies": {}, "counts": {"show": ["n", "at"]}})).domain
     assert mapped.books == ("counts", "tallies") and mapped.show == {"counts": ("n", "at")}   # a map's names, sorted
@@ -168,7 +168,7 @@ def test_a_book_shows_the_named_fields_of_this_clusters_own_copy_each_item_to_a_
 
 def test_an_open_console_shows_every_item_and_a_spec_with_a_list_shows_none():
     """A cluster outside any domain has no gate: the console is open, and its book is the whole cluster's view. testsub
-    as its file says carries `tallies` and shows nothing of it."""
+    with a list carries `tallies` and shows nothing of it."""
     from w2cplatform.console import Mount, SpecConsole
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.spec import SpecController, SubsystemSpec
@@ -195,7 +195,7 @@ def test_an_open_console_shows_every_item_and_a_spec_with_a_list_shows_none():
             srv.server_close()
     try:
         assert serve(SubsystemSpec.from_dict(_with_books({"tallies": {"show": ["n"]}}))) == (200, {"c7": {"n": 7}})
-        code, body = serve(SubsystemSpec.load(TESTSUB))
+        code, body = serve(SubsystemSpec.from_dict(_with_books(["tallies"])))
         assert code == 404 and "carried and not shown" in body["detail"], (code, body)
     finally:
         SubsystemSpec.load(TESTSUB)
