@@ -1132,14 +1132,24 @@
       // a page's tab that says it is busy (busy(): something under way in it a repaint would cut) is left alone
       const kind = String(st.sel).split(":")[0], cur = (shell.tabs[kind] || []).find(t => t.id === st.tab[kind]);
       if (cur && typeof cur.busy === "function") { try { if (cur.busy()) return; } catch (e) { /* not busy */ } }
+      // what a page's host shows now (its tab, its card, its section) seeds the new host: a page that draws after its
+      // own request draws over it, and the host is never blank in between — a poll's repaint does not blink
+      const shown = el.querySelector(".pc-tab:not([hidden])") || el.querySelector(":scope > .pc-card");
+      st.keep = shown ? { sel: st.sel, section: st.section, tab: shown.dataset.tab || "", html: shown.innerHTML } : null;
+      // a page's own card draws its title too, after its request: until it does, the head it had stays (its nodes, with
+      // their handlers — the crumbs, the star), and the page's next title replaces it as usual
+      const hd = $(".pc-hd"), head = shown && !shown.dataset.tab ? [...hd.childNodes] : null;
       const top = el.scrollTop;
-      paintMain();
+      try { paintMain(); } finally { st.keep = null; }
+      if (head && !hd.childNodes.length) head.forEach(n => hd.appendChild(n));
       el.scrollTop = top;
     }
+    // the host of a page's tab or card, seeded with what it showed before this repaint (refreshMain)
+    const seed = (host, tab) => { const k = st.keep; if (k && k.sel === st.sel && k.section === st.section && k.tab === (tab || "")) host.innerHTML = k.html; return host; };
     function paintMainInner() {
       const el = $(".pc-main");
       const own = shell.sections.find(s => s.id === st.section);
-      if (own) { el.innerHTML = ""; const host = document.createElement("div"); host.className = "pc-card"; el.appendChild(host); own.render(host); return; }
+      if (own) { el.innerHTML = ""; const host = document.createElement("div"); host.className = "pc-card"; el.appendChild(seed(host)); own.render(host); return; }
       if (st.section === "journal") return paintJournal(el);
       const ref = st.sel;
       if (!ref) {
@@ -1168,7 +1178,7 @@
       if (ref.startsWith("grants:")) return paintGrants(el, ref, ref.slice(7));
       const cardOf = (shell.cards || {})[String(ref).split(":")[0]];
       // a host of its own: what the page draws late (after its own request) lands in it, never in another card
-      if (cardOf) { el.innerHTML = ""; const host = document.createElement("div"); host.className = "pc-card"; el.appendChild(host); try { cardOf(host, ref); } catch (e) { host.textContent = String(e); } return; }
+      if (cardOf) { el.innerHTML = ""; const host = document.createElement("div"); host.className = "pc-card"; el.appendChild(seed(host)); try { cardOf(host, ref); } catch (e) { host.textContent = String(e); } return; }
       el.innerHTML = "";                                   // a ref nobody draws
     }
     // The page's tabs on a card: a tab bar — the module's own card is "general", each added tab one more. One
@@ -1185,7 +1195,7 @@
       own.forEach(c => { c.hidden = cur !== "general"; });
       for (const t of tabs) {
         const box = document.createElement("section"); box.className = "pc-tab"; box.dataset.tab = t.id; box.hidden = cur !== t.id; el.appendChild(box);
-        if (cur === t.id) { try { t.render(box, ref, obj); } catch (e) { box.textContent = String(e); } }
+        if (cur === t.id) { seed(box, t.id); try { t.render(box, ref, obj); } catch (e) { box.textContent = String(e); } }
       }
       bar.querySelectorAll("button").forEach(b => { b.onclick = () => { st.tab[kind] = b.dataset.tab; paintMain(); }; });
     }
@@ -2174,11 +2184,24 @@
       // the hover, the selection stay); a card or tab of the page's own is its data's, refreshed as it says
       const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st.unplaceable, st.schema, st.loadErr, st.shared, st.domShared]);   // [course leads] st.shared
       const same = fp === st.fp; st.fp = fp;
-      if (!same) { const t = $(".pc-tree"), top = t ? t.scrollTop : 0; paintTree(); if (t) t.scrollTop = top; }
-      if (!same || pageOwnsCard()) refreshMain();
+      repaint(!same, !same || pageOwnsCard());
       emit("refresh", { units: st.units, servers: st.servers, domain: st.dom });
     }
 
+    // A poll's repaint never lands under a pressed button: the element pressed would be replaced between the press and
+    // the release, and the click lost. While a button is down in the console the repaint waits, and runs on release
+    // (a press held longer than a few seconds — a release outside the window — does not hold it back).
+    let pressedAt = 0, pend = { tree: false, main: false };
+    root.addEventListener("pointerdown", () => { pressedAt = Date.now(); }, true);
+    const released = () => { if (!pressedAt) return; pressedAt = 0; if (pend.tree || pend.main) setTimeout(() => repaint(false, false), 0); };
+    document.addEventListener("pointerup", released, true); document.addEventListener("pointercancel", released, true);
+    function repaint(tree, main) {
+      pend.tree = pend.tree || tree; pend.main = pend.main || main;
+      if (pressedAt && Date.now() - pressedAt < 3000) return;
+      const doTree = pend.tree, doMain = pend.main; pend = { tree: false, main: false };
+      if (doTree) { const t = $(".pc-tree"), top = t ? t.scrollTop : 0; paintTree(); if (t) t.scrollTop = top; }
+      if (doMain) refreshMain();
+    }
     // At the holder: the domain's view, its alarms, its shared settings — nothing of a cluster's.
     async function loadHolder() {
       try { st.dom = await getJSON("/domain"); st.loadErr = null; } catch (e) { st.dom = null; st.loadErr = e.message; }
@@ -2186,7 +2209,7 @@
       await loadDomShared();
       paintHeader();
       const fp = JSON.stringify([st.dom, st.alarms, st.domShared, st.loadErr]), same = fp === st.fp; st.fp = fp;
-      if (!same) { const t = $(".pc-tree"), top = t ? t.scrollTop : 0; paintTree(); if (t) t.scrollTop = top; refreshMain(); }
+      repaint(!same, !same);
       emit("refresh", { domain: st.dom });
     }
     // The shared settings of the domain (GET /domain/shared: {doc, delivery, declared}) — read while the domain's card
