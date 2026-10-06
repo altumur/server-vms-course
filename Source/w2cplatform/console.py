@@ -25,7 +25,10 @@ show them. So the console is one class, run from the same spec:
     GET  /domain/shared/<sub>[?unit=<id>]   the fields a spec shares with the domain (`domain.shared`), resolved from
                                  this cluster's verified copy of the shared document: value and where it came from, the
                                  groups the domain offers for the field the page groups by; nothing undeclared
-    GET  /domain/keys            every key under `domain/` in this cluster's stores, secrets masked (`domain.keysview`)
+    GET  /domain/keys            every key under `domain/` in this cluster's stores: its index and field NAMES, an
+                                 object's size and age — no value, no body; values only of the public halves the domain
+                                 publishes (key set, root, member keys; «Архитектор» 2026-10-06, `domain.keysview`). A
+                                 book's content comes through the books route to come, not here
     …    /domain/<any other>     handed to the domain holder's door at the same path, unrewritten (`Mount.domain_forward`:
                                  the view's `url`), with the person's token and the edit's Idempotency-Key
     GET/PUT /policy             the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
@@ -3261,7 +3264,7 @@ class SpecConsole:
                 return h._send(200, con.servers())
             if path == "/domain":
                 return h._send(*domain_view(ctl.objects, con.wall(), con.lost_after))
-            if path == "/domain/keys":                       # every `domain/` key in this cluster's stores, masked
+            if path == "/domain/keys":                       # every `domain/` key here: names, no values (`keysview`)
                 from .domain.keysview import keys
                 return h._send(200, keys(ctl.vars, ctl.objects, con.wall()))
             if path.startswith("/domain/shared/"):

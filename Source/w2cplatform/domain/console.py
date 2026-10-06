@@ -17,7 +17,10 @@ lives under `/domain/*`, the same path a cluster console forwards without rewrit
 platform's module. `/api/*` is the processes' (the signer's) — here only the login door, handed on.
 
     GET  /domain                                the domain's view, as the signer's pass left it, with its age
-    GET  /domain/keys                           every key under `domain/` in the holder's stores (`keysview.py`)
+    GET  /domain/keys                           every key under `domain/` in the holder's stores (`keysview.py`):
+                                                index and field names, an object's size and age, no value — but
+                                                the public halves the domain publishes («Архитектор» 2026-10-06);
+                                                a book's content through the books route to come
     GET  /spec, /mounts                         for the module: no root (`{name: "", rows: null}` — the page says
                                                 `sections: ["domain"]`), and every spec this process loaded
                                                 (`SPEC_DIR`) a mount, `{root: "", mounts: {<sub>: describe}}`
