@@ -310,7 +310,7 @@ async function loadTimeline(id){
 
 Без этого страница нарисовала бы дыру там, где лежит видео выключенного сервера, и оператор искал бы запись на карте камеры или списал бы её как потерянную. Тест: регистратор тома `old` замолчал — место отвечает 404 с `X-Unreachable: old@srv-1`, на шкале минуты `new`, а `old@srv-1` назван рядом с `gone@srv-3` (`test_where_volume.py::test_a_volume_whose_recorder_went_silent_is_named_and_its_minutes_are_missing_not_drawn`).
 
-**Запись в другом кластере домена — тоже на шкале.** Камеру этого кластера может писать другой (пересечение, [М12B](../М12B_DomainVMS/README.md)). Тогда её минуты лежат там, и дверь к ним выдаёт консоль **того** кластера своим ключом (ADR-0015). Страница узнаёт такие записи из книги primaries, которую домен приносит в кластер камеры: `GET /domain/vms/books/primaries` отдаёт по `ref` камеры только поля, которые спека разрешает показать (`primaries: {show: [recorded_by, recording]}`; ADR-0010), без токенов дорог. `where` страница спрашивает у своей консоли, а та передаёт его консоли того кластера ровно один раз (`member_forward`, ADR-0061):
+**Запись в другом кластере домена — тоже на шкале.** Камеру этого кластера может писать другой (пересечение, [М12B](../М12B_DomainVMS/README.md)). Тогда её минуты лежат там, и дверь к ним выдаёт консоль **того** кластера своим ключом (ADR-0015). Страница узнаёт такие записи из книги primaries, которую домен приносит в кластер камеры: `GET /domain/vms/books/primaries` отдаёт по `ref` камеры только поля, которые спека разрешает показать (`primaries: {show: [recorded_by, recording, backups]}`; ADR-0010), без токенов дорог: кто пишет, какая запись и её резервы списком `[{cluster, recording}]` — каждый кластером и записью в нём, как его найдёт `/domain/at/…`. Список отдаётся как есть, а ключ `*_secret` внутри показанного значения консоль не отдаёт никогда (`_without_secrets`). `where` страница спрашивает у своей консоли, а та передаёт его консоли того кластера ровно один раз (`member_forward`, ADR-0061):
 
 ```js
 function farRecsOfCam(id){
@@ -558,7 +558,7 @@ GET  /                                  → vms/vms.shell.html над /platform/
 GET  /rec/where/7                       → {worker, server, door: {url, token: "door1.…", expires, routes: [timeline, segment, keeps]}}
 GET  /rec/where/volumes/old?unit=rec/7  → дверь держателя тома для записи 7
                                           или 404, door: null, X-Unreachable: old@srv-1
-GET  /domain/vms/books/primaries        → {<ref>: {recorded_by, recording}} — кто пишет камеру в другом кластере
+GET  /domain/vms/books/primaries        → {<ref>: {recorded_by, recording, backups}} — кто пишет камеру в другом кластере
 GET  /domain/at/east/rec/where/SN-7     → дверь записи кластера east, выданная его консолью (ADR-0061);
                                           403/404/502/503 — словами в подписи шкалы
 GET  <door>/timeline/7?from&to          → [{start_ms, end_ms, epoch, source?, fenced?, yields?}]   (Bearer)
