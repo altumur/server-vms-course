@@ -1,0 +1,107 @@
+# What each loader says of a spec: one table for the course (Source/tests/testdata/spec_verdicts.tsv and the files of
+# spec_verdicts/) and the product (testdata/spec_verdicts.tsv and testdata/spec_verdicts/ at its root), byte for byte.
+# Owner: «Паритет». Cases: the fourteenth review's (РЕВЬЮ-SERVERVMS-14/probes/loader); verdicts: «Архитектор»,
+# 2026-10-06. A loader that answers otherwise is a red test, not a finding of the next review.
+#
+# THE RULES the verdicts hold
+#   a spec is YAML 1.2 core, a subset: one document, a mapping; no anchors, aliases or tags; no duplicate key at any
+#   level; indentation by spaces; UTF-8, no BOM, no NUL; On/Off/Yes/No are words, not booleans; integers within 2^53
+#   every key known at every level (ADR-0012); every field a key names is a field of `fields:` (group_by, spread_by,
+#   requests.key, snapshot, display.*); display.fields and display.options name fields, not the platform's keys;
+#   display words are strings, and the tree's words a closed set
+#   lease.unconfirmed_max: forever, off, or a whole number of seconds above 0 — nothing else, no empty lease:
+#   requests.stamp: [group] only with placement.group_by; a key template's braces closed
+#   a JSON default or inherit of a `json` field is any JSON value
+# Not here: what needs the whole catalogue (worker.requests naming a subsystem with no requests: — KnowSpecs), and
+# sizes (a 10 MB spec; a depth limit is here, deep_flow_200 and deeper).
+#
+# Columns, tab-separated; a line that begins with '#' and an empty line are no row:
+#   case     the file spec_verdicts/<case>.subsystem.yaml beside this table, loaded alone as a subsystem's spec
+#   verdict  ok — it loads; refused — the loader refuses it, with a message naming where
+anchor_alias_display_keys	refused
+anchor_merge_key	refused
+base	ok
+block_scalar_hides_lease	ok
+block_scalar_hides_tail	refused
+bom_utf8	refused
+deep_block_500	refused
+deep_flow_200	refused
+deep_flow_5000	refused
+display_actions_nested	refused
+display_field_help_not_in_fields	refused
+display_field_not_in_fields	refused
+display_fields_nested_map	refused
+display_fields_platform_key_age	refused
+display_fields_platform_key_epoch	refused
+display_fields_status_field	ok
+display_form_fields_status_field	refused
+display_form_fields_unknown	refused
+display_form_unknown_key	refused
+display_kinds_nested	refused
+display_options_bool_enum	ok
+display_options_field_without_enum	refused
+display_options_not_a_field	refused
+display_options_not_in_enum	refused
+display_options_platform_key_server	refused
+display_options_status_field	ok
+display_options_yes_key	ok
+display_tree_column_unknown	refused
+display_tree_group_by_unknown	refused
+display_tree_word_remove	refused
+display_unknown_section	refused
+display_word_On_Off_unquoted	ok
+display_word_not_string	refused
+dup_block_hides_unknown	refused
+dup_key_in_flow_map	refused
+dup_key_lease_value	refused
+dup_top_key_name	refused
+enum_default_not_in_enum	refused
+group_by_unknown_field	refused
+inherit_map	ok
+json_default_map	ok
+key_true_yaml11	refused
+lease_.inf	refused
+lease_1.0e308	refused
+lease_1_000	refused
+lease_1e308	refused
+lease_90	ok
+lease_90_quoted	refused
+lease_90s	refused
+lease_Infinity	refused
+lease_OFF	refused
+lease_absent	ok
+lease_empty_map	refused
+lease_false	refused
+lease_forever	ok
+lease_forever_quoted	ok
+lease_hex_0x10	refused
+lease_huge_int	refused
+lease_inf	refused
+lease_minus1	refused
+lease_nan	refused
+lease_no	refused
+lease_null	refused
+lease_true	refused
+lease_zero	refused
+multiline_plain_scalar	refused
+non_utf8_in_comment	refused
+non_utf8_in_word	refused
+nul_byte_in_word	refused
+overindent_hides_tail	refused
+requests_key_stray_brace	refused
+requests_key_unknown_field	refused
+requests_stamp_group_without_group_by	refused
+requests_unknown_key	refused
+requests_unknown_stamp	refused
+retire_when_unknown_field	refused
+snapshot_unknown_field	refused
+spread_by_not_string	refused
+spread_by_unknown_field	refused
+tab_indent	refused
+unknown_depth1	refused
+unknown_depth2	refused
+unknown_depth3	refused
+unknown_depth4	refused
+unknown_in_lease	refused
+yaml_list_toplevel	refused
+yaml_two_documents	refused
