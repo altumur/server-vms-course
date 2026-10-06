@@ -114,8 +114,8 @@ def is_secret_field(name: str) -> bool:
 #   {nested: [names]}                    the value of a pair of these names is read as an address once unescaped (a
 #                                        `<scheme>:` before its own `scheme://` aside: `ffmpeg:https://…`), three
 #                                        levels deep (`_NESTED`) — by the rules of every loaded spec together, this
-#                                        field's beside them, and so are the names of a pair that holds one: whose
-#                                        address it is the field does not know (`_inner_rules`, ADR-0053)
+#                                        field's beside them: whose address it is the field does not know
+#                                        (`_inner_rules`, ADR-0053)
 #
 # BY WORD, NOT BY SUBSTRING (the thirteenth review, minor): a word that only BEGINS a name (`token` of `token_bucket`,
 # `auth` of `authmode`) names what the parameter is about, not what it holds — which is why a name is matched whole,
@@ -287,8 +287,9 @@ def _rules(rules: SecretRules | None) -> SecretRules:
 # url may hold in its `?src=` another subsystem's address with `user=admin_password=…` in it, which no word of the
 # table's field says. So an address nested in another (a pair's value, `nested`, behind its `<scheme>:`; one escaped
 # into a path segment) is read by the rules of every loaded spec together (`catalog.secret_rules`), the field's own
-# beside them, and so are the names of the pairs that hold one; the field's own pairs stay its own rule's — a word of
-# another subsystem's (`session`) does not narrow it.
+# beside them — and so is an address nested deeper in that one. Which of the field's own pairs hold an address is the
+# field's to say (its `nested`), and its own pairs stay its own rule's: a word of another subsystem's (`session`) does
+# not narrow it.
 @functools.lru_cache(maxsize=64)
 def _joined(own: SecretRules, every: SecretRules) -> SecretRules:
     return _with_common(own | every)
@@ -685,7 +686,7 @@ def hide_in_url(value, rules: SecretRules | None = None, _depth: int = 0):
     # the addresses wrapped in it, masked whole when one carries a password (read by every loaded spec's rules: whose
     # address it is the field does not know, `_inner_rules`) — and the rest read with them masked
     deep = _inner_rules(rules)
-    wrapped = [(a, b) for _, a, b, inner in _nested(value, deep)
+    wrapped = [(a, b) for _, a, b, inner in _nested(value, rules)
                if "secret" in ((address_fault(inner, deep, _depth + 1) or ("", frozenset()))[1])]
     s = _mask(value, wrapped)
     spans = _userinfo_spans(s) + _port_spans(s) + _opaque_spans(s)
@@ -819,7 +820,7 @@ def address_fault(value, rules: SecretRules | None = None, _depth: int = 0) -> t
     if said:
         return f"it carries {' and '.join(said)}", frozenset(kinds)
     deep = _inner_rules(rules)                           # whose address is inside, the field does not know
-    for name, _, _, inner in ([] if a_file else _nested(s, deep)):
+    for name, _, _, inner in ([] if a_file else _nested(s, rules)):
         got = address_fault(inner, deep, _depth + 1)
         if got:
             return (f"it holds an address in {name if name == 'a path segment' else repr(name)} that may not be "

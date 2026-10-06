@@ -840,9 +840,7 @@ def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_fr
              "driverpack://acme/admin:Hunter2/ch/1", "driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1",
              "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"]
     for src in spelt:
-        # the platform's own names: no vendor's — but a pair holding an address (`?src=`) is read by every loaded spec's
-        # `nested`, whatever the field's rule (ADR-0053, addendum of 2026-10-06): the VMS's spec is loaded here
-        assert (address_refusal(src, NO_RULES) is None) == ("src=" not in src), src
+        assert address_refusal(src, NO_RULES) is None, src                  # the platform's own names: no vendor's
         assert address_refusal(src, source.rules) and not _leaks(hide_in_url(src, source.rules)), src
         try:
             SPEC.refuse({"source": src})
@@ -857,13 +855,18 @@ def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_fr
         assert "gopher" in str(e) and "driverpack" in str(e)
 
 
-def _testsub2():
-    """`testsub2`'s spec, built here from its file: nobody's catalogue (`SubsystemSpec.from_dict`)."""
+def _testsub2(nested=None):
+    """`testsub2`'s spec, built here from its file: nobody's catalogue (`SubsystemSpec.from_dict`). `nested`: the pairs
+    its unit's `feed` says hold an address, in place of the file's (`[via]`)."""
     import os
     import yaml
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "testdata", "testsub2.subsystem.yaml"),
               encoding="utf-8") as f:
-        return SubsystemSpec.from_dict(yaml.safe_load(f))
+        d = yaml.safe_load(f)
+    if nested is not None:
+        feed = d["unit"]["fields"]["feed"]
+        feed["secret_in"] = [{"nested": nested} if "nested" in e else e for e in feed["secret_in"]]
+    return SubsystemSpec.from_dict(d)
 
 
 def test_an_at_where_no_address_reads_one_is_refused_and_a_stored_one_is_said_masked():
@@ -900,17 +903,22 @@ def test_an_at_where_no_address_reads_one_is_refused_and_a_stored_one_is_said_ma
 
 def test_an_address_nested_in_a_fields_is_read_by_every_loaded_specs_rule_and_its_own_pairs_by_its_own():
     """ADR-0053, addendum of 2026-10-06 on `nested`: a field knows the words its own addresses spell a secret by, not
-    whose address lies inside one. On `testsub2` (its spec built here — nobody's catalogue), beside the deployment's
-    specs: `?url=` holding a camera's address with a login is refused by the VMS's rule (its `nested: [src, url]`), and
-    so is one holding the VMS's word `session=`; the field's own `session=` — no word of `testsub2`'s — is taken. The
+    whose address lies inside one. On `testsub2` (its spec built here — nobody's catalogue — with its feed's `nested`
+    naming `url` beside `via`), beside the deployment's specs: `?url=` holding a camera's address with a login is
+    refused, and so is one holding the VMS's word `session=` — by the VMS's rule, which `testsub2`'s has not; the
+    field's own `session=` is taken. Which pairs hold an address is the field's own word: the file's `testsub2`
+    (`nested: [via]`) reads `?url=` as a value, `?via=` as an address. The
     volume's url (its own words, `nested: [src, url]`) refuses the sixth nested form — a camera's CGI in `src=`
     (`NESTED_FORMS`) — by the VMS's regex its own rule has not, and takes its own `session=`; a stored one is said
     with the inner address masked whole."""
     from vms.config import REC_SPEC
     from w2cplatform.secrets import hide_in_url
-    feed = _testsub2().fields["feed"]
+    feed = _testsub2(nested=["via", "url"]).fields["feed"]
+    as_filed = _testsub2().fields["feed"]
     volume = REC_SPEC.table_specs["volumes"].fields["url"]
     with _only_the_deployments_specs():
+        assert as_filed.refusal("mirror://acme/x?url=rtsp%3A%2F%2Fh%2Fs%3Fsession%3Dabc") is None
+        assert "session" in (as_filed.refusal("mirror://acme/x?via=rtsp%3A%2F%2Fh%2Fs%3Fsession%3Dabc") or "")
         login = "mirror://acme/x?url=rtsp%3A%2F%2Fadmin%3Apw%40h%2F"
         why = feed.refusal(login)
         assert why and "holds an address in 'url'" in why and "admin" not in why, why
