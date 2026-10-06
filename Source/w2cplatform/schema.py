@@ -11,7 +11,8 @@ rule that silently holds nothing):
     enum, const
     properties, required, additionalProperties (true, false or a schema), propertyNames, minProperties, maxProperties
     items (a schema), minItems, maxItems, uniqueItems
-    minLength, maxLength, pattern (searched, as the standard says: anchor it to mean the whole)
+    minLength, maxLength, pattern (searched, as the standard says: anchor it to mean the whole; RE2 only, `re2_fault`,
+                         and read as Go reads it, `go_regex`)
     minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf
     allOf, anyOf, oneOf, not, if/then/else
     title, description, $comment   words for a reader, checked nothing
@@ -20,6 +21,7 @@ rule that silently holds nothing):
 """
 from __future__ import annotations
 
+import functools
 import math
 import re
 
@@ -78,6 +80,10 @@ def load(schema, what: str, depth: int = 0):
             re.compile(schema["pattern"])
         except (re.error, TypeError) as e:
             raise ValueError(f"{what}: pattern {schema['pattern']!r} is no regular expression ({e})") from None
+        fault = re2_fault(schema["pattern"])
+        if fault:
+            raise ValueError(f"{what}: pattern {schema['pattern']!r} {fault}")
+        go_regex(schema["pattern"])                  # …and read as Go reads it, the one way it is matched
     for k in ("minLength", "maxLength", "minItems", "maxItems", "minProperties", "maxProperties"):
         if k in schema and (isinstance(schema[k], bool) or not isinstance(schema[k], int) or schema[k] < 0):
             raise ValueError(f"{what}: `{k}` is a whole number")
@@ -85,6 +91,171 @@ def load(schema, what: str, depth: int = 0):
         if k in schema and (isinstance(schema[k], bool) or not isinstance(schema[k], (int, float))):
             raise ValueError(f"{what}: `{k}` is a number")
     return schema
+
+
+# A REGULAR EXPRESSION OF A SPEC IS A SUBSET OF RE2 (the architect, 6 Oct). One spec for course and product (ADR 0019),
+# and the product's loader is Go's `regexp` — RE2; Python's `re` reads more and says nothing. What Go will not compile
+# or reads otherwise the course refuses at load (the strict loader, ADR 0012). Go does not compile: lookaround, a
+# backreference (`\1`…`\9`, `\g<…>`, `(?P=name)`), an atomic group, a conditional, a possessive quantifier, `\Z` and `\G`,
+# an inline flag but `i`, `m`, `s`, `U`, a comment `(?#…)`, `\u`/`\U`/`\N{…}`, an escaped non-ASCII character, `[\b]`, a
+# one-digit octal in a class, a count past 1000. Go reads otherwise: `[:` in a class (a POSIX class), `{,n}` (characters).
+# The scan walks the pattern as the parser does: `\x` is one escape, `[…]` one class, so `\(?=` and `[(?=]` stand.
+_RE2_FLAGS = set("imsU")
+_COUNT = re.compile(r"\{(\d*)(,?)(\d*)\}")
+_RE2_GROUPS = (("(?<=", "a lookbehind"), ("(?<!", "a negative lookbehind"), ("(?=", "a lookahead"),
+               ("(?!", "a negative lookahead"), ("(?P=", "a named backreference"), ("(?>", "an atomic group"),
+               ("(?(", "a conditional"), ("(?#", "a comment"))
+
+
+def re2_fault(p) -> str:
+    """'' for a pattern Go's RE2 compiles as Python reads it, else the words of what in it does not: the construct and
+    where it stands. Run after `re.compile` succeeded, so what Python refuses is Python's words."""
+    if not isinstance(p, str):
+        return ""
+    n, i, klass = len(p), 0, False
+
+    def no(what: str, at: int, text: str, apart: bool = False) -> str:
+        how = "reads it otherwise than Python" if apart else "does not compile it"
+        return (f"holds {what} `{text}` at {at}: Go's RE2 {how}, and what Go will not compile or reads otherwise the "
+                f"course refuses at load — one spec for course and product (ADR 0019, 0012)")
+
+    while i < n:
+        c = p[i]
+        if c == "\\" and i + 1 < n:
+            e = p[i + 1]
+            if e.isdigit() and e != "0":
+                if len(p[i + 1:i + 4]) == 3 and all(ch in "01234567" for ch in p[i + 1:i + 4]):
+                    i += 4                              # `\123`: an octal character to both
+                    continue
+                if not klass:
+                    return no("a backreference", i, p[i:i + 2])
+                if e in "1234567" and p[i + 2:i + 3] in tuple("01234567"):
+                    i += 3                              # `[\12]`: two octal digits, a character to both
+                    continue
+                return no("a one-digit octal escape in a class", i, p[i:i + 2])
+            if e == "g":
+                return no("a backreference", i, p[i:p.find(">", i) + 1 or i + 2])
+            if e in "ZG":
+                return no("an anchor RE2 lacks (it has `\\z`)", i, p[i:i + 2])
+            if e in "uUN":
+                return no("an escape RE2 lacks (it writes `\\x{…}`)", i, p[i:i + 2])
+            if klass and e == "b":
+                return no("a backspace escape in a class", i, p[i:i + 2])
+            if ord(e) > 127:
+                return no("an escaped non-ASCII character", i, p[i:i + 2])
+            i += 2
+            continue
+        if klass:
+            if c == "]":
+                klass = False
+            elif c == "[" and p[i + 1:i + 2] == ":":
+                return no("a POSIX class to Go, characters to Python", i, p[i:i + 2], apart=True)
+            i += 1
+            continue
+        if c == "[":
+            klass, i = True, i + 1
+            if p[i:i + 1] == "^":
+                i += 1
+            if p[i:i + 1] == "]":
+                i += 1                                  # `[]…]`: the first `]` is a character
+            continue
+        if c == "(" and p[i + 1:i + 2] == "?":
+            for start, what in _RE2_GROUPS:
+                if p.startswith(start, i):
+                    return no(what, i, start)
+            j = i + 2
+            while j < n and (p[j].isalpha() or p[j] == "-"):
+                j += 1
+            flags = p[i + 2:j]
+            if flags and p[j:j + 1] in (":", ")") and not flags.startswith("P"):
+                stray = [f for f in flags if f != "-" and f not in _RE2_FLAGS]
+                if stray:
+                    return no("an inline flag RE2 lacks (it reads i, m, s, U)", i, p[i:j + 1])
+            i += 2
+            continue
+        if c == "{":
+            m = _COUNT.match(p, i)
+            if m and (m.group(1) or m.group(2)):        # `{}` is two characters to both
+                lo, comma, hi = m.groups()
+                if not lo and comma:
+                    return no("a count with no lower bound (Go reads the characters; write `{0,n}`)", i, m.group(),
+                              apart=True)
+                if any(x and int(x) > 1000 for x in (lo, hi)):
+                    return no("a count past RE2's 1000", i, m.group())
+                if p[m.end():m.end() + 1] == "+":
+                    return no("a possessive quantifier", i, m.group() + "+")
+                i = m.end()
+                continue
+        if c in "*+?" and p[i + 1:i + 2] == "+":
+            return no("a possessive quantifier", i, p[i:i + 2])
+        i += 1
+    return ""
+
+
+# …AND THE COURSE READS IT AS GO DOES (the architect, 6 Oct): what both compile but read apart is read Go's way here,
+# not refused. `\d`, `\w`, `\b` are ASCII (`re.ASCII`); `\s` is Go's `[\t\n\f\r ]` (Python's ASCII one adds `\v`); `$`
+# outside a class is the end of the text (`\Z`: Python's `$` takes a newline before it too) — but not under the `m`
+# flag, `(?m)` or `(?m:…)`, where it is the end of a line to both. `\$` and `[$]` are a dollar, untouched.
+_GO_SPACE, _GO_NOT_SPACE, _GO_SPACE_IN_CLASS = r"[\t\n\f\r ]", r"[^\t\n\f\r ]", r"\t\n\f\r "
+
+
+def as_go(p: str) -> str:
+    """`p` (one `re2_fault` passed) as Python must be told it to read it as Go's RE2 does — compiled with `re.ASCII`."""
+    out, i, n, klass, multi = [], 0, len(p), False, [False]   # `multi`: the `m` flag, one entry per open group
+    while i < n:
+        c = p[i]
+        if c == "\\" and i + 1 < n:
+            e = p[i + 1]
+            if e == "s":
+                out.append(_GO_SPACE_IN_CLASS if klass else _GO_SPACE)
+            elif e == "S" and not klass:
+                out.append(_GO_NOT_SPACE)
+            else:
+                out.append(p[i:i + 2])
+            i += 2
+            continue
+        if klass:
+            klass = c != "]"
+            out.append(c)
+            i += 1
+            continue
+        if c == "[":
+            j = i + 1 + (p[i + 1:i + 2] == "^")
+            j += p[j:j + 1] == "]"                           # `[]…]`, `[^]…]`: the first `]` is a character
+            out.append(p[i:j])
+            klass, i = True, j
+            continue
+        if c == "(":
+            j = i + 2
+            if p.startswith("(?", i):
+                while j < n and (p[j].isalpha() or p[j] == "-"):
+                    j += 1
+            flags = p[i + 2:j] if p.startswith("(?", i) else ""
+            if flags and not flags.startswith("P") and p[j:j + 1] in (")", ":"):
+                on, _, off = flags.partition("-")
+                m = True if "m" in on else False if "m" in off else multi[-1]
+                if p[j] == ")":
+                    multi[-1] = m                            # `(?m)`: the rest of this group
+                else:
+                    multi.append(m)                          # `(?m:…)`: this group
+                out.append(p[i:j + 1])
+                i = j + 1
+                continue
+            multi.append(multi[-1])
+            out.append(c)
+            i += 1
+            continue
+        if c == ")" and len(multi) > 1:
+            multi.pop()
+        out.append("\\Z" if c == "$" and not multi[-1] else c)
+        i += 1
+    return "".join(out)
+
+
+@functools.lru_cache(maxsize=1024)
+def go_regex(p: str) -> "re.Pattern":
+    """A spec's pattern compiled to read as Go reads it (`as_go`, `re.ASCII`): every match of one goes through here."""
+    return re.compile(as_go(p), re.ASCII)
 
 
 def _type_of(v) -> str:
@@ -167,7 +338,7 @@ def check(schema, v, where: str = "") -> None:
             raise Invalid(f"{at} is at least {schema['minLength']} characters" if schema["minLength"] > 1 else f"{at} is not empty")
         if "maxLength" in schema and len(v) > schema["maxLength"]:
             raise Invalid(f"{at} is at most {schema['maxLength']} characters, not {len(v)}", "maxLength")
-        if "pattern" in schema and not re.search(schema["pattern"], v):
+        if "pattern" in schema and not go_regex(schema["pattern"]).search(v):
             raise Invalid(f"{at} does not match {schema['pattern']!r}")
     if isinstance(v, (list, tuple)):
         if "minItems" in schema and len(v) < schema["minItems"]:

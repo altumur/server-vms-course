@@ -82,6 +82,8 @@ import unicodedata
 from dataclasses import dataclass
 from urllib.parse import unquote_plus
 
+from .schema import go_regex, re2_fault
+
 SECRET_MASK = "***"
 
 
@@ -189,7 +191,7 @@ class SecretRules:
         if not isinstance(secret_in, list):
             raise ValueError(f"{where}: `secret_in` is a list of {_KINDS}, not {secret_in!r}")
         secret, login, patterns, nested = Names(), Names(), [], set()
-        for entry in secret_in:
+        for at, entry in enumerate(secret_in):
             keys = set(entry) if isinstance(entry, dict) else set()
             if not keys:
                 raise ValueError(f"{where}: an entry of `secret_in` is one of {_KINDS}, not {entry!r}")
@@ -214,7 +216,7 @@ class SecretRules:
                 if logins:
                     login = login | Names.parse(logins, "login", where)
             elif "regex" in keys:
-                patterns.append(_pattern(entry, keys, where))
+                patterns.append(_pattern(entry, keys, where, f"{where}: secret_in[{at}]"))
             elif "nested" in keys:
                 got = entry["nested"]
                 if keys != {"nested"} or not isinstance(got, list) or not got or \
@@ -226,7 +228,7 @@ class SecretRules:
         return cls(secret, login, tuple(patterns), frozenset(nested))
 
 
-def _pattern(entry: dict, keys: set, where: str) -> Pattern:
+def _pattern(entry: dict, keys: set, where: str, at: str) -> Pattern:
     if keys - {"regex", "in", "schemes", "decoded"}:
         raise ValueError(f"{where}: an entry of `secret_in` is one of {_KINDS}, not {entry!r}")
     parts = entry.get("in")
@@ -240,9 +242,13 @@ def _pattern(entry: dict, keys: set, where: str) -> Pattern:
     if not isinstance(entry.get("decoded", True), bool):
         raise ValueError(f"{where}: a `regex`'s `decoded` is true or false, not {entry['decoded']!r}")
     try:
-        rx = re.compile(str(entry["regex"]))
+        re.compile(str(entry["regex"]))            # Python's words first, for what it cannot read at all
     except re.error as e:
         raise ValueError(f"{where}: `regex` {entry['regex']!r} is no regular expression: {e}") from None
+    fault = re2_fault(str(entry["regex"]))         # a subset of RE2, as every pattern of a spec (ADR 0019, 0012)
+    if fault:
+        raise ValueError(f"{at}.regex {entry['regex']!r} {fault}")
+    rx = go_regex(str(entry["regex"]))             # …read as Go reads it: ASCII classes, `$` the end of the text
     if not {"login", "secret"} & set(rx.groupindex) or set(rx.groupindex) - {"login", "secret", "name"}:
         raise ValueError(f"{where}: `regex` {entry['regex']!r} names what it finds — a group `(?P<login>…)` or "
                          f"`(?P<secret>…)`, and maybe `(?P<name>…)`, no other")

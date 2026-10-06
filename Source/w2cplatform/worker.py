@@ -1539,7 +1539,7 @@ class Worker:
         self.lost_to_epoch: set[str] = set()      # units the lease step let go since the last assignment read (`take_epoch`)
         self.epoch_errors: dict[str, str] = {}    # unit -> why its epoch could not be taken (a garbled row)
         self.pass_refused = False                 # a resource did not answer this pass: early passes back off (`run`)
-        self.filings = {"filed": 0, "refused": 0} # requests this worker filed to others, and refused it (`file_request`)
+        self.filings = {"filed": 0, "again": 0, "refused": 0}   # requests this worker filed to others (`file_request`)
         self._requests_state()
 
     # -- staying itself: the slot, the leases, the fence -------------------------------------------------------
@@ -2021,10 +2021,17 @@ class Worker:
     #                  now by default; `filed` — now, by this clock, what the holder measures the request's own road from.
     #                  A row that says its own `by`, `at` or `filed` is refused, as a line that says its own `of`
     #   the row        each value as the holder reads it, in its one text (`canonical.field_text`; numbers by
-    #                  `number_text`), `None` left out; written CREATE-ONLY (`cas=0`, every store has it): the same id filed
-    #                  again is the same request, and the row that stands is the answer — `False`, nothing counted
+    #                  `number_text`), `None` left out; written CREATE-ONLY (`cas=0`, every store has it)
+    #   filed again    IDEMPOTENT (ADR-0013: "not more than once" is about PERFORMING). Only when the id is taken, the row
+    #                  that stands is read and compared, in its one text without the base's `filed`, with what is filed
+    #                  (`by`, `at` — the filer's moment, for a pusher the event's — and the fields): the same → the same
+    #                  request, `True`, counted `filings["again"]`, the row and its first `filed` untouched; a different
+    #                  one, or a row that cannot be read or does not parse → refused (`RequestRefused`, logged, counted),
+    #                  nothing written. A different request under a taken id passed silently before, as `False`
     #
-    # `True` when this call wrote the row. The deadline (`valid_until`) and what the request means are the caller's row.
+    # `True` when THIS call wrote the row; `False` for the same request filed before (it stands, counted `again`, no
+    # error) — one meaning on both sides (the product's `FileRequest`; «Архитектор», 2026-10-06). The deadline (`valid_until`) and
+    # what the request means are the caller's row.
     STAMPED = ("by", "at", "filed")
 
     def file_request(self, sub: str, rid: str, row: dict, *, unit=None, at: float | None = None) -> bool:
@@ -2049,12 +2056,36 @@ class Worker:
         out = {k: t for k, v in row.items() if (t := field_text(v)) is not None}
         out.update(by=f"{self.sub.name}/{unit if unit not in (None, '') else (self.name or self.instance)}",
                    at=number_text(float(now if at is None else at)), filed=number_text(float(now)))
+        key = Subsystem(sub).request_key(rid)
         try:
-            self.vars.put(Subsystem(sub).request_key(rid), out, cas=0)
+            self.vars.put(key, out, cas=0)
         except Conflict:
-            return False                                 # filed already: the same request, and the row that stands answers
+            why = self._filed_already(key, out)
+            if why is None:                              # the same request filed again: its row and first `filed` stand
+                self.filings["again"] += 1
+                return False                             # this call wrote nothing: the repeat is seen in `again` alone
+            self.filings["refused"] += 1
+            log.warning("%s: request %s/%s refused: %s", self.name or self.instance, sub, rid, why)
+            raise RequestRefused(f"request {sub}/{rid} refused: {why}") from None
         self.filings["filed"] += 1
         return True
+
+    # Whether the row standing under a request's id is the one being filed (ADR-0013: filing is idempotent, PERFORMING is
+    # not more than once): `None` when it is — the same text, byte for byte, on one form (`canonical_json` over the items
+    # as the store holds them), leaving out only the base's own stamp `filed`; else why not. A row that cannot be read or
+    # does not parse is not the same request either: it is said, and never overwritten.
+    def _filed_already(self, key: str, out: dict) -> str | None:
+        try:
+            standing, _ = self.vars.get(key)
+        except PARSE_ERRORS as e:                        # a torn row (`Garbled`)
+            return f"the row standing under this rid does not parse ({e}); it is left as it is"
+        except Exception as e:                           # noqa: BLE001 — a store that did not answer
+            return f"the row standing under this rid cannot be read ({type(e).__name__}: {e}); it is left as it is"
+        if standing is None:
+            return "the row that stood under this rid is gone (performed or expired meanwhile); file under a new rid"
+        same = (canonical_json({k: v for k, v in standing.items() if k != "filed"}) ==
+                canonical_json({k: v for k, v in out.items() if k != "filed"}))
+        return None if same else "under this rid stands a different request"
 
     # AN EVENT ABOUT A UNIT, under the epoch this worker holds for it, into the unit's bucket on this server's resource:
     # the platform's line. `None` when no epoch is held for it (not this worker's to speak of), the instance is fenced,

@@ -130,6 +130,31 @@ def test_the_same_log_read_again_files_nothing_new():
     assert sorted(box.vars.list("vms/requests/") + box.vars.list("rec/requests/")) == before
 
 
+def test_a_firing_filed_again_is_the_same_request_and_an_edited_one_is_refused_not_held():
+    """ADR-0013, filing is idempotent: a firing filed again — a restart forgot `fired` before the cursor moved — has the
+    same id, `at` and deadline, so it is the same request: it stands, its first `filed` kept, and `filed` does not count
+    it twice. Filed again after the scenario was edited, the action that changed is another request under a taken id:
+    refused by the base (counted, said), the row untouched — and the firing's other action still stands; nothing is
+    raised out of the pass, where it would hold the scenario's cursor for ever."""
+    box = Box()
+    t = box.wall()
+    _scenario(box)
+    w = _worker(box, _Log([]))
+    row = {"id": "door-on-badge", "then": DOOR["then"]}
+    assert w.file(row, "door-on-badge-d-1", t - 5)
+    rows = {k: box.vars.get(k) for k in box.vars.list("vms/requests/") + box.vars.list("rec/requests/")}
+    assert len(rows) == 2 and w.filed == 2
+    box.wall.advance(3)
+    w.fired.clear()                                      # the restart
+    assert w.file(row, "door-on-badge-d-1", t - 5)
+    assert {k: box.vars.get(k) for k in rows} == rows and w.filed == 2
+    assert w.filings == {"filed": 2, "again": 2, "refused": 0}
+    edited = {**row, "then": [DOOR["then"][0], {**DOOR["then"][1], "minutes": 20}]}
+    assert w.file(edited, "door-on-badge-d-1", t - 5)
+    assert {k: box.vars.get(k) for k in rows} == rows and w.filed == 2
+    assert w.filings == {"filed": 2, "again": 3, "refused": 1}
+
+
 def test_outside_the_window_is_not_a_firing():
     """The window is the whole question. Two things that happened are not two
     things that happened together."""
