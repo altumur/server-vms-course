@@ -1,3 +1,15 @@
 # console_module_debt.txt — the lines the course's copy of the platform's console module differs from the product's
 # by (test_console_module.py): a change the course leads with, until the product takes it. It only shrinks.
 #   <file> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>
+console.js | - | 7977d4d0 | domPlaced: "The domain is held by", termW: "term", backupKept: "This cluster keeps a backup copy of 
+console.js | + | 9ea10bdc | domPlaced: "The domain is held by", termW: "term", backupKept: "This cluster keeps a backup copy of 
+console.js | - | 4c418e76 | domPlaced: "Домен размещён:", termW: "срок", backupKept: "Этот кластер хранит резервную копию домена
+console.js | + | eaeddb31 | domPlaced: "Домен размещён:", termW: "срок", backupKept: "Этот кластер хранит резервную копию домена
+console.js | - | 6788c1f6 | // Where the domain is held, and whether this cluster keeps a copy; moving it here when its holder i
+console.js | + | c70c20ce | // Where the domain is held, and whether this cluster keeps a copy (`/api/held`, the one process doo
+console.js | + | c816d8c8 | // reads: the record, signed, and the number of the copy kept here — never its content, a member's t
+console.js | + | 48f37cc4 | // `/api/backup`); moving it here when its holder is dead.
+console.js | - | 1aa38d21 | <p class="sub">${h(b ? W.backupKept.replace("{r}", b.pointer && b.pointer.rev).replace("{t}", b.poin
+console.js | + | 5ad995d3 | <p class="sub">${h(b ? W.backupKept.replace("{r}", b.rev) : W.noBackupKept)}</p>
+console.js | - | 48ca40db | try { st.held = await getJSON("/domain/held"); } catch (e) { st.held = null; }
+console.js | + | 219d86fe | try { st.held = await getJSON("/api/held"); } catch (e) { st.held = null; }

@@ -1,6 +1,8 @@
 # /etc/systemd/system/w2c-domainagent.service — the domain's agent on every server (`w2c-run.sh domainagent` →
 # `python3 -m w2cplatform.domain.agent`): what this cluster carries, asked of the domain's DOOR by its member key
-# (`DOMAIN_URL`, w2c.env) — never the holder's store; kept sealed with this server's ring; its report up.
+# (`DOMAIN_URL`, w2c.env) — never the holder's store; kept sealed with this server's ring; its report up. It follows
+# the holder by itself after a move: it asks the consoles `CLUSTERS` names (`GET /api/held`) and carries through the
+# door the record of the greatest verified term names.
 [Unit]
 Description=w2c domain agent — what this cluster carries from the domain, and its report up
 After=network-online.target configstore.service

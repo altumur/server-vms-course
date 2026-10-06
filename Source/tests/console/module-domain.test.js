@@ -16,7 +16,7 @@ b.FIX["/domain"]={holder:"h",age:2,complete:true,member_list:{rev:3},
   members:[{name:"h",holder:true,state:"ok"},{name:"m-1",state:"ok",age:2,reaches:["v:a"],skew:1},{name:"m-2",state:"stale",age:99,error:P}],
   topology:{rev:4,centre:"",star:[],via:{"m-2":"m-1"},by:"ann"},knocking:[{name:"m-9",times:3,last:1,fingerprint:"ab:cd"}]};
 b.FIX["/domain/alarms"]={complete:false,sentence:"m-2 did not answer",events:[{t:1,kind:"silent",subsystem:"testsub",member:"m-1",unit:"7",note:P}]};
-b.FIX["/domain/held"]={cluster:"m-1",holder:{holder:"h",term:5},backup:{pointer:{rev:9,term:5}}};
+b.FIX["/api/held"]={cluster:"m-1",holder:{holder:"h",term:5},term:5,keys:{current:"k1"},backup:{rev:9}};
 b.FIX["/domain/keys"]={vars:[{key:"domain/x"}]};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));

@@ -51,7 +51,10 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
         if rest == "report" or rest.startswith("report@"):
             reporting.append((name, rest.partition("@")[2] or None))   # reached by nobody: read from its reports
             continue
-        config_url, objects = rest.split("|", 1)
+        if rest.startswith(("http://", "https://")):
+            reporting.append((name, None))                             # its console only: read from its reports too
+            continue
+        config_url, objects = rest.split("|", 2)[:2]                    # `|<console>` after them is `consoles_from_env`'s
         fed.add(Cluster(name, guarded(open_vars(config_url)), open_objects(objects),
                         is_domain_holder=(name == domain) if domain else i == 0))
     if not fed.clusters:
@@ -70,3 +73,25 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     for name, via in reporting:
         fed.add(member_copy(name, fed.domain_holder.objects, lost_after=float(os.environ.get("LOST_AFTER", "45")), via=via))
     return fed
+
+
+def consoles_from_env(var: str = "CLUSTERS") -> dict[str, str]:
+    """The consoles of the domain's clusters, by name, as `CLUSTERS` names them: `name=https://north.site:8443` (a member
+    the domain reads by its reports, whose console answers the processes' doors), or a third part after a cluster read
+    directly, `name=<store>|<objects>|https://…`. Where an agent asks for the holder's record (`GET /api/held`,
+    `agent.HolderFollower`) and where an outgoing holder finds its target (`signer_service.move_by_handover`) — one
+    declaration for both («Архитектор», 2026-10-06). A name with no console is in neither; a console that is not
+    http(s)://… is refused, said."""
+    out: dict[str, str] = {}
+    seen: set[str] = set()
+    for entry in filter(None, os.environ.get(var, "").split(",")):
+        name, _, rest = entry.partition("=")
+        at = rest if rest.startswith(("http://", "https://")) else (rest.split("|")[2] if rest.count("|") >= 2 else "")
+        if name in seen:
+            raise SystemExit(f"{var} names {name} twice")
+        seen.add(name)
+        if at and not at.startswith(("http://", "https://")):
+            raise SystemExit(f"{var} gives {name} the console {at!r}: a console is http(s)://host:port")
+        if at:
+            out[name] = at.rstrip("/")
+    return out

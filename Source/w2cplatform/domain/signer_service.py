@@ -25,7 +25,15 @@ rules — whoever hands it on (the domain's console, which has no key, forwards 
     PUT  /api/shared          {base_rev, shared} — the shared settings, checked and signed (`Holder.shared`)
     POST /api/handover        {to} — a planned handover (`Holder.handover`: `term.handover`)
     POST /api/move            {recovery, stolen?} — the domain moved HERE, on the NEW holder, from the newest backup any
-                              member holds (`Holder.move`: `term.move_domain`), checked by the recovery file
+                              member holds (`Holder.move`: `term.move_domain`), checked by the recovery file; the
+                              neighbours read over their consoles' doors (`/api/held`, `/api/backup`, `term.AskedCluster`)
+    POST /api/prepare         the TARGET's half of a planned handover, asked by the holder of the current term (its
+                              token key signs `prepare|<this cluster>|<time>`): a key of this signer's own for the
+                              domain, kept aside here (`domain/signer-prepared`); the answer is its public halves
+    POST /api/take            {grant, recovery_secret} — …and the taking: the outgoing holder's grant (signed by its
+                              token key, naming this cluster and the backup rev it carried), its signer's keys sealed to
+                              the prepared key; this signer moves the domain onto ITS OWN store (`Holder.take`:
+                              `term.move_domain`) — the outgoing holder writes no store but its own (ADR 0001 §1.12)
     GET|POST /api/people/users, PUT|DELETE /api/people/users/<name>, GET /api/people/break-glass,
     PUT  /api/people/break-glass/<cluster> — the people with their passwords and the clusters' emergency passwords,
                               sealed with the ring (`Holder.people`)
@@ -85,13 +93,15 @@ class Holder:
     never moves or that this cluster does not hold. `hand_to(to)`: how a handover is made (`term.handover` with this
     process's means), None where it cannot be. `console_url`: where the domain's console answers — the view's `url`,
     where a cluster console hands `/domain/*`; `signer_url`: where this signer answers, said in the holder record a
-    move here claims.
+    move here claims. `consoles`: the consoles of the domain's clusters, by name (`runtime.consoles_from_env`) — where a
+    move reads its neighbours and a handover asks its target; None — the clusters of `fed` are read as they are (the
+    lessons' site, one process).
     """
 
     def __init__(self, vars_, objects, signer: Signer, *, sealer=None, ids=None, revoked=None, pub=None, carry_door=None,
                  fed=None, view=None, members=None, topology=None, pending=None, alarms=None, term=None, hand_to=None,
                  journal=None, console_url: str | None = None, signer_url: str | None = None, wall=time.time,
-                 backup_every: float = BACKUP_EVERY, backup_holders: int = BACKUP_HOLDERS):
+                 backup_every: float = BACKUP_EVERY, backup_holders: int = BACKUP_HOLDERS, consoles: dict | None = None):
         from .steps import Steps
         self.vars, self.objects, self.signer = vars_, objects, signer
         self.sealer = sealer if sealer is not None else getattr(signer, "sealer", None)
@@ -100,6 +110,7 @@ class Holder:
         self.pending, self.alarms, self.term, self.hand_to = pending, alarms, term, hand_to
         self.journal, self.console_url, self.signer_url, self.wall = journal, console_url, signer_url, wall
         self.backup_every, self.backup_holders = backup_every, backup_holders
+        self.consoles = consoles
         self.loop = Steps("domain signer", 5.0, log)
         self._backed_up: float | None = None             # when the pass last sealed a backup
         self._moving = threading.Lock()                  # one handover at a time
@@ -220,12 +231,12 @@ class Holder:
         return t
 
     def hand_targets(self) -> list[str]:
-        """The members a planned handover can go to: the ones whose stores this process can write — the move writes
-        the new holder's (`term.move_domain`); a member read by its reports alone is not one of them."""
+        """The members a planned handover can go to: the ones that can be ASKED to take the domain — the target moves it
+        onto its own store, this holder writes none but its own (`term.handover`). A member with a console in
+        `CLUSTERS` (`consoles`); every other member of `fed` where there are no consoles (the lessons' site)."""
         if self.term is None or self.hand_to is None or self.fed is None:
             return []
-        from .uplink import _CopyObjects
-        return sorted(n for n, c in self.fed.clusters.items() if n != self.term.name and not isinstance(c.objects, _CopyObjects))
+        return sorted(n for n in self.fed.clusters if n != self.term.name and (self.consoles is None or n in self.consoles))
 
     # THE FREEZE IS THE SIGNER'S TO CHECK (ADR-0032). Every operation that changes what the domain decided asks it
     # here, in this process, whoever handed the request on: frozen, a handover is under way and a write accepted now
@@ -340,7 +351,8 @@ class Holder:
         if stolen and not is_recovery_file(blob):
             return 400, {"detail": "a stolen holder is answered by the root's recovery file: the signer's backup holds "
                                    "the stolen keys themselves"}
-        why = self._not_the_domains(blob, me)
+        fed = self.neighbours()
+        why = self._not_the_domains(blob, me, fed)
         if why:
             return 403, {"detail": why}
         if not self._moving.acquire(blocking=False):
@@ -349,9 +361,8 @@ class Holder:
             from .federation import Unreachable
             from .term import move_domain
             try:
-                new, report = move_domain(self.fed, me, blob, self.signer.domain,
-                                          lambda n: self.fed.clusters[n].objects, self.wall, stolen=stolen,
-                                          sealer=self.sealer)
+                new, report = move_domain(fed, me, blob, self.signer.domain, lambda n: fed.clusters[n].objects,
+                                          self.wall, stolen=stolen, sealer=self.sealer)
             except (ValueError, RuntimeError, Unreachable) as e:
                 return 409, {"detail": f"the domain was not moved: {e}"}
             self._took(new)
@@ -362,7 +373,32 @@ class Holder:
         return 200, {k: report.get(k) for k in ("term", "rev", "restored_from", "keys_rev", "stolen", "reissued",
                                                 "shared_from", "sentence")}
 
-    def _not_the_domains(self, blob: bytes, me: str) -> str | None:
+    # THE NEIGHBOURS, AS A MOVE HERE READS THEM: this cluster's own stores, and every other cluster over its console's
+    # doors (`term.AskedCluster`: `/api/held`, and `/api/backup` signed by this cluster's member key) — never a store of
+    # theirs. A cluster `CLUSTERS` gives no console is read as `fed` reaches it (a cluster read directly; the lessons).
+    def neighbours(self):
+        if not self.consoles:
+            return self.fed
+        from w2cplatform.trust.memberkey import MemberKey
+        from .federation import Federation
+        from .term import AskedCluster
+        me = self.fed.domain_holder
+        try:
+            key = MemberKey.load(me.vars, self.sealer)
+        except Exception:                                # noqa: BLE001 — a key that does not open: no backup is asked
+            key = None
+        fed = Federation()
+        fed.add(me)
+        for name, c in self.fed.clusters.items():
+            if name == me.name:
+                continue
+            fed.add(AskedCluster(name, self.consoles[name], me.name, key, wall=self.wall) if name in self.consoles else c)
+        for name, console in self.consoles.items():
+            if name not in fed.clusters:
+                fed.add(AskedCluster(name, console, me.name, key, wall=self.wall))
+        return fed
+
+    def _not_the_domains(self, blob: bytes, me: str, fed=None) -> str | None:
         """Why `blob` is not this domain's recovery file — None when it is. A root's: some member holds a key set that
         root signed (`term._trusted_keys`). The signer's backup: the key set this cluster holds names its token key, by
         the same public half."""
@@ -374,7 +410,7 @@ class Holder:
         try:
             if is_recovery_file(blob):
                 root = DomainRoot.restore(self.signer.domain, blob, now=self.wall)
-                if _trusted_keys(self.fed, me, root, self.wall()).rev == 0:
+                if _trusted_keys(fed or self.fed, me, root, self.wall()).rev == 0:
                     return "no member holds a key set this root signed: it is not this domain's recovery file"
                 return None
             d = json.loads(blob)
@@ -390,6 +426,136 @@ class Holder:
         if keys is None or keys.keys.get(kid) != pub:
             return f"the key set {me} holds does not name this backup's key: it is not this domain's signer"
         return None
+
+    # THE TARGET'S HALF OF A PLANNED HANDOVER (ADR-0032: `handover` is checked by the outgoing holder's grant; contract
+    # §10a: `/api/prepare`, `/api/take` are processes' doors, handed here by this cluster's console). The outgoing holder
+    # writes no store but its own (ADR 0001 §1.12): it asks THIS signer to prepare, then to take — and the move onto
+    # this cluster's store is made here, by `term.move_domain`, as an emergency move is.
+    PREPARED = "domain/signer-prepared"                 # `domain/signer*`: the signer's alone, never an agent's or a console's
+
+    def _current_holder_signed(self, message: bytes, signature: str | None) -> str | None:
+        """Why `signature` is not by the holder of the current term — None when it is: its token key, the current key
+        of the key set this cluster carries (the key only that holder holds)."""
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        from .agent import ClusterTrust, Untrusted
+        try:
+            keys = ClusterTrust(self.vars).keyset()
+        except Untrusted as e:
+            return f"the key set this cluster carries does not read ({e})"
+        if keys is None or not keys.current or keys.current not in keys.keys:
+            return "this cluster carries no key set: it knows no holder to take the domain from"
+        try:
+            Ed25519PublicKey.from_public_bytes(keys.keys[keys.current]).verify(bytes.fromhex(signature or ""), message)
+        except Exception:                                # noqa: BLE001 — anything that does not verify is not the holder
+            return "not signed by the holder of the current term"
+        return None
+
+    def prepare(self, at, signature: str | None) -> tuple[int, dict]:
+        """`POST /api/prepare`, signed by the holder of the current term (`prepare|<this cluster>|<time>`): a key of this
+        signer's own for the domain, made now and kept aside here, sealed with the ring; the answer is its public
+        halves — the outgoing holder seals its keys to `seal`. Anybody else: 403, and nothing is made or replaced."""
+        from w2cplatform.sealing import seal_items
+        from w2cplatform.trust.memberkey import MemberKey
+        from .carry import SKEW
+        from .term import prepare_message
+        if self.fed is None:
+            return 404, {"detail": "this signer reads no domain (CLUSTERS): there is nothing to prepare for"}
+        me = self.fed.domain_holder.name
+        if self.term is not None and not self.term.deposed_by:
+            return 409, {"detail": f"{me} holds the domain at term {self.term.term}: it is handed from here, not to here"}
+        try:
+            at = float(at)
+        except (TypeError, ValueError):
+            return 403, {"detail": "a prepare names its time (X-W2C-Time) and is signed by the holder (X-W2C-Signature)"}
+        why = self._current_holder_signed(prepare_message(me, at), signature)
+        if why:
+            return 403, {"detail": why}
+        if not (abs(self.wall() - at) <= SKEW):
+            return 403, {"detail": f"the ask is {self.wall() - at:+.0f} s from this cluster's clock: more than {SKEW:.0f} s"}
+        key = MemberKey.new()
+        _, idx = self.vars.get(self.PREPARED)
+        self.vars.put(self.PREPARED, seal_items(self.sealer, {"seed_secret": key.seed.hex(), "seal_pub": key.seal_pub,
+                                                              "at": str(at)}, self.PREPARED), cas=idx)
+        return 200, {"cluster": me, "seal": key.seal_pub, "pub": key.pub}
+
+    def _prepared(self):
+        from w2cplatform.sealing import open_row
+        from w2cplatform.trust.memberkey import MemberKey
+        items, _ = self.vars.get(self.PREPARED)
+        if not items or not items.get("seed_secret"):
+            return None
+        try:
+            return MemberKey(bytes.fromhex(open_row(self.sealer, items, self.PREPARED)["seed_secret"]))
+        except Exception:                                # noqa: BLE001 — a key that does not open is none prepared
+            return None
+
+    def take(self, body: dict) -> tuple[int, dict]:
+        """`POST /api/take {grant, recovery_secret}`: the domain moved onto this cluster's store, handed by the holder of
+        the current term. `grant`: signed by that holder's token key — `{grant: "handover", to: <this cluster>, term,
+        rev}`, the backup rev this cluster's agent carried; `recovery_secret`: that holder's signer's keys (Lessons
+        4–7: the domain's own), sealed to the key `/api/prepare` made. The prepared key is used once. Returns the move's
+        report and the record this cluster claimed."""
+        from w2cplatform.trust.documents import NotTaken, verify as verify_doc
+        from w2cplatform.trust.memberkey import NotMine
+        from w2cplatform.trust.signer import is_recovery_file
+        from .agent import ClusterTrust, Untrusted
+        from .term import BACKUP, HOLDER
+        if self.fed is None:
+            return 404, {"detail": "this signer reads no domain (CLUSTERS): there is nothing to take"}
+        refused = self.refusal()
+        if refused and refused[0] == 503:
+            return refused
+        me = self.fed.domain_holder.name
+        if self.term is not None and not self.term.deposed_by:
+            return 409, {"detail": f"{me} holds the domain at term {self.term.term}: there is nothing to take"}
+        grant, sealed = body.get("grant"), body.get("recovery_secret")
+        if not isinstance(grant, dict) or not isinstance(sealed, str):
+            return 400, {"detail": "a take is {grant: <the outgoing holder's, signed>, recovery_secret: <sealed>}"}
+        key = self._prepared()
+        if key is None:
+            return 409, {"detail": f"nothing is prepared on {me}: the holder asks POST /api/prepare first"}
+        try:
+            blob = key.open("recovery_secret", sealed, f"take|{me}").encode()
+            kid = json.loads(blob)["kid"]
+        except (NotMine, *PARSE_ERRORS) as e:
+            return 403, {"detail": f"the keys handed over do not open with the key prepared here: {e}"}
+        if is_recovery_file(blob):
+            return 400, {"detail": "a handover hands on the signer's own keys; a domain whose root is off the holder is "
+                                   "moved by its recovery file (POST /api/move)"}
+        try:
+            keys = ClusterTrust(self.vars).keyset()
+            g = verify_doc(grant, keys, self.wall())
+        except (Untrusted, NotTaken) as e:
+            return 403, {"detail": f"the grant does not verify: {e}"}
+        if g.get("grant") != "handover" or g.get("to") != me or g.get("kid") != kid or kid != keys.current:
+            return 403, {"detail": f"the grant is no handover to {me} by the holder whose keys it hands on"}
+        why = self._not_the_domains(blob, me)
+        if why:
+            return 403, {"detail": why}
+        ptr, _ = self.vars.get(BACKUP)
+        if not ptr or str(ptr.get("rev")) != str(g.get("rev")) or str(ptr.get("term")) != str(g.get("term")):
+            return 409, {"detail": f"{me} did not take backup rev {g.get('rev')} of term {g.get('term')}: the handover "
+                                   f"restores from nothing older"}
+        if not self._moving.acquire(blocking=False):
+            return 503, {"detail": "a move is under way already: seconds, not minutes"}
+        try:
+            from .federation import Unreachable
+            from .term import move_domain
+            fed = self.neighbours()
+            try:
+                new, report = move_domain(fed, me, blob, self.signer.domain, lambda n: fed.clusters[n].objects,
+                                          self.wall, sealer=self.sealer)
+            except (ValueError, RuntimeError, Unreachable) as e:
+                return 409, {"detail": f"the domain was not taken: {e}"}
+            self._took(new)
+            _, idx = self.vars.get(self.PREPARED)
+            self.vars.put(self.PREPARED, {"taken": f"term {new.term}"}, cas=idx)   # used once
+        finally:
+            self._moving.release()
+        self._say("domain.taken", user=g.get("from") or "holder", target=me, term=report["term"])
+        record = json.loads(self.vars.get(HOLDER)[0]["doc"])
+        return 200, {**{k: report.get(k) for k in ("term", "rev", "restored_from", "shared_from", "sentence")},
+                     "record": record}
 
     def _took(self, new) -> None:
         """This process holds the domain now: the new term, its signer for everything it signs from here on (the
@@ -643,6 +809,10 @@ class Holder:
                     return self._send(*holder.handover(self._token(), body))
                 if self.path == "/api/move":
                     return self._send(*holder.move(body))         # checked by the file it carries, not by a token
+                if self.path == "/api/prepare":                   # …by the current holder's signature
+                    return self._send(*holder.prepare(self.headers.get("X-W2C-Time"), self.headers.get("X-W2C-Signature")))
+                if self.path == "/api/take":                      # …by its grant and the key prepared here
+                    return self._send(*holder.take(body))
                 if self.path.startswith("/api/people/"):
                     return self._send(*holder.people("POST", self.path[len("/api/people/"):], self._token(), body))
                 self._send(404, {"detail": "no such route"})
@@ -747,10 +917,11 @@ def holder_pass(holder: Holder, domain: str, signer: Signer) -> None:
     from .members import Members
     from .pending import PendingEdits
     from .readview import ReadView
-    from .runtime import federation_from_env
+    from .runtime import consoles_from_env, federation_from_env
     from .topology import Topology
     from .uplink import _CopyObjects
     fed = federation_from_env()
+    holder.consoles = consoles_from_env() or None        # where a move reads its neighbours and a handover asks
     lost_after = float(os.environ.get("LOST_AFTER", "45"))
     configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
     hv, ho = fed.domain_holder.vars, fed.domain_holder.objects
@@ -790,10 +961,32 @@ def term_of(fed, signer: Signer, objects, url: str | None = None):
     return term
 
 
+def _post(url: str, body: dict, headers: dict | None = None, timeout: float = 10.0) -> tuple[int, dict]:
+    import urllib.error
+    import urllib.request
+    from .federation import Unreachable
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
+                                 headers={"Content-Type": "application/json", **(headers or {})})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            status, raw = r.status, r.read()
+    except urllib.error.HTTPError as e:
+        status, raw = e.code, e.read()
+    except OSError as e:
+        raise Unreachable(f"{url} did not answer: {e}") from None
+    try:
+        said = json.loads(raw or b"{}")
+    except PARSE_ERRORS:
+        said = {}
+    return status, said if isinstance(said, dict) else {}
+
+
 def move_by_handover(holder: Holder, to: str, domain: str, signer: Signer):
-    """`term.handover` with this process's means: the signer's own backup of its keys (a domain whose root is off the
-    holder needs the recovery file, which is not here — no `move` then), the members' stores as the domain reaches
-    them, and, for `to`'s agent to take the last backup, a wait for its report to say so."""
+    """`term.handover` with this process's means: for `to`'s agent to take the last backup, a wait for its report to
+    say so; then `to` is ASKED to take the domain at its console (`CLUSTERS`), which hands it to its signer — prepare
+    (signed by this holder's token key), then take (the grant, and this signer's own keys sealed to the key `to`
+    prepared; a domain whose root is off the holder has no such keys here — no handover then). This process writes
+    no store of `to`'s."""
     from .term import BACKUP, handover
     wait = float(os.environ.get("HANDOVER_WAIT", "80"))
     t = holder.term
@@ -808,7 +1001,38 @@ def move_by_handover(holder: Holder, to: str, domain: str, signer: Signer):
             if ptr and int(ptr.get("rev", -1)) == t.backup_rev and int(ptr.get("term", -1)) == t.term:
                 return
             time.sleep(0.5)
-    return handover(t, to, signer.backup(), domain, lambda n: holder.fed.clusters[n].objects, carry_to)
+
+    return handover(t, to, lambda n: holder.fed.clusters[n].objects, carry_to,
+                    asked_to_take((holder.consoles or {}).get(to), to, t, signer))
+
+
+def asked_to_take(console: str | None, to: str, t, signer: Signer):
+    """The `take` of `term.handover` over doors: `to`'s console (`CLUSTERS`) hands both asks to `to`'s signer — prepare,
+    signed by this holder's token key; then take, with the grant and this signer's own keys sealed to the key `to`
+    prepared. `(None, report)`: the report `to` answered, the record it claimed in it. `RuntimeError`: not taken."""
+    from w2cplatform.trust.documents import sign
+    from w2cplatform.trust.memberkey import seal_to
+    from .term import prepare_message
+
+    def take():
+        if not console:
+            raise RuntimeError(f"CLUSTERS gives {to} no console: there is nobody to ask to take the domain; the handover "
+                               f"is called off and {t.name} is still the holder")
+        at = time.time()
+        st, pubs = _post(console.rstrip("/") + "/api/prepare", {}, {
+            "X-W2C-Time": f"{at:.3f}", "X-W2C-Signature": signer.tokens.key.sign(prepare_message(to, at)).hex()})
+        if st != 200 or not isinstance(pubs.get("seal"), str):
+            raise RuntimeError(f"{to} did not prepare ({st}: {pubs.get('detail', '')}); the handover is called off and "
+                               f"{t.name} is still the holder")
+        grant = sign({"grant": "handover", "to": to, "from": t.name, "term": t.term, "rev": t.backup_rev,
+                      "at": time.time()}, signer.tokens)
+        sealed = seal_to(pubs["seal"], "recovery_secret", signer.backup().decode(), f"take|{to}")
+        st, rep = _post(console.rstrip("/") + "/api/take", {"grant": grant, "recovery_secret": sealed}, timeout=90.0)
+        if st != 200:
+            raise RuntimeError(f"{to} did not take the domain ({st}: {rep.get('detail', '')}); the handover is called "
+                               f"off and {t.name} is still the holder")
+        return None, rep
+    return take
 
 
 # THE SHARED SETTINGS ARE SIGNED WHERE THE KEY IS, AND CHECKED THERE (ADR-0032: the key's process performs the operation
