@@ -512,6 +512,10 @@ def forget_finished(ctl, now: float) -> int:
 # says none, so the deadline is the job's: how long it waits for a recorder to begin). A recorder that has not
 # begun it by then answers it expired and the reaper ends the row; a job still fetching asks again on its next turn,
 # and the recorder goes on from the first moment its volume does not show (`RecWorker.requests`).
+#
+# NOT A WORKER'S FILING (ADR-0013): the scan's worker only says `fetching` in its heartbeat — its spec names no
+# `worker.requests` and its grant reaches no `rec/requests/*`. This is the VMS's housekeeping, filing with the
+# console's grant through rec's controller, as an operator's console does; a worker files only by `Worker.file_request`.
 FETCH_WAIT = 600.0
 
 

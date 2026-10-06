@@ -7,6 +7,7 @@ observation of the camera.
 """
 import os
 
+from w2cplatform.canonical import number_text
 from w2cplatform.eventdatabase import EventIndex
 from tests.vmsconftest import Box
 from tests.test_autoworker import DOOR, _assigned, _Log, _scenario, _worker, ev
@@ -23,7 +24,7 @@ def test_a_scenario_counts_in_event_time_and_is_named_after_the_event():
     w = _worker(box, _Log(same))
     w.reconcile_once()
     assert sorted(box.vars.list("vms/requests/")) == ["vms/requests/one-12-e1-abc-1-0", "vms/requests/one-12-e1-abc-2-0"]
-    assert box.vars.get("vms/requests/one-12-e1-abc-1-0")[0]["valid_until"] == str(t - 10 + 30.0)
+    assert box.vars.get("vms/requests/one-12-e1-abc-1-0")[0]["valid_until"] == number_text(t - 10 + 30.0)   # one text for a number (`canonical`)
 
 
 def test_within_is_between_when_two_things_happened_and_a_late_event_is_too_late_to_act_on():
@@ -46,7 +47,7 @@ def test_within_is_between_when_two_things_happened_and_a_late_event_is_too_late
     _scenario(box2); _assigned(box2, "door-on-badge")
     w = _worker(box2, _Log(events))
     w.reconcile_once()
-    assert box2.vars.get("vms/requests/door-on-badge-d-1-0")[0]["valid_until"] == str(t - 4 + 30.0)
+    assert box2.vars.get("vms/requests/door-on-badge-d-1-0")[0]["valid_until"] == number_text(t - 4 + 30.0)
 
 
 def test_a_device_that_knows_when_it_happened_says_so_and_the_line_carries_it():
