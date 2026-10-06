@@ -91,11 +91,11 @@ def _spec_with(unconfirmed_max):
     """The VMS's spec, its `lease.unconfirmed_max` said otherwise."""
     import os
 
-    import yaml
+    from w2cplatform import specyaml
     from tests.productdir import SOURCE
     from w2cplatform.spec import SubsystemSpec
     with open(os.path.join(SOURCE, "vms", "vms.subsystem.yaml"), encoding="utf-8") as f:
-        d = yaml.safe_load(f)
+        d = specyaml.loads(f)
     return SubsystemSpec.from_dict({**d, "lease": {"unconfirmed_max": unconfirmed_max}})
 
 
@@ -137,7 +137,7 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
     the spec says so next to the place (`placement.places.lease: strict`): a spec that does not keeps it too."""
     import os
 
-    import yaml
+    from w2cplatform import specyaml
     from vms import volumes
     from vms.recworker import RecWorker
     from w2cplatform.spec import SubsystemSpec
@@ -145,7 +145,7 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
     from tests.vmsconftest import Box
     from tests.test_volumes import _recorder
     with open(os.path.join(SOURCE, "vms", "rec.subsystem.yaml"), encoding="utf-8") as f:
-        d = yaml.safe_load(f)
+        d = specyaml.loads(f)
     places = {k: v for k, v in d["placement"]["places"].items() if k != "lease"}
     from tests.conftest import in_catalogue
     from vms.config import REC_SPEC

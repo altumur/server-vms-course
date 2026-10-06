@@ -995,11 +995,11 @@ def test_servers_carries_a_recorders_missing_volume_as_a_string_and_its_waiting_
     declares `volume_missing` — a string, in `heartbeat.strings` — and `shrink_pending` — a number — gets each recorder's
     value on its row of `GET /servers` as the recorder said it: the volume's name, the bytes as an int; a recorder that
     says neither has neither. The spec is built here from the recorder's own, so the test does not wait on its bytes."""
-    import yaml
+    from w2cplatform import specyaml
     from w2cplatform.spec import SubsystemSpec
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms", "rec.subsystem.yaml"),
               encoding="utf-8") as f:
-        d = yaml.safe_load(f)
+        d = specyaml.loads(f)
     declared = [{"field": "volume_missing", "title": "том не найден"},           # rec's spec as it is: its bytes
                 {"field": "shrink_pending", "title": "уменьшение квоты не подтверждено"}]
     assert "volume_missing" in d["heartbeat"]["strings"] and d["servers"]["status"] == declared, d.get("servers")

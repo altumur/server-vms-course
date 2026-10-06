@@ -16,9 +16,9 @@ import os
 import re
 
 import pytest
-import yaml
 
 from tests.productdir import SOURCE, product_file, product_files
+from w2cplatform import specyaml
 
 PRODUCT_SPECS = "vmsworker/vms"                        # on the product's `main`, relative to its root
 _THEIRS = product_files(PRODUCT_SPECS, ".subsystem.yaml")
@@ -210,7 +210,7 @@ def test_every_spec_of_the_product_loads_with_the_courses_loader_but_for_the_deb
     `spec_load_debt.txt` as `<spec>:<key path>` until it is closed, and the list only shrinks."""
     found = set()
     for p in _THEIRS:
-        d = yaml.safe_load(product_file(p).decode("utf-8"))
+        d = specyaml.loads(product_file(p), f"the product's {p}")     # the course's one reading of a spec (ADR-0019)
         found |= {f"{d.get('name')}:{k}" for k in refused_paths(d)}
     _hold(found, LOAD_DEBT, LOAD_HEAD, "key paths of the product's specs the course's loader refuses")
 

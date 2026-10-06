@@ -23,9 +23,9 @@ SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def _testsub2_without(key: str) -> SubsystemSpec:
     """testsub2 with one key of its `placement.places` taken out: the spec that does not say it. A copy of its own, put in
     no catalogue (`conftest._read`): a loaded testsub2 changes the derived rules of every test after it in the run."""
-    import yaml
+    from w2cplatform import specyaml
     with open(TESTSUB2, encoding="utf-8") as f:
-        spec = SubsystemSpec.from_dict(yaml.safe_load(f))
+        spec = SubsystemSpec.from_dict(specyaml.loads(f))
     assert key in spec.places, key
     spec.places = {k: v for k, v in spec.places.items() if k != key}
     return spec
@@ -301,6 +301,6 @@ def test_a_spec_named_as_one_of_the_platforms_own_names_does_not_load():
         with open(path, "w", encoding="utf-8") as f:
             f.write(text.replace("\nname: testsub2\n", f"\nname: {name}\n", 1))
         _refused(lambda: SubsystemSpec.load(path), f"`{name}` is a name of the platform's own")
-    import yaml
-    other = yaml.safe_load(text.replace("\nname: testsub2\n", "\nname: testsub3\n", 1))
+    from w2cplatform import specyaml
+    other = specyaml.loads(text.replace("\nname: testsub2\n", "\nname: testsub3\n", 1))
     assert SubsystemSpec.from_dict(other).name == "testsub3"     # (from a dict: nobody's catalogue, the run's specs stay)
