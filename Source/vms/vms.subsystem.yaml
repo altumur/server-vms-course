@@ -430,6 +430,23 @@ metrics:
   - {name: device_events_refused_total, from: heartbeat.events_refused, default: 0, type: counter}
   - {name: commands_reanswered_total, from: heartbeat.commands_reanswered, default: 0, type: counter}
   - {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                    # the thirteenth pass, major 18
+  # The driver host's counts (heartbeat.driver, summed over a worker's hosts: the product's; a worker that runs its cameras
+  # in-process says none, and the line is 0): a device call not back, a zombie, an opening left behind in a driver, an
+  # NVR replaced under its name, a card lane stuck — each was in the heartbeat alone, visible to no alert (the eleventh
+  # review; «Архитектор», 2026-10-06: one spec, the driver's name nowhere in it).
+  - {name: driver_zombies, from: heartbeat.driver.zombies, default: 0}
+  - {name: driver_openings_left_behind, from: heartbeat.driver.openings_left_behind, default: 0}
+  - {name: driver_device_calls_stuck, from: heartbeat.driver.device_calls.stuck, default: 0}
+  - {name: driver_device_calls_left, from: heartbeat.driver.device_calls.left, default: 0}
+  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.timed_out, labels: {outcome: timed_out}, default: 0, type: counter}
+  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.behind_stuck, labels: {outcome: behind_stuck}, default: 0, type: counter}
+  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.busy, labels: {outcome: busy}, default: 0, type: counter}
+  - {name: driver_device_id_stuck_total, from: heartbeat.driver.device_id_stuck, default: 0, type: counter}
+  - {name: driver_device_id_changes_total, from: heartbeat.driver.device_id_changes, default: 0, type: counter}
+  - {name: driver_device_ids_shared_total, from: heartbeat.driver.device_ids_shared, default: 0, type: counter}
+  - {name: driver_card_stuck, from: heartbeat.driver.card_stuck, default: 0}
+  - {name: driver_card_slow, from: heartbeat.driver.card_slow, default: 0}
+  - {name: driver_card_reads_refused_total, from: heartbeat.driver.card_reads_refused, default: 0, type: counter}
 # What a page calls things (the console module reads it from /spec; the platform reads none of it).
 display:
   section: Оборудование
