@@ -22,7 +22,7 @@ Environment: `DOMAIN_ID`, `PLATFORM_STORE` (default the `domain` role's socket),
 - At its start a signer publishes its own key set only into a store that holds none: on a member the domain's key set, carried by its agent, stays.
 
 ## `edit_shared(vars_, objects, issuer, keyset, revoked, token, body, now)`
-The shared settings edited whole where the key is: the person (401/403), the shape (400), a stale `base_rev` (409), the specs' `domain.shared` — each field and each document (`{name, type: json, schema}`) by its schema (400, nothing signed) — then built, signed and pointed to — `200 {rev, by}`. One operation over what the specs declare: a document given as the text of its JSON is read as JSON (`_document`); no field is known by what it means.
+The shared settings edited whole where the key is: the person (401/403), the shape (400), a stale `base_rev` (409), the specs' `domain.shared` — each field and each document (`{name, type: json, schema}`) by its schema (400, nothing signed) — then built, signed and pointed to — `200 {rev, by}`. One operation over what the specs declare: a document is taken as it is — reading a text box is the page's work (the architect with «Паритет», 2026-10-06); no field is known by what it means.
 
 ## `signer_steps(ids, revoked)`, `revocations(vars_)`
 The identity set and the pruning, step by step; the revocation list read entry by entry, an unreadable row said and started empty.
