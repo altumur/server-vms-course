@@ -237,10 +237,13 @@ def test_a_target_that_hangs_holds_its_own_key_and_no_other():
 
 
 def test_a_target_that_answers_after_the_timeout_keeps_the_request_answered_and_its_mark_says_what_was_done_late():
-    """A call not back after `PERFORM_TIMEOUT` is answered "did not answer" (the request's answer: refused, cleared by
-    the console). When the target answers after all, that answer stands and the row is not touched — but the MARK says
-    what was really done to it, `late: true` beside the outcome: the next instance says it again rather than `unknown`,
-    and `late` tells an execution past the timeout (an incident) from an ordinary one (the architect's decision)."""
+    """A call not back after `PERFORM_TIMEOUT` is answered "did not answer" — whether the target acted is NOT KNOWN:
+    `unknown`, counted and on the unit's line, and in the holder's own begun mark, its reason beside it (the review's
+    fourteenth pass, major 6: the create-only refusal bumped into that mark, and the request ended with no outcome
+    anywhere). When the target answers after all, that answer stands and the row is not touched — but the MARK says
+    what was really done to it, over the `unknown`, `late: true` beside the outcome: the next instance says it again
+    rather than `unknown`, and `late` tells an execution past the timeout (an incident) from an ordinary one (the
+    architect's decision)."""
     box = Box()
     gate = threading.Event()
     w = _holder(box, testsub(), ["c1"], gate=gate)
@@ -249,7 +252,10 @@ def test_a_target_that_answers_after_the_timeout_keeps_the_request_answered_and_
     box.clock.advance(w.PERFORM_TIMEOUT)
     done = w.requests()
     assert [d.get("error") for d in done] == ["the target did not answer"] and w.fetched == ["r1"], done
-    assert "outcome" not in json.loads(box.objects.get(testsub().sub.command_key("r1")))
+    timed_out = json.loads(box.objects.get(testsub().sub.command_key("r1")))
+    assert (timed_out["outcome"], timed_out["error"], timed_out["instance"], timed_out["slot"]) == (
+        "unknown", "the target did not answer", w.instance, w.name) and "ended_at" in timed_out, timed_out
+    assert w.commands == {"performed": 0, "refused": 0, "expired": 0, "unknown": 1}
     gate.set()
     for _ in range(100):
         if not w._performing:
@@ -258,12 +264,13 @@ def test_a_target_that_answers_after_the_timeout_keeps_the_request_answered_and_
         time.sleep(0.02)
     mark = json.loads(box.objects.get(testsub().sub.command_key("r1")))
     assert mark["outcome"] == "performed" and mark["late"] is True and w.calls == [("c1", "c1", 4)], mark
-    assert w.fetched == ["r1"] and w.commands == {"performed": 0, "refused": 1, "expired": 0, "unknown": 0}
+    assert "error" not in mark and w.fetched == ["r1"]                              # its own word, not the timeout's
+    assert w.commands == {"performed": 0, "refused": 0, "expired": 0, "unknown": 1}    # one request, counted once
     assert box.vars.get(testsub().sub.request_key("r1"))[0]["add"] == "4"          # the row as it was
     path = w.observe("c1", "counted")
     said = [(ln["kind"], ln.get("outcome"), ln.get("late"), ln.get("error"), ln.get("reply"))
             for ln in read_bucket(path) if ln.get("kind") in (COMMAND, COMMAND_FAILED)]
-    assert said == [(COMMAND_FAILED, "refused", None, "the target did not answer", None),
+    assert said == [(COMMAND_FAILED, "unknown", None, "the target did not answer", None),
                     (COMMAND, "performed", True, None, {"added": 4})], said   # the incident, on the unit's line
     # the next instance, under another name the unit moved to: the mark's answer, said again — not `unknown`
     w2 = Holder(box, testsub())

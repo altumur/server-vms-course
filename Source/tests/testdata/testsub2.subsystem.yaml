@@ -144,6 +144,9 @@ snapshot: [name, of, mode, step]
 # `testsub2/seen/*`, naming each member it heard of by the field that carries the member's name — `of`, fixed
 domain: {reports: [counts/], witness: {report: seen, member_field: of}}
 metrics:
+  # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
+  # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).
+  - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}
   - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
   - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}
   - {name: notches_unshelved, count: table notches, unless: {table: shelves, where: {kind: reserve}}}

@@ -128,8 +128,10 @@ def test_the_reaper_writes_expired_create_only_and_never_over_a_mark_that_stands
     requests.clear_requests(con)
     assert box.vars.list(spec.sub.requests_prefix()) == []
     raw = box.objects.get(spec.sub.command_key("nobody")).decode()
+    row = {"unit": "c1", "add": "1", "action": "add", "valid_until": str(late), "at": str(late - 10)}
     assert raw == canonical_json({"action": "add", "at": box.wall(), "ended_at": box.wall(), "ended_by": "reaper",
-                                  "outcome": "expired", "unit": "c1"}), raw
+                                  "outcome": "expired", "unit": "c1", "valid_until": late,
+                                  "digest": requests.request_digest(row)}), raw   # what request it is: every mark
     assert box.objects.get(spec.sub.command_key("answered")) == answer              # the holder's answer stands
     # create-only: the end is not written over a mark made between the reaper's read and its write — a holder began it
     began = canonical_json({"instance": "a:1:x", "slot": "w-1", "unit": "c1", "at": late}).encode()
@@ -405,3 +407,175 @@ def test_a_foreign_marks_words_are_clipped_where_they_are_said_and_the_mark_is_k
     [line] = [line for line in said.lines if "gone" in line]
     _one_line_and_short(line, f"was answered ({SAID})")
     assert json.loads(box.objects.get(spec.sub.command_key("gone")))["outcome"] == HOSTILE
+
+
+class _IndexDown:
+    """The object store, and a switch on the writes BY INDEX alone (`get_at`, `put_at`): down, each is an OSError — the
+    store did not answer a closer — while a holder's create-only mark and its plain reads go through."""
+
+    def __init__(self, real):
+        self.real, self.down = real, False
+
+    def get_at(self, key):
+        if self.down:
+            raise PermissionError(13, "the store does not answer")
+        return self.real.get_at(key)
+
+    def put_at(self, key, data, index):
+        if self.down:
+            raise PermissionError(13, "the store does not answer")
+        return self.real.put_at(key, data, index)
+
+    def __getattr__(self, name):
+        return getattr(self.real, name)
+
+
+def test_a_target_that_did_not_answer_ends_unknown_in_its_mark_even_when_the_store_took_it_only_later():
+    """The review's fourteenth pass, major 6: a call not back after `PERFORM_TIMEOUT` is answered, its row cleared — and
+    its mark is completed `unknown`, the reason beside it, by the index read. A store that did not take that write leaves
+    it OWED: the next look writes it, though the console cleared the row meanwhile, before the holder's sweep could take
+    a mark that never had an outcome. The late answer is written over it and the owed `unknown` is dropped."""
+    box, spec = Box(), testsub()
+    gate = threading.Event()
+    w = _holder(box, spec, ["c1"], gate=gate)
+    down = w.objects = _IndexDown(box.objects)
+    _ask(box, spec, "r1", "c1", 4)
+    assert w.requests() == [] and len(w._performing) == 1
+    box.clock.advance(w.PERFORM_TIMEOUT)
+    down.down = True
+    errors = w.store_errors
+    assert [d.get("error") for d in w.requests()] == ["the target did not answer"]
+    assert "outcome" not in _mark(box, spec, "r1") and w.store_errors > errors and set(w._unknown_owed) == {"r1"}
+    box.vars.delete(spec.sub.request_key("r1"))                                       # the console cleared the answered row
+    down.down = False
+    w.requests()
+    m = _mark(box, spec, "r1")
+    assert (m["outcome"], m["error"], m["instance"]) == ("unknown", "the target did not answer", w.instance), m
+    assert w._unknown_owed == {} and w.commands["unknown"] == 1
+    box.clock.advance(w.MARK_SWEEP + 1)
+    w.requests()                                                                      # the sweep: the deadline not past
+    assert _mark(box, spec, "r1")["outcome"] == "unknown"
+    gate.set()
+    for _ in range(100):
+        if not w._performing:
+            break
+        w.requests()
+        time.sleep(0.02)
+    m = _mark(box, spec, "r1")
+    assert (m["outcome"], m["late"]) == ("performed", True) and "error" not in m, m
+    assert w.commands == {"performed": 0, "refused": 0, "expired": 0, "unknown": 1}
+
+
+def test_the_reaper_completes_a_gone_holders_mark_before_it_deletes_the_row():
+    """The review's fourteenth pass, major 6, its second half: the reaper deleted the row and then could not complete the
+    mark — the store did not answer — and no turn looked at that request again; the holder swept its mark with no outcome
+    ever. The mark first: not taken, the row stands and nothing is counted; the next turn completes it and ends the row,
+    counted once."""
+    from w2cplatform.contract import Slot
+    box, spec = Box(), testsub()
+    down = _IndexDown(box.objects)
+    con = SpecController(spec, box.vars, down, wall=box.wall)
+    late = box.wall() - requests.REAP_AFTER - 5
+    box.vars.put(spec.sub.request_key("r1"), {"unit": "c1", "add": "1", "valid_until": str(late)})
+    box.vars.put(spec.sub.slot_key("w-1"), Slot("w-1", "b:2:other", box.wall() + 45, False, 2).to_items())   # it went
+    _other(box, spec, "r1", "c1", instance="a:1:gone", slot="w-1", at=late - 1)
+    was = requests.unknown.get(spec.name, 0)
+    down.down = True
+    requests.clear_requests(con)
+    assert box.vars.get(spec.sub.request_key("r1"))[0] is not None and "outcome" not in _mark(box, spec, "r1")
+    assert requests.unknown.get(spec.name, 0) == was
+    down.down = False
+    requests.clear_requests(con)
+    assert box.vars.get(spec.sub.request_key("r1"))[0] is None
+    assert _mark(box, spec, "r1")["outcome"] == "unknown" and requests.unknown.get(spec.name, 0) == was + 1
+
+
+def test_a_unit_moved_mid_call_is_answered_by_its_beginner_and_counted_once():
+    """The review's fourteenth pass, minor 13: holder A's call is in flight, the unit is moved to B. B said `unknown` and
+    A then `performed` — one request in two outcomes, two lines on the unit. A mark with no outcome whose instance still
+    holds the slot it marked under is that instance's to answer (ADR-0054's rule for the reaper, now the holder's too):
+    B leaves it, then says A's answer again, uncounted. Once A's slot names another instance, B says `unknown`."""
+    from w2cplatform.contract import Controller, Slot
+    box, spec = Box(), testsub()
+    gate = threading.Event()
+    a = _holder(box, spec, ["c1"], gate=gate)
+    _ask(box, spec, "r1", "c1", 1)
+    assert a.requests() == [] and len(a._performing) == 1                             # A's call in flight: begun mark
+    b = Holder(box, spec)
+    b.server = "srv-2"
+    b.claim_slot("w-2")
+    Controller(spec.sub, box.vars, box.objects, wall=box.wall).assign("w-2", ["c1"])
+    b.assignment()
+    b.open = {"c1": {"id": "c1"}}
+    assert b.requests() == [] and b.requests() == [] and b.fetched == []              # A's to answer: asked again
+    assert sum(b.commands.values()) == 0 and "outcome" not in _mark(box, spec, "r1")
+    gate.set()
+    for _ in range(100):
+        if not a._performing:
+            break
+        a.requests()
+        time.sleep(0.02)
+    again = b.requests()
+    assert [(d.get("answered"), d.get("by")) for d in again] == [("performed", a.name)], again
+    assert sum(b.commands.values()) == 0 and b.reanswered == 1 and b.calls == []
+    assert sum(a.commands.values()) + sum(b.commands.values()) == 1 and len(a.calls) == 1
+    # A gone: its slot names another instance now — B says `unknown`, as before
+    box = Box()
+    gate2 = threading.Event()
+    a = _holder(box, spec, ["c1"], gate=gate2)
+    _ask(box, spec, "r2", "c1", 2)
+    assert a.requests() == [] and len(a._performing) == 1
+    box.vars.put(spec.sub.slot_key(a.name), Slot(a.name, "b:3:after", box.wall() + 45, False, 3).to_items())
+    b = Holder(box, spec)
+    b.server = "srv-2"
+    b.claim_slot("w-2")
+    Controller(spec.sub, box.vars, box.objects, wall=box.wall).assign("w-2", ["c1"])
+    b.assignment()
+    b.open = {"c1": {"id": "c1"}}
+    done = b.requests()
+    assert [d.get("error", "")[:8] for d in done] == ["unknown:"] and b.commands["unknown"] == 1, done
+    gate2.set()
+
+
+def test_a_mark_outlives_its_row_and_the_same_rid_filed_again_is_not_performed_twice():
+    """The review's fourteenth pass, major 2 («Архитектор», 2026-10-06): the row goes seconds after the answer, and an
+    evaluator that moved files the same id again — its cursor and `fired` stayed behind. The mark stands until the
+    request could no longer be performed (its deadline plus the reaper's margin), carries what request it is
+    (`digest`), and a filing reads it: the same request is `False`, counted `again`, nothing written; a different one is
+    refused. Past the bound the holder's sweep takes the mark, and a filing is a filing again — answered `expired`."""
+    from tests.test_worker_files_requests import _worker
+    from w2cplatform.worker import RequestRefused
+    box, spec = Box(), testsub()
+    w = _holder(box, spec, ["c1"])
+    filer = _worker(box, testsub2(), "t-1")
+    now = box.wall()
+    row = {"unit": "testsub/c1", "add": 2, "valid_until": now + 30}
+    assert filer.file_request("testsub", "fire-1-0", row, unit="t1", at=now) is True
+    assert [d.get("added") for d in _look(w, 1)] == [2] and len(w.calls) == 1
+    m = _mark(box, spec, "fire-1-0")
+    assert m["valid_until"] == now + 30 and m["digest"] == requests.request_digest(
+        box.vars.get(spec.sub.request_key("fire-1-0"))[0]), m
+    w.heartbeat_once()
+    requests.clear_requests(SpecController(spec, box.vars, box.objects, wall=box.wall), sweep=False)
+    assert box.vars.get(spec.sub.request_key("fire-1-0"))[0] is None                 # cleared: answered
+    box.clock.advance(w.MARK_SWEEP + 1)
+    box.wall.advance(5)
+    w.requests()                                                                      # the sweep: the mark stays
+    assert _mark(box, spec, "fire-1-0")["outcome"] == "performed"
+    assert filer.file_request("testsub", "fire-1-0", dict(row), unit="t1", at=now) is False
+    assert filer.filings == {"filed": 1, "again": 1, "refused": 0}
+    assert box.vars.get(spec.sub.request_key("fire-1-0"))[0] is None and w.requests() == [] and len(w.calls) == 1
+    try:
+        filer.file_request("testsub", "fire-1-0", {**row, "add": 3}, unit="t1", at=now)
+        raise AssertionError("a different request under a spent rid was filed")
+    except RequestRefused as e:
+        assert "this rid is spent" in str(e), str(e)
+    assert filer.filings["refused"] == 1
+    # past the deadline and the reaper's margin: swept, and filed as ever — the holder says it expired
+    box.wall.advance(30 + requests.REAP_AFTER)
+    box.clock.advance(w.MARK_SWEEP + 1)
+    w.requests()
+    assert box.objects.get(spec.sub.command_key("fire-1-0")) is None
+    assert filer.file_request("testsub", "fire-1-0", dict(row), unit="t1", at=now) is True
+    w.lease_pass()                                                                    # its lease, renewed after the clocks moved
+    assert [d.get("expired") for d in w.requests()] == [True] and len(w.calls) == 1

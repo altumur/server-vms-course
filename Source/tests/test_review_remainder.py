@@ -13,7 +13,7 @@ import os
 import tempfile
 import urllib.request
 
-from w2cplatform import variables
+from w2cplatform import requests, variables
 from w2cplatform.contract import Heartbeat, Slot
 from w2cplatform.epoch import next_epoch
 from w2cplatform.events import EventLog, buckets_under
@@ -292,11 +292,15 @@ def test_a_command_another_instance_began_is_not_performed_again():
     assert w2.commands["unknown"] == 1 and "command.failed" in [k for _, _, k in w2.observed]
     gate.set()
 
-    # the request is cleared by the console; its mark goes on a later pass, and not before
+    # the request is cleared by the console; its mark goes on a later pass, and not before — nor before the request
+    # could no longer be performed: its deadline plus the reaper's margin (the review's fourteenth pass, major 2)
     box.clock.advance(31)
     w2.requests(); assert box.objects.get("vms/commands/r1") is not None
     con.vars.delete(SPEC.sub.request_key("r1"))
     w2.requests(); assert box.objects.get("vms/commands/r1") is not None         # not yet: every thirty seconds
+    box.clock.advance(31)
+    w2.requests(); assert box.objects.get("vms/commands/r1") is not None         # …and its deadline is not past
+    box.wall.advance(30 + requests.REAP_AFTER + 1)
     box.clock.advance(31)
     w2.requests(); assert box.objects.get("vms/commands/r1") is None
 
