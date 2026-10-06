@@ -261,7 +261,8 @@ class _TooBig(Exception):
 # at four megabit write about 2.2 TB a day, and ten percent of a 20 TB disk is less than one of them.
 # A floor no unit is cut below is the subsystem's own word, not the knob's: the resource asks for bytes (a request row,
 # `requests: {free: true}`), and what the subsystem gives up — and what it will not, by its rows — is its to decide; a
-# shortfall is said in its heartbeat (`freed`) and here (`short`), never a quiet cut into yesterday.
+# shortfall is said here (`short`), never a quiet cut into yesterday; its heartbeat says only what it is still freeing
+# (`freeing`), which the resource does not ask for again.
 #
 # ON UNLESS SOMEBODY TURNED IT OFF (the platform review, "what happens when the disk fills is chosen by the
 # code"; feedback BM). It used to be off until a row said `enabled: true` — and an installation where nobody
@@ -1897,10 +1898,18 @@ class Resource:
     # Over `high`, free down to `low`. The resource does not free a subsystem's bytes and does not call its code: it ASKS,
     # by a request row of the subsystem's own family — `<sub>/requests/free-<server>-<volume> {free, volume, server, at}`,
     # for each subsystem whose spec says `requests: {free: true}` — and the subsystem's worker on this server decides
-    # what to give up and says what it gave in its heartbeat (`freed: {<volume>: bytes}`), read on the next pass (the
-    # boundary's step 6: it was a hook of the subsystem's, `free`, run on this thread). Slowness resolves itself: the row
-    # stands while the volume is over and is written again each pass; a volume back under its mark has its rows taken
-    # away. With nobody declared to answer, what is short is said as a shortfall, and nothing is cut.
+    # what to give up (the boundary's step 6: it was a hook of the subsystem's, `free`, run on this thread). Slowness
+    # resolves itself: the row stands while the volume is over and is written again each pass; a volume back under its
+    # mark has its rows taken away. With nobody declared to answer, what is short is said as a shortfall, and nothing is
+    # cut.
+    #
+    # WHAT IS GIVEN UP SHOWS IN `used`, OR IS STILL ON ITS WAY THERE (ADR 0059; ADR 0003: `freed`
+    # is gone, no alias). The worker says `freeing: {<volume>: bytes}` in its heartbeat — the bytes of deletions its
+    # engine has not yet confirmed, deleted and not yet visible on the volume (an engine that frees asynchronously, a
+    # file deleted while still open); with no such lag, 0. Each pass then asks for
+    #     need = used − total·low − freeing,  not below zero
+    # and nothing else: no count «since the last ask». It used to subtract `freed`, what the worker had given «since the
+    # last ask» — which counted the bytes twice once they showed in `used`, and asked for them again while they did not.
     def relieve(self) -> dict:
         """Over the high mark, ask each subsystem that frees to free bytes down to the low one.
 
@@ -1945,21 +1954,26 @@ class Resource:
                 for spec in frees:
                     self._unask(spec, name)                  # under the mark: nothing asked of anybody
                 continue
-            need, freed = int(sp["used"] - sp["total"] * knob["low"]), 0
+            freeing = 0
             for spec in frees:
-                said = self._freed(spec, name)               # what its workers here say they gave, since the last ask
+                said = self._freeing(spec, name)             # what its workers here are still freeing, not yet in `used`
                 self._progressed()                           # …and so is each subsystem's answer
-                freed += said
-                out.update({f"{spec.name}.freed": said} if len(self.volumes) == 1 else {f"{spec.name}.{name}.freed": said})
-                if freed < need:
-                    self._ask(spec, name, need - freed)
-            over.append({"volume": name, "full": round(sp["full"], 3), "need": need, "freed": freed,
-                         "short": max(0, need - freed)})
+                freeing += said
+                out.update({f"{spec.name}.freeing": said} if len(self.volumes) == 1 else {f"{spec.name}.{name}.freeing": said})
+            need = max(0, int(sp["used"] - sp["total"] * knob["low"] - freeing))
+            for spec in frees:
+                if need:
+                    self._ask(spec, name, need)
+                else:
+                    self._unask(spec, name)                  # all of it on its way: nothing asked again for those bytes
+            # `short` is what is asked and nobody is freeing — the need itself, said under its old name for the heartbeat
+            # and the console's metric.
+            over.append({"volume": name, "full": round(sp["full"], 3), "need": need, "freeing": freeing, "short": need})
         self.short = {v["volume"]: v["short"] for v in over if v["short"]}
         if not over:
             return {"space": "ok", "full": round(worst, 3)}
         first = over[0]                                      # single-volume callers read these three at the top level
-        return {"space": "over", "full": first["full"], "need": first["need"], "freed": first["freed"],
+        return {"space": "over", "full": first["full"], "need": first["need"], "freeing": first["freeing"],
                 "short": first["short"], "volumes": over, **out}
 
     # The request row of a subsystem for one of this server's volumes: written while it is over its mark (one row, its
@@ -1981,17 +1995,17 @@ class Resource:
         except OSError:
             pass                                             # asked again or taken away on the next pass
 
-    # What the subsystem's live workers on this server say they freed on the volume (`freed: {<volume>: bytes}` in
-    # their heartbeats) — a word there is 0, counted (`rows.number`).
-    def _freed(self, spec, volume: str) -> int:
+    # What the subsystem's live workers on this server say they are still freeing on the volume — deleted, not yet in
+    # `used` (`freeing: {<volume>: bytes}` in their heartbeats); a word there is 0, counted (`rows.number`).
+    def _freeing(self, spec, volume: str) -> int:
         from .console import heard_live, heartbeats
         total = 0
         for w, hb in heartbeats(self.objects, spec.name + "/").items():
             if str(hb.extra.get("server", "")) != self.server or not heard_live(spec.name, w, hb, self.wall(), self.lost_after, self.eyes):
                 continue
-            freed = hb.extra.get("freed")
-            if isinstance(freed, dict):
-                total += int(number(f"{spec.sub.heartbeat_key(w)}#freed.{volume}", freed.get(volume), float, 0))
+            freeing = hb.extra.get("freeing")
+            if isinstance(freeing, dict):
+                total += int(number(f"{spec.sub.heartbeat_key(w)}#freeing.{volume}", freeing.get(volume), float, 0))
         return total
 
     # The timer's body, in order: `retain`, then `relieve` — the promise first, the watermark only for what the promise

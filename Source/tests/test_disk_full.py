@@ -61,10 +61,10 @@ def test_what_could_not_be_freed_is_a_number_anybody_can_read():
     files = _files()
     [vol] = list(res.volumes)
     box.objects.put(files.sub.heartbeat_key("f-1"), Heartbeat("f-1", box.wall(), [], {"server": "srv-1",
-                                                                                    "freed": {vol: 2000}}).to_bytes())
+                                                                                    "freeing": {vol: 2000}}).to_bytes())
     assert res.heartbeat()["short"] == 0
     rep = res.relieve()
-    assert (rep["freed"], rep["short"]) == (2000, 148_000) and res.heartbeat()["short"] == 148_000
+    assert (rep["freeing"], rep["short"]) == (2000, 148_000) and res.heartbeat()["short"] == 148_000
     ctl = VmsController(box.vars, box.objects, wall=box.wall)
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
     assert 'w2c_resource_short_bytes{server="srv-1"} 148000' in text and 'w2c_resource_full{server="srv-1"} 0.9' in text
@@ -72,6 +72,40 @@ def test_what_could_not_be_freed_is_a_number_anybody_can_read():
     res.space_probe = lambda root: (1_000_000, 500_000)                # somebody added a disk
     assert res.relieve()["space"] == "ok" and res.heartbeat()["short"] == 0
     assert 'w2c_resource_short_bytes{server="srv-1"} 0' in SpecConsole(ctl, wall=box.wall).metrics_text()
+
+
+def test_bytes_still_being_freed_are_not_asked_for_again_and_bytes_freed_are_not_counted_twice():
+    """`freeing: {<volume>: bytes}` is what a worker's engine has deleted and the volume does not show yet (ADR 0059;
+    it was `freed`, what was given «since the last ask», ADR 0003). Each pass asks for `used − total·low − freeing`:
+
+        lag     an engine that frees asynchronously says 50 000 while `used` has not moved — 150 000 is asked, not 200 000
+        no lag  the deletion shows in `used` and the worker says 0 — the need is what `used` says, nothing taken off twice
+    """
+    box = Box()
+    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"})
+    disk = {"free": 50_000}                                            # 95 % full: 200 000 over the low mark
+    res = Resource(box.resource_root, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall,
+                   space_probe=lambda root: (1_000_000, disk["free"]))
+    files = _files()
+    [vol] = list(res.volumes)
+    asked = lambda: box.vars.get(files.sub.request_key(f"free-srv-1-{vol}"))[0]
+    say = lambda n: box.objects.put(files.sub.heartbeat_key("f-1"), Heartbeat("f-1", box.wall(), [], {
+        "server": "srv-1", "freeing": {vol: n}}).to_bytes())
+
+    say(50_000)                                                        # deleted, not yet visible on the volume
+    rep = res.relieve()
+    assert (rep["need"], rep["freeing"], asked()["free"]) == (150_000, 50_000, "150000")
+    disk["free"] = 100_000                                             # the engine confirms: `used` drops by as much…
+    say(0)                                                             # …and the worker stops saying it
+    rep = res.relieve()
+    assert (rep["need"], rep["freeing"], asked()["free"]) == (150_000, 0, "150000")   # the same, not 100 000
+
+    disk["free"] = 120_000                                             # no lag: 20 000 more gone, and already in `used`
+    rep = res.relieve()
+    assert (rep["need"], rep["short"], asked()["free"]) == (130_000, 130_000, "130000")   # what `used` says, no less
+    say(500_000)                                                       # a word over the need: not below zero
+    rep = res.relieve()
+    assert rep["space"] == "over" and rep["need"] == rep["short"] == 0 and asked() is None
 
 
 def test_a_recording_cut_inside_its_floor_raises_an_alarm_and_a_young_ring_does_not():

@@ -278,7 +278,7 @@ def test_the_watermark_asks_and_never_deletes():
     mark, or the next write puts it straight back over. What to give up is the
     subsystem's to decide: the platform ASKS, by a request row of the subsystem's own
     family (`requests: {free: true}`: `<sub>/requests/free-<server>-<volume>`), reads
-    what its workers on this server say they freed, and touches nothing itself (the
+    what its workers on this server say they are still freeing, and touches nothing itself (the
     boundary's step 6: it called the subsystem's `free`, code of the subsystem's in the
     resource's pass).
 
@@ -302,12 +302,13 @@ def test_the_watermark_asks_and_never_deletes():
     res.space_probe = lambda root: (1_000_000, 100_000)        # 90 % full
     rep = res.relieve()
     assert asked()["free"] == "150000" and asked()["volume"] == vol   # to the LOW mark, not to the high one
-    assert rep["space"] == "over" and rep["need"] == 150_000 and rep["freed"] == 0 and rep["short"] == 150_000
-    # its worker on this server gave up three ticks of fifty kB, and says so in its heartbeat
+    assert rep["space"] == "over" and rep["need"] == 150_000 and rep["freeing"] == 0 and rep["short"] == 150_000
+    # its worker on this server is giving up three ticks of fifty kB, not yet off the disk, and says so in its heartbeat
     box.objects.put(spec.sub.heartbeat_key("t-1"), Heartbeat("t-1", box.wall(), [], {"server": "srv-1",
-                                                                                     "freed": {vol: 150_000}}).to_bytes())
+                                                                                     "freeing": {vol: 150_000}}).to_bytes())
     rep = res.relieve()
-    assert rep["freed"] == 150_000 and rep["short"] == 0 and rep["counter.freed"] == 150_000
+    assert rep["freeing"] == 150_000 and rep["need"] == rep["short"] == 0 and rep["counter.freeing"] == 150_000
+    assert asked() is None                                     # all of it on its way: not asked for again
 
     # and a subsystem that does not free is simply not asked: `retain` by days is its whole policy
     other = SubsystemSpec.from_dict({"name": "other", "unit": {"rows": "units", "id": "name", "fields": {}},
@@ -378,7 +379,7 @@ def test_space_does_not_average_across_volumes():
     asked = lambda v: box.vars.get(spec.sub.request_key(f"free-srv-1-{v}"))[0]
     assert asked("vol-a")["free"] == "230000" and asked("vol-b") is None, "asked on the full volume, and only there"
     assert rep["space"] == "over" and [v["volume"] for v in rep["volumes"]] == ["vol-a"]
-    assert rep["counter.vol-a.freed"] == 0                     # the report says which disk it was about
+    assert rep["counter.vol-a.freeing"] == 0                   # the report says which disk it was about
     assert res.heartbeat()["volumes"]["vol-a"]["full"] == 0.98
 
 

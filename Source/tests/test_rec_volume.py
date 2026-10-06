@@ -1549,7 +1549,7 @@ def test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_
     """The boundary's step 6: the resource's watermark called the subsystem's hook (`free`); it files a request row now
     (`rec.subsystem.yaml`: `requests: {free: true}`), and the recorder holding that volume decides. Its footage is a ring
     of the size the volume was given — nothing on the disk is the recorder's to give up early — so it answers nought in
-    its heartbeat (`freed`) and closes the row; another server's ask is not its to answer."""
+    its heartbeat (`freeing`: no deletion it waits to see) and closes the row; another server's ask is not its to answer."""
     from w2cplatform.resource import SPACE_KEY, Resource
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
@@ -1565,7 +1565,7 @@ def test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_
     r.heartbeat_once()
     from w2cplatform.contract import Heartbeat
     hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key(r.name)))
-    assert hb.extra["freed"] == {r.volume: 0} and rid in hb.extra["fetched"].split(",")
+    assert hb.extra["freeing"] == {r.volume: 0} and rid in hb.extra["fetched"].split(",")
     assert "free-srv-9-other" not in hb.extra["fetched"]
     out = res.relieve()
-    assert out["freed"] == 0 and out["short"] == 48                       # said as a shortfall, and nothing is cut
+    assert out["freeing"] == 0 and out["short"] == 48                       # said as a shortfall, and nothing is cut
