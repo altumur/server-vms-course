@@ -1,0 +1,37 @@
+# A request's id (`rid`, the name of <sub>/requests/<rid> and of its mark <sub>/commands/<rid>): one table for the
+# course (Source/tests/testdata/rid.tsv) and the product (testdata/rid.tsv at its root), byte for byte. Owner:
+# «Паритет»; rule: «Архитектор», 2026-10-06, after the fourteenth review (the course counted characters and answered
+# 500 to a\u0085b and to 150 × «я»).
+#
+# THE RULE: at most 200 BYTES of UTF-8, not empty, not . or ..; no / \ " ' and no character of Unicode's Cc, Zl or Zp
+# (controls, U+0085, U+2028, U+2029). Refused at the door with a 400; on the worker's path as RequestRefused,
+# counted in filings.refused.
+#
+# Columns, tab-separated; a line that begins with '#' and an empty line are no row:
+#   rid      the id as a JSON string; a character of Cc, Zl or Zp is written escaped (\u0085, \u2028), every other
+#            character as it is
+#   verdict  ok — taken; refused — refused
+"cmd-1"	ok
+"ask-7f3a"	ok
+"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	ok
+"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	refused
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	ok
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	refused
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaя"	refused
+"a/b"	refused
+"a\\b"	refused
+"a\"b"	refused
+"a'b"	refused
+"a\u0085b"	refused
+"a\u000ab"	refused
+"a\u0000b"	refused
+"a\u2028b"	refused
+"a\u2029b"	refused
+"a\u0009b"	refused
+""	refused
+"."	refused
+".."	refused
+"a b"	ok
+"ключ-1"	ok
+"x-{unit}"	ok
+"a,b"	ok

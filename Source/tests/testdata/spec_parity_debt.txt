@@ -6,12 +6,7 @@ course-only auto.subsystem.yaml domain.shared.name   # ADR-0010/0032: the course
 course-only auto.subsystem.yaml domain.shared.schema   # ADR-0010/0032: the course first; the product's side — «Платформа»
 course-only auto.subsystem.yaml domain.shared.type   # ADR-0010/0032: the course first; the product's side — «Платформа»
 course-only auto.subsystem.yaml rights.cluster_rows
-course-only live.subsystem.yaml rights
-course-only live.subsystem.yaml rights.routes
-course-only live.subsystem.yaml rights.routes.view
-course-only rec.subsystem.yaml servers
 course-only rec.subsystem.yaml servers.show
-course-only rec.subsystem.yaml servers.status   # ADR-0057: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml worker.reads
 course-only vms.subsystem.yaml tables   # ADR-0012: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml tables.devices   # ADR-0012: the course first; the product's side — «Сборка»
@@ -47,6 +42,3 @@ product-only live.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only vms.subsystem.yaml domain.names   # ADR-0031: только у продукта — у курса нет учёток RTSP (stream-clients/)
-product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
-product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
-product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.window

@@ -361,12 +361,13 @@ requests:
       unit:        {type: string}
       id:          {type: string}
       action:      {enum: [output, preset]}
-      # an argument is a number or a word of at most 32 characters (`config.COMMAND_ARG_MAX`; the product's cross-check
-      # of the eleventh review), at the door as at the holder
-      port:        {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
-      state:       {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
-      pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
-      n:           {type: [string, integer], maxLength: 32, maximum: 99999999999999999999999999999999}
+      # an argument is a word of at most 32 characters or a whole number up to 2^53 − 1 (`config.COMMAND_ARG_MAX`; the
+      # product's cross-check of the eleventh review; integers past 2^53 are no number a spec holds), at the door as
+      # at the holder
+      port:        {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      state:       {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      n:           {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
       valid_until: {type: number}
   valid_for: 30
   most_valid: 600
@@ -587,6 +588,15 @@ events:
       window: 60                       # a camera that cannot be reached posts this every pass — once every
                                        # two seconds, for as long as the network is down. The first one is
                                        # the news; the next thirty are the same news.
+    source-stats:
+      window: 60
+      # …and this is the case `by` exists for. The counters in this line GROW — `delivered` and
+      # `received` are different on every pass — so with the default identity two of them are never the
+      # same thing and nothing would ever be suppressed. What actually says "the same news" here is that
+      # nothing was dropped and nothing is queued: a healthy pipeline then writes one line a minute
+      # instead of one every four seconds, and the moment a frame is dropped the line goes out at once,
+      # unchanged and immediately, because that is a different reading.
+      by: [dropped, depth]
 
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)

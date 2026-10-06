@@ -148,6 +148,9 @@ snapshot: [name, enabled]
 # Each evaluator's last pass and what it counted since it started, from its heartbeat (the boundary's step 6: it was
 # `vms/console.py`'s `auto_metrics`). `auto_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
 metrics:
+  # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
+  # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).
+  - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}
   - {name: scenarios_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: pass_seconds, from: heartbeat.pass_seconds}
   - {name: queries_per_pass, from: heartbeat.queries}
