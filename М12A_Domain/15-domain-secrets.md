@@ -252,7 +252,7 @@ def agent_denials(specs=None) -> list[str]:
     return out
 ```
 
-`SIGNER_KEYS` — это `"!domain/signer*"`. Заметьте `domain/grants/*` против `domain/grants`: копию своих прав у себя дома агент пишет, а права держателя для каждого члена — нет. Книги и `kept` берутся из раздела `domain:` каждой спеки (ADR 0031): у `testsub` это `!domain/testsub/tallies/*` и `!domain/testsub/ledger`, `!domain/testsub/badges/*`.
+`SIGNER_KEYS` — это `"!domain/signer*"`. Заметьте `domain/grants/*` против `domain/grants`: копию своих прав у себя дома агент пишет, а права держателя для каждого члена — нет. Так же `domain/backup/*` против `domain/backup-taken`: указатель, который держатель пишет каждому хранителю копии, агенту запрещён, а взятую копию — строку `{rev, term, sha256}` и документ рядом, которые член публикует в отчёте (урок 14), — агент пишет у себя дома. Имя `domain/backup-taken` — продуктовое, одно по обе стороны («Архитектор» 2026-10-06, ADR 0003: старого имени нет). Книги и `kept` берутся из раздела `domain:` каждой спеки (ADR 0031): у `testsub` это `!domain/testsub/tallies/*` и `!domain/testsub/ledger`, `!domain/testsub/badges/*`.
 
 **Запрет сильнее гранта, где бы он ни стоял.** Это одна функция, `w2cplatform/rights.py`, и спрашивают её оба места, где решаются права: файл прав демона configstore (`storemachine.Rights`) и ACL, который несёт ручка хранилища в процессе, — на коробке с `file://` или `memory://`, где демона между процессом и строками нет:
 
