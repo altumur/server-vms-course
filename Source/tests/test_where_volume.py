@@ -93,7 +93,7 @@ def test_a_recording_moved_to_another_volume_shows_what_it_left_on_the_first_at_
         assert st == 200 and w["worker"] == "r-new" and w["door"]["url"] == new.url, w
         st, p, _ = _get(base + "/rec/where/volumes/old?unit=rec/1")
         assert st == 200 and p["worker"] == "r-old" and p["server"] == "srv-1" and p["door"]["url"] == old.url, p
-        assert p["door"]["routes"] == ["timeline", "segment"]
+        assert p["door"]["routes"] == ["timeline", "segment", "keeps"]   # …and a keep's seal (`keeps`)
         st, body, _ = _get(f"{old.url}/timeline/1", w["door"]["token"])
         assert st == 401 and body["reason"] == "holder", body                         # not the recording's own token
         st, spans, _ = _get(f"{old.url}/timeline/1?from=0&to=1e12", p["door"]["token"])

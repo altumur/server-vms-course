@@ -227,7 +227,7 @@ SKIP = {"stsd": 8, "avc1": 78}
 
 ## Шаг 8 — Что дверь обещает муксеру
 
-Кусок интервала браузер берёт не у консоли: байты идут мимо неё (ADR 0015). Консоль только говорит, где дверь держателя записи, и даёт к ней токен — `GET /rec/where/<запись>` → `door: {url, token, expires, routes}` ([М10A, урок 15](../М10A_Platform/15-SpecConsole.md), шаг 12), — а маршруты двери объявляет спека `rec`: `door: {routes: [timeline, segment]}`. Сам маршрут куска — у регистратора, в `vms/footage.py`:
+Кусок интервала браузер берёт не у консоли: байты идут мимо неё (ADR 0015). Консоль только говорит, где дверь держателя записи, и даёт к ней токен — `GET /rec/where/<запись>` → `door: {url, token, expires, routes}` ([М10A, урок 15](../М10A_Platform/15-SpecConsole.md), шаг 12), — а маршруты двери объявляет спека `rec`: `door: {routes: [timeline, segment, keeps]}` (`keeps` — сверка печати метки, урок 18, шаг 7). Сам маршрут куска — у регистратора, в `vms/footage.py`:
 
 ```
 GET /segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4      one piece of it as a fragmented MP4; `.backfill.mp4` the

@@ -5,8 +5,11 @@
     GET /segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4      one piece of it as a fragmented MP4; `.backfill.mp4` the
                                                                backfilled stream, `.device.mp4` (epoch 0) what the camera
                                                                holds itself
+    POST /keeps/<keep>/verify?recording=<id>                   on the recorder that holds the incidents volume: a keep's
+                                                               seal checked against what that volume holds now
+                                                               (`keeps_route`; ADR-0015, ADR-0057)
 
-The product's paths (`recproc/door.go`) and the spec's `door: {routes: [timeline, segment]}`: the console says where the
+The product's paths (`recproc/door.go`) and the spec's `door: {routes: [timeline, segment, keeps]}`: the console says where the
 door is and lets in (`GET /rec/where/<recording>` → `door: {url, token, expires, routes}`, `w2cplatform/door.py`), the
 page goes to `<url>/<route>/<recording>`, and the bytes go holder → browser. What a door reads is every recorder's
 archive door between processes (`/spans/`, `/samples/`; `archive_routes` in `vms/recworker.py`) — a recording's minutes
@@ -163,7 +166,7 @@ def door_timeline(name: str, url: str, unit, t0: float, t1: float) -> tuple[list
 # THE ROUTES A RECORDING'S HOLDER OPENS TO A PAGE (the boundary's step 6, the owner's decision 1: the bytes do not go
 # through the console). A page goes to the recorder that holds the recording now, with the door token the console gave
 # it at `GET /rec/where/<recording>` (`w2cplatform/door.py`), and the routes are the spec's `door: {routes: [timeline,
-# segment]}`, in the product's paths:
+# segment, keeps]}`, in the product's paths (`keeps`, a keep's seal, is `keeps_route` below):
 #
 #   GET /timeline/<recording>?from&to                       the recording's spans, raw, from EVERY recorder's archive
 #                                                           door (each holds one volume, and what a recording wrote over
@@ -521,6 +524,46 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
 
     routes.note_read = note_read
     return routes
+
+
+# THE KEEP'S SEAL, CHECKED AT THE DOOR OF THE RECORDER THAT HOLDS ITS COPY (ADR-0015: the bytes bypass the console;
+# ADR-0057, point 3; the product's `keepVerified` in recproc/door.go):
+#
+#   POST /keeps/<keep>/verify?recording=<id>                 the kept interval of that recording read now in the incidents
+#                                                           volume and compared with its seal (`RecWorker.verify_keep`)
+#
+# A POST because it is asked, not because it writes anything. A route of the door only where rec's spec names it
+# (`door: {routes: [..., keeps]}`, `routes` here); the unit is the recording the request names, `?recording=` — the one
+# the place token (`GET /rec/where/volumes/<volume>?unit=rec/<recording>`) is for, so a token for another recording, or
+# one that does not carry `keeps`, is refused by the keeper (`w2cplatform/door.py`: 401 `unit`, `route`). `verify(keep,
+# recording, who)` answers. Returns the door's route, `(handler, method, path, q)` → an answer or None — not this route.
+def keep_verified(path: str) -> str | None:
+    """`/keeps/<keep>/verify` → the keep; anything else None."""
+    if not path.startswith("/keeps/") or not path.endswith("/verify"):
+        return None
+    kid = path[len("/keeps/"):-len("/verify")]
+    return kid if safe_segment(kid) else None
+
+
+def keeps_route(keeper, verify, routes=("keeps",)):
+    def route(handler, method: str, path: str, q: dict):
+        kid = keep_verified(path)
+        if kid is None or "keeps" not in routes:
+            return None
+        if method != "POST":
+            return 405, {"detail": "a keep's seal is checked with POST /keeps/<keep>/verify?recording=<id>",
+                         "error": "method"}
+        rec = str(q.get("recording", "") or "")
+        if rec and not safe_segment(rec):
+            return 404, {"detail": f"keep {kid} holds no recording {rec}", "error": "no such recording in the keep"}
+        who = ""
+        if keeper is not None:
+            admitted = keeper.admit(handler, "keeps", f"rec/{rec}")
+            if admitted is None:
+                return ()                                # refused, and said so
+            who = str(admitted.get("sub") or "")
+        return verify(kid, rec, who)
+    return route
 
 
 # A 200 of `video/mp4` begun on `handler`, its body in chunks to an HTTP/1.1 client (the connection's end to another):

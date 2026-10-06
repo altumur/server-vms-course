@@ -487,7 +487,7 @@ GET /cameras
                           · coverage 2026-09-13T04:00Z … 2026-09-16T06:10Z (непрерывно)
                           · device acme/10.0.0.50 (32 канала, 18 не заведено)
 
-GET /rec/where/41                                    → {"door": {"url": "http://box:…", "token": "door1.…", "expires": …, "routes": ["timeline", "segment"]}, …}
+GET /rec/where/41                                    → {"door": {"url": "http://box:…", "token": "door1.…", "expires": …, "routes": ["timeline", "segment", "keeps"]}, …}
 GET <door>/timeline/41?from=…&to=…                   → [{"start_ms": …, "end_ms": …, "epoch": 0, "source": "device", "yields": true}]
 GET <door>/segment/41/e0/<fromMs>-<toMs>.device.mp4  → MP4 с карты: держатель камеры → дверь записи → браузер
                                                        (подрезан по coverage, не длиннее часа)

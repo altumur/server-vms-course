@@ -2493,6 +2493,8 @@ class RecWorker(VmsWorker):
     # token the console gave with the
     # recording's place, for this recorder and that recording (`w2cplatform/door.py`, `DoorKeeper`); `OPTIONS` answered
     # for a page of a console's origin (`DOOR_ORIGINS`). Who read what is this recorder's journal, `audit/door-<name>`.
+    # And `POST /keeps/<keep>/verify?recording=<id>` — a keep's seal checked where its copy is (`verify_keep`; ADR-0015,
+    # ADR-0057), opened by the token of the incidents volume's place for that recording.
     #
     # Bounded like every door (the review's sixth pass: the protections were the console's alone): so many
     # connections at once and so many to one address, the next answered 503 (`door_server`); the request line and
@@ -2504,12 +2506,15 @@ class RecWorker(VmsWorker):
         from urllib.parse import parse_qs, urlsplit
         from w2cplatform.door import DoorKeeper
         from w2cplatform.journal import Journal
-        from .footage import answer, footage_routes
+        from .config import REC_SPEC
+        from .footage import answer, footage_routes, keeps_route
         routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
                                 self._kept_of, self._held_since)
         keeper = DoorKeeper(self.name, self.wall, self.vars)   # the ring is the store's `door/keys`
-        page = footage_routes(self.objects, self.vars, self.wall, Journal(self.resource_root, f"door-{self.name}", self.wall),
-                              keeper, self.eyes)
+        journal = Journal(self.resource_root, f"door-{self.name}", self.wall)
+        page = footage_routes(self.objects, self.vars, self.wall, journal, keeper, self.eyes)
+        # …and a keep's seal, checked here where its copy is (`verify_keep`), when rec's spec opens `keeps` at the door
+        sealed = keeps_route(keeper, lambda kid, rec, who: self.verify_keep(kid, rec, who, journal), REC_SPEC.door_routes)
 
         class H(Deadlined, BaseHTTPRequestHandler):
             # A socket that reads nothing is let go (`CONSOLE_TIMEOUT`, the timeout of every door a page reaches — the
@@ -2524,7 +2529,17 @@ class RecWorker(VmsWorker):
                     u = urlsplit(self.path)
                     got = page(self, "GET", u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
                     return answer(self, got if got is not None else (404, {"error": "no such path"}), keeper.headers(self))
+                if self.path.startswith("/keeps/"):
+                    return self.keeps("GET")
                 send_route(self, routes(self.path))                      # between processes: `/spans/`, `/samples/`
+
+            def do_POST(self):
+                self.keeps("POST")
+
+            def keeps(self, method: str):                                # POST /keeps/<keep>/verify?recording=<id>
+                u = urlsplit(self.path)
+                got = sealed(self, method, u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
+                answer(self, got if got is not None else (404, {"error": "no such path"}), keeper.headers(self))
 
             def do_OPTIONS(self):
                 keeper.preflight(self)
@@ -3012,7 +3027,6 @@ class RecWorker(VmsWorker):
 
     @one_look
     def keep_pass(self, now: float | None = None) -> dict:
-        import hashlib
         from w2cplatform.events import ALARM
         from . import keeps
         from .footage import recorder_doors
@@ -3047,6 +3061,7 @@ class RecWorker(VmsWorker):
         for k in declared:
             got = missing = 0.0
             touched: list[str] = []
+            whole: list[str] = []
             for rec in recordings_of(k):
                 # First what is GONE — before anything is copied, or a copy taken again from the recording's own
                 # volume would hide that the incidents ring is too small to hold what it was given.
@@ -3076,17 +3091,16 @@ class RecWorker(VmsWorker):
                     self.store.seal()                    # what was copied is readable now — and counted below
                 self.keep_held[(k.id, rec)] = held = inside(k, rec)
                 got += held
-                missing += self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
-                                               speaks)
-            entry = {"copied": round(got, 1), "missing": round(missing, 1)}
+                short = self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
+                                            speaks)
+                missing += short
+                if held > 0 and short <= 0:
+                    whole.append(rec)                    # the copy of this recording is whole: what may be sealed
+            # …and over which minutes: a seal is bound to the interval it was taken over (`_seal`)
+            entry = {"copied": round(got, 1), "missing": round(missing, 1), "from": k.since, "to": k.until}
             self._keep_uncopied(k, entry, missing, now)
             for rec in sorted(set(touched)):
-                h, size = hashlib.sha256(), 0
-                for smp in self.store.stream(rec, k.since, k.until):     # the digest a sequence at a time, as the copy
-                    raw = smp.encode()
-                    h.update(raw)
-                    size += len(raw)
-                digest = h.hexdigest()
+                digest, _, size = keep_digest(self.store, rec, k.since, k.until)
                 # Durable, with how much of the keep the volume held: what `keep_held` is restored from when this
                 # recorder starts again — in memory only, a restart forgot what had been copied, and the incidents
                 # ring taking it afterwards raised no `archive.keep.lost` (the review's third pass, a minor).
@@ -3094,8 +3108,26 @@ class RecWorker(VmsWorker):
                                  bytes=size, sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1),
                                  volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
-            if "sha256" not in entry and k.id in self.keep_state and "sha256" in self.keep_state[k.id]:
-                entry["sha256"] = self.keep_state[k.id]["sha256"]
+            # What was said of the recordings not copied this pass is carried, each — it was the whole map, and only
+            # when this pass copied nothing, so a pass that copied one recording dropped the others' digests — while the
+            # keep says the same interval: the digest of other minutes is not this keep's. A whole copy with no digest
+            # known (a recorder started again) is read once, and what is whole and has a digest is sealed (`_seal`;
+            # ADR-0057, дополнение п. 3).
+            was = self.keep_state.get(k.id, {})
+            carried = was.get("sha256", {}) if (was.get("from"), was.get("to")) == (k.since, k.until) else {}
+            sums = {**carried, **entry.get("sha256", {})}
+            for rec in whole:
+                if rec not in sums:
+                    try:
+                        sums[rec] = keep_digest(self.store, rec, k.since, k.until)[0]
+                    except (OSError, ObsdError, ArchiveError, *PARSE_ERRORS):
+                        pass                             # not readable now: no digest said, nothing sealed by it
+            sums = {rec: d for rec, d in sums.items() if d}
+            if sums:
+                entry["sha256"] = sums
+            if whole:
+                entry["whole"] = sorted(whole)
+                self._seal(k, {rec: sums[rec] for rec in whole if rec in sums}, now)
             state[k.id] = entry
         for k in unread:                                 # not read is not lifted: what it holds stays counted
             state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}
@@ -3288,6 +3320,147 @@ class RecWorker(VmsWorker):
             held[key] = max(held.get(key, 0.0), v)
         return held
 
+    # THE SEAL, WRITTEN ONCE (ADR-0057, дополнение п. 3: пишет рекордер тома incidents; the product's `SealKeeps`). The
+    # first time a recording's copy is whole — held, and short of nothing a source has (`keep_pass`'s `whole`) — its
+    # digest goes into the keep's seal, `rec/sealed/<keep>` (`keeps.Seal`: `recordings`, `from`, `to`, `sealed_at`), an
+    # object of rec's `objects.rows`: a row of the store on a cluster, which this recorder's worker role writes and the
+    # console only reads. Created create-only (`put_new`); a recording added to a seal of the same interval, or a seal of
+    # another interval replaced — an operator rewrote the keep — by CAS on the bytes read (`put_at`): whoever wrote it
+    # meanwhile wins, and the next pass seals what is left. A recording sealed once is never sealed again, whatever the
+    # volume holds later: a seal that followed the volume would vouch for whatever is there now. A seal that does not
+    # read is left as it is — counted (`keeps.SEALS`), not overwritten — and its keep is not sealed. Each recording sealed
+    # is an event `archive.keep.sealed`, durable, with its digest.
+    def _seal(self, k, sums: dict, now: float) -> None:
+        from . import keeps
+        if not sums or not k.since < k.until:
+            return
+        path = keeps.seal_key(k.id)
+        try:
+            raw, index = self.objects.get_at(path)
+        except (OSError, AttributeError) as e:
+            log.info("%s: keep %s: its seal cannot be read now (%s): the next pass seals", self.name, k.id, e)
+            return
+        seal = keeps.SEALS.read(path, lambda: keeps.parse_seal(raw))
+        if raw and seal is None:
+            return                                       # a seal that does not read is not overwritten: counted and said
+        have = seal.of(k) if seal is not None else {}
+        fresh = {rec: d for rec, d in sums.items() if rec not in have}
+        if not fresh:
+            return
+        data = keeps.Seal(tuple(sorted({**have, **fresh}.items())), k.since, k.until, round(now, 3)).to_bytes()
+        try:
+            done = self.objects.put_new(path, data) if raw is None else self.objects.put_at(path, data, index)
+        except (OSError, AttributeError) as e:
+            log.info("%s: keep %s not sealed this pass (%s): the next pass seals", self.name, k.id, e)
+            return
+        if not done:
+            return                                       # written meanwhile: the next pass reads it and seals what is left
+        for rec, digest in sorted(fresh.items()):
+            self.write_event(rec, now, "archive.keep.sealed", epoch=0, durable=True, cam=k.cam, keep=k.id, recording=rec,
+                             sha256=digest, volume=self.volume, **{"from": k.since, "to": k.until})
+
+    # A KEEP'S SEAL CHECKED, WHERE ITS COPY IS (ADR-0015: the bytes bypass the console; ADR-0057, point 3; the product's
+    # `verify` in recproc/keeper.go): `POST <door>/keeps/<keep>/verify?recording=<id>` — the kept interval read NOW in
+    # the incidents volume this recorder holds and compared with its seal, asked before the footage is handed to
+    # anybody, because "it was fine yesterday" is not what an investigator needs. The console carries no bytes and no
+    # question about them: the page asks the recorder that holds the incidents volume, at its door, with the token the
+    # console gives for that place (`GET /rec/where/volumes/<volume>?unit=rec/<recording>`, the spec's `door.routes`
+    # naming `keeps`) — and only that recording is checked. A door with no key in the store (its open mode) and no
+    # `?recording=` checks every recording of the keep.
+    #
+    # THE SEAL is the subsystem's own record, `rec/sealed/<keep>` (`keeps.Seal`; ADR-0057, дополнение п. 3: пишет
+    # рекордер тома incidents), set ONCE per recording — the digest of the copy when the incidents volume first held it
+    # whole — by the recorder that holds the copy (`_seal`), with its worker role; the console only reads the family, and
+    # no table door serves it. A seal that moved with every pass, or aged out with an event, would prove nothing. It is bound to the interval it was taken over: a keep whose row says other minutes now is not sealed by it
+    # (`Seal.of`) — "not sealed yet" — until the next turn seals it anew. The digest now is `keep_digest`'s, the same
+    # function that made the one sealed. The answer, the product's words:
+    #
+    #   {keep, integrity: "ok" | "broken: <why>" | "unknown: <why>", ok, recordings: {<rec>: {sealed, now, samples,
+    #    result: ok | damaged | pending | unverified, detail?}}}
+    #
+    # `broken` when a recording's copy does not hash to its seal, or cannot be read while it was sealed; `unknown` when
+    # nothing contradicts the seal and something is not known yet — a recording never copied (not sealed yet), one the
+    # volume cannot read and that was never sealed. 404: no such keep, or a recording it does not hold; 409: a keep any
+    # part of whose interval does not read — nothing of it was copied, nothing sealed, and the hash of half an interval
+    # is a guess (`keeps.as_far_as_read`; ADR-0057, дополнение п. 3); 503: this recorder holds no incidents volume, or the
+    # store does not answer — said as the product's `StoreFault`, no path of this box (`console.store_fault`). Each answer is a line `archive.keep.verified` in this
+    # recorder's door journal (`audit/door-<recorder>`), with whom the token was given to.
+    @one_look
+    def verify_keep(self, keep_id: str, recording: str = "", who: str = "", journal=None) -> tuple[int, dict]:
+        from w2cplatform.console import store_fault
+        from . import keeps
+        store = self.store
+        if store is None:
+            return 503, {"error": "cannot verify", "detail": "this recorder serves no incident archive",
+                         "integrity": "unknown: this recorder serves no incident archive"}
+        if not self.incidents:
+            # the incidents volume is where the copy is: a recorder that does not hold it has nothing to read
+            return 503, {"error": "cannot verify", "detail": "this recorder serves no incident archive: ask the holder of "
+                         "the incidents volume (GET /rec/where/volumes/<volume>)",
+                         "integrity": "unknown: no incident archive is served here"}
+        unread: list = []
+        try:
+            declared = keeps.declared(self.vars, unread)
+            rows = self._recordings()
+        except OSError as e:                             # unread is not "none" (`keeps.declared`): said, not guessed
+            log.warning("%s: keep %s cannot be verified, the store did not answer: %s", self.name, keep_id, e)
+            return 503, {"error": "cannot verify", "detail": store_fault(e)}
+        keep = next((k for k in declared if k.id == keep_id), None)
+        garbled = next((k for k in unread if k.id == keep_id), None)
+        if keep is None and garbled is None:
+            return 404, {"detail": f"no keep {keep_id}", "error": "no such keep"}
+        if garbled is not None or not keep.since < keep.until:
+            why = garbled.note if garbled is not None else "its interval ends before it starts"
+            return 409, {"detail": why, "error": "cannot verify a keep whose interval is garbled"}
+        names = sorted(set(keep.recordings) | {str(r["id"]) for r in rows if str(r.get("cam", "")) == keep.cam})
+        if recording:
+            if recording not in names:
+                return 404, {"detail": f"keep {keep_id} holds no recording {recording}",
+                             "error": "no such recording in the keep"}
+            names = [recording]
+        try:
+            seal = keeps.read_seal(self.objects, keep_id)
+        except OSError as e:                             # unread is not "not sealed"
+            log.warning("%s: keep %s cannot be verified, its seal cannot be read: %s", self.name, keep_id, e)
+            return 503, {"error": "cannot verify", "detail": store_fault(e)}
+        seals = seal.of(keep) if seal is not None else {}
+        out, every = {}, True
+        broken, unknown = [], []
+        for rec in names:
+            sealed = seals.get(rec, "")
+            row: dict = {"sealed": sealed}
+            try:
+                now, samples, _ = keep_digest(store, rec, keep.since, keep.until)
+                err = None
+            except (OSError, ObsdError, ArchiveError, *PARSE_ERRORS) as e:
+                now, samples, err = "", 0, f"{type(e).__name__}: {e}"
+            if err is not None and sealed:
+                # sealed, and the volume cannot read it: damage, whatever the bytes would have hashed to
+                row.update(result="damaged", detail=err); every = False
+                broken.append(f"{rec}: the archive cannot read what was sealed ({err})")
+            elif err is not None:
+                row.update(result="unverified", detail=err); every = False
+                unknown.append(f"{rec}: the archive cannot read it ({err})")
+            elif not sealed:
+                row.update(now=now, samples=samples, result="pending"); every = False   # nothing to compare with
+                unknown.append(f"{rec}: not sealed yet")
+            elif now == sealed:
+                row.update(now=now, samples=samples, result="ok")
+            else:
+                row.update(now=now, samples=samples, result="damaged"); every = False
+                broken.append(f"{rec}: the copy does not hash to its seal")
+            out[rec] = row
+        integrity = "ok"
+        if broken:
+            integrity = "broken: " + "; ".join(broken)
+        elif unknown:
+            integrity = "unknown: " + "; ".join(unknown)
+        elif not names:
+            every, integrity = False, "unknown: the keep names no recording"
+        if journal is not None:
+            journal.say("archive.keep.verified", keep=keep_id, ok=every, integrity=integrity, user=who, recordings=out)
+        return 200, {"keep": keep_id, "integrity": integrity, "ok": every, "recordings": out}
+
     # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole
     # inside a sequence would be drawn as footage. What the door handed over starts on a key frame.
     def _copy_in(self, rec: str, samples: list) -> bool:
@@ -3373,6 +3546,21 @@ def frames_of(body) -> bytes:
 # and the last chunk is written only when the stream ended whole: a reply without it is an error to the reader
 # (`http.client.IncompleteRead`; `RecWorker.read_samples`, the console's `_door`). In pieces, to a client that takes
 # them (`w2cplatform.console.Paced`). An HTTP/1.0 client has only the end of the connection, as before.
+# WHAT A KEEP IS SEALED WITH AND CHECKED AGAINST — one function for both, so the two cannot drift apart: the sha256 over
+# the frames of one recording in `[since, until)` as `store` holds them, in order, a sequence at a time (`Archive.stream`),
+# each as its record encodes it. `(sha256, samples, bytes)`; `""` and nought when the volume holds none of it (the
+# product's `digest`). Raises what reading the volume raises.
+def keep_digest(store, rec: str, since: float, until: float) -> tuple[str, int, int]:
+    import hashlib
+    h, samples, size = hashlib.sha256(), 0, 0
+    for smp in store.stream(rec, since, until):
+        raw = smp.encode()
+        h.update(raw)
+        samples += 1
+        size += len(raw)
+    return (h.hexdigest() if samples else ""), samples, size
+
+
 def send_route(handler, got) -> None:
     from w2cplatform.console import Paced, start_stream
     if got is None:

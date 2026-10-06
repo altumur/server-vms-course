@@ -60,7 +60,7 @@ def make_console(ctl: VmsController, resource_root: str | None, wall=None, live_
 | камеры, записи, потоки — строки, поля, правка | `rows`, `unit.fields` спек | М10A, урок 15 |
 | тома и удержания — таблицы `/rec/volumes`, `/rec/keeps` | `tables` спеки `rec` | М10A, урок 15, шаг 12; [урок 27](27-volumes.md) |
 | «дозаписать отрезок» — `POST /rec/requests` | `requests` спеки `rec` | М10A, урок 14, шаг 14; [урок 16](16-backfill-from-the-edge.md) |
-| дверь регистратора — `timeline`, `segment` | `door: {routes: [timeline, segment]}` спеки `rec` | этот урок, шаги 5–7 |
+| дверь регистратора — `timeline`, `segment`, `keeps` | `door: {routes: [timeline, segment, keeps]}` спеки `rec` | этот урок, шаги 5–7; печать метки — [урок 18](18-what-the-archive-gives-up-first.md), шаг 7 |
 | дверь шлюза — `whep` | `door: {routes: [whep]}` спеки `live` | этот урок, шаг 9; [урок 13](13-live-video.md) |
 | места записи — тома | `placement.places: {table: volumes, …}` спеки `rec` | М10A, урок 15, шаг 12; [урок 27](27-volumes.md) |
 | поток заводит зритель по праву `view` | `rights: {routes: {view: [streams]}}` спеки `live` | этот урок, шаг 9 |
@@ -529,11 +529,12 @@ pc.addTreeNodes("member",ref=>{
 
 ```
 GET  /                                  → vms/vms.shell.html над /platform/console.js (CSP: 'self' и хеш её скрипта)
-GET  /rec/where/7                       → {worker, server, door: {url, token: "door1.…", expires, routes: [timeline, segment]}}
+GET  /rec/where/7                       → {worker, server, door: {url, token: "door1.…", expires, routes: [timeline, segment, keeps]}}
 GET  /rec/where/volumes/old?unit=rec/7  → дверь держателя тома для записи 7
                                           или 404, door: null, X-Unreachable: old@srv-1
 GET  <door>/timeline/7?from&to          → [{start_ms, end_ms, epoch, source?, fenced?, yields?}]   (Bearer)
 GET  <door>/segment/7/e3/<a>-<b>.mp4?t= → кусок одной эпохи, video/mp4
+POST <door>/keeps/<метка>/verify?recording=7 → печать метки сверена с копией (у держателя тома incidents, урок 18)
 POST /live/streams {cam: "7"}           → 201, или 409 exists — поток уже смотрят
 GET  /live/where/7                      → дверь шлюза, routes: [whep]
 POST <door>/whep/7                      → 201 + SDP, Location: /whep/session/<id>; 404/503 — ещё не размещён
