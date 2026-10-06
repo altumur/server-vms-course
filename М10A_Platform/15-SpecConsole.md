@@ -862,6 +862,27 @@ metrics:
 
 По этому правилу печатается отсчёт, граница корзины (`le="1"`; `le="1000000"`, где прежний `%g` давал `1e+06`) и слово, с которым сравнивает `equals`: `equals: [1]` совпадает и с `1`, и с `1.0` в heartbeat'е. Дашборд, который матчил `61.0`, надо поправить. Тесты: `test_recorder_metrics.py`, `test_spec_declarations.py::test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_the_store_and_the_heartbeats`.
 
+**Метка с закрытым набором слов** (ADR-0063). `agg: label` превращает слово heartbeat'а в метку ряда: `rec_writer{state="stalled"}` из `heartbeat.writer.state`. Набор этих слов у писателя закрыт и один на двух сторонах (`ok`, `stalled`, `losing`), но язык метрик его не знал. Слово вне набора — опечатка писателя или состояние, которое добавила одна сторона, — молча становилось новым рядом, и ни одно правило тревоги его не видело. Теперь строка закрывает набор ключом `values: [...]`, и консоль читает слово так:
+
+```python
+    elif agg == "label":
+        said = v if v not in (None, "") else m["default"]
+        if said in (None, ""):
+            return
+        if m["values"] is not None:
+            # A word outside the closed set is a garbled field (ADR-0063): no line, counted once a spell, like a word
+            # where a number goes. Its own key: `servers.status` reads the same leaf as a string it may show, and one
+            # reading must not undo the other's count; two metrics on one leaf may close it differently.
+            vkey = f"{key}@{m['name']}"
+            if _word(said) not in m["values"]:
+                FIELDS.garbled(vkey, ValueError(f"{_word(said)!r} is none of values ({', '.join(sorted(m['values']))})"))
+                return
+            FIELDS.parsed(vkey)
+        say(m, {**labels, m["label"]: _word(said)}, 1)          # the word as compared: `true`, `61` (`metricText`)
+```
+
+Слово из набора даёт ряд, как раньше. Слово вне набора — испорченное поле: ряда нет, а счёт идёт в `FIELDS` раз на эпизод, как у слова там, где ждали число. Ключ у этого счёта свой, `<поле>@<метрика>`: `servers.status` читает тот же лист как строку, которую показывает, и одно чтение не должно сбрасывать счёт другого. Метка печатается словом, с которым сравнивали (`_word`): `true`, а не `True`, как `metricText` продукта. Загрузчик отказывает (ADR 0012), если `values` стоит не у `agg: label`; если это не список, список пуст или слово в нём дважды; если элемент — не слово метки (алфавит `LABEL_WORD`: буквы, цифры и `_ . : -`, до 64; голое `yes` YAML читает как `true`, его берут в кавычки); и если `default` не входит в набор — то, что печатается там, где поле не сказано, тоже обещано спекой. Тест: `test_spec_declarations.py::test_a_label_with_values_writes_a_word_of_the_set_and_counts_a_word_outside_it_garbled`.
+
 Каждый ключ и каждый оператор, который платформа читает в спеке, должен быть в ходу — у двух подсистем продукта или у тестовой подсистемы платформы; ключ, нужный одной подсистеме, — это её код в одежде платформы. Это проверяет `tests/test_spec_rule.py::test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_by_a_test_subsystem`. В М10B те же формы объявляет, например, регистратор: `volumes_declared` (`count: table volumes`), `recordings` (`from: status.phase, agg: count`), `keeps_unprotected` (`unless`). Тест: `test_spec_declarations.py::test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_the_store_and_the_heartbeats`.
 
 **Ресурсы — числа платформы, и говорятся они один раз, под именем `w2c`** (решение курса о платформенных именах, по правилу продукта: платформа — `w2c`, VMS — одна из её подсистем). Ресурс — один на сервер, что бы в него ни писали подсистемы. А каждая смонтированная консоль повторяла его числа под своим префиксом — `<sub>_resources_live` у каждой подсистемы процесса: один факт столько раз, сколько подсистем смонтировано, и алерт на диск, написанный по префиксу одной подсистемы, молчал бы на консоли без неё. Теперь живые ресурсы, их диски, ожидания, нечитаемые строки, зеркало и восстановление — в `platform_metrics`, с префиксом `w2c`:
