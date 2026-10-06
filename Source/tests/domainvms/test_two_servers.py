@@ -155,7 +155,8 @@ def test_a_camera_with_two_backups_names_both_and_each_backups_cluster_carries_t
     volumes.write(c.vars, {"name": "copy", "kind": "backup", "server": "srv-c", "url": "/data/copy", "quota_bytes": 10**12})
     rec_c = SpecController(REC_SPEC, c.vars, c.objects, wall=wall)
     rec_c.create({"name": f"{SERIAL}-c", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline"})
-    rec_c.publish_snapshot()
+    rec_c.create({"name": f"{SERIAL}-off", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline", "enabled": False})
+    rec_c.publish_snapshot()                                          # …and one switched off: no backup (the product's)
     c_agent = DomainAgent("srv-c", o.b.vars, c.vars, now=wall, seen_store=c.objects)
     o.domain_pass(); c_agent.sync()
     both = [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}, {"cluster": "srv-c", "recording": f"{SERIAL}-c"}]

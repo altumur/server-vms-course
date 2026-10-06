@@ -212,8 +212,9 @@ class Crossings:
     # cluster's rec snapshot — no record of its own — and from then on the camera has a second road, to the first of
     # its backups: it pushes there when, and only when, its primary does not take the stream. One stream, never two.
     #
-    # Every backup of the camera on another server, `(cluster, recording)`: the recording's id AT ITS CLUSTER (its
-    # `name`, as the primary's `recording` is), sorted by cluster. A page finds a backup recording by both — a cluster
+    # Every backup of the camera on another server, `(cluster, recording)` — each other cluster's enabled `when: offline`
+    # recording of it: the recording's id AT ITS CLUSTER (its `name`, as the primary's `recording` is), sorted by cluster
+    # and then recording (the product's `Cameras.BackupsOf`). A page finds a backup recording by both — a cluster
     # alone names no recording there, and `/domain/at/<cluster>/…` answers only `where/<id>` (ADR-0010, the addition).
     def backups_of(self, ref: str) -> list[tuple[str, str]]:
         on, home = self.all().get(str(ref)), (self.view.last_known(ref) or (None,))[0]
@@ -228,7 +229,8 @@ class Crossings:
                 for key in keys:
                     shard = published(name, key, c.objects.get(key), _recordings) or {}   # one torn shard is that shard's
                     for r in shard.get("recordings", []):
-                        if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") == "offline":
+                        if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") == "offline" \
+                                and r.get("enabled") is not False:           # switched off: no backup (the product's)
                             found.add((name, str(r.get("name") or r.get("id"))))
             except Unreachable:
                 continue
