@@ -473,6 +473,7 @@ class RecWorker(VmsWorker):
         self._depth_at = -1e18
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
         self._missing_said: dict[str, str] = {}     # volume -> the address `volume.missing` was said for, this episode
+        self._missing_now: dict[str, str] = {}      # volume -> its address: missing at this recorder's open since its last open
         # Volumes any box may serve that THIS recorder does not take, and why: its host's engine cannot give a volume
         # up (`_engine_refuses`). In the heartbeat with `refused`, and on the volumes page (`volumes.served`).
         self.unservable: dict[str, str] = {}
@@ -1122,6 +1123,13 @@ class RecWorker(VmsWorker):
                 # is the failure that looks like health: a fresh hold, a green console and nothing being
                 # written. Whatever reads it must not count that volume as served.
                 "volume_error": self.volume_error,
+                # The volume this recorder could not open because it was in use at its address and is not there now
+                # (`VOLUME_MISSING`, `_may_format`) — its NAME, a string (`heartbeat.strings`): since when, at which
+                # address and why are the recorder's journal (`volume.missing`), not the heartbeat. Said from the open
+                # that found it missing until this recorder opens a volume, or the volume is declared elsewhere or no
+                # more (`_forget_missing`). Several missing at once: the first by name, so the word does not change
+                # from pass to pass while the set does not.
+                **({"volume_missing": min(self._missing_now)} if self._missing_now else {}),
                 # Pinned to a volume any box may serve whose hold is not this recorder's: what it waits for (`_wait_for_pin`).
                 **({"volume_wait": self.volume_wait} if self.volume_wait else {}),
                 # Empty while the volume takes samples. Otherwise the reason it stopped, and since when.
@@ -1201,6 +1209,7 @@ class RecWorker(VmsWorker):
             if last is not None and not self.engine_lost and not volumes.any_box(last) and self.hold is None:
                 return self.volume
             rows = self._declared()
+            self._forget_missing(rows)
             vol = rows.get(self.pin) or self._own_volume(self.pin)
             if not volumes.any_box(vol) and not (last is not None and volumes.any_box(last)) and self.hold is None:
                 self.volume, self.volume_wait = self.pin, ""
@@ -1211,6 +1220,7 @@ class RecWorker(VmsWorker):
                 return self.volume
         if rows is None:
             rows = self._declared()
+            self._forget_missing(rows)
         self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked between passes
         # A camera's card is not this recorder's to take: it is the camera's buffer, and only the camera's own recorder
         # (`vms/card.py`, `CardRecorder`) writes it — a recorder of the engine on the camera's box included.
@@ -1512,8 +1522,17 @@ class RecWorker(VmsWorker):
                         self.name, vol.name, e)
         self._missing_said.pop(vol.name, None)        # found: the next time it is missing is another episode
 
+    # A volume missing at this recorder's open is said in its heartbeat (`volume_missing`) until it opens a volume —
+    # this one mounted back, or another (`_write_into`) — or the volume is no longer declared at the address it was
+    # missing at: declared again elsewhere, or withdrawn. The box's own volume, which nobody declares, is forgotten
+    # only by an open.
+    def _forget_missing(self, rows: dict) -> None:
+        self._missing_now = {n: u for n, u in self._missing_now.items()
+                             if (n in rows and rows[n].url == u) or (n not in rows and u == self.default_url)}
+
     def _say_missing(self, vol, e: ArchiveError) -> None:
         from w2cplatform.events import ALARM
+        self._missing_now = {**self._missing_now, vol.name: vol.url}
         if self._missing_said.get(vol.name) == vol.url:
             return
         self._missing_said[vol.name] = vol.url
@@ -1708,6 +1727,7 @@ class RecWorker(VmsWorker):
         if self.archive_error:
             log.info("%s: %s answers again after %.0f s", self.name, vol.name, self.wall() - self.archive_away_since)
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
+        self._missing_now = {}                       # a volume opened: what this recorder could not open is not its word now
         self._mark_used(vol)
         log.info("%s: writing into %s (%s)%s%s", self.name, vol.name, hide_in_url(vol.url), " — formatted" if store.formatted else "",
                  " — the writer a previous process left, picked up again" if store.reattached else "")
@@ -1994,8 +2014,10 @@ class RecWorker(VmsWorker):
         except OSError:                              # the store is silent: the hold lapses by itself
             self.hold = None
         self.volume, self.capacity, self.incidents = "", 0, False
-        # What the archive's state said was about the volume we just left. The next one starts clean.
+        # What the archive's state said was about the volume we just left. The next one starts clean — a shrink that
+        # waited for its second word too: it is the left volume's, and `shrink_pending` is said only while one waits.
         self.archive_error, self.archive_failure, self.archive_away_since, self._busy_since = "", "", 0.0, 0.0
+        self.quota_note, self.shrink_pending = "", 0
         self.keep_held, self.keep_state, self._keeps_read, self._keep_nowhere = {}, {}, False, {}
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
