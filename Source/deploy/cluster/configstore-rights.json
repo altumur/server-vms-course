@@ -168,7 +168,12 @@
     "platform/servers/*",
     "domain/keys",
     "domain/member",
-    "door/keys"
+    "door/keys",
+    "vms/requests/*",
+    "objects/vms/commands/*",
+    "rec/requests/*",
+    "objects/rec/commands/*",
+    "det/requests/*"
    ],
    "write": [
     "auto/epoch/*",
@@ -357,7 +362,9 @@
     "door/keys",
     "domain/vms/primaries",
     "objects/rec/used/*",
-    "objects/rec/commands/*"
+    "objects/rec/commands/*",
+    "vms/requests/*",
+    "objects/vms/commands/*"
    ],
    "write": [
     "rec/epoch/*",

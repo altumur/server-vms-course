@@ -33,7 +33,7 @@ from .events import ALARM, COMMAND, COMMAND_FAILED, OBSERVATION, OF
 from .journal import Journal
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .objects import ObjectStore
-from .requests import complete_mark, mark_error, mark_text
+from .requests import complete_mark, holder_still_there, mark_error, mark_kept_until, mark_request, mark_text, request_digest
 from .rows import PARSE_ERRORS, garbled_counts
 from .variables import Conflict, Variables, cas_pause
 
@@ -1910,23 +1910,27 @@ class Worker:
     #
     # NOTHING LONG WHERE THE LEASES ARE RENEWED (feedback BE). `perform` is a call into whatever the subsystem holds,
     # and such a call has no timeout of ours: it is made on a thread of its own — the loop waits `PERFORM_GRACE` for it,
-    # after `PERFORM_TIMEOUT` the request is answered "did not answer" and cleared, and while a call into a target has
+    # after `PERFORM_TIMEOUT` the request is answered "did not answer" — `unknown` — and cleared, and while a call into a target has
     # not returned no second call is made into it. A worker that may no longer act for the unit does not act on it:
     # a fenced instance, or one whose lease on the unit is lost, leaves the request for whoever holds the unit now.
     #
     # AT MOST ONCE (the platform review). Before the target is called the worker says it is about to — a MARK,
     # `<sub>/commands/<id>`, written CREATE-ONLY: of two holders in the same second the store says which made it, and
-    # the other answers `unknown`. A request that carries another instance's mark is not performed: it is answered
-    # `unknown: an earlier instance … began it`, and a person decides. The answer goes into the mark once it is known
-    # (`_confirm`), so an instance started after this one says it again rather than `unknown`. Marks of requests that
-    # no longer exist are cleared every `MARK_SWEEP` seconds, by whichever worker gets there. A unit held with no lease
+    # the other answers `unknown`. A request that carries another instance's mark is not performed: while that instance
+    # still holds the slot it marked under, it is left for it to answer (`_beginner_holds`); once it does not, it is
+    # answered `unknown: an earlier instance … began it`, and a person decides. The answer goes into the mark once it is
+    # known (`_confirm`), so an instance started after this one says it again rather than `unknown`. Marks of requests
+    # that no longer exist are cleared every `MARK_SWEEP` seconds, by whichever worker gets there — each once the request
+    # could no longer be performed (`sweep_marks`): until then a filing under its id meets it. A unit held with no lease
     # takes one before its first request, so a second holder fences the first.
     #
     # EVERY REQUEST ENDS WITH ITS OUTCOME IN ITS MARK (ADR-0054; who writes what: `requests.py`): a refusal before any
     # call and `expired` for a request nobody began go in create-only (`_end_mark`), with the refusal's `error`; an
     # answer is written over whatever stands (`_confirm`: the holder's word wins), `late: true` when it came after "did
-    # not answer"; another instance's mark with no outcome is completed `unknown`, its instance kept, by the index read
-    # (`_not_known`, `requests.complete_mark`) — past the deadline too: BEGUN IS NOT EXPIRED.
+    # not answer"; that answer, `unknown`, goes into this instance's own begun mark, and another instance's mark with no
+    # outcome is completed `unknown`, its instance kept — each by the index read (`_timed_out`, `_not_known`,
+    # `requests.complete_mark`) — past the deadline too: BEGUN IS NOT EXPIRED. Every mark says what request it is about
+    # (`requests.mark_request`: `valid_until`, `digest`).
     #
     # THE SUBSYSTEM SAYS ONLY WHAT ONE HOLDER KNOWS (ADR 0013): what it holds open now (`held_rows`), the key of what a
     # request against a row goes into (`request_target`: compared, never called — one call at a time into each), the call
@@ -1976,6 +1980,8 @@ class Worker:
         self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
         self._marks_owed: dict[str, bytes] = {}          # request -> its answered mark, not yet taken by the store (`_confirm`)
         self._begun_at: dict[str, float] = {}            # request -> when this instance made its mark (`_mark`): its `at`
+        self._marks_kept: dict[str, float | None] = {}   # a mark whose row is gone -> until when it stands (`sweep_marks`)
+        self._unknown_owed: dict[str, str] = {}          # request -> why: a timeout's `unknown` the store did not take (`_timed_out`)
 
     # Whether this worker's units take requests: its spec declares `requests:`.
     def serves_requests(self) -> bool:
@@ -2028,6 +2034,10 @@ class Worker:
     #                  request, `True`, counted `filings["again"]`, the row and its first `filed` untouched; a different
     #                  one, or a row that cannot be read or does not parse → refused (`RequestRefused`, logged, counted),
     #                  nothing written. A different request under a taken id passed silently before, as `False`
+    #   a spent id     the row gone, its MARK still standing (`sweep_marks` keeps it until the request could no longer be
+    #                  performed; «Архитектор», 2026-10-06, the review's fourteenth pass, major 2): read FIRST, before the
+    #                  row is written (`_spent_by`) — its `digest` this filing's → `False`, counted `again`, nothing
+    #                  written; else refused. An evaluator that moved files its last firings again: none is performed twice
     #
     # `True` when THIS call wrote the row; `False` for the same request filed before (it stands, counted `again`, no
     # error) — one meaning on both sides (the product's `FileRequest`; «Архитектор», 2026-10-06). The deadline (`valid_until`) and
@@ -2057,6 +2067,14 @@ class Worker:
         out.update(by=f"{self.sub.name}/{unit if unit not in (None, '') else (self.name or self.instance)}",
                    at=number_text(float(now if at is None else at)), filed=number_text(float(now)))
         key = Subsystem(sub).request_key(rid)
+        why = self._spent_by(Subsystem(sub).command_key(rid), out)
+        if why == "":                                    # its mark stands, and says it is this request: filed before
+            self.filings["again"] += 1
+            return False
+        if why is not None:
+            self.filings["refused"] += 1
+            log.warning("%s: request %s/%s refused: %s", self.name or self.instance, sub, rid, why)
+            raise RequestRefused(f"request {sub}/{rid} refused: {why}")
         try:
             self.vars.put(key, out, cas=0)
         except Conflict:
@@ -2086,6 +2104,29 @@ class Worker:
         same = (canonical_json({k: v for k, v in standing.items() if k != "filed"}) ==
                 canonical_json({k: v for k, v in out.items() if k != "filed"}))
         return None if same else "under this rid stands a different request"
+
+    # AN ID IS SPENT WHILE ITS MARK STANDS («Архитектор», 2026-10-06, after the review's fourteenth pass, major 2): the row
+    # goes seconds after the answer, the mark stays until the request could no longer be performed (`sweep_marks`). A
+    # filing whose row is gone and whose mark stands is the same request again — `""`: `False`, counted `again`, nothing
+    # written — when the mark's `digest` is this filing's (`requests.request_digest`, the text `_filed_already` compares);
+    # else why it is refused: a different request under a spent id, a mark that does not parse or says no digest, a store
+    # that does not answer (not known is not "nobody"). `None`: no mark — nobody began or ended it, filed as ever.
+    def _spent_by(self, mark_key: str, out: dict) -> str | None:
+        try:
+            raw = self.objects.get(mark_key)
+        except Exception as e:                           # noqa: BLE001 — a store that did not answer
+            return f"whether this rid was spent cannot be read ({type(e).__name__}: {e}); nothing is written"
+        if raw is None:
+            return None
+        try:
+            mark = json.loads(raw)
+        except PARSE_ERRORS:
+            mark = None
+        said = mark.get("digest") if isinstance(mark, dict) else None
+        if said == request_digest(out):
+            return ""
+        ended = f", {mark_text(mark, 'outcome')}" if isinstance(mark, dict) and mark.get("outcome") else ""
+        return f"this rid is spent: its mark stands{ended}, and does not say it is this request; file under a new rid"
 
     # AN EVENT ABOUT A UNIT, under the epoch this worker holds for it, into the unit's bucket on this server's resource:
     # the platform's line. `None` when no epoch is held for it (not this worker's to speak of), the instance is fenced,
@@ -2233,19 +2274,38 @@ class Worker:
             return {"instance": "?"}
         return mark if isinstance(mark, dict) else {"instance": "?"}
 
+    # A MARK OUTLIVES ITS ROW («Архитектор», 2026-10-06, the review's fourteenth pass, major 2): a mark whose row is gone is
+    # deleted only once the request it is about could no longer be performed — its deadline plus the reaper's margin
+    # (`requests.mark_kept_until`) — so that the same id filed again after the row was cleared (an evaluator that moved:
+    # its cursor and `fired` stayed behind) meets the mark and is not performed twice. Each such mark is read once; one
+    # that says no deadline, or does not parse, goes with its row as before; one the store does not hand over waits.
     def sweep_marks(self) -> int:
         if self.clock() - self._marks_swept < self.MARK_SWEEP:
             return 0
         self._marks_swept = self.clock()
         prefix = self.sub.command_key("")
         marks = self.objects.list(prefix)                # the marks FIRST: a mark is written after its request,
+        self._marks_kept = {k: t for k, t in self._marks_kept.items() if k in marks}
         if not marks:                                    # so a mark listed here whose row is gone below is over
             return 0
         rows = {k.rsplit("/", 1)[1] for k in self.vars.list(self.sub.requests_prefix())}
-        gone = [k for k in marks if k.rsplit("/", 1)[1] not in rows]
-        for k in gone:
+        ttl, now, gone = (self.spec.requests or {}).get("ttl") if self.spec else None, self.wall(), 0
+        for k in marks:
+            if k.rsplit("/", 1)[1] in rows:
+                continue
+            if k not in self._marks_kept:
+                try:
+                    self._marks_kept[k] = mark_kept_until(self.objects.get(k), ttl)
+                except Exception:                        # noqa: BLE001 — not read: kept, read at the next sweep
+                    self.store_errors += 1
+                    continue
+            until = self._marks_kept[k]
+            if until is not None and now <= until:
+                continue                                 # the request could still be filed again and performed
             self.objects.delete(k)
-        return len(gone)
+            self._marks_kept.pop(k, None)
+            gone += 1
+        return gone
 
     # EVERY ANSWER, OLDEST FIRST, UNDER A CEILING (the review's seventh and eighth passes): as many as fit in
     # `FETCHED_BYTES` and at most `FETCHED_COUNT`, each said by its digest when it is long (`requests.said_id`, which the
@@ -2293,6 +2353,8 @@ class Worker:
         self._marks_looked &= present
         if self._marks_owed:
             self._confirm_owed(present)                  # answers the store did not take the first time (`_confirm`)
+        if self._unknown_owed:
+            self._complete_owed()                        # a timeout's `unknown` the store did not take (`_timed_out`)
         self._appeared = {r: t for r, t in self._appeared.items() if r in present}
         if self._listed is not None:
             for r in present - self._listed[1]:
@@ -2367,6 +2429,8 @@ class Worker:
                         again += 1
                         continue
                     if mark is not None:
+                        if self._beginner_holds(mark):
+                            continue                     # its beginner's to answer (`_beginner_holds`): asked again
                         self._not_known(rid, row, it, mark, mark_text(mark, "instance") or "?", done)
                         continue
                 self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
@@ -2425,7 +2489,7 @@ class Worker:
                 again += 1
                 continue
             before = None if mark is None else (mark_text(mark, "instance") or "?")
-            made = self._mark(rid, unit, now) if before is None else False
+            made = self._mark(rid, unit, now, it) if before is None else False
             if made is None:
                 self._refused(rid, row, it, self.CANNOT_MARK, done)
                 continue
@@ -2433,6 +2497,8 @@ class Worker:
                 mark = self.mark_of(rid)                 # somebody made the mark between our read and our write
                 before = (None if mark is None else mark_text(mark, "instance")) or "?"
             if before is not None:
+                if self._beginner_holds(mark):
+                    continue                             # its beginner's to answer (`_beginner_holds`): asked again
                 self._not_known(rid, row, it, mark, before, done)
                 continue
             call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False,
@@ -2484,7 +2550,7 @@ class Worker:
     def _confirm(self, rid: str, row: dict, outcome: str, it: dict, late: bool = False, why: str = "") -> None:
         now = self.wall()
         mark = self._mark_body(row["id"], {"outcome": outcome, "action": str(it.get("action", "")),
-                                           "at": self._begun_at.pop(rid, now), "ended_at": now,
+                                           "at": self._begun_at.pop(rid, now), "ended_at": now, **mark_request(it),
                                            **({"error": mark_error(why)} if why else {}),
                                            **({"late": True} if late else {})})
         try:
@@ -2510,14 +2576,15 @@ class Worker:
             wrote += 1
         return wrote
 
-    # The mark, create-only (`put_new`): `True` when this instance made it, `False` when somebody else did; a store
+    # The mark, create-only (`put_new`), with the request's own words (`mark_request`, from its row `it`): `True` when
+    # this instance made it, `False` when somebody else did; a store
     # WITHOUT create-only answers `None`, and the request is refused (the review's third pass) — "not performed, and a
     # person is told why" is better than "perhaps twice".
-    def _mark(self, rid: str, unit: str, now: float) -> bool | None:
+    def _mark(self, rid: str, unit: str, now: float, it: dict | None = None) -> bool | None:
         put_new = getattr(self.objects, "put_new", None)
         if put_new is None:
             return None
-        made = bool(put_new(self.command_key(rid), self._mark_body(unit, {"at": now})))
+        made = bool(put_new(self.command_key(rid), self._mark_body(unit, {"at": now, **mark_request(it or {})})))
         if made:
             self._begun_at[rid] = now
         return made
@@ -2539,11 +2606,26 @@ class Worker:
         try:
             now = self.wall()                            # made and ended at once: `at` is `ended_at`
             put_new(self.command_key(rid), self._mark_body(unit, {
-                "outcome": outcome, "action": str(it.get("action", "")), "at": now, "ended_at": now,
+                "outcome": outcome, "action": str(it.get("action", "")), "at": now, "ended_at": now, **mark_request(it),
                 **({"error": mark_error(why)} if why else {})}))
         except Exception as e:                           # noqa: BLE001
             self.store_errors += 1
             log.warning("%s: request %s ended %s, and its mark was not written (%s)", self.name, rid, outcome, e)
+
+    # NOT UNKNOWN WHILE ITS BEGINNER IS THERE (the review's fourteenth pass, minor 13; ADR-0054's rule for the reaper, now
+    # for both closers): a unit moved while its old holder's call was in flight, the new holder said `unknown`, then the old
+    # one `performed` — one request counted twice, two lines on the unit, the first of them false. A mark with no outcome
+    # whose instance still holds the slot it marked under (`requests.holder_still_there`: the slot row names it, not
+    # released) is that instance's to answer — its answer, or its timeout's `unknown` (`_timed_out`), lands in the mark
+    # within `PERFORM_TIMEOUT`, and this holder says it again (`_answered_before`, uncounted). Not waited for: a mark that
+    # names no slot or instance, or does not parse (nobody to wait for), and this instance's own.
+    def _beginner_holds(self, mark) -> bool:
+        if not isinstance(mark, dict):
+            return False
+        inst, slot = mark.get("instance"), mark.get("slot")
+        if not (isinstance(inst, str) and isinstance(slot, str) and inst and slot) or inst in ("?", self.instance):
+            return False
+        return holder_still_there(self, mark)
 
     # A request another instance began and never answered (its mark, `mark`, as read): not known whether it was acted on,
     # said so, and written into that mark — the request's end, its beginner kept (ADR-0054). The beginner's own answer,
@@ -2585,6 +2667,7 @@ class Worker:
                     # was really done — so the next instance says it again rather than `unknown` — and `late`, which tells
                     # an execution past `PERFORM_TIMEOUT` (an incident) from an ordinary one.
                     outcome = "refused" if "error" in call else "performed"
+                    self._unknown_owed.pop(rid, None)    # its own word now: over the `unknown`, whether written or owed
                     self._confirm(rid, row, outcome, it, late=True, why=call.get("error", ""))
                     self._command_line(row, it, outcome, reply=call.get("out"), error=call.get("error"), late=True)
                     log.warning("%s: request %s was %s by %s after it had been answered as not answering (%.1f s)",
@@ -2601,8 +2684,40 @@ class Worker:
                     self._command_line(row, it, "performed", reply=call["out"])   # what was done to a unit: an event of it
             elif not call["answered"] and self.clock() - call["at"] >= self.PERFORM_TIMEOUT:
                 call["answered"] = True
-                self._refused(rid, row, it, f"{self.REQUEST_TARGET} did not answer", done)
+                self._timed_out(rid, row, it, done)
         return done
+
+    # A TARGET THAT DID NOT ANSWER (the review's fourteenth pass, major 6; ADR-0054): after `PERFORM_TIMEOUT` the request
+    # is answered — into `fetched`, so the console clears its row — and whether the target acted on the unit is NOT
+    # KNOWN: `unknown`, counted and said so, and written into this instance's own begun mark by the index read
+    # (`requests.complete_mark`). It was answered as a refusal, whose create-only mark bumped into that very begun mark:
+    # the request ended with no outcome anywhere, and its asker said "filed". The late answer, if it comes, is written over
+    # it (`_confirm`, `late: true`). A store that does not take it: OWED, written again at every look (`_complete_owed`)
+    # until it does, the mark is gone, or the answer came — whether the row still stands or not.
+    def _timed_out(self, rid: str, row: dict, it: dict, done: list) -> None:
+        why = f"{self.REQUEST_TARGET} did not answer"
+        self.fetched.append(rid)
+        done.append({"request": rid, "unit": row["id"], "error": why})
+        self.commands["unknown"] += 1
+        self._command_line(row, it, "unknown", error=why)
+        self._unknown_owed[rid] = why
+        self._complete_owed()
+        log.warning("%s: request %s: %s within %.0f s — whether it acted on %s is not known", self.name, rid, why,
+                    self.PERFORM_TIMEOUT, row["id"])
+
+    def _complete_owed(self) -> int:
+        wrote = 0
+        for rid, why in list(self._unknown_owed.items())[:self.MARKS_OWED_PER_LOOK]:
+            try:
+                complete_mark(self.objects, self.command_key(rid), "unknown", why, self.wall())   # False: an outcome
+            except Exception as e:                       # noqa: BLE001 — stands there already, or the mark is gone
+                self.store_errors += 1
+                log.warning("%s: request %s: its mark could not be completed unknown (%s); written again at the next "
+                            "look", self.name, rid, e)
+                break
+            del self._unknown_owed[rid]
+            wrote += 1
+        return wrote
 
     # THE LINE OF WHAT WAS DONE, in the platform's fields — the ones the console module reads (its contract, §5):
     # `outcome` (performed | refused | unknown), `action`, `by` (who asked), `late` (the target answered after the request

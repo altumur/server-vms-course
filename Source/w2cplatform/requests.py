@@ -63,6 +63,15 @@ def said_id(rid: str) -> str:
 #   the reaper   `expired` for a request nobody began, create-only, `ended_by: reaper` and `ended_at` (`_ended_mark`);
 #                `unknown` into a mark with no outcome whose holder is gone (`complete_mark`); a mark with an outcome — never
 #
+# A target that did not answer within `PERFORM_TIMEOUT` is `unknown` too, in the holder's own begun mark, by the index
+# read (`Worker._timed_out`, the review's fourteenth pass, major 6): whether it acted is not known; its late answer is
+# written over it, `late: true`.
+#
+# EVERY MARK SAYS WHAT REQUEST IT IS ABOUT (`mark_request`; the review's fourteenth pass, major 2, «Архитектор»
+# 2026-10-06): its deadline `valid_until` and its `digest`. The mark is what holds "not more than once" after the row is
+# gone — a request filed again under the same id, after the evaluator moved, finds it — so it is kept at least until the
+# request could no longer be performed (`mark_kept_until`), and a refiling reads it (`Worker.file_request`).
+#
 # BEGUN IS NOT EXPIRED: a mark with no outcome past the deadline is `unknown` — whoever began it may have acted on the
 # unit; `expired` is a request nobody began. The product's `MarkError`, `CompleteMark`, `endedMark`, byte for byte.
 MARK_ERROR = 200
@@ -72,6 +81,46 @@ def mark_error(why: str) -> str:
     """A reason as a mark keeps it: at most `MARK_ERROR` characters, and `…` where it was cut."""
     why = str(why)
     return why if len(why) <= MARK_ERROR else why[:MARK_ERROR] + "…"
+
+
+# WHAT A REQUEST IS, as its mark keeps it: the sha256 of the row's one text without the filer's own `filed` stamp — the
+# very text `Worker._filed_already` compares two filings by — so that a filing under an id whose row is gone is told the
+# same request (`again`) from a different one under a spent id (refused), from the mark alone. The product's
+# `RequestDigest`, byte for byte.
+def request_digest(row: dict) -> str:
+    return hashlib.sha256(canonical_json({k: v for k, v in row.items() if k != "filed"}).encode()).hexdigest()
+
+
+def mark_request(row: dict) -> dict:
+    """The request's words every mark of it carries, whoever writes it: `digest`, and `valid_until` when the row's
+    deadline is a finite time (a row without one, or with a word there, is refused, never performed: nothing to keep)."""
+    out = {"digest": request_digest(row)}
+    try:
+        until = finite(row.get("valid_until") or 0)
+    except (TypeError, ValueError):
+        until = 0.0
+    if until:
+        out["valid_until"] = until
+    return out
+
+
+# HOW LONG A MARK OUTLIVES ITS ROW («Архитектор», 2026-10-06, after the review's fourteenth pass, major 2): the row is
+# cleared seconds after the answer, and an evaluator that moved files the same id again — its cursor and `fired` stayed
+# behind. "Not more than once" is the mark's to hold, so it stands at least until the request could no longer be
+# performed: its deadline plus the reaper's margin — `REAP_AFTER`, or the family's `ttl` when that is longer (the holder
+# judges the deadline by its own clock, and whoever sweeps by another). None: a mark that names no deadline or does not
+# parse — swept with its row, as before.
+def mark_kept_until(raw, ttl=None) -> float | None:
+    try:
+        mark = json.loads(raw) if raw else None
+        until = finite(mark.get("valid_until") or 0) if isinstance(mark, dict) else 0.0
+    except (*PARSE_ERRORS, TypeError, ValueError, AttributeError):
+        return None
+    try:
+        margin = max(REAP_AFTER, finite(ttl or 0))
+    except (TypeError, ValueError):
+        margin = REAP_AFTER
+    return until + margin if until else None
 
 
 # A FOREIGN MARK'S WORDS ARE CLIPPED WHERE THEY ARE SAID («Сборка», window 3; ADR-0054): a mark is written by another
@@ -140,7 +189,8 @@ def _ended_mark(ctl, rid: str, it: dict, outcome: str, now: float) -> None:
     put_new = getattr(ctl.objects, "put_new", None)
     if put_new is None:
         return
-    mark = {"unit": str(it.get("unit", "")), "outcome": outcome, "at": now, "ended_by": "reaper", "ended_at": now}
+    mark = {"unit": str(it.get("unit", "")), "outcome": outcome, "at": now, "ended_by": "reaper", "ended_at": now,
+            **mark_request(it)}
     if it.get("action"):
         mark["action"] = str(it["action"])
     try:
@@ -159,7 +209,7 @@ def metrics_lines() -> list[str]:
 
 # Whether the instance that marked a request still holds the name it marked under — its slot row, read now. A mark or a
 # row that does not say, a store that does not answer: "still there" — nothing is ended on what cannot be read.
-def _holder_still_there(ctl, said) -> bool:
+def holder_still_there(ctl, said) -> bool:
     if not isinstance(said, dict) or not said.get("slot") or not said.get("instance"):
         return True
     try:
@@ -209,24 +259,33 @@ def _close(ctl, key: str, it: dict, idx, now: float, how: str) -> bool:
     except PARSE_ERRORS:
         said = {}
     begun = mark is not None and not (isinstance(said, dict) and said.get("outcome"))
-    if begun and _holder_still_there(ctl, said):
+    if begun and holder_still_there(ctl, said):
         return False
+    # THE MARK FIRST, THEN THE ROW (the review's fourteenth pass, major 6): the row deleted and the mark not completed —
+    # the store did not answer — left a request no turn would look at again, and its mark was swept with no outcome ever.
+    # Completed first, a mark the store did not take leaves the row standing, and the next turn writes it again.
+    wrote = False
+    if begun:
+        why = "its holder began it and is gone without saying how it went"
+        try:
+            wrote = complete_mark(ctl.objects, ctl.sub.command_key(rid), "unknown", why, now)   # by the index it reads
+        except Exception as e:                              # noqa: BLE001 — not written: the row stands, the next turn
+            log.warning("%s: request %s: its holder is gone, and its mark could not be completed (%s): left for the "
+                        "next turn", ctl.spec.name, rid, e)
+            return False
     try:
         ctl.vars.delete(key, cas=idx)                       # by CAS: a row filed again under the same id is a new one
     except Exception:                                       # noqa: BLE001 — changed meanwhile, or the store: the next pass
-        return False
+        return False                                        # (a mark completed above is an outcome the next turn reads)
     if isinstance(said, dict) and said.get("outcome"):
         log.info("%s: request %s was answered (%s) and its answer never reached a heartbeat: its row is cleared",
                  ctl.spec.name, rid, mark_text(said, "outcome"))
         return True
     if begun:
-        unknown[ctl.spec.name] = unknown.get(ctl.spec.name, 0) + 1
-        why = "its holder began it and is gone without saying how it went"
-        try:
-            complete_mark(ctl.objects, ctl.sub.command_key(rid), "unknown", why, now)   # by the index it reads
-        except Exception as e:                              # noqa: BLE001 — the row is ended; its mark says less
-            log.warning("%s: request %s ended not known, and its mark was not completed (%s)", ctl.spec.name, rid, e)
-        log.warning("%s: request %s for %s ended %s NOT KNOWN: %s", ctl.spec.name, rid, it.get("unit", "?"), how, why)
+        if wrote:                                           # not written: answered meanwhile — its beginner's word stands
+            unknown[ctl.spec.name] = unknown.get(ctl.spec.name, 0) + 1
+            log.warning("%s: request %s for %s ended %s NOT KNOWN: %s", ctl.spec.name, rid, it.get("unit", "?"), how,
+                        "its holder began it and is gone without saying how it went")
         return True
     count_expired(ctl.spec.name)
     _ended_mark(ctl, rid, it, "expired", now)
