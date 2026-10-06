@@ -256,6 +256,98 @@ def test_kept_footage_the_incidents_ring_took_is_an_alarm():
     assert len(_events(box, "archive.keep.lost")) == len(alarms)       # said once: what is gone is not lost again
 
 
+def _overfilled():
+    """Three keeps of five minutes, a quarter of a megabyte every ten seconds, copied into an incidents ring of 16 MB:
+    the third pushes the oldest kept footage out, and the recording's own door is gone, so nothing is copied back."""
+    box, k = _site(quota=16 << 20)
+    t = box.wall()
+    for smp in fake_samples(t - 1200, t, step=10, size=256 << 10):
+        box.src.put("7", 1, smp)
+    box.src.finish("7", 1); box.src.seal()
+    first = _keep(box, "7", t - 1200, t - 900)
+    k.keep_pass()
+    second, third = _keep(box, "7", t - 800, t - 500), _keep(box, "7", t - 400, t - 100)
+    k.keep_pass()
+    box.src_door.shutdown()
+    k.keep_pass()
+    return box, k, (first, second, third)
+
+
+def test_kept_footage_the_incidents_ring_wrote_over_is_in_the_heartbeat_with_its_seconds_every_pass():
+    """ADR-0064, its addition: the course's recorder says `incidents_lost {keep: seconds}` as the product does. The alarm
+    `archive.keep.lost` is said once; what the volume took of a keep in force and holds no more is in the heartbeat for
+    as long as it lasts — the most it ever held less what it holds now, in whole seconds — and gone with the keep."""
+    box, k, (first, second, third) = _overfilled()
+    assert k.store.status()["firstBlockId"] > 0
+    held = {kp.id: k.keep_held[(kp.id, "7")] for kp in (first, second, third)}
+    assert held[first.id] < 300                                        # the oldest went first
+    hb = k.heartbeat_extra()
+    want = {kp.id: round(300 - held[kp.id]) for kp in (first, second, third) if 300 - held[kp.id] > k.LOST_SLACK}
+    assert first.id in want and hb["incidents_lost"] == want, (hb.get("incidents_lost"), held)
+    assert all(type(s) is int for s in hb["incidents_lost"].values())
+    k.keep_pass()                                                      # the alarm is not said again; the field still is
+    assert k.heartbeat_extra()["incidents_lost"] == want
+    keeps.delete(box.vars, first.id)                                   # lifted: not a keep in force, not lost
+    k.keep_pass()
+    assert first.id not in k.heartbeat_extra().get("incidents_lost", {})
+
+
+def test_a_closed_incidents_ring_whose_oldest_footage_is_kept_says_that_keep_is_at_risk():
+    """ADR-0064, its addition: `incidents_at_risk [keep]` — the ring has closed, and the oldest footage it holds of a
+    recording lies in a keep still in force: the next block it writes over is kept. Footage of a keep that was lifted
+    going first is what a ring is for: once the keep whose minutes are oldest is lifted, nothing is at risk."""
+    box, k, kps = _overfilled()
+    oldest = k.store.coverage("7")[0][0]
+    under = [kp.id for kp in kps if kp.since - k.LOST_SLACK <= oldest <= kp.until]
+    assert under and k.heartbeat_extra()["incidents_at_risk"] == sorted(under)
+    for kid in under:
+        keeps.delete(box.vars, kid)
+    k.keep_pass()
+    oldest = k.store.coverage("7")[0][0]
+    assert not any(kp.since - k.LOST_SLACK <= oldest <= kp.until for kp in kps if kp.id not in under)
+    assert "incidents_at_risk" not in k.heartbeat_extra()
+
+
+def test_nothing_lost_and_nothing_at_risk_is_not_said():
+    """A keep copied whole into a ring that has room: `keeps` says it, and neither `incidents_lost` nor
+    `incidents_at_risk` is in the heartbeat — absent when empty, as the product leaves them out. A recorder that holds
+    no incidents volume says neither, whatever."""
+    box, k = _site()
+    t = box.wall()
+    footage(box.src, "7", 1, t - 3600, t, step=10)
+    kp = _keep(box, "7", t - 1800, t - 1200)
+    k.keep_pass()
+    assert k.store.status()["firstBlockId"] == 0
+    hb = k.heartbeat_extra()
+    assert hb["keeps"][kp.id]["copied"] == 600
+    assert "incidents_lost" not in hb and "incidents_at_risk" not in hb
+    plain = recorder(box, "r-disks-2", "srv-1", acl=False)
+    assert "incidents_lost" not in plain.heartbeat_extra() and "incidents_at_risk" not in plain.heartbeat_extra()
+
+
+def test_servers_shows_the_incidents_recorders_keeps_lost_and_at_risk_as_they_are():
+    """rec's spec declares `keeps`, `incidents_lost` and `incidents_at_risk` under `servers.status` with `of: keeps`
+    (ADR-0064): the incidents recorder's heartbeat goes onto its row of `GET /servers` as it is — a map of seconds by
+    keep, a list of keeps — and the page matches the keys and the elements with the rows of `keeps`."""
+    import urllib.request as ur
+    from w2cplatform.console import SpecConsole
+    box, k, _ = _overfilled()
+    k.heartbeat_once()
+    hb = k.heartbeat_extra()
+    assert hb["incidents_lost"] and hb["incidents_at_risk"]
+    declared = {e["field"]: e for e in REC_SPEC.servers_status}
+    assert all(declared[f].get("of") == "keeps" for f in ("keeps", "incidents_lost", "incidents_at_risk")), declared
+    srv = SpecConsole(SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall), wall=box.wall).serve("127.0.0.1", 0)
+    try:
+        req = ur.Request(f"http://127.0.0.1:{srv.server_address[1]}/servers", headers={"X-User": "ann"})
+        out = json.loads(ur.urlopen(req, timeout=10).read())
+        [row] = [w["status"] for s in out["servers"].values() for w in s["workers"] if w["worker"] == "r-keep"]
+        assert row["incidents_lost"] == hb["incidents_lost"] and row["incidents_at_risk"] == hb["incidents_at_risk"]
+        assert row["keeps"] == json.loads(json.dumps(hb["keeps"]))
+    finally:
+        srv.shutdown()
+
+
 def test_not_being_able_to_read_the_keeps_is_not_there_are_none():
     box, k = _site()
     t = box.wall()
@@ -536,6 +628,8 @@ def test_kept_footage_the_ring_took_while_the_recorder_was_restarting_is_still_a
     state = again.keep_pass()
     lost = [a for a in _events(box, "archive.keep.lost") if a["keep"] == first.id]
     assert lost and lost[0]["seconds"] > 0 and state[first.id]["missing"] > 0
+    # …and in the heartbeat, from what the copy said it held before the restart (`incidents_lost`, ADR-0064)
+    assert again.heartbeat_extra()["incidents_lost"][first.id] == round(300 - again.keep_held[(first.id, "7")])
 
 
 # -- a keep's seal, checked at the door of the recorder that holds its copy (ADR-0015, ADR-0057 point 3) --------------

@@ -528,7 +528,10 @@ class RecWorker(VmsWorker):
         self.incidents = False                       # is the volume this recorder holds an incidents volume
         self.keep_held: dict[tuple[str, str], float] = {}   # (keep, recording) -> seconds of it in the volume
         self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
-        self._keeps_read = False                     # `keep_held` restored from the volume and its events (`keep_pass`)
+        self.keep_took: dict[tuple[str, str], float] = {}   # (keep, recording) -> the most of it the volume ever held
+        self.incidents_lost: dict[str, int] = {}     # keep -> seconds the volume took and its ring wrote over (`_incidents_said`)
+        self.incidents_at_risk: list[str] = []       # keeps whose footage is the oldest of a ring that has closed (`_incidents_said`)
+        self._keeps_read = False                    # `keep_held` restored from the volume and its events (`keep_pass`)
         self._keep_short: dict[str, tuple] = {}      # keep -> (short since, last `archive.keep.uncopied`) — `_keep_uncopied`
         self._keep_garbled: dict[str, tuple] = {}    # keep -> (garbled since, last `archive.keep.garbled`) — `_keep_unreadable`
         self._keep_nowhere: dict[tuple[str, str], list] = {}   # (keep, recording) -> what a door that holds it said it has not
@@ -1168,7 +1171,12 @@ class RecWorker(VmsWorker):
                 # …and what each keep is short of, alone: `{keep: seconds}` — the console's `rec_keep_missing_seconds`
                 # (the review's fourth pass). Empty when every keep is whole.
                 **({"keep_missing": {kid: e["missing"] for kid, e in self.keep_state.items() if e.get("missing")}}
-                   if self.incidents else {})}
+                   if self.incidents else {}),
+                # …what of each keep the volume took and its own ring wrote over, `{keep: seconds}`, and the keeps whose
+                # footage the ring takes next, `[keep]` — the product's words (ADR-0064, its addition; `_incidents_said`).
+                # Absent when empty, as there.
+                **({"incidents_lost": dict(self.incidents_lost)} if self.incidents and self.incidents_lost else {}),
+                **({"incidents_at_risk": list(self.incidents_at_risk)} if self.incidents and self.incidents_at_risk else {})}
 
     # -- which archive this recorder writes into ------------------------------------------------------
     # Run once a pass, after the slot and the leases. Four outcomes, and the one that matters is the last.
@@ -2020,6 +2028,7 @@ class RecWorker(VmsWorker):
         self.archive_error, self.archive_failure, self.archive_away_since, self._busy_since = "", "", 0.0, 0.0
         self.quota_note, self.shrink_pending = "", 0
         self.keep_held, self.keep_state, self._keeps_read, self._keep_nowhere = {}, {}, False, {}
+        self.keep_took, self.incidents_lost, self.incidents_at_risk = {}, {}, []
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
     #
@@ -3008,6 +3017,7 @@ class RecWorker(VmsWorker):
     KEEP_EVERY = 60.0
     KEEP_UNCOPIED_AFTER = 300.0                      # five passes: a door that blinked had its chance
     KEEP_GARBLED_AFTER = 3600.0                      # an hour: a row being mended by hand had its chance
+    LOST_SLACK = 1.0                                 # seconds of a keep that may be missing before they are called lost
 
     def keeps_in_background(self) -> None:
         if self._keeper is not None and self._keeper.is_alive():
@@ -3058,7 +3068,10 @@ class RecWorker(VmsWorker):
 
         if not self._keeps_read:
             self._keeps_read = True
-            self.keep_held = {**self._keeps_held_before(declared, recordings_of, inside), **self.keep_held}
+            held_before, took_before = self._keeps_held_before(declared, recordings_of, inside)
+            self.keep_held = {**held_before, **self.keep_held}
+            self.keep_took = {**took_before, **self.keep_took}
+        lost_of: dict[str, float] = {}
         for k in declared:
             got = missing = 0.0
             touched: list[str] = []
@@ -3067,7 +3080,7 @@ class RecWorker(VmsWorker):
                 # First what is GONE — before anything is copied, or a copy taken again from the recording's own
                 # volume would hide that the incidents ring is too small to hold what it was given.
                 now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
-                if now_in + 1.0 < before:
+                if now_in + self.LOST_SLACK < before:
                     lost = round(before - now_in, 1)
                     self.write_event(rec, now, "archive.keep.lost", ALARM, epoch=0, cam=k.cam, keep=k.id, recording=rec,
                                      seconds=lost, volume=self.volume)
@@ -3091,6 +3104,9 @@ class RecWorker(VmsWorker):
                 if rec in touched:
                     self.store.seal()                    # what was copied is readable now — and counted below
                 self.keep_held[(k.id, rec)] = held = inside(k, rec)
+                took = self.keep_took[(k.id, rec)] = max(self.keep_took.get((k.id, rec), 0.0), held)
+                if took - held > self.LOST_SLACK:              # taken, and not here now: its ring wrote over it
+                    lost_of[k.id] = lost_of.get(k.id, 0.0) + took - held
                 got += held
                 short = self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
                                             speaks)
@@ -3134,12 +3150,42 @@ class RecWorker(VmsWorker):
             state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}
             self._keep_unreadable(k, state[k.id], now)
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
+        self.keep_took = {kr: v for kr, v in self.keep_took.items() if kr[0] in state}
+        self._incidents_said(declared, recordings_of, lost_of)
         self._keep_nowhere = {kr: v for kr, v in self._keep_nowhere.items() if kr[0] in state}
         self._keep_short = {kid: v for kid, v in self._keep_short.items() if kid in state}
         # Parsed again, or lifted: that episode is over, and the next garbling is a new one.
         self._keep_garbled = {kid: v for kid, v in self._keep_garbled.items() if state.get(kid, {}).get("garbled")}
         self.keep_state = state
         return state
+
+    # WHAT THE INCIDENTS RING HAS TAKEN, AND WHAT IT TAKES NEXT (ADR-0064, its addition: the product's words, from its
+    # keeper's `heartbeatExtra`). `archive.keep.lost` is said once, on the pass that found the loss, and `keeps` says
+    # what each keep holds now — neither says, pass after pass, that a keep is SHORT OF WHAT IT WAS GIVEN, nor that the
+    # next thing the ring writes over is kept. Two heartbeat fields do, recomputed every pass:
+    #
+    #   incidents_lost     {keep: seconds} — what this volume took of a keep in force and holds no more: the most of it
+    #                      the volume ever held (`keep_took`, restored at start with `keep_held`) less what it holds now,
+    #                      over each recording past `LOST_SLACK`. A copy taken again makes it smaller; a keep lifted,
+    #                      or one whose row does not parse, is not in it (the product's `lose`)
+    #   incidents_at_risk  [keep] — the ring has CLOSED (`firstBlockId` past nought, as `depth_pass` reads it, or it has
+    #                      lost a keep already) and the OLDEST footage it holds of one of the keep's recordings lies in
+    #                      the keep's interval: the next block it writes over is kept. Footage of keeps that were lifted
+    #                      going first is what a ring is for, and not this (the product's `atRisk`)
+    #
+    # Rounded seconds and a sorted list, absent from the heartbeat when empty, as in the product. A ring that does not
+    # answer says nothing new: what was said stays until it does.
+    def _incidents_said(self, declared, recordings_of, lost_of: dict) -> None:
+        self.incidents_lost = {kid: round(sec) for kid, sec in sorted(lost_of.items())}
+        try:
+            closed = int(self.store.status().get("firstBlockId", 0)) > 0 or bool(self.incidents_lost)
+            oldest = {rec: cov[0][0] for rec in {r for k in declared for r in recordings_of(k)}
+                      if (cov := self.store.coverage(rec))}
+        except (OSError, ObsdError, ArchiveError, *PARSE_ERRORS):
+            return
+        self.incidents_at_risk = sorted(
+            k.id for k in declared if closed and any(
+                rec in oldest and k.since - self.LOST_SLACK <= oldest[rec] <= k.until for rec in recordings_of(k)))
 
     # WHAT A KEEP IS SHORT OF is what a SOURCE has and this volume does not (the review's fifth pass). Every recording
     # of the keep's camera was counted over the keep's whole interval: a camera recorded for an hour as `7` and for a
@@ -3284,6 +3330,7 @@ class RecWorker(VmsWorker):
     # of, and the names the keep wrote down, not the recordings of its camera it was copied from. The incidents
     # volume's own `<recording>/e0` is the truth of what is there: a recorder starts from it for every recording of
     # every keep, and from an event that says MORE — the ring took some while nobody was looking — it raises the alarm.
+    # Returned beside it: the most each copy ever said, losses not taken off — what `incidents_lost` counts from.
     def _keeps_held_before(self, declared, recordings_of, inside) -> dict:
         from w2cplatform.events import alarm_tree, buckets_under, read_bucket
         ids = {k.id for k in declared}
@@ -3302,6 +3349,7 @@ class RecWorker(VmsWorker):
                 except OSError:
                     continue
         said: dict = {}
+        took: dict = {}                                  # the most each copy ever said it held: `keep_took`, before any loss
         # A line whose moment or `seconds` is not a number — a word, `nan`, 400 digits from a hand edit of the bucket —
         # is that line's, read as not said and counted (the review's tenth pass): read bare, it raised out of the keeps'
         # pass, and no keep of this volume was looked at that pass.
@@ -3315,11 +3363,12 @@ class RecWorker(VmsWorker):
             key = (str(e["keep"]), str(e.get("recording", "")))
             if e.get("kind") == "archive.keep.copied" and "seconds" in e:
                 said[key] = seconds
+                took[key] = max(took.get(key, 0.0), seconds)
             elif e.get("kind") == "archive.keep.lost" and key in said:
                 said[key] = max(0.0, said[key] - seconds)
         for key, v in said.items():
             held[key] = max(held.get(key, 0.0), v)
-        return held
+        return held, {key: max(took.get(key, 0.0), v) for key, v in held.items()}
 
     # THE SEAL, WRITTEN ONCE (ADR-0057, дополнение п. 3: пишет рекордер тома incidents; the product's `SealKeeps`). The
     # first time a recording's copy is whole — held, and short of nothing a source has (`keep_pass`'s `whole`) — its
