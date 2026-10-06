@@ -172,7 +172,7 @@ tables:
           # the card in one camera — a directory on it, with no key: an address is a local or network volume
           then:
             required: [server, cam]
-            properties: {url: {not: {pattern: "^(?!file://)[A-Za-z][A-Za-z0-9+.-]*://"}}}
+            properties: {url: {anyOf: [{pattern: "^file://"}, {not: {pattern: "^[A-Za-z][A-Za-z0-9+.-]*://"}}]}}
             allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
           else: {not: {required: [cam]}}             # `cam` is a card's: a disk or a bucket is no camera's
     journal: {written: archive.volume.declared, deleted: archive.volume.withdrawn}
