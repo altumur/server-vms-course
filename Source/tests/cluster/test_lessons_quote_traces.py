@@ -11,7 +11,7 @@ What is checked, in every lesson of the module (`[0-9][0-9]-*.md`):
 
 - a line anywhere that starts like a request or an answer, or like a trace's header line, is a line of some trace;
 - inside a fenced block that quotes a trace (it holds such a line), EVERY line is a line of some trace: a write's body
-  (`"holder": "srv-a:4101",`), an answer printed over several lines, a series of `/metrics` — so a value that shifted,
+  (`"holder": "srv-a:4101:001005",`), an answer printed over several lines, a series of `/metrics` — so a value that shifted,
   a key that was renamed, a field that went fails here, with the lesson and the line.
 
 Lines with `...` or `…` are paraphrase — the lesson says so by the ellipsis — and are not checked; nor is anything
@@ -137,7 +137,7 @@ def test_a_block_that_quotes_a_trace_is_checked_line_by_line():
         "```",
         "# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock",
         'POST /v1/write {"op": "put", "key": "k", "cas": "", "items": {',
-        '  "holder": "srv-a:4101",',
+        '  "holder": "srv-a:4101:001005",',
         "  …",
         "}}",
         "```",
@@ -150,6 +150,6 @@ def test_a_block_that_quotes_a_trace_is_checked_line_by_line():
         "GET /v1/list?prefix=vms/",
         "# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock",
         'POST /v1/write {"op": "put", "key": "k", "cas": "", "items": {',
-        '"holder": "srv-a:4101",',
+        '"holder": "srv-a:4101:001005",',
         "}}",
     ]

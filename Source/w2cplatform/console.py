@@ -172,6 +172,7 @@ from .access import (COOKIE, GLASS_COOKIE, MODULE_ROUTES, OPEN_ROUTES, UNIX_PEER
                      session_cookie, token_of)
 from .journal import AUDIT, Journal
 from .resource import resources_seen
+from . import runtime
 from .limits import TooLarge
 from .spec import GARBLED_ROW, LABEL_WORD, Exists, Refused, SpecController, server_name
 
@@ -1466,7 +1467,9 @@ class SpecConsole:
                  wall=None, lost_after: float = 45.0, per_minute: float = 0.0):
         self.ctl, self.spec, self.index = ctl, ctl.spec, index
         self.worst_failover, self.wall, self.lost_after = worst_failover, wall or ctl.wall, lost_after
-        self.instance = f"{socket.gethostname()}:{os.getpid()}"
+        # This incarnation's name in the ONE form every instance name has, `box:pid:rnd` (`runtime.instance_on_box`;
+        # ADR 0003, the review's fourteenth pass, minor 27: it was `host:pid`, a second format `box_of` read beside it).
+        self.instance = runtime.instance_on_box(os.environ)
         self.marks_root = marks_root
         # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
         # does; in a `Mount` only the root does (`Mount._adopt`), so a scrape of every page says each fact once.

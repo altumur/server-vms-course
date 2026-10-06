@@ -4,7 +4,7 @@ import scenario as sc
 s = sc.S()
 ws, ctl = sc.running(s)
 a = ws["srv-a"]
-b = s.worker("srv-a", tag="(вторая копия, srv-a:4104)")
+b = s.worker("srv-a", tag="(вторая копия, srv-a:4104:001008)")
 b.reconcile_once(); b.heartbeat_once()
 a.lease_pass()
 mark = s.log.mark()

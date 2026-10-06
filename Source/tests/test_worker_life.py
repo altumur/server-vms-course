@@ -157,16 +157,16 @@ def test_every_workers_failover_is_measured_from_the_heartbeat_its_name_left():
     constructor, and every other subsystem's failover went unmeasured. The platform reads it, before an instance's first
     heartbeat under its name, and says it in every heartbeat (`previous_hb`, `previous_instance`, `previous_server`)."""
     box = Box()
-    old = counter_worker(box, "w-1", instance="srv-1:101", resource_root=box.resource_root)
+    old = counter_worker(box, "w-1", instance="srv-1:101:aaaaaa", resource_root=box.resource_root)
     old.heartbeat_once()
     was = Heartbeat.from_bytes(box.objects.get(old.sub.heartbeat_key("w-1")))
     assert was.extra["previous_hb"] == 0.0 and was.extra["started"] == old.started_wall   # nobody before it
     old.release_slot()
     box.wall.advance(20)
-    new = counter_worker(box, "w-1", instance="srv-1:102", resource_root=box.resource_root)
+    new = counter_worker(box, "w-1", instance="srv-1:102:bbbbbb", resource_root=box.resource_root)
     new.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(new.sub.heartbeat_key("w-1")))
-    assert (hb.extra["previous_hb"], hb.extra["previous_instance"], hb.extra["previous_server"]) == (was.ts, "srv-1:101", "srv-1")
+    assert (hb.extra["previous_hb"], hb.extra["previous_instance"], hb.extra["previous_server"]) == (was.ts, "srv-1:101:aaaaaa", "srv-1")
     assert controller(box).failover_seconds() == {"w-1": 20.0}
 
 
