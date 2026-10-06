@@ -399,7 +399,7 @@ class DomainAgent:
         # not parse raised out of the pass, and the report below — the member's sign of life — was not written; the
         # domain then called a member silent whose only trouble was one row the domain itself wrote. Now it is refused,
         # said in what the pass did (`holder`, `shared`, `backup`) and in the log once, and the pass goes on.
-        from .term import BACKUP, carry_holder
+        from .term import BACKUP, BACKUP_TAKEN, carry_holder
         try:
             keyset = ClusterTrust(self.cluster_vars).keyset()
         except Untrusted:
@@ -415,7 +415,7 @@ class DomainAgent:
                     dv, do, self.cluster_vars, self.cluster_objects, keyset, self.now()))
                 self.backup = self._step("the backup", lambda: carry(
                     dv, do, self.cluster_vars, self.cluster_objects, keyset, self.now(),
-                    src=f"{BACKUP}/{self.cluster}", dst=BACKUP, obj=BACKUP, refused=f"{BACKUP}-refused"))
+                    src=f"{BACKUP}/{self.cluster}", dst=BACKUP_TAKEN, obj=BACKUP_TAKEN, refused=f"{BACKUP}-refused"))
         except Unreachable:
             return False
         self.last_synced = self.now()

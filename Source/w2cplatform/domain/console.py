@@ -193,7 +193,7 @@ class Console:
     def backup_doc(self) -> dict:
         """`GET /domain/backup`: for each member chosen to keep the domain's backup, the pointer the holder wrote for it
         and the one its last report says it took — and the term, as the signer says it."""
-        from .term import BACKUP
+        from .term import BACKUP, BACKUP_TAKEN
         from .uplink import member_copy
         from .federation import Unreachable
         holders = {}
@@ -201,7 +201,7 @@ class Console:
             name = path[len(BACKUP) + 1:]
             pointer, _ = self.holder_vars.get(path)
             try:
-                taken = member_copy(name, self.holder_objects, wall=self.view.wall).vars.get(BACKUP)[0] \
+                taken = member_copy(name, self.holder_objects, wall=self.view.wall).vars.get(BACKUP_TAKEN)[0] \
                     if self.holder_objects is not None else None
             except Unreachable:
                 taken = None

@@ -68,10 +68,10 @@ def _rows() -> tuple[str, ...]:
     from .agent import KEYS_PATH, ROOT_PATH
     from .pending import OUTCOMES_PATH
     from .shared import POINTER, REFUSED
-    from .term import BACKUP, HOLDER
+    from .term import BACKUP_TAKEN, HOLDER
     # The root this member pinned and the key set it holds (Lesson 15): what the domain compares with its own
     # before anybody accepts the member (`Members.pinned`, feedback BX).
-    return (OUTCOMES_PATH, POINTER, REFUSED, HOLDER, BACKUP, ROOT_PATH, KEYS_PATH, *declared.epoch_prefixes())
+    return (OUTCOMES_PATH, POINTER, REFUSED, HOLDER, BACKUP_TAKEN, ROOT_PATH, KEYS_PATH, *declared.epoch_prefixes())
 
 
 def base(member: str) -> str:

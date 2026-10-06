@@ -506,7 +506,7 @@ class Holder:
         from w2cplatform.trust.memberkey import NotMine
         from w2cplatform.trust.signer import is_recovery_file
         from .agent import ClusterTrust, Untrusted
-        from .term import BACKUP, HOLDER
+        from .term import BACKUP_TAKEN, HOLDER
         if self.fed is None:
             return 404, {"detail": "this signer reads no domain (CLUSTERS): there is nothing to take"}
         refused = self.refusal()
@@ -539,7 +539,7 @@ class Holder:
         why = self._not_the_domains(blob, me)
         if why:
             return 403, {"detail": why}
-        ptr, _ = self.vars.get(BACKUP)
+        ptr, _ = self.vars.get(BACKUP_TAKEN)
         if not ptr or str(ptr.get("rev")) != str(g.get("rev")) or str(ptr.get("term")) != str(g.get("term")):
             return 409, {"detail": f"{me} did not take backup rev {g.get('rev')} of term {g.get('term')}: the handover "
                                    f"restores from nothing older"}
@@ -994,7 +994,7 @@ def move_by_handover(holder: Holder, to: str, domain: str, signer: Signer):
     (signed by this holder's token key), then take (the grant, and this signer's own keys sealed to the key `to`
     prepared; a domain whose root is off the holder has no such keys here — no handover then). This process writes
     no store of `to`'s."""
-    from .term import BACKUP, handover
+    from .term import BACKUP_TAKEN, handover
     wait = float(os.environ.get("HANDOVER_WAIT", "80"))
     t = holder.term
 
@@ -1002,7 +1002,7 @@ def move_by_handover(holder: Holder, to: str, domain: str, signer: Signer):
         until = time.monotonic() + wait
         while time.monotonic() < until:
             try:
-                ptr, _ = t.reported(to).vars.get(BACKUP)
+                ptr, _ = t.reported(to).vars.get(BACKUP_TAKEN)
             except Exception:                            # noqa: BLE001 — not reported yet: wait on
                 ptr = None
             if ptr and int(ptr.get("rev", -1)) == t.backup_rev and int(ptr.get("term", -1)) == t.term:

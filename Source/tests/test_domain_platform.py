@@ -269,7 +269,7 @@ def test_the_holder_backs_up_what_a_spec_keeps_and_a_move_restores_it():
     the family is denied to it row by row, as a kept row is by name."""
     from w2cplatform.domain.agent import DomainAgent, DomainPublisher
     from w2cplatform.domain.rights import agent_denials, roles
-    from w2cplatform.domain.term import BACKUP, DomainHolder, exported, move_domain
+    from w2cplatform.domain.term import BACKUP_TAKEN, DomainHolder, exported, move_domain
     from w2cplatform.rights import allowed
     from w2cplatform.trust.signer import Signer
     fed, wall = site()
@@ -289,11 +289,42 @@ def test_the_holder_backs_up_what_a_spec_keeps_and_a_move_restores_it():
     holder.backup(["south"], north.objects)
     assert DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
                        cluster_objects=south.objects).sync()
-    assert south.vars.get(BACKUP)[0] and south.objects.get(BACKUP)
+    assert south.vars.get(BACKUP_TAKEN)[0] and south.objects.get(BACKUP_TAKEN)
     new, report = move_domain(fed, "south", signer.backup(), "acme", lambda n: fed.clusters[n].objects, wall)
     assert new.term == 2 and south.vars.get("domain/testsub/ledger")[0] == {"s1": "seen"}, report["sentence"]
     assert sorted(south.vars.list("domain/testsub/badges/")) == ["domain/testsub/badges/gold", "domain/testsub/badges/silver"]
     assert south.vars.get("domain/testsub/badges/silver")[0] == {"since": "2"}
+
+
+def test_a_member_publishes_the_copy_it_took_as_backup_taken_and_nothing_under_the_old_name():
+    """What a member publishes of the backup copy it took — `{rev, term, sha256}` and the document beside it — is
+    `domain/backup-taken`, the product's name (one name on both sides, «Архитектор» 2026-10-06; ADR 0003: no alias).
+    `domain/backup/<member>` stays the holder's pointer; no row and no object of the bare old name is written, in the
+    member's store or in its report the holder reads (`term.copies`, a handover's wait)."""
+    from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+    from w2cplatform.domain.term import BACKUP, BACKUP_TAKEN, DomainHolder, copies
+    from w2cplatform.domain.uplink import _rows
+    from w2cplatform.trust.signer import Signer
+    assert BACKUP_TAKEN == "domain/backup-taken" and BACKUP_TAKEN in _rows() and BACKUP not in _rows()
+    fed, wall = site()
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    holder = DomainHolder(fed, "north", signer, 1, wall, objects=north.objects)
+    holder.claim()
+    holder.backup(["south"], north.objects)
+    assert DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
+                       cluster_objects=south.objects, published=south.objects).sync()
+    pointer = north.vars.get(f"{BACKUP}/south")[0]
+    taken = south.vars.get(BACKUP_TAKEN)[0]
+    assert taken and {k: taken[k] for k in ("rev", "term", "sha256")} == \
+        {k: pointer[k] for k in ("rev", "term", "sha256")}, (taken, pointer)
+    assert south.objects.get(BACKUP_TAKEN) == north.objects.get(pointer["object"])
+    assert south.vars.get("domain/backup")[0] is None and south.objects.get("domain/backup") is None
+    assert south.vars.list("domain/backup") == [BACKUP_TAKEN]
+    report = holder.reported("south").vars
+    assert report.get(BACKUP_TAKEN)[0] == taken and report.get("domain/backup")[0] is None
+    assert copies(holder, ["south"]) == {"south": {"term": 1, "rev": int(pointer["rev"])}}
 
 
 def test_a_domain_section_that_names_what_is_not_there_is_refused_when_the_spec_loads():

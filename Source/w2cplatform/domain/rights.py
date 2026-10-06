@@ -9,7 +9,7 @@
                   and nothing a holder alone writes — the signer's keys, the people, the list of members, the per-member
                   rows the holder keeps for the others, a subsystem's books for the others and its kept rows — DENIED by
                   name, so a grant on `domain/*` cannot reach them (the product's r23-domain note: careful with what the
-                  agent writes on a member — its own copies of `domain/keys`, `root`, `grants`, `pending`, `backup`, the
+                  agent writes on a member — its own copies of `domain/keys`, `root`, `grants`, `pending`, `backup-taken`, the
                   books carried home, its `member-key`; deny only what it writes nowhere). It reads what it writes, and
                   never the signer's row
     <sub>domain   a subsystem's worker on the domain, on the holder (`domain.books` of its spec): its own prefix
