@@ -71,7 +71,7 @@ IMPLEMENTED = {
     "display.form.title", "display.form.state", "display.form.placement", "display.form.fields",
     "display.form.status.field", "display.form.status.since", "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness.report", "domain.witness.member_field",
-    "domain.books", "domain.kept", "domain.tables",
+    "domain.books", "domain.books.*.show", "domain.kept", "domain.tables",
     "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
     "domain.keys.prefix", "domain.shared", "domain.shared.name", "domain.shared.type", "domain.shared.schema",
     "domain.names.*.exclusive_with", "domain.names.*.grant",
@@ -79,6 +79,13 @@ IMPLEMENTED = {
     *{f"metrics.{k}" for k in metrics.KEYS}, *{f"metrics.agg={a}" for a in metrics.AGGS},
     *{f"metrics.type={t}" for t in metrics.TYPES}, "metrics.unless.table", "metrics.unless.where",
 }
+
+
+# A key a decision brought to the loader before a spec says it — the spec bytes are «Паритет»'s since the lessons'
+# signal —, each with what goes in and where. The debt only shrinks: a key here that a spec now uses fails as a key
+# unused does, and the line goes.
+WAITING = {"domain.books.*.show": "ADR-0010, the addition of 2026-10-06: testsub's `books: {tallies: {show: [n]}}` "
+                                  "(the product's testsub says it) — «Паритет»"}
 
 
 def _paths(d, at: str = "") -> set[str]:
@@ -114,7 +121,10 @@ def test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_
     mine = set().union(*(_paths(_load(p)) for p in TESTSUBS))
     theirs = [_paths(_load(p)) for p in PRODUCT]
     unused = sorted(k for k in IMPLEMENTED if k not in mine and sum(k in t for t in theirs) < 2)
-    assert not unused, f"read by the platform, used by fewer than two subsystems and by no test subsystem: {unused}"
+    assert not [k for k in unused if k not in WAITING], \
+        f"read by the platform, used by fewer than two subsystems and by no test subsystem: {unused}"
+    used = sorted(k for k in WAITING if k not in unused)
+    assert not used, f"used by a spec now, waiting no more — the line of WAITING goes: {used}"
     # …and the vocabulary the code keeps is inside the list above (a key added to the code is a key added here)
     from w2cplatform.spec import REQUEST_KEYS
     from w2cplatform.tables import TABLE_KEYS
