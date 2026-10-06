@@ -1067,13 +1067,16 @@ def test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_ca
         assert _call(base, "POST", "/rec/volumes", disks, token="admin")[0] == 201
         assert _call(base, "POST", "/rec/volumes", {**disks, "name": "d2", "cam": "2"}, token="admin")[0] == 400   # a disk is no camera's
         assert _call(base, "POST", "/rec/recordings", {"name": "1-b", "cam": "1"}, token="admin")[0] == 201
-        code, body = _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token="one")
+        # moving a recording's home is the cluster's grant (`rights.reach: {cluster: [home]}`, ADR 0057): a camera's
+        # admin is refused before the row is asked; the cluster's admin reaches the row, and the card refuses it
+        for who in ("one", "both"):
+            assert _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token=who)[0] == 403, who
+        code, body = _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token="admin")
         assert code == 409 and body.get("fault") == "must_match" and "home card2 is cam 2's" in body["detail"]                      # camera 2's card: nobody's place for it
-        code, body = _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token="both")
-        assert code == 409 and body.get("fault") == "must_match" and "home card2 is cam 2's" in body["detail"]                      # hers too — and still not camera 1's place
         assert _call(base, "POST", "/rec/recordings", {"name": "1-c", "cam": "1", "home": "card2"}, token="admin")[0] == 409
         assert not rec.unit("1-b").get("home") and rec.unit("1-c") is None
-        assert _call(base, "PUT", "/rec/recordings/1-b", {"home": "disks"}, token="one")[0] == 200       # a disk: her recording, her say
+        assert _call(base, "PUT", "/rec/recordings/1-b", {"home": "disks"}, token="one")[0] == 403       # a move: the cluster's
+        assert _call(base, "PUT", "/rec/recordings/1-b", {"home": "disks"}, token="admin")[0] == 200     # a disk: no camera's
         assert _call(base, "POST", "/rec/recordings", {"name": "2-card", "cam": "2", "home": "card2"}, token="admin")[0] == 201
         assert _call(base, "PUT", "/rec/recordings/2-card", {"retention_days": 3}, token="one")[0] == 403   # camera 2's, as it is
         # the card declared again as another camera's, a recording homed on it: refused
