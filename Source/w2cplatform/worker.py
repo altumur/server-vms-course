@@ -32,6 +32,7 @@ from .events import ALARM, COMMAND, COMMAND_FAILED, OBSERVATION, OF
 from .journal import Journal
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .objects import ObjectStore
+from .requests import complete_mark, mark_error
 from .rows import PARSE_ERRORS, garbled_counts
 from .variables import Conflict, Variables, cas_pause
 
@@ -1912,6 +1913,12 @@ class Worker:
     # no longer exist are cleared every `MARK_SWEEP` seconds, by whichever worker gets there. A unit held with no lease
     # takes one before its first request, so a second holder fences the first.
     #
+    # EVERY REQUEST ENDS WITH ITS OUTCOME IN ITS MARK (ADR-0054; who writes what: `requests.py`): a refusal before any
+    # call and `expired` for a request nobody began go in create-only (`_end_mark`), with the refusal's `error`; an
+    # answer is written over whatever stands (`_confirm`: the holder's word wins), `late: true` when it came after "did
+    # not answer"; another instance's mark with no outcome is completed `unknown`, its instance kept, by the index read
+    # (`_not_known`, `requests.complete_mark`) — past the deadline too: BEGUN IS NOT EXPIRED.
+    #
     # THE SUBSYSTEM SAYS ONLY WHAT ONE HOLDER KNOWS (ADR 0013): what it holds open now (`held_rows`), the key of what a
     # request against a row goes into (`request_target`: compared, never called — one call at a time into each), the call
     # (`perform`), and, if it has words of its own, how it names a unit moved since the request was given
@@ -2267,9 +2274,21 @@ class Worker:
                 self._refused(rid, row, it, f"`valid_until` is more than {most:.0f} s away: that is not a command", done)
                 continue
             if now > until:
+                if not unmarked:
+                    # BEGUN IS NOT EXPIRED (ADR-0054): an instance that marked it and never answered may have acted on
+                    # the unit — "not known" is the truth past the deadline too; expired is a request nobody began
+                    mark = self.mark_of(rid)             # raises if the store does not answer
+                    if mark is not None and mark.get("outcome"):
+                        self._answered_before(rid, row, mark, done)
+                        again += 1
+                        continue
+                    if mark is not None:
+                        self._not_known(rid, row, it, mark, str(mark.get("instance", "")) or "?", done)
+                        continue
                 self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
                 done.append({"request": rid, "unit": row["id"], "expired": True})
                 self.commands["expired"] += 1
+                self._end_mark(rid, unit, "expired", "", it)
                 log.warning("%s: request %s expired unperformed (%.0fs late)", self.name, rid, now - until)
                 continue
             # RIGHTS ARE THE GROUP'S THE REQUEST WAS FILED FOR (the review's eighth pass, minor): the console asked them on
@@ -2327,14 +2346,10 @@ class Worker:
                 self._refused(rid, row, it, self.CANNOT_MARK, done)
                 continue
             if before is None and not made:
-                before = self.began_by(rid) or "?"       # somebody made the mark between our read and our write
+                mark = self.mark_of(rid)                 # somebody made the mark between our read and our write
+                before = (None if mark is None else str(mark.get("instance", ""))) or "?"
             if before is not None:
-                why = f"unknown: an earlier instance ({before}) began it, and whether it was acted on is not known"
-                self.fetched.append(rid)
-                done.append({"request": rid, "unit": row["id"], "error": why})
-                self.commands["unknown"] += 1
-                self._command_line(row, it, "unknown", error=why)
-                log.warning("%s: request %s not performed — %s", self.name, rid, why)
+                self._not_known(rid, row, it, mark, before, done)
                 continue
             call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False,
                     "t0": time.monotonic()}
@@ -2376,12 +2391,15 @@ class Worker:
         log.info("%s: request %s was answered before (%s, by %s): said again, not performed", self.name, rid,
                  mark.get("outcome"), mark.get("slot") or mark.get("instance"))
 
-    # The answer, written into the mark once the target has said it. A store that does not take the write: the mark is
-    # OWED (`_marks_owed`) and written again at every look until it does, or the row is gone (the review's eighth pass).
-    def _confirm(self, rid: str, row: dict, outcome: str, it: dict, late: bool = False) -> None:
-        mark = canonical_json({"instance": self.instance, "slot": self.name, "unit": str(row["id"]),
-                               **self._of_said(row["id"]), "outcome": outcome, "action": str(it.get("action", "")),
-                               "at": self.wall(), **({"late": True} if late else {})}).encode()
+    # The answer, written into the mark once the target has said it — a refusal's reason as `error` (`mark_error`) —
+    # over whatever stands there: its own begun mark, or another's word of it (ADR-0054: the holder's answer wins; a
+    # late one, `late: true`, over the reaper's `unknown` or `expired` too: it is the truth of what was done to the unit).
+    # A store that does not take the write: the mark is OWED (`_marks_owed`) and written again at every look until it
+    # does, or the row is gone (the review's eighth pass).
+    def _confirm(self, rid: str, row: dict, outcome: str, it: dict, late: bool = False, why: str = "") -> None:
+        mark = self._mark_body(row["id"], {"outcome": outcome, "action": str(it.get("action", "")), "at": self.wall(),
+                                           **({"error": mark_error(why)} if why else {}),
+                                           **({"late": True} if late else {})})
         try:
             self.objects.put(self.command_key(rid), mark)
             self._marks_owed.pop(rid, None)
@@ -2411,8 +2429,46 @@ class Worker:
         put_new = getattr(self.objects, "put_new", None)
         if put_new is None:
             return None
-        mark = canonical_json({"instance": self.instance, "slot": self.name, "unit": unit, **self._of_said(unit), "at": now})
-        return bool(put_new(self.command_key(rid), mark.encode()))
+        return bool(put_new(self.command_key(rid), self._mark_body(unit, {"at": now})))
+
+    # A mark as this instance writes it: who (`instance`, `slot`), the unit and what it is about (`of`), and `fields`;
+    # in the one text of a row (`canonical_json`).
+    def _mark_body(self, unit, fields: dict) -> bytes:
+        return canonical_json({"instance": self.instance, "slot": self.name, "unit": str(unit), **self._of_said(unit),
+                               **fields}).encode()
+
+    # How a request ended, into its mark when nobody began it — CREATE-ONLY, so no mark that stands is written over: a
+    # refusal before any call (after one, the call's own mark takes the answer, `_confirm`), a request nobody began past
+    # its deadline (ADR-0054). A store without create-only writes no such mark (`CANNOT_MARK` says why nothing is
+    # performed); one that does not answer: said, counted, and the request is answered all the same.
+    def _end_mark(self, rid: str, unit, outcome: str, why: str, it: dict) -> None:
+        put_new = getattr(self.objects, "put_new", None)
+        if put_new is None:
+            return
+        try:
+            put_new(self.command_key(rid), self._mark_body(unit, {
+                "outcome": outcome, "action": str(it.get("action", "")), "at": self.wall(),
+                **({"error": mark_error(why)} if why else {})}))
+        except Exception as e:                           # noqa: BLE001
+            self.store_errors += 1
+            log.warning("%s: request %s ended %s, and its mark was not written (%s)", self.name, rid, outcome, e)
+
+    # A request another instance began and never answered (its mark, `mark`, as read): not known whether it was acted on,
+    # said so, and written into that mark — the request's end, its beginner kept (ADR-0054). The beginner's own answer,
+    # if it comes, is written over it and wins.
+    def _not_known(self, rid: str, row: dict, it: dict, mark: dict | None, before: str, done: list) -> None:
+        why = f"unknown: an earlier instance ({before}) began it, and whether it was acted on is not known"
+        self.fetched.append(rid)
+        done.append({"request": rid, "unit": row["id"], "error": why})
+        self.commands["unknown"] += 1
+        self._command_line(row, it, "unknown", error=why)
+        if mark is not None and not mark.get("outcome"):
+            try:
+                complete_mark(self.objects, self.command_key(rid), "unknown", why, self.wall())   # by the index read
+            except Exception as e:                       # noqa: BLE001
+                self.store_errors += 1
+                log.warning("%s: request %s: its mark was not completed (%s)", self.name, rid, e)
+        log.warning("%s: request %s not performed — %s", self.name, rid, why)
 
     # …and a mark says it too, as a line does (`of`): what was done to a unit is about what the unit is about. Absent for a
     # unit about nothing but itself.
@@ -2436,14 +2492,14 @@ class Worker:
                     # was really done — so the next instance says it again rather than `unknown` — and `late`, which tells
                     # an execution past `PERFORM_TIMEOUT` (an incident) from an ordinary one.
                     outcome = "refused" if "error" in call else "performed"
-                    self._confirm(rid, row, outcome, it, late=True)
+                    self._confirm(rid, row, outcome, it, late=True, why=call.get("error", ""))
                     self._command_line(row, it, outcome, reply=call.get("out"), error=call.get("error"), late=True)
                     log.warning("%s: request %s was %s by %s after it had been answered as not answering (%.1f s)",
                                 self.name, rid, outcome, self.REQUEST_TARGET, call.get("took", 0.0))
                     continue
                 if "error" in call:
                     self._refused(rid, row, it, call["error"], done)
-                    self._confirm(rid, row, "refused", it)
+                    self._confirm(rid, row, "refused", it, why=call["error"])
                 else:
                     self.fetched.append(rid)
                     done.append({"request": rid, "unit": row["id"], **call["out"]})
@@ -2472,3 +2528,4 @@ class Worker:
         done.append({"request": rid, "unit": row["id"], "error": why})
         self.commands["refused"] += 1
         self._command_line(row, it, "refused", error=why)
+        self._end_mark(rid, row["id"], "refused", why, it)   # a refusal before any call; after one, `_confirm` says it

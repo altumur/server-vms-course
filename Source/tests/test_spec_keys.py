@@ -348,7 +348,8 @@ def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
     assert spec.sub.acl_objects_worker() == ["testsub/heartbeats/*", "testsub/contenders/*", "testsub/used/*",
                                          "testsub/commands/*"]   # its marks before it performs a request
     assert spec.sub.acl_objects_controller() == ["testsub/snapshot/*", "testsub/controller/pass"]
-    assert spec.sub.acl_objects_console() == ["testsub/blobs/*"]
+    assert spec.sub.acl_objects_console() == ["testsub/blobs/*",
+                                          "testsub/commands/*"]   # the reaper ends a request in its mark (ADR-0054)
 
 
 def _testsub() -> dict:

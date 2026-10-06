@@ -376,10 +376,13 @@ def test_a_platform_stores_files_are_its_groups_under_the_units_umask():
         vars_.put("platform/doors/srv-1", {"url": "http://srv-1:8090"})
     finally:
         os.umask(was)
+    from w2cplatform.objects import DIR_LOCK
     made = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs]
-    assert not any(f.endswith(".tmp") for f in made), made
+    assert not any(f.endswith(".tmp") and os.path.basename(f) != DIR_LOCK for f in made), made
     assert {os.path.relpath(f, root): oct(os.stat(f).st_mode & 0o777) for f in made} == {
         "objects/platform/resources/srv-1/heartbeat": "0o660", "objects/vms/commands/1/a": "0o660",
+        # the directories' locks, which every write of the file store takes (ADR-0054: a mark written by its index)
+        f"objects/platform/resources/srv-1/{DIR_LOCK}": "0o660", f"objects/vms/commands/1/{DIR_LOCK}": "0o660",
         "config/vars/platform%2Fdoors%2Fsrv-1.json": "0o660", "config/lock": "0o660", "config/index": "0o660"}
 
 

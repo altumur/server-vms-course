@@ -7,7 +7,8 @@ the boundary note — the family whole in the platform, driven by the spec's `re
                 `<sub>/commands/<id>` (`Worker.requests`)
     cleared     here: a row a holder answered goes (`clear_requests`, every `CLEAR_EVERY`, no row read); and on the reaper's
                 slower turn (`sweep`) a row with a deadline nobody performed is ended `REAP_AFTER` past it — counted as
-                expired, or as not known when a holder began it and went — and a row with none ends after the spec's `ttl`
+                expired, or as not known when a holder began it and went, and said so in its mark (ADR-0054) — and a row
+                with none ends after the spec's `ttl`
 
 A worker writes no configuration, so it cannot delete what it has done, only say that it did it; the console, which
 reads the heartbeats already, removes the row — one writer per row.
@@ -18,6 +19,7 @@ import hashlib
 import json
 import logging
 
+from .canonical import canonical_json
 from .rows import PARSE_ERRORS, finite
 
 log = logging.getLogger(__name__)
@@ -45,6 +47,81 @@ def said_id(rid: str) -> str:
     if len(rid) <= 40 and not rid.startswith("#") and rid.isprintable() and not any(c in rid for c in ',"\\'):
         return rid
     return "#" + hashlib.sha256(rid.encode()).hexdigest()[:20]
+
+
+# EVERY REQUEST ENDS WITH ITS OUTCOME IN ITS MARK (ADR-0054): `<sub>/commands/<id>`, where whoever asked reads how it
+# went — `performed`, `refused`, `unknown` or `expired`; beside a refusal and `unknown` its reason, `error`, cut to
+# `MARK_ERROR` characters (a mark is read by every holder of the unit and by whoever asked: a reason is a sentence, not a
+# payload — cut, never refused); `late: true` on an answer that came after the request was answered "did not answer";
+# `ended_by: reaper` on the console's `expired`. Who writes what, and whose word wins:
+#
+#   the holder   its begun mark create-only before the call, its answer over it after (`Worker._confirm`) — over another
+#                instance's or the reaper's word too: the holder's answer is the truth of what was done to the unit; a
+#                refusal before any call, and `expired` for a request nobody began, create-only (`Worker._end_mark`);
+#                `unknown` into another instance's mark with no outcome, that instance kept (`complete_mark`, by the index
+#                it read)
+#   the reaper   `expired` for a request nobody began, create-only, `ended_by: reaper` and `ended_at` (`_ended_mark`);
+#                `unknown` into a mark with no outcome whose holder is gone (`complete_mark`); a mark with an outcome — never
+#
+# BEGUN IS NOT EXPIRED: a mark with no outcome past the deadline is `unknown` — whoever began it may have acted on the
+# unit; `expired` is a request nobody began. The product's `MarkError`, `CompleteMark`, `endedMark`, byte for byte.
+MARK_ERROR = 200
+
+
+def mark_error(why: str) -> str:
+    """A reason as a mark keeps it: at most `MARK_ERROR` characters, and `…` where it was cut."""
+    why = str(why)
+    return why if len(why) <= MARK_ERROR else why[:MARK_ERROR] + "…"
+
+
+# A CLOSER WRITES BY THE INDEX IT READ (ADR-0054, the architect's amendment): whoever completes a mark it did not begin —
+# the reaper, a holder's `unknown` — reads the mark with its index (`get_at`) and writes by it (`put_at`). A conflict
+# means somebody wrote the mark meanwhile: read again; an outcome there now — stop, the beginner's answer stands, it is
+# the truth; none — write again by the new index, `CLOSE_ATTEMPTS` times at most. The holder's own answer is no closer's:
+# `Worker._confirm` writes it unconditionally, the one writer that knows what was done to the unit.
+CLOSE_ATTEMPTS = 8
+
+
+def complete_mark(objects, key: str, outcome: str, why: str, at: float) -> bool:
+    """Writes `outcome` (and `why`, as `mark_error`) into the mark at `key` while it stands with none — the request's end
+    said by whoever saw it end, the mark's `instance` and `slot` kept, `ended_at` beside them — by the index read. True
+    when written; False when an outcome stands (or appeared), when there is no mark to complete, or after
+    `CLOSE_ATTEMPTS` conflicts. A mark that does not parse is a mark of nobody known (`instance: ?`)."""
+    for _ in range(CLOSE_ATTEMPTS):
+        raw, index = objects.get_at(key)
+        if raw is None:
+            return False                                    # gone (swept with its row): nothing begun to close
+        try:
+            mark = json.loads(raw)
+        except PARSE_ERRORS:
+            mark = None
+        if not isinstance(mark, dict):
+            mark = {"instance": "?"}
+        if mark.get("outcome"):
+            return False                                    # answered meanwhile: the beginner's word is the truth
+        out = {**mark, "outcome": outcome, "ended_at": at}
+        if why:
+            out["error"] = mark_error(why)
+        if objects.put_at(key, canonical_json(out).encode(), index):
+            return True
+    log.warning("%s: the mark was written by others %d times while it was being completed %s: left as it stands", key,
+                CLOSE_ATTEMPTS, outcome)
+    return False
+
+
+# The reaper's end of a request nobody began, into its mark, CREATE-ONLY — never over a mark that stands: a holder's
+# beginning or answer is the holder's. It says it is the reaper's word (`ended_by`). A store without create-only: none.
+def _ended_mark(ctl, rid: str, it: dict, outcome: str, now: float) -> None:
+    put_new = getattr(ctl.objects, "put_new", None)
+    if put_new is None:
+        return
+    mark = {"unit": str(it.get("unit", "")), "outcome": outcome, "at": now, "ended_by": "reaper", "ended_at": now}
+    if it.get("action"):
+        mark["action"] = str(it["action"])
+    try:
+        put_new(ctl.sub.command_key(rid), canonical_json(mark).encode())
+    except Exception as e:                                  # noqa: BLE001 — the row is ended; its mark is not written
+        log.warning("%s: request %s ended %s, and its mark was not written (%s)", ctl.spec.name, rid, outcome, e)
 
 
 def metrics_lines() -> list[str]:
@@ -91,7 +168,7 @@ def _end(ctl, key: str, it: dict, idx, now: float, most_valid) -> bool:
         return False                                        # its holder's to end, if it has one
     rid = key.rsplit("/", 1)[1]
     try:
-        mark = ctl.objects.get(f"{ctl.sub.name}/commands/{rid}")
+        mark = ctl.objects.get(ctl.sub.command_key(rid))
     except Exception as e:                                  # noqa: BLE001 — one mark unread does not end the walk
         log.warning("%s: whether request %s was begun cannot be read (%s): left for the next turn", ctl.spec.name, rid, e)
         return False
@@ -112,10 +189,16 @@ def _end(ctl, key: str, it: dict, idx, now: float, most_valid) -> bool:
         return True
     if begun:
         unknown[ctl.spec.name] = unknown.get(ctl.spec.name, 0) + 1
-        log.warning("%s: request %s for %s ended %.0f s past its deadline NOT KNOWN: its holder began it and is gone "
-                    "without saying how it went", ctl.spec.name, rid, it.get("unit", "?"), now - until)
+        why = "its holder began it and is gone without saying how it went"
+        try:
+            complete_mark(ctl.objects, ctl.sub.command_key(rid), "unknown", why, now)   # by the index it reads
+        except Exception as e:                              # noqa: BLE001 — the row is ended; its mark says less
+            log.warning("%s: request %s ended not known, and its mark was not completed (%s)", ctl.spec.name, rid, e)
+        log.warning("%s: request %s for %s ended %.0f s past its deadline NOT KNOWN: %s", ctl.spec.name, rid,
+                    it.get("unit", "?"), now - until, why)
         return True
     count_expired(ctl.spec.name)
+    _ended_mark(ctl, rid, it, "expired", now)
     log.warning("%s: request %s for %s ended unperformed %.0f s past its deadline — no worker held its unit to perform it",
                 ctl.spec.name, rid, it.get("unit", "?"), now - until)
     return True
@@ -168,6 +251,7 @@ def clear_requests(ctl, sweep: bool = True) -> int:
             continue
         if it.get("unit"):
             count_expired(ctl.spec.name)
+            _ended_mark(ctl, rid, it, "expired", now)
             log.warning("%s: request %s stood for %.0f s unanswered and was ended", ctl.spec.name, rid, ttl)
     return gone
 

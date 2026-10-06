@@ -27,7 +27,10 @@ A directory: the tests, and a bench with a shared mount. Same semantics as М10'
 Creates `root`.
 
 ### `put(self, key, data)`
-Writes `<root>/<key>.tmp` and `os.replace`s it over `<root>/<key>` — an object appears whole or not at all (a reader never sees a half-written heartbeat).
+Writes `<root>/<key>.tmp` and `os.replace`s it over `<root>/<key>` — an object appears whole or not at all (a reader never sees a half-written heartbeat). Under the directory's lock (`objects.dir_lock`), as every write of the store (`put_new` too).
+
+### `get_at(self, key)`, `put_at(self, key, data, index)`
+By the index read, as М10's (ADR-0054, the product's `IndexPutter`): the index is the bytes' digest (`objects.bytes_index`, `""` for none), and `put_at` writes only while it is still that, compared and written under the directory's lock.
 
 ### `get(self, key) -> bytes | None`
 The file's bytes, or `None` if absent.
@@ -53,6 +56,9 @@ A create-only key goes to the rows; anything else to the local file, its mtime s
 ### `put_new(key, data) -> bool`
 Only for a key a spec names a row (a `ValueError` naming `objects.rows` otherwise): `VariablesObjectStore.put_new`, a row written with `cas=0`.
 
+### `get_at(key)`, `put_at(key, data, index) -> bool`
+By the index read, for a row only (a `ValueError` otherwise, as `put_new`): `VariablesObjectStore.get_at`/`put_at`, the row's index and a write by CAS on it. What a closer of a request's mark writes by (ADR-0054: the reaper's and a holder's `unknown`, `requests.complete_mark`).
+
 ### `get(key) -> bytes | None`
 A create-only key from the rows. A key no door gives out (`resource.door_readable`: neither the platform's families nor a spec's `objects.door`) from the local file alone — another server's is never asked for. A blob from the local file when it hashes to its name (a copy that does not is logged and skipped). Anything else — and a blob not here or rotted here — `GET /v1/objects/<key>?scope=cluster` at the resource here: the freshest copy, or `None`. `X-Missing` goes into `missing`; a 404 for a key whose server is missing answers the bytes this reader last read of it (`_heard`), and a 404 otherwise forgets them.
 
@@ -66,7 +72,7 @@ A create-only key from the rows. A key no door gives out (`resource.door_readabl
 A create-only row by the store; a blob by `DELETE /v1/objects/<key>?scope=cluster` — here and on every server that answers (the sweep); anything else, this server's file.
 
 ## `class VariablesObjectStore`
-NARROWED on the cluster to the create-only keys (`ClusterObjectStore` routes them here); the class still holds any key, which the module's stand uses. Objects as Variables: key `<sub>/w-1/heartbeat` becomes the Variable `objects/<sub>/w-1/heartbeat` with a single item `{data: <utf-8 text>}`. The store is whatever `Variables` the caller holds, so the rights come with its door: on the cluster only the create-only rows are here, and the rights file grants them to the role that makes them (`objects/<sub>/commands/*` to `<sub>worker`, `deploy/cluster/configstore-rights.json`).
+NARROWED on the cluster to the create-only keys (`ClusterObjectStore` routes them here); the class still holds any key, which the module's stand uses. Objects as Variables: key `<sub>/w-1/heartbeat` becomes the Variable `objects/<sub>/w-1/heartbeat` with a single item `{data: <utf-8 text>}`. The store is whatever `Variables` the caller holds, so the rights come with its door: on the cluster only the create-only rows are here, and the rights file grants them to the role that makes them (`objects/<sub>/commands/*` to `<sub>worker`, and to `console`, whose reaper ends a request in its mark — ADR-0054; `deploy/cluster/configstore-rights.json`). `get_at`/`put_at`: the row's index, and a write by CAS on it (0: none, create-only) — `False` on a conflict.
 
 ### `__init__(self, vars_, prefix="objects")`
 `vars_` is any `Variables` (the process's `ConfigstoreVariables`, `FakeVariables` in older tests); `prefix` is stripped of slashes.
