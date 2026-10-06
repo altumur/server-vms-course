@@ -11,6 +11,9 @@ course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: the course fi
 course-only rec.subsystem.yaml domain.reports[ingest]   # ADR-0010: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml objects.door[forwarded/*]   # ADR-0019: the course first; the product's side — «Лекции»
 course-only rec.subsystem.yaml servers.show
+course-only rec.subsystem.yaml servers.status[incidents_at_risk]   # ADR-0064: the course first; the product's side — «Платформа»
+course-only rec.subsystem.yaml servers.status[incidents_lost]   # ADR-0064: the course first; the product's side — «Платформа»
+course-only rec.subsystem.yaml servers.status[keeps]   # ADR-0064: the course first; the product's side — «Платформа»
 course-only vms.subsystem.yaml domain.books[asks]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
 course-only vms.subsystem.yaml domain.books[polls]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
 course-only vms.subsystem.yaml domain.books[primaries]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
