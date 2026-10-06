@@ -14,11 +14,6 @@ course-only rec.subsystem.yaml servers.show
 course-only rec.subsystem.yaml servers.status[incidents_at_risk]   # ADR-0064: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml servers.status[incidents_lost]   # ADR-0064: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml servers.status[keeps]   # ADR-0064: the course first; the product's side — «Платформа»
-course-only vms.subsystem.yaml domain.books[asks]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
-course-only vms.subsystem.yaml domain.books[polls]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
-course-only vms.subsystem.yaml domain.books[primaries]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
-course-only vms.subsystem.yaml domain.books[sources]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
-course-only vms.subsystem.yaml domain.books[upstream]   # ADR-0010: the product first (a map of books); the course's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[acts]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[up]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0019: the course first; the product's side — «Сборка»
@@ -68,17 +63,9 @@ product-only rec.subsystem.yaml objects.rows[ingest/up/*]   # ADR-0019: the prod
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0024: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.asks   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books.lifts   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.polls   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.primaries   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.primaries.show[recorded_by]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.primaries.show[recording]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books.receiver   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.show   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.sources   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books.stream-accounts   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.books.upstream   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[ask-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[ingest-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[lift-keys]   # ADR-0010: the product first; the course's side — «Лекции»
