@@ -1000,10 +1000,9 @@ def test_servers_carries_a_recorders_missing_volume_as_a_string_and_its_waiting_
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms", "rec.subsystem.yaml"),
               encoding="utf-8") as f:
         d = yaml.safe_load(f)
-    declared = [{"field": "volume_missing", "title": "том не найден"},
+    declared = [{"field": "volume_missing", "title": "том не найден"},           # rec's spec as it is: its bytes
                 {"field": "shrink_pending", "title": "уменьшение квоты не подтверждено"}]
-    d["heartbeat"] = {"strings": [*d["heartbeat"]["strings"], "volume_missing"]}
-    d["servers"] = {**d.get("servers", {}), "status": declared}
+    assert "volume_missing" in d["heartbeat"]["strings"] and d["servers"]["status"] == declared, d.get("servers")
     spec = SubsystemSpec.from_dict(d)
     box = Box()
     for w, server, extra in (("r-1", "srv-a", {"volume": "", "volume_missing": "disk-a"}),
