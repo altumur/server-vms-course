@@ -414,7 +414,7 @@ def test_a_group_held_by_a_live_worker_that_stopped_reaching_it_is_short_whole()
     rep = ctl.pass_once()
     assert all(ctl.where(i) == "w-1" for i in ids) and rep["units_short"]["vlan:a"] == 0, rep
     _beat(box, "w-2", "srv-b", "vlan:a", capacity=2)                                # room for two: not for the group
-    box.vars.put("vms/servers/srv-a", {"labels": ""})                                # srv-a reaches nothing now
+    box.vars.put("platform/servers/srv-a", {"labels": ""})                                # srv-a reaches nothing now
     rep = ctl.pass_once()
     assert all(ctl.where(i) == "w-1" for i in ids), [ctl.where(i) for i in ids]     # waits whole where it is
     assert rep["units_short"]["vlan:a"] == 4, rep                                      # short, and whole: one piece of four

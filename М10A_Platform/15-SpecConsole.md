@@ -716,7 +716,7 @@ class Journal:
 
 Первый цикл добавляет серверы, у которых **бьётся ресурс, но нет воркеров**. Такой сервер существует для системы — на нём живёт ресурс — и должен быть на экране, пусть и с пустым списком. Так же попадает в ответ сервер, о котором есть слово администратора: строка меток (что сервер видит, урок 11) или списание (урок 7).
 
-Пропущенное в середине — то, что платформа знает о машине сама: метки узла и метки администратора рядом (`labels_node`, `labels`, `labels_source` — `console`, `node` или `unknown`, когда строка меток есть и не читается), вывод (`draining`), что ресурс говорит о себе (`resource_heard_at`, адрес `resource_url`, диск под ним `space: {total, free}` в байтах), списание и его отказ словами (`decommission`, `decommission_refusal`), у каждого воркера — завис ли он и с какого времени (`hung`, `hung_since`) и не просит ли его имя другой процесс (`name_conflict`). Всё это — ответы контроллера, пересказанные для показа.
+Пропущенное в середине — то, что платформа знает о машине сама: метки узла и метки администратора рядом (`labels_node`, `labels`, `labels_source` — `console`, `node` или `unknown`, когда строка меток есть и не читается или консоль строк ни разу не прочла; ответ — `server_labels_of` контроллера, урок 11), вывод (`draining`), что ресурс говорит о себе (`resource_heard_at`, адрес `resource_url`, диск под ним `space: {total, free}` в байтах), списание и его отказ словами (`decommission`, `decommission_refusal`), у каждого воркера — завис ли он и с какого времени (`hung`, `hung_since`) и не просит ли его имя другой процесс (`name_conflict`). Всё это — ответы контроллера, пересказанные для показа.
 
 `placeable`/`why` — то же правило, по которому решает `_pool` (урок 11), пересчитанное для показа. Дублирование логики? Да, и намеренное: контроллер отвечает решением, консоль — объяснением, и объяснение должно существовать до того, как решение понадобится. Если правило меняется, оно меняется в двух местах — и в уроке 11 у него один тест на оба.
 
@@ -883,7 +883,7 @@ metrics:
 | `<p>_units_diverged` | назначения, которые последний проход привёл к строкам размещения |
 | `<p>_units_moved_for_reach`, `<p>_units_moved_for_reach_total` | единицы, которые проход увёз или снял с размещения, потому что их сервер их больше не видит (`ensure_reach`, урок 11, шаг 17; обратная связь DQ): за последний проход — и с начала хранилища, счётчиком (десятое ревью: gauge последнего прохода скрейп раз в 15 с видел только на трети переездов; `test_server_labels.py::test_moves_for_reach_are_counted_since_the_store_was_new_and_said_in_the_log`) |
 | `<p>_units_waiting_for_reach` | единицы групп (`group_by`, у VMS — каналы одного устройства), которые последний проход оставил целыми на сервере, их больше не видящем: везти всю группу некуда, или она больше бюджета прохода (урок 11, шаг 17; одиннадцатое ревью — это была строка лога, и только). Не ноль надолго — единицы, которые никто не обслуживает: поднять `REACH_BUDGET`, дать место или увезти группу руками |
-| `<p>_servers_labels_unread` | серверы, чья строка меток не прочиталась при последнем чтении прохода: их единицы не двигаются, пока строка не прочтётся (урок 11, шаг 1; одиннадцатое ревью — непрочитанная днями строка была видна только на странице). Тест: `test_server_labels.py::test_one_row_that_cannot_be_read_is_that_servers_alone` |
+| `<p>_servers_labels_unread` | серверы, чья строка меток не прочиталась при последнем чтении прохода: их единицы не двигаются, пока строка не прочтётся (урок 11, шаг 1; одиннадцатое ревью — непрочитанная днями строка была видна только на странице); `-1` — контроллер строк ни разу не прочёл и не знает меток ни одного сервера (как в продукте). Тесты: `test_server_labels.py::test_one_row_that_cannot_be_read_is_that_servers_alone`, `::test_a_process_that_never_read_the_rows_knows_no_servers_labels` |
 | `<p>_worker_fenced{worker}` | воркер жив, ничего не держит и ждёт: его сборка не понимает схему хранилища (урок 17). Воркер, чей **слот** забрал другой экземпляр, здесь не виден — он молчит, пока не найдёт слот (нет heartbeat'а под этим именем), а когда снова встал в строй, говорит `was_fenced` |
 | `<p>_worker_store_errors{worker}`, `<p>_worker_pass_failures{worker}` | сколько раз хранилище ему не ответило; сколько раз часть его цикла упала |
 | `<p>_worker_slots_garbled{worker}` | сколько строк слотов воркер не смог разобрать, когда искал слот: каждая — имя, которое никто не возьмёт и никого под ним не увидят (шестое ревью) |
@@ -1384,7 +1384,7 @@ def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, inde
         return {"root": self.root.spec.name, "mounts": {n: c.describe() for n, c in self.mounts.items()}}
 ```
 
-`GET /mounts` — маршрут самого `Mount`, как `/drain`, `/schema` и списание сервера (`POST`/`DELETE /servers/<s>/decommission`): сервер несёт все подсистемы, и вопрос о нём задаётся всем консолям сразу. До третьего ревью эти маршруты отвечали **до** `dispatch`, где стоят ворота: `POST /drain?server=…` без токена уводил с сервера все единицы, а необратимый `PUT /schema` был открыт (блокер 2). Теперь `Mount.admit` спрашивает ворота корневой консоли: `admin` на изменение, `view` на чтение — `GET /mounts` отдаёт описание подсистем, а `/spec` каждой и так за воротами. Тест: `test_drain_schema_and_mounts_ask_the_gate_too`.
+`GET /mounts` — маршрут самого `Mount`, как `/drain`, `/schema`, списание сервера (`POST`/`DELETE /servers/<s>/decommission`) и метки сервера (`GET`/`PUT`/`DELETE /servers/<s>/labels`): сервер несёт все подсистемы, и вопрос о нём задаётся всем консолям сразу. До третьего ревью эти маршруты отвечали **до** `dispatch`, где стоят ворота: `POST /drain?server=…` без токена уводил с сервера все единицы, а необратимый `PUT /schema` был открыт (блокер 2). Теперь `Mount.admit` спрашивает ворота корневой консоли: `admin` на изменение, `view` на чтение — `GET /mounts` отдаёт описание подсистем, а `/spec` каждой и так за воротами. Тест: `test_drain_schema_and_mounts_ask_the_gate_too`.
 
 **Один плохой элемент — не весь маршрут.** Заход по масштабу нашёл маршруты консоли, которые падали целиком на одном элементе, и десятое ревью добавило к ним сырой `server` в пульсе. Воспроизведено запуском на каждом:
 
@@ -1400,6 +1400,22 @@ def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, inde
 | ворота: тело `POST /marks`, `/requests`, строки таблиц (`_named`, `admit_rows`) | `RecursionError` мимо `except ValueError` — без ответа | тело, которое не читается, — 400 до ворот (`dispatch`: `error: "bad body"`, `fault`), ключ не заявлен; ворота спрашивают только тело, которое прочлось |
 
 Тесты: `test_one_bad_element.py::test_a_heartbeat_whose_server_or_worker_is_no_name_is_that_heartbeats_and_no_route_falls`, `test_schema_lists_a_process_whose_schema_does_not_read_and_raises_past_nobody`, `test_a_domain_view_that_does_not_read_is_said_and_not_a_500`, `test_a_source_that_does_not_parse_costs_its_camera_not_drain_unplaceable_or_the_catalogue`, `test_a_body_that_is_no_json_object_is_refused_on_every_write_route`. Обходы `_unplaceable` и `_would_strand` сначала закрыли только корни (пульс, адрес группы), и новый вид битого элемента в строке единицы снова уронил бы маршрут целиком. Теперь у обоих есть защита на единицу (`_eligible_or_none`, уроки 11 и 17): единица, чьи фильтры упали, стоит в ответе как та, которую никто не примет, и считается (`table="unit_judged"`), а остальные проверяются. Тест: `test_one_bad_element.py::test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_judged`.
+
+**Метки сервера — тоже у корня** (ADR-0026, добавление «Архитектора»). Строка меток одна на сервер (`platform/servers/<сервер>`, урок 11), поэтому и маршрут один: `GET`/`PUT`/`DELETE /servers/<сервер>/labels` отвечает `Mount.labels_route`, а не консоль подсистемы. Раньше маршрут был у каждой подсистемы, и `PUT /<sub>/servers/<сервер>/labels` писал смонтированной подсистеме её собственную строку; теперь такого пути нет — 404, и псевдонима не будет (ADR-0003). Писать — `admin` на весь кластер, смотреть — любой грант (`admit`, как у `/drain`). Сервер должен быть известен хоть одной подсистеме: воркер любой из них, ресурс, строка меток, списание (`Mount.servers_known`); иначе 400 словами, как опечатка в имени. Тело `PUT` — `{"labels": [...]}` и ничего больше: ключ рядом (`label` с опечаткой, `server`, который уже назван путём) — тоже 400 с его именем (ADR 0012, строго, как в продукте; `test_a_labels_body_with_any_key_but_labels_is_refused_and_writes_nothing`). Каждая запись — строка журнала (`server.labels.set`, `server.labels.cleared`, шаг 8). Что правка увезёт, страница спрашивает до записи, и ответ — один список по всем спекам, каждая единица ссылкой `<sub>/<id>`, только те, что вызывающему можно видеть:
+
+```python
+    def would_move(self, h, server: str, labels) -> list[str]:
+        sees = self.root._visible(h)
+        out = []
+        for c in (self.root, *self.mounts.values()):
+            for uid in c.ctl.would_move(server, labels):
+                target = self.root.target_in(c, uid)
+                if sees is None or sees(*target):
+                    out.append(target[0])
+        return out
+```
+
+Охранник с грантом на `vlan:b` не узнаёт номеров единиц на `vlan:a`, а голый номер `7` без подсистемы ничего не говорил бы странице, у которой в одном списке единицы разных подсистем. Тесты: `test_server_labels.py::test_one_row_a_server_for_every_subsystem_and_the_edit_names_the_units_of_each`, `::test_a_server_known_to_any_subsystem_takes_a_row`, `::test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels`.
 
 `GET /mounts` — единственный маршрут `Mount`, который ничего не меняет и ничего не спрашивает у контроллеров. Ответ содержит **полное описание каждой подсистемы** (шаг 3), а не только имена: клиент, пришедший на порт впервые, за один запрос узнаёт, что здесь живёт и какие у каждого поля. Так читающая модель М12 открывает узел, ничего не зная о нём заранее.
 
@@ -1425,6 +1441,14 @@ def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, inde
                     if method == "POST" and not read_body(self, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
                         return
                     return self._send(*mnt.decommission_route(self, method, u.path, user))
+                if method in ("GET", "PUT", "DELETE") and u.path.startswith("/servers/") and \
+                        u.path.endswith("/labels") and u.path.count("/") == 3:
+                    user = mnt.admit(self, method)
+                    if user is None:
+                        return
+                    if method == "PUT" and not read_body(self, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
+                        return
+                    return self._send(*mnt.labels_route(self, method, u.path, user))
                 if u.path in mnt.MOUNT_ROUTES:
                     user = mnt.admit(self, method)
                     if user is None:

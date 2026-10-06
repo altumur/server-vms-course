@@ -35,7 +35,7 @@
 
 ## Шаг 1 — Единицы достижимы не отовсюду
 
-Камера VMS в сети `vlan:cctv-b` видна воркерам на серверах, чьи сетевые карты в этой сети; у другой подсистемы это GPU, лицензия, сегмент сети — что угодно, что есть у одних серверов и нет у других. Этот факт входит в систему в двух местах и встречается в контроллере. Сервер объявляет его — `LABELS=vlan:cctv-a,vlan:cctv-b` в `/etc/w2c/w2c.env` или, поверх, метки сервера, которые администратор правит в консоли (`PUT /servers/<server>/labels`, строка `<sub>/servers/<server>`; ADR 0026), — и воркер сообщает его в каждом heartbeat (урок 1). Оператор объявляет, что нужно единице, — поле `labels` в её строке. А спека говорит `constraint: labels-subset`: метки единицы должны быть подмножеством меток воркера.
+Камера VMS в сети `vlan:cctv-b` видна воркерам на серверах, чьи сетевые карты в этой сети; у другой подсистемы это GPU, лицензия, сегмент сети — что угодно, что есть у одних серверов и нет у других. Этот факт входит в систему в двух местах и встречается в контроллере. Сервер объявляет его — `LABELS=vlan:cctv-a,vlan:cctv-b` в `/etc/w2c/w2c.env` или, поверх, метки сервера, которые администратор правит в консоли (`PUT /servers/<server>/labels` у корня консоли, строка `platform/servers/<server>` — одна на сервер для всех подсистем; ADR 0026), — и воркер сообщает его в каждом heartbeat (урок 1). Оператор объявляет, что нужно единице, — поле `labels` в её строке. А спека говорит `constraint: labels-subset`: метки единицы должны быть подмножеством меток воркера.
 
 На стенде `srv-a` видит `vlan:cctv-a`, `srv-b` — обе сети, `srv-c` — `vlan:cctv-b`, у каждого по воркеру ёмкостью 10. Оператор создаёт четыре камеры. Трасса — [`Source/traces/10-placement-under-labels.txt`](../Source/traces/10-placement-under-labels.txt), в ней только записи контроллера; вот три строки размещения:
 
@@ -310,6 +310,7 @@ GET /metrics            vms_workers_live · vms_worker_headroom · vms_worker_lo
                         на процесс консоли: w2c_resources_live · w2c_resource_* · w2c_requests_*_total
 GET/PUT /policy         servers: shared | distinct (урок 8)
 POST/GET/DELETE /drain  вывод сервера (урок 9);  POST/DELETE /servers/<server>/decommission — списание (урок 4)
+GET/PUT/DELETE /servers/<server>/labels   метки сервера (шаг 1): would_move/will_move — <sub>/<id> всех спек
 POST /cameras           с Idempotency-Key;  PUT /cameras/1 {"worker": …} → 400
 GET /mounts             корень и смонтированные спеки: {"root": "vms", "mounts": {"rec": …}}
 ```

@@ -197,14 +197,14 @@ def _doors(s) -> None:
             with urllib.request.urlopen(url) as r:
                 r.read()
         # What a server reaches, from the console (feedback DQ): written, removed and written again — so the
-        # controllers' passes below read one — for the camera's subsystem and the recorder's.
-        for path in ("/servers/srv-a/labels", "/rec/servers/srv-a/labels"):
-            for method in ("PUT", "DELETE", "PUT"):
-                req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}{path}", method=method,
-                                             data=b'{"labels": ["vlan:cctv-a"]}' if method == "PUT" else None,
-                                             headers={"Content-Type": "application/json"})
-                with urllib.request.urlopen(req) as r:
-                    r.read()
+        # controllers' passes below read one — at the console's root: one row a server, the platform's
+        # (`platform/servers/srv-a`, ADR-0026's addition), read by the camera's controller and the recorder's.
+        for method in ("PUT", "DELETE", "PUT"):
+            req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/servers/srv-a/labels", method=method,
+                                         data=b'{"labels": ["vlan:cctv-a"]}' if method == "PUT" else None,
+                                         headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req) as r:
+                r.read()
         # A machine gone for good (М10A Lesson 7, step 7): srv-a goes silent, the console writes
         # `platform/decommission/srv-a` — deletes it and writes it again, so a delete is made too — and the
         # controllers' passes below read it, release the slot on that server and write their marks.

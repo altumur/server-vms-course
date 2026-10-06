@@ -567,6 +567,17 @@ DRAIN_KEY = "platform/drain"
 DECOMMISSION = "platform/decommission/"
 
 
+# `platform/servers/<server> {labels}`: what a SERVER reaches, as the administrator says it from the console (ADR-0026,
+# its addition; feedback DQ). ONE row a server, the platform's — a machine carries every subsystem, and its labels decide
+# where the units of each may go (§3 row 4 of the boundary note); where there is none, the labels its workers report (the
+# node's `LABELS`) answer. It was `<sub>/servers/<server>`, one per subsystem: gone without a trace (ADR-0003).
+SERVERS_PREFIX = "platform/servers/"
+
+
+def server_key(server: str) -> str:
+    return SERVERS_PREFIX + server
+
+
 class DecommissionRefused(Exception):
     """A server decommissioned while it still answers — its resource, a worker on it, or a slot renewed there."""
 
@@ -700,14 +711,6 @@ class Subsystem:
     # released, which units moved, which places stay held (`Controller.apply_decommissions`).
     def decommissioned_key(self, server: str) -> str:
         return f"{self.name}/decommissioned/{server}"
-
-    # `<name>/servers/<server>` — what a SERVER reaches, as the administrator says it from the console (`{labels}`;
-    # feedback DQ). Where there is none, the labels its workers report (the node's `LABELS`) answer, as they always did.
-    def server_key(self, server: str) -> str:
-        return f"{self.name}/servers/{server}"
-
-    def servers_prefix(self) -> str:
-        return f"{self.name}/servers/"
 
     # `<name>/blobs/` — what the sweep lists to find every blob.
     def blobs_prefix(self) -> str:

@@ -740,6 +740,17 @@ def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_star
     assert _said_to(out, "vms-recworker-spare@1") is None and _said_to(out, "vms-liveworker-spare@1") == "SPARE_FOR=\n"
 
 
+def test_the_spares_script_starts_only_for_the_empty_set_where_the_console_does_not_know_what_its_server_reaches():
+    """ADR-0026's addition: a console that has never read the servers' rows, or whose row of this server does not read,
+    says `source="unknown"` — placement puts nothing that needs a label there, so neither its last word nor this host's
+    `$LABELS` is a reason for a spare of a labelled set: only the empty set's."""
+    unknown = NEEDED.replace('labels="vlan:dmz",source="console"', 'labels="vlan:dmz",source="unknown"')
+    out, calls = _spares("vmsworker", pages={"/metrics": unknown}, env={"LABELS": "vlan:x"})
+    assert out.returncode == 0, out.stderr
+    assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-vmsworker-spare@1"], calls
+    assert _said_to(out, "vms-vmsworker-spare@1") == "SPARE_FOR=\n"
+
+
 def test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one():
     """The twelfth review, blocker 6: a spare was `systemd-run … w2c-run.sh worker` — root, no key, the fan-out on
     loopback; a camera of the dead server with a sealed password did not start on the spare started for it. Now a

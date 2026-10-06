@@ -32,7 +32,8 @@
 #      page then), is a reason to start NOTHING.
 #   3. Only the label sets THIS server covers: a camera on `vlan:cctv-dmz` is no use to a worker on a server that does
 #      not reach that VLAN. The server's labels are the console's (`<prefix>_server_labels{server=…,source="console"}`
-#      — what the administrator wrote for it), else this host's `$LABELS`.
+#      — what the administrator wrote for it), else this host's `$LABELS` — and none while the console says it does not
+#      know them (`source="unknown"`, ADR-0026's addition): then only the sets that need no label.
 #   4. Its own ceiling per role, counting the spares already running here: a bug on the other side that reported
 #      "nine hundred missing" costs a log line, not nine hundred processes.
 #   5. A camera worker, gateway or evaluator starts as a SPARE (`SPARE_FOR=<label set>`): it takes only an offer of
@@ -174,6 +175,11 @@ for role in $roles; do
                  sed -n "s/^${prefix}_server_labels{server=\"$srv\",labels=\"\([^\"]*\)\",source=\"console\"} 1\$/\1/p")
         [ -n "$labels" ] || printf '%s\n' "$text" | grep -q "^${prefix}_server_labels{server=\"$srv\",labels=\"\",source=\"console\"}" \
             || labels="${LABELS:-}"                 # no row for this server in the console: what this host says
+        # …and what this server reaches NOT KNOWN (`source="unknown"`: its row does not read, or the console has never
+        # read the rows — ADR-0026's addition): no label, as placement reads it — a spare only for the sets that need none
+        if printf '%s\n' "$text" | grep -q "^${prefix}_server_labels{server=\"$srv\",labels=\"[^\"]*\",source=\"unknown\"}"; then
+            labels=""
+        fi
     fi
     if [ -z "$wanted" ]; then
         echo "$ME: $CONSOLE$page says no number for $role (its controller's pass is stale, or none ran) — nothing started"

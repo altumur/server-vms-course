@@ -340,7 +340,7 @@ def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
     cluster every five seconds (the review's ninth pass)."""
     spec = SubsystemSpec.from_dict(_testsub())
     assert spec.acl_console() == ["testsub/counters/*", "testsub/next_id", "testsub/idem/*", "testsub/policy",
-                                  "testsub/sweep", "testsub/requests/*", "testsub/servers/*", "platform/drain",
+                                  "testsub/sweep", "testsub/requests/*", "platform/servers/*", "platform/drain",
                                   "platform/decommission/*", "platform/schema"]
     assert spec.acl_controller() == ["testsub/workers/*", "testsub/placement/*", "testsub/slots/*",
                                      "testsub/decommissioned/*"]
