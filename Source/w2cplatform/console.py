@@ -26,6 +26,9 @@ show them. So the console is one class, run from the same spec:
                                  this cluster's verified copy of the shared document: value and where it came from, the
                                  groups the domain offers for the field the page groups by; nothing undeclared
     GET  /domain/keys            every key under `domain/` in this cluster's stores, secrets masked (`domain.keysview`)
+    GET  /domain/at/<cluster>/<sub>/where/<id>, …/where/<table>/<place>?unit=   a member's `where`, handed to THAT
+                                 cluster's console (`CLUSTERS`) at `/<sub>/where/…`, once (`X-W2C-Via`), the reply as it
+                                 came (`Mount.member_forward`, ADR-0061); anything else under `/domain/at/` is 404
     …    /domain/<any other>     handed to the domain holder's door at the same path, unrewritten (`Mount.domain_forward`:
                                  the view's `url`), with the person's token and the edit's Idempotency-Key
     GET/PUT /policy             the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
@@ -3724,6 +3727,7 @@ class Mount:
     # the domain holder's door at `/domain/X`, the path unrewritten: the address is the view's `url`, which only the
     # cluster the domain runs in holds (`domain_view`); elsewhere 404, said so. The person's token, the edit's
     # `Idempotency-Key` and `X-Operator: console` go with it, and the answer comes back as it came: the domain decides.
+    # One prefix is not the holder's: `/domain/at/<cluster>/…` is a member's `where`, by name (`member_forward`, ADR-0061).
     # THE DOMAIN'S DOORS OF THIS CLUSTER, TO PROCESSES (contract §10a; «Архитектор» 2026-10-06; `domain.term`). Asked no
     # person's token — processes call them, each with its own proof:
     #   GET  /api/held      `{cluster, holder, term, keys, backup: {term, rev}}`: the holder's record and the key set this
@@ -3775,19 +3779,33 @@ class Mount:
         return method == "GET" and (path in ("/domain", "/domain/keys") or path.startswith("/domain/shared/"))
 
     def domain_forward(self, h, method: str, path: str, query: str) -> None:
-        import urllib.error
-        import urllib.request
-
-        from .access import token_of
         st, view = domain_view(self.root.ctl.objects, self.root.wall(), self.root.lost_after)
         url = str(view.get("url") or "") if st == 200 else ""
         if not url:
             return h._send(404, {"error": "no domain here", "detail": "this cluster is not the domain's, or the "
                                                                        "domain has not run: its door is not known"})
+        self.forward(h, method, url.rstrip("/") + path, query, 90.0 if path == "/domain/handover" else 5.0)
+
+    # ONE WAY TO HAND A REQUEST ON, WHOEVER IT GOES TO (ADR-0061: «механизм один — меняется только адрес»). The domain
+    # holder's door (`domain_forward`) and a member's console (`member_forward`) are reached by this one function: the
+    # person's token, the edit's `Idempotency-Key` and `X-Operator: console` go with it, and nothing else of what came in —
+    # an `X-W2C-Via` the person sent is not passed on; a hop to a member carries this console's own (`via`). The reply
+    # goes back AS IT CAME (ADR-0061, «байтов не трогает»): its status and its bytes, a door in it signed by whoever
+    # issued it, a refusal in that gate's words, and `X-Unreachable` when it says what is missing (`where_place`). It is
+    # served as JSON whatever it called itself: a page's reply on this console's origin is never a page. The status the
+    # page got is returned — 502 when the other side did not answer, said in words (`who`).
+    VIA = "X-W2C-Via"
+
+    def forward(self, h, method: str, to: str, query: str, timeout: float, via: str | None = None,
+                who: str = "the domain") -> int | None:
+        import urllib.error
+        import urllib.request
+
+        from .access import token_of
         body = b""
         if method in ("POST", "PUT", "DELETE"):
             if not read_body(h, 1 << 16):
-                return
+                return None
             body = h.rfile.read(int(h.headers.get("Content-Length") or 0))
         headers = {"Content-Type": "application/json", "X-Operator": "console"}
         token = token_of(h.headers)
@@ -3795,20 +3813,102 @@ class Mount:
             headers["Authorization"] = f"Bearer {token}"
         if h.headers.get("Idempotency-Key"):
             headers["Idempotency-Key"] = h.headers["Idempotency-Key"]
-        req = urllib.request.Request(url.rstrip("/") + path + (f"?{query}" if query else ""), data=body or None,
-                                     headers=headers, method=method)
+        if via is not None:
+            headers[self.VIA] = via
+        req = urllib.request.Request(to + (f"?{query}" if query else ""), data=body or None, headers=headers,
+                                     method=method)
         try:
-            with urllib.request.urlopen(req, timeout=90.0 if path == "/domain/handover" else 5.0) as r:
-                status, raw = r.status, r.read()
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                status, raw, missing = r.status, r.read(), r.headers.get("X-Unreachable")
         except urllib.error.HTTPError as e:
-            status, raw = e.code, e.read()
+            status, raw, missing = e.code, e.read(), e.headers.get("X-Unreachable")
         except (OSError, ValueError) as e:
-            return h._send(502, {"error": "the domain did not answer", "detail": str(e)})
+            h._send(502, {"error": f"{who} did not answer", "detail": str(e)})
+            return 502
+        h.send_response(status)
+        h.send_header("Content-Type", "application/json")
+        if missing:
+            h.send_header("X-Unreachable", missing)
+        h.send_header("Content-Length", str(len(raw)))
+        h.end_headers()
+        h.wfile.write(raw)
+        return status
+
+    # A `where` OF A MEMBER'S CONSOLE, ASKED AT THIS ONE (ADR-0061): `GET /domain/at/<cluster>/<sub>/where/<id>` and
+    # `GET /domain/at/<cluster>/<sub>/where/<table>/<place>?unit=<sub>/<id>` go to `<that cluster's console>/<sub>/where/…`,
+    # the same tail and query, by `forward` — only the address differs. What another cluster holds is looked at from
+    # the page the person already has open, and the door to it is issued by THAT cluster's console with its own key
+    # (ADR-0015): this one neither signs nor touches the reply. The path names the subsystem whichever it is there; the root of that
+    # console answers at `/where/…` — the same spec is this process's root (one layout on every cluster's console),
+    # every other spec is a mount, `/<sub>/where/…`. Checked here, before dialing, each refusal in words:
+    #   a person's request carrying `X-W2C-Via`, or a second hop            400 «one hop»: handed once, never on
+    #   not `GET`, or not a `where` route of a spec this process knows       404 «not a route handed to a member»:
+    #                                                                        edits go through the holder, as before
+    #   who is calling                                                       the gate, any grant (`admit`); THAT
+    #                                                                        cluster's gate decides by its grants
+    #   the cluster not on this cluster's carried list (`domain/member-list`), or this cluster itself      404
+    #   no console of it in `CLUSTERS` (`domain.runtime.consoles_from_env`; not `/api/held`: that is the holder)  404
+    #   its console not answering — the network, not a rule                  502
+    # A hop that was made is a journal line here, `domain.forwarded {cluster, path, user, status}`; the member's is its
+    # own `door.issued`.
+    AT = "/domain/at/"
+
+    def member_forward(self, h, method: str, path: str, query: str) -> None:
+        from . import catalog
+        from .domain.runtime import consoles_from_env
+        from .domain.term import MEMBER_LIST
+        here = self.root.ctl.cluster or ""
+
+        def refuse(status: int, error: str, detail: str) -> None:
+            if method != "GET":
+                h.close_connection = True                # refused before the body: what follows is not read
+            h._send(status, {"error": error, "detail": detail})
+        if h.headers.get(self.VIA) is not None:
+            return refuse(400, "one hop", f"this request came through {h.headers[self.VIA][:80]!r}: a where is handed to "
+                                          f"a member's console once, by the console it was asked at, and never on")
+        cluster, _, rest = path[len(self.AT):].partition("/")
+        sub, _, tail = rest.partition("/")
         try:
-            answer = json.loads(raw or b"{}")
-        except PARSE_ERRORS:
-            answer = {"detail": raw[:512].decode("utf-8", "replace")}
-        h._send(status, answer)
+            spec = catalog.spec(sub) if sub else None
+        except ValueError:
+            spec = None
+        segs = tail.split("/")
+        is_where = spec is not None and segs[0] == "where" and (
+            (len(segs) == 2 and bool(segs[1])) or
+            (len(segs) == 3 and bool(spec.places) and segs[1] == spec.places["table"] and bool(segs[2])))
+        if method != "GET" or not cluster or not is_where:
+            return refuse(404, "not a route handed to a member",
+                          f"{method} {path[:120]}: only GET /domain/at/<cluster>/<sub>/where/<id> and …/where/<table>/"
+                          f"<place> of a spec this process knows go to a member's console; edits go through the holder")
+        user = self.admit(h, "GET")                      # who is calling; the member's gate decides the rest
+        if user is None:
+            return
+        try:
+            items, _ = self.root.ctl.vars.get(MEMBER_LIST)
+            doc = json.loads(items["doc"]) if items and items.get("doc") else {}
+            members = set(dict(doc.get("members", {})))
+        except PARSE_ERRORS as e:
+            return refuse(503, "the list of members does not read",
+                          f"{here}'s copy of the domain's list ({MEMBER_LIST}) does not parse ({type(e).__name__}): "
+                          f"whether {cluster[:80]} is a member is not known here")
+        except OSError:
+            return refuse(503, "store unavailable", f"{here}'s store did not answer for its list of members: whether "
+                                                    f"{cluster[:80]} is a member is not known here")
+        if cluster == here:
+            return refuse(404, "not a member's", f"{cluster} is this cluster: ask {path[len(self.AT) + len(cluster):]} "
+                                                 f"here, not through the domain")
+        if cluster not in members:
+            return refuse(404, "not a member", f"{cluster[:80]} is no member of the domain by {here}'s copy of the "
+                                               f"list ({MEMBER_LIST})")
+        try:
+            at = consoles_from_env().get(cluster)
+        except SystemExit as e:                          # CLUSTERS that does not read: the deployment's, said
+            return refuse(503, "CLUSTERS does not read", str(e))
+        if not at:
+            return refuse(404, "no console known", f"no console of {cluster} is known here (CLUSTERS)")
+        to = at + ("" if sub == self.root.spec.name else f"/{sub}") + f"/{tail}"
+        status = self.forward(h, method, to, query, 5.0, via=here, who=f"{cluster}'s console")
+        self.root.journal.say("domain.forwarded", cluster=cluster, path=path, user=user, status=status)
 
     def admit(self, h, method: str) -> str | None:
         try:
@@ -3872,6 +3972,8 @@ class Mount:
                     return self._send(*mnt.backup(self))                # …a member's signature, checked here
                 if u.path in ("/api/prepare", "/api/take") and method == "POST":
                     return mnt.to_signer(self, u.path)                  # …the outgoing holder's, checked by the signer
+                if u.path.startswith(mnt.AT):                            # a member's where, by its name (ADR-0061)
+                    return mnt.member_forward(self, method, u.path, u.query)
                 if u.path.startswith("/domain/") and not mnt.domain_local(method, u.path):
                     if mnt.admit(self, "GET") is None:                   # who is calling; the domain decides the rest
                         return
