@@ -122,6 +122,8 @@
       glassNote: "keep it apart from the site's computers; every use is an alarm in the cluster's journal",
       domain: "domain", noDomain: "this cluster is in no domain", holder: "holder", thisCluster: "this cluster", term: "term", backup: "backup copy",
       noBackup: "this cluster keeps no backup copy of the domain", move: "Move the domain here", moveHelp: "when the holder is dead: the newest copy anyone keeps, on a larger term; a live holder hands it over from its own page",
+      recoveryFile: "The domain's recovery file", moveBtn: "Move here", holderStolen: "The old holder was stolen",
+      stolenHelp: "yes: what the domain's root issued before is revoked — the stolen holder's keys stop working", noRecovery: "no recovery file chosen",
       members: "members", publishes: "publishes", readHere: "read in place", never: "never published", silentFor: "silent", domSilent: "the domain is silent",
       knocking: "asking to join", admit: "Admit", fingerprint: "key fingerprint", fpCheck: "compare it with the fingerprint the server itself shows (member key in its agent's log); a mismatch means someone else",
       leave: "Take out of the domain", leaveHelp: "from the next pass the domain does not read it; the cluster itself goes on working", reaches: "reaches", direct: "to the domain directly", via: "via relay",
@@ -275,6 +277,8 @@
       glassNote: "храните его отдельно от компьютеров площадки; каждое использование — тревога в журнале кластера",
       domain: "домен", noDomain: "этот кластер не в домене", holder: "держатель", thisCluster: "этот кластер", term: "срок", backup: "резервная копия",
       noBackup: "резервной копии домена этот кластер не держит", move: "Перенести домен сюда", moveHelp: "когда держатель умер: берётся самая новая копия, на новом сроке; живой держатель передаёт домен со своей страницы",
+      recoveryFile: "Файл восстановления домена", moveBtn: "Перенести сюда", holderStolen: "Старый держатель украден",
+      stolenHelp: "да: всё, что корень домена выдавал раньше, отзывается — ключи украденного держателя перестают действовать", noRecovery: "файл восстановления не выбран",
       members: "члены", publishes: "публикует", readHere: "читается на месте", never: "ещё не публиковал", silentFor: "молчит", domSilent: "домен молчит",
       knocking: "просятся в домен", admit: "Принять", fingerprint: "отпечаток ключа", fpCheck: "сверьте его с отпечатком, который показывает сам сервер (member key в логе его агента); не совпадает — это кто-то другой",
       leave: "Вывести из домена", leaveHelp: "со следующего прохода домен его не читает; сам кластер продолжает работать", reaches: "видит", direct: "к домену напрямую", via: "через ретранслятор",
@@ -611,11 +615,13 @@
       f.querySelector(".chead").textContent = title;
       f.querySelector(".pc-dialog-b").innerHTML = `<div class="g">${fields.map(x => `<div><label>${h(x.label)}</label>${x.options
         ? `<select name="${h(x.name)}">${x.options.map(o => `<option value="${h(o[0])}">${h(o[1])}</option>`).join("")}</select>`
+        : x.type === "file" ? `<input name="${h(x.name)}" type="file">`
         : `<input name="${h(x.name)}" type="${x.type === "password" ? "password" : "text"}" value="${h(x.value || "")}" autocomplete="${x.type === "password" ? "new-password" : "off"}">`}${x.help ? `<p class="sub">${h(x.help)}</p>` : ""}</div>`).join("")}</div>`;
       f.querySelector(".pc-dialog-ok").textContent = okLabel || W.ok; f.querySelector(".pc-dialog-no").textContent = W.cancel;
       show(box, true);
       const done = v => { show(box, false); f.onsubmit = null; resolve(v); };
-      f.onsubmit = e => { e.preventDefault(); const v = {}; fields.forEach(x => { v[x.name] = f.elements[x.name].value; }); done(v); };
+      // a file field gives its text (read here; nothing of it is kept by the module)
+      f.onsubmit = async e => { e.preventDefault(); const v = {}; for (const x of fields) { const el = f.elements[x.name]; v[x.name] = x.type === "file" ? (el.files && el.files[0] ? await el.files[0].text() : "") : el.value; } done(v); };
       f.querySelector(".pc-dialog-no").onclick = () => done(null);
     });
     C.confirm = (q, more) => window.confirm(q + (more ? "\n\n" + more : ""));
@@ -1498,13 +1504,14 @@
         try { b.render(host, ref, obj); } catch (e) { host.textContent = String(e); }
       }
     }
-    // Where the domain is held, and whether this cluster keeps a copy (`/api/held`, the one process door the module
-    // reads: the record, signed, and the number of the copy kept here — never its content, a member's to read at
-    // `/api/backup`); moving it here when its holder is dead.
+    // Where the domain is held, and whether this cluster keeps a copy; moving it here when its holder is dead.
+    // GET /api/held, its public part: {cluster, holder (the holder's signed record), term, keys, backup: {rev}} — the copy's
+    // number only; what it holds is a member's to read (/api/backup), never the page's. The record's url is where the
+    // agents reach the holder, not a page: no link is made of it (the domain's page is the view's url, on its own card).
     function heldCard() {
       const hd2 = st.held; if (!hd2) return "";
       const r = hd2.holder, b = hd2.backup, here = r && r.holder === hd2.cluster;
-      return card(h(cap(W.domainWord)), `<p>${h(W.domPlaced)} ${r ? (here ? `<b>${h(W.thisCluster)}</b> (${h(hd2.cluster)}) · ${h(W.termW)} ${h(r.term)}` : `<b>${h(r.holder)}</b> · ${h(W.termW)} ${h(r.term)}${r.url ? ` · <a href="${h(r.url)}" target="_blank" rel="noopener">${h(r.url)}</a>` : ""}`) : h(W.none)}</p>
+      return card(h(cap(W.domainWord)), `<p>${h(W.domPlaced)} ${r ? (here ? `<b>${h(W.thisCluster)}</b> (${h(hd2.cluster)}) · ${h(W.termW)} ${h(hd2.term)}` : `<b>${h(r.holder)}</b> · ${h(W.termW)} ${h(hd2.term)}`) : h(W.none)}</p>
         <p class="sub">${h(b ? W.backupKept.replace("{r}", b.rev) : W.noBackupKept)}</p>
         ${here || !C.may("admin", "domain") ? "" : `<p class="sub">${h(W.moveHelp)}</p><div style="display:flex;justify-content:flex-end"><button type="button" class="btn s" data-a="move">${h(W.move)}</button></div>`}`);
     }
@@ -1543,8 +1550,13 @@
       el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); });
       const mv = el.querySelector('[data-a="move"]');
       if (mv) mv.onclick = async () => {
-        if (!C.confirm(W.move + "?", W.moveHelp)) return;
-        try { const d = await C.api("POST", "/domain/move", {}); C.toast(d && d.sentence || W.saved); await load(); paintMain(); } catch (e) { C.toast(W.refused + ": " + e.message); }
+        // without the outgoing holder (dead, stolen) the domain moves by its recovery file: the root itself grants the
+        // term; «stolen» revokes what the root issued before (ADR-0031)
+        const v = await C.dialog(W.move, [{ name: "recovery", label: W.recoveryFile, type: "file", help: W.moveHelp },
+          { name: "stolen", label: W.holderStolen, options: [["", W.noW], ["1", W.yesW]], help: W.stolenHelp }], W.moveBtn);
+        if (!v) return;
+        if (!v.recovery.trim()) { C.toast(W.refused + ": " + W.noRecovery); return; }
+        try { const d = await C.api("POST", "/domain/move", v.stolen ? { recovery: v.recovery, stolen: true } : { recovery: v.recovery }); C.toast(d && d.sentence || W.saved); await load(); paintMain(); } catch (e) { C.toast(W.refused + ": " + e.message); }
       };
       paintLabels(el.querySelector(".pc-labels"), name, s);
       paintDrain(el.querySelector(".pc-drain"), name);

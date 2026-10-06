@@ -277,3 +277,29 @@ def test_every_mark_with_an_outcome_says_when_it_was_made_and_when_it_ended():
     _look(w, 1)
     m = _mark(box, spec, "r1")
     assert m["outcome"] == "performed" and m["at"] == began and m["ended_at"] == began + 3, m
+
+
+def test_a_begun_request_older_than_ttl_is_unknown_not_expired_and_the_ttl_path_reads_the_mark_too():
+    """ADR 0054, one rule for both of the reaper's paths (the product's 1315207 found the second going past the mark): a
+    row with no deadline older than the family's `ttl` is closed as one past its deadline is — an outcome in its mark:
+    cleared; a mark with no outcome and its holder still there: it waits; its holder gone: `unknown`, beginner kept; no
+    mark: `expired`."""
+    from w2cplatform.contract import Slot
+    box, spec = Box(), testsub2()
+    con = SpecController(spec, box.vars, box.objects, wall=box.wall)
+    old = box.wall() - spec.requests["ttl"] - 5                                  # filed past the ttl, no deadline
+    for rid in ("gone", "held", "none"):
+        box.vars.put(spec.sub.request_key(rid), {"unit": "t1", "add": "1", "at": str(old)})
+    box.vars.put(spec.sub.slot_key("t-1"), Slot("t-1", "b:2:other", box.wall() + 45, False, 2).to_items())   # it went
+    box.vars.put(spec.sub.slot_key("t-2"), Slot("t-2", "a:1:here", box.wall() + 45, False, 2).to_items())    # it holds
+    _other(box, spec, "gone", "t1", instance="a:1:gone", slot="t-1", at=old)
+    _other(box, spec, "held", "t1", instance="a:1:here", slot="t-2", at=old)
+    was_unknown = requests.unknown.get(spec.name, 0)
+    requests.clear_requests(con)
+    m = _mark(box, spec, "gone")
+    assert (m["outcome"], m["instance"], m["slot"]) == ("unknown", "a:1:gone", "t-1"), m          # not `expired`
+    assert box.vars.get(spec.sub.request_key("gone"))[0] is None
+    assert "outcome" not in _mark(box, spec, "held") and box.vars.get(spec.sub.request_key("held"))[0]   # it waits
+    n = _mark(box, spec, "none")
+    assert (n["outcome"], n["ended_by"]) == ("expired", "reaper"), n                                  # nobody began it
+    assert requests.unknown.get(spec.name, 0) == was_unknown + 1

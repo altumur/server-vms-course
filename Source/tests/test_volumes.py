@@ -798,6 +798,15 @@ def test_the_boxs_own_volume_keeps_the_size_it_has_and_a_smaller_quota_waits_for
     again.lease_pass()
     assert again.store.size() == 128 << 20                             # a larger ring takes nothing away: at once
 
+    # `shrink_pending` is said ONLY while a shrink waits for its second word: an int, the bytes declared — and gone with
+    # the volume it was about when the recorder leaves it (it stayed, the name of a wait nobody had any more)
+    volumes.write(box.vars, {**row, "quota_bytes": 64 << 20})
+    again.lease_pass()
+    hb = again.heartbeat_extra()
+    assert hb["shrink_pending"] == 64 << 20 and type(hb["shrink_pending"]) is int and again.store.size() == 128 << 20
+    again.leave_volume("the test leaves it")
+    assert "shrink_pending" not in again.heartbeat_extra() and "quota_note" not in again.heartbeat_extra()
+
 
 def test_a_new_volume_without_a_quota_is_sized_by_the_disk_the_daemon_writes_to():
     """The review's fourth pass. The box's own volume, with no `ARCHIVE_QUOTA_BYTES`, was formatted at a share of the
@@ -952,12 +961,16 @@ def test_a_volume_whose_directory_is_gone_is_not_made_again_empty_and_its_record
     again = _recorder(box, "r-1", "srv-a")                               # its unit starts it again
     assert again.volume_pass() == "disk-b", "a missing volume was formatted again in its place"
     assert not os.path.exists(url)                                       # nothing made where the disk was
+    assert "volume_missing" not in again.heartbeat_extra()               # it writes into disk-b: nothing it cannot open
     spare = _recorder(box, "r-2", "srv-a")                               # a free recorder of this box asks for it too
     for _ in range(3):
         box.clock.advance(5); box.wall.advance(5)
         assert again.volume_pass() == "disk-b"
         assert spare.volume_pass() in ("", "disk-a") and spare.store is None and spare.capacity == 0
         assert not os.path.exists(url)
+        # …and its heartbeat says WHICH, by name, a string: the rest — since when, why — is the journal's `volume.missing`
+        assert spare.heartbeat_extra()["volume_missing"] == "disk-a"
+        assert "volume_missing" not in again.heartbeat_extra()
     alarms = [e for e in EventIndex(box.resource_root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
               if e["kind"] == "volume.missing"]
     assert len(alarms) == 2, alarms                                      # once each recorder that met it, not every pass
@@ -969,8 +982,41 @@ def test_a_volume_whose_directory_is_gone_is_not_made_again_empty_and_its_record
     box.clock.advance(5); box.wall.advance(5)
     assert spare.volume_pass() == "disk-a" and spare.store is not None and not spare.store.formatted   # as it was
     assert spare.capacity == spare.full_capacity and spare.volume_error == ""
+    assert "volume_missing" not in spare.heartbeat_extra()               # opened: not said any more
     assert spare.our_coverage("7") == [(t - 60, t)]
 
     _disk(box, "disk-a", url=url + "-new")                               # declared again at another address: a new volume
     assert spare.volume_pass() == "disk-a" and spare.store.formatted and spare.store.url == url + "-new"
     assert json.loads(box.objects.get(REC_SPEC.sub.used_key("disk-a")))["url"] == url + "-new"
+
+
+def test_servers_carries_a_recorders_missing_volume_as_a_string_and_its_waiting_shrink_as_a_number():
+    """`servers.status` over the recorder's heartbeat («Архитектор», the console by the specs' catalogue): a spec that
+    declares `volume_missing` — a string, in `heartbeat.strings` — and `shrink_pending` — a number — gets each recorder's
+    value on its row of `GET /servers` as the recorder said it: the volume's name, the bytes as an int; a recorder that
+    says neither has neither. The spec is built here from the recorder's own, so the test does not wait on its bytes."""
+    import yaml
+    from w2cplatform.spec import SubsystemSpec
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms", "rec.subsystem.yaml"),
+              encoding="utf-8") as f:
+        d = yaml.safe_load(f)
+    declared = [{"field": "volume_missing", "title": "том не найден"},           # rec's spec as it is: its bytes
+                {"field": "shrink_pending", "title": "уменьшение квоты не подтверждено"}]
+    assert "volume_missing" in d["heartbeat"]["strings"] and d["servers"]["status"] == declared, d.get("servers")
+    spec = SubsystemSpec.from_dict(d)
+    box = Box()
+    for w, server, extra in (("r-1", "srv-a", {"volume": "", "volume_missing": "disk-a"}),
+                             ("r-2", "srv-a", {"volume": "disk-b", "shrink_pending": 32 << 20}),
+                             ("r-3", "srv-b", {"volume": "disk-c"})):
+        box.objects.put(spec.sub.heartbeat_key(w), Heartbeat(w, box.wall(), [], {"server": server, "capacity": 4,
+                                                                                 "headroom": 4, **extra}).to_bytes())
+    call = _route(SpecController(spec, box.vars, box.objects, wall=box.wall))
+    try:
+        st, out = call("GET", "/servers")
+        assert st == 200 and out["status"] == declared, out
+        rows = {w["worker"]: w["status"] for s in out["servers"].values() for w in s["workers"]}
+        assert rows["r-1"] == {"volume_missing": "disk-a"}
+        assert rows["r-2"] == {"shrink_pending": 32 << 20} and type(rows["r-2"]["shrink_pending"]) is int
+        assert rows["r-3"] == {}                                           # nothing missing, nothing waiting: absent
+    finally:
+        call.server.shutdown()

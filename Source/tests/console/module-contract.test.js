@@ -82,8 +82,8 @@ pc.select("worker:w-1");await b.ready(50);
 out.workerUnits=/one/.test(main().textContent)&&/thing/.test(main().textContent);
 // вредная строка — текстом
 out.neverRan=w.__pwned===undefined&&!d.querySelector("img");
-// маршруты (из дверей процессов — только /api/held, контракт §2)
-const allowed=/^\/(spec|mounts|session|servers(\/.*)?|policy|drain|schema|unplaceable|where\/.*|events|marks|metrics|things(\/.*)?|sub\/(spec|parts(\/.*)?|unplaceable|where\/.*)|domain(\/.*)?|api\/held)$/;
+// маршруты
+const allowed=/^\/(spec|mounts|session|servers(\/.*)?|policy|drain|schema|unplaceable|where\/.*|events|marks|metrics|things(\/.*)?|sub\/(spec|parts(\/.*)?|unplaceable|where\/.*)|domain(\/.*)?|api\/held)$/;   // /api/held: the one process door it reads (§10a)
 const foreign=[...new Set(seen)].filter(p=>!allowed.test(p));
 out.onlyListedRoutes=foreign.length===0;out.foreign=foreign.join(",");
 out.errors=errs;

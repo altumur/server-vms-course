@@ -158,6 +158,8 @@ metrics:
 servers:
   show:
     - {table: shelves, by: server, title: полки, columns: [name, kind, enabled]}
+  status:
+    - {field: jam, title: затор}
 display:
   unit: счёт
   units: счёты

@@ -1228,6 +1228,8 @@ class SubsystemSpec:
     # their `by` field names (a disk under its server). Handed to `/spec`; it was a field the console's `/servers` read
     # out of one subsystem's heartbeat until the boundary's step 6.
     servers_show: list = field(default_factory=list)
+    # `servers: {status: [{field, title}]}` (`_servers_status`) — heartbeat fields a page shows on a server's row, titled
+    servers_status: list = field(default_factory=list)
     # `holds: {table, unit, since, until, longest}` — rows of a table that hold a unit's buckets on every resource past
     # their days (`holds.py`; it was a subsystem's function the resource called, `kept`).
     holds: dict = field(default_factory=dict)
@@ -1468,7 +1470,7 @@ class SubsystemSpec:
 
     # What a console and a page read and do not act on, checked at load (the boundary's step 6): `metrics` (`metrics.py`),
     # `display` — a dictionary of words, its tree's columns naming fields of the row or the unit's status — and
-    # `servers.show`, each entry a table of this spec and a field of its rows.
+    # `servers.show`, each entry a table of this spec and a field of its rows; `servers.status`, fields of its heartbeats.
     STATUS_COLUMNS = ("phase", "worker", "server", "revision", "observed_revision")
 
     def _page_words(self, d: dict) -> None:
@@ -1562,13 +1564,42 @@ class SubsystemSpec:
             self.display = disp
         servers = d.get("servers")
         if servers is not None:
-            show = servers.get("show") if isinstance(servers, dict) and not set(servers) - {"show"} else None
+            ok = isinstance(servers, dict) and servers and not set(servers) - {"show", "status"}
+            show = servers.get("show", []) if ok else None
             if not isinstance(show, list) or not all(isinstance(e, dict) and e.get("table") in self.tables
                                                       and isinstance(e.get("by"), str) and e["by"]
                                                       and not set(e) - {"table", "by", "title", "columns"} for e in show):
                 raise ValueError(f"spec {self.name}: `servers:` is {{show: [{{table: <one of its tables>, by: <its rows' "
-                                 f"field naming the server>, title, columns}}]}}, not {servers!r}")
+                                 f"field naming the server>, title, columns}}], status: [{{field, title}}]}}, "
+                                 f"not {servers!r}")
             self.servers_show = show
+            self.servers_status = self._servers_status(servers.get("status", []))
+
+    # `servers.status: [{field, title}]` — fields of this subsystem's heartbeats a page shows on its servers' rows, each
+    # under its title (a belt that jammed, say): `/servers` puts each worker's value of them in its row as the heartbeat
+    # carries it, and the page sums them per server; the platform reads none of them. A field is a string listed in
+    # `heartbeat.strings` or a number: the numbers of a heartbeat are declared nowhere (a heartbeat carries what its
+    # worker says), so a field not listed there is read as a number — and a word where a number stands is counted and
+    # left out (`SpecConsole._status_of`). The platform's own fields are the row's already, not a spec's to name; a field
+    # said twice is a second column of one value. Each entry is exactly `{field, title}`, the title a non-empty word.
+    def _servers_status(self, got) -> list:
+        word = re.compile(r"[a-z][a-z0-9_]*")
+        if not isinstance(got, list):
+            raise ValueError(f"spec {self.name}: servers.status is [{{field: <a field of its heartbeats>, title: <words>}}], "
+                             f"not {got!r}")
+        out: list = []
+        for e in got:
+            if not isinstance(e, dict) or set(e) != {"field", "title"} or not isinstance(e["field"], str) \
+                    or not word.fullmatch(e["field"]) or not isinstance(e["title"], str) or not e["title"].strip():
+                raise ValueError(f"spec {self.name}: servers.status is [{{field: <a field of its heartbeats>, title: "
+                                 f"<words>}}], not {e!r}")
+            if e["field"] in PLATFORM_HEARTBEAT_STRINGS:
+                raise ValueError(f"spec {self.name}: servers.status: {e['field']!r} is the platform's own field of a "
+                                 f"heartbeat ({', '.join(PLATFORM_HEARTBEAT_STRINGS)}), already in the row")
+            if e["field"] in (x["field"] for x in out):
+                raise ValueError(f"spec {self.name}: servers.status names {e['field']!r} twice")
+            out.append({"field": e["field"], "title": e["title"]})
+        return out
 
     # A UNIT'S CARD, IN WORDS (the product's; the page module draws the card from them, the platform reads none): `general`
     # — what the card's first tab is called; `fields` — a field's label (`id` and the unit's status words too);
