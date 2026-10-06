@@ -447,9 +447,10 @@ metrics:
   - {name: commands_reanswered_total, from: heartbeat.commands_reanswered, default: 0, type: counter}
   - {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                    # the thirteenth pass, major 18
   # The driver host's counts (heartbeat.driver, summed over a worker's hosts: the product's; a worker that runs its cameras
-  # in-process says none, and the line is 0): a device call not back, a zombie, an opening left behind in a driver, an
-  # NVR replaced under its name, a card lane stuck — each was in the heartbeat alone, visible to no alert (the eleventh
-  # review; «Архитектор», 2026-10-06: one spec, the driver's name nowhere in it).
+  # in-process says no `driver`, and has no line — `default` is a leaf's, in a map that is there): a device call not back,
+  # a zombie, an opening left behind in a driver, an NVR replaced under its name, a card lane stuck — each was in the
+  # heartbeat alone, visible to no alert (the eleventh review; «Архитектор», 2026-10-06: one spec, the driver's name
+  # nowhere in it).
   - {name: driver_zombies, from: heartbeat.driver.zombies, default: 0}
   - {name: driver_openings_left_behind, from: heartbeat.driver.openings_left_behind, default: 0}
   - {name: driver_device_calls_stuck, from: heartbeat.driver.device_calls.stuck, default: 0}
