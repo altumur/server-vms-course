@@ -95,7 +95,7 @@ def test_the_same_request_filed_again_stands_and_a_different_one_under_its_id_is
     assert w.file_request("testsub", "r1", asked, unit="t1", at=t0 - 4)
     first, idx = box.vars.get("testsub/requests/r1")
     box.wall.advance(7)                                  # the clock moved on: only `filed` would differ
-    assert w.file_request("testsub", "r1", dict(asked), unit="t1", at=t0 - 4)
+    assert w.file_request("testsub", "r1", dict(asked), unit="t1", at=t0 - 4) is False     # stands; this call wrote nothing
     assert box.vars.get("testsub/requests/r1") == (first, idx) and float(first["filed"]) == t0
     assert box.vars.list("testsub/requests/") == ["testsub/requests/r1"]
     assert w.filings == {"filed": 1, "again": 1, "refused": 0}

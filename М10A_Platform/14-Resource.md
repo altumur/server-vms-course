@@ -965,13 +965,13 @@ def requests_acl(*subs: str) -> list[str]:
             why = self._filed_already(key, out)
             if why is None:                              # the same request filed again: its row and first `filed` stand
                 self.filings["again"] += 1
-                return True
+                return False                             # this call wrote nothing: the repeat is seen in `again` alone
             self.filings["refused"] += 1
             log.warning("%s: request %s/%s refused: %s", self.name or self.instance, sub, rid, why)
             raise RequestRefused(f"request {sub}/{rid} refused: {why}") from None
 ```
 
-Совпало — та же заявка: `True`, в счётчик `filings["again"]`, стоящая строка и её первый `filed` не тронуты. Не совпало — другая заявка под тем же id: `RequestRefused` «under this rid stands a different request», в лог и в `filings["refused"]`, ничего не записано. Строку, которая не читается или не разбирается, база тоже не перезаписывает, а отказывает и говорит, что с ней. Раньше занятый id отвечал `False` без сравнения — и другая заявка под тем же id проходила молча; `Worker.FileRequest` продукта приводится к той же форме. Тесты: `test_worker_files_requests.py` — воркер `testsub` без `worker.requests` не подаёт никуда, `testsub2` с `[testsub]` подаёт в `testsub` и ни в кого больше; та же заявка, поданная дважды и при ушедших часах, стоит одной строкой с первым `filed`, а другое поле, другой `at` или другой `by` под тем же id — отказ; разорванная стоящая строка — отказ, и она не тронута.
+Совпало — та же заявка: `False` без ошибки (этот вызов ничего не записал; возврат значит «записал сейчас», на обеих сторонах), в счётчик `filings["again"]` — повтор виден только там, стоящая строка и её первый `filed` не тронуты. Не совпало — другая заявка под тем же id: `RequestRefused` «under this rid stands a different request», в лог и в `filings["refused"]`, ничего не записано. Строку, которая не читается или не разбирается, база тоже не перезаписывает, а отказывает и говорит, что с ней. Раньше занятый id отвечал `False` без сравнения — и другая заявка под тем же id проходила молча; `Worker.FileRequest` продукта приводится к той же форме. Тесты: `test_worker_files_requests.py` — воркер `testsub` без `worker.requests` не подаёт никуда, `testsub2` с `[testsub]` подаёт в `testsub` и ни в кого больше; та же заявка, поданная дважды и при ушедших часах, стоит одной строкой с первым `filed`, а другое поле, другой `at` или другой `by` под тем же id — отказ; разорванная стоящая строка — отказ, и она не тронута.
 
 Ресурс пишет `<sub>/requests/free-*` тех подсистем, чья спека говорит `requests: {free: true}` (роль `resource` в файле прав кластера, `w2cplatform/cluster/rights.py`).
 

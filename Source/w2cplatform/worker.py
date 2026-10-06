@@ -2029,7 +2029,8 @@ class Worker:
     #                  one, or a row that cannot be read or does not parse → refused (`RequestRefused`, logged, counted),
     #                  nothing written. A different request under a taken id passed silently before, as `False`
     #
-    # `True` when the request stands as filed: written now, or the same filed before. The deadline (`valid_until`) and
+    # `True` when THIS call wrote the row; `False` for the same request filed before (it stands, counted `again`, no
+    # error) — one meaning on both sides (the product's `FileRequest`; «Архитектор», 2026-10-06). The deadline (`valid_until`) and
     # what the request means are the caller's row.
     STAMPED = ("by", "at", "filed")
 
@@ -2062,7 +2063,7 @@ class Worker:
             why = self._filed_already(key, out)
             if why is None:                              # the same request filed again: its row and first `filed` stand
                 self.filings["again"] += 1
-                return True
+                return False                             # this call wrote nothing: the repeat is seen in `again` alone
             self.filings["refused"] += 1
             log.warning("%s: request %s/%s refused: %s", self.name or self.instance, sub, rid, why)
             raise RequestRefused(f"request {sub}/{rid} refused: {why}") from None
