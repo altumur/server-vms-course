@@ -36,7 +36,7 @@ snapshot: [name, start]
 domain:
   ref: name
   view: [start]
-  books: [tallies]
+  books: {tallies: {show: [n]}}
   kept: [ledger, badges/]              # `badges/`: a family of rows
   tables: [ledger]
   # a badge is never named like one of the domain's people, nor a person like a badge, and is granted no more than
