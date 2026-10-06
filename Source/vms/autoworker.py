@@ -32,7 +32,7 @@ import time
 
 from w2cplatform import runtime
 from w2cplatform.doors import unit_ref
-from w2cplatform.worker import Worker
+from w2cplatform.worker import RequestRefused, Worker
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.variables import Variables
 
@@ -544,8 +544,16 @@ class AutoWorker(Worker):
             # Filed by the base (`Worker.file_request`, ADR-0013): only to a subsystem this spec's `worker.requests`
             # names, create-only, stamped by the platform — `by` `auto/<scenario>`, `at` the event's moment, `filed` now
             # by this clock (what the holder measures the request's own road from, `vms_request_to_device_seconds`).
-            if self.file_request(sub, rid, {**fields, "action": name, "valid_until": valid_until}, unit=unit, at=at):
-                self.filed += 1
+            # Idempotent (ADR-0013): the same firing filed again — after a restart forgot `fired` — is the same request
+            # (the id, `at` and the deadline are the event's), stands, and is not counted `filed` twice; a different one
+            # under its id (the scenario was edited meanwhile) is refused, logged and counted by the base, and the
+            # firing's other actions are still filed — a refusal raised out of the pass would hold the cursor for ever.
+            written = self.filings["filed"]
+            try:
+                self.file_request(sub, rid, {**fields, "action": name, "valid_until": valid_until}, unit=unit, at=at)
+            except RequestRefused:
+                continue
+            self.filed += self.filings["filed"] - written
         self.fired[fid] = self.wall()
         self.recent.setdefault(unit, []).append(at)
         road = self.wall() - at
