@@ -60,6 +60,9 @@ file:///media/a.mp4	(none)	bad_url
 /media/a.mp4	(none)	bad_url
 # a scheme outside the map: no host is read for it, refused
 ftp://nvr50/a	(none)	bad_url
+nosuch://10.0.0.5/	(none)	bad_url
+rtsp://cam:hunter2/	(none)	bad_url
+rtsp://admin:pw/x@h/	(none)	bad_url
 # driverpack://<vendor>/<address>/…: the host is the path's first segment, and the vendor no part of it
 driverpack://acme/10.0.0.50/ch/17	10.0.0.50
 driverpack://acme/10.0.0.50/ch/18	10.0.0.50
