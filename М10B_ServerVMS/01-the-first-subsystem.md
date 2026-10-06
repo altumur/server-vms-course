@@ -206,7 +206,7 @@ placement:
 ## Шаг 6 — Снимок и консоль
 
 ```yaml
-snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
+snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, live]
 …
 metrics:
   - {name: cameras_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
