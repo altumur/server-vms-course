@@ -401,7 +401,7 @@ domain:
   # What the domain's door lets through in a member's camera (PUT /domain/vms/cameras/<ref>): on or off. Its name,
   # folders, labels and retention are its cluster's console's (ADR-0031).
   edit: [enabled]
-  books: {sources: {}, primaries: {show: [recorded_by, recording, backup_on]}, polls: {}, asks: {}, upstream: {}}
+  books: {sources: {}, primaries: {show: [recorded_by, recording, backups]}, polls: {}, asks: {}, upstream: {}}
   kept: [crossings, roads]
   tables: [crossings]
   tokens:
