@@ -1903,7 +1903,7 @@ class Resource:
     # mark has its rows taken away. With nobody declared to answer, what is short is said as a shortfall, and nothing is
     # cut.
     #
-    # WHAT IS GIVEN UP SHOWS IN `used`, OR IS STILL ON ITS WAY THERE («Архитектор», 6 Oct; ADR 0003: `freed`
+    # WHAT IS GIVEN UP SHOWS IN `used`, OR IS STILL ON ITS WAY THERE (ADR 0059; ADR 0003: `freed`
     # is gone, no alias). The worker says `freeing: {<volume>: bytes}` in its heartbeat — the bytes of deletions its
     # engine has not yet confirmed, deleted and not yet visible on the volume (an engine that frees asynchronously, a
     # file deleted while still open); with no such lag, 0. Each pass then asks for

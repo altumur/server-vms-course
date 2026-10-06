@@ -75,7 +75,7 @@ def test_what_could_not_be_freed_is_a_number_anybody_can_read():
 
 
 def test_bytes_still_being_freed_are_not_asked_for_again_and_bytes_freed_are_not_counted_twice():
-    """`freeing: {<volume>: bytes}` is what a worker's engine has deleted and the volume does not show yet («Архитектор»;
+    """`freeing: {<volume>: bytes}` is what a worker's engine has deleted and the volume does not show yet (ADR 0059;
     it was `freed`, what was given «since the last ask», ADR 0003). Each pass asks for `used − total·low − freeing`:
 
         lag     an engine that frees asynchronously says 50 000 while `used` has not moved — 150 000 is asked, not 200 000

@@ -2579,7 +2579,7 @@ class RecWorker(VmsWorker):
             # THE RESOURCE ASKS TO FREE BYTES on a volume of its server (`free-<server>-<volume>`; the boundary's step 6: it
             # was a hook of the VMS's the resource called). The recorder holding that volume decides, and answers in its
             # heartbeat (`freeing`: the bytes its engine deleted and the volume does not show yet, which the resource
-            # takes off what it asks — `Resource.relieve`; «Архитектор», it was `freed`, ADR 0003). Its footage is a ring
+            # takes off what it asks — `Resource.relieve`, ADR 0059; it was `freed`, ADR 0003). Its footage is a ring
             # of the size the volume was given, which gives up its oldest minutes by itself, IN PLACE: blocks
             # overwritten inside a volume formatted at its quota (`archive.py`, «the ring»), never a file deleted, so
             # nothing is ever deleted and not yet visible — and nothing on the disk is the recorder's to give up
