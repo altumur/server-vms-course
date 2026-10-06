@@ -433,7 +433,7 @@ class DomainHolder:
                 return False
         return True
 
-    # Replaced, by `rec` — a record verified by whoever read it: `check`, or a planned handover whose target answered
+    # Replaced, by the record given — verified by whoever read it: `check`, or a planned handover whose target answered
     # with the record it claimed (`handover`).
     def depose(self, rec: dict) -> None:
         self.deposed_by = rec

@@ -197,7 +197,8 @@ TREE_WORDS = ("nested_by", "group_title", "group_hint", "filter", "no_group", "c
 # to the dispatch by `test_spec_declarations.py`.
 CONSOLE_ROUTES = frozenset({"session", "healthz", "index.html", "spec", "where", "resources", "servers", "domain",
                             "policy", "unplaceable", "events", "metrics", "marks", "requests", "mounts", "drain", "schema",
-                            "platform"})   # `/platform/console.js`: the console module every page is built from
+                            "platform",    # `/platform/console.js`: the console module every page is built from
+                            "api"})        # `/api/held`, `/api/backup`, `/api/prepare`, `/api/take`: the processes' doors
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
                     "mended; the other units are judged", "unit's row")
 # What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
