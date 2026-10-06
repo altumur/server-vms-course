@@ -915,6 +915,91 @@ def test_a_card_with_no_note_a_torn_note_or_another_cameras_note_counts_what_it_
     assert out["kept"][5] is True and out["kept"][6] is True
 
 
+def test_the_cameras_heartbeat_says_whether_its_stream_goes_and_the_video_only_its_card_holds_until_backfill_carries_it():
+    """The camera's numbers beyond its gaps («Прошивка», «Архитектор» 2026-10-06), run through the camera's own wiring
+    (`camera_process`). The road goes at 20 s and is back at 100: while it is gone the stream does not go
+    (`stream.up` false) and nothing is owed yet — the break is the stream's own until it ends. Back, the stream continues
+    its last thirty seconds and steps over 20–70 s: fifty seconds only the card holds (`stream.owed_s`), one stretch
+    (`owed_gaps`). The recorder's backfill asks for 30–45: carried, and two stretches are left; then for the rest, and
+    nothing is owed."""
+    import os
+    from vms.card import declare_card
+    from vms.config import REC_SPEC
+    from w2cplatform.console import heartbeats
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.spec import SpecController
+    from w2cplatform.variables import FileVariables
+    wall = Clock(100_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    root, down = tempfile.mkdtemp(prefix="camproc-"), set()
+    vars_, objects = FileVariables(os.path.join(root, "config")), FsObjectStore(os.path.join(root, "objects"))
+    card_dir = tempfile.mkdtemp(prefix="card-")
+    declare_card(vars_, "cam-1", card_dir, 64 << 20, cam="1")
+    SpecController(REC_SPEC, vars_, objects, wall=wall).create(
+        {"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
+
+    def dial(url):
+        if url in down:
+            raise Unreachable(f"{url} did not answer")
+        return ingest
+    ingest.want(SERIAL, "recorder:r")
+    ingest.subscribe(SERIAL, "recorder:r")
+    live = []
+
+    class Writer:
+        def push(self, f):
+            if not live or f["t"] > live[-1]:
+                live.append(f["t"])
+    ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+    ingest.written = lambda ref: live[-1] if live else None
+    try:
+        ring, act, rec, pusher = _camera_process(wall, vars_, objects, root, cam.flash, dial)
+        start, n = wall(), 0
+
+        def step():
+            nonlocal n
+            n = _sensor(ring, start, wall, wall, n)
+            act.drain(); pusher.pass_once([]); rec.gate_pass(); act.drain()
+            wall.advance(0.5)
+
+        def until(at):
+            while wall() - start < at:
+                step()
+
+        def stream():
+            rec.heartbeat_once()
+            st = heartbeats(objects, "rec/")["r-cam"].extra["stream"]
+            return st["up"], st["owed_s"], st["owed_gaps"]
+
+        def carry(t0, t1):
+            ingest.request_range(SERIAL, start + t0, start + t1, recording="1-card")
+            for _ in range(40):
+                if not ingest.cams[SERIAL].ranges:
+                    return
+                step()
+            raise AssertionError(f"the range {t0}–{t1} was not carried")
+        until(10)
+        assert stream() == (True, 0.0, 0)
+        until(20)
+        down.update(URLS)
+        until(50)
+        assert stream() == (False, 0.0, 0)                              # broken off: nothing stepped over yet
+        until(100)
+        down.clear()
+        until(110)
+        up, owed_s, gaps = stream()
+        assert up and 49.0 <= owed_s <= 51.5 and gaps == 1, (up, owed_s, gaps)   # 20–70 s: only on the card
+        carry(30, 45)
+        up, owed_s, gaps = stream()
+        assert up and 34.0 <= owed_s <= 36.5 and gaps == 2, (up, owed_s, gaps)
+        carry(15, 30)
+        carry(45, 75)
+        assert stream() == (True, 0.0, 0)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+        shutil.rmtree(card_dir, ignore_errors=True)
+
+
 def _restart_with_a_full_card(case: str):
     """The tenth review's run: the road down 20–100 s, the camera's process started again, its card filled. `case` — what
     the new process finds of the card's note: `kept`, `none`, `torn` (half its bytes), `foreign` (another camera's),

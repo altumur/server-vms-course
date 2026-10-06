@@ -710,6 +710,43 @@ def test_what_a_camera_recorder_says_of_its_card_and_its_frames():
     assert not hb.extra["archive"] and not {"archive_quota", "volume_quota", "writer", "url"} & set(hb.extra)
 
 
+def test_a_camera_configured_without_a_card_says_none_and_no_error_and_every_state_is_one_of_the_closed_set():
+    """«Архитектор» via «Прошивка», 2026-10-06: a camera with NO card by its configuration says `card.state: none`;
+    `unavailable` is an accident — a card that should be there and is not. No card declared for the camera is no
+    `volume_error` (`rec_volume_error` 0, `rec_card_state{state="none"}`), and the card declared later is opened as
+    any. Every state the recorder says is one of the closed set, one with the product."""
+    from w2cplatform.console import heartbeats
+    from w2cplatform.metrics import text as spec_metrics
+    closed = {"opening", "recording", "failing", "stalled", "failed", "unavailable", "none"}
+    box, ctl, con, con_vars = _box()
+    ring = CamRing(clock=box.wall)
+    rec = CardRecorder("r-1", box.vars.as_writer("recworker-r-1", REC_ACL), box.objects, ring,
+                       CardActuator(ring, threaded=False), clock=box.clock, wall=box.wall, server="srv-1",
+                       resource_root=box.resource_root, env={})
+    assert rec._card_said() == ("opening", "")                            # not looked yet
+    rec.lease_pass(); rec.heartbeat_once()
+    hb = heartbeats(box.objects, "rec/")["r-1"].extra
+    assert hb["card"]["state"] == "none" and "error" not in hb["card"] and hb["volume_error"] == ""
+    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects,
+                             wall=box.wall)
+    lines = spec_metrics(rec_ctl).splitlines()
+    assert 'rec_card_state{worker="r-1",state="none"} 1' in lines and 'rec_volume_error{worker="r-1"} 0' in lines
+    said = {rec._card_said()[0]}
+    card_dir = tempfile.mkdtemp(prefix="card-")
+    declare_card(box.vars, "srv-1", card_dir, 64 << 20, cam="1")          # the card is declared: opened as any
+    rec.lease_pass(); rec.heartbeat_once()
+    said.add(rec._card_said()[0])
+    assert heartbeats(box.objects, "rec/")["r-1"].extra["card"]["state"] == "recording"
+    import shutil
+    rec._close_store(quiet=True)
+    shutil.rmtree(card_dir); open(card_dir, "w").close()                  # a card that should be there and is not
+    box.clock.advance(rec.CARD_RETRY); rec.lease_pass()
+    said.add(rec._card_said()[0])
+    assert rec._card_said()[0] == "unavailable"
+    os.remove(card_dir)
+    assert said <= closed and said == {"none", "recording", "unavailable"}, said
+
+
 def test_a_camera_whose_card_does_not_open_works_without_it_says_why_and_tries_again():
     """An SD card is often mounted after the camera's process starts, or put in later. A card that does not open
     costs the recorder its capacity — not a place to put a recording — and is said, in the heartbeat and in the
@@ -1010,7 +1047,7 @@ def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_a
             "failed_s": 0.0, "failed": 0}
     rec.stream_said, rec.stream_owed = lambda: dict(said), lambda: []   # (wired whole, as М12 `tie` wires it)
     rec.heartbeat_once()
-    assert heartbeats(box.objects, "rec/")["r-1"].extra["stream"] == said
+    assert heartbeats(box.objects, "rec/")["r-1"].extra["stream"] == {**said, "owed_s": 0.0, "owed_gaps": 0}   # nothing owed
     lines = spec_metrics(rec_ctl).splitlines()
     assert 'rec_stream_behind_seconds{worker="r-1"} 31.5' in lines and 'rec_stream_lagging{worker="r-1"} 1' in lines
     assert 'rec_stream_skipped_seconds_total{worker="r-1",why="cut"} 61' in lines
@@ -1441,6 +1478,51 @@ def test_what_a_cameras_stream_says_of_its_card_and_its_clock_is_on_metrics_not_
     lines = spec_metrics(rec_ctl).splitlines()
     assert 'rec_stream_owed_unknown{worker="r-1"} 0' in lines and 'rec_camera_frames_ahead_total{worker="r-1"} 0' in lines
 
+
+
+def test_the_video_only_the_card_holds_is_said_in_seconds_and_gaps_and_shrinks_as_backfill_carries_it():
+    """What the operator reads off a camera's stream beyond its gaps («Прошивка», «Архитектор» 2026-10-06): whether the
+    stream goes now (`stream.up`, the pusher's word) and the video only the card holds — what the stream stepped over
+    and backfill has not carried off the card yet (`stream.owed_s`, `stream.owed_gaps`; the recorder lays the pusher's
+    `owed_spans` over what the card holds). The open end of what is owed — the stream's own, not yet sent — is not a
+    gap; a stretch the card holds no frame of is on no copy, not owed by the card; what the card holds of one, is."""
+    from w2cplatform.metrics import text as spec_metrics
+    from w2cplatform.console import heartbeats
+    box, rec, ring, act, rec_ctl = _camera(when=None)
+    t = box.wall()
+    _film(ring, t, t + 100, act=act)                                      # the card holds t .. t+100
+    said, owed = {"state": "pushing", "up": True, "lagging": False, "cut_s": 0.0, "left_s": 0.0}, []
+    rec.stream_said, rec.stream_owed = lambda: dict(said), lambda: list(owed)
+
+    def stream():
+        rec.heartbeat_once()
+        st = heartbeats(box.objects, "rec/")["r-1"].extra["stream"]
+        return st["up"], st["owed_s"], st["owed_gaps"]
+    owed[:] = [(t + 99.5, float("inf"))]                                  # live: only the stream's own end, not sent yet
+    assert stream() == (True, 0.0, 0)
+    owed[:] = [(t + 20, t + 30), (t + 50, t + 70), (t + 99.5, float("inf"))]   # two stretches stepped over
+    assert stream() == (True, 30.0, 2)
+    lines = spec_metrics(rec_ctl).splitlines()
+    assert 'rec_stream_up{worker="r-1"} 1' in lines
+    assert 'rec_stream_owed_seconds{worker="r-1"} 30' in lines and 'rec_stream_owed_gaps{worker="r-1"} 2' in lines
+    owed[:] = [(t + 50, t + 70), (t + 99.5, float("inf"))]                # backfill carried the first off the card
+    assert stream() == (True, 20.0, 1)
+    owed[:] = [(t - 50, t - 40), (t - 10, t + 5), (t + 50, t + 70), (t + 99.5, float("inf"))]
+    assert stream() == (True, 25.0, 2)                                    # none of the first on the card, 5 s of the second
+    said["up"], owed[:] = False, [(t + 50, t + 70), (t + 60, float("inf"))]   # the road went: broken off, nothing new owed
+    assert stream() == (False, 20.0, 1)
+    assert 'rec_stream_up{worker="r-1"} 0' in spec_metrics(rec_ctl).splitlines()
+    owed[:] = [(t + 99.5, float("inf"))]                                  # …and all of it carried
+    assert stream()[1:] == (0.0, 0)
+    rec.stream_owed = None                                                # half wired: nobody to say — no leaves, `default`
+    rec.heartbeat_once()
+    st = heartbeats(box.objects, "rec/")["r-1"].extra["stream"]
+    assert st["owed"] == "unknown" and "owed_s" not in st and "owed_gaps" not in st
+    lines = spec_metrics(rec_ctl).splitlines()
+    assert 'rec_stream_owed_seconds{worker="r-1"} 0' in lines and 'rec_stream_owed_gaps{worker="r-1"} 0' in lines
+    rec.stream_owed = lambda: 1 / 0                                       # the pusher's trouble is not the heartbeat's end
+    rec.heartbeat_once()
+    assert "owed_s" not in heartbeats(box.objects, "rec/")["r-1"].extra["stream"]
 
 # -- the eleventh review -------------------------------------------------------------------------------------------------
 def _shot(n: int, t: float):

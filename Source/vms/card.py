@@ -1250,6 +1250,23 @@ class CardBuffer:
             return [(unix_s(s.first), unix_s(s.last)) for s in self.segs
                     if s.stream.startswith(f"{recording}/") and s.bytes > 0]
 
+    def held(self, spans: list[tuple[float, float]]) -> list[int]:
+        """How much of each of `spans` (unix seconds on the card's line) the card holds, in ms — any recording's, and
+        what two recordings both hold, once (`CardRecorder.owed_on_card`)."""
+        with self._lock:
+            have = sorted((s.first, s.last) for s in self.segs if s.bytes > 0)
+        merged: list[list[int]] = []
+        for a, b in have:
+            if merged and a <= merged[-1][1]:
+                merged[-1][1] = max(merged[-1][1], b)
+            else:
+                merged.append([a, b])
+        out = []
+        for t0, t1 in spans:
+            lo, hi = archive_ms(t0), archive_ms(t1)
+            out.append(sum(max(0, min(b, hi) - max(a, lo)) for a, b in merged))
+        return out
+
     def newest(self) -> int | None:
         """Where the newest sample the card holds BEGAN (archive ms), any recording's; None when it holds none."""
         with self._lock:
@@ -1980,6 +1997,7 @@ class CardRecorder(RecWorker):
         self.card_fault, self.card_error, self.card_tries, self.card_since = "would not open", "", 0, self.wall()
         self.card_failures = 0                               # times the card was closed for refusing a write
         self.card_cam = ""                                   # the camera whose card this is (the held volume's `cam`)
+        self.card_declared: bool | None = None               # a card is declared for this camera; None: not looked yet
         self.not_ours: dict[str, str] = {}                   # recordings placed here that are another camera's -> why not recorded
         self._card_retry_at = float("-inf")
         self._coverage: dict[str, tuple[float, list]] = {}
@@ -2137,6 +2155,27 @@ class CardRecorder(RecWorker):
         card = self.card
         return round((self._evicted_before + (card.evicted_owed_ms if card is not None else 0)) / 1000.0, 1)
 
+    # THE VIDEO ONLY THE CARD HOLDS («Прошивка», «Архитектор» 2026-10-06: `stream.owed_s`, `stream.owed_gaps` — the
+    # console's `rec_stream_owed_seconds` and `rec_stream_owed_gaps`). What the stream stepped over — a break older than
+    # it reaches (`left_s`), a cut to the live edge (`cut_s`), what memory let go of unsent — and backfill has not carried
+    # off the card yet: the pusher's `owed_spans` between what an ingest took and what a range uploaded (`_paid`), and of
+    # it what the card holds — a stretch the card has no frame of is on no copy, not owed by the card. The
+    # open end of `owed_spans` (from the last frame an ingest took on) is the stream's own, not yet sent or behind
+    # (`behind_s`), not a stretch stepped over: not counted. A gap: one such stretch the card holds any of. None — no card
+    # open, or nobody wired to say what the server has (`owed: unknown`): the leaves stay out, and the spec's `default`.
+    def owed_on_card(self) -> tuple[float, int] | None:
+        """`(seconds, gaps)` of what the stream stepped over and backfill has not carried yet, as the card holds it."""
+        card = self.card
+        try:
+            owed = self._owed()
+            if card is None or owed is None:
+                return None
+            held = [ms for ms in card.held([(a, b) for a, b in owed if b != float("inf")]) if ms > 0]
+        except Exception as e:                           # noqa: BLE001 — the pusher's trouble is not the heartbeat's end
+            log.warning("%s: what the server has not got could not be read (%s): the heartbeat says no owed", self.name, e)
+            return None
+        return round(sum(held) / 1000.0, 1), len(held)
+
     def _stream(self) -> dict | None:
         if self.stream_said is None:
             return None
@@ -2147,6 +2186,9 @@ class CardRecorder(RecWorker):
             return {"error": f"{type(e).__name__}: {e}"}
         if said is not None and self.evicted_s():
             said["evicted_s"] = self.evicted_s()         # (the console's `rec_stream_skipped_seconds_total{why="evicted"}`)
+        owed = self.owed_on_card() if said is not None else None
+        if owed is not None:
+            said["owed_s"], said["owed_gaps"] = owed
         unknown = (self._unknown_before + (self.card.evicted_unknown_ms if self.card is not None else 0)) / 1000.0
         if said is not None and unknown:                 # half wired, or from before the pusher knew (no note on the card)
             said["evicted_unknown_s"] = round(unknown, 1)
@@ -2313,13 +2355,14 @@ class CardRecorder(RecWorker):
         last = getattr(self, "_card_last", None)
         if self.hold in unread and last is not None and last.name == self.hold:
             rows[self.hold] = last
+        self.card_declared = bool(rows)
         held = self.hold
         if held is not None and (held not in rows or not self.renew_hold()):
             self.leave_volume(f"card {held} is not this camera's any more")
         if self.hold is None:
             if not rows or self.claim_hold(sorted(rows)) is None:
                 self.volume, self.capacity = "", 0
-                self.volume_error = "" if rows else "no card is declared for this camera"
+                self.volume_error = ""                       # no card declared is the camera's configuration (`none`)
                 return self.volume
         vol = self._card_last = rows[self.hold]
         self.card_cam = vol.cam
@@ -2438,6 +2481,12 @@ class CardRecorder(RecWorker):
     #     unavailable  closed: it would not open, or it refused a write — with what it did
     #     recording    open and taking writes — or opened again after refusing, and nothing has landed on it since:
     #                  that is said too, so a card gone read-only is an error all along and not one that blinks
+    #     opening      declared, and not open yet: the first pass has not come, or another holds its volume
+    #     none         no card is declared for this camera: its configuration, not an accident — no `volume_error`
+    #                  («Архитектор» via «Прошивка», 2026-10-06; `unavailable` is a card that should be there and is not)
+    #
+    # The set is closed, one with the product: `opening, recording, failing, stalled, failed, unavailable, none`. The
+    # course says all but `failed` — a card it has given up on; it never gives up, it tries again every `CARD_RETRY`.
     #
     # `volume_error` was set by the volume pass alone, so it was empty while the card was `failing` and again between
     # its opening anew and its next refusal: `rec_volume_error` went 1, 0, 1 every thirty seconds under a read-only
@@ -2446,6 +2495,8 @@ class CardRecorder(RecWorker):
         """`(state, error)`: what the card is doing, and what it did, in words for the operator ("" when well)."""
         card = self.card
         if card is None:
+            if self.card_declared is False:
+                return "none", ""
             if not self.card_error:
                 return "opening", ""
             return "unavailable", (self.card_error if self.card_fault == "would not open"
