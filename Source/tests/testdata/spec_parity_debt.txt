@@ -7,9 +7,7 @@ course-only auto.subsystem.yaml domain.shared.schema   # ADR-0010/0032: the cour
 course-only auto.subsystem.yaml domain.shared.type   # ADR-0010/0032: the course first; the product's side — «Платформа»
 course-only auto.subsystem.yaml metrics
 course-only auto.subsystem.yaml placement.offers
-course-only auto.subsystem.yaml rights
 course-only auto.subsystem.yaml rights.cluster_rows
-course-only auto.subsystem.yaml rights.names
 course-only auto.subsystem.yaml unit.fields.rate_per_minute.anyOf
 course-only auto.subsystem.yaml unit.fields.rate_per_minute.const
 course-only auto.subsystem.yaml unit.fields.rate_per_minute.maximum
@@ -124,8 +122,6 @@ course-only vms.subsystem.yaml placement.near.enabled
 course-only vms.subsystem.yaml placement.near.kind
 course-only vms.subsystem.yaml placement.near.prefer
 course-only vms.subsystem.yaml placement.offers
-course-only vms.subsystem.yaml rights.reach.cluster
-course-only vms.subsystem.yaml rights.reach.group
 course-only vms.subsystem.yaml unit.fields.kind
 course-only vms.subsystem.yaml unit.fields.kind.default
 course-only vms.subsystem.yaml unit.fields.kind.type
