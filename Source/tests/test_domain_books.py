@@ -199,3 +199,38 @@ def test_an_open_console_shows_every_item_and_a_spec_with_a_list_shows_none():
         assert code == 404 and "carried and not shown" in body["detail"], (code, body)
     finally:
         SubsystemSpec.load(TESTSUB)
+
+
+def test_a_shown_list_of_objects_goes_out_as_it_is_and_a_secret_inside_it_never_does():
+    """A field shown whose value is a list of objects — the book of primaries' `backups: [{cluster, recording}]`
+    (ADR-0010, the addition) — goes out as it is; a `*_secret` key inside a shown list or object, at any depth, stays
+    in the process like a secret item (`console._without_secrets`)."""
+    from w2cplatform import catalog
+    from w2cplatform.console import Mount, SpecConsole
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.spec import SpecController, SubsystemSpec
+    from w2cplatform.variables import FileVariables
+
+    root = tempfile.mkdtemp(prefix="books-list-")
+    vars_ = FileVariables(os.path.join(root, "config"), volatile=True)
+    objects = FsObjectStore(os.path.join(root, "objects"))
+    wall = lambda: 1_757_500_000.0                                 # noqa: E731
+    backups = [{"cluster": "south", "recording": "c7-copy"}, {"cluster": "east", "recording": "c7-east"}]
+    vars_.put("domain/testsub/tallies", {"c7": json.dumps({
+        "n": 7, "backups": backups,
+        "road": {"urls": ["srt://south:9000"], "token_secret": "tk-road", "hops": [{"key_secret": "tk-deep", "at": 1}]},
+        "roads": [{"url": "srt://east:9000", "token_secret": "tk-listed"}]})})
+    s = SubsystemSpec.from_dict(_with_books({"tallies": {"show": ["n", "backups", "road", "roads"]}}))
+    catalog.register(s, TESTSUB)
+    srv = Mount(SpecConsole(SpecController(s, vars_, objects, wall=wall, cluster="north"), wall=wall)).serve("127.0.0.1", 0)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/domain/testsub/books/tallies") as r:
+            body = r.read().decode()
+        assert json.loads(body) == {"c7": {"n": 7, "backups": backups,
+                                           "road": {"urls": ["srt://south:9000"], "hops": [{"at": 1}]},
+                                           "roads": [{"url": "srt://east:9000"}]}}, body
+        assert "tk-" not in body and "_secret" not in body, body
+    finally:
+        srv.shutdown()
+        srv.server_close()
+        SubsystemSpec.load(TESTSUB)
