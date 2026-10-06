@@ -335,8 +335,14 @@ def test_a_units_card_is_words_naming_its_fields():
                        ({"section": 2}, "display.section is a word"), ({"events": "no"}, "display.events is true or false"),
                        ({"kinds": {"tally.tick": 1}}, "display.kinds"),
                        ({"tree": {"group_by": "zone", "no_group": ["x"]}}, "display.tree is"),
-                       ({"tree": {"group_by": "zone", "not_in": "x"}}, "display.tree is")):
+                       ({"tree": {"group_by": "zone", "erase": "x"}}, "display.tree is")):
         _refused(lambda bad=bad: SubsystemSpec.from_dict({**d2, "display": {**d2["display"], **bad}}), words)
+    # the words of a unit's groups box the module reads (`groupsBox`: remove, not_in, add_to, no_others, new_group) are
+    # the tree's too — the set is the module's dictionary (the loader's verdicts, «Архитектор» 2026-10-06)
+    box = {"remove": "убрать", "not_in": "ни в одной зоне", "add_to": "в зону", "no_others": "других зон нет",
+           "new_group": "новая зона"}
+    took = SubsystemSpec.from_dict({**d2, "display": {**d2["display"], "tree": {**d2["display"]["tree"], **box}}})
+    assert {k: took.display["tree"][k] for k in box} == box
     for stray in ("status", "colour"):                   # a section of no one's: the loader names it with its path
         _refused(lambda stray=stray: SubsystemSpec.from_dict({**d2, "display": {**d2["display"], stray: {}}}),
                  f"`display.{stray}`")

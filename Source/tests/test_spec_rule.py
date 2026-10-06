@@ -68,7 +68,8 @@ IMPLEMENTED = {
     "display.tree.columns.title", "display.tree.columns.width", "display.tree.children", "display.tree.group_title",
     "display.tree.group_hint", "display.tree.filter", "display.tree.no_group", "display.tree.contents_title",
     "display.tree.group_word", "display.tree.no_group_suffix", "display.tree.pick_note", "display.tree.new_root",
-    "display.tree.new_sub", "display.tree.add_here", "display.tree.new_group_note", "display.keys.*.title",
+    "display.tree.new_sub", "display.tree.add_here", "display.tree.new_group_note", "display.tree.remove",
+    "display.tree.not_in", "display.tree.add_to", "display.tree.no_others", "display.tree.new_group", "display.keys.*.title",
     "display.keys.*.about", "display.keys.*.absent", "display.general", "display.fields", "display.options.*",
     "display.form.title", "display.form.state", "display.form.placement", "display.form.fields",
     "display.form.status.field", "display.form.status.since", "display.form.status.title", "display.form.note",
@@ -86,7 +87,9 @@ IMPLEMENTED = {
 # A key a decision brought to the loader before a spec says it — the spec bytes are «Паритет»'s since the lessons'
 # signal —, each with what goes in and where. The debt only shrinks: a key here that a spec now uses fails as a key
 # unused does, and the line goes.
-WAITING: dict[str, str] = {}
+WAITING = {f"display.tree.{w}": "the loader's verdicts, «Архитектор» 2026-10-06: the groups box's words the module reads "
+                                 "(`groupsBox`) — testsub2's `display.tree` says them — «Паритет»"
+           for w in ("remove", "not_in", "add_to", "no_others", "new_group")}
 
 
 def _paths(d, at: str = "") -> set[str]:
