@@ -76,12 +76,13 @@ def test_a_recording_the_engine_refuses_is_counted_by_itself_and_its_last_frame_
     assert 'rec_last_frame_age_seconds{unit="7"} 0' in text
 
 
-def test_a_cameras_stream_beyond_its_gaps_is_eleven_numbers_said_or_their_default():
+def test_a_cameras_stream_beyond_its_gaps_is_twelve_numbers_said_or_their_default():
     """The camera's numbers beyond its gaps («Прошивка», «Архитектор» 2026-10-06: the spec's `stream_up` …
     `card_state`). The course's camera recorder says `stream.up`, `stream.owed_s`, `stream.owed_gaps` and `card.state`;
     the leaves it cannot measure — live frames dropped, frames back in time, uploads held and their wait, the clock's
-    shift, video on no clock line, live the card skipped — stay out of its heartbeat, and the declaration's `default`
-    prints them 0 (`card_state`: `recording`). Each by its value (ADR 0055): `12.5`, `0`, never `0.0`. The default
+    shift, video on no clock line, live the card skipped, and what the card holds for the centre alone while a relay
+    has not sent it up (`stream_owed_up_seconds`: the course does not count the card's relay chain) — stay out of its
+    heartbeat, and the declaration's `default` prints them 0 (`card_state`: `recording`). Each by its value (ADR 0055): `12.5`, `0`, never `0.0`. The default
     stands for a leaf of a map that is there: a camera whose stream nobody says (no `stream` map) has no stream line, and
     a server's recorder — no card, no stream — none of the eleven."""
     box = Box()
@@ -95,7 +96,8 @@ def test_a_cameras_stream_beyond_its_gaps_is_eleven_numbers_said_or_their_defaul
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-srv"), Heartbeat("r-srv", now, [], {"server": "srv-1"}).to_bytes())
     lines = spec_metrics(rec).splitlines()
     said = {"stream_up": "1", "stream_owed_seconds": "12.5", "stream_owed_gaps": "2"}
-    stream = ("stream_up", "stream_owed_seconds", "stream_owed_gaps", "stream_live_drops_total", "stream_frames_back_total",
+    stream = ("stream_up", "stream_owed_seconds", "stream_owed_gaps", "stream_owed_up_seconds",   # (no relay chain: 0)
+              "stream_live_drops_total", "stream_frames_back_total",
               "stream_uploads_held", "stream_upload_wait_seconds_total", "camera_clock_shift_seconds",
               "camera_clock_unplaceable_seconds_total")
     for name in stream:
