@@ -3263,8 +3263,9 @@ class SpecController(Controller):
 
     # Live workers whose place is a row of the `affinity` table saying `admits: false`, `{worker: place}` (ADR 0056, its
     # addition; it was the product's `Unfit` hook). A place that takes no unit gives up the ones it has: "no new ones, the
-    # old ones stay" kept a recording in the evidence archive, for ever, and said nothing. A row that does not read and a
-    # table that does not list give nothing up — a unit is not moved on a guess. No spec key: `affinity` says it already.
+    # old ones stay" kept units where the administrator closed the place, for ever, and said nothing. A row that does not
+    # read and a table that does not list give nothing up — a unit is not moved on a guess. No spec key: `affinity` says
+    # it already.
     def admitting_none(self, workers) -> dict[str, str]:
         if not self.spec.affinity:
             return {}

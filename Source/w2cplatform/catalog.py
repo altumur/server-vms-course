@@ -94,7 +94,7 @@ def spec(name: str, env: dict | None = None):
 
 # The neighbour a spec reads by ITS spec (ADR 0056): `near.of` names a field of theirs, `near.prefer` reads their rows by
 # their `rows` and a field's `ref`. A spec whose neighbour this catalogue does not hold is refused, naming it — where the
-# catalogue is whole, which is not one file's load (`vms` follows `rec`, and a directory loads in name order): the end of
+# catalogue is whole, which is not one file's load (a directory loads in name order, and a follower may come first): the end of
 # `load_dir`, and a controller's start (`SpecController`), after its process loaded what it loads. It was a pass's: the
 # preference read nothing and placed as if nothing were preferred, in silence (ADR 0012).
 def near_known(spec) -> None:
