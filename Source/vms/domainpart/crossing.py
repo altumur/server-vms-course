@@ -209,29 +209,31 @@ class Crossings:
     # A BACKUP of a camera on another server (М11 lesson 1, two servers as two clusters of one): an ordinary
     # recording on that cluster's `backup` volume, `when: offline` (М10B lesson 26), naming the camera by the
     # domain's name (`cam: ref:<serial>`). The operator makes it there as always; the domain finds it in that
-    # cluster's rec snapshot — no record of its own — and from then on the camera has a second road: it pushes
-    # there when, and only when, its primary does not take the stream. One stream, never two.
-    def backup_of(self, ref: str) -> str | None:
-        found = self._backup(ref)
-        return found[0] if found else None
-
-    def _backup(self, ref: str) -> tuple[str, str] | None:
-        """(the backup's cluster, the backup recording's name)."""
+    # cluster's rec snapshot — no record of its own — and from then on the camera has a second road, to the first of
+    # its backups: it pushes there when, and only when, its primary does not take the stream. One stream, never two.
+    #
+    # Every backup of the camera on another server, `(cluster, recording)`: the recording's id AT ITS CLUSTER (its
+    # `name`, as the primary's `recording` is), sorted by cluster. A page finds a backup recording by both — a cluster
+    # alone names no recording there, and `/domain/at/<cluster>/…` answers only `where/<id>` (ADR-0010, the addition).
+    def backups_of(self, ref: str) -> list[tuple[str, str]]:
         on, home = self.all().get(str(ref)), (self.view.last_known(ref) or (None,))[0]
+        out: list[tuple[str, str]] = []
         for name in sorted(self.view.fed.clusters):
             if name in (on, home):
                 continue
             c = self.view.fed.clusters[name]
+            found = set()
             try:
                 keys = c.objects.list("rec/snapshot/")
                 for key in keys:
                     shard = published(name, key, c.objects.get(key), _recordings) or {}   # one torn shard is that shard's
                     for r in shard.get("recordings", []):
                         if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") == "offline":
-                            return name, str(r.get("name") or r.get("id"))
+                            found.add((name, str(r.get("name") or r.get("id"))))
             except Unreachable:
                 continue
-        return None
+            out += sorted(found)
+        return out
 
     # What the backup on the other server HOLDS, as its recorder says in its heartbeat — the same summary and
     # door a backup of this cluster gives (М10B lesson 26): coverage, and the URL of its archive. Carried in the
@@ -278,14 +280,13 @@ class Crossings:
             books.setdefault(on, {})
             found = self._doors(ref)
             if found is not None:
-                kept = self._backup(ref)
-                archive = self._backup_archive(*kept, self.wall()) if kept else None
-                if archive:
-                    found = {**found, "backups": [archive]}  # where the primary takes its hole back from
+                kept = self.backups_of(ref)
+                archives = [a for a in (self._backup_archive(c, r, self.wall()) for c, r in kept) if a]
+                if archives:
+                    found = {**found, "backups": archives}   # where the primary takes its hole back from
                 books[on][ref] = json.dumps(found, sort_keys=True)
-                backup = kept[0] if kept else None          # its backup's cluster resolves `ref:` too — to ITS ingest
-                if backup is not None:                      # decided for the backup's cluster by ITS networks
-                    there = self._doors(ref, backup) or {}
+                for backup in dict.fromkeys(c for c, _ in kept):   # each backup's cluster resolves `ref:` too — to
+                    there = self._doors(ref, backup) or {}           # ITS ingest, decided by ITS networks
                     books.setdefault(backup, {})[ref] = json.dumps(there, sort_keys=True)
         self._write_books(SOURCES_PATH, books)
         return books
@@ -317,17 +318,23 @@ class Crossings:
             ingest = self._ingest(ref, on, known[0], now, was.get("ingest"))
             if ingest:
                 entry["ingest"] = ingest
-            backup = self.backup_of(ref)
-            if backup is not None:
-                # For the backup's cluster: the same facts about the primary, so its recorder's gate knows when
-                # to cover (`carried_primary`, by `ref:`) — the book of primaries, for the other side.
-                # `backup_on` names the backup's cluster in both copies; `backup` is only ever the camera's second
-                # road itself — the product's form (`PrimaryEntry.Backup`, `BackupOn`): one name, one meaning.
+            backups = self.backups_of(ref)
+            if backups:
+                # Where the camera's backups are, in both copies: each one's cluster AND its recording there — what a
+                # page needs to open it through `/domain/at/<cluster>/…` (ADR-0010, the addition). Absent when there
+                # is none, as the product writes a list (`omitempty`). The word `backup_on` is gone: one knowledge, one
+                # word, no alias (ADR-0003). `backup` is only ever the camera's second road itself (`PrimaryEntry.Backup`).
+                entry["backups"] = [{"cluster": c, "recording": r} for c, r in backups]
+                # For each backup's cluster: the same facts about the primary, so its recorder's gate knows when to
+                # cover (`carried_primary`, by `ref:`) — the book of primaries, for the other side. Its own cluster is
+                # among the `backups`; no road, no token.
                 facts = {k: v for k, v in entry.items() if k != "ingest"}     # not the camera's stream token
-                books.setdefault(backup, {})[ref] = json.dumps({**facts, "backup_on": backup}, sort_keys=True)
+                for c in dict.fromkeys(c for c, _ in backups):
+                    books.setdefault(c, {})[ref] = json.dumps(facts, sort_keys=True)
+                backup = backups[0][0]                        # the camera's second road: to the first of them
                 there = self._ingest(ref, backup, known[0], now, was.get("backup"))
-                if there and ingest:                          # the camera's second road: only for one that pushes
-                    entry["backup"], entry["backup_on"] = there, backup
+                if there and ingest:                          # …and only for a camera that pushes
+                    entry["backup"] = there
             books.setdefault(known[0], {})[ref] = json.dumps(entry, sort_keys=True)
         self._write_books(PRIMARIES_PATH, books)
         return books

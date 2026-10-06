@@ -127,14 +127,88 @@ def test_while_a_writes_the_camera_sends_one_stream_to_a_and_neither_standby_rec
     wall = Clock()
     o = _office(wall)
     e = o.pusher.entry()
-    assert e["backup_on"] == "srv-b" and e["backup"]["urls"] == B_URLS     # its second road: the road itself
-    # B's copy, in the product's shape too (`PrimaryEntry`): the same facts, its cluster as `backup_on`, no road, no token
+    assert e["backup"]["urls"] == B_URLS                                    # its second road: the road itself
+    # Where its backup is: the cluster AND the recording there — what a page opens it by (ADR-0010, the addition)
+    assert e["backups"] == [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}] and "backup_on" not in e
+    # B's copy, in the product's shape too (`PrimaryEntry`): the same facts, B among its backups, no road, no token
     there = json.loads(o.b.vars.get("domain/vms/primaries/srv-b")[0][SERIAL])
-    assert there["backup_on"] == "srv-b" and there["recorded_by"] == "srv-a" and not {"backup", "ingest"} & set(there)
+    assert there["backups"] == e["backups"] and there["recorded_by"] == "srv-a"
+    assert not {"backup", "ingest", "backup_on"} & set(there)
     assert o.pusher.pass_once(_frames(wall, 5))["road"] == "primary"
     assert len(o.q["srv-a"].drain()) == 5 and o.q["srv-b"].drain() == []                    # one stream, to A
     assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())                     # the card holds
     assert not _covers(o.b.vars, o.b.objects, BACKUP, wall())                                # the backup holds
+
+
+def test_a_camera_with_two_backups_names_both_and_each_backups_cluster_carries_the_book_its_gate_reads():
+    """A third server keeps a backup of the camera too. The book names both, each by its cluster AND its recording
+    there — a page opens either through `/domain/at/<cluster>/…` (ADR-0010, the addition). Each backup's cluster gets the
+    copy its recorder's gate reads, itself among the `backups`, no road; the camera's second road stays one, to the
+    first. A dies: both backups cover."""
+    from vms import volumes
+    from vms.config import REC_SPEC
+    from w2cplatform.spec import SpecController
+    wall = Clock()
+    o = _office(wall)
+    c, c_link = make_cluster("srv-c")
+    o.fed.add(c)
+    volumes.write(c.vars, {"name": "copy", "kind": "backup", "server": "srv-c", "url": "/data/copy", "quota_bytes": 10**12})
+    rec_c = SpecController(REC_SPEC, c.vars, c.objects, wall=wall)
+    rec_c.create({"name": f"{SERIAL}-c", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline"})
+    rec_c.publish_snapshot()
+    c_agent = DomainAgent("srv-c", o.b.vars, c.vars, now=wall, seen_store=c.objects)
+    o.domain_pass(); c_agent.sync()
+    both = [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}, {"cluster": "srv-c", "recording": f"{SERIAL}-c"}]
+    e = o.pusher.entry()
+    assert e["backups"] == both and e["backup"]["urls"] == B_URLS                  # one second road: to the first
+    for name in ("srv-b", "srv-c"):
+        there = json.loads(o.b.vars.get(f"domain/vms/primaries/{name}")[0][SERIAL])   # the copy at the holder (on B)
+        assert there["backups"] == both and not {"backup", "ingest", "backup_on"} & set(there)
+    carried = json.loads(c.vars.get("domain/vms/primaries")[0][SERIAL])               # carried home by srv-c's agent
+    assert carried["backups"] == both and carried["recorded_by"] == "srv-a"
+    row_c = {"id": f"{SERIAL}-c", "cam": f"ref:{SERIAL}", "home": "copy", "when": "offline"}
+    assert not _covers(c.vars, c.objects, row_c, wall()) and not _covers(o.b.vars, o.b.objects, BACKUP, wall())
+    o.down.add("srv-a"); o.a_link.up = False
+    wall.advance(5)
+    o.domain_pass(a_up=False); c_agent.sync()
+    assert _covers(c.vars, c.objects, row_c, wall()) and _covers(o.b.vars, o.b.objects, BACKUP, wall())
+
+
+def test_the_page_reads_where_the_camera_is_recorded_backups_included_from_the_book_and_no_token():
+    """`GET /domain/vms/books/primaries`, on the VMS's own spec (`show: [recorded_by, recording, backups]`, «Паритет»'s
+    bytes): the camera's cluster and the backup's each answer from their own copy — who records it, the recording, and
+    its backups each by cluster and recording, as the domain wrote them; never a road, never its token (ADR-0010, the
+    addition)."""
+    import os
+    import tempfile
+    import urllib.request
+    from vms.config import SPEC
+    from w2cplatform.console import Mount, SpecConsole
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.spec import SpecController
+    from w2cplatform.variables import FileVariables
+    assert SPEC.domain.show["primaries"] == ("recorded_by", "recording", "backups")
+    wall = Clock()
+    o = _office(wall)
+    want = {SERIAL: {"recorded_by": "srv-a", "recording": SERIAL,
+                     "backups": [{"cluster": "srv-b", "recording": f"{SERIAL}-copy"}]}}
+    for carried in (o.cam.flash, o.b.vars):
+        copy = carried.get("domain/vms/primaries")[0]
+        assert copy and json.loads(copy[SERIAL]).get("backups"), "the copy was carried home"
+        # The copy as carried, in a store of its own: a console outside any domain, open — the gate is not the question
+        root = tempfile.mkdtemp(prefix="primaries-")
+        vars_ = FileVariables(os.path.join(root, "config"), volatile=True)
+        vars_.put("domain/vms/primaries", copy)
+        objects = FsObjectStore(os.path.join(root, "objects"))
+        srv = Mount(SpecConsole(SpecController(SPEC, vars_, objects, wall=wall), wall=wall)).serve("127.0.0.1", 0)
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/domain/vms/books/primaries") as r:
+                body = r.read().decode()
+        finally:
+            srv.shutdown()
+            srv.server_close()
+        assert json.loads(body) == want, body
+        assert "token" not in body and "srt://" not in body and "backup_on" not in body, body
 
 
 def test_a_dies_and_both_standbys_record_the_card_from_its_sensor_the_backup_from_the_one_stream():
