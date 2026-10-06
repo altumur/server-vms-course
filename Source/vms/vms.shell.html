@@ -36,8 +36,12 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
 - `addTab("unit")` «Видео» — the live picture (WHEP at the gateway's door), the timeline of every recording of the
   camera and every place a recording may have left footage on, the events on it, the operator's mark, «Закрепить»
   (what is only in a backup: `POST /rec/requests` for the primary recording), «Удержать показанное».
+  The timeline holds the camera's recordings in the other clusters of the domain too (ADR-0061): the book of
+  primaries the domain carries here names them by the camera's ref, their doors are asked at this console
+  (`/domain/at/<cluster>/rec/where/…`), a refusal said in words (403, 404, 502, 503).
   «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a backup) and
-  its keeps (`/rec/keeps`: make, lift).
+  its keeps (`/rec/keeps`: make, lift; check at the incidents holder's door; the state from its beat — `servers.status`
+  with `of: keeps`, ADR-0064 —, «нет кадров, запечатывать нечего» for a recording with no footage in the stretch).
 - Volumes (`/rec/<places table>`): `addTreeNodes("server")` (a server's own), `addTreeNodes("servers")` («Сетевые
   архивы»), `addCard("vol"|"netvols")`, `addBlock("server", {covers: "rec/volumes"})` «Архивы сервера»; declaring
   (`POST`, a smaller quota only with `shrink_confirmed`) and withdrawing (`DELETE`).
@@ -52,8 +56,10 @@ journal — the module's (`tests/console/shell-page.test.js`). Its jsdom tests: 
 
 ## Routes the page itself uses
 `/rec/recordings`, `/rec/<places table>`, `/rec/keeps`, `/rec/requests`, `/live/streams`, `/auto/scenarios`,
-`/events`, `/marks` (writes through `pc.api`); the holders' doors from `/rec/where/<recording>`,
-`/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`. Everything else is the module's.
+`/events`, `/marks` (writes through `pc.api`), `/domain/vms/books/primaries`; the holders' doors from
+`/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=rec/<recording>`, `/live/where/<camera>`, and another
+cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
+`POST /keeps/<keep>/verify?recording=<r>`. Everything else is the module's.
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -129,6 +135,27 @@ pc.on("refresh",d=>{if(d&&d.units)UNITS=d.units;if(d&&"domain" in d)domView=d.do
 const camById=id=>(UNITS.vms||[]).find(u=>String(u.id)===String(id))||null;
 const camName=id=>{const c=camById(id);return c?(c.name||"камера "+c.id):"камера "+id};
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
+// The camera's recordings in the other clusters of the domain (ADR-0061): {cluster, id, home, backup} — read at their
+// cluster's console through this one (GET /domain/at/<cluster>/rec/where/…, `member_forward`), the bytes from the
+// holder's door. Where this console learns them: the book of primaries the domain carries into this cluster
+// (GET /domain/vms/books/primaries: {<ref>: {recorded_by, recording}}, the fields the spec lets show — never its
+// tokens; ADR-0010), by the camera's ref. The product's page asks the VMS's state of the domain first at the holder's
+// cluster (/domain/vms/state); the course's domain part serves no such state, and the book is where both learn it here.
+let PRIMARIES=null;
+pc.on("refresh",async d=>{
+  if(!(d&&"domain" in d))return;
+  try{const r=await fetch("/domain/vms/books/primaries");PRIMARIES=r.ok?await r.json():null}catch(e){PRIMARIES=null}
+});
+function farRecsOfCam(id){
+  const c=camById(id),ref=c&&c.ref;if(!ref)return[];
+  const p=PRIMARIES&&PRIMARIES[ref];
+  // a recording this cluster holds itself is one of its own already (the book names this cluster too, then)
+  if(!p||!p.recorded_by||!p.recording||recsOfCam(id).some(r=>String(r.id)===String(p.recording)))return[];
+  return[{id:String(p.recording),cluster:String(p.recorded_by),home:"",backup:false,cam:String(id)}];
+}
+// where a recording's door is asked: its own cluster's console, or another's through this one (ADR-0061)
+const recWhere=rec=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+"/rec/where/"+encodeURIComponent(rec.id);
+const placeWhere=(rec,T,place)=>(rec.cluster?`/domain/at/${encodeURIComponent(rec.cluster)}`:"")+`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(place)}?unit=${encodeURIComponent("rec/"+rec.id)}`;
 const camOf=ref=>String(ref).replace(/^unit:vms\//,"");
 const isCam=ref=>String(ref).startsWith("unit:vms/");
 const goTab=t=>setTimeout(()=>{const x=document.querySelector(`.pc-tabs [data-tab="${t}"]`);if(x)x.click()},60);
@@ -264,19 +291,23 @@ async function loadTimeline(id){
   // volume it may have lain on (a recording moves; what it left behind stays on the old volume, read where it lies).
   // The raw ranges {start_ms, end_ms, epoch, source, yields} are merged without twins by (recording, start, end,
   // epoch, source), the recording's own door first; a volume nobody holds is named, not dropped silently.
-  const recs=recsOfCam(id);
+  const recs=recsOfCam(id).concat(farRecsOfCam(id));
   // the places a recording may lie on: the rows of the table rec's spec names (spec.places), not a name written here
   const T=((pc.spec("rec")||{}).places||{}).table||"";
   let places=[];
   if(T){try{const d=await (await fetch(`/rec/${encodeURIComponent(T)}`)).json();places=d[T]||[]}catch(e){places=[]}}
-  const asks=[],missing=new Set(),seen=new Set(),spans=[];
-  // a recording on a backup volume: what it has yields to the primary's, and its remainder is «only in the backup»
-  const backupRec=rec=>{const v=places.find(x=>x.name===rec.home);return!!v&&v.kind===VOL_BACKUP};
+  const asks=[],missing=new Set(),refused=new Map(),seen=new Set(),spans=[];
+  // a recording on a backup volume: what it has yields to the primary's, and its remainder is «only in the backup»;
+  // another cluster's recording says it itself (its volumes are that cluster's)
+  const backupRec=rec=>{if(rec.cluster)return!!rec.backup;const v=places.find(x=>x.name===rec.home);return!!v&&v.kind===VOL_BACKUP};
   const take=(rec,where,list)=>{const bk=backupRec(rec);for(const x of list||[]){
-    const k=[rec.id,x.start_ms,x.end_ms,x.epoch,x.source||""].join("|");if(seen.has(k))continue;seen.add(k);
+    const k=[rec.cluster||"",rec.id,x.start_ms,x.end_ms,x.epoch,x.source||""].join("|");if(seen.has(k))continue;seen.add(k);
     spans.push({start:x.start_ms/1000,end:x.end_ms/1000,epoch:x.epoch,fenced:!!x.fenced,events:0,source:x.source||"",recording:rec.id,where,media:true,yields:!!x.yields||bk,backupOnly:bk})}};
   const ask=async(rec,where,place)=>{
     const w=await whereAt(where);
+    // another cluster's answer, in words: its gate does not know you (403), its console is not reached (502), it is not
+    // a member this console can reach (404 from the hop), the members' list does not read here (503)
+    if(!w.door&&rec.cluster&&!place&&[403,404,502,503].includes(w.status)){refused.set(rec.cluster,w.status);return null}
     if(!w.door){if(place&&w.status===404&&w.missing)missing.add(w.missing);return null}   // «no such place»: nothing to say
     try{const r=await doorFetch(where,`/timeline/${encodeURIComponent(rec.id)}?from=${from}&to=${to}`);
       if(!r||!r.ok){missing.add(place||rec.id);return null}
@@ -285,14 +316,18 @@ async function loadTimeline(id){
     catch(e){missing.add(place||rec.id);return null}
   };
   // the recordings' own doors first (theirs win a twin), then the volumes'
-  const own=await Promise.all(recs.map(rec=>ask(rec,"/rec/where/"+encodeURIComponent(rec.id),"")));
-  recs.forEach((rec,i)=>take(rec,"/rec/where/"+encodeURIComponent(rec.id),own[i]));
-  for(const rec of recs)for(const v of places)asks.push((async()=>{const where=`/rec/where/${encodeURIComponent(T)}/${encodeURIComponent(v.name)}?unit=${encodeURIComponent("rec/"+rec.id)}`;take(rec,where,await ask(rec,where,v.name))})());
+  const own=await Promise.all(recs.map(rec=>ask(rec,recWhere(rec),"")));
+  recs.forEach((rec,i)=>take(rec,recWhere(rec),own[i]));
+  // the places: this cluster's table for its own recordings; another cluster's recording, its home there
+  for(const rec of recs)for(const name of rec.cluster?(rec.home&&!refused.has(rec.cluster)?[rec.home]:[]):places.map(v=>v.name))
+    asks.push((async()=>{const where=placeWhere(rec,T||"volumes",name);take(rec,where,await ask(rec,where,name))})());
   await Promise.all(asks);
   // Лента строится по дверям; недоступное названо: его архив не утрачен, а лента без него неполная — это
   // единственный сбой, который оператор иначе не увидел бы.
   const unr=[...missing];
-  V.note=unr.length?`Недоступн${unr.length>1?"ы":"о"}: ${unr.join(", ")} — ${unr.length>1?"их архивы недоступны":"его архив недоступен"}, а не утрачен${unr.length>1?"ы":""}; лента может быть неполной.`:"";
+  const WHY={403:c=>`на ${c} вас не знают: его архив не показан`,502:c=>`консоль ${c} не видна по сети: его архив смотрится только там, где её видно`,404:c=>`консоль ${c} отсюда не известна: его архив не показан`,503:c=>`список членов домена здесь не читается: архив ${c} не показан`};
+  V.note=(unr.length?`Недоступн${unr.length>1?"ы":"о"}: ${unr.join(", ")} — ${unr.length>1?"их архивы недоступны":"его архив недоступен"}, а не утрачен${unr.length>1?"ы":""}; лента может быть неполной.`:"")
+    +[...refused].map(([c,st])=>" "+WHY[st](c)+".").join("");V.note=V.note.trim();
   V.spans=yieldCut(spans).sort((a,b)=>a.start-b.start);
   V.cam=id;
   await fetchEvents(id,from,to);
@@ -665,13 +700,51 @@ function camRecCardHtml(cam){
   return card("Запись камеры",body,`<button type="button" class="btn s" data-act="addRec">＋ Запись</button>`)+keepCardHtml(cam);
 }
 const camKeeps=cam=>keeps.filter(k=>String(k.cam)===String(cam)).sort((a,b)=>b.from-a.from);
-function keepCardHtml(cam){
-  const list=camKeeps(cam),guard=vols.some(v=>v.kind==="incidents"&&v.enabled);
-  const warn=guard?"":`<p class="sub" style="color:var(--rd)">Тома вида «инциденты» нет: удержанное держится, только пока его хранит архив записи.</p>`;
-  const body=list.map(k=>`<div class="it" style="align-items:flex-start"><span>${pc.icon("storage")}</span>
+// the servers as the module last read them (refresh): what the recorders say in their beat (servers.status in the
+// worker's row) — [{server, worker, status}]
+let SERVERS={};
+pc.on("refresh",d=>{if(d&&d.servers)SERVERS=d.servers});
+const recWorkers=()=>Object.entries(SERVERS||{}).flatMap(([server,s])=>(s.workers||[]).map(w=>({server,worker:w.worker,status:w.status||{}})));
+const incidentsVol=()=>vols.find(v=>v.enabled&&v.kind==="incidents")||null;
+// the holder's door answers the checks of a keep only when rec's spec opens that route on it
+const keepVerifyOn=()=>(((pc.spec("rec")||{}).door||{}).routes||[]).includes("keeps");
+// What the incidents archive's holder says of the keeps, in its beat (servers.status of rec with `of: keeps`, ADR-0064):
+// keeps {<keep>: {state, …}}, incidents_lost {<keep>: seconds}, incidents_at_risk [<keep>] — matched to the keep's row
+// by its key. Only the fields rec's spec names with of: keeps are read; nothing named — nothing said.
+const KEEP_STATE={kept:"в архиве инцидентов",pushed:"вытолкнуто в архив инцидентов",pending:"ждёт выталкивания",released:"отпущено",lost:"потеряно"};
+function keepSaid(name){
+  const fields=new Set((((pc.spec("rec")||{}).servers||{}).status||[]).filter(x=>x.of==="keeps").map(x=>x.field));
+  const out={};
+  for(const w of recWorkers()){const st=w.status||{};
+    if(fields.has("keeps")&&st.keeps&&typeof st.keeps==="object"&&st.keeps[name])out.keep=st.keeps[name];
+    if(fields.has("incidents_lost")&&st.incidents_lost&&st.incidents_lost[name]!=null)out.lost=+st.incidents_lost[name];
+    if(fields.has("incidents_at_risk")&&Array.isArray(st.incidents_at_risk)&&st.incidents_at_risk.map(String).includes(name))out.risk=true}
+  return out;
+}
+function keepStateHtml(name){
+  const s2=keepSaid(name),k=s2.keep||{},parts=[];
+  if(k.state)parts.push(`<span class="bd${k.state==="lost"?" off":k.state==="kept"||k.state==="pushed"?"":" wait"}">${esc(KEEP_STATE[k.state]||k.state)}</span>`);
+  if(k.state==="released"&&k.why)parts.push(`<small>${esc(k.why)}</small>`);
+  // the recordings that hold no footage in the keep's stretch (the holder's keeps.<id>.empty): nothing to seal there
+  if(Array.isArray(k.empty)&&k.empty.length)parts.push(`<small class="sub">в отрезке нет кадров у ${esc(k.empty.join(", "))} — запечатывать нечего</small>`);
+  if(k.state==="lost"&&k.lost_seconds!=null)parts.push(`<small style="color:var(--rd)">${esc(k.recording||"")}: потеряно ${Math.round(+k.lost_seconds)} с</small>`);
+  if(s2.lost)parts.push(`<small style="color:var(--rd)">архив инцидентов потерял ${Math.round(s2.lost)} с из удержанного</small>`);
+  if(s2.risk)parts.push(`<span class="bd off">под угрозой: кольцо записи заберёт раньше, чем вытолкнет</span>`);
+  return parts.length?`<span style="display:flex;flex-direction:column;gap:2px;align-items:flex-end">${parts.join("")}</span>`:"";
+}
+// a keep is a row of rec/keeps, named by its key (`name`): its camera, its stretch, why, who and when
+function keepRowHtml(k){
+  return`<div class="it" style="align-items:flex-start"><span>${pc.icon("storage")}</span>
     <span><b>${fmtDayTime(k.from)} — ${fmtDayTime(k.to)}</b> <small>${Math.round((k.to-k.from)/60)} мин</small>${k.note?`<small>${esc(k.note)}</small>`:""}
-      <small>${k.by?`поставил ${esc(k.by)} · `:""}${k.at?fmtDayTime(k.at):""}</small></span>
-    <button type="button" class="btn s" data-act="lift" data-keep="${esc(k.name)}">Снять</button></div>`).join("")
+      <small>${k.by?`поставил ${esc(k.by)} · `:""}${k.at?fmtDayTime(k.at)+" · ":""}записи ${esc((k.recordings||[]).join(", ")||"—")}</small></span>
+    ${keepStateHtml(k.name)}
+    ${keepVerifyOn()?`<button type="button" class="btn s" data-act="verify" data-keep="${esc(k.name)}">Проверить</button>`:""}
+    <button type="button" class="btn s" data-act="lift" data-keep="${esc(k.name)}">Снять</button></div>`;
+}
+function keepCardHtml(cam){
+  const list=camKeeps(cam),inc=incidentsVol();
+  const warn=inc&&inc.held_by?"":`<p class="sub" style="color:var(--rd)">Архив инцидентов не обслуживается: удержанное держится, только пока его ещё хранит архив записи. Объявите том вида «инциденты».</p>`;
+  const body=list.map(keepRowHtml).join("")
     ||`<p class="sub">Ничего не удержано. Удержанный отрезок не уходит по сроку хранения записи и копируется в архив инцидентов.</p>`;
   return card("Удержание",warn+body,`<button type="button" class="btn s" data-act="addKeep">＋ Удержать</button>`);
 }
@@ -687,7 +760,7 @@ function paintArch(){
     home:el=>recWrite(r(el),{home:el.value},el.value?`Запись переедет в «${el.value}»`:"Архив не задан — пишется туда, где есть место"),
     when:el=>recWrite(r(el),{when:el.value},el.value==="offline"?"Резервная запись пишет, только пока основная не пишется":"Резервная запись пишет всегда"),
     days:el=>{const n=parseInt(el.value,10);if(!n||n<1){pc.toast("Срок хранения — целое число дней");return}recWrite(r(el),{retention_days:n},"Срок хранения изменён")},
-    lift:el=>liftKeep(el.dataset.keep)});
+    lift:el=>liftKeep(el.dataset.keep),verify:el=>verifyKeep(el.dataset.keep)});
 }
 async function reloadRec(){
   await loadRec();KEEP_ON=!!recOn;
@@ -726,6 +799,31 @@ function liftKeep(name){
   const k=keeps.find(x=>x.name===name);
   if(!pc.confirm("Снять удержание?",(k?`${fmtDayTime(k.from)} — ${fmtDayTime(k.to)}. `:"")+"Отрезок снова подчиняется сроку хранения записи."))return;
   (async()=>{try{await pc.api("DELETE","/rec/keeps/"+encodeURIComponent(name));await reloadRec();pc.toast("Удержание снято")}catch(e){pc.toast("Отказано: "+e.message)}})();
+}
+// The check of a keep's seal is the incidents volume holder's (its door, ADR-0015, ADR-0057 p. 3): the copy lies there.
+// One request per recording of the keep: the door is a place token for rec/<recording> (/rec/where/<table>/<volume>
+// ?unit=rec/<r>), and the check names it (?recording=<r>). The answers in one word each: ok, broken, unknown.
+async function verifyKeep(id){
+  const inc=incidentsVol(),k=keeps.find(x=>x.name===id);
+  if(!inc||!inc.held_by){pc.toast("Архив инцидентов никто не держит — проверять негде");return}
+  const list=k&&Array.isArray(k.recordings)&&k.recordings.length?k.recordings.map(String):recs.filter(r=>k&&String(r.cam)===String(k.cam)).map(r=>r.id);
+  if(!list.length){pc.toast("У удержания нет записей — проверять нечего");return}
+  const said=[];let bad=false;
+  for(const r of list){
+    try{const where=`/rec/where/${encodeURIComponent(T_PLACES)}/${encodeURIComponent(inc.name)}?unit=${encodeURIComponent("rec/"+r)}`;
+      const res=await doorFetch(where,"/keeps/"+encodeURIComponent(id)+"/verify?recording="+encodeURIComponent(r),{method:"POST"});
+      if(!res){said.push(`${r}: дверь держателя архива инцидентов не ответила`);bad=true;continue}
+      const d=await res.json().catch(()=>({}));
+      if(!res.ok){said.push(`${r}: ${d.detail||d.error||res.status}`);bad=true;continue}
+      // integrity: "ok" | "broken: <why>" | "unknown: <why>"; a recording that holds no footage in the stretch is not a
+      // failure and nothing to wait for (its result: "empty") — said apart
+      const g=String(d.integrity||""),why=g.replace(/^[a-z]+:\s*/,""),what=((d.recordings||{})[r]||{}).result;
+      if(what==="empty")said.push(`в этом отрезке у ${r} нет кадров — запечатывать нечего`);
+      else if(g==="ok")said.push(`${r}: цело`);else{bad=true;said.push(`${r}: ${g.startsWith("broken")?"повреждено — "+why:g.startsWith("unknown")?"не с чем сравнить — "+why:g||"нет ответа"}`)}
+    }catch(e){said.push(`${r}: ${e.message}`);bad=true}
+  }
+  pc.toast((bad?"Не подтверждено: ":"Проверено: ")+said.join("; "));
+  await reloadRec();
 }
 pc.addTab("unit",{id:"rec",label:"Архив",
   render:async(host,ref)=>{
