@@ -1,57 +1,110 @@
-# How a request's body value is written into its row, and how any JSON value a row holds is written (the canonical
-# form): one table for the course (Source/, Python: w2cplatform/canonical.py, SpecConsole._file_request) and the
-# product (Go: canonjson.go, requests.go). THIS IS THE COURSE'S SEED: the shared table is «Паритет»'s
-# (testdata/requests_body.tsv in the product), and when its committed main keeps one, this file is a copy of it, byte
-# for byte (tests/test_requests_body_table.py).
+# How a request's body value is written into its row, and how any JSON value the platform puts in a row is written (the
+# canonical form): one table for the course (Source/tests/testdata/requests_body.tsv; w2cplatform/canonical.py) and the
+# product (testdata/requests_body.tsv at its root; canonjson.go, requests.go), byte for byte. Owner: «Паритет».
+# Rules: «Архитектор», 2026-10-05/06. The course's seed (2d517c88) merged in whole.
 #
-# Each row is filed as `POST /requests {"unit": <a unit>, "v": <raw>}` in a family whose schema says of `v` only
-# `maxLength: 32`, and the row's field `v` is read back.
+# THE STAND both tests file through: a family whose schema says `v: {maxLength: 32}` (a `request` row: POST /requests
+# {"unit": <a unit>, "v": <body>}, the row's field `v` read back); and a table `counters` whose field `doc` is of type `json` (a `json` row: POST /counters {"name": …, "doc": <body>}, the unit's `doc` read back); a refusal is the 400's `fault`.
+#
+# THE RULES
+#   scalars in a request row
+#     true / false      the JSON text: true, false (not Python's True)
+#     null              at the top level of ANY field, a `json` one too: the field is ABSENT from the row (its default
+#                       stands); an empty string is the empty string; inside a JSON value a null stays null
+#     a number          exactly its digits, never through a float (Go: json.Number); a whole value in integer digits
+#                       (5, not 5.0; -0 is 0); otherwise the shortest decimal that reads back as the same float, never
+#                       an exponent; one past float64 (1e400) is refused: not_number
+#     a string          as it is, unquoted, its own quotes its own; a string that looks like a number or a boolean
+#                       stays the string; what type a field is, the schema says, not the text
+#     length            the schema's maxLength over the WRITTEN text (1e40 is 41 digits: too_long); the writing
+#                       function does not judge length
+#   the canonical JSON — a dict or a list in a request row, and any value of a `json` field: compact, a dict's keys
+#   sorted, UTF-8 as it is (no \u escaping; no HTML escaping of < > &; / not escaped), U+2028/2029 raw, control
+#   characters as json.dumps(ensure_ascii=False) writes them (\b \f \n \r \t short, the rest \u00xx lowercase),
+#   numbers inside by the scalar rule, a null inside stays null. A `json` field's value is taken AS IT IS: a string
+#   is a string document ("s" is stored "s"), never parsed again; the page parses its own text box before it sends,
+#   its «not JSON» under the box (ADR-0002); not_json at a `json` field is only a body that is not JSON. Round trip:
+#   the value read back and filed again is stored the same, byte for byte — both tests file every taken `json` row a
+#   second time with the value they read. The ceiling of a `json` field: its canonical text's BYTES of UTF-8,
+#   JSON_CEILING 4000: too_long. One function each side: canonical_json (course), CanonicalJSON (product).
+#   ANY door of the platform: a body that is not UTF-8, holds a lone surrogate or a number past float64 is a 400 with
+#   `fault` (not_json / not_number), its words those of fault.tsv (lesson 09).
+#   not JSON is refused, never repaired: NaN, Infinity, a lone surrogate (\ud800) — not_json, not U+FFFD.
 #
 # Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
-#   raw      the value as the body carries it, JSON text exactly as sent (`5.0` is not `5`)
-#   written  the text of the row's field: a string as it is, without quotes; true/false; a number whose value is whole
-#            in integer digits — an integer in exactly the digits it came with, never through a float — any other in
-#            its shortest decimal form, never an exponent; a list or a map as canonical JSON (compact, keys sorted,
-#            UTF-8 as it is: control characters as JSON writes them, \b \f \n \r \t short, U+2028/U+2029 raw, < > & /
-#            not escaped). Two words are no text: (absent) — the row has no such field (`null`); (refused) — the request
-#            is refused, 400 (not JSON; or the text is longer than the schema's maxLength, a number's text too)
-#   note     why the row is here
-# A text that would hold a tab or a line break is no row here: the table could not say it.
-true	true	a JSON boolean, not Python's True
-false	false	and not False
-null	(absent)	a null is no field at all: a holder tells an empty string from nothing
-""		an empty string is a field, empty
-5	5	an integer in its digits
-5.0	5	a whole value in integer digits, not 5.0
-1000.0	1000	json.dumps says 1000.0
-1.50	1.5	the shortest decimal
--2.5	-2.5	a negative number
-0.1	0.1	the shortest decimal that reads back as the same float
-1e3	1000	no exponent: a whole value in digits
-1E+3	1000	an exponent spelt otherwise
-1e-7	0.0000001	json.dumps says 1e-07
--0	0	zero has no sign: equal values, one text
--0.0	0	a negative zero is zero
-12345678901234567890	12345678901234567890	past 2^53: never through a float
-99999999999999999999999999999999	99999999999999999999999999999999	32 digits: as long as maxLength lets
--99999999999999999999999999999999	(refused)	33 characters as written: past maxLength, a number's text too
-1e40	(refused)	41 digits as written
-"text"	text	a string as it is, without quotes
-"text, as \"it\" is"	text, as "it" is	its quotes are its own
-"5.0"	5.0	a string that looks like a number stays the string
-"true"	true	and one that looks like a boolean
-"é ü"	é ü	UTF-8 as it is
-"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	(refused)	a string past maxLength: the schema says so
-{"b": 2, "a": [1]}	{"a":[1],"b":2}	a map: compact, keys sorted
-[1.50, 1e3, -0]	[1.5,1000,0]	numbers inside JSON by the same rule
-[12345678901234567890]	[12345678901234567890]	an integer inside JSON in exactly its digits
-{"s": "<&>/"}	{"s":"<&>/"}	no HTML escape, no escaped slash
-{"e": "\b\f\n\u0001"}	{"e":"\b\f\n\u0001"}	control characters as JSON writes them
-{"l": "\u2028"}	{"l":" "}	U+2028 raw, not escaped as Go writes it
-{"é": true}	{"é":true}	a key in UTF-8 as it is
-[]	[]	an empty list
-{}	{}	an empty map
-{"z": null, "y": false}	{"y":false,"z":null}	a null inside JSON stays null
-NaN	(refused)	not JSON, though Python reads it
-1e999	(refused)	past what a JSON number holds here
-"\ud800"	(refused)	a lone surrogate is no character: not JSON
+#   field    request — the field `v` of a request row; json — the field `doc` of type json
+#   body     the value as the body carries it, JSON text exactly as sent (5.0 is not 5)
+#   stored   the text the row holds; <absent> — the field is not in the row; <empty> — the empty string
+#   fault    empty (the tab is still there: every row has four columns) — taken; too_long — past the schema's maxLength (request) or JSON_CEILING (json);
+#            not_number — a number past float64; not_json — a body that is not JSON
+request	true	true	
+request	false	false	
+request	null	<absent>	
+request	""	<empty>	
+request	5	5	
+request	5.0	5	
+request	-0.0	0	
+request	0.1	0.1	
+request	-2.5	-2.5	
+request	1e21	1000000000000000000000	
+request	1e-7	0.0000001	
+request	1.5e-10	0.00000000015	
+request	9007199254740993	9007199254740993	
+request	1e33		too_long
+request	"abc"	abc	
+request	"5"	5	
+request	{"b":1,"a":2}	{"a":2,"b":1}	
+request	{"a": [1, 2.0]}	{"a":[1,2]}	
+request	{"t":"<b>&"}	{"t":"<b>&"}	
+request	{"ж":"ё"}	{"ж":"ё"}	
+json	"{\"b\": 1, \"a\": 2}"	"{\"b\": 1, \"a\": 2}"	
+json	"{oops"	"{oops"	
+json	{"b":1,"a":[1,2.0]}	{"a":[1,2],"b":1}	
+json	{"t":"<b>&"}	{"t":"<b>&"}	
+json	{"x":1e-7}	{"x":0.0000001}	
+json	{"x":1000.0}	{"x":1000}	
+json	{"x":1.50}	{"x":1.5}	
+json	{"x":1e3}	{"x":1000}	
+json	{"n":9007199254740993}	{"n":9007199254740993}	
+json	{"c":"a\u0001b\tc"}	{"c":"a\u0001b\tc"}	
+json	{"s":"\u2028"}	{"s":" "}	
+json	{"q":"\"\\/"}	{"q":"\"\\/"}	
+json	{"s":"жжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжж"}	{"s":"жжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжж"}	
+json	{"s":"жжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжж"}		too_long
+json	{"x":-0.0}	{"x":0}	
+request	1000.0	1000	
+request	1.50	1.5	
+request	1e3	1000	
+request	1E+3	1000	
+request	-0	0	
+request	12345678901234567890	12345678901234567890	
+request	99999999999999999999999999999999	99999999999999999999999999999999	
+request	-99999999999999999999999999999999		too_long
+request	1e40		too_long
+request	"text"	text	
+request	"text, as \"it\" is"	text, as "it" is	
+request	"5.0"	5.0	
+request	"true"	true	
+request	"é ü"	é ü	
+request	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"		too_long
+request	{"b": 2, "a": [1]}	{"a":[1],"b":2}	
+request	[1.50, 1e3, -0]	[1.5,1000,0]	
+request	[12345678901234567890]	[12345678901234567890]	
+request	{"s": "<&>/"}	{"s":"<&>/"}	
+request	{"e": "\b\f\n\u0001"}	{"e":"\b\f\n\u0001"}	
+request	{"l": "\u2028"}	{"l":" "}	
+request	{"é": true}	{"é":true}	
+request	[]	[]	
+request	{}	{}	
+request	{"z": null, "y": false}	{"y":false,"z":null}	
+request	NaN		not_json
+request	1e999		not_number
+request	1e400		not_number
+json	{"x":1e400}		not_number
+request	"\ud800"		not_json
+json	{"s":"\ud800"}		not_json
+request	Infinity		not_json
+json	{"x":NaN}		not_json
+json	null	<absent>	
+json	"s"	"s"	
+json	"\"s\""	"\"s\""	

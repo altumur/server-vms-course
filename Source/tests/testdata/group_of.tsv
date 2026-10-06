@@ -1,93 +1,162 @@
-# group_of.tsv — an address and the group the platform puts it in (ADR 0053), read by tests/test_group_of_table.py, which
-# builds the field and the grouping from the two declarations below — nothing of any subsystem's spec.
-# The group is the HOST the address names, in one spelling: neither the scheme nor the port is part of it; lower case, no
-# trailing dot; an IP as written once (IPv6 unbracketed, RFC 5952, no zone; IPv4-mapped as IPv4); a percent-escape in a
-# host is not decoded; the host read by the field's `schemes` (a scheme outside the map has none). (none): no group.
-# The only addresses without a group that are taken are the `none` ones; a host nobody can tell is refused, 400.
-# This is the course's seed of the table, until «Паритет» replaces it with the table shared with the product.
+# The group a camera's source puts it in (`placement.group_by: {field: source, cut_at: host}` over a url field that
+# declares its schemes, `fields.source.schemes: {<scheme>: {host, fragment, none} | {}}` — {} is «by the RFC»; one
+# declaration read by the url rule and the grouping alike): one table for the course (Source/, Python) and the product (Go),
+# read the same way by both: Source/tests/testdata/group_of.tsv (course, tests/test_group_of_table.py) and
+# testdata/group_of.tsv at the product's root (w2cplatform TestTheSharedTableOfGroups), byte for byte. Owner: «Паритет». ADR-0053 (the group is the device's host, e3fa789); decisions of «Архитектор», 2026-10-06. Seeded from the product's deviceOf (vms/gate.go), its
+# tests, the course's reviews 8, 10, 13, 14 and the course's seed (7fbcbade), merged.
 #
 # source: {type: url, schemes: {rtsp: {}, http: {}, file: {}, ipint: {fragment: none}, driverpack: {host: path, none: [file]}, mirror: {host: path, fragment: none, none: [local]}}}
 # group_by: {field: source, cut_at: host}
 #
-# Columns, tab-separated: the source; its group, or (none); the fault of a write of it — empty (taken) or `bad_url`.
+# THE RULES
+#   a field's schemes name only what an operator writes into the row and an actuator opens: a scheme with no actuator
+#   is not declared (onvif), one with an actuator comes back with its rows here; an address a platform or a subsystem
+#   builds in memory (ingest://) is no spec key. A scheme not in the field's map is refused, its host unread:
+#   nosuch://10.0.0.5/ below is that case (a made-up scheme: the row is about the map, not about any one scheme).
+#   the group is the source's HOST in one spelling: lowercased, without the root's trailing dot; an IP literal as netip
+#   writes it — IPv6 unbracketed, zero runs folded, zone dropped; IPv4-mapped as the IPv4 address
+#   the scheme and the port are no part of it: rtsp:// and ipint:// to one host, :554 and no port, are one group
+#   ipint: '#' is a character, not a fragment (ipintd reads it so): the host is after the LAST '@'
+#   a '#' under a scheme read by the RFC ({}) is bad_url: a fragment names one place to the rights and another to a
+#   driver that reads '#' as a character (rtsp://h/x#@evil/); `fragment: none` is the one word both read alike
+#   driverpack (`host: path`): the device's address is the path's first segment; the authority is the vendor — the
+#   driver, not the device — and no part of the group; with the path empty the authority serves as the host, so
+#   driverpack://<vendor> is the whole vendor's group; `none: [file]`: driverpack://file/… is a file and in no group
+#   `none` holds in its own scheme only: rtsp://file/x is host `file`; the authority is judged in one spelling
+#   (driverpack://FILE/x is the file; driverpack://file:1/x is not, its group the path's host)
+#   with `cut_at: host` declared, a host that cannot be read is a refusal (400) on both sides, never «taken, no group»
+#   a host that is neither RFC 1123 labels nor an IP literal is refused: a percent-escape, '_', non-ASCII, a numeric
+#   last label that is not the dotted-decimal IPv4 it looks like (010.0.0.50, 10.1, 0x0a.0.0.1)
+#   an authority whose port after the host is not a number (rtsp://cam:hunter2/, rtsp://admin:pw/x@h/) is an unreadable
+#   host: no group, refused (ADR-0053 as «Платформа» made it precise)
+#   refusing is the url rule's business, grouping is group_by's: a source refused whose host can still be read keeps
+#   the group of its host (an old row stays with its neighbours) — the row says the group AND refused; a login or a
+#   password in the path of a `host: path` scheme (admin:Hunter2%40…) is the url rule's own refusal by that option
 #
-# one host, whatever the scheme and the port
-rtsp://nvr50/ch/1	nvr50
-http://nvr50:8080/snap.jpg	nvr50
-ipint://nvr50/Acme/N8	nvr50
-rtsp://nvr50:554/ch/2	nvr50
-rtsp://nvr50	nvr50
-rtsp://nvr50?channel=1	nvr50
-rtsp://nvr50:/ch/1	nvr50
-# one spelling
-rtsp://NVR50/ch/1	nvr50
-RTSP://Nvr50/ch/1	nvr50
-rtsp://nvr50./ch/1	nvr50
-http://Cam.Example.COM.:80	cam.example.com
-rtsp://10.0.0.50/ch/1	10.0.0.50
-rtsp://10.0.0.50./ch/1	10.0.0.50
-rtsp://[::1]/ch/1	::1
-rtsp://[0:0::1]:554/ch/1	::1
-rtsp://[2001:DB8:0:0::1]/x	2001:db8::1
-rtsp://[::ffff:10.0.0.50]/x	10.0.0.50
-rtsp://[fe80::1%25eth0]/x	fe80::1
-# a login is not the host: refused, and on its host all the same
-rtsp://admin:hunter2@nvr50/ch/1	nvr50	bad_url
+# Columns, tab-separated; a line that begins with '#' and an empty line are no row:
+#   source   the camera's source as written (`mirror` is testsub2's scheme: host: path, fragment: none, none: [local])
+#   group    the group; <none> — in no group (a `none` of its scheme, or refused with no host to read)
+#   fault    empty — taken; bad_url — refused at the door, 400 (a word of fault.tsv; the reason in `detail`):
+#            its url rules, no host (a bare path too — a file camera only through its scheme's `none`), or a host no
+#            reader reads as one
+rtsp://10.0.0.50/ch/1	10.0.0.50	
+rtsp://10.0.0.50:554/ch/2	10.0.0.50	
+ipint://u:p@10.0.0.50:8000/Acme/N8	10.0.0.50	bad_url
+http://10.0.0.50/videostream.cgi	10.0.0.50	
+rtsp://10.0.0.50	10.0.0.50	
+rtsp://admin:pw@10.0.0.50:554/stream	10.0.0.50	bad_url
+rtsp://NVR-1/ch/1	nvr-1	
+rtsp://nvr-1./ch/1	nvr-1	
+rtsp://Cam.Example.COM./s	cam.example.com	
+rtsp://[2001:DB8:0:0::1]/s	2001:db8::1	
+rtsp://[2001:db8::1]:554/s	2001:db8::1	
+rtsp://[fe80::1%25eth0]/s	fe80::1	
+rtsp://[::ffff:10.0.0.50]/s	10.0.0.50	
+rtsp://nvr%2Ecorp/s	<none>	bad_url
+rtsp://nvr_1/s	<none>	bad_url
+rtsp://010.0.0.50/s	<none>	bad_url
+rtsp://10.1/s	<none>	bad_url
+rtsp://0x0a.0.0.1/s	<none>	bad_url
+rtsp://ж.example/s	<none>	bad_url
+rtsp:///s	<none>	bad_url
+rtsp://cam:hunter2/	<none>	bad_url
 ipint://cam7#@nvr50/Acme/N8	nvr50	bad_url
+ipint://u:C#pass@nvr50:8000/Acme/N8	nvr50	bad_url
+driverpack://acme/10.0.0.50/ch/17	10.0.0.50	
+driverpack://ACME/10.0.0.50/ch/2	10.0.0.50	
+driverpack://acme/10.0.0.51/ch/1	10.0.0.51	
+driverpack://other/10.0.0.50/ch/1	10.0.0.50	
+driverpack://acme/[fe80::1%25eth0]:80/x	fe80::1	
+driverpack://acme/admin:Hunter2xyz@[FE80::1]:80/ch/1	fe80::1	bad_url
+driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1	10.0.0.5	bad_url
+driverpack://acme	acme	
+driverpack://file/h.mp4	<none>	
+driverpack://file/gate.mp4	<none>	
+file:///media/a.mp4	<none>	bad_url
+/media/a.mp4	<none>	bad_url
+rtsp://file/x	file	
+driverpack://FILE/x	<none>	
+driverpack://file:1/x	x	
+driverpack://acme/[::1]x/ch/1	<none>	bad_url
+driverpack://acme?x/10.0.0.5	acme	
+mirror://local/x	<none>	
+mirror://LOCAL/x	<none>	
+mirror://local:1/x	x	
+mirror://acme/10.0.0.5/y	10.0.0.5	
+mirror://acme/10.0.0.5:9000/y	10.0.0.5	
+mirror://acme/NVR-1./y	nvr-1	
+mirror://acme/[2001:DB8::1]/y	2001:db8::1	
+mirror://acme/[fe80::1%25eth0]:80/y	fe80::1	
+mirror://other/10.0.0.5/z	10.0.0.5	
+mirror://acme	acme	
+mirror://acme/h#frag/x	<none>	bad_url
+mirror://acme/10.0.0.5#frag	<none>	bad_url
+mirror://acme/u:p@10.0.0.5/y	10.0.0.5	bad_url
+mirror://acme/nvr_1/y	<none>	bad_url
+mirror://acme/010.0.0.5/y	<none>	bad_url
+mirror://acme/[::1]x/y	<none>	bad_url
+mirror:///10.0.0.5/y	10.0.0.5	
+rtsp://local/x	local	
+rtsp://h/x#frag	h	bad_url
+nosuch://10.0.0.5/	<none>	bad_url
+rtsp://admin:pw/x@h/	<none>	bad_url
+rtsp://nvr50/ch/1	nvr50	
+http://nvr50:8080/snap.jpg	nvr50	
+ipint://nvr50/Acme/N8	nvr50	
+rtsp://nvr50:554/ch/2	nvr50	
+rtsp://nvr50	nvr50	
+rtsp://nvr50?channel=1	nvr50	
+rtsp://nvr50:/ch/1	nvr50	
+rtsp://NVR50/ch/1	nvr50	
+RTSP://Nvr50/ch/1	nvr50	
+rtsp://nvr50./ch/1	nvr50	
+http://Cam.Example.COM.:80	cam.example.com	
+rtsp://10.0.0.50./ch/1	10.0.0.50	
+rtsp://[::1]/ch/1	::1	
+rtsp://[0:0::1]:554/ch/1	::1	
+rtsp://[2001:DB8:0:0::1]/x	2001:db8::1	
+rtsp://[::ffff:10.0.0.50]/x	10.0.0.50	
+rtsp://[fe80::1%25eth0]/x	fe80::1	
+rtsp://admin:hunter2@nvr50/ch/1	nvr50	bad_url
 ipint://admin:pa@ss@nvr50/Acme/N8	nvr50	bad_url
 rtsp://cam7#@nvr50/ch/1	cam7	bad_url
-# no host to tell: no group, refused
-rtsp://nvr%2Ecorp/ch/1	(none)	bad_url
-rtsp://nvr%2ecorp/ch/1	(none)	bad_url
-rtsp://nvr_50/ch/1	(none)	bad_url
-rtsp://nvr 50/ch/1	(none)	bad_url
-rtsp://-nvr/ch/1	(none)	bad_url
-rtsp://nvr..corp/ch/1	(none)	bad_url
-rtsp://nvré/ch/1	(none)	bad_url
-rtsp://010.0.0.50/ch/1	(none)	bad_url
-rtsp://10.1/ch/1	(none)	bad_url
-rtsp://0x0a.0.0.1/ch/1	(none)	bad_url
-rtsp://256.0.0.1/ch/1	(none)	bad_url
-rtsp://[10.0.0.1]/ch/1	(none)	bad_url
-rtsp://[fe80::1%eth0]/ch/1	(none)	bad_url
-rtsp://[::1/ch/1	(none)	bad_url
-rtsp://[::1]x/ch/1	(none)	bad_url
-rtsp://cam:hunter2/ch/1	(none)	bad_url
-rtsp://nvr50/ch/%zz	(none)	bad_url
-rtsp:///ch/1	(none)	bad_url
-nvr50	(none)	bad_url
-file:///media/a.mp4	(none)	bad_url
-/media/a.mp4	(none)	bad_url
-# a scheme outside the map: no host is read for it, refused
-ftp://nvr50/a	(none)	bad_url
-nosuch://10.0.0.5/	(none)	bad_url
-rtsp://cam:hunter2/	(none)	bad_url
-rtsp://admin:pw/x@h/	(none)	bad_url
-# driverpack://<vendor>/<address>/…: the host is the path's first segment, and the vendor no part of it
-driverpack://acme/10.0.0.50/ch/17	10.0.0.50
-driverpack://acme/10.0.0.50/ch/18	10.0.0.50
-driverpack://other/10.0.0.50/ch/1	10.0.0.50
-driverpack://acme/10.0.0.50:8080/ch/1	10.0.0.50
-driverpack://acme/NVR-1./ch/1	nvr-1
-driverpack://acme/[fe80::1%25eth0]/ch/1	fe80::1
-driverpack://acme	acme
-driverpack://acme/	acme
-driverpack://acme?x/10.0.0.5	acme
-driverpack://acme/[::1]x/ch/1	(none)	bad_url
-driverpack://file/clips/a.mp4	(none)
-driverpack://file	(none)
-driverpack://FILE./clips/a.mp4	(none)
-driverpack://acme/nvr%2Ecorp/ch/1	(none)	bad_url
+rtsp://nvr%2Ecorp/ch/1	<none>	bad_url
+rtsp://nvr%2ecorp/ch/1	<none>	bad_url
+rtsp://nvr_50/ch/1	<none>	bad_url
+rtsp://nvr 50/ch/1	<none>	bad_url
+rtsp://-nvr/ch/1	<none>	bad_url
+rtsp://nvr..corp/ch/1	<none>	bad_url
+rtsp://nvré/ch/1	<none>	bad_url
+rtsp://010.0.0.50/ch/1	<none>	bad_url
+rtsp://10.1/ch/1	<none>	bad_url
+rtsp://0x0a.0.0.1/ch/1	<none>	bad_url
+rtsp://256.0.0.1/ch/1	<none>	bad_url
+rtsp://[10.0.0.1]/ch/1	<none>	bad_url
+rtsp://[fe80::1%eth0]/ch/1	<none>	bad_url
+rtsp://[::1/ch/1	<none>	bad_url
+rtsp://[::1]x/ch/1	<none>	bad_url
+rtsp://cam:hunter2/ch/1	<none>	bad_url
+rtsp://nvr50/ch/%zz	nvr50	bad_url
+rtsp:///ch/1	<none>	bad_url
+nvr50	<none>	bad_url
+ftp://nvr50/a	<none>	bad_url
+driverpack://acme/10.0.0.50/ch/18	10.0.0.50	
+driverpack://acme/10.0.0.50:8080/ch/1	10.0.0.50	
+driverpack://acme/NVR-1./ch/1	nvr-1	
+driverpack://acme/[fe80::1%25eth0]/ch/1	fe80::1	
+driverpack://acme/	acme	
+driverpack://file/clips/a.mp4	<none>	
+driverpack://file	<none>	
+driverpack://FILE./clips/a.mp4	<none>	
+driverpack://acme/nvr%2Ecorp/ch/1	<none>	bad_url
 driverpack://acme/admin:Hunter2@10.0.0.5/ch/1	10.0.0.5	bad_url
-driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1	10.0.0.5	bad_url
-driverpack://acme/10.0.0.5:hunter2/ch/1	10.0.0.5	bad_url
-driverpack://acme/admin:pa/ss@10.0.0.5/ch/1	10.0.0.5	bad_url
-driverpack://acme/admin:X%40nvr%2Ecorp/ch/1	(none)	bad_url
-# mirror://<hub>/<host>/…: the host in the path, `#` a character, `mirror://local/…` no host
-mirror://hub1/Feed.Example/a	feed.example
-mirror://hub2/feed.example:21/b	feed.example
-mirror://hub1/feed.example/c#d	feed.example
-mirror://hub1	hub1
-mirror://local/x	(none)
-mirror://LOCAL./x	(none)
-mirror://hub1/h%2Ecorp/x	(none)	bad_url
+driverpack://acme/10.0.0.5:hunter2/ch/1	<none>	bad_url
+driverpack://acme/admin:pa/ss@10.0.0.5/ch/1	<none>	bad_url
+driverpack://acme/admin:X%40nvr%2Ecorp/ch/1	<none>	bad_url
+mirror://hub1/Feed.Example/a	feed.example	
+mirror://hub2/feed.example:21/b	feed.example	
+mirror://hub1/feed.example/c#d	feed.example	
+mirror://hub1	hub1	
+mirror://LOCAL./x	<none>	
+mirror://hub1/h%2Ecorp/x	<none>	bad_url
+rtsp://h/x#@evil/	h	bad_url

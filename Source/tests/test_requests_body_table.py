@@ -1,10 +1,12 @@
-"""One table of how a request's body value is written into its row, for the course and the product
-(`testdata/requests_body.tsv`; the architect with «Паритет», 2026-10-05, ADR 0012): a string as it is, `true`/`false`, a
-whole number in integer digits, any other in its shortest decimal, `null` no field at all, a list or a map in the one
-canonical form of a JSON value in a row (`w2cplatform/canonical.py`, the product's `CanonicalJSON`). The door wrote
-`str(v)` — `True`, `None`, `5.0` — and a holder in Go read another value than one in Python. The table is «Паритет»'s:
-when the product's committed main keeps it, the course's file is a copy, byte for byte; until then it is the course's
-seed, in the same columns (`raw`, `written`, `note`)."""
+"""One table of how a body value is written into its row, for the course and the product (`testdata/requests_body.tsv`;
+the architect with «Паритет», 2026-10-05/06, ADR 0012): a string as it is, `true`/`false`, a whole number in integer
+digits, any other in its shortest decimal, `null` no field at all, a list or a map — and any value of a `json` field — in
+the one canonical form of a JSON value in a row (`w2cplatform/canonical.py`, the product's `CanonicalJSON`). The door
+wrote `str(v)` — `True`, `None`, `5.0` — and a holder in Go read another value than one in Python. The table is
+«Паритет»'s, a copy of the product's byte for byte, in the shared columns `field, body, stored, fault`: `field` is
+`request` (the field `v` of a request row, its family's schema `v: {maxLength: 32}`) or `json` (the field `doc` of type
+`json` of a table `counters`); `stored` is the row's text, `<absent>` — no field, `<empty>` — the empty string; `fault`
+is a word of `fault.tsv`, empty when taken."""
 from __future__ import annotations
 
 import json
@@ -13,21 +15,26 @@ import os
 from tests.productdir import SOURCE, product_file
 
 TABLE = os.path.join(SOURCE, "tests", "testdata", "requests_body.tsv")
-ABSENT, REFUSED = "(absent)", "(refused)"
+ABSENT, EMPTY = "<absent>", "<empty>"
+FIELDS = ("request", "json")
 
 
 def _rows():
+    """(line, field, body, stored, fault) of every row; `stored` with `<empty>` read as the empty string."""
     with open(TABLE, encoding="utf-8", newline="") as f:
         for i, line in enumerate(f.read().split("\n"), 1):
             if not line or line.startswith("#"):
                 continue
             cols = line.split("\t")
-            assert len(cols) == 3, f"line {i}: a row is raw, written, note: {line!r}"
-            yield i, cols
+            assert len(cols) == 4 and cols[0] in FIELDS, f"line {i}: a row is field, body, stored, fault: {line!r}"
+            field, body, stored, fault = cols
+            assert bool(fault) != bool(stored), f"line {i}: a row is stored or refused, one of the two: {line!r}"
+            yield i, field, body, "" if stored == EMPTY else stored, fault
 
 
 def _family():
-    """A family of deadlines whose schema says of `v` only `maxLength: 32` (the VMS's arguments say as much), one unit."""
+    """The table's stand: a family of deadlines whose schema says of `v` only `maxLength: 32` (the VMS's arguments say
+    as much), one unit; and a table `counters` whose field `doc` is of type `json`."""
     import tempfile
 
     from tests.conftest import Served
@@ -39,6 +46,8 @@ def _family():
     spec = SubsystemSpec.from_dict({
         "name": "jar", "unit": {"rows": "jars", "id": "name", "fields": {"name": {"type": "string"}}},
         "placement": {"capacity": {"from": "capacity", "default": 4}},
+        "tables": {"counters": {"key": "{name}", "fields": {"name": {"type": "string", "required": True},
+                                                            "doc": {"type": "json"}}}},
         "requests": {"schema": {"type": "object", "required": ["unit"], "additionalProperties": False,
                                 "properties": {"unit": {"type": "string"}, "v": {"maxLength": 32}}},
                      "valid_for": 30, "most_valid": 600}})
@@ -51,31 +60,45 @@ def _family():
 
 
 def test_every_body_value_of_the_shared_table_is_written_into_the_row_as_the_table_says():
-    """Each row is filed through the door — the body's bytes as `raw` says them, so `5.0` arrives as `5.0` — and the
-    row's field is read back: `written` is its text; `(absent)` — no field; `(refused)` — 400, nothing written."""
-    if not os.path.exists(TABLE):
-        print("  no testdata/requests_body.tsv: nothing to read")
-        return
+    """Each row is filed through the door — the body's bytes as the table writes them, so `5.0` arrives as `5.0`: a
+    `request` row as `v` of `POST /requests`, a `json` row as `doc` of `POST /counters` — and the row's field is read
+    back from the store: `stored` is its text, `<absent>` no field; a `fault` is a 400 saying that word, nothing
+    written. A `json` row taken is filed a second time with the value the door reads back (`GET /counters/<name>`, as
+    a client writes it again): the row is the same, byte for byte."""
     vars_, served = _family()
-    wrong, n = [], 0
+    wrong, n = [], {"request": 0, "json": 0}
     with served as call:
-        for i, (raw, written, _) in _rows():
-            n += 1
-            rid = f"r{i}"
-            st, out = call("POST", "/requests", raw=f'{{"unit": "jar/a", "v": {raw}}}'.encode(), key=rid)
-            row = vars_.get(f"jar/requests/{rid}")[0]
-            if written == REFUSED:
-                if st != 400 or row is not None:
-                    wrong.append(f"line {i}: {raw} is not refused: {st} {out}")
+        for i, field, body, stored, fault in _rows():
+            n[field] += 1
+            if field == "request":
+                key, path, raw = f"jar/requests/r{i}", "/requests", f'{{"unit": "jar/a", "v": {body}}}'
+                name = "v"
+            else:
+                key, path, raw = f"jar/counters/c{i}", "/counters", f'{{"name": "c{i}", "doc": {body}}}'
+                name = "doc"
+            st, out = call("POST", path, raw=raw.encode(), key=f"r{i}")
+            row = vars_.get(key)[0]
+            if fault:
+                if st != 400 or (out or {}).get("fault") != fault or row is not None:
+                    wrong.append(f"line {i}: {field} {body} is not refused {fault}: {st} {out}")
                 continue
-            if st != 202 or row is None:
-                wrong.append(f"line {i}: {raw} is refused: {st} {out}")
+            if st not in (201, 202) or row is None:
+                wrong.append(f"line {i}: {field} {body} is refused: {st} {out}")
                 continue
-            got = row.get("v", ABSENT) if written == ABSENT else row.get("v")
-            if (written == ABSENT and "v" in row) or (written != ABSENT and got != written):
-                wrong.append(f"line {i}: {raw}\n    written {row.get('v', ABSENT)!r}\n    the table: {written!r}")
+            if (stored == ABSENT) != (name not in row) or (stored != ABSENT and row[name] != stored):
+                wrong.append(f"line {i}: {field} {body}\n    stored {row.get(name, ABSENT)!r}\n    the table: {stored!r}")
+                continue
+            if field == "json":
+                st, back = call("GET", f"/counters/c{i}")
+                again = {"name": f"c{i}b", **({"doc": back["doc"]} if "doc" in back else {})} if st == 200 else None
+                st2, out2 = call("POST", "/counters", raw=json.dumps(again, ensure_ascii=False).encode(), key=f"r{i}b") \
+                    if again is not None else (st, back)
+                twice = vars_.get(f"jar/counters/c{i}b")[0]
+                if st2 != 201 or twice is None or twice.get(name, ABSENT) != row.get(name, ABSENT):
+                    wrong.append(f"line {i}: {body} read back and filed again is "
+                                 f"{(twice or {}).get(name, ABSENT)!r} ({st2} {out2}), first {row.get(name, ABSENT)!r}")
     assert not wrong, f"{len(wrong)} rows of {os.path.basename(TABLE)} go another way:\n  " + "\n  ".join(wrong)
-    assert n >= 20, f"the table is too short: {n} rows"
+    assert n["request"] >= 20 and n["json"] >= 10, f"the table is too short: {n}"
 
 
 def test_a_request_is_named_by_its_fields_text_and_an_int_of_its_key_in_exactly_its_digits():

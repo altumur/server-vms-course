@@ -118,15 +118,19 @@ def test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_decla
     assert url_host("x://[0:0::1]:9/") == url_host("x://[::1]") == "::1"
     assert url_host("x://[::FFFF:10.0.0.5]/") == url_host("x://10.0.0.5./") == "10.0.0.5"
     assert url_host("x://[fe80::1%25en0]/") == "fe80::1"
-    for none in ("x://h%2Ecorp/", "x://h_1/", "x://010.0.0.5/", "x://[fe80::1%en0]/", "x://h:pw/", "x://h/%zz",
+    for none in ("x://h%2Ecorp/", "x://h_1/", "x://010.0.0.5/", "x://[fe80::1%en0]/", "x://h:pw/",
                  "x:///a", "h", "", "x://a b/"):
         assert url_host(none) == "", none
+    assert url_host("x://h/%zz") == "h"              # the path's broken escape is the url rule's refusal, the host still read
     assert url_host("x://a#@h/") == "a" and url_host("x://a#@h/", {"x": {"fragment": "none"}}) == "h"
     hub = {"m": {"host": "path", "none": ["local"]}}
     assert url_host("m://hub1/H.Example/a", hub) == url_host("m://hub2/h.example:21/b", hub) == "h.example"
     assert url_host("m://hub1", hub) == url_host("m://hub1/", hub) == "hub1"           # no host in the path: the authority
-    assert url_host("m://local/x", hub) == url_host("m://LOCAL", hub) == url_host("m://u@local.:9/x", hub) == ""
-    assert url_host("m://hub/a:b%40h/x", hub) == url_host("m://hub/a:b/c@h/x", hub) == "h"   # a login set aside
+    assert url_host("m://local/x", hub) == url_host("m://LOCAL.", hub) == url_host("m://local", hub) == ""
+    assert url_host("m://local:9/x", hub) == url_host("m://u@local/x", hub) == "x"   # `none` is the authority as written
+    assert url_host("m:///h/x", hub) == "h"                                    # an empty vendor: the spec's schema to refuse
+    assert url_host("m://hub/a:b%40h/x", hub) == url_host("m://hub/a:b@h:80/x", hub) == "h"   # a login set aside
+    assert url_host("m://hub/a:b/c@h/x", hub) == url_host("m://hub/h:pw/x", hub) == ""   # a port no number: a login's
     assert url_host("m://hub/a:b%40h%2Ecorp/x", hub) == ""                     # a host only decoding makes is none
     # testsub2: a tally's feed by its host — a mirror's in its path, and the shelf's own copy (`local`) none
     spec = SubsystemSpec.load(os.path.join(os.path.dirname(__file__), "testdata", "testsub2.subsystem.yaml"))
