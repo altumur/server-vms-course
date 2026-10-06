@@ -191,6 +191,11 @@ display:
     new_sub: Подзона
     add_here: Добавить счёт сюда
     new_group_note: Зона создана — добавьте в неё счёт, иначе она не сохранится
+    remove: убрать из зоны
+    not_in: Не в зоне — попадёт в «без зоны».
+    add_to: Добавить в зону
+    no_others: других зон нет
+    new_group: Новая зона
   general: Счёт
   fields: {name: Имя, mode: Режим, id: ID}
   # `lane` is no field of the row: its worker says it in the unit's status (form[].status), and its values are free words
