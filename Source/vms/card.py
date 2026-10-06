@@ -62,7 +62,10 @@ or `network` volume like a server's — and is not built here.
 # **What it does NOT do.** No obsd, no `Session` — `CardRecorder` is built with `NO_ENGINE`, which refuses every
 # call, so a path that still reached for the engine fails loudly in the tests instead of quietly on a camera. No
 # archive door: the card is read by asking the camera (`answer_range`, the camera's answer to a range request — М12
-# Lesson 16, the ingest), never by a door on the camera that nobody can reach.
+# Lesson 16, the ingest), never by a door on the camera that nobody can reach. So its heartbeat names its volume and
+# never a `url`: the platform counts no holder of the card (`/rec/where/volumes/<card>` is 404, `X-Unreachable`). The
+# product's camera serves `/timeline` and `/segment` from its card and says `url` only while that door listens.
+# двери на камере в курсе нет — урок, не паритет (ADR-0015, долг «Лекций»)
 #
 # ## Public API
 # - `memory_split(budget)` — `(ring, queue, piece)`; `MEMORY_BUDGET`, `RING_BYTES`, `QUEUE_BYTES`, `PIECE_BYTES`.

@@ -16,7 +16,7 @@ import urllib.request
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.spec import SpecController
 from vms import keeps, volumes
-from vms.archive import event_log
+from vms.archive import STITCH, event_log
 from vms.config import REC_SPEC
 from vms.worker import fake_samples
 from tests.vmsconftest import TEST_QUOTA, Box, door, footage, recorder, store
@@ -282,7 +282,7 @@ def test_kept_footage_the_incidents_ring_wrote_over_is_in_the_heartbeat_with_its
     held = {kp.id: k.keep_held[(kp.id, "7")] for kp in (first, second, third)}
     assert held[first.id] < 300                                        # the oldest went first
     hb = k.heartbeat_extra()
-    want = {kp.id: round(300 - held[kp.id]) for kp in (first, second, third) if 300 - held[kp.id] > k.LOST_SLACK}
+    want = {kp.id: round(300 - held[kp.id]) for kp in (first, second, third) if 300 - held[kp.id] >= k.LOSS_SLACK}
     assert first.id in want and hb["incidents_lost"] == want, (hb.get("incidents_lost"), held)
     assert all(type(s) is int for s in hb["incidents_lost"].values())
     k.keep_pass()                                                      # the alarm is not said again; the field still is
@@ -298,13 +298,13 @@ def test_a_closed_incidents_ring_whose_oldest_footage_is_kept_says_that_keep_is_
     going first is what a ring is for: once the keep whose minutes are oldest is lifted, nothing is at risk."""
     box, k, kps = _overfilled()
     oldest = k.store.coverage("7")[0][0]
-    under = [kp.id for kp in kps if kp.since - k.LOST_SLACK <= oldest <= kp.until]
+    under = [kp.id for kp in kps if kp.since - STITCH <= oldest <= kp.until]
     assert under and k.heartbeat_extra()["incidents_at_risk"] == sorted(under)
     for kid in under:
         keeps.delete(box.vars, kid)
     k.keep_pass()
     oldest = k.store.coverage("7")[0][0]
-    assert not any(kp.since - k.LOST_SLACK <= oldest <= kp.until for kp in kps if kp.id not in under)
+    assert not any(kp.since - STITCH <= oldest <= kp.until for kp in kps if kp.id not in under)
     assert "incidents_at_risk" not in k.heartbeat_extra()
 
 
@@ -436,7 +436,12 @@ def test_a_garbled_keep_over_a_recording_this_volume_holds_is_said_garbled_on_it
     box.vars.put("rec/keeps/7-bad", {"cam": "7", "from": "yesterday", "to": str(t), "recordings": '["7"]'})
     box.vars.put("rec/keeps/9-bad", {"cam": "9", "from": "yesterday", "to": str(t), "recordings": '["9"]'})
     side = src.keep_side_pass()
-    assert side == {"7-bad": {"state": "garbled", "why": "its row does not parse"}}, side   # not 9's: none of it here
+    assert side == {"7-bad": {"state": "garbled", "why": "its row does not parse", "garbled_since": t}}, side   # not 9's
+    box.wall.advance(60)
+    assert src.keep_side_pass()["7-bad"]["garbled_since"] == t                # since when this recorder sees it so
+    assert src.heartbeat_extra()["keeps"]["7-bad"]["state"] == "garbled"
+    box.vars.put("rec/keeps/7-bad", {"cam": "7", "from": str(t - 600), "to": str(t), "recordings": '["7"]'})
+    assert src.keep_side_pass()["7-bad"]["state"] != "garbled"                # mended: what it holds, said as such
 
 
 def test_not_being_able_to_read_the_keeps_is_not_there_are_none():
@@ -588,9 +593,9 @@ def test_a_keep_that_stays_garbled_for_an_hour_is_an_alarm_once_per_episode_and_
     bad = {"cam": "7", "from": "yesterday", "to": str(t), "note": "", "by": "anna", "recordings": '["7"]'}
     box.vars.put("rec/keeps/7-bad", bad)
     state = k.keep_pass()
-    assert state["7-bad"]["state"] == "garbled" and state["7-bad"]["garbled_since"] == t
-    assert state["7-bad"]["why"] == "its row does not parse"                  # the product's word, and why
-    assert k.heartbeat_extra()["keeps"]["7-bad"]["garbled_since"] == t
+    assert "state" not in state["7-bad"] and state["7-bad"]["garbled_since"] == t
+    assert state["7-bad"]["why"] == "its row does not parse"
+    assert "7-bad" not in k.heartbeat_extra().get("keeps", {})          # the holder has no word for it: the product's
     box.wall.advance(k.KEEP_GARBLED_AFTER - 60)
     k.keep_pass()
     assert _events(box, "archive.keep.garbled") == []                  # not yet an hour: a hand edit has its chance
@@ -606,7 +611,7 @@ def test_a_keep_that_stays_garbled_for_an_hour_is_an_alarm_once_per_episode_and_
     assert len(_events(box, "archive.keep.garbled")) == 2              # again a day later, while it lasts
 
     box.vars.put("rec/keeps/7-bad", {**bad, "from": str(t - 600)})    # mended: the episode is over
-    assert "garbled" not in k.keep_pass()["7-bad"]
+    assert "garbled_since" not in k.keep_pass()["7-bad"]
     box.vars.put("rec/keeps/7-bad", bad)                               # garbled again: a new hour from now
     again = box.wall()
     assert k.keep_pass()["7-bad"]["garbled_since"] == again
