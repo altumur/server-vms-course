@@ -349,18 +349,18 @@ def gateway() -> None:
 # its epochs, its slot and its hold) and the controller must not (its grant is placement; one row, one writer), so
 # `vms jobs`, with the console's grant of the job's family, reads the heartbeats and is where the fact lands. See
 # `vms/jobs.py`.
-def _reap_loop(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0, journal=None) -> None:
-    host.every(lambda: _reap_turn(controllers, rec_ctl, det_ctl, survey_ctl, journal=journal), every)
+def _reap_loop(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
+    host.every(lambda: _reap_turn(controllers, rec_ctl, det_ctl, survey_ctl), every)
 
 
 # One turn of it, in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): `scan_what_arrived`
 # read every detector again for every span a recorder closed, `keep_what_fired` every recording for every hit, and
 # `reap` and `forget_finished` each every job — some 55 000 reads a turn at a thousand of each. Each key is read once a
 # turn now; what a step writes, the next reads back from the store.
-def _reap_turn(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, now=None, journal=None) -> None:
+def _reap_turn(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, now=None) -> None:
     import time
     from w2cplatform.contract import one_pass
-    from .jobs import ask_for_footage, forget_finished, keep_what_fired, reap, scan_what_arrived, seal_keeps
+    from .jobs import ask_for_footage, forget_finished, keep_what_fired, reap, scan_what_arrived
     every_ctl = [c for c in (*controllers, rec_ctl, det_ctl, survey_ctl) if c is not None]
     with one_pass(*every_ctl):
         for c in controllers:
@@ -397,13 +397,6 @@ def _reap_turn(controllers, rec_ctl=None, det_ctl=None, survey_ctl=None, now=Non
                     logging.info("%s: asked the recorder to keep %d stretch(es)", survey_ctl.spec.name, kept)
             except Exception:                         # noqa: BLE001
                 logging.exception("keeping what fired failed in %s — those minutes stay on the device", survey_ctl.spec.name)
-        if rec_ctl is not None:
-            try:
-                sealed = seal_keeps(rec_ctl, time.time() if now is None else now, journal)   # a whole copy's seal, once
-                if sealed:
-                    logging.info("%s: %d keep recording(s) sealed", rec_ctl.spec.name, sealed)
-            except Exception:                         # noqa: BLE001
-                logging.exception("sealing keeps failed in %s — their copies stay unsealed until it works", rec_ctl.spec.name)
 
 
 # (The answered requests, and the ones nobody answered, are cleared by the platform's console — `w2cplatform/requests.py`,
@@ -495,11 +488,7 @@ def jobs() -> None:
     srv = door_server((os.environ.get("JOBS_HOST", "127.0.0.1"), int(os.environ.get("JOBS_PORT", "8095"))), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     logging.info("the VMS's jobs; their numbers on %s/metrics", srv.server_address)
-    import time
-    from w2cplatform.journal import Journal
-    journal = Journal(runtime.events_root(os.environ), "jobs", time.time)   # `audit/jobs`: the seals it wrote (`seal_keeps`)
-    threading.Thread(target=_reap_loop, args=([job_ctl], rec_ctl, det_ctl, survey_ctl), kwargs={"journal": journal},
-                     daemon=True).start()
+    threading.Thread(target=_reap_loop, args=([job_ctl], rec_ctl, det_ctl, survey_ctl), daemon=True).start()
     threading.Thread(target=_requests_loop, args=(rec_ctl, det_ctl, job_ctl), daemon=True).start()   # a request lives 30 s: looked at every 2
     stop.wait()
     srv.shutdown()

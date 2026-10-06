@@ -3096,7 +3096,7 @@ class RecWorker(VmsWorker):
                 missing += short
                 if held > 0 and short <= 0:
                     whole.append(rec)                    # the copy of this recording is whole: what may be sealed
-            # …and over which minutes: a seal is bound to the interval it was taken over (`jobs.seal_keeps`)
+            # …and over which minutes: a seal is bound to the interval it was taken over (`_seal`)
             entry = {"copied": round(got, 1), "missing": round(missing, 1), "from": k.since, "to": k.until}
             self._keep_uncopied(k, entry, missing, now)
             for rec in sorted(set(touched)):
@@ -3111,8 +3111,8 @@ class RecWorker(VmsWorker):
             # What was said of the recordings not copied this pass is carried, each — it was the whole map, and only
             # when this pass copied nothing, so a pass that copied one recording dropped the others' digests — while the
             # keep says the same interval: the digest of other minutes is not this keep's. A whole copy with no digest
-            # known (a recorder started again) is read once: `vms jobs` seals what is whole and has a digest
-            # (`jobs.seal_keeps`; ADR-0057, дополнение п. 3).
+            # known (a recorder started again) is read once, and what is whole and has a digest is sealed (`_seal`;
+            # ADR-0057, дополнение п. 3).
             was = self.keep_state.get(k.id, {})
             carried = was.get("sha256", {}) if (was.get("from"), was.get("to")) == (k.since, k.until) else {}
             sums = {**carried, **entry.get("sha256", {})}
@@ -3127,6 +3127,7 @@ class RecWorker(VmsWorker):
                 entry["sha256"] = sums
             if whole:
                 entry["whole"] = sorted(whole)
+                self._seal(k, {rec: sums[rec] for rec in whole if rec in sums}, now)
             state[k.id] = entry
         for k in unread:                                 # not read is not lifted: what it holds stays counted
             state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}
@@ -3319,6 +3320,45 @@ class RecWorker(VmsWorker):
             held[key] = max(held.get(key, 0.0), v)
         return held
 
+    # THE SEAL, WRITTEN ONCE (ADR-0057, дополнение п. 3: пишет рекордер тома incidents; the product's `SealKeeps`). The
+    # first time a recording's copy is whole — held, and short of nothing a source has (`keep_pass`'s `whole`) — its
+    # digest goes into the keep's seal, `rec/sealed/<keep>` (`keeps.Seal`: `recordings`, `from`, `to`, `sealed_at`), an
+    # object of rec's `objects.rows`: a row of the store on a cluster, which this recorder's worker role writes and the
+    # console only reads. Created create-only (`put_new`); a recording added to a seal of the same interval, or a seal of
+    # another interval replaced — an operator rewrote the keep — by CAS on the bytes read (`put_at`): whoever wrote it
+    # meanwhile wins, and the next pass seals what is left. A recording sealed once is never sealed again, whatever the
+    # volume holds later: a seal that followed the volume would vouch for whatever is there now. A seal that does not
+    # read is left as it is — counted (`keeps.SEALS`), not overwritten — and its keep is not sealed. Each recording sealed
+    # is an event `archive.keep.sealed`, durable, with its digest.
+    def _seal(self, k, sums: dict, now: float) -> None:
+        from . import keeps
+        if not sums or not k.since < k.until:
+            return
+        path = keeps.seal_key(k.id)
+        try:
+            raw, index = self.objects.get_at(path)
+        except (OSError, AttributeError) as e:
+            log.info("%s: keep %s: its seal cannot be read now (%s): the next pass seals", self.name, k.id, e)
+            return
+        seal = keeps.SEALS.read(path, lambda: keeps.parse_seal(raw))
+        if raw and seal is None:
+            return                                       # a seal that does not read is not overwritten: counted and said
+        have = seal.of(k) if seal is not None else {}
+        fresh = {rec: d for rec, d in sums.items() if rec not in have}
+        if not fresh:
+            return
+        data = keeps.Seal(tuple(sorted({**have, **fresh}.items())), k.since, k.until, round(now, 3)).to_bytes()
+        try:
+            done = self.objects.put_new(path, data) if raw is None else self.objects.put_at(path, data, index)
+        except (OSError, AttributeError) as e:
+            log.info("%s: keep %s not sealed this pass (%s): the next pass seals", self.name, k.id, e)
+            return
+        if not done:
+            return                                       # written meanwhile: the next pass reads it and seals what is left
+        for rec, digest in sorted(fresh.items()):
+            self.write_event(rec, now, "archive.keep.sealed", epoch=0, durable=True, cam=k.cam, keep=k.id, recording=rec,
+                             sha256=digest, volume=self.volume, **{"from": k.since, "to": k.until})
+
     # A KEEP'S SEAL CHECKED, WHERE ITS COPY IS (ADR-0015: the bytes bypass the console; ADR-0057, point 3; the product's
     # `verify` in recproc/keeper.go): `POST <door>/keeps/<keep>/verify?recording=<id>` — the kept interval read NOW in
     # the incidents volume this recorder holds and compared with its seal, asked before the footage is handed to
@@ -3328,11 +3368,10 @@ class RecWorker(VmsWorker):
     # naming `keeps`) — and only that recording is checked. A door with no key in the store (its open mode) and no
     # `?recording=` checks every recording of the keep.
     #
-    # THE SEAL is the subsystem's own record, `rec/sealed/<keep>` (`keeps.Seal`; ADR-0057, дополнение п. 3), set ONCE
-    # per recording — the digest of the copy when the incidents volume first held it whole — by `vms jobs`
-    # (`jobs.seal_keeps`), not by this recorder: the archive that holds the footage is not the one that vouches for it,
-    # and no table door serves the family. A seal that moved with every pass, or aged out with an event, would prove
-    # nothing. It is bound to the interval it was taken over: a keep whose row says other minutes now is not sealed by it
+    # THE SEAL is the subsystem's own record, `rec/sealed/<keep>` (`keeps.Seal`; ADR-0057, дополнение п. 3: пишет
+    # рекордер тома incidents), set ONCE per recording — the digest of the copy when the incidents volume first held it
+    # whole — by the recorder that holds the copy (`_seal`), with its worker role; the console only reads the family, and
+    # no table door serves it. A seal that moved with every pass, or aged out with an event, would prove nothing. It is bound to the interval it was taken over: a keep whose row says other minutes now is not sealed by it
     # (`Seal.of`) — "not sealed yet" — until the next turn seals it anew. The digest now is `keep_digest`'s, the same
     # function that made the one sealed. The answer, the product's words:
     #

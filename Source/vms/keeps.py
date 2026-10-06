@@ -9,9 +9,9 @@
 #   the footage    is COPIED into an incidents volume by the recorder that holds it (`RecWorker.keep_pass`),
 #                  out of whichever recorder's door has it, and stays there after the recording's own ring has
 #                  moved on. What was copied is an event with its sha256 (`archive.keep.copied`). The digest of
-#                  a copy first whole is the keep's SEAL, set once by `vms jobs` in rec's own record of its
-#                  archive, `rec/sealed/<keep>` — not in the keep's row (`Seal`, `jobs.seal_keeps`;
-#                  ADR-0057, дополнение п. 3), and checked at the door of the recorder that holds the copy:
+#                  a copy first whole is the keep's SEAL, set once by the recorder of the incidents volume in
+#                  rec's own record of its archive, `rec/sealed/<keep>` — not in the keep's row (`Seal`,
+#                  `RecWorker._seal`; ADR-0057, дополнение п. 3), and checked at the door of the recorder that holds the copy:
 #                  `POST <door>/keeps/<keep>/verify?recording=<id>` (`RecWorker.verify_keep`; ADR-0015, ADR-0057)
 #   the events     retention skips the camera's event buckets that overlap it — its spec's `holds:`, which every
 #                  resource reads itself (`w2cplatform/holds.py`; the boundary's step 6)
@@ -94,15 +94,16 @@ def _names(raw) -> list:
 
 # THE SEAL OF A KEEP — not in its row (ADR-0057, дополнение п. 3). It is this subsystem's own record of its archive, as
 # a request's mark is: `rec/sealed/<keep>`, an object of rec's `objects.rows` — a row of the store on a cluster, written
-# create-only and then by CAS (`jobs.seal_keeps`, by `vms jobs`, ONCE per recording, when the incidents volume first
-# holds the copy whole). No table door serves it: an operator cannot write a seal by construction, and a declared field
+# create-only and then by CAS by the recorder of the incidents volume with its worker role (`RecWorker._seal`, ONCE per
+# recording, when the volume first holds the copy whole; ADR-0057, дополнение п. 3: пишет рекордер тома incidents) and
+# read by the console. No table door serves it: an operator cannot write a seal by construction, and a declared field
 # would have opened it to anyone who may edit the camera; an undeclared key in the keep's row would have been a row not
 # by its spec (ADR-0012). The door's check reads it (`RecWorker.verify_keep`).
 #
 #   {"recordings": "<recording>=<sha256>,…", "from": <unix s>, "to": <unix s>, "sealed_at": <unix s>}
 #
 # BOUND TO THE INTERVAL: a seal is of the minutes it was taken over. A keep whose row says another interval now — an
-# operator rewrote it — is not sealed by it (`Seal.of`): the check says "not sealed yet", and the next turn seals it anew.
+# operator rewrote it — is not sealed by it (`Seal.of`): the check says "not sealed yet", and the next pass seals it anew.
 SEALED = "sealed"
 
 
@@ -148,7 +149,7 @@ def parse_seal(raw: bytes | None) -> Seal | None:
     return Seal(seal_pairs(d.get("recordings")), finite(d["from"]), finite(d["to"]), finite(d.get("sealed_at", 0) or 0))
 
 
-SEALS = Table("seal", "read as no seal: its keep is not sealed until the next turn of `vms jobs` seals it anew")
+SEALS = Table("seal", "read as no seal, and not overwritten: its keep is not sealed until the record is mended or removed")
 
 
 def read_seal(objects, id_: str) -> Seal | None:

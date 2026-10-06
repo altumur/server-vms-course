@@ -20,8 +20,6 @@ from vms.archive import event_log
 from vms.config import REC_SPEC
 from vms.worker import fake_samples
 from tests.vmsconftest import TEST_QUOTA, Box, door, footage, recorder, store
-from vms.jobs import seal_keeps
-from w2cplatform.journal import Journal
 
 DAY = 86400.0
 
@@ -562,10 +560,10 @@ def _get(url, user="anna"):
 
 
 def _sealed_site(spec=None):
-    """`_site`, recording 7 of camera 7 copied for a keep into `evidence` and SEALED by `vms jobs` (`jobs.seal_keeps`, with
-    the console's grant, from `r-keep`'s heartbeat) — and a console over rec (`spec`: rec's, or one a test built) with the
-    cluster's door key, `r-keep` serving its door and saying where (`url`, `volume`). Returns
-    `(box, k, kp, base, keys, closers)`; `box.rec` is the console's controller of rec, `box.jobs` the jobs' journal."""
+    """`_site`, recording 7 of camera 7 copied for a keep into `evidence` and SEALED by `r-keep`, the recorder of the
+    incidents volume, in the same pass (`RecWorker._seal`) — and a console over rec (`spec`: rec's, or one a test built)
+    with the cluster's door key, `r-keep` serving its door and saying where (`url`, `volume`). Returns
+    `(box, k, kp, base, keys, closers)`."""
     from vms.config import SPEC
     from vms.console import make_console
     from vms.controller import VmsController
@@ -583,8 +581,7 @@ def _sealed_site(spec=None):
         m = make_console(ctl, box.resource_root, box.wall, mounts={"rec": rec})
     door_srv = k.serve_archive()
     k.heartbeat_once()
-    box.rec, box.jobs = rec, Journal(box.resource_root, "jobs", box.wall)
-    assert seal_keeps(rec, box.wall(), box.jobs) == 1
+    assert keeps.read_seal(box.objects, kp.id) is not None
     srv = m.serve("127.0.0.1", 0)
     return box, k, kp, f"http://127.0.0.1:{srv.server_address[1]}", keys, (srv, door_srv, box.src_door)
 
@@ -602,9 +599,9 @@ def _verified_lines(k):
 def test_a_keeps_seal_is_checked_at_the_door_of_the_recorder_that_holds_its_copy():
     """The page asks the console where the incidents volume is held, for recording 7 (`GET /rec/where/volumes/evidence
     ?unit=rec/7`): the door of `r-keep`, a token for its routes — `keeps` among them, rec's spec says so — and `POST
-    <door>/keeps/<keep>/verify?recording=7` reads the copy now and compares it with its seal — set once by `vms jobs`,
+    <door>/keeps/<keep>/verify?recording=7` reads the copy now and compares it with its seal — set once by `r-keep`,
     when the copy was whole, in rec's own record `rec/sealed/<keep>` and not in the keep's row (ADR-0057, дополнение
-    п. 3), a line `archive.keep.sealed` in its journal. The console has no such route; the answer is a line
+    п. 3: пишет рекордер тома incidents), an event `archive.keep.sealed`. The console has no such route; the answer is a line
     `archive.keep.verified` with who asked."""
     box, k, kp, base, keys, closers = _sealed_site()
     try:
@@ -620,8 +617,9 @@ def test_a_keeps_seal_is_checked_at_the_door_of_the_recorder_that_holds_its_copy
         seal = keeps.read_seal(box.objects, kp.id)
         assert seal == keeps.Seal((("7", copied["sha256"]),), kp.since, kp.until, box.wall()), seal   # its own record
         assert not {"sealed", "sealed_at"} & set(box.vars.get(keeps.key(kp.id))[0])                  # not the keep's row
-        [line] = _audit(box.resource_root, "jobs", "archive.keep.sealed")
+        [line] = _events(box, "archive.keep.sealed")
         assert (line["keep"], line["recording"], line["sha256"], line["cam"]) == (kp.id, "7", copied["sha256"], "7")
+        assert (line["from"], line["to"]) == (kp.since, kp.until)
         [line] = _verified_lines(k)
         assert line["keep"] == kp.id and line["ok"] is True and line["user"] == "anna" and line["integrity"] == "ok"
         for path in (f"/keeps/{kp.id}/verify", f"/rec/keeps/{kp.id}/verify"):
@@ -646,12 +644,11 @@ def test_a_copy_that_no_longer_hashes_to_its_seal_is_broken():
         assert got["integrity"] == "broken: 7: the copy does not hash to its seal", got
         row = got["recordings"]["7"]
         assert row["result"] == "damaged" and row["sealed"] and row["sealed"] != row["now"], row
-        k.keep_state[kp.id]["sha256"]["7"] = row["now"]                # the recorder says the new digest of a whole copy…
-        k.heartbeat_once()
-        assert seal_keeps(box.rec, box.wall(), box.jobs) == 0            # …and the seal stays what it was
-        k.keep_state = {}                                              # a recorder with nothing in memory: the seal says it
+        k.keep_state = {}                                              # a recorder with nothing in memory reads the copy
+        state = k.keep_pass()                                          # again — the damaged one — and seals nothing
+        assert state[kp.id]["sha256"]["7"] == row["now"] and state[kp.id]["whole"] == ["7"]
         assert k.verify_keep(kp.id, "7")[1]["recordings"]["7"]["sealed"] == row["sealed"]
-        assert len(_audit(box.resource_root, "jobs", "archive.keep.sealed")) == 1
+        assert len(_events(box, "archive.keep.sealed")) == 1
     finally:
         for s in closers:
             s.shutdown()
@@ -765,39 +762,6 @@ def test_a_recording_never_copied_is_pending_and_the_keep_unknown():
     assert got["recordings"]["7"] == {"sealed": "", "now": "", "samples": 0, "result": "pending"}
 
 
-def test_vms_jobs_seals_only_a_whole_copy_of_a_keep_that_reads_and_only_once():
-    """`jobs.seal_keeps` (the product's `SealKeeps`): from the live heartbeats of the recorders, a recording's digest goes
-    into the keep's seal `rec/sealed/<keep>` — created once, added to by CAS — only when the incidents recorder says its
-    copy of that interval is `whole`; a keep whose interval does not read is never sealed, nor one the recorder copied
-    over other minutes; and a recording sealed once is not sealed again."""
-    from w2cplatform.contract import Heartbeat
-    box = Box()
-    t = box.wall()
-    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    kp = _keep(box, "7", t - 1800, t - 1200, ["7", "7-ev"])
-    box.vars.put("rec/keeps/9-bad", {"cam": "9", "from": "yesterday", "to": str(t), "by": "anna", "recordings": '["9"]'})
-    a, b, span = "a" * 64, "b" * 64, {"from": kp.since, "to": kp.until}
-
-    def beat(keeps_said):
-        box.objects.put(REC_SPEC.sub.heartbeat_key("r-keep"),
-                        Heartbeat("r-keep", box.wall(), [], {"server": "srv-1", "keeps": keeps_said}).to_bytes())
-    beat({kp.id: {"sha256": {"7": a, "7-ev": b}, "whole": ["7"], "from": kp.since, "to": kp.until - 1},
-          "9-bad": {"sha256": {"9": a}, "whole": ["9"], "from": 0, "to": t}})
-    journal = Journal(box.resource_root, "jobs", box.wall)
-    assert seal_keeps(rec, box.wall(), journal) == 0                                # other minutes; an unread interval
-    assert keeps.read_seal(box.objects, kp.id) is None and keeps.read_seal(box.objects, "9-bad") is None
-    beat({kp.id: {"sha256": {"7": a, "7-ev": b}, "whole": ["7"], **span}})
-    assert seal_keeps(rec, box.wall(), journal) == 1
-    assert keeps.read_seal(box.objects, kp.id).of(kp) == {"7": a}                   # 7-ev is not whole yet
-    box.wall.advance(5)
-    beat({kp.id: {"sha256": {"7": b, "7-ev": b}, "whole": ["7", "7-ev"], **span}})
-    assert seal_keeps(rec, box.wall(), journal) == 1                                # 7-ev now; 7 stays what it was
-    seal = keeps.read_seal(box.objects, kp.id)
-    assert seal.of(kp) == {"7": a, "7-ev": b} and seal.sealed_at == box.wall()
-    assert seal_keeps(rec, box.wall(), journal) == 0
-    assert [(e["recording"], e["sha256"]) for e in _audit(box.resource_root, "jobs", "archive.keep.sealed")] == [("7", a), ("7-ev", b)]
-
-
 def test_nobody_writes_a_seal_through_a_door():
     """The seal is rec's own record, not a table: the console serves no `/rec/sealed` (404, to read or to write), and a
     keep written through the table door with a `sealed` in it is refused — an operator cannot write a seal by
@@ -818,10 +782,10 @@ def test_nobody_writes_a_seal_through_a_door():
     assert keeps.read_seal(box.objects, kp.id) is None
 
 
-def test_a_keep_rewritten_over_other_minutes_is_not_sealed_until_the_next_turn_seals_it_anew():
+def test_a_keep_rewritten_over_other_minutes_is_not_sealed_until_the_next_pass_seals_it_anew():
     """A seal is bound to the interval it was taken over. The keep's row rewritten by hand to other minutes: the check
     says "not sealed yet" for it — the old seal is of other minutes — and once the recorder has copied the new interval
-    whole, the next turn of `vms jobs` replaces the seal, by CAS, with one of the interval as it stands."""
+    whole, its next pass replaces the seal, by CAS, with one of the interval as it stands."""
     box, k, kp, base, keys, closers = _sealed_site()
     try:
         old = keeps.read_seal(box.objects, kp.id)
@@ -830,9 +794,7 @@ def test_a_keep_rewritten_over_other_minutes_is_not_sealed_until_the_next_turn_s
         st, got = k.verify_keep(kp.id, "7")
         assert st == 200 and got["integrity"] == "unknown: 7: not sealed yet", got
         assert got["recordings"]["7"]["result"] == "pending" and got["recordings"]["7"]["sealed"] == ""
-        k.keep_pass()                                                  # the new minutes copied, whole
-        k.heartbeat_once()
-        assert seal_keeps(box.rec, box.wall(), box.jobs) == 1
+        k.keep_pass()                                                  # the new minutes copied, whole — and sealed
         seal = keeps.read_seal(box.objects, kp.id)
         assert (seal.since, seal.until) == (kp.since + 300, kp.until + 100) and seal.recordings != old.recordings
         st, got = k.verify_keep(kp.id, "7")
@@ -842,23 +804,29 @@ def test_a_keep_rewritten_over_other_minutes_is_not_sealed_until_the_next_turn_s
             s.shutdown()
 
 
-def test_the_seal_family_in_a_spec_built_here_is_a_row_of_the_store():
-    """The byte «Паритет» puts into rec (ADR-0057, дополнение п. 3): `objects: {rows: [used/*, sealed/*], …}` — on a spec
-    built here until it lands: the loader takes it, and `rec/sealed/<keep>` is then a row of the store on a cluster
-    (created once across it, as a request's mark), not a file of the server that wrote it."""
-    from w2cplatform.spec import SubsystemSpec
-    with open(os.path.join(os.path.dirname(keeps.__file__), "rec.subsystem.yaml")) as f:
-        text = f.read()
-    assert text.count(OBJECTS_NOW) == 1
-    path = os.path.join(tempfile.mkdtemp(prefix="spec-"), "rec.subsystem.yaml")
-    with open(path, "w") as f:
-        f.write(text.replace(OBJECTS_NOW, OBJECTS_SEALED))
-    spec = SubsystemSpec.load(path)
-    assert spec.object_rows == ("used/*", "sealed/*")
+def test_the_recorder_seals_only_a_whole_copy_of_a_keep_that_reads_and_only_once():
+    """`RecWorker._seal` (ADR-0057, дополнение п. 3: пишет рекордер тома incidents; the product's `SealKeeps`): a copy
+    short of what no door from here can fill is not sealed; a keep whose interval does not read is never sealed; and a
+    recording sealed once is not sealed again, whatever the recorder computes later. The family is a row of the store
+    on a cluster — rec's `objects.rows` — which the recorder's role writes and the console only reads (the rights file,
+    `tests/cluster/test_policies.py`)."""
     from w2cplatform.catalog import matches
-    assert any(matches(f"rec/{p}", keeps.seal_key("7-1-2")) for p in spec.object_rows)
-
-
-# rec's `objects:` line as it is, and as «Паритет» puts it (one YAML with the product; ADR-0057, дополнение п. 3).
-OBJECTS_NOW = "objects: {rows: [used/*], door: [forwarded/*]}\n"
-OBJECTS_SEALED = "objects: {rows: [used/*, sealed/*], door: [forwarded/*]}\n"
+    assert "sealed/*" in REC_SPEC.object_rows
+    assert any(matches(f"rec/{p}", keeps.seal_key("7-1-2")) for p in REC_SPEC.object_rows)
+    box, k = _site()
+    t = box.wall()
+    footage(box.src, "7", 1, t - 3600, t - 1500, step=10)
+    whole = _keep(box, "7", t - 1800, t - 1600)
+    box.vars.put("rec/keeps/7-bad", {"cam": "7", "from": "yesterday", "to": str(t), "by": "anna", "recordings": '["7"]'})
+    state = k.keep_pass()
+    seal = keeps.read_seal(box.objects, whole.id)
+    assert state[whole.id]["whole"] == ["7"] and seal.of(whole) == {"7": state[whole.id]["sha256"]["7"]}
+    assert keeps.read_seal(box.objects, "7-bad") is None                          # an interval that does not read
+    box.src_door.shutdown()                                                       # no door from here answers now
+    short = _keep(box, "7", t - 1700, t - 1400)                                   # half of it copied with the first
+    state = k.keep_pass()
+    assert state[short.id]["missing"] > 0 and "whole" not in state[short.id]
+    assert keeps.read_seal(box.objects, short.id) is None                         # not whole: not sealed
+    k._seal(whole, {"7": "f" * 64}, box.wall())                                   # a later digest of a sealed copy…
+    assert keeps.read_seal(box.objects, whole.id) == seal                         # …changes nothing
+    assert [e["keep"] for e in _events(box, "archive.keep.sealed")] == [whole.id]
