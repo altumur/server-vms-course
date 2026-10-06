@@ -399,7 +399,7 @@ POST /v1/write {"op": "put", "key": "platform/drain", "cas": "", "items": {"serv
 ```
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items": {
-  "holder": "srv-c:4103",      ← не трогает
+  "holder": "srv-c:4103:001007",      ← не трогает
   "until": "1757500045.0",     ← не трогает
   "released": "true",          ← главное изменение
   "gen": "1"                   ← не трогает
