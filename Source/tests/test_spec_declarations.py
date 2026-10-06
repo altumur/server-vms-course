@@ -330,6 +330,67 @@ def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "servers": {"show": [{"table": "nope", "by": "server"}]}}), "`servers:` is")
 
 
+def test_a_label_with_values_writes_a_word_of_the_set_and_counts_a_word_outside_it_garbled():
+    """ADR-0063: `values: [...]` of an `agg: label` is the closed set of words the field says. A word of it is a series
+    (the default where nothing is said, too); a word outside it is a garbled field — no series, counted once a spell in
+    `FIELDS` like a word where a number goes, under a key of its own (`servers.status` reads the same leaf as a string
+    and must not undo the count), and counted again only after it was a word of the set. A status entry's field too.
+    The loader refuses `values` on another agg, not a list, empty, a word twice, an item that is no label word, and a
+    `default` outside the set (ADR 0012)."""
+    from w2cplatform.metrics import text
+    from w2cplatform.rows import FIELDS
+    belt = {"name": "belt", "from": "heartbeat.belt.state", "agg": "label", "label": "state", "default": "ok",
+            "values": ["ok", "slow", "true"]}
+    spec = SubsystemSpec.from_dict({**BIN, "servers": {"status": [{"field": "belt.state", "title": "лента"}]},
+                                    "metrics": [belt, {"name": "lane", "from": "status.lane", "agg": "label",
+                                                       "values": ["fast", "slow"]}]})
+    vars_, objects, wall = _box()
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    hb = lambda w, extra, status=(): objects.put(spec.sub.heartbeat_key(w), Heartbeat(w, wall(), list(status), {
+        "server": "s1", "bay": "", **extra}).to_bytes())
+    hb("l-1", {"belt": {"state": "slow"}}, [{"id": "a", "lane": "fast"}, {"id": "b", "lane": "sideways"}])
+    hb("l-2", {"belt": {}})                                                     # not said: the default, a word of the set
+    hb("l-3", {"belt": {"state": "jammed"}})                                    # a word outside the set
+    hb("l-4", {"belt": {"state": True}})                                        # `true` compared as the word it prints
+    key = lambda w, f: f"{spec.sub.heartbeat_key(w)}#{f}"
+    before = FIELDS.counts.get("bin", 0)
+    lines = text(ctl).splitlines()
+    for want in ('bin_belt{worker="l-1",state="slow"} 1', 'bin_belt{worker="l-2",state="ok"} 1',
+                 'bin_belt{worker="l-4",state="true"} 1', 'bin_lane{unit="a",value="fast"} 1'):
+        assert want in lines, (want, lines)
+    assert not [l for l in lines if 'worker="l-3"' in l or 'unit="b"' in l], lines
+    assert {key("l-3", "belt.state@belt"), key("l-1", "b.lane@lane")} <= FIELDS.bad
+    assert not {key(w, "belt.state@belt") for w in ("l-1", "l-2", "l-4")} & FIELDS.bad
+    assert FIELDS.counts.get("bin", 0) - before == 2
+    # read again, and through `servers.status` (the same leaf, a string it shows): the same spell, not counted again —
+    # `servers.status` counts only what it cannot show itself (`l-4`'s `true`, its own reading, ADR 0012), once
+    from w2cplatform.console import SpecConsole
+    rows = {w["worker"]: w["status"] for s in SpecConsole(ctl, wall=wall).servers()["servers"].values()
+            for w in s["workers"]}
+    assert rows["l-3"] == {"belt.state": "jammed"} and rows["l-4"] == {}, rows
+    assert key("l-4", "belt.state") in FIELDS.bad and key("l-3", "belt.state") not in FIELDS.bad
+    text(ctl)
+    assert FIELDS.counts.get("bin", 0) - before == 3 and key("l-3", "belt.state@belt") in FIELDS.bad
+    hb("l-3", {"belt": {"state": "ok"}})                                       # a word of the set again: the spell ends…
+    assert 'bin_belt{worker="l-3",state="ok"} 1' in text(ctl).splitlines() and key("l-3", "belt.state@belt") not in FIELDS.bad
+    hb("l-3", {"belt": {"state": "jammed"}})                                   # …and a new one is counted
+    text(ctl)
+    assert FIELDS.counts.get("bin", 0) - before == 4
+
+    def metric(**m):
+        return lambda: SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "from": "heartbeat.x", **m}]})
+    _refused(metric(agg="label", default="stuck", values=["ok", "slow"]), "default 'stuck' is none of values (ok, slow)")
+    _refused(metric(agg="flag", values=["ok"]), "`values` closes the words of `agg: label`, not of agg 'flag'")
+    _refused(metric(values=["ok"]), "`values` closes the words of `agg: label`, not of agg 'value'")   # agg left out
+    _refused(metric(agg="label", values=[]), "values is a list of words")
+    _refused(metric(agg="label", values="ok"), "values is a list of words")
+    _refused(metric(agg="label", values=["ok", "slow", "ok"]), "values says 'ok' twice")
+    for bad in ("zone 1", "", "-ok", "склад", "a,b", True, 1, None, ["ok"], "x" * 65):
+        _refused(metric(agg="label", values=["ok", bad]), "values is a list of words")
+    assert SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "from": "heartbeat.x", "agg": "label",
+                                                        "values": ["ok", "vlan:cctv-a", "site.b"]}]}).metrics[0]["values"] \
+        == {"ok", "vlan:cctv-a", "site.b"}                                     # a label's alphabet; no default: no check
+
 
 def test_a_metric_number_is_printed_by_its_value_and_not_by_how_the_heartbeat_spelled_it():
     """ADR 0055: a number on `/metrics` by its value, on both sides — a whole value whole (`61` whether the heartbeat
