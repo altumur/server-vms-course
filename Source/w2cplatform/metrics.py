@@ -89,6 +89,9 @@ def parse(name: str, raw, tables: tuple) -> list[dict]:
             raise ValueError(f"spec {name}: metric {m['name']}: type is one of {', '.join(TYPES)}, not {typ!r}")
         e = {"name": m["name"], "type": typ, "labels": {str(k): str(v) for k, v in (m.get("labels") or {}).items()}}
         if "count" in m:
+            if "values" in m:                                  # a count is a number of rows: it says no words to close
+                raise ValueError(f"spec {name}: metric {m['name']}: `values` closes the words of `agg: label`, not of a "
+                                 f"count (ADR-0063)")
             words = str(m["count"]).split()
             if len(words) != 2 or words[0] != "table" or words[1] not in tables:
                 raise ValueError(f"spec {name}: metric {m['name']}: count is `table <one of its tables>`, not {m['count']!r}")

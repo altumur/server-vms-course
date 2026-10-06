@@ -382,6 +382,8 @@ def test_a_label_with_values_writes_a_word_of_the_set_and_counts_a_word_outside_
     _refused(metric(agg="label", default="stuck", values=["ok", "slow"]), "default 'stuck' is none of values (ok, slow)")
     _refused(metric(agg="flag", values=["ok"]), "`values` closes the words of `agg: label`, not of agg 'flag'")
     _refused(metric(values=["ok"]), "`values` closes the words of `agg: label`, not of agg 'value'")   # agg left out
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "count": "table bays", "values": ["ok"]}]}),
+             "`values` closes the words of `agg: label`, not of a count")                 # a row count says no words
     _refused(metric(agg="label", values=[]), "values is a list of words")
     _refused(metric(agg="label", values="ok"), "values is a list of words")
     _refused(metric(agg="label", values=["ok", "slow", "ok"]), "values says 'ok' twice")
