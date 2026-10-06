@@ -1238,7 +1238,8 @@ class SubsystemSpec:
     holds: dict = field(default_factory=dict)
     # `requests: {free: true}` — this subsystem's workers answer the resource's request to free bytes on a volume of
     # their server: `<sub>/requests/free-<server>-<volume> {free, volume, server, at}`, the answer in their heartbeat's
-    # `freed: {<volume>: bytes}` (`Resource.relieve`; it was the subsystem's hook the resource called, `free`).
+    # `freeing: {<volume>: bytes}` — deleted and not yet visible on the volume, taken off what is asked (`Resource.relieve`;
+    # it was the subsystem's hook the resource called, `free`).
     requests_free: bool = False
     # `door: {routes: [<route>]}` — what a unit's holder opens to a page itself, the bytes going holder → browser and
     # never through the console (the boundary's step 6, the owner's decision 1): `/where/<id>` hands out the door —

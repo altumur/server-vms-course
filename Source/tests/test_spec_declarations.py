@@ -403,7 +403,7 @@ def test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_ab
 def test_the_resource_asks_a_subsystem_that_frees_by_a_request_row_and_reads_its_answer():
     """`requests: {free: true}` (it was a subsystem's hook the resource called, `free`): over the high mark the resource
     writes `<sub>/requests/free-<server>-<volume> {free, volume, server}` and reads what the subsystem's live workers
-    on its server say they freed (`freed` in their heartbeats); back under the mark, the row is taken away. Nothing of
+    on its server say they are still freeing (`freeing` in their heartbeats); back under the mark, the row is taken away. Nothing of
     the subsystem's runs in the resource."""
     from w2cplatform.resource import SPACE_KEY, Resource
     vars_, objects, wall = _box()
@@ -417,9 +417,9 @@ def test_the_resource_asks_a_subsystem_that_frees_by_a_request_row_and_reads_its
     vars_.put(SPACE_KEY, {"enabled": "true", "high": "0.9", "low": "0.5"})
     out = res.relieve()
     assert out["space"] == "over" and vars_.get(key)[0]["free"] == "48" and vars_.get(key)[0]["volume"] == vol
-    objects.put(spec.sub.heartbeat_key("w-1"), Heartbeat("w-1", wall(), [], {"server": "s1", "bay": "", "freed": {vol: 40}}).to_bytes())
+    objects.put(spec.sub.heartbeat_key("w-1"), Heartbeat("w-1", wall(), [], {"server": "s1", "bay": "", "freeing": {vol: 40}}).to_bytes())
     out = res.relieve()
-    assert out["freed"] == 40 and out["short"] == 8 and vars_.get(key)[0]["free"] == "8"   # what is left, asked again
+    assert out["freeing"] == 40 and out["short"] == 8 and vars_.get(key)[0]["free"] == "8"   # what is left, asked again
     full["used"] = 10
     assert res.relieve()["space"] == "ok" and vars_.get(key)[0] is None                # under the mark: nothing asked
 
