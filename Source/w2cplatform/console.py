@@ -28,7 +28,9 @@ show them. So the console is one class, run from the same spec:
     …    /domain/<any other>     handed to the domain holder's door at the same path, unrewritten (`Mount.domain_forward`:
                                  the view's `url`), with the person's token and the edit's Idempotency-Key
     GET/PUT /policy             the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
-    GET/PUT/DELETE /servers/<server>/labels   what a server reaches, the administrator's word over its node's (<sub>/servers/<server>)
+    GET/PUT/DELETE /servers/<server>/labels   on the Mount, as /drain: what a server reaches, the administrator's word over
+                                 its node's (platform/servers/<server>, one a server; ADR-0026) — `would_move`/`will_move`
+                                 are `<sub>/<id>` of every subsystem here, those the caller may see
     GET  /events?from&to&unit&kind&subsystem   the resources' event indexes, merged (MergedIndex), fenced by every subsystem's epochs
     GET  /metrics                <name>_workers_live · <name>_worker_headroom{worker,server} · <name>_worker_load ·
                                  <name>_epoch_conflicts · <name>_failover_seconds{kind="worst"} ·
@@ -1809,9 +1811,11 @@ class SpecConsole:
         for server, s in out.items():
             node = sorted({l for row in s["workers"] for l in str(row["labels"]).split(",") if l})
             s["labels_node"] = node
-            s["labels"], s["labels_source"] = (sorted(rows[server]), "console") if server in rows else (node, "node")
-            if ctl.labels_unread(server):                # its row is there and did not read: nothing moves off it (the tenth pass);
-                s["labels_source"] = "unknown"           # …"unknown", the product's word, which the console module shows
+            # …as placement reads it (`server_labels_of`): "unknown" — its row is there and did not read (the tenth pass),
+            # or this console has never read the rows (ADR-0026's addition) — is the product's word, which the module
+            # shows; the labels are then what its row last said, or none
+            said, s["labels_source"] = ctl.server_labels_of(server)
+            s["labels"] = node if s["labels_source"] == "node" else sorted(said or ())
             s["draining"] = server == drains
             s["resource"] = ctl.resource_state(server, self.lost_after)
             s["resource_heard_at"] = float(res[server]["ts"]) if server in res else None
@@ -1873,57 +1877,6 @@ class SpecConsole:
                 row.update(hung=True, hung_since=since, hung_why=why)
         except (*PARSE_ERRORS, OSError):
             return                                       # a name that is no key, a store that did not answer: that row says nothing of it
-
-    # WHAT A SERVER REACHES, FROM THE CONSOLE (feedback DQ): `/servers/<server>/labels`.
-    #
-    #   GET     ?labels=a,b — what it reaches now and from where, and which units would move if it reached `a,b`
-    #           (`would_move`; no `labels`: back to its node's) — the page asks before it writes, and warns
-    #   PUT     {"labels": ["vlan:cctv-a", …]} — the administrator's labels; [] reaches nothing. A server nobody has
-    #           announced (`servers_known`), a name that is not a host's, a body that is not JSON, a label that is not a
-    #           string: 400, in words (the review's tenth pass)
-    #   DELETE  back to the node's (`LABELS` in the server's environment)
-    #
-    # A path that names no unit: `admin` on the whole cluster to write (`needs`) — a server's labels decide where every
-    # unit may go. Each write is a journal line with the name and the labels; the controller moves what it decides on
-    # its next pass (`ensure_reach`), and the reply says which units that will be.
-    def server_labels_route(self, h, method: str, path: str, q: dict) -> tuple:
-        ctl, user = self.ctl, h.headers.get("X-User", "operator")
-        server = path[len("/servers/"):-len("/labels")]
-        try:
-            server_name(server)
-            if method == "GET":
-                # `?labels=` (blank) reaches nothing; no `labels` at all is back to its node's — `q` drops a blank value
-                want = parse_qs(urlsplit(h.path).query, keep_blank_values=True).get("labels", [None])[0]
-                labels = None if want is None else [l for l in want.split(",") if l]
-                if labels is not None and any(not LABEL_WORD.fullmatch(l) for l in labels):
-                    raise Refused(f"a label is letters, digits and _ . : - (up to 64): {want!r}")
-                rows = ctl.server_labels() or {}
-                sees = self._visible(h)
-                moves = [u for u in ctl.would_move(server, labels)
-                         if sees is None or sees(*self.target_in(self, u))]
-                return 200, {"server": server, "labels": sorted(rows[server]) if server in rows else None,
-                             "labels_source": ctl.labels_source(server), "would_move": moves}
-            # Through `object_body` (the eleventh review, a minor): `ValueError` alone let a body nested past what JSON
-            # reads (`RecursionError`) through, and the connection dropped with no answer.
-            body = object_body(h) if method == "PUT" else {}
-            if method == "PUT":
-                labels = ctl.set_server_labels(server, body.get("labels"))
-                self.journal.say("server.labels.set", sub=self.spec.name, server=server, labels=",".join(labels), user=user)
-                return 200, {"server": server, "labels": labels, "labels_source": "console",
-                             "will_move": ctl.would_move(server, labels)}
-            if ctl.clear_server_labels(server):
-                self.journal.say("server.labels.cleared", sub=self.spec.name, server=server, user=user)
-            return 200, {"server": server, "labels_source": "node", "will_move": ctl.would_move(server, None)}
-        except Refused as e:
-            return 400, {"detail": str(e), "error": "refused", **fault_of(e)}
-        except Forbidden as e:                           # the console's token, not the caller: the store said no
-            return 403, {"detail": str(e), "error": str(e)}
-        except OSError as e:
-            # Not the store's own words to the caller (the review's tenth pass, minor): a name of 300 characters answered
-            # with the local path of the store's file. They go to this console's log.
-            log.warning("%s: the labels of server %r were not written: %s", self.spec.name, server[:80], e)
-            return 503, {"detail": "the store did not take it: try again; the console's log says why",
-                         "error": "store unavailable"}
 
     # EVERY NUMBER OF A HEARTBEAT OR OF THE PASS REPORT HERE IS READ THROUGH `n`, `rn` OR `r` (the review's seventh
     # pass, part 2): read bare — `int(headroom)`, `float(space.full)`, `float(ts)` — one word in one field raised, and
@@ -2157,7 +2110,8 @@ class SpecConsole:
     # WHAT A HOST'S SPARES SCRIPT READS (the М11 rework; the product's names): `<p>_workers_needed{labels}` — the empty
     # set's row always — `<p>_units_short{labels}`, `<p>_spare_offers{labels}` from the controller's pass report
     # (`SpecController.offer_spares`), and `<p>_server_labels{server,labels,source}`: what each server reaches, the
-    # console's row (`source="console"`) or its workers' word (`"node"`). On `/metrics`, which asks no token — and ONLY
+    # console's row (`source="console"`), its workers' word (`"node"`), or not known (`"unknown"`: its row did not read,
+    # or this console has never read the rows — what its row last said, or none). On `/metrics`, which asks no token — and ONLY
     # while the pass is at most `SPARES_FRESH` old: a script reading the number of a controller that stopped would start
     # processes for a shortage that may be long gone. A stale pass: none of the four, and `w2c-spares.sh` starts nothing.
     SPARES_FRESH = 60.0
@@ -2199,15 +2153,15 @@ class SpecConsole:
             lines += [f"# TYPE {p}_{metric} gauge",
                       *[f'{p}_{metric}{{labels="{label(s)}"}} {number(f"{rk}#{field}.{s}", v, int, 0) + extra.get(s, 0)}'
                         for s, v in sorted(sets.items(), key=lambda x: str(x[0]))]]
-        rows = self.ctl.server_labels() or {}
         node: dict[str, set] = {}
         for w, hb in hbs.items():
             if isinstance(hb.extra.get("server"), str):
                 node.setdefault(hb.extra["server"], set()).update(l for l in str(hb.extra.get("labels", "")).split(",") if l)
         lines.append(f"# TYPE {p}_server_labels gauge")
         for server in sorted(self.ctl.servers_known()):
-            said, source = (rows[server], "console") if server in rows else (node.get(server, ()), "node")
-            lines.append(f'{p}_server_labels{{server="{label(server)}",labels="{label(label_set(said))}",source="{source}"}} 1')
+            said, by = self.ctl.server_labels_of(server)          # `unknown`: what its row last said, or none
+            said = node.get(server, ()) if by == "node" else (said or ())
+            lines.append(f'{p}_server_labels{{server="{label(server)}",labels="{label(label_set(said))}",source="{by}"}} 1')
         return lines
 
     # -- writes ---------------------------------------------------------------------------------
@@ -3237,8 +3191,6 @@ class SpecConsole:
                                      for s, hb in resources_seen(ctl.objects).items()})
             if path == "/servers":
                 return h._send(200, con.servers())
-            if path.startswith("/servers/") and path.endswith("/labels"):
-                return h._send(*con.server_labels_route(h, "GET", path, q))
             if path == "/domain":
                 return h._send(*domain_view(ctl.objects, con.wall(), con.lost_after))
             if path == "/domain/keys":                       # every `domain/` key in this cluster's stores, masked
@@ -3364,8 +3316,6 @@ class SpecConsole:
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
             self._remember(key, resp); return h._send(*resp)
-        if method in ("PUT", "DELETE") and path.startswith("/servers/") and path.endswith("/labels"):
-            return h._send(*con.server_labels_route(h, method, path, q))
         if method == "PUT":
             if path == "/policy":                                        # the administrator's knobs: one row, no idempotency needed (a PUT is)
                 try:
@@ -3588,8 +3538,7 @@ class Mount:
                              "note": "its workers are placed on, and given slots, again from the controllers' next pass"
                                      if was is not None else f"{server} was not decommissioned"}
             body = object_body(h)
-            known = {s for c in consoles for s in c.ctl.servers_known()} | set(ctl.decommission_requests())
-            if server not in known:
+            if server not in self.servers_known():
                 return 404, {"detail": f"no server called {server} is known here", "error": "no such server"}
             refusal = warning = None
             for c in consoles:
@@ -3626,6 +3575,80 @@ class Mount:
                              "to the servers that are here" +
                              (f"; what they held stays held — {', '.join(holds)}: withdraw a volume that went with its "
                               f"server" if holds else "")}
+
+    # The servers anybody here has announced: a worker of any subsystem, a resource, a row of labels (each controller's
+    # `servers_known`), and a decommission asked. What a write about a server is checked against.
+    def servers_known(self) -> set[str]:
+        return {s for c in (self.root, *self.mounts.values()) for s in c.ctl.servers_known()} \
+            | set(self.root.ctl.decommission_requests())
+
+    # WHAT A SERVER REACHES, FROM THE CONSOLE (feedback DQ; ADR-0026 and its addition): `/servers/<server>/labels`.
+    # On the Mount, as `/drain` and a decommission, not on a subsystem: the row is ONE a server
+    # (`platform/servers/<server>`), and what a server reaches decides where every subsystem's units may go. It was each
+    # subsystem's route and row (`/<sub>/servers/<s>/labels`, `<sub>/servers/<s>`): gone, no alias (ADR-0003).
+    #
+    #   GET     ?labels=a,b — what it reaches now and from where (`server_labels_of`: console | node | unknown), and
+    #           which units would move if it reached `a,b` (`would_move`; no `labels`: back to its node's) — the page
+    #           asks before it writes, and warns
+    #   PUT     {"labels": ["vlan:cctv-a", …]} — the administrator's labels; [] reaches nothing. A server nobody here has
+    #           announced (`servers_known`, of every subsystem), a name that is not a host's, a body that is not JSON, a
+    #           label that is not a string: 400, in words (the review's tenth pass)
+    #   DELETE  back to the node's (`LABELS` in the server's environment)
+    #
+    # `admin` on the whole cluster to write, any grant to look (`admit`): a path that names no unit. `would_move` and
+    # `will_move` are one list of `<sub>/<id>` across every spec here, cut to what the caller may `view` (the product's
+    # `Mount.wouldMove`). Each write is a journal line with the name and the labels (`server.labels.set`,
+    # `server.labels.cleared`); the controllers move what they decide on their next pass (`ensure_reach`).
+    def labels_route(self, h, method: str, path: str, user: str = "operator") -> tuple:
+        ctl = self.root.ctl
+        server = path[len("/servers/"):-len("/labels")]
+        try:
+            server_name(server)
+            if method == "GET":
+                # `?labels=` (blank) reaches nothing; no `labels` at all is back to its node's — `q` drops a blank value
+                want = parse_qs(urlsplit(h.path).query, keep_blank_values=True).get("labels", [None])[0]
+                labels = None if want is None else [l for l in want.split(",") if l]
+                if labels is not None and any(not LABEL_WORD.fullmatch(l) for l in labels):
+                    raise Refused(f"a label is letters, digits and _ . : - (up to 64): {want!r}")
+                said, by = ctl.server_labels_of(server)
+                return 200, {"server": server, "labels": sorted(said) if said is not None else None,
+                             "labels_source": by, "would_move": self.would_move(h, server, labels)}
+            if method == "PUT":
+                # Through `object_body` (the eleventh review, a minor): `ValueError` alone let a body nested past what
+                # JSON reads (`RecursionError`) through, and the connection dropped with no answer.
+                body = object_body(h)
+                labels = ctl.set_server_labels(server, body.get("labels"), self.servers_known())
+                self.root.journal.say("server.labels.set", server=server, labels=",".join(labels), user=user)
+                return 200, {"server": server, "labels": labels, "labels_source": "console",
+                             "will_move": self.would_move(h, server, labels)}
+            if method != "DELETE":
+                return 405, {"detail": "GET, PUT or DELETE", "error": "method not allowed"}
+            if ctl.clear_server_labels(server):
+                self.root.journal.say("server.labels.cleared", server=server, user=user)
+            return 200, {"server": server, "labels_source": "node", "will_move": self.would_move(h, server, None)}
+        except Refused as e:
+            return 400, {"detail": str(e), "error": "refused", **fault_of(e)}
+        except Forbidden as e:                           # the console's token, not the caller: the store said no
+            return 403, {"detail": str(e), "error": str(e)}
+        except OSError as e:
+            # Not the store's own words to the caller (the review's tenth pass, minor): a name of 300 characters answered
+            # with the local path of the store's file. They go to this console's log.
+            log.warning("the labels of server %r were not written: %s", server[:80], e)
+            return 503, {"detail": "the store did not take it: try again; the console's log says why",
+                         "error": "store unavailable"}
+
+    # What would move if `server` reached `labels` (None: its node's), in every subsystem here — each unit as
+    # `<sub>/<id>`, and only those the caller may look at (`_visible`, `target_in`: a guard granted `vlan:a` is not told
+    # the ids of the units on `vlan:b`).
+    def would_move(self, h, server: str, labels) -> list[str]:
+        sees = self.root._visible(h)
+        out = []
+        for c in (self.root, *self.mounts.values()):
+            for uid in c.ctl.would_move(server, labels):
+                target = self.root.target_in(c, uid)
+                if sees is None or sees(*target):
+                    out.append(target[0])
+        return out
 
     # THE MOUNT'S OWN ROUTES ASK THE GATE TOO (the review's third pass, blocker 2). `/drain`, `/schema` and `/mounts`
     # were answered here, before `dispatch` and its gate: `POST /drain?server=srv-1` with no token took every
@@ -3765,6 +3788,16 @@ class Mount:
                     if method == "POST" and not read_body(self, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
                         return
                     return self._send(*mnt.decommission_route(self, method, u.path, user))
+                # What a server reaches (ADR-0026's addition): on the Mount too — `admin` on the cluster to write, any
+                # grant to look; its body read as every other door's is (`read_body`)
+                if method in ("GET", "PUT", "DELETE") and u.path.startswith("/servers/") and \
+                        u.path.endswith("/labels") and u.path.count("/") == 3:
+                    user = mnt.admit(self, method)
+                    if user is None:
+                        return
+                    if method == "PUT" and not read_body(self, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
+                        return
+                    return self._send(*mnt.labels_route(self, method, u.path, user))
                 if u.path in mnt.MOUNT_ROUTES:
                     user = mnt.admit(self, method)
                     if user is None:

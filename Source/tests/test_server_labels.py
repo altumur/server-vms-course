@@ -4,10 +4,12 @@ A server's labels came from the node alone: `LABELS`, filled from `meta.labels` 
 a worker when it starts. Changing them was a file on the machine and a restart; and a label decided only the NEXT
 placement — a camera stayed on a server that had stopped reaching its VLAN, and nothing said so.
 
-Now a server may have a row, `<sub>/servers/<server> {labels}`, written by the console (`PUT`/`DELETE
-/servers/<server>/labels`, admin on the whole cluster). Where it exists, placement reads it; where it does not, the node's
-labels answer. And a pass step, `ensure_reach`, moves a placed unit whose server no longer passes the constraint — or
-unplaces it with the reason when nothing live does — at most ten a pass.
+Now a server may have a row, `platform/servers/<server> {labels}` — the platform's, one a server for every subsystem
+(ADR-0026 and its addition) — written by the console at its root (`PUT`/`DELETE /servers/<server>/labels`, on the Mount
+as `/drain`, admin on the whole cluster). Where it exists, placement reads it; where it does not, the node's labels
+answer — once the rows were read: a process that never read them knows no server's labels. And a pass step,
+`ensure_reach`, moves a placed unit whose server no longer passes the constraint — or unplaces it with the reason when
+nothing live does — at most ten a pass.
 """
 import json
 import urllib.error
@@ -60,7 +62,7 @@ def test_labels_from_the_console_override_the_nodes_and_deleting_returns_to_the_
 
         st, out = _call(base, "PUT", "/servers/srv-b/labels", {"labels": ["vlan:b", "vlan:a", "vlan:a"]}, user="anna")
         assert st == 200 and out["labels"] == ["vlan:a", "vlan:b"] and out["labels_source"] == "console"
-        assert box.vars.get("vms/servers/srv-b")[0] == {"labels": "vlan:a,vlan:b"}
+        assert box.vars.get("platform/servers/srv-b")[0] == {"labels": "vlan:a,vlan:b"}
         assert ctl.labels_of("w-2") == {"vlan:a", "vlan:b"}                       # the console's, over the node's ""
         s = _call(base, "GET", "/servers")[1]["servers"]["srv-b"]
         assert (s["labels"], s["labels_node"], s["labels_source"]) == (["vlan:a", "vlan:b"], [], "console")
@@ -151,7 +153,8 @@ def test_a_store_that_does_not_answer_moves_nothing():
     """The servers' rows were read once — srv-a reaches `vlan:a` by the console's word, over a node that says nothing.
     Then the store stops answering for them: the pass keeps the labels last read, and camera 1 stays where it is
     (falling back to the node's empty labels would have unplaced it). A controller that has never read them moves
-    nothing at all; the placement step still places by what it can read."""
+    nothing at all, and knows no server's labels — not its node's (ADR-0026's addition): a camera that needs a label is
+    placed nowhere, one that needs none is placed."""
     box = Box()
     ctl = _site(box, srv_a="", srv_b="")
     ctl.set_server_labels("srv-a", ["vlan:a"])
@@ -162,7 +165,7 @@ def test_a_store_that_does_not_answer_moves_nothing():
     real_list = box.vars.list
 
     def silent(prefix):
-        if prefix.startswith("vms/servers/"):
+        if prefix.startswith("platform/servers/"):
             raise OSError("the store did not answer")
         return real_list(prefix)
     box.vars.list = silent
@@ -174,6 +177,7 @@ def test_a_store_that_does_not_answer_moves_nothing():
         assert fresh.server_labels() is None
         assert fresh.ensure_reach() == [] and fresh.pass_once()["reach_moves"] == 0
         assert ctl.where(cam) == "w-1"
+        assert fresh.labels_source("srv-b") == "unknown" and fresh.pass_report()["servers_labels_unread"] == -1
     finally:
         box.vars.list = real_list
     ctl.clear_server_labels("srv-a")                                               # answered again: the node's "" — it moves
@@ -189,17 +193,19 @@ def test_a_servers_row_that_does_not_parse_keeps_what_was_last_read_of_it():
     ctl.set_server_labels("srv-a", ["vlan:a"])
     cam = _camera(ctl, 1)
     ctl.pass_once()
-    box.vars.put("vms/servers/srv-a", {"labels": "vlan:a,vlan b"})
+    box.vars.put("platform/servers/srv-a", {"labels": "vlan:a,vlan b"})
     assert ctl.pass_once()["reach_moves"] == 0 and ctl.where(cam) == "w-1"
-    assert "vms/servers/srv-a" in SERVER_LABELS.bad
-    box.vars.put("vms/servers/srv-a", {"labels": "vlan:a"})
+    assert "platform/servers/srv-a" in SERVER_LABELS.bad
+    box.vars.put("platform/servers/srv-a", {"labels": "vlan:a"})
     ctl.pass_once()
-    assert "vms/servers/srv-a" not in SERVER_LABELS.bad
+    assert "platform/servers/srv-a" not in SERVER_LABELS.bad
 
 
 def test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels():
     """A server's labels decide where every camera may go: `admin` on the cluster, not on one camera, not on a label,
-    not `view`. Looking — `GET /servers`, and what an edit would move — is any grant."""
+    not `view`. Looking — `GET /servers`, and what an edit would move — is any grant. The route is the console root's
+    alone (ADR-0026's addition): a subsystem's `/rec/servers/<s>/labels` is no route, for an admin too, and writes no
+    row of the recorders' (ADR-0003: no alias)."""
     box = Box()
     _site(box, srv_a="vlan:a")
     _resource(box, "srv-a")                                                        # known to the recorders too
@@ -210,20 +216,23 @@ def test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels():
         for who in ("cam-admin", "guard", "viewer"):
             assert _call(base, "PUT", "/servers/srv-a/labels", {"labels": []}, token=who)[0] == 403, who
             assert _call(base, "DELETE", "/servers/srv-a/labels", token=who)[0] == 403, who
-            assert _call(base, "PUT", "/rec/servers/srv-a/labels", {"labels": []}, token=who)[0] == 403, who
         assert _call(base, "GET", "/servers", token="viewer")[0] == 200
         assert _call(base, "GET", "/servers/srv-a/labels?labels=vlan:b", token="viewer")[0] == 200
-        assert box.vars.get("vms/servers/srv-a")[0] is None
+        assert box.vars.get("platform/servers/srv-a")[0] is None
         assert _call(base, "PUT", "/servers/srv-a/labels", {"labels": []}, token="admin")[0] == 200
-        assert _call(base, "PUT", "/rec/servers/srv-a/labels", {"labels": []}, token="admin")[0] == 200
-        assert box.vars.get("rec/servers/srv-a")[0] == {"labels": ""}            # the recorder's own row, its own prefix
+        assert box.vars.get("platform/servers/srv-a")[0] == {"labels": ""}       # one row, the platform's
+        for method in ("GET", "PUT", "DELETE"):
+            assert _call(base, method, "/rec/servers/srv-a/labels", {"labels": []} if method == "PUT" else None,
+                         token="admin")[0] == 404, method
+        assert box.vars.get("rec/servers/srv-a")[0] is None and box.vars.get("vms/servers/srv-a")[0] is None
     finally:
         srv.shutdown()
 
 
 def test_the_page_is_told_which_cameras_an_edit_will_move():
     """`GET /servers/<server>/labels?labels=…` — what would move if the server reached that — before anything is written,
-    and the `PUT` says the same of what it wrote. The page warns with it."""
+    and the `PUT` says the same of what it wrote. The page warns with it. Each unit is `<sub>/<id>` (ADR-0026's
+    addition): the list is every subsystem's."""
     box = Box()
     ctl = _site(box, srv_a="vlan:a,vlan:b", srv_b="vlan:a,vlan:b")
     ctl.set_server_labels("srv-b", [])
@@ -232,11 +241,11 @@ def test_the_page_is_told_which_cameras_an_edit_will_move():
     con_ctl, rec, m, srv, base = _console(box)
     try:
         st, out = _call(base, "GET", "/servers/srv-a/labels?labels=vlan:b")
-        assert st == 200 and out["would_move"] == [a] and out["labels_source"] == "node"
-        assert _call(base, "GET", "/servers/srv-a/labels?labels=")[1]["would_move"] == [a, b]
+        assert st == 200 and out["would_move"] == [f"vms/{a}"] and out["labels_source"] == "node"
+        assert _call(base, "GET", "/servers/srv-a/labels?labels=")[1]["would_move"] == [f"vms/{a}", f"vms/{b}"]
         assert _call(base, "GET", "/servers/srv-a/labels?labels=vlan%20b")[0] == 400
         st, out = _call(base, "PUT", "/servers/srv-a/labels", {"labels": ["vlan:a"]})
-        assert out["will_move"] == [b]
+        assert out["will_move"] == [f"vms/{b}"]
         assert ctl.where(a) == "w-1" and ctl.where(b) == "w-1"                    # nothing moved yet: the pass does
     finally:
         srv.shutdown()
@@ -276,11 +285,11 @@ def test_a_torn_server_row_after_a_controller_restart_moves_nothing_and_takes_no
     box = Box()
     ctl, cams = _stale_node_site(box, 12)
     for torn in ({"labels": "vlan:a,vlan b"}, {"note": "half a write"}):
-        box.vars.put("vms/servers/srv-a", torn)
+        box.vars.put("platform/servers/srv-a", torn)
         fresh = VmsController(box.vars, box.objects, capacity=50, wall=box.wall)     # the controller restarted
         for _ in range(2):
             assert fresh.pass_once()["reach_moves"] == 0
-        assert all(fresh.where(c) == "w-1" for c in cams) and "vms/servers/srv-a" in SERVER_LABELS.bad
+        assert all(fresh.where(c) == "w-1" for c in cams) and "platform/servers/srv-a" in SERVER_LABELS.bad
         assert fresh.labels_of("w-1") == set() and fresh.labels_unread("srv-a")
     new = _camera(fresh, 99)
     fresh.pass_once()
@@ -290,7 +299,7 @@ def test_a_torn_server_row_after_a_controller_restart_moves_nothing_and_takes_no
         assert _call(base, "GET", "/servers")[1]["servers"]["srv-a"]["labels_source"] == "unknown"
     finally:
         srv.shutdown()
-    box.vars.put("vms/servers/srv-a", {"labels": "vlan:a"})            # mended: read again, nothing to move
+    box.vars.put("platform/servers/srv-a", {"labels": "vlan:a"})            # mended: read again, nothing to move
     assert fresh.pass_once()["reach_moves"] == 0 and not fresh.labels_unread("srv-a")
 
 
@@ -302,7 +311,7 @@ def test_a_listing_that_leaves_a_servers_row_out_moves_nothing():
     box = Box()
     ctl, cams = _stale_node_site(box, 5)
     real = box.vars.list
-    box.vars.list = lambda prefix: [k for k in real(prefix) if k != "vms/servers/srv-a"]
+    box.vars.list = lambda prefix: [k for k in real(prefix) if k != "platform/servers/srv-a"]
     try:
         assert ctl.pass_once()["reach_moves"] == 0
         fresh = VmsController(box.vars, box.objects, capacity=50, wall=box.wall)
@@ -324,7 +333,7 @@ def test_one_row_that_cannot_be_read_is_that_servers_alone():
     assert ctl.where(cam) == "w-2"
     ctl.clear_server_labels("srv-a")
     real = box.vars.get
-    box.vars.get = lambda key: (_ for _ in ()).throw(OSError("one key")) if key == "vms/servers/srv-c" else real(key)
+    box.vars.get = lambda key: (_ for _ in ()).throw(OSError("one key")) if key == "platform/servers/srv-c" else real(key)
     try:
         ctl.set_server_labels("srv-b", ["vlan:z"])
         rep = ctl.pass_once()
@@ -480,11 +489,11 @@ def test_the_labels_route_answers_a_bad_body_a_bad_label_and_an_unknown_server_w
             code, body = _call(base, "PUT", f"/servers/{name}/labels", {"labels": []})
             assert code == 400 and box.resource_root not in json.dumps(body), (name[:20], code, body)
         assert "no server srv-x is known here" in _call(base, "PUT", "/servers/srv-x/labels", {"labels": []})[1]["detail"]
-        assert not [k for k in box.vars.list("vms/servers/")]
+        assert not [k for k in box.vars.list("platform/servers/")]
         real = con_ctl.vars.put                                       # the console's own view of the store
 
         def refuses(key, *a, **k):
-            if key.startswith("vms/servers/"):
+            if key.startswith("platform/servers/"):
                 raise OSError(f"[Errno 28] No space left on device: '{box.resource_root}/store/{key}'")
             return real(key, *a, **k)
         con_ctl.vars.put = refuses
@@ -639,3 +648,102 @@ def test_units_waiting_for_reach_are_counted_over_the_whole_pass():
     assert (rep["reach_moves"], rep["reach_waiting"]) == (REACH_BUDGET, 25 - REACH_BUDGET), rep
     assert [(r["reach_moves"], r["reach_waiting"]) for r in (ctl.pass_once(), ctl.pass_once())] == [(10, 5), (5, 0)]
     assert all(ctl.where(c) == "w-2" for c in cams)
+
+
+# -- ADR-0026's addition: one row a server, the console root's route, a process that never read knows nothing --------
+
+def _recorder(box, name: str, server: str, labels: str) -> None:
+    from vms.config import REC_SPEC
+    box.objects.put(REC_SPEC.sub.heartbeat_key(name),
+                    Heartbeat(name, box.wall(), [], {"server": server, "capacity": 50, "headroom": 50,
+                                                     "labels": labels}).to_bytes())
+
+
+def test_one_row_a_server_for_every_subsystem_and_the_edit_names_the_units_of_each():
+    """The row was each subsystem's (`vms/servers/srv-a`, `rec/servers/srv-a`): the same machine reached `vlan:a` for the
+    cameras and nothing for the recorders. It is the platform's now, one a server: one `PUT` at the console's root, and
+    the camera controller and the recorder controller both read it. What it would move is one list across every spec,
+    each unit `<sub>/<id>`, cut to what the caller may look at — a guard of `vlan:b` is not told the ids on `vlan:a`."""
+    from w2cplatform.spec import SpecController
+    from vms.config import REC_SPEC
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a,vlan:b", srv_b="vlan:a,vlan:b")
+    _recorder(box, "r-1", "srv-a", "vlan:a")
+    rc = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
+    ctl.set_server_labels("srv-b", [])
+    cam, cam_b = _camera(ctl, 1, "vlan:a"), _camera(ctl, 2, "vlan:b")
+    rc.create({"name": "1", "cam": str(cam), "labels": ["vlan:a"]})
+    ctl.ensure_placed(); rc.ensure_placed()
+    assert ctl.where(cam) == ctl.where(cam_b) == "w-1" and rc.placement("1").worker == "r-1"
+    access = Tokens({"admin": [("admin", None, ())], "guard-b": [("view", None, ("vlan:b",))]})
+    con_ctl, rec, m, srv, base = _console(box, access)
+    try:
+        st, out = _call(base, "GET", "/servers/srv-a/labels?labels=", token="admin")
+        assert st == 200 and out["would_move"] == [f"vms/{cam}", f"vms/{cam_b}", "rec/1"], out
+        assert _call(base, "GET", "/servers/srv-a/labels?labels=", token="guard-b")[1]["would_move"] == [f"vms/{cam_b}"]
+        st, out = _call(base, "PUT", "/servers/srv-a/labels", {"labels": ["vlan:b"]}, token="admin")
+        assert st == 200 and out["will_move"] == [f"vms/{cam}", "rec/1"], out
+        assert box.vars.get("platform/servers/srv-a")[0] == {"labels": "vlan:b"}
+        assert [k for k in box.vars.list("vms/servers/")] == [] and [k for k in box.vars.list("rec/servers/")] == []
+        assert ctl.labels_of("w-1") == rc.labels_of("r-1") == {"vlan:b"}      # one row, read by both
+        st, out = _call(base, "DELETE", "/servers/srv-a/labels", token="admin")
+        assert st == 200 and out["will_move"] == [] and box.vars.get("platform/servers/srv-a")[0] is None
+    finally:
+        srv.shutdown()
+    assert [k for k in _audit(box) if k[0].startswith("server.labels")] == [("server.labels.set", "admin"),
+                                                                            ("server.labels.cleared", "admin")]
+
+
+def test_a_server_known_to_any_subsystem_takes_a_row():
+    """`servers_known` across every subsystem and resource: a server only a recorder has announced is one the camera
+    console knows too — the row is the server's, not the cameras'."""
+    box = Box()
+    _site(box, srv_a="vlan:a")
+    _recorder(box, "r-9", "srv-r", "")
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        assert "srv-r" not in con_ctl.servers_known() and "srv-r" in m.servers_known()
+        st, out = _call(base, "PUT", "/servers/srv-r/labels", {"labels": ["vlan:r"]})
+        assert st == 200 and box.vars.get("platform/servers/srv-r")[0] == {"labels": "vlan:r"}, out
+        assert "no server srv-z is known here" in _call(base, "PUT", "/servers/srv-z/labels", {"labels": []})[1]["detail"]
+    finally:
+        srv.shutdown()
+
+
+def test_a_process_that_never_read_the_rows_knows_no_servers_labels():
+    """ADR-0026's addition («Архитектор»; the product's 59808df): a controller whose listing of `platform/servers/*` has
+    failed since it started placed by the node's `LABELS` — a guess, and the very word a row may have been written to
+    correct. It knows no server's labels now: a camera with a label is placed nowhere, a camera without labels is placed,
+    `ensure_reach` moves nothing, and its console says `unknown`. Once the rows read, the node answers for a server
+    that has none."""
+    box = Box()
+    _site(box, srv_a="vlan:a")
+    def silenced(vars_):
+        real = vars_.list
+
+        def silent(prefix):
+            if prefix.startswith("platform/servers/"):
+                raise OSError("the store did not answer")
+            return real(prefix)
+        vars_.list = silent
+    real_list = box.vars.list
+    silenced(box.vars)
+    try:
+        fresh = VmsController(box.vars, box.objects, capacity=50, wall=box.wall)
+        labelled, bare = _camera(fresh, 1, "vlan:a"), _camera(fresh, 2, "")
+        rep = fresh.pass_once()
+        assert fresh.where(labelled) is None and fresh.where(bare) == "w-1", rep
+        assert fresh.labels_of("w-1") == set() and fresh.server_labels_of("srv-a") == (None, "unknown")
+        assert rep["reach_moves"] == 0 and rep["servers_labels_unread"] == -1
+        con_ctl, rec, m, srv, base = _console(box)
+        silenced(con_ctl.vars)                                    # the console's own handle has never read them either
+        try:
+            s = _call(base, "GET", "/servers")[1]["servers"]["srv-a"]
+            assert (s["labels_source"], s["labels"], s["labels_node"]) == ("unknown", [], ["vlan:a"]), s
+            assert _call(base, "GET", "/servers/srv-a/labels")[1]["labels_source"] == "unknown"
+        finally:
+            srv.shutdown()
+    finally:
+        box.vars.list = real_list
+    fresh.pass_once()                                             # read now: srv-a has no row — its node's `vlan:a`
+    assert fresh.server_labels_of("srv-a") == (None, "node") and fresh.where(labelled) == "w-1"

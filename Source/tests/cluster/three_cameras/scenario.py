@@ -360,7 +360,7 @@ def s04_place() -> str:
     gets = sum(1 for x in s.log.calls[mark:] if x.kind == "store" and x.op == "get")
     out = ["# 04. Проход контроллера на srv-a, который размещает три камеры (часть 04-placement):",
            "# pass_once(1) + publish_snapshot() в одном one_pass — как юнит. Всё, что он читает (слоты, heartbeat'ы —",
-           "# объекты через ресурс srv-a, ресурсы, политика, drain, метки серверов vms/servers/*), записи размещения",
+           "# объекты через ресурс srv-a, ресурсы, политика, drain, метки серверов platform/servers/*), записи размещения",
            "# (vms/placement/<id>) и назначения (vms/workers/<w>), файлы снапшота (vms/snapshot/<w>) и отчёта прохода.", "",
            s.view(mark).render(),
            f"# за проход: {c}; из чтений хранилища list={lists}, get={gets}",

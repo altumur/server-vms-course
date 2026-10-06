@@ -66,10 +66,10 @@ and the worker is the subsystem.
 # - Every write is `Controller.write` (CAS loop) or a create-only `put(cas=0)`; nothing is cached between passes,
 #   so the process can be killed anywhere. Within one pass each key is read once (`contract.one_pass`). One
 #   exception, on purpose: the servers' labels last read (`server_labels`) are kept, so a store that does not answer
-#   moves nothing — a process that never read them moves nothing either.
-# - What a server reaches (feedback DQ): `<name>/servers/<server> {labels}`, the console's row, over the labels its
-#   workers report (`labels_of`, `node_labels_of`); `ensure_reach` moves a placed unit its server no longer reaches,
-#   or unplaces it with the reason, `REACH_BUDGET` a pass.
+#   moves nothing — a process that never read them knows no server's labels, and moves nothing either.
+# - What a server reaches (feedback DQ, ADR-0026): `platform/servers/<server> {labels}`, the platform's row — one a
+#   server, written from the console's root — over the labels its workers report (`labels_of`, `node_labels_of`);
+#   `ensure_reach` moves a placed unit its server no longer reaches, or unplaces it with the reason, `REACH_BUDGET` a pass.
 # - The order inside `place` — placement row, then assignment — is what makes two instances agree: the row
 #   is the lock.
 # - `capacity_of`/`labels_of`/`server_of` call `workers_seen(max_age=1e12)` each time: outside a pass one
@@ -92,8 +92,8 @@ from .doors import numeric, unnamable
 from .secrets import NOT_AN_ADDRESS, SecretRules, address_fault, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES, SCHEMA_KEY,
-                       OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
-                       label_set, one_pass, read_slot, slot_number, stored)
+                       SERVERS_PREFIX, OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
+                       label_set, one_pass, read_slot, server_key, slot_number, stored)
 from .events import OWN_OF_TREES, Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -189,7 +189,7 @@ NEXT_IDS = Table("next_id", "the next id is one past the largest one there is, a
 # stands — but a name with `,` is in no assignment (`contract.Assignment.to_items`), so nobody runs it.
 UNIT_NAMES = Table("unit_name", "it is served as it stands, a name with a comma is assigned to nobody; create it again "
                                 "under a name without the character", "unit's name")
-# A server's labels from the console (`<sub>/servers/<server>`, feedback DQ): one that does not parse — a word that is not
+# A server's labels from the console (`platform/servers/<server>`, feedback DQ, ADR-0026): one that does not parse — a word that is not
 # a label, no `labels` at all, a key the listing shows and a read does not find — keeps what was last read of that
 # server; never read, the server reaches no label until it is (the review's tenth pass) — and nothing moves off it
 # (`SpecController.server_labels`).
@@ -1787,7 +1787,7 @@ class SubsystemSpec:
                f"{self.name}/policy",                                                         # the administrator's knobs: servers distinct | shared
                f"{self.name}/sweep",                                                          # what the blob sweep marked, and when
                f"{self.name}/requests/*",                                                     # bounded work an operator asked a worker for, outside its ordinary pass
-               f"{self.name}/servers/*",                                                      # what a server reaches, as the administrator says it (feedback DQ)
+               SERVERS_PREFIX + "*",                                                          # what a server reaches, as the administrator says it: one row a server, every subsystem's (ADR-0026)
                DRAIN_KEY,                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
                DECOMMISSION + "*",                                                            # "this machine is gone for good": the operator's, every subsystem reads it
                SCHEMA_KEY]                                                                    # `PUT /schema`: the operator raises the layout once every machine is new
@@ -2503,15 +2503,12 @@ class SpecController(Controller):
         return number(f"{self.sub.heartbeat_key(worker)}#{field}", hb.extra[field], kind, None)
 
     # What this worker's server reaches, as placement reads it: the administrator's row for the server when there is
-    # one (`server_labels`, feedback DQ), the worker's own word otherwise (`node_labels_of`).
+    # one (`server_labels`, feedback DQ), the worker's own word otherwise (`node_labels_of`) — and, while what the server
+    # reaches is not known (`server_labels_of` says `unknown`), what its row last said, or nothing: a unit that needs a
+    # label is not placed there, one that needs none is.
     def labels_of(self, worker: str) -> set[str]:
-        rows = self.server_labels()
-        server = self.server_of(worker)
-        if rows is not None and server in rows:
-            return set(rows[server])
-        if server in self._server_rows_unread:
-            return set()                               # its row did not read, and never has: it reaches no label known
-        return self.node_labels_of(worker)
+        labels, said_by = self.server_labels_of(self.server_of(worker))
+        return self.node_labels_of(worker) if said_by == "node" else set(labels or ())
 
     # The `labels` string of its heartbeat, split on commas — the node's `LABELS` (the platform's
     # `w2c.env`, or a unit's), read by the worker when it starts: the first value of a new box and the fallback of every other.
@@ -2526,14 +2523,21 @@ class SpecController(Controller):
     # learns in the console, beside the cameras that carry the same labels — and a label decided only the NEXT
     # placement: a camera stayed on a server that no longer reached its VLAN, recorded by nobody, and nothing said so.
     #
-    # So a server may have a row, `<sub>/servers/<server> {labels: "a,b"}`, written by the console (`PUT`/`DELETE
-    # /servers/<server>/labels`, admin on the whole cluster). Where it exists it IS the server's labels — empty too,
-    # which says "this machine reaches nothing"; where it does not, the node's answer. Placement reads the rows once a
-    # pass (`_per_pass`), and `ensure_reach` moves what a server no longer reaches.
+    # So a server may have a row, `platform/servers/<server> {labels: "a,b"}` — the platform's, ONE a server for every
+    # subsystem (ADR-0026, its addition; §3 row 4 of the boundary note): a machine carries every subsystem, and what it
+    # reaches decides where the units of each may go. It was `<sub>/servers/<server>`, one per subsystem, and the same
+    # machine could reach `vlan:a` for one subsystem and nothing for another. Written by the console at its root
+    # (`PUT`/`DELETE /servers/<server>/labels`, `Mount.labels_route`, admin on the whole cluster). Where it exists it IS
+    # the server's labels — empty too, which says "this machine reaches nothing"; where it does not, the node's answer.
+    # Placement reads the rows once a pass (`_per_pass`), and `ensure_reach` moves what a server no longer reaches.
     #
     # A STORE THAT DOES NOT ANSWER MOVES NOTHING. The rows last read are kept (`_server_rows_last`): a hiccup must not
     # turn every server back to its node's labels for one pass and move the cameras the administrator placed by his.
-    # A process that has never read them says None — and `ensure_reach` then moves nothing.
+    # A process that has never read them says None — and knows NO server's labels (`server_labels_of`: `unknown`), not
+    # its node's: a unit with a label is placed nowhere, a unit without one is placed, and `ensure_reach` moves nothing.
+    # Placing by the node's `LABELS` there was placing by a guess — the very word the row was written to correct
+    # («Архитектор», ADR-0026's addition; the product's 59808df). The node answers only for a server whose rows WERE read
+    # and that has none.
     #
     # …AND A ROW THAT DID NOT READ IS NOT KNOWN, NOT "NO ROW" (the review's tenth pass, major; a run). A row that did not
     # parse kept what was last read of that server, else its NODE's: after a restart of the controller there was no
@@ -2548,7 +2552,7 @@ class SpecController(Controller):
     # alone: the others are read.
     def server_labels(self) -> dict[str, frozenset] | None:
         """`{server: labels}` from the console's rows — None while this process has never read them."""
-        prefix = self.sub.servers_prefix()
+        prefix = SERVERS_PREFIX
 
         def read():
             last = self._server_rows_last or {}
@@ -2592,13 +2596,32 @@ class SpecController(Controller):
         self.server_labels()
         return server in self._server_rows_unread
 
-    # Where a server's labels come from now: `console` (its row) or `node` (its workers' heartbeats).
-    def labels_source(self, server: str) -> str:
+    # What a server reaches as placement reads it, and from where (the product's `ServerLabelsOf`): `console` — its row,
+    # read whole; `unknown` — its row is there and did not read on the last read, or this process has never read the
+    # rows, with what its row last said if anything (None: nothing); `node` — the rows were read and it has none: its
+    # workers' heartbeats answer (`node_labels_of`), and the labels here are None.
+    def server_labels_of(self, server: str) -> tuple[frozenset | None, str]:
         rows = self.server_labels()
-        return "console" if rows is not None and server in rows else "node"
+        if rows is None:
+            return None, "unknown"
+        if server in self._server_rows_unread:
+            return rows.get(server), "unknown"
+        if server in rows:
+            return rows[server], "console"
+        return None, "node"
+
+    # Where a server's labels come from now: `console`, `unknown` or `node` (`server_labels_of`).
+    def labels_source(self, server: str) -> str:
+        return self.server_labels_of(server)[1]
+
+    # How many servers' rows did not read on the last read — -1 while this process has never read them (the product's
+    # `ServersLabelsUnread`): a console that counts is told from one that knows nothing.
+    def labels_unread_count(self) -> int:
+        return -1 if self.server_labels() is None else len(self._server_rows_unread)
 
     # The servers anybody has announced: this subsystem's workers (any age), the resources, the rows there are. A label
-    # row is written only for one of these (the review's tenth pass, minor: a typo was 200 and a row nobody reads).
+    # row is written only for one of these (the review's tenth pass, minor: a typo was 200 and a row nobody reads) — of
+    # ANY subsystem the console serves (`Mount.servers_known` unites these): the row is the server's, not a subsystem's.
     def servers_known(self) -> set[str]:
         from .resource import resources_seen
         out = set(self._worker_servers()) | set(self.server_labels() or {}) | set(self._server_rows_unread)
@@ -2612,31 +2635,33 @@ class SpecController(Controller):
     # reads it on its next pass. Refused: a server that is no name, a label that is not one (`LABEL_WORD`).
     #
     # …and only strings (the review's tenth pass, minor: `[null]`, `[true]`, `[1]` were the labels `None`, `True`, `1`),
-    # and only for a server somebody has announced (`servers_known`): a typo wrote a row no server reads, and said 200.
-    def set_server_labels(self, server: str, labels) -> list[str]:
+    # and only for a server somebody has announced (`known`, else `servers_known`): a typo wrote a row no server reads,
+    # and said 200. The console's root asks it with every subsystem's servers (`Mount.labels_route`).
+    def set_server_labels(self, server: str, labels, known: set[str] | None = None) -> list[str]:
         server = server_name(server)
         if not isinstance(labels, (list, tuple)) or not all(isinstance(l, str) for l in labels):
             raise Refused('the labels are {"labels": ["vlan:cctv-a", …]}, each a string; [] for none')
-        if server not in self.servers_known():
+        if server not in (self.servers_known() if known is None else known):
             raise Refused(f"no server {server} is known here: no worker and no resource of it has reported, and it has "
                           f"no row — check the name")
         out = sorted({str(l).strip() for l in labels})
         bad = [l for l in out if not LABEL_WORD.fullmatch(l)]
         if bad:
             raise Refused(f"a label is letters, digits and _ . : - (up to 64), not {bad[0]!r}")
-        self.vars.put(self.sub.server_key(server), {"labels": ",".join(out)})
+        self.vars.put(server_key(server), {"labels": ",".join(out)})
         return out
 
     def clear_server_labels(self, server: str) -> bool:
         """The row goes; the node's labels answer again. False when there was none."""
-        key = self.sub.server_key(server_name(server))
+        key = server_key(server_name(server))
         if self.vars.get(key)[0] is None:
             return False
         self.vars.delete(key)
         return True
 
     # What would move if `server` reached `labels` (None: its node's) — asked by the page before it writes, with the
-    # same constraint the pass asks: the units placed on that server's workers that would no longer pass it.
+    # same constraint the pass asks: the units placed on that server's workers that would no longer pass it. This
+    # subsystem's ids; the console's root names them `<sub>/<id>` across every spec (`Mount.would_move`).
     def would_move(self, server: str, labels) -> list:
         rule = CONSTRAINTS[self.spec.constraint]
         out = []
@@ -3731,7 +3756,7 @@ class SpecController(Controller):
         # Units `redistribute` could not move off a worker that is leaving — a group no worker takes whole, a unit nothing
         # has room or reach for (the review's twelfth pass, blocker 7: every counter said 0)
         rep["units_left_on_leaving"] = self.last_leaving_waiting
-        rep["servers_labels_unread"] = len(self._server_rows_unread)
+        rep["servers_labels_unread"] = self.labels_unread_count()      # -1: the rows never read since this process started
         # The spares' numbers, per label set (`offer_spares`; the product's names): what the console publishes as
         # `<name>_workers_needed`, `_units_short`, `_spare_offers` while this report is fresh
         rep.update(spares)
@@ -4191,7 +4216,6 @@ class SpecController(Controller):
         known = self.servers_known()
         if not known:
             return None
-        rows = self.server_labels() or {}
         node: dict[str, set] = {}
         for hb in self._per_pass(self.sub.heartbeats_prefix(), lambda: self.workers_seen(max_age=1e12), "any_age").values():
             if isinstance(hb.extra.get("server"), str):
@@ -4202,10 +4226,9 @@ class SpecController(Controller):
             if server in gone or self.resource_state(server) == "silent":
                 continue                                # gone or leaving: no spare runs on it (one only this process
                                                         # cannot reach — `unreachable` — is there, and may carry one)
-            if server in rows:
-                out[server] = frozenset(rows[server])
-            elif server in self._server_rows_unread:
-                out[server] = frozenset()               # its row did not read: it reaches no label known (`labels_of`)
+            labels, said_by = self.server_labels_of(server)
+            if said_by != "node":                       # its row; one not known: what it last said, or no label (`labels_of`)
+                out[server] = frozenset(labels or ())
             else:
                 out[server] = frozenset(node[server]) if server in node else None
         return out
@@ -4275,7 +4298,8 @@ class SpecController(Controller):
     # of the pool: the units of a worker that is gone, leaving or draining are `redistribute`'s. At most `budget` a pass:
     # every move is a new epoch and a seam in the recording, and an edit that strips a server of its VLAN moves its
     # cameras over a few passes, not in one. A pass that has never read the servers' rows (`server_labels` is None: the
-    # store did not answer) moves nothing; nor does one off a server whose row did not read this pass (the tenth pass).
+    # store did not answer since this process started — every server's reach `unknown`) moves nothing; nor does one off
+    # a server whose row did not read this pass (the tenth pass).
     #
     # THE GROUP MOVES WHOLE, OR NOT THIS PASS (the review's tenth pass, minor): an administrator of one camera of a
     # four-channel recorder changed its `labels`, and the channel went alone to another holder — two sessions to one

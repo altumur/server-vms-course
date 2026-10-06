@@ -538,7 +538,7 @@ def test_units_waiting_for_room_cost_a_pass_what_placed_ones_cost():
 
 
 def test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan_moves_ten_a_pass():
-    """Feedback DQ: placement reads a server's labels from the console's rows (`<sub>/servers/<server>`), once a pass —
+    """Feedback DQ: placement reads a server's labels from the console's rows (`platform/servers/<server>`), once a pass —
     `labels_of` is asked per candidate worker and per unit placed, and a read per question would be the 64 000 of the
     scaling pass again. A thousand cameras needing `vlan:a`, four servers whose rows say they reach it: the idle pass
     stays under the ceiling it had and changes nothing. Then srv-0 stops reaching `vlan:a` (its row says nothing): its
@@ -550,7 +550,7 @@ def test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan
         key = f"vms/cameras/{i}"
         vars_.put(key, {**vars_.get(key)[0], "labels": "vlan:a"})
     for s in range(4):
-        vars_.put(f"vms/servers/srv-{s}", {"labels": "vlan:a"})
+        vars_.put(f"platform/servers/srv-{s}", {"labels": "vlan:a"})
     before = rows(vars_)
     v, o = Reads(vars_), Reads(objects)
     ctl = _vms(v, o)
@@ -562,7 +562,7 @@ def test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan
     assert idle <= 2 * n + 150, idle
     assert rows(vars_) == before
 
-    vars_.put("vms/servers/srv-0", {"labels": ""})
+    vars_.put("platform/servers/srv-0", {"labels": ""})
     v.zero(), o.zero()
     with ctl.one_pass():
         rep = ctl.pass_once(1)
