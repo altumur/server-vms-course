@@ -66,11 +66,11 @@ def test_what_the_platform_checks_and_what_it_does_not():
     platform reads; what a trigger MEANS is the evaluator's."""
     box = Box(); con = _con(box)
 
-    try:
+    try:                                     # a string is a document that is a string (`Field.take`): the schema's no
         con.create({**DOOR, "name": "broken", "when": "{not json"})
-        raise AssertionError("a `json` field took something that is not JSON")
+        raise AssertionError("a `json` field's schema took a string for its list of triggers")
     except Refused as e:
-        assert "not JSON" in str(e)
+        assert "when" in str(e), e
 
     try:
         con.create({**DOOR, "name": "huge", "when": [{"sub": "vms", "kind": "x", "match": {"a": "b" * 5000}}]})

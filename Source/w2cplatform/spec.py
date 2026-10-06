@@ -1424,6 +1424,11 @@ class SubsystemSpec:
             raise ValueError(f"spec {self.name}: rights.reach is {{group: [<field>], cluster: [<field>], requests: "
                              f"[<action>]}}, not {reach!r}")
         self.reach = {k: tuple(v) for k, v in reach.items()}
+        # a change of a `reach.group` field reaches the unit's GROUP: with no `placement.group_by` there is none to reach,
+        # and the declaration would ask nothing (ADR 0012; the product's `reach-names`)
+        if self.reach.get("group") and not self.group_by:
+            raise ValueError(f"spec {self.name}: rights.reach.group names fields whose change reaches the unit's group, "
+                             f"and the spec says no placement.group_by — there is no group to reach")
         names = rights.get("names") or []
         if not isinstance(names, list) or not all(
                 isinstance(e, dict) and not set(e) - {"field", "unit", "sub", "of"} and e.get("field") in self.fields
@@ -1431,6 +1436,11 @@ class SubsystemSpec:
                 for e in names):
             raise ValueError(f"spec {self.name}: rights.names is [{{field: <a json field>, unit: <key>, sub: <key> | of: "
                              f"<subsystem>}}], not {names!r}")
+        # …and a name is read from a `json` field: any other answered "*" for a text it could not read, hiding a typo
+        wrong = [e["field"] for e in names if self.fields[e["field"]].type != "json"]
+        if wrong:
+            raise ValueError(f"spec {self.name}: rights.names reads names from a json field, and {wrong[0]} is "
+                             f"{self.fields[wrong[0]].type}")
         self.names = tuple(dict(e) for e in names)
 
     # What a console and a page read and do not act on, checked at load (the boundary's step 6): `metrics` (`metrics.py`),

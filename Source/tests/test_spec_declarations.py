@@ -406,7 +406,7 @@ def test_a_fields_shape_is_a_json_schema_in_the_spec_and_the_door_says_where_it_
     _refused(lambda: load({"type": "list"}, "x"), "type 'list' is none of")
 
 
-SHED = {"name": "shed", "placement": CAP,
+SHED = {"name": "shed", "placement": {**CAP, "group_by": {"field": "addr", "cut_at": "part"}},   # `reach.group` asks one
         "unit": {"rows": "tools", "id": "name",
                  "fields": {"name": {"type": "string", "required": True},
                             "addr": {"type": "url"}, "tag": {"type": "string"}, "labels": {"type": "list"}}},
@@ -641,6 +641,12 @@ def test_what_a_change_or_a_request_reaches_is_the_specs_group_the_cluster_or_th
     assert names_in(plan_spec, {"steps": "[{\"tool\": \"c\"}]"}) == {"shed/c"}
     assert names_in(plan_spec, {"steps": "{torn"}) == {"*"} and names_in(plan_spec, {"steps": "[{}]"}) == {"*"}
     _refused(lambda: SubsystemSpec.from_dict({**SHED, "rights": {"reach": {"group": ["nope"]}}}), "rights.reach is")
+    # …and two that asked nothing (the product's `reach-names`, «Архитектор» 2026-10-06): `reach.group` with no
+    # `placement.group_by` — no group to reach; a name read from a field that is not `json` — "*" hid a typo
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "placement": CAP, "rights": {"reach": {"group": ["addr"]}}}),
+             "no placement.group_by")
+    _refused(lambda: SubsystemSpec.from_dict({**SHED, "rights": {"names": [{"field": "tag", "unit": "tool", "sub": "s"}]}}),
+             "reads names from a json field, and tag is string")
 
 
 def _sealer():
