@@ -275,8 +275,8 @@ def _a_road(road) -> None:
 
 
 def _a_primary(e) -> dict:
-    """A camera's entry in the book of primaries: a cluster, and — when it pushes — the road to its ingest, and the
-    backup's when it has one."""
+    """A camera's entry in the book of primaries: the cluster that records it (`recorded_by`), and — when it pushes —
+    the road to its ingest, and the backup's when it has one."""
     if not isinstance(e, dict):
         raise TypeError(f"not an object: {type(e).__name__}")
     if e.get("ingest"):
@@ -2406,7 +2406,8 @@ class CameraPusher:
             self.uncovered = True                                      # the card writes what the stream cannot carry
         said = {"continue": dict(self.continued), "behind": round(behind, 1), "lagging": self.lag}
         if road is None:
-            self.state = f"no ingest of {e['cluster']} answered" + (" nor of its backup" if backup else "")
+            at = e["cluster"] if e.get("polls_only") else e["recorded_by"]     # the book of polls, or of primaries
+            self.state = f"no ingest of {at} answered" + (" nor of its backup" if backup else "")
             return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, **said}
         which, where, pushing = road
         self.road = which

@@ -334,7 +334,9 @@ class Crossings:
         # `starting` (feedback AB): the recording should be written and no recorder of its cluster has NAMED it
         # yet — a start, which gets the card's grace. Named and not written, or the cluster silent — a stop,
         # covered at once. It changes when a recording starts and when a recorder first reports it: rarely.
-        entry = {"cluster": on, "recording": "", "should": True, "written": False, "starting": False}
+        # `recorded_by`: the cluster that records it — the product's name too (`PrimaryEntry.RecordedBy`), one name on
+        # both sides, and the one the spec's `primaries.show` names (renamed from `cluster`, no alias: ADR-0003).
+        entry = {"recorded_by": on, "recording": "", "should": True, "written": False, "starting": False}
         c = self.view.fed.clusters.get(on)
         try:
             if c is None:

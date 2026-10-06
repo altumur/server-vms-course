@@ -357,7 +357,7 @@ def _camera_cluster():
     card.ring_film = lambda seconds: _film_on(box, ring, act, seconds)
 
     def carry(should=True, written=True, seen=True, starting=False):   # what the camera's agent does on a pass
-        book = {"SN1": json.dumps({"cluster": "room", "recording": "SN1", "should": should, "written": written,
+        book = {"SN1": json.dumps({"recorded_by": "room", "recording": "SN1", "should": should, "written": written,
                                    "starting": starting}, sort_keys=True)}
         have, idx = box.vars.get("domain/vms/primaries")
         if have != book:
