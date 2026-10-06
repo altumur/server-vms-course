@@ -99,7 +99,7 @@ def load(schema, what: str, depth: int = 0):
 # backreference (`\1`…`\9`, `\g<…>`, `(?P=name)`), an atomic group, a conditional, a possessive quantifier, `\Z` and `\G`,
 # an inline flag but `i`, `m`, `s`, `U`, a comment `(?#…)`, `\u`/`\U`/`\N{…}`, an escaped non-ASCII character, `[\b]`, a
 # one-digit octal in a class, a count past 1000, a group name not in ASCII. Go reads otherwise: `[:` in a class (a POSIX
-# class), `{,n}` (characters), `\S` in a class (Python's takes `\v`, `as_go` cannot say Go's there: write `[^\s]`), and a
+# class), `{,n}` (characters), `\S` in a class (Go's takes `\v`, Python's not; `as_go` cannot say Go's there: `[^\s]`), and a
 # non-ASCII character with a case under `(?i)` (Go folds it, Python's ASCII matching does not: write its cases, `[éÉ]`).
 # What `(?i)` folds in a VALUE is Go's and stays so — `k` takes the Kelvin sign there; the pattern is ASCII, the rule holds.
 # The scan walks the pattern as the parser does: `\x` is one escape, `[…]` one class, so `\(?=` and `[(?=]` stand.
