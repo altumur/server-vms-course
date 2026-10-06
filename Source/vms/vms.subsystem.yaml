@@ -2,7 +2,7 @@
 # subsystem is here; the worker (vmsworker) is the part that knows what a camera is.
 # the prefix. `SubsystemSpec.sub` becomes `Subsystem("vms")`, so every key is `vms/…`: rows under
 # `vms/cameras/`, `vms/next_id`, `vms/workers/<w>`, `vms/placement/<id>`, `vms/slots/<w>`, `vms/epoch/<id>`,
-# `vms/idem/<key>`, `vms/retention/<id>`, `vms/devices/<device>` (what a held device raises and can do — its
+# `vms/idem/<key>`, `vms/retention/<id>`, `vms/devices/<host>` (what a held device raises and can do — its
 # holder's, Lesson 25), and the object-store keys `vms/<w>/heartbeat` and `vms/snapshot`.
 # It also prefixes every `/metrics` line (`vms_…`) and is the `<subsystem>` directory on the resource
 # (`<archive>/vms/<cam>/…`). The grants are cut from it (`SubsystemSpec.acl_console`, `acl_controller`,
@@ -26,7 +26,7 @@ lease: {unconfirmed_max: forever}
 secrets:
   readers:
     door/signer: [console]
-# What the holder writes beside its claims: what a device it holds turned out to be (`vms/devices/<device>`, М10B Lesson
+# What the holder writes beside its claims: what a device it holds turned out to be (`vms/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
 worker: {writes: [devices]}
 unit:
@@ -244,7 +244,7 @@ unit:
     #
     # Deliberately NOT a list of capabilities. What a device can do — two inputs, one relay, PTZ — is a
     # DISCOVERY and belongs to the holder, not to the operator's row: the holder writes it in
-    # `vms/devices/<device>` when it changes and says it per camera in its heartbeat (`can`) — М10B Lesson
+    # `vms/devices/<host>` when it changes and says it per camera in its heartbeat (`can`) — М10B Lesson
     # 25, where automation checks a scenario against it. The row is what the operator declared; the device
     # row is what the process found.
     kind:                  {type: string, default: "video"}   # video | io — a device without a picture is still a device
