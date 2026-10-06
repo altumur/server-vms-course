@@ -1,0 +1,17 @@
+# The closed vocabulary of `fault`: the word a door's refusal says to a machine and a test, beside `detail` for a person.
+# One table for the course (Source/tests/testdata/fault.tsv; canonical.FAULTS and every door's code) and the product
+# (testdata/fault.tsv at its root; its Fault set), byte for byte. Owner: «Паритет». Decision of «Архитектор», 2026-10-06;
+# described in lesson 09. A new word comes here FIRST, then into the code of both sides; requests_body.tsv and
+# group_of.tsv take their words only from here, and their tests check it. The door's `error` word is not compared.
+#
+# Columns, tab-separated, one row a line; a line that begins with '#' and an empty line are no row:
+#   word     the fault
+#   status   the HTTP status it comes with: 400 — the body alone is wrong; 409 — it depends on the rows that stand (ADR-0031):
+#            garbled — a row a `ref` points at does not read; a store that did not answer is a store error, not this word
+not_json	400
+not_number	400
+too_long	400
+bad_url	400
+must_match	409
+unique	409
+garbled	409
