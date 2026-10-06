@@ -540,8 +540,9 @@ def test_the_shared_door_gives_only_declared_fields_and_an_edit_of_an_undeclared
 def test_a_document_the_domain_holds_whole_is_checked_by_its_schema_at_the_signers_one_operation():
     """ADR-0010/0032: `domain.shared` carries a document of type `json` with a schema — testsub's `rounds`, no counter's
     field. The signer's `shared` is one operation over whatever the specs declare: the document is checked by its
-    schema (400, the schema's words), taken as an object or as the text of one (a form's text box), signed with the
-    rest, and served at the cluster console's one door as it is. The operation knows no document by its name."""
+    schema (400, the schema's words), taken as it is — a string is a string, which a schema of an array refuses (reading
+    a form's text box is the page's work, the architect with «Паритет», (б)) — signed with the rest, and served at the
+    cluster console's one door as it is. The operation knows no document by its name."""
     from w2cplatform.domain.agent import DomainPublisher
     from w2cplatform.domain.grants import Grant, set_domain_grants
     from w2cplatform.domain.shared import POINTER, published
@@ -560,12 +561,13 @@ def test_a_document_the_domain_holds_whole_is_checked_by_its_schema_at_the_signe
                            shared.wall())
     for bad, words in (([{"counter": "s1"}], "every"), ([{"counter": "s1", "every": 0}], "every"),
                        ([{"counter": "s1", "every": 2, "colour": "red"}], "colour"), ({"counter": "s1"}, "array"),
-                       ("[{\"counter\": \"s1\", \"every\": \"two\"}]", "every"), ("not json at all", "not JSON")):
+                       ([{"counter": "s1", "every": "two"}], "every"), ("[{\"counter\": \"s1\", \"every\": 3}]", "array"),
+                       ("not json at all", "array")):
         st, out = edit({"base_rev": 0, "shared": {"testsub": {"rounds": bad}}})
         assert st == 400 and words in out["detail"], (bad, st, out)
     assert north_vars.get(POINTER)[0] is None                                                  # nothing signed
     assert edit({"base_rev": 0, "shared": {"testsub": {"rounds": [{"counter": "s1", "every": 5}], "step": 2}}})[0] == 200
-    assert edit({"base_rev": 1, "shared": {"testsub": {"rounds": "[{\"counter\": \"n1\", \"every\": 3}]"}}})[0] == 200
+    assert edit({"base_rev": 1, "shared": {"testsub": {"rounds": [{"counter": "n1", "every": 3}]}}})[0] == 200
     assert published(north_vars, north_objects)["shared"]["testsub"] == {"rounds": [{"counter": "n1", "every": 3}], "step": 2}
     assert agent.sync()
     assert con.shared_route("testsub", {})[1]["fields"]["rounds"] == {"value": [{"counter": "n1", "every": 3}],

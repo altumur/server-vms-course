@@ -1825,7 +1825,8 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
     pass — no status, no commands for any of its cameras — and the console could create no camera at all (500: one
     channel, one camera reads every row). By `doors.numeric` now: such a source is a key of its own, that camera's
     trouble. What is not an address by RFC 3986 — `rtsp://[…` (`urlsplit` raised), a port past 65535 — the platform
-    refuses at the door (400); what only the VMS reads in an address — a port written in its path, a channel in digits
+    refuses at the door (400), and so is a port of digits that are not 0–9 written in the path of a scheme that writes
+    its host there — where a password goes (ADR 0053); what only the VMS reads in an address — a channel in digits
     that are not 0–9 — is the holder's since the boundary's step 6: the row is taken, the holder does not dial it and
     says why in its heartbeat (`VmsWorker.held_back`). A source nobody can read a device from is still the cluster's
     grant to point a camera at, never the open path."""
@@ -1863,8 +1864,12 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
             assert code == 400 and ("port" in body["detail"] or "address" in body["detail"]), (bad, code, body)
             assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="three")[0] == 403       # the cluster's grant
             assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="admin")[0] == 400       # …and then refused
+        # a port in digits that are not 0–9, where the scheme writes its host in the path, is where a password goes:
+        # the url rule refuses it at any url field (ADR 0053; the product's c13c25f) — the platform's 400, not the holder's
+        code, body = _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.7:8²/ch/1"}, token="admin")
+        assert code == 400 and body.get("fault") == "bad_url", (code, body)
         made = []
-        for bad in ("driverpack://acme/10.0.0.7:8²/ch/1", "driverpack://acme/10.0.0.7/ch/①"):   # the VMS's words: its holder's
+        for bad in ("driverpack://acme/10.0.0.7/ch/①",):                # the VMS's words: its holder's
             assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="three")[0] == 403       # the cluster's grant still
             code, body = _call(base, "POST", "/cameras", {"source": bad}, token="admin")
             assert code == 201, (bad, code, body)

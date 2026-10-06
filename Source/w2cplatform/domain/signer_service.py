@@ -747,10 +747,13 @@ class Holder:
                 if not read_body(self, self.MAX_BODY):
                     return None
                 try:
-                    body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-                    if not isinstance(body, dict):
-                        raise TypeError("not an object")
-                except PARSE_ERRORS:
+                    # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400`
+                    # are 400 with the shared table's `fault` (the architect, 2026-10-06)
+                    body = parse_json(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                except PARSE_ERRORS as e:
+                    self._send(400, {"detail": "the body is a JSON object", "fault": getattr(e, "fault", "") or "not_json"})
+                    return None
+                if not isinstance(body, dict):
                     self._send(400, {"detail": "the body is a JSON object"})
                     return None
                 return body
@@ -1065,12 +1068,8 @@ def edit_shared(vars_, objects, issuer, keyset, revoked, token: str | None, body
         return 400, {"detail": "the edit is {base_rev: <the revision it was made against>, shared: {<sub>: {<field>: "
                                "value or null}}}"}
 
-    from . import declared
-    try:
-        shared = {sub: {f: _document(declared.spec(sub), f, v) for f, v in values.items()}
-                  for sub, values in shared.items()}
-    except ValueError as e:
-        return 400, {"detail": str(e)}
+    # a document a spec declares is taken AS IT IS: reading a form's text box is the page's work before it sends (the
+    # architect with «Паритет», 2026-10-06, (б)) — a string is a document that is a string
 
     def mutate(settings: dict) -> None:
         held = settings.setdefault("shared", {})
@@ -1096,18 +1095,6 @@ def edit_shared(vars_, objects, issuer, keyset, revoked, token: str | None, body
     except ApiError as e:
         return e.status, {"detail": e.detail}
     return 200, {"rev": rev, "by": who}
-
-
-def _document(spec, name: str, value):
-    """A value of the edit as the document keeps it: a document a spec declares (`domain.documents`) given as the TEXT
-    of its JSON — what a form's text box sends — is read as JSON; anything else is kept as it came. A text that is no
-    JSON is a `ValueError`, said with the field's name."""
-    if spec is None or name not in spec.domain.documents or not isinstance(value, str):
-        return value
-    try:
-        return parse_json(value)                         # the platform's one reading (`canonical.py`): no `NaN`
-    except PARSE_ERRORS as e:
-        raise ValueError(f"{spec.name}.{name} is a JSON document, and this is not JSON: {e}") from None
 
 
 # THE SIGNER'S LOOP, STEP BY STEP (the review's eighth pass, major). It was two `try` blocks with `except Exception: pass`

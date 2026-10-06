@@ -77,6 +77,8 @@ driverpack://file	(none)
 driverpack://FILE./clips/a.mp4	(none)
 driverpack://acme/nvr%2Ecorp/ch/1	(none)	bad_url
 driverpack://acme/admin:Hunter2@10.0.0.5/ch/1	10.0.0.5	bad_url
+driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1	10.0.0.5	bad_url
+driverpack://acme/10.0.0.5:hunter2/ch/1	10.0.0.5	bad_url
 driverpack://acme/admin:pa/ss@10.0.0.5/ch/1	10.0.0.5	bad_url
 driverpack://acme/admin:X%40nvr%2Ecorp/ch/1	(none)	bad_url
 # mirror://<hub>/<host>/…: the host in the path, `#` a character, `mirror://local/…` no host

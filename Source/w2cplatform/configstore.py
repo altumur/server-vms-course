@@ -158,6 +158,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import runtime, tls
+from .canonical import Fault, NotJson, parse_json
 from .storemachine import ADMIN, MAX_VALUE, PEER, Ambiguous, Rights, StoreMachine, Unavailable, answer
 from .variables import STORE_SCHEME, items_bytes
 
@@ -831,7 +832,10 @@ _API = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]{0,63}@)?[A-Za-z0-9._:\[\]%-]{1,2
 
 
 def _membership(path: str, raw: bytes) -> tuple[str, tuple | None]:
-    body = json.loads(raw or b"{}")
+    try:
+        body = parse_json(raw or b"{}")                 # the platform's one reading: `fault` said by the door
+    except RecursionError:
+        raise NotJson("nested past what is read") from None
     if not isinstance(body, dict):
         raise ValueError("not an object")
     node_id = body.get("id")
@@ -899,8 +903,9 @@ class StoreDaemon:
                 return 403, {"kind": "forbidden", "error": f"{role} may not change the group"}
             try:
                 node_id, join = _membership(path, raw)
-            except ValueError as e:
-                return 400, {"kind": "badrequest", "error": f"{path} takes {{id, raft, api}}: {e}"}
+            except ValueError as e:                      # a body that does not read: the shared table's `fault` too
+                return 400, {"kind": "badrequest", "error": f"{path} takes {{id, raft, api}}: {e}",
+                             **({"fault": e.fault} if isinstance(e, Fault) else {})}
             if role == PEER and (not peer or node_id != peer):
                 return 403, {"kind": "forbidden", "error": f"the daemon of {peer or 'no server'} may change the group "
                                                            f"for its own server, not for {node_id}"}

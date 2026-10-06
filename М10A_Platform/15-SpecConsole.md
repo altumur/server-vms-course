@@ -201,7 +201,7 @@ class IdempotencyKeys:
                 return wrong                                             # somebody else's key, or another body under it: not this reply
             if items.get("state") == "done":
                 self._seen.pop(path, None)
-                return int(items["status"]), json.loads(items["body"])
+                return int(items["status"]), parse_json(items["body"])
             first = self._seen.get(path)
             if first is None or first[0] != idx:
                 first = self._seen[path] = (idx, self.clock())
@@ -1024,6 +1024,12 @@ POST /requests {…, "valid_until": 1e12}              + Idempotency-Key: r4   �
             return self.blob_route(h, path)
         if not self.read_body(h, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
             return
+        if in_body and path not in OPEN_ROUTES:
+            try:
+                parse_json(h.rfile.getvalue() or b"{}")  # `read_body` put it back as memory: read, and still there
+            except PARSE_ERRORS as e:
+                return h._send(400, {"detail": f"the body is not JSON that can be read ({type(e).__name__})",
+                                     "error": "bad body", "fault": getattr(e, "fault", "") or "not_json"})
         if path not in OPEN_ROUTES:
             try:
                 if in_body:
@@ -1144,7 +1150,7 @@ def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
 
 Модуль консоли на странице (урок 16) начинает с `GET /session`: открыта консоль — работает без входа; закрыта и человека не знают — показывает окно входа. Имя и пароль уходят на `login_url`, вернувшийся токен — в `POST /session`. Если `LOGIN_URL` не задан, окно так и говорит: держатель домена кластеру не известен, войти можно только аварийно.
 
-**Тело двери входа — то, что прислал кто угодно.** Тело-список, токен-список или число, не JSON вовсе — обработчик падал на разборе или на `token.split`, и вместо ответа соединение обрывалось (девятое ревью, minor, воспроизведено запуском). Теперь `session` разбирает тело под `PARSE_ERRORS` и принимает на `/session` только объект со строкой `token`, а на `/session/break-glass` — объект из трёх строк `who`, `why`, `password`; всё остальное — 400, и воротам ничего не задаётся. Токен, который строка, но не наш, — заголовок-список, `kid`-список, `exp` словом, `NaN` или 10**400 — проверяет `tokens.verify` домена, и это 401 (М12, урок 4).
+**Тело двери входа — то, что прислал кто угодно.** Тело-список, токен-список или число, не JSON вовсе — обработчик падал на разборе или на `token.split`, и вместо ответа соединение обрывалось (девятое ревью, minor, воспроизведено запуском). Теперь `session` разбирает тело под `PARSE_ERRORS` и принимает на `/session` только объект со строкой `token`, а на `/session/break-glass` — объект из трёх строк `who`, `why`, `password`; всё остальное — 400, и воротам ничего не задаётся. Тело, которое не читается как JSON, несёт в этом 400 и слово `fault` (`not_json`, `not_number` — шаг 13). Токен, который строка, но не наш, — заголовок-список, `kid`-список, `exp` словом, `NaN` или 10**400 — проверяет `tokens.verify` домена, и это 401 (М12, урок 4).
 
 **Аварийная сессия — только у консоли.** Продукт нашёл у себя: `POST /session/break-glass` отвечали все двери, которые подключают общие ворота, — регистратор и шлюз живого видео (сверка с девятым ревью). Здесь `/session` маршрутизирует только `SpecConsole.dispatch`, и обход дверей это подтвердил: дверь воспроизведения держателя, шлюз, дверь архива регистратора и ресурс на `POST /session` и `/session/break-glass` отвечают 404 или 501 и сессии не открывают. Но ворота любой двери читали cookie аварийной сессии, а сессии лежат в памяти процесса (`Gate._glass`, общий для класса): дверь, запущенная в процессе консоли, приняла бы сессию, открытую там. Теперь у ворот есть `glass`: шлюз и дверь держателя строят их с `Gate(..., glass=False)` — такие ворота аварийную сессию не открывают (`open_glass` — 404) и не принимают, только токен. Тест: `test_console_gate.py::test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_entry_and_nothing_else` — обход четырёх дверей; сессия, открытая у консоли, в том же процессе пускает к консоли и не пускает к шлюзу (401, до правки шлюз пускал); пять мусорных тел — 400.
 
@@ -1197,7 +1203,7 @@ def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
 
 Порядок: сначала маршрут, потом ключ. Запрос на несуществующий путь получает 404, не 400 про заголовок — иначе опечатка в URL выглядела бы как проблема с идемпотентностью. Путь, который не строки и не отметки, может быть объявленным (шаг 12) — строка таблицы или заявка; заявка зовёт тот же `_idem` и так же обязательно, но имя её строки говорит спека.
 
-`object_body` — тело, которое не JSON-объект (список, вложенное глубже, чем читает JSON), — 400, ничего не записано. Запись, которая бросила, — `_failed`: заявка ключа снимается (записано ничего, за что ключ мог бы отвечать), хранилище — 503, клиент повторит, остальное — 500.
+`object_body` — тело, которое не JSON-объект (список, вложенное глубже, чем читает JSON), — 400, ничего не записано. Тело читает `canonical.parse_json`, как каждая дверь платформы: не UTF-8, одинокий суррогат (`\ud800` в JSON-экране), `NaN` — не JSON, число, которого не держит float64 (`1e400`), — не число. Тогда 400 несёт рядом со словами двери слово закрытого словаря, `fault: not_json` или `not_number` (`console.fault_of`, словарь — урок 9); тело, которое прочлось, но не объект, — 400 без `fault`: это не тот вид, а не нечитаемый текст. У маршрутов, где единица в теле (`EDIT_ROUTES` и строки таблиц с `unit_of`, шаг 12а), нечитаемое тело отказывается ещё до ворот (`dispatch`, `error: "bad body"`): такое тело не называет единицу, и спрашивать у вызывающего грант на весь кластер незачем. Ключ идемпотентности при любом из этих отказов не тратится. Запись, которая бросила, — `_failed`: заявка ключа снимается (записано ничего, за что ключ мог бы отвечать), хранилище — 503, клиент повторит, остальное — 500. Тест: `test_body_fault_doors.py::test_the_consoles_doors_refuse_a_body_that_is_no_json_with_its_fault`.
 
 `_remember` **до** отправки. Если процесс умрёт между ними, клиент не получит ответа, повторит — и получит сохранённый. Обратный порядок в той же аварии создал бы вторую единицу. А если ответ не лёг под ключ, `_remember` пишет об этом в лог и отправка идёт всё равно: запись сделана, и 503 отправил бы клиента делать вторую.
 
@@ -1353,13 +1359,13 @@ def spec_console(ctls: dict, root_name: str, marks_root: str | None = None, inde
 | Маршрут | Что делал один плохой элемент | Теперь |
 |---|---|---|
 | `/servers` | `"server": ["srv-x"]` в пульсе воркера — `TypeError` (ключ словаря); `5` среди строк — `TypeError` в `sorted` | пульс не разбирается (`contract._named`), пропущен и посчитан; остальные серверы на месте |
-| `/unplaceable` | тот же пульс; адрес, по которому единицы группируются (`group_by` с `cut_at`), `rtsp://[::1/x` — `ValueError: Invalid IPv6 URL` | пульс — его; адрес, который не адрес, — своя группа (`spec.url_cut`) |
+| `/unplaceable` | тот же пульс; адрес, по которому единицы группируются (`group_by` с `cut_at`), `rtsp://[::1/x` — `ValueError: Invalid IPv6 URL` | пульс — его; адрес, у которого хоста не прочесть, — без группы (`spec.url_host`), ни с кем; записать такой дверь не даст: 400 с `fault: bad_url` (ADR 0053) |
 | `/drain` | то же и `worker` списком — `TypeError` | то же |
 | `/metrics` | `server` списком или числом в пульсе ресурса — `resources_seen` и `sorted(res.items())` | пульс ресурса не разбирается, посчитан в `w2c_resource_heartbeats_garbled`; 400-значный `started` закрыт в девятом (`rows.number`) |
 | `/schema` | `build` списком — `TypeError` (множество сборок); строка `platform/schema` словом — `ValueError`; `schema: 1e999` — процесс пропускался | `build` — `?`; `version: null`; схема `null`, `can_raise_to` не выше хранилища, `set_schema` отказывает |
 | `/domain` | `domain/view` рваный, списком — 500; `ts: Infinity` — вид «свежий» навсегда | 503 «вид домена прочитать нельзя» |
-| `POST /<rows>`, `PUT /<rows>/<id>`, `POST /marks`, `PUT /policy` | тело не JSON, список, вложенное глубже, чем читает JSON — 500 или вовсе без ответа; отметка, чья единица не ссылка, — 500 | 400 (`object_body`, `ref_fault`), ничего не записано; ключ идемпотентности не тратится |
-| ворота: тело `POST /marks`, `/requests`, строки таблиц (`_named`, `admit_rows`) | `RecursionError` мимо `except ValueError` — без ответа | `PARSE_ERRORS`: тело не называет единицу, нужен грант на кластер, маршрут отвечает 400 |
+| `POST /<rows>`, `PUT /<rows>/<id>`, `POST /marks`, `PUT /policy` | тело не JSON, список, вложенное глубже, чем читает JSON — 500 или вовсе без ответа; отметка, чья единица не ссылка, — 500 | 400 (`object_body`, `ref_fault`), ничего не записано; ключ идемпотентности не тратится; тело, которое не читается (не UTF-8, одинокий суррогат, `NaN`, `1e400`), — с `fault` (`not_json`/`not_number`, `console.fault_of`) |
+| ворота: тело `POST /marks`, `/requests`, строки таблиц (`_named`, `admit_rows`) | `RecursionError` мимо `except ValueError` — без ответа | тело, которое не читается, — 400 до ворот (`dispatch`: `error: "bad body"`, `fault`), ключ не заявлен; ворота спрашивают только тело, которое прочлось |
 
 Тесты: `test_one_bad_element.py::test_a_heartbeat_whose_server_or_worker_is_no_name_is_that_heartbeats_and_no_route_falls`, `test_schema_lists_a_process_whose_schema_does_not_read_and_raises_past_nobody`, `test_a_domain_view_that_does_not_read_is_said_and_not_a_500`, `test_a_source_that_does_not_parse_costs_its_camera_not_drain_unplaceable_or_the_catalogue`, `test_a_body_that_is_no_json_object_is_refused_on_every_write_route`. Обходы `_unplaceable` и `_would_strand` сначала закрыли только корни (пульс, адрес группы), и новый вид битого элемента в строке единицы снова уронил бы маршрут целиком. Теперь у обоих есть защита на единицу (`_eligible_or_none`, уроки 11 и 17): единица, чьи фильтры упали, стоит в ответе как та, которую никто не примет, и считается (`table="unit_judged"`), а остальные проверяются. Тест: `test_one_bad_element.py::test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_judged`.
 
