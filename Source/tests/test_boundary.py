@@ -719,7 +719,8 @@ def _piece_two_specs():
     `test_spec_rule.py`): the console of the deployment fronts testsub at `/` and testsub2 under its name, from the specs
     alone; `/spec` carries what the page reads (a field's `enum`, `display.tree.children`, the door's routes); a value
     outside a field's `enum` is a 400 naming the values; every metric testsub2 declares is a line on `/metrics`, with the
-    platform's count of its places (`<sub>_workers_needed`); and the rights file is generated for both."""
+    platform's count of its places (`<sub>_workers_needed`), and every field of its `servers.status` is on its worker's
+    row of `/servers`; and the rights file is generated for both."""
     import json
     import urllib.request
     from w2cplatform import host
@@ -767,6 +768,12 @@ def _piece_two_specs():
                      "belt", "adds_total", "queue_max", "wait_seconds_bucket"):
             assert f"testsub2_{name}" in text, (name, text[-2000:])
         assert 'testsub2_workers_needed{labels=""}' in text                                # `placement.places`
+        # what `servers.status` names of that heartbeat is on the worker's row of `/servers`, a dotted path's leaf too
+        # (`belt.state`, the leaf the metric `belt` reads; «Архитектор» 2026-10-06)
+        said = {"jam": "yes", "belt.state": "slow"}
+        st, out = _http(base, "GET", "/testsub2/servers")
+        row = next(w for s in out["servers"].values() for w in s["workers"] if w["worker"] == "t-1")
+        assert st == 200 and row["status"] == {e["field"]: said[e["field"]] for e in out["status"]}, (st, out)
     finally:
         srv.shutdown(); srv.server_close()
     specs = [SubsystemSpec.load(os.path.join(os.path.dirname(TESTSUB), f)) for f in ("testsub.subsystem.yaml",

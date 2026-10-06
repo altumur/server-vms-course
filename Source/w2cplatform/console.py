@@ -272,6 +272,17 @@ DOMAIN_VIEW = "domain/view"
 
 # A JSON number as it is (`5` stays `5`, `0.5` stays `0.5`): `true` is no number and neither is the word `"5"` — a
 # `TypeError` for both, a `ValueError` for `nan` and `inf` (`finite`).
+# The value at a `servers.status` field in a heartbeat's extra — a field, or a path through its maps by its dots:
+# `(said, value)`; a key not there, or a value on the way that is no map, is not said.
+def _status_path(extra: dict, field: str) -> tuple[bool, object]:
+    cur = extra
+    for seg in field.split("."):
+        if not isinstance(cur, dict) or seg not in cur:
+            return False, None
+        cur = cur[seg]
+    return True, cur
+
+
 def _json_number(v):
     if isinstance(v, bool) or not isinstance(v, (int, float)):
         raise TypeError(f"{v!r:.40} is not a number")
@@ -1872,17 +1883,21 @@ class SpecConsole:
     # A worker's heartbeat fields the spec's `servers.status` names, AS THE HEARTBEAT CARRIES THEM: a string of
     # `heartbeat.strings` (one that is not a string never got here — the heartbeat was garbled, `parse_heartbeat`), any
     # other a JSON number — a word there (`"5"` too), `true`, a list or an object is counted as a garbled field (the
-    # rows' count, `FIELDS`, as `number` counts it) and left out. A field the heartbeat does not carry is absent, not
-    # null: "nothing said" is not "said nothing".
+    # rows' count, `FIELDS`, as `number` counts it) and left out. A path (`writer.state`) goes into the heartbeat's maps
+    # by its dots (`_status_path`), and its leaf is a string or a number — a map's leaf says what it is, no
+    # `heartbeat.strings` names it —, or it is counted and left out the same way (ADR 0057, «Архитектор» 2026-10-06; the
+    # reading of `metrics[].from`, the product's `statusOf`). A field the heartbeat does not carry — or a map on the way
+    # that is not there — is absent, not null: "nothing said" is not "said nothing".
     def _status_of(self, w: str, hb) -> dict:
         spec, out = self.ctl.spec, {}
         for e in spec.servers_status:
             f = e["field"]
-            if f not in hb.extra:
+            said, v = _status_path(hb.extra, f)
+            if not said:
                 continue
-            v = hb.extra[f]
+            leaf = "." in f and isinstance(v, str)
             if f in spec.heartbeat_strings or FIELDS.read(f"{self.ctl.sub.heartbeat_key(w)}#{f}",
-                                                           lambda: _json_number(v), None) is not None:
+                                                           lambda: v if leaf else _json_number(v), None) is not None:
                 out[f] = v
         return out
 
