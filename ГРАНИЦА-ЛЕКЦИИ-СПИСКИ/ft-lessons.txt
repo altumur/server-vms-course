@@ -1,0 +1,10 @@
+ft — lesson lines made untrue by `parse_json` + `fault` on every door, and a json field's top-level null = no field
+
+М10A_Platform/09-SubsystemSpec.md:448 — quoted `items` code `if f.inherits and v is None:` is now `if v is None and (f.inherits or f.type == "json"):`.
+М10A_Platform/09-SubsystemSpec.md:454 — «only an unset inheriting field is left out of the row» — a json field's `null` (or absent, no default) is left out too: `null` at the top level of any field is «no field», the default applies; inside a JSON document `null` is a value.
+М10A_Platform/09-SubsystemSpec.md:150 — `Field.parse` quotes `_json.loads(v)` — the code uses `parse_json`.
+М10A_Platform/15-SpecConsole.md:204 — quotes `json.loads(items["body"])` — the code uses `parse_json`.
+М10A_Platform/15-SpecConsole.md:1200 (`object_body`), :1361 (table row for `POST /<rows>`) — an unreadable body (not UTF-8, a lone surrogate, `NaN`, a number past float64) is 400 with `fault` (`not_json`/`not_number`, `console.fault_of`); on edit routes it is refused before the gate (`SpecConsole.dispatch`), `error: "bad body"`, the idempotency key not claimed.
+М10A_Platform/15-SpecConsole.md:1147 — the session door's 400 for a body that does not parse also carries `fault`.
+М12A_Domain/03-the-api-and-what-it-refuses.md:84 — «Отдельного теста на такое тело у консоли домена нет» — there is: `tests/domain/test_body_fault_doors.py`; its 400 carries `fault`. The signer's door, the token door, the store's `/v1/write`, `/v1/join`, `/v1/leave` likewise.
+М10A_Platform/09-SubsystemSpec.md — Field.to_item quote (`canonical_json(parse_json(v) if isinstance(v, (str, bytes)) else v)`) is now `canonical_json(v)`; a json field takes its value AS IT IS (`Field.take`): a string is a document that is a string (`"s"` → `"\"s\""`), reading a text box is the page's work; the paragraph «строку … платформа сначала разбирает (parse_json)» is untrue. М12A 12 «A document may arrive as JSON text (signer_service._document)» — gone: the signer takes the document as it is.
