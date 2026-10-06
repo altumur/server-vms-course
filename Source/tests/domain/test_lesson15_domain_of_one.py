@@ -22,7 +22,7 @@ from w2cplatform.domain.pending import PendingEdits
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.domain.shared import sign
 from w2cplatform.trust.signer import Signer
-from w2cplatform.domain.term import (BACKUP, Deposed, DomainHolder, GuardedPending, carry_holder, find_holder, handover,
+from w2cplatform.domain.term import (BACKUP_TAKEN, Deposed, DomainHolder, GuardedPending, carry_holder, find_holder, handover,
                                      move_domain, read_holder, stranded)
 from w2cplatform.trust.tokens import TokenIssuer
 from w2cplatform.domain.federation import Unreachable
@@ -188,8 +188,8 @@ def test_a_backup_not_signed_by_the_domain_is_ignored_however_new_it_claims_to_b
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
     forged = sign({"term": 9, "rev": 99, "holder": "cam-SN2", "state": {"domain/grants/cam-SN3": {"mallory": "admin"}}},
                   TokenIssuer(DOMAIN))
-    devices["cam-SN2"].disk.put(BACKUP, json.dumps(forged).encode())
-    devices["cam-SN2"].flash.put(BACKUP, {"rev": 99, "term": 9, "sha256": "x"})
+    devices["cam-SN2"].disk.put(BACKUP_TAKEN, json.dumps(forged).encode())
+    devices["cam-SN2"].flash.put(BACKUP_TAKEN, {"rev": 99, "term": 9, "sha256": "x"})
     devices["cam-SN0"].power_off()
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     assert report["restored_from"] == "cam-SN1" and report["rev"] == 1 and report["term"] == 2
@@ -408,7 +408,7 @@ def test_the_holders_card_says_each_members_copy_by_term_and_rev_a_former_holder
     following["cam-SN0"].sync(); following["cam-SN3"].sync()
     assert new.backup(["cam-SN3"], devices["cam-SN1"].disk_door()) == 3
     following["cam-SN3"].sync()
-    devices["cam-SN4"].flash.put(BACKUP, {"rev": "seven", "term": 2, "sha256": "x"})   # a row nobody can read as a pair
+    devices["cam-SN4"].flash.put(BACKUP_TAKEN, {"rev": "seven", "term": 2, "sha256": "x"})   # a row nobody can read as a pair
     following["cam-SN2"].sync(); following["cam-SN4"].sync()
 
     t = Holder(new.vars, devices["cam-SN1"].disk, new.signer, fed=fed, term=new, wall=wall).term_view()

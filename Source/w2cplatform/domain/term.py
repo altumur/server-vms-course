@@ -23,7 +23,8 @@ stolen. So moving the domain has to become an ordinary operation, and three thin
                                 `from`: the backup {term, rev} this term was restored from
     domain/backup/<member>      in the holder's Variables: a pointer, for each member chosen to keep a copy
     backup/rev-<n>              in the holder's durable objects: the signed state
-    domain/backup               in a chosen member: its agent's copy of the pointer, and of the document
+    domain/backup-taken         in a chosen member: its agent's copy of the pointer, and of the document — written
+                                only once the copy verified, and carried up in its report: the member says it took it
     domain/stranded             in a DEPOSED holder's Variables: what it alone held, decided once, when it stepped down
 
 Who opens which connection (Lesson 10, step 7). The holder reads the other members only by their REPORTS, left
@@ -70,6 +71,10 @@ from .federation import Unreachable
 # review's eighth pass, sibling of the relay's bundle).
 
 HOLDER, BACKUP, STRANDED = "domain/holder", "domain/backup", "domain/stranded"
+# `BACKUP` names the holder's pointers, one per backup holder (`domain/backup/<member>`); what a member publishes of
+# the copy it took — the row `{rev, term, sha256}` and the object beside it — is `BACKUP_TAKEN`: the product's name
+# (СЕССИИ §1 rule 5, one name on both sides, «Архитектор» 2026-10-06; ADR 0003 — no alias for the old one).
+BACKUP_TAKEN = "domain/backup-taken"
 # Everything the domain DECIDED and nobody else holds (feedback AS: the first list stopped at Lesson 14, and a
 # move lost the topology of Lesson 17 — every chain through a relay —, the list of members, and every road a
 # subsystem had decided, which was decided again differently). The platform's own rows, and what each subsystem
@@ -148,9 +153,9 @@ def verified_record(doc, keys, now: float) -> dict | None:
 #                         by an agent following the holder (`agent.HolderFollower`), by a move for the largest term and
 #                         the keys, and by the console module on a person's page (contract §2: the one process door it
 #                         reads). Never the backup's content — even its plain part is the domain's state
-#     GET  /api/backup    the backup copy this cluster keeps (`domain/backup`, the object it names) and the shared
-#                         document, only to a process that signs the ask with the key of a member on THIS cluster's
-#                         copy of the list of members (`MEMBER_LIST`, carried home by its agent) — the way the
+#     GET  /api/backup    the backup copy this cluster keeps (`domain/backup-taken`, the object beside it) and the
+#                         shared document, only to a process that signs the ask with the key of a member on THIS
+#                         cluster's copy of the list of members (`MEMBER_LIST`, carried home by its agent) — the way the
 #                         domain's door knows a member (`carry.HolderDoor`). The new holder of an emergency move is a
 #                         member, and signs with its member key (`AskedCluster`)
 #     POST /api/prepare, POST /api/take   a planned handover's, handed on to this cluster's own signer
@@ -177,7 +182,7 @@ def held(cluster: str, vars_) -> dict:
         term = int(rec["term"]) if rec else None
     except PARSE_ERRORS:
         term = None
-    ptr, _ = vars_.get(BACKUP)
+    ptr, _ = vars_.get(BACKUP_TAKEN)
     try:
         backup = copy_of(ptr)
     except PARSE_ERRORS:
@@ -197,9 +202,9 @@ def copy_of(ptr) -> dict | None:
 #
 #     backup    the last copy the holder wrote — the newest by (term, rev) of the pointers it keeps for its backup
 #               holders (`domain/backup/<member>`); a pointer that does not read is left out of the newest
-#     copies    {<member>: {term, rev}} — the copy each member says it keeps: the `domain/backup` row its agent writes
-#               only when the copy it took matched the pointer and verified (`shared.carry`), carried up with every
-#               report (`uplink`). A member that keeps none is not listed; one whose row does not read is
+#     copies    {<member>: {term, rev}} — the copy each member says it keeps: the `domain/backup-taken` row its agent
+#               writes only when the copy it took matched the pointer and verified (`shared.carry`), carried up with
+#               every report (`uplink`). A member that keeps none is not listed; one whose row does not read is
 #               `{garbled: <why>}` — said, not left out. A former backup holder's copy too, and a former holder's:
 #               nobody updates them and nobody drops them — they are a move's last way back (`move_domain` reads the
 #               newest anyone keeps)
@@ -220,16 +225,16 @@ def copies(holder: "DomainHolder", members) -> dict:
     for name in members if holder.objects is not None else ():   # no store for reports: nobody's copy is known here
         mine = holder.reported(name)
         try:
-            mine.vars.list(BACKUP)                       # never reported, or its mark does not read: nothing to say
+            mine.vars.list(BACKUP_TAKEN)                 # never reported, or its mark does not read: nothing to say
         except Unreachable:
             continue
         try:
-            c = copy_of(mine.vars.get(BACKUP)[0])
+            c = copy_of(mine.vars.get(BACKUP_TAKEN)[0])
         except Unreachable as e:                         # the report's copy of the row does not parse
             out[name] = {"garbled": str(e)}
             continue
         except PARSE_ERRORS as e:                        # it parses, and is no pointer
-            out[name] = {"garbled": f"{name}'s copy of {BACKUP} is no pointer ({type(e).__name__}: {e})"}
+            out[name] = {"garbled": f"{name}'s {BACKUP_TAKEN} is no pointer ({type(e).__name__}: {e})"}
             continue
         if c is not None:
             out[name] = c
@@ -272,8 +277,8 @@ def backup_answer(cluster: str, vars_, objects, member: str | None, at, signatur
         return 401, {"detail": f"the ask is not signed by {member}'s key"}
     if not (abs(now - at) <= SKEW):
         return 401, {"detail": f"the ask is {now - at:+.0f} s from {cluster}'s clock: more than {SKEW:.0f} s"}
-    ptr, _ = vars_.get(BACKUP)
-    raw = objects.get(BACKUP) if ptr and objects is not None else None
+    ptr, _ = vars_.get(BACKUP_TAKEN)
+    raw = objects.get(BACKUP_TAKEN) if ptr and objects is not None else None
     shared = objects.get(SHARED_OBJECT) if objects is not None else None
     return 200, {"cluster": cluster, "pointer": dict(ptr) if ptr else None,
                  "backup": raw.decode() if raw is not None else None,
@@ -301,7 +306,7 @@ class AskedCluster:
                 if path == KEYS_PATH:
                     keys = outer.held().get("keys")
                     return (dict(keys) if isinstance(keys, dict) else None), 0
-                if path == BACKUP:
+                if path == BACKUP_TAKEN:
                     ptr = outer.backup().get("pointer")
                     return (dict(ptr) if isinstance(ptr, dict) else None), 0
                 return None, 0
@@ -312,7 +317,7 @@ class AskedCluster:
         class Objects:
             def get(self, key):
                 from .shared import OBJECT as SHARED_OBJECT
-                said = outer.backup().get({BACKUP: "backup", SHARED_OBJECT: "shared"}.get(key, ""))
+                said = outer.backup().get({BACKUP_TAKEN: "backup", SHARED_OBJECT: "shared"}.get(key, ""))
                 return said.encode() if isinstance(said, str) else None
 
             def put(self, *a, **kw):
@@ -647,8 +652,8 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         if rec and int(rec["term"]) > top_term:
             top_term, top_holder = int(rec["term"]), rec["holder"]   # the holder being replaced: after a theft, the thief's
         try:                                             # a backup refused or not answered is not a term unseen
-            ptr, _ = c.vars.get(BACKUP)
-            raw = objects_of(name).get(BACKUP) if ptr else None
+            ptr, _ = c.vars.get(BACKUP_TAKEN)
+            raw = objects_of(name).get(BACKUP_TAKEN) if ptr else None
         except Unreachable as e:
             if isinstance(c, AskedCluster):              # its console answered the record and refused the backup: said
                 ignored.append((name, str(e)))
@@ -918,7 +923,8 @@ def handover(holder: DomainHolder, to: str, objects_of, carry_to, take,
         rev = holder.backup([to], objects_of(holder.name))
         carry_to()
         try:                                             # read in `to`'s REPORT, which its agent left in the holder's store
-            ptr, _ = (holder.reported(to).vars if holder.objects is not None else holder.fed.clusters[to].vars).get(BACKUP)
+            mine = holder.reported(to).vars if holder.objects is not None else holder.fed.clusters[to].vars
+            ptr, _ = mine.get(BACKUP_TAKEN)
         except Unreachable:
             ptr = None                                   # silent: it cannot be the new holder now
         if not ptr or int(ptr["rev"]) != rev or int(ptr["term"]) != holder.term:

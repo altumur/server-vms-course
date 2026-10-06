@@ -176,7 +176,7 @@ def test_the_backup_carries_the_people_and_the_emergency_hashes_under_the_backup
     from w2cplatform.domain.agent import DomainAgent, DomainPublisher
     from w2cplatform.domain.carry import open_row
     from w2cplatform.domain.identity import IdentityStore, _check
-    from w2cplatform.domain.term import BACKUP, install, move_domain
+    from w2cplatform.domain.term import BACKUP_TAKEN, install, move_domain
     from w2cplatform.trust.signer import DomainRoot
     fed, wall = site()
     north, south = fed.clusters["north"], fed.clusters["south"]
@@ -191,7 +191,7 @@ def test_the_backup_carries_the_people_and_the_emergency_hashes_under_the_backup
     doc = json.loads(north.objects.get("backup/rev-1"))
     assert doc["state"]["identity/users/anna"]["pwhash_secret"].startswith("enc:v1:backup")
     assert DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
-                       cluster_objects=south.objects).sync() and south.objects.get(BACKUP)
+                       cluster_objects=south.objects).sync() and south.objects.get(BACKUP_TAKEN)
     DomainPublisher(north.vars)
     new, report = move_domain(fed, "south", root.recovery(), "acme", lambda n: fed.clusters[n].objects, wall,
                               sealer=south_ring)
@@ -268,7 +268,7 @@ def test_the_agents_rights_deny_what_only_the_holder_writes_and_its_reads_never_
     assert "member" not in r and "testsubdomain" in r
     agent = r["domainagent"]
     rights = Rights({"domainagent": agent})
-    mine = ["domain/keys", "domain/grants", "domain/pending", "domain/backup", TALLIES, "domain/member-key",
+    mine = ["domain/keys", "domain/grants", "domain/pending", "domain/backup-taken", TALLIES, "domain/member-key",
             "domain/break_glass", "domain/holder"]
     holders = ["domain/signer", "domain/members", "domain/grants/south", "domain/pending/south", f"{TALLIES}/south",
                "domain/testsub/ledger", "domain/break_glass/south", "domain/backup/south"]
