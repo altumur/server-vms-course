@@ -871,14 +871,14 @@ def test_an_at_where_no_address_reads_one_is_refused_and_a_stored_one_is_said_ma
     `://` — `AKIA:pw@s3.example.com/…`, `s3:AKIA:pw/a+b@…` — was taken as opaque and shown on `/volumes` whole. An `@`
     there, or before an address's first `://`, is refused in the words of an `@` after the `://` (a path writes one
     `%40`: `/mnt/a@b` is refused, `/mnt/a%40b` taken), at a volume's url through the table's door and at `testsub2`'s
-    url fields alike; and a row stored before is said with what follows its first `:` up to the `@` masked — a page
-    masks never less than a write refuses."""
+    url fields alike; and a row stored before is said with what follows the last `:` before the `@` masked, `/` and
+    all (the product's reading) — a page masks never less than a write refuses."""
     from vms.config import REC_SPEC
     from vms.volumes import write as declare_volume
     from w2cplatform.secrets import hide_in_url
     from w2cplatform.tables import shown
     bad = {"AKIA:Hunter2@s3.example.com/eu/bucket": "AKIA:***@s3.example.com/eu/bucket",
-           "s3:AKIA:Hunter2/a+b@s3.example.com/eu": "s3:***@s3.example.com/eu",
+           "s3:AKIA:Hunter2/a+b@s3.example.com/eu": "s3:AKIA:***@s3.example.com/eu",
            "AKIA:Hunter2@https://s3.example.com/eu": "AKIA:***@https://s3.example.com/eu",
            "/mnt/a@b": "/mnt/a@b"}
     for raw, said in bad.items():
@@ -920,6 +920,15 @@ def test_an_address_nested_in_a_fields_is_read_by_every_loaded_specs_rule_and_it
         assert hide_in_url(word, feed.rules) == "mirror://acme/x?url=***"
         assert feed.refusal("mirror://acme/x?session=abc") is None
         assert hide_in_url("mirror://acme/x?session=abc", feed.rules) == "mirror://acme/x?session=abc"
+        # …wherever it lies: escaped into a path segment as well as in a pair (the refinement of «Архитектор», the same
+        # day) — a segment bypassing what a pair may not
+        for seg in ("mirror://acme/x/rtsp%3A%2F%2Fadmin%3Apw%40h%2Fs", "mirror://acme/x/rtsp%3A%2F%2Fh%2Fs%3Fsession%3Dabc"):
+            why = feed.refusal(seg)
+            assert why and "holds an address in a path segment" in why and "admin" not in why, (seg, why)
+            assert hide_in_url(seg, feed.rules) == "mirror://acme/x/***", hide_in_url(seg, feed.rules)
+        assert "session" in feed.refusal("mirror://acme/x/rtsp%3A%2F%2Fh%2Fs%3Fsession%3Dabc")
+        harmless = "mirror://acme/x/rtsp%3A%2F%2Fh%2Fs"
+        assert feed.refusal(harmless) is None and hide_in_url(harmless, feed.rules) == harmless
         sixth = NESTED_FORMS[5]
         assert volume.refusal(sixth) and not _leaks(volume.refusal(sixth)), sixth
         assert not _leaks(hide_in_url(sixth, volume.rules)), hide_in_url(sixth, volume.rules)

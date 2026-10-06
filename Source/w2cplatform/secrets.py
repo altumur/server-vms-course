@@ -728,15 +728,16 @@ AT_LOGIN = "it carries a login (what stands before an '@'; an '@' the url needs 
 # before its first `://` has no userinfo by RFC 3986, and was taken as opaque and shown whole; a reader that dials it
 # takes what stands before the `@` for a login and a password. A url field refuses an `@` there in the words of an `@`
 # after the `://` (`opaque_fault`, asked by `Field.refusal` — a field's value, never a door's free text, where
-# `ops@site` is a mail), `/mnt/a@b` too: a local path's `@` is written `%40`. A password where it stood: whatever
-# follows the first `:`. What is said of one stored before is masked from that `:` to the last `@` (`_opaque_spans`,
-# `hide_in_url`: `KEY:***@…`) — the password and maybe more: a page masks never less than a write refuses (ADR-0053).
+# `ops@site` is a mail), `/mnt/a@b` too: a local path's `@` is written `%40`. A password where it stood: from the last
+# `:` before the `@` on, `/` and all (the product's reading, one table: `s3:KEY:pw/a+b@…` is `s3:KEY:***@…`). What is
+# said of one stored before is masked there (`_opaque_spans`, `hide_in_url`): a page masks never less than a write
+# refuses (ADR-0053).
 def _opaque_at(s: str) -> tuple[int, int] | None:
-    """`(colon, at)` of the `@` before `s`'s first `://` (all of `s` with none): its last such `@`, and the first `:`
+    """`(colon, at)` of the `@` before `s`'s first `://` (all of `s` with none): its last such `@`, and the last `:`
     before it (-1 for none) — None when there is no `@` there."""
     head = s[:s.find("://")] if "://" in s else s
     at = head.rfind("@")
-    return None if at < 0 else (head.find(":", 0, at), at)
+    return None if at < 0 else (head.rfind(":", 0, at), at)
 
 
 def _opaque_spans(s: str) -> list[tuple[int, int]]:
