@@ -57,6 +57,7 @@ product-only rec.subsystem.yaml heartbeat.strings[ingest_rtsp]   # ADR-0019: the
 product-only rec.subsystem.yaml objects.door[taken/*]   # ADR-0057: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/clock/*]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/up/*]   # ADR-0019: the product first; the course's side — «Лекции»
+product-only rec.subsystem.yaml objects.rows[sealed/*]   # ADR-0057: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0024: the product first; the course's side — «Лекции»
