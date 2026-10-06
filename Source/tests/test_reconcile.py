@@ -196,7 +196,7 @@ def test_a_unit_that_dies_after_every_start_waits_longer_and_one_that_stays_up_e
 
 
 def test_a_unit_that_held_past_max_and_then_fails_its_restart_counts_waits_longer_and_stalls():
-    """A camera has recorded for an hour (longer than `max`), the operator edits its row, and the restart in place fails
+    """A tally has run for an hour (longer than `max`), the operator edits its row, and the restart in place fails
     every time: each failure adds to the count, the delay doubles, and at `stall_failures` the unit is `stalled`. The
     hour it held earned back the failures BEFORE it, not the ones of the restart that keeps failing: a key behind its
     revision has not held anything (ADR 0033, review 14, major 7: the count was wiped on every pass, the restart retried
