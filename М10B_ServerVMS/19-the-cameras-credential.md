@@ -32,7 +32,7 @@ source:        {type: url, required: true, …}                # шаг 2
 cred_username: {type: string}                     # the device login
 cred_secret:   {type: string, bound_to: [source]} # the device password: never in the snapshot, masked on the way out
 
-snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
+snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, live]
 ```
 
 Логин и пароль — не одна и та же вещь. Логин **идентифицирует**, пароль **аутентифицирует**, и хранить в тайне надо второе. Одно поле вместо двух — `cred: "admin:hunter2"` — сломало бы именно это различие: маска бинарна, она либо скрыла бы логин вместе с паролем, либо не скрыла бы ничего. Два поля дают маске за что взяться: `cred_secret` не отдаёт ни один ответ консоли, `cred_username` виден оператору на экране — по нему понятно, под какой учётной записью работает камера.

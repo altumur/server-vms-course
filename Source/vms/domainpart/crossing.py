@@ -26,9 +26,9 @@ recording goes on with the domain switched off, from the address last carried.
     domain/sources              in the recording cluster: its agent's copy
     domain/primaries/<cluster>  in the domain holder: the camera cluster's book of primaries
     domain/primaries            in the camera's cluster: its agent's copy, read by the backup on its card
-    domain/poll/<cluster>       in the domain holder: for a camera that pushes and that NOBODY records, the
+    domain/polls/<cluster>      in the domain holder: for a camera that pushes and that NOBODY records, the
                                 ingest it polls anyway — so an ask reaches it (Lesson 16, step 8)
-    domain/poll                 in the camera's cluster: its agent's copy
+    domain/polls                in the camera's cluster: its agent's copy
 
 The book of primaries is the source book the other way round. A backup on the camera's card with
 `when: offline` records while its primary should be written and is not (М10B Lesson 26) — and its primary
@@ -47,7 +47,7 @@ from dataclasses import dataclass
 from w2cplatform.variables import Conflict
 from vms.archive import subtract
 
-from .keys import CROSSINGS, POLL_PATH, PRIMARIES_PATH, ROADS, SOURCES_PATH
+from .keys import CROSSINGS, POLLS_PATH, PRIMARIES_PATH, ROADS, SOURCES_PATH
 from w2cplatform.domain.federation import Unreachable, _names, a_heartbeat, published
 from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.trust.tokens import kid_of
@@ -405,13 +405,13 @@ class Crossings:
             on = self._poll_home(home)
             if on is None:
                 continue
-            have, _ = self.vars.get(f"{POLL_PATH}/{home}")
+            have, _ = self.vars.get(f"{POLLS_PATH}/{home}")
             old = _entry((have or {}).get(ref), None)
             ingest = self._ingest(ref, on, home, now, old)
             if ingest:
                 books.setdefault(home, {})[ref] = json.dumps({**ingest, "cluster": on}, sort_keys=True)
         for home in {h for h in self.unrecorded().values()} | set(books):
-            path = f"{POLL_PATH}/{home}"
+            path = f"{POLLS_PATH}/{home}"
             have, idx = self.vars.get(path)
             if (have or {}) != books.get(home, {}):
                 self.vars.put(path, books.get(home, {}), cas=idx)

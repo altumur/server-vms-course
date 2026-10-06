@@ -43,12 +43,12 @@ domain:
   ref: ref
   view: [name, enabled]   # what the holder knows of a camera: its name, and whether it is on (domain.edit)
   edit: [enabled]
-  books: [sources, primaries, poll, upstream, asks]
+  books: [sources, primaries, polls, upstream, asks]
   kept: [crossings, roads]
   tables: [crossings]
   tokens:
     stream: {lifetime: 86400, claims: [aud, ref]}
-    ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}
+    ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
   shared: [folders, alarms, events_retention_days]
   keys:
     - {id: roads, keys: [domain/vms/roads]}
@@ -120,13 +120,13 @@ def kept() -> list[str]:
 
 ## Шаг 3 — Книги: строка на каждого члена
 
-**`books: [sources, primaries, poll, upstream, asks]`** — строки, которые у держателя лежат по одной на члена, `domain/vms/<книга>/<член>`, а агент члена уносит домой как `domain/vms/<книга>`. Что в них — дело VMS и следующих уроков:
+**`books: [sources, primaries, polls, upstream, asks]`** — строки, которые у держателя лежат по одной на члена, `domain/vms/<книга>/<член>`, а агент члена уносит домой как `domain/vms/<книга>`. Что в них — дело VMS и следующих уроков:
 
 | Книга | Для кого | Урок |
 |---|---|---|
 | `sources` | кластер записи: где последний раз видели камеры других кластеров, которые он пишет | 2 |
 | `primaries` | кластер камеры: кто её пишет, пишется ли, куда толкать | 2, 3 |
-| `poll` | толкающая камера, которую никто не пишет: приёмник, который она опрашивает | 3 |
+| `polls` | толкающая камера, которую никто не пишет: приёмник, который она опрашивает | 3 |
 | `upstream` | ретранслятор: приёмник центра по каждой камере | 4 |
 | `asks` | камера-триггер сценария: кого и какими дорогами она может просить | 3, 4 |
 
@@ -185,7 +185,7 @@ CROSSINGS = _kept("crossings")
 ```yaml
   tokens:
     stream: {lifetime: 86400, claims: [aud, ref]}
-    ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}
+    ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
 ```
 
 Подписывающий выпускает только объявленное (`trust.tokens.DeclaredIssuer`): вид, которого не объявил никто, и утверждение, которого нет в списке вида, — отказ:
@@ -262,7 +262,7 @@ ExecStart=/opt/w2c/bin/w2c-run.sh vms domainpart
 
 ## Шаг 7 — Что видит страница: `keys`, `shared`, `reports`, `witness`
 
-**`keys`** — семьи ключей VMS для вкладки «Ключи» карточки домена. `GET /domain/keys` отдаёт каждый ключ под `domain/` в хранилищах держателя как есть, секреты закрыты (`keysview.py`), — список хранилища, так что ключ, для которого у страницы нет слов, всё равно виден. Какая семья что значит, говорит спека: `/spec` несёт `domain: {keys, shared, edit, view}`, а слова семей — `display.keys` (`{<id>: {title, about, absent}}`), страница сводит их по `id`. Платформа по ним не делает ничего. Тест держит, что каждый ключ, который VMS пишет на домене, — у держателя, у кластера записи и на камере, — попадает в объявленную семью и у каждой семьи есть слова: `test_domain_secrets_vms.py::test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_declares`.
+**`keys`** — семьи ключей VMS для вкладки «Ключи» карточки домена. `GET /domain/keys` отдаёт каждый ключ под `domain/` в хранилищах держателя — строку с индексом и именами полей, объект с размером и возрастом, без значений и тел (`keysview.py`; «Архитектор», 2026-10-06). Закрывать секреты по имени поля оказалось мало: запись книги VMS несёт `token_secret` внутри значения, и вкладка показывала его целиком. Значения видны только у открытых половин, которые домен публикует сам (`keysview.PUBLIC`: набор ключей, корень, открытые ключи члена, сертификат кластера); содержимое книги придёт своим маршрутом, с полями, которые спека объявит показывать. Тест: `test_domain_platform.py::test_the_keys_view_shows_names_and_never_a_value_a_nested_token_or_an_objects_body`. Это список хранилища, так что ключ, для которого у страницы нет слов, всё равно виден. Какая семья что значит, говорит спека: `/spec` несёт `domain: {keys, shared, edit, view}`, а слова семей — `display.keys` (`{<id>: {title, about, absent}}`), страница сводит их по `id`. Платформа по ним не делает ничего. Тест держит, что каждый ключ, который VMS пишет на домене, — у держателя, у кластера записи и на камере, — попадает в объявленную семью и у каждой семьи есть слова: `test_domain_secrets_vms.py::test_every_key_the_vms_writes_on_the_domain_falls_into_a_family_its_spec_declares`.
 
 **`shared: [folders, alarms, events_retention_days]`** — поля камеры, общее на домен значение которых держит домен (М12A, урок 12): папки, которые предлагает страница, тревоги площадки, которые добавляются к тревогам камеры, и срок хранения событий. Разрешает их платформа (`shared.resolve`: значение камеры, потом домена, потом `inherit` спеки) и отдаёт одной дверью консоли кластера — `GET /domain/shared/vms[?unit=<id>]`; маршрута VMS для этого нет. Правка общего документа с полем, которого спека не объявила, — 400: правка неверна по спекам сама по себе. Рядом — документ `auto`, `scenarios`: сценарии между камерами, которые домен держит целиком и подписывающий проверяет по их схеме ([урок 3, шаг 8](03-a-camera-nobody-can-reach.md)).
 

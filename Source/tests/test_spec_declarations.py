@@ -330,6 +330,67 @@ def test_a_subsystems_own_numbers_are_declared_and_the_console_prints_them_from_
     _refused(lambda: SubsystemSpec.from_dict({**BIN, "servers": {"show": [{"table": "nope", "by": "server"}]}}), "`servers:` is")
 
 
+def test_a_label_with_values_writes_a_word_of_the_set_and_counts_a_word_outside_it_garbled():
+    """ADR-0063: `values: [...]` of an `agg: label` is the closed set of words the field says. A word of it is a series
+    (the default where nothing is said, too); a word outside it is a garbled field — no series, counted once a spell in
+    `FIELDS` like a word where a number goes, under a key of its own (`servers.status` reads the same leaf as a string
+    and must not undo the count), and counted again only after it was a word of the set. A status entry's field too.
+    The loader refuses `values` on another agg, not a list, empty, a word twice, an item that is no label word, and a
+    `default` outside the set (ADR 0012)."""
+    from w2cplatform.metrics import text
+    from w2cplatform.rows import FIELDS
+    belt = {"name": "belt", "from": "heartbeat.belt.state", "agg": "label", "label": "state", "default": "ok",
+            "values": ["ok", "slow", "true"]}
+    spec = SubsystemSpec.from_dict({**BIN, "servers": {"status": [{"field": "belt.state", "title": "лента"}]},
+                                    "metrics": [belt, {"name": "lane", "from": "status.lane", "agg": "label",
+                                                       "values": ["fast", "slow"]}]})
+    vars_, objects, wall = _box()
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    hb = lambda w, extra, status=(): objects.put(spec.sub.heartbeat_key(w), Heartbeat(w, wall(), list(status), {
+        "server": "s1", "bay": "", **extra}).to_bytes())
+    hb("l-1", {"belt": {"state": "slow"}}, [{"id": "a", "lane": "fast"}, {"id": "b", "lane": "sideways"}])
+    hb("l-2", {"belt": {}})                                                     # not said: the default, a word of the set
+    hb("l-3", {"belt": {"state": "jammed"}})                                    # a word outside the set
+    hb("l-4", {"belt": {"state": True}})                                        # `true` compared as the word it prints
+    key = lambda w, f: f"{spec.sub.heartbeat_key(w)}#{f}"
+    before = FIELDS.counts.get("bin", 0)
+    lines = text(ctl).splitlines()
+    for want in ('bin_belt{worker="l-1",state="slow"} 1', 'bin_belt{worker="l-2",state="ok"} 1',
+                 'bin_belt{worker="l-4",state="true"} 1', 'bin_lane{unit="a",value="fast"} 1'):
+        assert want in lines, (want, lines)
+    assert not [l for l in lines if 'worker="l-3"' in l or 'unit="b"' in l], lines
+    assert {key("l-3", "belt.state@belt"), key("l-1", "b.lane@lane")} <= FIELDS.bad
+    assert not {key(w, "belt.state@belt") for w in ("l-1", "l-2", "l-4")} & FIELDS.bad
+    assert FIELDS.counts.get("bin", 0) - before == 2
+    # read again, and through `servers.status` (the same leaf, a string it shows): the same spell, not counted again —
+    # `servers.status` counts only what it cannot show itself (`l-4`'s `true`, its own reading, ADR 0012), once
+    from w2cplatform.console import SpecConsole
+    rows = {w["worker"]: w["status"] for s in SpecConsole(ctl, wall=wall).servers()["servers"].values()
+            for w in s["workers"]}
+    assert rows["l-3"] == {"belt.state": "jammed"} and rows["l-4"] == {}, rows
+    assert key("l-4", "belt.state") in FIELDS.bad and key("l-3", "belt.state") not in FIELDS.bad
+    text(ctl)
+    assert FIELDS.counts.get("bin", 0) - before == 3 and key("l-3", "belt.state@belt") in FIELDS.bad
+    hb("l-3", {"belt": {"state": "ok"}})                                       # a word of the set again: the spell ends…
+    assert 'bin_belt{worker="l-3",state="ok"} 1' in text(ctl).splitlines() and key("l-3", "belt.state@belt") not in FIELDS.bad
+    hb("l-3", {"belt": {"state": "jammed"}})                                   # …and a new one is counted
+    text(ctl)
+    assert FIELDS.counts.get("bin", 0) - before == 4
+
+    def metric(**m):
+        return lambda: SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "from": "heartbeat.x", **m}]})
+    _refused(metric(agg="label", default="stuck", values=["ok", "slow"]), "default 'stuck' is none of values (ok, slow)")
+    _refused(metric(agg="flag", values=["ok"]), "`values` closes the words of `agg: label`, not of agg 'flag'")
+    _refused(metric(values=["ok"]), "`values` closes the words of `agg: label`, not of agg 'value'")   # agg left out
+    _refused(metric(agg="label", values=[]), "values is a list of words")
+    _refused(metric(agg="label", values="ok"), "values is a list of words")
+    _refused(metric(agg="label", values=["ok", "slow", "ok"]), "values says 'ok' twice")
+    for bad in ("zone 1", "", "-ok", "склад", "a,b", True, 1, None, ["ok"], "x" * 65):
+        _refused(metric(agg="label", values=["ok", bad]), "values is a list of words")
+    assert SubsystemSpec.from_dict({**BIN, "metrics": [{"name": "x", "from": "heartbeat.x", "agg": "label",
+                                                        "values": ["ok", "vlan:cctv-a", "site.b"]}]}).metrics[0]["values"] \
+        == {"ok", "vlan:cctv-a", "site.b"}                                     # a label's alphabet; no default: no check
+
 
 def test_a_metric_number_is_printed_by_its_value_and_not_by_how_the_heartbeat_spelled_it():
     """ADR 0055: a number on `/metrics` by its value, on both sides — a whole value whole (`61` whether the heartbeat
@@ -874,8 +935,8 @@ def test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_a
     the heartbeat carries it — a string of `heartbeat.strings` a string, a number a number, `2` not `2.0` —, and the
     declarations once beside `policy`, as `/spec` carries them beside `show`; the page sums them per server, the platform
     adds nothing up. A field the heartbeat does not carry is absent, not null; a word where a number stands is counted
-    and absent. The loader takes exactly `{field, title}`: another form, another key, an empty title, a field said twice,
-    the platform's own field — refused (ADR 0012)."""
+    and absent. The loader takes `{field, title}` and maybe `of` (ADR-0064): another form, another key, an empty title, a
+    field said twice, the platform's own field — refused (ADR 0012)."""
     import json
     import urllib.request
     from w2cplatform.console import SpecConsole
@@ -936,10 +997,11 @@ def test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_a
 def test_a_servers_status_field_is_a_path_into_the_heartbeats_maps():
     """A field of `servers.status` may be a path into the heartbeat's maps by its dots (`writer.state`; «Архитектор»
     2026-10-06, the product's window 12: the reading of `metrics[].from` without its `heartbeat.`): its leaf is a string
-    or a number, either one (no `heartbeat.strings` names a path), said under the path as the spec writes it; a leaf
-    that is a map, a list, `true` or null is counted as a garbled field and left out; a path the heartbeat does not
-    carry — a key not there, a word where a map should be — is absent, not counted. The loader takes dotted names, plain keys only (no `<k>`: a cell is one value), and refuses an
-    empty segment, other characters, and a path into the platform's own field (ADR 0012)."""
+    or a number, either one (no `heartbeat.strings` names a path), or a map or a list put whole (ADR-0064), said under
+    the path as the spec writes it; a leaf that is `true` or null is counted as a garbled field and left out; a path the
+    heartbeat does not carry — a key not there, a word where a map should be — is absent, not counted. The loader takes
+    dotted names, plain keys only (no `<k>`: a cell is one value), and refuses an empty segment, other characters, and
+    a path into the platform's own field (ADR 0012)."""
     from w2cplatform.console import SpecConsole
     from w2cplatform.rows import FIELDS
     declared = [{"field": "belt.state", "title": "лента"}, {"field": "belt.lag_s", "title": "отстаёт"},
@@ -963,8 +1025,10 @@ def test_a_servers_status_field_is_a_path_into_the_heartbeats_maps():
     key = spec.sub.heartbeat_key
     assert not {f"{key(w)}#{f}" for w in ("w-2", "w-4") for f in ("belt.state", "belt.lag_s", "belt.motor.amps")} \
         & FIELDS.bad                                                           # …and not counted
-    assert rows["w-3"] == {}                                                   # a list, a map, a bool: absent…
-    assert {f"{key('w-3')}#belt.state", f"{key('w-3')}#belt.lag_s", f"{key('w-3')}#belt.motor.amps"} <= FIELDS.bad
+    # a list and a map at the leaf go whole, not counted (ADR-0064); a bool is absent and counted
+    assert rows["w-3"] == {"belt.state": ["x"], "belt.lag_s": {"s": 1}}, rows
+    assert not {f"{key('w-3')}#belt.state", f"{key('w-3')}#belt.lag_s"} & FIELDS.bad
+    assert f"{key('w-3')}#belt.motor.amps" in FIELDS.bad
     assert rows["w-6"] == {} and f"{key('w-6')}#belt.state" in FIELDS.bad      # null is said, and is neither
     # a string leaf, empty too, is said as it is — any leaf: no `heartbeat.strings` names a path, a map's leaf says
     # what it is (the product's `statusOf`); an empty map on the way says nothing and is not counted
@@ -978,6 +1042,65 @@ def test_a_servers_status_field_is_a_path_into_the_heartbeats_maps():
         _refused(status(bad), "servers.status is [{field")
     _refused(status("server.name"), "the platform's own field")                # a path into the platform's own
     _refused(status("labels.zone"), "the platform's own field")
+
+
+def test_a_servers_status_map_or_list_goes_on_the_row_whole_and_of_names_a_table_of_the_spec():
+    """ADR-0064: a `servers.status` field — a top one or a path's leaf — may be a map or a list, put on the worker's row
+    of `/servers` whole, as the heartbeat carries it: the platform reads nothing in it and counts none of it garbled (a
+    field once garbled and now a map is a field read). `of: <a table of this spec>` says whose rows its keys are; the
+    page reads it beside `title`, on `/spec` and once on `/servers`. An `of` that names no table of the spec is refused
+    at load (ADR 0012). What stays as it was (ADR 0057): `true` and null counted, a top field's word where a number
+    stands counted, a key not there absent."""
+    import json
+    import urllib.request
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.rows import FIELDS
+    declared = [{"field": "keeps", "title": "сохранения", "of": "bays"}, {"field": "lost", "title": "потеряно", "of": "bays"},
+                {"field": "writer.queue", "title": "очередь"}, {"field": "piles", "title": "кучи"}]
+    spec = SubsystemSpec.from_dict({**BIN, "servers": {"status": declared}})
+    assert spec.servers_status == declared
+    vars_, objects, wall = _box()
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    key = spec.sub.heartbeat_key
+
+    def beat(w, extra):
+        objects.put(key(w), Heartbeat(w, wall(), [], {"server": "s1", "bay": "", "capacity": 4, "headroom": 4,
+                                                      **extra}).to_bytes())
+    beat("w-1", {"keeps": {"k1": {"copied": 3, "missing": 0}, "k2": {}}, "lost": ["k1"], "writer": {"queue": [1, 2]},
+                 "piles": 2})
+    beat("w-2", {"keeps": True, "lost": None, "writer": {"queue": "long"}, "piles": "many"})
+    beat("w-3", {"keeps": None, "writer": "stuck"})
+    srv = SpecConsole(ctl, wall=wall).serve("127.0.0.1", 0)
+
+    def get(path):
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}{path}", headers={"X-User": "ann"})
+        return json.loads(urllib.request.urlopen(req).read())
+    try:
+        out = get("/servers")
+        rows = {w["worker"]: w["status"] for s in out["servers"].values() for w in s["workers"]}
+        assert rows["w-1"] == {"keeps": {"k1": {"copied": 3, "missing": 0}, "k2": {}}, "lost": ["k1"],
+                               "writer.queue": [1, 2], "piles": 2}, rows
+        assert not {f"{key('w-1')}#{f}" for f in ("keeps", "lost", "writer.queue", "piles")} & FIELDS.bad
+        # `true`, null and a top field's word stay garbled; a path's word leaf is said
+        assert rows["w-2"] == {"writer.queue": "long"}, rows
+        assert {f"{key('w-2')}#keeps", f"{key('w-2')}#lost", f"{key('w-2')}#piles"} <= FIELDS.bad
+        assert rows["w-3"] == {} and f"{key('w-3')}#keeps" in FIELDS.bad      # `lost` not carried, `writer` no map
+        assert f"{key('w-3')}#lost" not in FIELDS.bad and f"{key('w-3')}#writer.queue" not in FIELDS.bad
+        beat("w-3", {"keeps": {}})                                            # …and now it says a map: read, not garbled
+        rows = {w["worker"]: w["status"] for s in get("/servers")["servers"].values() for w in s["workers"]}
+        assert rows["w-3"] == {"keeps": {}} and f"{key('w-3')}#keeps" not in FIELDS.bad
+        # `of` where the page reads `title`: the declarations once on `/servers`, and `/spec`
+        assert out["status"] == declared and get("/spec")["servers"] == {"status": declared}
+    finally:
+        srv.shutdown()
+
+    def status(*entries):
+        return lambda: SubsystemSpec.from_dict({**BIN, "servers": {"status": list(entries)}})
+    _refused(status({"field": "keeps", "title": "x", "of": "keeps"}), "declares no such table")   # BIN has `bays` only
+    _refused(status({"field": "keeps", "title": "x", "of": 5}), "declares no such table")
+    _refused(status({"field": "keeps", "title": "x", "of": ["bays"]}), "declares no such table")
+    _refused(status({"field": "keeps", "of": "bays"}), "servers.status is [{field")       # `of` is no title
+    _refused(status({"field": "keeps", "title": "x", "of": "bays", "by": "id"}), "servers.status is [{field")
 
 
 def test_who_holds_a_row_is_said_by_the_table_of_places_and_not_by_the_affinity_table():

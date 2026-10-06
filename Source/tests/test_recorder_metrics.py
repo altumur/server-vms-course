@@ -17,7 +17,7 @@ def test_a_recorders_troubles_are_numbers_not_only_a_heartbeat():
     now = box.wall()
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", now, [
         {"id": "7", "phase": "running"}, {"id": "8", "phase": "running"}, {"id": "9", "phase": "failed"}],
-        {"server": "srv-1", "volume": "vol-a", "volume_error": "", "writer": {"state": "stuck"},
+        {"server": "srv-1", "volume": "vol-a", "volume_error": "", "writer": {"state": "stalled"},
          "archive_away_since": now - 360.0, "archive_failure": "away", "fenced": False}).to_bytes())
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-2"), Heartbeat("r-2", now, [],
         {"server": "srv-2", "volume": "vol-b", "volume_error": "read-only file system", "writer": {"state": "ok"},
@@ -26,7 +26,7 @@ def test_a_recorders_troubles_are_numbers_not_only_a_heartbeat():
     for line in ('rec_recordings{worker="r-1",phase="running"} 2', 'rec_recordings{worker="r-1",phase="failed"} 1',
                  'rec_volume_error{worker="r-1"} 0', 'rec_volume_error{worker="r-2"} 1',
                  'rec_archive_away_seconds{worker="r-1"} 360', 'rec_archive_away_seconds{worker="r-2"} 0',
-                 'rec_writer{worker="r-1",state="stuck"} 1', 'rec_writer{worker="r-2",state="ok"} 1',
+                 'rec_writer{worker="r-1",state="stalled"} 1', 'rec_writer{worker="r-2",state="ok"} 1',
                  'rec_archive_failure{worker="r-1",kind="away"} 1'):
         assert line in text, line
     assert 'rec_archive_failure{worker="r-2"' not in text             # nothing failing: no line

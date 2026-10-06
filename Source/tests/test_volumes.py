@@ -993,11 +993,11 @@ def test_a_volume_whose_directory_is_gone_is_not_made_again_empty_and_its_record
 def test_servers_carries_a_recorders_missing_volume_its_waiting_shrink_and_its_writers_state():
     """`servers.status` over the recorder's heartbeat («Архитектор», the console by the specs' catalogue): a spec that
     declares `volume_missing` — a string, in `heartbeat.strings` —, `shrink_pending` — a number — and `writer.state` —
-    a path into the recorder's `writer` map (`WriterWatch.state`: ok, stuck or losing; «Архитектор» 2026-10-06) — gets
+    a path into the recorder's `writer` map (`WriterWatch.state`: ok, stalled or losing; «Архитектор» 2026-10-06) — gets
     each recorder's value on its row of `GET /servers` as the recorder said it: the volume's name, the bytes as an int,
     the writer's word; a recorder that says none of them has none. The spec is built here from the recorder's own, so
-    the test does not wait on its bytes: they say these entries, or the first two of them until «Паритет» adds the
-    third."""
+    the test does not wait on its bytes: they begin with these entries (the incidents volume's `keeps`,
+    `incidents_lost`, `incidents_at_risk` follow them, ADR-0064 — another test's)."""
     from w2cplatform import specyaml
     from w2cplatform.spec import SubsystemSpec
     from vms.writerwatch import WriterWatch
@@ -1007,7 +1007,7 @@ def test_servers_carries_a_recorders_missing_volume_its_waiting_shrink_and_its_w
     declared = [{"field": "volume_missing", "title": "том не найден"},           # rec's spec: its bytes
                 {"field": "shrink_pending", "title": "уменьшение квоты не подтверждено"},
                 {"field": "writer.state", "title": "запись в архив"}]
-    assert "volume_missing" in d["heartbeat"]["strings"] and d["servers"]["status"] in (declared, declared[:2]), \
+    assert "volume_missing" in d["heartbeat"]["strings"] and d["servers"]["status"][:3] == declared, \
         d.get("servers")
     assert isinstance(WriterWatch().state["state"], str)                       # the leaf the path names is a word
     d["servers"]["status"] = declared
@@ -1015,7 +1015,7 @@ def test_servers_carries_a_recorders_missing_volume_its_waiting_shrink_and_its_w
     box = Box()
     for w, server, extra in (("r-1", "srv-a", {"volume": "", "volume_missing": "disk-a", "writer": {"state": "ok"}}),
                              ("r-2", "srv-a", {"volume": "disk-b", "shrink_pending": 32 << 20,
-                                               "writer": {"state": "stuck", "outstanding": 8 << 20, "still": 12.0}}),
+                                               "writer": {"state": "stalled", "outstanding": 8 << 20, "still": 12.0}}),
                              ("r-3", "srv-b", {"volume": "disk-c"})):
         box.objects.put(spec.sub.heartbeat_key(w), Heartbeat(w, box.wall(), [], {"server": server, "capacity": 4,
                                                                                  "headroom": 4, **extra}).to_bytes())
@@ -1025,7 +1025,7 @@ def test_servers_carries_a_recorders_missing_volume_its_waiting_shrink_and_its_w
         assert st == 200 and out["status"] == declared, out
         rows = {w["worker"]: w["status"] for s in out["servers"].values() for w in s["workers"]}
         assert rows["r-1"] == {"volume_missing": "disk-a", "writer.state": "ok"}
-        assert rows["r-2"] == {"shrink_pending": 32 << 20, "writer.state": "stuck"}
+        assert rows["r-2"] == {"shrink_pending": 32 << 20, "writer.state": "stalled"}
         assert type(rows["r-2"]["shrink_pending"]) is int
         assert rows["r-3"] == {}                                           # nothing missing, waiting or said: absent
     finally:

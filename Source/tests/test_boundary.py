@@ -761,7 +761,8 @@ def _piece_two_specs():
         now = ctls["testsub2"].wall()
         objects.put("testsub2/heartbeats/t-1", Heartbeat("t-1", now, [{"id": "t1", "phase": "running", "depth": 2}], {
             "server": "srv-1", "shelf": "", "jam": "yes", "away_since": now - 5, "belt": {"state": "slow"},
-            "adds": {"done": 3}, "queue": {"a": 4, "b": 1}, "wait": {"buckets": [1, 2], "count": 2, "sum": 3.0}}).to_bytes())
+            "adds": {"done": 3}, "queue": {"a": 4, "b": 1}, "wait": {"buckets": [1, 2], "count": 2, "sum": 3.0},
+            "shelved": {"s1": 2, "s3": 0}}).to_bytes())
         with urllib.request.urlopen(base + "/testsub2/metrics", timeout=10) as r:
             text = r.read().decode()
         for name in ("tallies_running", "shelves_open", "notches_unshelved", "phases", "depth", "jam", "away_seconds",
@@ -769,11 +770,14 @@ def _piece_two_specs():
             assert f"testsub2_{name}" in text, (name, text[-2000:])
         assert 'testsub2_workers_needed{labels=""}' in text                                # `placement.places`
         # what `servers.status` names of that heartbeat is on the worker's row of `/servers`, a dotted path's leaf too
-        # (`belt.state`, the leaf the metric `belt` reads; «Архитектор» 2026-10-06)
-        said = {"jam": "yes", "belt.state": "slow"}
+        # (`belt.state`, the leaf the metric `belt` reads; «Архитектор» 2026-10-06), and a map whole — `shelved`, a
+        # tally count per shelf, its keys rows of `shelves` (`of: shelves`, ADR-0064)
+        said = {"jam": "yes", "belt.state": "slow", "shelved": {"s1": 2, "s3": 0}}
         st, out = _http(base, "GET", "/testsub2/servers")
         row = next(w for s in out["servers"].values() for w in s["workers"] if w["worker"] == "t-1")
         assert st == 200 and row["status"] == {e["field"]: said[e["field"]] for e in out["status"]}, (st, out)
+        # …and the declarations, `of` with them, are what `/spec` gives the page
+        assert _http(base, "GET", "/testsub2/spec")[1]["servers"]["status"] == out["status"], out["status"]
     finally:
         srv.shutdown(); srv.server_close()
     specs = [SubsystemSpec.load(os.path.join(os.path.dirname(TESTSUB), f)) for f in ("testsub.subsystem.yaml",

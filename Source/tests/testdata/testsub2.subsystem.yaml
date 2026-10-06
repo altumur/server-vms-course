@@ -154,7 +154,7 @@ metrics:
   - {name: depth, from: status.depth, agg: value, type: gauge, default: 0}
   - {name: jam, from: heartbeat.jam, agg: flag, equals: [stuck, "yes"]}
   - {name: away_seconds, from: heartbeat.away_since, agg: age, default: 0}
-  - {name: belt, from: heartbeat.belt.state, agg: label, label: state, default: ok}
+  - {name: belt, from: heartbeat.belt.state, agg: label, label: state, default: ok, values: [ok, slow]}
   - {name: adds_total, from: "heartbeat.adds.<outcome>", agg: sum, type: counter, labels: {kind: add}}
   - {name: queue_max, from: "heartbeat.queue.<lane>", agg: max}
   - {name: wait_seconds, from: heartbeat.wait, agg: histogram, type: histogram, buckets: [1.0, 5.0]}
@@ -164,6 +164,7 @@ servers:
   status:
     - {field: jam, title: затор}
     - {field: belt.state, title: лента}
+    - {field: shelved, title: счёты на полках, of: shelves}
 display:
   unit: счёт
   units: счёты

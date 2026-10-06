@@ -231,7 +231,7 @@ requests:
   # A scenario's `record` (`vms/autoworker.py`) is turned into a recording by the VMS's jobs (`jobs.record_on_request`),
   # not performed by a recorder: the platform's reaper leaves it to them.
   elsewhere: [record]
-snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
+snapshot: [name, cam, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was `vms/console.py`'s `rec_metrics`, a
 # function the platform's console called and never read). `rec_<name>` on `/metrics`; the shapes are the platform's
 # (`w2cplatform/metrics.py`): a count of a table's rows, or a field of the recorders' heartbeats and status entries.
@@ -258,7 +258,7 @@ metrics:
   - {name: volume_shrink_pending, from: heartbeat.quota_note, agg: flag, default: 0}
   - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0}
   - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind}
-  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, default: ok}
+  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing], default: ok}
   # Per recording: how long since it last took anything from its source (feedback BI); what the engine refused of its
   # samples, by answer (the third pass); how deep it goes and whether its ring closed inside the floor (feedback BM);
   # and how long it has gone on under an epoch the store has not confirmed.
@@ -298,7 +298,7 @@ metrics:
   - {name: card_live_skipped_seconds_total, from: heartbeat.card.live_skipped_s, default: 0, type: counter}
   # card.state is a closed set, the same words on both sides: opening, recording, failing, stalled, failed, unavailable (an
   # accident: a card that would not open or refused), none (no card by the camera's own setting — no accident)
-  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, default: recording}
+  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, values: [opening, recording, failing, stalled, failed, unavailable, none], default: recording}
 # What a page shows under a server: the volumes whose `server` names it (the boundary's step 6; it was the recorder's
 # heartbeat field `archive`, read by the platform's `/servers`).
 servers:
@@ -308,6 +308,9 @@ servers:
     - {field: volume_missing, title: том не найден}
     - {field: shrink_pending, title: уменьшение квоты не подтверждено}
     - {field: writer.state, title: запись в архив}
+    - {field: keeps, title: сохранения, of: keeps}
+    - {field: incidents_lost, title: потеряно из сохранений, of: keeps}
+    - {field: incidents_at_risk, title: сохранения под угрозой, of: keeps}
 # What a page calls things (the console module reads it from /spec; the platform reads none of it).
 display:
   unit: запись

@@ -922,7 +922,7 @@ def test_a_card_write_that_hangs_holds_neither_the_heartbeat_nor_a_range_and_the
     "lost" after 45 s with no reason, and the card said `recording` all along. Now the card's I/O and what the card
     holds are two locks, and the I/O is watched: while one write hangs, the heartbeat and the status come at once, a
     range is refused at once (`Stalled`, an error — never an empty answer), and the card is said `stalled` — in the
-    heartbeat, in `volume_error`, as `writer: stuck` for the console's `rec_writer`, and — once the stall has lasted
+    heartbeat, in `volume_error`, as `writer: stalled` for the console's `rec_writer`, and — once the stall has lasted
     `STALL_ALARM` times what the write may take (the eighth review: a slow, healthy card was an alarm) — as the alarm
     `card.failing`. When the write returns, the card records again and nothing is said."""
     import threading
@@ -958,9 +958,9 @@ def test_a_card_write_that_hangs_holds_neither_the_heartbeat_nor_a_range_and_the
         assert hb.extra["card"]["state"] == "stalled" and hb.extra["card"]["stalled_s"] >= 0.3
         assert hb.extra["volume_error"].startswith("the card does not answer: a write to it has not returned for")
         assert "check or replace the card" in hb.extra["volume_error"]
-        assert hb.extra["writer"]["state"] == "stuck"
+        assert hb.extra["writer"]["state"] == "stalled"
         lines = spec_metrics(rec_ctl).splitlines()
-        assert 'rec_writer{worker="r-1",state="stuck"} 1' in lines and 'rec_volume_error{worker="r-1"} 1' in lines
+        assert 'rec_writer{worker="r-1",state="stalled"} 1' in lines and 'rec_volume_error{worker="r-1"} 1' in lines
         rec.gate_pass()
         assert _alarms(box, "card.failing") == []                        # a slow write is not yet the alarm (the eighth review)…
         time.sleep(rec.STALL_ALARM * card.stall_limit() - card.stalled_for() + 0.1)

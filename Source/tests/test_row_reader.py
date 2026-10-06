@@ -470,7 +470,7 @@ def test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader()
     assert jobs.reap(job) == {"done": 0, "failed": 0} and jobs.ask_for_footage(job, _rec_console(box)) == 0
     rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     box.objects.put("rec/heartbeats/r-9", Heartbeat("r-9", t, [{"phase": "running", "last_frame_at": t, "depth_days": 1}],
-                                                    {"writer": "stuck"}).to_bytes())
+                                                    {"writer": "stalled"}).to_bytes())
     _prometheus(spec_metrics(rec))
     _forget_garbled()
 

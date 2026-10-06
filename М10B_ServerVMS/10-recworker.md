@@ -1173,7 +1173,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 | **теряет** | том двигается, но за пять минут дошло меньше 90 % отданного | сторож «том не двигается» этого не видит вообще, а на ящике продукта доходило 66–69 % |
 | **в порядке** | всё остальное, включая «ничего не отдано» | резервная запись на удержании и тихая камера ничего не отдают — и они здоровы |
 
-Состояние уходит в heartbeat отдельным полем `writer`, а консоль пишет его на томе: *writing stuck: 8 MB not landed for 61 s*, *losing writes: 67 % landing over 300 s*.
+Состояние уходит в heartbeat отдельным полем `writer`, а консоль пишет его на томе: *writing stalled: 8 MB not landed for 61 s*, *losing writes: 67 % landing over 300 s*. В heartbeat состояние — одно из трёх слов `stalled`, `losing`, `ok`, тех же, что у регистратора продукта (`recact`): одно имя на обеих сторонах. Закрывает этот набор спека — ключ `values` у метрики `writer` (ADR-0063), — и слово вне него консоль считает испорченным полем, а не новым рядом.
 
 Лечение одно — открыть писателя заново:
 
@@ -1190,7 +1190,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 
 Конвейеры останавливаются и считаются потерянными, сверка поднимает их с новой эпохой. А сам писатель закрывается и открывается снова на следующем проходе — тем же путём, что после пропавшего демона (`engine_lost`): новый писатель под тем же владельцем. Остановить одни конвейеры мало: если застрял писатель, новые конвейеры писали бы в него же. И не чаще раза в десять минут (`REOPEN_EVERY`). Если причина не в писателе, а в том, что ему дают, перезапуск каждую минуту только добавит к потере время, за которое писатель отпускает том. Heartbeat при этом говорит правду на каждом проходе. Исполнитель, который не умеет считать отданное, не говорит ничего: молчание здесь значит «не измерено», а не «всё хорошо».
 
-Тесты — `tests/test_writer_watch.py`: `test_a_quiet_camera_is_not_stuck_and_a_standing_volume_with_megabytes_waiting_is`, `test_a_volume_that_moves_but_takes_two_thirds_is_losing`, `test_the_writer_is_reopened_once_in_ten_minutes_however_long_it_stays_wrong`, `test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_console_says_it_on_the_volume` (в нём после переоткрытия `engine_lost` поднят, а следующий `lease_pass` открывает новый `Archive` с писателем), `test_an_actuator_that_does_not_measure_says_nothing`.
+Тесты — `tests/test_writer_watch.py`: `test_a_quiet_camera_is_not_stalled_and_a_standing_volume_with_megabytes_waiting_is`, `test_a_volume_that_moves_but_takes_two_thirds_is_losing`, `test_the_writer_is_reopened_once_in_ten_minutes_however_long_it_stays_wrong`, `test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_console_says_it_on_the_volume` (в нём после переоткрытия `engine_lost` поднят, а следующий `lease_pass` открывает новый `Archive` с писателем), `test_an_actuator_that_does_not_measure_says_nothing`.
 
 ## Шаг 13 — Глубина и числа
 

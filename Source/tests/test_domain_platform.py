@@ -147,7 +147,7 @@ def test_the_door_serves_the_units_and_a_declared_table_and_nothing_undeclared()
 def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_them_on_unrewritten():
     """One set of paths (the console module's contract, §10a): the domain's door answers `GET /domain` — the view in the
     product's shape, members a list with the holder among them, the topology, who knocks, where the door is —,
-    `/domain/keys` (every `domain/` key, a secret masked), `/spec` (no root subsystem) and `/mounts` (every spec), and
+    `/domain/keys` (every `domain/` key, its field names and no value), `/spec` (no root subsystem) and `/mounts` (every spec), and
     `/domain/topology`, `/domain/members`, `/domain/<sub>/<table>`; the old `/api/…` is no route (no alias). The holder's
     cluster console serves the same view at `/domain` and hands `/domain/X` to the domain's door at `/domain/X`; a
     cluster that does not hold the domain says it does not know where its door is."""
@@ -191,7 +191,8 @@ def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_t
         assert [(m["name"], m["holder"]) for m in d["members"]] == [("north", True), ("south", False)]
         st, k = get(door, "/domain/keys")
         gold = next(v for v in k["vars"] if v["key"] == "domain/testsub/badges/gold")
-        assert gold["items"] == {"since": "1", "pin_secret": "***"} and any(o["key"] == "domain/view" for o in k["objects"])
+        assert gold["fields"] == ["pin_secret", "since"] and "public" not in gold and "4321" not in json.dumps(k)
+        assert any(o["key"] == "domain/view" and "body" not in o for o in k["objects"])
         assert get(door, "/spec") == (200, {"name": "", "rows": None})
         st, m = get(door, "/mounts")
         assert m["root"] == "" and m["mounts"]["testsub"]["domain"] == {
@@ -217,6 +218,97 @@ def test_the_holders_human_routes_are_under_domain_and_a_cluster_console_hands_t
             srv.shutdown()
             srv.server_close()
 
+
+class _Store:
+    """Rows and objects as a store lists and gives them, and a row this process may not read (`domain/signer`)."""
+
+    def __init__(self, rows=None, objs=None):
+        self.rows, self.objs = rows or {}, objs or {}
+
+    def list(self, prefix):
+        return [k for k in {**self.rows, **self.objs} if k.startswith(prefix)]
+
+    def get(self, k):
+        from w2cplatform.variables import Forbidden
+        if k == "domain/signer":
+            raise Forbidden(k)
+        if k in self.objs:
+            return self.objs[k]
+        return self.rows.get(k), 7
+
+
+def test_the_keys_view_shows_names_and_never_a_value_a_nested_token_or_an_objects_body():
+    """`GET /domain/keys` — identifiers only («Архитектор», 2026-10-06). The leak it closes: a book row whose field holds
+    a document with `token_secret` in it (as a dict, or as JSON text), an `ingest.key`-style field holding a stream
+    token, a sealed value under a name that does not say secret, and an object whose body carries a token — the
+    masking by a field's name let every one of them through. Now no value and no body comes back: the field names do,
+    the index, an object's size and age, and a row the role may not read stays named and withheld."""
+    from w2cplatform.domain.keysview import keys
+    tok = "tok-9f3a1c-stream"
+    rows = {"domain/testsub/books/south": {"u-1": {"url": "tcp://srv/1", "token_secret": tok},
+                                           "u-2": json.dumps({"url": "tcp://srv/2", "token_secret": tok})},
+            "domain/testsub/ingest/south": {"ingest.key": tok, "ingest.url": "https://south:8443/in"},
+            "domain/testsub/ledger": {"s1": "enc:v1:k1:" + tok},
+            "domain/signer": {"issuing_secret": tok}}
+    objs = {"domain/testsub/heartbeat/south": json.dumps({"ts": 90.0, "token": tok}).encode(),
+            "domain/raw": b"not json " + tok.encode()}
+    d = keys(_Store(rows), _Store(objs=objs), now=100.0)
+    assert tok not in json.dumps(d) and "error" not in d, d
+    by = {v["key"]: v for v in d["vars"]}
+    assert by["domain/testsub/books/south"] == {"key": "domain/testsub/books/south", "index": "7",
+                                                "fields": ["u-1", "u-2"]}
+    assert by["domain/testsub/ingest/south"]["fields"] == ["ingest.key", "ingest.url"]
+    assert by["domain/testsub/ledger"]["fields"] == ["s1"] and "public" not in by["domain/testsub/ledger"]
+    assert by["domain/signer"] == {"key": "domain/signer", "withheld": "not this process's to read"}
+    assert d["objects"] == [{"key": "domain/raw", "size": len(objs["domain/raw"])},
+                            {"key": "domain/testsub/heartbeat/south", "size": len(objs["domain/testsub/heartbeat/south"]),
+                             "age": 10.0}]
+
+
+def test_the_keys_view_shows_the_public_halves_the_domain_publishes_and_never_a_private_one():
+    """The one exception: the trust the domain publishes on purpose — the key set (signed by the root, Lesson 15, and
+    the plain form of Lessons 4–7), the root a member pinned, a member's public keys, a cluster's identity certificate.
+    Their public fields come with their values (`public`); the member's `seed_secret` beside them does not, and a field
+    of a public row not named in `PUBLIC`, or a public field whose value is sealed, stays a name."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from w2cplatform.domain.keysview import keys
+    from w2cplatform.trust.memberkey import MemberKey
+    from w2cplatform.trust.signer import DomainRoot
+    from w2cplatform.trust.tokens import KeySet
+    pub = Ed25519PrivateKey.generate().public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    ks = KeySet(current="k1")
+    ks.keys["k1"] = pub
+    root = DomainRoot("north")
+    signed, plain = root.key_set(ks, 3), ks.to_items()
+    mk = MemberKey.new()
+    secret = "enc:v1:m1:the-seed"
+    member = {"seed_secret": secret, "pub": mk.pub, "seal_pub": mk.seal_pub, "note": "kept here"}
+    cert = "-----BEGIN CERTIFICATE-----\nMII\n"
+    rows = {"domain/keys": signed, "domain/root": {"pub": root.public_bytes.hex()}, "domain/member-key": member,
+            "domain/ldevid/south": {"cert": cert, "chain": "enc:v1:k1:x"}}
+    d = keys(_Store(rows), None, now=0.0)
+    by, text = {v["key"]: v for v in d["vars"]}, json.dumps(d)
+    assert by["domain/keys"]["public"] == signed and pub.hex() in by["domain/keys"]["public"]["doc"]
+    assert by["domain/root"]["public"] == {"pub": root.public_bytes.hex()}
+    assert by["domain/member-key"]["fields"] == ["note", "pub", "seal_pub", "seed_secret"]
+    assert by["domain/member-key"]["public"] == {"pub": mk.pub, "seal_pub": mk.seal_pub}
+    assert by["domain/ldevid/south"]["public"] == {"cert": cert}
+    assert secret not in text and "kept here" not in text and "enc:v1:k1:x" not in text
+    assert plain == {"current": "k1", "key:k1": pub.hex()}
+    assert keys(_Store({"domain/keys": plain}), None, 0.0)["vars"][0]["public"] == plain
+    # a document in a public field that carries a secret is not shown: the check reads into it
+    tainted = {"doc": json.dumps({"keys": {}, "root": "ab", "x": {"token_secret": "t"}})}
+    assert "public" not in keys(_Store({"domain/keys": tainted}), None, 0.0)["vars"][0]
+    # who the members are is public too: the holder's list and a member's carried copy, by their `doc`
+    listed = {"doc": json.dumps({"rev": 2, "members": {"south": {"how": "admitted", "key": pub.hex(),
+                                                               "console": "https://south:8443"}}})}
+    for row in ("domain/members", "domain/member-list"):
+        v = keys(_Store({row: listed}), None, 0.0)["vars"][0]
+        assert v["fields"] == ["doc"] and v["public"] == listed, v
+        hidden = {"doc": json.dumps({"rev": 3, "members": {"south": {"enroll_secret": "e-1"}}})}
+        v = keys(_Store({row: hidden}), None, 0.0)["vars"][0]
+        assert "public" not in v and "e-1" not in json.dumps(v), v
 
 def test_a_member_carries_home_the_books_its_spec_declares_and_nothing_it_does_not():
     """The holder keeps a book for each member under `domain/<sub>/<book>/<member>`; the member's agent carries its own

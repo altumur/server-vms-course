@@ -4,7 +4,7 @@ runs where the signer's key is: `domain.signer_service`, when it is given CLUSTE
 
     sources      Lesson 13   for each recording cluster: where its cameras of other clusters were last seen
     primaries    Lesson 13   for each camera cluster: who records it, whether written, and where to push (16)
-    poll         Lesson 16   for a pushing camera nobody records: the ingest it polls for asks
+    polls        Lesson 16   for a pushing camera nobody records: the ingest it polls for asks
     upstream     Lesson 17   for each relay: the centre's ingest, per camera, when there is a centre
     asks         Lesson 16   for each camera a scenario of the shared document makes a trigger: whom it may
                              ask, by which roads — built last, because it reads what the others decided
@@ -43,10 +43,10 @@ class Books:
             ("the read view's pass", c.view.refresh),
             ("sources", lambda: len(c.publish())),
             ("primaries", lambda: len(c.publish_primaries())),
-            ("poll", lambda: len(c.publish_polls())),
+            ("polls", lambda: len(c.publish_polls())),
             ("upstream", lambda: len(publish_upstream(c, c.centre, star=c.star)) if c.centre else None),
             ("the shared settings", lambda: published(c.vars, self.objects)))
-        out = {k: got[k] for k in ("sources", "primaries", "poll", "upstream") if got.get(k) is not None}
+        out = {k: got[k] for k in ("sources", "primaries", "polls", "upstream") if got.get(k) is not None}
         if "the shared settings" in got:                 # a document nobody can read writes no book of asks: the last stays
             settings = got["the shared settings"]
             more = self.steps.run(

@@ -25,7 +25,7 @@ from .spec import TREE_WORDS
 from .tables import TABLE_KEYS
 
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
-         "domain.tokens", "domain.names", "secrets.readers", "unit.fields.*.schemes",
+         "domain.tokens", "domain.names", "domain.books", "secrets.readers", "unit.fields.*.schemes",
          "tables.*.fields.*.schemes"}
 OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
@@ -71,7 +71,7 @@ KEYS = {
     "rights.reach.cluster", "rights.reach.requests", "rights.names.field", "rights.names.unit", "rights.names.sub",
     "rights.names.of",
     "servers.show.table", "servers.show.by", "servers.show.title", "servers.show.columns", "servers.status.field",
-    "servers.status.title",
+    "servers.status.title", "servers.status.of",
     *(f"metrics.{k}" for k in metrics.KEYS), "metrics.unless.table", "metrics.unless.where",
     "display.unit", "display.units", "display.units_count", "display.section", "display.events", "display.field_help",
     "display.kinds", "display.actions", "display.tree.group_by", "display.tree.columns.field",
@@ -81,7 +81,7 @@ KEYS = {
     "display.form.placement", "display.form.fields", "display.form.status.field", "display.form.status.since",
     "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness.report", "domain.witness.member_field",
-    "domain.books", "domain.kept", "domain.tables",
+    "domain.books", "domain.books.*.show", "domain.kept", "domain.tables",   # books: a list of names, or {<book>: {show}}
     "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
     "domain.keys.prefix", "domain.shared", "domain.shared.name", "domain.shared.type", "domain.shared.schema",
     "domain.names.*.exclusive_with", "domain.names.*.grant",

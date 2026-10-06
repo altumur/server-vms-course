@@ -1028,7 +1028,7 @@ class RecWorker(VmsWorker):
     # took since this recorder opened it (`totalWritten`). Between the two is a queue and the engine's own
     # policy — a sequence it lost, a group of pictures it cut — and "taken" is not "on the volume" until this
     # says so. A recorder whose actuator does not measure says nothing — silence here
-    # is "not measured", never "fine". When the watch says stuck or losing, the cure is to reopen the writer:
+    # is "not measured", never "fine". When the watch says stalled or losing, the cure is to reopen the writer:
     # the pipelines are stopped and counted lost, and the reconciler starts them again, under a new epoch as
     # any restart — and the volume is closed and opened again on the next pass, a new writer under the same
     # owner, exactly as after a lost engine. At most every ten minutes (`WriterWatch.reopen_every`); the heartbeat
@@ -1064,7 +1064,7 @@ class RecWorker(VmsWorker):
                 self._lost_engine()                  # the daemon no longer knows the session: remount, not wait
             return self.writer.state                 # a volume that does not answer measures nothing this pass
         # Offered is summed by DELTAS per pipeline, not as the sum of the running ones: a recording that stops took
-        # its count out of the sum, `outstanding` went negative and `stuck` never came (the review's second pass).
+        # its count out of the sum, `outstanding` went negative and `stalled` never came (the review's second pass).
         # And what this process wrote into the writer itself — fetched ranges, keeps — is offered too, else it
         # masks a stall for as long as it lands.
         for c, v in zip(running, vals):
@@ -1143,7 +1143,7 @@ class RecWorker(VmsWorker):
                 # Seconds of footage that writers this recorder gave up had taken and not written (`_say_dropped`; each
                 # is an alarm in its recording's journal too).
                 **({"archive_dropped_seconds": round(self.dropped_seconds, 1)} if self.dropped_seconds else {}),
-                # Whether what the sinks were handed is reaching the volume (Lesson 10): ok, stuck or losing.
+                # Whether what the sinks were handed is reaching the volume (Lesson 10): ok, stalled or losing.
                 # A fresh hold and a running row do not say it; only this does.
                 "writer": self.writer.state,
                 # Volumes this recorder handed back for refusing writes, and why — left alone until the time

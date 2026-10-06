@@ -2,7 +2,7 @@
 
 The pipeline's watchdog sees frames arrive. Whether they reach the volume after the sink, nothing checked —
 and the product lost fifteen and twenty-seven minutes that way with every sign saying "writing". The
-recorder compares what it OFFERED its sinks with what LANDED, says stuck or losing in its heartbeat, and
+recorder compares what it OFFERED its sinks with what LANDED, says stalled or losing in its heartbeat, and
 reopens the writer, at most every ten minutes.
 """
 from vms import volumes
@@ -13,7 +13,7 @@ from tests.test_backup_archive import _site
 MB = BLOCK
 
 
-def test_a_quiet_camera_is_not_stuck_and_a_standing_volume_with_megabytes_waiting_is():
+def test_a_quiet_camera_is_not_stalled_and_a_standing_volume_with_megabytes_waiting_is():
     w = WriterWatch()
     t = 0.0
     for _ in range(20):                                   # a quiet camera: half a block in ten minutes
@@ -25,8 +25,8 @@ def test_a_quiet_camera_is_not_stuck_and_a_standing_volume_with_megabytes_waitin
     w.observe(5 * MB, 0, 30.0)
     assert w.state["state"] == "ok"                       # not for a minute yet
     w.observe(8 * MB, 0, 61.0)
-    assert w.state["state"] == "stuck" and w.state["outstanding"] == 8 * MB
-    assert describe(w.state) == "writing stuck: 8 MB not landed for 61 s"
+    assert w.state["state"] == "stalled" and w.state["outstanding"] == 8 * MB
+    assert describe(w.state) == "writing stalled: 8 MB not landed for 61 s"
     w.observe(9 * MB, 9 * MB, 70.0)                       # it moved
     assert w.state["state"] == "ok"
 
@@ -60,7 +60,7 @@ def test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_consol
     for _ in range(3):                                    # megabytes handed to the sink, nothing reaching the volume
         box.wall.advance(30); act.offered_bytes["1"] += 4 * MB
         primary.writer_pass()
-    assert primary.heartbeat_extra()["writer"]["state"] == "stuck"
+    assert primary.heartbeat_extra()["writer"]["state"] == "stalled"
     assert ("stop", "1") in act.calls and "1" not in primary.reconciler.running()   # reopened: the reconciler starts it again
     first = primary.store
     assert primary.engine_lost
@@ -72,7 +72,7 @@ def test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_consol
     primary.heartbeat_once()
     served = volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)
     disks = next(v for v in served["volumes"] if v["name"] == "disks")
-    assert disks["served_by"] and disks["writing"].startswith("writing stuck:")
+    assert disks["served_by"] and disks["writing"].startswith("writing stalled:")
 
 
 def test_an_actuator_that_does_not_measure_says_nothing():
@@ -83,7 +83,7 @@ def test_an_actuator_that_does_not_measure_says_nothing():
 
 def test_what_was_offered_stays_offered_when_a_recording_stops():
     """Offered was the SUM over the running recordings: one that stopped took its megabytes out of the sum,
-    `outstanding` went negative, and a volume that had taken nothing of them was never called stuck (the review's
+    `outstanding` went negative, and a volume that had taken nothing of them was never called stalled (the review's
     second pass). Offered is summed by deltas now, and nothing is taken back."""
     from w2cplatform.spec import SpecController
     box, rec_ctl, primary, backup, holder = _site()
@@ -97,4 +97,4 @@ def test_what_was_offered_stays_offered_when_a_recording_stops():
     box.wall.advance(30); primary.writer_pass()
     primary._actuate("stop", {"id": "1"}); primary.reconciler.drop("1")   # one recording stops
     box.wall.advance(31)
-    assert primary.writer_pass()["state"] == "stuck"                                 # the four megabytes are still owed
+    assert primary.writer_pass()["state"] == "stalled"                                 # the four megabytes are still owed

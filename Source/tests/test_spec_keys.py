@@ -126,17 +126,24 @@ def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to
     is the grants the specs make, and the declaration is the promise they are held to (`cluster.rights.check_secrets`).
     testsub2's console alone reads its door's seed, as it says. Named with a role that does not read it — or kept under
     the subsystem's own name, where its controller and worker read every row — it is no file at all, the disagreement
-    named; a row the worker says it reads and its grants do not reach is the same; a role is one of the platform's."""
+    named; a role is one of the platform's. `reads` grants as well, as the product's key does (ADR-0024): the worker
+    that names a row reads it — a prefix as its rows — and a row another spec keeps secret has that worker among its
+    readers, the others still held to the declaration."""
     from w2cplatform.cluster.rights import roles
+    from w2cplatform.rights import allowed
     two = _testsub2()
     roles([SubsystemSpec.from_dict(_testsub()), SubsystemSpec.from_dict(two)], "test")
+    for secrets, row in (({"reads": ["domain/member-key"]}, "domain/member-key"),
+                         ({"reads": ["domain/test/clients/"]}, "domain/test/clients/a"),
+                         ({"readers": {"door/signer": ["console"]}, "reads": ["door/signer"]}, "door/signer")):
+        got = roles([SubsystemSpec.from_dict(_testsub()), SubsystemSpec.from_dict({**two, "secrets": secrets})], "test")
+        assert allowed(got["testsub2worker"]["read"], row), (secrets, got["testsub2worker"]["read"])
+        assert not allowed(roles([SubsystemSpec.from_dict(_testsub()), SubsystemSpec.from_dict(two)],
+                                 "test")["testsub2worker"]["read"], row), row    # …and not without it
     for secrets, words in (({"readers": {"door/signer": ["console", "worker"]}}, "the rights let console read it"),
                            ({"readers": {"testsub2/vault/": ["console"]}},
                             "testsub2/vault/: the specs name console as its readers, and the rights let console, "
-                            "domain, domainconsole, testsub2controller, testsub2worker, testsubdomain read it"),
-                           ({"reads": ["door/signer"]}, "says its worker reads it (secrets.reads)"),
-                           ({"readers": {"door/signer": ["console"]}, "reads": ["door/signer"]},
-                            "the specs name console, testsub2worker")):
+                            "domain, domainconsole, testsub2controller, testsub2worker, testsubdomain read it")):
         _refused(lambda secrets=secrets: roles([SubsystemSpec.from_dict(_testsub()),
                                                 SubsystemSpec.from_dict({**two, "secrets": secrets})], "test"), words)
     for bad, words in (({"readers": {"door/signer": ["operator"]}}, "is a list of roles"),

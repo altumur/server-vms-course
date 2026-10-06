@@ -18,6 +18,8 @@ IS, in two shapes, and the console reads the store and the heartbeats it already
                             sum, max (over every worker, by the wildcard labels) | histogram (`{buckets, count, sum}`
                             over the edges `buckets`)
         default             what is printed where nothing is said (else no line); for `label`, the label then
+        values              `label` only: the closed set of words the field says (ADR-0063) — a word outside it is a
+                            garbled field, counted (`FIELDS`), and no line; `default` is one of them
         labels              constant labels added to every line
         live                true: the workers this console saw change within `lost_after`, not every heartbeat
         when                status: only the entries that say this field
@@ -38,7 +40,7 @@ from .rows import FIELDS, PARSE_ERRORS, finite, number
 AGGS = ("value", "flag", "age", "label", "count", "sum", "max", "histogram")
 TYPES = ("gauge", "counter", "histogram")
 KEYS = {"name", "type", "labels", "count", "where", "unheld", "unless", "from", "agg", "default", "live", "when", "equals",
-        "label", "buckets"}
+        "label", "buckets", "values"}
 NAME = re.compile(r"[a-z][a-z0-9_]*")
 
 
@@ -107,9 +109,34 @@ def parse(name: str, raw, tables: tuple) -> list[dict]:
                                  f"`buckets`")
             e.update(src=src, path=path.split("."), agg=agg, default=m.get("default"), live=m.get("live") is True,
                      when=str(m["when"]) if m.get("when") else "", equals=_values(m["equals"]) if "equals" in m else None,
-                     label=str(m.get("label", "value")), buckets=[float(b) for b in m.get("buckets") or []])
+                     label=str(m.get("label", "value")), buckets=[float(b) for b in m.get("buckets") or []],
+                     values=_closed(name, m, agg))
         out.append(e)
     return out
+
+
+# `values: [...]` of a label (ADR-0063): the closed set of words the field says, the same words on both sides. Without
+# it a word outside the set (a writer's typo, a state one side added) was quietly a new series no alarm rule sees; with
+# it, that word is a garbled field (`_one`). Refused at load (ADR 0012): `values` on any
+# agg but `label`; not a list, empty, a word said twice, an item that is not a label word (`spec.LABEL_WORD`, the
+# alphabet of a label: letters, digits and _ . : -, up to 64 — a bare `yes` YAML reads as true is no word: quote it);
+# a `default` outside the set — what is printed where nothing is said is one of the words the spec promises.
+def _closed(name: str, m: dict, agg: str) -> frozenset | None:
+    if "values" not in m:
+        return None
+    from .spec import LABEL_WORD
+    v, at = m["values"], f"spec {name}: metric {m['name']}"
+    if agg != "label":
+        raise ValueError(f"{at}: `values` closes the words of `agg: label`, not of agg {agg!r} (ADR-0063)")
+    if not isinstance(v, list) or not v or not all(isinstance(x, str) and LABEL_WORD.fullmatch(x) for x in v):
+        raise ValueError(f"{at}: values is a list of words (letters, digits and _ . : -, up to 64, starting with a "
+                         f"letter or a digit), not {v!r} (ADR-0063)")
+    twice = sorted({x for x in v if v.count(x) > 1})
+    if twice:
+        raise ValueError(f"{at}: values says {twice[0]!r} twice (ADR-0063)")
+    if m.get("default") not in (None, "") and _word(m["default"]) not in v:
+        raise ValueError(f"{at}: default {_word(m['default'])!r} is none of values ({', '.join(v)}) (ADR-0063)")
+    return frozenset(v)
 
 
 # Every value a path names in `d`: `[(labels from the wildcards, value)]` — a segment `<k>` walks every key of a map.
@@ -232,8 +259,18 @@ def _one(m, say, labels: dict, v, now: float, key: str) -> None:
         say(m, labels, 1 if _said(v, m["equals"]) else 0)
     elif agg == "label":
         said = v if v not in (None, "") else m["default"]
-        if said not in (None, ""):
-            say(m, {**labels, m["label"]: str(said)}, 1)
+        if said in (None, ""):
+            return
+        if m["values"] is not None:
+            # A word outside the closed set is a garbled field (ADR-0063): no line, counted once a spell, like a word
+            # where a number goes. Its own key: `servers.status` reads the same leaf as a string it may show, and one
+            # reading must not undo the other's count; two metrics on one leaf may close it differently.
+            vkey = f"{key}@{m['name']}"
+            if _word(said) not in m["values"]:
+                FIELDS.garbled(vkey, ValueError(f"{_word(said)!r} is none of values ({', '.join(sorted(m['values']))})"))
+                return
+            FIELDS.parsed(vkey)
+        say(m, {**labels, m["label"]: _word(said)}, 1)          # the word as compared: `true`, `61` (`metricText`)
     elif agg == "age":
         t = number(key, v or None, float, None)
         if t is not None:
