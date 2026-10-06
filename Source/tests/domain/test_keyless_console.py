@@ -199,15 +199,15 @@ def test_a_handover_is_the_signers_and_the_console_only_hands_it_on():
     signer hands the domain over (`term.handover`) — freeze, the last backup to the target, the target's agent takes it,
     the move. Then the old holder is replaced: every operation there is refused (409), at the signer and so at the
     console. No route anywhere signs what it is given."""
-    from tests.domain.test_lesson15_domain_of_one import DOMAIN, _objects, _site
+    from tests.domain.test_lesson15_domain_of_one import DOMAIN, _objects, _site, _take
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
     set_domain_grants(holder.vars, [Grant("anna", "admin", None, 0.0)], wall())
     lines = Lines()
     h = Holder(holder.vars, devices["cam-SN0"].disk, signer, ids=IdentityStore(signer, holder.vars, devices["cam-SN0"].disk,
                publish_floor=0, now=wall), revoked=RevocationList(), fed=fed, term=holder, journal=lines,
-               hand_to=lambda to: handover(holder, to, offline, DOMAIN, _objects(devices), lambda: agents[to].sync(),
-                                           wall),
+               hand_to=lambda to: handover(holder, to, _objects(devices), lambda: agents[to].sync(),
+                                           _take(fed, devices, to, offline, wall), wall),
                wall=wall)
     srv, signer_url = _serve(h)
     con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None),

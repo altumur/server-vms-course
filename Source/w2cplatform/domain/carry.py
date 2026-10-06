@@ -11,7 +11,8 @@ bigger hole). So a member reads NOTHING of the holder's store. It asks the domai
                                   and a time within `SKEW` of its own clock
     the answer                    {cluster, rows: {path: items}, objects: {key: base64}} — the rows every member reads
                                   (the key set, the revocations, the holder record, the shared settings' pointer, the
-                                  topology) and THIS cluster's own (`<path>/<cluster>`: grants, kept edits, the backup
+                                  topology, the list of members — what a cluster's console knows a member by when it
+                                  asks for the backup this cluster keeps, `term.backup_answer`) and THIS cluster's own (`<path>/<cluster>`: grants, kept edits, the backup
                                   pointer, its LDevID, its emergency hash, every book a spec declares), with the two
                                   documents those pointers name. Every `*_secret` in them — at the top of a row, or of a
                                   JSON object that is one of its values — is opened with the holder's ring and SEALED TO
@@ -44,10 +45,11 @@ class Refused(Exception):
 
 def public_rows() -> list[str]:
     from .agent import KEYS_PATH, REVOKED_PATH
+    from .members import MEMBERS
     from .shared import POINTER
     from .term import HOLDER
     from .topology import TOPOLOGY
-    return [KEYS_PATH, REVOKED_PATH, HOLDER, POINTER, TOPOLOGY]
+    return [KEYS_PATH, REVOKED_PATH, HOLDER, POINTER, TOPOLOGY, MEMBERS]
 
 
 def own_rows(cluster: str) -> list[str]:

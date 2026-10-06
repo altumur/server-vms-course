@@ -88,6 +88,12 @@ def _objects(devices):
     return lambda name: devices[name].disk_door()
 
 
+def _take(fed, devices, to, offline, wall):
+    """`to`'s own move, as its signer makes it when a planned handover asks it to take the domain (`Holder.take`): onto
+    `to`'s store, by `to` — the outgoing holder writes none of it."""
+    return lambda: move_domain(fed, to, offline, DOMAIN, _objects(devices), wall)
+
+
 def test_the_holder_dies_and_the_domain_is_moved_with_the_edit_it_was_keeping():
     """SN3 is off and the domain on SN0 is keeping an edit for it — the one piece of state that, by
     definition, is on no camera that could carry it home. SN0 published a signed backup to SN1 and SN2.
@@ -251,7 +257,7 @@ def test_a_planned_handover_strands_nothing():
             assert e.status == 503 and "handing the domain over to cam-SN1" in e.detail
         agents["cam-SN1"].sync()
 
-    new, report = handover(holder, "cam-SN1", offline, DOMAIN, _objects(devices), carry_to, wall)
+    new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert report["planned"] and report["stranded"] == [] and report["term"] == 2
     assert report["sentence"].endswith("nothing stranded")
     assert "SN3" in PendingEdits(new.vars, wall).of("cam-SN3")
@@ -270,7 +276,7 @@ def test_a_handover_the_target_did_not_take_is_called_off_and_changes_nothing():
         devices["cam-SN1"].power_off()                   # and its agent with it: no report of the backup comes
 
     try:
-        handover(holder, "cam-SN1", offline, DOMAIN, _objects(devices), carry_to, wall)
+        handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
         raise AssertionError("the handover must be called off")
     except RuntimeError as e:
         assert "called off" in str(e)
@@ -291,7 +297,7 @@ def test_a_write_that_slips_past_the_freeze_is_reported_not_trusted_away():
         PendingEdits(holder.vars, wall).add("cam-SN2", "SN2", {"name": "sneaked"}, {"name": "SN2"}, "anna")   # no guard
         agents["cam-SN1"].sync()
 
-    new, report = handover(holder, "cam-SN1", offline, DOMAIN, _objects(devices), carry_to, wall)
+    new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert [(p, k) for p, k, _ in report["stranded"]] == [("domain/pending/cam-SN2", "SN2")]
     assert "1 item(s) stranded" in report["sentence"]
 
@@ -332,7 +338,7 @@ def test_a_report_that_closes_an_edit_during_a_handover_is_not_stranded():
         PendingEdits(holder.vars, wall).reconcile("cam-SN3", {"SN3": {"rev": rev, "conflicts": {"name": {"current": "x"}}}})
         agents["cam-SN1"].sync()
 
-    new, report = handover(holder, "cam-SN1", offline, DOMAIN, _objects(devices), carry_to, wall)
+    new, report = handover(holder, "cam-SN1", _objects(devices), carry_to, _take(fed, devices, "cam-SN1", offline, wall), wall)
     assert report["stranded"] == [] and report["sentence"].endswith("nothing stranded")
     assert PendingEdits(new.vars, wall).of("cam-SN3")["SN3"]["rev"] == rev
 

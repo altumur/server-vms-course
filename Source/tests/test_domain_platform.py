@@ -927,6 +927,187 @@ def test_after_a_theft_the_move_through_the_door_drops_the_old_keys_and_a_wrong_
         stop()
 
 
+# -- the cluster console's doors of a move, to processes (contract §10a; «Архитектор» 2026-10-06) ----------------------
+def _signed_get(base, path, headers):
+    import urllib.error
+    import urllib.request
+    try:
+        with urllib.request.urlopen(urllib.request.Request(base + path, headers=headers), timeout=30) as r:
+            return r.status, json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+
+
+def _signed_post(base, path, headers, body=None):
+    import urllib.error
+    import urllib.request
+    req = urllib.request.Request(base + path, data=json.dumps(body or {}).encode(), method="POST",
+                                 headers={"Content-Type": "application/json", **headers})
+    try:
+        with urllib.request.urlopen(req, timeout=90) as r:
+            return r.status, json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+
+
+class _SignerHere:
+    """`SIGNER_URL` of this "box" for as long as a test needs it: where a cluster's console hands `/api/prepare` and
+    `/api/take`."""
+    def __init__(self, url): self.url, self.saved = url, os.environ.get("SIGNER_URL")
+    def __enter__(self): os.environ["SIGNER_URL"] = self.url
+    def __exit__(self, *a): os.environ.pop("SIGNER_URL") if self.saved is None else os.environ.__setitem__("SIGNER_URL", self.saved)
+
+
+def _members_site(wall):
+    """north holds term 1 (its signer's own root) and keeps a ledger; south and east are members admitted with keys;
+    south keeps north's backup, and its agent carried home the list of members with it."""
+    from w2cplatform.domain.agent import DomainAgent, DomainPublisher
+    from w2cplatform.domain.members import Members
+    from w2cplatform.domain.term import DomainHolder
+    from w2cplatform.trust.memberkey import MemberKey
+    from w2cplatform.trust.signer import Signer
+    fed, wall = site(wall)
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    north_holder = DomainHolder(fed, "north", signer, 1, wall)
+    north_holder.claim()
+    skey, ekey = MemberKey.load_or_make(south.vars), MemberKey.new()
+    Members(north.vars, wall).add("south", "voucher", key=skey.pub, seal=skey.seal_pub)
+    Members(north.vars, wall).add("east", "voucher", key=ekey.pub, seal=ekey.seal_pub)
+    north.vars.put("domain/testsub/ledger", {"s1": "seen"})
+    north_holder.backup(["south"], north.objects)
+    for name, c in (("north", north), ("south", south)):          # the holder's own agent too: its cluster's list
+        assert DomainAgent(name, north.vars, c.vars, now=wall, domain_objects=north.objects,
+                           cluster_objects=c.objects).sync()
+    return fed, wall, north_holder, signer, skey, ekey
+
+
+def _cluster_console(c, wall):
+    from w2cplatform.console import Mount, SpecConsole
+    from w2cplatform.spec import SpecController
+    srv = Mount(SpecConsole(SpecController(spec(), c.vars, c.objects, wall=wall, cluster=c.name), wall=wall)).serve(port=0)
+    return srv, f"http://127.0.0.1:{srv.server_address[1]}"
+
+
+def _member_signer(fed, wall, consoles=None):
+    """south's signer, as it runs on a member: its own store, a signer of its own made at its start."""
+    from w2cplatform.console import open_doors
+    from w2cplatform.domain.federation import Cluster, Federation
+    from w2cplatform.domain.signer_service import Holder
+    from w2cplatform.trust.signer import Signer
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    mine = Federation()
+    mine.add(Cluster("south", south.vars, south.objects, is_domain_holder=True))
+    mine.add(Cluster("north", north.vars, north.objects))
+    holder = Holder(south.vars, south.objects, Signer("acme", south.vars, now=wall), fed=mine,
+                    signer_url="http://south.site:8445", wall=wall, consoles=consoles)
+    srv = open_doors("127.0.0.1", 0, holder.handler(), unix_env="DW_NO_SUCH_SOCKET", say=False)
+    return holder, srv, f"http://127.0.0.1:{srv.server_address[1]}"
+
+
+def test_a_clusters_console_says_held_to_anybody_the_backup_to_a_member_and_prepare_to_the_holder_alone():
+    """south's console, to processes: `/api/held` to anybody — exactly `{cluster, holder, term, keys, backup: {rev}}`, the
+    record and the key set south holds, signed, and the number of the backup copy it keeps, never its content;
+    `/api/backup` only to a member that signs its ask with the key it was admitted
+    with (unsigned 401, a name off the list 403, a member's name with another key 401, east itself 200); `/api/prepare`
+    handed to south's signer, which prepares only for the holder of the current term — north's token key; unsigned,
+    a member's key: 403. The old doors `/domain/held`, `/domain/prepare` are no doors of a process (no alias, ADR 0003)."""
+    from w2cplatform.trust.memberkey import MemberKey
+    from w2cplatform.domain.term import backup_message, prepare_message
+    fed, wall, north_holder, signer, skey, ekey = _members_site(None)
+    srv, console = _cluster_console(fed.clusters["south"], wall)
+    holder, ssrv, signer_url = _member_signer(fed, wall)
+    try:
+        st, said = _signed_get(console, "/api/held", {})
+        assert st == 200 and sorted(said) == ["backup", "cluster", "holder", "keys", "term"], said
+        assert said["cluster"] == "south" and said["holder"]["holder"] == "north" and said["term"] == 1
+        assert said["keys"]["current"] == signer.tokens.kid and said["backup"] == {"rev": 1}   # its number, no content
+        for path in ("/domain/held", "/domain/prepare"):
+            assert _signed_get(console, path, {})[0] in (401, 404), path      # a person's route, no process door
+            assert _signed_get(signer_url, path, {})[0] == 404, path
+
+        def ask(member, key):
+            at = wall()
+            return _signed_get(console, "/api/backup", {"X-W2C-Member": member, "X-W2C-Time": f"{at:.3f}",
+                                                        "X-W2C-Signature": key.sign(backup_message("south", member, at))})
+        assert _signed_get(console, "/api/backup", {})[0] == 401
+        assert ask("mallory", MemberKey.new())[0] == 403
+        assert ask("east", MemberKey.new())[0] == 401
+        st, got = ask("east", ekey)
+        assert st == 200 and int(got["pointer"]["rev"]) == 1 and json.loads(got["backup"])["rev"] == 1, got
+
+        def prepare(sign_with):
+            at = wall()
+            return _signed_post(console, "/api/prepare", {"X-W2C-Time": f"{at:.3f}",
+                                                          "X-W2C-Signature": sign_with(prepare_message("south", at))})
+        assert _signed_post(console, "/api/prepare", {})[0] == 404                # no signer on this box: said
+        with _SignerHere(signer_url):
+            assert _signed_post(console, "/api/prepare", {})[0] == 403
+            assert prepare(ekey.sign)[0] == 403                                    # a member is not the holder
+            st, pubs = prepare(lambda m: north_holder.signer.tokens.key.sign(m).hex())
+            assert st == 200 and len(pubs["seal"]) == 64, pubs
+            assert prepare(skey.sign)[0] == 403                                    # nor is south itself
+    finally:
+        for s in (srv, ssrv):
+            s.shutdown()
+            s.server_close()
+
+
+def test_a_planned_handover_over_the_doors_is_taken_by_the_target_onto_its_own_store():
+    """north hands the domain to south over the doors alone (`asked_to_take`): south's console hands prepare and take
+    to south's signer, which checks north's signature and grant, opens north's keys with the key it prepared, reads
+    north over north's console (`/api/held`, and `/api/backup` signed with south's member key) and moves the domain
+    onto its OWN store. north writes nothing of south's: every write into south's store is south's signer's or south's
+    agent's. north reads the term south claimed and steps down; a second take is refused."""
+    import threading
+    import time
+    from w2cplatform.domain.agent import DomainAgent
+    from w2cplatform.domain.signer_service import asked_to_take
+    from w2cplatform.domain.term import HOLDER, handover
+    fed, wall, north_holder, signer, skey, ekey = _members_site(time.time)
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    nsrv, ncon = _cluster_console(north, wall)
+    srv, console = _cluster_console(south, wall)
+    holder, ssrv, signer_url = _member_signer(fed, wall, consoles={"north": ncon})
+    by_north, carrying = [], threading.Event()
+    put = south.vars.put
+
+    def watched(path, items, cas=None):
+        if threading.current_thread() is threading.main_thread() and not carrying.is_set():
+            by_north.append(path)                       # the main thread is north's, but for south's agent below
+        return put(path, items, cas)
+    south.vars.put = watched
+
+    def carry_to():
+        carrying.set()
+        try:
+            DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
+                        cluster_objects=south.objects).sync()
+        finally:
+            carrying.clear()
+    try:
+        with _SignerHere(signer_url):
+            new, report = handover(north_holder, "south", lambda n: fed.clusters[n].objects, carry_to,
+                                   asked_to_take(console, "south", north_holder, signer))
+            assert new is None and report["term"] == 2 and report["planned"], report
+            assert by_north == [], by_north
+            assert north_holder.deposed_by["holder"] == "south" and north_holder.deposed_by["term"] == 2
+            rec = json.loads(south.vars.get(HOLDER)[0]["doc"])
+            assert rec["holder"] == "south" and rec["term"] == 2 and holder.term.term == 2
+            assert south.vars.get("domain/testsub/ledger")[0] == {"s1": "seen"}
+            try:
+                asked_to_take(console, "south", north_holder, signer)()
+                raise AssertionError("south holds the domain: nothing is taken twice")
+            except RuntimeError as e:
+                assert "did not prepare (409" in str(e), e
+    finally:
+        south.vars.put = put
+        for s in (nsrv, srv, ssrv):
+            s.shutdown()
+            s.server_close()
+
+
 # -- the witness: a member matched by its own name, the field that carries it declared ---------------------------------
 def test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spec_must_declare_it_fixed():
     """`domain.witness: {report, member_field}` — testsub2's `{report: seen, member_field: of}`: the witness objects are

@@ -3623,6 +3623,52 @@ class Mount:
     # the domain holder's door at `/domain/X`, the path unrewritten: the address is the view's `url`, which only the
     # cluster the domain runs in holds (`domain_view`); elsewhere 404, said so. The person's token, the edit's
     # `Idempotency-Key` and `X-Operator: console` go with it, and the answer comes back as it came: the domain decides.
+    # THE DOMAIN'S DOORS OF THIS CLUSTER, TO PROCESSES (contract §10a; «Архитектор» 2026-10-06; `domain.term`). Asked no
+    # person's token — processes call them, each with its own proof:
+    #   GET  /api/held      `{cluster, holder, term, keys, backup: {rev}}`: the holder's record and the key set this
+    #                       cluster holds, as signed, and the number of the backup copy kept here — public, proving
+    #                       itself: what a member's agent follows the holder by (`domain.agent.HolderFollower`), what a
+    #                       move reads the largest term and the keys by, and what the page shows on a server's overview
+    #                       (contract §2). Never the backup's content
+    #   GET  /api/backup    the backup copy kept here, to a member that signs its ask (`domain.term.backup_answer`)
+    #   POST /api/prepare, /api/take   a planned handover, handed to THIS box's signer (`SIGNER_URL`) as it came — the
+    #                       signer checks the outgoing holder's signature and grant itself; no signer here: 404, said
+    def held(self) -> dict:
+        from .domain.term import held
+        return held(self.root.ctl.cluster, self.root.ctl.vars)
+
+    def backup(self, h) -> tuple[int, dict]:
+        from .domain.term import backup_answer
+        return backup_answer(self.root.ctl.cluster, self.root.ctl.vars, self.root.ctl.objects,
+                             h.headers.get("X-W2C-Member"), h.headers.get("X-W2C-Time", "nan"),
+                             h.headers.get("X-W2C-Signature"), self.root.wall())
+
+    def to_signer(self, h, path: str) -> None:
+        import urllib.error
+        import urllib.request
+        signer = os.environ.get("SIGNER_URL", "")
+        if not signer:
+            return h._send(404, {"error": "no signer here", "detail": f"{self.root.ctl.cluster} runs no signer of the "
+                                                                      f"domain (SIGNER_URL): the domain cannot be handed here"})
+        if not read_body(h, 1 << 16):
+            return
+        body = h.rfile.read(int(h.headers.get("Content-Length") or 0))
+        headers = {"Content-Type": "application/json",
+                   **{k: h.headers[k] for k in ("X-W2C-Time", "X-W2C-Signature") if h.headers.get(k)}}
+        req = urllib.request.Request(signer.rstrip("/") + path, data=body or b"{}", headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=90.0 if path == "/api/take" else 10.0) as r:
+                status, raw = r.status, r.read()
+        except urllib.error.HTTPError as e:
+            status, raw = e.code, e.read()
+        except (OSError, ValueError) as e:
+            return h._send(502, {"error": "the signer did not answer", "detail": str(e)})
+        try:
+            answer = json.loads(raw or b"{}")
+        except PARSE_ERRORS:
+            answer = {"detail": raw[:512].decode("utf-8", "replace")}
+        h._send(status, answer)
+
     @staticmethod
     def domain_local(method: str, path: str) -> bool:
         return method == "GET" and (path in ("/domain", "/domain/keys") or path.startswith("/domain/shared/"))
@@ -3709,6 +3755,12 @@ class Mount:
                     if u.path == "/drain":
                         return self._send(*mnt.drain_route(method, q, user))
                     return self._send(*mnt.schema_route(method, q, user))
+                if u.path == "/api/held" and method == "GET":
+                    return self._send(200, mnt.held())                  # a process door: the record proves itself
+                if u.path == "/api/backup" and method == "GET":
+                    return self._send(*mnt.backup(self))                # …a member's signature, checked here
+                if u.path in ("/api/prepare", "/api/take") and method == "POST":
+                    return mnt.to_signer(self, u.path)                  # …the outgoing holder's, checked by the signer
                 if u.path.startswith("/domain/") and not mnt.domain_local(method, u.path):
                     if mnt.admit(self, "GET") is None:                   # who is calling; the domain decides the rest
                         return

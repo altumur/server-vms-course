@@ -35,6 +35,15 @@ the largest term (`move_domain`) — the one exception the lesson names, because
 reports is the one that is gone. That move is the new holder's signer's operation (`signer_service.Holder.move`,
 `POST /api/move`, which `w2cctl domain move` calls), checked by the recovery file.
 
+ONE WRITER PER STORE, A MOVE INCLUDED (ADR 0001 §1.12; «Архитектор» 2026-10-06). A move writes the new holder's own
+store and nothing else — its term record, signed, the state it restored, its keys. Nobody tells the members: each
+member's agent FOLLOWS the holder by itself (`agent.HolderFollower`). It asks the console of every cluster `CLUSTERS`
+names for the holder's record that cluster holds (`GET /api/held`, `held`), and follows the greatest term that verifies
+against the key set it carries — a record is signed, so whichever cluster says it, nobody can forge a larger one. A
+planned handover is the same rule from the other side: the outgoing holder freezes and seals its last backup in its
+own store; the TARGET takes the domain onto its own store (`POST /api/prepare`, `POST /api/take` at its signer,
+`signer_service.Holder.take`) — the outgoing holder never writes the target's store.
+
 What is NOT in the backup: the signer's key. It is the one thing that must never sit beside the rest, and it
 is restored from where Lesson 7 put it — offline, or in the recovery file the installer handed over. Without
 it no backup verifies and no member follows the new holder, which is the point.
@@ -104,14 +113,188 @@ def read_holder(vars_, keys, now: float) -> dict | None:
     if not items:
         return None
     try:
-        rec = verify(json.loads(items["doc"]), keys, now)
+        return verified_record(json.loads(items["doc"]), keys, now)
+    except PARSE_ERRORS:
+        return None
+
+
+def verified_record(doc, keys, now: float) -> dict | None:
+    """A holder record as signed (`{term, holder, at[, from][, url], kid, sig}`), verified against `keys` — or None:
+    unsigned, signed by a key this member does not trust, not a record at all. A member that trusts a root takes a
+    holder record only from the ROOT (step 9). The token key signs every minute and sits on the holder; a record it
+    signed is what a stolen holder would write to take the domain."""
+    try:
+        rec = verify(doc, keys, now)
+        int(rec["term"])
+        if not isinstance(rec.get("holder"), str) or not rec["holder"]:
+            return None
     except (NotTaken, *PARSE_ERRORS):
         return None
-    # A member that trusts a root takes a holder record only from the ROOT (step 9). The token key signs every
-    # minute and sits on the holder; a record it signed is what a stolen holder would write to take the domain.
     if keys is not None and keys.root is not None and rec.get("kid") != ROOT_KID:
         return None
     return rec
+
+
+# THE PROCESS DOORS OF EVERY CLUSTER'S CONSOLE THAT A MOVE AND A FOLLOWING AGENT USE (contract §10a; «Архитектор»
+# 2026-10-06). Each cluster answers for what IT holds; nobody reads another cluster's store.
+#
+#     GET  /api/held      no token: `{cluster, holder, term, keys, backup: {rev}}` — the holder's record this cluster
+#                         holds (the holder's own claim on the holder's cluster, the record its agent carried home on a
+#                         member) as it was signed, its term, the key set it carries as it was signed, and the NUMBER of
+#                         the backup copy kept here (its pointer's `rev`; null — none). Public, and proving itself: read
+#                         by an agent following the holder (`agent.HolderFollower`), by a move for the largest term and
+#                         the keys, and by the console module on a person's page (contract §2: the one process door it
+#                         reads). Never the backup's content — even its plain part is the domain's state
+#     GET  /api/backup    the backup copy this cluster keeps (`domain/backup`, the object it names) and the shared
+#                         document, only to a process that signs the ask with the key of a member on THIS cluster's
+#                         copy of the list of members (`MEMBER_LIST`, carried home by its agent) — the way the
+#                         domain's door knows a member (`carry.HolderDoor`). The new holder of an emergency move is a
+#                         member, and signs with its member key (`AskedCluster`)
+#     POST /api/prepare, POST /api/take   a planned handover's, handed on to this cluster's own signer
+#                         (`signer_service.Holder.prepare`, `.take`), which checks them itself
+#
+# `MEMBER_LIST`: the list of members as the domain last gave it to this cluster's agent — `domain/members` is the
+# holder's record, written by the holder alone, and an agent writes no row of that name anywhere (`rights`).
+MEMBER_LIST = "domain/member-list"
+
+
+def held(cluster: str, vars_) -> dict:
+    from .agent import KEYS_PATH
+
+    def doc_of(path):
+        items, _ = vars_.get(path)
+        try:
+            doc = json.loads(items["doc"]) if items and items.get("doc") else None
+        except PARSE_ERRORS:
+            doc = None
+        return doc if isinstance(doc, dict) else None
+    keys, _ = vars_.get(KEYS_PATH)
+    rec = doc_of(HOLDER)
+    try:
+        term = int(rec["term"]) if rec else None
+    except PARSE_ERRORS:
+        term = None
+    ptr, _ = vars_.get(BACKUP)
+    try:
+        backup = {"rev": int(ptr["rev"])} if ptr else None
+    except PARSE_ERRORS:
+        backup = None
+    return {"cluster": cluster, "holder": rec, "term": term, "keys": dict(keys) if keys else None, "backup": backup}
+
+
+def backup_message(cluster: str, member: str, at: float) -> bytes:
+    """What a member signs to read the backup copy `cluster` keeps (`GET /api/backup`)."""
+    return f"backup|{cluster}|{member}|{at:.3f}".encode()
+
+
+def prepare_message(cluster: str, at: float) -> bytes:
+    """What the holder of the current term signs to ask `cluster` to prepare for a handover (`POST /api/prepare`)."""
+    return f"prepare|{cluster}|{at:.3f}".encode()
+
+
+def backup_answer(cluster: str, vars_, objects, member: str | None, at, signature: str | None,
+                  now: float) -> tuple[int, dict]:
+    """`GET /api/backup` on `cluster`'s console: 401 for an ask nobody signed, or out of time; 403 for a name that is no
+    member on this cluster's list, or whose key the root revoked; 200 — `{cluster, pointer, backup, shared}`: the
+    pointer, the backup object it names and the shared document, as this cluster's agent verified and kept them."""
+    from w2cplatform.trust.memberkey import verify as verify_sig
+    from .carry import SKEW
+    from .shared import OBJECT as SHARED_OBJECT
+    if not member or not signature:
+        return 401, {"detail": "the backup a cluster keeps is the domain's state: a member signs its ask (X-W2C-Member, "
+                               "X-W2C-Time, X-W2C-Signature)"}
+    try:
+        at = float(at)
+        items, _ = vars_.get(MEMBER_LIST)
+        doc = json.loads(items["doc"]) if items and items.get("doc") else {}
+        row = dict(doc.get("members", {})).get(member) or {}
+    except PARSE_ERRORS:
+        return 401, {"detail": "an ask names its time, and this cluster's list of members must read"}
+    if not row.get("key"):
+        return 403, {"detail": f"{member} is no member with a key on {cluster}'s list of members"}
+    if row["key"] in row.get("revoked_keys", []):
+        return 403, {"detail": f"{member}'s key was revoked by the domain's root"}
+    if not verify_sig(row["key"], backup_message(cluster, member, at), signature):
+        return 401, {"detail": f"the ask is not signed by {member}'s key"}
+    if not (abs(now - at) <= SKEW):
+        return 401, {"detail": f"the ask is {now - at:+.0f} s from {cluster}'s clock: more than {SKEW:.0f} s"}
+    ptr, _ = vars_.get(BACKUP)
+    raw = objects.get(BACKUP) if ptr and objects is not None else None
+    shared = objects.get(SHARED_OBJECT) if objects is not None else None
+    return 200, {"cluster": cluster, "pointer": dict(ptr) if ptr else None,
+                 "backup": raw.decode() if raw is not None else None,
+                 "shared": shared.decode() if shared is not None else None}
+
+
+class AskedCluster:
+    """A cluster as a move reads it over its console's process doors, never its store: `/api/held` for the holder's
+    record and the key set it carries, `/api/backup` — signed by `key`, this member's own — for the backup copy it keeps
+    and the shared document. Shaped as the `Cluster` a move reads (`vars.get`, `objects.get`); every answer is asked
+    once; a console that does not answer is `Unreachable`, as a store that does not. It writes nothing anywhere."""
+
+    def __init__(self, name: str, console: str, member: str, key, wall=time.time, timeout: float = 5.0):
+        self.name, self.console, self.member, self.key, self.wall, self.timeout = name, console, member, key, wall, timeout
+        self.is_domain_holder = False
+        self._held = self._backup = None
+        outer = self
+
+        class Vars:
+            def get(self, path):
+                from .agent import KEYS_PATH
+                if path == HOLDER:
+                    doc = outer.held().get("holder")
+                    return ({"doc": json.dumps(doc, sort_keys=True)} if doc else None), 0
+                if path == KEYS_PATH:
+                    keys = outer.held().get("keys")
+                    return (dict(keys) if isinstance(keys, dict) else None), 0
+                if path == BACKUP:
+                    ptr = outer.backup().get("pointer")
+                    return (dict(ptr) if isinstance(ptr, dict) else None), 0
+                return None, 0
+
+            def put(self, *a, **kw):
+                raise PermissionError("a move writes no other cluster's store")
+
+        class Objects:
+            def get(self, key):
+                from .shared import OBJECT as SHARED_OBJECT
+                said = outer.backup().get({BACKUP: "backup", SHARED_OBJECT: "shared"}.get(key, ""))
+                return said.encode() if isinstance(said, str) else None
+
+            def put(self, *a, **kw):
+                raise PermissionError("a move writes no other cluster's store")
+
+        self.vars, self.objects = Vars(), Objects()
+
+    def _get(self, path: str, headers: dict | None = None) -> dict:
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request(self.console.rstrip("/") + path, headers=headers or {})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                said = json.loads(r.read(16 << 20))
+        except urllib.error.HTTPError as e:
+            raise Unreachable(f"{self.name} refused {path}: {e.code}") from None
+        except (OSError, *PARSE_ERRORS) as e:
+            raise Unreachable(f"{self.name} did not answer {path}: {e}") from None
+        if not isinstance(said, dict):
+            raise Unreachable(f"{self.name} answered {path} with no object")
+        return said
+
+    def held(self) -> dict:
+        if self._held is None:
+            self._held = self._get("/api/held")
+        return self._held
+
+    def backup(self) -> dict:
+        if self._backup is None:
+            if self.key is None:
+                raise Unreachable(f"{self.member} holds no member key: it cannot ask {self.name} for its backup")
+            at = self.wall()
+            self._backup = self._get("/api/backup", {
+                "X-W2C-Member": self.member, "X-W2C-Time": f"{at:.3f}",
+                "X-W2C-Signature": self.key.sign(backup_message(self.name, self.member, at))})
+        return self._backup
 
 
 # Step 9's cold start: a domain whose root is off the holder from the first day. The installer holds the root
@@ -246,11 +429,16 @@ class DomainHolder:
             except Unreachable:
                 continue
             if rec and int(rec["term"]) > self.term:
-                self.deposed_by = rec
-                self._strand()
-                self._forget_keys()
+                self.depose(rec)
                 return False
         return True
+
+    # Replaced, by `rec` — a record verified by whoever read it: `check`, or a planned handover whose target answered
+    # with the record it claimed (`handover`).
+    def depose(self, rec: dict) -> None:
+        self.deposed_by = rec
+        self._strand()
+        self._forget_keys()
 
     # A holder that was replaced has no use for its keys, and a box that stays on the wall with them in its
     # flash is the stolen holder of step 9, waiting. An issuing signer's keys are nowhere else — the new holder
@@ -325,7 +513,18 @@ def carry_holder(domain_vars, member_vars, keys, now: float) -> str:
     if not items:
         return "no holder record"
     try:
-        incoming = verify(json.loads(items["doc"]), keys, now)
+        doc = json.loads(items["doc"])
+    except PARSE_ERRORS as e:
+        return f"refused: {e}"
+    return take_record(member_vars, doc, keys, now)
+
+
+def take_record(member_vars, doc, keys, now: float) -> str:
+    """The holder record `doc`, as signed, into this member's own store — written by its own agent — when it verifies
+    and holds a larger term than the record kept here: never backwards."""
+    try:
+        incoming = verify(doc, keys, now)
+        int(incoming["term"])
     except (NotTaken, *PARSE_ERRORS) as e:
         return f"refused: {e}"
     if keys is not None and keys.root is not None and incoming.get("kid") != ROOT_KID:
@@ -334,7 +533,7 @@ def carry_holder(domain_vars, member_vars, keys, now: float) -> str:
     if have and int(have["term"]) >= int(incoming["term"]):
         return "holding" if int(have["term"]) == int(incoming["term"]) else "holding a larger term"
     _, idx = member_vars.get(HOLDER)
-    member_vars.put(HOLDER, dict(items), cas=idx)
+    member_vars.put(HOLDER, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
     return f"took term {incoming['term']}"
 
 
@@ -389,12 +588,17 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     for name, c in fed.clusters.items():
         try:
             rec = read_holder(c.vars, keys, now)
-            ptr, _ = c.vars.get(BACKUP)
-            raw = objects_of(name).get(BACKUP) if ptr else None
         except Unreachable:
             continue
         if rec and int(rec["term"]) > top_term:
             top_term, top_holder = int(rec["term"]), rec["holder"]   # the holder being replaced: after a theft, the thief's
+        try:                                             # a backup refused or not answered is not a term unseen
+            ptr, _ = c.vars.get(BACKUP)
+            raw = objects_of(name).get(BACKUP) if ptr else None
+        except Unreachable as e:
+            if isinstance(c, AskedCluster):              # its console answered the record and refused the backup: said
+                ignored.append((name, str(e)))
+            continue
         if raw is None:
             continue
         try:
@@ -466,7 +670,8 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     reissued = reissue_ldevids(signer, new_vars, skip={top_holder} if top_holder else set(),
                                revoked=revoked_now) if stolen else []
     rev = holder.backup_rev
-    report = {"term": holder.term, "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
+    report = {"term": holder.term, "record": json.loads(new_vars.get(HOLDER)[0]["doc"]),
+              "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
               "shared_from": shared_from, "keys_rev": keys_rev, "stolen": stolen, "reissued": reissued,
               "state": best[1]["state"] if best else {},
               "sentence": (f"term {holder.term} on {new}: the domain's state from backup rev {rev}, held by {best[0]}; "
@@ -642,13 +847,18 @@ class GuardedPending:
 #     last backup   to `to` itself, so the new holder restores from a copy that has EVERYTHING
 #     carried       `to`'s agent takes it — verified, as any backup; if it does not, the handover is called
 #                   off and the old holder unfreezes: nothing was claimed, nothing moved
-#     move       the same `move_domain`; the old holder is reachable and reads the larger term on `to`, steps down
+#     taken         `to` takes the domain onto ITS OWN store — the same `move_domain`, run by `to`'s signer
+#                   (`take`), never by the old holder, which writes no store but its own (ADR 0001 §1.12); the old
+#                   holder reads the larger term `to` claims and steps down
 #
 # The difference from the emergency path is the last line of the report: nothing stranded, because the
 # freeze made sure there was nothing to strand.
-def handover(holder: DomainHolder, to: str, signer_backup: bytes, domain_id: str, objects_of, carry_to,
-             wall=time.time) -> tuple[DomainHolder, dict]:
-    """`carry_to()` runs `to`'s agent once — in production, a nudge to the agent it would run anyway."""
+def handover(holder: DomainHolder, to: str, objects_of, carry_to, take,
+             wall=time.time) -> tuple[DomainHolder | None, dict]:
+    """`carry_to()` runs `to`'s agent once — in production, a nudge to the agent it would run anyway. `take()` is `to`'s
+    own move: `(new, report)` — `new` the `DomainHolder` where the target runs in this process (the lessons), None where
+    it answered over its door (`signer_service.move_by_handover`); `report["record"]`, the record it claimed, when it
+    says one. `Unreachable` or `RuntimeError` from it: nothing moved."""
     holder.frozen_for = to
     try:
         rev = holder.backup([to], objects_of(holder.name))
@@ -664,15 +874,33 @@ def handover(holder: DomainHolder, to: str, signer_backup: bytes, domain_id: str
         holder.frozen_for = None
         raise
     try:
-        new, report = move_domain(holder.fed, to, signer_backup, domain_id, objects_of, wall)
+        new, report = take()
     except Unreachable:                                  # it reported the backup, then went silent: not the new holder
         holder.frozen_for = None
         raise RuntimeError(f"{to} took backup rev {rev} and then stopped answering; the handover is called off and "
                            f"{holder.name} is still the holder")
-    holder.check()
+    except RuntimeError:
+        holder.frozen_for = None
+        raise
+    # The record the target claimed, as it answered: verified here like any record a member reads — and, where the
+    # target is reachable as a store of the site (the lessons), read there by `check` as well.
+    from .agent import ClusterTrust, Untrusted
+    try:
+        keys = ClusterTrust(holder.vars).keyset() or holder.signer.tokens.keyset()
+    except Untrusted:
+        keys = holder.signer.tokens.keyset()
+    claimed = verified_record(report.get("record"), keys, wall()) if report.get("record") else None
+    if claimed and claimed["holder"] == to and int(claimed["term"]) > holder.term:
+        holder.depose(claimed)
+    if not holder.deposed_by:
+        holder.check()
+    if not holder.deposed_by:
+        holder.frozen_for = None
+        raise RuntimeError(f"{to} answered the handover with no record of a larger term; {holder.name} is still the holder")
     left = (holder.stranded_items() or {}).get("items", [])
-    report.update(planned=True, stranded=left,
-                  sentence=f"planned handover: term {new.term} on {to}, the domain's state at rev {rev} from "
+    term = int(holder.deposed_by["term"])
+    report.update(planned=True, stranded=left, term=term,
+                  sentence=f"planned handover: term {term} on {to}, the domain's state at rev {rev} from "
                            f"{holder.name}; " + ("nothing stranded" if not left else f"{len(left)} item(s) stranded — a write got past the freeze"))
     return new, report
 

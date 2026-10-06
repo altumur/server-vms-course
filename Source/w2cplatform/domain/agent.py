@@ -88,11 +88,77 @@ class DomainPublisher:
         self.vars.put(path, grants_to_items(grants, was=have, where=path), cas=idx)   # an old name there blocks nothing (the ninth review)
 
 
+class HolderFollower:
+    """WHICH MEMBER HOLDS THE DOMAIN, AS A MEMBER'S AGENT WORKS IT OUT BY ITSELF (Lesson 15; «Архитектор» 2026-10-06).
+    A move writes the new holder's own store and nobody else's (ADR 0001 §1.12): no member is told. So the agent asks
+    every cluster of the domain — `CLUSTERS`, the one declaration; the domain recruits nobody and there is no list of
+    candidates — for the holder's record that cluster holds (`GET /api/held` at its console, `term.held`), and follows
+    the record with the GREATEST term that verifies against the key set this member carries (`term.verified_record`:
+    signed by a key it trusts, by the root once a root is pinned). A record proves itself, so it does not matter which
+    cluster says it — the new holder's own claim, or a member that carried it already. A forged or unsigned record of
+    any term is not counted; a cluster that does not answer is skipped; two holders claiming one term are followed by
+    nobody, said. Never backwards: a record smaller than the one this member holds changes nothing (`take_record`).
+
+    `ask`: `{cluster: callable() -> the /api/held answer}` — over HTTP in production (`ask_held`), a cluster's store
+    read through its door in the lessons; `Unreachable` (or anything that is not an answer) skips that cluster."""
+
+    def __init__(self, ask: dict):
+        self.ask = dict(ask)
+
+    def best(self, keys, now: float) -> tuple[dict | None, str]:
+        """The verified record of the greatest term any cluster holds, and what was found — or None and why."""
+        import json
+        from .term import verified_record
+        best, heard, forged = None, [], []
+        for name, ask in sorted(self.ask.items()):
+            try:
+                said = ask()
+                doc = said.get("holder") if isinstance(said, dict) else None
+            except Unreachable:
+                continue
+            except PARSE_ERRORS:
+                continue
+            heard.append(name)
+            if not doc:
+                continue
+            rec = verified_record(doc, keys, now)
+            if rec is None:
+                forged.append(name)
+                continue
+            if best is None or int(rec["term"]) > int(best["term"]):
+                best = rec
+            elif int(rec["term"]) == int(best["term"]) and rec["holder"] != best["holder"]:
+                return None, f"{rec['holder']} and {best['holder']} both claim term {rec['term']}: followed by nobody"
+        if best is None:
+            return None, ("no cluster answered" if not heard else "no cluster holds a record this member can verify"
+                          + (f" (refused from {', '.join(forged)})" if forged else ""))
+        return json.loads(json.dumps(best)), (f"term {best['term']} on {best['holder']}"
+                                              + (f"; a record that does not verify refused from {', '.join(forged)}"
+                                                 if forged else ""))
+
+
+def ask_held(console: str, timeout: float = 3.0):
+    """`GET <console>/api/held` — a cluster console's process door: the holder's record that cluster holds. A console that
+    does not answer, or answers no object, is `Unreachable` to the follower."""
+    import json
+    import urllib.request
+    try:
+        with urllib.request.urlopen(console.rstrip("/") + "/api/held", timeout=timeout) as r:
+            raw = r.read(1 << 20)
+        said = json.loads(raw)
+    except (OSError, *PARSE_ERRORS) as e:
+        raise Unreachable(f"{console}: {e}") from None
+    if not isinstance(said, dict):
+        raise Unreachable(f"{console}: /api/held answered no object")
+    return said
+
+
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
                  console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
                  published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None, alarm_waiting=None,
-                 reaches=None, own_objects=None, sealer=None, key=None):
+                 reaches=None, own_objects=None, sealer=None, key=None, follow: HolderFollower | None = None,
+                 open_door=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a unit by the domain's name. Given them, the agent also applies
         the edits the domain kept while this cluster was off. Without them it only carries them home.
@@ -114,8 +180,16 @@ class DomainAgent:
         relay's `relay.Relay(...).vars` — whose answer is this member's own rows, its secrets sealed to `key` (this
         member's `trust.memberkey.MemberKey`); or the holder's store itself, on the holder's own box and in the tests,
         read through the same `carry.answer`: its own rows and nothing else. `sealer`: this member's key ring — every
-        secret the agent writes into its own store is sealed with it (`carry.seal_row`)."""
+        secret the agent writes into its own store is sealed with it (`carry.seal_row`).
+
+        `follow` and `open_door` are Lesson 15: the agent follows the holder by itself (`HolderFollower`) — every pass
+        it asks the domain's clusters for the record of the greatest term, carries it home, and when it names another
+        holder, `open_door(record)` gives the door to carry through from now on: `(domain_vars, domain_objects)`, or None
+        where the record names no door (the agent keeps the one it has)."""
         self.cluster, self.domain_vars, self.cluster_vars, self.now = cluster, domain_vars, cluster_vars, now
+        self.follow, self.open_door = follow, open_door
+        self.holder_at: str | None = None                  # the holder whose door this agent carries through, once known
+        self.followed = ""                                 # what the last pass found of the holder
         self.sealer, self.key = sealer, key
         self.relayed: dict[str, dict] = {}                 # a relay: what the domain answered for each member it relays
         self.console, self.current = console, current
@@ -274,6 +348,8 @@ class DomainAgent:
     def _sync(self) -> bool:
         from .carry import CarriedObjects, CarriedVars, Refused
         from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
+        if self.follow is not None:                        # Lesson 15: where the domain is held now — asked first
+            self.followed = self._step("following the holder", self._follow)
         try:
             got = self._answer()
         except Unreachable:
@@ -294,8 +370,13 @@ class DomainAgent:
         later = [(path, dv.get(f"{path}/{self.cluster}")[0]) for path in per_cluster()]
         self.keys = self._carry_keys(keys)
         self._say_refused("the key set", self.keys)
+        from .members import MEMBERS
+        from .term import MEMBER_LIST
         from .topology import TOPOLOGY
-        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]), *later):
+        # …and the list of members, under a name of this cluster's (`term.MEMBER_LIST`): its console knows a member by it
+        # when one asks for the backup copy kept here (`GET /api/backup`)
+        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]),
+                            (MEMBER_LIST, dv.get(MEMBERS)[0]), *later):
             self._carry(path, items)
         # Edits the domain kept while this cluster was off (Lesson 9) — carried home even when there are
         # none left, because an edit the domain has cleared must stop being applied here. Then applied, by
@@ -377,6 +458,42 @@ class DomainAgent:
             except Unreachable:
                 return False
         return True
+
+    # The holder, followed (`HolderFollower`): the record of the greatest term the domain's clusters hold, checked against
+    # the key set THIS member carries, kept in its own store (never backwards), and — when it names a holder other than
+    # the one this agent carries through — the door moved there. A record of a smaller term than the one kept here moves
+    # nothing: the holder that is off stays the holder until somebody holds more.
+    def _follow(self) -> str:
+        from .term import read_holder, take_record
+        try:
+            keys = ClusterTrust(self.cluster_vars).keyset()
+        except Untrusted:
+            keys = None
+        if keys is None:
+            return "no keys yet: nothing to check a holder's record against"
+        now = self.now()
+        if self.holder_at is None:
+            kept = read_holder(self.cluster_vars, keys, now)
+            self.holder_at = kept["holder"] if kept else None
+        rec, said = self.follow.best(keys, now)
+        if rec is None:
+            return said
+        took = take_record(self.cluster_vars, rec, keys, now)
+        if took.startswith("refused"):
+            return took
+        kept = read_holder(self.cluster_vars, keys, now)
+        if kept is None or kept["holder"] == self.holder_at:
+            return f"{said} ({took})"
+        door = self.open_door(kept) if self.open_door is not None else None
+        if door is None:
+            return f"{said} ({took}); the record names no door — carrying through the one this agent has"
+        self.domain_vars, objects = door
+        if objects is not None:
+            self.domain_objects = objects
+        log.warning("%s: the domain is held by %s at term %s; carrying through its door from now on", self.cluster,
+                    kept["holder"], kept["term"])
+        self.holder_at = kept["holder"]
+        return f"{said} ({took}); following {kept['holder']}"
 
     def relays(self) -> list[str]:
         """The members this cluster relays, by the domain's topology as it last carried it."""
@@ -525,11 +642,19 @@ def main() -> None:
     if relay and not relayed:
         relayed = lambda: agent.relays()                                  # noqa: E731  the topology, as carried
     own_objects = open_store(os.environ["OBJECTS"]) if os.environ.get("OBJECTS") else None
+    # Lesson 15: a member that carries through the domain's door FOLLOWS the holder by itself — it asks the consoles of
+    # the domain's clusters `CLUSTERS` names (`runtime.consoles_from_env`) for the holder's record (`/api/held`), and
+    # carries through the door the record of the greatest term names (its `url`, the signer's). Behind a relay, the
+    # relay is its road, whoever holds the domain.
+    from .runtime import consoles_from_env
+    consoles = consoles_from_env() if os.environ.get("DOMAIN_URL") and not os.environ.get("RELAY_URL") else {}
+    follow = HolderFollower({n: (lambda u=u: ask_held(u)) for n, u in consoles.items()}) if consoles else None
     agent = DomainAgent(cluster, domain_vars, own_vars, domain_objects=domain_objects,
                         published=own_objects if report else None,
                         relay_members=relayed or None, bundle_members=relayed or None,
                         bundle_store=own_objects if relay else None,
-                        reaches=local_networks, own_objects=own_objects, sealer=sealer, key=key)
+                        reaches=local_networks, own_objects=own_objects, sealer=sealer, key=key, follow=follow,
+                        open_door=lambda rec: (CarryClient(rec["url"], cluster, key), None) if rec.get("url") else None)
     if relay:                                                # its members ask it for what the domain answered for them
         from w2cplatform.console import open_doors
         from .relay import RelayDoor, door_handler

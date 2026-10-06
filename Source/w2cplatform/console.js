@@ -62,7 +62,7 @@
       writeW: "Write", clusterW: "Cluster", toDomain: "To the domain", seesNets: "Sees networks", relayFor: "Relay for", behindBy: "behind by", aheadBy: "ahead by",
       memberNote: "Every connection is opened by the cluster: it publishes its own and takes books and edits. The domain does not dial it.",
       inDomain: "In the domain", byConfigShort: "In the domain by its configuration", memberSub: "A cluster of its own, in the domain",
-      domPlaced: "The domain is held by", termW: "term", backupKept: "This cluster keeps a backup copy of the domain: rev {r} of term {t}.", noBackupKept: "This cluster keeps no backup copy of the domain.",
+      domPlaced: "The domain is held by", termW: "term", backupKept: "This cluster keeps a backup copy of the domain: rev {r}.", noBackupKept: "This cluster keeps no backup copy of the domain.",
       overview: "Overview", serverCap: "Server", resourceIs: "Resource", drainingBd: "being drained", workersN: "Workers", diskFree: "Disk free",
       diskTotal: "Disk total", buildW: "Build", eventsOnDisk: "Events on disk", gbW: "GB", idle: "idle by policy", workerSilent: "The worker does not answer",
       loadW: "Load", capW: "Capacity", freeW: "Free", labelsW: "Labels", idleNote: "Idle by the policy servers: {p}: units are carried by one worker per server.",
@@ -214,7 +214,7 @@
       writeW: "Сохранить", clusterW: "Кластер", toDomain: "К домену", seesNets: "Видит сети", relayFor: "Ретранслятор для", behindBy: "отстают на", aheadBy: "спешат на",
       memberNote: "Все соединения открывает кластер: публикует своё, забирает книги и правки. Домен его не набирает.",
       inDomain: "В домене", byConfigShort: "В домене по конфигурации", memberSub: "Отдельный кластер, в домене",
-      domPlaced: "Домен размещён:", termW: "срок", backupKept: "Этот кластер хранит резервную копию домена: rev {r} срока {t}.", noBackupKept: "Резервной копии домена этот кластер не хранит.",
+      domPlaced: "Домен размещён:", termW: "срок", backupKept: "Этот кластер хранит резервную копию домена: rev {r}.", noBackupKept: "Резервной копии домена этот кластер не хранит.",
       overview: "Обзор", serverCap: "Сервер", resourceIs: "Ресурс", drainingBd: "выводится из эксплуатации", workersN: "Воркеров", diskFree: "Диск свободно",
       diskTotal: "Диск всего", buildW: "Сборка", eventsOnDisk: "События на диске", gbW: "ГБ", idle: "простаивает по политике", workerSilent: "Воркер не отвечает",
       loadW: "Нагрузка", capW: "Ёмкость", freeW: "Свободно", labelsW: "Метки", idleNote: "Простаивает по политике servers: {p}: единицы несёт один воркер на сервер.",
@@ -1483,12 +1483,14 @@
         try { b.render(host, ref, obj); } catch (e) { host.textContent = String(e); }
       }
     }
-    // Where the domain is held, and whether this cluster keeps a copy; moving it here when its holder is dead.
+    // Where the domain is held, and whether this cluster keeps a copy (`/api/held`, the one process door the module
+    // reads: the record, signed, and the number of the copy kept here — never its content, a member's to read at
+    // `/api/backup`); moving it here when its holder is dead.
     function heldCard() {
       const hd2 = st.held; if (!hd2) return "";
       const r = hd2.holder, b = hd2.backup, here = r && r.holder === hd2.cluster;
       return card(h(cap(W.domainWord)), `<p>${h(W.domPlaced)} ${r ? (here ? `<b>${h(W.thisCluster)}</b> (${h(hd2.cluster)}) · ${h(W.termW)} ${h(r.term)}` : `<b>${h(r.holder)}</b> · ${h(W.termW)} ${h(r.term)}${r.url ? ` · <a href="${h(r.url)}" target="_blank" rel="noopener">${h(r.url)}</a>` : ""}`) : h(W.none)}</p>
-        <p class="sub">${h(b ? W.backupKept.replace("{r}", b.pointer && b.pointer.rev).replace("{t}", b.pointer && b.pointer.term) : W.noBackupKept)}</p>
+        <p class="sub">${h(b ? W.backupKept.replace("{r}", b.rev) : W.noBackupKept)}</p>
         ${here || !C.may("admin", "domain") ? "" : `<p class="sub">${h(W.moveHelp)}</p><div style="display:flex;justify-content:flex-end"><button type="button" class="btn s" data-a="move">${h(W.move)}</button></div>`}`);
     }
     // A subsystem's tables under a server (the spec's servers.show: [{table, by, title, columns}]): the rows whose `by` is
@@ -2138,7 +2140,7 @@
       try { st.dom = await getJSON("/domain"); } catch (e) { st.dom = null; }
       if (st.dom) { try { st.alarms = await getJSON("/domain/alarms"); } catch (e) { st.alarms = null; } }
       await loadDomShared();
-      try { st.held = await getJSON("/domain/held"); } catch (e) { st.held = null; }
+      try { st.held = await getJSON("/api/held"); } catch (e) { st.held = null; }
       await loadGauges();
       paintHeader();
       // the same data is the same picture: an idle poll touches neither the tree nor the card (no flicker, the scroll,
