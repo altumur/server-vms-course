@@ -384,12 +384,12 @@ rights:
     requests: [output, preset]
 # No door at a camera's holder for a page (the product's rule): the scale is built from the camera's recordings, each its
 # own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
-snapshot: [name, source, enabled, events_retention_days, priority, labels, alarms, ref, live, kind]
+snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, live]
 # The VMS on the domain (the boundary's «no hooks»; DOMAIN-PLATFORM.md): what the platform's domain reads and moves for
 # it, under `domain/vms/…`, without knowing what any of it means. A camera is found across clusters by its `ref`, and the
 # shared view shows its name. The books the VMS's domain worker writes at the holder for each member (`vms/domainpart`):
 # where a recording cluster finds cameras of others (sources), who records a camera and where it pushes (primaries), the
-# ingest a camera nobody records polls (poll), a relay's road to the centre (upstream), and whom a camera may ask to act
+# ingest a camera nobody records polls (polls), a relay's road to the centre (upstream), and whom a camera may ask to act
 # (asks) — each carried home by the member's agent as it is. Kept at the holder for the whole domain: which cluster
 # records which camera of another (crossings, served at `/domain/vms/crossings`) and the cameras sent to push (roads). The
 # tokens the books carry: a stream token (to push to, poll or pull from an ingest) and a token to ask one camera of
@@ -400,12 +400,12 @@ domain:
   # What the domain's door lets through in a member's camera (PUT /domain/vms/cameras/<ref>): on or off. Its name,
   # folders, labels and retention are its cluster's console's (ADR-0031).
   edit: [enabled]
-  books: [sources, primaries, poll, upstream, asks]
+  books: [sources, primaries, polls, upstream, asks]
   kept: [crossings, roads]
   tables: [crossings]
   tokens:
     stream: {lifetime: 86400, claims: [aud, ref]}
-    ask: {lifetime: 86400, claims: [aud, ask, by, acts, up]}
+    ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
   # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
   # `<book>/<member>` at the holder and `<book>` in the member that carried it home. The product's issued stream keys
   # are no rows here (a book's entry carries its token sealed, `token_secret`); its asks carried up wait in the relay's
@@ -419,7 +419,7 @@ domain:
     - {id: crossings, keys: [domain/vms/crossings]}
     - {id: sources, keys: [domain/vms/sources], prefix: domain/vms/sources/}
     - {id: primaries, keys: [domain/vms/primaries], prefix: domain/vms/primaries/}
-    - {id: polls, keys: [domain/vms/poll], prefix: domain/vms/poll/}
+    - {id: polls, keys: [domain/vms/polls], prefix: domain/vms/polls/}
     - {id: upstream, keys: [domain/vms/upstream], prefix: domain/vms/upstream/}
     - {id: asks, keys: [domain/vms/asks], prefix: domain/vms/asks/}
     - {id: worker, keys: [domain/vms/worker]}
