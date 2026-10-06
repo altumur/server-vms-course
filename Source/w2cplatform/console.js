@@ -88,7 +88,7 @@
       labels: "Labels: the networks the server is plugged into", labelsConsole: "set in the console — placement reads these",
       labelsNode: "from the node's settings (LABELS / meta.labels): not set in the console", labelsUnknown: "the server's labels row cannot be read: which labels hold is unknown; nothing is moved by labels meanwhile",
       nodeSays: "the node says", noLabels: "none — the server reaches no network", backToNode: "Back to the node's labels",
-      labelsMove: "units that need a label it loses move to a server that has it, a few a pass, or are left unplaced", labelsLose: "units on it it will no longer reach",
+      labelsMove: "units that need a label it loses move to a server that has it, a few a pass, or are left unplaced", labelsLose: "units on it it will no longer reach", labelsMoveUnknown: "what would move could not be asked", movesN: "moving {n}",
       unitsLeft: "units left", pendingWrites: "unsaved writes", pendingUnsaid: "did not say how many writes they hold unsaved", drainUnsafe: "the drain is not safe",
       drain: "Drain", drainOn: "Being drained", drained: "Drained: everything it carried is elsewhere — the machine may be stopped", draining: "Draining: some of it is still here",
       drainHelp: "for a server that comes back (maintenance, upgrade): its units leave and it waits; a server that will not come back is decommissioned (below)",
@@ -244,7 +244,7 @@
       labels: "Метки: сети, в которые включён сервер", labelsConsole: "заданы в консоли — размещение читает их",
       labelsNode: "из настройки узла (LABELS / meta.labels): в консоли не задавались", labelsUnknown: "строку меток сервера не прочитать: какие метки действуют, неизвестно; по меткам пока ничего не переносится",
       nodeSays: "узел говорит", noLabels: "нет — сервер не видит ни одной сети", backToNode: "Вернуть метки узла",
-      labelsMove: "единицы, которым нужна снятая метка, переедут на сервер с ней — по нескольку за проход — или станут неразмещёнными", labelsLose: "единицы на нём, которых он больше не увидит",
+      labelsMove: "единицы, которым нужна снятая метка, переедут на сервер с ней — по нескольку за проход — или станут неразмещёнными", labelsLose: "единицы на нём, которых он больше не увидит", labelsMoveUnknown: "что переедет, узнать не удалось", movesN: "переезжают {n}",
       unitsLeft: "осталось единиц", pendingWrites: "не сохранено", pendingUnsaid: "не сказали, сколько у них несохранённого", drainUnsafe: "слив не безопасен",
       drain: "Вывести из эксплуатации", drainOn: "Выводится", drained: "Сервер выведен: всё, что он нёс, уже в другом месте — машину можно останавливать", draining: "Сервер выводится: часть ещё на нём",
       drainHelp: "для сервера, который вернётся (обслуживание, обновление): единицы уходят, сервер ждёт возврата; сервер, который не вернётся, списывают (ниже)",
@@ -1582,6 +1582,10 @@
       const node = s.labels_node || [...new Set((s.workers || []).flatMap(w => String(w.labels || "").split(",").filter(Boolean)))].sort();
       return { labels: s.labels || node, node, source: s.labels_source || "node" };
     }
+    // a unit's ref as the platform names it (<sub>/<id>) in words, when this page knows the unit
+    const refWord = ref => { const u = parseUnit("unit:" + ref); return u && u.row ? label(u.sub, u.row) : String(ref); };
+    // what a write of labels moves (will_move), in a toast
+    const moving = d => { const m = d && Array.isArray(d.will_move) ? d.will_move : []; return m.length ? " · " + W.movesN.replace("{n}", m.length) + ": " + m.slice(0, 5).map(refWord).join(", ") + (m.length > 5 ? "…" : "") : ""; };
     function paintLabels(box, name, s) {
       const L = labelsOf(s), admin = C.may("admin", "server:" + name);
       const draft = st.labelDraft && st.labelDraft.name === name ? st.labelDraft.value : L.labels.join(", ");
@@ -1595,16 +1599,19 @@
       inp.oninput = () => { st.labelDraft = { name, value: inp.value }; };
       box.querySelector(".pc-lab-save").onclick = async () => {
         const labels = [...new Set(inp.value.split(/[,\s]+/).map(x => x.trim()).filter(Boolean))];
-        const here = new Set((s.workers || []).map(w => w.worker)), has = new Set(labels);
-        const lose = st.subs.flatMap(sub => (st.units[sub.name] || []).filter(u => u.worker && here.has(u.worker) && (u.labels || []).some(l => !has.has(l))).map(u => label(sub, u)));
-        if ((lose.length || !labels.length) && !C.confirm(W.confirmQ, (labels.length ? labels.join(", ") : W.noLabels) + (lose.length ? "\n" + W.labelsLose + ": " + lose.slice(0, 5).join(", ") + (lose.length > 5 ? "…" : "") + "\n" + W.labelsMove : ""))) return;
-        try { await C.api("PUT", "/servers/" + encodeURIComponent(name) + "/labels", { labels }); st.labelDraft = null; await load(); paintMain(); C.toast(W.saved); }
+        // what would move is the platform's to say (GET …/labels?labels=: would_move, refs <sub>/<id> of every subsystem
+        // the caller may see) — not guessed here from the rows
+        let lose = null;
+        try { const d = await getJSON("/servers/" + encodeURIComponent(name) + "/labels?labels=" + encodeURIComponent(labels.join(","))); if (Array.isArray(d.would_move)) lose = d.would_move.map(refWord); } catch (e) { /* not known */ }
+        if ((lose === null || lose.length || !labels.length) && !C.confirm(W.confirmQ, (labels.length ? labels.join(", ") : W.noLabels)
+          + (lose === null ? "\n" + W.labelsMoveUnknown : lose.length ? "\n" + W.labelsLose + ": " + lose.slice(0, 5).join(", ") + (lose.length > 5 ? "… (" + lose.length + ")" : "") + "\n" + W.labelsMove : ""))) return;
+        try { const d = await C.api("PUT", "/servers/" + encodeURIComponent(name) + "/labels", { labels }); st.labelDraft = null; await load(); paintMain(); C.toast(W.saved + moving(d)); }
         catch (err) { C.toast(W.refused + ": " + err.message); }
       };
       const back = box.querySelector(".pc-lab-back");
       if (back) back.onclick = async () => {
         if (!C.confirm(W.backToNode + "?", L.node.join(", ") || W.none)) return;
-        try { await C.api("DELETE", "/servers/" + encodeURIComponent(name) + "/labels"); st.labelDraft = null; await load(); paintMain(); }
+        try { const d = await C.api("DELETE", "/servers/" + encodeURIComponent(name) + "/labels"); st.labelDraft = null; await load(); paintMain(); C.toast(W.saved + moving(d)); }
         catch (err) { C.toast(W.refused + ": " + err.message); }
       };
     }

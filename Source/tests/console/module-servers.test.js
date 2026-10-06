@@ -39,9 +39,13 @@ pc.select("server:s-con");await b.ready(30);
 out.labelsConsoleAndNode=/set in the console/.test(main())&&/the node says: a/.test(main());
 out.decomRefusal=!btn(/^Decommission$/)&&/cannot be decommissioned: server s-con answers/.test(main());
 out.drainHelp=/for a server that comes back/.test(main());
-// метки: снять «a», на которой стоит единица 1 → вопрос, потом PUT
+// метки: что переедет, говорит платформа (GET …/labels?labels= → would_move, ссылки <sub>/<id> всех подсистем); вопрос
+// называет их словами страницы, а чужие — ссылкой; PUT, и тост называет will_move
+b.FIX["/servers/s-con/labels"]={server:"s-con",labels:["b"],labels_source:"console",would_move:["testsub/1","other/7-a"],will_move:["testsub/1"]};
+const gets=[];{const f0=w.fetch;w.fetch=(u,i)=>{if(!i||!i.method||i.method==="GET")gets.push(String(u));return f0(u,i)}}
 d.querySelector(".pc-lab-in").value="b";let n=w.__calls.length;asked=[];await click(/^Save$/);
-out.labelsAskWhenUnitsLose=asked.length===1&&/no longer reach: one/.test(asked[0]);
+out.labelsAskWhatThePlatformSays=gets.includes("/servers/s-con/labels?labels=b")&&asked.length===1&&/no longer reach: one, other\/7-a/.test(asked[0]);
+out.labelsToastNamesWhatMoves=/moving 1: one/.test(d.querySelector(".pc-toast").textContent);
 out.labelsPut=w.__calls.slice(n).some(x=>x.method==="PUT"&&x.path==="/servers/s-con/labels"&&JSON.stringify(x.body.labels)==='["b"]');
 pc.select("server:s-con");await b.ready(30);n=w.__calls.length;await click(/Back to the node/);
 out.labelsBack=w.__calls.slice(n).some(x=>x.method==="DELETE"&&x.path==="/servers/s-con/labels");
