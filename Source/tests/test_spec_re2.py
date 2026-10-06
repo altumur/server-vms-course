@@ -49,6 +49,14 @@ NOT_RE2 = (
     ("a{1001}", "a count past RE2's 1000 `{1001}` at 1"),
     ("[[:alpha:]]", "a POSIX class to Go, characters to Python `[:` at 1"),
     ("a{,3}", "a count with no lower bound"),
+    ("(?i)abé", "a non-ASCII character with a case under `(?i)` (Go folds it, Python's ASCII matching does not; write "
+                "its cases) `é` at 6"),
+    ("x(?i:[а-я])", "a non-ASCII character with a case under `(?i)`"),
+    ("(?i)a" + BS + "xe9", "a non-ASCII character with a case under `(?i)` (Go folds it, Python's ASCII matching does "
+                          "not; write its cases) `" + BS + "xe9` at 5"),
+    ("(?i)" + BS + "351", "a non-ASCII character with a case under `(?i)`"),
+    ("[a" + BS + "S]", "a non-space class inside a class (write `[^" + BS + "s]` or the characters) `" + BS + "S` at 2"),
+    ("(?P<имя>a)", "a group name not in ASCII `(?P<имя>` at 0"),
 )
 # …and what Python refuses itself — its words come first at load, so only the scan is asked here
 PYTHON_REFUSES_FIRST = ((BS + "g<1>", "a backreference `" + BS + "g<1>`"), (BS + "Ga", "an anchor RE2 lacks"),
@@ -57,7 +65,9 @@ PYTHON_REFUSES_FIRST = ((BS + "g<1>", "a backreference `" + BS + "g<1>`"), (BS +
 LOOK_ALIKES = (BS + "(?=a" + BS + ")", "[(?=]", "[(?<!]", BS + "(?P=x" + BS + ")", BS + "(?>a" + BS + ")", "[(?(]",
                "a" + BS + "*+", "a" + BS + "++", "[*+?]+", BS + BS + "1", "[" + BS + BS + "1]", BS + "123", "[" + BS + "12]",
                BS + "0", "[a{,3}]", BS + "{,3}", "a{}+", "a{1000}", "a+?", "(?i)a", "(?ims:a)", "(?-i:a)", "(?P<name>a)",
-               "[]a]", "[^]a]+", BS + "Aa" + BS + "b", "[" + BS + "d" + BS + "w]")
+               "[]a]", "[^]a]+", BS + "Aa" + BS + "b", "[" + BS + "d" + BS + "w]",
+               "(?i)abc", "(?i:a)é", "(?i)(?-i:é)", "éx", "(?i)²", "[^" + BS + "s]", "[" + BS + "D" + BS + "W]",
+               "(?i)" + BS + "x41")
 
 
 def _testsub(name: str) -> dict:
@@ -93,8 +103,10 @@ def _places(pattern: str):
 
 def test_a_pattern_go_does_not_compile_is_refused_at_load_with_its_path_and_its_construct_wherever_it_stands():
     """Lookahead, lookbehind (both kinds), a numbered and a named backreference, an atomic group, a conditional,
-    possessive quantifiers, `\\Z`, inline flags but i/m/s/U, a comment, Python's own escapes, and what Go reads
-    otherwise — each refused in a schema's pattern and in a `secret_in` regex, the refusal naming where and what."""
+    possessive quantifiers, `\\Z`, inline flags but i/m/s/U, a comment, Python's own escapes, a group name not in ASCII,
+    and what Go reads otherwise — `[:`, `{,n}`, `\\S` in a class, a non-ASCII character with a case under `(?i)` (written,
+    `\\x..` or octal) — each refused in a schema's pattern and in a `secret_in` regex, the refusal naming where and
+    what. `(?i)` over ASCII stands."""
     for pattern, construct in NOT_RE2:
         assert re.compile(pattern)                       # Python reads it, and says nothing
         for path, d in _places(pattern):
@@ -171,6 +183,10 @@ def test_a_pattern_is_read_as_go_reads_it_ascii_classes_and_dollar_the_end_of_th
     assert not _matches("^" + BS + "w+$", "é") and not _matches(BS + "bé", "é")
     assert _matches(BS + "s", " ") and not _matches(BS + "s", vt) and not _matches("[" + BS + "s]", vt)
     assert _matches(BS + "S", vt) and not _matches(BS + "S", tab)
+    # `[\S]` is refused; `[^\s]` is what it would say, read as Go reads it: `\v` is no space to Go, so it is taken
+    assert _matches("^[^" + BS + "s]$", "a") and _matches("^[^" + BS + "s]$", vt) and not _matches("[^" + BS + "s]", tab)
+    assert re.search("[^" + BS + "s]", vt, re.ASCII) is None                          # …which Python alone would not
+    assert _matches("(?i)^abc$", "ABC")
     assert _matches("^a" + BS + "$", "a$") and not _matches("^a" + BS + "$", "a")
     assert _matches("^[$]$", "$") and not _matches("^[$]$", "$" + nl)
     assert _matches("(?m)^a$", "a" + nl + "b") and _matches("(?m:^a$)", "b" + nl + "a" + nl + "c")
