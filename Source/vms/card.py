@@ -2093,7 +2093,7 @@ class CardRecorder(RecWorker):
         # A STALL IS AN ALARM WHEN IT LASTS (the eighth review, a minor: one write of 1.5 × `stall_after` on a slow, healthy
         # card was the alarm, and every such write a new one). What a write may take grows with its bytes now
         # (`CardBuffer.stall_limit`), and a stall shorter than `STALL_ALARM` of those is said in the heartbeat (`stalled`,
-        # `writer: stuck`) and once in the log — a warning; one that lasts is the alarm.
+        # `writer: stalled`) and once in the log — a warning; one that lasts is the alarm.
         card = self.card
         if state == "stalled" and self.failing_said is None and card is not None and \
                 card.stalled_for() < self.STALL_ALARM * card.stall_limit():
@@ -2513,7 +2513,7 @@ class CardRecorder(RecWorker):
 
     # What a camera's recorder says: its place, the card, and the camera's frames. None of the engine's fields — no
     # `archive` (nothing for a console to offer to declare), no quota of a ring, no door — and no writer watch but
-    # one: a STALLED card is `writer: stuck`, what waits for it and for how long, so the console's `rec_writer` and its
+    # one: a STALLED card is `writer: stalled`, what waits for it and for how long, so the console's `rec_writer` and its
     # volume page say it as they say a server's writer that stopped landing (the seventh review). Nothing here waits
     # for the card: its counters are read under its own lock, which no I/O holds (`CardBuffer._io`).
     def heartbeat_extra(self) -> dict:
@@ -2528,18 +2528,18 @@ class CardRecorder(RecWorker):
             card["error"] = error
         if getattr(self.actuator, "failures", 0):
             card["failures"] = self.actuator.failures        # writes the card refused, since this process started
-        stuck = {}
+        writer = {}
         if state == "stalled":
             card["stalled_s"] = round(self.card.stalled_for(), 1)
-            stuck = {"writer": {"state": "stuck", "outstanding": getattr(self.actuator, "queued", 0),
-                                "still": card["stalled_s"]}}
+            writer = {"writer": {"state": "stalled", "outstanding": getattr(self.actuator, "queued", 0),
+                                 "still": card["stalled_s"]}}
         # `archive` empty: a worker's is its events tree, and under `rec/` it is read as the box's own volume, one a
         # page may offer to declare — a camera has no volume of the engine to offer.
         stream = self._stream()                              # the pusher's word on the stream (`stream_said`)
         return {**VmsWorker.heartbeat_extra(self), "archive": "", "volume": self.volume,
                 "volume_error": self.volume_error if self.card is None else f"the card {error}" if error else "",
                 "card": card,
-                "feed": self.ring.status(self.wall()), **stuck, **({"stream": stream} if stream is not None else {})}
+                "feed": self.ring.status(self.wall()), **writer, **({"stream": stream} if stream is not None else {})}
 
     # The camera's answer to a request for a range of its card (М12 Lesson 16: the server puts the range in the answer
     # to the camera's poll, the camera uploads it). A card that is not open, or a read cut short, is an ERROR — the

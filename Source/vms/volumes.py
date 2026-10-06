@@ -320,7 +320,7 @@ def _refusing(objects, sub: Subsystem, now: float, lost_after: float, eyes=None)
     return out
 
 
-# `{volume: what the console says}` for the volumes whose live holder reports its writer stuck or losing
+# `{volume: what the console says}` for the volumes whose live holder reports its writer stalled or losing
 # (Lesson 10, feedback U). Served, and not writing well: a different sentence from "cannot write there".
 def _writing(objects, sub: Subsystem, now: float, lost_after: float, eyes=None) -> dict[str, str]:
     from w2cplatform.console import heard_live, heartbeats
