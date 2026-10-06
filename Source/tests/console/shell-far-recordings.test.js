@@ -1,9 +1,9 @@
-// Записи камеры в других кластерах домена (ADR-0061): консоль кластера камеры (член) узнаёт их из книги, которую
-// несёт домен (GET /domain/vms/books/primaries — только recorded_by и recording), и спрашивает дверь записи у консоли
+// Записи камеры в других кластерах домена (ADR-0061): консоль кластера камеры узнаёт их из книги, которую несёт её
+// кластер (GET /domain/vms/books/primaries — recorded_by, recording и backups [{cluster, recording}]; ADR-0010,
+// дополнение 2026-10-06), у члена и у держателя одинаково — вид домена для этого не читается; и спрашивает дверь записи у консоли
 // того кластера через себя: GET /domain/at/<кластер>/rec/where/<запись>. Кусок — с двери держателя напрямую, мимо
 // обеих консолей. Отказ того кластера — словами: 403 «на … вас не знают», 502 «консоль … не видна по сети».
-// Копия продуктового vmsworker/vms/consoletest/shell-far-recordings.test.js (другое здесь — путь страницы); в курсе
-// книга — источник и у кластера держателя домена: /domain/vms/state курс не отдаёт.
+// Копия продуктового vmsworker/vms/consoletest/shell-far-recordings.test.js (другое здесь — путь страницы).
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","vms","vms.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -16,13 +16,15 @@ const now=Date.now()/1000,ms=x=>Math.round(x*1000);
 b.FIX["/session"]={open:true};
 b.FIX["/spec"]={name:"vms",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"vms",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"vms",field:"cam"},places:{table:"volumes"},fields:[{name:"cam",type:"string"}]}}};
-b.FIX["/cameras"]={configured:[{id:1,name:"demo",ref:"SN-DEMO"},{id:2,name:"x",ref:"SN-X"},{id:3,name:"y",ref:"SN-Y"},{id:4,name:"own",ref:"SN-OWN"},{id:5,name:"z",ref:"SN-Z"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
-b.FIX["/rec/recordings"]={configured:[{id:"1-card",cam:"1",home:"card",backup:true},{id:"SN-OWN",cam:"4",home:"card"}],rows:[]};
+b.FIX["/cameras"]={configured:[{id:1,name:"demo",ref:"SN-DEMO"},{id:2,name:"x",ref:"SN-X"},{id:3,name:"y",ref:"SN-Y"},{id:4,name:"own",ref:"SN-OWN"},{id:5,name:"z",ref:"SN-Z"},{id:6,name:"bk",ref:"SN-BK"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
+b.FIX["/rec/recordings"]={configured:[{id:"1-card",cam:"1",home:"card",backup:true},{id:"SN-OWN",cam:"4",home:"card"},{id:"6-card",cam:"6",home:"card",backup:true}],rows:[]};
 b.FIX["/rec/volumes"]={volumes:[{name:"card",kind:"backup",server:"cam-demo",held_by:"r-1"}]};
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
 // член: вида домена нет (404), книга primaries — кто пишет камеры
-b.FIX["/domain/vms/books/primaries"]={"SN-DEMO":{recorded_by:"relay-b",recording:"SN-DEMO"},"SN-X":{recorded_by:"relay-x",recording:"SN-X"},"SN-Y":{recorded_by:"relay-y",recording:"SN-Y"},"SN-OWN":{recorded_by:"cam-demo",recording:"SN-OWN"},"SN-Z":{recorded_by:"relay-z",recording:"SN-Z"}};
+b.FIX["/domain/vms/books/primaries"]={"SN-DEMO":{recorded_by:"relay-b",recording:"SN-DEMO"},"SN-X":{recorded_by:"relay-x",recording:"SN-X"},"SN-Y":{recorded_by:"relay-y",recording:"SN-Y"},"SN-OWN":{recorded_by:"cam-demo",recording:"SN-OWN"},"SN-Z":{recorded_by:"relay-z",recording:"SN-Z"},
+  // резервы — списком: каждый своей строкой; свой кластер и нечитаемый элемент не спрашиваются через /domain/at
+  "SN-BK":{recorded_by:"relay-b",recording:"SN-BK",backups:[{cluster:"relay-k",recording:"SN-BK-b"},{cluster:"cam-demo",recording:"6-card"},"x",{cluster:"relay-k"}]}};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 const calls=[];
@@ -35,6 +37,10 @@ const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Au
   if(s==="/domain/at/relay-x/rec/where/SN-X")return J(403,{error:"refused",detail:"no grant names you"});
   if(s==="/domain/at/relay-y/rec/where/SN-Y")return J(502,{error:"the member did not answer"});
   if(s==="/domain/at/relay-z/rec/where/SN-Z")return J(503,{error:"the members' list does not read"});
+  if(s==="/domain/at/relay-b/rec/where/SN-BK")return J(200,{door:{url:"http://relay-b:9101",token:"RB",expires:now+120}});
+  if(s.startsWith("http://relay-b:9101/timeline/SN-BK"))return J(200,[{start_ms:ms(now-900),end_ms:ms(now-800),epoch:1}]);
+  if(s==="/domain/at/relay-k/rec/where/SN-BK-b")return J(200,{door:{url:"http://relay-k:9201",token:"RK",expires:now+120}});
+  if(s.startsWith("http://relay-k:9201/timeline/SN-BK-b"))return J(200,[{start_ms:ms(now-700),end_ms:ms(now-650),epoch:2}]);
   if(s.startsWith("/domain/at/cam-demo/"))return J(404,{error:"not another member"});
   return f0(u,i)};
 await b.ready(600);await w.platformConsole.ready;await w.platformConsole.refresh();await b.ready(80);
@@ -58,6 +64,16 @@ await w.eval("loadTimeline('4')");await b.ready(60);
 out.ownRecordingNotAskedAcross=!calls.some(([u])=>u.startsWith("/domain/at/cam-demo/"))&&!/отсюда не известна/.test(V().note);
 await w.eval("loadTimeline('5')");await b.ready(60);
 out.membersListUnreadSaid=/список членов домена здесь не читается: архив relay-z не показан/.test(V().note);
+// резерв из книги: своя строка, через консоль своего кластера, со знаком «только в резерве»
+await w.eval("loadTimeline('6')");await b.ready(60);
+out.backupFromTheBook=V().spans.some(s=>s.recording==="SN-BK-b"&&s.where==="/domain/at/relay-k/rec/where/SN-BK-b"&&s.backupOnly)
+  &&V().spans.some(s=>s.recording==="SN-BK"&&!s.backupOnly);
+out.backupRowsWellFormedOnly=JSON.stringify(w.eval("farRecsOfCam('6')").map(r=>[r.cluster,r.id,r.backup]))===JSON.stringify([["relay-b","SN-BK",false],["relay-k","SN-BK-b",true]]);
+// держатель читает ту же книгу: вид домена говорит другое — не читается для записей камеры
+b.FIX["/domain"]={holder:"cam-demo",age:1,complete:true,members:[{name:"cam-demo",state:"ok",age:1,holder:true}],topology:{rev:1,centre:"cam-demo",star:[],via:{}}};
+b.FIX["/domain/vms/state"]={cameras:[{cluster:"cam-demo",id:"1",ref:"SN-DEMO",recorded_by:"relay-state",recordings:[{cluster:"relay-state",id:"FROM-STATE"}]}]};
+await w.platformConsole.refresh();await b.ready(120);
+out.holderReadsTheBook=JSON.stringify(w.eval("farRecsOfCam('1')").map(r=>[r.cluster,r.id]))===JSON.stringify([["relay-b","SN-DEMO"]]);
 out.errors=errs;out.noErrors=!errs.length;
 b.report(out);
 try{fs.unlinkSync(TMP)}catch(e){}
