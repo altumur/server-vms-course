@@ -13,6 +13,7 @@ course-only rec.subsystem.yaml servers
 course-only rec.subsystem.yaml servers.show
 course-only rec.subsystem.yaml servers.status   # ADR-0057: the course first; the product's side — «Платформа»
 course-only rec.subsystem.yaml worker.reads
+course-only vms.subsystem.yaml tables   # ADR-0012: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml tables.devices   # ADR-0012: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml tables.devices.fields   # ADR-0012: the course first; the product's side — «Сборка»
 course-only vms.subsystem.yaml tables.devices.fields.device   # ADR-0012: the course first; the product's side — «Сборка»
