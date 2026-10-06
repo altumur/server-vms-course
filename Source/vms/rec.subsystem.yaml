@@ -41,7 +41,7 @@ heartbeat: {strings: [volume, volume_error, archive, volume_missing]}
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
 # What a recorder reads outside its subsystem's rows: the domain's book of where each camera's primary is (М12).
-worker: {reads: [domain/vms/primaries]}
+worker: {reads: [domain/vms/primaries], requests: [vms]}   # requests: a camera's pusher files vms/requests/ask-<id> as the recorder (М12 16)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -194,6 +194,7 @@ tables:
 rights:
   unit_of: {keeps: cam}
   routes: {edit: [keeps]}
+  reach: {cluster: [home]}         # a recording moved to another volume is the cluster's to move (ADR-0057)
 # What a keep HOLDS on every resource past its days (the boundary's step 6: it was the VMS's function the resource called,
 # `kept_buckets`): the events of its camera's units — the camera's own and every unit about it — for its stretch, at
 # most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).

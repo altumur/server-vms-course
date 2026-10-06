@@ -36,6 +36,8 @@ course-only rec.subsystem.yaml placement.affinity.kind
 course-only rec.subsystem.yaml placement.affinity.server_field
 course-only rec.subsystem.yaml placement.affinity.strict
 course-only rec.subsystem.yaml placement.affinity.table
+course-only rec.subsystem.yaml rights.reach   # ADR-0057: the course first; the product's side — «Сборка»
+course-only rec.subsystem.yaml rights.reach.cluster   # ADR-0057: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml rights.routes
 course-only rec.subsystem.yaml rights.routes.edit
 course-only rec.subsystem.yaml servers
@@ -135,7 +137,6 @@ product-only live.subsystem.yaml secrets
 product-only live.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
-product-only rec.subsystem.yaml worker.requests   # the recorder files a device's ask to the VMS (recproc's asker): the course's rec.subsystem.yaml says it next
 product-only vms.subsystem.yaml domain.names   # ADR-0031: только у продукта — у курса нет учёток RTSP (stream-clients/)
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats
 product-only vms.subsystem.yaml events.suppress.ipintsrc-stats.by
