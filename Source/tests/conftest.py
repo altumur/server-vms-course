@@ -178,10 +178,10 @@ def _read(path: str):
     objects are rows — are every loaded spec's together. A test of the platform that loaded testsub2 would change
     them for every test after it in the same run; a test that needs a spec in the catalogue registers it itself."""
     if path not in _SPECS:
-        import yaml
+        from w2cplatform import specyaml
         from w2cplatform.spec import SubsystemSpec
         with open(path, encoding="utf-8") as f:
-            _SPECS[path] = SubsystemSpec.from_dict(yaml.safe_load(f))
+            _SPECS[path] = SubsystemSpec.from_dict(specyaml.loads(f))
     return _SPECS[path]
 
 

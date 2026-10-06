@@ -354,11 +354,11 @@ def _redundant_spec():
     The `unit:` block is untouched — it is the shipped one, names and all. Only `placement` differs, and
     of its four lines exactly one is the subject: `spread_by: cam`. The other three take the disks out of
     the exercise, which is about servers."""
-    import yaml
+    from w2cplatform import specyaml
     import vms
     from w2cplatform.spec import SubsystemSpec
     path = os.path.join(os.path.dirname(vms.__file__), "rec.subsystem.yaml")
-    d = yaml.safe_load(open(path, encoding="utf-8"))
+    d = specyaml.loads(open(path, encoding="utf-8"))
     d["placement"]["spread_by"] = "cam"                                     # the line under test
     d["placement"].update({"requires": "none", "servers": "shared", "near": "vms"})
     for k in ("place_by", "home", "places"):                                # placed by server: no places of its own

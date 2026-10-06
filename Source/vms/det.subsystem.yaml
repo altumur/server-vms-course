@@ -61,6 +61,26 @@ placement:
   # a field nobody maintains. The affinity above is the whole of its topology.
   tie_break:  most-free-capacity
   rebalance:  {dead_band: 0.10}
+# What another subsystem asks of a detector (the automation's `then`: detect on a camera now, or scan its recording around
+# a moment): a request row, performed by the detectors' job runner (`vms jobs`). No `valid_until` in the schema: the one
+# who files it sets it; no `free` — nothing to free here (ADR-0059). A minute by default, an hour at most.
+requests:
+  schema:
+    type: object
+    required: [action, cam, kind]
+    additionalProperties: false
+    properties:
+      action: {enum: [detect, scan]}
+      cam: {type: string}
+      kind: {type: string}
+      minutes: {type: number}
+      before: {type: number}
+      after: {type: number}
+      rec: {type: string}
+      params: {}
+  valid_for: 60
+  most_valid: 3600
+  elsewhere: [detect, scan]
 snapshot: [name, cam, kind, enabled, until]
 metrics:
   - {name: units_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)

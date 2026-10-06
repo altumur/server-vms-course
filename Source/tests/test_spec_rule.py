@@ -8,7 +8,7 @@ from __future__ import annotations
 import glob
 import os
 
-import yaml
+from w2cplatform import specyaml
 
 from w2cplatform import metrics
 from w2cplatform.spec import SubsystemSpec
@@ -104,7 +104,7 @@ def _paths(d, at: str = "") -> set[str]:
 
 def _load(path: str) -> dict:
     with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        return specyaml.loads(f)
 
 
 def test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_by_a_test_subsystem():

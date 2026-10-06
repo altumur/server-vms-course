@@ -1547,11 +1547,11 @@ def test_a_row_a_viewer_creates_reaches_the_units_of_its_group_through_the_door(
     `live`'s stream). The spec is built here — `live` with a `source` grouped by its host and `rights.reach.group` — so
     that a viewer of camera 1 creating a stream on a host where the streams of cameras 2 and 3 stand needs a grant on
     each of them; on a host nobody's stream is at, the cluster's; on a host where every stream is hers, her own."""
-    import yaml
+    from w2cplatform import specyaml
     from vms.config import LIVE_SPEC
     from w2cplatform.spec import SubsystemSpec
     with open(os.path.join(os.path.dirname(os.path.abspath(sys.modules["vms.config"].__file__)), "live.subsystem.yaml")) as f:
-        d = yaml.safe_load(f)
+        d = specyaml.loads(f)
     d["unit"]["fields"]["source"] = {"type": "url", "schemes": {"driverpack": {"host": "path", "none": ["file"]}}}
     d["placement"]["group_by"] = {"field": "source", "cut_at": "host"}
     d["rights"] = {"routes": {"view": ["streams"]}, "reach": {"group": ["source"]}}

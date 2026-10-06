@@ -998,12 +998,12 @@ def test_servers_carries_a_recorders_missing_volume_its_waiting_shrink_and_its_w
     the writer's word; a recorder that says none of them has none. The spec is built here from the recorder's own, so
     the test does not wait on its bytes: they say these entries, or the first two of them until «Паритет» adds the
     third."""
-    import yaml
+    from w2cplatform import specyaml
     from w2cplatform.spec import SubsystemSpec
     from vms.writerwatch import WriterWatch
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vms", "rec.subsystem.yaml"),
               encoding="utf-8") as f:
-        d = yaml.safe_load(f)
+        d = specyaml.loads(f)
     declared = [{"field": "volume_missing", "title": "том не найден"},           # rec's spec: its bytes
                 {"field": "shrink_pending", "title": "уменьшение квоты не подтверждено"},
                 {"field": "writer.state", "title": "запись в архив"}]

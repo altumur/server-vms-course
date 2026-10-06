@@ -14,7 +14,8 @@ stands (the architect, 2026-10-05: the key sets are closed — nothing is accept
 # platform reads by its own rule, and nothing is walked.
 #
 # ## Module-level names
-# - `KEYS` — every path a spec may hold (a path's parents may stand too); `NAMED`, `OPAQUE` — as above.
+# - `KEYS` — every path a spec may hold (a path's parents may stand too); `NAMED`, `OPAQUE` — as above; `JSON_VALUES` — opaque
+#   under a field of `type: json` only (its `default`, `inherit`: any JSON value).
 # - `unknown(d)` — the paths of `d` that are none of them, each with the keys as written; `refuse_unknown(name, d)`.
 # ================================================================================================
 from __future__ import annotations
@@ -31,6 +32,10 @@ OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fie
           "placement.near.prefer", "placement.affinity.strict", "rights.unit_of", "placement.places.where",
           "metrics.where", "metrics.unless.where", "metrics.labels", "unit.derived.items", "unit.derived.on_delete",
           "unit.fields.*.must_match", "tables.*.fields.*.must_match", "domain.shared.schema"}
+# …and under these only where the field is `type: json`: its `default` and `inherit` are a JSON value, any — a map or a
+# list included (`{type: json, default: {a: 1}}`; the fourteenth review, minor 25: the closed set refused a legal
+# default as keys nobody reads). Another type's value is no map, and a map under it is walked and refused as before.
+JSON_VALUES = {"unit.fields.*.default", "unit.fields.*.inherit", "tables.*.fields.*.default"}
 
 # A field's own words — of a unit's row and of a table's alike.
 FIELD_KEYS = ("type", "default", "required", "inherit", "merge", "bound_to", "fixed", "enum", "schema", "ref",
@@ -99,7 +104,7 @@ def unknown(d, at: str = "", said: str = "") -> list[str]:
         written = f"{said}.{k}" if said else str(k)
         if p not in _TAKEN:
             out.append(written)
-        elif p not in OPAQUE:
+        elif p not in OPAQUE and not (p in JSON_VALUES and d.get("type") == "json"):
             out += unknown(v, p, written)
     return out
 

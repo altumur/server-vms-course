@@ -11,7 +11,7 @@ import glob
 import os
 import re
 
-import yaml
+from w2cplatform import specyaml
 
 from w2cplatform.schema import re2_fault
 from w2cplatform.spec import SubsystemSpec
@@ -72,7 +72,7 @@ LOOK_ALIKES = (BS + "(?=a" + BS + ")", "[(?=]", "[(?<!]", BS + "(?P=x" + BS + ")
 
 def _testsub(name: str) -> dict:
     with open(os.path.join(TESTDATA, f"{name}.subsystem.yaml")) as f:
-        return yaml.safe_load(f)
+        return specyaml.loads(f)
 
 
 def _places(pattern: str):
@@ -156,7 +156,7 @@ def test_every_spec_of_the_course_loads_and_writes_only_re2():
     for p in paths:
         SubsystemSpec.load(p)
         with open(p) as f:
-            for where, rx in _regexes(yaml.safe_load(f)):
+            for where, rx in _regexes(specyaml.loads(f)):
                 assert re2_fault(rx) == "", (os.path.basename(p), where, re2_fault(rx))
                 seen += 1
     assert seen >= 10, seen
