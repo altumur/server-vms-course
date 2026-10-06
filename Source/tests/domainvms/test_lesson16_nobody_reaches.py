@@ -337,7 +337,7 @@ def test_a_refused_action_is_answered_and_only_a_scenario_gives_the_right_to_ask
     except Refused:
         pass
     push = pusher.entry()["ingest"]["token_secret"]                           # a push token is not a token to ask
-    for bad in (push, signer.tokens.issue(GATE, 60, now=wall(), aud=audience("south"), ask="SN9999", kind="ask")):
+    for bad in (push, signer.tokens.issue(GATE, 60, now=wall(), aud=audience("south"), ref="SN9999", kind="ask")):
         try:
             ingest.ask(bad, SERIAL, {"preset": 1}, wall() + 10)
             assert False
@@ -459,7 +459,7 @@ def test_the_token_names_the_actions_and_one_camera_cannot_flood_an_ingest():
         assert False
     except Refused as e:
         assert "not {'preset': 4}" in str(e)
-    wide = signer.tokens.issue(GATE, 600, now=wall(), aud=audience("south"), ask=SERIAL, by=GATE, kind="ask",
+    wide = signer.tokens.issue(GATE, 600, now=wall(), aud=audience("south"), ref=SERIAL, by=GATE, kind="ask",
                                acts=[{"preset": i} for i in range(20)])
     for i in range(MAX_LIVE_ASKS):
         ingest.ask(wide, SERIAL, {"preset": i}, wall() + 30)

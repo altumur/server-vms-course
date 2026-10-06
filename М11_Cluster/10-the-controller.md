@@ -223,7 +223,7 @@ PUT vms/snapshot/w-srv-b-1
 # vmscontroller on srv-a → its own files on srv-a
 PUT vms/snapshot/w-srv-c-1
 
-# on srv-a, /data/platform/objects: {'vms/snapshot/w-srv-a-1': 341, 'vms/snapshot/w-srv-b-1': 341, 'vms/snapshot/w-srv-c-1': 341}
+# on srv-a, /data/platform/objects: {'vms/snapshot/w-srv-a-1': 308, 'vms/snapshot/w-srv-b-1': 308, 'vms/snapshot/w-srv-c-1': 308}
 ```
 
 В каждом шарде — кластер, воркер, `ts` прохода и единицы этого воркера с сервером (поля — из `snapshot:` спеки). Строки, которые никто не держит, идут в шард `<sub>/snapshot/unplaced`; в этой сцене таких нет, и этого шарда здесь нет. **Но `unplaced` — не только для неразмещённых** (двенадцатое ревью, «Вопросы»). Кластер без единой единицы опубликовал бы ничего, и «опубликовал, что камер нет» читалось бы как «не публиковал никогда» — член домена, который не публиковал, не отчитывается (М12A, урок 10). Поэтому, когда шардов нет вовсе, проход пишет пустой `unplaced`; а шард, однажды записанный, — `unplaced` или воркера, которого больше нет, — каждый следующий проход пишет пустым, а не оставляет старым (`SpecController._publish_snapshot`):

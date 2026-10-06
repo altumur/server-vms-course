@@ -902,7 +902,7 @@ class Ingest:
     # -- asks between cameras ---------------------------------------------------------------------------------
     def ask(self, token: str, target: str, action: dict, deadline: float, camera_now: float | None = None) -> str:
         """A camera asks `target` to do `action` before `deadline` (the asker's clock). The token is the domain
-        signer's, for this ingest, naming the target in its `ask` claim — issued because a scenario ties the
+        signer's, for this ingest, naming the target in its `ref` claim — issued because a scenario ties the
         asker's event to the target's action. Kept only until the deadline."""
         ks = self._keys()
         if ks is None:
@@ -911,8 +911,8 @@ class Ingest:
             p = verify(token, ks, self.revoked(), now=self.wall(), kind="ask")
         except TokenError as e:
             raise Refused(f"ask token refused: {e}")
-        if p.get("aud") != audience(self.cluster) or str(p.get("ask")) != str(target):
-            raise Refused(f"ask token is for {p.get('ask')} at {p.get('aud')}, not {target} at {audience(self.cluster)}")
+        if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(target):
+            raise Refused(f"ask token is for {p.get('ref')} at {p.get('aud')}, not {target} at {audience(self.cluster)}")
         # The token names the actions the scenarios allow — "preset 3", not "anything the yard camera does".
         # A camera whose token was minted for preset 3 cannot ask for preset 9, or for the relay.
         action = json.loads(json.dumps(action))
@@ -1778,7 +1778,7 @@ class CameraPusher:
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
         asks, never told to push (step 8)."""
-        from .keys import POLL_PATH, PRIMARIES_PATH, opened
+        from .keys import POLLS_PATH, PRIMARIES_PATH, opened
         items = opened(self.flash.get(PRIMARIES_PATH)[0], PRIMARIES_PATH, self.sealer)
         raw = (items or {}).get(self.serial)
         if raw:
@@ -1791,11 +1791,11 @@ class CameraPusher:
             road = {k: p[k] for k in ("urls", "token_secret", "until")}
             _a_road(road)
             return {"cluster": str(p["cluster"]), "polls_only": True, "ingest": road}
-        items = opened(self.flash.get(POLL_PATH)[0], POLL_PATH, self.sealer)
+        items = opened(self.flash.get(POLLS_PATH)[0], POLLS_PATH, self.sealer)
         raw = (items or {}).get(self.serial)
         if not raw:
             return None
-        e = BOOKS.read(f"{POLL_PATH}/{self.serial}", lambda: polls(json.loads(raw)))
+        e = BOOKS.read(f"{POLLS_PATH}/{self.serial}", lambda: polls(json.loads(raw)))
         if e is not None:
             self._entry = e
         return e if e is not None else self._entry
@@ -2716,7 +2716,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
                 and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token_secret", "")) == crossings.issuer.kid:
             return old
-        claims = {"aud": audience(cluster), "ask": b, "by": a, "acts": acts, **({"up": up} if up else {})}
+        claims = {"aud": audience(cluster), "ref": b, "by": a, "acts": acts, **({"up": up} if up else {})}
         return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
                 "token_secret": crossings.issuer.issue("ask", sub, now=now, **claims)}
 

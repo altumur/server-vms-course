@@ -86,7 +86,7 @@ def test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_i
     books = Books(Crossings(north.vars, view, wall, issuer=signer.tokens), north.objects)
     for _ in range(2):
         wall.advance(5); out = books.pass_once()
-    assert out["failing"] == [] and {"sources", "primaries", "poll", "asks"} <= set(out)
+    assert out["failing"] == [] and {"sources", "primaries", "polls", "asks"} <= set(out)
     page_ = view.list()
     assert page_["clusters"][cam.name] == "unreachable" and "bundle cannot be read" in page_["why"][cam.name]
     assert MEMBER_OBJECTS.counts.get("east", 0) == before + 1           # once, not once per read or per pass
@@ -237,7 +237,7 @@ def test_an_ask_whose_deadline_or_camera_clock_is_not_a_number_is_refused_and_th
     DomainPublisher(south.vars).publish_keys(signer.tokens.keyset())
     ing = Ingest("south", ["srt://south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
     acts = [{"action": "preset", "arg": i} for i in range(40)]
-    token = signer.tokens.issue("cam-GATE", 3600, now=wall(), aud=audience("south"), ask="SN5", by="GATE", acts=acts, kind="ask")
+    token = signer.tokens.issue("cam-GATE", 3600, now=wall(), aud=audience("south"), ref="SN5", by="GATE", acts=acts, kind="ask")
     for deadline, camera_now in ((float("nan"), None), (float("inf"), None), ("soon", None),
                                  (wall() + ASK_DEADLINE_MAX + 60, None), (wall() + 10, float("nan"))):
         for i in range(3):
@@ -607,7 +607,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
     acts = [{"action": "preset", "arg": i} for i in range(MAX_LIVE_ASKS)]
 
     def token(by):
-        return signer.tokens.issue(f"cam-{by}", 3600, now=wall(), aud=audience("south"), ask="SN5", by=by, acts=acts,
+        return signer.tokens.issue(f"cam-{by}", 3600, now=wall(), aud=audience("south"), ref="SN5", by=by, acts=acts,
                                    kind="ask")
     flood, other = token("GATE"), token("YARD")
     for deadline in (wall() - 1, wall()):

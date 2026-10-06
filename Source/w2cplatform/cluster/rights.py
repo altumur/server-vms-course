@@ -123,12 +123,14 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # A worker that files requests (`worker.requests`) reads, of each subsystem it files to, the row standing under an
         # id it files again (`Worker._filed_already`) and the mark that says the id is spent (`Worker._spent_by`; the
         # review's fourteenth pass, major 2): writing them alone, it read neither, and every filing again was refused.
+        # What its spec says it reads is `worker.reads` and the secret rows of `secrets.reads`: the product's key lets
+        # the worker read what it names (ADR-0024, ADR-0019 — one meaning on both sides), a prefix as its rows.
         rows = _worker_objects(s)
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
                                       [SCHEMA_KEY, *asked, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
-                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads, *rows,
-                                       *filed_to])
+                                       DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads,
+                                       *[r + "*" if r.endswith("/") else r for r in s.secret_reads], *rows, *filed_to])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to
     # free bytes, a request row of each subsystem whose spec says it frees (`requests: {free: true}`); reads the others'
     # doors, the mirror and the watermark's knobs, every subsystem's days, what a spec's `holds:` table holds and the rows
@@ -153,8 +155,9 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
 # reads are the grants above, so a declaration is held to them, never the other way: the file is not made while a role
 # reads a declared row and is not named (a grant that reaches a seed nobody meant it to — a worker's `<sub>/*` over a
 # secret kept under its subsystem's name), or is named and reads nothing of it. A spec's `controller`/`worker` is its
-# subsystem's; `console`, `domain`, `domainagent`, `resource` are the one role of that name. A row only `reads` names (no
-# spec keeps it secret) is held to the worker's grant alone.
+# subsystem's; `console`, `domain`, `domainagent`, `resource` are the one role of that name. `reads` is the one key that
+# grants as well (the product's meaning, ADR-0024): the worker that says it reads a row is let read it (`roles`), and a
+# row another spec keeps secret is held to its readers with that worker among them.
 def check_secrets(specs: list, out: dict[str, dict]) -> None:
     from w2cplatform.rights import allowed
 
@@ -181,11 +184,6 @@ def check_secrets(specs: list, out: dict[str, dict]) -> None:
         if have != want:
             faults.append(f"{row}: the specs name {', '.join(sorted(want))} as its readers, and the rights let "
                           f"{', '.join(sorted(have)) or 'nobody'} read it")
-    for s in specs:
-        for row in s.secret_reads:
-            if row not in declared and role(s, "worker") not in reading(row):
-                faults.append(f"{row}: {s.name}'s spec says its worker reads it (secrets.reads), and its rights give it "
-                              f"no read — `worker.reads` names what it reads")
     if faults:
         raise ValueError("the secret rows the specs declare are not read as they say (secrets.readers, secrets.reads):\n  "
                          + "\n  ".join(faults))
