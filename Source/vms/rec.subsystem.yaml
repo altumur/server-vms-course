@@ -78,7 +78,7 @@ unit:
     # raises the alarm `archive.shallow` (М10B Lesson 18). It does not stop the ring: a larger quota, or fewer
     # recordings on the volume, is the answer.
     min_depth_days: {type: float,  default: 0}
-    when:           {type: string, default: always}  # a BACKUP recording (home on a backup volume): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
+    when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup volume): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
 placement:
   capacity:   {from: capacity, default: 50}         # cameras a recorder can write — its own number, from its heartbeat: disks and NIC
   headroom:   {from: headroom}
