@@ -194,6 +194,7 @@ tables:
 rights:
   unit_of: {keeps: cam}
   routes: {edit: [keeps]}
+  reach: {cluster: [home]}         # a recording moved to another volume is the cluster's to move (ADR-0057)
 # What a keep HOLDS on every resource past its days (the boundary's step 6: it was the VMS's function the resource called,
 # `kept_buckets`): the events of its camera's units — the camera's own and every unit about it — for its stretch, at
 # most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).
