@@ -689,7 +689,7 @@ def test_a_scan_reads_only_its_own_cameras_recording_and_keeps_it():
         assert mounts["detjob"].unit("1-motion-1")["rec"] == "1"
         assert _call(base, "PUT", "/detjob/jobs/1-motion-1", {"params": "{}"}, token="one")[0] == 200   # her camera, her scan
         code, body = _call(base, "POST", "/detjob/jobs", {**job, "name": "1-motion-2", "rec": "2"}, token="admin")
-        assert code == 400 and "rec 2 is cam 2's" in body["detail"]                           # another camera's recording
+        assert code == 409 and body.get("fault") == "must_match" and "rec 2 is cam 2's" in body["detail"]                           # another camera's recording
     finally:
         srv.shutdown()
 
@@ -1068,17 +1068,17 @@ def test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_ca
         assert _call(base, "POST", "/rec/volumes", {**disks, "name": "d2", "cam": "2"}, token="admin")[0] == 400   # a disk is no camera's
         assert _call(base, "POST", "/rec/recordings", {"name": "1-b", "cam": "1"}, token="admin")[0] == 201
         code, body = _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token="one")
-        assert code == 400 and "home card2 is cam 2's" in body["detail"]                      # camera 2's card: nobody's place for it
+        assert code == 409 and body.get("fault") == "must_match" and "home card2 is cam 2's" in body["detail"]                      # camera 2's card: nobody's place for it
         code, body = _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token="both")
-        assert code == 400 and "home card2 is cam 2's" in body["detail"]                      # hers too — and still not camera 1's place
-        assert _call(base, "POST", "/rec/recordings", {"name": "1-c", "cam": "1", "home": "card2"}, token="admin")[0] == 400
+        assert code == 409 and body.get("fault") == "must_match" and "home card2 is cam 2's" in body["detail"]                      # hers too — and still not camera 1's place
+        assert _call(base, "POST", "/rec/recordings", {"name": "1-c", "cam": "1", "home": "card2"}, token="admin")[0] == 409
         assert not rec.unit("1-b").get("home") and rec.unit("1-c") is None
         assert _call(base, "PUT", "/rec/recordings/1-b", {"home": "disks"}, token="one")[0] == 200       # a disk: her recording, her say
         assert _call(base, "POST", "/rec/recordings", {"name": "2-card", "cam": "2", "home": "card2"}, token="admin")[0] == 201
         assert _call(base, "PUT", "/rec/recordings/2-card", {"retention_days": 3}, token="one")[0] == 403   # camera 2's, as it is
         # the card declared again as another camera's, a recording homed on it: refused
         code, body = _call(base, "POST", "/rec/volumes", {**card, "cam": "1"}, token="admin")
-        assert code == 400 and "2-card" in body["detail"]
+        assert code == 409 and body.get("fault") == "must_match" and "2-card" in body["detail"]   # the rows standing (ADR 0031)
 
         # the same reach through a scenario: `record` into an archive that is another camera's card
         record = lambda **more: [{"sub": "rec", "action": "record", "cam": "1", "minutes": 10, **more}]
@@ -1133,14 +1133,14 @@ def test_a_cameras_source_is_moved_only_by_whoever_administers_every_camera_of_t
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}2"}, token="one")[0] == 403          # camera 2's channel
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}7"}, token="one")[0] == 403          # a free one, and still camera 2's device
         code, body = _call(base, "PUT", "/cameras/1", {"source": f"{nvr}2"}, token="both")
-        assert code == 400 and "vms 2 has that source already" in body["detail"]                        # every camera of the device hers: still one camera
-        assert _call(base, "PUT", "/cameras/1", {"source": "driverpack://ACME/10.0.0.50/ch/2"}, token="admin")[0] == 400   # the same address, its host in capitals
+        assert code == 409 and body.get("fault") == "unique" and "vms 2 has that source already" in body["detail"]                        # every camera of the device hers: still one camera
+        assert _call(base, "PUT", "/cameras/1", {"source": "driverpack://ACME/10.0.0.50/ch/2"}, token="admin")[0] == 409   # the same address, its host in capitals
         assert _call(base, "PUT", "/cameras/1", {"source": "driverpack://acme/10.0.0.60/ch/5"}, token="both")[0] == 403   # camera 3's device
         assert ctl.camera(1)["source"] == f"{nvr}1"
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}1", "name": "gate"}, token="one")[0] == 200   # nothing moved: her camera
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}7"}, token="both")[0] == 200          # a free channel, every camera of it hers
         code, body = _call(base, "POST", "/cameras", {"source": f"{nvr}7"}, token="admin")
-        assert code == 400 and "vms 1 has that source already" in body["detail"]
+        assert code == 409 and body.get("fault") == "unique" and "vms 1 has that source already" in body["detail"]
         assert _call(base, "DELETE", "/cameras/1", token="admin")[0] == 200
         assert _call(base, "POST", "/cameras", {"source": f"{nvr}7"}, token="admin")[0] == 201           # a deleted camera holds no channel
         # `ref`: the cluster's to change, and one camera's
@@ -1148,7 +1148,7 @@ def test_a_cameras_source_is_moved_only_by_whoever_administers_every_camera_of_t
         assert _call(base, "PUT", "/cameras/2", {"ref": "SN-2"}, token="admin")[0] == 200
         assert _call(base, "PUT", "/cameras/2", {"ref": "SN-2", "name": "yard"}, token="both")[0] == 200   # unchanged: hers
         code, body = _call(base, "PUT", "/cameras/3", {"ref": "SN-2"}, token="admin")
-        assert code == 400 and "vms 2 has that ref already" in body["detail"]
+        assert code == 409 and body.get("fault") == "unique" and "vms 2 has that ref already" in body["detail"]
     finally:
         srv.shutdown()
 
@@ -1305,7 +1305,7 @@ def test_every_spelling_of_a_devices_host_is_its_group_and_a_host_nobody_can_rea
             assert "hunter2" not in json.dumps(body)
         assert box.vars.get("vms/cameras/3")[0]["source"] == "driverpack://file/3.mp4"   # nothing written
         code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50/ch/2"}, token="admin")
-        assert code == 400 and "vms 2 has that source already" in body["detail"], (code, body)          # one address
+        assert code == 409 and body.get("fault") == "unique" and "vms 2 has that source already" in body["detail"], (code, body)          # one address
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50:80/ch/9"}, token="admin")[0] == 200
         cmds = ({"unit": "vms/3", "action": "output", "port": 1}, {"unit": "vms/3", "action": "preset", "n": 2})
         for cmd in cmds:
@@ -1415,7 +1415,7 @@ def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_secon
         [st] = [x for x in w.status() if str(x["id"]) == "3"]
         assert "same serial number as acme/10.0.0.50" in st.get("warning", ""), st              # said by the holder
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="three")[0] == 403
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="admin")[0] == 400   # one address
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="admin")[0] == 409   # one address
     finally:
         srv.shutdown()
 

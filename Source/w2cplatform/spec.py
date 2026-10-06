@@ -97,7 +97,7 @@ from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMM
 from .events import OWN_OF_TREES, Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
-from .canonical import BadUrl, canonical_json, number_text, parse_json
+from .canonical import MUST_MATCH, UNIQUE, BadUrl, canonical_json, number_text, parse_json
 from .rows import PARSE_ERRORS, Table, finite
 from .variables import Conflict, Garbled, Variables
 
@@ -130,6 +130,21 @@ class AddressRefused(Refused):
     no number, a scheme the field is not reached by, a `#`: 400 with `fault: bad_url` at every door (`canonical.BadUrl`,
     the closed dictionary `canonical.FAULTS`), the reason in `detail`."""
     fault = BadUrl.fault
+
+
+class Mismatched(Refused):
+    """A write `must_match` refuses, either way (a unit pointing at a row it disagrees with; a row rewritten so that the
+    units pointing at it would disagree): a refusal that depends on the rows standing — 409 with `fault: must_match`
+    (ADR 0031's rule), the unit or row it disagrees with in `detail`."""
+    status = 409
+    fault = MUST_MATCH
+
+
+class NotUnique(Refused):
+    """A value a `unique` field holds that another unit holds already (in the canonical spelling where it says so): a
+    refusal that depends on the rows standing — 409 with `fault: unique` (ADR 0031's rule), the other unit in `detail`."""
+    status = 409
+    fault = UNIQUE
 
 
 class Exists(Refused):
@@ -2790,7 +2805,7 @@ class SpecController(Controller):
                     for theirs, mine in f.must_match.items():
                         want = str(items.get(theirs) or "")
                         if want and str(new.get(mine) or "") != want:
-                            raise Refused(f"{n} {v} is {theirs} {want}'s: only that {theirs}'s rows point at it, and "
+                            raise Mismatched(f"{n} {v} is {theirs} {want}'s: only that {theirs}'s rows point at it, and "
                                           f"{uid} is {mine} {new.get(mine)}'s")
         unique = [(n, f) for n, f in self.spec.fields.items() if f.unique and str(new.get(n) or "") and changed(n)]
         if not unique:
@@ -2801,7 +2816,7 @@ class SpecController(Controller):
                 continue
             for n, f in unique:
                 if row.get(n) and (canonical_url if f.unique == "canonical" else str)(row[n]) == same[n]:
-                    raise Refused(f"{self.spec.name} {row['id']} has that {n} already: one {n} is one unit — change "
+                    raise NotUnique(f"{self.spec.name} {row['id']} has that {n} already: one {n} is one unit — change "
                                   f"that one, or delete it first")
 
     # The labels a unit is placed by, in the one alphabet (`LABEL_WORD`; the review's tenth pass): a camera with `склад`

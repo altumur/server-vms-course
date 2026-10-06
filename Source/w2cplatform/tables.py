@@ -137,7 +137,7 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
               said: dict | None = None) -> tuple[str, dict]:
     from .sealing import seal_items
     from .secrets import is_secret_field
-    from .spec import Refused, SubsystemSpec, unbound_secret
+    from .spec import Mismatched, Refused, SubsystemSpec, unbound_secret
     from .variables import Garbled
     t = spec.table_specs[table]
     if not isinstance(body, dict):
@@ -196,7 +196,7 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
             for theirs, mine in f.must_match.items():
                 want = str(row.get(theirs) or "")
                 if want and str(unit.get(mine) or "") != want:
-                    raise Refused(f"{unit['id']} has {n} {name} and is {mine} {unit.get(mine)}'s: the row would say "
+                    raise Mismatched(f"{unit['id']} has {n} {name} and is {mine} {unit.get(mine)}'s: the row would say "
                                   f"{theirs} {want} — change {unit['id']} first")
     if said is not None and old:
         blank = lambda v: None if v in (None, "") else v              # noqa: E731 — an empty word is not stored
