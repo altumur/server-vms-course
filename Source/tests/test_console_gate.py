@@ -1495,6 +1495,93 @@ def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_th
         srv.shutdown()
 
 
+def test_a_camera_created_on_a_device_reaches_every_camera_of_it_as_a_move_onto_it_does():
+    """«Платформа» found it, «Архитектор» decided it (2026-10-06): `rights.reach` was asked on a `PUT` of a row that is
+    there and on nothing else — the sixth review's hole, closed for an edit and open for a CREATE: a unit put on a host
+    where other people's units stand reached them past every grant. A create is a move from no group (`old = {}`): it
+    asks for every camera of the group the row names, and a group of nobody's is the cluster's (`*`); the units a row of
+    another subsystem names (`rights.names`) cannot name one that is not there yet. Through the VMS's door: `POST
+    /cameras` is the cluster's grant anyway, and a `PUT` of a camera that is not there (17 — deleted, or granted before
+    it is made) is asked what it reaches BEFORE the 404 says nothing is there to change."""
+    box = Box()
+    access = Tokens({"one": [("admin", "vms/1", ())],
+                     "c17": [("admin", "vms/17", ())],
+                     "c17all": [("admin", "vms/17", ())] + [("admin", f"vms/{i}", ()) for i in (1, 2, 3)],
+                     "c17nvr": [("admin", "vms/17", ())] + [("admin", f"vms/{i}", ()) for i in (1, 2, 3, 5)],
+                     "c17four": [("admin", "vms/17", ()), ("admin", "vms/4", ())],
+                     "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    nvr = "driverpack://acme/10.0.0.50/ch/"
+    try:
+        for ch in (1, 2, 3):                                            # cameras 1–3: the recorder's channels
+            assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.60/ch/1"}, token="admin")[0] == 201   # 4
+        # a camera's administrator creates no camera: a create names no unit, so it is the cluster's to make
+        assert _call(base, "POST", "/cameras", {"source": f"{nvr}9"}, token="one")[0] == 403
+        assert _call(base, "POST", "/cameras", {"source": f"{nvr}9"}, token="admin")[0] == 201
+        # a PUT of a row that is not there: asked as a create — the recorder's cameras are other people's
+        assert _call(base, "PUT", "/cameras/17", {"source": f"{nvr}8"}, token="c17")[0] == 403
+        assert _call(base, "PUT", "/cameras/17", {"source": f"{nvr}8"}, token="c17all")[0] == 403   # camera 5 is the cluster's
+        assert _call(base, "PUT", "/cameras/17", {"source": f"{nvr}8"}, token="c17nvr")[0] == 404   # all of them: nothing there
+        code, body = _call(base, "PUT", "/cameras/17", {"source": "driverpack://acme/10.0.0.60/ch/2"}, token="c17four")
+        assert code == 404, (code, body)                               # every camera of the host is mine: nothing there
+        assert _call(base, "PUT", "/cameras/17", {"source": "driverpack://acme/10.0.0.99/ch/1"}, token="c17four")[0] == 403   # nobody's host
+        assert _call(base, "PUT", "/cameras/17", {"source": "driverpack://acme/10.0.0.99/ch/1"}, token="admin")[0] == 404
+        assert _call(base, "PUT", "/cameras/17", {"name": "none"}, token="c17")[0] == 404               # nothing reached
+        from w2cplatform.console import SpecConsole
+        con = SpecConsole(VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall), wall=box.wall)
+        assert con.reach_of_change({}, {"source": f"{nvr}7"}) == {f"vms/{i}" for i in (1, 2, 3, 5)}
+        assert con.reach_of_change({}, {"source": "driverpack://acme/10.0.0.99/ch/1"}) == {"*"}
+        assert con.reach_of_change({}, {"name": "no source"}) == set()
+        assert con.reach_of_change({}, {"source": f"{nvr}7", "ref": "r-1"}) >= {"*"}   # a `reach.cluster` field
+        # a recording created with a `home` is moved into it: the cluster's (`rights.reach: {cluster: [home]}`, ADR 0057)
+        rec = SpecConsole(mounts["rec"], wall=box.wall)
+        assert rec.reach_of_change({}, {"cam": "1", "home": "v1"}) == {"*"}
+        assert rec.reach_of_change({}, {"cam": "1"}) == set()
+    finally:
+        srv.shutdown()
+
+
+def test_a_row_a_viewer_creates_reaches_the_units_of_its_group_through_the_door():
+    """The same rule where a create IS a unit's grant: a row ABOUT a camera that its viewer creates (`rights.routes`:
+    `live`'s stream). The spec is built here — `live` with a `source` grouped by its host and `rights.reach.group` — so
+    that a viewer of camera 1 creating a stream on a host where the streams of cameras 2 and 3 stand needs a grant on
+    each of them; on a host nobody's stream is at, the cluster's; on a host where every stream is hers, her own."""
+    import yaml
+    from vms.config import LIVE_SPEC
+    from w2cplatform.spec import SubsystemSpec
+    with open(os.path.join(os.path.dirname(os.path.abspath(sys.modules["vms.config"].__file__)), "live.subsystem.yaml")) as f:
+        d = yaml.safe_load(f)
+    d["unit"]["fields"]["source"] = {"type": "url", "schemes": {"driverpack": {"host": "path", "none": ["file"]}}}
+    d["placement"]["group_by"] = {"field": "source", "cut_at": "host"}
+    d["rights"] = {"routes": {"view": ["streams"]}, "reach": {"group": ["source"]}}
+    live = SubsystemSpec.from_dict(d)
+    assert live.name == LIVE_SPEC.name
+    box = Box()
+    access = Tokens({"one": [("view", "vms/1", ())], "one23": [("view", f"vms/{i}", ()) for i in (1, 2, 3)],
+                     "four5": [("view", "vms/4", ()), ("view", "vms/5", ())], "admin": [("admin", None, ())]})
+    vars_ = box.vars.as_writer("console", SPEC.acl_console() + live.acl_console())
+    m = make_console(VmsController(vars_, box.objects, wall=box.wall), box.resource_root, box.wall,
+                     live_ctl=SpecController(live, vars_, box.objects, wall=box.wall))
+    for con in (m.root, *m.mounts.values()):
+        con.gate.impl = access
+    srv = m.serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    nvr = "driverpack://acme/10.0.0.50/ch/"
+    try:
+        for cam in (2, 3):
+            assert _call(base, "POST", "/live/streams", {"cam": str(cam), "source": f"{nvr}{cam}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/live/streams", {"cam": "4", "source": "driverpack://acme/10.0.0.60/ch/1"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/live/streams", {"cam": "1", "source": f"{nvr}1"}, token="one")[0] == 403      # 2 and 3: not hers
+        assert _call(base, "POST", "/live/streams", {"cam": "1", "source": "driverpack://acme/10.0.0.99/ch/1"}, token="one23")[0] == 403   # nobody's host
+        assert _call(base, "POST", "/live/streams", {"cam": "1", "source": f"{nvr}1"}, token="one23")[0] == 201
+        assert _call(base, "POST", "/live/streams", {"cam": "5", "source": "driverpack://acme/10.0.0.60/ch/2"}, token="four5")[0] == 201   # all hers
+        assert _call(base, "POST", "/live/streams", {"cam": "6"}, token="admin")[0] == 201
+        assert box.vars.get("live/streams/1")[0]["source"] == f"{nvr}1"
+    finally:
+        srv.shutdown()
+
+
 def test_an_empty_word_from_a_device_does_not_unsay_what_it_said_before():
     """The review's ninth pass, major (в) — a run: a recorder that answered two passes without its serial number had its
     row rewritten without one (`describe_devices`); `nvr50.local`, opened meanwhile, took the identity, and after a
