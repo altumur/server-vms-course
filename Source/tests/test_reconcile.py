@@ -5,7 +5,7 @@ counters through it; testsub2's here (`TallyWorker`) its tallies, with a restart
 
 Each check of the ADR's Confirmation is a test below, and each fails without the rule it names: the doubling and its
 ceiling, the spread within `[1−J, 1+J]`, two keys with one history waiting apart, a count cleared only by a unit that
-stayed up `max`, a waiting key not tried early, `jitter = 0` refused, the order «stops, restarts, starts», and `drop`,
+stayed up `max`, a count dropped with its key from the wanted set, a waiting key not tried early, `jitter = 0` refused, the order «stops, restarts, starts», and `drop`,
 `clear`, `reset_backoff` and `status` on testsub2.
 """
 import random
@@ -193,6 +193,41 @@ def test_a_unit_that_dies_after_every_start_waits_longer_and_one_that_stays_up_e
     assert w.reconciler.status()["a"].failures == 0
     w.reconciler.forget("a")
     assert w.reconciler.status()["a"].retry_at - box.clock() == 1
+
+
+def test_a_unit_nobody_wants_loses_its_count_and_comes_back_a_new_life_while_one_still_wanted_keeps_its_count():
+    """Two tallies fail twice — their delays grow to 2. `a` leaves the assignment for one pass: its count goes with it,
+    at the top of that pass, as in the product's `Once`. It comes back: it is tried at once, not at its old instant, and
+    its first failure waits the base delay, 1, not the grown 4. `b`, wanted all along, keeps its count — waiting out its
+    2, then failing a third time, at 4 (ADR 0033)."""
+    box = Box()
+    w = TallyWorker(box, backoff=Backoff(1.0, 60.0, 0.5))
+    w.reconciler.rand = lambda: 0.5                      # the middle of the spread: the delays themselves
+    w.failing.update({"a", "b"})
+    _tallies(box, ["a", "b"])
+    waits = []
+    for n in (1, 2):
+        if n > 1:
+            box.clock.t = w.reconciler.status()["a"].retry_at
+        assert sorted(w.reconcile_once().failed) == ["a", "b"]
+        st = w.reconciler.status()
+        assert st["a"].failures == st["b"].failures == n, st
+        waits.append(st["a"].retry_at - box.clock())
+    assert waits == [1, 2], waits
+    _tallies(box, ["b"])                                 # `a` is no longer wanted
+    p = w.reconcile_once()
+    assert p.waiting == ["b"] and p.failed == [] and set(w.reconciler.status()) == {"b"}, p
+    assert w.reconciler.status()["b"].failures == 2
+    _tallies(box, ["a", "b"])                            # `a` is back, before its old instant
+    p = w.reconcile_once()
+    assert p.failed == ["a"] and p.waiting == ["b"], p
+    st = w.reconciler.status()
+    assert st["a"].failures == 1 and st["a"].retry_at - box.clock() == 1, st
+    assert st["b"].failures == 2
+    box.clock.t = st["b"].retry_at                       # past `a`'s 1 as well: both are tried, both fail
+    assert sorted(w.reconcile_once().failed) == ["a", "b"]
+    st = w.reconciler.status()["b"]
+    assert st.failures == 3 and st.retry_at - box.clock() == 4, st
 
 
 def test_a_unit_that_held_past_max_and_then_fails_its_restart_counts_waits_longer_and_stalls():
