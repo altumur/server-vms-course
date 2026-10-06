@@ -146,28 +146,34 @@ def test_a_json_value_in_a_row_has_one_text_compact_sorted_and_its_numbers_by_th
         raise AssertionError(f"{bad!r} written as JSON")
 
 
-def test_a_json_field_is_written_in_the_canonical_form_from_a_shape_or_from_text_and_text_not_json_is_refused():
-    """A field of type `json` (`Field.to_item`, the write's check): the same value is the same row, given as a shape or
-    as text — sorted keys, `1.5` for `1.50`, a big integer in its digits — and read back with them; a string that does
-    not parse as JSON is refused, not stored as typed (the architect, 2026-10-05)."""
+def test_a_json_field_is_written_in_the_canonical_form_of_its_value_and_a_string_is_a_document_that_is_a_string():
+    """A field of type `json` (`Field.take`, `Field.to_item`): the value is taken as it is given and written in the one
+    canonical form — sorted keys, `1.5` for `1.50`, a big integer in its digits — and read back with them. A string is a
+    document that is a string, never JSON text read again (the architect with «Паритет», 2026-10-06, (б)): `"s"` is
+    written `"s"`, taken again as read it is the same row; reading a text box is the page's work before it sends."""
     import tempfile
 
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.spec import Field, Refused, SpecController, SubsystemSpec
     from w2cplatform.variables import FileVariables
     f = Field("rule", "json")
-    shaped = f.to_item({"b": 12345678901234567890, "a": "<"})
-    assert shaped == '{"a":"<","b":12345678901234567890}' and f.to_item('{"b": 12345678901234567890, "a": "<"}') == shaped
-    assert f.to_item('{"b": 1.50, "a": [ 1 ]}') == '{"a":[1],"b":1.5}'
-    assert f.parse('{"n": 12345678901234567890}') == {"n": 12345678901234567890}
+    assert f.to_item({"b": 12345678901234567890, "a": "<"}) == '{"a":"<","b":12345678901234567890}'
+    assert f.to_item({"b": 1.5, "a": [1]}) == '{"a":[1],"b":1.5}'
+    assert f.to_item("s") == '"s"' and f.to_item('"s"') == '"\\"s\\""' and f.take("{oops") == "{oops"
+    assert f.parse('{"n": 12345678901234567890}') == {"n": 12345678901234567890}     # a stored item: its text, read
     spec = SubsystemSpec.from_dict({"name": "deck", "unit": {"rows": "decks", "id": "name", "fields": {
         "name": {"type": "string"}, "rule": {"type": "json"}}}, "placement": {"capacity": {"from": "capacity", "default": 4}}})
     root = tempfile.mkdtemp(prefix="jsonfield-")
     vars_ = FileVariables(os.path.join(root, "config"))
     ctl = SpecController(spec, vars_, FsObjectStore(os.path.join(root, "objects")), wall=lambda: 1_757_500_000.0)
-    ctl.create({"name": "a", "rule": '{"when": [{"in": 2.0}], "at": 1e-7}'})
+    ctl.create({"name": "a", "rule": {"when": [{"in": 2.0}], "at": 1e-7}})
     assert vars_.get("deck/decks/a")[0]["rule"] == '{"at":0.0000001,"when":[{"in":2}]}'
-    for bad in ("not json", "{'a': 1}", "NaN", '{"a": Infinity}'):
+    for n, text in enumerate(("not json", '"s"', "{oops")):                    # strings: documents, written as such
+        made = ctl.create({"name": f"s{n}", "rule": text})
+        assert vars_.get(f"deck/decks/s{n}")[0]["rule"] == json.dumps(text, ensure_ascii=False)
+        ctl.create({"name": f"t{n}", "rule": made["rule"]})                    # taken again as read: one row
+        assert vars_.get(f"deck/decks/t{n}")[0]["rule"] == vars_.get(f"deck/decks/s{n}")[0]["rule"]
+    for bad in (float("nan"), {"a": float("inf")}):                            # no JSON value: refused, not stored
         try:
             ctl.create({"name": "b", "rule": bad})
         except Refused as e:
@@ -188,8 +194,6 @@ def test_a_json_field_is_written_in_the_canonical_form_from_a_shape_or_from_text
             assert taken, (n, "taken")
         except Refused as e:
             assert not taken and f"{(4000, 4001, 4008)[n]} bytes of JSON" in str(e), (n, e)
-    ctl.create({"name": "spaced", "rule": '{"s":   ' + " " * 100 + '"' + "a" * 3992 + '"}'})   # 4100 typed, 4000 stored
-    assert len(vars_.get("deck/decks/spaced")[0]["rule"]) == 4000
 
 
 def test_a_refused_body_value_says_its_kind_as_the_shared_table_names_it():

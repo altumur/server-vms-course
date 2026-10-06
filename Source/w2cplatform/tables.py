@@ -162,7 +162,7 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
         if f.required and sent.get(n) in (None, ""):
             raise Refused(f"a row of {table} needs {n}")
         try:
-            row[n] = f.parse(sent[n]) if sent.get(n) is not None else f.default_value()
+            row[n] = f.take(sent[n]) if sent.get(n) is not None else f.default_value()
         except (*PARSE_ERRORS, OverflowError):            # `"1e12"` where a whole number goes, `1e999`: the sender's 400
             raise Refused(f"{n} is {f.type}, not {str(sent[n])[:60]!r}") from None
         if f.enum and sent.get(n) is not None and row[n] not in f.enum:   # `enum`: one of the values its spec names

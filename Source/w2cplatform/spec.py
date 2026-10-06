@@ -374,6 +374,14 @@ class Field:
             return parse_json(v) if isinstance(v, (str, bytes)) else v
         return str(v)
 
+    # A value as a body or a caller gives it (`parse` reads a stored item): a `json` field takes it AS IT IS — a string is
+    # a document that is a string, never JSON text read again (the architect with «Паритет», 2026-10-06, (б): reading a
+    # text box is the page's work before it sends; the double reading reached a 500 on `"\"s\""`); the rest as `parse`.
+    def take(self, v):
+        if self.type == "json" and v is not None and not self.inherits:
+            return v
+        return self.parse(v)
+
     # The declared default, else the type's zero (`0`, `0.0`, `False`, `[]`, `""`).
     def default_value(self):
         if self.inherits:
@@ -382,16 +390,16 @@ class Field:
             return self.default
         return {"int": 0, "float": 0.0, "bool": False, "list": [], "json": None}.get(self.type, "")
 
-    # The Variables form: bools as `"true"/"false"`, lists comma-joined, else `str`. A `json` field is its canonical text
-    # (`canonical.py`: sorted keys, `5` for `5.0` — the product's `CanonicalJSON`, the architect 2026-10-05); a string
-    # given is JSON text, parsed first — stored as typed, it was another row than the same value given parsed.
+    # The Variables form: bools as `"true"/"false"`, lists comma-joined, else `str`. A `json` field is its value's canonical
+    # text (`canonical.py`: sorted keys, `5` for `5.0` — the product's `CanonicalJSON`, the architect 2026-10-05); a string
+    # is a document that is a string (`"s"` is written `"\"s\""`), as `take` holds it.
     def to_item(self, v) -> str:
         if self.type == "bool":
             return "true" if v else "false"
         if self.type == "list":
             return ",".join(v)
         if self.type == "json":
-            return canonical_json(parse_json(v) if isinstance(v, (str, bytes)) else v)
+            return canonical_json(v)
         return str(v)
 
 
@@ -1713,7 +1721,7 @@ class SubsystemSpec:
             if not f.fixed or n not in fields or not was or was.get(n) in (None, ""):
                 continue
             try:
-                same = str(f.parse(fields[n])) == str(f.parse(was[n]))
+                same = str(f.take(fields[n])) == str(f.take(was[n]))
             except PARSE_ERRORS:
                 same = False
             if not same:
@@ -1856,7 +1864,7 @@ class SubsystemSpec:
             if f.type == "json" and fields.get(name) is not None:
                 raw = fields[name]
                 try:                                     # the text measured is the text stored (`Field.to_item`)
-                    doc = parse_json(raw) if isinstance(raw, (str, bytes)) else raw
+                    doc = raw                            # the value as given: a string is a document (`Field.take`)
                     text = canonical_json(doc)
                 except PARSE_ERRORS as e:                # nested past JSON's depth too: 400, not 500 (the tenth round)
                     r = Refused(f"{name} is not JSON: {e}")
@@ -1877,7 +1885,7 @@ class SubsystemSpec:
                 self._schema_refusal(name, f, value)
             if f.enum and fields.get(name) is not None:
                 try:
-                    value = f.parse(fields[name]) if f.type != "string" else str(fields[name])
+                    value = f.take(fields[name]) if f.type != "string" else str(fields[name])
                 except PARSE_ERRORS:
                     value = None
                 if value not in f.enum:
@@ -1953,8 +1961,8 @@ class SubsystemSpec:
             if f.required and not fields.get(n):
                 raise Refused(f"a {self.name} unit needs a {n}")
             v = fields.get(n)
-            r[n] = f.parse(v) if v is not None else f.default_value()
-            if isinstance(r[n], str) and "{id}" in r[n]:
+            r[n] = f.take(v) if v is not None else f.default_value()
+            if isinstance(r[n], str) and "{id}" in r[n] and f.type != "json":
                 r[n] = r[n].replace("{id}", str(uid))
         r["revision"] = 1
         return r
@@ -2821,7 +2829,7 @@ class SpecController(Controller):
                               f"for {fields[moved]} under another name (this one stays {r[moved]}'s, deleted or not)")
             was = dict(r)
             for k, v in fields.items():
-                r[k] = self.spec.fields[k].parse(v)
+                r[k] = self.spec.fields[k].take(v)
             for k, f in self.spec.fields.items():
                 why = unbound_secret(k, f.bound_to, was, r) if f.bound_to and k not in fields else None
                 if why:

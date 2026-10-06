@@ -9,6 +9,8 @@ field — the default applies, as for a field of any other type and a request's 
 (`{"a": null}` is stored as `{"a":null}`)."""
 from __future__ import annotations
 
+import json
+
 import os
 import tempfile
 
@@ -87,7 +89,8 @@ def test_the_stores_write_door_and_its_membership_door_refuse_a_body_that_is_no_
 def test_null_at_the_top_of_a_json_field_is_no_field_and_null_inside_a_document_is_a_value():
     """`POST /counters {"name": …, "doc": <body>}` and the row as stored: `null` is no `doc` (the default applies — none
     declared: no field, never the text `null`; one declared: the default's text), absent the same; `{"a": null}`, `{}`,
-    `[]`, `0` are the document, canonical. A string is JSON text (`Field.to_item`): `"s"` is no JSON, 400 `not_json`."""
+    `[]`, `0` are the document, canonical. A string is a document that is a string (`Field.take`, the architect with
+    «Паритет», (б)): `"s"` is written `"s"` and `"\\"s\\""` is written `"\\"s\\""` — taken again as read, the same row."""
     vars_, served = _counters()
     cases = [("null", None), ("absent", None), ('{"a": null}', '{"a":null}'), ("{}", "{}"), ("[]", "[]"), ("0", "0"),
              ('[null, {"z": null}]', '[null,{"z":null}]')]
@@ -101,8 +104,12 @@ def test_null_at_the_top_of_a_json_field_is_no_field_and_null_inside_a_document_
                 wrong.append(f"{body}: {st} {out}, stored {row}, not {stored!r}")
             elif stored is None and out.get("doc") is not None:
                 wrong.append(f"{body}: the reply says doc {out.get('doc')!r}")
-        st, out = call("POST", "/counters", raw=b'{"name": "s", "doc": "s"}')
-        assert st == 400 and out.get("fault") == "not_json" and vars_.get("ctr/counters/s")[0] is None, (st, out)
+        for i, (body, stored) in enumerate((('"s"', '"s"'), ('"\\"s\\""', '"\\"s\\""'), ('"{oops"', '"{oops"'))):
+            st, out = call("POST", "/counters", raw=f'{{"name": "s{i}", "doc": {body}}}'.encode())
+            row = vars_.get(f"ctr/counters/s{i}")[0]
+            assert st == 201 and row.get("doc") == stored, (body, st, out, row)
+            st, again = call("POST", "/counters", raw=json.dumps({"name": f"t{i}", "doc": out["doc"]}).encode())
+            assert st == 201 and vars_.get(f"ctr/counters/t{i}")[0].get("doc") == stored, (body, again)   # as read
     assert not wrong, "\n".join(wrong)
     vars_, served = _counters(default='{"n": 1}')     # JSON text: a map under `default` is keys the loader refuses
     with served as call:
