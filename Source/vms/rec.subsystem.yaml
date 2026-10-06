@@ -255,7 +255,7 @@ metrics:
   - {name: volume_shrink_pending, from: heartbeat.quota_note, agg: flag, default: 0}
   - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0}
   - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind}
-  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, default: ok}
+  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing], default: ok}
   # Per recording: how long since it last took anything from its source (feedback BI); what the engine refused of its
   # samples, by answer (the third pass); how deep it goes and whether its ring closed inside the floor (feedback BM);
   # and how long it has gone on under an epoch the store has not confirmed.
@@ -295,7 +295,7 @@ metrics:
   - {name: card_live_skipped_seconds_total, from: heartbeat.card.live_skipped_s, default: 0, type: counter}
   # card.state is a closed set, the same words on both sides: opening, recording, failing, stalled, failed, unavailable (an
   # accident: a card that would not open or refused), none (no card by the camera's own setting — no accident)
-  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, default: recording}
+  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, values: [opening, recording, failing, stalled, failed, unavailable, none], default: recording}
 # What a page shows under a server: the volumes whose `server` names it (the boundary's step 6; it was the recorder's
 # heartbeat field `archive`, read by the platform's `/servers`).
 servers:
