@@ -25,7 +25,7 @@ from .spec import TREE_WORDS
 from .tables import TABLE_KEYS
 
 NAMED = {"unit.fields", "tables", "tables.*.fields", "events.suppress", "display.keys", "display.options",
-         "domain.tokens", "domain.names", "secrets.readers", "unit.fields.*.schemes",
+         "domain.tokens", "domain.names", "domain.books", "secrets.readers", "unit.fields.*.schemes",
          "tables.*.fields.*.schemes"}
 OPAQUE = {"display.field_help", "display.kinds", "display.actions", "display.fields", "display.options.*",
           "requests.schema", "tables.*.schema", "unit.fields.*.schema", "tables.*.fields.*.schema",
@@ -81,7 +81,7 @@ KEYS = {
     "display.form.placement", "display.form.fields", "display.form.status.field", "display.form.status.since",
     "display.form.status.title", "display.form.note",
     "domain.ref", "domain.view", "domain.reports", "domain.witness.report", "domain.witness.member_field",
-    "domain.books", "domain.kept", "domain.tables",
+    "domain.books", "domain.books.*.show", "domain.kept", "domain.tables",   # books: a list of names, or {<book>: {show}}
     "domain.tokens.*.lifetime", "domain.tokens.*.claims", "domain.keys.id", "domain.keys.keys",
     "domain.keys.prefix", "domain.shared", "domain.shared.name", "domain.shared.type", "domain.shared.schema",
     "domain.names.*.exclusive_with", "domain.names.*.grant",

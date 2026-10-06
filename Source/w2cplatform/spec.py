@@ -748,6 +748,27 @@ _DOMAIN_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
 _DOMAIN_KEYS = ("ref", "view", "reports", "witness", "books", "kept", "tables", "tokens", "keys", "shared", "names",
                 "edit")
 _RESERVED_CLAIMS = ("iss", "sub", "iat", "exp", "jti", "kind")
+# A book's name and a shown field's: the product's `domainNameRe`, the one rule of `domain.books` on both sides.
+_BOOK_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+
+
+def _q(s: str) -> str:
+    """A name quoted as the product's `%q` quotes it — so a refusal reads the same on both sides."""
+    import json
+    return json.dumps(s, ensure_ascii=False)
+
+
+def _v(x) -> str:
+    """A value as the product's `%v` writes it, near enough to read the same: nothing is `<nil>`, a list `[a b]`."""
+    if x is None:
+        return "<nil>"
+    if isinstance(x, list):
+        return "[" + " ".join(_v(i) for i in x) + "]"
+    if isinstance(x, dict):
+        return "map[" + " ".join(f"{k}:{_v(i)}" for k, i in sorted(x.items(), key=lambda kv: str(kv[0]))) + "]"
+    if isinstance(x, bool):
+        return "true" if x else "false"
+    return str(x)
 # What a family's names may be held apart from (`domain.names.<family>.exclusive_with`): the domain's people — the
 # grants' other subjects. A closed set, as every word of the section (ADR-0031).
 EXCLUSIVE_WITH = ("domain/users",)
@@ -770,7 +791,12 @@ EXCLUSIVE_WITH = ("domain/users",)
 #             member by its own name — no word of the subsystem's, no name of one turned into another (ADR-0010)
 #   books     rows the subsystem writes at the holder for each member, `domain/<sub>/<book>/<member>`, which that
 #             member's agent carries home as `domain/<sub>/<book>` without reading them; a `*_secret` field in a book
-#             (at the top of the row, or of a JSON object that is one of its values) travels sealed
+#             (at the top of the row, or of a JSON object that is one of its values) travels sealed. A list of names,
+#             or a map `{<book>: {} | {show: [<field>…]}}`: `show` names the fields of the book's entries (each item a
+#             JSON object) a page is given at `GET /domain/<sub>/books/<book>` — of this cluster's own copy, never
+#             another member's, an item to whoever may view the unit whose `domain.ref` is its key (`console.py`,
+#             `SpecConsole.book_route`); a book without it is carried and not shown (ADR-0010, the addition of
+#             2026-10-06; the product's `domainBooks`, word for word)
 #   kept      rows the subsystem keeps at the holder for the domain as a whole, `domain/<sub>/<name>`, which leave the
 #             holder in its backup with what the domain decided; a name ending in `/` is a FAMILY of rows,
 #             `domain/<sub>/<name>/<row>` — one row per thing, kept, backed up and denied to the agent alike
@@ -805,7 +831,8 @@ class DomainSection:
     reports: tuple = ()
     witness: str = ""             # `witness.report`: the object family `<sub>/<report>/*`
     member_field: str = ""        # `witness.member_field`: the unit's fixed field that carries the member's name
-    books: tuple = ()
+    books: tuple = ()             # the names: a list's in its order, a map's sorted
+    show: dict = field(default_factory=dict)        # {<book>: (<field>…)} — the books shown, each its fields (`_books`)
     kept: tuple = ()
     tables: tuple = ()
     tokens: dict = field(default_factory=dict)
@@ -842,7 +869,8 @@ class DomainSection:
                 raise ValueError(f"{where}.{key} names one thing twice")
             return tuple(v)
         sec = cls(ref=str(d.get("ref") or ""), view=names("view"), reports=names("reports", tail=True),
-                  books=names("books"), kept=names("kept", tail=True), tables=names("tables"))
+                  kept=names("kept", tail=True), tables=names("tables"))
+        sec.books, sec.show = cls._books(d.get("books"), where)
         sec.witness, sec.member_field = cls._witness(spec, d.get("witness"), where)
         for f in ([sec.ref] if sec.ref else []) + list(sec.view):
             if f not in spec.snapshot and f != "id":
@@ -898,6 +926,59 @@ class DomainSection:
                 raise ValueError(f"{where}.shared: {f!r} neither inherits nor is the field the page groups by "
                                  f"(display.tree.group_by) — a domain value it would have nowhere to go")
         return sec
+
+    @staticmethod
+    def _books(v, where: str) -> tuple[tuple, dict]:
+        """`domain.books`: a list of names — carried, none shown — or a map, each book `{}` or `{show: [<field>…]}`.
+        `(names, {<book>: (<field>…)})`. Nothing is guessed: a book with no value, an empty `show`, a secret named or a
+        key beside `show` is refused, with its path — the product's `domainBooks`, its words, so a spec of either side
+        loads, or is refused, alike on both (ADR-0012)."""
+        where += ".books"
+        out: list = []
+        show: dict = {}
+
+        def name(n) -> None:
+            n = n if isinstance(n, str) else ""
+            if not _BOOK_NAME.match(n):
+                raise ValueError(f"{where}: {_q(n)} is not a name (lower case, digits, - and _)")
+            if n in out:
+                raise ValueError(f"{where} names {_q(n)} twice")
+            out.append(n)
+        if v is None:
+            return (), show
+        if isinstance(v, list):
+            for x in v:
+                name(x)
+            return tuple(out), show
+        if isinstance(v, dict):
+            for b in sorted(v, key=str):
+                name(b)
+                at = f"{where}.{b}"
+                book = v[b]
+                if not isinstance(book, dict):
+                    raise ValueError(f"{at} takes {{}} (carried, not shown) or {{show: [<field>…]}} — not {_v(book)}")
+                for k in book:
+                    if k != "show":
+                        raise ValueError(f"{at}.{k}: unknown key")
+                if "show" not in book:
+                    continue
+                raw = book["show"]
+                if not isinstance(raw, list) or not raw:
+                    raise ValueError(f"{at}.show names the fields of the book's entries a page is given, at least one — "
+                                     f"not {_v(raw)} (a book not shown says no show)")
+                fields: list = []
+                for x in raw:
+                    f = x if isinstance(x, str) else ""
+                    if not _BOOK_NAME.match(f):
+                        raise ValueError(f"{at}.show: {_q(f)} is not a field's name (lower case, digits, - and _)")
+                    if is_secret_field(f):
+                        raise ValueError(f"{at}.show: {_q(f)} is a secret, and a secret is never shown")
+                    if f in fields:
+                        raise ValueError(f"{at}.show names {_q(f)} twice")
+                    fields.append(f)
+                show[b] = tuple(fields)
+            return tuple(out), show
+        raise ValueError(f"{where} is a list of names or a map {{<book>: {{}} | {{show: [<field>…]}}}}, not {_v(v)}")
 
     @staticmethod
     def _witness(spec: "SubsystemSpec", raw, where: str) -> tuple[str, str]:
