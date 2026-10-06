@@ -24,6 +24,9 @@ PRODUCT = sorted(p for p in glob.glob(os.path.join(ROOT, "*", "*.subsystem.yaml"
 from w2cplatform.speckeys import NAMED, OPAQUE  # noqa: E402
 # Scalars whose VALUE is an operator: `metrics.agg=sum`.
 OPERATORS = {"metrics.agg", "metrics.type"}
+# Scalars whose value has a FORM the platform reads beside the plain one: a `servers.status` field that is a path into
+# the heartbeat's maps by its dots (`servers.status.field=path`, «Архитектор» 2026-10-06) — a reading a spec must use.
+PATHS = {"servers.status.field"}
 
 # A field's own words, of a unit's row and of a table's alike.
 FIELD = ("type", "default", "required", "inherit", "merge", "bound_to", "fixed", "enum", "schema", "ref", "must_match",
@@ -57,7 +60,7 @@ IMPLEMENTED = {
     "rights.reach.cluster", "rights.reach.requests", "rights.names.field", "rights.names.unit", "rights.names.sub",
     "rights.names.of",
     "servers.show.table", "servers.show.by", "servers.show.title", "servers.show.columns", "servers.status.field",
-    "servers.status.title",
+    "servers.status.field=path", "servers.status.title",
     "display.unit", "display.units", "display.units_count", "display.section", "display.events", "display.field_help",
     "display.kinds", "display.actions", "display.tree.group_by", "display.tree.nested_by", "display.tree.columns.field",
     "display.tree.columns.title", "display.tree.columns.width", "display.tree.children", "display.tree.group_title",
@@ -92,6 +95,8 @@ def _paths(d, at: str = "") -> set[str]:
         out.add(p)
         if p in OPERATORS and isinstance(v, str):
             out.add(f"{p}={v}")
+        if p in PATHS and isinstance(v, str) and "." in v:
+            out.add(f"{p}=path")
         if p not in OPAQUE:
             out |= _paths(v, p)
     return out
@@ -122,8 +127,11 @@ def test_every_key_and_operator_the_platform_reads_is_used_by_two_subsystems_or_
 
 
 def test_a_key_no_spec_uses_is_found_by_the_walk():
-    """The walk itself: names stand as `*`, words passed on whole are not walked, an operator is its value."""
+    """The walk itself: names stand as `*`, words passed on whole are not walked, an operator is its value, a
+    dotted `servers.status` field is its form."""
     got = _paths({"unit": {"fields": {"x": {"type": "int", "schema": {"minimum": 1}}}},
                   "metrics": [{"name": "m", "from": "status.phase", "agg": "count", "where": {"a": 1}}]})
     assert {"unit.fields.*.type", "unit.fields.*.schema", "metrics.agg=count", "metrics.where"} <= got
+    assert "servers.status.field=path" in _paths({"servers": {"status": [{"field": "belt.state", "title": "x"}]}})
+    assert "servers.status.field=path" not in _paths({"servers": {"status": [{"field": "jam", "title": "x"}]}})
     assert "unit.fields.*.schema.minimum" not in got and "metrics.where.a" not in got
