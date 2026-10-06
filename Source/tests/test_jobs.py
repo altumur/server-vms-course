@@ -155,10 +155,11 @@ def test_a_backfill_request_is_a_row_and_not_a_202():
         status2, body2 = call("POST", "/requests", ask, headers={"X-User": "anna"})   # a retry is the same row, not a second fetch
         assert status2 == 202 and body2["queued"]["id"] == rid
     rows = [k.rsplit("/", 1)[1] for k in box.vars.list(REC_SPEC.sub.requests_prefix())]
-    assert [r for r in rows if not r.startswith("asks-")] == [rid]
-    # …and beside it anna's own list of what she has asked for (the review's sixth pass): one id, counted once
-    [mine] = [r for r in rows if r.startswith("asks-")]
-    held = json.loads(box.vars.get(REC_SPEC.sub.request_key(mine))[0]["asks"])
+    assert rows == [rid]
+    # …and beside the family (ADR 0060) anna's own list of what she has asked for (the review's sixth pass): one id,
+    # counted once
+    assert box.vars.list(REC_SPEC.sub.asked_prefix()) == [REC_SPEC.sub.asked_key("anna")]
+    held = json.loads(box.vars.get(REC_SPEC.sub.asked_key("anna"))[0]["asks"])
     assert [r for r, _ in held] == [rid]
 
 
@@ -197,11 +198,14 @@ def test_a_backfill_nobody_answered_for_a_day_is_ended_and_a_record_request_is_n
     rec.vars.put(key("7-100-200"), {"unit": "7", "cam": "7", "from": "100", "to": "200", "at": old, "by": "anna"})
     rec.vars.put(key("7-300-400"), {"unit": "7", "cam": "7", "from": "300", "to": "400", "at": young, "by": "anna"})
     rec.vars.put(key("s-1"), {"action": "record", "cam": "7", "minutes": "10", "at": old})
-    rec.vars.put(key("asks-0123"), {"asks": "[]", "by": "boris", "at": old})
+    rec.vars.put(REC_SPEC.sub.asked_key("boris"), {"asks": "[]", "by": "boris", "at": old})
+    rec.vars.put(REC_SPEC.sub.asked_key("anna"), {"asks": "[]", "by": "anna", "at": young})
     was = requests.expired.get("rec", 0)
     assert requests.clear_requests(rec) == 0                              # nothing was fetched…
     assert sorted(k.rsplit("/", 1)[1] for k in rec.vars.list(REC_SPEC.sub.requests_prefix())) == ["7-300-400", "s-1"]
-    assert requests.expired.get("rec", 0) == was + 1                             # …one ask ended, and counted; the list is not a request
+    assert requests.expired.get("rec", 0) == was + 1                             # …one ask ended, and counted
+    # …and the people's ledgers, beside the family (ADR 0060): boris's, untouched for `ttl`, is gone; anna's stays
+    assert rec.vars.list(REC_SPEC.sub.asked_prefix()) == [REC_SPEC.sub.asked_key("anna")]
 
 
 # -- fetching: the job that cannot run because the footage is still on the device -------------------

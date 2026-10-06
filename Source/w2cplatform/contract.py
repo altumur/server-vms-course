@@ -114,6 +114,7 @@ UNPLACED = "unplaced"
 # A prefix that cannot be bounded by a grant is a layout problem, not a missing feature of the rights.
 HEARTBEATS = "heartbeats"
 REQUESTS = "requests"      # `<name>/requests/<id>`: bounded work an operator asked for, written by the console
+ASKED = "asked"            # `<name>/asked/<sha256 of a person, 16 hex>`: that person's open requests, the console's (ADR 0060)
 CONTROLLER_PASS = "controller/pass"   # `<name>/controller/pass`: the controller's report on its last pass (`SpecController.pass_once`)
 CONTENDERS = "contenders"  # `<name>/contenders/<slot>/<box>`: a process that wants a name another instance holds (`Worker._contend`)
 USED = "used"              # `<name>/used/<place>`: a place this subsystem's workers have opened, and where (`Subsystem.used_key`)
@@ -705,6 +706,17 @@ class Subsystem:
 
     def requests_prefix(self) -> str:
         return f"{self.name}/{REQUESTS}/"
+
+    # `<name>/asked/<sha256 of the person, 16 hex>` — ONE PERSON'S OPEN REQUESTS (`per_person`), the console's to write and
+    # read, beside the family and not in it (ADR 0060): it was `<name>/requests/asks-<…>`, a row of the family whose every
+    # row is a request, and a request named `asks-<somebody's hash>` read that person's list, while a holder and the
+    # reaper had to know a prefix that meant "not a request". The holder, the reaper and `file_request` never look here.
+    def asked_key(self, person: str) -> str:
+        import hashlib
+        return f"{self.name}/{ASKED}/{hashlib.sha256(str(person).encode()).hexdigest()[:16]}"
+
+    def asked_prefix(self) -> str:
+        return f"{self.name}/{ASKED}/"
 
     # `<name>/decommissioned/<server> {asked_at, at, slots, units, holds}` — the controller's mark that a server's
     # decommission (`platform/decommission/<server>`, the console's) was carried out in this subsystem: which slots it

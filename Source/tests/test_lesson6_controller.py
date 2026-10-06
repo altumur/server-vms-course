@@ -250,17 +250,21 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
         first = post(p1, "k-1"); again = post(p2, "k-1")                     # the retry reaches the OTHER console
         assert first == again and first[0] == 201 and len(a.cameras()) == 1
         assert box.vars.get("vms/idem/k-1")[0]["state"] == "done"
-        # in flight: console B holds the claim and has not answered yet; A waits for B's reply rather than writing
-        box.vars.put("vms/idem/k-2", {"state": "pending", "at": box.wall()}, cas=0)
+        # in flight: console B holds the claim and has not answered yet; A waits for B's reply rather than writing.
+        # B's claim says whose request and of what body, as every console's does (a claim that says neither answers
+        # nobody: the fourteenth review, minor 6)
+        from w2cplatform.console import IdempotencyKeys
+        tag = IdempotencyKeys(box.vars, "vms/idem/", box.wall)._tag(
+            "operator", json.dumps({"name": "gate", "source": "driverpack://file/g.mp4"}).encode())
+        box.vars.put("vms/idem/k-2", {"state": "pending", "at": box.wall(), **tag}, cas=0)
         out = {}
         t = threading.Thread(target=lambda: out.setdefault("r", post(p1, "k-2"))); t.start()
         time.sleep(0.15); assert "r" not in out and len(a.cameras()) == 1
-        box.vars.put("vms/idem/k-2", {"state": "done", "status": 201, "body": json.dumps({"id": 1, "worker": None}), "at": box.wall()})
+        box.vars.put("vms/idem/k-2", {"state": "done", "status": 201, "body": json.dumps({"id": 1, "worker": None}), "at": box.wall(), **tag})
         t.join(3); assert out["r"] == (201, {"id": 1, "worker": None}) and len(a.cameras()) == 1
         # a key with a slash is not a path segment
         assert post(p1, "a/b")[0] == 400
         # old keys go: a day later the next claim prunes them (at most once a minute)
-        from w2cplatform.console import IdempotencyKeys
         keys = IdempotencyKeys(box.vars, "vms/idem/", box.wall, clock=box.clock)
         box.wall.advance(90000); box.clock.advance(61)
         assert keys.prune() == 2 and box.vars.list("vms/idem/") == [] and keys.prune() == 0
@@ -280,6 +284,14 @@ def _console_with_its_own_clock(box, ctl):
     m.root.seen.clock, m.root.seen.sleep = box.clock, (lambda s: None)
     srv = m.serve("127.0.0.1", 0)
     return m, srv, srv.server_address[1]
+
+
+def _claim_tag(key, name="gate", user=None):
+    """What another console's claim of `_post(port, key, name, user)` says — whose request and of what body: every claim
+    a console makes carries it, and one that does not answers nobody (the fourteenth review, minor 6)."""
+    from w2cplatform.console import IdempotencyKeys
+    return IdempotencyKeys(None, "vms/idem/", None)._tag(
+        user or "operator", json.dumps({"name": name, "source": f"driverpack://file/{key}.mp4"}).encode())
 
 
 def _post(port, key, name="gate", user=None, body=None):
@@ -308,12 +320,12 @@ def test_a_claim_is_stale_by_standing_still_on_this_consoles_clock_and_not_by_an
     m, srv, port = _console_with_its_own_clock(box, a)
     try:
         # the neighbour's clock is ninety seconds behind: its `at` says "old", and it is not
-        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall() - 90}, cas=0)
+        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall() - 90, **_claim_tag("k-1")}, cas=0)
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # in flight: waited, served nothing, wrote nothing
         box.clock.advance(20)
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # twenty seconds of standing still: not yet
         # …re-made by somebody meanwhile (a new revision): the count starts again
-        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall()})
+        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall(), **_claim_tag("k-1")})
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # twenty seconds since the first claim, none since this revision
         box.clock.advance(20)
         assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # forty since the first, twenty of this one
@@ -332,7 +344,7 @@ def test_a_claim_is_stale_by_standing_still_on_this_consoles_clock_and_not_by_an
         box.clock.advance(31)
         assert _post(port, "k-2") == (code, body) and len(a.cameras()) == 2   # …and past the TTL takes it over: camera 2 exists, so camera 2 is the answer
         # the first attempt died between reserving the id and writing the row: the retry creates under the reserved id
-        box.vars.put("vms/idem/k-3", {"state": "pending", "at": box.wall(), "id": "9"}, cas=0)
+        box.vars.put("vms/idem/k-3", {"state": "pending", "at": box.wall(), "id": "9", **_claim_tag("k-3")}, cas=0)
         assert _post(port, "k-3")[0] == 409
         box.clock.advance(31)
         assert _post(port, "k-3")[1]["id"] == 9 and [c["id"] for c in a.cameras()] == [1, 2, 9]
@@ -428,7 +440,7 @@ def test_a_claim_nobody_will_answer_does_not_hold_its_key_for_a_day():
         return _post(port, key, name)
 
     try:
-        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall()}, cas=0)   # claimed by a console that then died
+        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall(), **_claim_tag("k-1")}, cas=0)   # claimed by a console that then died
         assert post("k-1")[0] == 409                                                   # seen once: in flight, for all this console knows
         box.clock.advance(31)
         assert post("k-1")[0] == 201 and len(a.cameras()) == 1                          # taken over: the work is done
