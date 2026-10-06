@@ -18,7 +18,8 @@ show them. So the console is one class, run from the same spec:
     GET  /resources              the platform's resources: usage, units, live | silent
     GET  /unplaceable            units nothing live can serve, with the labels that say why
     GET  /servers                every server as placement sees it: its labels, its resource (the fact, its address, its disk),
-                                 its workers, placeable or why not, its decommission
+                                 its workers (each with the heartbeat fields its spec's `servers.status` names), placeable
+                                 or why not, its decommission
     GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
                                  units by cluster, with its age; 404 anywhere else — a cluster does not know the others
     GET  /domain/shared/<sub>[?unit=<id>]   the fields a spec shares with the domain (`domain.shared`), resolved from
@@ -135,7 +136,7 @@ from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_M
                        parse_heartbeat, read_slot, schema_version)
 from .epoch import current_epoch
 from .canonical import canonical_json, field_text, number_text, parse_json
-from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
+from .rows import FIELDS, PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence, unit_id
 from .events import ALARM, CONSOLE_MARKS, OF, EventLog
 
@@ -264,6 +265,15 @@ def send_file(handler, path: str, content_type: str, headers=()) -> dict:
 DOMAIN_VIEW = "domain/view"
 
 
+# A JSON number as it is (`5` stays `5`, `0.5` stays `0.5`): `true` is no number and neither is the word `"5"` — a
+# `TypeError` for both, a `ValueError` for `nan` and `inf` (`finite`).
+def _json_number(v):
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise TypeError(f"{v!r:.40} is not a number")
+    finite(v)
+    return v
+
+
 # `GET /spec`: a spec as the page reads it — of the spec alone, so the domain holder's door, which runs no controller,
 # says the same of every spec it loaded (`/mounts` there, the contract's §10a).
 def describe(s) -> dict:
@@ -277,7 +287,9 @@ def describe(s) -> dict:
             # the page's words and what it shows under a server, as the spec wrote them; the gauges it reads on
             # `/metrics` by name (the boundary's step 6; the product's keys)
             **({"display": s.display} if s.display else {}),
-            **({"servers": {"show": s.servers_show}} if s.servers_show else {}),
+            **({"servers": {**({"show": s.servers_show} if s.servers_show else {}),
+                            **({"status": s.servers_status} if s.servers_status else {})}}
+               if s.servers_show or s.servers_status else {}),
             **({"door": {"routes": list(s.door_routes)}} if s.door_routes else {}),
             **({"places": {"table": s.places["table"]}} if s.places else {}),   # `/where/<table>/<place>`
             # its part of the domain, as the page reads it (the contract, §10a): the key families (`domain.keys`; their
@@ -1776,7 +1788,9 @@ class SpecConsole:
                                  "place": ctl.place_of(w),
                                  # …by what this console saw change, on its clock (the review's thirteenth pass)
                                  "state": "live" if ctl.eyes.fresh(ctl.sub.heartbeat_key(w), hb.token, self.lost_after, hb.ts,
-                                                                   ctl.sub.name) else "stale", "idle_by_policy": False})
+                                                                   ctl.sub.name) else "stale", "idle_by_policy": False,
+                                 # …and what the spec's `servers.status` names of its heartbeat, as it is written there
+                                 **({"status": self._status_of(w, hb)} if ctl.spec.servers_status else {})})
         for w in ctl.idle_by_policy(list(heartbeats(ctl.objects, ctl.sub.name + "/"))):    # servers: distinct — one worker per server carries units
             for s in out.values():
                 for row in s["workers"]:
@@ -1843,7 +1857,27 @@ class SpecConsole:
                         f"server {server} draining" if s["draining"] else
                         f"resource on {server} silent" if not s["placeable"] else None)
             s["workers"].sort(key=lambda x: x["worker"])
-        return {"policy": ctl.policy(), "servers": dict(sorted(out.items()))}
+        # The titles of the workers' `status` once, as the spec wrote them (`servers.status`): the page sums each field over
+        # a server's workers and titles it — the platform shows what the heartbeats say and adds nothing up.
+        return {"policy": ctl.policy(), "servers": dict(sorted(out.items())),
+                **({"status": ctl.spec.servers_status} if ctl.spec.servers_status else {})}
+
+    # A worker's heartbeat fields the spec's `servers.status` names, AS THE HEARTBEAT CARRIES THEM: a string of
+    # `heartbeat.strings` (one that is not a string never got here — the heartbeat was garbled, `parse_heartbeat`), any
+    # other a JSON number — a word there (`"5"` too), `true`, a list or an object is counted as a garbled field (the
+    # rows' count, `FIELDS`, as `number` counts it) and left out. A field the heartbeat does not carry is absent, not
+    # null: "nothing said" is not "said nothing".
+    def _status_of(self, w: str, hb) -> dict:
+        spec, out = self.ctl.spec, {}
+        for e in spec.servers_status:
+            f = e["field"]
+            if f not in hb.extra:
+                continue
+            v = hb.extra[f]
+            if f in spec.heartbeat_strings or FIELDS.read(f"{self.ctl.sub.heartbeat_key(w)}#{f}",
+                                                           lambda: _json_number(v), None) is not None:
+                out[f] = v
+        return out
 
     def _judged(self, row: dict, held: dict) -> None:
         w, ctl = row["worker"], self.ctl
@@ -2346,7 +2380,9 @@ class SpecConsole:
     #       `X-Unreachable: <place>@<server>` when nobody holds it.
     #   - `GET /resources` — every resource heartbeat with `state: live | silent` by `lost_after`.
     #   - `GET /servers` — `servers()`: per server, `resource` (`live | silent | unreachable | unknown`), `workers`,
-    #     `placeable` and `why` (what of a subsystem's tables a server holds is the spec's `servers.show`, read with `/spec`).
+    #     `placeable` and `why` (what of a subsystem's tables a server holds is the spec's `servers.show`, read with `/spec`);
+    #     each worker's `status` — the fields of its heartbeat the spec's `servers.status` names, as written — and
+    #     those declarations once, `status: [{field, title}]`, beside `policy`.
     #   - `GET /unplaceable` — `ctl.unplaceable()`.
     #         - `GET /events?from&to&unit&kind&subsystem&limit&keep&class` — 503 if no index; else
     #       `current_epochs` from every `<sub>/epoch/*` row (`epochs`, cached `EPOCH_CACHE` seconds) and

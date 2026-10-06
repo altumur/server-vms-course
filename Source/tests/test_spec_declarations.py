@@ -863,3 +863,68 @@ def test_the_console_is_the_platforms_built_from_a_directory_of_specs_and_the_de
     _refused(lambda: host.build_console({**env, "CONSOLE_ROOT": "nope"}), "CONSOLE_ROOT='nope' names no spec")
     assert "console" in host.USAGE
 
+
+
+def test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_as_the_heartbeat_wrote_them():
+    """`servers.status: [{field, title}]`, beside `servers.show`: fields of the subsystem's heartbeats a page shows on a
+    server's row under its title. `GET /servers` puts each worker's value in its row, `status: {<field>: <value>}`, as
+    the heartbeat carries it — a string of `heartbeat.strings` a string, a number a number, `2` not `2.0` —, and the
+    declarations once beside `policy`, as `/spec` carries them beside `show`; the page sums them per server, the platform
+    adds nothing up. A field the heartbeat does not carry is absent, not null; a word where a number stands is counted
+    and absent. The loader takes exactly `{field, title}`: another form, another key, an empty title, a field said twice,
+    the platform's own field — refused (ADR 0012)."""
+    import json
+    import urllib.request
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.rows import FIELDS
+    declared = [{"field": "jam", "title": "застряло"}, {"field": "stuck", "title": "застрявших"}]
+    d = {**BIN, "heartbeat": {"strings": ["jam"]}, "servers": {"status": declared}}
+    spec = SubsystemSpec.from_dict(d)
+    assert spec.servers_status == declared and spec.servers_show == []
+    vars_, objects, wall = _box()
+    ctl = SpecController(spec, vars_, objects, wall=wall)
+    for w, server, extra in (("w-1", "s1", {"jam": "yes", "stuck": 2}), ("w-2", "s1", {"jam": "no", "stuck": 0.5}),
+                             ("w-3", "s2", {}), ("w-4", "s2", {"stuck": "many"})):
+        objects.put(spec.sub.heartbeat_key(w), Heartbeat(w, wall(), [], {"server": server, "bay": "", "capacity": 4,
+                                                                         "headroom": 4, **extra}).to_bytes())
+    srv = SpecConsole(ctl, wall=wall).serve("127.0.0.1", 0)
+    def get(path):
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}{path}", headers={"X-User": "ann"})
+        return json.loads(urllib.request.urlopen(req).read())
+    try:
+        out = get("/servers")
+        rows = {w["worker"]: w for s in out["servers"].values() for w in s["workers"]}
+        assert rows["w-1"]["status"] == {"jam": "yes", "stuck": 2} and type(rows["w-1"]["status"]["stuck"]) is int
+        assert rows["w-2"]["status"] == {"jam": "no", "stuck": 0.5}
+        assert rows["w-3"]["status"] == {}                                        # nothing said: absent, not null
+        assert rows["w-4"]["status"] == {}                                        # a word where a number stands
+        assert f"{spec.sub.heartbeat_key('w-4')}#stuck" in FIELDS.bad              # …counted, as `number` counts it
+        assert out["status"] == declared                                          # the titles, once
+        assert get("/spec")["servers"] == {"status": declared}
+    finally:
+        srv.shutdown()
+    plain = SpecConsole(SpecController(SubsystemSpec.from_dict(BIN), vars_, objects, wall=wall), wall=wall)
+    out = plain.servers()
+    assert "status" not in out and not any("status" in w for s in out["servers"].values() for w in s["workers"])
+    assert "servers" not in plain.describe()
+    with_show = SubsystemSpec.from_dict({**d, "servers": {"show": [{"table": "bays", "by": "server"}], "status": declared}})
+    assert with_show.servers_show and with_show.servers_status == declared
+
+    def status(*entries, strings=("jam",)):
+        return lambda: SubsystemSpec.from_dict({**BIN, "heartbeat": {"strings": list(strings)},
+                                                "servers": {"status": list(entries)}})
+    _refused(lambda: SubsystemSpec.from_dict({**d, "servers": {"status": {"field": "jam", "title": "x"}}}),
+             "servers.status is [{field")                                       # not a list
+    _refused(status("jam"), "servers.status is [{field")                          # an entry that is a word
+    _refused(status({"field": "jam"}), "servers.status is [{field")               # no title
+    _refused(status({"title": "x"}), "servers.status is [{field")                 # no field
+    _refused(status({"field": "Jam it", "title": "x"}), "servers.status is [{field")   # no field's name
+    _refused(status({"field": 5, "title": "x"}), "servers.status is [{field")
+    _refused(status({"field": "jam", "title": 5}), "servers.status is [{field")
+    _refused(status({"field": "jam", "title": "x", "sum": True}), "servers.status is [{field")   # an unknown key
+    _refused(lambda: SubsystemSpec.from_dict({**d, "servers": {"status": declared, "totals": []}}), "`servers:` is")
+    _refused(lambda: SubsystemSpec.from_dict({**BIN, "servers": {}}), "`servers:` is")
+    _refused(status({"field": "jam", "title": ""}), "servers.status is [{field")       # an empty title
+    _refused(status({"field": "jam", "title": "  "}), "servers.status is [{field")
+    _refused(status({"field": "jam", "title": "x"}, {"field": "jam", "title": "y"}), "names 'jam' twice")
+    _refused(status({"field": "server", "title": "x"}), "the platform's own field")
