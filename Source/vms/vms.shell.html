@@ -951,7 +951,11 @@ pc.addCard("netvols",host=>{CARD_HOST=host;netVolumesCard(host)});
 pc.addBlock("server",{id:"vols",covers:"rec/volumes",render:(host,ref)=>{
   const name=ref.slice(7);
   if(!recOn){host.innerHTML=offCard("Архивы сервера","подсистема записи не подключена","Консоль не монтирует <code>rec</code>.");return}
-  host.innerHTML=card("Архивы сервера",serverVolumes(name).map(v=>{const st2=volState(v);
+  // a volume whose directory is gone on this server, as its recorders say it (servers.status volume_missing in their
+  // rows at /rec/servers): named, each a way to its card
+  const miss=[...new Set(recWorkers().filter(x=>x.server===name).map(x=>x.status.volume_missing).filter(Boolean))];
+  const gone=miss.length?`<div class="nt err">Пропал каталог ${miss.length>1?"томов":"тома"}: ${miss.map(x=>`<a href="#" data-act="vol" data-vol="${esc(x)}">${esc(x)}</a>`).join(", ")}. Записи ушли на другие тома.</div>`:"";
+  host.innerHTML=gone+card("Архивы сервера",serverVolumes(name).map(v=>{const st2=volState(v);
     return`<div class="it" data-act="vol" data-vol="${esc(v.name)}"><span>${pc.icon("storage")}</span><span>${esc(v.name)}<small>${esc(volKind(v,true))} · ${esc(v.url||"—")} · ${gbytes(v.quota_bytes)} · записей: ${volRecs(v.name).length}</small></span><span class="bd ${st2.bad?"off":""}">${esc(st2.label)}</span></div>`}).join("")
     ||`<p class="sub">На этом сервере нет объявленных архивов</p>`,
     `<button type="button" class="btn s" data-act="arc">＋ Камеру в архив</button> <button type="button" class="btn s" data-act="add">＋ Архив</button>`);
