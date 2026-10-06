@@ -1410,13 +1410,16 @@ def test_a_dns_name_and_its_address_are_two_groups_to_the_platform_and_its_secon
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
         w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
-        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"     # the holder said what it is
+        assert box.vars.get("vms/devices/10.0.0.50")[0]["identity"] == "ACME-SN-0042"     # the holder said what it is
+        code, got = _call(base, "GET", "/devices/10.0.0.50", token="admin")   # …a row of the declared table, by its host
+        assert code == 200 and got["device"] == "10.0.0.50" and got["relays"] == 2 and got["ptz"] is False, (code, got)
+        assert "command" in got["events"] and got["identity"] == "ACME-SN-0042", got   # typed by the table's fields
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="three")[0] == 403
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/7"}, token="admin")[0] == 200
         for _ in range(2):
             w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
         [st] = [x for x in w.status() if str(x["id"]) == "3"]
-        assert "same serial number as acme/10.0.0.50" in st.get("warning", ""), st              # said by the holder
+        assert "same serial number as 10.0.0.50" in st.get("warning", ""), st              # said by the holder
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="three")[0] == 403
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="admin")[0] == 409   # one address
     finally:
@@ -1429,8 +1432,9 @@ def _opened(box, *keys, holder: str = "w-held") -> None:
     known only while a holder says so (the review's tenth pass). The holder has no room, so
     nothing is placed on it."""
     from w2cplatform.contract import Heartbeat
-    for key in keys:
-        box.vars.put(f"vms/devices/{key}", {"events": "command", "rays": "0", "relays": "1", "ptz": "false",
+    for key in keys:                                     # the row is named by the host (ADR 0053), the session by the key
+        host = key.rsplit("/", 1)[-1]
+        box.vars.put(f"vms/devices/{host}", {"device": host, "events": "command", "rays": "0", "relays": "1", "ptz": "false",
                                             "presets": "0", "identity": f"SN-{key}"})
     key_ = SPEC.sub.heartbeat_key(holder)
     raw = box.objects.get(key_)
@@ -1514,17 +1518,17 @@ def test_an_empty_word_from_a_device_does_not_unsay_what_it_said_before():
         for ch in (1, 2):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
         w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
-        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"
+        assert box.vars.get("vms/devices/10.0.0.50")[0]["identity"] == "ACME-SN-0042"
         nvr.identity = ""                                             # two passes without its serial
         for _ in range(2):
             w.heartbeat_once(); w.reconcile_once()
-            assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # not unsaid
+            assert box.vars.get("vms/devices/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # not unsaid
         assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="admin")[0] == 201
         w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
-        assert w.coincidences == {"acme/nvr50.local": ("acme/10.0.0.50", "ACME-SN-0042")}   # the new name is the one said
+        assert w.coincidences == {"nvr50.local": ("10.0.0.50", "ACME-SN-0042")}   # the new name is the one said
         act, w = holder()                                             # a restart, the recorder still silent about itself
         w.heartbeat_once(); w.reconcile_once()
-        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # the row's word stands
+        assert box.vars.get("vms/devices/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # the row's word stands
         assert {1, 2} <= set(act.running), act.running                # both of the recorder's cameras record
         nvr.identity = "ACME-SN-0042"
         w.heartbeat_once(); w.reconcile_once()
@@ -1563,11 +1567,11 @@ def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidenc
         for _ in range(3):
             w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
         assert set(act.running) == {1, 2}                              # both clones record
-        assert box.vars.get("vms/devices/acme/10.0.0.60")[0]["identity"] == "CLONE-0000"
+        assert box.vars.get("vms/devices/10.0.0.60")[0]["identity"] == "CLONE-0000"
         [st] = [x for x in w.status() if str(x["id"]) == "2"]
-        assert st["phase"] == "running" and "same serial number as acme/10.0.0.50" in st["warning"], st
+        assert st["phase"] == "running" and "same serial number as 10.0.0.50" in st["warning"], st
         assert "why" not in st
-        assert [d.get("same_serial_as") for d in w.device_status()] == [None, "acme/10.0.0.50"]
+        assert [d.get("same_serial_as") for d in w.device_status()] == [None, "10.0.0.50"]
         assert len([m for m in said if "firmware clones" in m]) == 1   # said once, not every pass
         w.heartbeat_once()
         text = m_text(base)
@@ -1575,7 +1579,7 @@ def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidenc
         # rights are the platform's, by the spec's group (one address, one group; the boundary's step 6): two clones at
         # two addresses are two devices to it, and the holder is the one that says they may be one
         assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1}, token="guard")[0] == 202
-        box.vars.delete("vms/devices/acme/10.0.0.50")                  # the operator: the other row is stale
+        box.vars.delete("vms/devices/10.0.0.50")                  # the operator: the other row is stale
         w.heartbeat_once(); w.reconcile_once()
         assert not w.coincidences and "warning" not in [x for x in w.status() if str(x["id"]) == "2"][0]
     finally:
@@ -1734,8 +1738,8 @@ def test_a_press_of_a_relay_and_a_move_of_a_camera_read_the_rows_of_their_device
     from w2cplatform.variables import FileVariables
     box = Box()
     for i in range(1000):                                              # devices that came and went: their rows stay
-        box.vars.put(f"vms/devices/acme/10.1.{i // 250}.{i % 250}", {"events": "command", "relays": "1", "identity": f"SN-{i}"})
-    box.vars.put("vms/devices/acme/10.0.0.50", {"events": "command", "relays": "2", "identity": "SN-NVR"})
+        box.vars.put(f"vms/devices/10.1.{i // 250}.{i % 250}", {"device": f"10.1.{i // 250}.{i % 250}", "events": "command", "relays": "1", "identity": f"SN-{i}"})
+    box.vars.put("vms/devices/10.0.0.50", {"device": "10.0.0.50", "events": "command", "relays": "2", "identity": "SN-NVR"})
     mounts, srv, base = _console_with_jobs(box, Tokens({"admin": [("admin", None, ())]}))
     reads = [0]
     real = FileVariables.get
@@ -1811,7 +1815,7 @@ def test_a_device_nobody_holds_a_camera_of_is_the_clusters_whatever_a_row_says()
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.42/ch/{ch}"}, token="admin")[0] == 201
         for f in ("3", "4"):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{f}.mp4"}, token="admin")[0] == 201
-        box.vars.put("vms/devices/acme/nvr50.local", {"events": "command", "relays": "1", "identity": "SN-OLD"})   # the past
+        box.vars.put("vms/devices/nvr50.local", {"device": "nvr50.local", "events": "command", "relays": "1", "identity": "SN-OLD"})   # the past
         _opened(box, "acme/nvr50.local")                              # …and a holder saying it holds it: no matter
         code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")
         assert code == 403, (code, body)

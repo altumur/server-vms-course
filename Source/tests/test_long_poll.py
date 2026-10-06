@@ -1874,7 +1874,7 @@ def test_another_serial_number_under_the_same_key_is_said_and_counted():
         assert holder.identity_changes == 0
         nvr.identity = "SN-NEW"
         holder.reconcile_once()
-        assert holder.identity_changes == 1 and box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "SN-NEW"
+        assert holder.identity_changes == 1 and box.vars.get("vms/devices/10.0.0.50")[0]["identity"] == "SN-NEW"
         assert any("now gives the serial number SN-NEW; it gave SN-OLD before" in m for m in said), said
         holder.heartbeat_once()
         hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
