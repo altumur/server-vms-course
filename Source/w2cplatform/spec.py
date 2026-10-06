@@ -1537,6 +1537,15 @@ class SubsystemSpec:
                 raise ValueError(f"spec {self.name}: {where} is {n!r}, a route the console answers itself "
                                  f"(`/{n}`) — no request would reach that family; name it otherwise "
                                  f"(the console's routes: {', '.join(sorted(CONSOLE_ROUTES))})")
+        # WHAT A WORKER WRITES HAS A DECLARED FORM (ADR 0012; «Архитектор» with «Паритет», 2026-10-06): `worker.writes`
+        # names its units' rows or one of its DECLARED tables (`{key, fields}`), whose field rules the write goes through
+        # (`tables.write_row`). Any other family under `<sub>/` — a table only named, or none — is rows of no declared
+        # form that nobody serves, and its token would write them: refused at load, the family named.
+        stray = [w for w in self.worker_writes if w != self.rows and w not in self.table_specs]
+        if stray:
+            raise ValueError(f"spec {self.name}: worker.writes names {', '.join(stray)} — neither its units' rows "
+                             f"({self.rows}) nor one of its declared tables ({', '.join(self.table_specs) or 'none'}); "
+                             f"declare it under `tables:` with its key and fields, or write nothing there")
         disp = d.get("display")
         if disp is not None:
             if not isinstance(disp, dict):

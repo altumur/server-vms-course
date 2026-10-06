@@ -7,7 +7,8 @@ Python view of the same thing, for the worker and the tests:
     vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
     vms/retention/<id>    days — derived from events_retention_days       (the console writes, with the row; the resource reads)
     vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
-    vms/devices/<device>  events, rays, relays, ptz, presets — what it says and does   (its holder, on a change)
+    vms/devices/<host>    device, events, rays, relays, ptz, presets, identity — what it says and does
+                          (its holder, on a change: the declared table `devices`, through its field rules)
     vms/next_id           n                                               (the controller)
 
 A camera row is small, rare and must be consistent: raft's shape. Nothing
@@ -194,15 +195,21 @@ def device_of(source: str) -> str:
 
 
 # WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
-# is (`identity` in its row, `vms/devices/<device>`: a serial number, a MAC; the driver's word). A DNS name and the
-# address it resolves to are two keys and one identity. A spelling no holder has opened yet has no identity, and is its
-# key alone until a holder opens it (М10B Lesson 15).
+# is (`identity` in its row, `vms/devices/<host>`: a serial number, a MAC; the driver's word). A DNS name and the
+# address it resolves to are two hosts and one identity. A spelling no holder has opened yet has no identity, and is its
+# key alone until a holder opens it (М10B Lesson 15). The answer is by the ROW's name — the host (`device_row_name`).
 #
 # A HOLDER'S WORD IS NOT A REFUSAL (the owner's decisions on the review's ninth pass). An identity is the driver's word,
 # and firmware clones say the same serial number: the holder that finds its device's identity under another key says so
 # and goes on (`VmsWorker.describe_devices`), it refuses nothing; a camera is still one channel of ONE key (the holder's
 # «device busy», `VmsWorker.held_back`), so two clones' cameras are two cameras. Who may move a camera onto a device is
 # the platform's to say from the spec (`rights.reach.group`, the boundary's step 6): it reads no device row.
+def device_row_name(source) -> str:
+    """The name of the device row of a camera with this `source`: its group, the host (`SPEC.group_of`, ADR 0053); ""
+    when it names none (`driverpack://file/…`) — no row."""
+    return SPEC.group_of(source) if source else ""
+
+
 def device_identities(vars_) -> dict[str, str]:
     prefix = SPEC.sub.config(DEVICES, "")
     out = {}
@@ -215,10 +222,21 @@ def device_identities(vars_) -> dict[str, str]:
 
 
 # -- the device row: what the holder found the device to be -----------------------------------------------
-# `vms/devices/<device>`, keyed by DEVICE and not by camera: a sixteen-channel recorder is one device and one
+# `vms/devices/<host>`, keyed by DEVICE and not by camera: a sixteen-channel recorder is one device and one
 # set of relays, and keyed by camera the same facts would be written sixteen times. Its one writer is the
-# worker that holds the device (`group_by: device` makes that one worker), and it writes only when the
-# answer changes — on a camera the row is on flash, and a description does not change between passes.
+# worker that holds the device (`group_by: {field: source, cut_at: host}` makes that one worker), and it writes only
+# when the answer changes — on a camera the row is on flash, and a description does not change between passes.
+#
+# A DECLARED TABLE, NAMED BY THE HOST (ADR 0012, ADR 0053; «Архитектор», 2026-10-06). `worker.writes` names only a unit's
+# rows or a declared table, so `devices` is declared in vms.subsystem.yaml (`tables.devices: {key: device, fields}`) and
+# the holder writes a row through the table's field rules (`tables.write_row`), as the console writes one. The row's name
+# is the device's GROUP — the host its sources name, in its one spelling (`SPEC.group_of`: `10.0.0.50`, `nvr50.local`,
+# `fe80::1`), never the driver's session key: `device_of` says `acme/10.0.0.50` — the vendor and a port, a leftover of
+# the grouping by vendor, and a `/` no row's name may hold. Two drivers' sessions on one host are one device and one
+# row (`VmsWorker.describe_devices` writes it from both). A source with no host (a file) has no device row.
+#
+# THE LINE: `device_of` is the driver's session — what `device_factory` opens, `VmsWorker.devices`, the heartbeat's and
+# the door's `/devices`, «device busy», a channel's key; `device_row_name` is the row — written, read, compared.
 #
 # Why a row and not only the heartbeat: automation checks a scenario against it when the scenario is
 # WRITTEN (`auto.Catalog`), and the device may be off at that moment. A heartbeat is what the device is now;
@@ -253,11 +271,12 @@ def describe(caps: dict | None) -> dict | None:
             "ptz": bool(caps.get("ptz")), "presets": int(caps.get("presets", 0) or 0)}
 
 
-def device_row(desc: dict, identity: str = "") -> dict:
-    """The description as a row: strings, a list comma-joined — the store's shape (М10A Lesson 9). And what the device
+def device_row(desc: dict, identity: str = "", device: str = "") -> dict:
+    """The description as a row of the table `devices`: its key field `device` (the host, `device_row_name`), strings, a
+    list comma-joined — the store's shape (М10A Lesson 9), what `tables.write_row` stores it as. And what the device
     says it IS, when it says (`identity_of`): not a capability — it is not in `can`, it does not leave the cluster —
     but what tells two spellings of one device apart (`device_identities`, `VmsWorker.describe_devices`)."""
-    return {"events": ",".join(desc["events"]), "rays": str(desc["rays"]), "relays": str(desc["relays"]),
+    return {"device": device, "events": ",".join(desc["events"]), "rays": str(desc["rays"]), "relays": str(desc["relays"]),
             "ptz": "true" if desc["ptz"] else "false", "presets": str(desc["presets"]),
             **({"identity": identity} if identity else {})}
 
@@ -272,8 +291,9 @@ def identity_of(caps: dict | None) -> str:
 def parse_device_row(items: dict | None) -> dict | None:
     if not items:
         return None
-    # The counts through `rows.number` (the review's seventh pass): a word in one device's row raised out of the
-    # evaluator's whole pass (`Catalog.check`) and out of the scenario catalogue page. Not said, none.
+    # The row as the table `devices` stores it (`Field.to_item`: a list comma-joined, a bool `true`/`false`), its counts
+    # through `rows.number` (the review's seventh pass): a word in one device's row raised out of the evaluator's whole
+    # pass (`Catalog.check`) and out of the scenario catalogue page. Not said, none — and counted.
     from w2cplatform.rows import number
     n = lambda f: number(f"vms/devices#{f}", items.get(f) or 0, int, 0)
     return {"events": [e for e in str(items.get("events", "")).split(",") if e],

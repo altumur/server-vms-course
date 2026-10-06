@@ -285,6 +285,7 @@ metrics:
   - {name: stream_up, from: heartbeat.stream.up, agg: flag, equals: true}
   - {name: stream_owed_seconds, from: heartbeat.stream.owed_s, default: 0}
   - {name: stream_owed_gaps, from: heartbeat.stream.owed_gaps, default: 0}
+  - {name: stream_owed_up_seconds, from: heartbeat.stream.owed_up_s, default: 0}         # held by the card alone for the centre: a relay has not sent it up yet
   - {name: stream_live_drops_total, from: heartbeat.stream.live_drops, default: 0, type: counter}
   - {name: stream_frames_back_total, from: heartbeat.stream.back_frames, default: 0, type: counter}
   - {name: stream_uploads_held, from: heartbeat.stream.uploads_held, default: 0}

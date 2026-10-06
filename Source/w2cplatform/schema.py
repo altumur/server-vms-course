@@ -98,13 +98,21 @@ def load(schema, what: str, depth: int = 0):
 # or reads otherwise the course refuses at load (the strict loader, ADR 0012). Go does not compile: lookaround, a
 # backreference (`\1`…`\9`, `\g<…>`, `(?P=name)`), an atomic group, a conditional, a possessive quantifier, `\Z` and `\G`,
 # an inline flag but `i`, `m`, `s`, `U`, a comment `(?#…)`, `\u`/`\U`/`\N{…}`, an escaped non-ASCII character, `[\b]`, a
-# one-digit octal in a class, a count past 1000. Go reads otherwise: `[:` in a class (a POSIX class), `{,n}` (characters).
+# one-digit octal in a class, a count past 1000, a group name not in ASCII. Go reads otherwise: `[:` in a class (a POSIX
+# class), `{,n}` (characters), `\S` in a class (Go's takes `\v`, Python's not; `as_go` cannot say Go's there: `[^\s]`), and a
+# non-ASCII character with a case under `(?i)` (Go folds it, Python's ASCII matching does not: write its cases, `[éÉ]`).
+# What `(?i)` folds in a VALUE is Go's and stays so — `k` takes the Kelvin sign there; the pattern is ASCII, the rule holds.
 # The scan walks the pattern as the parser does: `\x` is one escape, `[…]` one class, so `\(?=` and `[(?=]` stand.
 _RE2_FLAGS = set("imsU")
 _COUNT = re.compile(r"\{(\d*)(,?)(\d*)\}")
+_FOLDED = "a non-ASCII character with a case under `(?i)` (Go folds it, Python's ASCII matching does not; write its cases)"
 _RE2_GROUPS = (("(?<=", "a lookbehind"), ("(?<!", "a negative lookbehind"), ("(?=", "a lookahead"),
                ("(?!", "a negative lookahead"), ("(?P=", "a named backreference"), ("(?>", "an atomic group"),
                ("(?(", "a conditional"), ("(?#", "a comment"))
+
+
+def _has_case(c: str) -> bool:
+    return ord(c) > 127 and (c.lower() != c or c.upper() != c)
 
 
 def re2_fault(p) -> str:
@@ -112,7 +120,7 @@ def re2_fault(p) -> str:
     where it stands. Run after `re.compile` succeeded, so what Python refuses is Python's words."""
     if not isinstance(p, str):
         return ""
-    n, i, klass = len(p), 0, False
+    n, i, klass, ci = len(p), 0, False, [False]        # `ci`: the `i` flag, one entry per open group
 
     def no(what: str, at: int, text: str, apart: bool = False) -> str:
         how = "reads it otherwise than Python" if apart else "does not compile it"
@@ -125,6 +133,8 @@ def re2_fault(p) -> str:
             e = p[i + 1]
             if e.isdigit() and e != "0":
                 if len(p[i + 1:i + 4]) == 3 and all(ch in "01234567" for ch in p[i + 1:i + 4]):
+                    if ci[-1] and _has_case(chr(int(p[i + 1:i + 4], 8))):
+                        return no(_FOLDED, i, p[i:i + 4], apart=True)
                     i += 4                              # `\123`: an octal character to both
                     continue
                 if not klass:
@@ -141,10 +151,17 @@ def re2_fault(p) -> str:
                 return no("an escape RE2 lacks (it writes `\\x{…}`)", i, p[i:i + 2])
             if klass and e == "b":
                 return no("a backspace escape in a class", i, p[i:i + 2])
+            if klass and e == "S":
+                return no("a non-space class inside a class (write `[^\\s]` or the characters)", i, p[i:i + 2],
+                          apart=True)
+            if e == "x" and ci[-1] and _has_case(chr(int(p[i + 2:i + 4], 16))):
+                return no(_FOLDED, i, p[i:i + 4], apart=True)
             if ord(e) > 127:
                 return no("an escaped non-ASCII character", i, p[i:i + 2])
             i += 2
             continue
+        if ci[-1] and _has_case(c):
+            return no(_FOLDED, i, c, apart=True)
         if klass:
             if c == "]":
                 klass = False
@@ -163,16 +180,36 @@ def re2_fault(p) -> str:
             for start, what in _RE2_GROUPS:
                 if p.startswith(start, i):
                     return no(what, i, start)
+            if p.startswith("(?P<", i):
+                k = p.find(">", i)
+                if not p[i + 4:k].isascii():
+                    return no("a group name not in ASCII", i, p[i:k + 1])
+                ci.append(ci[-1])
+                i = k + 1
+                continue
             j = i + 2
             while j < n and (p[j].isalpha() or p[j] == "-"):
                 j += 1
             flags = p[i + 2:j]
-            if flags and p[j:j + 1] in (":", ")") and not flags.startswith("P"):
+            if flags and p[j:j + 1] in (":", ")"):
                 stray = [f for f in flags if f != "-" and f not in _RE2_FLAGS]
                 if stray:
                     return no("an inline flag RE2 lacks (it reads i, m, s, U)", i, p[i:j + 1])
+                on, _, off = flags.partition("-")
+                folded = True if "i" in on else False if "i" in off else ci[-1]
+                if p[j] == ")":
+                    ci[-1] = folded                     # `(?i)`: the rest of this group
+                else:
+                    ci.append(folded)                   # `(?i:…)`: this group
+                i = j + 1
+                continue
+            ci.append(ci[-1])
             i += 2
             continue
+        if c == "(":
+            ci.append(ci[-1])
+        elif c == ")" and len(ci) > 1:
+            ci.pop()
         if c == "{":
             m = _COUNT.match(p, i)
             if m and (m.group(1) or m.group(2)):        # `{}` is two characters to both

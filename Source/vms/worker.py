@@ -109,8 +109,11 @@ from w2cplatform.events import ALARM, OBSERVATION
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_key, channel_of, describe, device_of,
-                     device_identities, device_row, identity_of, live_shm, live_url, COMMAND_ARG_MAX,
+                     device_identities, device_row, device_row_name, identity_of, live_shm, live_url, COMMAND_ARG_MAX,
                      playback_url, port_of, row)
+from w2cplatform.spec import Refused
+from w2cplatform.tables import write_row
+from w2cplatform.variables import Conflict, Garbled
 from w2cplatform.reconcile import CONVERGED, Reconciler, Want
 
 
@@ -514,9 +517,10 @@ class VmsWorker(Worker):
         # a box, a `FakeDevice` in the tests, `None` for a source with no archive of its own (a file).
         self.device_factory = device_factory or (lambda key: None)
         self.devices: dict[str, object] = {}
-        self.described: dict[str, dict] = {}              # device -> the description this worker last wrote
-        self.identities: dict[str, str] = {}              # device -> what it said it is (`identity`), as last written
-        self.coincidences: dict[str, tuple] = {}          # device -> (another key whose row says its identity, the identity): said
+        self.described: dict[str, dict] = {}              # device -> the description it last gave (its session's key)
+        self.identities: dict[str, str] = {}              # device -> what it said it is (`identity`), as last heard
+        self.rows_said: dict[str, dict] = {}              # host -> its device row as this worker last wrote or found it
+        self.coincidences: dict[str, tuple] = {}          # host -> (another host whose row says its identity, the identity): said
         self.identity_changes = 0                         # a key whose device said another identity than before (`describe_devices`)
         self.events_refused = 0                           # lines a device posted that could not be written (`drain_bus`)
         self.assignment_rev = 0
@@ -632,7 +636,7 @@ class VmsWorker(Worker):
         closes = []
         for key in set(self.devices) - want:
             dev = self.devices.pop(key)
-            self.described.pop(key, None); self.identities.pop(key, None); self.coincidences.pop(key, None)
+            self.described.pop(key, None); self.identities.pop(key, None)
             if hasattr(dev, "close"):
                 closes.append((("close", id(dev)), dev, dev.close))
         with self._dev_lock:                             # opens that came back after their device stopped being wanted
@@ -651,9 +655,12 @@ class VmsWorker(Worker):
         self._said_status = {k: v for k, v in self._said_status.items() if k[1] in held}
         self._slow_asks &= held
         self._open_failed = {k: v for k, v in self._open_failed.items() if k in want and k not in self.devices}
-        for key, (other, ident) in list(self.coincidences.items()):
-            if not self._still_known_as(other, ident):   # the other row went, or says another device now: said no more
-                self.coincidences.pop(key, None)
+        names = self._device_row_names()
+        mine = {names.get(k, "") for k in self.devices} - {""}   # the hosts of the devices held: their rows are this holder's
+        self.rows_said = {n: r for n, r in self.rows_said.items() if n in mine}
+        for name, (other, ident) in list(self.coincidences.items()):
+            if name not in mine or not self._still_known_as(other, ident):   # not held, or the other row went or says
+                self.coincidences.pop(name, None)                            # another device now: said no more
         self.describe_devices(until)
 
     # NO CALL INTO A DEVICE WAITS ON THE LOOP'S THREAD (the scaling pass after the eighth review). `perform` was made on a
@@ -824,14 +831,20 @@ class VmsWorker(Worker):
     def _device_name(self, dev) -> str:
         return next((k for k, d in self.devices.items() if d is dev), str(getattr(dev, "key", "?")))
 
-    # What each held device is, written where automation reads it: `vms/devices/<device>` (`config.py` says
+    # What each held device is, written where automation reads it: `vms/devices/<host>` (`config.py` says
     # why a row). Only when the answer differs from what is stored — the first pass after a start compares
     # with the store, every later one with memory, so a worker that holds a camera for a year writes its row
     # once. A device that described nothing is left alone: silence is "unknown", and a row saying "no relays"
     # would be a lie that refuses scenarios.
     #
+    # A ROW OF A DECLARED TABLE, NAMED BY THE HOST (ADR 0012, ADR 0053; «Архитектор», 2026-10-06). The row is written
+    # through the table's field rules (`tables.write_row`, `tables.devices` in vms.subsystem.yaml), as the console writes
+    # one — by CAS against what this pass read: an operator's delete or write in between is not overwritten blind, it is
+    # read again on the next pass. Its name is the host (`device_row_name`), not the driver's session (`device_of`):
+    # two sessions on one host — two drivers, two ports — are one device, and its row is written from both (`_merged`).
+    #
     # …and WHICH DEVICE it is, in its own word (`identity`; the review's eighth pass): a DNS name and the address it
-    # resolves to are two keys here and one recorder, and only the process that opened it can ask the hardware. Every
+    # resolves to are two hosts here and one recorder, and only the process that opened it can ask the hardware. Every
     # holder reads them back to tell two spellings of one device apart (`config.device_identities`, below).
     #
     # A NAME WHOSE IDENTITY ANOTHER KEY HAS IS SAID, NOT REFUSED (the owner's decisions on the review's ninth pass). The
@@ -844,24 +857,33 @@ class VmsWorker(Worker):
     #
     #   an empty word unsays nothing   what the device said before — in memory, or in its row when this holder has just
     #                                  started — stands until the device says something else
-    #   a coincidence is said          an identity learned now and found under another key (`device_identities`, any
-    #                                  vendor) is written all the same, said in the log once, counted (`coincidences`:
-    #                                  `identity_coincidences` in the heartbeat, `vms_device_identity_coincidences` on
-    #                                  `/metrics`) and named in the status of every camera of the device (`warning`) —
-    #                                  two names of one device or two devices with one serial: an operator can tell
-    #                                  which, the holder cannot
+    #   a coincidence is said          an identity learned now and found under another host's row (`device_identities`,
+    #                                  any vendor) is written all the same, said in the log once, counted
+    #                                  (`coincidences`: `identity_coincidences` in the heartbeat,
+    #                                  `vms_device_identity_coincidences` on `/metrics`) and named in the status of every
+    #                                  camera of the device (`warning`) — two names of one device or two devices with one
+    #                                  serial: an operator can tell which, the holder cannot
     #
-    # Who may point a camera at a name is the console's question, and it asks it exactly where no identity is known yet:
-    # a device no holder has opened is a grant on the whole cluster (`vms/console.py`, `source_cams`); one opened, every
-    # camera of every key with its identity. Each pass asks the store whether the other row still says it
-    # (`_still_known_as`, `_refresh_devices`), so removing a stale row ends the warning.
+    # Who may point a camera at a name is the platform's to say from the spec (`rights.reach.group`): it reads no device
+    # row. Each pass asks the store whether the other row still says it (`_still_known_as`, `_refresh_devices`), so
+    # removing a stale row ends the warning.
     #
     # Asked through `_ask_devices` (the scaling pass): a device that did not answer this pass has its description as it
     # was — not known is not "no relays".
     def describe_devices(self, until: float | None = None) -> int:
         wrote = 0
         idents = self.identities
-        known: dict | None = None                        # the device rows' identities, read once a pass when needed
+        names = self._device_row_names()
+        stored: dict[str, dict | None] = {}              # the device rows read this pass, by host
+
+        def row_of(name: str) -> dict | None:
+            if name not in stored:
+                try:
+                    items, _ = self.vars.get(SPEC.sub.config(DEVICES, name))
+                except Garbled:                          # a row nobody can read is written again whole (`write_row`)
+                    items = None
+                stored[name] = items if isinstance(items, dict) else None
+            return stored[name]
         heard = self._ask_devices([(("capabilities", id(d)), d, d.capabilities) for d in self.devices.values()
                                    if hasattr(d, "capabilities")], until)
         for key, dev in self.devices.items():
@@ -874,29 +896,55 @@ class VmsWorker(Worker):
             ident = said or idents.get(key, "")          # an empty word does not unsay a known one
             if self.described.get(key) == desc and idents.get(key, "") == ident:
                 continue
-            path = self.SUB.config(DEVICES, key)
-            items, _ = self.vars.get(path)
-            if not ident and isinstance(items, dict):
-                ident = str(items.get("identity") or "").strip()   # …nor the one its row keeps, when this holder has just started
-            was = idents.get(key, "") or (str(items.get("identity") or "").strip() if isinstance(items, dict) else "")
+            items = row_of(names[key]) if names.get(key) else None
+            kept = str((items or {}).get("identity") or "").strip()
+            ident = ident or kept                        # …nor the one its row keeps, when this holder has just started
+            was = idents.get(key, "") or kept
             if said and was and said != was:
                 self._changed(key, was, said)
-            if ident and idents.get(key, "") != ident:  # learned now: does another key's row say the same?
+            self.described[key], idents[key] = desc, ident
+        known: dict | None = None                        # the device rows' identities, read once a pass when needed
+        for name in sorted({n for k, n in names.items() if n and k in self.described}):
+            keys = sorted(k for k, n in names.items() if n == name and k in self.described)
+            ident = next((idents[k] for k in keys if idents.get(k)), "")
+            row = device_row(self._merged([self.described[k] for k in keys]), ident, name)
+            if self.rows_said.get(name) == row:
+                continue                                 # as this holder last wrote it: a year, one write
+            if ident and (self.rows_said.get(name) or {}).get("identity", "") != ident:   # learned now: another host's?
                 if known is None:
                     known = device_identities(self.vars)
-                other = next((k for k, i in sorted(known.items()) if i == ident and k != key), None)
+                other = next((n for n, i in sorted(known.items()) if i == ident and n != name), None)
                 if other is not None:
-                    self._coincide(key, other, ident)
+                    self._coincide(name, other, ident)
                 else:
-                    self.coincidences.pop(key, None)
-            row = device_row(desc, ident)
-            if items != row:
-                self.vars.put(path, row)
+                    self.coincidences.pop(name, None)
+            if row_of(name) != row:
+                try:
+                    write_row(SPEC, DEVICES, self.vars, row)
+                except (Conflict, Refused) as e:        # written meanwhile (an operator's delete): read again next pass
+                    log.warning("%s: the device row %s was not written (%s); it is read again on the next pass",
+                                self.name, name, e)
+                    continue
                 wrote += 1
+            self.rows_said[name] = row
             if known is not None and ident:
-                known[key] = ident
-            self.described[key], idents[key] = desc, ident
+                known[name] = ident
         return wrote
+
+    # The device row's name of each session held or wanted (`device_of` -> `device_row_name`): from the rows' sources,
+    # since the host is the source's (`group_of`) and the session key is the driver's spelling of it.
+    def _device_row_names(self) -> dict[str, str]:
+        return {device_of(r["source"]): device_row_name(str(r["source"])) for r in self.rows if r.get("source")}
+
+    # Two sessions on one host are one device (ADR 0053): what either can do, the device can — the kinds of event of both,
+    # the larger count (two drivers counting one box's relays), a turn if either turns. One session: its description.
+    @staticmethod
+    def _merged(descs: list[dict]) -> dict:
+        if len(descs) == 1:
+            return descs[0]
+        return {"events": sorted({e for d in descs for e in d["events"]}),
+                **{k: max(d[k] for d in descs) for k in ("rays", "relays", "presets")},
+                "ptz": any(d["ptz"] for d in descs)}
 
     # ANOTHER DEVICE UNDER THE SAME KEY (the product team's sibling of the review's tenth pass): the recorder at an address
     # was replaced, or a name was pointed elsewhere, and the holder went on as if nothing happened — the row took the new
@@ -909,19 +957,19 @@ class VmsWorker(Worker):
                     "address now — replaced, or the name points elsewhere. Its cameras are recorded from the device that "
                     "answers; if that is not the one meant, point them at the right address", self.name, key, now, was)
 
-    def _coincide(self, key: str, other: str, ident: str) -> None:
-        if self.coincidences.get(key) == (other, ident):
+    def _coincide(self, name: str, other: str, ident: str) -> None:
+        if self.coincidences.get(name) == (other, ident):
             return                                       # said once, while it holds
-        self.coincidences[key] = (other, ident)
+        self.coincidences[name] = (other, ident)
         log.warning("%s: device %s gives the same serial number (%s) as device %s. Either they are one device under two "
                     "names, or two devices with one serial number (firmware clones). Both are recorded. If it is one "
                     "device, point all its cameras at one of the two names and remove the device row of the other "
-                    "(vms/devices/...)", self.name, key, ident, other)
+                    "(vms/devices/%s)", self.name, name, ident, other, other)
 
     # Whether the device row of `other` still says `ident` — the warning about a coincidence holds while it does.
     def _still_known_as(self, other: str, ident: str) -> bool:
         try:
-            items, _ = self.vars.get(self.SUB.config(DEVICES, other))
+            items, _ = self.vars.get(SPEC.sub.config(DEVICES, other))
         except Exception:                                # noqa: BLE001 — a store that does not answer: the warning stands
             return True
         return str((items or {}).get("identity") or "").strip() == ident if isinstance(items, dict) else False
@@ -1220,8 +1268,8 @@ class VmsWorker(Worker):
                 out[-1]["why"] = f"{self.row_errors[str(cid)]}; going on with the row read last"
             if str(cid) in back:                           # «device busy», or a source it cannot read: not opened, said why
                 out[-1]["device_state"], out[-1]["why"] = back[str(cid)]
-            if cam.get("source") and device_of(cam["source"]) in self.coincidences:   # recorded, and said (`describe_devices`)
-                other = self.coincidences[device_of(cam["source"])][0]
+            if cam.get("source") and device_row_name(cam["source"]) in self.coincidences:   # recorded, and said (`describe_devices`)
+                other = self.coincidences[device_row_name(cam["source"])][0]
                 out[-1]["warning"] = (f"its device gives the same serial number as {other}: either one device under two "
                                       f"names, or two devices with one serial number. It is recorded. If it is one device, "
                                       f"point all its cameras at one of the two names and remove the other's device row")
@@ -1262,6 +1310,7 @@ class VmsWorker(Worker):
         devices = sorted(self.devices.items())
         heard = self._heard if self._heard is not None else self._ask_devices(self._status_asks(devices))
         slow = self._slow_devices()
+        names = self._device_row_names()                 # the session's device row (its host): what a coincidence is of
         out = []
         for key, dev in devices:
             have = known.get(key, set())
@@ -1295,7 +1344,7 @@ class VmsWorker(Worker):
                 st["reads_stuck"] = stuck                # cameras, and the device slow (the thirteenth review, major 18)
                 st.setdefault("state", "slow")
             out.append({**st, **({"can": self.described[key]} if key in self.described else {}),
-                        **({"same_serial_as": self.coincidences[key][0]} if key in self.coincidences else {})})
+                        **({"same_serial_as": self.coincidences[names[key]][0]} if names.get(key) in self.coincidences else {})})
         opening = self._opening()
         for key in sorted(set(known) - set(self.devices)):
             if key in opening:
