@@ -299,6 +299,8 @@ def _at_site():
             return 200, b'{"worker":  "south-I1", "door": {"url": "http://south-srv:9000", "token": "door1.x"}}', {}
         if path.startswith("/testsub2/where/shelves/"):
             return 404, b'{"door": null, "unreachable": "s9@srv-2"}', {"X-Unreachable": "s9@srv-2"}
+        if path.startswith(("/where/big", "/domain/big")):                 # one byte over the limit of a reply
+            return 200, b'"' + b"x" * ((1 << 20) - 1) + b'"', {}
         if path.startswith("/where/locked"):
             return 403, b'{"detail": "ann may not view testsub/locked", "error": "denied"}', {}
         return 200, b'{"topology": {}}', {}
@@ -386,6 +388,58 @@ def test_a_where_is_handed_to_a_member_only_a_get_of_a_known_spec_to_a_member_wi
             assert st == 400 and json.loads(raw)["error"] == "one hop", raw
     finally:
         srv.shutdown(); srv.server_close(); member.stop(); there.shutdown(); there.server_close()
+
+
+def test_the_holders_cluster_is_a_member_for_a_hop_by_its_verified_record_and_a_forged_one_names_nobody():
+    """The holder is on no list of members (`Members`): it is one for a hop by the carried record `domain/holder` as THIS
+    cluster's key set verifies it (ADR-0061, дополнение, 1). The record north's agent carried names hq — the hop to hq
+    is made. The same record with another holder written in, its signature unchanged, verifies nothing: rogue is 404,
+    and hq is no member any more either; nothing more was dialed."""
+    from w2cplatform.domain.agent import DomainPublisher
+    from w2cplatform.domain.term import HOLDER
+    from w2cplatform.trust.documents import sign
+    from w2cplatform.trust.signer import Signer
+    fed, wall, mnt, srv, base, member, clusters = _at_site()
+    north = fed.clusters["north"]
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())         # the key set north's agent carried home
+    record = sign({"term": 2, "holder": "hq", "at": wall()}, signer.tokens)
+    north.vars.put(HOLDER, {"doc": json.dumps(record, sort_keys=True)})
+
+    class Anybody:                                       # north holds a key set now: its gate asks; anybody is somebody
+        def who(self, token): return {"sub": token or "ann"}
+        def may(self, payload, capability, unit, labels): return True
+        def by_labels(self, payload, capability): return False
+    mnt.root.gate.impl = Anybody()
+    try:
+        with _Env("CLUSTERS", clusters + f",hq={member.url},rogue={member.url}"):
+            st, raw, _ = _call_raw(base, "GET", "/domain/at/hq/testsub/where/s1", {"Authorization": "Bearer ann"})
+            assert st == 200 and member.seen[-1][1] == "/where/s1", (st, raw, member.seen)
+            n = len(member.seen)
+            north.vars.put(HOLDER, {"doc": json.dumps({**record, "holder": "rogue"}, sort_keys=True)})
+            for who in ("rogue", "hq"):
+                st, raw, _ = _call_raw(base, "GET", f"/domain/at/{who}/testsub/where/s1", {"Authorization": "Bearer ann"})
+                assert st == 404 and json.loads(raw)["error"] == "not a member", (who, st, raw)
+            assert len(member.seen) == n, member.seen[n:]
+    finally:
+        srv.shutdown(); srv.server_close(); member.stop()
+
+
+def test_an_answer_over_one_mib_is_502_on_both_forwardings_and_nothing_of_it_is_passed():
+    """A reply longer than 1 MiB (ADR-0061, дополнение, 2) — from a member's console and from the holder's door alike —
+    is 502 «answer too large» in a few words, and none of its bytes reach the page."""
+    from w2cplatform.console import DOMAIN_VIEW
+    fed, wall, mnt, srv, base, member, clusters = _at_site()
+    fed.clusters["north"].objects.put(DOMAIN_VIEW, json.dumps({"ts": wall(), "url": member.url}).encode())
+    try:
+        with _Env("CLUSTERS", clusters):
+            for path in ("/domain/at/south/testsub/where/big", "/domain/big"):
+                st, raw, _ = _call_raw(base, "GET", path)
+                assert st == 502 and json.loads(raw)["error"] == "answer too large" and len(raw) < 512, (path, st, raw[:200])
+            assert [p for _, p, _ in member.seen] == ["/where/big", "/domain/big"], member.seen
+            assert mnt.root.journal.lines[-1][1]["status"] == 502, mnt.root.journal.lines
+    finally:
+        srv.shutdown(); srv.server_close(); member.stop()
 
 
 def test_the_forwarding_console_asks_only_who_is_calling_and_the_members_gate_decides():

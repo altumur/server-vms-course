@@ -3803,13 +3803,17 @@ class Mount:
 
     # ONE WAY TO HAND A REQUEST ON, WHOEVER IT GOES TO (ADR-0061: «механизм один — меняется только адрес»). The domain
     # holder's door (`domain_forward`) and a member's console (`member_forward`) are reached by this one function: the
-    # person's token, the edit's `Idempotency-Key` and `X-Operator: console` go with it, and nothing else of what came in —
-    # an `X-W2C-Via` the person sent is not passed on; a hop to a member carries this console's own (`via`). The reply
-    # goes back AS IT CAME (ADR-0061, «байтов не трогает»): its status and its bytes, a door in it signed by whoever
-    # issued it, a refusal in that gate's words, and `X-Unreachable` when it says what is missing (`where_place`). It is
-    # served as JSON whatever it called itself: a page's reply on this console's origin is never a page. The status the
-    # page got is returned — 502 when the other side did not answer, said in words (`who`).
+    # person's token, the edit's `Idempotency-Key` and `X-Operator: console` go with it, and nothing else of what came in
+    # (ADR-0061, дополнение, 4) — an `X-W2C-Via` the person sent is not passed on; a hop to a member carries this
+    # console's own (`via`). The reply goes back AS IT CAME, the holder's as much as a member's (ADR-0061, дополнение, 6:
+    # one function, one behaviour): its status and its bytes, a door in it signed by whoever issued it, a refusal in that
+    # gate's words, and `X-Unreachable` when it says what is missing (`where_place`) — never parsed, never wrapped in
+    # `{"detail": …}`. It is served as JSON whatever it called itself: a page's reply on this console's origin is never a
+    # page. At most `FORWARD_MAX` of it (1 MiB, ADR-0061, дополнение, 2): a longer one is 502 «answer too large», and
+    # nothing of its body reaches the page. The status the page got is returned — 502 when the other side did not
+    # answer, said in words (`who`).
     VIA = "X-W2C-Via"
+    FORWARD_MAX = 1 << 20
 
     def forward(self, h, method: str, to: str, query: str, timeout: float, via: str | None = None,
                 who: str = "the domain") -> int | None:
@@ -3834,11 +3838,15 @@ class Mount:
                                      method=method)
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
-                status, raw, missing = r.status, r.read(), r.headers.get("X-Unreachable")
+                status, raw, missing = r.status, r.read(self.FORWARD_MAX + 1), r.headers.get("X-Unreachable")
         except urllib.error.HTTPError as e:
-            status, raw, missing = e.code, e.read(), e.headers.get("X-Unreachable")
+            status, raw, missing = e.code, e.read(self.FORWARD_MAX + 1), e.headers.get("X-Unreachable")
         except (OSError, ValueError) as e:
             h._send(502, {"error": f"{who} did not answer", "detail": str(e)})
+            return 502
+        if len(raw) > self.FORWARD_MAX:
+            h._send(502, {"error": "answer too large", "detail": f"{who} answered more than {self.FORWARD_MAX} bytes "
+                                                                f"(ADR-0061): nothing of it is passed on"})
             return 502
         h.send_response(status)
         h.send_header("Content-Type", "application/json")
@@ -3853,16 +3861,21 @@ class Mount:
     # `GET /domain/at/<cluster>/<sub>/where/<table>/<place>?unit=<sub>/<id>` go to `<that cluster's console>/<sub>/where/…`,
     # the same tail and query, by `forward` — only the address differs. What another cluster holds is looked at from
     # the page the person already has open, and the door to it is issued by THAT cluster's console with its own key
-    # (ADR-0015): this one neither signs nor touches the reply. The path names the subsystem whichever it is there; the root of that
-    # console answers at `/where/…` — the same spec is this process's root (one layout on every cluster's console),
-    # every other spec is a mount, `/<sub>/where/…`. Checked here, before dialing, each refusal in words:
-    #   a person's request carrying `X-W2C-Via`, or a second hop            400 «one hop»: handed once, never on
+    # (ADR-0015): this one neither signs nor touches the reply. The path names the subsystem whichever it is there; the
+    # root of that console answers at `/where/…` — by THIS process's layout (ADR-0061, дополнение, 3: one layout of
+    # consoles in a deployment): this process's root spec is the root there, every other spec a mount, `/<sub>/where/…`.
+    # Checked here, before dialing, each refusal in words:
+    #   any `X-W2C-Via` on `/domain/at/…` — a second hop, or a person's     400 «one hop» (ADR-0061, дополнение, 4)
     #   not `GET`, or not a `where` route of a spec this process knows       404 «not a route handed to a member»:
     #                                                                        edits go through the holder, as before
     #   who is calling                                                       the gate, any grant (`admit`); THAT
     #                                                                        cluster's gate decides by its grants
-    #   the cluster not on this cluster's carried list (`domain/member-list`), or this cluster itself      404
-    #   no console of it in `CLUSTERS` (`domain.runtime.consoles_from_env`; not `/api/held`: that is the holder)  404
+    #   a member: on this cluster's carried list (`domain/member-list`), or the holder named in the carried record
+    #   `domain/holder` VERIFIED by this cluster's key set (`term.read_holder`; the holder is on no list — ADR-0061,
+    #   дополнение, 1); and not this cluster. Otherwise 404. Not known is not "not a member" (дополнение, 5): a list or
+    #   a key set that does not read, a store that does not answer — 503 in words
+    #   no console of it in `CLUSTERS` (`domain.runtime.consoles_from_env`; not `/api/held`: that is the holder) — 404;
+    #   `CLUSTERS` that does not read — 503 with its words, not the process's end (дополнение, 5)
     #   its console not answering — the network, not a rule                  502
     # A hop that was made is a journal line here, `domain.forwarded {cluster, path, user, status}`; the member's is its
     # own `door.issued`.
@@ -3871,7 +3884,8 @@ class Mount:
     def member_forward(self, h, method: str, path: str, query: str) -> None:
         from . import catalog
         from .domain.runtime import consoles_from_env
-        from .domain.term import MEMBER_LIST
+        from .domain.agent import ClusterTrust, Untrusted
+        from .domain.term import MEMBER_LIST, read_holder
         here = self.root.ctl.cluster or ""
 
         def refuse(status: int, error: str, detail: str) -> None:
@@ -3902,6 +3916,15 @@ class Mount:
             items, _ = self.root.ctl.vars.get(MEMBER_LIST)
             doc = json.loads(items["doc"]) if items and items.get("doc") else {}
             members = set(dict(doc.get("members", {})))
+            if cluster not in members:                   # …and the holder, by its record as this cluster verifies it
+                try:
+                    keys = ClusterTrust(self.root.ctl.vars).keyset()
+                except Untrusted as e:
+                    return refuse(503, "the key set does not read", f"{e}: whether {cluster[:80]} holds the domain is "
+                                                                    f"not known here")
+                rec = read_holder(self.root.ctl.vars, keys, self.root.wall()) if keys is not None else None
+                if rec is not None:
+                    members.add(rec["holder"])
         except PARSE_ERRORS as e:
             return refuse(503, "the list of members does not read",
                           f"{here}'s copy of the domain's list ({MEMBER_LIST}) does not parse ({type(e).__name__}): "
@@ -3914,7 +3937,7 @@ class Mount:
                                                  f"here, not through the domain")
         if cluster not in members:
             return refuse(404, "not a member", f"{cluster[:80]} is no member of the domain by {here}'s copy of the "
-                                               f"list ({MEMBER_LIST})")
+                                               f"list ({MEMBER_LIST}), nor the holder its verified record names")
         try:
             at = consoles_from_env().get(cluster)
         except SystemExit as e:                          # CLUSTERS that does not read: the deployment's, said
