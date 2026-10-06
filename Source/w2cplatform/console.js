@@ -427,7 +427,9 @@
         await sleep(after > 0 ? Math.min(5000, Math.max(1000, after * 1000)) : C.retryWaits[i]);
       }
     };
-    const getJSON = async path => { const r = await fetch(path); if (r.status === 401) showLogin(""); if (!r.ok) throw new Error(path + ": " + r.status); return r.json(); };
+    // a read refused for who is asking says why (the door's detail: a debug entry no grant names, an expired token) under
+    // the sign-in, not only «sign in»
+    const getJSON = async path => { const r = await fetch(path); if (r.status === 401) { let why = ""; try { const d = await r.clone().json(); why = d.detail || d.error || ""; } catch (e) { /* no body */ } showLogin(why); } if (!r.ok) throw new Error(path + ": " + r.status); return r.json(); };
 
     // -- the spec's words, and the interim ones the page passes ----------------------------------------------
     const display = sub => sub.spec.display || {};   // what the spec calls things

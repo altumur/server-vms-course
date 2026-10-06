@@ -1593,10 +1593,14 @@ class SubsystemSpec:
     # carries it, and the page sums them per server; the platform reads none of them. A field is a string listed in
     # `heartbeat.strings` or a number: the numbers of a heartbeat are declared nowhere (a heartbeat carries what its
     # worker says), so a field not listed there is read as a number — and a word where a number stands is counted and
-    # left out (`SpecConsole._status_of`). The platform's own fields are the row's already, not a spec's to name; a field
-    # said twice is a second column of one value. Each entry is exactly `{field, title}`, the title a non-empty word.
+    # left out (`SpecConsole._status_of`). A field may be a PATH into the heartbeat's maps by its dots (`writer.state`;
+    # ADR 0057, «Архитектор» 2026-10-06, the product's window 12: `metrics[].from` read without its `heartbeat.`, plain
+    # keys — no `<k>`: a wildcard says many values, and a row's cell is one): its leaf is a string or a number, either
+    # one, since `heartbeat.strings` names top fields only. The platform's own fields are the row's already, not a
+    # spec's to name — nor a path into one; a field said twice is a second column of one value. Each entry is exactly
+    # `{field, title}`, the title a non-empty word.
     def _servers_status(self, got) -> list:
-        word = re.compile(r"[a-z][a-z0-9_]*")
+        word = re.compile(r"[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*")
         if not isinstance(got, list):
             raise ValueError(f"spec {self.name}: servers.status is [{{field: <a field of its heartbeats>, title: <words>}}], "
                              f"not {got!r}")
@@ -1606,9 +1610,10 @@ class SubsystemSpec:
                     or not word.fullmatch(e["field"]) or not isinstance(e["title"], str) or not e["title"].strip():
                 raise ValueError(f"spec {self.name}: servers.status is [{{field: <a field of its heartbeats>, title: "
                                  f"<words>}}], not {e!r}")
-            if e["field"] in PLATFORM_HEARTBEAT_STRINGS:
+            if e["field"].split(".")[0] in PLATFORM_HEARTBEAT_STRINGS:
                 raise ValueError(f"spec {self.name}: servers.status: {e['field']!r} is the platform's own field of a "
-                                 f"heartbeat ({', '.join(PLATFORM_HEARTBEAT_STRINGS)}), already in the row")
+                                 f"heartbeat ({', '.join(PLATFORM_HEARTBEAT_STRINGS)}) or a path into one, already "
+                                 f"in the row")
             if e["field"] in (x["field"] for x in out):
                 raise ValueError(f"spec {self.name}: servers.status names {e['field']!r} twice")
             out.append({"field": e["field"], "title": e["title"]})

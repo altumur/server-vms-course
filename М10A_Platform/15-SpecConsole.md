@@ -666,18 +666,33 @@ class Journal:
         spec, out = self.ctl.spec, {}
         for e in spec.servers_status:
             f = e["field"]
-            if f not in hb.extra:
+            said, v = _status_path(hb.extra, f)
+            if not said:
                 continue
-            v = hb.extra[f]
+            leaf = "." in f and isinstance(v, str)
             if f in spec.heartbeat_strings or FIELDS.read(f"{self.ctl.sub.heartbeat_key(w)}#{f}",
-                                                           lambda: _json_number(v), None) is not None:
+                                                           lambda: v if leaf else _json_number(v), None) is not None:
                 out[f] = v
         return out
 ```
 
-Поле, которого в heartbeat'е нет, в ответе **отсутствует**, а не стоит `null`: «ничего не сказал» — не то же, что «сказал ничего». Поле — либо строка, объявленная в `heartbeat.strings` (строка, которая оказалась не строкой, сюда не доходит: такой heartbeat разбит и посчитан, урок 4), либо число. Числа heartbeat'а нигде не объявлены — воркер говорит о себе что хочет, — поэтому поле не из `heartbeat.strings` читается числом, и `5` остаётся `5`, а не `5.0` (`_json_number`). Слово там, где стоит число, `true`, список, объект — не число: поле посчитано как разбитое (`FIELDS`, тот же счёт, что у `number`) и в ответ не попало. Складывает значения по серверу страница — у сервера бывает несколько воркеров одной подсистемы; платформа показывает, что сказали heartbeat'ы, и ничего не суммирует. Заголовки страница берёт там же, где `show`, — в `/spec`, а `/servers` повторяет объявления один раз, рядом с `policy` (ниже).
+Поле, которого в heartbeat'е нет, в ответе **отсутствует**, а не стоит `null`: «ничего не сказал» — не то же, что «сказал ничего». Поле — либо строка, объявленная в `heartbeat.strings` (строка, которая оказалась не строкой, сюда не доходит: такой heartbeat разбит и посчитан, урок 4), либо число. Числа heartbeat'а нигде не объявлены — воркер говорит о себе что хочет, — поэтому поле не из `heartbeat.strings` читается числом, и `5` остаётся `5`, а не `5.0` (`_json_number`). Слово там, где стоит число, `true`, список, объект — не число: поле посчитано как разбитое (`FIELDS`, тот же счёт, что у `number`) и в ответ не попало. Поле может быть и **путём по точкам** в карты heartbeat'а — `writer.state`: регистратор кладёт в heartbeat карту `writer` (`{state: ok | stuck | losing, …}`, М10B), и оператору нужен её `state`, а не вся карта. Это то же чтение, что у `metrics[].from`, только без `heartbeat.` впереди и без `<k>`: подстановка даёт много значений, а в клетке строки одно (ADR 0057, «Архитектор» 2026-10-06; в продукте — окно 12). Путь проходит `_status_path`:
 
-Загрузчик (`SubsystemSpec._servers_status`) берёт ровно `{field, title}`: поле — имя (`[a-z][a-z0-9_]*`), заголовок — непустое слово. Другая форма, лишний ключ в записи, пустой заголовок, поле, названное дважды, и поле самой платформы (`worker`, `server`, `url`, `instance`, `labels` — они в строке уже есть) — отказ при загрузке (ADR 0012). Тест: `test_spec_declarations.py::test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_as_the_heartbeat_wrote_them`.
+```python
+def _status_path(extra: dict, field: str) -> tuple[bool, object]:
+    cur = extra
+    for seg in field.split("."):
+        if not isinstance(cur, dict) or seg not in cur:
+            return False, None
+        cur = cur[seg]
+    return True, cur
+```
+
+Ключа нет или на пути стоит не карта (`belt: "jammed"` там, где ждали `belt: {state: …}`) — поле не сказано: его в ответе нет, и ничего не посчитано. Лист — строка или число, любое из двух: `heartbeat.strings` называет только поля верхнего уровня, а лист карты сам говорит, что он такое (`leaf`). Карта, список, `true`, `null` на месте листа — то же, что слово вместо числа: посчитано как разбитое и в ответ не попало. В строке значение стоит под путём, как его написала спека: `status: {"writer.state": "stuck"}`.
+
+Складывает значения по серверу страница — у сервера бывает несколько воркеров одной подсистемы; платформа показывает, что сказали heartbeat'ы, и ничего не суммирует. Заголовки страница берёт там же, где `show`, — в `/spec`, а `/servers` повторяет объявления один раз, рядом с `policy` (ниже).
+
+Загрузчик (`SubsystemSpec._servers_status`) берёт ровно `{field, title}`: поле — имя или путь из имён через точку (`[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*`), заголовок — непустое слово. Другая форма, лишний ключ в записи, пустой заголовок, пустой сегмент пути (`belt.`, `.belt`, `belt..state`), `<k>` и другие символы, поле, названное дважды, и поле самой платформы (`worker`, `server`, `url`, `instance`, `labels` — они в строке уже есть) или путь в него (`server.name`) — отказ при загрузке (ADR 0012). Тесты: `test_spec_declarations.py::test_servers_status_puts_the_heartbeat_fields_it_names_on_each_workers_row_as_the_heartbeat_wrote_them`, `::test_a_servers_status_field_is_a_path_into_the_heartbeats_maps`.
 
 `state` — `live` или `stale`, и судит его не сравнение чужого `ts` со своими часами, а то, что **эта консоль видела, как heartbeat менялся**, по своим часам (`ctl.eyes.fresh`; тринадцатое ревью). Не «мёртв»: консоль не выносит приговоров, это дело контроллера и его `failover_seconds`.
 
