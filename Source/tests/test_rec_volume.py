@@ -1407,6 +1407,9 @@ def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
     assert runtime.box({}) in (socket.gethostname(), *(open(p).read().strip() for p in runtime.MACHINE_ID_FILES
                                                        if os.path.exists(p)))
     assert box_instance({"INSTANCE_ID": "alloc-1"}) == "alloc-1" and host_of("alloc-1") is None   # no host: it waits
+    # ONE FORM OF NAME, `box:pid:rnd` (ADR 0003; review 14, minor 27): the older `host:pid` says no box — not read as a
+    # second format, as the product's `OnThisBox` does not; a hold under `srv-a:1234` is not followed by name
+    assert host_of("srv-a:1234") is None and host_of("srv-a:1234:ab12cd") == "srv-a"
     assert box_instance({"INSTANCE_ID": "alloc-1", "BOX_ID": "node-7"}) == f"node-7:{os.getpid()}:alloc-1"
     box = Box()
     a = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})

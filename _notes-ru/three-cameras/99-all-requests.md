@@ -45,7 +45,7 @@ w-srv-a-1 GET  /v1/get?key=platform/schema                     → пусто   
 w-srv-a-1 GET  /v1/get?key=platform/decommission/srv-a         → пусто          мой сервер не списан
 w-srv-a-1 GET  /v1/list?prefix=vms/slots/                      → {}
 w-srv-a-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → пусто
-w-srv-a-1 POST /v1/write put vms/slots/w-srv-a-1 cas=""         → index 1004     holder srv-a:4101, until t0+45, gen 1,
+w-srv-a-1 POST /v1/write put vms/slots/w-srv-a-1 cas=""         → index 1004     holder srv-a:4101:001005, until t0+45, gen 1,
                                                                                server srv-a
 res-a     GET  /v1/list?prefix=platform/doors/                  → srv-a, srv-b, srv-c  (записаны первыми heartbeat'ами ресурсов)
 res-a     GET  /v1/get?key=platform/doors/srv-b                 → url http://srv-b:8090, since, at   …и srv-c: где отвечают
@@ -55,7 +55,7 @@ w-srv-a-1 GET  /v1/objects/vms/contenders/w-srv-a-1/machine-id-srv-a?scope=clust
 w-srv-a-1 GET  /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster → 404        прошлого отчёта нет
 w-srv-b-1 GET  schema, decommission/srv-b                       → пусто
 w-srv-b-1 GET  /v1/list?prefix=vms/slots/                      → [w-srv-a-1]
-w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101, released false: занят
+w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101:001005, released false: занят
 w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-b-1                 → пусто
 w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=""         → index 1005     server srv-b
 res-b     GET  doors: список, srv-a, srv-c
@@ -77,7 +77,7 @@ w-srv-c-1 FILE vms/heartbeats/w-srv-c-1                                         
 ── 2.4 ресурсы отчитываются о дисках и процессах ──────────────────────────────────────────── (2.4)
 res-a     FILE platform/resources/srv-a/heartbeat                               649 Б: space, volumes, waits, restore;
                                                                                 workers {vms: [w-srv-a-1]}, running {vms:
-                                                                                [w-srv-a-1]}, running_instances [srv-a_4101]
+                                                                                [w-srv-a-1]}, running_instances [srv-a_4101_001005]
 res-b     FILE platform/resources/srv-b/heartbeat
 res-c     FILE platform/resources/srv-c/heartbeat
           каждые 15 с ресурс ещё переписывает свою дверь: POST /v1/write put platform/doors/<srv> cas=null, новый at
@@ -88,7 +88,7 @@ ctl       GET  /v1/objects/vms/controller/pass?scope=cluster    → 404         
 ctl       GET  /v1/list?prefix=platform/decommission/          → {}           списывать некого
 ctl       GET  /v1/list?prefix=vms/decommissioned/             → {}
 ctl       GET  /v1/list?prefix=vms/slots/                      → три слота
-ctl       GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101, until t0+45, released false, server srv-a
+ctl       GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101:001005, until t0+45, released false, server srv-a
 ctl       GET  /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster → 509 Б, X-Server srv-a
           …то же для w-srv-b-1 и w-srv-c-1 (их файлы на srv-b и srv-c, ресурс srv-a приносит их сам)
 ctl       GET  /v1/list?prefix=vms/placement/                  → {}
@@ -211,7 +211,7 @@ w-srv-c-1 FILE vms/heartbeats/w-srv-c-1
 
 ── продление имени и эпох, lease_pass (раз в ~8 с): 2+K чтений, 1 запись ──────────────── (5.2, 8.6)
 w-srv-a-1 GET  /v1/get?key=platform/schema                     → пусто
-w-srv-a-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101 — я, @1004
+w-srv-a-1 GET  /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4101:001005 — я, @1004
 w-srv-a-1 POST /v1/write put vms/slots/w-srv-a-1 cas=1004       → index 1022     until +45 от сейчас, server srv-a
 w-srv-a-1 GET  /v1/get?key=vms/epoch/1                         → epoch 1 — моя     по чтению на каждую камеру
           …то же на w-srv-b-1 и w-srv-c-1
@@ -410,9 +410,9 @@ w-srv-a-1 POST /v1/write put vms/epoch/2 cas=1020               → index 1037  
           t+95 с: 29 чтений, 0 записей, 12 объектных; снова move — уводить уже нечего
           systemd поднимает w-srv-b-1 заново (новый процесс, то же имя)
 w-srv-b-1 GET  schema, decommission/srv-b                       → пусто
-w-srv-b-1 GET  /v1/list?prefix=vms/slots/ + строки трёх слотов → свой: holder srv-b:4102, until t0+45 — истёк
+w-srv-b-1 GET  /v1/list?prefix=vms/slots/ + строки трёх слотов → свой: holder srv-b:4102:001006, until t0+45 — истёк
 w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-b-1                 → @1005
-w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=1005       → index 1043     holder srv-b:4104, gen 2
+w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=1005       → index 1043     holder srv-b:4104:001008, gen 2
 w-srv-b-1 GET  /v1/objects/vms/contenders/w-srv-b-1/machine-id-srv-b?scope=cluster → 404
 w-srv-b-1 GET  /v1/objects/vms/heartbeats/w-srv-b-1?scope=cluster → 773 Б      прежний отчёт
 w-srv-b-1 GET  /v1/get?key=vms/workers/w-srv-b-1               → units "", rev 2   начинает пустым
@@ -433,7 +433,7 @@ w-srv-a-1 POST /v1/write put vms/epoch/2 cas=1020               → index 1045  
 w-srv-a-1 FILE vms/heartbeats/w-srv-a-1                                         работает [1, 2], эпохи {1: 1, 2: 2}
 
 ── 8.6в обесточен srv-b, контроллер свежий (первый проход на t+95) ───────────────────────────── (8.6)
-          в хранилище с прошлого: vms/slots/w-srv-b-1 @1005 {holder srv-b:4102, until t0+45, server srv-b};
+          в хранилище с прошлого: vms/slots/w-srv-b-1 @1005 {holder srv-b:4102:001006, until t0+45, server srv-b};
           platform/doors/srv-b @1002 {at t0} — ресурс srv-b больше не отмечался
 ctl       GET  /v1/objects/vms/controller/pass?scope=cluster    → 839 Б, X-Missing srv-b
 ctl       GET  /v1/list?prefix=platform/decommission/, vms/decommissioned/ → {}
@@ -502,7 +502,7 @@ w-srv-a-1 POST /v1/write put vms/epoch/2 cas=1020               → index 1264  
           отчёт: workers_hung_moved_total 1; журнал: тревога worker.hung_moved {worker w-srv-b-1, after 900}
           зависший процесс оживает (SIGCONT)
 w-srv-b-1 GET  /v1/get?key=platform/schema                     → пусто
-w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-b-1                 → holder srv-b:4102, gen 1 — всё ещё я, @1005
+w-srv-b-1 GET  /v1/get?key=vms/slots/w-srv-b-1                 → holder srv-b:4102:001006, gen 1 — всё ещё я, @1005
 w-srv-b-1 POST /v1/write put vms/slots/w-srv-b-1 cas=1005       → index 1265     until t0+995: имя продлено
 w-srv-b-1 GET  /v1/get?key=vms/epoch/2                         → epoch 2 @1264 — не моя: камеру 2 теряет
 w-srv-b-1 GET  /v1/get?key=vms/workers/w-srv-b-1               → units "", rev 2
@@ -511,9 +511,9 @@ w-srv-b-1 FILE vms/heartbeats/w-srv-b-1                                         
           в 8.6г и 8.6д проходы между отметками не запускались; контроллер один, на srv-a
 
 ── 8.7 две копии w-srv-a-1 ────────────────────────────────────────────────────────────────── (8.7)
-w-srv-a-1² GET schema, decommission/srv-a                       → пусто         вторая копия, srv-a:4104
-w-srv-a-1² GET /v1/list?prefix=vms/slots/ + слоты всех трёх, затем свой ещё раз → holder srv-a:4101 @1004
-w-srv-a-1² POST /v1/write put vms/slots/w-srv-a-1 cas=1004      → index 1022     holder srv-a:4104, gen 2
+w-srv-a-1² GET schema, decommission/srv-a                       → пусто         вторая копия, srv-a:4104:001008
+w-srv-a-1² GET /v1/list?prefix=vms/slots/ + слоты всех трёх, затем свой ещё раз → holder srv-a:4101:001005 @1004
+w-srv-a-1² POST /v1/write put vms/slots/w-srv-a-1 cas=1004      → index 1022     holder srv-a:4104:001008, gen 2
 w-srv-a-1² GET /v1/objects/vms/contenders/w-srv-a-1/machine-id-srv-a?scope=cluster → 404
 w-srv-a-1² GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster → 761 Б
 w-srv-a-1² GET /v1/get?key=vms/workers/w-srv-a-1               → units "1"
@@ -522,7 +522,7 @@ w-srv-a-1² GET /v1/get?key=vms/epoch/1                         → epoch 1 @101
 w-srv-a-1² POST /v1/write put vms/epoch/1 cas=1019              → index 1023     epoch 2
 w-srv-a-1² FILE vms/heartbeats/w-srv-a-1                                        работает [1] под эпохой 2
 w-srv-a-1  GET /v1/get?key=platform/schema                     → пусто         первая копия просыпается
-w-srv-a-1  GET /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4104, gen 2 — не я:
+w-srv-a-1  GET /v1/get?key=vms/slots/w-srv-a-1                 → holder srv-a:4104:001008, gen 2 — не я:
                                                                  камеру 1 теряет, recording_allowed false
 
 ── 8.8 камер больше, чем ёмкости (в трассе CAPACITY=1) ────────────────────────────────────── (8.8)
@@ -537,7 +537,7 @@ ctl       FILE vms/snapshot/w-srv-a-1, w-srv-b-1, w-srv-c-1, unplaced
           vms_spare_offers 1 → под пользователем w2c-spares пишет SPARE_FOR=vlan:cctv в
           /run/w2c-spares/vms-vmsworker-spare@1.service.env и делает systemctl start vms-vmsworker-spare@1
           (шаблон — юнит воркера без WORKER_NAME, RTSP_PORT=auto; w2c-run.sh берёт из файла только SPARE_FOR=)
-w-2       POST /v1/write put vms/slots/w-2 cas=1024             → index 1025     holder srv-c:4104, gen 1, taken_at,
+w-2       POST /v1/write put vms/slots/w-2 cas=1024             → index 1025     holder srv-c:4104:001008, gen 1, taken_at,
                                                                                server srv-c (запасной: 7 чтений, 1 объектный)
 w-2       FILE vms/heartbeats/w-2
           проход контроллера и запасного вместе: 34 чтения, 3 записи, 13 объектных, 7 файлов

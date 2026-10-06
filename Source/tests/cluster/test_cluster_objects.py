@@ -220,3 +220,18 @@ def test_open_store_reads_the_cluster_url():
     s = open_store(f"cluster://{d}/objects?resource=http://10.0.0.7:8090", vars_=FakeVariables())
     assert isinstance(s, ClusterObjectStore) and s.local.root == f"{d}/objects" and s.resource == "http://10.0.0.7:8090"
     assert open_store(f"cluster://{d}/o2").resource == "http://127.0.0.1:8090"
+
+
+def test_the_bench_file_store_deletes_under_its_directory_lock():
+    """`OBJECTS=file:///path` (`FsObjectStore`): a worker's mark sweep (`MARK_SWEEP`) deletes what it swept, and the
+    bench store had no `delete` — an `AttributeError` every sweep, and the marks never went (review 14, minor 19;
+    ADR 0054). It deletes as М10's file store does: under the directory's lock, a missing key `False`, the second sweep
+    of one candidate the same as the first."""
+    import tempfile
+    d = tempfile.mkdtemp(prefix="bench-objects-")
+    s = open_store(f"file://{d}")
+    assert s.put_new("vms/marks/r-1", b"{}") and s.get("vms/marks/r-1") == b"{}"
+    assert s.delete("vms/marks/r-1") is True and s.get("vms/marks/r-1") is None
+    assert s.delete("vms/marks/r-1") is False and s.delete("vms/none/r-2") is False
+    assert not os.path.exists(os.path.join(d, "vms", "none"))          # nothing made to say there was nothing
+    assert s.put_new("vms/marks/r-1", b"{}")                           # the name is free again

@@ -267,9 +267,11 @@ class Cluster:
     def env(self, server: str, name: str | None = None, **more) -> dict:
         """What a unit puts in its process's environment: the neutral names of `w2cplatform.runtime` — the name from
         the unit (`WORKER_NAME=w-%l-1`), the server and its labels from `/etc/w2c/w2c.env` — and this incarnation,
-        host and pid. A spare has `SPARE_FOR` and no name."""
+        host and pid — in the one form of an instance name, `box:pid:rnd` (ADR 0003; the fourteenth review, minor 27: it was
+        `host:pid`, which the platform no longer reads as a box). A spare has `SPARE_FOR` and no name."""
         self.pids += 1
-        env = {"SERVER_NAME": server, "LABELS": self.servers[server].labels, "INSTANCE_ID": f"{server}:{self.pids}",
+        env = {"SERVER_NAME": server, "LABELS": self.servers[server].labels,
+               "INSTANCE_ID": f"{server}:{self.pids}:{self.pids:06x}",
                "RESOURCE_ROOT": self.servers[server].resource}          # `w2c.env`: the platform's events archive here
         if name is not None:
             env["WORKER_NAME"] = name

@@ -283,7 +283,7 @@ def who_may_write_what() -> str:
     tries = [
         ("vmsworker", "vmsworker w-srv-a-1 on srv-a", [("vms/epoch/7", {"epoch": "1"}),
                                                        ("vms/placement/7", {"worker": "w-srv-a-1"})]),
-        ("recworker", "recworker r-srv-a-1 on srv-a", [("rec/holds/disks-a", {"holder": "srv-a:4102"}),
+        ("recworker", "recworker r-srv-a-1 on srv-a", [("rec/holds/disks-a", {"holder": "srv-a:4102:001006"}),
                                                        ("rec/recordings/7", {"cam": "7"})]),
         ("vmscontroller", "vmscontroller on srv-a", [("vms/placement/7", {"worker": "w-srv-a-1", "reason": "…"}),
                                                      ("vms/cameras/7", {"name": "moved"})]),
@@ -399,7 +399,7 @@ def objects_across_servers() -> str:
     mark = s.log.mark()
     w.heartbeat_once()
     seen = ctl.workers_seen()
-    made = w.objects.put_new("vms/commands/r-17", b'{"instance": "srv-a:4101"}')
+    made = w.objects.put_new("vms/commands/r-17", b'{"instance": "srv-a:4101:001005"}')
     s.servers["srv-a"].down = True
     later = ctl.workers_seen()
     keep = ("objects", "file", "store")

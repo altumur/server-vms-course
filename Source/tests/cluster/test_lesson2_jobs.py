@@ -22,7 +22,7 @@ def test_the_name_comes_from_the_unit_and_the_labels_from_the_server():
     hb = ctl.workers_seen()
     assert hb["w-srv-a-1"].extra["server"] == "srv-a" and hb["w-srv-a-1"].extra["labels"] == "vlan:cctv-a"
     assert hb["w-srv-b-1"].extra["labels"] == "vlan:cctv-a,vlan:cctv-b" and hb["w-srv-b-1"].extra["alloc"] == b.instance
-    assert ctl.slots()["w-srv-b-1"].holder == b.instance == "srv-b:4102"      # the claim names the process, host and pid
+    assert ctl.slots()["w-srv-b-1"].holder == b.instance == "srv-b:4102:001006"      # the claim names the process, host and pid
 
 
 def test_a_spare_takes_an_offer_then_stops():

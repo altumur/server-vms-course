@@ -8,7 +8,7 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items": {
-  "holder": "srv-c:4102",
+  "holder": "srv-c:4102:001006",
   "until": "1757500045.0",
   "released": "true",
   "gen": "1",

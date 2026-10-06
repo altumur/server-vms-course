@@ -80,7 +80,9 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 #   each — the old instance is fenced by construction.
 # - The exits from a lost lease are the base worker's `lease_pass`: the slot held by another instance (fence
 #   everything, first), and a lease lost — a newer epoch issued (the camera reassigned, or a zombie's) or unconfirmed
-#   past its ceiling — which stops that one camera (`stop_unit`: dropped from the reconciler, no failure) and goes on.
+#   past its ceiling — which stops that one camera and goes on (`stop_unit`: a camera the assignment still gives this
+#   worker is a failure, `forget` — three within the backoff's max are `stalled`; one no longer its is dropped, no
+#   failure; ADR 0033 with its additions, the product's `Forget`/`Drop`).
 #   A lease that merely expired because the loop stalled shows up as `may_act` false in `_actuate` and a fresh epoch
 #   on the next start.
 # - `observe` returns the bucket path, which the tests read back with `read_bucket`; the worker keeps
@@ -99,7 +101,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from w2cplatform import runtime
 from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced, SendMixin, door_server, start_stream
-from w2cplatform.contract import NotReadThisPass, SchemaTooNew, Subsystem, check_schema
+from w2cplatform.contract import ASSIGNMENTS, NotReadThisPass, SchemaTooNew, Subsystem, check_schema, read_assignment, stored
 from w2cplatform.worker import Worker
 from w2cplatform.objects import ObjectStore
 from w2cplatform.rows import PARSE_ERRORS, finite
@@ -525,6 +527,7 @@ class VmsWorker(Worker):
         self.events_refused = 0                           # lines a device posted that could not be written (`drain_bus`)
         self.assignment_rev = 0
         self._pass_now: float | None = None               # a test's own `now` for one pass (`reconcile_once(now)`)
+        self._assigned_at_loss: frozenset | None = None   # the assignment one lease step read at its first loss (`stop_unit`)
         self.reconciler = self.new_reconciler()
         self.labels = labels_from_environment(env)
         self.alloc = runtime.instance(env) or ""          # published as `alloc` for the readers that already know that name
@@ -1147,10 +1150,38 @@ class VmsWorker(Worker):
     # -- the platform's life cycle, in the holder's words (`w2cplatform/worker.py`) ------------------------------------
     # A lost lease stops ONE pipeline: `lost` names units the way the lease does — as text — and the reconciler keys by
     # the row's id, which the spec parsed (a number for cameras, a name for recordings): matched, never cast.
+    #
+    # …AND A CAMERA STILL MINE THAT LOST ITS LEASE IS A FAILURE (ADR 0033 with its additions; review 14, minor 22; the
+    # product's `Forget`): its next start waits the backoff, and one that loses its epoch three times within `max` is
+    # `stalled` — a zombie that keeps taking the epoch, or a store that keeps losing the lease, is on `/metrics`, not a
+    # camera restarted at once for ever. One the assignment no longer gives this worker was moved: let go, no failure
+    # (`drop`). The assignment as the store says it now — read ONCE per lease step, at its first lost lease, however
+    # many it lost — without touching what the pass keeps (`assigned_now`, `lost_to_epoch` are the pass's read's); a
+    # store that does not answer — the rows read last.
+    def lease_pass(self) -> list[str]:
+        self._assigned_at_loss = None
+        try:
+            return super().lease_pass()
+        finally:
+            self._assigned_at_loss = None
+
     def stop_unit(self, unit) -> None:
         uid = next((k for k in self.reconciler.running() if str(k) == str(unit)), unit)
         self.actuator("stop", {"id": uid})
-        self.reconciler.drop(uid)                   # stopped by its lease, not failed: started again, if still mine
+        if self._still_assigned(unit):
+            self.reconciler.forget(uid)             # lost while still mine: a failure, started again after its delay
+        else:
+            self.reconciler.drop(uid)               # moved away: not a failure, and not started again here
+
+    def _still_assigned(self, unit) -> bool:
+        if self._assigned_at_loss is None:
+            key = self.sub.assignment(self.name)
+            try:
+                units = read_assignment(key, self.name, stored(self.vars, key, ASSIGNMENTS)[0]).units
+            except OSError:
+                units = [r.get("id") for r in self.rows]
+            self._assigned_at_loss = frozenset(str(u) for u in units)
+        return str(unit) in self._assigned_at_loss
 
     def stop_all_units(self) -> None:
         self.actuator.stop_all()                    # with GStreamer, EOS lets the last access units reach each sink

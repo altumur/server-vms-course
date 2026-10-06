@@ -858,8 +858,9 @@ class Worker:
     # Confirmed late is confirmed: by CAS on the row this worker wrote last, so nobody took it meanwhile (a claimant's
     # take would have changed it), and the fence opens again. A place not held strictly — its row names this worker's
     # server — stays this worker's through the silence by the units' ceiling (`lease.unconfirmed_max`, past the hold's
-    # end; `forever`: for as long as the silence lasts). Nothing is held through a silence longer than the spec says:
-    # past the ceiling it is asked for and let go the same way.
+    # write window `slot_ttl − lease_margin`, as a unit's lease counts it past its own; `forever`: for as long as the
+    # silence lasts — ADR 0033 with its additions, the product's `RenewHold`). Nothing is held through a silence longer
+    # than the spec says: past the ceiling it is asked for and let go the same way.
     def _strict_place_pass(self) -> None:
         place = self.hold
         if place is None:
@@ -869,7 +870,7 @@ class Worker:
         if strict:
             if quiet < self.slot_ttl - self.lease_margin:
                 return
-        elif self.unconfirmed_max is None or quiet < self.slot_ttl + self.unconfirmed_max:
+        elif self.unconfirmed_max is None or quiet < self.slot_ttl - self.lease_margin + self.unconfirmed_max:
             return
         try:
             if self.renew_hold():

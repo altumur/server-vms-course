@@ -279,6 +279,29 @@ def test_a_reassignment_is_not_a_zombie():
     assert w1.reconcile_once() == []
 
 
+def test_a_camera_still_mine_that_loses_its_epoch_three_times_within_max_is_stalled():
+    """A lost lease on a camera the assignment still gives this worker is a FAILURE (ADR 0033 with its additions, review
+    14, minor 22; the product's `Forget`): its restart waits the backoff, and the third loss within `max` makes it
+    `stalled` — a zombie that keeps taking the epoch, or a store that keeps losing it, shows on `/metrics` instead of a
+    camera restarted at once for ever. One that is no longer mine is let go without a failure (`drop`; the test
+    above)."""
+    from w2cplatform.epoch import next_epoch
+    box, ctl = _box_with_cameras(1)
+    ctl.assign("w-1", ["1"])
+    act = FakeActuator()
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall)
+    w.reconciler.rand = lambda: 0.5
+    assert w.reconcile_once() == [("start", 1)]
+    for n in (1, 2, 3):
+        next_epoch(box.vars, w.sub.epoch_key("1"))            # somebody took a newer epoch; the row is still mine
+        assert w.lease_pass() == ["1"] and act.running == set()
+        st = w.reconciler.status()[1]
+        assert st.failures == n and st.state == (STALLED if n == 3 else LAGGING), (n, st)
+        assert w.reconcile_once() == []                        # waiting its delay, not restarted at once
+        box.clock.advance(st.retry_at - w.reconciler.now())   # the loop's clock counts from the worker's start
+        assert w.reconcile_once() == [("start", 1)]
+
+
 def test_lease_expiry_without_renewal_stops_starts():
     box, ctl = _box_with_cameras(1)
     ctl.assign("w-1", ["1"])

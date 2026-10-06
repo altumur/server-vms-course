@@ -51,7 +51,7 @@ GET /v1/list?prefix=vms/slots/
 → 200 {"keys": {"vms/slots/w-srv-a-1": 1004, "vms/slots/w-srv-b-1": 1005, "vms/slots/w-srv-c-1": 1006}}
 
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}, "index": 1004}
+→ 200 {"items": {"holder": "srv-a:4101:001005", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}, "index": 1004}
 
 GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
 → 200 {"bytes": 570, "X-Written": "1757500000.0", "X-Server": "srv-a"}

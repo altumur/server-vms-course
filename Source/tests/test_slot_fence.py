@@ -316,12 +316,12 @@ def test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names():
     assert w.may_act("c1") and w.renew_slot() is True
 
     try:                                                                # "somebody": whose box, the row does not say
-        _worker(box, name="w-9", instance="other:9")
+        _worker(box, name="w-9", instance="other:9:aaaaaa")
         raise AssertionError("a garbled row of a holder nobody judged was taken")
     except NameOnAnotherBox:
         pass
     box.wall.advance(HUNG_MOVE_AFTER + 1)                               # nobody to say whether it runs: `wait`, to the limit
     assert "w-9" in ctl.publish_names()["names_given"]
-    w9 = _worker(box, name="w-9", instance="other:9")                   # the runtime named it: taken, and whole again
-    assert Slot.from_items("w-9", box.vars.get(w.sub.slot_key("w-9"))[0]).holder == "other:9" and w9.renew_slot() is True
+    w9 = _worker(box, name="w-9", instance="other:9:aaaaaa")                   # the runtime named it: taken, and whole again
+    assert Slot.from_items("w-9", box.vars.get(w.sub.slot_key("w-9"))[0]).holder == "other:9:aaaaaa" and w9.renew_slot() is True
     _forget_garbled()

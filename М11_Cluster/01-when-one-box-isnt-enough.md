@@ -130,7 +130,7 @@
  "SERVER_NAME": "srv-a", "LABELS": "vlan:cctv-a"}
 ```
 
-`WORKER_NAME` и `PLATFORM_STORE` — из юнита, `SERVER_NAME` и `LABELS` — из `w2c.env`. Свой экземпляр процесс называет сам — `хост:pid:случайное`; стенд пишет короче, `srv-a:4101`. Платформа знает только нейтральные имена (`w2cplatform/runtime.py`), и ни одно из них не называет того, кто их заполнил: юнит `systemd`, plist `launchd` или, где он есть, оркестратор. Урок 3 показывает это на юнитах.
+`WORKER_NAME` и `PLATFORM_STORE` — из юнита, `SERVER_NAME` и `LABELS` — из `w2c.env`. Свой экземпляр процесс называет сам — `хост:pid:случайное`; стенд задаёт ту же форму сам: `srv-a:4101:001005` — сервер, номер процесса стенда и шесть знаков. Другой формы имени нет (ADR 0003): `хост:pid` из двух частей коробку не называет. Платформа знает только нейтральные имена (`w2cplatform/runtime.py`), и ни одно из них не называет того, кто их заполнил: юнит `systemd`, plist `launchd` или, где он есть, оркестратор. Урок 3 показывает это на юнитах.
 
 ## Шаг 5 — Сколько берёт воркер
 
@@ -169,7 +169,7 @@ GET /v1/get?key=vms/slots/w-srv-a-1
 
 ```
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": "", "items": {
-  "holder": "srv-a:4101",
+  "holder": "srv-a:4101:001005",
   "until": "1757500045.0",
   "released": "false",
   "gen": "1",
@@ -197,7 +197,7 @@ GET /v1/list?prefix=platform/doors/
   "ts": 1757500000.0,
   "status": [],
   "server": "srv-a",
-  "instance": "srv-a:4101",
+  "instance": "srv-a:4101:001005",
   "labels": "vlan:cctv-a",
   "capacity": 50,
   "headroom": 50,
@@ -206,7 +206,7 @@ GET /v1/list?prefix=platform/doors/
   "previous_hb": 0.0,
   "previous_instance": "",
   "previous_server": "",
-  "alloc": "srv-a:4101",
+  "alloc": "srv-a:4101:001005",
   "assignment_rev": 0,
   "passes": 0,
   "store_errors": 0,
