@@ -1,3 +1,3 @@
 # console_module_debt.txt — the lines the course's copy of the platform's console module differs from the product's
 # by (test_console_module.py): a change the course leads with, until the product takes it. It only shrinks.
-#   <file> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>
+#   <file> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>   # ADR-NNNN «the other side's owner»

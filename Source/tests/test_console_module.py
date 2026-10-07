@@ -15,6 +15,7 @@ from __future__ import annotations
 import difflib
 import hashlib
 import os
+import re
 from collections import Counter
 
 import pytest
@@ -26,7 +27,11 @@ PRODUCT = "vmsworker/w2cplatform/"                      # on the product's `main
 DEBT = os.path.join(SOURCE, "tests", "testdata", "console_module_debt.txt")
 HEAD = ("# console_module_debt.txt — the lines the course's copy of the platform's console module differs from the product's\n"
         "# by (test_console_module.py): a change the course leads with, until the product takes it. It only shrinks.\n"
-        "#   <file> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>\n")
+        "#   <file> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>   # ADR-NNNN «the other side's owner»\n")
+# A debt line exists only by a decision, as a line of `spec_parity_debt.txt` (СЕССИИ.md §1.7): its tail names the ADR and
+# the owner of the side that closes it (ADR-0019, the owner's addition of 2026-10-07). The line's text is a line of JS,
+# CSS or HTML and may hold a `#` of its own: the tail is the one at its END.
+_TAIL = re.compile(r"\s+(#\s*ADR-\d{4}\b[^«]*«[^»]+»)\s*$")
 _THEIRS = {f: product_file(PRODUCT + f) for f in FILES}
 pytestmark = pytest.mark.skipif(any(v is None for v in _THEIRS.values()),
                                 reason="no product beside the course (W2C_PRODUCT_DIR), or no `main` there: the console "
@@ -52,16 +57,24 @@ def differences() -> list[tuple[str, str, str, str]]:
     return out
 
 
-def read_debt() -> list[tuple[str, str, str, str]]:
+def read_debt() -> list[tuple[str, str, str, str, str]]:
+    """`(file, sign, sha8, text, tail)` of every line of the debt; `tail` is "" for a line that names no decision."""
     out = []
     if not os.path.exists(DEBT):
         return out
     with open(DEBT, encoding="utf-8") as fh:
         for line in fh:
             if line.strip() and not line.startswith("#"):
-                f, sign, sha, text = (p.strip() for p in line.rstrip("\n").split(" | ", 3))
-                out.append((f, sign, sha, text))
+                line = line.rstrip("\n")
+                m = _TAIL.search(line)
+                tail = m.group(1) if m else ""
+                f, sign, sha, text = (p.strip() for p in (line[:m.start()] if m else line).split(" | ", 3))
+                out.append((f, sign, sha, text, tail))
     return out
+
+
+def _debt_line(d) -> str:
+    return " | ".join(d[:4]) + (f"   {d[4]}" if d[4] else "") + "\n"
 
 
 def test_the_course_copy_of_the_console_module_is_the_products_but_for_the_debt():
@@ -77,9 +90,20 @@ def test_the_course_copy_of_the_console_module_is_the_products_but_for_the_debt(
                 continue
             keep.append(d)
         with open(DEBT, "w", encoding="utf-8") as fh:
-            fh.write(HEAD + "".join(" | ".join(d) + "\n" for d in keep))
+            fh.write(HEAD + "".join(_debt_line(d) for d in keep))
         gone = []
     assert not new, ("the course's console module differs from the product's main where the debt says nothing — make it "
                      "good on one side or the other: " + "; ".join(f"{f} {s} {t}" for f, s, _, t in new[:10]))
     assert not gone, ("the debt says what is no longer so (the product took it, or the course dropped it) — "
                       "W2C_CONSOLE_SHRINK=1 rewrites it: " + "; ".join(f"{f} {s} {t}" for f, s, _, t in gone[:10]))
+
+
+def test_every_debt_line_of_the_console_module_names_its_decision_and_the_other_sides_owner():
+    """ADR-0019, the owner's addition of 2026-10-07: a line of `console_module_debt.txt` carries `# ADR-NNNN «owner»`
+    after its text, the owner of the side that closes it, as a line of `spec_parity_debt.txt` does (СЕССИИ.md §1.7). A
+    line without it is red. And the tail is told from a `#` of the line's own text: only the one at its end counts."""
+    bare = [_debt_line(d).rstrip("\n") for d in read_debt() if not d[4]]
+    assert not bare, "a debt line with no decision — `   # ADR-NNNN «owner»` after its text:\n  " + "\n  ".join(bare)
+    m = _TAIL.search("console.css | + | 0123abcd | a { color: #fff; }   # ADR-0019 «Консоль»")
+    assert m and m.group(1) == "# ADR-0019 «Консоль»"
+    assert _TAIL.search("console.css | + | 0123abcd | a { color: #fff; }") is None
