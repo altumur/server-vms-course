@@ -29,6 +29,7 @@ from w2cplatform.access import DOMAIN_MARKS, MEMBER_MARK, TRUST_KEYS
 from w2cplatform.contract import COMMANDS, DECOMMISSION, REQUESTS, SCHEMA_KEY, SERVERS_PREFIX
 from w2cplatform.door import KEYS_KEY, SIGNER_KEY
 from w2cplatform.resource import DOORS, MIRROR_KEY, SPACE_KEY
+from w2cplatform.domain.declared import GRANTS_PREFIX
 from w2cplatform.rights import split
 
 from .objectstore import ROWS_PREFIX, is_row
@@ -128,13 +129,17 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # id it files again (`Worker._filed_already`) and the mark that says the id is spent (`Worker._spent_by`; the
         # review's fourteenth pass, major 2): writing them alone, it read neither, and every filing again was refused.
         # What its spec says it reads is `worker.reads` and the secret rows of `secrets.reads`: the product's key lets
-        # the worker read what it names (ADR-0024, ADR-0019 — one meaning on both sides), a prefix as its rows.
+        # the worker read what it names (ADR-0024, ADR-0019 — one meaning on both sides), a prefix as its rows. A worker
+        # whose spec declares a door for people (`door: {routes}`) decides who it shows a unit to by the cluster's grants:
+        # it reads `domain/grants/*` — not secret; derived from the spec, as ADR-0014's read by a door's role («Архитектор»
+        # 2026-10-07; the product's worker reads `*` less its denials, the same behaviour)
         rows = _worker_objects(s)
+        grants = [f"{GRANTS_PREFIX}*"] if s.door_routes else []
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
                                       [SCHEMA_KEY, *asked, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
                                        DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads,
-                                       *[r + "*" if r.endswith("/") else r for r in s.secret_reads], *rows, *filed_to])
+                                       *[r + "*" if r.endswith("/") else r for r in s.secret_reads], *rows, *filed_to, *grants])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to
     # free bytes, a request row of each subsystem whose spec says it frees (`requests: {free: true}`); reads the others'
     # doors, the mirror and the watermark's knobs, every subsystem's days, what a spec's `holds:` table holds and the rows

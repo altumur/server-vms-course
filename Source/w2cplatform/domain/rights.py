@@ -54,6 +54,21 @@ def agent_denials(specs=None) -> list[str]:
     return out
 
 
+# A SECRET ROW UNDER `domain/` IS READ BY THOSE ITS SPEC NAMES, AND BY NO OTHER ROLE OF THE DOMAIN («Архитектор»
+# 2026-10-07, as the product's generator does): the domain's roles read `domain/*`, and a secret row there (`secrets.readers`,
+# ADR-0024) was theirs to read whatever the spec said — the cluster's rights check (`cluster.rights.check_secrets`) refused
+# the file. Each role of the domain a row's readers do not name gets a denial of it, `!<row>*` — a prefix's rows, and a
+# row's own family of books (`stream-accounts` and `stream-accounts/<cluster>`) with it. A reader `domainpart` is the
+# subsystem's worker on the domain, `<sub>domain`.
+def secret_denials(role: str, specs=None) -> list[str]:
+    readers: dict[str, set] = {}
+    for s in (specs if specs is not None else declared.specs()):
+        for row, names in s.secret_readers.items():
+            if row.startswith("domain/"):
+                readers.setdefault(row, set()).update(f"{s.name}domain" if n == "domainpart" else n for n in names)
+    return [f"!{row}*" for row, names in sorted(readers.items()) if role not in names]
+
+
 def _on_domain(specs) -> list:
     return declared.specs() if specs is None else [s for s in specs if s.domain is not None]
 
@@ -69,14 +84,16 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
     units = list(dict.fromkeys([f"{s.name}/*" for s in (specs if specs is not None else declared.specs())]))
     agent = ["domain/*", *agent_denials(specs)]
     out = {
-        "domain": role("domain", ["domain/*", "identity/*"], [schema, "domain/*", "identity/*", "platform/*", *units]),
+        "domain": role("domain", ["domain/*", "identity/*"], [schema, "domain/*", "identity/*", "platform/*", *units,
+                                                            *secret_denials("domain", specs)]),
         # The domain's console: the keys are not its to read, and the people's rows are opened where the ring is — the
         # signer's; what it writes is plain and a person's (`console.Console`).
         "domainconsole": role("domainconsole", list(CONSOLE_WRITES),
-                              [schema, "domain/*", SIGNER_KEYS, "platform/*", *units]),
+                              [schema, "domain/*", SIGNER_KEYS, "platform/*", *units,
+                               *secret_denials("domainconsole", specs)]),
         # It reads what it carries, on a member, and on the holder what the holder's own agent reads through `answer` —
         # the holder's rows for every member included; never the signer's.
-        "domainagent": role("domainagent", agent, [schema, "domain/*", SIGNER_KEYS]),
+        "domainagent": role("domainagent", agent, [schema, "domain/*", SIGNER_KEYS, *secret_denials("domainagent", specs)]),
     }
     for s in on:
         if not (s.domain.books or s.domain.kept):
@@ -86,5 +103,6 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
                                                                f"{declared.GRANTS_PREFIX}*")]
         out[f"{s.name}domain"] = role(f"{s.name}domain", [f"{s.domain_prefix}*"],
                                       [schema, f"{s.domain_prefix}*", "domain/keys", "domain/topology", "domain/members",
-                                       "domain/shared", "platform/*", *units, *apart])
+                                       "domain/shared", "platform/*", *units, *apart,
+                                       *secret_denials(f"{s.name}domain", specs)])
     return out
