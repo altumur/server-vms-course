@@ -138,8 +138,8 @@ class FsObjectStore:
                 pass
             raise
 
-    # The bytes a ROW will name — a detector's mask, whose digest goes into a row written with fsync. Without the
-    # barrier the row survives the power going and the file does not, and the detector never starts (the review's
+    # The bytes a ROW will name — a sensor's mask, whose digest goes into a row written with fsync. Without the
+    # barrier the row survives the power going and the file does not, and the unit never starts (the review's
     # second pass). Heartbeats and snapshots do not pay it: the next one replaces them anyway.
     def put_durable(self, key: str, data: bytes) -> None:
         self.put(key, data, durable=True)
@@ -147,11 +147,11 @@ class FsObjectStore:
     # Creates the object only if there is none; `True` when THIS call made it. The file system's create-or-
     # tell-me-it-exists (`link` onto the final name, which fails on a name that is taken) — the one CAS a
     # store of last-writer-wins objects can offer, and the one a worker's command mark needs: two holders of
-    # one device must not both believe they were first (the review's second pass). A store without it gets
-    # the command refused (`VmsWorker._mark`).
+    # one unit must not both believe they were first (the review's second pass). A store without it gets
+    # the command refused (the worker's `_mark`).
     #
     # DURABLE, both halves (the review's third pass): the bytes to the medium before the name is made, the
-    # directory entry after. The mark is written BEFORE the device is called; a mark the power took with it
+    # directory entry after. The mark is written BEFORE the outside thing is called; a mark the power took with it
     # leaves no trace of a call that happened, and the next holder opens the door a second time.
     def put_new(self, key: str, data: bytes) -> bool:
         check(key, len(data), self.max_bytes)

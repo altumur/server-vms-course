@@ -1,5 +1,5 @@
 """The platform, on one box (the package is `w2cplatform` only because Python owns the name `platform`). Everything here would host any fleet of
-stateless shards writing bulk data; nothing here knows what a camera is.
+stateless shards writing bulk data; nothing here knows what a unit is.
 
     variables.py   a small, consistent config store with ModifyIndex and check-and-set (file-backed)
     objects.py     an object store (a directory)
@@ -22,7 +22,7 @@ and changes nothing above this line.
 #
 # **Role in the module.** The file contains no code, only the package docstring. It names the package
 # (`w2cplatform` rather than `platform` because Python's standard library already owns `platform`), states
-# the one design line that governs everything under it — *nothing here knows what a camera is*; anything
+# the one design line that governs everything under it — *nothing here knows what a unit is*; anything
 # here would host any fleet of stateless shards writing bulk data — and gives a one-line map of the modules:
 # `variables.py` (config store with ModifyIndex and check-and-set), `objects.py` (object store), `epoch.py`
 # (fencing token and lease), `contract.py` (Controller and Worker bases), `spec.py` (the controller as
@@ -38,8 +38,9 @@ and changes nothing above this line.
 # explicitly (`from w2cplatform.spec import SpecController`).
 #
 # ## Notes
-# - `tests/test_lesson1_platform.py::test_the_platform_knows_nothing_about_its_subsystems` greps every `.py` under
-#   this directory for `from vms` / `import vms`, and every file except this `__init__.py` for the word
-#   "camera" in any case. This file is exempt from the word check only because its docstring says "nothing
-#   here knows what a camera is"; it still must not import from `vms/`.
+# - `tests/test_lesson1_platform.py::test_the_platform_knows_nothing_about_its_subsystems` greps the code of every
+#   `.py` under this directory for an import of a subsystem's package, and every file except this `__init__.py` for
+#   the word a subsystem's spec calls its unit, in any case. This file is exempt from that word check because its
+#   docstring once named the unit; it still must not import a subsystem's package, and `tests/test_boundary.py`
+#   holds it, like the whole tree, to every word of the product (ADR-0001).
 # ================================================================================================

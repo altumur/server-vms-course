@@ -51,8 +51,8 @@ can take it as it is — a role is a name in the certificate, not a property of 
 # a certificate without one says it with its CN, `<role>.<server>`. The CA is the installation's own and signs only
 # what `w2c-ca.sh` issues, so a role in a certificate it signed is a role somebody installed.
 # A DAEMON'S CERTIFICATE CARRIES ONE ROLE (the product's cross-check of its hashicorp/raft store). «Any one grants»
-# made a certificate of `configstore` and `recworker` a store daemon at every door that asked for the store — and a
-# recorder that holds its key a daemon of the group. The store's role is never shared (`SOLE_ROLES`): `w2c-ca.sh issue`
+# made a certificate of `configstore` and a worker role a store daemon at every door that asked for the store — and a
+# worker that holds its key a daemon of the group. The store's role is never shared (`SOLE_ROLES`): `w2c-ca.sh issue`
 # refuses it with another, a door refuses a peer whose certificate carries it with another whatever role the door
 # asks (`require_role`), and no context is built on such a certificate of our own (`_context`) — the daemon does not
 # start with one.
@@ -66,11 +66,11 @@ can take it as it is — a role is a name in the certificate, not a property of 
 # ## Both sides check
 # - The SERVER requires a client certificate signed by the CA (`server_context`), and the door asks
 #   `require_role` for the role it serves. No certificate: the handshake fails. A certificate of another role
-#   (a recorder's, a console's): the door answers 403.
+#   (a worker's, a console's): the door answers 403.
 # - The CLIENT checks that the server's certificate is the CA's AND that its SAN DNS is the server it dialled
 #   (`client_context` + `server_hostname`). An address is often an IP or a name the certificate does not carry, so
 #   the name to check is given apart from it: `srv-a@10.0.0.7:8300` (`split_address`); a bare `srv-a:8300` checks
-#   `srv-a`. The client then asks the role of the server, too (`require_role`): a recorder's certificate for
+#   `srv-a`. The client then asks the role of the server, too (`require_role`): a worker's certificate for
 #   `srv-a` is a valid certificate for `srv-a` and still not the store.
 # ================================================================================================
 from __future__ import annotations
