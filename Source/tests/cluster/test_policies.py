@@ -386,3 +386,21 @@ def test_a_key_is_exact_and_a_prefix_says_so():
     assert r.allows("c", "write", "objects/vms/snapshot/w-1") and not r.allows("c", "write", "objects/vms/snapshot")
     assert r.allows("c", "write", "vms/policy") and r.allows("c", "write", "vms/cameras/1")
     assert not r.allows("c", "write", "vms/epoch/1")
+
+
+def test_a_worker_whose_spec_declares_a_door_for_people_reads_the_clusters_grants_and_no_other_does():
+    """«Архитектор» 2026-10-07 (the RTSP accounts, question B): a holder that decides who it shows a unit to — its spec
+    declares a door for people (`door: {routes}`: the live gateway, the recorder) — reads the cluster's grants
+    (`domain/grants/*`, not secret); a worker with no such door does not. The product's worker reads `*` less its
+    denials: the same behaviour. And the secret rows under `domain/` are read by those `secrets.readers` names — the
+    domain's console reads neither the accounts nor the books of them; its agent reads the carried book, not the clients."""
+    r = rights()
+    with_door = {f"{s.name}worker" for s in SPECS if s.door_routes}
+    assert {"liveworker", "recworker"} <= with_door
+    for s in SPECS:
+        assert r.allows(f"{s.name}worker", "read", "domain/grants/room-a") == (f"{s.name}worker" in with_door), s.name
+    assert not r.allows("domainconsole", "read", "domain/vms/stream-clients/wall1")
+    assert not r.allows("domainconsole", "read", "domain/vms/stream-accounts")
+    assert not r.allows("domainagent", "read", "domain/vms/stream-clients/wall1")
+    assert r.allows("domainagent", "read", "domain/vms/stream-accounts")
+    assert r.allows("domain", "read", "domain/vms/stream-clients/wall1")              # the signer backs up domain.kept

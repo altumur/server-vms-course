@@ -4,7 +4,7 @@ addendum of 2026-10-07; ADR-0024: the gateway reads the accounts because its spe
 One box: a VMS worker holding two cameras, a live gateway with the door over `FakeRTSPServer` (what speaks RTSP is
 pluggable, as the WebRTC peer is). What the cluster's agent would have carried is written as it lies: the accounts this
 cluster is granted, sealed with the cluster's ring (`domain/vms/stream-accounts`), and its grants (`domain/grants`). The
-declarations are the product's lines added to the course's YAML (`tests/streamspec.py`)."""
+declarations are the course's YAML, in the product's spelling (`tests/streamspec.py`)."""
 import json
 import os
 import tempfile
@@ -19,7 +19,7 @@ from vms.liveworker import LiveWorker
 from vms.rtspdoor import FakeRTSPServer, RTSPDoor
 from vms.streamclients import STREAM_ACCOUNTS_KEY
 from vms.worker import FakeActuator, VmsWorker
-from tests.streamspec import declared
+from tests.streamspec import declared, undeclared
 from tests.vmsconftest import Box
 
 PW = {"wall1": "p" * 32, "wall2": "q" * 32, "wall3": "r" * 32}
@@ -62,12 +62,13 @@ def _gateway(box, env, server):
 
 
 def test_the_door_is_off_unless_asked_for_declared_and_given_a_server():
-    """LIVE_RTSP_LISTEN unset: no door. Set, and the gateway's spec does not say it reads the accounts (the course's YAML
-    as it is): no door. Declared, and no server to open it with: no door. All three: the door."""
+    """LIVE_RTSP_LISTEN unset: no door. Set, and the gateway's spec does not say it reads the accounts (its `secrets.reads`
+    taken out): no door. Declared, and no server to open it with: no door. All three: the door."""
     box, _ = _box()
     on = {"LIVE_RTSP_LISTEN": "127.0.0.1:8554"}
-    assert _gateway(box, {}, FakeRTSPServer()).rtsp is None
-    assert _gateway(box, on, FakeRTSPServer()).rtsp is None
+    with undeclared():
+        assert _gateway(box, {}, FakeRTSPServer()).rtsp is None
+        assert _gateway(box, on, FakeRTSPServer()).rtsp is None
     with declared():
         assert _gateway(box, {}, FakeRTSPServer()).rtsp is None
         assert _gateway(box, on, None).rtsp is None

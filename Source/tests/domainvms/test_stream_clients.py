@@ -5,7 +5,7 @@ secrets, ADR-0010 for the books and the kept rows).
 A domain of three: srv-b holds it, srv-a and srv-c are members, each with its own ring and admitted with its own key, each
 agent carrying through the holder's door. The domain's console is the real one (the people's routes handed to a signer
 that answers the list of people from the holder's identity store); the worker's door is the real one, with tokens that
-name their person. The declarations are the product's lines added to the course's YAML (`tests/streamspec.py`)."""
+name their person. The declarations are the course's YAML, in the product's spelling (`tests/streamspec.py`)."""
 import json
 import os
 import tempfile
@@ -34,7 +34,7 @@ from vms.domainpart.crossing import Crossings
 from vms.domainpart.streamclients import ConsoleDoor, StreamClientDoors, new_stream_client
 from vms.domainpart.worker import door_handler
 from tests.domain.conftest import Clock, make_cluster
-from tests.streamspec import declared
+from tests.streamspec import declared, undeclared
 
 
 def ring():
@@ -261,8 +261,13 @@ def test_deleting_a_client_drops_every_grant_that_names_it_through_the_domain_co
 
 
 def test_nothing_declared_nothing_made_and_nothing_carried():
-    """The course's YAML as it is, without the product's lines: the doors are not there (404), the pass writes no book
+    """The accounts' declarations taken out of the course's specs: the doors are not there (404), the pass writes no book
     (`stream-accounts` is not in what it returns), and a member reads no account."""
+    with undeclared():
+        _nothing_declared()
+
+
+def _nothing_declared():
     s = _site()
     try:
         assert s.call("GET", "/stream-clients")[0] == 404
