@@ -1607,7 +1607,7 @@ class SpecConsole:
     # three numbers a suppressed window reports (Lesson 12), because it is the same question asked one
     # layer up: what happened, how many times, between when and when. Alarms keep their own groups rather
     # than being folded in with the noise, so a screen in aggregate mode still puts them first.
-    def timeline(self, rep: dict, t0: float, t1: float) -> dict:
+    def events_reply(self, rep: dict, t0: float, t1: float) -> dict:
         events = rep.get("events", [])
         minutes = max((min(t1, self.wall()) - t0) / 60.0, 1 / 60.0)
         rate = len(events) / minutes
@@ -1748,7 +1748,7 @@ class SpecConsole:
                     except PARSE_ERRORS:                 # `epoch: Infinity` too (`int(inf)`; the tenth round's sweep)
                         log.warning("%s: epoch row %s does not parse: its events are not fenced", self.spec.name, p)
             except OSError as e:
-                log.warning("%s: the store did not answer the epochs (%s): the timeline is fenced by the last ones read", self.spec.name, e)
+                log.warning("%s: the store did not answer the epochs (%s): the events are fenced by the last ones read", self.spec.name, e)
                 self.epochs_stale = True
                 return self._epochs[1]
             self._epochs, self.epochs_stale = (now, out), False
@@ -3564,7 +3564,7 @@ class SpecConsole:
                                                for u, n in sorted(withheld.items())]
                     if not narrow and con.epochs_stale:
                         rep = {**rep, "epochs": "cached"}         # fenced by the epochs read before the store went quiet
-                    return h._send(200, con.timeline(rep, t0, t1))
+                    return h._send(200, con.events_reply(rep, t0, t1))
                 except ValueError as e:
                     return h._send(400, {"error": str(e)})
             if path == "/metrics":

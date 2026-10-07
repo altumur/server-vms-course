@@ -27,7 +27,7 @@
 # a console writes about who did what — `unit.deleted`, `door.issued`, a row of a table — then names somebody who was
 # checked, not somebody who introduced themselves.
 #
-# What this does NOT close, and it is said in the product's module design (ADR-0034): the doors BEHIND the console —
+# What this does NOT close, and it is said in ADR-0034: the doors BEHIND the console —
 # the resource, a holder's door between processes — still ask nobody. That is mutual TLS between processes, the next
 # step, and until it a cluster of several machines stands behind its network.
 # ================================================================================================

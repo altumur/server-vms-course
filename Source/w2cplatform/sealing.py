@@ -168,7 +168,7 @@ def seal_items(sealer: Sealer | None, items: dict, ctx: str) -> dict:
         if not _said_clear and any(is_secret_field(k) and v for k, v in items.items()):
             _said_clear = True
             log.warning("secrets are stored in the CLEAR: this process has no SECRETS_KEY, and whoever reads or copies "
-                        "the store reads every device password")
+                        "the store reads every secret in the clear")
         return items
     return {k: (sealer.seal(k, str(v), ctx) if is_secret_field(k) and v else v) for k, v in items.items()}
 
@@ -223,9 +223,9 @@ def seal_stored(sealer: "Sealer | None", vars_, prefixes) -> int:
                 skipped += 1
                 log.warning("%s was NOT sealed (%s)", key, e)
     if sealed:
-        log.warning("sealed the device secrets of %d row(s) written before this console had a key", sealed)
+        log.warning("sealed the secrets of %d row(s) written before this console had a key", sealed)
     if skipped:
-        log.warning("%d row(s) with device secrets in the clear could not be sealed: the store refused or did not answer", skipped)
+        log.warning("%d row(s) with secrets in the clear could not be sealed: the store refused or did not answer", skipped)
     return sealed
 
 
@@ -257,6 +257,6 @@ if __name__ == "__main__":                              # python3 -m w2cplatform
     if len(sys.argv) == 3 and sys.argv[1] == "new":
         new_key_file(sys.argv[2], store=platform_stores(os.environ))
         print(f"a key ring with one key: {sys.argv[2]} (mode 0640, the directory's group: w2c-secrets) — read by the "
-              "console, the holders and the recorders, which join that group")
+              "console and the workers that read secrets, which join that group")
     else:
         print("usage: python3 -m w2cplatform.sealing new <path>")

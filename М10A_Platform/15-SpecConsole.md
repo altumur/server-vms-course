@@ -424,7 +424,7 @@ GET /testsub2/where/shelves/s3?unit=testsub2/t1   → 404 {…, "error": "no suc
                     if sees is not None:
                         …                                     # a unit's events, to whoever may view that unit (step 12a)
                     …
-                    return h._send(200, con.timeline(rep, t0, t1))
+                    return h._send(200, con.events_reply(rep, t0, t1))
                 except ValueError as e:
                     return h._send(400, {"error": str(e)})
 ```
@@ -450,7 +450,7 @@ GET /testsub2/where/shelves/s3?unit=testsub2/t1   → 404 {…, "error": "no suc
 Поэтому у консоли есть **норматив** — сколько событий в минуту ожидается от одного читателя, — и, что важнее, **за ним что-то происходит**:
 
 ```python
-    def timeline(self, rep: dict, t0: float, t1: float) -> dict:
+    def events_reply(self, rep: dict, t0: float, t1: float) -> dict:
         events = rep.get("events", [])
         minutes = max((min(t1, self.wall()) - t0) / 60.0, 1 / 60.0)
         rate = len(events) / minutes
@@ -461,7 +461,7 @@ GET /testsub2/where/shelves/s3?unit=testsub2/t1   → 404 {…, "error": "no suc
         return {**out, "aggregated": True, "events": [], "groups": ordered}
 ```
 
-Норматив без действующей половины — комментарий в файле. Записанное и ни разу не прочитанное число не предотвращает ничего: буря идёт ровно так же, обои получаются ровно те же. Поэтому в курсе он не константа в политике, а поле консоли (`per_minute`, `EVENTS_PER_MINUTE`, по умолчанию 60), за которым стоит `timeline`.
+Норматив без действующей половины — комментарий в файле. Записанное и ни разу не прочитанное число не предотвращает ничего: буря идёт ровно так же, обои получаются ровно те же. Поэтому в курсе он не константа в политике, а поле консоли (`per_minute`, `EVENTS_PER_MINUTE`, по умолчанию 60), за которым стоит `events_reply`.
 
 Агрегат — это `(подсистема, единица, вид, класс)` со счётчиком и границами: **те же три числа**, которыми отчитывается подавленное окно в уроке 12. Тот же вопрос, заданный этажом выше: что происходило, сколько раз, между когда и когда. Тревоги идут отдельными группами и первыми — экран в режиме счёта не должен прятать их среди шума.
 

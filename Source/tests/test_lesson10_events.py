@@ -391,10 +391,10 @@ def test_past_the_norm_the_timeline_counts_instead_of_listing():
     db = EventIndex(box.resource_root, "srv-1", wall=box.wall)
     con = _console_over(box, db)
 
-    quiet = con.timeline(db.query(0, t + 5), 0, t + 5)             # a handful over a long window
+    quiet = con.events_reply(db.query(0, t + 5), 0, t + 5)             # a handful over a long window
     assert quiet["aggregated"] is False and quiet["events"] and "groups" not in quiet
 
-    busy = con.timeline(db.query(t, t + 60), t, t + 60)            # ninety-three in a minute, norm sixty
+    busy = con.events_reply(db.query(t, t + 60), t, t + 60)            # ninety-three in a minute, norm sixty
     assert busy["aggregated"] is True and busy["events"] == []
     assert busy["rate_per_minute"] > busy["per_minute"]
     assert [g["kind"] for g in busy["groups"]] == ["io.input", "stats"], "the alarm group is not first"
@@ -423,7 +423,7 @@ def test_the_norm_is_the_operators_and_a_process_still_gets_every_line():
     assert "aggregated" not in db.query(t, t + 60)
 
     patient = _console_over(box, db, per_minute=1000)
-    assert patient.timeline(db.query(t, t + 60), t, t + 60)["aggregated"] is False
+    assert patient.events_reply(db.query(t, t + 60), t, t + 60)["aggregated"] is False
 
 
 def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
@@ -740,7 +740,7 @@ def test_the_operators_timeline_says_which_servers_a_window_is_missing():
     now = box.wall()
     for per_minute in (0.0, 1000.0):                                   # folded, and plain
         con = _console_over(box, Merge(), per_minute=per_minute)
-        out = con.timeline(con.index.query(now - 60, now), now - 60, now)
+        out = con.events_reply(con.index.query(now - 60, now), now - 60, now)
         assert out["complete"] is False and out["incomplete"] == {"srv-2": "did not answer"}
 
 
