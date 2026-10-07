@@ -32,8 +32,9 @@ def test_the_writer_works_with_the_volumes_own_block_or_its_setting_whichever_is
 
 def test_a_recorder_on_a_volume_of_small_blocks_says_block_small_and_the_page_is_told_by_servers_status():
     """The recorder of a volume formatted with 1 MiB blocks says `objectstorage: {volume, block_bytes, block_small}` in
-    every heartbeat; one on a volume of 4 MiB blocks says its block and no `block_small`. rec's spec names the field for
-    the page (`servers.status`, «блок тома меньше кадров видео»)."""
+    every heartbeat — `block_small` the block's bytes, a number, so that `/servers` shows it (a `true` leaf is a garbled
+    one, ADR-0064; «Архитектор» 2026-10-07); one on a volume of 4 MiB blocks says its block and no `block_small`. rec's
+    spec names the field for the page (`servers.status`, «блок тома меньше кадров видео»), and the console shows it."""
     assert {"field": "objectstorage.block_small", "title": "блок тома меньше кадров видео"} in \
         [{k: s[k] for k in ("field", "title")} for s in REC_SPEC.servers_status]
     for block, small in ((1 << 20, True), (TEST_BLOCK, False)):
@@ -48,4 +49,9 @@ def test_a_recorder_on_a_volume_of_small_blocks_says_block_small_and_the_page_is
         r.heartbeat_once()
         said = heartbeats(box.objects, "rec")["r-1"].extra["objectstorage"]
         assert said["volume"] == "disk" and said["block_bytes"] == block, said
-        assert said.get("block_small", False) is small, said
+        assert said.get("block_small") == (block if small else None), said
+        from w2cplatform.console import SpecConsole
+        from w2cplatform.spec import SpecController
+        rows = SpecConsole(SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall), wall=box.wall).servers()
+        shown = [w.get("status", {}).get("objectstorage.block_small") for s in rows["servers"].values() for w in s["workers"]]
+        assert shown == ([block] if small else [None]), rows
