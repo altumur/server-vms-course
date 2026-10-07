@@ -22,6 +22,10 @@ from w2cplatform import specyaml
 
 PRODUCT_SPECS = "vmsworker/vms"                        # on the product's `main`, relative to its root
 _THEIRS = product_files(PRODUCT_SPECS, ".subsystem.yaml")
+# …and the product's TEST subsystems: its own files, not the course's (the bytes are not one — «Архитектор» 2026-10-07),
+# loaded by the course's loader all the same (ADR-0012, ADR-0019: cross-load), their refusals in the load debt too
+PRODUCT_TEST_SPECS = "vmsworker/w2cplatform/testdata"
+_THEIR_TESTSUBS = product_files(PRODUCT_TEST_SPECS, ".subsystem.yaml")
 pytestmark = pytest.mark.skipif(not _THEIRS, reason="no product beside the course (W2C_PRODUCT_DIR), or no `main` "
                                                     "there: the specs are not compared")
 
@@ -237,9 +241,11 @@ def _drop(x, parts: list[str]) -> None:
 def test_every_spec_of_the_product_loads_with_the_courses_loader_but_for_the_debt():
     """A product spec is a course spec (one YAML): the course's loader takes it. The key sets are closed — what it
     refuses is a divergence to close (the course reads the key, the product drops it, or both rename it), named in
-    `spec_load_debt.txt` as `<spec>:<key path>` until it is closed, and the list only shrinks."""
+    `spec_load_debt.txt` as `<spec>:<key path>` until it is closed, and the list only shrinks. The product's test
+    subsystems (`testsub*`, its own bytes) are asked the same: each side's loader takes the other's test specs."""
+    assert len(_THEIR_TESTSUBS) == 2, _THEIR_TESTSUBS
     found = set()
-    for p in _THEIRS:
+    for p in _THEIRS + _THEIR_TESTSUBS:
         d = specyaml.loads(product_file(p), f"the product's {p}")     # the course's one reading of a spec (ADR-0019)
         found |= {f"{d.get('name')}:{k}" for k in refused_paths(d)}
     _hold(found, LOAD_DEBT, LOAD_HEAD, "key paths of the product's specs the course's loader refuses")
