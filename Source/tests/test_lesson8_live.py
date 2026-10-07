@@ -243,27 +243,63 @@ def test_placement_by_label_a_stream_for_outside_viewers_needs_a_public_address(
 
 def test_a_stream_nobody_places_does_not_stand_for_ever():
     """The review's second pass, major: `POST /whep/7?labels=nowhere` made a row nothing could place, and every next
-    viewer of camera 7 was told "retry" — for ever. The console refused labels no live gateway carried while it
-    created the row (`LiveFront.offer`); since the boundary's step 6 the viewer writes the row through the platform's
-    console (`POST /live/streams`, a `view` of the camera), and what the row's labels ask is placement's to say — the
-    controller's reason (`unplaceable`) — and a row that IS unplaced, by any cause, is deleted by any gateway that has
-    seen it stand so for the row's own `grace`, with the token that deletes idle fan-outs already; the next viewer
-    makes a fresh one."""
+    viewer of camera 7 was told "retry" — for ever. The viewer writes the row through the platform's console (`POST
+    /live/streams`, a `view` of the camera), and what its labels ask is placement's to say — the controller's reason
+    (`unplaceable`). A row that IS unplaced, by any cause, is deleted by its CONTROLLER once nobody has held it for
+    `placement.unplaced.delete_after` (30 s in `live.subsystem.yaml`; ADR-0067) — not by a gateway, which deletes only
+    the rows it held: in a cluster with no gateway at all the row and its alarm stood for ever while the sweep was the
+    gateway's. The next viewer makes a fresh row; a row placed before its time is not deleted, whatever its age."""
     box, ctl, live_ctl, w, srv, base = _box()
+    lines = []
+    live_ctl.journal = type("J", (), {"say": lambda self, kind, cls="observation", **f: lines.append((kind, f))})()
     try:
         g = _gateway(box, "g-1", labels="rack-7")
         assert _whep(base, 1, path="/whep/1?labels=nowhere,rack-7")[0] == 503          # taken: nobody holds it
-        assert live_ctl.ensure_placed() == [] and live_ctl.placement("1") is None
-        # a row the controller never placed (it is away): seen so for `grace`, the gateway deletes it
-        box.vars.put("live/streams/2", {"id": "2", "cam": "2", "labels": "nowhere", "grace": "30", "revision": "1"})   # a row from before this rule
-        assert g.reconcile_once() == [] and live_ctl.unit("2") is not None               # first seen: the count starts
-        box.wall.advance(20); g.reconcile_once()
-        assert live_ctl.unit("2") is not None and live_ctl.unit("1") is not None          # inside the grace: a pass away from placement, maybe
+        box.vars.put("live/streams/2", {"id": "2", "cam": "2", "labels": "nowhere", "grace": "30", "revision": "1"})
+        live_ctl.pass_once()                                                            # first seen unheld: the count starts
+        assert live_ctl.placement("1") is None and live_ctl.unit("2") is not None
+        box.wall.advance(20); live_ctl.pass_once(); g.reconcile_once()
+        assert live_ctl.unit("2") is not None and live_ctl.unit("1") is not None          # inside the 30 s
         box.wall.advance(11); g.reconcile_once()
-        assert live_ctl.unit("2") is None and live_ctl.unit("1") is None                  # both unplaced for 31 s: gone; the next viewer makes a fresh row
-        assert _whep(base, 1, path="/whep/1?labels=rack-7")[0] == 503 and live_ctl.unit("1")["revision"] == 2
-        live_ctl.ensure_placed(); box.wall.advance(31); w.heartbeat_once(); g.reconcile_once()
-        assert live_ctl.unit("1") is not None and g.reconcile_once() == ["1"]            # placed on this gateway: not an orphan, whatever its age
+        assert live_ctl.unit("2") is not None and live_ctl.unit("1") is not None          # a gateway deletes no row it never held
+        rep = live_ctl.pass_once()
+        assert live_ctl.unit("2") is None and live_ctl.unit("1") is None                  # both unheld for 31 s: gone
+        assert rep["unplaced_deleted_total"] == 2
+        assert sorted(f["target"] for k, f in lines if k == "unit.unplaced_deleted") == ["1", "2"]
+        assert all(f["after_s"] == 30 for k, f in lines if k == "unit.unplaced_deleted")
+        assert box.vars.get("live/streams/1")[0] is None                                  # removed, not a tombstone: the right is a delete
+        assert _whep(base, 1, path="/whep/1?labels=rack-7")[0] == 503 and live_ctl.unit("1")["revision"] == 1   # a fresh row
+        live_ctl.pass_once(); box.wall.advance(31); w.heartbeat_once(); g.reconcile_once(); live_ctl.pass_once()
+        assert live_ctl.unit("1") is not None and g.reconcile_once() == ["1"]            # placed on this gateway: kept, whatever its age
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
+def test_a_stream_of_a_camera_nobody_serves_is_waited_for_said_and_deleted_after_its_grace():
+    """ADR-0057, window 2 (the product's `waitFor`): the console writes a stream row of a camera that is not there — `ref`
+    asks a row only for `must_match`, nothing undeclared binds — and the gateway it is placed on does not serve it,
+    says why in its heartbeat (`waiting`), and once it has waited the row's `grace` deletes it as it deletes an idle
+    fan-out. A camera that is there and recorded nowhere is said so; one that comes up is subscribed and not waited for."""
+    from w2cplatform.console import heartbeats
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1")
+        box.vars.put("live/streams/9", {"id": "9", "cam": "9", "grace": "30", "revision": "1"})      # no camera 9
+        live_ctl.ensure_placed(); w.heartbeat_once(); g.heartbeat_once()
+        assert live_ctl.placement("9").worker == "g-1"
+        assert g.reconcile_once() == [] and g.subscriptions == 0
+        g.heartbeat_once()
+        assert heartbeats(box.objects, "live")["g-1"].extra["waiting"] == {"9": "no camera 9"}
+        box.wall.advance(29); w.heartbeat_once(); g.reconcile_once()
+        assert live_ctl.unit("9") is not None                                             # inside its grace
+        box.wall.advance(1); w.heartbeat_once(); g.reconcile_once(); g.heartbeat_once()
+        assert live_ctl.unit("9") is None and g.waiting == {}                             # waited its grace: gone
+        assert "waiting" not in heartbeats(box.objects, "live")["g-1"].extra
+        ctl_cam = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+        ctl_cam.create_camera({"name": "yard", "source": "driverpack://file/yard.mp4"})  # camera 2, on no worker yet
+        box.vars.put("live/streams/2", {"id": "2", "cam": "2", "grace": "30", "revision": "1"})
+        live_ctl.ensure_placed(); w.heartbeat_once(); g.heartbeat_once(); g.reconcile_once()
+        assert g.waiting == {"2": "camera 2 is recorded nowhere: no worker says it running"}, g.waiting
     finally:
         srv.shutdown(); srv.server_close()
 

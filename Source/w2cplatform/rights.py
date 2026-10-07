@@ -14,6 +14,9 @@ box with `file://` it could, until the two shared this).
 
 A pattern is a key, or a prefix with one trailing `*`; with a leading `!` it DENIES what it names. Denials are asked
 first, wherever they stand in the list: `["domain/*", "!domain/signer*"]` is every row of the domain but the signer's.
+With a leading `delete:` (`DELETE_ONLY`, the product's `p.DeleteOnly`) it gives the DELETE of what it names and never its
+write: a controller that removes a unit nobody held for `placement.unplaced.delete_after` and may still write no unit's row
+(ADR-0067). A rights file holds no such pattern: its roles carry `delete` beside `write` (`cluster/rights.py`).
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -22,7 +25,9 @@ first, wherever they stand in the list: `["domain/*", "!domain/signer*"]` is eve
 #
 # - `hit(pattern, key)` — one pattern (no `!`) against one key: equal, or a prefix when the pattern ends in `*`.
 # - `valid(pattern)` — what a rights file or an ACL may hold: a non-empty string, `*` only last, `!` only first.
-# - `allowed(patterns, key)` — the question: any denial that hits says no; else any grant that hits says yes; else no.
+# - `allowed(patterns, key, action)` — the question: any denial that hits says no; else any grant that hits says yes;
+#   else no. A `delete:` pattern is a grant for `action="delete"` alone.
+# - `split(patterns)` — `(write, delete)`: what a role writes, and what it deletes — the writes and the `delete:` ones.
 # - `refusal(writer, acl, key, action)` — the in-process form: None when the handle may, else the words of a
 #   `Forbidden`. No writer, or no ACL at all, is an unrestricted handle (a test's, the operator's own tool).
 # - `DOMAIN_ROLES` — who may DELETE `domain/*` (the product's names): the domain's processes on its holder's store,
@@ -32,6 +37,7 @@ first, wherever they stand in the list: `["domain/*", "!domain/signer*"]` is eve
 from __future__ import annotations
 
 DOMAIN_ROLES = frozenset({"domain", "domainagent"})
+DELETE_ONLY = "delete:"
 
 
 def hit(pattern: str, key: str) -> bool:
@@ -41,19 +47,28 @@ def hit(pattern: str, key: str) -> bool:
 def valid(p) -> bool:
     if not isinstance(p, str):
         return False
-    body = p[1:] if p.startswith("!") else p
+    body = p[1:] if p.startswith("!") else p[len(DELETE_ONLY):] if p.startswith(DELETE_ONLY) else p
     return bool(body) and "!" not in body and "*" not in body[:-1]
 
 
-def allowed(patterns, key: str) -> bool:
+def allowed(patterns, key: str, action: str = "write") -> bool:
     pats = list(patterns or ())
     if any(hit(p[1:], key) for p in pats if p.startswith("!")):
         return False                          # a denial wins over every grant, wherever it stands in the list
-    return any(hit(p, key) for p in pats if not p.startswith("!"))
+    grants = [p[len(DELETE_ONLY):] if p.startswith(DELETE_ONLY) else p for p in pats if not p.startswith("!")
+              and (action == "delete" or not p.startswith(DELETE_ONLY))]
+    return any(hit(p, key) for p in grants)
+
+
+def split(patterns) -> tuple[list, list]:
+    """`(write, delete)` of an ACL: a `delete:` pattern only in the second, bare."""
+    pats = list(patterns or ())
+    write = [p for p in pats if not p.startswith(DELETE_ONLY)]
+    return write, write + [p[len(DELETE_ONLY):] for p in pats if p.startswith(DELETE_ONLY)]
 
 
 def refusal(writer: str | None, acl: dict | None, key: str, action: str = "write") -> str | None:
     """Why the in-process handle `writer` may not `action` `key` under `acl` ({writer: [patterns]}); None if it may."""
     if writer is None or not acl:
         return None
-    return None if allowed(acl.get(writer, []), key) else f"{writer} may not {action} {key}"
+    return None if allowed(acl.get(writer, []), key, action) else f"{writer} may not {action} {key}"

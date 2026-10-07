@@ -109,8 +109,9 @@ class LiveWorker(Worker):
         self.resets = 0                                             # subscriptions reopened because the camera moved or the source died
         self.swept = 0                                              # sessions closed because their viewer was gone
         self.subscriptions = 0                                      # how many times an RTP source was opened — the test's number
-        self._unplaced_since: dict[str, float] = {}                 # stream rows nobody holds -> when this gateway first saw them so
         self.refused: dict[str, str] = {}                           # cameras whose epoch could not be taken -> why (the heartbeat's `refused`)
+        self.waiting: dict[str, str] = {}                           # cameras assigned here whose stream nobody serves -> why (the heartbeat's `waiting`)
+        self.waiting_since: dict[str, float] = {}                   # …and since when, by this gateway's wall clock
         self.lock = threading.Lock()
 
     # -- where a camera's RTP is: the VMS heartbeat, never a call to the worker ----------------------
@@ -159,6 +160,7 @@ class LiveWorker(Worker):
                     log.error("%s: camera %s not subscribed: its epoch could not be taken: %s", self.name, cam, e)
         for cam in [c for c in self.refused if c not in wanted]:
             del self.refused[cam]                                   # not ours any more: nothing to say about it
+        unsourced = self._wait_for(now, wanted, sources)
         rows = {}
         for cam in (idle if self.ctl is not None else ()):
             try:
@@ -166,7 +168,6 @@ class LiveWorker(Worker):
                 self.row_parsed(cam)
             except PARSE_ERRORS as e:    # its row does not parse (`row_garbled`): nobody can say
                 self.row_garbled(cam, e)                      # its grace has run out, and the fan-out is kept
-        orphans = self._orphans(now, wanted) if self.ctl is not None else []
         dropped, deleted = [], []
         with self.lock:
             for cam in wanted - set(self.upstreams):
@@ -186,26 +187,60 @@ class LiveWorker(Worker):
                     deleted.append(cam)
         for cam in dropped:
             self.release(cam)
-        for cam in deleted + orphans:
+        for cam in deleted:
             self.ctl.delete(cam)                                    # the controller's next pass takes the placement back
+        for cam in unsourced:
+            try:
+                self.ctl.delete(cam)
+            except Exception as e:                                  # noqa: BLE001 — the store: the next pass
+                log.warning("%s: stream %s, served by nobody, was not deleted: %s", self.name, cam, e)
+                continue
+            log.info("%s: a stream nobody serves aged out: %s (%s)", self.name, cam, self.waiting.get(cam, ""))
+            self.waiting.pop(cam, None); self.waiting_since.pop(cam, None)
         return sorted(self.upstreams)
 
-    # A stream row nobody holds and nobody is about to: a viewer asked for labels no gateway carries, or the row
-    # outlived its controller. It stood for ever, and every next viewer of that camera was told 503 "retry" (the
-    # review's second pass, major). A row seen unplaced for its own `grace` — by this gateway's wall clock from
-    # the pass that first saw it — is deleted by whichever gateway sees it so, with the token that deletes idle
-    # fan-outs already; the next viewer makes a fresh row.
-    def _orphans(self, now: float, wanted: set) -> list[str]:
+    # A STREAM NOBODY SERVES (ADR-0057, window 2; the product's `waitFor`): a camera assigned here that no worker says it
+    # running — there is no such camera, or nobody records it, or its fan-out is on another server's loopback. The console
+    # writes such a row: `ref` asks a row only for `must_match`, and nothing undeclared binds (ADR-0012). The gateway does
+    # not serve it, says why in its heartbeat (`waiting: {cam: why}`), and once it has waited the row's `grace` — by this
+    # gateway's wall clock from the pass that first saw it so — deletes it as it deletes an idle fan-out; the next viewer
+    # makes a fresh row. A camera that comes up meanwhile is subscribed and forgotten here.
+    def _wait_for(self, now: float, wanted: set, sources: dict) -> list[str]:
         out = []
-        unplaced = {str(r["id"]): r for r in self.ctl.units() if str(r["id"]) not in wanted and self.ctl.placement(r["id"]) is None}
-        for cam in list(self._unplaced_since):
-            if cam not in unplaced:
-                del self._unplaced_since[cam]                      # placed, or gone
-        for cam, row in unplaced.items():
-            since = self._unplaced_since.setdefault(cam, now)
-            if now - since >= int(row.get("grace", 30)):
-                out.append(cam); del self._unplaced_since[cam]
+        for cam in sorted(wanted):
+            if cam in self.upstreams or sources.get(cam) is not None:
+                continue
+            self.waiting[cam] = self._why_no_source(cam)
+            since = self.waiting_since.setdefault(cam, now)
+            if self.ctl is None:
+                continue
+            try:
+                row = self.ctl.unit(cam)
+            except PARSE_ERRORS:
+                continue                                            # its row does not parse: nobody can say its grace
+            if row is not None and now - since >= int(row.get("grace", 30)):
+                out.append(cam)
+        for cam in [c for c in self.waiting if c not in wanted or c in self.upstreams or sources.get(c) is not None]:
+            self.waiting.pop(cam, None); self.waiting_since.pop(cam, None)
         return out
+
+    # Why a camera assigned here has no stream to fan out, in words a page shows.
+    def _why_no_source(self, cam: str) -> str:
+        if cam in self._said_loopback:
+            return f"camera {cam} is served on another server's loopback: not reachable from {self.server}"
+        try:
+            from .config import SPEC
+            row, _ = self.vars.get(SPEC.sub.config(SPEC.rows, cam))
+        except (OSError, *PARSE_ERRORS):
+            row = {}
+        if not row or row.get("deleted") == "true":
+            return f"no camera {cam}"
+        return f"camera {cam} is recorded nowhere: no worker says it running"
+
+    # A stream row NOBODY holds — a viewer asked for labels no gateway carries, or no gateway is left — is not this
+    # gateway's to delete: it never held it. Its controller deletes it after `placement.unplaced.delete_after` (30 s,
+    # `live.subsystem.yaml`; ADR-0067) — a cluster with no gateway at all kept such a row and its alarm for ever while
+    # the sweep was here. The gateway deletes only the rows it held whose viewers' `grace` ran out (above).
 
     # A session ends with DELETE — when the viewer says so. A tab closed, a laptop lid shut, an offer whose
     # connection never came up say nothing, and their sessions stayed: the fan-out was never idle, so the unit
@@ -323,7 +358,8 @@ class LiveWorker(Worker):
                        # `url`: the page's door too (the platform's word: `/live/where/<cam>` hands it out with a token)
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
                        sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
-                       swept=self.swept, resets=self.resets, **({"refused": dict(self.refused)} if self.refused else {}))
+                       swept=self.swept, resets=self.resets, **({"refused": dict(self.refused)} if self.refused else {}),
+                       **({"waiting": dict(self.waiting)} if self.waiting else {}))
 
     def metrics_text(self) -> str:
         return (f"# TYPE live_sessions gauge\nlive_sessions {len(self.sessions)}\n"

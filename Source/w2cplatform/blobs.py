@@ -1,6 +1,6 @@
 """A field too big for a row: the bytes go in the object store, the row keeps a digest.
 
-Some units carry one opaque lump the platform does not interpret: a detector's
+Some units carry one opaque lump the platform does not interpret: a sensor's
 mask, a panel's firmware, a model. Three things about it are all true at once —
 it belongs to exactly one unit, the platform will never read inside it, and it
 does not fit in a row.

@@ -20,6 +20,7 @@ placement:
   headroom:   {from: headroom}
   constraint: labels-subset
   tie_break:  most-free-capacity
+  unplaced:   {delete_after: 3600}   # a counter nobody holds for an hour is deleted by the controller (ADR-0067)
 # A request to a counter's holder: add to it (the platform's request family, `w2cplatform/worker.py`, `requests.py`).
 requests:
   schema:

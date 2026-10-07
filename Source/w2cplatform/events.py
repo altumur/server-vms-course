@@ -7,8 +7,8 @@ and it is all of this:
     its fence   the epoch in the path: a stale instance writes into its own bucket, marked afterwards
     its index   the resource's own over its tree (`eventdatabase.py`), and (М11) a cluster-wide cache over every resource
 
-Nothing here knows what a unit is. The VMS's recording has footage — in a
-volume of its own — and its bucket is here; a detector's unit is a model; a gateway's
+Nothing here knows what a unit is. One subsystem's unit writes bulk data — in a
+store of its own — and its bucket is here; another's unit is a model; a third's
 unit is a fan-out. The word "event" means only: something a worker
 observed at a time, about a unit it holds.
 """
@@ -23,18 +23,17 @@ observed at a time, about a unit it holds.
 # of `bucket_seconds` starting at `<start>`; its writer is the worker holding that unit's epoch (one writer
 # per file by construction); its fence is the epoch in the path (a stale instance writes into its own
 # bucket, which is marked afterwards); its index is `eventdatabase.py` on each resource, over its own tree. `resource.py` walks these paths for retention
-# and mirroring; `console.py` uses `EventLog` for operator marks under `console/<instance>/`; the VMS worker
-# uses it per camera. Nothing here knows what a unit is.
+# and mirroring; `console.py` uses `EventLog` for operator marks under `console/<instance>/`; a subsystem's worker
+# uses it per unit. Nothing here knows what a unit is.
 #
 # ## Module-level names
 # - `EVENTS` — regex for a bucket filename: `YYYYMMDDTHHMMSSZ.events.jsonl`.
 # - `EPOCH_DIR` — regex for the epoch directory: `e<digits>`.
 #
 # ## Notes
-# - `test_lesson3_archive.py::test_events_are_buckets_on_the_resource_recording_or_not` and
-#   `test_lesson4_worker.py::test_the_worker_observes_what_it_holds_recording_or_not` exercise the VMS's use
-#   of this file: buckets are written whether or not media is recorded, closed buckets are counted onto the
-#   timeline, and a fenced epoch's bucket is marked, not deleted.
+# - A subsystem's own tests (М10B Lessons 3 and 4) exercise its use of this file: buckets are written whether
+#   or not its bulk data is, closed buckets are counted onto the history a page draws, and a fenced epoch's
+#   bucket is marked, not deleted.
 # - A bucket is "closed" when `end <= now`; only closed buckets are mirrored and indexed
 #   (`resource.Resource.closed_buckets`). The open one is the accepted loss on a disk failure.
 # ================================================================================================
@@ -165,7 +164,7 @@ class Bucket:
 # (`eventdatabase.query`). A third class with no policy of its own would be a word in a file.
 #
 # Which lines are alarms is NOT settled here, and not in a subsystem's spec either: the same `io.input` is
-# an alarm on a door contact and noise on a technological sensor, and the difference is how the device was
+# an alarm on a door contact and noise on a technological sensor, and the difference is how the input was
 # wired, not what the event type is. So the platform fixes the vocabulary and refuses anything outside it;
 # the value comes from the unit's own configuration, one layer up.
 ALARM = "alarm"
@@ -202,7 +201,7 @@ def alarm_tree(subsystem: str) -> str:
     return subsystem + ALARM_TREE
 
 
-# `(subsystem, is it the alarm tree)` for a first directory of a resource: `vms.alarms` is `vms`'s.
+# `(subsystem, is it the alarm tree)` for a first directory of a resource: `testsub.alarms` is `testsub`'s.
 def tree_owner(name: str) -> tuple[str, bool]:
     return (name[:-len(ALARM_TREE)], True) if name.endswith(ALARM_TREE) else (name, False)
 
@@ -226,7 +225,7 @@ OWN_OF_TREES = (CONSOLE_MARKS, AUDIT)
 # is ninety times what the free-looking call suggests.
 #
 # So the fallback is not a nicety: a build that used plain `fsync` here and believed itself durable would
-# have bought a feeling. Linux's `fsync` does go to the device (barriers permitting) and needs no special
+# have bought a feeling. Linux's `fsync` does go to the disk (barriers permitting) and needs no special
 # call, which is why this is a try and not a platform check.
 _F_FULLFSYNC = 51
 
@@ -256,7 +255,7 @@ def durable_dir(path: str) -> None:
 
 # A file in flight beside `<dir>/<prefix>…`, created under the PROCESS'S UMASK — not `tempfile.mkstemp`'s fixed 0600.
 # A platform store is shared by group (the owner's decision, 4 October: `w2c-store` for the file stores, `w2c-events`
-# for the archive, setgid directories, every unit's umask 0007): a heartbeat or a blob written 0600 by one process
+# for the event logs, setgid directories, every unit's umask 0007): a heartbeat or a blob written 0600 by one process
 # was a file the resource — another uid of the same group — could not read. The kernel applies the umask to `0o666`
 # as it does for `open()`; `O_EXCL` keeps mkstemp's promise that the name is this writer's alone.
 def new_temp(dir: str, prefix: str, suffix: str = ".tmp") -> tuple[int, str]:
@@ -278,10 +277,10 @@ def new_temp(dir: str, prefix: str, suffix: str = ".tmp") -> tuple[int, str]:
 #              that. An event filed by when it HAPPENED would, arriving an hour late, have to be appended to a
 #              file a neighbour has already copied; a month late, to one that was deleted
 #   occurred   when the event HAPPENED, by the writer's clock, as far as the writer knows. Only when it knows
-#              better than `t`: a device that reported late, a driver's callback a pass ago. A device's own
+#              better than `t`: a source that reported late, a driver's callback a pass ago. A source's own
 #              raw clock is not this — it is brought to the writer's clock first, or it is a field of the kind
 #   id         the line's name: `<unit>-e<epoch>-<process>-<n>`. Given by the writer when it writes; the
-#              device is not needed for it, and a device's own id, when it has one, is a field of the kind.
+#              source is not needed for it, and a source's own id, when it has one, is a field of the kind.
 #              What tells a COPY from a TWIN: two events of one kind in one instant used to be one event to
 #              the merge, which knew a line by (server, file, time, kind, unit)
 #   v          the format's version — and NOT written. A line without `v` is version 1; a reader skips the
@@ -293,7 +292,7 @@ def new_temp(dir: str, prefix: str, suffix: str = ".tmp") -> tuple[int, str]:
 #              product's `FieldOf`). Written by the writer, never looked up again: a line stays where it was filed
 #
 # The process is in the id because several processes write under one epoch in one place: a console's marks
-# and its journal of archive reads are all epoch 1.
+# and its journal of reads are all epoch 1.
 OF = "of"
 _PROC = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
 _SEQ = itertools.count(1)
@@ -353,7 +352,7 @@ class EventLog:
     #
     # `cls` is the line's TRAFFIC CLASS, and it is a declared value rather than a convention on `kind`.
     # A convention — "kinds beginning with io. are alarms" — does not refuse anything: the first
-    # `det.Motion` written where `det.motion` was meant falls out of its class in silence, and stays out
+    # `io.Input` written where `io.input` was meant falls out of its class in silence, and stays out
     # until somebody reads the file by hand. An unknown class is refused here instead, where the line is
     # written and the traceback names the writer.
     #
@@ -391,7 +390,7 @@ class EventLog:
         # The second policy the class carries, and the one that costs something. An observation is
         # flushed and no more: it survives the process dying, not the power going, and that loss was
         # accepted on purpose (see `read_bucket` below — it is the same shape as the accepted loss for
-        # footage). An ALARM is not the same trade. It is written down because losing it is losing the
+        # a unit's bulk data). An ALARM is not the same trade. It is written down because losing it is losing the
         # thing the system is for, and a line that only reached the page cache is not written down.
         #
         # The cost is real and only alarms pay it: ~4 ms a line here against ~50 µs (`durably`). A box
@@ -438,7 +437,7 @@ class EventLog:
 # not fatal: an OBSERVATION is written and flushed and no more, so a crash or a power loss can leave the
 # last line half-written, and losing the whole bucket for one torn line would lose ten minutes of
 # observations where one record was actually damaged. The accepted loss is then the same shape as it is
-# for footage — the open thing, not the day (М10B Lesson 6). `torn` counts them, so a resource whose
+# for a unit's bulk data — the open thing, not the day (М10B Lesson 6). `torn` counts them, so a resource whose
 # buckets keep tearing says so instead of quietly returning less.
 #
 # An alarm is not in that trade: `append` takes it all the way to the medium, so a torn last line is an
@@ -487,11 +486,11 @@ def buckets_under(root: str, subsystem: str, unit: str, bucket_seconds: int) -> 
 #
 # A bucket's path says everything a policy needs — whose it is, which epoch, when it starts — and its end is
 # the start plus the bucket's length. `buckets_under` also opens every file to count its lines, which is what
-# `/buckets` answers and what nothing that SWEEPS needs: the retention pass read a year of archive, every
+# `/buckets` answers and what nothing that SWEEPS needs: the retention pass read a year of buckets, every
 # pass, to delete the files of one day (the platform review; feedback BI).
 #
 # `progressed`, if given, is called for every directory listed and every bucket named (the review's fifth pass,
-# Т-M13's remainder): a year of one camera is fifty thousand buckets, and on a cold disk listing them is minutes —
+# Т-M13's remainder): a year of one unit is fifty thousand buckets, and on a cold disk listing them is minutes —
 # one mark per UNIT left the resource's pulse calling a walk that moved the whole time "stuck".
 def bucket_names_under(root: str, subsystem: str, unit: str, bucket_seconds: int, progressed=None) -> list[Bucket]:
     out = []
@@ -511,8 +510,8 @@ def bucket_names_under(root: str, subsystem: str, unit: str, bucket_seconds: int
 
 # `{subsystem: [unit, ...]}` present on a resource, from the directory tree — the index's and the resource
 # heartbeat's discovery, with no registry. Hidden directories (`.mirror`) are skipped; a missing root is
-# `{}`. The console test asserts that after one mark the archive root shows `{"console": [<instance>]}` and
-# nothing under `vms/1/`, proving a mark is the console's bucket, not a worker's.
+# `{}`. The console test asserts that after one mark the resource root shows `{"console": [<instance>]}` and
+# nothing under `<subsystem>/1/`, proving a mark is the console's bucket, not a worker's.
 def subsystems_under(root: str) -> dict[str, list[str]]:
     """{subsystem: [unit, ...]} present on a resource — the index's discovery, no registry."""
     out: dict[str, list[str]] = {}
@@ -532,7 +531,7 @@ def subsystems_under(root: str) -> dict[str, list[str]]:
 # ==================================================================================================
 # A storm of events is NORMAL, not a fault: a contact bouncing, a link flapping, a sensor re-reporting
 # for as long as the thing it watches keeps happening. Nothing downstream can undo one — an index reads
-# what is written, a timeline draws what it reads, and every reader that tried to collapse repeats would
+# what is written, a page draws what it reads, and every reader that tried to collapse repeats would
 # do it its own way and disagree with the others. The one place a repeat can be recognised BEFORE it costs anything is the
 # process holding the unit's epoch, one line before `append`.
 #
@@ -542,7 +541,7 @@ def subsystems_under(root: str) -> dict[str, list[str]]:
 #      worth, the first occurrence is the observation, and delaying it to batch it would trade the
 #      one property an alarm has for a smaller file.
 #   2. What was dropped is SAID. When the window closes, a summary line carries `repeats`, `since`
-#      and `until`, so a quiet log and a suppressed storm are different things on the timeline.
+#      and `until`, so a quiet log and a suppressed storm are different things on every page that draws the log.
 #      Without it suppression is indistinguishable from nothing having happened, which is the failure
 #      this whole module is built to avoid (`state`, `truncated`, `unreachable` — Lesson 13).
 @dataclass(frozen=True)

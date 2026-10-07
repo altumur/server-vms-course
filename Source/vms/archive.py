@@ -51,6 +51,11 @@ STITCH = 2.0         # seconds: two spans closer than this are one run — the s
 # is cut where the block is full and the rest is refused until the next key frame (the product's incident,
 # feedback Y): block ≥ read + 3 MB.
 BLOCK, READ = 8 << 20, 1 << 20
+# A volume formatted with blocks under this loses every sequence that does not fit — a group of pictures of a camera at
+# a high bitrate is a megabyte and more — for as long as it is used, and only a format with a larger block mends it: said
+# in the recorder's heartbeat, `objectstorage.block_small`, and on the page by rec's `servers.status` (ADR-0064; the
+# product's `smallBlock`, found on its stand 2026-10-07: volumes formatted with 1 MiB blocks, a 1029 KiB sequence refused).
+SMALL_BLOCK = 4 << 20
 log = logging.getLogger("vms.archive")
 NEVER, FOREVER = 0, 1 << 62           # the archive's milliseconds: before anything, after everything
 # HOW LONG WRITTEN STAYS INVISIBLE (feedback CP). A reader sees only blocks written to the volume, and a block is
@@ -296,6 +301,7 @@ class Archive:
         self.may_format = may_format               # no volume there: may one be made (raises `ArchiveError` if not)
         self.session = session or Session(client="vms-archive")
         self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
+        self.block_bytes = 0                       # the block the writer works with, once it is mounted (`_effective_block`)
         self.sequence_flush_ms, self.block_flush_s = int(sequence_flush_ms), int(block_flush_s)
         self.confirm, self.lock_refresh = confirm, int(lock_refresh)
         self.fence, self.on_unclean = fence, on_unclean
@@ -394,6 +400,7 @@ class Archive:
                 self.writer = self._mount_rw(vol)
                 self.reattached = self.writer.reattached
                 self._configure()
+                self.block_bytes = self._effective_block()
         except (ObsdError, *PARSE_ERRORS) as e:     # an answer of the engine this build cannot read: `wrong`, said (the tenth round)
             raise self._classified(e) from None
         return self
@@ -421,6 +428,17 @@ class Archive:
             if int(got.get("capacity") or 0) or path in ("/", ""):
                 return got
             path = path.rsplit("/", 1)[0] or "/"
+
+    # THE BLOCK THE WRITER WORKS WITH (the product's `effectiveSizes`): the volume's own, fixed when it was formatted
+    # (`READER_INFO` → `tunables.maxBlockSize`), or this recorder's setting when that is smaller — the engine takes the
+    # smaller. A volume formatted with small blocks stays small whatever the writer is told. 0 when the engine did not say.
+    def _effective_block(self) -> int:
+        try:
+            with self.reading() as r:
+                own = int(((r.info().get("info") or {}).get("tunables") or {}).get("maxBlockSize") or 0)
+        except (ObsdError, *PARSE_ERRORS):
+            return 0
+        return min(own, self.block) if own and self.block else own
 
     def size(self) -> int:
         """The ring's size as the volume holds it — `maxVolumeSize`, what it was formatted or last resized to."""

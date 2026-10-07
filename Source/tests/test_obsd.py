@@ -81,12 +81,15 @@ def test_a_sequence_opens_on_a_key_frame():
 
 def test_a_group_of_pictures_longer_than_a_block_is_cut_and_the_rest_waits_for_a_key():
     """One key frame and then six megabytes of the rest, into four-megabyte blocks: the sequence is closed where
-    the block is full, and every frame after it is refused until a key frame opens a new one — lost, not queued."""
+    the block is full, and every frame after it is refused until a key frame opens a new one — lost, not queued. The
+    frame that did not fit is said `SEQUENCE_TOO_LARGE` (the engine since ObjectStorage 16c910b; before it, it too was
+    `SEQUENCE_NEEDS_KEY_SAMPLE`), the ones after it `SEQUENCE_NEEDS_KEY_SAMPLE`."""
     s = obsd_session()
     vol, _ = obsd_volume(s, max_block=4 << 20)
     w = vol.mount_rw("rec:t4")
     said = _frames(w, "7/e1", 2100, gop=10 ** 6)
-    assert said["OK"] < 2100 and said["SEQUENCE_NEEDS_KEY_SAMPLE"] == 2100 - said["OK"]
+    assert said["OK"] < 2100 and said.get("SEQUENCE_TOO_LARGE", 0) <= 1
+    assert said["SEQUENCE_NEEDS_KEY_SAMPLE"] + said.get("SEQUENCE_TOO_LARGE", 0) == 2100 - said["OK"]
     s.bye()
 
 

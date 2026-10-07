@@ -25,6 +25,7 @@ placement:
   tie_break:  most-free-capacity
   offers:     true                              # a gateway short on a label set is offered to a spare (`live_workers_needed`)
   rebalance:  {dead_band: 0.10}
+  unplaced:   {delete_after: 30}                 # a stream nobody holds for 30 s goes — no gateway carries its labels, or none is left; its controller deletes it (ADR-0067)
 # Not a moment past its lease's end: a gateway writes nothing that carries an epoch — it holds a camera's stream and
 # hands it to viewers, and a fan-out that goes on under a lease nobody confirms is a second subscription to the camera
 # beside the gateway that took it over, not a duplicate anybody could mark. (The platform's default; said so it is

@@ -19,7 +19,7 @@
 # logged once with what not reading it means, and its key is in `bad` for whoever names it on a page. A row
 # that parses again leaves `bad`; garbled again later, it is counted again — a new spell, not a re-read.
 #
-# What the DEFAULT is, is the caller's: no candidate (a slot, a hold), the row read last (a volume a recorder
+# What the DEFAULT is, is the caller's: no candidate (a slot, a hold), the row read last (a mount a holder
 # holds), "everything kept" (a keep), the settings read last (the watermark). Never "no" where "not known" is
 # what happened.
 #
@@ -132,7 +132,7 @@ def forget() -> None:
 
 
 # AN ANSWER OF ANOTHER PROCESS'S DOOR IS READ UP TO A BOUND (the review's eighth pass, a sibling the product team found):
-# a peer's `/mirrored`, a recorder's `/timeline`, a resource's `/events` and `/events/wait` were read whole whatever
+# a peer's `/mirrored`, a holder's own door, a resource's `/events` and `/events/wait` were read whole whatever
 # their size — a door of another build, a proxy's page, a door gone wrong was memory without a ceiling in the reader.
 # `answer(r, limit)` reads at most `limit` bytes and raises `ValueError` past it — one of `PARSE_ERRORS`: an answer too
 # big to read is an answer that does not parse, and every reader of a door takes it as that door not answering.

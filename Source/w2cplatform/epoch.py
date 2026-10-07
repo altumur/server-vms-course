@@ -13,14 +13,14 @@ platform only promises that it comes from one issuer and increases.
 # ================================================================================================
 # # epoch.py — the fencing-token issuer and the lease, generic to any writer that can have two instances
 #
-# **Role in the module.** Lesson 1. A unit (a camera, a fan-out, a model) may at any moment have two processes
+# **Role in the module.** Lesson 1. A unit (a stream, a fan-out, a model) may at any moment have two processes
 # believing they run it — a zombie after a reschedule, or a reassignment window. The platform's answer is a
 # fencing token, the *epoch*: a per-unit integer that comes from one issuer (the CAS on a Variables key) and
 # only increases. Whoever holds the newest epoch is the writer; an older holder discovers it on its next
 # renewal and stops. This file has the issuer (`next_epoch`), the reader (`current_epoch`) and the lease
 # that a holder keeps on its epoch (`Lease`). The subsystem decides the key (`Subsystem.epoch_key(unit)`
 # gives `<name>/epoch/<unit>`); the platform promises only that numbers come from one issuer, in order.
-# `worker.Worker.take_epoch` and `renew_leases` are the callers; `vms.archive` puts the epoch in every
+# `worker.Worker.take_epoch` and `renew_leases` are the callers; a subsystem's bulk writer puts the epoch in every
 # segment and bucket path so a stale writer's output is identifiable afterwards.
 #
 # ## Module-level names
@@ -31,8 +31,8 @@ platform only promises that it comes from one issuer and increases.
 #   `seconds_left() == 0`; a successful `renew()` restores it; after someone else calls `next_epoch` on the
 #   same key, `renew()` returns False, `fenced` is set and `conflicts == 1`.
 # - The fence is discovered at renewal, never pushed: a zombie keeps writing for at most `ttl − margin`
-#   after the new holder took the epoch. That bounded window is the RPO the archive lesson accepts, and the
-#   epoch in the name — of a bucket, of a stream in a volume — is what lets the timeline mark that window as
+#   after the new holder took the epoch. That bounded window is the RPO a subsystem's storage lesson accepts, and the
+#   epoch in the name — of a bucket, of a stream in a volume — is what lets a reader mark that window as
 #   fenced afterwards.
 # - Two threads renew a lease (feedback DD): the loop, and `Worker`'s stand-in while a step of the loop hangs.
 #   The fields are under `_lock`, the store is asked outside it; a stamp never moves backwards, and a lease
@@ -103,7 +103,7 @@ class Lease:
         #   silent_since       when the store first failed to answer a renewal WHILE THE LEASE WAS STILL GOOD.
         #                      A holder that slept past its lease and then found the store away has not
         #                      established silence: its lease ran out while nobody was asking, and it is lost
-        #   unconfirmed_max    how long past the lease's end the recording may go on unconfirmed. `None`: no
+        #   unconfirmed_max    how long past the lease's end the writing may go on unconfirmed. `None`: no
         #                      ceiling. `0`: none at all — the strict behaviour, which is this class's default;
         #                      a subsystem that writes data says otherwise
         self.silent_since: float | None = None
@@ -141,7 +141,7 @@ class Lease:
         except PARSE_ERRORS:                   # `epoch: Infinity` too — it raised out of `renew_leases`, every lease (the tenth round)
             # The store ANSWERED, with a row that is not an epoch. That is not silence to record through
             # (the review's second pass): somebody wrote over the counter, and whoever did may have given the
-            # camera away too. Fenced, as a counter that moved; the instance takes a fresh slot and starts again.
+            # unit away too. Fenced, as a counter that moved; the instance takes a fresh slot and starts again.
             with self._lock:
                 self.fenced, self.conflicts = True, self.conflicts + 1
             return False

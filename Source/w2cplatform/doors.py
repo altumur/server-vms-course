@@ -35,9 +35,9 @@ def safe_segment(name: str) -> bool:
 # the characters found, sorted; empty when the name may stand.
 #
 # A UNIT'S NAME, `unit=True`, is in lists and is sorted as a number (the review's ninth pass; the product team's sibling
-# B). A worker's assignment is its units joined by `,` (`contract.Assignment`), and so are a recorder's `closed` and a
-# heartbeat's ranges: a recording named `1,9` made its worker take `9` and never start `1,9`, and its fetched range
-# scanned recording 9's camera. And a name that is all digits sorts by its number (`spec._unit_key`): `"7²".isdigit()`
+# B). A worker's assignment is its units joined by `,` (`contract.Assignment`), and so are a holder's `closed` and a
+# heartbeat's ranges: a unit named `1,9` made its worker take `9` and never start `1,9`, and its fetched range
+# scanned unit 9's data. And a name that is all digits sorts by its number (`spec._unit_key`): `"7²".isdigit()`
 # is true and `int("7²")` raises — every `GET` of that subsystem's list went unanswered. So a unit's name also may not
 # hold `,`, nor a digit that is not ASCII 0–9 (superscripts, Arabic-Indic, full width: `isdigit` says yes to all).
 # A request's id is not a unit's: a heartbeat says it by its digest when it holds a comma (`requests.said_id`).

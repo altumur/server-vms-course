@@ -4,7 +4,7 @@ file — and the platform runs the controller from it:
     name          the prefix: <name>/*
     unit          the rows: where they live (<name>/<rows>/<id>), how an id is made (numeric | <field>),
                   the operator's fields with types and defaults, and derived rows (a second row the
-                  platform keeps beside the unit — the VMS's <name>/retention/<id> that the resource reads)
+                  platform keeps beside the unit — testsub2's <name>/retention/<id> that the resource reads)
     placement     capacity and headroom as heartbeat fields; a constraint and a tie-break BY NAME from
                   the catalogue below — never an expression; `requires: resource` when a worker must
                   run where a resource answers (not placed on, moved off, while it is silent); the
@@ -32,16 +32,16 @@ and the worker is the subsystem.
 # **Role in the module.** Lesson 6. A subsystem gives the platform one YAML file and the platform runs its
 # controller from it. The spec says: `name` (the prefix `<name>/*`); `unit` (where rows live —
 # `<name>/<rows>/<id>` — how an id is made — `numeric` or a field name — the operator's fields with types
-# and defaults, and derived rows kept beside the unit, such as the VMS's `vms/retention/<id>` that the
+# and defaults, and derived rows kept beside the unit, such as testsub2's `testsub2/retention/<id>` that the
 # resource reads); `placement` (which heartbeat fields carry capacity and headroom, a constraint and a
 # tie-break chosen *by name* from a short catalogue — never an expression — `requires: resource` when the
 # worker's server must have a resource that answers, and the rebalance dead band);
 # `snapshot` (the fields that leave the cluster); `console` (the name of the running gauge). What is not in
 # a spec: anything about what a unit does — that is the worker, and the worker is the subsystem.
 # `SpecController` extends `contract.Controller` and adds units, placement, redistribution, rebalance, the
-# read model and the snapshot. `vms/controller.py` is this class with the VMS's spec and VMS names for the
-# methods; `vms/config.py` exposes `row()`/`items()`; `console.py` runs over the same spec.
-# `tests/test_lesson8_live.py` and `tests/test_lesson9_det.py` run two more subsystems through it from their own YAML.
+# read model and the snapshot. A subsystem's own controller module is this class with its spec and its own names for
+# the methods, and its config module exposes `row()`/`items()`; `console.py` runs over the same spec. The platform's
+# tests run testsub and testsub2 through it from their own YAML (`tests/testdata/`), and the lessons run the rest.
 #
 # ## Module-level names
 # - `PLATFORM_FIELDS = ("worker", "placement", "epoch", "revision", "observed_revision", "phase", "id")` —
@@ -161,8 +161,8 @@ class Exists(Refused):
 # WHAT A SECRET LOOKS LIKE ON A PAGE, AND WHAT IT IS GIVEN FOR (the thirteenth round; the product's rule, one YAML key in
 # both). A reply shows a secret as `***` (`secrets.mask_secrets`); a page or a client of its own shows `•••`, `●●●` or
 # `＊＊＊`. Sent back, any of them is a password nobody typed: refused at the door (`is_mask`) — three or more of one of
-# those characters and nothing else. And a secret is the key to an ADDRESS (`bound_to`: a camera's `cred_secret` to its
-# `source`, a volume's `access_secret` to its `url`): the address changed on an edit and no new secret came — the old
+# those characters and nothing else. And a secret is the key to an ADDRESS (`bound_to`: testsub2's `feed_secret` to its
+# `feed`, a shelf's to its own `feed`): the address changed on an edit and no new secret came — the old
 # one would go to whatever host the new address names; refused, in words (`unbound_secret`).
 MASK_CHARS = "*•●＊"
 
@@ -234,10 +234,10 @@ CONSOLE_ROUTES = frozenset({"session", "healthz", "index.html", "spec", "where",
                             "api"})        # `/api/held`, `/api/backup`, `/api/prepare`, `/api/take`: the processes' doors
 UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
                     "mended; the other units are judged", "unit's row")
-# What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
-# (a comma) or in a path. The product's rule (`labelWord`). ONE alphabet (the review's tenth pass, major): a camera's
+# What a label may be: a unit's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
+# (a comma) or in a path. The product's rule (`labelWord`). ONE alphabet (the review's tenth pass, major): a unit's
 # `labels` (any subsystem's under `labels-subset`, at creation and for a label new to a row), a server's row, the
-# node's `LABELS` (`runtime.labels` says the words outside it). A camera stored before with `склад` or `zone 1` is
+# node's `LABELS` (`runtime.labels` says the words outside it). A unit stored before with `склад` or `zone 1` is
 # read as it stands and is not moved for a label no server's row can say (`UNIT_LABELS`).
 LABEL_WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:\-]{0,63}")
 UNIT_LABELS = Table("unit_label", "the unit stays where it is: no server's row can say it reaches that label — write the "
@@ -316,7 +316,7 @@ class Placement:
 # does not carry it, a read gives `None`, and the value in `inherit` is only the LAST link of the chain, taken
 # at the moment of use by whoever resolves it (`SharedView.effective` in М12; the resource's own fallback for
 # retention). `merge` says what a set value does to an inherited one: `override` (the default) replaces it,
-# `union` adds to it — a list of alarm kinds the site declares, plus the camera's own.
+# `union` adds to it — a list of alarm kinds the site declares, plus the unit's own.
 @dataclass
 class Field:
     name: str
@@ -403,8 +403,8 @@ class Field:
         # `when_1_sub`, `when_2_sub` — a schema pretending not to be one.
         #
         # What the platform checks is exactly what it can: valid JSON, and small. What the shapes MEAN is
-        # the subsystem's, checked in its own controller before the row is written, the way `vms/volumes`
-        # checks a volume. A generic loader that tried to validate a trigger would be a generic loader
+        # the subsystem's, checked in its own controller before the row is written, the way a subsystem
+        # checks a row of its own table. A generic loader that tried to validate a trigger would be a generic loader
         # that knows what a trigger is.
         if self.type == "json":
             return parse_json(v) if isinstance(v, (str, bytes)) else v
@@ -500,8 +500,8 @@ def _bound_to(name: str, v) -> tuple:
 
 # A second row the platform keeps beside the unit: `row` (a path template under the prefix with `{id}`, e.g.
 # `retention/{id}`), `items` (`{item name: field name}` — which unit field feeds each item), `on_delete`
-# (what the row becomes when the unit is deleted; `None` leaves it alone). The VMS's derived row makes
-# `events_retention_days` visible to the resource as `vms/retention/<id> {days}` and sets `{days: 0}` on
+# (what the row becomes when the unit is deleted; `None` leaves it alone). testsub2's derived row makes
+# `keep_days` visible to the resource as `testsub2/retention/<id> {days}` and sets `{days: 0}` on
 # delete so the buckets go at the next pass.
 @dataclass
 class Derived:
@@ -594,6 +594,18 @@ def _capacity(name, cap) -> tuple[str, int]:
     if isinstance(d, bool) or not isinstance(d, int) or d < 0:
         raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {d!r}")
     return str(cap.get("from", "capacity") or "capacity"), d
+
+
+# `placement.unplaced: {delete_after: <whole seconds, 1 or more>}` — how long a unit nobody holds stands before its
+# controller deletes it (ADR-0067; the form «Платформа»'s). Without the key nothing is deleted; `0`, a fraction, a
+# word, `true`, or another key under `unplaced` does not load (ADR-0012). `60.0` is sixty: YAML's number, whole.
+def _unplaced(name, v) -> int:
+    d = v.get("delete_after") if isinstance(v, dict) and set(v) == {"delete_after"} else None
+    whole = not isinstance(d, bool) and (isinstance(d, int) or (isinstance(d, float) and d.is_integer() and abs(d) <= 1 << 31))
+    if not whole or d < 1:
+        raise ValueError(f"spec {name}: placement.unplaced is {{delete_after: <whole seconds, 1 or more>}} — how long a "
+                         f"unit nobody holds is kept before the controller deletes it — not {v!r}")
+    return int(d)
 
 
 # `slot: {prefix, name_env}` — `(prefix, name_env)`; left out, `w` and `WORKER_NAME`.
@@ -744,7 +756,7 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
         tuple(map(str, worker.get("requests") or ()))
 
 
-# The parsed YAML. Fields: `name`; `rows` (`"units"`; the VMS says `cameras`); `id` (`"numeric"` or a field
+# The parsed YAML. Fields: `name`; `rows` (`"units"`; testsub says `counters`); `id` (`"numeric"` or a field
 # name); `fields`; `derived`; `capacity_from` / `capacity_default` (heartbeat key for a worker's capacity,
 # and the number for a worker that said nothing); `headroom_from`; `constraint`; `tie_break` (only
 # `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`console.running`: the name
@@ -1098,6 +1110,7 @@ class SubsystemSpec:
     derived: list[Derived] = field(default_factory=list)
     capacity_from: str = "capacity"
     capacity_default: int = 50    # `placement.capacity.default`: a worker that has said nothing yet (the spec must say it)
+    unplaced_delete_after: int = 0   # `placement.unplaced.delete_after`: a unit nobody holds that long goes (0: never; ADR-0067)
     headroom_from: str = "headroom"
     constraint: str = "none"
     requires: str = "none"        # "resource": a worker is eligible only while its server's resource is not silent
@@ -1123,7 +1136,7 @@ class SubsystemSpec:
     #
     # The field is read from the heartbeat STATUS (`status_extra` puts it there), not from the other
     # subsystem's rows, which this controller has no business reading. Several of their units may answer —
-    # two recordings of one camera — and then the affinity takes the smallest of their ids, so two passes
+    # two copies kept of one unit — and then the affinity takes the smallest of their ids, so two passes
     # over the same heartbeats reach the same server. Being beside one of them is the point; the other
     # reads the same fan-out over the network.
     near_of: str = ""
@@ -1131,7 +1144,7 @@ class SubsystemSpec:
     # `home: near` — wherever the subsystem this one follows is. A PREFERENCE and not a label: a label is a
     # filter, and a unit whose home is down would become unplaceable — the one thing it must not be,
     # because the home being down is exactly when the work has to continue somewhere else. It is topology,
-    # not taste: the recording's home is the disk it is written to. Coming home is then not a procedure but
+    # not taste: the home of a unit that writes is the disk it writes to. Coming home is then not a procedure but
     # a consequence, bounded by `ensure_home`.
     home: str = ""
     # `spread_by: <field>` — units sharing a value of that field go on DIFFERENT servers. Unlike `near` this
@@ -1139,10 +1152,10 @@ class SubsystemSpec:
     # is, and a second copy on the same server is not a second copy. Unplaceable while no other server
     # qualifies, and that is the honest answer — `/unplaceable` says so rather than quietly co-locating.
     spread_by: str = ""
-    # `group_by: <name>` — the mirror image, and the one the VMS needed first: units sharing a value go on
-    # the SAME worker. Also a FILTER, for a reason that is not about preference at all — a device is ONE
-    # connection. Sixteen channels of one recorder are sixteen units, and placing them on four workers
-    # opens four sessions to a box that licenses two; the subsystem then fails in the device's words
+    # `group_by: <name>` — the mirror image, and the one a subsystem needed first: units sharing a value go on
+    # the SAME worker. Also a FILTER, for a reason that is not about preference at all — a box at the far end
+    # is ONE connection. Sixteen channels of one box are sixteen units, and placing them on four workers
+    # opens four sessions to a box that licenses two; the subsystem then fails in the box's words
     # ("too many sessions"), which is the hardest kind of failure to trace back to a placement decision.
     #
     # What the value is: the field of this name, or — `group_by: {field: <a url field>, cut_at: host}` — the HOST that
@@ -1156,7 +1169,7 @@ class SubsystemSpec:
     # Where it hurts, and it does: the worker holding the group is not chosen for its room. A group that
     # outgrows its worker becomes unplaceable rather than spilling over, because spilling over is the
     # thing being prevented. The operator raises that worker's capacity or moves the group — `/unplaceable`
-    # names the device, so the answer is on the screen rather than in a session count on a camera.
+    # names the group, so the answer is on the screen rather than in a session count on the far end.
     group_by: str = ""
     group_cut: str = ""           # `group_by.cut_at`: `host`, or the segment the url field's spelling is cut before
     # `near: {…, prefer: {<their field>[.<field of the row it refs>]: <value or values>}}` — when `near` finds SEVERAL
@@ -1177,9 +1190,9 @@ class SubsystemSpec:
     affinity: dict = field(default_factory=dict)
     # `place_by: <field>` — WHAT the policy and the home are counted in: the heartbeat field that names the
     # place a worker occupies. `server` by default, and for everything whose unit of storage is a server
-    # that is the truth. A recorder's is not: a box with three disks runs three recorders, one per volume,
-    # and `servers: distinct` has to mean one per DISK — two recorders on one volume are no second place to
-    # record, while two on one server with different disks are exactly that.
+    # that is the truth. A writer's is not: a box with three disks runs three of its workers, one per disk,
+    # and `servers: distinct` has to mean one per DISK — two workers on one disk are no second place to
+    # write, while two on one server with different disks are exactly that.
     #
     # Only the policy and `home` follow this field. Reachability (`requires: resource`), draining and
     # `spread_by` stay on the server, because those are about a machine: a volume has no address, cannot be
@@ -1209,10 +1222,10 @@ class SubsystemSpec:
     # None — for as long as the silence lasts; 0 — none (`Worker.unconfirmed_max`, `Lease.may_write`)
     unconfirmed_max: float | None = 0.0
     # `retire_when: {field: state, in: [done, failed]}` — a unit whose row says one of those values is
-    # FINISHED, and finished work is not placed. The first subsystem to need it is `detjob`, whose unit
+    # FINISHED, and finished work is not placed. The first subsystem to need it was one of jobs, whose unit
     # ends; everything before it ran until an operator said stop.
     #
-    # Not `enabled`. That field is read by workers, never here: a disabled camera keeps its assignment and
+    # Not `enabled`. That field is read by workers, never here: a disabled unit keeps its assignment and
     # its line in the console's list, and a unit that has to STAY VISIBLE while doing nothing is a
     # different thing from one that is over. Saying which field and which values, per subsystem, is the
     # difference between the two — and it is the row that says it, not a heartbeat: un-placing a finished
@@ -1273,7 +1286,7 @@ class SubsystemSpec:
     #
     # A storm is normal, not a fault, and the only place a repeat costs nothing to recognise is the writer
     # (`Suppressor`, `events.py`). The subsystem declares it because the timescale belongs to the event:
-    # a door contact bounces in milliseconds, a motion detector re-reports for as long as the scene moves,
+    # a door contact bounces in milliseconds, a motion sensor re-reports for as long as the scene moves,
     # a link flaps for as long as the cable is bad. The platform holds none of those numbers.
     #
     # `by` defaults to every field of the line, which is the reading that cannot lose an observation: two
@@ -1281,7 +1294,7 @@ class SubsystemSpec:
     # that is not a new observation.
     suppress: dict[str, "Suppress"] = field(default_factory=dict)
     # `about: {sub: <another subsystem>, field: <a field of the row>}` — every unit of this subsystem is ABOUT one unit
-    # of another: the one whose id its row holds in that field (a recording is about its camera). What the platform
+    # of another: the one whose id its row holds in that field (a tally is about its counter). What the platform
     # reads it for, and nothing else: an event of such a unit is also its about-unit's (the line's `of`, the index's
     # second column), a grant on the about-unit takes it in, and the labels a `labels:` grant is matched against are
     # the about-unit's — a unit's own labels say where it may run, not whose it is. Empty: about nothing but itself.
@@ -1425,7 +1438,7 @@ class SubsystemSpec:
         if not isinstance(spec.offers, bool):
             raise ValueError(f"spec {spec.name}: placement.offers is true or false — the slots offered are named by "
                              f"`slot.prefix` — not {spec.offers!r}")
-        # A secret in the snapshot is a secret leaving the cluster: `vms/snapshot/*` is what М12's directory
+        # A secret in the snapshot is a secret leaving the cluster: `<name>/snapshot/*` is what М12's directory
         # reads. Refused at LOAD time, not watched for at review time — and only when it is named, because
         # the default ("every field") is a convenience and not a decision.
         # A table's name becomes a key family and an ACL prefix, so it is a name and not a path, and it may
@@ -1492,9 +1505,17 @@ class SubsystemSpec:
             raise ValueError(f"spec {spec.name}: home names no field: {spec.home!r}")
         # …the capacity of a worker that said nothing: the spec's to say (`_capacity`).
         spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
-        # …and, the last thing asked, a key nobody above read: refused, named where it stands (`speckeys.py`).
+        # …how long a unit nobody holds stands before its controller deletes it (`_unplaced`; ADR-0067)
+        if "unplaced" in pl:
+            spec.unplaced_delete_after = _unplaced(spec.name, pl["unplaced"])
+        # …a key nobody above read: refused, named where it stands (`speckeys.py`).
         from .speckeys import refuse_unknown
         refuse_unknown(spec.name, d)
+        # …and, the last thing asked, the key beside rows the console derives: it writes and cleans those, and the
+        # controller writes no row but its own (ADR-0067, the refinement of window 17)
+        if spec.unplaced_delete_after and spec.derived:
+            raise ValueError(f"spec {spec.name}: placement.unplaced.delete_after with unit.derived — the controller "
+                             f"deletes a unit and cannot clean its derived rows, which are the console's")
         return spec
 
     # `about:` and `rights:` as written, checked at load: `about` names another subsystem by a name and a field of this
@@ -1995,7 +2016,7 @@ class SubsystemSpec:
                SCHEMA_KEY]                                                                    # `PUT /schema`: the operator raises the layout once every machine is new
         for d in self.derived:
             out.append(f"{self.name}/{d.row.split('/')[0]}/*")
-        out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `rec/volumes/*`
+        out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `testsub2/shelves/*`
         return out
 
     # What a worker of this subsystem may write: its epochs, its slot and its place, the rows of its own tables its spec
@@ -2009,10 +2030,14 @@ class SubsystemSpec:
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the
     # console cannot place and the controller cannot edit; `test_the_console_over_http` proves
     # `con.place(1)` raises `Forbidden`.
+    # With `placement.unplaced.delete_after` it may DELETE a unit's row (`delete:`, the product's `p.DeleteOnly`; ADR-0067)
+    # — and still never write one.
     def acl_controller(self) -> list[str]:
         """Placement: what the controller (count = 1) may write — never a unit's row."""
+        from .rights import DELETE_ONLY
         return [f"{self.name}/workers/*", f"{self.name}/placement/*", f"{self.name}/slots/*",
-                f"{self.name}/decommissioned/*"]                       # its mark that a server's decommission was carried out
+                f"{self.name}/decommissioned/*",                       # its mark that a server's decommission was carried out
+                *([f"{DELETE_ONLY}{self.sub.config(self.rows, '*')}"] if self.unplaced_delete_after > 0 else [])]
 
     # Whether ids are numbers; convert a string id accordingly.
     @property
@@ -2054,7 +2079,7 @@ class SubsystemSpec:
         if unknown:
             raise Refused(f"unknown field(s) {unknown}")
         # A secret arrives in the clear and is sealed HERE, on its way into the store. A value that already looks
-        # sealed is a copy from another row — camera 7's ciphertext under camera 8, for the holder to open for
+        # sealed is a copy from another row — unit 7's ciphertext under unit 8, for the holder to open for
         # whoever reads 8 — or a typo that would stop the holder's pass (the review's second pass, blocker 3 and a
         # major): refused at the door. Nothing a client types is `enc:v1:…`.
         from .sealing import is_sealed, is_secret_field
@@ -2062,13 +2087,13 @@ class SubsystemSpec:
         if pasted:
             raise Refused(f"{pasted}: a secret is given in the clear and sealed by this console; a sealed value is not taken")
         # …nor its MASK (the review's thirteenth round; the product's guard): every reply shows a secret as `***`
-        # (`secrets.mask_secrets`), and a page that sent back what it was shown stored `***` as the camera's password
-        # — the camera stopped, and nothing said why. What the mask stands for is not known here: refused, in words —
+        # (`secrets.mask_secrets`), and a page that sent back what it was shown stored `***` as the unit's password
+        # — the unit stopped, and nothing said why. What the mask stands for is not known here: refused, in words —
         # `***` and the masks other pages draw (`is_mask`).
         masked = [k for k, v in fields.items() if is_secret_field(k) and is_mask(v)]
         if masked:
             raise Refused(f"{masked}: a secret was sent as its mask; leave the field out to keep it")
-        # A `url` field may not carry a userinfo. `rtsp://root:hunter2@10.0.0.5/…` is how a password
+        # A `url` field may not carry a userinfo. `x://root:hunter2@10.0.0.5/…` is how a password
         # reaches a row that is in the SNAPSHOT — out of the cluster, into М12's directory, and onto the
         # screen of every console, past a mask that only looks at `*_secret`. The credential fields are
         # where it goes instead, and saying so is better than moving it quietly: an operator who pasted a
@@ -2082,7 +2107,7 @@ class SubsystemSpec:
                               f"PUT the bytes to /{self.rows}/<id>/{name} and the row gets the digest back")
         # A VALUE OF A LIST HOLDS NO `,` (the review's ninth answer, left open; the tenth round). A list is stored as one
         # string joined by `,` (`Field.to_item`), and every reader — this one, М11's, М12's, another build's — splits it
-        # there: `["zone 1,2"]` read back as two labels, a camera nobody's server reaches, an alarm kind nobody raises.
+        # there: `["zone 1,2"]` read back as two labels, a unit nobody's server reaches, an alarm kind nobody raises.
         # Refused where it is written; the store's form stays what every reader already reads (the rows written before
         # are already split, and read as they are). A string value is the joined form itself, and is taken as it is.
         for name, f in self.fields.items():
@@ -2132,7 +2157,7 @@ class SubsystemSpec:
                 written = str(fields[name])
                 rfc = rfc_spelling(written, f.schemes)
                 # …and a url `urlsplit` cannot read, or whose port is no port, is a 400 with the words (the product
-                # team's sibling of the tenth pass): `rtsp://[10.0.0.5/x` raised `ValueError` out of here — a 500 — and
+                # team's sibling of the tenth pass): `x://[10.0.0.5/x` raised `ValueError` out of here — a 500 — and
                 # `…:8²/…` was taken, to stand in every reader of the row.
                 try:
                     u = urlsplit(rfc)
@@ -2146,8 +2171,8 @@ class SubsystemSpec:
                     raise AddressRefused(f"{name} is not an address: a '%' in it is not followed by two hex digits")
                 # …A LOGIN NOR A CREDENTIAL ANYWHERE IN IT — the platform's one rule (`secrets.address_refusal`), the one a
                 # volume's url and the domain's door ask. This was a copy of it, and the copy fell behind (the thirteenth
-                # review, blocker 6): it read the `@` of the netloc and the path only, and `…/relay?src=rtsp%3A%2F%2Fadmin
-                # %3A…%40host` — how a relay like go2rtc is told what to fetch — was 201, the password in the row, the
+                # review, blocker 6): it read the `@` of the netloc and the path only, and `…/relay?src=x%3A%2F%2Fadmin
+                # %3A…%40host` — how a relay is told what to fetch — was 201, the password in the row, the
                 # page and the snapshot. What the copy had learnt before, a review at a time: a login in the path of a
                 # scheme that names its host there (the tenth round), a credential pair (the eleventh review, blocker 4).
                 # The words name the parameter, never its value.
@@ -2168,9 +2193,9 @@ class SubsystemSpec:
                 if path_login(written, f.schemes):
                     raise AddressRefused(f"{name} holds a login where its scheme writes the host (in the path): the "
                                          f"login and the password are the spec's own fields, not the address")
-                # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/dev7#@nvr50/ch/1` is
-                # device `dev7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
-                # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
+                # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `x://acme/box7#@box50/ch/1` is
+                # box `box7` to every right asked of it, while a driver that does not stop at `#` dials `box50` —
+                # rights asked of one box, another box opened. Nothing a unit is reached at holds one.
                 if "#" in rfc:
                     raise AddressRefused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
                                   f"and maybe another to the driver")
@@ -2192,7 +2217,7 @@ class SubsystemSpec:
         except RecursionError:
             raise Refused(f"{name} is nested past what is read") from None
 
-    # A fresh row: each required field must be present and truthy (`"a vms unit needs a source"`), others
+    # A fresh row: each required field must be present and truthy (`"a testsub unit needs a name"`), others
     # get their default; a string value containing `{id}` has it substituted (a spec's `name: "u{id}"`);
     # `revision` is 1.
     def new_row(self, uid, fields: dict) -> dict:
@@ -2540,7 +2565,7 @@ def _authority_spelling(a: str) -> str:
 # THE ROWS THIS PROCESS WROTE, FOR A READER IN THE SAME PROCESS THAT REMEMBERS BETWEEN ITS TURNS (the eleventh review: the
 # tenth's `REREAD`, not fixed). The console's request loop reads its rows whole every `jobs.Remembered.REREAD` seconds
 # and, between, only the rows it remembers ending; an `until` given through the console's DOOR was written by another
-# controller of the same process, which the loop's memory never heard of — a recording given `until = now + 1` there
+# controller of the same process, which the loop's memory never heard of — a unit given `until = now + 1` there
 # ended 23 s later. Every `create` and `update` notes its unit here (`wrote`); a reader takes what was written since it
 # last looked (`take_written`) and reads those rows at its next turn. One reader per process takes them — the console
 # runs one request loop — and a reader in ANOTHER process is told nothing: the store has no change feed to tell it by.
@@ -2722,11 +2747,11 @@ class SpecController(Controller):
         return set(l for l in str(hb.extra.get("labels", "")).split(",") if l) if hb else set()
 
     # -- what a server reaches, from the console (feedback DQ) ----------------------------------------------------
-    # A camera's labels say which network segments its address answers on; a server's say which ones the machine is
+    # A unit's labels say which network segments its address answers on; a server's say which ones the machine is
     # plugged into. The server's half came from the node alone: `LABELS` in the server's environment (`w2c.env`, or a
     # unit's), read by a worker when it starts. Changing it was a file on the machine and a restart, for a fact the operator
-    # learns in the console, beside the cameras that carry the same labels — and a label decided only the NEXT
-    # placement: a camera stayed on a server that no longer reached its VLAN, recorded by nobody, and nothing said so.
+    # learns in the console, beside the units that carry the same labels — and a label decided only the NEXT
+    # placement: a unit stayed on a server that no longer reached its VLAN, served by nobody, and nothing said so.
     #
     # So a server may have a row, `platform/servers/<server> {labels: "a,b"}` — the platform's, ONE a server for every
     # subsystem (ADR-0026, its addition; §3 row 4 of the boundary note): a machine carries every subsystem, and what it
@@ -2737,7 +2762,7 @@ class SpecController(Controller):
     # Placement reads the rows once a pass (`_per_pass`), and `ensure_reach` moves what a server no longer reaches.
     #
     # A STORE THAT DOES NOT ANSWER MOVES NOTHING. The rows last read are kept (`_server_rows_last`): a hiccup must not
-    # turn every server back to its node's labels for one pass and move the cameras the administrator placed by his.
+    # turn every server back to its node's labels for one pass and move the units the administrator placed by his.
     # A process that has never read them says None — and knows NO server's labels (`server_labels_of`: `unknown`), not
     # its node's: a unit with a label is placed nowhere, a unit without one is placed, and `ensure_reach` moves nothing.
     # Placing by the node's `LABELS` there was placing by a guess — the very word the row was written to correct
@@ -2747,8 +2772,8 @@ class SpecController(Controller):
     # …AND A ROW THAT DID NOT READ IS NOT KNOWN, NOT "NO ROW" (the review's tenth pass, major; a run). A row that did not
     # parse kept what was last read of that server, else its NODE's: after a restart of the controller there was no
     # last read, the node's `LABELS` was the stale `vlan:b` the row had been written to correct, and `ensure_reach`
-    # took 12 cameras of 12 off the server in two passes, "srv-a no longer reaches vlan:a". And a listing that left
-    # the row out for one pass was "no row": the node's labels again, 5 cameras of 5 moved, and they did not come back.
+    # took 12 units of 12 off the server in two passes, "srv-a no longer reaches vlan:a". And a listing that left
+    # the row out for one pass was "no row": the node's labels again, 5 units of 5 moved, and they did not come back.
     # Now each server's row is read BY ITS KEY — the listed ones, the servers this subsystem's workers run on, and the
     # ones read before — so a listing that misses a row costs nothing; and a server whose row is there and did not read
     # (garbled, no `labels`, a read that failed, a listed key the read does not find) is UNREAD this pass
@@ -2900,12 +2925,12 @@ class SpecController(Controller):
         #
         # The field is ABSENT: one volume named after the server. That is the truth for every box with one
         # disk, it is what a worker written before the field existed means, and where it is NOT the truth
-        # it errs the safe way — three recorders on three disks that nobody told apart read as three on
+        # it errs the safe way — three workers on three disks that nobody told apart read as three on
         # one place, and `distinct` idles two of them rather than letting two think they own the same disk.
         #
         # The field is PRESENT AND EMPTY: the worker says it is on NO place — a spare, running and holding
         # nothing, waiting for a place to become free. Reading that as its server would be the worst
-        # answer available: the spare would share a place with the recorder that actually owns the disk,
+        # answer available: the spare would share a place with the worker that actually owns the disk,
         # and `distinct` would idle one of the two at random.
         if self.spec.place_by in hb.extra:
             return str(hb.extra[self.spec.place_by])
@@ -2951,7 +2976,7 @@ class SpecController(Controller):
                     # Written whether or not the row was there. "If the row exists" was the rule, and it stopped
                     # being right the day a field could be left to INHERIT (М12 Lesson 12): such a unit has no
                     # derived row at all, so deleting it wrote nothing, and what the row governs lived on by the
-                    # subsystem's default — a deleted camera's events, for a year (found with feedback BO).
+                    # subsystem's default — a deleted unit's events, for a year (found with feedback BO).
                     self.write(path, lambda it, v=d.on_delete: {k: str(x) for k, x in v.items()})
                 continue
             # A field left to inherit gives no item: the derived row then says nothing, and its reader goes on
@@ -3065,7 +3090,7 @@ class SpecController(Controller):
                     raise NotUnique(f"{self.spec.name} {row['id']} has that {n} already: one {n} is one unit — change "
                                   f"that one, or delete it first")
 
-    # The labels a unit is placed by, in the one alphabet (`LABEL_WORD`; the review's tenth pass): a camera with `склад`
+    # The labels a unit is placed by, in the one alphabet (`LABEL_WORD`; the review's tenth pass): a unit with `склад`
     # was placed by the node's word and taken off its server as soon as an administrator gave that server a row, which
     # cannot hold the word.
     def _refuse_labels(self, fields: dict, old) -> None:
@@ -3088,7 +3113,7 @@ class SpecController(Controller):
     def update(self, uid, fields: dict) -> dict:
         self.spec.refuse(fields)
         # A secret sent EMPTY or null on an edit keeps the stored one (the thirteenth round; the product's rule): a page
-        # whose field was typed in and cleared sends `""`, and that wiped the camera's password. Left out, it is kept —
+        # whose field was typed in and cleared sends `""`, and that wiped the unit's password. Left out, it is kept —
         # unless the address it is the key to changed (`bound_to`), and then the edit is refused below.
         fields = {k: v for k, v in fields.items() if not (is_secret_field(k) and (v is None or v == ""))}
         def mutate(it):
@@ -3133,7 +3158,7 @@ class SpecController(Controller):
     # The controller's half of a delete: for every `placement/<id>` row with a worker whose unit no longer
     # exists, remove the unit from that worker's assignment and rewrite the placement as `{worker: "",
     # reason: "deleted", at, rev+1}`. Runs first in `ensure_placed` and `redistribute`. The console test:
-    # after `DELETE /cameras/1` the placement still says `w-1` until `unplace_deleted()` returns `[1]`.
+    # after `DELETE /<rows>/1` the placement still says `w-1` until `unplace_deleted()` returns `[1]`.
     def unplace_deleted(self) -> list:
         """The controller's half of a delete: every placement whose unit is gone
         loses its assignment and its row says so. Runs first in every pass."""
@@ -3196,7 +3221,7 @@ class SpecController(Controller):
     # The same for the controller's loops over units ALREADY PLACED (the review's third pass): a row that does not
     # parse is `GARBLED_ROW` — logged once, counted by `units()` in `rows_garbled` like every other — instead of an
     # exception out of `unplace_deleted`, which ran first in `ensure_placed` and `redistribute`: one hand-edited
-    # field on a placed camera, and no new camera was placed and no unit of a silent server moved, every pass.
+    # field on a placed unit, and no new unit was placed and no unit of a silent server moved, every pass.
     # Exported (the boundary's step 5): a subsystem's loop that reads a unit it remembers asks this, not the private name.
     def parsed_unit(self, uid):
         try:
@@ -3294,7 +3319,7 @@ class SpecController(Controller):
         # The group's worker is looked for in the pool as GIVEN, not in what the filters left (the eleventh review, a
         # minor): a channel whose group's worker no longer passed them — its server's row unread this pass, a label
         # given to this one channel — found no group in `out` and was placed alone on another worker, two sessions to one
-        # recorder. Such a unit has no worker: it waits, and `_unplaceable` says beside whom.
+        # box. Such a unit has no worker: it waits, and `_unplaceable` says beside whom.
         with_group = self.worker_with_group(row, workers)
         return [w for w in out if w == with_group] if with_group else out
 
@@ -3392,7 +3417,7 @@ class SpecController(Controller):
         return delete_row(self.spec, table, self.vars, name)
 
     # Every live row by one value of it — the group, the spread field — built once a pass (`_per_pass`). Asked for every
-    # unit waiting to be placed, it was every row read and parsed again for each: 500 cameras waiting of 600 cost a pass
+    # unit waiting to be placed, it was every row read and parsed again for each: 500 units waiting of 600 cost a pass
     # 670 000 reads and ten seconds (the scaling pass; `tests/test_read_budget.py`). Rows in `units()` order.
     def _rows_by(self, name: str, value_of) -> dict[str, list[dict]]:
         def read():
@@ -3405,9 +3430,9 @@ class SpecController(Controller):
     # The servers already carrying a unit that shares this row's `spread_by` value — where this one may
     # therefore NOT go. Empty when the subsystem does not ask to spread, which is every subsystem today.
     #
-    # Read the whole rule in one sentence: two recordings of one camera exist to survive one server, so
+    # Read the whole rule in one sentence: two copies of one unit's work exist to survive one server, so
     # putting them on one server is not a compromise, it is the failure the operator was buying insurance
-    # against. `near` pulls a recorder towards the camera's holder and would otherwise pull BOTH copies to
+    # against. `near` pulls each copy towards the holder of what it follows and would otherwise pull BOTH copies to
     # the same place — the preference loses to the filter, and the reason says which.
     def servers_taken(self, row: dict) -> set[str]:
         field = self.spec.spread_by
@@ -3563,7 +3588,7 @@ class SpecController(Controller):
 
     # The dry run. Which units nothing else could serve if this server went away — asked BEFORE it does,
     # with the machinery that will answer for real afterwards (`eligible` over the pool minus that server).
-    # Fifty cameras leaving a machine have to land somewhere, and "somewhere" is a fact about headroom and
+    # Fifty units leaving a machine have to land somewhere, and "somewhere" is a fact about headroom and
     # labels, not a hope. An upgrade script reads this and stops; the alternative is reading `/unplaceable`
     # after the reboot.
     def would_strand(self, server: str, workers: list[str] | None = None) -> list[str]:
@@ -3591,17 +3616,17 @@ class SpecController(Controller):
         return UNIT_JUDGED.read(key, lambda: self.eligible(row, pool), [])
 
     # `near: <sub>`: the worker of that subsystem whose heartbeat status lists this unit's id in phase
-    # `running` — `(worker, server)` — or None. The recorder says `near: vms`: the camera's holder.
+    # `running` — `(worker, server)` — or None. testsub2 says `near: {sub: testsub, …}`: its counter's holder.
     #
     # `near.of` names the field of THEIR status entry the value is matched against, instead of their unit
-    # id: how a camera finds the recorder running a recording OF it without knowing what the operator named
-    # that recording. Ties (two recordings of one camera) go to the smallest of their ids, so two passes
+    # id: how a unit finds the worker running a unit of theirs ABOUT it without knowing what the operator named
+    # that one. Ties (two of theirs about one of ours) go to the smallest of their ids, so two passes
     # over the same heartbeats reach the same server.
     #
     # FROM ONE LOOK, HANDED IN (the scaling pass). Each call read every heartbeat of the followed subsystem and walked
-    # every entry in them — and `ensure_home` asks for every unit, `_pick` for every unit it places: a thousand cameras
-    # beside the recordings of twenty recorders read the store 25 500 times, and walked every recorder's status a
-    # thousand times. A caller asking for many units takes one look first — `near_index`, from the heartbeats it has
+    # every entry in them — and `ensure_home` asks for every unit, `_pick` for every unit it places: a thousand units
+    # beside the units of twenty workers they follow read the store 25 500 times, and walked every such worker's status
+    # a thousand times. A caller asking for many units takes one look first — `near_index`, from the heartbeats it has
     # read already, if it has — and hands it in as `near`; a unit asked about alone takes a look of its own.
     def near_index(self, beats: dict | None = None) -> NearIndex:
         """The followed subsystem's live `running` entries, by the value `near` matches. `beats`: its heartbeats as
@@ -3703,13 +3728,13 @@ class SpecController(Controller):
     # server an operator named — or the literal `near`, meaning "wherever the thing I follow is".
     #
     # The second form is what makes one subsystem come home BEHIND another. `near` alone is applied once,
-    # when a unit is placed: a camera whose worker was moved while a server was down keeps being held
-    # there for ever, because reading its fan-out over RTSP works and nothing is broken.
+    # when a unit is placed: a unit whose worker was moved while a server was down keeps being held
+    # there for ever, because reading its fan-out over the network works and nothing is broken.
     #
     # Exactly one of a following pair may say `home: near`, and that is not a detail. Two subsystems that
     # each follow the other have no anchor: every pass moves each towards where the other was, and they
-    # swap places instead of meeting. The anchor is the one with a real home — for the VMS, the recording,
-    # because it writes to a disk and a disk does not move.
+    # swap places instead of meeting. The anchor is the one with a real home — the one that writes to a
+    # disk, because a disk does not move.
     def home_for(self, row: dict, near: NearIndex | None = None) -> str:
         if self.spec.home == "near":
             near = self.holder_near(row["id"], near) if self.spec.near != "none" else None
@@ -3726,10 +3751,10 @@ class SpecController(Controller):
     # The pick, with the two affinities in order — home first, then `near` — over a pool the FILTERS have
     # already cut (`eligible`: the constraint and `spread_by`). `(worker, free, note)`, and the note says
     # which it was: "at home on srv-a", "beside w-1 holding it", "away from home srv-a" — so the reason
-    # tells the operator both where the recording reads its source from and whether it is where it belongs.
+    # tells the operator both where the unit reads its source from and whether it is where it belongs.
     #
-    # Home before near, because they disagree exactly when a server is down: `near` would pin a recorder to
-    # whichever server picked up the camera, and nothing would ever come back.
+    # Home before near, because they disagree exactly when a server is down: `near` would pin a follower to
+    # whichever server picked up the unit it follows, and nothing would ever come back.
     def _pick(self, pool: list[str], uid, near: NearIndex | None = None) -> tuple[str | None, int, str]:
         near = self.holder_near(uid, near)
         home = near[1] if self.spec.home == "near" and near else self.home_of(uid)
@@ -3787,7 +3812,7 @@ class SpecController(Controller):
     # capacity, the pool size, the labels reached (under `labels-subset`) and the server. Then the row first
     # (CAS decides who won: if another instance placed it meanwhile, the mutator returns `None` and the
     # other's row is used), then `assign_add` on the winner's worker. `test_two_controllers_agree_by_cas`:
-    # two threads placing 40 cameras with opposite preferences end with every camera exactly once across
+    # two threads placing 40 units with opposite preferences end with every unit exactly once across
     # `w-1`/`w-2`.
     def place(self, uid, workers: list[str] | None = None) -> Placement | None:
         """Place ONE unit on the worker with the most free capacity among those
@@ -3833,12 +3858,12 @@ class SpecController(Controller):
         return pl
 
     # The pass: `unplace_deleted`, then `place` every unit; returns what is placed.
-    # `test_placement_is_stored_with_a_reason_and_adding_a_worker_moves_nothing`: six cameras split 3/3 by
+    # `test_placement_is_stored_with_a_reason_and_adding_a_worker_moves_nothing`: six units split 3/3 by
     # capacity 3; the seventh waits; a third worker arriving takes only the seventh.
     # THE PASS, as one call that measures itself and says so where anybody can read it (feedback BG). The
     # controller has no port, and its pass used to be three calls in a loop in `__main__`: a pass that raised
     # every time, a unit with nowhere to go, an assignment the rows contradicted — none of it was a number
-    # anywhere. `snapshot_age` stayed fresh while the cameras were not recorded. The report goes to the object
+    # anywhere. `snapshot_age` stayed fresh while the units were served by nobody. The report goes to the object
     # store (`<sub>/controller/pass`), like a heartbeat, and the console exports it:
     #
     #   ts, last_success   when the pass last ran, and when it last ran WITHOUT raising. Both: a pass that does
@@ -3870,7 +3895,7 @@ class SpecController(Controller):
 
     # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
     # the report re-read the rows, the placements and the heartbeats per step and per unit — some 41 000 reads at a
-    # thousand cameras on twenty workers, 2 000-odd now (`tests/test_read_budget.py`). The loop that also publishes the
+    # thousand units on twenty workers, 2 000-odd now (`tests/test_read_budget.py`). The loop that also publishes the
     # snapshot opens the pass around both (`host.placement_pass`), and the snapshot reads nothing again.
     def pass_once(self, home_budget: int = 1) -> dict:
         with one_pass(self):
@@ -3987,7 +4012,10 @@ class SpecController(Controller):
         # `<name>_workers_needed`, `_units_short`, `_spare_offers` while this report is fresh
         rep.update(spares)
         try:
-            rep["unplaced"] = len(self.unplaced())
+            unplaced = self.unplaced()
+            rep["unplaced"] = len(unplaced)
+            self.delete_long_unplaced(unplaced)
+            rep["unplaced_deleted_total"] = self.unplaced_deleted
             rep["garbled"] = self.rows_garbled
             for name, counts in (("slots_garbled", SLOTS_GARBLED), ("assignments_garbled", ASSIGNMENTS_GARBLED)):
                 if counts.get(self.sub.name):         # rows of the contract this process could not read (`contract.py`):
@@ -4032,6 +4060,49 @@ class SpecController(Controller):
     def unplaced(self) -> list:
         """Units that should be somewhere and are nowhere — whatever the reason; `/unplaceable` says which cannot be."""
         return [r["id"] for r in self.units() if not self.retired(r) and self.placement(r["id"]) is None]
+
+    # A UNIT NOBODY HOLDS FOR `placement.unplaced.delete_after` GOES (ADR-0067; the product's `deleteLongUnplaced`): counted
+    # by this controller's own clock (`judge_clock`: monotonic; ADR-0049) from the first pass of an unbroken run that found it with
+    # no holder — not from the row's `rev` — its row removed by CAS on the index read, as a console's DELETE leaves it,
+    # and `unplace_deleted` does the rest; a line `unit.unplaced_deleted {target, after_s}`. A unit placed again starts
+    # its count again; a controller started again starts every count again: later, never sooner. A row changed
+    # meanwhile, placed or gone, is the next pass's. Without the key nothing is deleted. It was a worker's sweep in the
+    # product (`sweepUnplaced`): where no worker of the subsystem runs, the row and its alarm stood for ever.
+    def delete_long_unplaced(self, unplaced: list) -> list:
+        after = self.spec.unplaced_delete_after
+        if after <= 0:
+            return []
+        from .contract import judge_clock
+        now = judge_clock(self.wall)()                # monotonic — or a test's own wall
+        since, still, gone = getattr(self, "_unplaced_since", {}), {}, []
+        for uid in unplaced:
+            first = since.get(uid, now)
+            if now - first < after or not self._delete_unplaced(uid, after):
+                still[uid] = first
+            else:
+                gone.append(uid)
+        self._unplaced_since = still
+        return gone
+
+    @property
+    def unplaced_deleted(self) -> int:
+        return getattr(self, "_unplaced_deleted", 0)
+
+    def _delete_unplaced(self, uid, after: int) -> bool:
+        path = self.row_key(uid)
+        try:
+            row, index = self.vars.get(path)
+            if not row or row.get("deleted") == "true" or self.placement(uid) is not None:
+                return False
+            self.vars.delete(path, cas=index)
+        except Exception as e:                        # noqa: BLE001 — a conflict, a refusal, a silent store: the next pass
+            log.info("unplaced: %s %s, unheld for %d s, was not deleted: %s", self.sub.name, uid, after, e)
+            return False
+        self._unplaced_deleted = self.unplaced_deleted + 1
+        log.info("unplaced: %s %s deleted — nobody held it for %d s (placement.unplaced.delete_after)", self.sub.name,
+                 uid, after)
+        self.journal.say("unit.unplaced_deleted", sub=self.sub.name, target=str(uid), after_s=after)
+        return True
 
     def ensure_placed(self, workers: list[str] | None = None) -> list[Placement]:
         self.unplace_deleted()
@@ -4149,7 +4220,7 @@ class SpecController(Controller):
     # held, one whose place admits no unit (`admitting_none`), one on a drained or decommissioned server, and a slot that stopped renewing whose fate says its units move
     # (`slot_fate`: `MOVED_FATES`). A slot that merely lapsed, or whose worker is hung, or that nobody can judge, is not
     # touched — it is waited for, up to `hung_move_after` for the last two. `test_scale_in_releases_a_slot_and_the_controller_redistributes`: a silent `w-3`
-    # moves nothing; after `release_slot()` its two cameras go to `w-1`/`w-2` with reason `slot w-3 released; …`.
+    # moves nothing; after `release_slot()` its two units go to `w-1`/`w-2` with reason `slot w-3 released; …`.
     def redistribute(self, workers: list[str] | None = None) -> list[tuple]:
         """The controller's one unasked move: the units of a worker that is leaving
         (`leaving`: a released slot, a drained, decommissioned or silent server, no
@@ -4183,7 +4254,7 @@ class SpecController(Controller):
                 # THE GROUP GOES WHOLE, OR STAYS WHOLE (the review's twelfth pass, blocker 7; `ensure_reach`'s rule). The
                 # first unit of a group went where IT fitted, the next ones were pinned to that worker
                 # (`eligible`) — and with no room or no reach for them there they stayed on the leaving worker: a drained,
-                # released, decommissioned or dead slot, a recorder split, and the channels left behind written by
+                # released, decommissioned or dead slot, a group split, and the channels left behind written by
                 # nobody, every counter at 0. Now the units of the group on the leaving worker go together onto a worker
                 # that every one of them may go to AND that has room for all of them — or none goes, said once and
                 # counted (`units_left_on_leaving` in the pass report, on `/metrics`).
@@ -4240,9 +4311,9 @@ class SpecController(Controller):
         for w in self.without_resource(seen):
             if self.assignment(w).units:
                 gone_for.setdefault(w, f"resource on {self.server_of(w)} silent")
-        # …and a live worker that holds NO PLACE where the subsystem places by one (feedback BN): a recorder
-        # that lost its volume — two restarted, the other took it — is alive, keeps its slot and cannot write
-        # a byte, and the recordings assigned to it used to stay there, recorded by nobody, for as long as it
+        # …and a live worker that holds NO PLACE where the subsystem places by one (feedback BN): a worker
+        # that lost its disk — two restarted, the other took it — is alive, keeps its slot and cannot write
+        # a byte, and the units assigned to it used to stay there, written by nobody, for as long as it
         # lived. It says so itself (`place` empty in its heartbeat); its units go to a worker that has a place.
         for w in self.placeless(seen):
             if self.assignment(w).units:
@@ -4284,16 +4355,17 @@ class SpecController(Controller):
     #                 worker has not been heard yet — for `OFFER_GRACE` (90 s) from the take, as this controller saw it,
     #                 it is a worker on its way. A piece larger than `per` no spare takes: withheld, the reason said
     #
-    # …AND ONLY WHAT A SPARE COULD TAKE (the twelfth round's «Вопросы», found rebuilding three-cameras by runs). Three
+    # …AND ONLY WHAT A SPARE COULD TAKE (the twelfth round's «Вопросы», found rebuilding a scenario by runs). Three
     # things the count did not ask:
     #   per           a spare says its capacity in its first heartbeat, after it was started for the count. The count
     #                 is by the smallest capacity the live workers of the set announce (a spare is started from the
-    #                 same unit and environment as the role's workers, so says the same), the fallback `CAPACITY`
-    #                 only where none is live — never by this controller's own fallback while the workers say better
+    #                 same unit and environment as the role's workers, so says the same), the spec's
+    #                 `placement.capacity.default` only where none is live — never by that default while the workers
+    #                 say better; the platform reads no `CAPACITY` (ADR-0030, п. 6: it is the workers' key)
     #   a server      a spare runs on a server: one whose resource is not silent, not drained, not decommissioned, and
     #                 whose labels cover the set (its row; else its workers' word; a server whose labels nobody has said yet
     #                 may cover it). Under `servers: distinct` only a server with no live worker of this subsystem
-    #                 can carry a spare's units — on any other it idles by policy, the camera stays unplaced, and the
+    #                 can carry a spare's units — on any other it idles by policy, the unit stays unplaced, and the
     #                 next pass offered again: spares raised to `MAX_WORKERS` on every server, each idle
     #   none          no such server: no offer is written — it could only hang, or start a spare that idles. The
     #                 shortage stays counted (`units_short`), the reason is said (`spares_withheld`, on `/metrics`),
@@ -4313,9 +4385,9 @@ class SpecController(Controller):
         leaving = self.leaving(sorted(self.workers_seen()))
         subset = self.spec.constraint == "labels-subset"
         key = (lambda row: label_set(row.get("labels") or [])) if subset else (lambda row: "")
-        # …BY GROUP (the review's thirteenth pass, major 16): units of one `group_by` waiting together — a recorder's
-        # channels left whole on a leaving slot, a device's new channels — go onto ONE worker or not at all
-        # (`redistribute`), and were counted one by one against the room of every worker: a 4-channel NVR on a released
+        # …BY GROUP (the review's thirteenth pass, major 16): units of one `group_by` waiting together — a box's
+        # channels left whole on a leaving slot, a box's new channels — go onto ONE worker or not at all
+        # (`redistribute`), and were counted one by one against the room of every worker: a 4-channel box on a released
         # slot beside two workers with 2 places each was "short 0", no offer, no alarm, four channels written by nobody.
         # A group is one piece now, under the labels of all its waiting units together, and it fits only where one
         # worker has room for all of it.
@@ -4488,7 +4560,7 @@ class SpecController(Controller):
         return False
 
     # Units placed away from the home their row names, moved back — at most `budget` a pass, because every
-    # move is a new epoch and a seam in the recording. It is the other half of `home`: the preference in
+    # move is a new epoch and a seam in the unit's writes. It is the other half of `home`: the preference in
     # `_pick` decides where a unit goes when it is placed, and this is what happens to one already placed
     # somewhere else when its home comes back.
     #
@@ -4522,24 +4594,24 @@ class SpecController(Controller):
     # WHAT MAKES A LABEL AN EDIT AND NOT A NOTE (feedback DQ). A placed unit whose worker no longer passes the constraint
     # — its server's labels, or its own, changed after it was placed — moves to a live worker that does; when none does,
     # it gives its place back with the reason, and `/unplaceable` lists it. Without this a label decided only the NEXT
-    # placement: a camera stayed on a server that had stopped reaching it, and nothing said so.
+    # placement: a unit stayed on a server that had stopped reaching it, and nothing said so.
     #
     # Only the constraint is asked again — `spread_by` and the subsystem's `admit` decided the place once and are not
     # this step's, though the target is chosen through `eligible`, which asks them — and only of a unit on a LIVE worker
     # of the pool: the units of a worker that is gone, leaving or draining are `redistribute`'s. At most `budget` a pass:
-    # every move is a new epoch and a seam in the recording, and an edit that strips a server of its VLAN moves its
-    # cameras over a few passes, not in one. A pass that has never read the servers' rows (`server_labels` is None: the
+    # every move is a new epoch and a seam in the unit's writes, and an edit that strips a server of its VLAN moves its
+    # units over a few passes, not in one. A pass that has never read the servers' rows (`server_labels` is None: the
     # store did not answer since this process started — every server's reach `unknown`) moves nothing; nor does one off
     # a server whose row did not read this pass (the tenth pass).
     #
-    # THE GROUP MOVES WHOLE, OR NOT THIS PASS (the review's tenth pass, minor): an administrator of one camera of a
-    # four-channel recorder changed its `labels`, and the channel went alone to another holder — two sessions to one
-    # recorder, for good. A unit with a group (`group_by`: the VMS's device) moves with every unit of its group on its
+    # THE GROUP MOVES WHOLE, OR NOT THIS PASS (the review's tenth pass, minor): an administrator of one channel of a
+    # four-channel box changed its `labels`, and the channel went alone to another holder — two sessions to one
+    # box, for good. A unit with a group (`group_by`: its address's box) moves with every unit of its group on its
     # worker, onto a worker that takes them all, in one pass.
     #
     # …ONTO ANY WORKER THAT HAS ROOM FOR ALL OF IT, AND NEVER SPLIT, NEVER PAST THE BUDGET (the eleventh review: a major,
     # a minor, and the remark on the budget; the product's cross-check). The target was `_pick`'s ONE worker — the near
-    # one first — and when that one had two places for a four-channel recorder the pass gave all four back "nothing live
+    # one first — and when that one had two places for a four-channel box the pass gave all four back "nothing live
     # reaches it", while srv-c with fifty reached them; the next placement put two on srv-b and two nowhere, for good.
     # Now the target is picked among the workers that reach every unit of the group AND have room for the whole of it
     # (near and home still first among those). With none, a unit alone gives its place back with the true reason (none
@@ -4549,8 +4621,8 @@ class SpecController(Controller):
     # moved inside the pass's budget: 32 channels with a budget of 10 were 32 epochs and seams in one pass. A group
     # bigger than the budget waits the same way, said with its size — the budget is raised, or it is moved by hand.
     #
-    # …and A LABEL NO ROW CAN SAY IS NOT A REASON TO MOVE (the same pass, major): a camera stored with `склад` before the
-    # one alphabet was placed by a node's word; a server's row cannot hold the word, so the camera stays where it is,
+    # …and A LABEL NO ROW CAN SAY IS NOT A REASON TO MOVE (the same pass, major): a unit stored with `склад` before the
+    # one alphabet was placed by a node's word; a server's row cannot hold the word, so the unit stays where it is,
     # counted once (`UNIT_LABELS`). Each move and each place given back is a line in the log with its reason; the pass
     # report counts them (`reach_moves`, and `reach_moves_total` since the store was new).
     #
@@ -4640,8 +4712,8 @@ class SpecController(Controller):
         self.last_reach_moves = len(moves)
         return moves
 
-    # A NEW MEMBER ITS GROUP'S WORKER MAY NOT TAKE (the review's thirteenth pass, major 17). A channel added to a device
-    # whose other channels are placed is pinned to their worker (`eligible`: one device, one worker) — and when it needs
+    # A NEW MEMBER ITS GROUP'S WORKER MAY NOT TAKE (the review's thirteenth pass, major 17). A channel added to a box
+    # whose other channels are placed is pinned to their worker (`eligible`: one group, one worker) — and when it needs
     # a label that worker's server does not reach, it was unplaced for ever: `unplaceable` said so, and no door moves a
     # group by hand. Such a member is a reason to move the group whole: the placed members together onto a worker that
     # EVERY member — placed and waiting — may go to and that has room for all of them; the waiting ones follow it on the

@@ -359,7 +359,7 @@ def test_every_grant_of_a_subsystem_is_derived_from_its_spec():
                                   "testsub/sweep", "testsub/requests/*", "platform/servers/*", "platform/drain",
                                   "platform/decommission/*", "platform/schema"]
     assert spec.acl_controller() == ["testsub/workers/*", "testsub/placement/*", "testsub/slots/*",
-                                     "testsub/decommissioned/*"]
+                                     "testsub/decommissioned/*", "delete:testsub/counters/*"]   # the key (ADR-0067)
     assert spec.acl_worker_role() == spec.sub.acl_worker() == ["testsub/epoch/*", "testsub/slots/*", "testsub/holds/*"]
     assert spec.sub.acl_objects_worker() == ["testsub/heartbeats/*", "testsub/contenders/*", "testsub/used/*",
                                          "testsub/commands/*"]   # its marks before it performs a request

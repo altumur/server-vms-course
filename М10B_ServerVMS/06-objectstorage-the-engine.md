@@ -516,13 +516,16 @@ def obsd_volume(session, size: int = 64 << 20, max_block: int = 4 << 20, optimal
 
 ```python
     """One key frame and then six megabytes of the rest, into four-megabyte blocks: the sequence is closed where
-    the block is full, and every frame after it is refused until a key frame opens a new one — lost, not queued."""
+    the block is full, and every frame after it is refused until a key frame opens a new one — lost, not queued. The
+    frame that did not fit is said `SEQUENCE_TOO_LARGE` (the engine since ObjectStorage 16c910b; before it, it too was
+    `SEQUENCE_NEEDS_KEY_SAMPLE`), the ones after it `SEQUENCE_NEEDS_KEY_SAMPLE`."""
     ...
     said = _frames(w, "7/e1", 2100, gop=10 ** 6)
-    assert said["OK"] < 2100 and said["SEQUENCE_NEEDS_KEY_SAMPLE"] == 2100 - said["OK"]
+    assert said["OK"] < 2100 and said.get("SEQUENCE_TOO_LARGE", 0) <= 1
+    assert said["SEQUENCE_NEEDS_KEY_SAMPLE"] + said.get("SEQUENCE_TOO_LARGE", 0) == 2100 - said["OK"]
 ```
 
-Последовательность не переходит границу блока. Блок полон — движок закрывает последовательность, и следующий кадр должен открыть новую. Он зависимый, поэтому отвергнут. И все за ним, до ключевого кадра. Кадры не ждут в очереди, они **потеряны**.
+Последовательность не переходит границу блока. Блок полон — движок закрывает последовательность, и следующий кадр должен открыть новую. Он зависимый, поэтому отвергнут: сам он — словом `SEQUENCE_TOO_LARGE` (так движок говорит с ObjectStorage 16c910b; до того — `SEQUENCE_NEEDS_KEY_SAMPLE`), и все за ним, до ключевого кадра, — `SEQUENCE_NEEDS_KEY_SAMPLE`. Кадры не ждут в очереди, они **потеряны**.
 
 Отсюда правило размера блока в `vms/archive.py` (инцидент продукта, обратная связь Y):
 

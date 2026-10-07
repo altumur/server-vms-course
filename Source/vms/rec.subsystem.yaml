@@ -189,7 +189,7 @@ tables:
       # the camera's recordings when it was set, if whoever set it says them: a recording deleted since still has its
       # minutes copied (`keeps.spans_of`); left out, its camera's recordings as they are when it is copied
       recordings: {type: list}
-    stamp: [by, at]
+    stamp: [by, at, made_at]                         # made_at: when the row was made — what a keep's seal is bound to (ADR-0057)
     journal: {written: archive.keep.made, deleted: archive.keep.lifted}
 # Whose a row of a table is: a keep is its camera's (`cam`, an id of the camera `about` names). Whoever writes one
 # needs on that camera what the route needs — on both, if a write ever moved it. And a keep is set by an operator
@@ -311,6 +311,7 @@ servers:
     - {field: volume_missing, title: том не найден}
     - {field: shrink_pending, title: уменьшение квоты не подтверждено}
     - {field: writer.state, title: запись в архив}
+    - {field: objectstorage.block_small, title: блок тома меньше кадров видео}
     - {field: keeps, title: сохранения, of: keeps}
     - {field: incidents_lost, title: потеряно из сохранений, of: keeps}
     - {field: incidents_at_risk, title: сохранения под угрозой, of: keeps}

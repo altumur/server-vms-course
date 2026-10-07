@@ -9,7 +9,8 @@ units — nothing is placed on it, it has no epoch and no worker — and its spe
         fields: {…}               as a unit's: types, required, defaults, a `*_secret` sealed and `bound_to` its address,
                                   a url's words, `ref`/`must_match`, `schema`
         schema: {…}               the row as a whole, JSON Schema (`schema.py`): what one field cannot say
-        stamp: [by, at]           who wrote it and when, set by the console
+        stamp: [by, at, made_at]  who wrote it and when, and when the row was made — set by the console, never by the
+                                  body (each word on its own; a body that sends one is refused, as an unknown field)
         journal: {written: <kind>, deleted: <kind>}
 
 and the console serves it (`SpecConsole`, `_table_route`):
@@ -62,6 +63,14 @@ class TableSpec:
 
 
 TABLE_KEYS = ("key", "fields", "schema", "stamp", "journal")   # what a table of a spec says
+# What the console stamps a row with, each word on its own (ADR-0057, addendum of 2026-10-07, the form «Платформа»'s):
+#   by       who wrote it, the gate's name
+#   at       when it was written last — every write sets it
+#   made_at  when the row was MADE: the console's clock when a write finds no row under the key, carried unchanged through
+#            every write after it; a row made before the table said `made_at` is not given one after the fact, and a row
+#            made again under the same key after a DELETE has its own: what a subsystem binds a record of its own to,
+#            when "this row, as it was made" is what the record is about
+STAMP_WORDS = ("by", "at", "made_at")
 
 def parse(sub: str, raw, field_parser) -> tuple[tuple, dict]:
     """`tables:` as written — a list of names (a family the console's token may write, served by nobody), or a map of
@@ -86,8 +95,8 @@ def parse(sub: str, raw, field_parser) -> tuple[tuple, dict]:
         if not named or named - set(fields):
             raise ValueError(f"spec {sub}: tables.{t}.key names fields of its rows — {key!r} names {sorted(named - set(fields))}")
         stamp = d.get("stamp") or []
-        if not isinstance(stamp, list) or set(stamp) - {"by", "at"}:
-            raise ValueError(f"spec {sub}: tables.{t}.stamp is a list of `by`, `at`, not {stamp!r}")
+        if not isinstance(stamp, list) or set(stamp) - set(STAMP_WORDS):
+            raise ValueError(f"spec {sub}: tables.{t}.stamp is a list of `by`, `at`, `made_at`, not {stamp!r}")
         journal = d.get("journal") or {}
         if not isinstance(journal, dict) or set(journal) - {"written", "deleted"}:
             raise ValueError(f"spec {sub}: tables.{t}.journal is {{written: <kind>, deleted: <kind>}}, not {journal!r}")
@@ -109,7 +118,7 @@ def refusal_of_name(name: str) -> str | None:
 
 def shown(items: dict, fields: dict) -> dict:
     """A stored row as a page may see it: values parsed, secrets left out, every address said as `hide_in_url` says it;
-    the stamp `at` a number, as every time on a page is."""
+    the stamps `at` and `made_at` numbers, as every time on a page is."""
     from .catalog import secret_rules
     from .secrets import hide_in_url, is_secret_field
     out = {}
@@ -118,7 +127,7 @@ def shown(items: dict, fields: dict) -> dict:
             continue
         f = fields.get(k)
         try:
-            v = f.parse(v) if f is not None else float(v) if k == "at" else v
+            v = f.parse(v) if f is not None else float(v) if k in ("at", "made_at") else v
         except PARSE_ERRORS:
             pass
         # …a url field's by its own rule and every loaded spec's: what its write refuses, never shown (ADR-0053, addendum
@@ -230,6 +239,11 @@ def write_row(spec, table: str, vars_, body, user: str = "", now: float = 0.0, s
         row["by"] = user
     if "at" in t.stamp:
         row["at"] = now
+    if "made_at" in t.stamp:
+        if not old:
+            row["made_at"] = now                          # made now: no row under the key, or one nobody can read
+        elif old.get("made_at") not in (None, ""):
+            row["made_at"] = old["made_at"]               # as stored, through every write
     items = {n: (t.fields[n].to_item(v) if n in t.fields else str(v)) for n, v in row.items()
              if v is not None and not (n in t.fields and t.fields[n].type == "string" and v == "" and n not in sent)}
     vars_.put(key, seal_items(sealer, items, key), cas=idx)
