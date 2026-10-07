@@ -2869,8 +2869,8 @@ class SpecConsole:
 
     # The units a write to such a row touches: the row as stored and the row as sent (`sent`, the body, once it is
     # read). The row as stored is the one under the name in the path — or, a row written whole by `POST /<table>`, under
-    # the name its body gives it (`TableSpec.name_of`, what `write_row` stores it under): an operator of one camera who
-    # posts a keep named as another camera's keep touches that camera too (ADR-0014, дополнение 2026-10-07).
+    # the name its body gives it (`TableSpec.name_of`, what `write_row` stores it under): who may write one unit's rows
+    # and posts a row under the name of another unit's touches that unit too (ADR-0014, дополнение 2026-10-07).
     def _table_targets(self, method: str, path: str, sent=None) -> set:
         table, rid = self._table_row(method, path)
         if table is None:

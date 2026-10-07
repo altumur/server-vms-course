@@ -68,7 +68,8 @@ TABLE_KEYS = ("key", "fields", "schema", "stamp", "journal")   # what a table of
 #   at       when it was written last — every write sets it
 #   made_at  when the row was MADE: the console's clock when a write finds no row under the key, carried unchanged through
 #            every write after it; a row made before the table said `made_at` is not given one after the fact, and a row
-#            made again under the same key after a DELETE has its own. What a keep's seal is bound to (`vms/keeps.py`)
+#            made again under the same key after a DELETE has its own: what a subsystem binds a record of its own to,
+#            when "this row, as it was made" is what the record is about
 STAMP_WORDS = ("by", "at", "made_at")
 
 def parse(sub: str, raw, field_parser) -> tuple[tuple, dict]:
