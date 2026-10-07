@@ -8,6 +8,8 @@ runs where the signer's key is: `domain.signer_service`, when it is given CLUSTE
     upstream     Lesson 17   for each relay: the centre's ingest, per camera, when there is a centre
     asks         Lesson 16   for each camera a scenario of the shared document makes a trigger: whom it may
                              ask, by which roads — built last, because it reads what the others decided
+    stream-accounts          for each cluster: the RTSP accounts its grants name, passwords sealed — where the spec
+                             declares the book (`streamclients.py`; ADR-0031, the addendum of 2026-10-07)
 
 EACH BOOK IS A STEP OF ITS OWN (the review's eighth pass; the seventh left "the steps of `Books.pass_once`" open).
 The pass was one call for everything: a member's object that raised in the first read stopped all five books, and
@@ -23,6 +25,7 @@ import logging
 from .chain import publish_upstream
 from .ingest import publish_asks
 from .scenario import pairs, refusals, unchecked
+from .streamclients import publish_accounts
 from w2cplatform.domain.shared import published
 from w2cplatform.domain.steps import Steps
 
@@ -57,6 +60,11 @@ class Books:
                 ("refused", lambda: refusals(settings, c)),
                 ("unchecked", lambda: unchecked(settings, c)))    # accepted, and nobody could vouch for it: said too
             out.update(more)
+        # The RTSP accounts granted to each cluster: a step of its own, after the books it does not read (the product's
+        # `publishAccounts`, the pass's last). None — the spec declares no such book, or the domain is not installed.
+        accounts = self.steps.run(("stream-accounts", lambda: publish_accounts(c))).get("stream-accounts")
+        if accounts is not None:
+            out["stream-accounts"] = accounts
         out["moved"] = got.get("following the topology", [])
         out["members"] = got.get("following the members", {"joined": [], "left": []})
         out["failing"] = sorted(self.steps.failing)

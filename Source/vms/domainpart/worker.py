@@ -12,8 +12,9 @@ carries each member's books home as it carries any row a spec declares, without 
     its heartbeat   `domain/vms/heartbeat` in the holder's object store: {ts, instance, passes, failing, step_failures}
 
 Environment: `CLUSTERS` and `DOMAIN_HOLDER` as the domain's console reads them (`w2cplatform.domain.runtime`);
-`SIGNER_TOKENS_UNIX` — the signer's socket; `CENTRE`, `STAR` only where the operator's topology says nothing;
-`BOOKS_EVERY` (5 s), `LOST_AFTER` (45 s).
+`SIGNER_TOKENS_UNIX` — the signer's socket; `DOMAIN_CONSOLE_URL` — the domain console's door, where the people and the
+grants are asked as the person who asked (the RTSP accounts, `streamclients.py`); `CENTRE`, `STAR` only where the
+operator's topology says nothing; `BOOKS_EVERY` (5 s), `LOST_AFTER` (45 s).
 """
 from __future__ import annotations
 
@@ -77,10 +78,12 @@ class DomainPartWorker:
 #                   steps, a forwarder's drops and holes (`ingest.stream_metrics`)
 #   GET /catalog    what a scenario between cameras may name: the actions one camera may ask another, and per camera
 #                   what it said it raises and can do (`scenario.catalog`)
+#   …/stream-clients   the RTSP accounts, where the spec keeps them (`streamclients.py`, `clients`; ADR-0031)
 #
 # `verifier(token) -> subject` and `viewer(subject) -> bool`: a person's token and a `view` on the domain, as the
-# domain's own door asks them (`w2cplatform.domain.grants.domain_may`); not given, the door is open.
-def door_handler(fed, crossings=None, verifier=None, viewer=None):
+# domain's own door asks them (`w2cplatform.domain.grants.domain_may`); not given, the door is open. A request that
+# changes something asks `admin(subject)` instead — view to look, admin to change, as the domain's own door does.
+def door_handler(fed, crossings=None, verifier=None, viewer=None, admin=None, clients=None):
     from http.server import BaseHTTPRequestHandler
     from urllib.parse import urlsplit
 
@@ -96,18 +99,34 @@ def door_handler(fed, crossings=None, verifier=None, viewer=None):
             self.end_headers()
             self.wfile.write(raw)
 
+        # Who asks: the subject its token names — or, with no verifier, whom the header says (`X-Operator`). None:
+        # the answer (401, 403) is given. `need`: `view` to look, `admin` to change.
+        def _who(self, need: str = "view"):
+            if verifier is None:
+                return self.headers.get("X-Operator", "") or ""
+            auth = self.headers.get("Authorization", "")
+            if not auth.startswith("Bearer "):
+                self._send(401, {"detail": "a token is required"})
+                return None
+            try:
+                subject = verifier(auth[7:])
+            except ApiError as e:
+                self._send(e.status, {"detail": e.detail})
+                return None
+            may = admin if need == "admin" else viewer
+            if may is not None and not may(subject):
+                self._send(403, {"detail": f"{subject} may not {'change' if need == 'admin' else 'look at'} the domain: "
+                                           f"no `{need}` on it"})
+                return None
+            return subject
+
         def do_GET(self):
             path = urlsplit(self.path).path
-            if verifier is not None:
-                auth = self.headers.get("Authorization", "")
-                if not auth.startswith("Bearer "):
-                    return self._send(401, {"detail": "a token is required"})
-                try:
-                    subject = verifier(auth[7:])
-                except ApiError as e:
-                    return self._send(e.status, {"detail": e.detail})
-                if viewer is not None and not viewer(subject):
-                    return self._send(403, {"detail": f"{subject} may not look at the domain: no `view` on it"})
+            who = self._who()
+            if who is None:
+                return
+            if clients is not None and clients.serves(path):
+                return self._send(*clients.handle("GET", path, {}, self.headers.get("Authorization", ""), who))
             if path == "/metrics":
                 from .ingest import stream_metrics
                 return self._send(200, "\n".join(stream_metrics(fed)) + "\n", text=True)
@@ -115,6 +134,34 @@ def door_handler(fed, crossings=None, verifier=None, viewer=None):
                 from .scenario import catalog
                 return self._send(200, catalog(crossings))
             self._send(404, {"detail": "no such route"})
+
+        def _change(self, method: str):
+            from w2cplatform.console import read_body
+            path = urlsplit(self.path).path
+            if clients is None or not clients.serves(path):
+                return self._send(404, {"detail": "no such route"})
+            who = self._who("admin")
+            if who is None:
+                return
+            if not read_body(self, 1 << 16):
+                return
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+            try:
+                body = json.loads(raw) if raw.strip() else {}
+            except ValueError as e:
+                return self._send(400, {"error": "refused", "detail": f"the body is not JSON: {e}"})
+            if not isinstance(body, dict):
+                return self._send(400, {"error": "refused", "detail": "the body is one JSON object"})
+            self._send(*clients.handle(method, path, body, self.headers.get("Authorization", ""), who))
+
+        def do_POST(self):
+            self._change("POST")
+
+        def do_PUT(self):
+            self._change("PUT")
+
+        def do_DELETE(self):
+            self._change("DELETE")
 
         def log_message(self, *a):
             pass
@@ -162,9 +209,19 @@ def main() -> None:
     def viewer(subject: str) -> bool:
         from w2cplatform.domain.grants import domain_may
         return domain_may(holder.vars, subject, "view", time.time())
+
+    def admin(subject: str) -> bool:
+        from w2cplatform.domain.grants import domain_may
+        return domain_may(holder.vars, subject, "admin", time.time())
+    # The RTSP accounts (ADR-0031): kept in the holder's store as this process opened it (guarded by the spec's
+    # `domain.names`), sealed with its ring; the people and the grants asked of the domain console, as the person.
+    from .keys import ring
+    from .streamclients import ConsoleDoor, StreamClientDoors
+    clients = StreamClientDoors(holder.vars, sealer=ring(), console=ConsoleDoor(os.environ.get("DOMAIN_CONSOLE_URL", "")))
     from w2cplatform.console import open_doors
     open_doors(os.environ.get("DOMAINPART_HOST", "0.0.0.0"), int(os.environ.get("DOMAINPART_PORT", "8096")),
-               door_handler(fed, books.crossings, verifier if os.environ.get("AUTH", "1") == "1" else None, viewer),
+               door_handler(fed, books.crossings, verifier if os.environ.get("AUTH", "1") == "1" else None, viewer,
+                            admin, clients),
                unix_env="DOMAINPART_UNIX", say=False)
     every = float(os.environ.get("BOOKS_EVERY", "5"))
     stop = threading.Event()

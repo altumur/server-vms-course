@@ -25,6 +25,8 @@ lease: {unconfirmed_max: forever}
 # (`w2cplatform/cluster/rights.py`, `check_secrets`).
 secrets:
   readers:
+    domain/vms/stream-clients/: [domainpart, domain]
+    domain/vms/stream-accounts: [domainagent, domainpart, domain]
     door/signer: [console]
 # What the holder writes beside its claims: what a device it holds turned out to be (`vms/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
@@ -401,9 +403,13 @@ domain:
   # What the domain's door lets through in a member's camera (PUT /domain/vms/cameras/<ref>): on or off. Its name,
   # folders, labels and retention are its cluster's console's (ADR-0031).
   edit: [enabled]
-  books: {sources: {}, primaries: {show: [recorded_by, recording, backups]}, polls: {}, asks: {}, upstream: {}}
-  kept: [crossings, roads]
+  books: {sources: {}, primaries: {show: [recorded_by, recording, backups]}, polls: {}, asks: {}, upstream: {}, stream-accounts: {}}
+  kept: [crossings, roads, stream-clients/]
   tables: [crossings]
+  # The RTSP accounts are subjects of the domain's grants (ADR-0031, the platform carries it out): no person of the
+  # domain under an account's name, and no grant to an account wider than view.
+  names:
+    stream-clients/: {exclusive_with: domain/users, grant: view}
   tokens:
     stream: {lifetime: 86400, claims: [aud, ref]}
     ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
@@ -423,6 +429,8 @@ domain:
     - {id: polls, keys: [domain/vms/polls], prefix: domain/vms/polls/}
     - {id: upstream, keys: [domain/vms/upstream], prefix: domain/vms/upstream/}
     - {id: asks, keys: [domain/vms/asks], prefix: domain/vms/asks/}
+    - {id: stream-clients, prefix: domain/vms/stream-clients/}
+    - {id: stream-accounts, keys: [domain/vms/stream-accounts], prefix: domain/vms/stream-accounts/}
     - {id: worker, keys: [domain/vms/worker]}
 # The VMS's own numbers, declared (the boundary's step 6: it was `vms/console.py`'s `vms_metrics` and `beat_lines`,
 # functions the platform's console called). `vms_<name>`; the shapes are the platform's (`w2cplatform/metrics.py`).
@@ -555,6 +563,12 @@ display:
     asks:
       title: Просьбы
       about: "Книги просьб по сценариям: для камеры-триггера — кого она может просить и какими дорогами; domain/vms/asks/<кластер> — книга каждого кластера."
+    stream-clients:
+      title: Учётки RTSP
+      about: "Учётные записи RTSP наружу (видеостена, другая VMS): имя и пароль, у держателя домена."
+    stream-accounts:
+      title: Учётки RTSP кластеров
+      about: "Какие учётки RTSP выданы кластеру — по его грантам; пароли запечатаны. domain/vms/stream-accounts/<кластер> — у держателя, domain/vms/stream-accounts — унесённая агентом."
     worker:
       title: Воркер книг
       about: Слот воркера VMS на домене — кто сейчас пишет книги (экземпляр и время).

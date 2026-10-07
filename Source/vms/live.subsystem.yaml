@@ -31,6 +31,10 @@ placement:
 # beside the gateway that took it over, not a duplicate anybody could mark. (The platform's default; said so it is
 # read, as the product says it.)
 lease: {unconfirmed_max: off}
+# The VMS's secret rows its gateway reads (vms.subsystem.yaml, secrets.readers): the RTSP accounts it takes its
+# clients' passwords and its own records from.
+secrets:
+  reads: [domain/vms/stream-clients/, domain/vms/stream-accounts]
 snapshot: [cam, labels]
 # Asking for a camera's stream is watching it, not changing it: `view` on the camera creates the row (it was the
 # console's `POST /whep/<cam>`, which created it on the first viewer — the boundary's step 6).

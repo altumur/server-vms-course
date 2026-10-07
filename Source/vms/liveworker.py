@@ -11,6 +11,8 @@ N browsers behind it over WebRTC. Capacity is counted in viewers.
                             run from live.subsystem.yaml)
     live/<g>/heartbeat      capacity, headroom (viewers it could still take), url, per-stream status
 
+    rtsp://<gateway>/<cam>        RTSP outward, for a stream client's account (`rtspdoor.py`; ADR-0031): off unless
+                                  LIVE_RTSP_LISTEN, and while the spec does not say the gateway reads the accounts
     POST   /whep/<cam>            WHEP, from the page itself with the door token `GET /live/where/<cam>` gave: an SDP
                                   offer in, 201 + the SDP answer out, Location: /whep/session/<id>
     DELETE /whep/session/<id>     the viewer hangs up
@@ -90,7 +92,7 @@ class LiveWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, ctl: SpecController | None = None, url: str = "",
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
-                 peer_factory=None, env: dict | None = None, resource_root: str | None = None):
+                 peer_factory=None, env: dict | None = None, resource_root: str | None = None, rtsp_server=None):
         env = dict(os.environ if env is None else env)
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall, resource_root=resource_root, env=env)
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
@@ -113,6 +115,17 @@ class LiveWorker(Worker):
         self.waiting: dict[str, str] = {}                           # cameras assigned here whose stream nobody serves -> why (the heartbeat's `waiting`)
         self.waiting_since: dict[str, float] = {}                   # …and since when, by this gateway's wall clock
         self.lock = threading.Lock()
+        # RTSP outward (`rtspdoor.py`): the door over `rtsp_server`, where LIVE_RTSP_LISTEN asks for it and the spec
+        # says this gateway reads the accounts — the cluster's name (`CLUSTER`) is what the holder hands its accounts by,
+        # its ring (`SECRETS_KEY`) what the carried accounts open with.
+        from .rtspdoor import RTSPDoor, open_rtsp
+        server = open_rtsp(env, rtsp_server)
+        self.rtsp = None
+        if server is not None:
+            from w2cplatform.sealing import Sealer
+            self.rtsp = RTSPDoor(server, lambda cam: (self.rtp_source(cam) or (None, None))[1], self.vars,
+                                 env.get("CLUSTER", "room-a"), journal=lambda: self.journal, sealer=Sealer.from_env(env),
+                                 wall=self.wall, gateway=lambda: self.name)
 
     # -- where a camera's RTP is: the VMS heartbeat, never a call to the worker ----------------------
     def rtp_source(self, cam: str):
@@ -197,7 +210,18 @@ class LiveWorker(Worker):
                 continue
             log.info("%s: a stream nobody serves aged out: %s (%s)", self.name, cam, self.waiting.get(cam, ""))
             self.waiting.pop(cam, None); self.waiting_since.pop(cam, None)
+        self.rtsp_pass()
         return sorted(self.upstreams)
+
+    # The RTSP door's pass, after the subscriptions' (`rtspdoor.RTSPDoor.sync`, `watch`): in a try of its own — a door
+    # that could not read the grants this pass leaves the WebRTC viewers as they are, and says why.
+    def rtsp_pass(self) -> None:
+        if self.rtsp is None:
+            return
+        try:
+            self.rtsp.pass_once()
+        except Exception:                                           # noqa: BLE001 — the next pass tries again
+            log.exception("%s: the RTSP door's pass failed; tried again on the next", self.name)
 
     # A STREAM NOBODY SERVES (ADR-0057, window 2; the product's `waitFor`): a camera assigned here that no worker says it
     # running — there is no such camera, or nobody records it, or its fan-out is on another server's loopback. The console

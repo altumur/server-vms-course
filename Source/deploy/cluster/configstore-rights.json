@@ -323,7 +323,10 @@
     "platform/servers/*",
     "domain/keys",
     "domain/member",
-    "door/keys"
+    "door/keys",
+    "domain/vms/stream-clients/*",
+    "domain/vms/stream-accounts",
+    "domain/grants/*"
    ],
    "write": [
     "live/epoch/*",
@@ -377,7 +380,8 @@
     "objects/rec/commands/*",
     "objects/rec/sealed/*",
     "vms/requests/*",
-    "objects/vms/commands/*"
+    "objects/vms/commands/*",
+    "domain/grants/*"
    ],
    "write": [
     "rec/epoch/*",
@@ -587,7 +591,9 @@
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*"
+    "vms/*",
+    "!domain/vms/stream-accounts*",
+    "!domain/vms/stream-clients/*"
    ],
    "write": [
     "domain/members",
@@ -607,7 +613,8 @@
    "read": [
     "platform/schema",
     "domain/*",
-    "!domain/signer*"
+    "!domain/signer*",
+    "!domain/vms/stream-clients/*"
    ],
    "write": [
     "domain/*",
@@ -625,9 +632,11 @@
     "!domain/vms/polls/*",
     "!domain/vms/primaries/*",
     "!domain/vms/sources/*",
+    "!domain/vms/stream-accounts/*",
     "!domain/vms/upstream/*",
     "!domain/vms/crossings",
     "!domain/vms/roads",
+    "!domain/vms/stream-clients/*",
     "!domain/vms/worker",
     "!domain/vms/heartbeat"
    ],
@@ -647,9 +656,11 @@
     "!domain/vms/polls/*",
     "!domain/vms/primaries/*",
     "!domain/vms/sources/*",
+    "!domain/vms/stream-accounts/*",
     "!domain/vms/upstream/*",
     "!domain/vms/crossings",
     "!domain/vms/roads",
+    "!domain/vms/stream-clients/*",
     "!domain/vms/worker",
     "!domain/vms/heartbeat"
    ]
@@ -670,7 +681,9 @@
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*"
+    "vms/*",
+    "identity/users/*",
+    "domain/grants/*"
    ],
    "write": [
     "domain/vms/*"
