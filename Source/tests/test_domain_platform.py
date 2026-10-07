@@ -1276,6 +1276,35 @@ def test_a_move_is_made_on_the_new_holder_by_its_signer_through_the_door_and_che
         stop()
 
 
+def test_a_move_at_a_clusters_console_is_handed_to_this_boxs_signer_never_to_the_holder_that_is_gone():
+    """ADR-0066: the domain moves where its file is brought — at the cluster console of the box that takes it,
+    `POST /domain/move` is handed to THIS box's signer (`SIGNER_URL`, its `/api/move`) by the console's one `forward`,
+    not to the holder's door (north is gone: `domain_forward` would dial it). No signer here: 404 «no signer here»;
+    a file of another domain: the signer's 403, passed on as it came; the right file: the move, term 2 on south."""
+    from w2cplatform.trust.signer import Signer
+    from w2cplatform.cluster.variables import FakeVariables
+    north_holder, south, holder, con, signer_url, base, lines, wall, stop = _moving_site()
+    csrv, cbase = _cluster_console(south, wall)
+    right = north_holder.signer.backup().decode()
+    wrong = Signer("acme", FakeVariables(), now=wall).backup().decode()
+    try:
+        st, out = _call(cbase, "POST", "/domain/move", {"recovery": right})
+        assert st == 404 and out["error"] == "no signer here", out
+        with _SignerHere(signer_url):
+            assert _call(cbase, "POST", "/domain/move", {"recovery": wrong})[0] == 403
+            assert holder.term is None                                               # nothing moved yet
+            st, out = _call(cbase, "POST", "/domain/move", {"recovery": right})
+            assert st == 200 and out["term"] == 2, out
+            assert holder.term.term == 2 and holder.term.name == "south"
+        with _SignerHere("http://127.0.0.1:9"):                                       # a signer that does not answer
+            st, out = _call(cbase, "POST", "/domain/move", {"recovery": right})
+            assert st == 502 and out["error"] == "the signer did not answer", out
+    finally:
+        csrv.shutdown()
+        csrv.server_close()
+        stop()
+
+
 def test_after_a_theft_the_move_through_the_door_drops_the_old_keys_and_a_wrong_root_is_refused():
     """Lesson 15, step 9, through the door: the root is off the holder, north is stolen, and the operator moves the
     domain onto south with the root's recovery file, saying so (`stolen`). Another root's file is 403 — no member holds

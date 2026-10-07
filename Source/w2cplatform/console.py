@@ -3951,8 +3951,11 @@ class Mount:
     #                       move reads the largest term and the keys by, and what the page shows on a server's overview
     #                       (contract §2). Never the backup's content
     #   GET  /api/backup    the backup copy kept here, to a member that signs its ask (`domain.term.backup_answer`)
-    #   POST /api/prepare, /api/take   a planned handover, handed to THIS box's signer (`SIGNER_URL`) as it came — the
-    #                       signer checks the outgoing holder's signature and grant itself; no signer here: 404, said
+    #   POST /api/prepare, /api/take, /domain/move   a planned handover and a move from the recovery file, handed to THIS
+    #                       box's signer (`SIGNER_URL`) by `forward` as they came, with their signature headers
+    #                       (`SIGNED`) — the signer checks the outgoing holder's signature, the grant or the file itself;
+    #                       90 s for `take` and `move`, 10 s for `prepare`; no signer here: 404, said (ADR-0066). A move
+    #                       is made where the domain goes, never at the holder that is gone: not `domain_forward`
     def held(self) -> dict:
         from .domain.term import held
         return held(self.root.ctl.cluster, self.root.ctl.vars)
@@ -3963,31 +3966,17 @@ class Mount:
                              h.headers.get("X-W2C-Member"), h.headers.get("X-W2C-Time", "nan"),
                              h.headers.get("X-W2C-Signature"), self.root.wall())
 
+    # The console's route → the signer's (`signer_service`): the same operation under the signer's own name.
+    TO_SIGNER = {"/api/prepare": "/api/prepare", "/api/take": "/api/take", "/domain/move": "/api/move"}
+    SIGNED = ("X-W2C-Time", "X-W2C-Signature", "X-W2C-Member")
+
     def to_signer(self, h, path: str) -> None:
-        import urllib.error
-        import urllib.request
         signer = os.environ.get("SIGNER_URL", "")
         if not signer:
             return h._send(404, {"error": "no signer here", "detail": f"{self.root.ctl.cluster} runs no signer of the "
                                                                       f"domain (SIGNER_URL): the domain cannot be handed here"})
-        if not read_body(h, 1 << 16):
-            return
-        body = h.rfile.read(int(h.headers.get("Content-Length") or 0))
-        headers = {"Content-Type": "application/json",
-                   **{k: h.headers[k] for k in ("X-W2C-Time", "X-W2C-Signature") if h.headers.get(k)}}
-        req = urllib.request.Request(signer.rstrip("/") + path, data=body or b"{}", headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=90.0 if path == "/api/take" else 10.0) as r:
-                status, raw = r.status, r.read()
-        except urllib.error.HTTPError as e:
-            status, raw = e.code, e.read()
-        except (OSError, ValueError) as e:
-            return h._send(502, {"error": "the signer did not answer", "detail": str(e)})
-        try:
-            answer = json.loads(raw or b"{}")
-        except PARSE_ERRORS:
-            answer = {"detail": raw[:512].decode("utf-8", "replace")}
-        h._send(status, answer)
+        self.forward(h, "POST", signer.rstrip("/") + self.TO_SIGNER[path], "", 10.0 if path == "/api/prepare" else 90.0,
+                     who="the signer", keep=self.SIGNED)
 
     @staticmethod
     def domain_local(method: str, path: str) -> bool:
@@ -4006,7 +3995,7 @@ class Mount:
     # holder's door (`domain_forward`) and a member's console (`member_forward`) are reached by this one function: the
     # person's token, the edit's `Idempotency-Key` and `X-Operator: console` go with it, and nothing else of what came in
     # (ADR-0061, дополнение п. 4) — an `X-W2C-Via` the person sent is not passed on; a hop to a member carries this
-    # console's own (`via`). The reply goes back AS IT CAME, the holder's as much as a member's (ADR-0061, дополнение п. 6:
+    # console's own (`via`); a process's door to the signer carries its signature headers too (`keep`, ADR-0066). The reply goes back AS IT CAME, the holder's as much as a member's (ADR-0061, дополнение п. 6:
     # one function, one behaviour): its status and its bytes, a door in it signed by whoever issued it, a refusal in that
     # gate's words, and `X-Unreachable` when it says what is missing (`where_place`) — never parsed, never wrapped in
     # `{"detail": …}`. It is served as JSON whatever it called itself: a page's reply on this console's origin is never a
@@ -4017,7 +4006,7 @@ class Mount:
     FORWARD_MAX = 1 << 20
 
     def forward(self, h, method: str, to: str, query: str, timeout: float, via: str | None = None,
-                who: str = "the domain") -> int | None:
+                who: str = "the domain", keep: tuple = ()) -> int | None:
         import urllib.error
         import urllib.request
 
@@ -4033,6 +4022,7 @@ class Mount:
             headers["Authorization"] = f"Bearer {token}"
         if h.headers.get("Idempotency-Key"):
             headers["Idempotency-Key"] = h.headers["Idempotency-Key"]
+        headers.update({k: h.headers[k] for k in keep if h.headers.get(k)})
         if via is not None:
             headers[self.VIA] = via
         req = urllib.request.Request(to + (f"?{query}" if query else ""), data=body or None, headers=headers,
@@ -4209,8 +4199,8 @@ class Mount:
                     return self._send(200, mnt.held())                  # a process door: the record proves itself
                 if u.path == "/api/backup" and method == "GET":
                     return self._send(*mnt.backup(self))                # …a member's signature, checked here
-                if u.path in ("/api/prepare", "/api/take") and method == "POST":
-                    return mnt.to_signer(self, u.path)                  # …the outgoing holder's, checked by the signer
+                if u.path in mnt.TO_SIGNER and method == "POST":
+                    return mnt.to_signer(self, u.path)                  # …the holder's, a grant, a file: by the signer
                 if u.path.startswith(mnt.AT):                            # a member's where, by its name (ADR-0061)
                     return mnt.member_forward(self, method, u.path, u.query)
                 if u.path.startswith("/domain/") and not mnt.domain_local(method, u.path):
