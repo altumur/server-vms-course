@@ -393,6 +393,28 @@ def test_a_grant_on_labels_reaches_the_recordings_of_the_cameras_that_carry_them
         srv.shutdown()
 
 
+def test_a_row_posted_under_the_name_of_another_units_row_asks_the_right_on_that_unit_too():
+    """ADR-0014, addendum of 2026-10-07 (the product's aceb399): a table's row is written whole by `POST /<table>`, named
+    by its body (`TableSpec.name_of`), and the gate read the stored row only when the PATH named it. A keep that stands
+    under the name `1-100-200` as camera 2's — a row nobody may make it say otherwise but camera 2's operator — is not
+    camera 1's guard's to take: posting a body that names camera 1 and fills in that name is 403, and the row stays camera
+    2's. Camera 1's own keep is the guard's, and an administrator's on the cluster may write either."""
+    box = Box()
+    access = Tokens({"guard": [("edit", None, ("ground",))], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4", "labels": ["ground"]}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/2.mp4"}, token="admin")[0] == 201
+        box.vars.put("rec/keeps/1-100-200", {"cam": "2", "from": "100", "to": "200"})
+        code, out = _call(base, "POST", "/rec/keeps", {"cam": "1", "from": 100, "to": 200}, token="guard")
+        assert code == 403, (code, out)
+        assert box.vars.get("rec/keeps/1-100-200")[0]["cam"] == "2"                    # still camera 2's
+        assert _call(base, "POST", "/rec/keeps", {"cam": "1", "from": 300, "to": 400}, token="guard")[0] == 201
+        assert _call(base, "POST", "/rec/keeps", {"cam": "1", "from": 100, "to": 200}, token="admin")[0] == 201
+    finally:
+        srv.shutdown()
+
+
 
 def test_the_emergency_door_closes_after_a_handful_of_wrong_passwords():
     """The one account with rights to everything is the one password worth guessing — and every wrong guess was a

@@ -2867,14 +2867,21 @@ class SpecConsole:
             return None, None
         return segs[1], (segs[2] if len(segs) == 3 and segs[2] else None)
 
-    # The units a write to such a row touches: the row as stored (the path names one) and the row as sent (`sent`, the
-    # body, once it is read).
+    # The units a write to such a row touches: the row as stored and the row as sent (`sent`, the body, once it is
+    # read). The row as stored is the one under the name in the path — or, a row written whole by `POST /<table>`, under
+    # the name its body gives it (`TableSpec.name_of`, what `write_row` stores it under): an operator of one camera who
+    # posts a keep named as another camera's keep touches that camera too (ADR-0014, дополнение 2026-10-07).
     def _table_targets(self, method: str, path: str, sent=None) -> set:
         table, rid = self._table_row(method, path)
         if table is None:
             return set()
         from .doors import safe_segment
         rows = []
+        if not rid and isinstance(sent, dict) and method in ("POST", "PUT"):
+            try:
+                rid = str(self.spec.table_specs[table].name_of(sent))
+            except Exception:                            # noqa: BLE001 — no name in the body: `write_row` refuses it, 400
+                rid = None
         if rid and safe_segment(rid):
             try:
                 rows.append(self.ctl.vars.get(self.spec.sub.config(table, rid))[0])
