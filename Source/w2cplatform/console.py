@@ -84,7 +84,7 @@ rule in this file.
 # its holders serve go holder → browser through the door `/where` hands out (`door.py`; the boundary's step 6). The
 # console holds the subsystem's `SpecController` with the *console's* token (the operator's rows, never
 # placement), so a write it should not make is a 403 from the store, not a rule in this file.
-# `vms/console.py` builds it via `make_console`; the deploy unit `w2c-console.container` runs it as its own
+# A subsystem's own console module builds it via `make_console`; the deploy unit `w2c-console.container` runs it as its own
 # process.
 #
 # ## Module-level names
@@ -102,9 +102,9 @@ rule in this file.
 # over `<sub>/idem/`. `_scan` caches the assignment directory; `scans` counts cache refreshes.
 #
 # ## Notes
-# - `test_the_console_over_http` walks the whole surface: POST twice with one key is one camera; the
-#   console's controller cannot `place` (`Forbidden`); PUT `{"worker": "w-9"}` is 400; `/cameras` rows show
-#   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
+# - `test_the_console_over_http`, a subsystem's own test, walks the whole surface: POST twice with one key is one
+#   unit; the console's controller cannot `place` (`Forbidden`); PUT `{"worker": "w-9"}` is 400; `/<rows>` rows show
+#   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows <rows>`; `/metrics` contains `<sub>_<running> 1`; `/marks` writes to `console/<instance>/e1/`;
 #   a subsystem's own page reads `/spec` and the holders' doors;
 #   what the holders serve is read at the doors `/where` hands out, never here; PUT `{"enabled": false}` bumps
 #   revision to 2; DELETE marks the row and the placement waits for `unplace_deleted`.
@@ -155,8 +155,8 @@ from .eventdatabase import refence, unit_id
 from .events import ALARM, CONSOLE_MARKS, OF, EventLog
 
 
-# The default flow one operator is expected to read, in events a minute. Past it a timeline of separate
-# lines is not information any more: a storm makes every alarm look like the last one, and the operator
+# The default flow one operator is expected to read, in events a minute. Past it the events shown one
+# line each are not information any more: a storm makes every alarm look like the last one, and the operator
 # stops reading — which is the failure the whole event path was built to avoid, arriving through the
 # front door instead of through a lost write.
 #
@@ -187,8 +187,8 @@ from . import runtime
 from .limits import TooLarge
 from .spec import GARBLED_ROW, LABEL_WORD, Exists, Refused, SpecController, server_name
 
-# A unit's row the timeline's gate reads for its labels (`SpecConsole.dispatch`, `/events`): one that does not parse is
-# that unit's events withheld from a grant by label, and nobody else's timeline (the scaling pass after the eighth review).
+# A unit's row the events' gate reads for its labels (`SpecConsole.dispatch`, `/events`): one that does not parse is
+# that unit's events withheld from a grant by label, and nobody else's events (the scaling pass after the eighth review).
 UNIT_LABELS = Table("unit", "its events are shown only to a grant that needs no labels: the unit's own, or the whole "
                     "cluster's", "unit's row, read for its labels")
 # A request row a person's ledger names, read to tell whether it still stands (`_file_request`, `per_person`): one that
@@ -248,12 +248,12 @@ def page_csp(path: str = PAGE) -> str:
     return f"script-src {own}{hashes}; object-src 'none'; base-uri 'none'"
 
 
-# A file, whole or by `Range` — what a `<video>` element asks for. Parses `bytes=a-b`, replies 206 with
-# `Content-Range` and `Accept-Ranges` when a range was asked, 200 otherwise. Used by the VMS's
-# page itself; a subsystem with files of its own to serve would call it the same way. `headers`: more of
+# A file, whole or by `Range` — what a page's media element asks for. Parses `bytes=a-b`, replies 206 with
+# `Content-Range` and `Accept-Ranges` when a range was asked, 200 otherwise. Used by a subsystem's
+# page itself; any other subsystem with files of its own to serve calls it the same way. `headers`: more of
 # them, in front of the file.
 def send_file(handler, path: str, content_type: str, headers=()) -> dict:
-    """A file, whole or by Range — what a <video> element asks for. Returns what LEFT: `status`, `bytes`, and
+    """A file, whole or by Range — what a page's media element asks for. Returns what LEFT: `status`, `bytes`, and
     whether it was the whole file (`whole`, with `data` to take a digest of)."""
     size = os.path.getsize(path)
     rng = handler.headers.get("Range")
@@ -278,7 +278,7 @@ def send_file(handler, path: str, content_type: str, headers=()) -> dict:
 # The domain's view, as the domain left it in THIS cluster's object store on its last pass (М12 Lesson 3,
 # feedback X). The operator of the most common site — small members and one server room, the domain in the
 # room's cluster — wants one tree, not the room in one console and everything else in another. The cluster console
-# does not ask any member anything: it reads what the domain already gathered, the way a recorder reads the
+# does not ask any member anything: it reads what the domain already gathered, the way a holder reads the
 # source book instead of the member's own cluster. A cluster that does not host the domain has no such object and
 # says so — it does not know the others. And the view's age is part of the answer: older than `lost_after`, the
 # page says "the domain is silent" rather than showing a short list as if it were current (Lesson 1's rule,
@@ -391,7 +391,7 @@ def domain_view(objects, now: float, lost_after: float = 45.0) -> tuple[int, dic
 def heartbeats(objects, sub: str) -> dict[str, Heartbeat]:
     """Every worker's last heartbeat, WHATEVER ITS AGE — the read model's source.
 
-    `sub` is the subsystem's name (`"vms"`, or `"vms/"` — both spellings the callers
+    `sub` is the subsystem's name (`"testsub"`, or `"testsub/"` — both spellings the callers
     already use). Where its heartbeats LIVE is this function's business and not its
     callers': before they lived under `<name>/heartbeats/`, every caller listed
     `<name>/` and filtered by a suffix, and the filter was not the point — it was
@@ -413,7 +413,7 @@ def heartbeats(objects, sub: str) -> dict[str, Heartbeat]:
 # -- the catalogue: who is reachable, and who holds what ----------------------------------------------
 # `heartbeats` answers "what did each of them last say", which is what a screen wants. This answers "who
 # can I talk to", which is what a subscriber wants — and the difference is one comparison that every
-# caller was making differently or not at all (the recorder, the gateway and the detector leant on a dead
+# caller was making differently or not at all (the holders of three subsystems leant on a dead
 # worker's last `phase: running`; the console's playback route checked nothing).
 #
 # It is the `?passing=true` of a service catalogue, and it is here rather than in each caller for the
@@ -439,7 +439,7 @@ def heard_live(sub: str, w: str, hb: Heartbeat, now: float, lost_after: float = 
 
 # `(worker, its heartbeat, the unit's status entry)` for the process holding `unit` right now, or None.
 # `phase` narrows it further when the caller needs the unit to be doing something and not merely held:
-# a recorder subscribes to a fan-out only in `running`, while a playback door answers in `held` too.
+# a subscriber to a fan-out takes it only in `running`, while a playback door answers in `held` too.
 def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
               phase: str | None = None, field: str | None = None, eyes=None):
     found = []
@@ -476,7 +476,7 @@ def newest(found: list):
 
 
 # AN ERROR IN WORDS, WITHOUT A PATH (the review's thirteenth pass, minor; the product's cross-check (c)): a 500's and a
-# 503's `detail` was `str(e)` — "[Errno 13] Permission denied: '/data/platform/vars/vms/cameras/7'", the layout of the
+# 503's `detail` was `str(e)` — "[Errno 13] Permission denied: '/data/platform/vars/testsub/counters/7'", the layout of the
 # server's disk for anybody who can make a write fail. An `OSError` says its `strerror`; anything else has every
 # absolute path in its text replaced. The full error goes to the log, where the operator reads it.
 _ABSOLUTE = re.compile(r"(?<![\w.:/])/(?:[^\s'\"/:,;)]+/)+[^\s'\"/:,;)]*")
@@ -490,7 +490,7 @@ def no_paths(e) -> str:
 
 
 # The id in `/<family>/<id>`: the second segment, whatever follows it. The ONE reading of a path's id — the gate's
-# (`SpecConsole.route_id`) and every route's, the platform's and a subsystem's (`vms/console.py`) — so the unit
+# (`SpecConsole.route_id`) and every route's, the platform's and a subsystem's (its own console module) — so the unit
 # checked and the unit acted on cannot be two segments of one path (the review's third pass, blocker 1).
 def path_id(path: str) -> str:
     segs = path.split("/")
@@ -498,11 +498,11 @@ def path_id(path: str) -> str:
 
 
 # A LABEL VALUE ON `/metrics` IS TEXT SOMEBODY ELSE WROTE (the review's eighth pass, part 4). A worker's name, a server's,
-# a recording's, a keep's id, a table's, a kind of failure — each went into `{label="…"}` as it stood, and a recording
+# a unit's, a keep's id, a table's, a kind of failure — each went into `{label="…"}` as it stood, and a unit
 # named `7"x`, or with a newline in it, made a line the text format cannot read: Prometheus refuses the whole scrape
 # for one such line, and every alert of the subsystem goes with it. New names with `"`, `|` or a newline are refused
 # where they are created; the ones already stored are written here as the format says — `\` as `\\`, `"` as `\"`, a
-# newline as `\n` — by this one function, in every metrics function of the platform and the VMS.
+# newline as `\n` — by this one function, in every metrics function of the platform and of every subsystem.
 def label(value) -> str:
     return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
@@ -532,7 +532,7 @@ class NoSuchRoute(Exception):
 # reads go through this: each one is given what is left of the request's deadline (`deadline()`), at most the
 # socket's own timeout, and past the deadline the read is a `TimeoutError` — which `BaseHTTPRequestHandler` answers
 # by closing the connection. Only READS: what the console writes back (an export) is the socket timeout's, and the
-# export's own rule (`vms/console.py`).
+# export's own rule (the subsystem's console module, which serves it).
 #
 # …AND A BODY HAS A FLOOR ON ITS PACE, NOT ONLY A DEADLINE (the review's eighth pass; a run). The deadline of a body was
 # proportional to the length it DECLARED: 64 MiB was given 1054 s, and a sender of a byte every few seconds held its
@@ -604,7 +604,7 @@ class DeadlineReader(io.RawIOBase):
 # FOUR ADDRESSES SHUT IT, RESERVE AND ALL (the review's seventh pass, major; reproduced by a run). Sixteen common
 # connections to an address and two of the reserve: four addresses sending half a line and reconnecting held all 64
 # common connections and all 8 of the reserve, and an honest address had not one 200 — `/metrics`, `/healthz`,
-# `/session`, `/cameras`. "Addresses in their dozens", the sixth pass's answer said; it was four. So:
+# `/session`, `/<rows>`. "Addresses in their dozens", the sixth pass's answer said; it was four. So:
 #
 #   a smaller share   `CONSOLE_PER_ADDRESS` is 8 — a page's parallel requests, not a quarter of the door
 #   the reserve       is taken only when the COMMON slots are all gone — an address past its own share while others
@@ -884,9 +884,9 @@ def _unread(sock) -> bool:
 
 # The two halves every bounded door has: its server takes a lane for each connection or answers 503 (`Bounded`), and
 # its handler reads under a deadline and knows the lane it is served on (`Deadlined`). The console is one such door;
-# the holder's, the recorder's and the gateway's are the others (the review's sixth pass, major: the protections were
-# the console's alone, and three hundred slow connections to the holder's door were three hundred threads in the
-# process holding every camera of its server).
+# the doors of the subsystems' holders are the others (the review's sixth pass, major: the protections were
+# the console's alone, and three hundred slow connections to a holder's door were three hundred threads in the
+# process holding every unit of its server).
 class Bounded:
     daemon_threads = True
     bounds: Bounds
@@ -1070,8 +1070,8 @@ class Deadlined:
     # Past the headers the request is its handler's: each operation has the socket's own timeout, and a body is given
     # a deadline of its own by whoever reads it (`SpecConsole.read_body`) — or, read without one, a body's floor from its
     # first read (`DeadlineReader.lazy`; the review's twelfth pass: it was a year). What the handler waits for that is
-    # not its client — a device, a peer — no deadline here can end: each door bounds those waits itself (the holder's
-    # reads of a device: `VmsWorker._door_read`).
+    # not its client — a unit's source, a peer — no deadline here can end: each door bounds those waits itself (a
+    # holder's reads of its source are its subsystem's worker's to bound).
     def parse_request(self):
         ok = super().parse_request()
         self.deadline = float("inf")
@@ -1094,8 +1094,8 @@ class Deadlined:
         return True
 
 
-# A door BETWEEN PROCESSES — the holder's, a recorder's, the gateway's — bounded the same way, with numbers of its own:
-# its callers are the cluster's processes (a console asks every recorder's door for a timeline; a recorder copies
+# A door BETWEEN PROCESSES — a holder's, of whatever subsystem — bounded the same way, with numbers of its own:
+# its callers are the cluster's processes (a console asks every holder's door for its events; a holder copies
 # from another's), so one address is given half the door, and there is no reserve and no lane for the box: nothing a
 # person logs in at. The environment's `CONSOLE_*` are the console's and are not read here.
 DOOR_CONNECTIONS = 64
@@ -1107,12 +1107,12 @@ def door_server(addr, handler, limit: int = DOOR_CONNECTIONS, per_address: int =
 
 
 # WHAT A DOOR STREAMS, IT WRITES IN PIECES, TO A CLIENT THAT TAKES THEM (the review's sixth pass, major). The holder's
-# door wrote a minute of a device's footage in one `sendall`, and a socket's timeout is the whole of a `sendall`: a
-# camera of 100 kB/s read by a viewer at 150 kB/s — faster than it was recorded — was cut after 36 s, six megabytes
+# door wrote a minute of a unit's stream in one `sendall`, and a socket's timeout is the whole of a `sendall`: a
+# source of 100 kB/s read by a client at 150 kB/s — faster than it was written — was cut after 36 s, six megabytes
 # not sent inside thirty seconds. So a stream is written `STREAM_PIECE` at a time, each piece under the socket's
 # timeout; and the bound on a client that hardly reads is a floor on its pace, as an export's is (`EXPORT_MIN_RATE`):
 # `STREAM_MIN_RATE` on average over the time this door spent WRITING to it — not waiting for its source, which may be
-# a device playing a card back at the speed it was recorded — counted once that time is past `STREAM_GRACE`. To an
+# a source that plays back only at the speed it was written — counted once that time is past `STREAM_GRACE`. To an
 # HTTP/1.1 client the pieces are chunks, and the last chunk (`end`) is written only when the stream is whole: a reply
 # that ends without it is an error to the client (`http.client.IncompleteRead`), not a shorter answer.
 STREAM_PIECE = 128 << 10
@@ -1197,7 +1197,7 @@ class SendMixin:
 
 # A REQUEST'S BODY IS A JSON OBJECT, OR A REFUSAL (the review's tenth round, the routes that failed whole). A body that
 # is not JSON, is nested past what JSON reads, or is a list went into the route as it was: `POST /<rows>` and `PUT
-# /<rows>/<id>` answered 500 "the write failed", `PUT /policy` and the VMS's `POST /requests` no reply at all.
+# /<rows>/<id>` answered 500 "the write failed", `PUT /policy` and a subsystem's `POST /requests` no reply at all.
 # `Refused` — 400 to whoever sent it, and nothing written.
 def object_body(h) -> dict:
     try:
@@ -1340,7 +1340,7 @@ class IdempotencyKeys:
     # the same caller with the same body.
     #
     # NEVER A BARE HASH OF A BODY THAT CARRIES A SECRET (the thirteenth review, major 7; a run). It was the body's
-    # sha256, kept a day under `<sub>/idem/`: the camera's row held `cred_secret` sealed, and `admin123` and
+    # sha256, kept a day under `<sub>/idem/`: a unit's row held `cred_secret` sealed, and `admin123` and
     # `qwerty2024` came back from the claims by hashing a dictionary of seven words into the body around them —
     # whoever reads the store had the password the key ring was there to keep from him. Now:
     #   a key ring   `mac`: HMAC of the body under a key derived from the ring's (`Sealer.mac`), which the store never
@@ -1401,9 +1401,9 @@ class IdempotencyKeys:
     # Try `put({state: pending, at, sub, mac or digest}, cas=0)`: success means ours to answer — return `None` (the
     # caller does the write, then `store`). On `Conflict`, another instance holds it: poll up to 40 × 50 ms; if the
     # row vanished (pruned or the claimant crashed mid-flight) claim again; if `state == done` return `(status,
-    # body)`; after the polls, `409 in flight`. `test_a_retry_that_lands_on_another_console_is_one_camera`
-    # covers all of it: the second console returns the first's 201 body; a key with a pending claim makes
-    # console A wait and then serve B's reply without creating a camera; a key `a/b` is 400.
+    # body)`; after the polls, `409 in flight`. A subsystem's test of a retry that lands on
+    # another console covers all of it: the second console returns the first's 201 body; a key with a pending claim
+    # makes console A wait and then serve B's reply without creating a second unit; a key `a/b` is 400.
     def claim(self, key: str, sub=None, body=None):
         """None: ours to answer — do the write, then store(). Else the reply to serve."""
         path, tag = self._path(key), self._tag(sub, body)
@@ -1433,7 +1433,7 @@ class IdempotencyKeys:
             # "Stood still" is judged by THIS process's monotonic clock from the moment it first saw this
             # revision of the claim — never by the `at` another console wrote with its own wall clock (the
             # review's second pass, major): a console a minute behind its neighbour read every fresh claim as
-            # stale, took it over and created the second camera. A claim re-made by somebody else is a new
+            # stale, took it over and created the unit twice. A claim re-made by somebody else is a new
             # revision, and the count starts again.
             first = self._seen.get(path)
             if first is None or first[0] != idx:
@@ -1459,9 +1459,9 @@ class IdempotencyKeys:
 
     # The id a create is about to use, written into the claim BEFORE the row (`SpecController.create(reserve=)`).
     # A console that dies between the two leaves a claim that names the unit: whoever takes the claim over
-    # creates under that id, or finds it created and answers with it — one camera either way (the product's
+    # creates under that id, or finds it created and answers with it — one unit either way (the product's
     # `Reserve`, feedback CS). Without it a lost reply and a write never made were the same claim, and the
-    # retry made the second camera.
+    # retry made a second unit.
     #
     # By CAS on the revision this process wrote — like `store` and `release` (the review's third pass, major). A
     # take-over is a new revision; the console it was taken from may only be asleep, and when it wakes its write
@@ -1520,7 +1520,7 @@ class IdempotencyKeys:
 
     # At most once per 60 s of monotonic time: delete every key under the prefix whose `at` is older than
     # `ttl`, by CAS (a conflict skips it). The test advances a day and sees 2 pruned, then 0, then a re-used
-    # key create a new camera — a forgotten key is a new request, by design.
+    # key create a new unit — a forgotten key is a new request, by design.
     def prune(self) -> int:
         if self.clock() - self._pruned < 60:
             return 0
@@ -1564,8 +1564,8 @@ class SpecConsole:
         # …and whether it serves a page at `/` (`page_of`): a console alone does; in a `Mount` only the root, for its
         # root subsystem — a mounted one's units are shown by the module on the root's page (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §1).
         self.serves_page = True
-        # How many events a minute one operator is expected to read. Past it the timeline stops showing
-        # lines and starts showing counts — see `timeline`. The number belongs to the CONSOLE and not to a
+        # How many events a minute one operator is expected to read. Past it `/events` stops showing
+        # lines and starts showing counts — see the method that answers it. The number belongs to the CONSOLE and not to a
         # subsystem's policy, because the screen merges every subsystem and the attention it competes for
         # is one person's; and it is a number rather than a constant because a control room with four
         # screens and a guard with a phone are not the same reader.
@@ -1719,20 +1719,20 @@ class SpecConsole:
         return self._scan[1]
 
 
-    # -- every subsystem's epochs, for the timeline's fence --------------------------------------
+    # -- every subsystem's epochs, for the events' fence -----------------------------------------
     # `{(subsystem, unit): epoch}` from every `<sub>/epoch/<unit>` row — the one scan of the WHOLE store the
-    # console makes, and it made it on every `GET /events`: a thousand cameras, a page polling every three
+    # console makes, and it made it on every `GET /events`: a thousand units, a page polling every three
     # seconds, ten operators — thousands of reads a second to the store, the leases' CAS queueing behind
     # them (the review's second pass, major). Cached for `EPOCH_CACHE` seconds of monotonic time, like the
     # directory: an epoch that changed inside the window shows as current for those seconds and fenced on
-    # the next refresh, which is the lag the timeline already has from the resources' side.
+    # the next refresh, which is the lag the events already have from the resources' side.
     EPOCH_CACHE = 3.0
 
     #
     # One row that does not parse is skipped, not the whole answer: it was a `ValueError` out of the handler and the
     # page got no reply at all (the review's third pass, minor) — its unit's events then stand as their resource
     # marked them, as in `epochs_of`. A store that does not answer leaves the last map in place and says so
-    # (`epochs_stale`, and `epochs: "cached"` in the reply): fenced by what was known a moment ago beats no timeline.
+    # (`epochs_stale`, and `epochs: "cached"` in the reply): fenced by what was known a moment ago beats no events at all.
     epochs_stale = False
 
     def epochs(self) -> dict:
@@ -1755,7 +1755,7 @@ class SpecConsole:
             self.epoch_scans += 1
         return self._epochs[1]
 
-    # The epochs of the units IN an answer — a camera's, or one unit's: a handful of rows read by name, no scan,
+    # The epochs of the units IN an answer — a unit's and those about it, or one alone: a few rows read by name, no scan,
     # and read now, so a fence that fell a moment ago shows. `pairs` is `{(subsystem, unit)}`. `refused`, when given,
     # collects the subsystems whose epoch rows this console may not read (its rights in the store).
     def epochs_of(self, pairs, refused: set | None = None) -> dict:
@@ -1878,10 +1878,10 @@ class SpecConsole:
     # sums); `<p>_worker_load{worker}` = `1 − headroom/capacity` per live worker (assigned/capacity: what a
     # target-value policy scales on); `<p>_epoch_conflicts{worker}` counter from every heartbeat;
     # `<p>_failover_seconds{kind="worst"}`; and `<p>_<running_gauge>` — the count of status entries in phase
-    # `running` on live workers (`vms_cameras_running`). The page reads two of these for its status line. The
+    # `running` on live workers (named by the spec's `console.running`). The page reads two of these for its status line. The
     # RESOURCES are the platform's, not a subsystem's: `w2c_resources_live` and `w2c_resource_*` (`platform_metrics`),
     # said once per console process — by the root of a `Mount`, or by a console alone — and not once per subsystem
-    # under its prefix (the course's decision on the platform's names: `vms_resources_live`, `rec_resources_live`, …
+    # under its prefix (the course's decision on the platform's names: `testsub_resources_live`, `testsub2_resources_live`, …
     # were one fact said as many times as there were subsystems mounted).
     # The servers this subsystem runs on, as the placement sees them: every server a worker heartbeats from
     # or a resource heartbeats from — the state of its resource (`live`, `silent`, `unreachable` — it writes to the
@@ -1928,7 +1928,7 @@ class SpecConsole:
         ctl, now = self.ctl, self.wall()
         out: dict[str, dict] = {}
         for w, hb in heartbeats(ctl.objects, ctl.sub.name + "/").items():
-            # (No `archive` here any more: what a server holds of a subsystem's tables is the spec's `servers.show`, which
+            # (No subsystem's field here any more: what a server holds of a subsystem's tables is the spec's `servers.show`, which
             # the page reads with `/spec` — the boundary's step 6; it was one subsystem's heartbeat field, read here.)
             s = out.setdefault(hb.extra.get("server", "?"), {"resource": "unknown", "workers": []})
             s["workers"].append({"worker": w, "load": ctl.load(w), "capacity": ctl.capacity_of(w), "labels": hb.extra.get("labels", ""),
@@ -2184,7 +2184,7 @@ class SpecConsole:
                   *[f'{p}_worker_fenced{{worker="{label(w)}"}} {1 if str(hb.extra.get("fenced")).lower() == "true" else 0}' for w, hb in hbs.items()],
                   f"# TYPE {p}_worker_store_errors counter",
                   *[f'{p}_worker_store_errors{{worker="{label(w)}"}} {n(w, "store_errors", int)}' for w in hbs],
-                  # Units a worker is recording past their lease's end, the store silent (feedback BK): data goes
+                  # Units a worker keeps working on past their lease's end, the store silent (feedback BK): data goes
                   # on, actions wait. Not zero for long is a store that is away, seen from the workers' side.
                   f"# TYPE {p}_worker_unconfirmed gauge",
                   *[f'{p}_worker_unconfirmed{{worker="{label(w)}"}} {n(w, "unconfirmed", int)}' for w in hbs],
@@ -2196,7 +2196,7 @@ class SpecConsole:
                   *[f'{p}_worker_slots_garbled{{worker="{label(w)}"}} {n(w, "slots_garbled", int)}' for w in hbs]]
         # …and the rows of the other tables a worker could not read, by table (`rows.Table`; the review's seventh
         # pass, a minor: `holds_garbled` was in the heartbeat and not here) — `holds_garbled`, a place nobody can take;
-        # `assignments_garbled`; a recorder's `volumes_garbled`, `keeps_garbled`. Rows, each once until it parses
+        # `assignments_garbled`; a subsystem's own tables', `keeps_garbled` and the like. Rows, each once until it parses
         # again — not reads.
         tables = garbled_by_table()
         for name in sorted(tables):
@@ -2548,9 +2548,9 @@ class SpecConsole:
         return (method == "GET" and len(segs) == 4 and segs[1] == "where" and bool(self.spec.places)
                 and segs[2] == self.spec.places["table"] and bool(segs[3]))
 
-    # …and an id that is no id of this subsystem — `/where/None`, `/cameras/x` where ids are numbers — is the sender's, a
+    # …and an id that is no id of this subsystem — `/where/None`, `/<rows>/x` where ids are numbers — is the sender's, a
     # 400 in words (the coordinator's find in the twelfth round): `parse_id` raised `ValueError` out of `dispatch`, and
-    # `GET /where/None` dropped the connection; `PUT`/`DELETE /cameras/x` answered 500 "the write failed".
+    # `GET /where/None` dropped the connection; `PUT`/`DELETE /<rows>/x` answered 500 "the write failed".
     def _uid(self, path):
         raw = path_id(path)
         try:
@@ -2559,7 +2559,7 @@ class SpecConsole:
             raise Refused(f"{raw[:80]!r} is not an id of {self.spec.name}: its ids are "
                           f"{'whole numbers' if self.spec.numeric else 'names'}") from None
         # …and a name is ONE segment of a key (the review's thirteenth pass, minor): `..` passed as a name, and the store
-        # refused the key it made — `PUT` and `DELETE` on `/rec/recordings/..`, `/detjob/jobs/..`, `/auto/scenarios/..`
+        # refused the key it made — `PUT` and `DELETE` on `/<sub>/<rows>/..` of every subsystem whose ids are names
         # answered 500 "the write failed". Not an id: 400, as a word is where the ids are numbers.
         from .doors import safe_segment
         if not self.spec.numeric and not safe_segment(str(uid)):
@@ -2600,7 +2600,7 @@ class SpecConsole:
     # What a route needs: `(capability, unit, labels, of)` — what `Gate.admit` takes.
     #
     #   view    every GET, and a write the spec says changes nothing (`rights.routes.view` — asking for a stream)
-    #   edit    acting through the system without changing what it IS — a mark, a command to a device, a
+    #   edit    acting through the system without changing what it IS — a mark, a request to a holder, a
     #           backfill, a keep
     #   admin   everything else that writes: units, volumes, policy, drain, a server decommissioned
     #
@@ -2622,7 +2622,7 @@ class SpecConsole:
     # A GET names its unit in the query the same way (`?unit=<sub>/<id>`): the events of one unit, a subsystem's route
     # about one. A route that names no unit anywhere is answered to any grant — a list, and the list is cut to what the
     # caller may see; a route that names one in the query is about that unit (the review's second pass, blocker 1: a
-    # route that named its unit in the query was "any grant", and one unit's footage went to the guard of another). A
+    # route that named its unit in the query was "any grant", and one unit's stream went to the guard of another). A
     # name that is no reference — a bare id — is 400 here, asked of nobody: whose `7` would the gate check?
     def _named(self, h, method: str, path: str, q: dict | None = None) -> str | None:
         if method == "GET":
@@ -2672,7 +2672,7 @@ class SpecConsole:
 
     # WHAT A UNIT IS, AS A GRANT IS ASKED ABOUT IT: `(ref, labels, of)`, read through the catalogue (`units`) — its row,
     # what the row says it is about (`about`), and the labels a `labels:` grant reads: the about-unit's when there is one
-    # (a recording's own labels say where it runs, not whose it is), else its own. A unit of a subsystem this console
+    # (a unit about another has labels that say where it runs, not whose it is), else its own. A unit of a subsystem this console
     # does not serve is asked as it is named, with no labels: only a grant on it, or the cluster's, takes it in.
     def target(self, ref: str) -> tuple[str, list, str | None]:
         got = parse_ref(ref)
@@ -2725,7 +2725,7 @@ class SpecConsole:
 
     # The reply, remembered under the key — and sent whether or not it could be remembered. The write HAPPENED:
     # a store that did not take the reply is a log line, not a 503 that sends the client back to make a second
-    # camera (the review's second pass, major). The claim stays pending; a retry inside `PENDING_TTL` waits on
+    # unit (the review's second pass, major). The claim stays pending; a retry inside `PENDING_TTL` waits on
     # it, and past it takes it over — the one window left, and it needs the store to fail twice.
     def _remember(self, key: str | None, resp: tuple) -> None:
         if not key:
@@ -3370,7 +3370,7 @@ class SpecConsole:
         # the body, and what they MAY do was asked after it: a token with no grant at all sent 32 MiB to
         # `PUT /<rows>/1/mask`, eight at a time, and the console held 331 MiB before it said 403 — in М11 four such
         # requests were its memory limit. Everything the path alone decides is asked first: the capability, the unit
-        # the path names, the cameras the row reaches as it is. Only a route whose unit is IN the body (`EDIT_ROUTES`:
+        # the path names, the units the row reaches as it is. Only a route whose unit is IN the body (`EDIT_ROUTES`:
         # a mark, a command, a keep) waits for it — and is first asked for any grant at all, so a stranger's body is
         # not read. After the body: that unit, and the row as it will be.
         # …and a write to a row of a table whose rows say whose they are (`rights.unit_of`): its unit is in the body too
@@ -3478,12 +3478,12 @@ class SpecConsole:
                 if con.index is None:
                     return h._send(503, {"error": "no event index behind this console"})
                 # `unit` is `<sub>/<id>` — its own lines and those of every unit about it (the index's `of`); a bare id
-                # is 400 (`check_query`). Every subsystem's epochs, from the cache — the timeline shows them all. One
-                # unit's timeline reads only the epochs of the units in ITS answer, after the query, and fences again.
+                # is 400 (`check_query`). Every subsystem's epochs, from the cache — `/events` shows them all. One
+                # unit's events read only the epochs of the units in ITS answer, after the query, and fences again.
                 unit = q.get("unit") or None
                 narrow = unit is not None
                 cur = {} if narrow else con.epochs()
-                try:                                          # the operator's timeline: `limit` is theirs to set, and
+                try:                                          # the operator's events: `limit` is theirs to set, and
                                                               # `keep` says which end of a busy hour they get
                     t0, t1 = float(q.get("from", 0)), float(q.get("to", 1e12))
                     rep = con.index.query(t0, t1, q.get("kind"), q.get("subsystem"), unit, cur,
@@ -3495,7 +3495,7 @@ class SpecConsole:
                     else:
                         # …AND A SUBSYSTEM THE SCAN DID NOT SEE IS ASKED BY NAME (the twelfth round's «Вопросы» 6, found
                         # by runs): the scan lists the empty prefix, and a store that answers only what the console may
-                        # read (М11's rights) leaves out every subsystem outside them — `live/`, `det/` — and their
+                        # read (М11's rights) leaves out every subsystem outside them — `testsub2/`, say — and their
                         # events stood "current" whatever their epoch. The units of such a subsystem in THIS answer are
                         # read by name; a subsystem whose rows the console may not read at all is said (`epochs_unread`),
                         # its events as their resource marked them. The journal and the console's marks are written
@@ -3515,7 +3515,7 @@ class SpecConsole:
 
                         # ONE UNIT'S ROW IS ONE UNIT'S EVENTS (the scaling pass after the eighth review). The labels a
                         # grant may name were read with `ctl.unit` bare: one row that does not parse was a `ValueError`
-                        # and a 400 for the whole timeline of everybody the gate checks (a `KeyError`, no reply at all).
+                        # and a 400 for the whole of `/events` for everybody the gate checks (a `KeyError`, no reply at all).
                         # The row is read through `rows.Table` now (`UNIT_LABELS`: counted once, logged once, on
                         # `/metrics`); its unit is judged with no labels — the unit's own grant and the whole cluster's
                         # still see its events, a grant by label cannot, since what the row says is not known — and what
@@ -3555,7 +3555,7 @@ class SpecConsole:
                         rep = {**rep, "events": [e for e in rep["events"] if may_see(e)]}
                         # …said only to a caller who holds a grant BY LABEL (the review's tenth pass, minor): what is
                         # withheld is what such a grant might have covered. A grant on one unit never covered another
-                        # unit, and naming it — its id, how many events it had — told a guard of camera 2 about camera 3.
+                        # unit, and naming it — its id, how many events it had — told a guard of unit 2 about unit 3.
                         if withheld and not self._by_labels(h):
                             withheld = {}
                         if withheld:
@@ -3793,7 +3793,7 @@ class Mount:
     #
     # The operator operates SERVERS, not workers (the owner's decision, 3 Oct, on the review's eleventh pass). There was
     # a door to retire a worker, and it asked the operator whether a silent process is dead or hung — which they cannot
-    # know, and which made two holders of the same cameras. What they do know is a machine: they took it out and switched
+    # know, and which made two holders of the same units. What they do know is a machine: they took it out and switched
     # it off. So the door is about the machine, and the platform checks what it can: the server answers by any of three
     # signs (`Controller.decommission_refusal` — its resource heard, a worker of it heard, a slot of it renewed) — 409, the
     # sign in words, nothing written. A server whose resource was never heard passes, with a warning. Written otherwise
@@ -3936,7 +3936,7 @@ class Mount:
 
     # THE MOUNT'S OWN ROUTES ASK THE GATE TOO (the review's third pass, blocker 2). `/drain`, `/schema` and `/mounts`
     # were answered here, before `dispatch` and its gate: `POST /drain?server=srv-1` with no token took every
-    # recording off a server, and the irreversible `PUT /schema` was as open. There are no exceptions for rights:
+    # unit off a server, and the irreversible `PUT /schema` was as open. There are no exceptions for rights:
     # the root console's gate, `admin` to change (a drain moves every unit of a server; a schema locks out every
     # older build) and `view` to read — `/mounts` too. It says what this process fronts and each subsystem's
     # `/spec`, which is gated; it is the same knowledge, and the page reads it after its login like `/spec`. An
