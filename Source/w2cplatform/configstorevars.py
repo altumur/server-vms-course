@@ -5,8 +5,8 @@ on its own server (`configstore.py`). Standard library only; a process that open
 # ================================================================================================
 # # configstorevars.py — the handle
 #
-# **Role.** `open_vars("configstore:///run/configstore/vmsworker.sock")` — `PLATFORM_STORE` in the unit's environment
-# (`variables.store_url`) — gives a `ConfigstoreVariables`, and nothing in `vms/` can tell it from `file://`: the same
+# **Role.** `open_vars("configstore:///run/configstore/<unit>.sock")` — `PLATFORM_STORE` in the unit's environment
+# (`variables.store_url`) — gives a `ConfigstoreVariables`, and no subsystem can tell it from `file://`: the same
 # five calls, the same `(None, 0)`, the same `Conflict` (the seam, М10A lesson 3). Who is leader is the daemon's
 # business; the handle talks to the socket of its own server and to nothing else.
 #

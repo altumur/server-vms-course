@@ -102,11 +102,11 @@ def items_bytes(items: dict) -> int:
 # A key must have exactly ONE spelling, and this is where that is enforced. It is not (only) about escaping
 # `<root>/vars/`: the same text becomes a key here, a prefix the ACL is matched against, and — through
 # `events.unit_dir` — a directory on a resource's disk. `..` breaks all three differently. Without
-# normalisation `vms/a/../b` and `vms/b` are two keys one person reads as one, each with its own
+# normalisation `testsub/a/../b` and `testsub/b` are two keys one person reads as one, each with its own
 # ModifyIndex, so two writers both win their CAS. With normalisation somewhere downstream (a URL, a tree)
 # they collapse into one — but the ACL was matched against the un-normalised string, which is how a token
-# for `rec/recordings/*` reaches `vms/cameras/7`. Refused loudly, never repaired: a caller that meant
-# `vms/b` should say `vms/b`.
+# for `testsub2/rows/*` reaches `testsub/counters/7`. Refused loudly, never repaired: a caller that meant
+# `testsub/b` should say `testsub/b`.
 def safe_path(path: str) -> str:
     if not path or path.startswith("/") or ".." in path.split("/"):
         raise ValueError(f"not a key: {path!r}")
@@ -229,7 +229,7 @@ def _lock_exclusive(f, wait: float | None = None) -> None:
 
 # A PAUSE BEFORE A CAS IS TRIED AGAIN (the review, "CAS retries with no delay and no jitter"). A conflict
 # means somebody else wrote between our read and our write. Tried again at once, the same writers meet again
-# at once — ten recorders starting after a power cut each lose nine times in a row to the same nine others,
+# at once — ten workers starting after a power cut each lose nine times in a row to the same nine others,
 # and a loop with ten tries gives up. A random pause, growing with the number of losses, spreads them out:
 # from a fraction of a millisecond to a tenth of a second. Random and not fixed, because two writers that
 # wait the same time collide again.
@@ -249,9 +249,9 @@ def cas_pause(attempt: int, sleep=time.sleep) -> float:
 # the memory one and a cluster's cannot disagree about it:
 #
 #   the ACL        whoever may not write a path may not remove it either. It used to be unchecked: a worker
-#                  whose token writes epochs and its slot could delete a camera's row
+#                  whose token writes epochs and its slot could delete a unit's row
 #   the epoch      nobody deletes `<subsystem>/epoch/<unit>` — not even a handle with no writer at all. The
-#                  row is a counter. Deleted, it starts again from 1, and `e1` is already the name of footage
+#                  row is a counter. Deleted, it starts again from 1, and `e1` is already the name of bulk data
 #                  and events somebody else wrote: two writers' files under one name, and a fencing token
 #                  that went backwards
 #   the domain     nobody but the domain's own roles deletes `domain/*` (the review's third pass, Н-M2) — not a
@@ -497,7 +497,7 @@ class FileVariables:
             self._durable_dirs()                    # the removal, too, survives the power going (the review's second pass)
 
     # Every stored path that starts with `prefix`, decoded from the filenames and sorted. Callers pass
-    # prefixes ending in `/` (`"vms/workers/"`, `"vms/slots/"`, `"vms/idem/"`) to enumerate a row family.
+    # prefixes ending in `/` (`"testsub/workers/"`, `"testsub/slots/"`, `"testsub/idem/"`) to enumerate a row family.
     def list(self, prefix: str) -> list[str]:
         out = []
         for f in os.listdir(self.dir):

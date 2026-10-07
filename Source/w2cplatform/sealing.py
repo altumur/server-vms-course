@@ -4,7 +4,7 @@
 #
 # `secrets.py` keeps a secret off every screen and out of every copy that leaves the cluster. What it could not
 # do, and said so: the ROW held the password in the clear, and whoever could read `<sub>/<rows>/*` — or copied
-# the store's directory, or a backup of it — read every camera's password (the product's authentication note,
+# the store's directory, or a backup of it — read every unit's password (the product's authentication note,
 # section 3.6; the order agreed with it, feedback BP).
 #
 # THE KEY IS NOT IN THE STORE. That is the whole design, and everything else follows from it. A key kept beside
@@ -27,7 +27,7 @@
 #
 # NO KEY IS STILL A MODE, AND IT SAYS SO. Without `SECRETS_KEY` a secret is written as it always was, and the
 # console's log says, once, that secrets are stored in the clear. A value that IS sealed and a process with no
-# key, or without the kid it names, is an error at the one place it matters — the camera does not start, and
+# key, or without the kid it names, is an error at the one place it matters — the unit does not start, and
 # the reason names the key — never a password silently read as the ciphertext.
 #
 # A value that is not sealed opens as itself: rows written before a key existed go on working, and the next
@@ -105,12 +105,12 @@ class Sealer:
         return cls.from_file(path) if path else None
 
     # The associated data binds the ciphertext to its place: the ROW (`<sub>/<rows>/<id>`, the store key) and the
-    # field. Without the row, camera 7's sealed password pasted into camera 8's row opens for whoever reads 8 —
+    # field. Without the row, unit 7's sealed password pasted into unit 8's row opens for whoever reads 8 —
     # the holder does the opening, and does it for the row it was given (the review's second pass, a major).
     #
     # The row is NOT optional (the review's third pass, blocker 3). It was `ctx=""` by default, and the one caller
-    # that forgot it — the recorder opening a volume's `access_secret` — asked for a value bound to no row, which
-    # the console had sealed to `rec/volumes/<name>`: every network volume's secret failed to open. Every seal and
+    # that forgot it — a worker opening a mounted store's `access_secret` — asked for a value bound to no row, which
+    # the console had sealed to `<sub>/<rows>/<name>`: every such row's secret failed to open. Every seal and
     # every open names its row now, or does not run.
     #
     # Values sealed before the row was part of it open by the field alone — and ONLY where `seal_stored` re-seals
@@ -139,7 +139,7 @@ class Sealer:
         if not is_sealed(value):
             return value
         # A value that only LOOKS sealed — `enc:v1:x`, a row somebody typed or a copy that lost its tail — is a
-        # `Sealed` like any other: this camera's status, not the end of the pass for every camera after it
+        # `Sealed` like any other: this unit's status, not the end of the pass for every unit after it
         # (the review's second pass, blocker 3).
         parts = value[len(PREFIX):].split(":")
         if len(parts) != 3 or not all(parts):
@@ -186,7 +186,7 @@ def open_row(sealer: Sealer | None, row: dict, ctx: str) -> dict:
 
 
 # Rows written BEFORE the key existed (feedback CD). `seal_items` seals a row the next time it is written, and a
-# camera nobody touches is never written again: its password would lie in the clear for years beside rows that
+# unit nobody touches is never written again: its password would lie in the clear for years beside rows that
 # are sealed. So the console, starting with a key, seals what is stored — the value only, in place, by CAS: the
 # revision does not move, because nothing the row MEANS has changed, and a revision that moved would restart
 # every pipeline for a password it already has. `prefixes`: the rows of every subsystem this console writes.

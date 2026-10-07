@@ -27,7 +27,7 @@
 # a console writes about who did what — `unit.deleted`, `door.issued`, a row of a table — then names somebody who was
 # checked, not somebody who introduced themselves.
 #
-# What this does NOT close, and it is said in `М10B_ServerVMS/module-design.md`: the doors BEHIND the console —
+# What this does NOT close, and it is said in the product's module design (ADR-0034): the doors BEHIND the console —
 # the resource, a holder's door between processes — still ask nobody. That is mutual TLS between processes, the next
 # step, and until it a cluster of several machines stands behind its network.
 # ================================================================================================
@@ -46,7 +46,7 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 # replaced), the grants, the revocation list, the emergency account's hash. Any of them and no key set is a cluster
 # that lost its keys — deleted, or the row rolled back from a backup — not one that never had any: shut, and it stays
 # shut across a restart of the console, which a flag in one process's memory did not. `domain/primaries` is not one
-# of them: the recorder writes it in a cluster of its own.
+# of them: a subsystem's worker writes it in a cluster of its own.
 DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break_glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
 MEMBER_MARK = DOMAIN_MARKS[0]         # the one a door that verifies no token reads (`Gate.gated`; the review's ninth pass)
 RANK = {"view": 0, "edit": 1, "admin": 2}
@@ -230,7 +230,7 @@ class Gate:
             cls._glass_tries.clear(); cls._glass_limited.clear(); cls._glass_pace.update(tat=0.0, local=0.0)
 
     # THE EMERGENCY DOOR IS THE CONSOLE'S (the product's own finding on the review's ninth pass: its `POST /session/break-
-    # glass` was served by every door that mounts the shared gate — a recorder, the live gateway). Here `/session` is
+    # glass` was served by every door that mounts the shared gate — a holder, a gateway). Here `/session` is
     # routed by the console alone (`SpecConsole.dispatch`), and a session lives in the memory of the process that opened
     # it — but the gate a door holds read the session cookie all the same, so a door running in the console's process
     # would have taken one. `glass=False` — a door that is not the console (the gateway, the holder's playback door):
@@ -243,8 +243,8 @@ class Gate:
         self._loaded: Access | None = None
 
     # Whether this cluster asks at all: a key set, or the marks of a member that lost it — without loading
-    # anything that verifies a token. For a door that checks something other than a token (the device's playback
-    # door checks the console's signature, `vms/playback.py`) and must ask exactly when the console asks.
+    # anything that verifies a token. For a door that checks something other than a token (a holder's playback
+    # door checks the console's signature) and must ask exactly when the console asks.
     # `Denied(503)` when the store does not answer: "I cannot tell" is not "open".
     #
     # …BY THE KEY SET AND THE MEMBERSHIP ROW ALONE (the review's ninth pass, minor): it read every mark the console reads,

@@ -9,7 +9,7 @@
 #
 # Not a mechanism of its own: a FAMILY OF KINDS in the event log there already is. Subsystem `audit`, the unit
 # is the ROLE of the writer (`console`, `resource`), and everything an event log has comes with it — the
-# timeline reads it, the retention pass keeps it, the mirror copies it, the index answers it.
+# page reads it, the retention pass keeps it, the mirror copies it, the index answers it.
 #
 #   unit.created/changed/deleted   console    a unit of any subsystem was created, edited, deleted: which, and who
 #   door.issued               console    a holder's door was handed out with a unit's place: who, which unit, which
@@ -21,8 +21,8 @@
 # with the name the door token was given to), a viewer admitted and gone, a row of one of its tables set or lifted —
 # each its spec's and its code's words, in this same family.
 #
-# Kept as long as alarms are (`resource.retention_days`): the record of who deleted a camera is wanted for as
-# long as that camera's alarms are.
+# Kept as long as alarms are (`resource.retention_days`): the record of who deleted a unit is wanted for as
+# long as that unit's alarms are.
 #
 # What is NOT here: what a subsystem gives up by itself, by the thousand — a ring that overwrites its oldest — where
 # a line each would be the noise the journal exists to be read through. What a person needs to hear about of that is

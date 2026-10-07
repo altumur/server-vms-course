@@ -257,7 +257,7 @@ class _TooBig(Exception):
 
 # Reads the watermark. `high` and `low` are USED fractions of the disk: over `high` the resource starts
 # freeing and stops at `low`, and the gap between them is the whole point — one mark alone gives a saw, a
-# file freed and a file written, for ever. Choose the gap in HOURS OF INGEST, not in percent: fifty cameras
+# file freed and a file written, for ever. Choose the gap in HOURS OF INGEST, not in percent: fifty streams
 # at four megabit write about 2.2 TB a day, and ten percent of a 20 TB disk is less than one of them.
 # A floor no unit is cut below is the subsystem's own word, not the knob's: the resource asks for bytes (a request row,
 # `requests: {free: true}`), and what the subsystem gives up — and what it will not, by its rows — is its to decide; a
@@ -266,7 +266,7 @@ class _TooBig(Exception):
 #
 # ON UNLESS SOMEBODY TURNED IT OFF (the platform review, "what happens when the disk fills is chosen by the
 # code"; feedback BM). It used to be off until a row said `enabled: true` — and an installation where nobody
-# had written that row met a full disk with no policy at all: the recorder's writes failed, the store and the
+# had written that row met a full disk with no policy at all: the subsystem's writes failed, the store and the
 # event log on the same partition failed with them, and nothing had been decided by anyone. With no row the
 # watermark now runs on its defaults; `enabled: false` is the decision not to have one, and it is a decision
 # somebody makes.
@@ -408,7 +408,7 @@ def peers_of(server: str, live: list[str], copies: int) -> list[str]:
 # …AND WHAT CANNOT BE READ IS NOT "NOT HERE" (the review's twelfth pass, blocker 3). A directory that does not list (no
 # rights, EIO, the volume not mounted where the workers write), a lock that does not open (EMFILE), a LIVE lock whose
 # `.json` is absent, torn or names no subsystem — each was read as an empty list, or as a lock under `?`: the worker "not
-# listed" by a resource that answers, its slot released, its cameras given to a second holder while its process still
+# listed" by a resource that answers, its slot released, its units given to a second holder while its process still
 # wrote them. Now the resource says what it could not read: a directory that does not list says no lists at all
 # (`presence_error`, `workers`/`running` absent — "not said", which `slot_fate` takes for `wait`); a live lock whose
 # owner it cannot read, or a lock it cannot open, is counted (`presence_unread`), and then no worker of this server is
@@ -509,7 +509,7 @@ def resources_seen(objects) -> dict[str, dict]:
         hb = dict(json.loads(raw))
         hb["server"], finite(hb["ts"])                         # what every reader of this dict asks of it — `server` a name
         # (`ts` a finite number: `Infinity` was a resource live for ever, `NaN` one silent — and a silent resource MOVES
-        # a recorder's units; the review's eleventh pass, the sibling of the slot's `until`)
+        # a worker's units; the review's eleventh pass, the sibling of the slot's `until`)
         # (`parse_heartbeat` checks it: `["srv-x"]` was the key of `out` below, and `/metrics`, `restore` and the mirror
         # raised on it — the review's tenth pass)
         # …and what the mirror asks of it (the review's seventh pass): `url` to send to and take back from, `mirrors` a
@@ -836,7 +836,7 @@ class Resource:
         # A CEILING per volume, in bytes, and zero means "the disk is the ceiling". Two things need it and
         # neither is exotic. A volume on a network mount has no disk of its own to ask — `shutil.disk_usage` on a
         # mount point answers about the machine, not the share. And two volumes on ONE partition — which is how an
-        # operator splits a disk between a long-retention archive and a short one — would otherwise both
+        # operator splits a disk between a long-retention store and a short one — would otherwise both
         # read the same free space and both believe they own it.
         #
         # A quota is a ceiling, not a reservation: a volume gets the SMALLER of what its quota leaves and
@@ -900,7 +900,7 @@ class Resource:
         # without a limit a burst of readers is a queue with no end: every answer later, memory growing, and a
         # reader that times out cannot tell "slow" from "gone". Past the limit the answer is 503 with
         # `Retry-After` — a refusal the merge reads as "did not answer", which makes the window incomplete and
-        # holds automation's cursor rather than losing what this resource holds (М10B Lesson 25).
+        # holds a reader's cursor rather than losing what this resource holds (М10B Lesson 25).
         self.events_slots = threading.BoundedSemaphore(EVENTS_INFLIGHT)
         # The requests this resource HOLDS for readers of its events (`GET /events/wait`, `longpoll.Watch`): answered
         # when a line of a kind the reader watches is appended to a current bucket here. Its own bound, apart from
@@ -965,7 +965,7 @@ class Resource:
     #
     # By NAME, and a mark of progress per bucket (the review's fifth pass, Т-M13's remainder). The mirror needs a
     # bucket's path and its end, both in the name; `buckets_under` opened every file to count its lines, so the walk
-    # read a year of archive every pass — and marked progress once per UNIT: 5000 buckets of 300 lines took 3.2 s
+    # read a year of buckets every pass — and marked progress once per UNIT: 5000 buckets of 300 lines took 3.2 s
     # against a pulse limit of 2, and the resource looked silent while it walked. `events` is 0 here: nobody reads it.
     def closed_buckets(self) -> list[Bucket]:
         out = []
@@ -988,7 +988,7 @@ class Resource:
     # used to take the whole policy pass with it.
     #
     # A mark of progress per FILE (the review's sixth pass): it was one per directory, and every bucket of an epoch
-    # is in one directory — a year of one camera is fifty thousand `stat`s between two marks, and on a cold disk the
+    # is in one directory — a year of one unit is fifty thousand `stat`s between two marks, and on a cold disk the
     # pulse called a walk that moved the whole time "stuck".
     def usage(self, volume: str | None = None) -> int:
         roots = [self.volumes[volume]] if volume is not None else list(self.volumes.values())
@@ -1055,7 +1055,7 @@ class Resource:
     # EVERY LOOK AT A VOLUME WITH A DEADLINE (the review's thirteenth pass, blocker 5; the product's cross-check (a)): the
     # `statfs`, the directory listings and the presence look ran bare on the heartbeat's thread, and one volume that
     # stopped answering — an NFS server gone, a dying disk — held the heartbeat for good: the resource silent in 45 s,
-    # and the live workers' cameras carried off a server whose processes all ran. Each volume is looked at in a probe of
+    # and the live workers' units carried off a server whose processes all ran. Each volume is looked at in a probe of
     # its own (`_probe`, `PROBE_DEADLINE`); one that does not answer in time is said (`volumes_stuck`, with how long) and
     # its last numbers stand; the presence look that does not answer is `presence_error` — "cannot tell", never "gone".
     def heartbeat(self) -> dict:
@@ -1209,7 +1209,7 @@ class Resource:
     # the beat runs beside the loop whatever the loop does: the last full heartbeat again, the presence looked at anew
     # (with its deadline), the time moved on, and the door's `at`. A pass that has not moved for `PULSE_LIMIT` ×
     # `lost_after` is said (`pass_stuck`, on `/metrics`) and logged once — the resource is there, its pass is not, and
-    # that is a fault of the server to look at, not a silence that moves cameras.
+    # that is a fault of the server to look at, not a silence that moves units.
     def beat(self) -> bool:
         last = getattr(self, "_last_heartbeat", None)
         if last is None:
@@ -1723,7 +1723,7 @@ class Resource:
                 n += 1
                 # Each copy the peer took is progress (the review's fourth pass): the FIRST mirroring of a server
                 # sends a year of buckets, and without a mark per bucket a mirror that moved the whole time was
-                # "stuck" to the pulse after four `lost_after` — the resource silent, its recordings moved.
+                # "stuck" to the pulse after four `lost_after` — the resource silent, its units moved.
                 self._progressed()
         self.mirror_peers_failed = failed
         return {"enabled": True, "mirrored": n, "peers": peers, **({"peers_failed": failed} if failed else {})}
@@ -1734,7 +1734,7 @@ class Resource:
     #
     # UNDER THE SAME PULSE AS THE PASS (the review's seventh pass, M4). It runs before the loop's first heartbeat after
     # the first, on the same thread: a disk replaced and two thousand buckets pulled at 50 ms each were 100 s without a
-    # heartbeat — the resource silent to the index (the window incomplete, automation's cursor held) and to the
+    # heartbeat — the resource silent to the index (the window incomplete, a reader's cursor held) and to the
     # console, while its door answered. It beats as `pass_` does (`_pulsing`), with a mark per bucket pulled — and per
     # listing and per bucket already here — so a pull that moves keeps the pulse, and one that hangs on a peer stops it.
     #
@@ -1892,7 +1892,7 @@ class Resource:
     # -- the watermark -------------------------------------------------------------------
     # Retention by days is a PROMISE to the operator; this is what happens when the promise cannot be kept.
     # The resource measures — the disk, not the tree — and says how many bytes to free; each subsystem
-    # decides what to give up, because only it knows what its files mean. Nothing here knows what a camera
+    # decides what to give up, because only it knows what its files mean. Nothing here knows what a unit
     # is, and nothing here deletes a subsystem's file.
     #
     # Over `high`, free down to `low`. The resource does not free a subsystem's bytes and does not call its code: it ASKS,
@@ -1915,7 +1915,7 @@ class Resource:
 
         Per VOLUME, and that is the whole difference from the single-disk case:
         space does not average. A box that is 50% full across two disks, one of
-        them at 98%, is a box that stops recording — and freeing bytes on the
+        them at 98%, is a box that stops writing — and freeing bytes on the
         empty one closes nothing, because the unit that cannot write is on the
         full one. So the loop is over volumes, and the volume goes into the request:
         only the subsystem knows which of its files are where, but only the
@@ -2012,8 +2012,8 @@ class Resource:
     # left behind — then `mirror`; results flattened into one dict (`removed`, `space`, `enabled`, `mirrored`, `peers`).
     #
     # THE PASS CARRIES ITS OWN PULSE (feedback BE). It runs on the thread that heartbeats, and it reads every
-    # bucket it keeps: on a year of archive it takes longer than `lost_after`, the resource is called silent,
-    # and `redistribute` moves the recordings off a server that is perfectly well. A second thread calling
+    # bucket it keeps: on a year of buckets it takes longer than `lost_after`, the resource is called silent,
+    # and `redistribute` moves the units off a server that is perfectly well. A second thread calling
     # `heartbeat()` would race the pass for the very state a heartbeat reads — the usage it caches, the volumes
     # — so what is sent while the pass runs is the LAST heartbeat again, with the time moved on: bytes already
     # published, and nothing the pass is changing.
@@ -2027,9 +2027,9 @@ class Resource:
     #
     # Three things the first version got wrong (the review's third pass). The pulse died on its first error — one
     # store write that failed, an exception out of the thread, and a five-minute pass on a store that blinked was a
-    # silent resource whose recordings `redistribute` moved off a sound server: each beat is in a `try` of its own
+    # silent resource whose units `redistribute` moved off a sound server: each beat is in a `try` of its own
     # now. It measured by the WALL clock, which NTP steps: by a monotonic one (`clock`). And it counted TOTAL time,
-    # which a year of archive legitimately takes: "stuck" is no progress — the walk, the retention and each part say
+    # which a year of buckets legitimately takes: "stuck" is no progress — the walk, the retention and each part say
     # they moved (`_progressed`).
     #
     # …and every part says it, not only the walk and the retention (the review's fourth pass): the mirror marks
@@ -2308,7 +2308,7 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090) -> Thread
         # 2 MB/s never got one at all — the socket's timeout is the whole of a `sendall`, and `restore` of that bucket
         # failed on every retry. Its length is said (`Content-Length`: a reply that ends short is an error to the
         # reader, not a smaller bucket) and the bytes go `STREAM_PIECE` at a time, each under the socket's timeout, to a
-        # reader that keeps `STREAM_MIN_RATE` on average (`Paced`) — what the holder's and the recorders' doors do.
+        # reader that keeps `STREAM_MIN_RATE` on average (`Paced`) — what every holder's door does.
         def _bucket(self, p):
             try:
                 f = open(p, "rb")

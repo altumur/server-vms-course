@@ -55,11 +55,11 @@ A query for a unit finds both: its own lines and those of every unit about it.
 # answered under the owner's name. `MergedIndex` below is untouched.
 #
 # **Freshness is looked at, not assumed.** A bucket is named by the time of its EVENTS, not by the time
-# they were written: a scan of an archive (`detjob`, М10B Lesson 21) and a survey of somebody else's
+# they were written: a scan of a subsystem's stored bulk (М10B Lesson 21) and a survey of somebody else's
 # (Lesson 23) write lines stamped hours ago into buckets whose time is long past. So "a closed bucket never
 # changes" is not a rule this index may lean on. It asks the file instead — size and modification time —
-# and only for the files a query's window can touch: one or two per unit for the minutes automation asks
-# about, a day's worth for a timeline. A file that grew is read from where the last read stopped.
+# and only for the files a query's window can touch: one or two per unit for the minutes an evaluator asks
+# about, a day's worth for a page's history. A file that grew is read from where the last read stopped.
 #
 # **A unit is `<sub>/<id>`, and nothing is a number of somebody's** (the boundary's step 2). The index had a column
 # named after one subsystem's field and a rule that a numeric unit was that field's value: the platform knew which
@@ -179,7 +179,7 @@ class EventIndex:
     # the cache.
     #
     # "Grown" means the SAME file grown (feedback AX). A bucket that retention removed and a late scan of the
-    # archive wrote again under the same name is at least as long as the old one, and read on from the old
+    # stored bulk wrote again under the same name is at least as long as the old one, and read on from the old
     # offset it would keep the old lines and start the new ones mid-line — one lost, and counted as torn. So
     # the file's identity is compared (device and inode), and its first bytes too: a freed inode is handed to
     # the next file created, often at once.
@@ -257,7 +257,7 @@ class EventIndex:
         `keep` is which END of an overflowing window survives `limit` — and it is the CALLER's
         to choose, because "a thousand of the five thousand" means nothing without it. The
         default is "newest": nearly everything asked of an event log is a form of "what just
-        happened", and the reader that wants the other end — paging forward through an archive
+        happened", and the reader that wants the other end — paging forward through history
         from a cursor — knows that about itself and says so.
 
         The answer is ascending by time whichever end was kept, and it carries `truncated`, so a
@@ -355,7 +355,7 @@ class EventIndex:
                             n += sum(1 for f in os.listdir(os.path.join(base, sub, u, f"e{epoch}")) if EVENTS.match(f))
                         except FileNotFoundError:
                             pass
-                    units += 1 if n else 0                   # a recorder's tree is a unit with no events: not counted
+                    units += 1 if n else 0                   # a unit whose tree holds no events: not counted
                     buckets += n
         return {"units": units, "buckets": buckets, "mirrored": sorted(mirrored), "cached": len(self._cache)}
 
@@ -404,14 +404,14 @@ def check_query(keep: str, cls: str | None, by: str, unit: str | None) -> None:
 
 # A RESOURCE'S ANSWER IS ANOTHER PROCESS'S WORDS (the review's eighth pass, part 4, a sibling of the peers' doors). The
 # merge read `rep.get`, `rep["events"]`, `e["server"]` bare, after the fan-out's `try`: one resource of another build
-# answering a list, or one line without `t`, raised out of `query` — automation's pass and the console's `/events` for
+# answering a list, or one line without `t`, raised out of `query` — a reader's pass and the console's `/events` for
 # every reader, every time. An answer that is not `{events: [...]}` is that resource not answering (`None`: the window
 # incomplete, said); a line the merge cannot order, dedupe or fence is passed by and counted (`PEER_EVENTS`), and the
 # rest of that resource's answer stands.
 #
 # …AND THE LINE IS KEPT AS IT WAS CHECKED, not as it came (the scaling pass after the eighth review, the `/events` sweep):
 # the values were checked to convert and the originals kept, so `"t": "1700000000"` passed — and the merge's sort, a
-# string beside numbers, raised `TypeError` out of `query`, no reply to anybody's timeline; a list for `unit`, `server`,
+# string beside numbers, raised `TypeError` out of `query`, no reply to anybody's page; a list for `unit`, `server`,
 # `id` or `bucket` did the same in the sets that dedupe and fence. Each is now the type the merge orders and keys by.
 def _event_line(e: dict) -> dict:
     out = {**e, "t": finite(e["t"]), "server": str(e["server"]), "kind": str(e["kind"]), "unit": str(e["unit"]),
@@ -532,7 +532,7 @@ class MergedIndex:
         told the window is partial, not which server made it partial.
 
         `complete` is the other half of "is this all of it", and a reader that DECIDES on a window —
-        automation moving its cursor past it — needs it: an empty window and a window whose server did not
+        an evaluator moving its cursor past it — needs it: an empty window and a window whose server did not
         answer look the same in `events`. `incomplete` names each server the window is missing, and why:
         live by heartbeat and did not answer; answered, but its own state is not `live` (`empty`,
         `catching up` — a restarted resource rebuilding); or silent, and it could have written inside the

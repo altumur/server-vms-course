@@ -32,7 +32,7 @@ instead of at the end of its wait, and reads what it would have read anyway.
 # in the newest epoch, in the subsystem's tree and its alarms' (and the bucket before, for the first seconds after
 # a boundary). A file that grew is read from where it stood, and the kinds of the new lines, with the unit whose
 # file it is, are what waiters are matched against. Nobody waiting: no thread,
-# no stat. Lines written into OLD buckets — an archive scan's, a card survey's — are not watched: the reader's
+# no stat. Lines written into OLD buckets — a bulk scan's, a card survey's — are not watched: the reader's
 # own pass is still there, and it is the safety net for everything this does not see.
 #
 # **The bounds.** One request held per CLIENT — an evaluator's instance, `client=` — and a second one from it ends
@@ -42,10 +42,10 @@ instead of at the end of its wait, and reads what it would have read anyway.
 # when the passes are long or the resources refuse (`Wake.pace`). What was held, refused and replaced is in the
 # resource's heartbeat and on `/metrics` (`Watch.counts`).
 #
-# **The unit is in the want** (the review's seventh pass, M8). `vms/io.input/12` is camera 12's contacts and nobody
-# else's; `vms/io.input` is any camera's. A request for named units is answered only for them, and the watcher looks
-# at their directories alone — a thousand cameras on the resource cost what the units asked about cost, not a stat
-# per camera per tick. The answer says which of the wanted units changed (`touched`), and the reader's early pass
+# **The unit is in the want** (the review's seventh pass, M8). `<sub>/io.input/12` is unit 12's contacts and nobody
+# else's; `<sub>/io.input` is any unit's. A request for named units is answered only for them, and the watcher looks
+# at their directories alone — a thousand units on the resource cost what the units asked about cost, not a stat
+# per unit per tick. The answer says which of the wanted units changed (`touched`), and the reader's early pass
 # evaluates the scenarios those touch and no others.
 #
 # **Between two waits.** A reader that was answered asks again, and a line written in between would fall into
@@ -103,13 +103,13 @@ def wanted(pairs) -> frozenset:
 
 
 # MORE THAN ONE REQUEST MAY NAME IS FOLDED, NOT REFUSED FOR GOOD (the review's eighth pass, part 3: a regression of the
-# seventh's M8). An evaluator with 65 scenarios on 65 cameras sent 65 triples, every request was 400, and its long poll
-# was off for good — the road from an event to a request back at two seconds, seen only in `auto_wait_errors_total`.
+# seventh's M8). An evaluator with 65 scenarios on 65 units sent 65 triples, every request was 400, and its long poll
+# was off for good — the road from an event to a request back at two seconds, seen only in its error counter.
 # More than `WANTS_MAX` scenarios on one evaluator are expected (the coordinator's decision of 2 October). Past the
 # bound the triples are folded to their `(subsystem, kind)` with any unit: the request is held, any unit of those kinds
 # answers it, and the answer's `touched` still names the units that changed — so the early pass still evaluates only
 # the scenarios they touch. What folding costs is the watcher's look at every unit of the kind, and an early pass for a
-# camera nobody watches. `(wants, folded)`: `folded` is how many triples were folded, 0 when none. More kinds than the
+# unit nobody watches. `(wants, folded)`: `folded` is how many triples were folded, 0 when none. More kinds than the
 # bound — no request can hold them — is `([], n)`: the reader's pass, every `poll`, is all there is then.
 def fold(wants) -> tuple[list, int]:
     wants = sorted(set(wants))
@@ -366,8 +366,8 @@ class Watch:
     # epoch is a fenced writer's, and no reader acts on it.
     #
     # WHAT IS LISTED IS WHAT IS WANTED (the review's seventh pass, minor). Every unit of every watched subsystem was
-    # listed every second and its files stat-ed every tick — a thousand cameras were 7 % of a core with ONE waiter, for
-    # one camera's contact. Now a want that names its units lists those units' directories and no others; only a want
+    # listed every second and its files stat-ed every tick — a thousand units were 7 % of a core with ONE waiter, for
+    # one unit's contact. Now a want that names its units lists those units' directories and no others; only a want
     # with no unit lists the subsystem. And a directory is listed again only when its mtime moved (an epoch or a unit
     # appeared) — or changed within `MTIME_SLACK`, for a file system whose clock is coarser than two creations.
     def _list(self, looked: frozenset) -> list[tuple[str, str, str]]:
@@ -460,7 +460,7 @@ def client_gone(conn) -> bool:
         return True
 
 
-# `vms/io.input,det/motion/7-motion` -> `[("vms", "io.input", ""), ("det", "motion", "7-motion")]`: a unit of `""` is
+# `testsub/io.input,testsub2/tick/7` -> `[("testsub", "io.input", ""), ("testsub2", "tick", "7")]`: a unit of `""` is
 # any unit of the kind.
 #
 # REFUSED, NOT GUESSED (the review's seventh pass, minor). What did not look like a want was dropped: an empty `want`
