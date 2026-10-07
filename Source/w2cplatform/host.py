@@ -101,7 +101,7 @@ def controller_loop(ctl, env: dict | None = None, every: float = 5.0, journal: b
     tree = runtime.events_said(env) if journal else None
     if tree:                                             # a slot it frees, and why, in this server's journal (`journal.py`)
         from .journal import Journal
-        ctl.journal = Journal(tree, "controller", ctl.wall)
+        ctl.journal = Journal(tree, f"{ctl.sub.name}controller", ctl.wall)   # its identity's (ADR-0030)
     if env.get("HUNG_MOVE_AFTER"):                       # how long a hung worker keeps its units (`Controller.hung_move_after`)
         ctl.hung_move_after = float(env["HUNG_MOVE_AFTER"])
     while not stop.is_set():

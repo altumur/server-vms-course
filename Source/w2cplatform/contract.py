@@ -1916,11 +1916,13 @@ class Controller:
 
     # The controller's lines in the journal (`journal.py`): a decommission carried out, a slot it released and why, a
     # hung worker. The log only, unless the process is given a resource tree (a subsystem's controller loop gives it one).
+    # Its role is its identity, `<sub>controller` (ADR-0030: the configstore role's name): two controllers of one server
+    # write two journals, never one.
     @property
     def journal(self) -> Journal:
         j = self.__dict__.get("_journal")
         if j is None:
-            j = self.__dict__["_journal"] = Journal(None, "controller", self.wall)
+            j = self.__dict__["_journal"] = Journal(None, f"{self.sub.name}controller", self.wall)
         return j
 
     @journal.setter

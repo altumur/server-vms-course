@@ -216,3 +216,33 @@ def test_a_cluster_with_no_units_publishes_that_it_has_none():
     shard = json.loads(box.objects.get("testsub/snapshot/unplaced"))
     assert shard["counters"] == [] and shard["worker"] is None and ctl.snapshot_age() == 0
     assert ctl.snapshot()["counters"] == []                            # published, and it says none
+
+
+def test_two_controllers_of_one_server_write_two_journals_each_under_its_identity():
+    """ADR-0030 (the identity is the configstore role's name, `<sub>controller`; the product's `controllerhost`): the
+    controller's journal is written under its identity, not under one `controller` for every subsystem — the
+    controllers of testsub and testsub2 on one server wrote into one branch of the audit tree, and whose line was whose
+    was a field to read. Now each has its own: `audit/testsubcontroller/…` and `audit/testsub2controller/…`."""
+    import os
+    from w2cplatform.events import buckets_under, read_bucket
+    from w2cplatform.runtime import RESOURCE_ROOT
+    from tests.conftest import testsub2
+    box = Box()
+    os.makedirs(box.resource_root, exist_ok=True)
+    real_wait = stop.wait
+    stop.clear()
+    stop.wait = lambda timeout=None: stop.set() or True
+    try:
+        for spec in (testsub(), testsub2()):
+            ctl = SpecController(spec, box.vars, box.objects, 50, wall=box.wall)
+            controller_loop(ctl, {RESOURCE_ROOT: box.resource_root})
+            stop.clear()
+            ctl.journal.say("controller.probe", sub=spec.name)
+    finally:
+        stop.wait = real_wait
+        stop.clear()
+    for role, sub in (("testsubcontroller", "testsub"), ("testsub2controller", "testsub2")):
+        lines = [e for b in buckets_under(box.resource_root, "audit", role, 600)
+                 for e in read_bucket(os.path.join(box.resource_root, b.path)) if e.get("kind") == "controller.probe"]
+        assert [e["sub"] for e in lines] == [sub], (role, lines)
+    assert buckets_under(box.resource_root, "audit", "controller", 600) == []           # the one shared name: gone
