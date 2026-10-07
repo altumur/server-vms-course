@@ -1997,7 +1997,9 @@ def test_a_playback_door_to_a_hung_recorder_answers_ask_again_and_keeps_its_conn
         for status, body, took in got.values():
             assert status == 503 and b"ask again" in body and took < 3 * holder.DOOR_ASK_WAIT, (status, body[:120], took)
         assert inside[0] <= holder.DOOR_READS_PER_DEVICE, inside[0]
-        assert srv.bounds.used["common"] == 0, srv.bounds.used                   # the door's connections are back
+        # the door's connections are back — waited for, not read at once: the reply reaches the client before the
+        # serving thread returns its slot, and under a full suite's load the read came first (a red that was a race)
+        _until(lambda: srv.bounds.used["common"] == 0, 5.0, f"the door's connections back: {srv.bounds.used}")
         assert _door_get(port, f"/playback/{healthy}?from=0&to=2", 5)[0] == 200
         assert _door_get(port, f"/recordings/{healthy}?from=0&to=60", 5)[0] == 200
         assert _door_get(port, "/devices", 5)[0] == 200
