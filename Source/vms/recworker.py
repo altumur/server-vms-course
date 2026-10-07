@@ -1155,12 +1155,14 @@ class RecWorker(VmsWorker):
                 # A fresh hold and a running row do not say it; only this does.
                 "writer": self.writer.state,
                 # The volume's block, as the writer works with it, and — only while it is smaller than a group of pictures
-                # (`archive.SMALL_BLOCK`) — the same number as `block_small`: a leaf the page shows by `servers.status`
+                # (`archive.SMALL_BLOCK`), or the engine refused a sample `SEQUENCE_TOO_LARGE` since the writer was
+                # mounted — the same number as `block_small`: a leaf the page shows by `servers.status`
                 # (a `true` there is a garbled leaf, ADR-0064, and was shown nowhere; «Архитектор» 2026-10-07), not only
                 # once in the log at the open — such a volume loses every sequence that does not fit until it is
                 # formatted again
                 **({"objectstorage": {"volume": self.volume, "block_bytes": block,
-                                      **({"block_small": block} if block < SMALL_BLOCK else {})}}
+                                      **({"block_small": block}
+                                         if block < SMALL_BLOCK or getattr(self.store, "too_large", 0) else {})}}
                    if (block := getattr(self.store, "block_bytes", 0)) else {}),
                 # Volumes this recorder handed back for refusing writes, and why — left alone until the time
                 # given, so that a key somebody fixes is picked up without a restart. And the ones it does not take at

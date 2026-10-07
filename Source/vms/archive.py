@@ -55,6 +55,8 @@ BLOCK, READ = 8 << 20, 1 << 20
 # a high bitrate is a megabyte and more — for as long as it is used, and only a format with a larger block mends it: said
 # in the recorder's heartbeat, `objectstorage.block_small`, and on the page by rec's `servers.status` (ADR-0064; the
 # product's `smallBlock`, found on its stand 2026-10-07: volumes formatted with 1 MiB blocks, a 1029 KiB sequence refused).
+# A block of this size or more is said small too once the engine refused a sample `SEQUENCE_TOO_LARGE` since the writer
+# was mounted: a 4K group of pictures that did not fit («Архитектор» 2026-10-07, one rule on both sides).
 SMALL_BLOCK = 4 << 20
 log = logging.getLogger("vms.archive")
 NEVER, FOREVER = 0, 1 << 62           # the archive's milliseconds: before anything, after everything
@@ -302,6 +304,7 @@ class Archive:
         self.session = session or Session(client="vms-archive")
         self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
         self.block_bytes = 0                       # the block the writer works with, once it is mounted (`_effective_block`)
+        self.too_large = 0                         # samples the engine refused `SEQUENCE_TOO_LARGE` since the writer was mounted
         self.sequence_flush_ms, self.block_flush_s = int(sequence_flush_ms), int(block_flush_s)
         self.confirm, self.lock_refresh = confirm, int(lock_refresh)
         self.fence, self.on_unclean = fence, on_unclean
@@ -400,7 +403,7 @@ class Archive:
                 self.writer = self._mount_rw(vol)
                 self.reattached = self.writer.reattached
                 self._configure()
-                self.block_bytes = self._effective_block()
+                self.block_bytes, self.too_large = self._effective_block(), 0
         except (ObsdError, *PARSE_ERRORS) as e:     # an answer of the engine this build cannot read: `wrong`, said (the tenth round)
             raise self._classified(e) from None
         return self
@@ -482,6 +485,8 @@ class Archive:
             # place lost: nothing more is sent, and the recorder gives the volume up (`RecWorker.volume_pass`).
             if e.name == "WRITER_STOPPED" and "lock lost" in e.detail:
                 self.lock_lost = True
+            if e.name == "SEQUENCE_TOO_LARGE":
+                self.too_large += 1                # a group of pictures the block does not hold: `block_small` (ADR-0064)
             raise
 
     def finish(self, unit, epoch: int, backfill: bool = False) -> bool:
@@ -632,6 +637,7 @@ class Archive:
             self.lost = True
             raise
         self._configure()
+        self.too_large = 0                         # counted since this writer was mounted
 
     def close(self, timeout: float | None = None) -> bool:
         """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
