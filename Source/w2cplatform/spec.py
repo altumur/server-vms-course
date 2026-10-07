@@ -4288,8 +4288,9 @@ class SpecController(Controller):
     # things the count did not ask:
     #   per           a spare says its capacity in its first heartbeat, after it was started for the count. The count
     #                 is by the smallest capacity the live workers of the set announce (a spare is started from the
-    #                 same unit and environment as the role's workers, so says the same), the fallback `CAPACITY`
-    #                 only where none is live — never by this controller's own fallback while the workers say better
+    #                 same unit and environment as the role's workers, so says the same), the spec's
+    #                 `placement.capacity.default` only where none is live — never by that default while the workers
+    #                 say better; the platform reads no `CAPACITY` (ADR-0030, п. 6: it is the workers' key)
     #   a server      a spare runs on a server: one whose resource is not silent, not drained, not decommissioned, and
     #                 whose labels cover the set (its row; else its workers' word; a server whose labels nobody has said yet
     #                 may cover it). Under `servers: distinct` only a server with no live worker of this subsystem
