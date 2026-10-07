@@ -275,6 +275,35 @@ def test_a_stream_nobody_places_does_not_stand_for_ever():
         srv.shutdown(); srv.server_close()
 
 
+def test_a_stream_of_a_camera_nobody_serves_is_waited_for_said_and_deleted_after_its_grace():
+    """ADR-0057, window 2 (the product's `waitFor`): the console writes a stream row of a camera that is not there — `ref`
+    asks a row only for `must_match`, nothing undeclared binds — and the gateway it is placed on does not serve it,
+    says why in its heartbeat (`waiting`), and once it has waited the row's `grace` deletes it as it deletes an idle
+    fan-out. A camera that is there and recorded nowhere is said so; one that comes up is subscribed and not waited for."""
+    from w2cplatform.console import heartbeats
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1")
+        box.vars.put("live/streams/9", {"id": "9", "cam": "9", "grace": "30", "revision": "1"})      # no camera 9
+        live_ctl.ensure_placed(); w.heartbeat_once(); g.heartbeat_once()
+        assert live_ctl.placement("9").worker == "g-1"
+        assert g.reconcile_once() == [] and g.subscriptions == 0
+        g.heartbeat_once()
+        assert heartbeats(box.objects, "live")["g-1"].extra["waiting"] == {"9": "no camera 9"}
+        box.wall.advance(29); w.heartbeat_once(); g.reconcile_once()
+        assert live_ctl.unit("9") is not None                                             # inside its grace
+        box.wall.advance(1); w.heartbeat_once(); g.reconcile_once(); g.heartbeat_once()
+        assert live_ctl.unit("9") is None and g.waiting == {}                             # waited its grace: gone
+        assert "waiting" not in heartbeats(box.objects, "live")["g-1"].extra
+        ctl_cam = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+        ctl_cam.create_camera({"name": "yard", "source": "driverpack://file/yard.mp4"})  # camera 2, on no worker yet
+        box.vars.put("live/streams/2", {"id": "2", "cam": "2", "grace": "30", "revision": "1"})
+        live_ctl.ensure_placed(); w.heartbeat_once(); g.heartbeat_once(); g.reconcile_once()
+        assert g.waiting == {"2": "camera 2 is recorded nowhere: no worker says it running"}, g.waiting
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
 def test_a_second_viewer_watches_the_stream_that_exists():
     """The review's second pass (Н-M8): the labels of the FIRST viewer applied to every next viewer of the camera — one
     fan-out per camera, placed by its row — and a second viewer's `?labels=` was dropped without a word; the console
