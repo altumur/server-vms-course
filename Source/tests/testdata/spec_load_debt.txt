@@ -2,5 +2,5 @@
 # `<spec>:<key path>   # ADR-NNNN «owner»`. A line goes when the course reads the key or the product drops it;
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
 # side, who closes it (СЕССИИ.md §1.7).
-testsub2:placement.places   # ADR-0012: places with no place_by — the course refuses, the product loads; the product's side — «Платформа»
-testsub2:worker.writes   # ADR-0012: writes into a table only named (tables: [pins]) — the course refuses, the product loads; the product's side — «Платформа»
+testsub2:placement.places   # ADR-0012: places with no place_by — the course refuses, the product loads; the product's side — «Сборка»
+testsub2:worker.writes   # ADR-0012: writes into a table only named (tables: [pins]) — the course refuses, the product loads; the product's side — «Сборка»

@@ -1,13 +1,13 @@
 # spec_parity_debt.txt — the keys the course's specs and the product's differ by (spec_parity_test.go).
 # A line goes when both sides have the key, or neither; a new difference is not written here but made good.
-course-only auto.subsystem.yaml domain   # ADR-0010/0032: the course first; the product's side — «Платформа»
-course-only auto.subsystem.yaml domain.shared   # ADR-0010/0032: the course first; the product's side — «Платформа»
-course-only auto.subsystem.yaml domain.shared.name   # ADR-0010/0032: the course first; the product's side — «Платформа»
-course-only auto.subsystem.yaml domain.shared.schema   # ADR-0010/0032: the course first; the product's side — «Платформа»
-course-only auto.subsystem.yaml domain.shared.type   # ADR-0010/0032: the course first; the product's side — «Платформа»
-course-only auto.subsystem.yaml domain.shared[scenarios]   # ADR-0010: the course first; the product's side — «Платформа»
+course-only auto.subsystem.yaml domain   # ADR-0010/0032: the course first; the product's side — «Сборка»
+course-only auto.subsystem.yaml domain.shared   # ADR-0010/0032: the course first; the product's side — «Сборка»
+course-only auto.subsystem.yaml domain.shared.name   # ADR-0010/0032: the course first; the product's side — «Сборка»
+course-only auto.subsystem.yaml domain.shared.schema   # ADR-0010/0032: the course first; the product's side — «Сборка»
+course-only auto.subsystem.yaml domain.shared.type   # ADR-0010/0032: the course first; the product's side — «Сборка»
+course-only auto.subsystem.yaml domain.shared[scenarios]   # ADR-0010: the course first; the product's side — «Сборка»
 course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: the course first; the product's side — «Сборка»
-course-only rec.subsystem.yaml domain.reports[ingest]   # ADR-0010: the course first; the product's side — «Платформа»
+course-only rec.subsystem.yaml domain.reports[ingest]   # ADR-0010: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml objects.door[forwarded/*]   # ADR-0019: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[acts]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[up]   # ADR-0010: the course first; the product's side — «Лекции»
@@ -59,7 +59,7 @@ product-only vms.subsystem.yaml domain.books.receiver   # ADR-0010: the product 
 product-only vms.subsystem.yaml domain.kept[ask-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[ingest-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[lift-keys]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml domain.kept[scenarios]   # ADR-0010: the product moves it to auto's domain.shared — «Платформа»
+product-only vms.subsystem.yaml domain.kept[scenarios]   # ADR-0010: the product moves it to auto's domain.shared — «Сборка»
 product-only vms.subsystem.yaml domain.kept[upstream-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml heartbeat.strings[device_url]   # ADR-0019: the product drops it — «Сборка»
 product-only vms.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
