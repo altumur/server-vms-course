@@ -189,7 +189,7 @@ tables:
       # the camera's recordings when it was set, if whoever set it says them: a recording deleted since still has its
       # minutes copied (`keeps.spans_of`); left out, its camera's recordings as they are when it is copied
       recordings: {type: list}
-    stamp: [by, at]
+    stamp: [by, at, made_at]                         # made_at: when the row was made — what a keep's seal is bound to (ADR-0057)
     journal: {written: archive.keep.made, deleted: archive.keep.lifted}
 # Whose a row of a table is: a keep is its camera's (`cam`, an id of the camera `about` names). Whoever writes one
 # needs on that camera what the route needs — on both, if a write ever moved it. And a keep is set by an operator

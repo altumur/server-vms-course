@@ -30,12 +30,15 @@
 # was set, and also matches any recording whose row names the camera now.
 # ================================================================================================
 import json
+import logging
 import math
 from dataclasses import dataclass
 
 from w2cplatform.doors import safe_segment, unnamable
 from w2cplatform.rows import PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import Refused
+
+log = logging.getLogger(__name__)
 
 SUB = "rec"
 TABLE = "keeps"
@@ -57,6 +60,8 @@ class Keep:
     at: float = 0.0               # when
     recordings: tuple = ()        # the names of the camera's recordings when it was set
     garbled: bool = False         # its interval did not parse whole: held as far as it reads (`as_far_as_read`)
+    made_at: float = 0.0          # when its row was MADE — the platform's stamp, kept through every write; what its
+                                  # seal is bound to (ADR-0057, addendum of 2026-10-07). 0: made before the stamp
 
     # Only the INTERVAL can make a keep unreadable (the review's eighth pass, part 4): `at` — when it was set — is
     # metadata, and `at: "yesterday"` made the whole keep garbled, its camera held from the start of time to its end.
@@ -66,11 +71,12 @@ class Keep:
         # `finite`: a `nan` bound passes no comparison, so such a keep held nothing while it looked set (the seventh pass)
         return cls(id_, str(d.get("cam", "")), finite(d.get("from", 0) or 0), finite(d.get("to", 0) or 0),
                    str(d.get("note", "")), str(d.get("by", "")), number(f"{key(id_)}#at", d.get("at") or None, float, 0.0),
-                   tuple(str(r) for r in _names(d.get("recordings"))))
+                   tuple(str(r) for r in _names(d.get("recordings"))),
+                   made_at=number(f"{key(id_)}#made_at", d.get("made_at") or None, float, 0.0))
 
     def to_items(self) -> dict:
         return {"cam": self.cam, "from": self.since, "to": self.until, "note": self.note, "by": self.by,
-                "at": self.at, "recordings": json.dumps(list(self.recordings))}
+                "at": self.at, "made_at": self.made_at, "recordings": json.dumps(list(self.recordings))}
 
     def shown(self) -> dict:
         """The row as a console answers it: the recordings as a list."""
@@ -100,10 +106,15 @@ def _names(raw) -> list:
 # would have opened it to anyone who may edit the camera; an undeclared key in the keep's row would have been a row not
 # by its spec (ADR-0012). The door's check reads it (`RecWorker.verify_keep`).
 #
-#   {"recordings": "<recording>=<sha256>,…", "from": <unix s>, "to": <unix s>, "sealed_at": <unix s>}
+#   {"recordings": "<recording>=<sha256>,…", "from": <unix s>, "to": <unix s>, "keep_made_at": <unix s>, "sealed_at": <unix s>}
 #
 # BOUND TO THE INTERVAL: a seal is of the minutes it was taken over. A keep whose row says another interval now — an
 # operator rewrote it — is not sealed by it (`Seal.of`): the check says "not sealed yet", and the next pass seals it anew.
+# …AND TO THE KEEP IT WAS TAKEN FOR: `keep_made_at` is the keep row's `made_at` (the platform's stamp — when the row was
+# made, carried through every write; `at` is the last write's, and a note edited would have dropped the seal). A keep
+# lifted and made again under the same name over the same minutes is a new keep with a new `made_at`: the old seal does
+# not count for it — it read as sealed by a copy nobody had checked (ADR-0057, addendum of 2026-10-07; the product's GW
+# note) — and a seal whose keep is gone or was made again is deleted by its author (`drop_stale_seals`).
 SEALED = "sealed"
 
 
@@ -117,14 +128,18 @@ class Seal:
     since: float
     until: float
     sealed_at: float = 0.0
+    keep_made_at: float = 0.0     # the `made_at` of the keep row it was taken for
 
     def of(self, keep: "Keep") -> dict:
-        """`{recording: sha256}` of this seal for `keep` — nothing when the keep's interval is not the one sealed."""
-        return dict(self.recordings) if (self.since, self.until) == (keep.since, keep.until) else {}
+        """`{recording: sha256}` of this seal for `keep` — nothing when it was taken for another keep of that name, or
+        over other minutes than the keep's now."""
+        same = (self.keep_made_at, self.since, self.until) == (keep.made_at, keep.since, keep.until)
+        return dict(self.recordings) if same else {}
 
     def to_bytes(self) -> bytes:
         return json.dumps({"recordings": ",".join(f"{r}={d}" for r, d in self.recordings), "from": self.since,
-                           "to": self.until, "sealed_at": self.sealed_at}, sort_keys=True).encode()
+                           "to": self.until, "keep_made_at": self.keep_made_at, "sealed_at": self.sealed_at},
+                          sort_keys=True).encode()
 
 
 # `recordings` of a seal: `<recording>=<sha256>` joined by `,` (the product's `p.JoinNames`; a unit's name holds no `,`,
@@ -146,7 +161,8 @@ def parse_seal(raw: bytes | None) -> Seal | None:
     d = json.loads(raw)
     if not isinstance(d, dict):
         raise ValueError("a seal is a JSON object")
-    return Seal(seal_pairs(d.get("recordings")), finite(d["from"]), finite(d["to"]), finite(d.get("sealed_at", 0) or 0))
+    return Seal(seal_pairs(d.get("recordings")), finite(d["from"]), finite(d["to"]), finite(d.get("sealed_at", 0) or 0),
+                finite(d.get("keep_made_at", 0) or 0))
 
 
 SEALS = Table("seal", "read as no seal, and not overwritten: its keep is not sealed until the record is mended or removed")
@@ -162,6 +178,52 @@ def read_seal(objects, id_: str) -> Seal | None:
 
 def key(id_: str) -> str:
     return f"{SUB}/{TABLE}/{id_}"
+
+
+# A SEAL NO KEEP CAN COUNT FOR GOES (ADR-0057, addendum of 2026-10-07; the product's `DropStaleSeals`): its keep is gone,
+# or was made again since (another `made_at`). Run by the seals' author — the recorder of the incidents volume — before
+# it seals, so it never takes back a seal it has just written. Each keep row is read on its own, and a seal whose keep
+# row does not read, or does not say, is left for the next pass: a silent store deletes nothing. Returns the keeps whose
+# seals it deleted, with why.
+def drop_stale_seals(vars_, objects) -> dict:
+    from w2cplatform.variables import Garbled
+    if objects is None:
+        return {}
+    prefix = f"{SUB}/{SEALED}/"
+    try:
+        paths = objects.list(prefix)
+    except OSError:
+        return {}
+    out = {}
+    for path in paths:
+        id_ = path[len(prefix):]
+        if not id_ or "/" in id_:
+            continue
+        try:
+            row, _ = vars_.get(key(id_))
+        except (OSError, Garbled, *PARSE_ERRORS):
+            continue                                     # not read is not gone
+        why = ""
+        if not isinstance(row, dict) or not row or row.get("deleted") == "true":
+            why = "its keep is gone"
+        else:
+            try:
+                seal = parse_seal(objects.get(path))
+                made = number(f"{key(id_)}#made_at", row.get("made_at") or None, float, 0.0)
+            except (OSError, *PARSE_ERRORS):
+                continue                                 # a seal that does not read is counted where it is read, not deleted
+            if seal is not None and seal.keep_made_at != made:
+                why = "its keep was made again"
+        if not why:
+            continue
+        try:
+            objects.delete(path)
+        except OSError as e:
+            log.info("keeps: the seal of keep %s (%s) could not be deleted (%s): the next pass", id_, why, e)
+            continue
+        log.info("keeps: the seal of keep %s is deleted: %s", id_, why)
+        out[id_] = why
+    return out
 
 
 # SET BY THE PLATFORM'S RULES (the boundary's step 6): what a keep row may be — a camera, an interval, a note of at

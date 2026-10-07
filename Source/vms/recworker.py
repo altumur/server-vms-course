@@ -3065,6 +3065,7 @@ class RecWorker(VmsWorker):
         # and what was copied of it is carried as it stands below, so its losses are still seen when it is mended.
         unread: list = []
         declared = keeps.declared(self.vars, unread)
+        keeps.drop_stale_seals(self.vars, self.objects)  # a seal no keep counts for goes, before this pass seals (ADR-0057)
         cams: dict[str, set] = {}
         for row in self._recordings():
             cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
@@ -3539,10 +3540,11 @@ class RecWorker(VmsWorker):
 
     # THE SEAL, WRITTEN ONCE (ADR-0057, дополнение п. 3: пишет рекордер тома incidents; the product's `SealKeeps`). The
     # first time a recording's copy is whole — held, and short of nothing a source has (`keep_pass`'s `whole`) — its
-    # digest goes into the keep's seal, `rec/sealed/<keep>` (`keeps.Seal`: `recordings`, `from`, `to`, `sealed_at`), an
+    # digest goes into the keep's seal, `rec/sealed/<keep>` (`keeps.Seal`: `recordings`, `from`, `to`, `keep_made_at`, `sealed_at`), an
     # object of rec's `objects.rows`: a row of the store on a cluster, which this recorder's worker role writes and the
     # console only reads. Created create-only (`put_new`); a recording added to a seal of the same interval, or a seal of
-    # another interval replaced — an operator rewrote the keep — by CAS on the bytes read (`put_at`): whoever wrote it
+    # another interval or of another keep of that name (`keep_made_at`) replaced — an operator rewrote the keep, or
+    # lifted it and made it again — by CAS on the bytes read (`put_at`): whoever wrote it
     # meanwhile wins, and the next pass seals what is left. A recording sealed once is never sealed again, whatever the
     # volume holds later: a seal that followed the volume would vouch for whatever is there now. A seal that does not
     # read is left as it is — counted (`keeps.SEALS`), not overwritten — and its keep is not sealed. Each recording sealed
@@ -3564,7 +3566,7 @@ class RecWorker(VmsWorker):
         fresh = {rec: d for rec, d in sums.items() if rec not in have}
         if not fresh:
             return
-        data = keeps.Seal(tuple(sorted({**have, **fresh}.items())), k.since, k.until, round(now, 3)).to_bytes()
+        data = keeps.Seal(tuple(sorted({**have, **fresh}.items())), k.since, k.until, round(now, 3), k.made_at).to_bytes()
         try:
             done = self.objects.put_new(path, data) if raw is None else self.objects.put_at(path, data, index)
         except (OSError, AttributeError) as e:

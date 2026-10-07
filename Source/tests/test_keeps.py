@@ -806,7 +806,8 @@ def test_a_keeps_seal_is_checked_at_the_door_of_the_recorder_that_holds_its_copy
         row = got["recordings"]["7"]
         assert row["result"] == "ok" and row["sealed"] == row["now"] == copied["sha256"] and row["samples"] > 0, row
         seal = keeps.read_seal(box.objects, kp.id)
-        assert seal == keeps.Seal((("7", copied["sha256"]),), kp.since, kp.until, box.wall()), seal   # its own record
+        assert seal == keeps.Seal((("7", copied["sha256"]),), kp.since, kp.until, box.wall(), kp.made_at), seal   # its own record
+        assert kp.made_at == box.wall() > 0                                          # …taken for the keep made then
         assert not {"sealed", "sealed_at"} & set(box.vars.get(keeps.key(kp.id))[0])                  # not the keep's row
         [line] = _events(box, "archive.keep.sealed")
         assert (line["keep"], line["recording"], line["sha256"], line["cam"]) == (kp.id, "7", copied["sha256"], "7")
@@ -1018,6 +1019,79 @@ def test_a_keep_rewritten_over_other_minutes_is_not_sealed_until_the_next_pass_s
         assert (seal.since, seal.until) == (kp.since + 300, kp.until + 100) and seal.recordings != old.recordings
         st, got = k.verify_keep(kp.id, "7")
         assert st == 200 and got["ok"] is True and got["integrity"] == "ok", got
+    finally:
+        for s in closers:
+            s.shutdown()
+
+
+def test_a_keeps_row_is_stamped_made_at_when_made_and_carries_it_through_every_write():
+    """ADR-0057, addendum of 2026-10-07 (the form «Платформа»'s): `keeps.stamp: [by, at, made_at]`. `made_at` is the
+    console's clock when the row is MADE — `at` is the last write's — and every write after it carries it as stored; a
+    body that sends it is refused as an unknown field, as `at` and `by`; a row made before the stamp is not given one
+    after the fact; and a keep lifted and made again under the same name has its own."""
+    from w2cplatform.spec import Refused
+    from w2cplatform.tables import parse
+    assert REC_SPEC.table_specs["keeps"].stamp == ("by", "at", "made_at")
+    box = Box()
+    t = box.wall()
+    kp = _keep(box, "7", t - 1800, t - 1200)
+    assert kp.made_at == kp.at == t
+    box.wall.advance(60)
+    again = keeps.write(box.vars, {"cam": "7", "from": t - 1800, "to": t - 1200, "note": "the other gate"}, ["7"], "boris",
+                        box.wall())
+    assert (again.id, again.made_at, again.at, again.by) == (kp.id, t, t + 60, "boris")
+    for word in ("made_at", "at", "by"):
+        try:
+            keeps.write(box.vars, {"cam": "7", "from": t - 1800, "to": t - 1200, word: 1.0}, ["7"], "mallory", box.wall())
+            raise AssertionError(f"{word} in the body was taken")
+        except Refused:
+            pass
+    assert keeps.declared(box.vars)[0].made_at == t                                    # nobody's body moved it
+    keeps.delete(box.vars, kp.id)
+    box.wall.advance(60)
+    assert _keep(box, "7", t - 1800, t - 1200).made_at == t + 120                     # made again: its own
+    box.vars.put("rec/keeps/8-1-2", {"cam": "8", "from": "1", "to": "2", "by": "anna", "at": "5"})   # made before the stamp
+    old = keeps.write(box.vars, {"cam": "8", "from": 1, "to": 2, "note": "n"}, ["8"], "anna", box.wall())
+    assert old.made_at == 0.0 and "made_at" not in box.vars.get(keeps.key("8-1-2"))[0]
+    for stamp in (["made_at"], ["by", "made_at"], []):                                 # each word on its own
+        parse("x", {"t": {"key": "n", "fields": {"n": {"type": "string"}}, "stamp": stamp}}, lambda t, f: f)
+    try:
+        parse("x", {"t": {"key": "n", "fields": {"n": {"type": "string"}}, "stamp": ["made"]}}, lambda t, f: f)
+        raise AssertionError("a stamp word nobody declared was taken")
+    except ValueError as e:
+        assert "`made_at`" in str(e), e
+
+
+def test_a_keep_lifted_and_made_again_is_not_sealed_by_the_old_seal_and_a_seal_of_no_keep_goes():
+    """ADR-0057, addendum of 2026-10-07 (the product's GW note): the seal names the keep it was taken for by its row's
+    `made_at`. The keep lifted and made again under the same name over the same minutes is a new keep: the old seal does
+    not count for it — the check says "not sealed yet" — and the recorder of the incidents volume, before it seals, drops
+    the seal no keep counts for (`keeps.drop_stale_seals`) and seals the new keep's copy anew. A seal whose keep is gone
+    is dropped by that pass too; one whose keep row does not read is left."""
+    box, k, kp, base, keys, closers = _sealed_site()
+    try:
+        old = keeps.read_seal(box.objects, kp.id)
+        assert old.keep_made_at == kp.made_at and old.of(kp)
+        keeps.delete(box.vars, kp.id)
+        box.wall.advance(30)
+        made = _keep(box, "7", kp.since, kp.until)
+        assert made.id == kp.id and made.made_at == kp.made_at + 30
+        assert old.of(made) == {}                                                     # the old seal is not this keep's
+        st, got = k.verify_keep(made.id, "7")
+        assert st == 200 and got["integrity"] == "unknown: 7: not sealed yet", got
+        k.keep_pass()                                                                  # dropped, then sealed anew
+        seal = keeps.read_seal(box.objects, made.id)
+        assert seal.keep_made_at == made.made_at and seal.of(made) == {"7": old.recordings[0][1]}, seal
+        st, got = k.verify_keep(made.id, "7")
+        assert st == 200 and got["ok"] is True and got["integrity"] == "ok", got
+        assert keeps.drop_stale_seals(box.vars, box.objects) == {}                    # it counts: it stays
+        keeps.delete(box.vars, made.id)
+        box.objects.put(keeps.seal_key("9-1-2"), old.to_bytes())                       # …a seal whose keep never was
+        box.vars.put("rec/keeps/5-1-2", {"cam": "5", "from": "1", "to": "2"})
+        box.objects.put(keeps.seal_key("5-1-2"), old.to_bytes())                       # …one whose keep is not of it
+        k.keep_pass()
+        for gone in (made.id, "9-1-2", "5-1-2"):
+            assert keeps.read_seal(box.objects, gone) is None, gone
     finally:
         for s in closers:
             s.shutdown()
