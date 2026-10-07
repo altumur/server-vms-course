@@ -309,7 +309,8 @@
     "live/workers/*",
     "live/placement/*",
     "live/slots/*",
-    "live/decommissioned/*"
+    "live/decommissioned/*",
+    "live/streams/*"
    ]
   },
   "liveworker": {

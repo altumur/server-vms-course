@@ -23,6 +23,7 @@ from w2cplatform.domain.rights import roles as domain_roles  # noqa: E402
 from w2cplatform import catalog
 from w2cplatform.cluster.objectstore import is_row
 from w2cplatform.cluster.rights import render, roles
+from w2cplatform.rights import DELETE_ONLY, split
 from vms.config import REC_SPEC, SPEC
 from w2cplatform.resource import DOORS
 from w2cplatform.storemachine import Rights
@@ -69,13 +70,27 @@ def _expected_writes() -> dict[str, set[str]]:
     out = {"console": {a for s in SPECS for a in s.acl_console()} | {"door/signer", "door/keys"}   # the door key (`door.py`)
            | {p for s in SPECS for p in rows(s.sub.acl_objects_console())}}   # the reaper's end in a mark (ADR-0054)
     for s in SPECS:                                                           # every subsystem of the catalogue: its two roles
-        out[f"{s.name}controller"] = set(s.acl_controller())
+        out[f"{s.name}controller"] = set(split(s.acl_controller())[0])          # a `delete:` is no write (ADR-0067)
         out[f"{s.name}worker"] = set(s.acl_worker_role()) | rows(s.sub.acl_objects_worker() + [s.sub.config(p) for p in s.object_rows])
     return {**out,
             "resource": {DOORS + "/*", *[s.sub.request_key("free-*") for s in SPECS if s.requests_free]},   # its ask to free bytes
             # the domain's roles are the platform domain's to say, from the specs (`w2cplatform/domain/rights.py`): the
             # agent's grant on `domain/*` with a denial of every row only the holder writes; no member role
             **{role: set(g["write"]) for role, g in domain_roles(specs=SPECS).items()}}
+
+
+def _delete_only(role: str) -> set:
+    return {p[len(DELETE_ONLY):] for s in SPECS if role == f"{s.name}controller" for p in s.acl_controller()
+            if p.startswith(DELETE_ONLY)}
+
+
+def test_a_controller_deletes_a_unit_row_only_when_its_spec_says_unplaced_delete_after_and_never_writes_one():
+    """ADR-0067: `placement.unplaced.delete_after` gives the controller of the spec the DELETE of its unit rows (`delete:`,
+    the product's `p.DeleteOnly`) and no write of them; a spec without the key gives neither. The live controller deletes
+    a stream nobody holds; the VMS's deletes no camera."""
+    r = rights()
+    assert r.allows("livecontroller", "delete", "live/streams/7") and not r.allows("livecontroller", "write", "live/streams/7")
+    assert not r.allows("vmscontroller", "delete", "vms/cameras/7") and not r.allows("reccontroller", "delete", "rec/recordings/7")
 
 
 def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there():
@@ -86,8 +101,9 @@ def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_
     assert got == _expected_writes()
     for role, g in doc()["roles"].items():
         marks = {p for p in g["write"] if p.startswith(OBJECTS) and p.endswith("/commands/*")} if role == "console" else set()
-        assert set(g["delete"]) == set(g["write"]) - marks, role                 # a role deletes what it writes — but the
-        # console a mark: it writes the end of a request into one (the second writer) and never takes one away (ADR 0054)
+        assert set(g["delete"]) == set(g["write"]) - marks | _delete_only(role), role   # a role deletes what it writes — but
+        # the console a mark: it writes the end of a request into one (the second writer) and never takes one away (ADR
+        # 0054) — and a controller whose spec says `placement.unplaced.delete_after` deletes its unit rows besides (ADR-0067)
         assert all(not p.startswith(OBJECTS) or is_row(p[len(OBJECTS):]) for p in g["write"]), role
 
 

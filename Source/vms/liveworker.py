@@ -109,7 +109,6 @@ class LiveWorker(Worker):
         self.resets = 0                                             # subscriptions reopened because the camera moved or the source died
         self.swept = 0                                              # sessions closed because their viewer was gone
         self.subscriptions = 0                                      # how many times an RTP source was opened — the test's number
-        self._unplaced_since: dict[str, float] = {}                 # stream rows nobody holds -> when this gateway first saw them so
         self.refused: dict[str, str] = {}                           # cameras whose epoch could not be taken -> why (the heartbeat's `refused`)
         self.lock = threading.Lock()
 
@@ -166,7 +165,6 @@ class LiveWorker(Worker):
                 self.row_parsed(cam)
             except PARSE_ERRORS as e:    # its row does not parse (`row_garbled`): nobody can say
                 self.row_garbled(cam, e)                      # its grace has run out, and the fan-out is kept
-        orphans = self._orphans(now, wanted) if self.ctl is not None else []
         dropped, deleted = [], []
         with self.lock:
             for cam in wanted - set(self.upstreams):
@@ -186,26 +184,14 @@ class LiveWorker(Worker):
                     deleted.append(cam)
         for cam in dropped:
             self.release(cam)
-        for cam in deleted + orphans:
+        for cam in deleted:
             self.ctl.delete(cam)                                    # the controller's next pass takes the placement back
         return sorted(self.upstreams)
 
-    # A stream row nobody holds and nobody is about to: a viewer asked for labels no gateway carries, or the row
-    # outlived its controller. It stood for ever, and every next viewer of that camera was told 503 "retry" (the
-    # review's second pass, major). A row seen unplaced for its own `grace` — by this gateway's wall clock from
-    # the pass that first saw it — is deleted by whichever gateway sees it so, with the token that deletes idle
-    # fan-outs already; the next viewer makes a fresh row.
-    def _orphans(self, now: float, wanted: set) -> list[str]:
-        out = []
-        unplaced = {str(r["id"]): r for r in self.ctl.units() if str(r["id"]) not in wanted and self.ctl.placement(r["id"]) is None}
-        for cam in list(self._unplaced_since):
-            if cam not in unplaced:
-                del self._unplaced_since[cam]                      # placed, or gone
-        for cam, row in unplaced.items():
-            since = self._unplaced_since.setdefault(cam, now)
-            if now - since >= int(row.get("grace", 30)):
-                out.append(cam); del self._unplaced_since[cam]
-        return out
+    # A stream row NOBODY holds — a viewer asked for labels no gateway carries, or no gateway is left — is not this
+    # gateway's to delete: it never held it. Its controller deletes it after `placement.unplaced.delete_after` (30 s,
+    # `live.subsystem.yaml`; ADR-0067) — a cluster with no gateway at all kept such a row and its alarm for ever while
+    # the sweep was here. The gateway deletes only the rows it held whose viewers' `grace` ran out (above).
 
     # A session ends with DELETE — when the viewer says so. A tab closed, a laptop lid shut, an offer whose
     # connection never came up say nothing, and their sessions stayed: the fan-out was never idle, so the unit

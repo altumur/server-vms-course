@@ -29,6 +29,7 @@ from w2cplatform.access import DOMAIN_MARKS, MEMBER_MARK, TRUST_KEYS
 from w2cplatform.contract import COMMANDS, DECOMMISSION, REQUESTS, SCHEMA_KEY, SERVERS_PREFIX
 from w2cplatform.door import KEYS_KEY, SIGNER_KEY
 from w2cplatform.resource import DOORS, MIRROR_KEY, SPACE_KEY
+from w2cplatform.rights import split
 
 from .objectstore import ROWS_PREFIX, is_row
 
@@ -112,9 +113,12 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         asked = [f"!{s.sub.asked_prefix()}*"] if "per_person" in (s.requests or {}) else []
         # Placement, one pass at a time and safe at two: its prefixes; reads its subsystem, the ones it refers to, the
         # platform's rows (decommission, the drain, what each server reaches: `platform/servers/*`).
-        out[f"{s.name}controller"] = role(f"{s.name}controller", s.acl_controller(),
+        # …and, with `placement.unplaced.delete_after`, deletes a unit's row nobody held that long — never writes one
+        # (`delete:`, ADR-0067; `rights.split`)
+        writes, deletes = split(s.acl_controller())
+        out[f"{s.name}controller"] = role(f"{s.name}controller", writes,
                                           [SCHEMA_KEY, *asked, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"],
-                                          platform=True)
+                                          delete=deletes, platform=True)
         # The holder: its claims, what its spec says it writes, its marks; reads its subsystem, what its units are about,
         # whether its server is decommissioned (`Worker._claim_slot`), what a holder's door asks (`Gate.gated`: the key
         # set, and `domain/member` while there is none), the door keys its page door checks a token by (`door/keys`) and

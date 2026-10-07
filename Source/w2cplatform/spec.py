@@ -596,6 +596,18 @@ def _capacity(name, cap) -> tuple[str, int]:
     return str(cap.get("from", "capacity") or "capacity"), d
 
 
+# `placement.unplaced: {delete_after: <whole seconds, 1 or more>}` — how long a unit nobody holds stands before its
+# controller deletes it (ADR-0067; the form «Платформа»'s). Without the key nothing is deleted; `0`, a fraction, a
+# word, `true`, or another key under `unplaced` does not load (ADR-0012). `60.0` is sixty: YAML's number, whole.
+def _unplaced(name, v) -> int:
+    d = v.get("delete_after") if isinstance(v, dict) and set(v) == {"delete_after"} else None
+    whole = not isinstance(d, bool) and (isinstance(d, int) or (isinstance(d, float) and d.is_integer() and abs(d) <= 1 << 31))
+    if not whole or d < 1:
+        raise ValueError(f"spec {name}: placement.unplaced is {{delete_after: <whole seconds, 1 or more>}} — how long a "
+                         f"unit nobody holds is kept before the controller deletes it — not {v!r}")
+    return int(d)
+
+
 # `slot: {prefix, name_env}` — `(prefix, name_env)`; left out, `w` and `WORKER_NAME`.
 def _slot(name, slot) -> tuple[str, str]:
     if slot is None:
@@ -1098,6 +1110,7 @@ class SubsystemSpec:
     derived: list[Derived] = field(default_factory=list)
     capacity_from: str = "capacity"
     capacity_default: int = 50    # `placement.capacity.default`: a worker that has said nothing yet (the spec must say it)
+    unplaced_delete_after: int = 0   # `placement.unplaced.delete_after`: a unit nobody holds that long goes (0: never; ADR-0067)
     headroom_from: str = "headroom"
     constraint: str = "none"
     requires: str = "none"        # "resource": a worker is eligible only while its server's resource is not silent
@@ -1492,9 +1505,17 @@ class SubsystemSpec:
             raise ValueError(f"spec {spec.name}: home names no field: {spec.home!r}")
         # …the capacity of a worker that said nothing: the spec's to say (`_capacity`).
         spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
-        # …and, the last thing asked, a key nobody above read: refused, named where it stands (`speckeys.py`).
+        # …how long a unit nobody holds stands before its controller deletes it (`_unplaced`; ADR-0067)
+        if "unplaced" in pl:
+            spec.unplaced_delete_after = _unplaced(spec.name, pl["unplaced"])
+        # …a key nobody above read: refused, named where it stands (`speckeys.py`).
         from .speckeys import refuse_unknown
         refuse_unknown(spec.name, d)
+        # …and, the last thing asked, the key beside rows the console derives: it writes and cleans those, and the
+        # controller writes no row but its own (ADR-0067, the refinement of window 17)
+        if spec.unplaced_delete_after and spec.derived:
+            raise ValueError(f"spec {spec.name}: placement.unplaced.delete_after with unit.derived — the controller "
+                             f"deletes a unit and cannot clean its derived rows, which are the console's")
         return spec
 
     # `about:` and `rights:` as written, checked at load: `about` names another subsystem by a name and a field of this
@@ -2009,10 +2030,14 @@ class SubsystemSpec:
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the
     # console cannot place and the controller cannot edit; `test_the_console_over_http` proves
     # `con.place(1)` raises `Forbidden`.
+    # With `placement.unplaced.delete_after` it may DELETE a unit's row (`delete:`, the product's `p.DeleteOnly`; ADR-0067)
+    # — and still never write one.
     def acl_controller(self) -> list[str]:
         """Placement: what the controller (count = 1) may write — never a unit's row."""
+        from .rights import DELETE_ONLY
         return [f"{self.name}/workers/*", f"{self.name}/placement/*", f"{self.name}/slots/*",
-                f"{self.name}/decommissioned/*"]                       # its mark that a server's decommission was carried out
+                f"{self.name}/decommissioned/*",                       # its mark that a server's decommission was carried out
+                *([f"{DELETE_ONLY}{self.sub.config(self.rows, '*')}"] if self.unplaced_delete_after > 0 else [])]
 
     # Whether ids are numbers; convert a string id accordingly.
     @property
@@ -3987,7 +4012,10 @@ class SpecController(Controller):
         # `<name>_workers_needed`, `_units_short`, `_spare_offers` while this report is fresh
         rep.update(spares)
         try:
-            rep["unplaced"] = len(self.unplaced())
+            unplaced = self.unplaced()
+            rep["unplaced"] = len(unplaced)
+            self.delete_long_unplaced(unplaced)
+            rep["unplaced_deleted_total"] = self.unplaced_deleted
             rep["garbled"] = self.rows_garbled
             for name, counts in (("slots_garbled", SLOTS_GARBLED), ("assignments_garbled", ASSIGNMENTS_GARBLED)):
                 if counts.get(self.sub.name):         # rows of the contract this process could not read (`contract.py`):
@@ -4032,6 +4060,49 @@ class SpecController(Controller):
     def unplaced(self) -> list:
         """Units that should be somewhere and are nowhere — whatever the reason; `/unplaceable` says which cannot be."""
         return [r["id"] for r in self.units() if not self.retired(r) and self.placement(r["id"]) is None]
+
+    # A UNIT NOBODY HOLDS FOR `placement.unplaced.delete_after` GOES (ADR-0067; the product's `deleteLongUnplaced`): counted
+    # by this controller's own clock (`judge_clock`: monotonic; ADR-0049) from the first pass of an unbroken run that found it with
+    # no holder — not from the row's `rev` — its row removed by CAS on the index read, as a console's DELETE leaves it,
+    # and `unplace_deleted` does the rest; a line `unit.unplaced_deleted {target, after_s}`. A unit placed again starts
+    # its count again; a controller started again starts every count again: later, never sooner. A row changed
+    # meanwhile, placed or gone, is the next pass's. Without the key nothing is deleted. It was a worker's sweep in the
+    # product (`sweepUnplaced`): where no worker of the subsystem runs, the row and its alarm stood for ever.
+    def delete_long_unplaced(self, unplaced: list) -> list:
+        after = self.spec.unplaced_delete_after
+        if after <= 0:
+            return []
+        from .contract import judge_clock
+        now = judge_clock(self.wall)()                # monotonic — or a test's own wall
+        since, still, gone = getattr(self, "_unplaced_since", {}), {}, []
+        for uid in unplaced:
+            first = since.get(uid, now)
+            if now - first < after or not self._delete_unplaced(uid, after):
+                still[uid] = first
+            else:
+                gone.append(uid)
+        self._unplaced_since = still
+        return gone
+
+    @property
+    def unplaced_deleted(self) -> int:
+        return getattr(self, "_unplaced_deleted", 0)
+
+    def _delete_unplaced(self, uid, after: int) -> bool:
+        path = self.row_key(uid)
+        try:
+            row, index = self.vars.get(path)
+            if not row or row.get("deleted") == "true" or self.placement(uid) is not None:
+                return False
+            self.vars.delete(path, cas=index)
+        except Exception as e:                        # noqa: BLE001 — a conflict, a refusal, a silent store: the next pass
+            log.info("unplaced: %s %s, unheld for %d s, was not deleted: %s", self.sub.name, uid, after, e)
+            return False
+        self._unplaced_deleted = self.unplaced_deleted + 1
+        log.info("unplaced: %s %s deleted — nobody held it for %d s (placement.unplaced.delete_after)", self.sub.name,
+                 uid, after)
+        self.journal.say("unit.unplaced_deleted", sub=self.sub.name, target=str(uid), after_s=after)
+        return True
 
     def ensure_placed(self, workers: list[str] | None = None) -> list[Placement]:
         self.unplace_deleted()
