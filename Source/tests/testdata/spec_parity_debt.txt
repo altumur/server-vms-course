@@ -59,7 +59,6 @@ product-only rec.subsystem.yaml objects.rows[ingest/up/*]   # ADR-0019: the prod
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0024: the product first; the course's side — «Лекции»
-product-only rec.subsystem.yaml servers.status[objectstorage.block_small]   # ADR-0064 «Лекции» (пауза): the recorder says a volume's blocks are smaller than a group of pictures
 product-only vms.subsystem.yaml domain.books.lifts   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books.receiver   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.books.stream-accounts   # ADR-0010: the product first; the course's side — «Лекции»

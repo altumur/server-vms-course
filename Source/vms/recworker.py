@@ -50,7 +50,7 @@ from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.variables import Variables
 
 from . import volumes
-from .archive import STITCH, Archive, ArchiveError, Fenced, classify, overlaps, stitch, subtract
+from .archive import SMALL_BLOCK, STITCH, Archive, ArchiveError, Fenced, classify, overlaps, stitch, subtract
 from .config import rec_row
 from .worker import FakeActuator, VmsWorker
 from .writerwatch import WriterWatch
@@ -1154,6 +1154,12 @@ class RecWorker(VmsWorker):
                 # Whether what the sinks were handed is reaching the volume (Lesson 10): ok, stalled or losing.
                 # A fresh hold and a running row do not say it; only this does.
                 "writer": self.writer.state,
+                # The volume's block, as the writer works with it, and whether it is smaller than a group of pictures
+                # (`archive.SMALL_BLOCK`): said here, and on the page by `servers.status`, not only once in the log at the
+                # open — such a volume loses every sequence that does not fit until it is formatted again (ADR-0064)
+                **({"objectstorage": {"volume": self.volume, "block_bytes": self.store.block_bytes,
+                                      **({"block_small": True} if self.store.block_bytes < SMALL_BLOCK else {})}}
+                   if self.store is not None and self.store.block_bytes else {}),
                 # Volumes this recorder handed back for refusing writes, and why — left alone until the time
                 # given, so that a key somebody fixes is picked up without a restart. And the ones it does not take at
                 # all, for as long as the reason stands (`unservable`).
