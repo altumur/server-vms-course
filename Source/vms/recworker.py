@@ -1159,10 +1159,9 @@ class RecWorker(VmsWorker):
                 # (a `true` there is a garbled leaf, ADR-0064, and was shown nowhere; «Архитектор» 2026-10-07), not only
                 # once in the log at the open — such a volume loses every sequence that does not fit until it is
                 # formatted again
-                **({"objectstorage": {"volume": self.volume, "block_bytes": self.store.block_bytes,
-                                      **({"block_small": self.store.block_bytes}
-                                         if self.store.block_bytes < SMALL_BLOCK else {})}}
-                   if self.store is not None and self.store.block_bytes else {}),
+                **({"objectstorage": {"volume": self.volume, "block_bytes": block,
+                                      **({"block_small": block} if block < SMALL_BLOCK else {})}}
+                   if (block := getattr(self.store, "block_bytes", 0)) else {}),
                 # Volumes this recorder handed back for refusing writes, and why — left alone until the time
                 # given, so that a key somebody fixes is picked up without a restart. And the ones it does not take at
                 # all, for as long as the reason stands (`unservable`).

@@ -52,7 +52,7 @@ IMPLEMENTED = {
     "placement.near.of", "placement.near.prefer", "placement.spread_by", "placement.group_by.field",
     "placement.group_by.cut_at", "placement.place_by", "placement.places.table", "placement.places.where",
     "placement.places.server_field", "placement.places.lease",
-    "placement.offers", "placement.home", "placement.retire_when.field", "placement.retire_when.in",
+    "placement.offers", "placement.home", "placement.retire_when.field", "placement.retire_when.in", "placement.unplaced.delete_after",
     "placement.rebalance.dead_band", "placement.affinity.field", "placement.affinity.table",
     "placement.affinity.server_field", "placement.affinity.strict",
     "holds.table", "holds.unit", "holds.since", "holds.until", "holds.longest",
