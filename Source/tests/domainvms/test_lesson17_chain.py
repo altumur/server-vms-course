@@ -1142,3 +1142,60 @@ def test_what_the_ingests_did_not_hand_on_is_on_the_vms_domain_workers_metrics_a
     finally:
         srv.shutdown(); srv.server_close()
 
+
+# -- the forwarder lives in the relay's recorder (ADR-0065 and its addition of 2026-10-08; ADR-0019) ----------------------
+# The product's `Forwarder.Stats` (`recproc/forwarder.go`): every camera's two words, a pulled camera's three, a pushed
+# camera's twelve — `up_have` only once the centre said one. Seventeen between them.
+FORWARDER_WORDS = {"push": {"mode", "state", "up_sent", "up_dropped", "up_gaps", "up_resumed", "up_have", "up_have_every",
+                            "up_unconfirmed_s", "up_polls", "up_cuts", "up_kept", "up_expired", "up_kept_writes"},
+                   "pull": {"mode", "state", "down_taken", "down_dropped", "down_breaks"}}
+
+
+def test_the_relays_recorder_says_what_its_forwarder_carried_and_lost_in_the_products_seventeen_words():
+    """What the forwarder carried and lost is not an object of the relay's (`rec/forwarded/<name>` is gone) but its
+    recorder's heartbeat: `upstream.<ref>`, per camera of the upstream book, in the product's words — what the course
+    counts under its word, nought where it counts nothing. A pushed camera says what the centre confirmed (`up_have`)
+    once it said it; a star's pulled camera says the down words; the centre, with no upstream book, says no `upstream`."""
+    assert len(FORWARDER_WORDS["push"] | FORWARDER_WORDS["pull"]) == 17
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
+    host = domain_pass.recorders["east"]
+    assert set(_upstream(host)[SERIAL]) == FORWARDER_WORDS["push"] - {"up_have"}   # the centre has said nothing yet
+    centre.want(SERIAL, "recorder:centre")
+    rq = centre.subscribe(SERIAL, "recorder:centre", maxsize=1000)
+    centre.written = lambda ref: wall()
+    fwd.pass_once(); pusher.pass_once(["a", "b"]); fwd.pass_once()
+    assert rq.drain() == ["a", "b"]
+    up = _upstream(host)[SERIAL]
+    assert set(up) == FORWARDER_WORDS["push"]
+    assert up["mode"] == "push" and up["state"].startswith("forwarding") and up["up_have"] == wall()
+    assert (up["up_dropped"], up["up_expired"], up["up_kept_writes"], up["up_kept"]) == (0, 0, 1, False)
+    assert "upstream" not in json.loads(north.objects.get("rec/heartbeats/r-1"))   # the centre forwards nothing
+
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(Clock(), star={"east"})
+    relay.subscribe(SERIAL, "recorder:east")
+    fwd.pass_once(); pusher.pass_once(["s1"]); fwd.pass_once()
+    up = _upstream(domain_pass.recorders["east"])[SERIAL]
+    assert set(up) == FORWARDER_WORDS["pull"] and up["mode"] == "pull" and up["down_breaks"] == 0
+
+
+def test_nothing_writes_where_the_ingest_or_the_forwarder_used_to_announce_itself():
+    """ADR-0003, ADR-0065's addition: `rec/ingest` (the ingest's announcement) and `rec/forwarded/<name>` (the forwarder's
+    losses) are gone without a migration — no writer, no reader, no spec line (`domain.reports[ingest]`,
+    `objects.door[forwarded/*]`). A chain that pushes and pulls, its recorders beating, leaves neither in any store."""
+    from vms.config import REC_SPEC
+    from vms.domainpart import chain, ingest
+    assert REC_SPEC.domain.reports == ("polled/",) and "forwarded/*" not in REC_SPEC.object_door
+    assert not hasattr(ingest, "INGEST") and not hasattr(ingest, "FORWARDED")
+    assert not hasattr(ingest.Ingest, "announce") and not hasattr(chain.Forwarder, "publish")
+    for star in (frozenset(), {"east"}):
+        wall = Clock()
+        north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall, star=star)
+        centre.want(SERIAL, "recorder:centre")
+        relay.subscribe(SERIAL, "recorder:east")
+        for _ in range(3):
+            fwd.pass_once(); pusher.pass_once([{"t": wall(), "key": True}]); wall.advance(1); domain_pass()
+        for c in (north, east):
+            keys = c.objects.list("rec/")
+            assert "rec/heartbeats/r-1" in keys and any(k.startswith("rec/polled/") for k in keys), keys
+            assert "rec/ingest" not in keys and not any(k.startswith("rec/forwarded") for k in keys), keys
