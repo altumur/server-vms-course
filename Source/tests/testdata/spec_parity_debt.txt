@@ -1,17 +1,9 @@
 # spec_parity_debt.txt — the keys the course's specs and the product's differ by (spec_parity_test.go).
 # A line goes when both sides have the key, or neither; a new difference is not written here but made good.
 course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: detectors are not in the product — «Сборка»
-course-only vms.subsystem.yaml domain.tokens.ask.claims[acts]   # ADR-0010: the domain's signer issues the ask token with these claims; the product's side — «Сборка»
-course-only vms.subsystem.yaml domain.tokens.ask.claims[up]   # ADR-0010: the domain's signer issues the ask token with these claims; the product's side — «Сборка»
 course-only vms.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml secrets   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml secrets.reads   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
-product-only vms.subsystem.yaml domain.books.lifts   # ADR-0010: the signer's ask token takes their place; the product takes them out — «Сборка»
-product-only vms.subsystem.yaml domain.books.receiver   # ADR-0010: the signer's ask token takes their place; the product takes them out — «Сборка»
-product-only vms.subsystem.yaml domain.kept[ask-keys]   # ADR-0010: the signer's ask token takes their place; the product takes them out — «Сборка»
-product-only vms.subsystem.yaml domain.kept[ingest-keys]   # ADR-0010: the signer's ask token takes their place; the product takes them out — «Сборка»
-product-only vms.subsystem.yaml domain.kept[lift-keys]   # ADR-0010: the signer's ask token takes their place; the product takes them out — «Сборка»
-product-only vms.subsystem.yaml domain.kept[upstream-keys]   # ADR-0010: the signer's ask token takes their place; the product takes them out — «Сборка»
