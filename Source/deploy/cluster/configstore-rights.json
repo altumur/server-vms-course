@@ -23,6 +23,7 @@
     "objects/det/commands/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/up/*",
     "objects/rec/sealed/*",
     "objects/vms/commands/*",
     "door/signer",
@@ -378,6 +379,7 @@
     "domain/vms/primaries",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/up/*",
     "objects/rec/sealed/*",
     "vms/requests/*",
     "objects/vms/commands/*",
@@ -390,6 +392,7 @@
     "vms/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/up/*",
     "objects/rec/sealed/*"
    ],
    "delete": [
@@ -399,6 +402,7 @@
     "vms/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/up/*",
     "objects/rec/sealed/*"
    ]
   },

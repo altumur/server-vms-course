@@ -9,6 +9,7 @@ summary object.
 """
 import json
 
+from w2cplatform.cluster.objectstore import VariablesObjectStore
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
@@ -926,6 +927,116 @@ def test_the_cameras_card_holds_what_its_relay_took_until_the_centre_has_written
     centre.cams[SERIAL].wants.clear()                                   # the centre takes the camera no longer
     fwd.pass_once()
     assert SERIAL not in relay.up_have
+
+
+
+# -- the centre's word, kept across a restart of the relay (ADR-0019: the product's `recproc/upkept.go`, r22) ------------
+# The row lands where a cluster puts it (`ClusterObjectStore` sends the keys of `objects.rows` to the store's rows): the
+# test's file store keeps the ingest's announcement at `rec/ingest`, a file, and `rec/ingest/up/…` could not be beside it.
+def _gone(url):
+    raise Unreachable(f"{url} did not answer the relay")
+
+
+def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres_have():
+    """The product first (`upkept.go`): the centre's `have` was in the relay's memory alone, and a relay restarted while the
+    centre was unreachable told the camera its own `have` — the card let go of what the centre does not have. The
+    forwarder writes the centre's word down in a row of the relay's store (`rec/ingest/up/<ref>.json`, the product's key
+    and shape) — not on every answer: once when the centre starts wanting the stream, then at most once a minute while
+    its `have` moves (`UP_KEPT_EVERY`), at once when it goes back — and the restarted relay seeds `up_have` from it before
+    its first pass."""
+    from vms.domainpart.chain import UP_KEPT_EVERY, up_key
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    rows = VariablesObjectStore(east.vars)                              # a row of the relay's store, as on a cluster
+    fwd = Forwarder("east", relay, east.vars, fwd.dial, objects=rows)
+    centre.want(SERIAL, "recorder:centre")
+    written = [wall() + 0.25]
+    centre.written = lambda ref: written[0]
+    fwd.pass_once()
+    row = json.loads(rows.get(up_key(SERIAL)))
+    assert row == {"v": 1, "have": int(written[0] * 1000), "heard": int(wall() * 1000)}, row
+    for _ in range(30):                                                 # half a minute of `have` moving on: not written
+        wall.advance(1.0); written[0] += 1.0
+        fwd.pass_once()
+    assert fwd.up_writes[SERIAL] == 1 and relay.up_have[SERIAL] == written[0]
+    wall.advance(UP_KEPT_EVERY); written[0] += UP_KEPT_EVERY
+    fwd.pass_once()                                                     # a minute on: written
+    written[0] -= 5.0
+    fwd.pass_once()                                                     # gone back: written at once
+    assert fwd.up_writes[SERIAL] == 3
+    assert json.loads(rows.get(up_key(SERIAL)))["have"] == int(written[0] * 1000)
+
+    restarted = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)  # the relay restarts; the centre is unreachable
+    assert SERIAL not in restarted.up_have
+    again = Forwarder("east", restarted, east.vars, _gone, objects=rows)
+    assert abs(restarted.up_have[SERIAL] - written[0]) < 1e-3          # before its first pass
+    again.pass_once()
+    assert abs(restarted._have(SERIAL) - written[0]) < 1e-3            # what the camera is told: the centre's word
+    assert again.stats()[SERIAL]["up_expired"] == 0
+
+    nowhere = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)    # a relay with nowhere to keep it: as before
+    Forwarder("east", nowhere, east.vars, _gone).pass_once()
+    assert SERIAL not in nowhere.up_have
+
+
+def test_a_centre_that_does_not_want_the_stream_drops_the_kept_word():
+    from vms.domainpart.chain import up_key
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    rows = VariablesObjectStore(east.vars)                              # a row of the relay's store, as on a cluster
+    fwd = Forwarder("east", relay, east.vars, fwd.dial, objects=rows)
+    centre.want(SERIAL, "recorder:centre")
+    centre.written = lambda ref: wall()
+    fwd.pass_once()
+    assert rows.get(up_key(SERIAL)) is not None
+    centre.release(SERIAL, "recorder:centre")
+    centre.cams[SERIAL].wants.clear()                                   # the centre takes the camera no longer
+    fwd.pass_once()
+    assert rows.get(up_key(SERIAL)) is None and SERIAL not in relay.up_have
+    restarted = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)
+    Forwarder("east", restarted, east.vars, _gone, objects=rows)
+    assert SERIAL not in restarted.up_have                              # nothing kept, nothing said
+
+
+def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre_expires_the_same_way():
+    """`UP_KEPT_FOR`, the product's `UpKeptFor`: kept for ever, the word of a centre that never comes back had every
+    camera behind the relay keep everything its card holds. A word written longer ago than a day is not said after the
+    restart: dropped, counted (`up_expired`) and logged; a fresher one is said. While the relay runs, a centre silent that
+    long is said no more, counted the same way — and answering again says it again."""
+    from vms.domainpart.chain import UP_KEPT_FOR, up_key
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
+    rows = VariablesObjectStore(east.vars)                              # a row of the relay's store, as on a cluster
+    wall.advance(3 * UP_KEPT_FOR)
+
+    def kept(age, have):
+        rows.put(up_key(SERIAL), json.dumps({"v": 1, "have": have, "heard": int((wall() - age) * 1000)}).encode())
+
+    kept(UP_KEPT_FOR + 1, 5_000)
+    stale = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)
+    old = Forwarder("east", stale, east.vars, _gone, objects=rows)
+    assert SERIAL not in stale.up_have and rows.get(up_key(SERIAL)) is None
+    assert old.up_expired == {SERIAL: 1} and old.stats()[SERIAL]["up_expired"] == 1
+
+    kept(UP_KEPT_FOR - 60, 7_000)                                       # a word not a day old: said
+    fresh = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)
+    now = Forwarder("east", fresh, east.vars, _gone, objects=rows)
+    assert fresh.up_have[SERIAL] == 7.0
+    now.pass_once()
+    assert fresh.up_have[SERIAL] == 7.0 and now.up_expired == {}
+    wall.advance(61)                                                    # …and past the day, the centre still silent
+    now.pass_once()
+    assert SERIAL not in fresh.up_have and now.up_expired == {SERIAL: 1}
+    now.pass_once()
+    assert now.up_expired == {SERIAL: 1}                                # counted once
+
+    now.dial = fwd.dial                                                 # the centre answers again: its word is said again
+    domain_pass()                                                       # three days on: the stream token issued anew
+    centre.want(SERIAL, "recorder:centre")
+    centre.written = lambda ref: wall()
+    now.pass_once()
+    assert fresh.up_have[SERIAL] == wall()
+    assert json.loads(rows.get(up_key(SERIAL)))["heard"] == int(wall() * 1000)
 
 
 # -- the eleventh review -------------------------------------------------------------------------------------------------
