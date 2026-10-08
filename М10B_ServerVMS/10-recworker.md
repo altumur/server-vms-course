@@ -1214,6 +1214,26 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 
 Всё остальное о регистраторе консоль берёт из его heartbeat'а и отдаёт на своём `/metrics`: `rec_volume_error`, `rec_volume_wait`, `rec_archive_away_seconds`, `rec_archive_failure{kind}`, `rec_writer{state}`, `rec_last_frame_age_seconds`, `rec_archive_depth_days`, `rec_archive_shallow`. Регистратору никто не звонит: консоль читает то, что он опубликовал, как и всё остальное (`test_a_recorders_troubles_are_numbers_not_only_a_heartbeat`).
 
+## Шаг 14 — Приёмник и передатчик домена живут в регистраторе
+
+Забегая вперёд, в М12B. Камера, до которой никто не может дозвониться, толкает свой поток сама — в **приёмник** кластера, который её пишет ([М12B, урок 3](../М12B_DomainVMS/03-a-camera-nobody-can-reach.md)). Ретранслятор передаёт такие потоки центру своим **передатчиком** ([М12B, урок 4](../М12B_DomainVMS/04-a-chain-site-relay-centre.md)). Оба живут в процессе регистратора, как в продукте (`recproc/run.go`): приёмник отдаёт поток подписчикам этого же процесса, а передатчик читает диапазоны из этого же тома. Так решено в ADR-0065 (дополнение 2026-10-08), сверка — ADR-0019. Регистратор поднимает оба одним вызовом:
+
+```python
+    def host_ingest(self, cluster: str, url: str | None = None, dial=None, keys=None, archive=None, needs=None):
+```
+
+`url` — где приёмник принимает потоки, по умолчанию дверь архива и `/ingest`, как у продукта. `cluster` — имя кластера записи, аудитория его ключей потока. `dial` — как дозвониться до другого приёмника: до центра для передатчика, до соседей по кластеру. Потоки передатчика `RecWorker.run` запускает рядом со своими проходами (`Forwarder.serve`).
+
+Что об этом знают остальные, идёт **тем же heartbeat'ом**, словами продукта (`ingest_fields`):
+
+| поле | что |
+|---|---|
+| `ingest` | где приёмник принимает потоки — строка, спека так и объявляет (`heartbeat: {strings: [volume, volume_error, archive, ingest, volume_missing]}`). Отсюда домен пишет адреса в книги камер, отсюда соседний приёмник находит этот |
+| `ingest_streams` | по каждой камере — что говорит `Ingest.Stats` продукта: `push`, `live`, `received`, `recorders`, `viewers` и остальные счётчики (`Ingest.stats`) |
+| `upstream` | по каждой камере книги `domain/upstream` — что передатчик передал и потерял, 17 слов продукта (`Forwarder.stats`); только пока книга кого-то называет |
+
+С тем же heartbeat'ом пишется `rec/polled/<приёмник>`: когда каждая камера в последний раз опрашивала приёмник — это свидетель домена (М12A, урок 13). Регистратор без приёмника не говорит ни одного из трёх полей. Своих объектов у приёмника и передатчика больше нет: `rec/ingest` (объявление приёмника) и `rec/forwarded/<имя>` (потери передатчика) ушли без переноса (ADR-0003), вместе с `domain.reports[ingest]` и `objects.door[forwarded/*]` в спеке. Провода у приёмника курса нет (SRT и долгий опрос по HTTP — дорожка 2 М12B), поэтому процесс регистратора `vms/__main__.py` его не поднимает — поднимают тесты, через регистратор (`tests/vmsconftest.py::ingest_recorder`). Тесты: `test_lesson16_nobody_reaches.py::test_a_recorder_that_hosts_an_ingest_says_where_and_what_in_its_heartbeat_and_a_peer_finds_it_there`, `test_lesson17_chain.py::test_the_relays_recorder_says_what_its_forwarder_carried_and_lost_in_the_products_seventeen_words`.
+
 ## Результат
 
 ```python

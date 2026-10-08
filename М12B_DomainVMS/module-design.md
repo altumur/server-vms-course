@@ -47,7 +47,7 @@
 | `tokens` | `stream`, `ask` | подписывающий (`DeclaredIssuer`, сокет токенов `tokendoor.py`) | `TokenDoor` из воркера |
 | `keys` | восемь семей `domain/vms/…` | `/spec` → `domain.keys`; `GET /domain/keys` | слова — `display.keys` |
 | `shared` | `vms`: `[folders, alarms, events_retention_days]`; `auto`: документ `{name: scenarios, type: json, schema}` | `shared.resolve`, `GET /domain/shared/vms`; правка с необъявленным полем или значением, которое отвергает схема, — 400 (`shared.refusals`) | сценарии проверяет по описаниям камер проход книг (`scenario.refusals` → `refused`) |
-| `reports`, `witness` | `rec`: `[ingest, polled/]`, `{report: polled, member_field: cam}` | отчёт члена (`declared.reported_objects`), свидетель тревог (`declared.witnesses`) | приёмник пишет `rec/ingest`, `rec/polled/<приёмник>` |
+| `reports`, `witness` | `rec`: `[polled/]`, `{report: polled, member_field: cam}` | отчёт члена (`declared.reported_objects`), свидетель тревог (`declared.witnesses`) | heartbeat регистратора с приёмником пишет `rec/polled/<приёмник>`; где приёмник — поле `ingest` того же heartbeat (ADR-0065) |
 | `names` | нет (учёток RTSP в курсе нет; форма продукта по ADR 0031 — `stream-clients/`) | `declared.guarded` на каждой записи хранилища держателя | — |
 
 ## Строки VMS на домене
@@ -80,8 +80,8 @@
 |---|---|---|---|
 | 1 | VMS на домене: вклад подсистемы | `vms.subsystem.yaml`, `rec.subsystem.yaml` (`domain:`); `vms/domainpart/keys.py`, `worker.py`, `books.py`; платформа — `w2cplatform/domain/declared.py`, `rights.py`, `carry.py`, `tokendoor.py`, `w2cplatform/spec.py` (`DomainSection`) | `tests/domainvms/test_domain_secrets_vms.py` — 5; `tests/test_domain_platform.py` — 16 (платформа на `testsub`); `tests/test_boundary.py`; `tests/test_deploy_units.py` |
 | 2 | Поток из другого кластера | `vms/domainpart/crossing.py` — `Crossings` (`record`, `publish`, `publish_primaries`), `resolve`, `plan_backfill`; `vms/recworker.py` — `carried_primary` | `tests/domainvms/test_lesson13_crossing.py` — 8 |
-| 3 | Камера, до которой никто не дотягивается | `vms/domainpart/ingest.py` — `Ingest`, `IngestLiveEndpoint`, `CameraPusher`, `Asker`, `publish_asks`, `stream_metrics`; `scenario.py` — от сценария к запросу, `refusals`, `catalog`; `crossing.py` — дорога (`_road`), ключ потока (`_ingest`), книга опроса, резерв (`backups_of`, `plan_takeback`, `ColdStandby`); `vms/card.py` — карта | `test_lesson16_nobody_reaches.py` — 30, `test_lesson16_card.py` — 31, `test_lesson16_break.py` — 26, `test_two_servers.py` — 10 |
-| 4 | Цепочка: объект, ретранслятор, центр | `vms/domainpart/chain.py` — `Forwarder` (вверх — `lift`, по событию — `serve`, `retry_wait`), `publish_upstream`; `ingest.py` — `pull`, `inject`; платформа — `w2cplatform/domain/relay.py` (`relay_down`, `RelayDoor`, `bundle`, `BundleView`, `say_seen`), `topology.py` | `test_lesson17_chain.py` — 24; `tests/domain/test_topology.py` — 12 |
+| 3 | Камера, до которой никто не дотягивается | `vms/recworker.py` — `RecWorker.host_ingest` (приёмник и передатчик живут в регистраторе, ADR-0065); `vms/domainpart/ingest.py` — `Ingest` (`stats`), `ingest_urls`, `heartbeat_peers`, `IngestLiveEndpoint`, `CameraPusher`, `Asker`, `publish_asks`, `stream_metrics`; `scenario.py` — от сценария к запросу, `refusals`, `catalog`; `crossing.py` — дорога (`_road`), ключ потока (`_ingest`), книга опроса, резерв (`backups_of`, `plan_takeback`, `ColdStandby`); `vms/card.py` — карта | `test_lesson16_nobody_reaches.py` — 31, `test_lesson16_card.py` — 35, `test_lesson16_break.py` — 26, `test_two_servers.py` — 12 |
+| 4 | Цепочка: объект, ретранслятор, центр | `vms/domainpart/chain.py` — `Forwarder` (вверх — `lift`, по событию — `serve`, `retry_wait`; слова продукта в heartbeat — `stats`), `publish_upstream`; `ingest.py` — `pull`, `inject`; платформа — `w2cplatform/domain/relay.py` (`relay_down`, `RelayDoor`, `bundle`, `BundleView`, `say_seen`), `topology.py` | `test_lesson17_chain.py` — 29; `tests/domain/test_topology.py` — 12 |
 
 ## Код целиком
 
@@ -95,7 +95,7 @@
 2. **Решения о записи у держателя принимает только тест.** `Crossings.record` двери не имеет: у человека нет маршрута, чтобы сказать «эту камеру пишет та серверная».
 3. **Отметка возраста ретранслятора по `RELAY_URL`.** Дверь ретранслятора отдаёт `seen`, агент камеры кладёт его в `_carried_seen` и не использует; по сети камера за ретранслятором считает свежесть по своему разговору с ним.
 4. **Адрес двери воркера VMS.** Комментарий воркера обещает, что страница берёт его из общего вида, но в `domain/view` его нет; адрес знает только установка (`DOMAINPART_PORT`).
-5. **Процессов приёмника и передатчика нет.** `Ingest` и `Forwarder` — библиотеки, которые водят тесты; `publish_polled` и `Forwarder.publish` периодически не зовёт никто.
+5. **Провода у приёмника нет.** Приёмник и передатчик живут в регистраторе (`RecWorker.host_ingest`, ADR-0065, дополнение 2026-10-08), и его heartbeat говорит о них словами продукта (`ingest`, `ingest_streams`, `upstream`) и пишет `rec/polled/<приёмник>`. Но SRT и долгого опроса по HTTP в курсе нет (дорожка 2), поэтому процесс регистратора `vms/__main__.py` приёмник не поднимает — его поднимают тесты, через регистратор.
 6. **Слот воркера не покрыт тестом.** `DomainPartWorker.claim` — CAS и `SLOT_LOST` — проверяется только чтением кода.
 
 ## План проверки
