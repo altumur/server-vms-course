@@ -41,10 +41,8 @@ LOAD_HEAD = ("# spec_load_debt.txt — the key paths of the product's specs the 
              "# one is added only where a decision brings a key to one side first: its ADR number and the owner of the other\n"
              "# side, who closes it (СЕССИИ.md §1.7).\n")
 # СЕССИИ.md §1.7: every line of either debt carries its decision and the other side's owner — `# ADR-NNNN «owner»` after
-# the key. The bridge until «Паритет» marks the old lines up: a bare line is taken only if the debts held it on the day
-# of §1.7 (8bb36dfd) — `testdata/debt_bare_1_7.txt`, deleted once no bare line is left; a new bare line is a failure.
+# the key; a bare line is a failure (the bridge of the day of §1.7, `debt_bare_1_7.txt`, went with its last line).
 _TAIL = re.compile(r"#\s*ADR-\d{4}\b[^«]*«[^»]+»")
-BARE_1_7 = os.path.join(TESTDATA, "debt_bare_1_7.txt")
 
 # The product's reading of a spec, line by line — its regular expressions, its order (`specKeyPaths`).
 _KEY = re.compile(r"^([A-Za-z0-9_.\-\"']+)\s*:\s*(.*)$")
@@ -173,15 +171,10 @@ def test_the_specs_keys_are_the_products_but_for_the_debt_and_the_debt_only_shri
 
 def test_every_debt_line_names_its_decision_and_the_other_sides_owner():
     """СЕССИИ.md §1.7: a debt line exists only by a decision that brought a key to one side first — `# ADR-NNNN
-    «owner»` after it, the owner of the side that closes it. A bare line is taken only from the bridge (the debts on
-    the day of §1.7), and the bridge goes when no bare line is left."""
-    bridge = _debt(BARE_1_7) if os.path.exists(BARE_1_7) else set()
-    bare = [f"{os.path.basename(p)}: {ln}" for p in (PARITY_DEBT, LOAD_DEBT) for k, ln in _lines(p)
-            if not _TAIL.search(ln) and k not in bridge]
+    «owner»` after it, the owner of the side that closes it."""
+    bare = [f"{os.path.basename(p)}: {ln}" for p in (PARITY_DEBT, LOAD_DEBT) for k, ln in _lines(p) if not _TAIL.search(ln)]
     assert not bare, ("a debt line with no decision — `   # ADR-NNNN «owner»` after the key (СЕССИИ.md §1.7):\n  "
                       + "\n  ".join(bare))
-    left = {k for p in (PARITY_DEBT, LOAD_DEBT) for k, ln in _lines(p) if not _TAIL.search(ln)}
-    assert not bridge or left, ("no bare line is left in the debts: delete testdata/debt_bare_1_7.txt and its reading")
 
 
 def test_the_parity_debt_is_the_products_file_byte_for_byte():
