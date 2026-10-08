@@ -378,29 +378,25 @@ class Crossings:
                 "running": any(n in running for n in names), **({"starting": True} if starting else {})}
 
     # Lesson 16: where the camera pushes, and the token that lets it. The addresses are what the recording
-    # cluster's ingest announced (`rec/ingest`). The token is re-issued only when the one the book already
-    # holds is past half its life — the book is flash on the camera, and a token minted every pass would
-    # rewrite it every pass.
+    # cluster's recorders say in their heartbeats (`ingest`, `ingest.ingest_urls`: the ingest lives in the recorder —
+    # ADR-0065, its addition of 2026-10-08 — and the product reads the same, `Cameras.IngestURLs`). The token is
+    # re-issued only when the one the book already holds is past half its life — the book is flash on the camera, and
+    # a token minted every pass would rewrite it every pass.
     def _ingest(self, ref: str, on: str, home: str, now: float, old: dict | None) -> dict | None:
-        from .ingest import INGEST, _urls, audience
+        from .ingest import audience, ingest_urls
         if on in self.star and self.centre:
             on = self.centre                             # a star: the camera pushes to the centre, never to its relay
         c = self.view.fed.clusters.get(on)
         if self.issuer is None or c is None:
             return None
         try:
-            raw = c.objects.get(INGEST)
+            urls = ingest_urls(on, c.objects, now)
         except Unreachable:
-            raw = None
-        if raw is None:
-            return old                                   # the recording cluster is silent: keep what the camera has
-        # `_urls`, the one check of an announcement (the review's ninth pass, major): `list(v["urls"])` passed a STRING —
-        # its letters are a list — and the book of primaries told the camera to push to "https://east/ingest2" as a
-        # string; the camera found no road in it and stopped pushing. A list of strings, or the road the book had.
-        announced = published(on, INGEST, raw, _urls)
-        if announced is None:
-            return old                                   # …and one whose announcement does not parse, the same (the seventh review)
-        urls = announced["urls"]
+            urls = []
+        # Each address through the members' one reader (`ingest_urls`; the review's ninth pass, major: a STRING read as a
+        # list told the camera to push to its letters): a string, or that recorder says nothing.
+        if not urls:
+            return old                                   # silent, or no recorder there says an ingest: keep what the camera has
         if old and old.get("urls") == urls and _until(old) - now > self.token_lifetime / 2 \
                 and kid_of(old.get("token_secret", "")) == self.issuer.kid:
             return old

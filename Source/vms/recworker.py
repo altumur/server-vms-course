@@ -519,6 +519,8 @@ class RecWorker(VmsWorker):
         self.refusals: dict[tuple[str, str, int, int], tuple[int, float, float]] = {}   # piece -> (times, its span)
         self.given_up: dict[tuple[str, str], list[tuple[float, float]]] = {}
         self.archive_url = ""                       # this recorder's archive door, once served (Lesson 26)
+        # М12 Lessons 16–17: the ingest this recorder hosts, its address, and its relay's forwarder (`host_ingest`)
+        self.ingest, self.ingest_url, self.forwarder = None, "", None
         self._rows_seen: dict[str, dict | None] = {}   # recording -> its row as last read, for the door (`_visible_from`)
         self._not_written_since: dict[str, float] = {}   # primary recording -> since when nobody writes it
         self.holding: dict[str, bool] = {}          # `when: offline` recording -> is its pipeline on hold now
@@ -1198,7 +1200,74 @@ class RecWorker(VmsWorker):
                 # footage the ring takes next, `[keep]` — the product's words (ADR-0064, its addition; `_incidents_said`).
                 # Absent when empty, as there.
                 **({"incidents_lost": dict(self.incidents_lost)} if self.incidents and self.incidents_lost else {}),
-                **({"incidents_at_risk": list(self.incidents_at_risk)} if self.incidents and self.incidents_at_risk else {})}
+                **({"incidents_at_risk": list(self.incidents_at_risk)} if self.incidents and self.incidents_at_risk else {}),
+                # М12 Lessons 16–17: the ingest this recorder hosts and its relay's forwarder, in the product's words
+                # (`ingest`, `ingest_streams`, `upstream`; `ingest_fields`). A recorder that hosts none says none of them.
+                **self.ingest_fields()}
+
+    # -- the ingest and the forwarder: М12B Lessons 16–17, in the recorder (ADR-0065, its addition of 2026-10-08) ----
+    # As the product's (`recproc/run.go`): the ingest that takes the streams cameras push lives in the RECORDER, and so
+    # does a relay's forwarder, which carries them to the centre and back. What the others need of them — the domain,
+    # writing the cameras' books; the other ingests of this cluster — goes by this recorder's HEARTBEAT, never an object
+    # of the cluster's (`rec/ingest` and `rec/forwarded/<name>` are gone, ADR-0003):
+    #
+    #     ingest          its address (a string: `heartbeat.strings`) — the product's `<door>/ingest`
+    #     ingest_streams  per camera, what the ingest did (`Ingest.stats`, the product's words)
+    #     upstream        per camera of this cluster's upstream book, what the forwarder carried and lost
+    #                     (`Forwarder.stats`, the product's seventeen words) — only while the book names one
+    #
+    # …and, as the product's heartbeat does it, when each camera last polled here (`rec/polled/<ingest>`, the domain's
+    # witness; `Ingest.publish_polled`). `url`: where it takes streams — by default this recorder's archive door and
+    # `/ingest`, as the product's; in the course the wire is a function (`dial`, the tests' network: Track 2 speaks SRT).
+    # `dial(url)` reaches another ingest — the centre's, for the forwarder; this cluster's others, for the peers
+    # (`heartbeat_peers`, read in the heartbeats). `archive(ref, t0, t1, recording=None)`: the centre's ranges out of this
+    # recorder's archive; `needs(ref)`: this cluster wants a star's stream itself; `keys()`: the key set the ingest checks
+    # stream tokens with (by default this cluster's agent's, `ClusterTrust`). `cluster`: this recording cluster's name —
+    # the audience of its tokens.
+    def host_ingest(self, cluster: str, url: str | None = None, dial=None, keys=None, archive=None, needs=None):
+        from w2cplatform.domain.agent import ClusterTrust
+        from w2cplatform.domain.federation import Unreachable
+        from vms.domainpart.chain import Forwarder
+        from vms.domainpart.ingest import (Ingest, heartbeat_peers, keep_clocks, should_from_snapshot,
+                                           written_from_heartbeats)
+        url = url or (self.archive_url + "/ingest" if self.archive_url else "")
+        if not url:
+            raise ValueError(f"{self.name}: an ingest needs an address — its door, or one given")
+
+        def unreachable(where):
+            raise Unreachable(f"{where}: this recorder dials nobody")
+        dial = dial or unreachable
+        ing = Ingest(cluster, [url], keys=keys or (lambda: ClusterTrust(self.vars).keyset()), wall=self.wall, name=url,
+                     peers=heartbeat_peers(self.objects, lambda: url, dial, self.wall),
+                     should=should_from_snapshot(self.objects, self.wall, sources=self.vars),
+                     written=written_from_heartbeats(self.objects, self.wall))
+        keep_clocks(ing, self.objects)                            # the camera's clock, kept for the next ingest
+        self.ingest, self.ingest_url = ing, url
+        self.forwarder = Forwarder(cluster, ing, self.vars, dial, archive=archive, needs=needs,  # `up:<cluster>` above
+                                   objects=self.objects)
+        return ing
+
+    def ingest_fields(self) -> dict:
+        if self.ingest is None:
+            return {}
+        try:
+            self.ingest.publish_polled(self.objects)              # the domain's witness, as the product's heartbeat writes it
+        except OSError as e:
+            logging.warning("%s: when the cameras last polled could not be written (%s)", self.name, e)
+        try:
+            up = self.forwarder.stats() if self.forwarder is not None else {}
+        except Exception:                                         # noqa: BLE001 — the book unread: the heartbeat goes on
+            logging.exception("%s: the forwarder's numbers could not be said", self.name)
+            up = {}
+        return {"ingest": self.ingest_url, "ingest_streams": self.ingest.stats(), **({"upstream": up} if up else {})}
+
+    # The forwarder runs beside the passes, as the product's (`go fwd.Run`): its held polls at the centre and its asks
+    # are threads of their own (`Forwarder.serve`), stopped with the recorder.
+    def run(self, poll: float = 2.0, stop=None, beat: float = 0.0) -> None:
+        stop = stop or threading.Event()
+        if self.forwarder is not None:
+            self.forwarder.serve(stop)
+        super().run(poll=poll, stop=stop, beat=beat)
 
     # -- which archive this recorder writes into ------------------------------------------------------
     # Run once a pass, after the slot and the leases. Four outcomes, and the one that matters is the last.

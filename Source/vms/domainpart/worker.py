@@ -74,8 +74,8 @@ class DomainPartWorker:
 # whose content is the VMS's). What the VMS computes on the domain is the VMS worker's to serve, at an address the page
 # takes from the shared view; the platform's door serves what the specs declare and nothing it would have to understand.
 #
-#   GET /metrics    what every member's ingests and forwarders did not hand on: frames lost by why, the camera clock's
-#                   steps, a forwarder's drops and holes (`ingest.stream_metrics`)
+#   GET /metrics    what every member's ingests did not hand on: frames lost by why, the camera clock's steps
+#                   (`ingest.stream_metrics`); a relay's forwarder says its own in its recorder's heartbeat (`upstream`)
 #   GET /catalog    what a scenario between cameras may name: the actions one camera may ask another, and per camera
 #                   what it said it raises and can do (`scenario.catalog`)
 #   …/stream-clients   the RTSP accounts, where the spec keeps them (`streamclients.py`, `clients`; ADR-0031)

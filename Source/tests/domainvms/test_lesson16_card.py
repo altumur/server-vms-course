@@ -22,6 +22,7 @@ from vms.domainpart.ingest import (ANSWER_KEPT, LANDED_KEPT, POLL_ROUND, UPLINK_
                                    piece_wait)
 from tests.domain.conftest import Clock, real_card
 from tests.domainvms.test_lesson16_nobody_reaches import SERIAL, URLS, _site, _times
+from tests.vmsconftest import ingest_recorder
 from vms.card import MEMORY_BUDGET, PIECE_BYTES
 
 
@@ -1131,15 +1132,12 @@ def test_backfill_after_a_step_and_a_restart_of_the_cameras_process_lands_the_ho
     moves. The same when the camera comes back after the restart to ANOTHER ingest of the cluster — the hole asked at the
     first: a new ingest measures the camera's offset afresh, and the line it measures is the same line."""
     import os
-    from vms.domainpart.ingest import Ingest
-    from w2cplatform.domain.agent import ClusterTrust
     from vms.obsd import unix_s
     for jump in (30.0, -30.0):
         for move in (False, True):
             wall = Clock(100_000.0)
-            fed, north, south, signer, ingest, cam, *_ = _site(wall)
-            other = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
-            ingest.peers, other.peers = (lambda: [other]), (lambda: [ingest])
+            fed, north, south, signer, ingest, cam, *_, domain_pass = _site(wall)
+            other = domain_pass.recorders[1].ingest                        # the room's second recorder's: a peer, by heartbeat
             skew, boot, down, at = [0.0], [wall()], [False], [ingest]
             camclock, steady = (lambda: wall() + skew[0]), (lambda: wall() - boot[0])
 
@@ -1977,7 +1975,7 @@ def test_a_step_of_the_cameras_clock_keeps_its_hole_on_the_old_clock_at_this_ing
     `rec/ingest/clock/<ref>.json` (`keep_clocks`). An ingest with nothing kept begins with the camera's first word, and
     told the hole a step away, as before. A range after the step is on the new clock everywhere."""
     import json
-    from vms.domainpart.ingest import CLOCK_KEPT, Ingest, keep_clocks
+    from vms.domainpart.ingest import CLOCK_KEPT, keep_clocks
     for step in (30.0, -30.0):
         for case in ("this ingest", "restarted", "another", "nothing kept"):
             wall = Clock(1_780_000_000.0)
@@ -1990,9 +1988,10 @@ def test_a_step_of_the_cameras_clock_keeps_its_hole_on_the_old_clock_at_this_ing
             assert kept["v"] == 1 and [p["off_ms"] for p in kept["pieces"]] == [0, int(-step * 1000)], kept
             assert "old_off_ms" not in kept["pieces"][1], kept             # the old offset, 0: omitted, as the product writes
             at = {"this ingest": ingest,
-                  "restarted": Ingest("south", URLS, keys=ingest.keys, wall=wall),
-                  "another": Ingest("south", ["srt://srv-2.south:9000"], keys=ingest.keys, wall=wall),
-                  "nothing kept": Ingest("south", URLS, keys=ingest.keys, wall=wall)}[case]
+                  "restarted": lambda: ingest_recorder("south", URLS[0], wall, keys=ingest.keys).ingest,
+                  "another": lambda: ingest_recorder("south", "srt://srv-2.south:9000", wall, keys=ingest.keys).ingest,
+                  "nothing kept": lambda: ingest_recorder("south", URLS[0], wall, keys=ingest.keys).ingest}[case]
+            at = at() if callable(at) else at                              # a recorder's process, raised for its case
             if case in ("restarted", "another"):
                 keep_clocks(at, rows)
             _polls(wall, at, token, 5, step)                               # its first word there
@@ -2011,7 +2010,7 @@ def test_the_newest_pieces_of_a_cameras_offset_are_kept_and_bytes_that_do_not_pa
     next ingest goes on from them; a range from before the oldest is told by it — it holds whatever came before. A row
     that does not parse, or of another version, is nothing kept: the ingest begins with the camera's first word."""
     import json
-    from vms.domainpart.ingest import CLOCK_KEPT, CLOCK_PIECES_KEPT, Ingest, keep_clocks
+    from vms.domainpart.ingest import CLOCK_KEPT, CLOCK_PIECES_KEPT, keep_clocks
     wall = Clock(1_780_000_000.0)
     rows, ingest, token = _kept_world(wall)
     for i in range(CLOCK_PIECES_KEPT + 8):                                 # forty steps forward, each held firm first
@@ -2019,7 +2018,7 @@ def test_the_newest_pieces_of_a_cameras_offset_are_kept_and_bytes_that_do_not_pa
     kept = json.loads(rows.get(f"{CLOCK_KEPT}/{SERIAL}.json"))
     assert len(kept["pieces"]) == CLOCK_PIECES_KEPT and kept["pieces"][-1]["off_ms"] == -10_000 * (CLOCK_PIECES_KEPT + 7)
     oldest = kept["pieces"][0]
-    again = keep_clocks(Ingest("south", URLS, keys=ingest.keys, wall=wall), rows)
+    again = keep_clocks(ingest_recorder("south", URLS[0], wall, keys=ingest.keys).ingest, rows)
     skew = 10.0 * (CLOCK_PIECES_KEPT + 7)
     _polls(wall, again, token, 5, skew)
     assert again.cams[SERIAL].restored == CLOCK_PIECES_KEPT and again.cams[SERIAL].clock_steps == 0
@@ -2028,7 +2027,7 @@ def test_the_newest_pieces_of_a_cameras_offset_are_kept_and_bytes_that_do_not_pa
     assert abs(told["from"] - (oldest["srv_from"] / 1000 - 100 - oldest["off_ms"] / 1000)) < 0.002, (told, oldest)
     for torn in (b"{torn", json.dumps({"v": 2, "at": 0, "pieces": kept["pieces"]}).encode()):
         rows.put(f"{CLOCK_KEPT}/{SERIAL}.json", torn)
-        fresh = keep_clocks(Ingest("south", URLS, keys=ingest.keys, wall=wall), rows)
+        fresh = keep_clocks(ingest_recorder("south", URLS[0], wall, keys=ingest.keys).ingest, rows)
         fresh.poll(token, SERIAL, camera_now=wall() + 3.0, rtt=0.05)
         c = fresh.cams[SERIAL]
         assert c.restored == 0 and abs(c.offset + 3.0) < 0.002 and len(c.pieces) == 1, torn

@@ -6,24 +6,28 @@ relay the centre. The want travels down, the stream up. The star: a relay that c
 its cameras' streams from the centre. A relay: a camera that can reach only its relay cluster reaches the domain
 through it both ways — the relay copies down what the domain left for it and carries its report up in one
 summary object.
+
+Every ingest here lives in a RECORDER of its cluster, and the relay's forwarder in the relay's recorder
+(`RecWorker.host_ingest`; ADR-0065, its addition of 2026-10-08): the domain finds the centre's ingest in its recorder's
+heartbeat (`ingest`), and what the forwarder carried and lost is in the relay's (`upstream`, the product's words).
 """
 import json
 
-from w2cplatform.cluster.objectstore import VariablesObjectStore
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
-from vms.domainpart.chain import Forwarder, publish_upstream
+from vms.domainpart.chain import publish_upstream
 from w2cplatform.domain.relay import bundle
 from vms.domainpart.crossing import Crossings
 from vms.domainpart.device import DeviceCluster, Ram
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.domainpart.gateway import Gateway
-from vms.domainpart.ingest import LINGER, CameraPusher, Ingest, IngestLiveEndpoint, audience
+from vms.domainpart.ingest import LINGER, CameraPusher, IngestLiveEndpoint, audience
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
 from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster
+from tests.vmsconftest import ingest_recorder
 
 SERIAL = "SN7001"
 RELAY_URLS = ["srt://ingest.east.relay:9000"]
@@ -39,13 +43,10 @@ def _chain(wall, star=frozenset()):
     fed.add(north); fed.add(east)
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
-    centre = Ingest("north", CENTRE_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
-    centre.announce(north.objects)
     relay_agent = DomainAgent("east", north.vars, east.vars, now=wall)
     relay_agent.sync()
-    relay = Ingest("east", RELAY_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
-    relay.announce(east.objects)
     SpecController(REC_SPEC, east.vars, east.objects, wall=wall).create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
+    at: dict = {}                                                      # the ingests, by who answers which address
 
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, pushes=True)
     cam.boot(); cam.door_open = False                                  # nobody dials the camera
@@ -62,24 +63,45 @@ def _chain(wall, star=frozenset()):
         def dial(url):
             dialled.append((who, url))
             if url in RELAY_URLS and "relay" in reachable:
-                return relay
+                return at["relay"]
             if url in CENTRE_URLS:
-                return centre
+                return at["centre"]
             raise Unreachable(f"{url} did not answer {who}")
         return dial
 
+    # The centre's ingest in a recorder of the centre; the relay's, and its forwarder, in a recorder of the relay — each
+    # says where it takes streams in its heartbeat, and the relay's says what its forwarder carried (`upstream`)
+    recs = {"north": ingest_recorder("north", CENTRE_URLS[0], wall, north.vars, north.objects),
+            "east": ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects, dial=dial_from("relay", set()),
+                                    archive=lambda ref, t0, t1: [("east-archive", ref, t0, t1)], needs=lambda ref: True)}
+    centre, relay, fwd = recs["north"].ingest, recs["east"].ingest, recs["east"].forwarder
+    at.update(centre=centre, relay=relay)
     pusher = CameraPusher(SERIAL, cam.flash, dial_from("camera", {"relay"} if not star else set()), clock=wall)
-    fwd = Forwarder("east", relay, east.vars, dial_from("relay", set()),
-                    archive=lambda ref, t0, t1: [("east-archive", ref, t0, t1)], needs=lambda ref: True)
 
     def domain_pass():
+        for r in recs.values():
+            r.heartbeat_once()                                         # where each recorder's ingest is, said again
         view.refresh(); crossings.publish(); crossings.publish_primaries()
         publish_upstream(crossings, "north", star=star)
         cam_agent.sync(); relay_agent.sync()
 
-    domain_pass.crossings = crossings
+    domain_pass.crossings, domain_pass.recorders = crossings, recs
     domain_pass()
     return north, east, centre, relay, pusher, fwd, dialled, domain_pass
+
+
+def _upstream(rec) -> dict:
+    """What the relay's recorder says of its forwarder, in its heartbeat (`upstream`), said now."""
+    rec.heartbeat_once()
+    return json.loads(rec.objects.get(f"rec/heartbeats/{rec.name}")).get("upstream", {})
+
+
+def _in_book(rec, ref, mode="push") -> None:
+    """Camera `ref` in the upstream book the relay's agent carried (`domain/upstream`), as the domain writes it."""
+    from vms.domainpart.keys import UPSTREAM_PATH
+    items, idx = rec.vars.get(UPSTREAM_PATH)
+    rec.vars.put(UPSTREAM_PATH, {**(items or {}), ref: json.dumps({"urls": CENTRE_URLS, "mode": mode, "token_secret": "t",
+                                                                  "until": 1e12})}, cas=idx)
 
 
 def test_a_viewer_in_the_centre_the_want_travels_down_and_the_stream_up():
@@ -218,17 +240,15 @@ def test_a_centre_that_restarts_in_the_middle_of_a_pull_with_two_answers_lost_ha
     nothing counted them. A batch's mark is `(boot, n)` now, and a mark from another boot is never this boot's: the
     last batch goes again until the relay has a mark of this boot. Every frame arrives, once, in order; a relay that
     restarted itself says no mark, and gets the last batch once more — a repeat its ingest drops."""
-    from vms.domainpart.chain import Forwarder
-
-    def centre():
-        ing = Ingest("north", CENTRE_URLS, keys=lambda: {})
+    def centre():                                                      # the centre's recorder, its process (re)started
+        ing = ingest_recorder("north", CENTRE_URLS[0], keys=lambda: {}).ingest
         ing._check = lambda *a, **k: {}                                # (the tokens are the other tests')
         ing.subscribe("7", "up:east", maxsize=1000)                    # the relay's subscription, from its first pull
         return ing
     at = {"centre": centre()}
-    relay = Ingest("east", RELAY_URLS, keys=lambda: {})
+    host = ingest_recorder("east", RELAY_URLS[0], keys=lambda: {}, dial=lambda url: at["centre"], needs=lambda ref: True)
+    relay, fwd = host.ingest, host.forwarder
     rq = relay.subscribe("7", "recorder:east", maxsize=1000)
-    fwd = Forwarder("east", relay, FakeVariables(), lambda url: at["centre"], needs=lambda ref: True)
 
     def pull(t, lost=False):
         ing = at["centre"]
@@ -286,18 +306,21 @@ def test_frames_the_centre_took_but_whose_answer_was_lost_reach_its_recorder_onc
 def test_the_forwarder_keeps_what_it_holds_in_seconds_and_bytes_and_says_what_it_dropped():
     """The eighth review, a minor: "the relay does not lose frames when a push fails" held about a second and a half —
     thirty frames waiting, fifty kept — and what it dropped was counted where nobody looked. It keeps `FORWARD_HOLD`
-    seconds now, at most `FORWARD_BYTES`, cut clean to a key frame, and the camera's state and `stats` say how many
-    frames it dropped past that."""
-    from vms.domainpart.chain import FORWARD_HOLD, Forwarder
-    fwd = Forwarder("east", Ingest("east", RELAY_URLS, keys=lambda: {}), FakeVariables(), lambda url: None)
+    seconds now, at most `FORWARD_BYTES`, cut clean to a key frame, and its recorder's heartbeat says how many frames it
+    dropped past that (`upstream.<ref>.up_dropped`, the product's word)."""
+    from vms.domainpart.chain import FORWARD_HOLD
+    host = ingest_recorder("east", RELAY_URLS[0], keys=lambda: {}, dial=lambda url: None)
+    fwd = host.forwarder
     frames = [{"t": 1000 + i / 25, "key": i % 50 == 0} for i in range(25 * 30)]   # thirty seconds at 25 frames a second
     kept = fwd._kept("7", frames)
     assert kept[0]["key"] and frames[-1]["t"] - kept[0]["t"] <= FORWARD_HOLD and kept[-1] is frames[-1]
     assert len(kept) >= 25 * (FORWARD_HOLD - 2) and fwd.dropped["7"] == len(frames) - len(kept)
     fat = [{"t": 1000 + i, "key": True, "body": b"x" * (4 << 20)} for i in range(8)]
     assert len(fwd._kept("8", fat)) == 4                               # sixteen mebibytes, whatever the seconds
+    _in_book(host, "7")                                                # a camera of the relay's upstream book
     fwd.state["7"] = "forwarding"
-    assert fwd.stats()["7"]["dropped"] == fwd.dropped["7"]
+    up = _upstream(host)["7"]
+    assert up["up_dropped"] == fwd.dropped["7"] and up["mode"] == "push" and up["state"] == "forwarding"
 
 
 def _site_of(n_relays, per_relay, wall):
@@ -386,11 +409,12 @@ def test_a_camera_that_sees_only_its_relay_reaches_the_domain_through_it_both_wa
     through = Relay(relay_agent, east.objects)                         # all the camera can reach: east, and what it keeps
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, console=cam.local_console(), current=cam.current,
                             domain_objects=through.objects, published=cam.local_objects(), seen_store=cam.local_objects())
-    relay = Ingest("east", RELAY_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
-    relay.announce(east.objects)
+    host = ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects)   # the relay's ingest, in its recorder
+    relay = host.ingest
     SpecController(REC_SPEC, east.vars, east.objects, wall=wall).create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
 
     def passes():
+        host.heartbeat_once()
         relay_agent.sync(); cam_agent.sync(); relay_agent.sync()
 
     passes()
@@ -484,8 +508,7 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
     fed.add(north); fed.add(east)
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
-    centre = Ingest("north", CENTRE_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
-    centre.announce(north.objects)                                     # there IS an ingest up there: the wrong one
+    hosts = [ingest_recorder("north", CENTRE_URLS[0], wall, north.vars, north.objects)]   # there IS an ingest up there: the wrong one
     through = Relay(None, east.objects)                                # all a camera of this site can reach
     cams, agents = {}, []
     for n in ("SN7002", "SN7003"):                                     # the gate, the PTZ
@@ -500,13 +523,15 @@ def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_rel
                                bundle_store=east.objects, bundle_members=members, relay_members=members)
     through.door.agent = relay_agent                                   # what the cameras ask: what east keeps
     relay_agent.sync()
-    relay = Ingest("east", RELAY_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
-    relay.announce(east.objects)
+    hosts.append(ingest_recorder("east", RELAY_URLS[0], wall, east.vars, east.objects))
+    relay = hosts[-1].ingest
     SharedDoor(north.vars, north.objects, signer, wall).set_scenarios([
         {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}])
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
 
     def domain_pass():
+        for h in hosts:
+            h.heartbeat_once()
         for d in cams.values():
             d.publish()
         for a in agents:
@@ -561,11 +586,20 @@ def _two_relays(wall):
         fed.add(c)
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
-    ing = {"north": Ingest("north", CENTRE_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall),
-           "east": Ingest("east", EAST_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall),
-           "west": Ingest("west", WEST_URLS, keys=lambda: ClusterTrust(west.vars).keyset(), wall=wall)}
-    for name, c in (("north", north), ("east", east), ("west", west)):
-        ing[name].announce(c.objects)
+    ing: dict = {}
+    centre_up = {"on": True}
+
+    def reach(urls, owner):
+        def dial(url):
+            if url in urls and (owner != "relay" or centre_up["on"]):
+                return next(i for i in ing.values() if url in i.urls)
+            raise Unreachable(f"{url} does not answer {owner}")
+        return dial
+    # Each cluster's ingest in a recorder of its own; each relay's forwarder in its relay's recorder (ADR-0065)
+    hosts = {name: ingest_recorder(name, urls[0], wall, c.vars, c.objects,
+                                   dial=reach(CENTRE_URLS, "relay") if name != "north" else None)
+             for name, c, urls in (("north", north, CENTRE_URLS), ("east", east, EAST_URLS), ("west", west, WEST_URLS))}
+    ing.update({name: h.ingest for name, h in hosts.items()})
     cams, agents, relays = {}, [], []
     for relay, serials in (("east", (GATE7, PTZ7)), ("west", (YARD7,))):
         store = east if relay == "east" else west
@@ -590,6 +624,8 @@ def _two_relays(wall):
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, centre="north"), north.objects)
 
     def domain_pass():
+        for h in hosts.values():
+            h.heartbeat_once()
         for d in cams.values():
             d.publish()
         for a in agents:
@@ -603,17 +639,7 @@ def _two_relays(wall):
             a.sync()
 
     domain_pass(); domain_pass()
-    centre_up = {"on": True}
-
-    def reach(urls, owner):
-        def dial(url):
-            if url in urls and (owner != "relay" or centre_up["on"]):
-                return next(i for i in ing.values() if url in i.urls)
-            raise Unreachable(f"{url} does not answer {owner}")
-        return dial
-
-    fwd = {"east": Forwarder("east", ing["east"], east.vars, reach(CENTRE_URLS, "relay")),
-           "west": Forwarder("west", ing["west"], west.vars, reach(CENTRE_URLS, "relay"))}
+    fwd = {"east": hosts["east"].forwarder, "west": hosts["west"].forwarder}
     done = {PTZ7: [], YARD7: []}
     ptz = CameraPusher(PTZ7, cams[PTZ7].flash, reach(EAST_URLS, "site"), clock=wall,
                        perform=lambda a: done[PTZ7].append(a) or "performed")
@@ -736,21 +762,22 @@ def test_a_relay_that_lost_the_centre_tries_again_each_camera_at_its_own_moment(
     assert len({round(w, 6) for w in waits}) > len(waits) // 2, waits  # …and not one number for every camera
 
 
-def test_a_torn_announcement_or_book_entry_is_that_ones_trouble_and_the_relay_forwards_on():
-    """The eighth review's siblings, left in this module by the М12 pass: the centre's ingest announcement and the
+def test_a_torn_heartbeat_or_book_entry_is_that_ones_trouble_and_the_relay_forwards_on():
+    """The eighth review's siblings, left in this module by the М12 pass: where the centre takes streams and the
     upstream book's own entries (`publish_upstream`), and the books the relay's agent carried (`Forwarder.book`,
     `asks_book`) were read bare — one torn document raised out of the whole pass: no token to push up re-issued, or no
-    camera of the relay forwarded. A torn announcement keeps the road each entry names; a torn entry of the domain's
-    book is issued anew; a torn entry the relay carried is the one it read last — each counted once (`BOOKS`)."""
+    camera of the relay forwarded. The centre's ingest is said in its recorder's heartbeat now (ADR-0065, its addition):
+    a torn heartbeat says no ingest, and each entry keeps the road it names; a torn entry of the domain's book is issued
+    anew; a torn entry the relay carried is the one it read last — each counted once (`BOOKS`)."""
     from vms.domainpart.keys import UPSTREAM_PATH
     from vms.domainpart.keys import ASKS_PATH
-    from vms.domainpart.ingest import BOOKS, INGEST
+    from vms.domainpart.ingest import BOOKS
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
-    north.objects.put(INGEST, b'{"cluster": "north", "urls": ')          # the centre's announcement, half written
+    north.objects.put("rec/heartbeats/r-1", b'{"worker": "r-1", "ts": ')  # the centre's recorder's heartbeat, half written
     books = publish_upstream(domain_pass.crossings, "north", lifetime=1.0)   # (a lifetime that asks for a new token)
     assert json.loads(books["east"][SERIAL])["urls"] == CENTRE_URLS       # re-issued, on the road the entry named
-    centre.announce(north.objects)
+    domain_pass.recorders["north"].heartbeat_once()                       # …and said again whole
     items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
     north.vars.put(f"{UPSTREAM_PATH}/east", {**items, SERIAL: "{"}, cas=idx)   # the book's own entry, torn
     books = publish_upstream(domain_pass.crossings, "north")
@@ -853,19 +880,19 @@ def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_count
     """The ninth review, a minor (and the product's sibling E): the centre keeps the batch it handed over until the relay
     says it has it — in memory. The answer to batch 3 was lost on the way down, the centre restarted, and frame 3 went
     with it: nothing anywhere counted it. The relay cannot know whether such a batch was there, but it knows the centre
-    restarted — the mark's `boot` changed — and counts that as a possible hole (`holes`, in `stats`), once per restart;
-    a pull whose answer is lost with no restart is handed over again and counts nothing."""
-    from vms.domainpart.chain import Forwarder
-
-    def centre():
-        ing = Ingest("north", CENTRE_URLS, keys=lambda: {})
+    restarted — the mark's `boot` changed — and counts that as a possible hole (`holes`; in its recorder's heartbeat the
+    product's `upstream.<ref>.down_breaks`), once per restart; a pull whose answer is lost with no restart is handed over
+    again and counts nothing."""
+    def centre():                                                      # the centre's recorder, its process (re)started
+        ing = ingest_recorder("north", CENTRE_URLS[0], keys=lambda: {}).ingest
         ing._check = lambda *a, **k: {}                                # (the tokens are the other tests')
         ing.subscribe("7", "up:east", maxsize=1000)
         return ing
     at = {"centre": centre()}
-    relay = Ingest("east", RELAY_URLS, keys=lambda: {})
+    host = ingest_recorder("east", RELAY_URLS[0], keys=lambda: {}, dial=lambda url: at["centre"], needs=lambda ref: True)
+    relay, fwd = host.ingest, host.forwarder
+    _in_book(host, "7", mode="pull")                                   # a star's camera: pulled down from the centre
     rq = relay.subscribe("7", "recorder:east", maxsize=1000)
-    fwd = Forwarder("east", relay, FakeVariables(), lambda url: at["centre"], needs=lambda ref: True)
 
     def pull(t, lost=False):
         ing = at["centre"]
@@ -882,12 +909,12 @@ def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_count
             pass
         ing.pull = real
     pull(1); pull(2, lost=True); pull(4)
-    assert [f["t"] for f in rq.drain()] == [1, 2, 4] and fwd.stats()["7"]["holes"] == 0   # handed over again: no hole
+    assert [f["t"] for f in rq.drain()] == [1, 2, 4] and _upstream(host)["7"]["down_breaks"] == 0   # handed over again
     pull(5, lost=True)                                                  # batch 5 handed over, its answer lost…
     at["centre"] = centre()                                             # …and the centre restarts
     pull(6); pull(7)
     assert [f["t"] for f in rq.drain()] == [6, 7]                       # 5 is gone with the centre —
-    assert fwd.stats()["7"]["holes"] == 1                               # — and counted, once
+    assert _upstream(host)["7"]["down_breaks"] == 1 and fwd.holes["7"] == 1   # — and counted, once
 
 
 def test_the_cameras_card_holds_what_its_relay_took_until_the_centre_has_written_it():
@@ -931,10 +958,16 @@ def test_the_cameras_card_holds_what_its_relay_took_until_the_centre_has_written
 
 
 # -- the centre's word, kept across a restart of the relay (ADR-0019: the product's `recproc/upkept.go`, r22) ------------
-# The row lands where a cluster puts it (`ClusterObjectStore` sends the keys of `objects.rows` to the store's rows): the
-# test's file store keeps the ingest's announcement at `rec/ingest`, a file, and `rec/ingest/up/…` could not be beside it.
+# The row lands in the relay's store, where its recorder keeps it (`rec/ingest/up/<ref>.json`). A restart of the relay is a
+# new process of its recorder over the same stores — a recorder of its own name here, the old one's slot not lapsed yet.
 def _gone(url):
     raise Unreachable(f"{url} did not answer the relay")
+
+
+def _restarted(east, wall, objects=None, dial=_gone):
+    """The relay's recorder, started again over the relay's stores (`objects`: another store — one that kept nothing)."""
+    return ingest_recorder("east", RELAY_URLS[0], wall, east.vars, objects if objects is not None else east.objects,
+                           name="r-again", dial=dial, keys=lambda: {})
 
 
 def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres_have():
@@ -946,9 +979,8 @@ def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres
     its first pass."""
     from vms.domainpart.chain import UP_KEPT_EVERY, up_key
     wall = Clock()
-    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
-    rows = VariablesObjectStore(east.vars)                              # a row of the relay's store, as on a cluster
-    fwd = Forwarder("east", relay, east.vars, fwd.dial, objects=rows)
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
+    rows = east.objects                                                 # the relay's store, its recorder's
     centre.want(SERIAL, "recorder:centre")
     written = [wall() + 0.25]
     centre.written = lambda ref: written[0]
@@ -966,16 +998,18 @@ def test_a_relay_restarted_while_the_centre_is_unreachable_still_has_the_centres
     assert fwd.up_writes[SERIAL] == 3
     assert json.loads(rows.get(up_key(SERIAL)))["have"] == int(written[0] * 1000)
 
-    restarted = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)  # the relay restarts; the centre is unreachable
-    assert SERIAL not in restarted.up_have
-    again = Forwarder("east", restarted, east.vars, _gone, objects=rows)
+    up = _upstream(domain_pass.recorders["east"])[SERIAL]               # said in the relay's recorder's heartbeat
+    assert up["up_kept_writes"] == 3 and abs(up["up_have"] - written[0]) < 1e-3 and up["up_kept"] is False
+
+    host = _restarted(east, wall)                                       # the relay restarts; the centre is unreachable
+    restarted, again = host.ingest, host.forwarder
     assert abs(restarted.up_have[SERIAL] - written[0]) < 1e-3          # before its first pass
     again.pass_once()
     assert abs(restarted._have(SERIAL) - written[0]) < 1e-3            # what the camera is told: the centre's word
-    assert again.stats()[SERIAL]["up_expired"] == 0
+    up = _upstream(host)[SERIAL]
+    assert up["up_expired"] == 0 and up["up_kept"] is True              # …the word a process before kept
 
-    nowhere = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)    # a relay with nowhere to keep it: as before
-    Forwarder("east", nowhere, east.vars, _gone).pass_once()
+    nowhere = _restarted(east, wall, objects=Ram()).ingest   # a store that kept nothing
     assert SERIAL not in nowhere.up_have
 
 
@@ -983,8 +1017,7 @@ def test_a_centre_that_does_not_want_the_stream_drops_the_kept_word():
     from vms.domainpart.chain import up_key
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
-    rows = VariablesObjectStore(east.vars)                              # a row of the relay's store, as on a cluster
-    fwd = Forwarder("east", relay, east.vars, fwd.dial, objects=rows)
+    rows = east.objects                                                 # the relay's store, its recorder's
     centre.want(SERIAL, "recorder:centre")
     centre.written = lambda ref: wall()
     fwd.pass_once()
@@ -993,8 +1026,7 @@ def test_a_centre_that_does_not_want_the_stream_drops_the_kept_word():
     centre.cams[SERIAL].wants.clear()                                   # the centre takes the camera no longer
     fwd.pass_once()
     assert rows.get(up_key(SERIAL)) is None and SERIAL not in relay.up_have
-    restarted = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)
-    Forwarder("east", restarted, east.vars, _gone, objects=rows)
+    restarted = _restarted(east, wall).ingest
     assert SERIAL not in restarted.up_have                              # nothing kept, nothing said
 
 
@@ -1006,21 +1038,20 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
     from vms.domainpart.chain import UP_KEPT_FOR, up_key
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
-    rows = VariablesObjectStore(east.vars)                              # a row of the relay's store, as on a cluster
+    rows = east.objects                                                 # the relay's store, its recorder's
     wall.advance(3 * UP_KEPT_FOR)
 
     def kept(age, have):
         rows.put(up_key(SERIAL), json.dumps({"v": 1, "have": have, "heard": int((wall() - age) * 1000)}).encode())
 
     kept(UP_KEPT_FOR + 1, 5_000)
-    stale = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)
-    old = Forwarder("east", stale, east.vars, _gone, objects=rows)
+    host = _restarted(east, wall)
+    stale, old = host.ingest, host.forwarder
     assert SERIAL not in stale.up_have and rows.get(up_key(SERIAL)) is None
-    assert old.up_expired == {SERIAL: 1} and old.stats()[SERIAL]["up_expired"] == 1
+    assert old.up_expired == {SERIAL: 1} and _upstream(host)[SERIAL]["up_expired"] == 1
 
     kept(UP_KEPT_FOR - 60, 7_000)                                       # a word not a day old: said
-    fresh = Ingest("east", RELAY_URLS, keys=lambda: {}, wall=wall)
-    now = Forwarder("east", fresh, east.vars, _gone, objects=rows)
+    fresh, now = (lambda h: (h.ingest, h.forwarder))(_restarted(east, wall))
     assert fresh.up_have[SERIAL] == 7.0
     now.pass_once()
     assert fresh.up_have[SERIAL] == 7.0 and now.up_expired == {}
@@ -1040,13 +1071,13 @@ def test_a_kept_word_older_than_a_day_is_dropped_and_counted_and_a_silent_centre
 
 
 # -- the eleventh review -------------------------------------------------------------------------------------------------
-def test_what_the_ingests_and_the_forwarder_did_not_hand_on_is_on_the_vms_domain_workers_metrics():
+def test_what_the_ingests_did_not_hand_on_is_on_the_vms_domain_workers_metrics_and_the_forwarders_in_its_heartbeat():
     """The eleventh review, a minor: an ingest's `lost` (a subscriber's full queue, a peer cut, repeats, frames far ahead)
     and `clock_steps` were in its object and nowhere a monitor reads, and the forwarder's `dropped` and `holes` nowhere
-    at all. The forwarder leaves an object beside its ingest's (`Forwarder.publish`), and the VMS's worker on the domain
-    says both on its door's `/metrics` (`stream_metrics`; the boundary's «no hooks»: it was a route of the platform's
-    domain console), every line labelled with its cluster; an object that does not parse is counted and the rest are
-    said; a door that asks for `view` asks for it here too."""
+    at all. The VMS's worker on the domain says the ingests' on its door's `/metrics` (`stream_metrics`; the boundary's
+    «no hooks»: it was a route of the platform's domain console), every line labelled with its cluster; an object that
+    does not parse is counted and the rest are said; a door that asks for `view` asks for it here too. The forwarder's
+    are in its recorder's heartbeat (`upstream`, the product's words; ADR-0065) — no object of its own, and no line here."""
     import urllib.error
     import urllib.request
     from w2cplatform.console import open_doors
@@ -1054,7 +1085,7 @@ def test_what_the_ingests_and_the_forwarder_did_not_hand_on_is_on_the_vms_domain
     from vms.domainpart.worker import door_handler
     from w2cplatform.rows import counts
     wall = Clock()
-    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     centre.want(SERIAL, "recorder:centre")
     centre.subscribe(SERIAL, "recorder:centre", maxsize=1000)
     relay.subscribe(SERIAL, "viewer:v", maxsize=1, edge=True)          # a viewer at the relay that does not read
@@ -1074,9 +1105,10 @@ def test_what_the_ingests_and_the_forwarder_did_not_hand_on_is_on_the_vms_domain
         return out
     centre.push = took_but_lost
     fwd.pass_once(); second(); fwd.pass_once()                         # the centre gets two frames again: repeats
-    fwd._kept("SN7002", [{"t": 1000 + i / 25, "key": i % 50 == 0} for i in range(25 * 30)])   # past what it holds
+    fwd._kept(SERIAL, [{"t": 1000 + i / 25, "key": i % 50 == 0} for i in range(25 * 30)])   # past what it holds
     relay.cams[SERIAL].clock_steps = 2                                  # (as two moves of the held offset leave it)
-    centre.publish_polled(north.objects); relay.publish_polled(east.objects); fwd.publish(east.objects)
+    for r in domain_pass.recorders.values():
+        r.heartbeat_once()                                              # each recorder writes its ingest's `rec/polled`
     east.objects.put("rec/polled/torn", b'{"cluster": "east", "lost": ')
     fed = Federation()
     fed.add(north); fed.add(east)
@@ -1086,14 +1118,15 @@ def test_what_the_ingests_and_the_forwarder_did_not_hand_on_is_on_the_vms_domain
     finally:
         srv.shutdown(); srv.server_close()
     lines = text.splitlines()
-    held = fwd.dropped["SN7002"]
+    held = fwd.dropped[SERIAL]
     assert held > 0
     assert f'ingest_frames_lost_total{{cluster="north",ingest="{CENTRE_URLS[0]}",camera="{SERIAL}",why="repeats"}} 2' in lines, text
     assert any(ln.startswith(f'ingest_frames_lost_total{{cluster="east",ingest="{RELAY_URLS[0]}",camera="{SERIAL}",why="dropped"}} ')
                and int(ln.split()[-1]) > 0 for ln in lines), text
     assert f'ingest_clock_steps_total{{cluster="east",ingest="{RELAY_URLS[0]}",camera="{SERIAL}"}} 2' in lines
-    assert f'forwarder_frames_dropped_total{{cluster="east",forwarder="east",camera="SN7002",where="held"}} {held}' in lines
-    assert f'forwarder_holes_total{{cluster="east",forwarder="east",camera="{SERIAL}"}} 0' in lines
+    assert not any(ln.startswith("forwarder_") or "# TYPE forwarder_" in ln for ln in lines), text   # not here…
+    up = _upstream(domain_pass.recorders["east"])[SERIAL]               # …but in the relay's recorder's heartbeat
+    assert up["up_dropped"] >= held and up["mode"] == "push"
     assert sum(counts()["member_object"].values()) >= 1                 # the torn one: counted, the rest said
     srv = open_doors("127.0.0.1", 0, door_handler(fed, verifier=lambda t: t, viewer=lambda s: s == "boris"),
                      unix_env="NO_SUCH_DOOR", say=False)
@@ -1108,3 +1141,61 @@ def test_what_the_ingests_and_the_forwarder_did_not_hand_on_is_on_the_vms_domain
         assert (status(), status("vera"), status("boris")) == (401, 403, 200)
     finally:
         srv.shutdown(); srv.server_close()
+
+
+# -- the forwarder lives in the relay's recorder (ADR-0065 and its addition of 2026-10-08; ADR-0019) ----------------------
+# The product's `Forwarder.Stats` (`recproc/forwarder.go`): every camera's two words, a pulled camera's three, a pushed
+# camera's twelve — `up_have` only once the centre said one. Seventeen between them.
+FORWARDER_WORDS = {"push": {"mode", "state", "up_sent", "up_dropped", "up_gaps", "up_resumed", "up_have", "up_have_every",
+                            "up_unconfirmed_s", "up_polls", "up_cuts", "up_kept", "up_expired", "up_kept_writes"},
+                   "pull": {"mode", "state", "down_taken", "down_dropped", "down_breaks"}}
+
+
+def test_the_relays_recorder_says_what_its_forwarder_carried_and_lost_in_the_products_seventeen_words():
+    """What the forwarder carried and lost is not an object of the relay's (`rec/forwarded/<name>` is gone) but its
+    recorder's heartbeat: `upstream.<ref>`, per camera of the upstream book, in the product's words — what the course
+    counts under its word, nought where it counts nothing. A pushed camera says what the centre confirmed (`up_have`)
+    once it said it; a star's pulled camera says the down words; the centre, with no upstream book, says no `upstream`."""
+    assert len(FORWARDER_WORDS["push"] | FORWARDER_WORDS["pull"]) == 17
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
+    host = domain_pass.recorders["east"]
+    assert set(_upstream(host)[SERIAL]) == FORWARDER_WORDS["push"] - {"up_have"}   # the centre has said nothing yet
+    centre.want(SERIAL, "recorder:centre")
+    rq = centre.subscribe(SERIAL, "recorder:centre", maxsize=1000)
+    centre.written = lambda ref: wall()
+    fwd.pass_once(); pusher.pass_once(["a", "b"]); fwd.pass_once()
+    assert rq.drain() == ["a", "b"]
+    up = _upstream(host)[SERIAL]
+    assert set(up) == FORWARDER_WORDS["push"]
+    assert up["mode"] == "push" and up["state"].startswith("forwarding") and up["up_have"] == wall()
+    assert (up["up_dropped"], up["up_expired"], up["up_kept_writes"], up["up_kept"]) == (0, 0, 1, False)
+    assert "upstream" not in json.loads(north.objects.get("rec/heartbeats/r-1"))   # the centre forwards nothing
+
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(Clock(), star={"east"})
+    relay.subscribe(SERIAL, "recorder:east")
+    fwd.pass_once(); pusher.pass_once(["s1"]); fwd.pass_once()
+    up = _upstream(domain_pass.recorders["east"])[SERIAL]
+    assert set(up) == FORWARDER_WORDS["pull"] and up["mode"] == "pull" and up["down_breaks"] == 0
+
+
+def test_nothing_writes_where_the_ingest_or_the_forwarder_used_to_announce_itself():
+    """ADR-0003, ADR-0065's addition: `rec/ingest` (the ingest's announcement) and `rec/forwarded/<name>` (the forwarder's
+    losses) are gone without a migration — no writer, no reader, no spec line (`domain.reports[ingest]`,
+    `objects.door[forwarded/*]`). A chain that pushes and pulls, its recorders beating, leaves neither in any store."""
+    from vms.config import REC_SPEC
+    from vms.domainpart import chain, ingest
+    assert REC_SPEC.domain.reports == ("polled/",) and "forwarded/*" not in REC_SPEC.object_door
+    assert not hasattr(ingest, "INGEST") and not hasattr(ingest, "FORWARDED")
+    assert not hasattr(ingest.Ingest, "announce") and not hasattr(chain.Forwarder, "publish")
+    for star in (frozenset(), {"east"}):
+        wall = Clock()
+        north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall, star=star)
+        centre.want(SERIAL, "recorder:centre")
+        relay.subscribe(SERIAL, "recorder:east")
+        for _ in range(3):
+            fwd.pass_once(); pusher.pass_once([{"t": wall(), "key": True}]); wall.advance(1); domain_pass()
+        for c in (north, east):
+            keys = c.objects.list("rec/")
+            assert "rec/heartbeats/r-1" in keys and any(k.startswith("rec/polled/") for k in keys), keys
+            assert "rec/ingest" not in keys and not any(k.startswith("rec/forwarded") for k in keys), keys

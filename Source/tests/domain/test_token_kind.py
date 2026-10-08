@@ -10,7 +10,8 @@ from w2cplatform.cluster.variables import FakeVariables
 from w2cplatform.domain.access import ClusterAccess
 from w2cplatform.domain.agent import GRANTS_PATH, KEYS_PATH
 from w2cplatform.domain.grants import ClusterAuthoriser, ClusterGrants, Grant, grants_to_items
-from vms.domainpart.ingest import Ingest, Refused, audience
+from vms.domainpart.ingest import Refused, audience
+from tests.vmsconftest import ingest_recorder
 from w2cplatform.trust.tokens import TokenIssuer, WrongKind, kind_of, verify
 from w2cplatform.access import Denied
 
@@ -76,7 +77,7 @@ def test_a_camera_or_relay_token_is_not_a_person_at_the_consoles_gate_even_with_
 
 def test_an_ingest_takes_stream_tokens_for_streams_and_ask_tokens_for_asks():
     t, tok = _tokens()
-    ing = Ingest("south", ["srt://srv-1.south:9000"], keys=t.keyset, wall=lambda: NOW)
+    ing = ingest_recorder("south", "srt://srv-1.south:9000", lambda: NOW, keys=t.keyset).ingest   # a recorder's (ADR-0065)
     assert ing.poll(tok["stream"], "SN5001")["version"] >= 0
     for k in ("person", "ask"):
         try:

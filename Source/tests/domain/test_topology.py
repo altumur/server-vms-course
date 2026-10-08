@@ -13,7 +13,7 @@ import urllib.request
 
 from w2cplatform.cluster.variables import Conflict, FakeVariables
 
-from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
+from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.api import ApiError, ConsoleAPI
 from vms.domainpart.books import Books
 from w2cplatform.domain.relay import Relay
@@ -21,7 +21,8 @@ from w2cplatform.domain.console import Console
 from vms.domainpart.crossing import Crossings
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import DomainDirectory, Federation
-from vms.domainpart.ingest import CameraPusher, Ingest
+from vms.domainpart.ingest import CameraPusher
+from tests.vmsconftest import ingest_recorder
 from w2cplatform.domain.placement import UnitSite, ClusterPlacer
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
@@ -98,7 +99,7 @@ def test_the_passes_follow_the_topology_without_a_restart():
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     for name, c, urls in (("north", north, CENTRE_URLS), ("east", east, RELAY_URLS)):
-        Ingest(name, urls, keys=lambda c=c: ClusterTrust(c.vars).keyset(), wall=wall).announce(c.objects)
+        ingest_recorder(name, urls[0], wall, c.vars, c.objects)       # each ingest in a recorder, said in its heartbeat
     cam = DeviceCluster("SN8002", FakeVariables(), wall=wall, pushes=True)
     cam.boot(); cam.door_open = False
     fed.add(member_copy(cam.name, north.objects, wall=wall))          # configured: it reports directly

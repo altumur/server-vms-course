@@ -18,7 +18,8 @@ from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import MEMBER_OBJECTS, DomainDirectory, Federation, Unreachable
 from w2cplatform.domain.grants import DOMAIN_GRANTS, BadName, Grant, domain_may, grants_from_items, grants_to_items, set_domain_grants
 from w2cplatform.domain.identity import IdentityStore
-from vms.domainpart.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Ingest, Refused, audience
+from vms.domainpart.ingest import ASK_DEADLINE_MAX, MAX_LIVE_ASKS, Refused, audience
+from tests.vmsconftest import ingest_recorder
 from w2cplatform.domain.pending import OUTCOMES_PATH, PendingEdits
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
@@ -235,7 +236,7 @@ def test_an_ask_whose_deadline_or_camera_clock_is_not_a_number_is_refused_and_th
     south, _ = make_cluster("south")
     signer = Signer("acme", south.vars, now=wall)
     DomainPublisher(south.vars).publish_keys(signer.tokens.keyset())
-    ing = Ingest("south", ["srt://south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
+    ing = ingest_recorder("south", "srt://south:9000", wall, keys=lambda: ClusterTrust(south.vars).keyset()).ingest
     acts = [{"action": "preset", "arg": i} for i in range(40)]
     token = signer.tokens.issue("cam-GATE", 3600, now=wall(), aud=audience("south"), ref="SN5", by="GATE", acts=acts, kind="ask")
     for deadline, camera_now in ((float("nan"), None), (float("inf"), None), ("soon", None),
@@ -487,14 +488,14 @@ def test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_who
     assert "east/vms/heartbeats/w-1" in MEMBER_OBJECTS.bad
 
 
-def test_a_recorders_url_that_is_a_list_stops_no_source_book_and_a_string_of_urls_takes_no_road_away():
+def test_a_recorders_url_or_ingest_that_is_a_list_stops_no_book_and_takes_no_road_away():
     """Two reads of another cluster's data in the books, not through the one reader: the backup's recorder publishing
     its archive door's `url` as a list raised in `.rstrip` out of the whole `sources` step — no book written for any camera;
-    and an ingest announcing `urls` as a STRING passed `list(...)` as its letters, and the book of primaries handed
-    the camera a string for a road. Now the url is that heartbeat's trouble — no backup archive from it, counted —
-    and the string is an announcement that does not parse: the road the book already held stays."""
+    and where an ingest takes streams said as other than a string passed `list(...)` as its letters, and the book of
+    primaries handed the camera a string for a road. Now each is that heartbeat's trouble — no backup archive from it,
+    no ingest from it (`ingest_urls`: `ingest` is a string by the spec, `heartbeat.strings`), counted — and the road the
+    book already held stays."""
     from vms.domainpart.keys import PRIMARIES_PATH, SOURCES_PATH
-    from vms.domainpart.ingest import INGEST
     from w2cplatform.contract import Heartbeat, Subsystem
     from tests.domainvms.test_two_servers import A_URLS, SERIAL as SN, _office
     wall = Clock()
@@ -506,8 +507,10 @@ def test_a_recorders_url_that_is_a_list_stops_no_source_book_and_a_string_of_url
     entry = json.loads(books["srv-a"][SN])
     assert "backups" not in entry and json.loads(o.b.vars.get(f"{SOURCES_PATH}/srv-a")[0][SN]) == entry
     assert any(k.endswith("#url") for k in MEMBER_OBJECTS.bad)
-    o.a.objects.put(INGEST, json.dumps({"cluster": "srv-a", "urls": "srt://srv-a:9000", "ts": wall()}).encode())
+    o.a.objects.put(Subsystem("rec").heartbeat_key("r-ingest"),                # srv-a's ingest, said as a list
+                    Heartbeat("r-ingest", wall(), [], {"ingest": A_URLS}).to_bytes())
     o.crossings.publish_primaries()
+    assert any(k.endswith("#ingest") for k in MEMBER_OBJECTS.bad)
     said = json.loads(o.b.vars.get(f"{PRIMARIES_PATH}/{o.cam.name}")[0][SN])
     assert said["ingest"]["urls"] == A_URLS                               # the road it had, not a string
 
@@ -603,7 +606,7 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
     south, _ = make_cluster("south")
     signer = Signer("acme", south.vars, now=wall)
     DomainPublisher(south.vars).publish_keys(signer.tokens.keyset())
-    ing = Ingest("south", ["srt://south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
+    ing = ingest_recorder("south", "srt://south:9000", wall, keys=lambda: ClusterTrust(south.vars).keyset()).ingest
     acts = [{"action": "preset", "arg": i} for i in range(MAX_LIVE_ASKS)]
 
     def token(by):
