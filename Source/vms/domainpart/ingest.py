@@ -103,6 +103,7 @@ from vms.card import PIECE_BYTES       # what one piece of a camera's card may w
 from vms.card import RING_BYTES        # …and the camera's ring: what a pusher with no camera ring keeps at most
 from vms.card import CamLine           # …and the camera's line of time, which steps of its clock do not move
 from vms.card import RING_AHEAD        # …and how much later than the camera's clock its frame may lie on its line
+from vms.card import CLOCK_FLOOR       # …and the time before which the camera's clock is not set
 from vms.obsd import archive_ms, unix_s
 
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite
@@ -250,6 +251,24 @@ OFFSET_SLEW = 0.5
 # of now+9 did what one of now+59 did, inside every bound.
 CAMERA_AHEAD = RING_AHEAD + OFFSET_HOLD
 STREAM_JUMP = 2.0
+# THE PIECES OF A CAMERA'S OFFSET ARE KEPT (ADR-0019, the product's `recproc/clockkept.go`). The offset held is one number
+# in this process's memory, and each of its moves — a step of somebody's clock (`clock_steps`) — is where the recorder's
+# frames went over from the old offset to the new. A range is told the camera by the offset its frames were PUT by: the
+# PIECE it lies in (`_Camera.pieces`, `Ingest._told_at`), not the one held now — a hole from before a step is asked on the
+# clock it was captured on. A restart of the ingest, or the camera coming back to another ingest of its cluster, began
+# with nothing: the first word after it was the offset for every range, and the hole before the step was read a step
+# away. Now the pieces live in a ROW of the cluster's store (`rec/ingest/clock/<ref>.json`, the rec spec's `objects.rows`),
+# written when they change (`save_clock`) and read once per camera on its first clock word (`load_clock`; `keep_clocks`
+# wires both over the store): the next ingest goes on from them, the newest held firm — it rests on the words of the
+# ingest before. The product's shape, `{v: 1, at, pieces: [...]}`: `at` the ms of the camera's last clock word, each piece
+# `from` (the camera's ms where it begins), `srv_from` (this cluster's), `off_ms`, `old_off_ms`; the product's other
+# fields of a piece (its line, its zone) the course does not say — kept as they came, written as the product's zero. One
+# move takes pieces BACK: the camera's clock being set, which relabels on its line what was placed while it was unset
+# (`_set_clock`).
+CLOCK_KEPT = "rec/ingest/clock"        # `/<ref>.json`
+CLOCK_PIECES_KEPT = 32                 # the newest pieces a camera keeps — the product's `ClockPiecesKept`
+_PIECE_FIELDS = ("from", "srv_from", "off_ms", "lo", "fwd", "old_off_ms", "sure", "zone", "back", "line", "line_from",
+                 "cont")               # the product's `keptPiece`, in its order; all but the first three omitted at zero
 
 
 # ONE ENTRY OF A BOOK THAT DOES NOT PARSE IS THAT ENTRY'S TROUBLE (the eighth review's sibling, left here by the М12
@@ -367,6 +386,14 @@ class _Camera:
     rtt_least: float | None = None                               # the least round trip the camera said (`_offset`)
     newest: float | None = None                                  # the newest frame it pushed, on its own clock
     clock_steps: int = 0                                         # times the held offset moved
+    # The pieces of the offset (`CLOCK_KEPT`): where each offset began to put the camera's frames, the newest last, at
+    # most `CLOCK_PIECES_KEPT` — dicts of the product's fields (`_PIECE_FIELDS`)
+    pieces: list[dict] = field(default_factory=list)
+    pieces_dirty: bool = False                                   # …changed since they were last kept (`save_clock`)
+    clock_loaded: bool = False                                   # …an ingest before was asked for them (`load_clock`)
+    restored: int = 0                                            # …how many came from it
+    clock_at: float | None = None                                # when the camera last said its clock, on this clock
+    rose_at: float | None = None                                 # when a provisional rise began to put frames
     asks: dict[str, dict] = field(default_factory=dict)          # asks for this camera: {id: {action, deadline, by}}
     outcomes: dict[str, tuple] = field(default_factory=dict)     # what became of each, when, and whose ask: (outcome, at, by)
     version: int = 0
@@ -380,13 +407,18 @@ class Ingest:
     `peers()` are the other ingests of the same cluster (AG) — on a real cluster, found through its store."""
 
     def __init__(self, cluster: str, urls: list[str], keys, revoked=lambda: set(), wall=time.time,
-                 name: str | None = None, peers=lambda: [], should=None, written=None):
+                 name: str | None = None, peers=lambda: [], should=None, written=None, load_clock=None,
+                 save_clock=None):
         """`should(ref) -> bool | None`: whether THIS cluster should be recording the camera now — from its own
         rec rows (`should_from_snapshot`). Given it, every poll also says whether the recording is UNCOVERED:
         it should be written and no recorder here takes the stream. The camera needs no domain to know that its
-        primary does not take its stream (М11 lesson 1)."""
+        primary does not take its stream (М11 lesson 1).
+
+        `load_clock(ref) -> bytes | None` and `save_clock(ref, data)`: where the camera's pieces of the offset are kept
+        for the next ingest (`CLOCK_KEPT`; over the cluster's store: `keep_clocks`). None: nothing is kept."""
         self.cluster, self.urls, self.keys, self.revoked, self.wall = cluster, list(urls), keys, revoked, wall
         self.name, self.peers, self.should = name or (urls[0] if urls else cluster), peers, should
+        self.load_clock, self.save_clock = load_clock, save_clock
         # `written(ref) -> float | None`: how far this cluster's recorder WROTE the camera, on the cluster's clock
         # (`written_from_heartbeats`) — the `have` every poll answer carries (feedback CB).
         self.written = written
@@ -508,8 +540,106 @@ class Ingest:
         if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(ref):
             raise Refused(f"stream token is for {p.get('ref')} at {p.get('aud')}, not {ref} at {audience(self.cluster)}")
         if camera_now is not None:                               # every request says what time the camera thinks it is
-            self._offset(ref, self._cam(ref), self.wall(), self.wall() - _finite_clock(camera_now), _round_trip(rtt))
+            cam, now = self._cam(ref), self.wall()
+            offset = now - _finite_clock(camera_now)
+            self._restore(ref, cam)                              # its first word here: from what an ingest before kept
+            self._offset(ref, cam, now, offset, _round_trip(rtt))
+            cam.clock_at = now
+            self._keep(ref, cam)
         return p
+
+    # -- the pieces of the offset, kept (`CLOCK_KEPT`) ---------------------------------------------------
+    @staticmethod
+    def _piece(cam: _Camera, at: float, off: float, old: float | None, rise: bool = False) -> None:
+        """A new piece of the offset: `off` puts the camera's frames from `at` on this cluster's clock on. `rise`: a rise
+        past `CLOCK_STEP`, confirmed — this process's own mark (`_set_clock`), never kept."""
+        p = {"from": int(round((at - off) * 1000)), "srv_from": int(round(at * 1000)), "off_ms": int(round(off * 1000))}
+        if old is not None and int(round(old * 1000)):
+            p["old_off_ms"] = int(round(old * 1000))
+        if rise:
+            p["_rise"] = True
+        cam.pieces = (cam.pieces + [p])[-CLOCK_PIECES_KEPT:]
+        cam.pieces_dirty = True
+
+    @staticmethod
+    def _repiece(cam: _Camera, off: float) -> None:
+        """The newest piece's offset was one request's travel (a move down from an offset not held firm, `_untold`): it
+        is this one, from where it began."""
+        if not cam.pieces:
+            return
+        p = dict(cam.pieces[-1], off_ms=int(round(off * 1000)))
+        p["from"] = p["srv_from"] - p["off_ms"]
+        cam.pieces[-1], cam.pieces_dirty = p, True
+
+    @staticmethod
+    def _set_clock(cam: _Camera, off: float) -> bool:
+        """A move down past `CLOCK_STEP` that is the camera's clock being SET: the pieces it ends were of a clock not set —
+        one that read before `CLOCK_FLOOR` (a camera with no RTC, in 1970), or a rise past `CLOCK_STEP` from where this one
+        goes back to (its line went on after the card's newest by a guess, `CamLine.adrift`). The camera's line relabels
+        what it placed since its clock was unset (`CamLine._set`): on its card those frames lie by the set clock now, and
+        so do their pieces — they go, and the set offset holds from where the first of them began. True when it was so."""
+        gone = []
+        while cam.pieces:
+            p = cam.pieces[-1]
+            unset = p["from"] < CLOCK_FLOOR * 1000
+            adrift = p.get("_rise") and abs(p.get("old_off_ms", 0) - off * 1000) <= CLOCK_STEP * 1000
+            if not (unset or adrift):
+                break
+            gone.append(cam.pieces.pop())
+        if not gone:
+            return False
+        if not cam.pieces or abs(cam.pieces[-1]["off_ms"] - off * 1000) > OFFSET_HOLD * 1000:
+            at = gone[-1]["srv_from"]
+            cam.pieces.append({"from": at - int(round(off * 1000)), "srv_from": at, "off_ms": int(round(off * 1000))})
+        cam.pieces_dirty = True
+        return True
+
+    def _told_at(self, cam: _Camera, t0: float) -> float | None:
+        """The offset a range from `t0` (this cluster's clock) is told the camera by: the piece's it lies in — its frames
+        were put by it — and the firm one (`_told`) from the newest piece on; None while a rise is provisional."""
+        firm = self._told(cam)
+        if firm is None or not cam.pieces or t0 * 1000 >= cam.pieces[-1]["srv_from"]:
+            return firm
+        for p in reversed(cam.pieces[:-1]):
+            if p["srv_from"] <= t0 * 1000:
+                return p["off_ms"] / 1000
+        return cam.pieces[0]["off_ms"] / 1000                    # the oldest kept holds whatever came before it
+
+    def _restore(self, ref: str, cam: _Camera) -> None:
+        """Once per camera, before its first word here is taken: the pieces an ingest before kept (`load_clock`). The
+        newest is the offset held, and held FIRM — it rests on the words of the ingest before: the first word here is
+        measured against it as any word is (a step is a step, a request that travelled is travel)."""
+        if cam.clock_loaded or cam.told or self.load_clock is None:
+            return
+        cam.clock_loaded = True
+        try:
+            kept = _kept_clock(self.load_clock(ref))
+        except Exception as e:                                   # noqa: BLE001 — a store that fails: this ingest begins afresh
+            log.warning("camera %s: the pieces of its offset could not be read (%s): this ingest begins afresh", ref, e)
+            return
+        if kept is None:
+            return
+        at, pieces = kept
+        cam.pieces, cam.restored = pieces, len(pieces)
+        cam.offset, cam.told, cam.agreed = pieces[-1]["off_ms"] / 1000, True, (float("-inf"), RISE_REQUESTS)
+        cam.clock_at = at
+        log.info("camera %s: the pieces of its offset, as an ingest before kept them: %d", ref, len(pieces))
+
+    def _keep(self, ref: str, cam: _Camera) -> None:
+        """The camera's pieces written down (`save_clock`) when they changed: the newest `CLOCK_PIECES_KEPT`, the
+        product's bytes."""
+        if not cam.pieces_dirty or not cam.pieces or self.save_clock is None:
+            return
+        cam.pieces_dirty = False
+        at = int(round((cam.clock_at if cam.clock_at is not None else self.wall()) * 1000))
+        data = json.dumps({"v": 1, "at": at, "pieces": [
+            {k: p[k] for k in _PIECE_FIELDS if k in p and (k in ("from", "srv_from", "off_ms") or p[k])}
+            for p in cam.pieces[-CLOCK_PIECES_KEPT:]]}, separators=(",", ":")).encode()
+        try:
+            self.save_clock(ref, data)
+        except Exception as e:                                   # noqa: BLE001 — the next ingest begins afresh, as before
+            log.warning("camera %s: the pieces of its offset could not be kept (%s): an ingest after this one begins "
+                        "afresh", ref, e)
 
     def _offset(self, ref: str, cam: _Camera, now: float, offset: float, rtt: float | None = None) -> None:
         """The camera's offset, held: moved by what one request says only past `OFFSET_HOLD` — down by the frames (a
@@ -526,6 +656,7 @@ class Ingest:
             return rise if rtt is None else rise - max(0.0, rtt - cam.rtt_least)
         if not cam.told:
             cam.offset, cam.told, cam.agreed = offset, True, (now, 1)
+            self._piece(cam, now, offset, None)
         elif offset < held - OFFSET_HOLD and cam.provisional is not None:
             # Back on the old clock: the rise was a request's travel. Withdrawn — to the offset held before it, not this
             # request's own word (its travel in it would put the next frame a few milliseconds before the last) — by the
@@ -548,6 +679,12 @@ class Ingest:
                 cam.target, cam.rise, cam.leap = offset, None, offset < held - CLOCK_STEP
             if not firm:
                 self._untold(ref, offset, now)                   # what it was held at was a request's travel
+            if offset < held - CLOCK_STEP and self._set_clock(cam, offset):
+                pass                                             # the camera's clock set: its line relabelled its pieces
+            elif not firm:
+                self._repiece(cam, offset)                       # …and so was its piece
+            else:
+                self._piece(cam, now, offset, held)              # the frames from here on: the new piece
             cam.agreed = (now, 1)
         elif offset > held + CLOCK_STEP and proven(offset - held) > CLOCK_STEP:
             # A rise past `CLOCK_STEP`: taken at once, PROVISIONALLY (DZ, the product's rule): a camera that rebooted with
@@ -556,7 +693,7 @@ class Ingest:
             # clock withdraws it (above), `RISE_REQUESTS` agreeing make it a step, counted then. One whose road explains
             # it past `CLOCK_STEP` is a rise up to it (below; the twelfth and thirteenth reviews).
             if cam.provisional is None:
-                cam.provisional = held
+                cam.provisional, cam.rose_at = held, now         # …its piece begins here, when it is confirmed
             cam.offset, cam.target, cam.leap, cam.newest, cam.rise = offset, None, False, None, None
             cam.agreed, cam.slow = (now, 1), False
         elif offset > held + OFFSET_HOLD:
@@ -567,6 +704,7 @@ class Ingest:
                 since, low, n = cam.rise or (now, offset, 0)
                 cam.rise = (since, min(low, offset), n + 1)
                 if now - since >= OFFSET_RISE and n + 1 >= RISE_REQUESTS:
+                    self._piece(cam, now, cam.rise[1], held)
                     self._moved(ref, cam, cam.rise[1])
                     cam.agreed = (since, n + 1)                  # every request of the window agreed with it: firm
         elif cam.provisional is not None and proven(cam.offset - cam.provisional) <= OFFSET_HOLD:
@@ -587,6 +725,7 @@ class Ingest:
                 log.warning("camera %s: its clock moved %.3f s against this cluster's (it rebooted with its clock unset, or "
                             "this cluster's clock stepped): its frames are put on this clock by the new difference",
                             ref, cam.provisional - cam.offset)
+                self._piece(cam, cam.rose_at if cam.rose_at is not None else now, cam.offset, cam.provisional, rise=True)
                 cam.provisional, cam.slow = None, False
                 cam.agreed = (float("-inf"), cam.agreed[1])     # firm: a step of a clock — the next one back is taken at once
 
@@ -738,7 +877,7 @@ class Ingest:
             for rid, r in list(c.ranges.items()):
                 by = c.told_by.get(rid)
                 if by is None and firm is not None:
-                    by = c.told_by[rid] = firm
+                    by = c.told_by[rid] = self._told_at(cam, r[0])   # by the piece its frames were put by
                 if by is not None:
                     ranges[rid], told[rid] = r, by
             _forget_outcomes(c, now)
@@ -2524,6 +2663,54 @@ def written_from_heartbeats(objects, wall=time.time, fresh: float = 45.0):
                         best = max(best or float("-inf"), at)
         return best
     return written
+
+
+def clock_key(ref) -> str:
+    """Where a camera's pieces of the offset are kept: a row of this cluster's store (`CLOCK_KEPT`, the rec spec's
+    `objects.rows`)."""
+    return f"{CLOCK_KEPT}/{ref}.json"
+
+
+def keep_clocks(ingest: Ingest, objects) -> Ingest:
+    """The ingest's `load_clock`/`save_clock` over this cluster's object store (the product's `keepClocks`): the next
+    ingest that hears the camera — this one restarted, another of the cluster the camera moved to — goes on from its
+    pieces. WHY THE STORE, NOT THE CAMERA: the pieces are this side's knowledge — this cluster's clock against the
+    camera's, as its words showed it — and the camera cannot say them. The store is the cluster's: every recorder of it
+    reads it, and a few hundred bytes a camera, written when a piece begins, are nothing to it. A cluster the camera
+    moves to from another begins afresh, as before."""
+    def load(ref) -> bytes | None:
+        return objects.get(clock_key(ref))
+
+    def save(ref, data: bytes) -> None:
+        put = getattr(objects, "put_durable", None) or objects.put
+        put(clock_key(ref), data)
+    ingest.load_clock, ingest.save_clock = load, save
+    return ingest
+
+
+def _kept_clock(data) -> tuple[float, list[dict]] | None:
+    """What `save_clock` wrote — `(at, pieces)`, `at` in seconds — or None: nothing kept, another version, or bytes that
+    do not parse (this ingest begins afresh, as with nothing). The newest `CLOCK_PIECES_KEPT`; a piece's fields the
+    course does not say come along as they are, and the oldest holds whatever came before it (no `cont`)."""
+    if not data:
+        return None
+    try:
+        k = json.loads(data)
+    except PARSE_ERRORS:
+        return None
+    if not isinstance(k, dict) or k.get("v") != 1 or not isinstance(k.get("pieces"), list) or not k["pieces"]:
+        return None
+
+    def ms(v) -> bool:
+        return isinstance(v, int) and not isinstance(v, bool)
+    pieces = [{f: p[f] for f in _PIECE_FIELDS if f in p} for p in k["pieces"] if isinstance(p, dict)]
+    if len(pieces) != len(k["pieces"]) or not all(ms(p.get("from")) and ms(p.get("srv_from")) and ms(p.get("off_ms"))
+                                                  for p in pieces):
+        return None
+    pieces = pieces[-CLOCK_PIECES_KEPT:]
+    pieces[0].pop("cont", None)
+    at = k.get("at")
+    return (at / 1000 if ms(at) else None), pieces
 
 
 def backup_gate(ingest):
