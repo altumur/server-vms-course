@@ -43,10 +43,8 @@ course-only vms.subsystem.yaml worker.writes[devices]   # ADR-0012: the course f
 product-only auto.subsystem.yaml heartbeat
 product-only auto.subsystem.yaml heartbeat.strings
 product-only auto.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
-product-only live.subsystem.yaml snapshot[grace]   # ADR-0010: the product drops it — «Сборка»
 product-only rec.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
 product-only rec.subsystem.yaml heartbeat.strings[ingest]   # ADR-0019: the product first; the course's side — «Лекции»
-product-only rec.subsystem.yaml heartbeat.strings[ingest_rtsp]   # ADR-0019: the product drops it — «Сборка»
 product-only rec.subsystem.yaml objects.door[taken/*]   # ADR-0057: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/clock/*]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/up/*]   # ADR-0019: the product first; the course's side — «Лекции»
@@ -60,7 +58,4 @@ product-only vms.subsystem.yaml domain.kept[ingest-keys]   # ADR-0010: the produ
 product-only vms.subsystem.yaml domain.kept[lift-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[scenarios]   # ADR-0010: the product moves it to auto's domain.shared — «Сборка»
 product-only vms.subsystem.yaml domain.kept[upstream-keys]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml heartbeat.strings[device_url]   # ADR-0019: the product drops it — «Сборка»
 product-only vms.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
-product-only vms.subsystem.yaml snapshot[alarms_retention_days]   # ADR-0010: the product drops it — «Сборка»
-product-only vms.subsystem.yaml snapshot[folders]   # ADR-0010: the product drops it — «Сборка»
