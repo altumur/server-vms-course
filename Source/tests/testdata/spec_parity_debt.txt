@@ -6,44 +6,14 @@ course-only auto.subsystem.yaml domain.shared.name   # ADR-0010/0032: the course
 course-only auto.subsystem.yaml domain.shared.schema   # ADR-0010/0032: the course first; the product's side — «Сборка»
 course-only auto.subsystem.yaml domain.shared.type   # ADR-0010/0032: the course first; the product's side — «Сборка»
 course-only auto.subsystem.yaml domain.shared[scenarios]   # ADR-0010: the course first; the product's side — «Сборка»
-course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: the course first; the product's side — «Сборка»
+course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: detectors are not in the product — «Сборка»
 course-only rec.subsystem.yaml domain.reports[ingest]   # ADR-0010: the course first; the product's side — «Сборка»
 course-only rec.subsystem.yaml objects.door[forwarded/*]   # ADR-0019: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[acts]   # ADR-0010: the course first; the product's side — «Лекции»
 course-only vms.subsystem.yaml domain.tokens.ask.claims[up]   # ADR-0010: the course first; the product's side — «Лекции»
-course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0019: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.device   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.device.required   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.device.type   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.events   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.events.type   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.identity   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.identity.maxLength   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.identity.schema   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.identity.type   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.presets   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.presets.default   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.presets.type   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.ptz   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.ptz.default   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.ptz.type   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.rays   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.rays.default   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.rays.type   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.relays   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.relays.default   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.fields.relays.type   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml tables.devices.key   # ADR-0012: the course first; the product's side — «Сборка»
-course-only vms.subsystem.yaml worker
-course-only vms.subsystem.yaml worker.writes
-course-only vms.subsystem.yaml worker.writes[devices]   # ADR-0012: the course first; the product's side — «Сборка»
-product-only auto.subsystem.yaml heartbeat
-product-only auto.subsystem.yaml heartbeat.strings
-product-only auto.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
-product-only rec.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
+course-only vms.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
+course-only vms.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
+course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml heartbeat.strings[ingest]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml secrets
 product-only rec.subsystem.yaml secrets.reads
@@ -55,4 +25,3 @@ product-only vms.subsystem.yaml domain.kept[ingest-keys]   # ADR-0010: the produ
 product-only vms.subsystem.yaml domain.kept[lift-keys]   # ADR-0010: the product first; the course's side — «Лекции»
 product-only vms.subsystem.yaml domain.kept[scenarios]   # ADR-0010: the product moves it to auto's domain.shared — «Сборка»
 product-only vms.subsystem.yaml domain.kept[upstream-keys]   # ADR-0010: the product first; the course's side — «Лекции»
-product-only vms.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
