@@ -414,9 +414,10 @@ domain:
     stream: {lifetime: 86400, claims: [aud, ref]}
     ask: {lifetime: 86400, claims: [aud, ref, by, acts, up]}
   # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
-  # `<book>/<member>` at the holder and `<book>` in the member that carried it home. The product's issued stream keys
-  # are no rows here (a book's entry carries its token sealed, `token_secret`); its asks carried up wait in the relay's
-  # memory; the scenarios between cameras are `auto`'s document in the shared settings (`auto.subsystem.yaml`).
+  # `<book>/<member>` at the holder and `<book>` in the member that carried it home. Issued keys are no rows here: a
+  # book's entry carries its token sealed, `token_secret`, the domain's signer's (`tokens:` above; ADR-0010, its addition
+  # of 2026-10-08); asks carried up wait in the relay's memory; the scenarios between cameras are `auto`'s document in
+  # the shared settings (`auto.subsystem.yaml`).
   # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
   # them at GET /domain/shared/vms): the folders the page offers, and two that inherit — the site's alarm kinds
   # (added to the camera's own) and the events' retention.

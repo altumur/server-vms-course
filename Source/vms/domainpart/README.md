@@ -53,5 +53,7 @@ The platform's domain page draws members, units and causes from `domain/view`. W
 
 The domain card's «Ключи» tab: the families are the spec's now — `/spec` → `domain.keys` (`[{id, keys, prefix}]`) and
 `display.keys` (`{<id>: {title, about, absent}}`), merged by id; the product page's `KEY_FAMILIES` constant gives way to
-them. The course's VMS has no rows for the product's issued stream keys (a book's entry carries its token sealed,
-`token_secret`), its ask lifts (in the relay's memory) or a receivers' book; scenarios are the platform's `domain/shared`.
+them. No rows for issued keys on either side: a book's entry carries its token sealed (`token_secret`), the domain's
+signer's — the ask token with `by`, `acts` and `up` (ADR-0010, its addition of 2026-10-08; the product's receivers' book,
+lifts and key lists went in b5ae5b7); asks carried up wait in the relay's memory; scenarios are the platform's
+`domain/shared`.
