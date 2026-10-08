@@ -47,7 +47,6 @@ product-only live.subsystem.yaml snapshot[grace]   # ADR-0010: the product drops
 product-only rec.subsystem.yaml heartbeat.strings[events]   # ADR-0019: the product moves it to the platform's fields — «Сборка»
 product-only rec.subsystem.yaml heartbeat.strings[ingest]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml heartbeat.strings[ingest_rtsp]   # ADR-0019: the product drops it — «Сборка»
-product-only rec.subsystem.yaml objects.door[taken/*]   # ADR-0057: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/clock/*]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml objects.rows[ingest/up/*]   # ADR-0019: the product first; the course's side — «Лекции»
 product-only rec.subsystem.yaml secrets
