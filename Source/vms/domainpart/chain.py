@@ -67,25 +67,22 @@ def retry_wait(period: float) -> float:
 # For every camera a cluster records, the centre's ingest and a token to push to it — or, for a star relay,
 # a token to PULL from it. Tokens are the domain signer's, re-issued past their half-life (Lesson 16).
 #
-# The centre's announcement and the books' own entries are read past what does not parse (the eighth review's sibling,
-# left here by the М12 pass): a torn announcement keeps the road each entry already names — tokens are still re-issued
-# on it — and a torn entry is issued anew. Either raised out of the whole pass, and a day later every relay's token to
-# push up had run out.
+# Where the centre takes streams is what its recorders say in their heartbeats (`ingest_urls`: ADR-0065, its addition of
+# 2026-10-08 — the ingest lives in the recorder, and no object of the centre's announces it). The books' own entries are
+# read past what does not parse (the eighth review's sibling, left here by the М12 pass): a torn entry is issued anew. A
+# centre none of whose recorders heard lately says an ingest keeps the road each entry already names — tokens are still
+# re-issued on it; one torn heartbeat raised out of the whole pass once, and a day later every relay's token to push up
+# had run out. A centre that does not answer: nothing is written.
 def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float = 86400.0) -> dict[str, dict]:
-    from w2cplatform.domain.federation import published
-    from .ingest import BOOKS, INGEST, _an_object, _urls, audience
+    from .ingest import BOOKS, _an_object, audience, ingest_urls
     now, books = crossings.wall(), {}
     c = crossings.view.fed.clusters.get(centre)
-    raw = None
-    if c is not None:
-        try:
-            raw = c.objects.get(INGEST)
-        except Unreachable:
-            raw = None
-    if raw is None or crossings.issuer is None:
+    if c is None or crossings.issuer is None:
         return {}
-    said = published(centre, INGEST, raw, _urls)
-    urls = said["urls"] if said is not None else None             # torn: each entry keeps the road it names
+    try:
+        urls = ingest_urls(centre, c.objects, now) or None       # none said: each entry keeps the road it names
+    except Unreachable:
+        return {}
     # Every camera a relay records — and every camera that only POLLS a relay (nobody records it, and it
     # reaches only that relay, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
     # a viewer in the centre, whose want the relay's forwarder carries down like any other.
@@ -582,27 +579,49 @@ class Forwarder:
         self.dropped[ref] = self.dropped.get(ref, 0) + len(frames) - len(kept)
         return kept
 
-    # …left where a monitor reads it (the eleventh review, a minor: `dropped` and `holes` were said nowhere): an object in
-    # this relay's own store, beside its ingest's (`rec/forwarded/<name>`), which the domain's console says on its
-    # `/metrics` (`ingest.stream_metrics`). The process that runs the forwarder leaves it as its ingest leaves its own.
-    def publish(self, objects) -> dict:
-        from .ingest import FORWARDED
-        st = self.stats()
-        key = f"{FORWARDED}/" + "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in self.name)
-        objects.put(key, json.dumps({"cluster": self.local.cluster, "forwarder": self.name, "ts": self.local.wall(),
-                                     "cameras": st}).encode())
-        return st
-
+    # …SAID IN THE RECORDER'S HEARTBEAT, IN THE PRODUCT'S WORDS (ADR-0065 and its addition of 2026-10-08; ADR-0019). The
+    # forwarder lives in the relay's recorder (`RecWorker.host_ingest`, as `recproc/run.go`), and what it carried and lost
+    # is `upstream: {<ref>: …}` there — the product's `Forwarder.Stats` (`recproc/forwarder.go`), its seventeen words. Not
+    # an object of its own (`rec/forwarded/<name>` is gone, ADR-0003). Per camera of the upstream book that names a road:
+    #
+    #     every camera  mode            `push` or `pull`, as the book says
+    #                   state           what the last pass did (`state`, the course's own sentence)
+    #     pull          down_taken      0 — the course does not count frames taken down
+    #                   down_dropped    0 — nor what its recorder could not take of them
+    #                   down_breaks     pulls whose centre had restarted since the last (`holes`): a batch may be gone
+    #     push          up_sent         0 — the course does not count frames sent up
+    #                   up_dropped      frames dropped past what it holds to push again (`dropped`), and past the queue
+    #                                   between two pushes (its subscription's `dropped`)
+    #                   up_gaps         0 — the course says no gap on the way up
+    #                   up_resumed      0 — nor resumes from this relay's archive
+    #                   up_have         what the centre confirmed of it (unix s, `Ingest.up_have`) — only once it said one
+    #                   up_have_every   0 — the course's centre says no step
+    #                   up_unconfirmed_s  0 — the course does not keep how far the stream up ran ahead of it
+    #                   up_polls        0 — nor counts the centre's answers
+    #                   up_cuts         0 — nor cuts a stream up for a silent centre
+    #                   up_kept         the camera is told the word an earlier process of this relay kept, and the centre
+    #                                   has not answered since (`restore_up`)
+    #                   up_expired      times the centre's word outlived `UP_KEPT_FOR` (`up_expired`)
+    #                   up_kept_writes  times it was written down (`up_writes`)
     def stats(self) -> dict[str, dict]:
-        """Per camera: its state, and what was dropped past what the forwarder holds — kept to push again
-        (`dropped`), and waiting between two pushes (`queue_dropped`); and how many times a pull found its centre restarted
-        since the last — a batch may have gone with it (`holes`); and how many times the centre's word on it outlived
-        `UP_KEPT_FOR` (`up_expired`)."""
-        return {ref: {"state": self.state.get(ref, ""), "dropped": self.dropped.get(ref, 0),
-                      "queue_dropped": getattr(self.queues.get(ref), "dropped", 0), "holes": self.holes.get(ref, 0),
-                      "up_expired": self.up_expired.get(ref, 0)}
-                for ref in sorted(set(self.state) | set(self.queues) | set(self.pulled) | set(self.dropped) | set(self.holes)
-                                  | set(self.up_expired))}
+        out = {}
+        for ref, e in self.book().items():
+            if not e.get("urls"):
+                continue                                         # no road: no loop for it, as the product's `Pass`
+            st = {"mode": e["mode"], "state": self.state.get(ref, "")}
+            if e["mode"] == "pull":
+                st.update(down_taken=0, down_dropped=0, down_breaks=self.holes.get(ref, 0))
+            else:
+                st.update(up_sent=0, up_dropped=self.dropped.get(ref, 0) + getattr(self.queues.get(ref), "dropped", 0),
+                          up_gaps=0, up_resumed=0)
+                if (have := self.local.up_have.get(ref)) is not None:
+                    st["up_have"] = have
+                kept = self._up_kept.get(ref) or {}
+                st.update(up_have_every=0.0, up_unconfirmed_s=0.0, up_polls=0, up_cuts=0,
+                          up_kept=bool(kept.get("on") and not kept.get("seen") and ref in self.local.up_have),
+                          up_expired=self.up_expired.get(ref, 0), up_kept_writes=self.up_writes.get(ref, 0))
+            out[ref] = st
+        return out
 
     def _pull(self, ing, ref: str, e: dict) -> str:
         if not self.needs(ref) and not self.local.wanted(ref):

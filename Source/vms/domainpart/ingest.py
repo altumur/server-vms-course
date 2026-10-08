@@ -6,11 +6,13 @@ did the same (Lesson 3). A camera behind a NAT, on a cellular link, or recorded 
 building or a rented region (Lesson 8) has no door anybody can open. So the camera pushes — and it pushes
 recording and live the same way, because they are the same stream.
 
-    the ingest   a job of the RECORDING cluster, on every server like the console, with a stable address it
-                 announces in its cluster (`rec/ingest`). It takes streams the cameras push, keyed by the
-                 domain's name for the camera, and hands each to whoever in its cluster wants it: the
-                 recorder, to write; the gateway, to show. The fan-out that lived on the camera's worker
-                 (М10B Lesson 9) moves off the camera, into the cluster that consumes it
+    the ingest   lives in the RECORDER of the recording cluster, as the product's does (`recproc/run.go`): every
+                 recorder that hosts one (`RecWorker.host_ingest`) says where it takes streams in its own
+                 heartbeat (`ingest`, and per camera `ingest_streams`; ADR-0065, its addition of 2026-10-08,
+                 and ADR-0019), and the domain reads the addresses there (`ingest_urls`). It takes streams the
+                 cameras push, keyed by the domain's name for the camera, and hands each to whoever in its
+                 cluster wants it: the recorder, to write; the gateway, to show. The fan-out that lived on the
+                 camera's worker (М10B Lesson 9) moves off the camera, into the cluster that consumes it
     where        the camera learns where to push from its book of primaries (Lesson 13, point V): the domain
                  adds the recording cluster's ingest addresses and a STREAM TOKEN. The token is the domain
                  signer's, like every token in this module (Lesson 4): audience the ingest of that cluster,
@@ -114,11 +116,9 @@ from w2cplatform.trust.tokens import TokenError, kid_of, verify
 
 log = logging.getLogger("ingest")
 
-INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
 # `/<ingest>`: when each member last polled here, as ages — {"cluster", "ingest", "ts", "units": {<member>: seconds}};
 # the rec spec's witness (`domain.witness`)
 POLLED = "rec/polled"
-FORWARDED = "rec/forwarded"            # `/<forwarder>`: what a relay's forwarder dropped, per camera (`chain.Forwarder.publish`)
 LINGER = 10.0                          # how long a stream nobody wants any more keeps being asked for
 # Asks (step 8). An outcome is kept this long for the asker to read — the product's automation remembers
 # what it fired for as long (autoworker REMEMBER) — and then forgotten: an ingest's memory is not a log.
@@ -468,10 +468,6 @@ class Ingest:
         with self._cond:
             return self._cond.wait_for(lambda: self._gen != gen, timeout=max(0.0, until - time.monotonic()))
 
-    def announce(self, objects) -> None:
-        """Where cameras push to — in this cluster's own store, where the domain (or this cluster's report) reads it."""
-        objects.put(INGEST, json.dumps({"cluster": self.cluster, "urls": self.urls, "ts": self.wall()}).encode())
-
     # When each camera last polled — the domain's witness that a camera is alive when its agent is not reporting
     # (Lesson 14): the poll is kept by the camera's pusher, another process than its agent. Ages, not times, so
     # the domain reads them against the object's own `ts` and a clock difference cancels out. Named by the MEMBER that
@@ -517,6 +513,57 @@ class Ingest:
         for ref, n in list(self.ahead.items()):
             e = out.setdefault(ref, {})
             e["ahead"] = e.get("ahead", 0) + n
+        return out
+
+    # WHAT THE RECORDER'S HEARTBEAT SAYS OF ITS INGEST, PER CAMERA (ADR-0065, its addition of 2026-10-08; ADR-0019): the
+    # product's `Ingest.Stats` (`recproc/ingest.go`), under `ingest_streams` beside `ingest`, the address — every word of
+    # it, so a reader of either side reads one shape. What the course keeps is said under the product's word:
+    #
+    #     push                  this ingest wants the stream now — its own wants, as the product's (`wants`, not run out)
+    #     live                  the camera pushes here now (`pushing`)
+    #     received              frames its recorders' tee took (`LiveTee.frames`)
+    #     recorders, viewers    subscribers of the recorders' tee named `recorder…` (`taken`'s rule), of the viewers' tee
+    #     repeats_dropped       repeats the tees handed to nobody (`_InOrder.repeats`)
+    #     absurd_frames         frames refused at the door for no time or a time past now (`_timely`, `ahead`)
+    #     ahead_losses          frames far past the stream that the next frame did not follow (`_InOrder.ahead`)
+    #     clock_pieces, clock_pieces_restored    the pieces of the camera's offset, and how many came from before
+    #     last, skew_s, camera_rtt_s, polled_ago   when it last pushed (unix s), the held offset (0.1 s), its least round
+    #                           trip (ms), how long ago it last polled — each only once there is one, as the product's
+    #
+    # Every other count of the product's is nought here: the course's ingest does not keep it (what it drops is in
+    # `lost`, its object `rec/polled/<ingest>`). A camera nobody pushed or polled is said as the product says it: counts
+    # at nought.
+    STREAM_COUNTS = ("received", "viewers", "recorders", "cut_for_full_queue", "repeats_dropped", "streams_replaced",
+                     "clock_back", "stream_gaps", "camera_gaps", "inject_dropped", "inject_losses", "lead_in",
+                     "absurd_frames", "ask_outcomes_dropped", "have_answers", "clock_step_forward", "ahead_repeats",
+                     "ahead_losses", "clock_pieces", "clock_steps_in_stream", "clock_outliers", "clock_ambiguous_frames",
+                     "clock_unsure_frames", "clock_drift_pieces", "clock_step_back_word", "clock_clamped_frames",
+                     "clock_refined", "clock_line_pieces", "clock_pieces_restored", "clock_step_back_withdrawn",
+                     "clock_unplaceable_frames", "clock_refined_by_road", "clock_range_reasked", "clock_road_forgiven")
+    STREAM_SECONDS = ("stream_gap_s", "clock_step_forward_s", "clock_step_back_s", "clock_step_back_word_s")
+
+    def stats(self) -> dict[str, dict]:
+        now, out = self.wall(), {}
+        for ref, c in list(self.cams.items()):
+            live, edge = self.tees.get((ref, "live")), self.tees.get((ref, "edge"))
+            tees = [t for t in (live, edge) if t is not None]
+            st: dict = {"push": any(u > now for u in list(c.wants.values())), "live": self.pushing(ref),
+                        **{w: 0 for w in self.STREAM_COUNTS}, **{w: 0.0 for w in self.STREAM_SECONDS}}
+            st.update(received=getattr(live, "frames", 0),
+                      recorders=sum(1 for w in list(getattr(live, "subscribers", {})) if w.startswith("recorder")),
+                      viewers=len(getattr(edge, "subscribers", {})),
+                      repeats_dropped=sum(getattr(t, "repeats", 0) for t in tees),
+                      absurd_frames=self.ahead.get(ref, 0), ahead_losses=sum(getattr(t, "ahead", 0) for t in tees),
+                      clock_pieces=len(c.pieces), clock_pieces_restored=c.restored)
+            if c.pushed_at is not None:
+                st["last"] = round(c.pushed_at, 3)
+            if c.told:
+                st["skew_s"] = round(c.offset, 1)
+            if c.rtt_least is not None:
+                st["camera_rtt_s"] = round(c.rtt_least, 3)
+            if c.polled_at is not None:
+                st["polled_ago"] = round(now - c.polled_at, 3)
+            out[ref] = st
         return out
 
     def _cam(self, ref) -> _Camera:
@@ -1715,24 +1762,23 @@ DELIVERED_SEAM = 0.25                  # two pieces this close are one stretch: 
 UPLINK_FREE = 2.0
 
 
-# WHAT THE INGESTS AND THE FORWARDERS DID NOT HAND ON, ON `/metrics` (the eleventh review, a minor). An ingest's `lost` —
-# a subscriber's queue that overflowed, a peer cut, repeats, frames far past the stream — and its `clock_steps` were in
-# the object it leaves in its cluster's store (`publish_polled`) and nowhere a monitor reads; a relay's forwarder's
-# `dropped` and `holes` were nowhere at all. Both leave an object now (`publish_polled`, `chain.Forwarder.publish`), and
-# the domain's console, which reads every member's store already (`alarms.DomainAlarms.alive_at`), says them on its
-# `/metrics` — one place for the whole domain, every line labelled with its cluster. Each object goes through the
-# members' one reader (`published`): one that does not parse is counted and logged there, and the rest are said; a
-# member that does not answer is left out of this scrape. Counters since that process began: a restart starts them
-# again, as a Prometheus counter's reset.
+# WHAT THE INGESTS DID NOT HAND ON, ON `/metrics` (the eleventh review, a minor). An ingest's `lost` — a subscriber's
+# queue that overflowed, a peer cut, repeats, frames far past the stream — and its `clock_steps` were in the object it
+# leaves in its cluster's store (`publish_polled`) and nowhere a monitor reads. The domain's console, which reads every
+# member's store already (`alarms.DomainAlarms.alive_at`), says them on its `/metrics` — one place for the whole domain,
+# every line labelled with its cluster. Each object goes through the members' one reader (`published`): one that does not
+# parse is counted and logged there, and the rest are said; a member that does not answer is left out of this scrape.
+# Counters since that process began: a restart starts them again, as a Prometheus counter's reset. A relay's forwarder
+# says what it carried and lost in its recorder's heartbeat (`upstream`, the product's seventeen words; ADR-0065) — not
+# an object of its own, and not here.
 def stream_metrics(fed) -> list[str]:
     from w2cplatform.console import label
     from w2cplatform.rows import number
     from w2cplatform.domain.federation import published
-    lost, steps, dropped, holes = [], [], [], []
+    lost, steps = [], []
     for name, c in list(fed.clusters.items()):
         try:
             polled = [(k, c.objects.get(k)) for k in c.objects.list(POLLED + "/")]
-            forwarded = [(k, c.objects.get(k)) for k in c.objects.list(FORWARDED + "/")]
         except Unreachable:
             continue
         for key, raw in polled:
@@ -1754,19 +1800,7 @@ def stream_metrics(fed) -> list[str]:
                 lost += [f'ingest_frames_lost_total{{{at},camera="{label(ref)}",why="{why}"}} {v}' for why, v in by.items()]
             steps += [f'ingest_clock_steps_total{{{at},camera="{label(ref)}"}} {number(f"{name}/{key}#clock_steps.{ref}", v, int)}'
                       for ref, v in sorted(dict(d.get("clock_steps") or {}).items())]
-        for key, raw in forwarded:
-            d = published(name, key, raw, lambda d: dict(d.get("cameras") or {}))
-            if d is None:
-                continue
-            at = f'cluster="{label(name)}",forwarder="{label(d.get("forwarder", key.rsplit("/", 1)[-1]))}"'
-            for ref, e in sorted(dict(d.get("cameras") or {}).items()):
-                e = e if isinstance(e, dict) else {}
-                n = lambda field: number(f"{name}/{key}#cameras.{ref}.{field}", e.get(field), int)   # noqa: E731
-                dropped += [f'forwarder_frames_dropped_total{{{at},camera="{label(ref)}",where="held"}} {n("dropped")}',
-                            f'forwarder_frames_dropped_total{{{at},camera="{label(ref)}",where="queue"}} {n("queue_dropped")}']
-                holes.append(f'forwarder_holes_total{{{at},camera="{label(ref)}"}} {n("holes")}')
-    return (["# TYPE ingest_frames_lost_total counter"] + lost + ["# TYPE ingest_clock_steps_total counter"] + steps
-            + ["# TYPE forwarder_frames_dropped_total counter"] + dropped + ["# TYPE forwarder_holes_total counter"] + holes)
+    return ["# TYPE ingest_frames_lost_total counter"] + lost + ["# TYPE ingest_clock_steps_total counter"] + steps
 
 
 class CameraPusher:
@@ -2866,7 +2900,7 @@ def _round_trip(rtt) -> float | None:
 
 
 def _urls(v: dict) -> None:
-    """An ingest's announcement: its `urls`, a list of strings."""
+    """A road to an ingest (a book's entry): its `urls`, a list of strings."""
     if not isinstance(v.get("urls"), list) or not all(isinstance(u, str) for u in v["urls"]):
         raise TypeError("its urls are not a list of addresses")
 
@@ -2881,20 +2915,16 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
     from .chain import UPSTREAM_PATH
     now, books = crossings.wall(), {}
 
-    # What another cluster's ingest announced is read through the members' one reader (the review's eighth pass): a
-    # torn announcement raised out of the whole book of asks — every camera's right to ask stopped being re-issued.
-    # One that does not parse keeps the road the book already holds for that cluster (`old`), as the book of
-    # primaries does (`Crossings._ingest`); a cluster that is silent gives no road, as before.
+    # Where another cluster takes streams: what its recorders say in their heartbeats (`ingest_urls`; ADR-0065, its
+    # addition) — the product's `Cameras.IngestURLs`. A cluster that is silent, or none of whose recorders heard lately
+    # says an ingest, gives no road, as the product's book of asks gives none (`len(urls) > 0`).
     def urls_of(cluster, old: dict | None = None):
         c = crossings.view.fed.clusters.get(cluster)
         try:
-            raw = c.objects.get(INGEST) if c is not None else None
+            urls = ingest_urls(cluster, c.objects, now) if c is not None else []
         except Unreachable:
-            raw = None
-        if not raw:
-            return None
-        said = published(cluster, INGEST, raw, _urls)
-        return said["urls"] if said is not None else (old or {}).get("urls")
+            urls = []
+        return urls or None
 
     dc = getattr(crossings.view.fed, "domain_holder", None)
     top = crossings.centre or (dc.name if dc is not None else None)      # where every relay's forwarder goes
@@ -2977,3 +3007,63 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             if have:
                 crossings.vars.put(path, {}, cas=idx)
     return books
+
+
+# -- where a cluster takes streams: its recorders' heartbeats ---------------------------------------------------
+# ADR-0065, its addition of 2026-10-08 (and ADR-0019): the ingest lives in the recorder, and what the others know of it
+# goes by the recorder's heartbeat — `ingest`, its address, and per camera `ingest_streams` (`Ingest.stats`). There is no
+# object of the cluster's that announces it (`rec/ingest` is gone, ADR-0003). Two readers, the product's two:
+#
+#     ingest_urls       the domain's: the addresses cluster `cluster` takes streams at — its recorders heard within
+#                       `lost_after` that say an `ingest`, in the order of their heartbeats' keys (the product's
+#                       `Cameras.IngestURLs`). Read through the members' one reader (`published`): a heartbeat that does
+#                       not parse says nothing; an `ingest` that is not a string — its spec says it is one
+#                       (`heartbeat.strings`) — is that heartbeat's trouble, counted once, and the rest are read
+#     heartbeat_peers   the recorder's: the other ingests of its own cluster (feedback AG, AJ; the product's
+#                       `clusterPeersHeard`) — every recorder of the store this process SAW beat within `fresh` (its own
+#                       clock: `contract.Eyes`, the product's `p.Hearing`) that says an ingest other than `own`, dialled
+#                       by `dial(url)`; one that does not answer is not a peer this time
+INGEST_LOST_AFTER = 45.0               # the platform's `lost_after`: a recorder heard longer ago than this says no ingest
+PEER_LOST_AFTER = 30.0                 # the product's `peerLostAfter`: a peer not heard from for this long is not asked
+
+
+def ingest_urls(cluster: str, objects, now: float, lost_after: float = INGEST_LOST_AFTER) -> list[str]:
+    """The ingest addresses cluster `cluster` announces in its recorders' heartbeats (`objects`: its store). Raises
+    `Unreachable` for a cluster that does not answer."""
+    from w2cplatform.domain.federation import MEMBER_OBJECTS, a_heartbeat
+    out = []
+    for key in sorted(objects.list("rec/heartbeats/")):
+        hb = published(cluster, key, objects.get(key), a_heartbeat) or {}
+        if hb.get("ingest") in (None, "") or now - float(hb.get("ts", 0)) > lost_after:
+            continue
+        url = MEMBER_OBJECTS.read(f"{cluster}/{key}#ingest", lambda: _an_address(hb["ingest"]))
+        if url is not None:
+            out.append(url)
+    return out
+
+
+def _an_address(v) -> str:
+    if not isinstance(v, str):
+        raise TypeError(f"`ingest` is not an address: {v!r:.40}")
+    return v
+
+
+def heartbeat_peers(objects, own, dial, wall=time.time, fresh: float = PEER_LOST_AFTER):
+    """`peers()` for a recorder's ingest: the other ingests of this cluster, from its recorders' heartbeats. `own()`: this
+    ingest's address, left out; `dial(url)`: reaching another ingest of the cluster (in the tests, the network)."""
+    from w2cplatform.console import heard_live, heartbeats
+    from w2cplatform.contract import Eyes, judge_clock
+    eyes = Eyes(judge_clock(wall), wall)
+
+    def peers() -> list:
+        me, now, out = own(), wall(), []
+        for name, hb in heartbeats(objects, "rec/").items():
+            at = hb.extra.get("ingest")
+            if not isinstance(at, str) or not at or at == me or not heard_live("rec", name, hb, now, fresh, eyes):
+                continue
+            try:
+                out.append(dial(at))
+            except Unreachable:
+                continue
+        return out
+    return peers

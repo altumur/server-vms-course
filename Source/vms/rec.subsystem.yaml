@@ -30,20 +30,22 @@ name: rec
 slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
 # a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone; a
-# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`). And
-# the files its resource's door gives the other servers (`resource.door_readable`): what a relay's forwarder dropped,
-# per camera (`rec/forwarded/<forwarder>`), which the ingest reads wherever it runs. What a member reports to the domain
-# (`domain.reports`) the door gives out unasked. A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
+# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`). What
+# a member reports to the domain (`domain.reports`) the resource's door gives out unasked (`resource.door_readable`). What
+# a relay's forwarder carried and lost is not an object: its recorder's heartbeat says it (`upstream`; ADR-0065, its
+# addition of 2026-10-08). A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
 # recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
 # tables door; the door's `verify` reads it (ADR-0057). A relay's word of the centre per camera (`rec/ingest/up/<ref>.json`,
 # `chain.Forwarder`, `UP_KEPT`): the next process of the relay goes on from it while the centre is unreachable; and the
 # pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`) (ADR-0019).
 # What an incidents volume took of each recording, and whether its ring came round (`rec/taken/<volume>`): written by the
 # recorder that holds the volume, read by whichever holds it next, on any box (ADR-0057).
-objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [forwarded/*, taken/*]}
+objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [taken/*]}
 # The fields of a recorder's heartbeat that are strings and that something decides by: the volume it is counted in
-# (`place_by`), why that volume will not open, the box's own volume a page offers to declare (`volumes.py`).
-heartbeat: {strings: [volume, volume_error, archive, volume_missing]}
+# (`place_by`), why that volume will not open, the box's own volume a page offers to declare (`volumes.py`), and where
+# the ingest it hosts takes streams (`ingest`: the domain writes it into the cameras' books, the cluster's other ingests
+# find it there — `ingest.ingest_urls`, `ingest.heartbeat_peers`; ADR-0065, its addition of 2026-10-08).
+heartbeat: {strings: [volume, volume_error, archive, ingest, volume_missing]}
 # A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
@@ -337,13 +339,14 @@ display:
     archive.keep.verified: сохранённое проверено
     archive.keep.copied: сохранённое скопировано
     archive.keep.lost: сохранённое не удалось скопировать
-# The recorders on the domain: a member reports, beside its heartbeats and snapshot, where its ingest takes streams
-# (`rec/ingest`) and when each camera last polled it (`rec/polled/<ingest>`) — the domain's witness that a camera is
-# alive while its agent is silent. The witness names each camera it heard of by whose it is, `cam` — fixed, as the
+# The recorders on the domain: a member reports, beside its heartbeats and snapshot, when each camera last polled its
+# ingest (`rec/polled/<ingest>`) — the domain's witness that a camera is alive while its agent is silent. Where the ingest
+# takes streams is in the recorder's heartbeat (`ingest`), which the domain has already: no report of its own (ADR-0065,
+# its addition of 2026-10-08). The witness names each camera it heard of by whose it is, `cam` — fixed, as the
 # platform requires of the field a witness names by: a camera that is a member is its own cluster, and the ingest names
 # it by the member it is (its stream token's subject), so the domain matches a silent member by its own name.
 domain:
-  reports: [ingest, polled/]
+  reports: [polled/]
   witness: {report: polled, member_field: cam}
   # What the domain's door would let through in a member's recording (ADR-0031). The course's door edits the units of
   # its directory alone (`PUT /domain/<sub>/<rows>/<ref>`) and a recording has no `ref`: declared, as the product's.

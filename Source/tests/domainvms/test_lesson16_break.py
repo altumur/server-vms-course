@@ -15,6 +15,7 @@ from w2cplatform.domain.federation import Unreachable
 from vms.domainpart.ingest import CameraPusher, written_from_heartbeats
 from tests.domain.conftest import Clock, real_card
 from tests.domainvms.test_lesson16_nobody_reaches import SERIAL, URLS, _site
+from tests.vmsconftest import ingest_recorder
 
 
 def _frame(t):
@@ -458,8 +459,8 @@ def test_a_push_repeated_after_its_answer_was_lost_adds_nothing_even_with_have_f
     _second(wall, pusher, 5)
     lost = ingest.lost()[SERIAL]
     assert lost["repeats"] > 50 and lost["dropped"] == {"viewer:v": 3}
-    ingest.publish_polled(south.objects)
-    [key] = south.objects.list(POLLED + "/")
+    ingest.publish_polled(south.objects)                                  # as its recorder's heartbeat writes it
+    [key] = [k for k in south.objects.list(POLLED + "/") if "srv-1" in k]
     assert json.loads(south.objects.get(key))["lost"][SERIAL] == lost
 
 
@@ -473,8 +474,7 @@ def test_a_camera_that_polls_an_ingest_that_restarted_is_answered_at_once_whatev
     south, ingest, pusher, rq, down = _world(wall)
     token = _token(ingest, pusher)
     seen = ingest.poll(token, SERIAL, version=-1)["version"]
-    from vms.domainpart.ingest import Ingest
-    again = Ingest(ingest.cluster, ingest.urls, ingest.keys, wall=wall)    # the same ingest, restarted
+    again = ingest_recorder(ingest.cluster, ingest.urls[0], wall, keys=ingest.keys).ingest   # the same ingest, restarted
     again.want(SERIAL, "recorder:r")
     began = time.monotonic()
     out = again.poll(token, SERIAL, version=seen, wait=2.0)
@@ -542,7 +542,7 @@ def test_a_frame_with_an_absurd_time_is_refused_and_counted_and_the_frames_after
     or whose time is no finite number, is refused now, counted (`ahead`, under `lost`), and never anybody's last frame;
     a frame of an hour ahead too. The same at the other doors into the tees, which the review did not name: what this
     cluster's forwarder injects, and what a peer ingest hands on."""
-    from vms.domainpart.ingest import FRAME_AHEAD, Ingest, PeerLink
+    from vms.domainpart.ingest import FRAME_AHEAD, PeerLink
     wall = Clock(1000.0)
     south, ingest, pusher, rq, down = _world(wall)
     token = _token(ingest, pusher)
@@ -558,7 +558,7 @@ def test_a_frame_with_an_absurd_time_is_refused_and_counted_and_the_frames_after
     assert len(got) == len(bad) + 250 and got == sorted(got)               # every good frame, none of the bad
     assert ingest.lost()[SERIAL]["ahead"] == len(bad) and "repeats" not in ingest.lost()[SERIAL]
     ingest.inject(SERIAL, [{"t": 1e300, "key": True}, _frame(wall())])     # this cluster's forwarder…
-    peer = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: {}, wall=wall)
+    peer = ingest_recorder("south", "srt://srv-2.south:9000", wall, keys=lambda: {}).ingest
     pq = peer.subscribe(SERIAL, "recorder:p", maxsize=1000)
     wall.advance(1)
     PeerLink(peer, SERIAL).send([{"t": 1e300, "key": True}, _frame(wall())])   # …and a peer ingest's stream
@@ -654,11 +654,11 @@ def test_one_frame_far_past_the_stream_silences_no_recorder_at_any_door():
     A camera's own frame is held to its own clock now (`CAMERA_AHEAD`), and in the tee a frame further past the stream
     than `STREAM_JUMP` is the stream's only when the frame after it follows it: 251 of 251 at every door, the stray
     frame counted (`ahead`). A stream that truly jumps — a push begun again after a pause — loses nothing."""
-    from vms.domainpart.ingest import Ingest, PeerLink
+    from vms.domainpart.ingest import PeerLink
     wall = Clock(1000.0)
     south, ingest, pusher, rq, down = _world(wall)
     token = _token(ingest, pusher)
-    peer = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: {}, wall=wall)
+    peer = ingest_recorder("south", "srt://srv-2.south:9000", wall, keys=lambda: {}).ingest
     pq, link = peer.subscribe(SERIAL, "recorder:p", maxsize=1000), PeerLink(peer, SERIAL)
     doors = [("push", lambda fs: ingest.push(token, SERIAL, fs, camera_now=wall()), rq, ingest),
              ("inject", lambda fs: ingest.inject(SERIAL, fs), rq, ingest), ("relay", link.send, pq, peer)]
@@ -690,13 +690,13 @@ def test_a_sparse_stream_reaches_the_recorder_whole_and_at_once_at_every_door():
     60 s apart reach the recorder, every one, each the moment it arrives — and the stray frame from the future the hold
     is there for is still held and dropped (`test_one_frame_far_past_the_stream_silences_no_recorder_at_any_door`)."""
     import random
-    from vms.domainpart.ingest import Ingest, PeerLink
+    from vms.domainpart.ingest import PeerLink
     rnd = random.Random(11)
     for door in ("push", "inject", "relay"):
         wall = Clock(1000.0)
         south, ingest, pusher, rq, down = _world(wall)
         token = _token(ingest, pusher)
-        peer = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: {}, wall=wall)
+        peer = ingest_recorder("south", "srt://srv-2.south:9000", wall, keys=lambda: {}).ingest
         pq, link = peer.subscribe(SERIAL, "recorder:p", maxsize=1000), PeerLink(peer, SERIAL)
         send, q = {"push": (lambda fs: ingest.push(token, SERIAL, fs, camera_now=wall()), rq),
                    "inject": (lambda fs: ingest.inject(SERIAL, fs), rq), "relay": (link.send, pq)}[door]

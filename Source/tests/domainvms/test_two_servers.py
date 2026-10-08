@@ -21,11 +21,12 @@ from vms.domainpart.crossing import Crossings, plan_takeback, resolve
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.domainpart.gateway import Gateway
-from vms.domainpart.ingest import CameraPusher, Ingest, IngestLiveEndpoint, audience, live_road
+from vms.domainpart.ingest import CameraPusher, IngestLiveEndpoint, audience, live_road
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
 from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster
+from tests.vmsconftest import ingest_recorder
 
 SERIAL = "SN6001"
 A_URLS, B_URLS = ["srt://srv-a:9000"], ["srt://srv-b:9000"]
@@ -41,13 +42,11 @@ def _office(wall):
     fed.add(a); fed.add(b)
     signer = Signer("acme", b.vars, now=wall)
     DomainPublisher(b.vars).publish_keys(signer.tokens.keyset())
-    from w2cplatform.domain.agent import ClusterTrust
-    from vms.domainpart.ingest import should_from_snapshot
-    ing = {"srv-a": Ingest("srv-a", A_URLS, keys=lambda: ClusterTrust(a.vars).keyset(), wall=wall,
-                           should=should_from_snapshot(a.objects, wall, sources=a.vars)),
-           "srv-b": Ingest("srv-b", B_URLS, keys=lambda: ClusterTrust(b.vars).keyset(), wall=wall,
-                           should=should_from_snapshot(b.objects, wall, sources=b.vars))}
-    ing["srv-a"].announce(a.objects); ing["srv-b"].announce(b.objects)
+    # Each server's ingest lives in a recorder of its own (`RecWorker.host_ingest`, ADR-0065's addition), which says where
+    # in its heartbeat; whether its cluster should record the camera it reads from its own rows (`should_from_snapshot`)
+    hosts = {"srv-a": ingest_recorder("srv-a", A_URLS[0], wall, a.vars, a.objects, name="r-ingest"),
+             "srv-b": ingest_recorder("srv-b", B_URLS[0], wall, b.vars, b.objects, name="r-ingest")}
+    ing = {n: r.ingest for n, r in hosts.items()}
     agents = {"srv-a": DomainAgent("srv-a", b.vars, a.vars, now=wall),
               "srv-b": DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects)}
     for x in agents.values():
@@ -82,6 +81,9 @@ def _office(wall):
             {"url": "http://srv-b:9100/"}).to_bytes())
 
     def domain_pass(a_up=True, backup_coverage=None):
+        for n, r in hosts.items():
+            if a_up or n != "srv-a":
+                r.heartbeat_once()                                     # where each server's ingest is, said again
         cam.publish(); cam_agent.sync()
         if a_up:
             recorders(backup_coverage=backup_coverage)

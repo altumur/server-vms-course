@@ -10,7 +10,7 @@ import tempfile
 
 from w2cplatform.cluster.variables import FakeVariables
 
-from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
+from w2cplatform.domain.agent import DomainAgent, DomainPublisher
 from w2cplatform.domain.carry import CarryClient, HolderDoor
 from w2cplatform.domain.federation import Federation, Unreachable
 from w2cplatform.domain.members import Members
@@ -20,9 +20,10 @@ from w2cplatform.trust.memberkey import MemberKey
 from w2cplatform.trust.signer import Signer
 from vms.domainpart.crossing import Crossings
 from vms.domainpart.device import DeviceCluster
-from vms.domainpart.ingest import CameraPusher, Ingest
+from vms.domainpart.ingest import CameraPusher
 from vms.domainpart.keys import PRIMARIES_PATH, SOURCES_PATH
 from tests.domain.conftest import Clock, make_cluster
+from tests.vmsconftest import ingest_recorder
 
 SERIAL = "SN6101"
 A_URLS, B_URLS = ["srt://srv-a:9000"], ["srt://srv-b:9000"]
@@ -54,9 +55,9 @@ def _site(wall):
     for n, k in keys.items():
         members.add(n, "voucher", key=k.pub, seal=k.seal_pub)
     door = HolderDoor(b.vars, b.objects, rings["srv-b"], wall)
-    ing = {"srv-a": Ingest("srv-a", A_URLS, keys=lambda: ClusterTrust(a.vars).keyset(), wall=wall),
-           "srv-b": Ingest("srv-b", B_URLS, keys=lambda: ClusterTrust(b.vars).keyset(), wall=wall)}
-    ing["srv-a"].announce(a.objects); ing["srv-b"].announce(b.objects)
+    hosts = {"srv-a": ingest_recorder("srv-a", A_URLS[0], wall, a.vars, a.objects),     # each in a recorder (ADR-0065)
+             "srv-b": ingest_recorder("srv-b", B_URLS[0], wall, b.vars, b.objects)}
+    ing = {n: r.ingest for n, r in hosts.items()}
     agents = {"srv-a": DomainAgent("srv-a", CarryClient(door, "srv-a", keys["srv-a"], wall), a.vars, now=wall,
                                    sealer=rings["srv-a"], key=keys["srv-a"]),
               "srv-b": DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects, sealer=rings["srv-b"])}
@@ -70,6 +71,8 @@ def _site(wall):
     crossings = Crossings(b.vars, view, wall, issuer=signer.tokens, sealer=rings["srv-b"])
 
     def domain_pass():
+        for r in hosts.values():
+            r.heartbeat_once()
         cam.publish(); cam_agent.sync()
         for x in agents.values():
             x.sync()

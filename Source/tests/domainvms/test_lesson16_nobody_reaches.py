@@ -4,6 +4,10 @@ The camera's door is closed for good: no domain, no recorder, no gateway can ope
 reaches out — its agent for books and reports (Lesson 10), a long poll to the recording cluster's ingest for
 work, a push for media — and recording, live view and backfill all work. The stream token is the domain
 signer's; the ingest checks it with the key set its own agent carried.
+
+The ingest lives in a RECORDER of the room (`RecWorker.host_ingest`; ADR-0065, its addition of 2026-10-08): two of them,
+each saying where its ingest takes streams in its heartbeat (`ingest`), and the domain writes the camera's book from what
+they say. Nothing here raises an ingest by hand.
 """
 from w2cplatform.cluster.variables import FakeVariables
 
@@ -12,11 +16,12 @@ from vms.domainpart.crossing import Crossings, resolve
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import Federation, Unreachable
 from vms.domainpart.gateway import Gateway
-from vms.domainpart.ingest import LINGER, CameraPusher, Ingest, IngestLiveEndpoint, Refused, audience
+from vms.domainpart.ingest import LINGER, CameraPusher, IngestLiveEndpoint, Refused, audience
 from w2cplatform.domain.readview import ReadView
 from w2cplatform.trust.signer import Signer
 from w2cplatform.domain.uplink import member_copy
 from tests.domain.conftest import Clock, make_cluster, real_card
+from tests.vmsconftest import ingest_recorder
 
 SERIAL = "SN5001"
 URLS = ["srt://srv-1.south:9000", "srt://srv-2.south:9000"]
@@ -33,8 +38,17 @@ def _site(wall, down=()):
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
     room_agent = DomainAgent("south", north.vars, south.vars, now=wall)
     room_agent.sync()                                                  # the room's key set: what the ingest checks with
-    ingest = Ingest("south", URLS, keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
-    ingest.announce(south.objects)
+    inside: dict = {}
+
+    def network(url):                                                  # the room's own network: its ingests reach each other
+        if url not in inside:
+            raise Unreachable(f"{url} did not answer")
+        return inside[url]
+    # Two recorders of the room, each hosting an ingest and saying where in its heartbeat (`ingest`)
+    recs = [ingest_recorder("south", u, wall, south.vars, south.objects, name=f"r-{i + 1}", dial=network)
+            for i, u in enumerate(URLS)]
+    inside.update({r.ingest_url: r.ingest for r in recs})
+    ingest = recs[0].ingest
     SpecController(REC_SPEC, south.vars, south.objects, wall=wall).create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
 
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, pushes=True)
@@ -48,16 +62,19 @@ def _site(wall, down=()):
     crossings = Crossings(north.vars, view, wall, issuer=signer.tokens)
     crossings.record(SERIAL, on="south")
 
-    def dial(url):                                                     # the camera dialling OUT; only the ingest answers
+    def dial(url):                                                     # the camera dialling OUT; only the ingests answer
         if url not in URLS or url in down:
             raise Unreachable(f"{url} did not answer")
-        return ingest
+        return inside[url]
 
     pusher = CameraPusher(SERIAL, cam.flash, dial, card=_card_from(wall()), clock=wall)
 
     def domain_pass():
+        for r in recs:
+            r.heartbeat_once()                                         # the recorders say their ingests again
         view.refresh(); crossings.publish(); crossings.publish_primaries(); cam_agent.sync(); room_agent.sync()
 
+    domain_pass.recorders = recs
     domain_pass()
     return fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass
 
@@ -247,9 +264,7 @@ def test_two_ingests_of_one_cluster_pass_the_stream_to_each_other():
     answered there."""
     wall = Clock()
     fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall)
-    keys = lambda: ClusterTrust(south.vars).keyset()
-    a = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[0], peers=lambda: [b])
-    b = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[1], peers=lambda: [a])
+    a, b = (r.ingest for r in domain_pass.recorders)                  # each finds the other in its recorder's heartbeat
     by_url = {URLS[0]: a, URLS[1]: b}
     pusher = CameraPusher(SERIAL, cam.flash, lambda url: by_url[url], clock=wall, card=_card_from(100.0, 100.0))
     b.want(SERIAL, "recorder:srv-2")                                   # the recorder is on the second server
@@ -356,9 +371,9 @@ def _scenario_site(wall, scenarios, open_doors=()):
     from vms.domainpart.scenario import Scenarios
     from w2cplatform.domain.shared import SharedView
     from tests.domain.conftest import SharedDoor
-    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, _ = _site(wall)
-    home = Ingest("north", NORTH_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
-    home.announce(north.objects)                                       # the domain's holder: every camera reaches it
+    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, site_pass = _site(wall)
+    home_rec = ingest_recorder("north", NORTH_URLS[0], wall, north.vars, north.objects)   # the domain's holder: every camera reaches it
+    home = home_rec.ingest
 
     def member(serial, pushes=True):
         d = DeviceCluster(serial, FakeVariables(), wall=wall, pushes=pushes)
@@ -377,6 +392,8 @@ def _scenario_site(wall, scenarios, open_doors=()):
     agents = (cam_agent, room_agent, gate_agent, ptz_agent, *(a for _, a in extra.values()))
 
     def domain_pass():
+        for r in (*site_pass.recorders, home_rec):
+            r.heartbeat_once()                                         # where each recorder's ingest is, said again
         for d in (cam, gate, ptz, *(d for d, _ in extra.values())):
             d.publish()
         for a in agents:
@@ -387,7 +404,7 @@ def _scenario_site(wall, scenarios, open_doors=()):
 
     domain_pass()
     domain_pass.devices = {n: d for n, (d, _) in extra.items()}
-    ingests = {u: ingest for u in URLS} | {u: home for u in NORTH_URLS}
+    ingests = {r.ingest_url: r.ingest for r in site_pass.recorders} | {u: home for u in NORTH_URLS}
 
     def dial(url):
         if url not in ingests:
@@ -500,7 +517,7 @@ def test_an_ingest_that_restarted_knows_nothing_and_the_asker_says_so_after_the_
     ingest, pusher, asker, done, *_ = _two(wall)
     ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
     deadline = wall() + 10
-    fresh = Ingest("south", URLS, keys=ingest.keys, wall=wall)         # the same addresses, a new process
+    fresh = ingest_recorder("south", URLS[0], wall, keys=ingest.keys).ingest   # the same address, a new process
     asker.dial = pusher.dial = lambda url: fresh
     assert pusher.pass_once([])["asks"] == [] and done == []
     assert asker.outcome(SERIAL, aid, deadline) is None                # not yet: it may still come
@@ -547,11 +564,12 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     SharedDoor(home, devices["cam-SN0"].disk_door(), signer, wall).set_scenarios([
         {"when": {"camera": "SN1", "kind": "vehicle"}, "then": {"camera": "SN2", "action": "preset", "arg": 3}}])
 
-    urls, ingests = {"cam-SN0": ["srt://sn0.site:9000"], "cam-SN3": ["srt://sn3.site:9000"]}, {}
+    urls, ingests, recs = {"cam-SN0": ["srt://sn0.site:9000"], "cam-SN3": ["srt://sn3.site:9000"]}, {}, {}
 
-    def light_ingest(name, vars_):                                     # on the domain camera: asks only
-        ingests[name] = Ingest(name, urls[name], keys=lambda: ClusterTrust(vars_).keyset(), wall=wall)
-        ingests[name].announce(fed.clusters[name].objects)
+    def light_ingest(name, vars_):                                     # on the domain camera's recorder: asks only
+        recs[name] = ingest_recorder(name, urls[name][0], wall, objects=fed.clusters[name].objects,
+                                     keys=lambda: ClusterTrust(vars_).keyset())
+        ingests[name] = recs[name].ingest
 
     def dial(url):
         for name, i in ingests.items():
@@ -566,6 +584,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
                                 wall, issuer=issuer), devices[holder_name].disk)      # the holder reads reports, not doors
         for n in live:
             devices[n].publish()
+        recs[holder_name].heartbeat_once()                               # its ingest, said in its recorder's heartbeat
         for a in agents:
             a.sync()
         books.pass_once()
@@ -756,9 +775,7 @@ def test_a_peer_that_falls_behind_is_cut_clean_to_a_keyframe_never_in_the_middle
     writes garbage until the next one."""
     wall = Clock()
     fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall)
-    keys = lambda: ClusterTrust(south.vars).keyset()
-    a = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[0], peers=lambda: [b])
-    b = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[1], peers=lambda: [a])
+    a, b = (r.ingest for r in domain_pass.recorders)
     pusher = CameraPusher(SERIAL, cam.flash, lambda url: a, clock=wall)
     b.want(SERIAL, "recorder:srv-2")
     rq = b.subscribe(SERIAL, "recorder:srv-2", maxsize=1000)
@@ -840,7 +857,8 @@ def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wak
 def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as_alive():
     """The domain's witness that a camera is alive when its agent is not reporting (Lesson 14): the ingest it
     polls publishes when it last did (`rec/polled/<ingest>`), as ages against the object's own time, so a clock
-    difference cancels out. The poll is kept by the camera's pusher — another process than its agent.
+    difference cancels out — with its recorder's heartbeat, as the product's does. The poll is kept by the camera's
+    pusher — another process than its agent.
 
     One object per ingest (feedback AZ): a cluster runs several, and the one the camera does NOT poll, publishing
     after the other, used to overwrite the single `rec/polled` and make a live camera look gone.
@@ -855,12 +873,15 @@ def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     pusher.pass_once([])                                                   # a poll
     wall.advance(10)
-    assert ingest.publish_polled(south.objects) == {cam.name: 10.0} and cam.name == f"cam-{SERIAL}"
-    other = Ingest("south", ["srt://srv-3.south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
-    assert other.publish_polled(south.objects) == {}                      # the second ingest: nobody polled it
+    for r in domain_pass.recorders:
+        r.heartbeat_once()                                                 # each recorder says its ingest's
     keys = south.objects.list(POLLED + "/")
     assert len(keys) == 2
-    d = json.loads(south.objects.get([k for k in keys if "srv-1" in k][0]))
+    said = {k: json.loads(south.objects.get(k)) for k in keys}
+    d = said[[k for k in keys if "srv-1" in k][0]]
     assert d["cluster"] == "south" and d["ts"] == wall() and d["ingest"] == URLS[0]
+    assert d["units"] == {cam.name: 10.0} and cam.name == f"cam-{SERIAL}"
+    assert said[[k for k in keys if "srv-2" in k][0]]["units"] == {}      # the second ingest: nobody polled it
     assert DomainAlarms(fed, None, wall).alive_at(cam.name) == (wall() - 10, "south")
     assert DomainAlarms(fed, None, wall).alive_at(SERIAL) is None                 # no name turned into another
+
