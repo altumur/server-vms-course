@@ -729,6 +729,179 @@ def test_kept_footage_the_ring_took_while_the_recorder_was_restarting_is_still_a
     assert again.heartbeat_extra()["incidents_lost"][first.id] == round(300 - again.keep_held[(first.id, "7")])
 
 
+# -- what an incidents volume took, written down by volume: `rec/taken/<volume>` (ADR-0057) ----------------------------
+
+def _taken(box, volume="evidence"):
+    return keeps.parse_taken(box.objects.get(keeps.taken_key(volume)))
+
+
+def _on_another_box(box, name="r-keep"):
+    """A recorder of this site whose resource's tree is another box's: the events the first one wrote are not in it."""
+    here = box.resource_root
+    box.resource_root = tempfile.mkdtemp(prefix="another-box-")
+    try:
+        return recorder(box, name, "srv-1", acl=False)
+    finally:
+        box.resource_root = here
+
+
+def _events_in(box, root, kind):
+    return [e for e in EventIndex(root, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+            if e["kind"] == kind]
+
+
+def test_what_an_incidents_volume_took_outlives_its_recorder_and_its_box():
+    """ADR-0057, the product's `rec/taken/<volume>` (TestWhatAnIncidentArchiveTookOutlivesItsProcess). The events that
+    said what was copied are in the tree of the server that copied it: a recorder of the volume on another box started
+    from what the ring still held, and kept footage the ring wrote over before it came was never `archive.keep.lost`.
+    The record of what the volume took goes with the volume: the next holder, wherever it is, says the loss."""
+    box, k = _site(quota=16 << 20)
+    t = box.wall()
+    for smp in fake_samples(t - 1200, t, step=10, size=256 << 10):
+        box.src.put("7", 1, smp)
+    box.src.finish("7", 1); box.src.seal()
+    first = _keep(box, "7", t - 1200, t - 900)
+    k.keep_pass()
+    fmt = k.store.formatted_at()
+    assert fmt and _taken(box) == ({"7": [(t - 1200, t - 900)]}, False, fmt)
+    _keep(box, "7", t - 800, t - 500); _keep(box, "7", t - 400, t - 100)
+    k.keep_pass()                                                      # its own copies push the first keep out of the ring…
+    k.after_stop()                                                     # …and it goes before its next pass sees it
+    box.src_door.shutdown()
+    assert _taken(box)[0]["7"][0] == (t - 1200, t - 900)               # what it took, as it took it
+
+    again = _on_another_box(box)                                       # the volume's next holder, on another box
+    again.lease_pass()
+    assert again.volume == "evidence" and again.resource_root != box.resource_root
+    left = sum(min(b, t - 900) - max(a, t - 1200) for a, b in again.store.coverage("7") if b > t - 1200 and a < t - 900)
+    assert 300 - left >= again.LOSS_SLACK                              # gone before it came: the ring holds no trace of it
+    state = again.keep_pass()
+    lost = [a for a in _events_in(box, again.resource_root, "archive.keep.lost") if a["keep"] == first.id]
+    assert lost and lost[0]["recording"] == "7" and lost[0]["seconds"] == round(300 - left, 1)
+    assert state[first.id]["missing"] > 0 and again.heartbeat_extra()["incidents_lost"][first.id] == round(300 - left)
+    took, wrapped, formatted = _taken(box)
+    assert wrapped and formatted == fmt                                # the ring came round, for whoever holds it next
+    assert took["7"][0] == (t - 1200, t - 900)                         # a keep in force: what it took stays, lost or not
+    again.keep_pass()
+    assert len([a for a in _events_in(box, again.resource_root, "archive.keep.lost") if a["keep"] == first.id]) == 1
+
+
+def test_the_record_of_what_was_taken_is_in_the_products_bytes():
+    """One record, two writers on one site's history: the course writes what the product's `json.Marshal` of
+    `takenRecord` writes — its field order, no spaces, a whole second without `.0` — and reads it back."""
+    box, k = _site()
+    t = box.wall()
+    footage(box.src, "7", 1, t - 3600, t, step=10)
+    _keep(box, "7", t - 1800, t - 1200)
+    k.keep_pass()
+    fmt = k.store.formatted_at()
+    raw = box.objects.get(keeps.taken_key("evidence"))
+    assert raw == f'{{"took":{{"7":[[{int(t - 1800)},{int(t - 1200)}]]}},"wrapped":false,"formatted":{fmt}}}'.encode()
+    assert keeps.taken_bytes({"7": [(1000.5, 1095.0)]}, True, 7) == b'{"took":{"7":[[1000.5,1095]]},"wrapped":true,"formatted":7}'
+    assert keeps.parse_taken(b'{"took":null,"wrapped":false,"formatted":7}') == ({}, False, 7)
+
+
+def test_what_was_taken_is_written_down_as_large_as_what_is_kept():
+    """Pruned on write by the keeps as they stand (the product's `pruneTook`, 0ae8365 — its record grew without bound):
+    a span outside every keep goes, a recording no keep names goes, and a keep lifted takes its spans with it."""
+    box, k = _site()
+    t = box.wall()
+    footage(box.src, "7", 1, t - 3600, t, step=10)
+    first, second = _keep(box, "7", t - 1800, t - 1200), _keep(box, "7", t - 600, t - 300)
+    k.keep_pass()
+    fmt = k.store.formatted_at()
+    assert _taken(box) == ({"7": [(t - 1800, t - 1200), (t - 600, t - 300)]}, False, fmt)
+    k.taken["7"] = k.taken["7"] + [(t - 3000, t - 2900)]               # a span no keep covers…
+    k.taken["8"] = [(0.0, 50000.0)]                                    # …and a recording no keep names
+    k.keep_pass()
+    assert _taken(box) == ({"7": [(t - 1800, t - 1200), (t - 600, t - 300)]}, False, fmt)
+    keeps.delete(box.vars, first.id)
+    k.keep_pass()
+    assert _taken(box) == ({"7": [(t - 600, t - 300)]}, False, fmt)
+    keeps.delete(box.vars, second.id)
+    k.keep_pass()
+    assert _taken(box) == ({}, False, fmt)
+
+
+def test_a_keep_whose_interval_does_not_read_keeps_what_was_taken_whole():
+    """Which footage a garbled keep means is not known (`keeps.as_far_as_read`): its recordings' spans are kept whole,
+    as the product's `pruneTook` keeps a keep that is not `Bounded`."""
+    box, k = _site()
+    t = box.wall()
+    footage(box.src, "7", 1, t - 3600, t, step=10)
+    kp = _keep(box, "7", t - 1800, t - 1200)
+    k.keep_pass()
+    k.taken["7"] = k.taken["7"] + [(t - 3000, t - 2900)]
+    items, _ = box.vars.get(keeps.key(kp.id))
+    box.vars.put(keeps.key(kp.id), {**items, "from": "yesterday"})
+    k.keep_pass()
+    assert _taken(box)[0] == {"7": [(t - 3000, t - 2900), (t - 1800, t - 1200)]}
+
+
+def test_keeps_that_cannot_be_read_prune_nothing_of_what_was_taken():
+    """A store that does not answer is not "nothing is kept": what was taken is written down as it is."""
+    box, k = _site()
+    t = box.wall()
+    footage(box.src, "7", 1, t - 3600, t, step=10)
+    _keep(box, "7", t - 1800, t - 1200)
+    k.keep_pass()
+    k.taken["8"] = [(0.0, 50000.0)]
+
+    class Away:
+        def __init__(self, inner): self.inner = inner
+        def get(self, key): return self.inner.get(key)
+        def list(self, prefix):
+            if prefix == "rec/keeps/":
+                raise PermissionError(13, "the store does not answer")
+            return self.inner.list(prefix)
+
+    here, k.vars = k.vars, Away(box.vars)
+    try:
+        k._taken_write(lambda kp: sorted(kp.recordings))
+    finally:
+        k.vars = here
+    assert _taken(box)[0] == {"7": [(t - 1800, t - 1200)], "8": [(0.0, 50000.0)]}
+
+
+def test_a_record_of_another_format_of_the_volume_is_not_taken():
+    """`took` and `wrapped` are of one format of the volume (`formatted`): a record of another, or of none said (an
+    older build's, ADR-0003), is not this volume's — a disk replaced and declared again under the old name starts with
+    nothing taken and a ring that has not come round."""
+    for stale in (keeps.taken_bytes({"7": [(100.0, 400.0)]}, True, 1),
+                  b'{"took":{"7":[[100,400]]},"wrapped":true}'):
+        box = Box()
+        box.src = store("disks")
+        box.src_door = door(box, box.src, "r-disks", "srv-1")
+        box.objects.put(keeps.taken_key("evidence"), stale)
+        volumes.write(box.vars, {"name": "evidence", "kind": "incidents", "server": "srv-1",
+                                 "url": tempfile.mkdtemp(prefix="evidence-"), "quota_bytes": TEST_QUOTA})
+        k = recorder(box, "r-keep", "srv-1", acl=False)
+        k.lease_pass()
+        kp = _keep(box, "7", 50, 500, recordings=["7"])
+        k.keep_pass()
+        assert _events(box, "archive.keep.lost") == [] and kp.id not in k.heartbeat_extra().get("incidents_lost", {})
+        assert "incidents_at_risk" not in k.heartbeat_extra()
+        assert _taken(box) == ({}, False, k.store.formatted_at())     # written anew, of this format
+        box.src_door.shutdown()
+
+
+def test_a_volume_formatted_again_under_the_running_recorder_forgets_what_the_old_one_took():
+    """The same name, another format, while the process holds it (the product's `loadTaken`, 0ae8365): `took`,
+    `wrapped` and what each keep held of the old volume go."""
+    box, k = _site()
+    t = box.wall()
+    footage(box.src, "7", 1, t - 3600, t, step=10)
+    kp = _keep(box, "7", t - 1800, t - 1200)
+    k.keep_pass()
+    k.taken_wrapped = True
+    assert k._taken_read() == {"7": [(t - 1800, t - 1200)]}            # the same format: read once, kept
+    fmt = k.store.formatted_at()
+    k.store.formatted_at = lambda: fmt + 60
+    assert k._taken_read() == {} and not k.taken_wrapped and (kp.id, "7") not in k.keep_held
+    assert k._taken_format == fmt + 60
+    box.src_door.shutdown()
+
+
 # -- a keep's seal, checked at the door of the recorder that holds its copy (ADR-0015, ADR-0057 point 3) --------------
 
 def _post(url, token=None):

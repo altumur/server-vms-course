@@ -29,13 +29,18 @@ name: rec
 # beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
 slot: {prefix: r, name_env: RECORDER_NAME}
 # Objects of this subsystem that are ROWS of the store, not files (`catalog.object_rows`, `cluster/objectstore.py`):
-# a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone. And
+# a volume this subsystem opened, and at which address (`RecWorker._may_format`): read where the volume is gone; a
+# camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`). And
 # the files its resource's door gives the other servers (`resource.door_readable`): what a relay's forwarder dropped,
 # per camera (`rec/forwarded/<forwarder>`), which the ingest reads wherever it runs. What a member reports to the domain
 # (`domain.reports`) the door gives out unasked. A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
 # recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
-# tables door; the door's `verify` reads it (ADR-0057).
-objects: {rows: [sealed/*, used/*], door: [forwarded/*]}
+# tables door; the door's `verify` reads it (ADR-0057). A relay's word of the centre per camera (`rec/ingest/up/<ref>.json`,
+# `chain.Forwarder`, `UP_KEPT`): the next process of the relay goes on from it while the centre is unreachable; and the
+# pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<ref>.json`, `ingest.keep_clocks`) (ADR-0019).
+# What an incidents volume took of each recording, and whether its ring came round (`rec/taken/<volume>`): written by the
+# recorder that holds the volume, read by whichever holds it next, on any box (ADR-0057).
+objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [forwarded/*, taken/*]}
 # The fields of a recorder's heartbeat that are strings and that something decides by: the volume it is counted in
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare (`volumes.py`).
 heartbeat: {strings: [volume, volume_error, archive, volume_missing]}
