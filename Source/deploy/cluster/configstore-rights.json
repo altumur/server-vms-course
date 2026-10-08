@@ -23,6 +23,7 @@
     "objects/det/commands/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/clock/*",
     "objects/rec/ingest/up/*",
     "objects/rec/sealed/*",
     "objects/vms/commands/*",
@@ -379,6 +380,7 @@
     "domain/vms/primaries",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/clock/*",
     "objects/rec/ingest/up/*",
     "objects/rec/sealed/*",
     "vms/requests/*",
@@ -392,6 +394,7 @@
     "vms/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/clock/*",
     "objects/rec/ingest/up/*",
     "objects/rec/sealed/*"
    ],
@@ -402,6 +405,7 @@
     "vms/requests/*",
     "objects/rec/used/*",
     "objects/rec/commands/*",
+    "objects/rec/ingest/clock/*",
     "objects/rec/ingest/up/*",
     "objects/rec/sealed/*"
    ]

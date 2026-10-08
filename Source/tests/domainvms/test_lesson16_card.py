@@ -1943,3 +1943,118 @@ def test_the_ranges_a_camera_could_not_read_are_remembered_to_a_bound_and_all_of
         wall.advance(1.0)
     assert len(pusher.failed_ranges) == FAILED_KEPT and pusher.ranges_failed == FAILED_KEPT + 20
     assert pusher.failed_ranges[-1][2] == "this camera has no card"
+
+
+def _kept_world(wall):
+    """A camera that polls the site's ingest, its pieces of the offset kept in the cluster's store (`keep_clocks`) — in
+    its ROWS, as the cluster's store keeps a key the rec spec names in `objects.rows` (`ClusterObjectStore`, through
+    `VariablesObjectStore`; the test's store of files has no rows of its own)."""
+    from vms.domainpart.ingest import clock_key, keep_clocks
+    from w2cplatform.cluster.objectstore import VariablesObjectStore, is_row
+    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    assert is_row(clock_key(SERIAL))                                   # the rec spec's `objects.rows`: ingest/clock/*
+    rows = VariablesObjectStore(south.vars)
+    keep_clocks(ingest, rows)
+    return rows, ingest, pusher.entry()["ingest"]["token_secret"]
+
+
+def _polls(wall, ingest, token, seconds, skew, every=5.0):
+    """The camera polls every `every` s for `seconds`, its clock `skew` off this cluster's, its road a steady 50 ms."""
+    out = None
+    for _ in range(int(seconds / every)):
+        out = ingest.poll(token, SERIAL, camera_now=wall() + skew, rtt=0.05)
+        wall.advance(every)
+    return out
+
+
+def test_a_step_of_the_cameras_clock_keeps_its_hole_on_the_old_clock_at_this_ingest_restarted_or_another():
+    """ADR-0019, the product's `clockkept.go` and its `TestAStepAndARestartOfTheCamerasProcessKeepTheHoleItsOwnFor
+    TheSameRecorderOrANewOne`: the camera speaks on its clock for a minute — a hole of twenty seconds in it, nothing
+    pushed — and then its clock steps 30 s, forward or back, and the ingest takes the step (`clock_steps`). A range of the
+    hole is asked: its frames were captured — and their neighbours put — on the OLD clock, and it is told the camera on
+    it (`Ingest._told_at`: the piece it lies in), at this ingest; at this ingest restarted over the same store; and at
+    another ingest of the cluster the camera came back to — each goes on from the pieces kept in the row
+    `rec/ingest/clock/<ref>.json` (`keep_clocks`). An ingest with nothing kept begins with the camera's first word, and
+    told the hole a step away, as before. A range after the step is on the new clock everywhere."""
+    import json
+    from vms.domainpart.ingest import CLOCK_KEPT, Ingest, keep_clocks
+    for step in (30.0, -30.0):
+        for case in ("this ingest", "restarted", "another", "nothing kept"):
+            wall = Clock(1_780_000_000.0)
+            rows, ingest, token = _kept_world(wall)
+            _polls(wall, ingest, token, 60, 0.0)
+            hole = (wall() - 40, wall() - 20)
+            _polls(wall, ingest, token, 60, step)                          # the camera's clock steps
+            assert ingest.cams[SERIAL].clock_steps == 1, (step, case)
+            kept = json.loads(rows.get(f"{CLOCK_KEPT}/{SERIAL}.json"))
+            assert kept["v"] == 1 and [p["off_ms"] for p in kept["pieces"]] == [0, int(-step * 1000)], kept
+            assert "old_off_ms" not in kept["pieces"][1], kept             # the old offset, 0: omitted, as the product writes
+            at = {"this ingest": ingest,
+                  "restarted": Ingest("south", URLS, keys=ingest.keys, wall=wall),
+                  "another": Ingest("south", ["srt://srv-2.south:9000"], keys=ingest.keys, wall=wall),
+                  "nothing kept": Ingest("south", URLS, keys=ingest.keys, wall=wall)}[case]
+            if case in ("restarted", "another"):
+                keep_clocks(at, rows)
+            _polls(wall, at, token, 5, step)                               # its first word there
+            rid, late = at.request_range(SERIAL, *hole), at.request_range(SERIAL, wall() - 10, wall() - 5)
+            told = at.poll(token, SERIAL, camera_now=wall() + step, rtt=0.05)["ranges"]
+            want = hole[0] + step if case == "nothing kept" else hole[0]   # nothing kept: a step away, as before
+            assert abs(told[rid]["from"] - want) < 0.002 and abs(told[rid]["to"] - (want + 20)) < 0.002, (step, case, told)
+            assert abs(told[late]["from"] - (wall() - 10 + step)) < 0.002, (step, case, told)
+            c = at.cams[SERIAL]
+            assert c.restored == (2 if case in ("restarted", "another") else 0), (step, case, c.restored)
+            assert c.clock_steps == (1 if case == "this ingest" else 0), (step, case)   # a new one saw no step
+
+
+def test_the_newest_pieces_of_a_cameras_offset_are_kept_and_bytes_that_do_not_parse_begin_afresh():
+    """ADR-0019: of a camera's pieces the newest `CLOCK_PIECES_KEPT` are kept (the product's `ClockPiecesKept`), and the
+    next ingest goes on from them; a range from before the oldest is told by it — it holds whatever came before. A row
+    that does not parse, or of another version, is nothing kept: the ingest begins with the camera's first word."""
+    import json
+    from vms.domainpart.ingest import CLOCK_KEPT, CLOCK_PIECES_KEPT, Ingest, keep_clocks
+    wall = Clock(1_780_000_000.0)
+    rows, ingest, token = _kept_world(wall)
+    for i in range(CLOCK_PIECES_KEPT + 8):                                 # forty steps forward, each held firm first
+        _polls(wall, ingest, token, 35, 10.0 * i)
+    kept = json.loads(rows.get(f"{CLOCK_KEPT}/{SERIAL}.json"))
+    assert len(kept["pieces"]) == CLOCK_PIECES_KEPT and kept["pieces"][-1]["off_ms"] == -10_000 * (CLOCK_PIECES_KEPT + 7)
+    oldest = kept["pieces"][0]
+    again = keep_clocks(Ingest("south", URLS, keys=ingest.keys, wall=wall), rows)
+    skew = 10.0 * (CLOCK_PIECES_KEPT + 7)
+    _polls(wall, again, token, 5, skew)
+    assert again.cams[SERIAL].restored == CLOCK_PIECES_KEPT and again.cams[SERIAL].clock_steps == 0
+    rid = again.request_range(SERIAL, oldest["srv_from"] / 1000 - 100, oldest["srv_from"] / 1000 - 90)
+    told = again.poll(token, SERIAL, camera_now=wall() + skew, rtt=0.05)["ranges"][rid]
+    assert abs(told["from"] - (oldest["srv_from"] / 1000 - 100 - oldest["off_ms"] / 1000)) < 0.002, (told, oldest)
+    for torn in (b"{torn", json.dumps({"v": 2, "at": 0, "pieces": kept["pieces"]}).encode()):
+        rows.put(f"{CLOCK_KEPT}/{SERIAL}.json", torn)
+        fresh = keep_clocks(Ingest("south", URLS, keys=ingest.keys, wall=wall), rows)
+        fresh.poll(token, SERIAL, camera_now=wall() + 3.0, rtt=0.05)
+        c = fresh.cams[SERIAL]
+        assert c.restored == 0 and abs(c.offset + 3.0) < 0.002 and len(c.pieces) == 1, torn
+
+
+def test_the_pieces_of_a_clock_not_set_go_when_it_is_set_as_its_line_relabels_them():
+    """The one move whose pieces the camera's own line takes back: its clock being SET (`CamLine._set` relabels what it
+    placed since the clock was unset — on its card too). A camera with no RTC that rebooted goes on after its card's
+    newest by a guess (adrift: its offset up by the reboot's length, a rise past `CLOCK_STEP` confirmed), and one that
+    booted in 1970 speaks on a clock before `CLOCK_FLOOR`; NTP sets either, and the frames of that stretch lie on the card
+    by the set clock. Their pieces go (`Ingest._set_clock`): a range of it is told by the set offset — while a step of
+    this cluster's clock, a rise nobody took back, keeps its piece (above)."""
+    import json
+    from vms.domainpart.ingest import CLOCK_KEPT
+    for case in ("adrift", "1970"):
+        wall = Clock(1_780_000_000.0)
+        rows, ingest, token = _kept_world(wall)
+        if case == "adrift":
+            _polls(wall, ingest, token, 60, 0.0)
+            _polls(wall, ingest, token, 60, -40.0)                         # rebooted for 40 s, its line goes on by a guess
+        else:
+            _polls(wall, ingest, token, 60, 60.0 - wall())                 # 1970, a minute of uptime
+        stretch = (wall() - 50, wall() - 30)
+        _polls(wall, ingest, token, 60, 0.0)                               # NTP sets it
+        rid = ingest.request_range(SERIAL, *stretch)
+        told = ingest.poll(token, SERIAL, camera_now=wall(), rtt=0.05)["ranges"][rid]
+        assert abs(told["from"] - stretch[0]) < 0.002, (case, told, stretch)
+        kept = json.loads(rows.get(f"{CLOCK_KEPT}/{SERIAL}.json"))
+        assert [p["off_ms"] for p in kept["pieces"]] == [0] and not any("_rise" in p for p in kept["pieces"]), (case, kept)
