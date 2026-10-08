@@ -226,6 +226,54 @@ def drop_stale_seals(vars_, objects) -> dict:
     return out
 
 
+# WHAT AN INCIDENTS VOLUME TOOK, WRITTEN DOWN BY VOLUME (ADR-0057; the product's `takenKey`, `takenRecord`,
+# recproc/keeper.go, as of 0ae8365): what the recorder of an incidents volume copied into it of each recording — `took`,
+# merged spans, pruned by the keeps that stand — whether its ring has come round (`wrapped`), and of which volume: when it
+# was formatted (`formatted`, the engine's `createdAtUnixSec`; 0 when not said). `rec/taken/<volume>`, an object of rec's
+# `objects.door`: written by whichever recorder holds the volume, through its object store, and read by whichever
+# recorder holds it NEXT, on any box — the door gives it out (`resource.door_readable`). The events that said the same
+# (`archive.keep.copied`) are in the tree of the server that wrote them, and a recorder of the volume on another box never
+# saw them: the ring taking kept footage while the volume moved was never `archive.keep.lost` (`RecWorker._taken_read`,
+# `_taken_write`). The product's bytes, as Go's `json.Marshal` writes them:
+#
+#   {"took":{"<recording>":[[<from>,<to>],…]},"wrapped":<bool>,"formatted":<unix s>}
+TAKEN = "taken"
+
+
+def taken_key(volume: str) -> str:
+    return f"{SUB}/{TAKEN}/{volume}"
+
+
+TAKENS = Table("taken", "read as nothing taken: a loss of what it said is not an alarm, and the next copy writes it anew")
+
+
+def parse_taken(raw: bytes | None) -> tuple[dict, bool, int]:
+    """`({recording: [(from, to)]}, wrapped, formatted)` of a record; `({}, False, 0)` when there is none."""
+    if not raw:
+        return {}, False, 0
+    d = json.loads(raw)
+    if not isinstance(d, dict) or not isinstance(d.get("took") or {}, dict) or not isinstance(d.get("wrapped", False), bool):
+        raise ValueError("a record of what was taken is {took: {recording: [[from, to]]}, wrapped: bool, formatted: int}")
+    formatted = d.get("formatted", 0)
+    if isinstance(formatted, bool) or not isinstance(formatted, (int, float)) or formatted != int(formatted):
+        raise ValueError(f"formatted is a whole number of seconds, not {formatted!r}")
+    took = {}
+    for rec, spans in (d.get("took") or {}).items():
+        got = [(finite(a), finite(b)) for a, b in spans or []]
+        took[str(rec)] = [(a, b) for a, b in got if b > a]
+    return {r: s for r, s in took.items() if s}, bool(d.get("wrapped", False)), int(formatted)
+
+
+def _go_number(x: float) -> int | float:
+    return int(x) if float(x).is_integer() and abs(x) < 1e21 else float(x)
+
+
+def taken_bytes(took: dict, wrapped: bool, formatted: int = 0) -> bytes:
+    """The record in the product's bytes: Go's field order, its map keys sorted, no spaces, a whole number without `.0`."""
+    return json.dumps({"took": {r: [[_go_number(a), _go_number(b)] for a, b in spans] for r, spans in sorted(took.items())},
+                       "wrapped": bool(wrapped), "formatted": int(formatted)}, separators=(",", ":")).encode()
+
+
 # SET BY THE PLATFORM'S RULES (the boundary's step 6): what a keep row may be — a camera, an interval, a note of at
 # most 500 characters, named by its camera and its interval, stamped with who and when — is `tables.keeps` in
 # rec.subsystem.yaml, and the platform's console writes it (`tables.write_row`); a keep holds at most a week of events on

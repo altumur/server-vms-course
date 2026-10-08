@@ -443,6 +443,15 @@ class Archive:
             return 0
         return min(own, self.block) if own and self.block else own
 
+    # WHEN THE VOLUME WAS FORMATTED (the product's `recworkersink.Formatted`: `READER_INFO` → `createdAtUnixSec`): a volume
+    # formatted again is another volume, whatever its name. None when the engine did not say.
+    def formatted_at(self) -> int | None:
+        try:
+            with self.reading() as r:
+                return int((r.info().get("info") or {}).get("createdAtUnixSec") or 0) or None
+        except (ArchiveError, ObsdError, OSError, *PARSE_ERRORS):
+            return None
+
     def size(self) -> int:
         """The ring's size as the volume holds it — `maxVolumeSize`, what it was formatted or last resized to."""
         with self.reading() as r:

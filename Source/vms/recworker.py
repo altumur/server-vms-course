@@ -536,6 +536,10 @@ class RecWorker(VmsWorker):
         self.incidents_lost: dict[str, int] = {}     # keep -> seconds the volume took and its ring wrote over (`_incidents_said`)
         self.incidents_at_risk: list[str] = []       # keeps whose footage is the oldest of a ring that has closed (`_incidents_said`)
         self._keeps_read = False                    # `keep_held` restored from the volume and its events (`keep_pass`)
+        self.taken: dict[str, list] = {}             # recording -> the spans the incidents volume took of it (`rec/taken/<volume>`)
+        self.taken_wrapped = False                   # its ring has come round: `wrapped` of the same record
+        self._taken_said: bytes | None = None        # the record as last read or written: written again only when it changes
+        self._taken_from, self._taken_format = "", None   # the volume whose record was read back, and its format then
         self._keep_short: dict[str, tuple] = {}      # keep -> (short since, last `archive.keep.uncopied`) — `_keep_uncopied`
         self._keep_garbled: dict[str, tuple] = {}    # keep -> (garbled since, last `archive.keep.garbled`) — `_keep_unreadable`
         self._keep_nowhere: dict[tuple[str, str], list] = {}   # (keep, recording) -> what a door that holds it said it has not
@@ -2047,6 +2051,8 @@ class RecWorker(VmsWorker):
         self.quota_note, self.shrink_pending = "", 0
         self.keep_held, self.keep_state, self._keeps_read, self._keep_nowhere = {}, {}, False, {}
         self.keep_took, self.incidents_lost, self.incidents_at_risk = {}, {}, []
+        self.taken, self.taken_wrapped, self._taken_said = {}, False, None
+        self._taken_from, self._taken_format = "", None
         self.keep_side, self._keep_prev, self._side_lost_said, self._side_garbled = {}, {}, {}, {}
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
@@ -3093,9 +3099,10 @@ class RecWorker(VmsWorker):
         def recordings_of(k) -> list[str]:               # what the keep names, and every recording of its camera now
             return sorted(set(k.recordings) | cams.get(k.cam, set()))
 
+        taken = self._taken_read()                       # a store that does not answer RAISES: read again next pass
         if not self._keeps_read:
             self._keeps_read = True
-            held_before, took_before = self._keeps_held_before(declared, recordings_of, inside)
+            held_before, took_before = self._keeps_held_before(declared, recordings_of, inside, taken)
             self.keep_held = {**held_before, **self.keep_held}
             self.keep_took = {**took_before, **self.keep_took}
         lost_of: dict[str, float] = {}
@@ -3137,6 +3144,8 @@ class RecWorker(VmsWorker):
                 if rec in touched:
                     self.store.seal()                    # what was copied is readable now — and counted below
                 self.keep_held[(k.id, rec)] = held = inside(k, rec)
+                if held > 0:
+                    self._taken_add(rec, k)              # what it holds of the keep it took: into `took`, merged
                 took = self.keep_took[(k.id, rec)] = max(self.keep_took.get((k.id, rec), 0.0), held)
                 if took - held >= self.LOSS_SLACK:             # taken, and not here now: its ring wrote over it
                     lost_of[k.id] = lost_of.get(k.id, 0.0) + took - held
@@ -3164,6 +3173,8 @@ class RecWorker(VmsWorker):
                                  bytes=size, sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1),
                                  volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
+            if touched:
+                self._taken_write(recordings_of)         # on each copy, as the product after each push
             # What was said of the recordings not copied this pass is carried, each — it was the whole map, and only
             # when this pass copied nothing, so a pass that copied one recording dropped the others' digests — while the
             # keep says the same interval: the digest of other minutes is not this keep's. A whole copy with no digest
@@ -3193,6 +3204,9 @@ class RecWorker(VmsWorker):
             self._keep_unreadable(k, state[k.id], now)
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
         self.keep_took = {kr: v for kr, v in self.keep_took.items() if kr[0] in state}
+        if lost_of:
+            self.taken_wrapped = True                    # the ring has come round: it wrote over what it took
+        self._taken_write(recordings_of)
         self._incidents_said(declared, recordings_of, lost_of)
         self._keep_nowhere = {kr: v for kr, v in self._keep_nowhere.items() if kr[0] in state}
         self._keep_short = {kid: v for kid, v in self._keep_short.items() if kid in state}
@@ -3346,7 +3360,8 @@ class RecWorker(VmsWorker):
     #                      over each recording from `LOSS_SLACK` on. A copy taken again makes it smaller; a keep lifted,
     #                      or one whose row does not parse, is not in it (the product's `lose`)
     #   incidents_at_risk  [keep] — the ring has CLOSED (`firstBlockId` past nought, as `depth_pass` reads it, or it has
-    #                      lost a keep already) and the OLDEST footage it holds of one of the keep's recordings lies in
+    #                      lost a keep already — this process, or any before it: `wrapped` in `rec/taken/<volume>`, the
+    #                      product's `wrapped || round()`) and the OLDEST footage it holds of one of the keep's recordings lies in
     #                      the keep's interval: the next block it writes over is kept. Footage of keeps that were lifted
     #                      going first is what a ring is for, and not this (the product's `atRisk`)
     #
@@ -3356,7 +3371,8 @@ class RecWorker(VmsWorker):
     def _incidents_said(self, declared, recordings_of, lost_of: dict) -> None:
         self.incidents_lost = {kid: round(sec) for kid, sec in sorted(lost_of.items())}
         try:
-            closed = int(self.store.status().get("firstBlockId", 0)) > 0 or bool(self.incidents_lost)
+            closed = (int(self.store.status().get("firstBlockId", 0)) > 0 or bool(self.incidents_lost)
+                      or self.taken_wrapped)
             oldest = {rec: cov[0][0] for rec in {r for k in declared for r in recordings_of(k)}
                       if (cov := self.store.coverage(rec))}
         except (OSError, ObsdError, ArchiveError, *PARSE_ERRORS):
@@ -3509,7 +3525,14 @@ class RecWorker(VmsWorker):
     # volume's own `<recording>/e0` is the truth of what is there: a recorder starts from it for every recording of
     # every keep, and from an event that says MORE — the ring took some while nobody was looking — it raises the alarm.
     # Returned beside it: the most each copy ever said, losses not taken off — what `incidents_lost` counts from.
-    def _keeps_held_before(self, declared, recordings_of, inside) -> dict:
+    #
+    # AND FIRST WHAT THE VOLUME'S OWN RECORD SAYS IT TOOK (`taken`: `rec/taken/<volume>`, `_taken_read`; ADR-0057). The
+    # events are this server's: a recorder holding the volume on another box — a volume any box may take, moved after its
+    # holder died — saw none of them, started from what the ring still held, and kept footage the ring wrote over while
+    # the volume moved was never an alarm. The record goes wherever the volume goes. Each (keep, recording) the record
+    # speaks for starts from the seconds of the keep it took — unless an event HERE says less: those are losses this
+    # server has said already (`archive.keep.lost` after the copy), and are not said again.
+    def _keeps_held_before(self, declared, recordings_of, inside, taken: dict | None = None) -> dict:
         from w2cplatform.events import alarm_tree, buckets_under, read_bucket
         ids = {k.id for k in declared}
         held: dict = {}
@@ -3546,7 +3569,118 @@ class RecWorker(VmsWorker):
                 said[key] = max(0.0, said[key] - seconds)
         for key, v in said.items():
             held[key] = max(held.get(key, 0.0), v)
+        for k in declared:
+            for rec in recordings_of(k):
+                t = sum(min(b, k.until) - max(a, k.since) for a, b in (taken or {}).get(rec, []) if b > k.since and a < k.until)
+                if t <= 0:
+                    continue
+                key = (k.id, rec)
+                took[key] = max(took.get(key, 0.0), t)
+                if key not in said:
+                    held[key] = max(held.get(key, 0.0), t)
         return held, {key: max(took.get(key, 0.0), v) for key, v in held.items()}
+
+    # WHAT THE INCIDENTS VOLUME TOOK, WRITTEN DOWN WHERE THE NEXT HOLDER READS IT (ADR-0057; the product's `saveTaken`,
+    # `loadTaken`, `pruneTook`: recproc/keeper.go, as of 0ae8365). `rec/taken/<volume>` (`keeps.taken_key`), an object of
+    # rec's `objects.door`: put through this recorder's object store, given out by its resource's door, and read by
+    # whichever recorder holds the volume next, on this box or another (`resource.door_readable`). The product's bytes:
+    #
+    #   took       what each copy put into the volume of each recording, merged — what the volume holds of a keep in
+    #              force (`_taken_add`, every pass, so a record begun after the copies were made still speaks for them)
+    #   wrapped    its ring has come round: it wrote over footage it took (`keep_pass`). One of the three words for a
+    #              CLOSED ring in `incidents_at_risk`
+    #   formatted  when the volume was formatted (`Archive.formatted_at`, the engine's `createdAtUnixSec`): a volume
+    #              formatted again is another volume, whatever its name
+    #
+    # READ at every keeps' pass — once per volume and format: a store that does not answer raises, and the pass is read
+    # again on the next, never written over unread. A record that does not parse is counted (`keeps.TAKENS`) and read as
+    # nothing taken. A record of ANOTHER format of the volume, or of none said (an older build's — ADR-0003), is not this
+    # volume's, and is not taken: what the old volume took, and that it wrapped, are not true of this one. FORMATTED
+    # AGAIN while this process holds it: `took`, `wrapped` — and what each keep held and took of the old volume — go.
+    #
+    # WRITTEN on each pass that copied, and at the end of every pass when it changed — durably where the store can
+    # (`put_durable`, the product's `PutDurably`) — PRUNED by the keeps as they stand (`_taken_pruned`, the product's
+    # `pruneTook`): as large as what is kept, not as what was ever copied. Keeps that cannot be read prune nothing: that
+    # is not "nothing is kept".
+    def _taken_read(self) -> dict:
+        from . import keeps
+        now = self.store.formatted_at()
+        if self._taken_from == self.volume and (now is None or self._taken_format == now):
+            return {rec: list(spans) for rec, spans in self.taken.items()}
+        if self._taken_from == self.volume:              # the same name, formatted again: nothing of the old volume's stays
+            log.info("%s: %s was formatted again: what the volume before it took is forgotten", self.name, self.volume)
+            self.taken, self.taken_wrapped, self._taken_said = {}, False, None
+            self.keep_held, self.keep_took = {}, {}
+        path = keeps.taken_key(self.volume)
+        raw = self.objects.get(path)
+        took, wrapped, formatted = keeps.TAKENS.read(path, lambda: keeps.parse_taken(raw), ({}, False, 0))
+        if now is not None and formatted != now:
+            if took or wrapped:
+                log.info("%s: what an earlier volume named %s took is not read: the volume was formatted again (%s, the "
+                         "record of %s)", self.name, self.volume, now, formatted or "none said")
+            took, wrapped = {}, False
+        for rec, spans in took.items():
+            self.taken[rec] = stitch(self.taken.get(rec, []) + spans, 0.0)
+        self.taken_wrapped = self.taken_wrapped or wrapped
+        self._taken_said = raw
+        self._taken_from, self._taken_format = self.volume, now
+        return {rec: list(spans) for rec, spans in self.taken.items()}
+
+    def _taken_add(self, rec: str, k) -> None:
+        have = [(max(a, k.since), min(b, k.until)) for a, b in self.store.coverage(rec) if b > k.since and a < k.until]
+        self.taken[rec] = stitch(self.taken.get(rec, []) + have, 0.0)
+
+    # What of `took` a standing keep can still lose (the product's `pruneTook`): each recording's spans cut to the
+    # intervals of the keeps that name it (`recordings_of`: what the keep names, and every recording of its camera now —
+    # what `keep_pass` copies). A keep lifted takes its spans with it, a span no keep covers goes, and a recording no
+    # keep names goes whole. A keep whose interval does not read (`keeps.as_far_as_read`) keeps its recordings' spans
+    # whole: which of them it means is not known.
+    @staticmethod
+    def _taken_pruned(took: dict, standing, recordings_of) -> dict:
+        windows: dict[str, list] = {}
+        whole: set[str] = set()
+        for k in standing:
+            for rec in recordings_of(k):
+                if k.garbled:
+                    whole.add(rec)
+                else:
+                    windows.setdefault(rec, []).append((k.since, k.until))
+        out = {}
+        for rec, spans in took.items():
+            if rec in whole:
+                out[rec] = stitch(spans, 0.0)
+                continue
+            kept = [(max(a, x), min(b, y)) for x, y in windows.get(rec, []) for a, b in spans if min(b, y) > max(a, x)]
+            if kept:
+                out[rec] = stitch(kept, 0.0)
+        return out
+
+    def _taken_write(self, recordings_of) -> None:
+        from . import keeps
+        try:
+            garbled: list = []
+            standing = keeps.declared(self.vars, garbled) + garbled
+        except OSError as e:                             # not read is not "none kept": nothing pruned
+            log.info("%s: the keeps could not be read (%s): what %s took is written down unpruned", self.name, e,
+                     self.volume)
+        else:
+            self.taken = self._taken_pruned(self.taken, standing, recordings_of)
+        if self._taken_said is None and not self.taken and not self.taken_wrapped:
+            return                                       # nothing taken, nothing written before: nothing to say
+        data = keeps.taken_bytes(self.taken, self.taken_wrapped, self._taken_format or 0)
+        if data != self._taken_said:
+            self._taken_put(self.volume, data)
+
+    def _taken_put(self, volume: str, data: bytes) -> None:
+        from . import keeps
+        put = getattr(self.objects, "put_durable", None) or self.objects.put
+        try:
+            put(keeps.taken_key(volume), data)
+        except OSError as e:                             # written again on the next pass that has something to say
+            log.warning("%s: what %s took could not be written down (%s): its loss after a move would go unsaid until "
+                        "it is", self.name, volume, e)
+            return
+        self._taken_said = data
 
     # THE SEAL, WRITTEN ONCE (ADR-0057, дополнение п. 3: пишет рекордер тома incidents; the product's `SealKeeps`). The
     # first time a recording's copy is whole — held, and short of nothing a source has (`keep_pass`'s `whole`) — its
