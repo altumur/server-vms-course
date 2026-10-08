@@ -34,8 +34,9 @@ slot: {prefix: r, name_env: RECORDER_NAME}
 # per camera (`rec/forwarded/<forwarder>`), which the ingest reads wherever it runs. What a member reports to the domain
 # (`domain.reports`) the door gives out unasked. A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
 # recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
-# tables door; the door's `verify` reads it (ADR-0057).
-objects: {rows: [sealed/*, used/*], door: [forwarded/*]}
+# tables door; the door's `verify` reads it (ADR-0057). A relay's word of the centre per camera (`rec/ingest/up/<ref>.json`,
+# `chain.Forwarder`, `UP_KEPT`): the next process of the relay goes on from it while the centre is unreachable (ADR-0019).
+objects: {rows: [ingest/up/*, sealed/*, used/*], door: [forwarded/*]}
 # The fields of a recorder's heartbeat that are strings and that something decides by: the volume it is counted in
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare (`volumes.py`).
 heartbeat: {strings: [volume, volume_error, archive, volume_missing]}

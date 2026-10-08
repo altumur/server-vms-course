@@ -132,6 +132,55 @@ FORWARD_BYTES = 16 << 20
 FORWARD_FRAMES = 300
 
 
+# THE CENTRE'S WORD, KEPT ACROSS A RESTART OF THE RELAY (ADR-0019: the product first, `recproc/upkept.go`; its r22). What the
+# centre confirmed of a camera (`Ingest.up_have`) was in this process's memory alone: a relay restarted while the centre
+# was unreachable said nothing of it, and the camera took what the relay records as delivered — its card let go of what
+# the centre does not have. So the forwarder writes the centre's word down per camera in a ROW of this cluster's store
+# (`rec/ingest/up/<ref>.json`, rec.subsystem.yaml `objects.rows`: every recorder of the cluster reads the store, the next
+# writer may be on another box), `{"v": 1, "have": <archive ms, this relay's clock>, "every": <s>, "heard": <unix ms>}` —
+# `have` and `every` left out when there is none (the course's centre says no step: `every` is never written) — and the
+# restarted relay seeds `up_have` from it before its first pass. Not on every answer (one a second): when the centre
+# starts wanting the stream, when its `have` goes back, at most once per `UP_KEPT_EVERY` while it moves on, once per
+# `UP_KEPT_REFRESH` while it stands (so `heard` ages right after a restart). A centre that does not want the stream drops
+# the row. Not for ever: a word older than `UP_KEPT_FOR` (a day: about what a camera's card holds) is dropped at the
+# restart, counted (`up_expired`) and logged — and while the relay runs and the centre stays silent that long, the word is
+# said no more, counted the same way: the card goes by the relay's own `have` again.
+UP_KEPT = "rec/ingest/up"
+UP_KEPT_FOR = 86400.0
+UP_KEPT_EVERY = 60.0
+UP_KEPT_REFRESH = 3600.0
+
+
+def up_key(ref: str) -> str:
+    return f"{UP_KEPT}/{ref}.json"
+
+
+def keep_ups(objects) -> tuple:
+    """`(load_up, save_up, drop_up)` over a cluster's object store — the recorder's — or three `None` without one: a relay
+    with nowhere to keep the centre's word forgets it at a restart, as before."""
+    if objects is None:
+        return None, None, None
+
+    def load_up(ref):
+        try:
+            return objects.get(up_key(ref))
+        except OSError:
+            return None
+
+    def save_up(ref, data):
+        try:
+            objects.put(up_key(ref), data)
+        except OSError as err:
+            log.warning("forwarder: the centre's word on %s could not be kept; a restart of this relay forgets it: %s", ref, err)
+
+    def drop_up(ref):
+        try:
+            objects.delete(up_key(ref))
+        except OSError as err:
+            log.warning("forwarder: the centre's word on %s kept for a restart could not be dropped: %s", ref, err)
+    return load_up, save_up, drop_up
+
+
 # One pass. For every camera in this cluster's upstream book: PUSH mode — poll the centre's ingest; if it wants
 # the stream, want it here too (that is the want travelling down to the camera) and push up what arrived;
 # upload any range the centre asked for, out of this cluster's archive; carry down any ask left there for the camera
@@ -140,11 +189,14 @@ FORWARD_FRAMES = 300
 class Forwarder:
     sealer = None                  # the ring its books' tokens are opened with: this process's (`keys.ring`) when None
 
-    def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None):
+    def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None, objects=None,
+                 load_up=None, save_up=None, drop_up=None):
         """`local`: this cluster's `Ingest`. `dial(url)`: calling OUT to the centre. `archive(ref, t0, t1)`:
         frames of a range from this cluster's archive — called with `recording=` when the centre named one, and
         raising `OSError` for a range it could not read. `needs(ref)`: whether this cluster wants the stream
-        itself — its recorder — which in star mode it must fetch."""
+        itself — its recorder — which in star mode it must fetch. `load_up(ref) -> bytes | None`, `save_up(ref, data)`,
+        `drop_up(ref)`: where the centre's word on a camera is kept across a restart — by default over `objects`, this
+        cluster's object store (`keep_ups`), and nowhere without it."""
         self.name, self.local, self.vars, self.dial = name, local, cluster_vars, dial
         self.archive = archive or (lambda ref, t0, t1, recording=None: [])
         self.needs = needs or (lambda ref: False)
@@ -169,6 +221,20 @@ class Forwarder:
         self.woken = threading.Event()                           # set by the local ingest: something changed here
         self.pending = threading.Event()                         # set when an ask went up: an outcome to wait for
         local.listen(self.woken.set)
+        # The centre's word kept across a restart (`UP_KEPT`): the three callables, what was last written per camera
+        # (`_up_kept`: on, have ms, at, seen), when the centre last answered (`heard`, this relay's wall), the words that
+        # outlived `UP_KEPT_FOR` (`up_expired`), how many times written (`up_writes`), and the cameras whose kept word was
+        # read already (`_up_read`).
+        defaults = keep_ups(objects)
+        self.load_up = load_up if load_up is not None else defaults[0]
+        self.save_up = save_up if save_up is not None else defaults[1]
+        self.drop_up = drop_up if drop_up is not None else defaults[2]
+        self._up_kept: dict[str, dict] = {}
+        self.heard: dict[str, float] = {}
+        self.up_expired: dict[str, int] = {}
+        self.up_writes: dict[str, int] = {}
+        self._up_read: set[str] = set()
+        self.restore_up()                                        # before the first pass: a camera polling now hears it
 
     # The books the relay's agent carried, read entry by entry (the eighth review's sibling): an entry that does not
     # parse is the one read last — or none, when there never was one — counted (`ingest.BOOKS`); it raised out of the
@@ -208,10 +274,13 @@ class Forwarder:
         return None
 
     def pass_once(self) -> dict[str, str]:
-        for ref, e in self.book().items():
+        book = self.book()
+        self.restore_up(book)
+        for ref, e in book.items():
             ing = self._centre(e)
             if ing is None:
                 self.state[ref] = "no ingest of the centre answered"
+                self._silent(ref)
                 continue
             try:                                                # one camera's centre that stopped answering is that
                 if e["mode"] == "pull":                         # camera's, not the end of the pass (the seventh review)
@@ -220,7 +289,85 @@ class Forwarder:
                     self.state[ref] = self._push(ing, ref, e)
             except Unreachable as err:
                 self.state[ref] = f"the centre stopped answering: {err}"
+                self._silent(ref)
         return dict(self.state)
+
+    # -- the centre's word, kept (`UP_KEPT`) ------------------------------------------------------------------
+    def restore_up(self, book: dict | None = None) -> None:
+        """Seeds `Ingest.up_have` from the word an earlier process of this relay kept, for every push camera of the book
+        not read yet — at construction, before the first pass, and for a camera new to the book. A word that does not
+        read is dropped and said; one older than `UP_KEPT_FOR` is dropped, counted (`up_expired`) and said."""
+        if self.load_up is None:
+            return
+        for ref, e in (self.book() if book is None else book).items():
+            if ref in self._up_read or e.get("mode") != "push":
+                continue
+            self._up_read.add(ref)
+            raw = self.load_up(ref)
+            if raw is None:
+                continue
+            try:
+                k = json.loads(raw)
+                heard = finite(k["heard"]) / 1000.0
+                have = None if k.get("have") is None else finite(k["have"]) / 1000.0
+                if k.get("v") != 1 or heard <= 0:
+                    raise ValueError(f"v {k.get('v')!r}, heard {k.get('heard')!r}")
+            except PARSE_ERRORS as err:
+                log.warning("%s: the centre's word on %s kept for a restart does not read; dropped: %s", self.name, ref, err)
+                if self.drop_up is not None:
+                    self.drop_up(ref)
+                continue
+            silent = self.local.wall() - heard
+            if silent > UP_KEPT_FOR:
+                self.up_expired[ref] = self.up_expired.get(ref, 0) + 1
+                log.warning("%s: the centre wanted %s and has said nothing for %.0f s, longer than it is kept (%.0f s); the "
+                            "camera's card goes by this relay's word again", self.name, ref, silent, UP_KEPT_FOR)
+                if self.drop_up is not None:
+                    self.drop_up(ref)
+                continue
+            if have is not None:
+                self.local.up_have[ref] = have
+            self.heard[ref] = heard
+            self._up_kept[ref] = {"on": True, "have": None if have is None else round(have * 1000), "at": heard,
+                                  "seen": False}
+            log.info("%s: the centre's word on %s, kept from before: up_have %s until the centre answers", self.name, ref, have)
+
+    def _keep_up(self, ref: str, push: bool, up: float | None) -> None:
+        """Writes the centre's word down as it answered, when it changed enough to: the first answer that wants the
+        stream, a `have` gone back at once, one moved on at most once per `UP_KEPT_EVERY`, one standing still once per
+        `UP_KEPT_REFRESH`; an answer that does not want it drops the row (once — and the first answer of this process
+        drops what a process before may have left)."""
+        now = self.local.wall()
+        self.heard[ref] = now
+        if self.save_up is None:
+            return
+        k = self._up_kept.setdefault(ref, {"on": False, "have": None, "at": 0.0, "seen": False})
+        if not push:
+            if (k["on"] or not k["seen"]) and self.drop_up is not None:
+                self.drop_up(ref)
+            k.update(on=False, seen=True)
+            return
+        k["seen"] = True
+        have = None if up is None else int(up * 1000)               # down to the ms: the card keeps more, never less
+        since = now - k["at"]
+        if k["on"] and (have or 0) >= (k["have"] or 0) and (have == k["have"] or since < UP_KEPT_EVERY) \
+                and since < UP_KEPT_REFRESH:
+            return
+        row = {"v": 1, **({"have": have} if have else {}), "heard": int(now * 1000)}
+        self.save_up(ref, json.dumps(row, separators=(",", ":")).encode())
+        k.update(on=True, have=have, at=now)
+        self.up_writes[ref] = self.up_writes.get(ref, 0) + 1
+
+    def _silent(self, ref: str) -> None:
+        """The centre did not answer: its word stands — but not past `UP_KEPT_FOR` since it last did. Then it is said no
+        more (`up_have` dropped), counted and logged, once; the centre answering again says it again."""
+        heard = self.heard.get(ref)
+        if heard is None or ref not in self.local.up_have or self.local.wall() - heard <= UP_KEPT_FOR:
+            return
+        self.local.up_have.pop(ref, None)
+        self.up_expired[ref] = self.up_expired.get(ref, 0) + 1
+        log.warning("%s: the centre wanted %s and has said nothing for longer than it is kept (%.0f s); the camera's card "
+                    "goes by this relay's word again", self.name, ref, UP_KEPT_FOR)
 
     def _push(self, ing, ref: str, e: dict, wait: float = 0.0) -> str:
         work = ing.poll(e["token_secret"], ref, version=self.versions.get(ref) if wait else None, wait=wait)
@@ -237,6 +384,7 @@ class Forwarder:
             self.local.up_have.pop(ref, None)
         else:
             self.local.up_have[ref] = up
+        self._keep_up(ref, bool(work["push"]), up)                # …and kept across a restart of this relay (`UP_KEPT`)
         if work["push"]:
             self.local.want(ref, self.up)                       # the centre wants it: so do we, from the camera
             q = self.queues.setdefault(ref, self.local.subscribe(ref, self.up, maxsize=FORWARD_FRAMES))
@@ -368,6 +516,8 @@ class Forwarder:
                 e = self.book().get(ref)
                 ing = self._centre(e) if e else None
                 if ing is None or e["mode"] != "push":
+                    if e is not None:
+                        self._silent(ref)
                     stop.wait(retry_wait(period))                 # no centre answered (or nothing to push): not in step
                     continue
                 try:
@@ -376,13 +526,16 @@ class Forwarder:
                     if streaming:
                         stop.wait(stream_every)
                 except Unreachable:
+                    self._silent(ref)
                     stop.wait(retry_wait(period))
 
         def asks():
             while not stop.is_set():
                 self.woken.wait(period)
                 self.woken.clear()
-                for ref in self.book():
+                book = self.book()
+                self.restore_up(book)                                    # a camera new to the book: its kept word first
+                for ref in book:
                     if ref not in threads:
                         threads[ref] = threading.Thread(target=down, args=(ref,), daemon=True, name=f"fwd-{ref}")
                         threads[ref].start()
@@ -443,10 +596,13 @@ class Forwarder:
     def stats(self) -> dict[str, dict]:
         """Per camera: its state, and what was dropped past what the forwarder holds — kept to push again
         (`dropped`), and waiting between two pushes (`queue_dropped`); and how many times a pull found its centre restarted
-        since the last — a batch may have gone with it (`holes`)."""
+        since the last — a batch may have gone with it (`holes`); and how many times the centre's word on it outlived
+        `UP_KEPT_FOR` (`up_expired`)."""
         return {ref: {"state": self.state.get(ref, ""), "dropped": self.dropped.get(ref, 0),
-                      "queue_dropped": getattr(self.queues.get(ref), "dropped", 0), "holes": self.holes.get(ref, 0)}
-                for ref in sorted(set(self.state) | set(self.queues) | set(self.pulled) | set(self.dropped) | set(self.holes))}
+                      "queue_dropped": getattr(self.queues.get(ref), "dropped", 0), "holes": self.holes.get(ref, 0),
+                      "up_expired": self.up_expired.get(ref, 0)}
+                for ref in sorted(set(self.state) | set(self.queues) | set(self.pulled) | set(self.dropped) | set(self.holes)
+                                  | set(self.up_expired))}
 
     def _pull(self, ing, ref: str, e: dict) -> str:
         if not self.needs(ref) and not self.local.wanted(ref):
