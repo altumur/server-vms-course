@@ -117,6 +117,7 @@ def test_a_heartbeat_field_its_spec_says_is_a_string_and_is_not_garbles_the_hear
     assert GARBLED["beater"] == before + 3
     assert parse_heartbeat("nobody/heartbeats/w-1", beat(shelf=5)) is not None
     _refused(lambda: _spec(heartbeat={"strings": ["server"]}), "heartbeat.strings: 'server' is no field of its own")
+    _refused(lambda: _spec(heartbeat={"strings": ["fetched"]}), "heartbeat.strings: 'fetched' is no field of its own")
     _refused(lambda: _spec(heartbeat={"strings": ["a", "a"]}), "or is said twice")
     _refused(lambda: _spec(heartbeat={"strings": "a"}), "`heartbeat:` is {strings:")
 

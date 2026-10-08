@@ -661,8 +661,10 @@ def _object_rows(name, objects) -> tuple:
 # something decides by (the product's key: the field it places by, say — the place a worker is counted in). A heartbeat
 # in which one of them is not a string is garbled — skipped and counted, as one that does not parse
 # (`contract.parse_heartbeat`): a reader that keyed or compared by it raised, or took `5` for a place. The platform's
-# own (`worker`, `server`, `url`, `instance`, `labels`) are not a spec's to say.
-PLATFORM_HEARTBEAT_STRINGS = ("worker", "server", "url", "instance", "labels")
+# own (`worker`, `server`, `url`, `instance`, `labels`, and `fetched` — the requests a holder took, which the platform's
+# clearing reads, `requests.py`) are not a spec's to say: a spec that declared one would collide with the platform's word
+# unseen («Архитектор» 2026-10-07, ADR-0019; the product's `PlatformHeartbeatStrings`).
+PLATFORM_HEARTBEAT_STRINGS = ("worker", "server", "url", "instance", "labels", "fetched")
 
 
 def _heartbeat_strings(name, hb) -> tuple:
