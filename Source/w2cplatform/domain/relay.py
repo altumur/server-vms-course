@@ -143,20 +143,31 @@ def relay_down(agent, members: list[str]) -> int:
     has a door (`CarryClient.carry_for`: sealed to the member, with the member's key to check its asks by), read
     through `carry.answer` when it holds the holder's store itself (the tests). A member it no longer relays is
     forgotten. How current it all is, the relay says on every pass of its own, reached or not (`say_seen`)."""
-    from .carry import answer
+    from .carry import Refused, answer
     from .members import Members
     changed = 0
+    refused = agent.__dict__.setdefault("relay_refused", {})
     for m in members:
         if hasattr(agent.domain_vars, "carry_for"):
-            got = agent.domain_vars.carry_for(m)
+            # The door refusing one member is that member's (O9: one no longer on the list): what was kept for it is
+            # dropped and the door's words kept for its asks (`RelayDoor`); the others are relayed as before.
+            try:
+                got = agent.domain_vars.carry_for(m)
+            except Refused as e:
+                changed += agent.relayed.pop(m, None) is not None
+                refused[m] = e.detail
+                continue
         else:
             got = answer(agent.domain_vars, agent.domain_objects, m)
             got["key"] = (Members(agent.domain_vars).read()["members"].get(m) or {}).get("key")
         if agent.relayed.get(m) != got:
             changed += 1
         agent.relayed[m] = got
+        refused.pop(m, None)
     for m in [m for m in agent.relayed if m not in members]:
         del agent.relayed[m]
+    for m in [m for m in refused if m not in members]:
+        del refused[m]
     return changed
 
 
@@ -194,6 +205,9 @@ class RelayDoor:
     def _kept(self, cluster: str) -> dict:
         from .carry import Refused
         kept = self.agent.relayed.get(cluster) if self.agent is not None else None
+        why = getattr(self.agent, "relay_refused", {}).get(cluster) if self.agent is not None else None
+        if kept is None and why:
+            raise Refused(403, f"the domain refuses {cluster} to {getattr(self.agent, 'cluster', 'the relay')}: {why}")
         if kept is None:
             raise Refused(404, f"{getattr(self.agent, 'cluster', 'the relay')} relays no member {cluster}, or has not "
                                f"reached the domain for it yet")

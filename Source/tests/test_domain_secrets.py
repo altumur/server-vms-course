@@ -369,3 +369,45 @@ def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admit
         assert got["cluster"] == "cam-x" and "domain/keys" in got["rows"], urllib.parse.quote(str(got)[:200])
     finally:
         srv.shutdown()
+
+
+def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_to_one_that_left():
+    """The scenario «камера — офис — центр», O9: the holder's door asked only the topology before answering a relay for a
+    member — `DELETE /domain/members/<camera>` and the office still got 200 for it (public rows, no secret, `key: null`),
+    and the office refused the camera as one "admitted without a key", not as one that left. The door carries for a member
+    on the list alone (404, said); the relay drops what it kept for it, relays the others as before, and answers the
+    camera with the domain's words."""
+    from w2cplatform.domain.agent import DomainAgent
+    from w2cplatform.domain.carry import CarryClient, HolderDoor, Refused, request_message
+    from w2cplatform.domain.members import Members
+    from w2cplatform.domain.relay import Relay
+    from w2cplatform.domain.topology import Topology
+    from w2cplatform.trust.memberkey import MemberKey
+    from tests.test_domain_platform import cluster
+    fed, wall, signer, holder_ring, keys = holder_with_members()
+    north = fed.clusters["north"]
+    east = fed.clusters.get("east") or cluster("east", wall)
+    keys["west"] = MemberKey.new()
+    members = Members(north.vars, wall, domain="north")
+    members.add("west", "voucher", key=keys["west"].pub, seal=keys["west"].seal_pub)
+    Topology(north.vars).edit(lambda d: d["via"].update({"south": "east", "west": "east"}), 0,
+                              known={"north", "south", "east", "west"})
+    door = HolderDoor(north.vars, north.objects, holder_ring, wall)
+    relay = DomainAgent("east", CarryClient(door, "east", keys["east"], wall), east.vars, now=wall, key=keys["east"],
+                        relay_members=["south", "west"], bundle_store=east.objects, sealer=ring())
+    assert relay.sync() and set(relay.relayed) == {"south", "west"}
+    assert members.remove("south", by="anna")
+    try:
+        CarryClient(door, "east", keys["east"], wall).carry_for("south")
+        raise AssertionError("the door carried for a member that left")
+    except Refused as e:
+        assert e.status == 404 and "no member of this domain" in e.detail, e.detail
+    assert relay.sync() and set(relay.relayed) == {"west"}
+    relay_door = Relay(relay).door
+    try:
+        relay_door.carry("south", wall(), keys["south"].seal_pub,
+                         keys["south"].sign(request_message("south", wall(), keys["south"].seal_pub)))
+        raise AssertionError("the relay answered a member that left")
+    except Refused as e:
+        assert e.status == 403 and "no member of this domain" in e.detail and "without a key" not in e.detail, e.detail
+    assert Relay(relay).vars.answer_for("west", keys["west"])["rows"]

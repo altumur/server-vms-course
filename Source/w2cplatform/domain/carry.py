@@ -186,9 +186,14 @@ class HolderDoor:
             if seal != me.get("seal", seal):
                 raise Refused(401, f"the ask names a sealing key that is not {cluster}'s")
             return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer)
+        # …and only for a MEMBER (the scenario «камера — офис — центр», O9): the topology alone was asked, and a member
+        # deleted from the list while the topology still placed it behind its office was answered all the same — its
+        # public rows, no secret, `key: null` — and the office then refused the camera as one "admitted without a key".
+        if for_member not in members:
+            raise Refused(404, f"{for_member} is no member of this domain: nothing is carried for it")
         if Topology(self.vars).via(for_member) != cluster:
             raise Refused(403, f"{cluster} does not relay {for_member} (the domain's topology says so)")
-        theirs = members.get(for_member) or {}
+        theirs = members[for_member]
         out = answer(self.vars, self.objects, for_member, seal_to=theirs.get("seal") or None, sealer=self.sealer)
         if not theirs.get("seal"):
             # Nobody to seal to: the relay is given no secret of a member it could open, only the rest.
