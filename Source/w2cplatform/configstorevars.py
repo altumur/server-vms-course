@@ -216,7 +216,7 @@ class ConfigstoreVariables:
                 if time.monotonic() - start >= min(REFUSED_WAIT, self.timeout):
                     raise StoreUnavailable(f"the store's daemon is not there: {e}") from None
                 # …each caller at its own moment: every process of the server lost the daemon at once, and in step
-                # they reached its new socket at once (the product's cross-check, its pusher's 2 s exactly).
+                # they reached its new socket at once (the product's cross-check: a process of its own retried at 2 s exactly).
                 time.sleep(REFUSED_STEP * random.uniform(0.5, 1.5))
             except (OSError, http.client.HTTPException) as e:
                 kind = StoreAmbiguous if write else StoreUnavailable

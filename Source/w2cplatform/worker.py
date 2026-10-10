@@ -2031,7 +2031,7 @@ class Worker:
     #                  `number_text`), `None` left out; written CREATE-ONLY (`cas=0`, every store has it)
     #   filed again    IDEMPOTENT (ADR-0013: "not more than once" is about PERFORMING). Only when the id is taken, the row
     #                  that stands is read and compared, in its one text without the base's `filed`, with what is filed
-    #                  (`by`, `at` — the filer's moment, for a pusher the event's — and the fields): the same → the same
+    #                  (`by`, `at` — the filer's moment, for a filer that reports an event, the event's — and the fields): the same → the same
     #                  request, `True`, counted `filings["again"]`, the row and its first `filed` untouched; a different
     #                  one, or a row that cannot be read or does not parse → refused (`RequestRefused`, logged, counted),
     #                  nothing written. A different request under a taken id passed silently before, as `False`
@@ -2672,7 +2672,7 @@ class Worker:
                     # IT CAME BACK AFTER WE HAD SAID IT DID NOT ANSWER (the architect's decision; the product's
                     # `request-holder`): the request keeps that answer and its row is not touched, but the MARK says what
                     # was really done — so the next instance says it again rather than `unknown` — and `late`, which tells
-                    # an execution past `PERFORM_TIMEOUT` (an incident) from an ordinary one.
+                    # an execution past `PERFORM_TIMEOUT` (a failure worth looking into) from an ordinary one.
                     outcome = "refused" if "error" in call else "performed"
                     self._unknown_owed.pop(rid, None)    # its own word now: over the `unknown`, whether written or owed
                     self._confirm(rid, row, outcome, it, late=True, why=call.get("error", ""))

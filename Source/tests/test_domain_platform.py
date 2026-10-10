@@ -239,7 +239,7 @@ class _Store:
 
 def test_the_keys_view_shows_names_and_never_a_value_a_nested_token_or_an_objects_body():
     """`GET /domain/keys` — identifiers only («Архитектор», 2026-10-06). The leak it closes: a book row whose field holds
-    a document with `token_secret` in it (as a dict, or as JSON text), an `ingest.key`-style field holding a stream
+    a document with `token_secret` in it (as a dict, or as JSON text), a `door.key`-style field holding a stream
     token, a sealed value under a name that does not say secret, and an object whose body carries a token — the
     masking by a field's name let every one of them through. Now no value and no body comes back: the field names do,
     the index, an object's size and age, and a row the role may not read stays named and withheld."""
@@ -247,7 +247,7 @@ def test_the_keys_view_shows_names_and_never_a_value_a_nested_token_or_an_object
     tok = "tok-9f3a1c-stream"
     rows = {"domain/testsub/books/south": {"u-1": {"url": "tcp://srv/1", "token_secret": tok},
                                            "u-2": json.dumps({"url": "tcp://srv/2", "token_secret": tok})},
-            "domain/testsub/ingest/south": {"ingest.key": tok, "ingest.url": "https://south:8443/in"},
+            "domain/testsub/door/south": {"door.key": tok, "door.url": "https://south:8443/in"},
             "domain/testsub/ledger": {"s1": "enc:v1:k1:" + tok},
             "domain/signer": {"issuing_secret": tok}}
     objs = {"domain/testsub/heartbeat/south": json.dumps({"ts": 90.0, "token": tok}).encode(),
@@ -257,7 +257,7 @@ def test_the_keys_view_shows_names_and_never_a_value_a_nested_token_or_an_object
     by = {v["key"]: v for v in d["vars"]}
     assert by["domain/testsub/books/south"] == {"key": "domain/testsub/books/south", "index": "7",
                                                 "fields": ["u-1", "u-2"]}
-    assert by["domain/testsub/ingest/south"]["fields"] == ["ingest.key", "ingest.url"]
+    assert by["domain/testsub/door/south"]["fields"] == ["door.key", "door.url"]
     assert by["domain/testsub/ledger"]["fields"] == ["s1"] and "public" not in by["domain/testsub/ledger"]
     assert by["domain/signer"] == {"key": "domain/signer", "withheld": "not this process's to read"}
     assert d["objects"] == [{"key": "domain/raw", "size": len(objs["domain/raw"])},

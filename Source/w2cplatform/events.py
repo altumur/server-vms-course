@@ -612,7 +612,7 @@ class Suppressor:
         return out
 
     # `repeats` is how many were swallowed, `since`/`until` the bounds they fell between — the three
-    # numbers an incident is reconstructed from. The fields are the FIRST line's of that window: with
+    # numbers an outage is reconstructed from. The fields are the FIRST line's of that window: with
     # every-field identity they are all of them, and with a narrowed `by` they are one concrete
     # example of what repeated.
     def _summary(self, k) -> tuple[float, str, dict]:
