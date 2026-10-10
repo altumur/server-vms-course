@@ -235,3 +235,41 @@ def test_the_bench_file_store_deletes_under_its_directory_lock():
     assert s.delete("vms/marks/r-1") is False and s.delete("vms/none/r-2") is False
     assert not os.path.exists(os.path.join(d, "vms", "none"))          # nothing made to say there was nothing
     assert s.put_new("vms/marks/r-1", b"{}")                           # the name is free again
+
+
+def test_the_bench_file_store_reads_a_key_deleted_meanwhile_as_no_object():
+    """`FsObjectStore.get` looked (`exists`) and then opened: a `delete` between the two raised `FileNotFoundError`
+    through `complete_mark` — 3 threads of 300 (the review's fifteenth pass, minor 8). A key deleted meanwhile is no
+    object, as one never written is: the race run here, and the moment itself, the file gone after the look."""
+    import tempfile
+    import threading
+    d = tempfile.mkdtemp(prefix="bench-objects-")
+    s = open_store(f"file://{d}")
+    errors, got = [], []
+
+    def churn(n):
+        key = f"vms/marks/r-{n % 7}"
+        try:
+            for _ in range(20):
+                s.put_new(key, b"{}"); got.append(s.get(key)); s.delete(key); got.append(s.get(key))
+        except Exception as e:                           # noqa: BLE001 — what the test is about
+            errors.append(e)
+    threads = [threading.Thread(target=churn, args=(n,)) for n in range(60)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(30)
+    assert not errors, errors[:3]
+    assert set(got) <= {b"{}", None}
+    s.put_new("vms/marks/gone", b"{}")
+    real_open = open
+    def open_after_delete(path, *a, **kw):               # the file goes between whatever looked and the read
+        if str(path).endswith("vms/marks/gone"):
+            os.remove(path)
+        return real_open(path, *a, **kw)
+    import builtins
+    builtins.open = open_after_delete
+    try:
+        assert s.get("vms/marks/gone") is None
+    finally:
+        builtins.open = real_open

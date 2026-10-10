@@ -161,12 +161,16 @@ class FsObjectStore:
             except FileNotFoundError:
                 return False
 
+    # A key that is not there is `None`, and so is one deleted between the look and the read: `exists` then `open` raised
+    # `FileNotFoundError` through `complete_mark` when a sweep removed the mark meanwhile (the review's fifteenth pass,
+    # minor 8; 3 of 300 threads). The `open` alone answers, without the directory's lock — a reader does not wait for a
+    # writer; `delete` and `put` replace the name whole, so what it opens is one object or none.
     def get(self, key: str) -> bytes | None:
-        p = os.path.join(self.root, key)
-        if not os.path.exists(p):
+        try:
+            with open(os.path.join(self.root, key), "rb") as f:
+                return f.read()
+        except FileNotFoundError:
             return None
-        with open(p, "rb") as f:
-            return f.read()
 
     def list(self, prefix: str) -> list[str]:
         out = []
