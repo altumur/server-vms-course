@@ -849,6 +849,37 @@ class Holder:
         return H
 
 
+# Lesson 15, step 9: a domain whose root stays off the holder. The installer points RECOVERY_FILE at the root for the
+# FIRST start only: the holder's issuing certificate and the first key set are signed, the domain is founded — the
+# record of its holder at term 1, signed by the root (`term.found`: the product's `domain install` writes it with the
+# keys; without it `term_of` found no term, and the domain could not be moved — the three-site scenario, F4) — and the
+# file goes back to the operator. The holder is the one `DOMAIN_HOLDER` names, else the first of `CLUSTERS`, else this
+# cluster (`CLUSTER`); none of them: refused, said, nothing written. From then on the signer holds its own keys, and the
+# key set is the root's — never overwritten here by one of its own, which members that pinned the root would refuse.
+def first_signer(vars_, domain: str, sealer, pub, env) -> Signer:
+    recovery = env.get("RECOVERY_FILE")
+    if vars_.get("domain/signer")[0] is None and recovery:
+        from .runtime import names_from_env
+        from .term import found
+        holder = names_from_env(env=env)[0] or env.get("CLUSTER")
+        if not holder:
+            raise SystemExit("RECOVERY_FILE founds the domain, and nothing names its holder: DOMAIN_HOLDER, CLUSTERS "
+                             "or CLUSTER — nothing was written")
+        with open(recovery, "rb") as f:
+            root = DomainRoot.restore(domain, f.read())
+        signer = Signer(domain, vars_, root=root, sealer=sealer)
+        pub.publish_keys(root.key_set(signer.tokens.keyset(), rev=1, issuing=[signer.root.cert.serial_number]))
+        found(vars_, holder, root)
+        return signer
+    signer = Signer(domain, vars_, sealer=sealer)
+    # A first start publishes its own key set. A start on a MEMBER — a signer waiting for a move here (`Holder.move`) —
+    # finds the domain's key set its agent carried, and leaves it: over it, a key set of its own would make the cluster
+    # trust nobody but itself, and the move could not check the file against what it holds.
+    if not signer.chain and vars_.get(KEYS_PATH)[0] is None:
+        pub.publish_keys(signer.tokens.keyset())
+    return signer
+
+
 def main() -> None:
     from w2cplatform import runtime
     from w2cplatform.journal import Journal
@@ -863,23 +894,7 @@ def main() -> None:
     seal_stored(vars_, sealer, DOMAIN_PREFIXES)
     objects = open_objects(os.environ.get("OBJECTS", "file:///data/platform/objects"))   # the platform's, `w2c.env`
     pub = DomainPublisher(vars_)
-    # Lesson 15, step 9: a domain whose root stays off the holder. The installer points RECOVERY_FILE at the root
-    # for the FIRST start only: the holder's issuing certificate and the first key set are signed, and the file
-    # goes back to the operator. From then on the signer holds its own keys, and the key set is the root's —
-    # never overwritten here by one of its own, which members that pinned the root would refuse.
-    recovery = os.environ.get("RECOVERY_FILE")
-    if vars_.get("domain/signer")[0] is None and recovery:
-        with open(recovery, "rb") as f:
-            root = DomainRoot.restore(domain, f.read())
-        signer = Signer(domain, vars_, root=root, sealer=sealer)
-        pub.publish_keys(root.key_set(signer.tokens.keyset(), rev=1, issuing=[signer.root.cert.serial_number]))
-    else:
-        signer = Signer(domain, vars_, sealer=sealer)
-        # A first start publishes its own key set. A start on a MEMBER — a signer waiting for a move here
-        # (`Holder.move`) — finds the domain's key set its agent carried, and leaves it: over it, a key set of its own
-        # would make the cluster trust nobody but itself, and the move could not check the file against what it holds.
-        if not signer.chain and vars_.get(KEYS_PATH)[0] is None:
-            pub.publish_keys(signer.tokens.keyset())
+    signer = first_signer(vars_, domain, sealer, pub, os.environ)
     # Its own lines of the journal, as role `domain` — who changed the people, the shared settings, who handed the domain
     # on; the domain's console writes its own (`domainconsole`). Where it was told to (`runtime.events_said`).
     journal = Journal(runtime.events_said(os.environ), "domain", time.time)
