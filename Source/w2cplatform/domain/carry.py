@@ -155,7 +155,7 @@ class HolderDoor:
     """The door's checks, over the holder's stores: who asks (a member's key, as admitted), when (its clock within
     `SKEW` of ours), for whom (itself, or a member the topology says it relays) — then `answer`, sealed to the member.
 
-    A REFUSED ASK OF A CLUSTER NOT ON THE LIST IS A KNOCK (the scenario «камера — офис — центр», O2; the product's
+    A REFUSED ASK OF A CLUSTER NOT ON THE LIST IS A KNOCK (the three-site scenario, O2; the product's
     `Members.NoteKnock`). An agent that carries through the door and that the door does not know never got as far as a
     report — the pass ends at the refusal — so nobody saw it knock, and `POST /domain/members {name, fingerprint}` had
     nothing to compare. The ask names the key it is signed with (`X-W2C-Key`, `key`); signed by that key and within
@@ -186,9 +186,9 @@ class HolderDoor:
             if seal != me.get("seal", seal):
                 raise Refused(401, f"the ask names a sealing key that is not {cluster}'s")
             return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer)
-        # …and only for a MEMBER (the scenario «камера — офис — центр», O9): the topology alone was asked, and a member
+        # …and only for a MEMBER (the three-site scenario, O9): the topology alone was asked, and a member
         # deleted from the list while the topology still placed it behind its office was answered all the same — its
-        # public rows, no secret, `key: null` — and the office then refused the camera as one "admitted without a key".
+        # public rows, no secret, `key: null` — and the relay then refused the member as one "admitted without a key".
         if for_member not in members:
             raise Refused(404, f"{for_member} is no member of this domain: nothing is carried for it")
         if Topology(self.vars).via(for_member) != cluster:

@@ -7,7 +7,7 @@
 - `ROOT_PATH = "domain/root"` — the domain root's public key, pinned once in a member (Lesson 15).
 - `LDEVID_PATH = "domain/ldevid"`, `BREAK_GLASS_PATH = "domain/break_glass"` — per-cluster rows of the platform's own.
 - `MEMBER_PATH = "domain/member"` — written on every pass that leaves a key set: "this cluster IS a member", so a console tells "keys lost" from "never joined".
-- `DOMAIN_SEEN = "domain/seen"` — in the member's own object store: when it last reached the domain (through a relay: when the relay did). Through a relay over the network too: an answer that carries the relay's age mark (`seen`) is measured by it (the scenario «камера — офис — центр», O10). A subsystem's process judges the age of its carried books by it.
+- `DOMAIN_SEEN = "domain/seen"` — in the member's own object store: when it last reached the domain (through a relay: when the relay did). Through a relay over the network too: an answer that carries the relay's age mark (`seen`) is measured by it (the three-site scenario, O10). A subsystem's process judges the age of its carried books by it.
 - `PLATFORM_PER_CLUSTER`, `per_cluster()` — the per-cluster rows carried home: the platform's, then every spec's books (`declared.books()`), read from the catalogue at each pass.
 
 ## `class DomainPublisher` — the signer's side: the key set, the revocation list, a cluster's break-glass hash, a cluster's grants, written into the holder's store by CAS.
