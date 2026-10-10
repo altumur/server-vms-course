@@ -13,9 +13,9 @@
 #                   a domain has none, and its console is as open as it always was — and says so in its log.
 #                   М10A and М10B are read and run without М12; one box is not made to carry a signer
 #   what to ask     `Access`: `who(token)` — the token's payload, or a refusal — and `may(payload, capability,
-#                   unit, labels)`. Whoever can verify a token implements it; `ACCESS_IMPL` names it
-#                   (the platform's domain: `w2cplatform.domain.access:cluster_access`), and it is imported only
-#                   when there are keys to check by
+#                   unit, labels)`. Whoever can verify a token implements it: the platform's domain
+#                   (`w2cplatform.domain.access.cluster_access`, named in the code — no variable of the
+#                   environment picks it), imported only when there are keys to check by; a test passes `impl`
 #   what a route    `view` to read, `edit` to act (a command, a mark, a keep), `admin` to change what the
 #   needs           cluster is (units, volumes, policy)
 #
@@ -33,7 +33,6 @@
 # ================================================================================================
 from __future__ import annotations
 
-import importlib
 import logging
 import os
 import threading
@@ -290,13 +289,15 @@ class Gate:
                             "they are and whoever reaches it is an administrator under any name", TRUST_KEYS)
             return None
         if self._loaded is None:
-            name = os.environ.get("ACCESS_IMPL", "w2cplatform.domain.access:cluster_access")
+            # The platform's own domain, imported by name in the code and not by a variable of the environment (the
+            # review's fifteenth pass, minor 2; ADR-0002): a deployment could have put any module's code behind the
+            # gate, and the boundary test would not have seen it. A process that builds its own passes `impl`.
             try:
-                module, _, fn = name.partition(":")
-                self._loaded = getattr(importlib.import_module(module), fn)(self.vars, self.wall)
+                from .domain.access import cluster_access
+                self._loaded = cluster_access(self.vars, self.wall)
             except Exception as e:                       # noqa: BLE001 — not installed, or broken: shut either way
                 raise Denied(503, f"this cluster is in a domain (its store holds a key set) and this console cannot "
-                                  f"verify a token ({name}: {e}): it admits nobody") from None
+                                  f"verify a token (w2cplatform.domain.access: {e}): it admits nobody") from None
         return self._loaded
 
     # WHO, BEFORE WHAT (the review's fifth pass, major). The console read a request's body before the gate — `_named`

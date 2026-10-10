@@ -106,12 +106,12 @@ def test_a_cluster_in_a_domain_runs_its_console_from_an_image_that_can_check_a_t
     import os
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     image = open(os.path.join(here, "deploy", "domain", "Containerfile")).read()
-    assert "FROM localhost/clustervms:latest" in image and "python3-cryptography" in image and "ACCESS_IMPL" not in image
+    assert "FROM localhost/clustervms:latest" in image and "python3-cryptography" in image
     job = open(os.path.join(here, "deploy", "cluster", "nomad", "console.nomad.hcl")).read()
     assert 'variable "w2c_home"' in job and 'command = "${var.w2c_home}/bin/w2c-run.sh"' in job and 'default = "/opt/w2c"' in job
     import importlib
     from w2cplatform.access import Gate
-    assert importlib.import_module("w2cplatform.domain.access").cluster_access                 # what `ACCESS_IMPL` names is there to be loaded
+    assert importlib.import_module("w2cplatform.domain.access").cluster_access                 # what the gate imports is there to be loaded
     vars_ = FakeVariables(); vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
     assert type(Gate(vars_, lambda: 0.0).access()).__name__ == "ClusterAccess"     # …and with a key set in the store, the gate loads it
 
