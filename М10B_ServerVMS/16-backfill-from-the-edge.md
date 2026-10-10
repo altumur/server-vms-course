@@ -267,7 +267,7 @@ requests:
     type: object
     required: [unit, from, to]
     additionalProperties: false
-    properties: {unit: {type: string}, from: {type: number}, to: {type: number}}
+    properties: {unit: {type: string}, from: {type: number}, to: {type: number}, lost: {type: boolean}}
   key: "{unit}-{from:int}-{to:int}"
   per_person: 7
   settle: 60
@@ -311,7 +311,7 @@ POST /rec/requests …восьмая неотвеченная заявка то�
 
 **Заявка, на которую некому ответить, места не держит вечно.** У дозаписи, поданной у двери консоли, `valid_until` нет — час, выкачанный с опозданием, тот же час, — поэтому строку, простоявшую `ttl` спеки (сутки), кончает уборка платформы и считает в `w2c_requests_expired_total{sub="rec"}`; список заявок человека, которого сутки никто не касался, уходит туда же. Задача, которой эти минуты ещё нужны, попросит снова (`ask_for_footage`); человек увидит, что дыра на месте, и тоже может. Тест: `test_jobs.py::test_a_backfill_nobody_answered_for_a_day_is_ended_and_a_record_request_is_not_its_business` — заявка старше суток уходит и считается, младшая остаётся, `record` со своим `valid_until` не тронут.
 
-Заявку, которую подаёт сама VMS — задача или обзор карт (`jobs._ask_recorder`, уроки 21 и 23), — она подаёт так, как подаёт строку семейство просьб (М10A, урок 14): `unit: rec/<запись>` и срок `valid_until`. Регистратор читает обе формы единицы и чтит срок, где его дали: не начатая к сроку заявка получает ответ «просрочена» (`expired`), а не выкачивается — кто просил, попросит снова; начатая доводится до конца. Тест: `test_backfill_bounds.py::test_a_request_filed_as_the_family_files_one_is_fetched_and_one_past_its_deadline_unbegun_is_answered_expired`.
+Заявку, которую подаёт сама VMS — задача или обзор карт (`jobs._ask_recorder`, уроки 21 и 23), — она подаёт по тем же правилам семейства, что и консоль (`requests.file_as`, `FileAs` продукта; М10A, урок 14; пятнадцатое ревью, major 4): та же схема, те же штампы, тот же журнал, только без учёта человека, и срока у неё тоже нет. Схема семейства берёт ещё `lost: true` — кусок, который регистратор потерял по дороге и который продукт подаёт своим проходом (`FileLostSpans`); подачи потерянного у курса нет. Регистратор читает обе формы единицы (`rec/<запись>` и id) и чтит срок, где его дали: не начатая к сроку заявка получает ответ «просрочена» (`expired`), а не выкачивается — кто просил, попросит снова; начатая доводится до конца. Тест: `test_backfill_bounds.py::test_a_request_filed_as_the_family_files_one_is_fetched_and_one_past_its_deadline_unbegun_is_answered_expired`.
 
 Регистратор читает заявки в каждом проходе:
 

@@ -293,19 +293,23 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
 
 Идентификатором запроса служит сам диапазон (`<unit>-<from>-<to>`), поэтому задача, спрашивающая каждые тридцать секунд, пишет одну строку, а не очередь. Та же форма у подачи человеком: `key: "{unit}-{from:int}-{to:int}"` в `requests:` спеки `rec`.
 
-Строку процесс заданий подаёт так, как её подаёт семейство (`jobs._ask_recorder`):
+Строку процесс заданий подаёт по правилам семейства — функцией платформы `requests.file_as` (`FileAs` продукта; М10A, урок 14), а не своей записью (`jobs._ask_recorder`):
 
 ```python
-    key = rec_ctl.sub.request_key(f"{unit}-{int(t0)}-{int(t1)}")
-    if rec_ctl.vars.get(key)[0]:
-        return False                                    # already asked; the recorder says when it is fetched
-    most = min(FETCH_WAIT, float(rec_ctl.spec.requests.get("most_valid", FETCH_WAIT)))
-    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": number_text(t0),
-                           "to": number_text(t1), "at": number_text(now), "by": by,
-                           "valid_until": number_text(now + most)})            # numbers by the platform's one rule
+def _ask_recorder(rec_ctl, unit: str, t0: float, t1: float, now: float, by: str, journal=None) -> bool:
+    from w2cplatform.doors import unit_ref
+    from w2cplatform.requests import file_as
+    from w2cplatform.variables import Conflict
+    try:
+        _, _, filed = file_as(rec_ctl, {"unit": unit_ref(rec_ctl.spec.name, unit), "from": t0, "to": t1}, by,
+                              journal=rec_ctl.journal if journal is None else journal, now=now)
+    except (Refused, Conflict) as e:                    # the family's refusal, or another request under its id
+        …
+        return False
+    return filed                                        # False: it stands, or was answered — the recorder says when
 ```
 
-Единица — `rec/<запись>` (`unit_ref`, как её называет дверь консоли), числа — по одному правилу платформы (`number_text`), и у строки есть срок: `FETCH_WAIT` (600 с) — сколько задача ждёт, пока регистратор начнёт. Семейство `rec` своего `most_valid` не объявляет (оно `free`, строки кончает `ttl`), поэтому срок — задачи; объяви спека `most_valid`, срок был бы не дальше него. Регистратор, не начавший её к `valid_until`, отвечает «просрочена» (`expired`), и уборка кончает строку; задача, всё ещё ждущая видео, попросит снова на следующем ходу, а регистратор продолжит с первого момента, которого в томе нет (урок 16). Начатую он доводит до конца.
+Тело — то, что принимает схема `rec`: единица `rec/<запись>`, `from`, `to`. Остальное ставит платформа по спеке, как у двери консоли: id — шаблон `key`, штампы `by` (`detjob/<задача>`), `at` и `cam` записи (`about`), строку журнала `archive.backfill.asked`; id, чья отметка стоит, отвечает отметкой. Учёта человека (`per_person`) у процесса нет: он подаёт то, что сказал отчёт воркера. Поле схемы `lost` (кусок, который регистратор потерял по дороге, — `FileLostSpans` продукта) здесь не ставится: задача просит диапазон, который ей нужен, а не потерянный. До пятнадцатого ревью задания писали строку сами: с `cam`, которого схема не берёт, со штампами `[at, by]` вместо `[by, at, about]`, со своим сроком `FETCH_WAIT`, без журнала — и тот, кто искал в журнале, кто попросил снять этот час, находил только операторов (major 4; ГРАНИЦА §3 п. 3, ADR-0013, ADR-0012). Срока у строки теперь нет: `rec` не объявляет `valid_for`, и строку, на которую никто не ответил, кончает `ttl` семейства, как дозапись человека (урок 16). Регистратор пробует её каждым проходом, пока источник не ответит, и продолжает с первого момента, которого в томе нет. Тест: `test_requests_r15.py::test_jobs_ask_the_recorder_by_the_familys_rules_schema_stamps_journal`.
 
 Когда видео приезжает, `plan` перестаёт быть пустым, воркер говорит `running`, жнец двигает строку обратно — и скан идёт по видео, которым мы владеем.
 

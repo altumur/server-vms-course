@@ -456,22 +456,31 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
             continue                                        # a backfill: the recorder's, not ours
         rid = key.rsplit("/", 1)[1]
         try:
+            if _answered_before(rec_ctl, key, rid):         # its mark stands: answered under this id, not performed again
+                continue
+        except Exception as e:                              # noqa: BLE001 — the mark not read: not known, the next turn
+            log.warning("%s: whether %s was answered cannot be read (%s): the next turn", rec_ctl.spec.name, rid, e)
+            if mem is not None:
+                mem.failed(key, now)
+            continue
+        try:
             until, minutes = _deadline(it), finite(it.get("minutes", 0) or 0)
         except PARSE_ERRORS as e:
             REQUESTS.garbled(key, e)                        # refused, cleared: counted and said once
-            rec_ctl.vars.delete(key)
+            _ended(rec_ctl, key, rid, it, "refused", now, f"a request nobody can read: {e}")
             continue
         if until and now > until:
-            rec_ctl.vars.delete(key)                        # asked for too late to mean what it meant
-            count_expired(rec_ctl.spec.name)
-            log.warning("%s: %s expired before it was turned into a recording", rec_ctl.spec.name, rid)
+            if _ended(rec_ctl, key, rid, it, "expired", now):   # asked for too late to mean what it meant
+                count_expired(rec_ctl.spec.name)
+                log.warning("%s: %s expired before it was turned into a recording", rec_ctl.spec.name, rid)
             continue
         cam = str(it.get("cam") or it.get("unit") or "")
         if not cam or minutes <= 0:
-            rec_ctl.vars.delete(key)
             log.warning("%s: %s asks to record nothing: %s", rec_ctl.spec.name, rid, it)
+            _ended(rec_ctl, key, rid, it, "refused", now, "asks to record nothing: a camera and minutes")
             continue
         name, ends = f"{cam}-auto", now + minutes * 60
+        why = ""
         try:
             row = rec_ctl.unit(name)                        # in the try: that recording's row garbled is this request's trouble
             if row is None:
@@ -489,6 +498,7 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
                 mem.note(rec_ctl.spec.name, name, ends)     # its end, known without reading the row back
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused for %s: %s", rec_ctl.spec.name, rid, name, e)
+            why = str(e)
         except Exception as e:                              # noqa: BLE001
             # NOT an answer: the store conflicted, or did not answer at all. The request stays and the next
             # pass tries again — it carries `valid_until`, so it cannot wait for ever. It used to be deleted
@@ -498,13 +508,17 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
             if mem is not None:
                 mem.failed(key, now)
             continue
-        rec_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
+        # performed or refused: said in its mark, and the row goes (a mark the store did not take: the next turn)
+        if not _ended(rec_ctl, key, rid, it, "refused" if why else "performed", now, why) and mem is not None:
+            mem.failed(key, now)
     return started
 ```
 
-Пять решений, и память цикла поверх них.
+Шесть решений, и память цикла поверх них.
 
-**Отказ — ответ, сбой — нет.** Заявка удаляется, когда по ней что-то решено: запись создана, продлена или в ней отказано. Если проход споткнулся — хранилище ответило конфликтом или не ответило вовсе, — заявка остаётся до следующего прохода; ждать вечно она не может, у неё есть `valid_until`. Первая версия удаляла заявку в любом случае: сценарий сработал, записи нет, и сказать о том, что её просили, уже нечему (обратная связь, BC). Повтор идёт не каждые две секунды, а после паузы, которая удваивается от двух секунд до `Remembered.RETRY_MAX` (300 с): заявка без `valid_until` иначе пробовалась бы каждые две секунды вечно (`mem.failed`, `mem.waits`). Тест: `test_read_budget.py::test_a_request_the_store_failed_is_tried_again_after_a_doubling_pause_not_every_turn` — за 600 секунд хранилище, которое не берёт запись, спрошено от пяти до десяти раз, а не триста; когда оно снова берёт, запись заводится и заявка снимается.
+**Исход — в отметке, и только потом строка уходит** (пятнадцатое ревью, minor 7 и major 2; ADR-0054). `record` — действие из `requests.elsewhere`: его держатель — этот цикл, и ведёт он себя как держатель. Сначала читает отметку `rec/commands/<id>` (`_answered_before`): стоит — просьбу под этим id уже ответили, строка уходит, запись не продлевается второй раз. В конце пишет исход — `performed`, `refused` с причиной или `expired` — в отметку только-если-нет, с `ended_by: jobs` и словами самой просьбы (`digest`, `valid_until`; `_ended`), и лишь потом удаляет строку. Отметку, которую хранилище не взяло, заменяет оставленная строка: следующий оборот попробует снова. Раньше строка удалялась молча: сценарий, который подал заявку, нигде не читал исхода, а вычислитель, переехавший на другой сервер, подавал тот же id ещё раз — и запись продлевалась дважды. Теперь его подача (`Worker.file_request`) встречает отметку и возвращает `False`. Отметку этот процесс не удаляет никогда (грант консоли её только пишет): её убирает взгляд регистратора на просьбы (`Worker.sweep_marks`), когда просьбу уже нельзя подать снова — срок плюс `ttl` семейства (М10A, урок 14). То же у детекторов (`detect_on_request`, ниже). Тесты: `test_requests_r15.py::test_a_record_request_ends_in_its_mark_and_filed_again_after_its_row_went_is_not_performed_twice`, `…::test_detect_and_scan_end_in_their_marks_and_a_spent_id_is_not_turned_into_work_again`.
+
+**Отказ — ответ, сбой — нет.** Заявка снимается, когда по ней что-то решено: запись создана, продлена или в ней отказано. Если проход споткнулся — хранилище ответило конфликтом или не ответило вовсе, — заявка остаётся до следующего прохода; ждать вечно она не может, у неё есть `valid_until`. Первая версия удаляла заявку в любом случае: сценарий сработал, записи нет, и сказать о том, что её просили, уже нечему (обратная связь, BC). Повтор идёт не каждые две секунды, а после паузы, которая удваивается от двух секунд до `Remembered.RETRY_MAX` (300 с): заявка без `valid_until` иначе пробовалась бы каждые две секунды вечно (`mem.failed`, `mem.waits`). Тест: `test_read_budget.py::test_a_request_the_store_failed_is_tried_again_after_a_doubling_pause_not_every_turn` — за 600 секунд хранилище, которое не берёт запись, спрошено от пяти до десяти раз, а не триста; когда оно снова берёт, запись заводится и заявка снимается.
 
 **Цикл помнит между оборотами только то, что экономит чтение.** Третий аргумент, `mem`, — объект `jobs.Remembered`, который цикл заявок процесса заданий держит между оборотами (`_requests_loop`, ниже). Раньше каждый оборот читал каждую строку `rec/requests/`, включая дозаписи, которые консоли не нужны, и каждую запись и детектор ради их `until`. На тысяче каждого это около 3 000 чтений раз в две секунды и 33 000 при десяти сработавших сценариях. В `Remembered` три вещи. `seen` — заявки, которые оборот признал чужими (дозаписи регистратора): пока они в списке, их не читают снова. `retry_at` — паузы после сбоя хранилища (выше). `deadlines` — у каких строк какой `until`: `record_on_request` сразу записывает туда конец, который сам поставил (`mem.note`), и `expire` между полными чтениями перечитывает только строки, чей конец наступил или близок. Раз в `Remembered.REREAD` (30 с) семейство читается целиком, как раньше: так замечается, если в списке оказалось что-то новое под старым именем. Удлинённый `until` замечается раньше, чем что-то снимается: строку перечитывают перед удалением.
 
