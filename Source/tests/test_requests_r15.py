@@ -263,8 +263,25 @@ def test_jobs_ask_the_recorder_by_the_familys_rules_schema_stamps_journal():
     # asked again on the next turn: the row stands — one row, not a queue, and no second line
     assert jobs._ask_recorder(rec, "7", now - 600, now - 540, now + 30, "detjob/7-lpr-1-2", journal=Journal()) is False
     assert len(said) == 1
-    # a recording that is not there: refused by the door, said, nothing filed
-    assert jobs._ask_recorder(rec, "9", now - 600, now - 540, now, "detjob/9-x", journal=Journal()) is False
+    # a recording that is not there: refused by the door, said in the log whole (the fifteenth review's p4 on a2550ea6
+    # read a line that did not format: a probe's stale call put a word where `%.0f` stood), nothing filed
+    import logging
+
+    class Lines(logging.Handler):
+        def __init__(self):
+            super().__init__()
+            self.got = []
+
+        def emit(self, record):
+            self.got.append(record.getMessage())              # raises here, in the test, if the arguments do not fit
+    lines = Lines()
+    jobs.log.addHandler(lines)
+    try:
+        assert jobs._ask_recorder(rec, "9", now - 600, now - 540, now, "detjob/9-x", journal=Journal()) is False
+    finally:
+        jobs.log.removeHandler(lines)
+    assert len(lines.got) == 1 and lines.got[0].startswith(
+        f"rec: asking the recorder for 9 [{now - 600:.0f}, {now - 540:.0f}) for detjob/9-x was refused: "), lines.got
     assert box.vars.get(REC_SPEC.sub.request_key(f"9-{int(now - 600)}-{int(now - 540)}"))[0] is None
 
 
