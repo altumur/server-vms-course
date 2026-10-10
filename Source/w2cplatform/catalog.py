@@ -104,11 +104,31 @@ def spec(name: str, env: dict | None = None):
 def near_known(spec) -> None:
     if spec.near == "none" or not (spec.near_of or spec.near_prefer):
         return
-    names = [s.name for s in specs()]
+    held = {s.name: s for s in specs()}
+    names = list(held)
     if spec.near not in names:
         key = "near.prefer" if spec.near_prefer else "near.of"
         raise ValueError(f"spec {spec.name}: {key} reads the spec of {spec.near!r}, and this process loaded none "
                          f"(it loaded {', '.join(names) or 'nothing'}; {SPEC_DIR}) — load {spec.near}'s spec beside it")
+    # …and what `prefer` reads of theirs is theirs (ADR-0012, ADR-0056; the fifteenth review, major 1): a field of their
+    # row, and after a dot a field of the row that field refs (`home.kind`). `{kinnd: backup}` loaded and preferred
+    # nothing, a pass at a time, without a word.
+    them = held[spec.near]
+    for k in spec.near_prefer:
+        first, _, second = k.partition(".")
+        f = them.fields.get(first)
+        if f is None or (second and not f.ref):
+            raise ValueError(f"spec {spec.name}: near.prefer names {k!r}, and {first!r} is no field of {spec.near}'s row"
+                             f"{' with a ref' if second else ''} ({', '.join(them.fields) or 'none'})")
+        if second:
+            sub, _, rows = f.ref.partition("/")
+            if sub not in names:
+                continue                 # theirs refs a subsystem this process did not load: its own load says so
+            ref = held[sub]
+            known = tuple(ref.fields) if rows == ref.rows else ref.row_fields(rows) if rows in ref.table_specs else None
+            if known is not None and second not in known:
+                raise ValueError(f"spec {spec.name}: near.prefer names {k!r}, and {second!r} is no field of the rows of "
+                                 f"{f.ref} ({', '.join(known) or 'none'})")
 
 
 # The families a spec's worker files to (`worker: {requests: [<sub>, …]}`, `Worker.file_request`), each a subsystem this

@@ -1141,7 +1141,7 @@ def test_who_holds_a_row_is_said_by_the_table_of_places_and_not_by_the_affinity_
     from w2cplatform.console import SpecConsole
     vars_, objects, wall = _box()
     t = {"key": "{name}", "fields": {"name": {"type": "string", "required": True}, "kind": {"type": "string"},
-                                     "server": {"type": "string"}}}
+                                     "server": {"type": "string"}, "enabled": {"type": "bool"}}}   # BIN's strict reads it
     spec = SubsystemSpec.from_dict({**BIN, "tables": {"bays": t, "shelves": t},
                                     "placement": {**BIN["placement"], "places": {"table": "shelves"}}})
     assert spec.affinity["table"] == "bays" and spec.places["table"] == "shelves"

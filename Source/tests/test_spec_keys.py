@@ -448,8 +448,9 @@ def test_worker_requests_names_subsystems_of_the_catalogue_that_take_requests():
     from w2cplatform.spec import SpecController
     one = SubsystemSpec.from_dict(_testsub())
     plain = _spec(name="plain")                                                 # a subsystem of no family
+    # the spec itself needs no catalogue: refused at load (the fifteenth review, minor 10)
+    _refused(lambda: _spec(worker={"requests": ["probe"]}), "worker.requests names 'probe', which is the spec itself")
     for names, words in ((["recc"], "names 'recc', which is no subsystem this process loaded"),
-                         (["probe"], "names 'probe', which is the spec itself"),
                          (["plain"], "names 'plain', which declares no `requests:`")):
         spec = _spec(worker={"requests": names})
         with in_catalogue(one, plain, spec):
@@ -483,3 +484,131 @@ def _testsub() -> dict:
 def _testsub2() -> dict:
     from w2cplatform import specyaml
     return specyaml.load(os.path.join(TESTDATA, "testsub2.subsystem.yaml"))
+
+
+# The fifteenth review, major 1 (ADR-0012, ADR-0056): nine keys that name a field were not held to `fields:` — a typo loaded
+# and changed what the platform does without a word (a hold that held nothing, a row any viewer saw, a derived row never
+# written, an affinity that bound nothing, a metric 0 for ever). Each refused at load, its key's path named.
+NAMED = {"name": "p", "unit": {"rows": "units", "id": "name",
+                               "fields": {"name": {"type": "string", "required": True}, "home": {"type": "string"},
+                                          "keep_days": {"type": "int", "default": 7}}},
+         "placement": {"capacity": {"from": "capacity", "default": 4}, "place_by": "disk"},
+         "tables": {"disks": {"key": "name", "fields": {"name": {"type": "string", "required": True},
+                                                        "server": {"type": "string"}, "kind": {"type": "string"},
+                                                        "admits": {"type": "bool", "default": True}}},
+                    "pins": {"key": "name", "stamp": ["made_at"],
+                             "fields": {"name": {"type": "string", "required": True}, "item": {"type": "string"},
+                                        "a": {"type": "float"}, "b": {"type": "float"}}}}}
+
+
+def _named(**over) -> dict:
+    import copy
+    d = copy.deepcopy(NAMED)
+    for path, v in over.items():
+        at = d
+        *head, last = path.split("__")
+        for k in head:
+            at = at.setdefault(k, {})
+        at[last] = v
+    return d
+
+
+def test_every_key_that_names_a_field_names_one_of_the_row_or_of_its_table():
+    derived = lambda f: [{"row": "retention/{id}", "items": {"days": f}, "on_delete": {"days": 0}}]   # noqa: E731
+    cases = [
+        (dict(unit__derived=derived("keep_dayz")), dict(unit__derived=derived("keep_days")),
+         "unit.derived.items.days names a field of the unit's row (name, home, keep_days), not 'keep_dayz'"),
+        (dict(rights={"unit_of": {"pins": "itemm"}}), dict(rights={"unit_of": {"pins": "item"}}),
+         "rights.unit_of.pins names a field of the rows of pins (name, item, a, b, made_at), not 'itemm'"),
+        (dict(servers={"show": [{"table": "disks", "by": "servre", "title": "D"}]}),
+         dict(servers={"show": [{"table": "disks", "by": "server", "title": "D", "columns": ["name", "kind"]}]}),
+         "servers.show.by names a field of the rows of disks (name, server, kind, admits), not 'servre'"),
+        (dict(servers={"show": [{"table": "disks", "by": "server", "title": "D", "columns": ["name", "knd"]}]}), None,
+         "servers.show.columns names a field of the rows of disks (name, server, kind, admits), not 'knd'"),
+        (dict(holds={"table": "pins", "unit": "itm", "since": "a", "until": "b"}),
+         dict(holds={"table": "pins", "unit": "item", "since": "made_at", "until": "b"}),     # a stamp is a field of the row
+         "holds.unit names a field of the rows of pins (name, item, a, b, made_at), not 'itm'"),
+        (dict(holds={"table": "pins", "unit": "item", "since": "a", "until": "bb"}), None,
+         "holds.until names a field of the rows of pins"),
+        (dict(placement__affinity={"field": "home", "table": "disks", "server_field": "servre"}),
+         dict(placement__affinity={"field": "home", "table": "disks", "server_field": "server",
+                                   "strict": {"kind": "local"}}),
+         "placement.affinity.server_field names a field of the rows of disks (name, server, kind, admits), not 'servre'"),
+        (dict(placement__affinity={"field": "home", "table": "disks", "strict": {"kinnd": "local"}}), None,
+         "placement.affinity.strict names a field of the rows of disks (name, server, kind, admits), not 'kinnd'"),
+        (dict(placement__places={"table": "disks", "server_field": "servre"}),
+         dict(placement__places={"table": "disks", "server_field": "server", "where": {"admits": True}}),
+         "placement.places.server_field names a field of the rows of disks (name, server, kind, admits), not 'servre'"),
+        (dict(placement__places={"table": "disks", "where": {"rolle": "main"}}), None,
+         "placement.places.where names a field of the rows of disks (name, server, kind, admits), not 'rolle'"),
+        (dict(metrics=[{"name": "local", "count": "table disks", "where": {"kinnd": "local"}}]),
+         dict(metrics=[{"name": "local", "count": "table disks", "where": {"kind": "local"},
+                        "unless": {"table": "pins", "where": {"item": "x"}}}]),
+         "metrics.where names a field of the rows of disks (name, server, kind, admits), not 'kinnd' — metric local"),
+        (dict(metrics=[{"name": "local", "count": "table disks", "unless": {"table": "pins", "where": {"itm": "x"}}}]),
+         None, "metrics.unless.where names a field of the rows of pins (name, item, a, b, made_at), not 'itm' — metric local"),
+    ]
+    for bad, good, words in cases:
+        _refused(lambda bad=bad: SubsystemSpec.from_dict(_named(**bad)), "spec p: " + words)
+        if good is not None:
+            SubsystemSpec.from_dict(_named(**good))
+    # a table only named declares no fields: what names one of its fields is not asked (the product's testsub2 `shelves`)
+    only = _named(placement__places={"table": "shelves", "server_field": "server", "where": {"enabled": True}})
+    only["tables"]["shelves"] = None
+    SubsystemSpec.from_dict(only)
+
+
+def test_near_prefer_names_a_field_of_the_neighbours_row_and_through_a_ref_a_field_of_the_row_it_refs():
+    from tests.conftest import in_catalogue
+    nb = SubsystemSpec.from_dict({**_named(name="nb", unit__fields__home={"type": "string", "ref": "nb/disks"}),
+                                  "placement": dict(CAP)})
+    near = lambda prefer: SubsystemSpec.from_dict(   # noqa: E731
+        {**_named(placement={**CAP, "near": {"sub": "nb", "of": "home", "prefer": prefer}})})
+    with in_catalogue(nb):
+        for prefer, words in (({"kinnd": "backup"}, "near.prefer names 'kinnd', and 'kinnd' is no field of nb's row "
+                                                    "(name, home, keep_days)"),
+                              ({"keep_days.kind": "x"}, "near.prefer names 'keep_days.kind', and 'keep_days' is no field "
+                                                        "of nb's row with a ref"),
+                              ({"home.knd": "x"}, "near.prefer names 'home.knd', and 'knd' is no field of the rows of "
+                                                  "nb/disks (name, server, kind, admits)")):
+            _refused(lambda prefer=prefer: catalog.near_known(near(prefer)), "spec p: " + words)
+        catalog.near_known(near({"home.kind": ["backup", "edge"], "keep_days": 7}))
+
+
+# The fifteenth review, minor 16 (ADR-0012): what names a unit is a field or `numeric`; a field's type is one of a closed
+# set; a door's route is said once; `objects.rows` names no family of the platform's own (the product's refusals).
+def test_unit_id_field_type_door_routes_and_object_rows_are_closed():
+    _refused(lambda: SubsystemSpec.from_dict(_named(unit__id="nosuch")),
+             "spec p: unit.id is `numeric` or a field of the row (name, home, keep_days), not 'nosuch'")
+    SubsystemSpec.from_dict(_named(unit__id="numeric"))
+    _refused(lambda: SubsystemSpec.from_dict(_named(unit__fields__home={"type": "text"})),
+             "spec p: field home: `type` is one of string, int, float, bool, list, json, blob, url, not 'text'")
+    _refused(lambda: SubsystemSpec.from_dict(_named(tables__pins__fields__a={"type": "double"})),
+             "spec p: tables.pins: field a: `type` is one of string, int, float, bool, list, json, blob, url, not 'double'")
+    _refused(lambda: SubsystemSpec.from_dict(_named(door={"routes": ["read", "seek", "read"]})),
+             "spec p: door.routes: 'read' is said twice — a route is named once")
+    SubsystemSpec.from_dict(_named(door={"routes": ["read", "seek"]}))
+    for p in ("heartbeats/*", "contenders/x", "snapshot/*", "controller/*", "blobs/*", "*"):
+        _refused(lambda p=p: SubsystemSpec.from_dict(_named(objects={"rows": [p]})),
+                 f"spec p: objects.rows: {p!r} names a family of the platform's own (heartbeats, contenders, snapshot, "
+                 f"controller, blobs, commands) or every one")
+    SubsystemSpec.from_dict(_named(objects={"rows": ["used/*", "marks/*"]}))     # `used/*` is a subsystem's rows (rec's)
+
+
+# ADR-0067, the addendum of 2026-10-10 (the fifteenth review, minor 1): the controller deletes an unplaced unit outright and
+# leaves no tombstone, so `delete_after` is only where a name keeps nothing — no fixed field but the id, about nothing or
+# about its id (`live`).
+def test_unplaced_delete_after_only_where_the_name_keeps_nothing():
+    words = ("placement.unplaced.delete_after with fixed fields or about — a deleted name would be reused with another "
+             "meaning; say no delete_after")
+    ua = {"capacity": {"from": "capacity", "default": 4}, "unplaced": {"delete_after": 30}}
+    fixed = {"name": {"type": "string", "required": True, "fixed": True}, "cam": {"type": "string", "fixed": True}}
+    _refused(lambda: _spec(placement=ua, unit={"rows": "items", "id": "name", "fields": fixed}), "spec probe: " + words)
+    _refused(lambda: _spec(placement=ua, about={"sub": "vms", "field": "cam"},
+                           unit={"rows": "items", "id": "name",
+                                 "fields": {"name": {"type": "string", "required": True},
+                                            "cam": {"type": "string", "fixed": True}}}), "spec probe: " + words)
+    _spec(placement=ua, about={"sub": "vms", "field": "cam"},                    # about its own id: live's form
+          unit={"rows": "items", "id": "cam", "fields": {"cam": {"type": "string", "required": True, "fixed": True}}})
+    _spec(placement=ua)                                                           # nothing fixed, about nothing
+    SubsystemSpec.load(os.path.join(os.path.dirname(TESTDATA), "..", "vms", "live.subsystem.yaml"))

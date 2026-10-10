@@ -81,6 +81,10 @@ def parse_routes(where: str, raw) -> tuple:
     routes = raw.get("routes") if isinstance(raw, dict) and not set(raw) - {"routes"} else None
     if not isinstance(routes, list) or not routes or not all(isinstance(r, str) and _ROUTE.match(r) for r in routes):
         raise ValueError(f"{where}: `door:` is {{routes: [<a word, one path segment>]}}, not {raw!r}")
+    # …each once (ADR-0012; the fifteenth review, minor 16: `[read, read]` loaded — the product refuses it)
+    twice = next((r for i, r in enumerate(routes) if r in routes[:i]), None)
+    if twice is not None:
+        raise ValueError(f"{where}: door.routes: {twice!r} is said twice — a route is named once")
     return tuple(routes)
 
 

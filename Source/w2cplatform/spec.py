@@ -441,7 +441,15 @@ class Field:
 
 # The fields of a unit's row — or of a table's (`tables.py`) — as written: types, defaults, `required`, `inherit`, `fixed`,
 # `bound_to`, a url's words, `ref`/`must_match`/`unique`, `schema`; each checked at load, `where` naming whose they are.
+# …and a field's `type` is one of these, nothing else (ADR-0012; the fifteenth review, minor 16): `type: text` was read as
+# a string, the word a promise nobody keeps.
+FIELD_TYPES = ("string", "int", "float", "bool", "list", "json", "blob", "url")
+
+
 def read_fields(where: str, raw: dict) -> dict:
+    for n, f in raw.items():
+        if isinstance(f, dict) and f.get("type", "string") not in FIELD_TYPES:
+            raise ValueError(f"{where}: field {n}: `type` is one of {', '.join(FIELD_TYPES)}, not {f['type']!r}")
     fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)),
                        f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(n, f.get("bound_to")),
                        f.get("fixed", False) is True)
@@ -628,6 +636,7 @@ def _slot(name, slot) -> tuple[str, str]:
 # that wrote it alone. The platform's own families (`resource.PLATFORM_DOOR`: heartbeats, contenders, used, snapshot,
 # controller, blobs) are not a spec's to name, nor every family at once.
 PLATFORM_FAMILIES = ("heartbeats", "contenders", "used", "snapshot", "controller", "blobs")
+PLATFORM_ROWS = ("heartbeats", "contenders", "snapshot", "controller", "blobs", "commands")   # the product's, as it is
 
 
 def _object_patterns(name, objects, family: str) -> tuple:
@@ -646,6 +655,12 @@ def _object_patterns(name, objects, family: str) -> tuple:
         if family == "rows" and segs[0] == "commands":
             raise ValueError(f"spec {name}: objects.rows: {p!r} is the platform's family — a request's marks are rows for "
                              f"every spec with `requests:` (`catalog.rows_of`), and a spec does not name them")
+        # …nor any other family of the platform's own, nor every one (the fifteenth review, minor 16: `heartbeats/*` loaded
+        # as rows of the store the platform keeps as files; the product refused it, `objectPatternFault`, by this list).
+        # `used` is not in it: the door gives a resource's `used/*` out unasked, and a subsystem keeps its own `used/*` as rows.
+        if family == "rows" and segs[0] in ("*", *PLATFORM_ROWS):
+            raise ValueError(f"spec {name}: objects.rows: {p!r} names a family of the platform's own "
+                             f"({', '.join(PLATFORM_ROWS)}) or every one — the platform keeps those itself")
         if family == "door" and segs[0] in ("*", *PLATFORM_FAMILIES):
             raise ValueError(f"spec {name}: objects.door: {p!r} names a family of the platform's own "
                              f"({', '.join(PLATFORM_FAMILIES)}) or every one — a door gives those out unasked")
@@ -755,6 +770,12 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
         bad = [x for x in worker.get(k) or [] if not word.fullmatch(str(x))]
         if bad:
             raise ValueError(f"spec {name}: worker.{k} takes names, not {bad}")
+    # …and the subsystems it files to are others (ADR-0012, ADR-0054; the fifteenth review, minor 10): a worker performs its
+    # own units' work and files to the rest. The other two faults — a name of no subsystem, one that takes no request —
+    # need the catalogue whole, and are asked where it is (`catalog.requests_known`, as `near_known`).
+    if name in [str(x) for x in worker.get("requests") or []]:
+        raise ValueError(f"spec {name}: worker.requests names {name!r}, which is the spec itself — a worker performs its "
+                         f"own units' work, it files to others")
     bad = [x for x in worker.get("reads") or [] if not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+", str(x))]
     if bad:
         raise ValueError(f"spec {name}: worker.reads takes keys of the store (`<family>/<name>`), not {bad}")
@@ -1435,7 +1456,8 @@ class SubsystemSpec:
         spec._about_and_rights(d)
         spec._placement_words(pl)
         spec._page_words(d)
-        spec.domain = DomainSection.read(spec, d.get("domain"))
+        spec._fields_named()
+        spec.domain =DomainSection.read(spec, d.get("domain"))
         words = set((spec.display.get("keys") or {}) if isinstance(spec.display, dict) else {})
         stray = words - {f["id"] for f in (spec.domain.keys if spec.domain else ())}
         if stray:
@@ -1509,6 +1531,11 @@ class SubsystemSpec:
             raise ValueError(f"spec {spec.name}: home: near needs a near to follow")
         if spec.home and spec.home != "near" and spec.home not in fields:
             raise ValueError(f"spec {spec.name}: home names no field: {spec.home!r}")
+        # …and what names a unit, a field of its row or a number the console counts (ADR-0012; the fifteenth review, minor
+        # 16): `id: nosuch` loaded, and every create answered "a unit needs a nosuch" — no unit was ever made.
+        if spec.id != "numeric" and spec.id not in fields:
+            raise ValueError(f"spec {spec.name}: unit.id is `numeric` or a field of the row "
+                             f"({', '.join(fields) or 'none'}), not {spec.id!r}")
         # …the capacity of a worker that said nothing: the spec's to say (`_capacity`).
         spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
         # …how long a unit nobody holds stands before its controller deletes it (`_unplaced`; ADR-0067)
@@ -1522,6 +1549,17 @@ class SubsystemSpec:
         if spec.unplaced_delete_after and spec.derived:
             raise ValueError(f"spec {spec.name}: placement.unplaced.delete_after with unit.derived — the controller "
                              f"deletes a unit and cannot clean its derived rows, which are the console's")
+        # …and only where a name holds nothing to keep (ADR-0067, the addendum of 2026-10-10; the fifteenth review, minor 1):
+        # the console deletes a unit by a tombstone that keeps its `fixed` fields, and a create under the name with another
+        # `about` is refused; the controller deletes the row outright, and never writes one, so it can leave no tombstone.
+        # A unit with no fixed field but its id and about nothing but its id (`live/streams/<cam>`: name and subject one)
+        # may be deleted so; any other would have its name reused with another meaning — its buckets, marks and grants
+        # read as the new unit's history.
+        if spec.unplaced_delete_after and (
+                any(f.fixed and n != spec.id for n, f in spec.fields.items())
+                or (spec.about_sub and spec.about_field != spec.id)):
+            raise ValueError(f"spec {spec.name}: placement.unplaced.delete_after with fixed fields or about — a deleted "
+                             f"name would be reused with another meaning; say no delete_after")
         return spec
 
     # `about:` and `rights:` as written, checked at load: `about` names another subsystem by a name and a field of this
@@ -1730,6 +1768,64 @@ class SubsystemSpec:
                                  f"not {servers!r}")
             self.servers_show = show
             self.servers_status = self._servers_status(servers.get("status", []))
+
+    # EVERY KEY THAT NAMES A FIELD NAMES ONE (ADR-0012, ADR-0056; the fifteenth review, major 1): a field of the unit's row,
+    # or of the rows of the table the key declares — its `fields:` and what the console stamps on it (`stamp:`). It was
+    # checked of `display.tree.columns` and of nine keys not: `holds: {unit: itm}` loaded and the resource held nothing,
+    # `rights.unit_of: {pins: itemm}` made every row nobody's (any viewer saw it), `derived.items: {days: keep_dayz}`
+    # wrote no row (365 days where the operator said 7), `affinity.strict: {kinnd: …}` bound nothing, a metric's `where`
+    # counted 0 for ever. Refused at load, the key's path named; the neighbour's fields of `near.prefer` are asked where
+    # the catalogue is whole (`catalog.near_known`). A table only named declares no fields, and its names are not asked.
+    def row_fields(self, table: str | None) -> tuple:
+        if table is None:
+            return tuple(self.fields)
+        t = self.table_specs.get(table)
+        return (*t.fields, *(w for w in t.stamp if w not in t.fields)) if t is not None else ()
+
+    def _names_field(self, path: str, name, table: str | None = None, of: str = "") -> None:
+        if table is not None and table not in self.table_specs:
+            return                       # a table only named (`tables: {shelves: }`) declares no fields: nothing to hold to
+        known = self.row_fields(table)
+        if not isinstance(name, str) or name not in known:
+            whose = "the unit's row" if table is None else f"the rows of {table}"
+            raise ValueError(f"spec {self.name}: {path} names a field of {whose} ({', '.join(known) or 'none'}), "
+                             f"not {name!r}{of}")
+
+    def _fields_named(self) -> None:
+        for d in self.derived:
+            for item, fld in d.items.items():
+                self._names_field(f"unit.derived.items.{item}", fld)
+        for table, fld in self.unit_of.items():
+            self._names_field(f"rights.unit_of.{table}", fld, table)
+        for e in self.servers_show:
+            self._names_field("servers.show.by", e["by"], e["table"])
+            cols = e.get("columns", [])
+            if not isinstance(cols, list):
+                raise ValueError(f"spec {self.name}: servers.show.columns is a list of fields of the rows of "
+                                 f"{e['table']}, not {cols!r}")
+            for c in cols:
+                self._names_field("servers.show.columns", c, e["table"])
+        if self.places:
+            if self.places["server_field"]:
+                self._names_field("placement.places.server_field", self.places["server_field"], self.places["table"])
+            for k in self.places["where"]:
+                self._names_field("placement.places.where", k, self.places["table"])
+        if self.affinity:
+            if self.affinity["server_field"]:
+                self._names_field("placement.affinity.server_field", self.affinity["server_field"], self.affinity["table"])
+            for k in self.affinity["strict"]:
+                self._names_field("placement.affinity.strict", k, self.affinity["table"])
+        if self.holds:
+            for k in ("unit", "since", "until"):
+                self._names_field(f"holds.{k}", self.holds[k], self.holds["table"])
+        for m in self.metrics:
+            if "count" not in m:
+                continue
+            for k in m["where"]:
+                self._names_field("metrics.where", k, m["count"], f" — metric {m['name']}")
+            if m["unless"]:
+                for k in m["unless"]["where"]:
+                    self._names_field("metrics.unless.where", k, m["unless"]["table"], f" — metric {m['name']}")
 
     # `servers.status: [{field, title, of?}]` — fields of this subsystem's heartbeats a page shows on its servers' rows,
     # each under its title (a belt that jammed, say): `/servers` puts each worker's value of them in its row as the
