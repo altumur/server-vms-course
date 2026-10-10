@@ -319,7 +319,7 @@ def test_a_move_signs_a_revision_larger_than_any_a_member_out_of_reach_may_hold(
 
 
 def test_the_signers_start_with_the_recovery_file_founds_the_domain_at_term_one_and_a_later_start_leaves_it():
-    """The three-site scenario, F4: the signer's first start with `RECOVERY_FILE` — the course's installer — signed the
+    """The three-site run, F4: the signer's first start with `RECOVERY_FILE` — the course's installer — signed the
     keys with the root and wrote no record of the holder, so `term_of` found the domain not installed with a term and
     the stand called `term.install` itself. As the product's `domain install` (`Install`, then `Found`): the record of
     the holder at term 1, signed by the root, written once into a store that names none; a later start leaves it; a start
@@ -357,7 +357,7 @@ def test_the_signers_start_with_the_recovery_file_founds_the_domain_at_term_one_
 
 
 def test_install_seals_the_holders_keys_with_the_installers_ring():
-    """The three-site scenario, F5: `term.install` made the signer with no ring, and `domain/signer` lay in the store in
+    """The three-site run, F5: `term.install` made the signer with no ring, and `domain/signer` lay in the store in
     the clear until the signer's first start sealed it. The installer's ring seals it at once — the one it is given, or
     the one `SECRETS_KEY` names, as the product's install seals with its process's key."""
     import os

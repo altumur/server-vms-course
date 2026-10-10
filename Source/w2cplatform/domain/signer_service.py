@@ -852,7 +852,7 @@ class Holder:
 # Lesson 15, step 9: a domain whose root stays off the holder. The installer points RECOVERY_FILE at the root for the
 # FIRST start only: the holder's issuing certificate and the first key set are signed, the domain is founded — the
 # record of its holder at term 1, signed by the root (`term.found`: the product's `domain install` writes it with the
-# keys; without it `term_of` found no term, and the domain could not be moved — the three-site scenario, F4) — and the
+# keys; without it `term_of` found no term, and the domain could not be moved — the three-site run, F4) — and the
 # file goes back to the operator. The holder is the one `DOMAIN_HOLDER` names, else the first of `CLUSTERS`, else this
 # cluster (`CLUSTER`); none of them: refused, said, nothing written. From then on the signer holds its own keys, and the
 # key set is the root's — never overwritten here by one of its own, which members that pinned the root would refuse.

@@ -443,7 +443,7 @@ class Console:
                     return None
                 return body
 
-            # THE STORE'S NO IS SAID, NEVER A DROPPED CONNECTION (the three-site scenario, F1): a write or a
+            # THE STORE'S NO IS SAID, NEVER A DROPPED CONNECTION (the three-site run, F1): a write or a
             # read this console's role may not make (`configstore-rights.json`, `domainconsole`) raised `Forbidden` out of
             # the handler, and the caller got no answer at all — `PUT /domain/grants/<cluster>` ended in
             # `RemoteDisconnected`. It is this console's role that may not, not the person: 403, with the store's words.

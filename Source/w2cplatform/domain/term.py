@@ -375,7 +375,7 @@ def found(vars_, name: str, root: DomainRoot, wall=time.time) -> bool:
 
 # The holder's keys go into the store SEALED by the installer's ring (`sealer`; else the one `SECRETS_KEY` names — the
 # product's install seals with its process's key, `SealFields`): with no ring here, `domain/signer` lay in the clear
-# until the signer's first start sealed it (the three-site scenario, F5).
+# until the signer's first start sealed it (the three-site run, F5).
 def install(fed, name: str, domain_id: str, root: DomainRoot, wall=time.time, objects=None,
             member_key: str | None = None, sealer=None) -> "DomainHolder":
     from w2cplatform.sealing import Sealer

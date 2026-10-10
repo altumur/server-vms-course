@@ -67,7 +67,7 @@ def _gate() -> list[str]:
 # key set, and which backup copy it keeps (`term.held`) — and `GET /api/backup`, the copy itself to a member that signs
 # for it by the key this cluster's list of members has (`term.backup_answer`). The console read neither row: every
 # `/api/held` was a 403 from the store and a dropped connection, and no agent following the holder by `CLUSTERS` heard a
-# console (the three-site scenario, F2). Public and signed things only: the record proves itself, the
+# console (the three-site run, F2). Public and signed things only: the record proves itself, the
 # pointer is `{term, rev, sha256}`, the list of members is names and public keys; the copy is an object, not a row.
 def _moves() -> list[str]:
     from w2cplatform.domain.term import BACKUP_TAKEN, HOLDER, MEMBER_LIST
