@@ -75,6 +75,22 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     return fed
 
 
+def names_from_env(var: str = "CLUSTERS", env=None) -> tuple[str | None, list[str]]:
+    """`(the domain's holder, the members that report)` as `CLUSTERS` names them — read as `federation_from_env` reads
+    them (the holder: `DOMAIN_HOLDER`, else the first entry; reporting: `name=report`, `name=report@relay`, a name with
+    its console alone), opening no store. What a command on the holder needs that writes the list of members before
+    anybody has (`members key`): the first write carries the configuration's members (`Members.configured`)."""
+    env = os.environ if env is None else env
+    holder, reporting = env.get("DOMAIN_HOLDER") or None, []
+    for i, entry in enumerate(filter(None, env.get(var, "").split(","))):
+        name, _, rest = entry.partition("=")
+        if rest == "report" or rest.startswith(("report@", "http://", "https://")):
+            reporting.append(name)
+        elif holder is None and i == 0:
+            holder = name
+    return holder, reporting
+
+
 def consoles_from_env(var: str = "CLUSTERS") -> dict[str, str]:
     """The consoles of the domain's clusters, by name, as `CLUSTERS` names them: `name=https://north.site:8443` (a member
     the domain reads by its reports, whose console answers the processes' doors), or a third part after a cluster read

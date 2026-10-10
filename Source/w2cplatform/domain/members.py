@@ -278,13 +278,28 @@ def apply(fed, members: Members, domain_objects, topology=None, lost_after: floa
 
 
 # On the holder: `PLATFORM_STORE=… python3 -m w2cplatform.domain.members key <member> <pub> <seal_pub>` — the keys its
-# agent printed at its first start.
-if __name__ == "__main__":
+# agent printed at its first start. ON A FRESH DOMAIN TOO (the scenario «камера — офис — центр», O1): the list of members
+# is written by its first change, and that first write carries the members the configuration names (`CLUSTERS`, as the
+# domain's processes read it: `runtime.names_from_env`) — the command built the list with no configuration, nobody had
+# written it yet, and a member of `CLUSTERS` was "not registered — no such member". The product lists the members of
+# `CLUSTERS` from the start (`Membership.Configured`).
+def main(argv: list[str], env=None) -> int:
     import os
     import sys
 
     from w2cplatform.variables import open_vars
-    if len(sys.argv) != 5 or sys.argv[1] != "key":
-        sys.exit("usage: python3 -m w2cplatform.domain.members key <member> <pub> <seal_pub>")
-    done = Members(open_vars(os.environ["PLATFORM_STORE"])).set_key(sys.argv[2], sys.argv[3], sys.argv[4], by="the holder's operator")
-    print(f"{sys.argv[2]}: {'key registered' if done else 'not registered — no such member, or it has a key'}")
+    from .runtime import names_from_env
+    env = os.environ if env is None else env
+    if len(argv) != 4 or argv[0] != "key":
+        print("usage: python3 -m w2cplatform.domain.members key <member> <pub> <seal_pub>", file=sys.stderr)
+        return 2
+    holder, reporting = names_from_env(env=env)
+    m = Members(open_vars(env["PLATFORM_STORE"]), configured=lambda: reporting, domain=holder)
+    done = m.set_key(argv[1], argv[2], argv[3], by="the holder's operator")
+    print(f"{argv[1]}: {'key registered' if done else 'not registered — no such member, or it has a key'}")
+    return 0 if done else 1
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main(sys.argv[1:]))

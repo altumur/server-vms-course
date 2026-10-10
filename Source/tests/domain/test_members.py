@@ -183,3 +183,29 @@ def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
     finally:
         con.stop(srv)
     assert apply(fed, members, north.objects)["joined"] == ["cam-SN9007"]
+
+
+def test_a_members_key_is_registered_on_a_fresh_domain_whose_list_nobody_wrote():
+    """The scenario «камера — офис — центр», O1: `members key <member> <pub> <seal_pub>` on a domain whose list of members
+    nobody had written yet answered "not registered — no such member" for a member of `CLUSTERS` — the command built the
+    list with no configuration. Its first write carries the configuration's members (`how: configuration`), the holder
+    left out, as every other first write does; the product lists the members of `CLUSTERS` from the start."""
+    import contextlib
+    import io
+    import tempfile
+    from w2cplatform.domain.members import main
+    from w2cplatform.trust.memberkey import MemberKey
+    from w2cplatform.variables import FileVariables
+    root = tempfile.mkdtemp()
+    env = {"PLATFORM_STORE": f"file://{root}/vars",
+           "CLUSTERS": "srv,relay-a=report,cam-a=report@relay-a,relay-b=https://relay-b.site:8443"}
+    k = MemberKey.new()
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        assert main(["key", "relay-a", k.pub, k.seal_pub], env) == 0, out.getvalue()
+        assert main(["key", "relay-a", k.pub, k.seal_pub], env) == 1          # it has a key: never replaced this way
+        assert main(["key", "nobody", k.pub, k.seal_pub], env) == 1
+    members = Members(FileVariables(f"{root}/vars")).read()["members"]
+    assert sorted(members) == ["cam-a", "relay-a", "relay-b"], members        # the holder is no member to list
+    assert members["relay-a"]["key"] == k.pub and members["relay-a"]["how"] == "configuration"
+    assert members["cam-a"]["how"] == "configuration" and "key" not in members["cam-a"]
