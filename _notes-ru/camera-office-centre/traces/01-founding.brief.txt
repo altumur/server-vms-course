@@ -1,0 +1,207 @@
+## Сцена 1. Домен основан на srv.
+## Установщик на srv до первого старта (в курсе — функция term.install установщика; у продукта
+## `domain install --holder srv --recovery …`, stand.sh start): корень домена вне держателя, файл
+## восстановления отдан оператору; первый набор ключей и запись держателя срока 1 подписаны корнем.
+
+# installer on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/signer", "cas": "", "items": {
+  "issuing_key_secret": "«секрет 1»",
+  "issuing_cert": "«сертификат 1»",
+  "token_key_secret": "«секрет 2»",
+  "kid": "8c47b46a",
+  "gen": "1",
+  "previous": "[]",
+  "backup_key_secret": "«секрет 3»",
+  "backup_key_rev": "1",
+  "issued": "true"
+}}
+→ 200 {"index": 1002}
+
+# installer on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/keys", "cas": "", "items": {
+  "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+}}
+→ 200 {"index": 1003}
+
+# installer on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/holder", "cas": "", "items": {
+  "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
+}}
+→ 200 {"index": 1004}
+
+## Первый человек домена — тоже установщика (в курсе — вызовы IdentityStore.create_local и
+## grants.set_domain_grants; у продукта `domain user add`, `domain grant --cluster domain`): дверь людей —
+## подписывающего, и она спрашивает админа.
+
+# installer on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "identity/users/anna", "cas": "", "items": {
+  "id": "anna",
+  "kind": "local",
+  "roles": "",
+  "pwhash_secret": "«запечатано кольцом 1»",
+  "idp_subject": "",
+  "created": "1757500000.0"
+}}
+→ 200 {"index": 1005}
+
+# installer on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/grants/domain", "cas": "", "items": {"anna|admin|": "0.0"}}
+→ 200 {"index": 1006}
+
+## Подписывающий стартует (signer_service.main): CLUSTERS=srv,relay-a=http://relay-a:8080,relay-b=http://relay-b:8080
+
+# signer on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/signer", "cas": 1002, "items": {
+  "issuing_key_secret": "«запечатано кольцом 2»",
+  "issuing_cert": "«сертификат 1»",
+  "token_key_secret": "«запечатано кольцом 3»",
+  "kid": "8c47b46a",
+  "gen": "1",
+  "previous": "[]",
+  "backup_key_secret": "«запечатано кольцом 4»",
+  "backup_key_rev": "1",
+  "issued": "true"
+}}
+→ 200 {"index": 1007}
+
+# signer on srv → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/holder", "cas": 1004, "items": {
+  "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
+}}
+→ 200 {"index": 1008}
+
+## Консоль домена (console.main) и воркер VMS на домене (vms.domainpart) стартуют; агент держателя тоже.
+
+# vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
+GET /kinds
+→ 200 {
+  "stream": {
+    "lifetime": 86400.0,
+    "claims": [
+      "aud",
+      "ref"
+    ]
+  },
+  "ask": {
+    "lifetime": 86400.0,
+    "claims": [
+      "aud",
+      "ref",
+      "by",
+      "acts",
+      "up"
+    ]
+  }
+}
+
+# domainagent on srv → /run/configstore/domainagent.sock
+POST /v1/write {"op": "put", "key": "domain/member-key", "cas": "", "items": {
+  "seed_secret": "«запечатано кольцом 5»",
+  "pub": "«ключ 3»",
+  "seal_pub": "«ключ 4»"
+}}
+→ 200 {"index": 1009}
+
+## Первый проход подписывающего (Holder.run_pass); его объекты — файлы на srv — тоже в трассе.
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-a/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-b/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
+→ 200 {"server": "srv", "objects": {}}
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects?prefix=vms/snapshot/&scope=cluster
+→ 200 {"server": "srv", "objects": {}}
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-a/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-b/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-a/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-b/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects?prefix=vms/snapshot/&scope=cluster
+→ 200 {"server": "srv", "objects": {}}
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-a/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-b/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects?prefix=vms/snapshot/&scope=cluster
+→ 200 {"server": "srv", "objects": {}}
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-a/reported?scope=cluster
+→ 404
+
+# signer on srv → the resource on srv, http://srv:8090
+GET /v1/objects/domain/members/relay-b/reported?scope=cluster
+→ 404
+
+# signer on srv → its own files on srv
+PUT domain/view
+
+## Первый проход воркера VMS на домене: слот domain/vms/worker, книги — пусто.
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": "", "items": {
+  "instance": "srv:1201:0004b1",
+  "at": "1757500000.0"
+}}
+→ 200 {"index": 1010}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/relay-a", "cas": "", "items": {
+  "accounts_secret": "«запечатано кольцом 6»"
+}}
+→ 200 {"index": 1011}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/relay-b", "cas": "", "items": {
+  "accounts_secret": "«запечатано кольцом 7»"
+}}
+→ 200 {"index": 1012}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts/srv", "cas": "", "items": {
+  "accounts_secret": "«запечатано кольцом 8»"
+}}
+→ 200 {"index": 1013}
+
+## Первый проход агента держателя: он читает своё хранилище сам (DOMAIN_CONFIG_URL), отчёта не пишет.
+
+# domainagent on srv → /run/configstore/domainagent.sock
+POST /v1/write {"op": "put", "key": "domain/root", "cas": null, "items": {"pub": "«ключ 2»"}}
+→ 200 {"index": 1014}
+
+# domainagent on srv → /run/configstore/domainagent.sock
+POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts", "cas": "", "items": {
+  "accounts_secret": "«запечатано кольцом 8»"
+}}
+→ 200 {"index": 1015}
+
+# domainagent on srv → /run/configstore/domainagent.sock
+POST /v1/write {"op": "put", "key": "domain/member", "cas": "", "items": {"cluster": "srv"}}
+→ 200 {"index": 1016}
