@@ -219,6 +219,7 @@ class DomainAgent:
         self.woken = threading.Event()
         self._urgent_at: float | None = None
         self._relay_n, self._relay_seen = None, None      # through a relay: its last age mark, on OUR clock
+        self._carried_seen, self._carried_relay = None, False   # the mark the last answer carried, and whether it did
 
     # One row home, by CAS, only when what it SAYS changed: a secret in it is sealed afresh every time (a new nonce), so
     # the row as stored is compared opened — or the member's flash would be written every pass for nothing.
@@ -329,8 +330,19 @@ class DomainAgent:
             say_seen(self.bundle_store, self.last_synced, self.now())
         return ok
 
+    # THROUGH A RELAY OVER THE NETWORK TOO (the scenario «камера — офис — центр», O10; М12B module-design, «Что открыто»):
+    # a member with `RELAY_URL` carries through a `CarryClient`, which has no `seen()` — the relay's age mark comes in
+    # its answer (`RelayDoor`: `seen`), and was read and never used. While the office was cut from the centre the camera
+    # wrote into `domain/seen` the time it last talked to the office, and took its books for current. An answer that
+    # carries a `seen` is a relay's, whatever the road: its mark is the member's measure.
+    def _through_relay(self) -> bool:
+        return hasattr(self.domain_vars, "seen") or getattr(self, "_carried_relay", False)
+
     def _relay_mark(self) -> float | None:
-        mark = self.domain_vars.seen()                     # None when it does not parse (`relay.RelayLink.seen`)
+        if hasattr(self.domain_vars, "seen"):
+            mark = self.domain_vars.seen()                 # None when it does not parse (`relay.RelayLink.seen`)
+        else:
+            mark = _a_mark(self._carried_seen)
         if mark and mark.get("n") != self._relay_n:
             self._relay_n = mark.get("n")
             self._relay_seen = None if mark.get("age") is None else self.now() - float(mark["age"])
@@ -360,7 +372,7 @@ class DomainAgent:
             return False
         self._say_refused("the door", "")
         dv, do = CarriedVars(got.get("rows", {})), CarriedObjects(got.get("objects", {}), report_to=self.domain_objects)
-        self._carried_seen = got.get("seen")
+        self._carried_seen, self._carried_relay = got.get("seen"), "seen" in got
         keys, _ = dv.get(KEYS_PATH)
         revoked, _ = dv.get(REVOKED_PATH)
         grants, _ = dv.get(f"{GRANTS_PATH}/{self.cluster}")
@@ -425,7 +437,7 @@ class DomainAgent:
             # Through a relay (Lesson 17), "when did I last hear from the domain" is when the RELAY last did: a
             # member that reaches its relay every pass while the relay is cut from the centre has current
             # nothing, and must not believe its books are.
-            seen = self._relay_mark() if hasattr(self.domain_vars, "seen") else self.last_synced
+            seen = self._relay_mark() if self._through_relay() else self.last_synced
             self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": seen or 0.0, "cluster": self.cluster}).encode())
         # Up, on the same connection: what the domain reads of this member, left where it reads it. Last,
         # so the outcomes of the edits applied above go up in this same pass.
@@ -525,6 +537,17 @@ class DomainAgent:
             said[what] = done
         elif said.pop(what, None) is not None:
             log.warning("%s: %s taken again", self.cluster, what)
+
+
+def _a_mark(mark) -> dict | None:
+    """A relay's age mark as it came in an answer, `{n, age}` — None when it is no such mark (as `relay.seen_mark`)."""
+    from w2cplatform.rows import finite
+    if not isinstance(mark, dict):
+        return None
+    try:
+        return {"n": mark.get("n"), "age": None if mark.get("age") is None else finite(mark["age"])}
+    except PARSE_ERRORS:
+        return None
 
 
 class Untrusted(Exception):

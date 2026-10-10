@@ -411,3 +411,43 @@ def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_t
     except Refused as e:
         assert e.status == 403 and "no member of this domain" in e.detail and "without a key" not in e.detail, e.detail
     assert Relay(relay).vars.answer_for("west", keys["west"])["rows"]
+
+
+def test_a_member_behind_a_relay_over_the_network_judges_its_books_by_the_relays_age_mark():
+    """The scenario «камера — офис — центр», O10: a camera with `RELAY_URL` carries through a `CarryClient`, which has no
+    `seen()`; the relay's age mark came in its answer and was never used — while the office was cut from the centre the
+    camera wrote into `domain/seen` the time it last talked to the office and took its books for current. An answer that
+    carries the relay's mark is measured by it: the books are as old as the relay's last contact with the domain."""
+    from w2cplatform.domain.agent import DOMAIN_SEEN, DomainAgent
+    from w2cplatform.domain.carry import CarryClient, HolderDoor
+    from w2cplatform.domain.federation import Unreachable
+    from w2cplatform.domain.relay import Relay
+    from w2cplatform.domain.topology import Topology
+    from w2cplatform.objects import FsObjectStore
+    from tests.test_domain_platform import cluster
+    fed, wall, signer, holder_ring, keys = holder_with_members()
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    east = fed.clusters.get("east") or cluster("east", wall)
+    Topology(north.vars).edit(lambda d: d["via"].update({"south": "east"}), 0, known={"north", "south", "east"})
+    door = HolderDoor(north.vars, north.objects, holder_ring, wall)
+    relay = DomainAgent("east", CarryClient(door, "east", keys["east"], wall), east.vars, now=wall, key=keys["east"],
+                        relay_members=["south"], bundle_store=east.objects, sealer=ring())
+    assert relay.sync()
+    flash = FsObjectStore(tempfile.mkdtemp(prefix="flash-"))
+    cam = DomainAgent("south", CarryClient(Relay(relay).door, "south", keys["south"], wall), south.vars, now=wall,
+                      key=keys["south"], seen_store=flash, sealer=ring())
+    assert cam.sync()
+    assert json.loads(flash.get(DOMAIN_SEEN))["ts"] == wall()                  # the relay reached the domain just now
+
+    class Cut:
+        def answer_for(self, cluster, key):
+            raise Unreachable("the centre is away")
+
+        def carry_for(self, member):
+            raise Unreachable("the centre is away")
+    reached = wall()
+    relay.domain_vars = Cut()
+    wall.advance(600)
+    assert relay.sync() is False                                               # cut: its mark says 600 s
+    assert cam.sync()                                                          # the camera still reaches the office…
+    assert json.loads(flash.get(DOMAIN_SEEN))["ts"] == reached                 # …and its books are 600 s old
