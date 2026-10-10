@@ -159,10 +159,7 @@ def keep_ups(objects) -> tuple:
         return None, None, None
 
     def load_up(ref):
-        try:
-            return objects.get(up_key(ref))
-        except OSError:
-            return None
+        return objects.get(up_key(ref))                     # a store that did not answer: `restore_up` counts it, reads again
 
     def save_up(ref, data):
         try:
@@ -231,7 +228,42 @@ class Forwarder:
         self.up_expired: dict[str, int] = {}
         self.up_writes: dict[str, int] = {}
         self._up_read: set[str] = set()
-        self.restore_up()                                        # before the first pass: a camera polling now hears it
+        # WHAT FAILED, COUNTED AND SAID (the fifteenth review's blocker; ADR-0065, its addition): `errors` per loop — a
+        # camera's own (its ref), `asks`, `outcomes` — and `_failing`, what each loop last failed with, so a failure is
+        # logged once per change and its end once (`_failed`, `_works`).
+        self.errors: dict[str, int] = {}
+        self._failing: dict[str, str] = {}
+        self._said = threading.Lock()
+        try:
+            self.restore_up()                                    # before the first pass: a camera polling now hears it
+        except Exception as err:                                 # noqa: BLE001 — the book unread: the asks' round reads it again
+            self._failed("asks", "reading the upstream book before the first pass", err)
+
+    # A LOOP OF THE FORWARDER THAT FAILED GOES ON (the fifteenth review's blocker; ADR-0065, its addition). The store not
+    # answering once (`OSError`; the file store's `StoreBusy` is one) killed the loop it hit: a camera's thread, the asks'
+    # thread — in silence, for good, while the heartbeat repeated the last word. Now each round of each loop is one try: a
+    # failure is counted (`errors`, said per camera in `upstream.<ref>.errors`, and all of them in the recorder's
+    # `forwarder_errors`), logged when it is new or changed, and the loop waits about a period and goes on — as the
+    # product's loops do (`recproc/forwarder.go`: a failed poll is a note and the next round). Its end is logged once.
+    def _failed(self, where: str, what: str, err: BaseException) -> None:
+        said = f"{type(err).__name__}: {err}"
+        with self._said:
+            self.errors[where] = self.errors.get(where, 0) + 1
+            new, self._failing[where] = self._failing.get(where) != said, said
+            n = self.errors[where]
+        if new:
+            log.warning("%s: %s failed (%s); counted (%d so far), tried again in about a period", self.name, what, said, n,
+                        exc_info=None if isinstance(err, OSError) else err)
+
+    def _works(self, where: str, what: str) -> None:
+        with self._said:
+            was = self._failing.pop(where, None)
+        if was is not None:
+            log.info("%s: %s works again (last failure: %s)", self.name, what, was)
+
+    def errors_total(self) -> int:
+        with self._said:
+            return sum(self.errors.values())
 
     # The books the relay's agent carried, read entry by entry (the eighth review's sibling): an entry that does not
     # parse is the one read last — or none, when there never was one — counted (`ingest.BOOKS`); it raised out of the
@@ -293,14 +325,20 @@ class Forwarder:
     def restore_up(self, book: dict | None = None) -> None:
         """Seeds `Ingest.up_have` from the word an earlier process of this relay kept, for every push camera of the book
         not read yet — at construction, before the first pass, and for a camera new to the book. A word that does not
-        read is dropped and said; one older than `UP_KEPT_FOR` is dropped, counted (`up_expired`) and said."""
+        read is dropped and said; one older than `UP_KEPT_FOR` is dropped, counted (`up_expired`) and said. A store that
+        did not answer is that camera's failure — counted and said (`_failed`), and read again on the next round: it was
+        taken for "no word kept", and a store that blinked at a restart lost the centre's word for good."""
         if self.load_up is None:
             return
         for ref, e in (self.book() if book is None else book).items():
             if ref in self._up_read or e.get("mode") != "push":
                 continue
+            try:
+                raw = self.load_up(ref)
+            except OSError as err:
+                self._failed(ref, f"reading the centre's word on {ref} kept for a restart", err)
+                continue
             self._up_read.add(ref)
-            raw = self.load_up(ref)
             if raw is None:
                 continue
             try:
@@ -365,6 +403,24 @@ class Forwarder:
         self.up_expired[ref] = self.up_expired.get(ref, 0) + 1
         log.warning("%s: the centre wanted %s and has said nothing for longer than it is kept (%.0f s); the camera's card "
                     "goes by this relay's word again", self.name, ref, UP_KEPT_FOR)
+
+    def _left(self, ref: str, stop: threading.Event) -> None:
+        """A camera's loop ended — its camera left the upstream book (the fifteenth review, minor 9; the product's `Pass`
+        closes `c.stop`, `recproc/forwarder.go`), or the recorder stops: what it held goes with it — its subscription at
+        this relay's ingest and its want there, what it kept to push again, the centre's word told to the camera. Its
+        thread and its subscription grew with every camera the relay ever forwarded."""
+        q = self.queues.pop(ref, None)
+        if q is not None:
+            self.dropped[ref] = self.dropped.get(ref, 0) + getattr(q, "dropped", 0)   # its losses stay counted
+            self.local.unsubscribe(ref, self.up)
+        self.local.release(ref, self.up)
+        for kept in (self.unsent, self.versions, self.forwarding, self.state):
+            kept.pop(ref, None)
+        self.local.up_have.pop(ref, None)
+        with self._said:
+            self._failing.pop(ref, None)
+        if not stop.is_set():
+            log.info("%s: %s is no longer in the upstream book; its stream up ended", self.name, ref)
 
     def _push(self, ing, ref: str, e: dict, wait: float = 0.0) -> str:
         work = ing.poll(e["token_secret"], ref, version=self.versions.get(ref) if wait else None, wait=wait)
@@ -501,45 +557,60 @@ class Forwarder:
     def serve(self, stop: threading.Event, period: float = 5.0, stream_every: float = 0.05) -> list[threading.Thread]:
         """The forwarder as a process: three kinds of thread, none of them on a timer that matters.
         · asks — waits for the local ingest to say something changed (an ask to take up, an outcome to take
-          back) and runs `lift` at once; `period` is only its fallback.
+          back) and runs `lift` at once; `period` is only its fallback. Each round it reads the upstream book again
+          and starts a thread for a camera new to it.
         · one per camera in the upstream book — a HELD poll at the centre: the centre answers it the moment a
-          want, a range or an ask for that camera arrives there. While the centre wants the stream, it forwards.
+          want, a range or an ask for that camera arrives there. While the centre wants the stream, it forwards. It
+          reads the book every round, and ends when its camera is no longer there (`_left`).
         · outcomes — while asks it took up are open, a held wait at the centre for their outcome.
+        A round of any of them that fails is counted, said and tried again (`_failed`); no failure ends a thread.
         On a real relay the per-camera polls are one held request for all its cameras; here, a thread each."""
         threads: dict[str, threading.Thread] = {}
 
         def down(ref):
-            while not stop.is_set():
-                e = self.book().get(ref)
-                ing = self._centre(e) if e else None
-                if ing is None or e["mode"] != "push":
-                    if e is not None:
+            try:
+                while not stop.is_set():
+                    try:
+                        e = self.book().get(ref)
+                        if e is None:
+                            return                                # the camera left the book: so does its loop
+                        ing = self._centre(e)
+                        if ing is None or e["mode"] != "push":
+                            self._silent(ref)
+                            self._works(ref, f"the stream of {ref} up")
+                            stop.wait(retry_wait(period))         # no centre answered (or nothing to push): not in step
+                            continue
+                        streaming = self.forwarding.get(ref, False)
+                        self.state[ref] = self._push(ing, ref, e, wait=0.0 if streaming else period)
+                        self._works(ref, f"the stream of {ref} up")
+                        if streaming:
+                            stop.wait(stream_every)
+                    except Unreachable:
                         self._silent(ref)
-                    stop.wait(retry_wait(period))                 # no centre answered (or nothing to push): not in step
-                    continue
-                try:
-                    streaming = self.forwarding.get(ref, False)
-                    self.state[ref] = self._push(ing, ref, e, wait=0.0 if streaming else period)
-                    if streaming:
-                        stop.wait(stream_every)
-                except Unreachable:
-                    self._silent(ref)
-                    stop.wait(retry_wait(period))
+                        stop.wait(retry_wait(period))
+                    except Exception as err:                      # noqa: BLE001 — counted, said, and the next round
+                        self._failed(ref, f"the stream of {ref} up", err)
+                        self.state[ref] = f"failed, tried again: {err}"
+                        stop.wait(retry_wait(period))
+            finally:
+                self._left(ref, stop)
 
         def asks():
             while not stop.is_set():
                 self.woken.wait(period)
                 self.woken.clear()
-                book = self.book()
-                self.restore_up(book)                                    # a camera new to the book: its kept word first
-                for ref in book:
-                    if ref not in threads:
-                        threads[ref] = threading.Thread(target=down, args=(ref,), daemon=True, name=f"fwd-{ref}")
-                        threads[ref].start()
                 try:
+                    book = self.book()
+                    self.restore_up(book)                         # a camera new to the book: its kept word first
+                    for ref in book:
+                        if ref not in threads or not threads[ref].is_alive():
+                            threads[ref] = threading.Thread(target=down, args=(ref,), daemon=True, name=f"fwd-{ref}")
+                            threads[ref].start()
                     self.lift()
-                except Exception:                                        # noqa: BLE001 — a bad round is retried on the next event
-                    pass
+                    self._works("asks", "carrying asks up and down (lift)")
+                except Exception as err:                          # noqa: BLE001 — counted, said, and the next event
+                    self._failed("asks", "carrying asks up and down (lift)", err)
+                    stop.wait(retry_wait(period))
 
         def outcomes():
             while not stop.is_set():
@@ -551,9 +622,13 @@ class Forwarder:
                 x = open_[0]
                 try:
                     x["centre"].outcome_wait(x["target"], x["aid"], wait=period)
+                    self._works("outcomes", "waiting for an ask's outcome at the centre")
                 except Unreachable:
                     stop.wait(retry_wait(period))                 # every relay's held wait broke at once: not in step
-                self.woken.set()                                         # settle it: `lift` does
+                except Exception as err:                          # noqa: BLE001 — counted, said, and the next round
+                    self._failed("outcomes", "waiting for an ask's outcome at the centre", err)
+                    stop.wait(retry_wait(period))
+                self.woken.set()                                  # settle it: `lift` does
 
         started = [threading.Thread(target=asks, daemon=True, name=f"fwd-asks-{self.name}"),
                    threading.Thread(target=outcomes, daemon=True, name=f"fwd-outcomes-{self.name}")]
@@ -579,46 +654,43 @@ class Forwarder:
         self.dropped[ref] = self.dropped.get(ref, 0) + len(frames) - len(kept)
         return kept
 
-    # …SAID IN THE RECORDER'S HEARTBEAT, IN THE PRODUCT'S WORDS (ADR-0065 and its addition of 2026-10-08; ADR-0019). The
-    # forwarder lives in the relay's recorder (`RecWorker.host_ingest`, as `recproc/run.go`), and what it carried and lost
-    # is `upstream: {<ref>: …}` there — the product's `Forwarder.Stats` (`recproc/forwarder.go`), its seventeen words. Not
-    # an object of its own (`rec/forwarded/<name>` is gone, ADR-0003). Per camera of the upstream book that names a road:
+    # …SAID IN THE RECORDER'S HEARTBEAT, IN THE PRODUCT'S WORDS — THE ONES IT COUNTS (ADR-0065 and its additions of
+    # 2026-10-08 and 2026-10-10; ADR-0019, ADR-0003). The forwarder lives in the relay's recorder (`RecWorker.host_ingest`,
+    # as `recproc/run.go`), and what it carried and lost is `upstream: {<ref>: …}` there — words of the product's
+    # `Forwarder.Stats` (`recproc/forwarder.go`). Not an object of its own (`rec/forwarded/<name>` is gone). Per camera of
+    # the upstream book that names a road:
     #
     #     every camera  mode            `push` or `pull`, as the book says
     #                   state           what the last pass did (`state`, the course's own sentence)
-    #     pull          down_taken      0 — the course does not count frames taken down
-    #                   down_dropped    0 — nor what its recorder could not take of them
-    #                   down_breaks     pulls whose centre had restarted since the last (`holes`): a batch may be gone
-    #     push          up_sent         0 — the course does not count frames sent up
-    #                   up_dropped      frames dropped past what it holds to push again (`dropped`), and past the queue
+    #                   errors          rounds of the camera's loop that failed — the store, anything but the centre not
+    #                                   answering (`_failed`; the fifteenth review's blocker) — the course's own word
+    #     pull          down_breaks     pulls whose centre had restarted since the last (`holes`): a batch may be gone
+    #     push          up_dropped      frames dropped past what it holds to push again (`dropped`), and past the queue
     #                                   between two pushes (its subscription's `dropped`)
-    #                   up_gaps         0 — the course says no gap on the way up
-    #                   up_resumed      0 — nor resumes from this relay's archive
     #                   up_have         what the centre confirmed of it (unix s, `Ingest.up_have`) — only once it said one
-    #                   up_have_every   0 — the course's centre says no step
-    #                   up_unconfirmed_s  0 — the course does not keep how far the stream up ran ahead of it
-    #                   up_polls        0 — nor counts the centre's answers
-    #                   up_cuts         0 — nor cuts a stream up for a silent centre
     #                   up_kept         the camera is told the word an earlier process of this relay kept, and the centre
     #                                   has not answered since (`restore_up`)
     #                   up_expired      times the centre's word outlived `UP_KEPT_FOR` (`up_expired`)
     #                   up_kept_writes  times it was written down (`up_writes`)
+    #
+    # The product's other nine words — `up_sent`, `up_gaps`, `up_resumed`, `up_have_every`, `up_unconfirmed_s`, `up_polls`,
+    # `up_cuts`, `down_taken`, `down_dropped` — the course does not count, and does not say: a word that is not there is
+    # "not counted", one that is there is a count (the fifteenth review, major 3: nine noughts read as health). On
+    # `/metrics` the spec's lines over `up_dropped`, `down_breaks`, `up_expired` (`rec.subsystem.yaml`, `upstream_*_total`).
     def stats(self) -> dict[str, dict]:
         out = {}
         for ref, e in self.book().items():
             if not e.get("urls"):
                 continue                                         # no road: no loop for it, as the product's `Pass`
-            st = {"mode": e["mode"], "state": self.state.get(ref, "")}
+            st = {"mode": e["mode"], "state": self.state.get(ref, ""), "errors": self.errors.get(ref, 0)}
             if e["mode"] == "pull":
-                st.update(down_taken=0, down_dropped=0, down_breaks=self.holes.get(ref, 0))
+                st.update(down_breaks=self.holes.get(ref, 0))
             else:
-                st.update(up_sent=0, up_dropped=self.dropped.get(ref, 0) + getattr(self.queues.get(ref), "dropped", 0),
-                          up_gaps=0, up_resumed=0)
+                st.update(up_dropped=self.dropped.get(ref, 0) + getattr(self.queues.get(ref), "dropped", 0))
                 if (have := self.local.up_have.get(ref)) is not None:
                     st["up_have"] = have
                 kept = self._up_kept.get(ref) or {}
-                st.update(up_have_every=0.0, up_unconfirmed_s=0.0, up_polls=0, up_cuts=0,
-                          up_kept=bool(kept.get("on") and not kept.get("seen") and ref in self.local.up_have),
+                st.update(up_kept=bool(kept.get("on") and not kept.get("seen") and ref in self.local.up_have),
                           up_expired=self.up_expired.get(ref, 0), up_kept_writes=self.up_writes.get(ref, 0))
             out[ref] = st
         return out

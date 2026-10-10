@@ -1212,9 +1212,12 @@ class RecWorker(VmsWorker):
     # of the cluster's (`rec/ingest` and `rec/forwarded/<name>` are gone, ADR-0003):
     #
     #     ingest          its address (a string: `heartbeat.strings`) — the product's `<door>/ingest`
-    #     ingest_streams  per camera, what the ingest did (`Ingest.stats`, the product's words)
+    #     ingest_streams  per camera, what the ingest did (`Ingest.stats`, the product's words it counts)
     #     upstream        per camera of this cluster's upstream book, what the forwarder carried and lost
-    #                     (`Forwarder.stats`, the product's seventeen words) — only while the book names one
+    #                     (`Forwarder.stats`, the product's words it counts, and `errors`) — only while the book
+    #                     names one
+    #     forwarder_errors  rounds of the forwarder's loops that failed — every camera's and the asks' (`Forwarder.errors`,
+    #                     the fifteenth review's blocker) — only once one did
     #
     # …and, as the product's heartbeat does it, when each camera last polled here (`rec/polled/<ingest>`, the domain's
     # witness; `Ingest.publish_polled`). `url`: where it takes streams — by default this recorder's archive door and
@@ -1259,7 +1262,9 @@ class RecWorker(VmsWorker):
         except Exception:                                         # noqa: BLE001 — the book unread: the heartbeat goes on
             logging.exception("%s: the forwarder's numbers could not be said", self.name)
             up = {}
-        return {"ingest": self.ingest_url, "ingest_streams": self.ingest.stats(), **({"upstream": up} if up else {})}
+        errors = self.forwarder.errors_total() if self.forwarder is not None else 0
+        return {"ingest": self.ingest_url, "ingest_streams": self.ingest.stats(), **({"upstream": up} if up else {}),
+                **({"forwarder_errors": errors} if errors else {})}
 
     # The forwarder runs beside the passes, as the product's (`go fwd.Run`): its held polls at the centre and its asks
     # are threads of their own (`Forwarder.serve`), stopped with the recorder.

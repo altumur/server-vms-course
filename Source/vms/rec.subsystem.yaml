@@ -253,6 +253,17 @@ metrics:
   # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
   # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).
   - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}
+  # What the chain lost, per camera, from the recorders that host an ingest and a relay's forwarder (ADR-0065, its
+  # addition of 2026-10-10; the fifteenth review, major 3): frames the stream up had no room for, pulls from a centre
+  # that restarted, the centre's word outliving its keep; frames the ingest's queues dropped, refused as absurd, lost
+  # ahead of the stream, repeats handed to nobody.
+  - {name: upstream_dropped_total, from: "heartbeat.upstream.<camera>.up_dropped", agg: sum, type: counter}
+  - {name: upstream_breaks_total, from: "heartbeat.upstream.<camera>.down_breaks", agg: sum, type: counter}
+  - {name: upstream_expired_total, from: "heartbeat.upstream.<camera>.up_expired", agg: sum, type: counter}
+  - {name: ingest_cut_total, from: "heartbeat.ingest_streams.<camera>.cut_for_full_queue", agg: sum, type: counter}
+  - {name: ingest_absurd_frames_total, from: "heartbeat.ingest_streams.<camera>.absurd_frames", agg: sum, type: counter}
+  - {name: ingest_ahead_losses_total, from: "heartbeat.ingest_streams.<camera>.ahead_losses", agg: sum, type: counter}
+  - {name: ingest_repeats_dropped_total, from: "heartbeat.ingest_streams.<camera>.repeats_dropped", agg: sum, type: counter}
   - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
   - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds

@@ -515,14 +515,17 @@ class Ingest:
             e["ahead"] = e.get("ahead", 0) + n
         return out
 
-    # WHAT THE RECORDER'S HEARTBEAT SAYS OF ITS INGEST, PER CAMERA (ADR-0065, its addition of 2026-10-08; ADR-0019): the
-    # product's `Ingest.Stats` (`recproc/ingest.go`), under `ingest_streams` beside `ingest`, the address — every word of
-    # it, so a reader of either side reads one shape. What the course keeps is said under the product's word:
+    # WHAT THE RECORDER'S HEARTBEAT SAYS OF ITS INGEST, PER CAMERA (ADR-0065, its additions of 2026-10-08 and 2026-10-10;
+    # ADR-0019, ADR-0003): words of the product's `Ingest.Stats` (`recproc/ingest.go`), under `ingest_streams` beside
+    # `ingest`, the address — the ones the course counts, each under the product's word:
     #
     #     push                  this ingest wants the stream now — its own wants, as the product's (`wants`, not run out)
     #     live                  the camera pushes here now (`pushing`)
     #     received              frames its recorders' tee took (`LiveTee.frames`)
     #     recorders, viewers    subscribers of the recorders' tee named `recorder…` (`taken`'s rule), of the viewers' tee
+    #     cut_for_full_queue    frames the subscribers' queues had no room for and dropped, the oldest first — what
+    #                           `lost` calls `dropped` (`LeakyQueue.dropped`). The product ends the stream instead, and
+    #                           counts the streams it ended: the same loss, counted where each side takes it
     #     repeats_dropped       repeats the tees handed to nobody (`_InOrder.repeats`)
     #     absurd_frames         frames refused at the door for no time or a time past now (`_timely`, `ahead`)
     #     ahead_losses          frames far past the stream that the next frame did not follow (`_InOrder.ahead`)
@@ -530,28 +533,24 @@ class Ingest:
     #     last, skew_s, camera_rtt_s, polled_ago   when it last pushed (unix s), the held offset (0.1 s), its least round
     #                           trip (ms), how long ago it last polled — each only once there is one, as the product's
     #
-    # Every other count of the product's is nought here: the course's ingest does not keep it (what it drops is in
-    # `lost`, its object `rec/polled/<ingest>`). A camera nobody pushed or polled is said as the product says it: counts
-    # at nought.
-    STREAM_COUNTS = ("received", "viewers", "recorders", "cut_for_full_queue", "repeats_dropped", "streams_replaced",
-                     "clock_back", "stream_gaps", "camera_gaps", "inject_dropped", "inject_losses", "lead_in",
-                     "absurd_frames", "ask_outcomes_dropped", "have_answers", "clock_step_forward", "ahead_repeats",
-                     "ahead_losses", "clock_pieces", "clock_steps_in_stream", "clock_outliers", "clock_ambiguous_frames",
-                     "clock_unsure_frames", "clock_drift_pieces", "clock_step_back_word", "clock_clamped_frames",
-                     "clock_refined", "clock_line_pieces", "clock_pieces_restored", "clock_step_back_withdrawn",
-                     "clock_unplaceable_frames", "clock_refined_by_road", "clock_range_reasked", "clock_road_forgiven")
-    STREAM_SECONDS = ("stream_gap_s", "clock_step_forward_s", "clock_step_back_s", "clock_step_back_word_s")
+    # The product's other counts and seconds the course's ingest does not keep, and does not say: a word that is not there
+    # is "not counted", one that is there is a count (the fifteenth review, major 3: `cut_for_full_queue` said 0 while the
+    # queues dropped). A camera nobody pushed or polled says its counts at nought. On `/metrics` the spec's lines over the
+    # losses (`rec.subsystem.yaml`, `ingest_*_total`).
+    STREAM_COUNTS = ("received", "viewers", "recorders", "cut_for_full_queue", "repeats_dropped", "absurd_frames",
+                     "ahead_losses", "clock_pieces", "clock_pieces_restored")
 
     def stats(self) -> dict[str, dict]:
         now, out = self.wall(), {}
         for ref, c in list(self.cams.items()):
             live, edge = self.tees.get((ref, "live")), self.tees.get((ref, "edge"))
             tees = [t for t in (live, edge) if t is not None]
-            st: dict = {"push": any(u > now for u in list(c.wants.values())), "live": self.pushing(ref),
-                        **{w: 0 for w in self.STREAM_COUNTS}, **{w: 0.0 for w in self.STREAM_SECONDS}}
+            st: dict = {"push": any(u > now for u in list(c.wants.values())), "live": self.pushing(ref)}
             st.update(received=getattr(live, "frames", 0),
                       recorders=sum(1 for w in list(getattr(live, "subscribers", {})) if w.startswith("recorder")),
                       viewers=len(getattr(edge, "subscribers", {})),
+                      cut_for_full_queue=sum(getattr(q, "dropped", 0) for t in tees
+                                             for q in list(getattr(t, "subscribers", {}).values())),
                       repeats_dropped=sum(getattr(t, "repeats", 0) for t in tees),
                       absurd_frames=self.ahead.get(ref, 0), ahead_losses=sum(getattr(t, "ahead", 0) for t in tees),
                       clock_pieces=len(c.pieces), clock_pieces_restored=c.restored)
@@ -1320,6 +1319,13 @@ class Ingest:
     def subscribe(self, ref: str, who: str, kind: str = "live", maxsize: int = 30, edge: bool = False) -> LeakyQueue:
         return self._tee(ref, "edge" if edge else kind).subscribe(who, maxsize)
 
+    def unsubscribe(self, ref: str, who: str, kind: str = "live", edge: bool = False) -> None:
+        """The subscription `subscribe` gave, ended: its queue no longer fills (a relay's forwarder, for a camera that left
+        its upstream book — the fifteenth review, minor 9)."""
+        tee = self.tees.get((str(ref), "edge" if edge else kind))
+        if tee is not None:
+            tee.unsubscribe(who)
+
     def taken(self, ref: str) -> bool:
         """A recorder of this cluster takes the stream — subscribed to it, at any ingest of the cluster. A recorder
         subscribes as `recorder:<name>`; viewers and forwarders are not recorders."""
@@ -1769,7 +1775,7 @@ UPLINK_FREE = 2.0
 # every line labelled with its cluster. Each object goes through the members' one reader (`published`): one that does not
 # parse is counted and logged there, and the rest are said; a member that does not answer is left out of this scrape.
 # Counters since that process began: a restart starts them again, as a Prometheus counter's reset. A relay's forwarder
-# says what it carried and lost in its recorder's heartbeat (`upstream`, the product's seventeen words; ADR-0065) — not
+# says what it carried and lost in its recorder's heartbeat (`upstream`, the product's words it counts; ADR-0065) — not
 # an object of its own, and not here.
 def stream_metrics(fed) -> list[str]:
     from w2cplatform.console import label

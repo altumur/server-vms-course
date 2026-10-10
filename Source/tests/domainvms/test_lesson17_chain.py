@@ -1144,19 +1144,22 @@ def test_what_the_ingests_did_not_hand_on_is_on_the_vms_domain_workers_metrics_a
 
 
 # -- the forwarder lives in the relay's recorder (ADR-0065 and its addition of 2026-10-08; ADR-0019) ----------------------
-# The product's `Forwarder.Stats` (`recproc/forwarder.go`): every camera's two words, a pulled camera's three, a pushed
-# camera's twelve — `up_have` only once the centre said one. Seventeen between them.
-FORWARDER_WORDS = {"push": {"mode", "state", "up_sent", "up_dropped", "up_gaps", "up_resumed", "up_have", "up_have_every",
-                            "up_unconfirmed_s", "up_polls", "up_cuts", "up_kept", "up_expired", "up_kept_writes"},
-                   "pull": {"mode", "state", "down_taken", "down_dropped", "down_breaks"}}
+# Words of the product's `Forwarder.Stats` (`recproc/forwarder.go`) — only the ones the course counts (ADR-0065, its
+# addition of 2026-10-10: the fifteenth review, major 3) — and the course's own `errors` (the fifteenth review's blocker):
+# every camera's three, a pulled camera's one more, a pushed camera's five more — `up_have` only once the centre said one.
+FORWARDER_WORDS = {"push": {"mode", "state", "errors", "up_dropped", "up_have", "up_kept", "up_expired", "up_kept_writes"},
+                   "pull": {"mode", "state", "errors", "down_breaks"}}
+FORWARDER_NOT_COUNTED = {"up_sent", "up_gaps", "up_resumed", "up_have_every", "up_unconfirmed_s", "up_polls", "up_cuts",
+                         "down_taken", "down_dropped"}
 
 
-def test_the_relays_recorder_says_what_its_forwarder_carried_and_lost_in_the_products_seventeen_words():
+def test_the_relays_recorder_says_what_its_forwarder_carried_and_lost_in_the_products_words_it_counts():
     """What the forwarder carried and lost is not an object of the relay's (`rec/forwarded/<name>` is gone) but its
-    recorder's heartbeat: `upstream.<ref>`, per camera of the upstream book, in the product's words — what the course
-    counts under its word, nought where it counts nothing. A pushed camera says what the centre confirmed (`up_have`)
-    once it said it; a star's pulled camera says the down words; the centre, with no upstream book, says no `upstream`."""
-    assert len(FORWARDER_WORDS["push"] | FORWARDER_WORDS["pull"]) == 17
+    recorder's heartbeat: `upstream.<ref>`, per camera of the upstream book, in the product's words — only what the course
+    counts; the nine it does not count are not said (a nought read as health). A pushed camera says what the centre
+    confirmed (`up_have`) once it said it; a star's pulled camera says the down word; the centre, with no upstream book,
+    says no `upstream`."""
+    assert len(FORWARDER_NOT_COUNTED | FORWARDER_WORDS["push"] | FORWARDER_WORDS["pull"]) == 18   # the 17, and `errors`
     wall = Clock()
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
     host = domain_pass.recorders["east"]
@@ -1169,7 +1172,7 @@ def test_the_relays_recorder_says_what_its_forwarder_carried_and_lost_in_the_pro
     up = _upstream(host)[SERIAL]
     assert set(up) == FORWARDER_WORDS["push"]
     assert up["mode"] == "push" and up["state"].startswith("forwarding") and up["up_have"] == wall()
-    assert (up["up_dropped"], up["up_expired"], up["up_kept_writes"], up["up_kept"]) == (0, 0, 1, False)
+    assert (up["up_dropped"], up["up_expired"], up["up_kept_writes"], up["up_kept"], up["errors"]) == (0, 0, 1, False, 0)
     assert "upstream" not in json.loads(north.objects.get("rec/heartbeats/r-1"))   # the centre forwards nothing
 
     north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(Clock(), star={"east"})
@@ -1199,3 +1202,170 @@ def test_nothing_writes_where_the_ingest_or_the_forwarder_used_to_announce_itsel
             keys = c.objects.list("rec/")
             assert "rec/heartbeats/r-1" in keys and any(k.startswith("rec/polled/") for k in keys), keys
             assert "rec/ingest" not in keys and not any(k.startswith("rec/forwarded") for k in keys), keys
+
+
+# -- a store that failed once does not end the forwarder (the fifteenth review's blocker, minor 9; ADR-0065, its addition) --
+class _FlakyStore(FakeVariables):
+    """The relay's store, which answers — and, while `broken`, does not: the file store's `StoreBusy`, an `OSError`."""
+    broken = False
+
+    def get(self, path):
+        if self.broken:
+            from w2cplatform.variables import StoreBusy
+            raise StoreBusy("the store did not answer")
+        return super().get(path)
+
+
+class _TakesAll:
+    """A centre that wants every stream and takes all it is pushed."""
+    def __init__(self):
+        self.pushed = []
+
+    def poll(self, token, ref, version=None, wait=0.0):
+        return {"version": 1, "push": True, "ranges": {}, "asks": {}}
+
+    def push(self, token, ref, frames):
+        self.pushed.extend(frames)
+
+
+def _until(cond, within: float = 5.0) -> bool:
+    import time
+    end = time.monotonic() + within
+    while time.monotonic() < end:
+        if cond():
+            return True
+        time.sleep(0.01)
+    return cond()
+
+
+def _alive(name: str) -> bool:
+    import threading
+    return any(t.name == name and t.is_alive() for t in threading.enumerate())
+
+
+def _frames(n: int, start: float) -> list:
+    return [{"t": start + i * 0.01, "key": i == 0} for i in range(n)]
+
+
+def test_a_store_that_did_not_answer_once_is_counted_said_and_the_stream_up_goes_on_after_it():
+    """The fifteenth review's blocker (ADR-0065, its addition; `resilience.mdc`, `observability.mdc`). One `StoreBusy` of
+    the relay's store killed the camera's thread and the asks' thread of its forwarder for good — nothing logged, nothing
+    counted, the camera's frames never reached the centre again while the heartbeat repeated "forwarding". Now a round
+    that fails is counted (`upstream.<ref>.errors`, the recorder's `forwarder_errors`), said once by the `chain` logger
+    and once more when it works again, and the next round goes on: the frames after the store came back reach the
+    centre."""
+    import logging
+    import threading
+    import time
+    store, centre = _FlakyStore(), _TakesAll()
+    rec = ingest_recorder("east", RELAY_URLS[0], time.time, store, dial=lambda url: centre)
+    local, fwd = rec.ingest, rec.forwarder
+    _in_book(rec, SERIAL)
+    said: list[logging.LogRecord] = []
+    catch = logging.Handler(logging.INFO)
+    catch.emit = said.append
+    chain_log = logging.getLogger("chain")
+    level = chain_log.level
+    chain_log.addHandler(catch); chain_log.setLevel(logging.INFO)
+    stop = threading.Event()
+    try:
+        fwd.serve(stop, period=0.05, stream_every=0.01)
+        assert _until(lambda: fwd.forwarding.get(SERIAL) and SERIAL in fwd.queues)
+        local.inject(SERIAL, _frames(30, time.time() - 1))
+        assert _until(lambda: len(centre.pushed) == 30)
+        store.broken = True                                              # one blink of the store…
+        assert _until(lambda: fwd.errors.get(SERIAL, 0) >= 2 and fwd.errors.get("asks", 0) >= 1)
+        store.broken = False                                             # …and it answers again
+        local.inject(SERIAL, _frames(30, time.time() - 0.5))
+        assert _until(lambda: len(centre.pushed) == 60), len(centre.pushed)   # the stream up went on
+        assert _alive(f"fwd-{SERIAL}") and _alive("fwd-asks-east") and _alive("fwd-outcomes-east")
+    finally:
+        stop.set()
+        chain_log.removeHandler(catch); chain_log.setLevel(level)
+    failed = [r.getMessage() for r in said if r.levelno == logging.WARNING and f"the stream of {SERIAL} up failed" in r.getMessage()]
+    assert len(failed) == 1 and "StoreBusy" in failed[0], failed        # said once, not once a round
+    assert any(f"the stream of {SERIAL} up works again" in r.getMessage() for r in said)
+    assert any(r.levelno == logging.WARNING and "(lift) failed" in r.getMessage() for r in said)
+    rec.heartbeat_once()
+    hb = json.loads(rec.objects.get("rec/heartbeats/r-1"))
+    assert hb["upstream"][SERIAL]["errors"] == fwd.errors[SERIAL] >= 2
+    assert hb["forwarder_errors"] == sum(fwd.errors.values()) > hb["upstream"][SERIAL]["errors"]   # the asks' too
+
+
+def test_a_camera_taken_out_of_the_upstream_book_ends_its_loop_and_its_subscription():
+    """The fifteenth review, minor 9 (`sharding-and-backpressure.mdc`; the product's `Pass` closes the loop of a camera its
+    book no longer names, `recproc/forwarder.go`). A camera's thread read the book and waited while its camera was gone
+    from it — for ever, its subscription at the relay's ingest filling and dropping: threads and queues grew with every
+    camera the relay ever forwarded. Now the loop ends, and lets go of its subscription and its want; the camera put back
+    in the book is forwarded again by a loop of its own."""
+    import threading
+    import time
+    from vms.domainpart.keys import UPSTREAM_PATH
+    store, centre = _FlakyStore(), _TakesAll()
+    rec = ingest_recorder("east", RELAY_URLS[0], time.time, store, dial=lambda url: centre)
+    local, fwd = rec.ingest, rec.forwarder
+    _in_book(rec, SERIAL)
+    stop = threading.Event()
+    try:
+        fwd.serve(stop, period=0.05, stream_every=0.01)
+        assert _until(lambda: SERIAL in fwd.queues and _alive(f"fwd-{SERIAL}"))
+        assert fwd.up in local.tees[(SERIAL, "live")].subscribers
+        items, idx = store.get(UPSTREAM_PATH)
+        store.put(UPSTREAM_PATH, {k: v for k, v in items.items() if k != SERIAL}, cas=idx)   # the domain took it out
+        assert _until(lambda: not _alive(f"fwd-{SERIAL}"))
+        assert SERIAL not in fwd.queues and SERIAL not in fwd.state
+        assert fwd.up not in local.tees[(SERIAL, "live")].subscribers   # its subscription let go…
+        assert local.cams[SERIAL].wants[fwd.up] <= time.time() + LINGER  # …and its want, as a viewer's
+        assert SERIAL not in fwd.stats() and _alive("fwd-asks-east")
+        _in_book(rec, SERIAL)                                            # back in the book: a loop of its own again
+        fwd.woken.set()
+        assert _until(lambda: SERIAL in fwd.queues and _alive(f"fwd-{SERIAL}"))
+        local.inject(SERIAL, _frames(10, time.time() - 1))
+        assert _until(lambda: len(centre.pushed) >= 10)
+        assert sum(t.name == f"fwd-{SERIAL}" for t in threading.enumerate()) == 1
+    finally:
+        stop.set()
+
+
+def test_what_the_chain_lost_is_on_rec_metrics_per_camera():
+    """ADR-0065, its addition of 2026-10-10 (the fifteenth review, major 3): the losses the course counts are lines of
+    the spec's `metrics:` over the recorders' heartbeats — `rec_upstream_{dropped,breaks,expired}_total` over the
+    forwarder's `upstream.<camera>`, `rec_ingest_{cut,absurd_frames,ahead_losses,repeats_dropped}_total` over the ingest's
+    `ingest_streams.<camera>` — each with the camera as its label, on the console's `/rec/metrics`."""
+    import urllib.request
+    from vms.config import REC_SPEC, SPEC
+    from vms.console import serve
+    from vms.controller import VmsController
+    from w2cplatform.spec import SpecController
+    from tests.vmsconftest import Box
+    box = Box()
+    rec = ingest_recorder("east", RELAY_URLS[0], box.wall, objects=box.objects)
+    _in_book(rec, SERIAL); _in_book(rec, "SN7002", mode="pull")
+    fwd, ing = rec.forwarder, rec.ingest
+    fwd.dropped[SERIAL], fwd.up_expired[SERIAL], fwd.holes["SN7002"] = 3, 1, 2
+    q = ing.subscribe(SERIAL, "recorder:r-9", maxsize=2)
+    frames = _frames(5, box.wall() - 1)
+    ing.inject(SERIAL, frames); ing.inject(SERIAL, frames)              # three past a queue of two; five repeats
+    ing.ahead[SERIAL] = 4                                                # (refused at the door as absurd)
+    rec.heartbeat_once()
+    hb = json.loads(box.objects.get("rec/heartbeats/r-1"))
+    st = hb["ingest_streams"][SERIAL]
+    assert q.dropped == st["cut_for_full_queue"] == 3 and st["repeats_dropped"] == 5 and st["absurd_frames"] == 4
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    recs = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    srv = serve(ctl, box.resource_root, port=0, wall=box.wall, mounts={"rec": recs})
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/rec/metrics", headers={"X-User": "anna"})
+        text = urllib.request.urlopen(req).read().decode()
+    finally:
+        srv.shutdown()
+    lines = text.splitlines()
+    for line in (f'rec_upstream_dropped_total{{camera="{SERIAL}"}} 3', 'rec_upstream_breaks_total{camera="SN7002"} 2',
+                 f'rec_upstream_expired_total{{camera="{SERIAL}"}} 1', f'rec_ingest_cut_total{{camera="{SERIAL}"}} 3',
+                 f'rec_ingest_absurd_frames_total{{camera="{SERIAL}"}} 4',
+                 f'rec_ingest_ahead_losses_total{{camera="{SERIAL}"}} {st["ahead_losses"]}',
+                 f'rec_ingest_repeats_dropped_total{{camera="{SERIAL}"}} 5'):
+        assert line in lines, (line, [x for x in lines if "upstream" in x or "ingest_" in x])
+    for name in ("upstream_dropped_total", "upstream_breaks_total", "upstream_expired_total", "ingest_cut_total",
+                 "ingest_absurd_frames_total", "ingest_ahead_losses_total", "ingest_repeats_dropped_total"):
+        assert f"# TYPE rec_{name} counter" in lines

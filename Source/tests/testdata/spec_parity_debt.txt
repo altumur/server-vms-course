@@ -1,6 +1,13 @@
 # spec_parity_debt.txt — the keys the course's specs and the product's differ by (spec_parity_test.go).
 # A line goes when both sides have the key, or neither; a new difference is not written here but made good.
 course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: detectors are not in the product — «Сборка»
+course-only rec.subsystem.yaml metrics[ingest_absurd_frames_total]   # ADR-0065 (its addition of 2026-10-10): the course writes the lines over the chain's losses first, the product lays the same over its counters — «Сборка»
+course-only rec.subsystem.yaml metrics[ingest_ahead_losses_total]   # ADR-0065 (its addition of 2026-10-10): the course writes the lines over the chain's losses first, the product lays the same over its counters — «Сборка»
+course-only rec.subsystem.yaml metrics[ingest_cut_total]   # ADR-0065 (its addition of 2026-10-10): the course writes the lines over the chain's losses first, the product lays the same over its counters — «Сборка»
+course-only rec.subsystem.yaml metrics[ingest_repeats_dropped_total]   # ADR-0065 (its addition of 2026-10-10): the course writes the lines over the chain's losses first, the product lays the same over its counters — «Сборка»
+course-only rec.subsystem.yaml metrics[upstream_breaks_total]   # ADR-0065 (its addition of 2026-10-10): the course writes the lines over the chain's losses first, the product lays the same over its counters — «Сборка»
+course-only rec.subsystem.yaml metrics[upstream_dropped_total]   # ADR-0065 (its addition of 2026-10-10): the course writes the lines over the chain's losses first, the product lays the same over its counters — «Сборка»
+course-only rec.subsystem.yaml metrics[upstream_expired_total]   # ADR-0065 (its addition of 2026-10-10): the course writes the lines over the chain's losses first, the product lays the same over its counters — «Сборка»
 course-only vms.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»

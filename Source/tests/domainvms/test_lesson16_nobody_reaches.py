@@ -887,16 +887,18 @@ def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as
 
 
 # -- the ingest lives in the recorder (ADR-0065, its addition of 2026-10-08; ADR-0019) ------------------------------------
-# The product's `Ingest.Stats` (`recproc/ingest.go`), every word a recorder's heartbeat says of each camera under
-# `ingest_streams` — and the four said only once there is one.
+# Words of the product's `Ingest.Stats` (`recproc/ingest.go`) a recorder's heartbeat says of each camera under
+# `ingest_streams` — only the ones the course counts (ADR-0065, its addition of 2026-10-10: the fifteenth review, major 3)
+# — and the four said only once there is one. The product's words the course does not count are not said at all.
 STREAM_WORDS = {"push", "live", "received", "viewers", "recorders", "cut_for_full_queue", "repeats_dropped",
-                "streams_replaced", "clock_back", "stream_gaps", "camera_gaps", "stream_gap_s", "inject_dropped",
-                "inject_losses", "lead_in", "absurd_frames", "ask_outcomes_dropped", "have_answers", "clock_step_forward",
-                "clock_step_forward_s", "ahead_repeats", "ahead_losses", "clock_pieces", "clock_steps_in_stream",
-                "clock_step_back_s", "clock_outliers", "clock_ambiguous_frames", "clock_unsure_frames",
-                "clock_drift_pieces", "clock_step_back_word", "clock_step_back_word_s", "clock_clamped_frames",
-                "clock_refined", "clock_line_pieces", "clock_pieces_restored", "clock_step_back_withdrawn",
-                "clock_unplaceable_frames", "clock_refined_by_road", "clock_range_reasked", "clock_road_forgiven"}
+                "absurd_frames", "ahead_losses", "clock_pieces", "clock_pieces_restored"}
+NOT_COUNTED = {"streams_replaced", "clock_back", "stream_gaps", "camera_gaps", "stream_gap_s", "inject_dropped",
+               "inject_losses", "lead_in", "ask_outcomes_dropped", "have_answers", "clock_step_forward",
+               "clock_step_forward_s", "ahead_repeats", "clock_steps_in_stream", "clock_step_back_s", "clock_outliers",
+               "clock_ambiguous_frames", "clock_unsure_frames", "clock_drift_pieces", "clock_step_back_word",
+               "clock_step_back_word_s", "clock_clamped_frames", "clock_refined", "clock_line_pieces",
+               "clock_step_back_withdrawn", "clock_unplaceable_frames", "clock_refined_by_road", "clock_range_reasked",
+               "clock_road_forgiven"}
 STREAM_WORDS_ONCE = {"last", "skew_s", "camera_rtt_s", "polled_ago"}
 
 
@@ -922,6 +924,7 @@ def test_a_recorder_that_hosts_an_ingest_says_where_and_what_in_its_heartbeat_an
     assert hb["ingest"] == URLS[0] and "upstream" not in hb                 # no upstream book: no forwarder words
     st = hb["ingest_streams"][SERIAL]
     assert STREAM_WORDS <= set(st) <= STREAM_WORDS | STREAM_WORDS_ONCE, set(st) ^ STREAM_WORDS
+    assert not NOT_COUNTED & set(st)                                        # a nought it does not count is not said
     assert (st["push"], st["live"], st["received"], st["recorders"], st["viewers"]) == (True, True, 2, 1, 0)
     assert st["last"] == wall() and st["polled_ago"] == 0.0 and st["skew_s"] == 0.0
     assert ingest_urls("south", south.objects, wall()) == URLS              # what the domain reads: both recorders'
