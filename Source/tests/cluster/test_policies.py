@@ -404,3 +404,41 @@ def test_a_worker_whose_spec_declares_a_door_for_people_reads_the_clusters_grant
     assert not r.allows("domainagent", "read", "domain/vms/stream-clients/wall1")
     assert r.allows("domainagent", "read", "domain/vms/stream-accounts")
     assert r.allows("domain", "read", "domain/vms/stream-clients/wall1")              # the signer backs up domain.kept
+
+
+def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
+    """The scenario «камера — офис — центр», F3: the ingest and the forwarder live in the recorder (ADR-0065's addition of
+    2026-10-08), and on configstore the recorder never raised its forwarder — the forwarder's first read, the relay's
+    upstream book, was a 403 — and its ingest's every poll read the source book refused. The books they read are the
+    rec spec's `worker.reads` (the product's recorder reads them as `*` less its denials): the role `recworker` reads
+    them, and the code reads nothing of the domain's books beyond them."""
+    import tempfile
+    from vms.domainpart.chain import Forwarder
+    from vms.domainpart.ingest import should_from_snapshot
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.variables import FileVariables, Forbidden
+    r = rights()
+    root = tempfile.mkdtemp()
+    inner, read = FileVariables(f"{root}/vars"), []
+
+    class AsRecorder:
+        def get(self, path):
+            read.append(path)
+            if not r.allows("recworker", "read", path):
+                raise Forbidden(f"recworker may not read {path}")
+            return inner.get(path)
+
+        def list(self, prefix):
+            return [k for k in inner.list(prefix) if r.allows("recworker", "read", k)]
+
+    class Local:
+        def listen(self, fn):
+            pass
+    objects = FsObjectStore(f"{root}/objects")
+    fw = Forwarder("relay-a", Local(), AsRecorder(), dial=lambda url: None, objects=objects)
+    fw.book()
+    fw.asks_book()
+    should_from_snapshot(objects, sources=AsRecorder())("SN-A")
+    books = {p for p in read if p.startswith("domain/vms/")}
+    assert books == {"domain/vms/upstream", "domain/vms/asks", "domain/vms/sources"}, sorted(books)
+    assert set(REC_SPEC.worker_reads) >= books, REC_SPEC.worker_reads
