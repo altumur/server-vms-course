@@ -1,0 +1,68 @@
+## Отказ 2. Обрыв камера → офис: на минуту, потом на полчаса. Короткий обрыв продолжается из памяти камеры
+## (кольцо, have); длиннее кольца — карта и дозапись по слову камеры (ADR-0040).
+
+# anna → srv:8070
+POST /api/login {"user": "anna", "password": "anna-test-password"}
+→ …
+
+# domain console on srv → srv:8071
+POST /api/login {"user": "anna", "password": "anna-test-password"}
+  X-Operator: domain-console
+→ 200 {"token": "«токен 1: person sub=anna на 900 с»"}
+
+# anna ← srv:8070: ответ на POST /api/login
+→ 200 {"token": "«токен 1: person sub=anna на 900 с»"}
+
+## Дорога cam-a — relay-a перерезана.
+
+## толкатель cam-a: no ingest of relay-a answered
+
+## Минута прошла, дорога вернулась. Первый шаг:
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500383.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "300 кадров, t 1757500353.1…1757500383.0",
+  "camera_now": 1757500383.0,
+  "rtt": 0.0
+}
+→ 200 300
+
+## толкатель cam-a: {"state": "pushing to http://relay-a:8091/ingest", "pushed": 300, "continue": {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}, "behind": 0.0}
+
+## карта cam-a: {"1-sd": {"phase": "running", "hold": false, "card_segments": 15, "card_bytes": 369762, "samples_written": 1411}, "stream": {"state": "pushing to http://relay-a:8091/ingest", "up": true, "behind_s": 0.0, "cut_s": 0.0, "left_s": 0.0, "owed_s": 72.0, "owed_gaps": 1}}
+
+## Теперь на полчаса (свёрнуто).
+
+## карта cam-a в конце обрыва: {"1-sd": {"phase": "running", "hold": false, "card_segments": 195, "card_bytes": 5086662, "samples_written": 19411}, "stream": {"state": "no ingest of relay-a answered", "up": false, "behind_s": 0.0, "cut_s": 0.0, "left_s": 0.0, "owed_s": 72.0, "owed_gaps": 1}}
+
+## Дорога вернулась. Первый шаг:
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757502204.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "300 кадров, t 1757502174.1…1757502204.0",
+  "camera_now": 1757502204.0,
+  "rtt": 0.0
+}
+→ 200 300
+
+## толкатель cam-a: {"state": "pushing to http://relay-a:8091/ingest", "pushed": 300, "continue": {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}, "behind": 0.0}
+
+## карта cam-a: {"1-sd": {"phase": "running", "hold": false, "card_segments": 198, "card_bytes": 5167908, "samples_written": 19721}, "stream": {"state": "pushing to http://relay-a:8091/ingest", "up": true, "behind_s": 0.0, "cut_s": 0.0, "left_s": 0.0, "owed_s": 1843.0, "owed_gaps": 2}}

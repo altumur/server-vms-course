@@ -374,6 +374,240 @@ def s12_alarm(site) -> None:
     site.ask("anna", "GET", "domain console", "/domain/alarms")
 
 
+# -- the failure scenes: each its own run from the end of the happy path ---------------------------------------------------
+def _card_said(site, name: str) -> str:
+    cam = site.cams[name]
+    cam.rec.heartbeat_once()
+    hb = json.loads(cam.ram.get("rec/heartbeats/r-1"))
+    st = next((x for x in hb["status"] if x["id"] == "1-sd"), {})
+    keep = ("phase", "hold", "why", "card_segments", "card_bytes", "samples_written")
+    return json.dumps({"1-sd": {k: st.get(k) for k in keep if k in st},
+                       "stream": {k: v for k, v in (hb.get("stream") or {}).items()
+                                  if k in ("state", "up", "behind_s", "owed_s", "owed_gaps", "cut_s", "left_s")}},
+                      ensure_ascii=False)
+
+
+def _cameras_seen(site, who: str = "anna") -> None:
+    st, got = site.ask(who, "GET", "domain console", "/domain/vms/cameras")
+    if isinstance(got, dict):
+        site.log.note("консоль домена: " + json.dumps({"clusters": got.get("clusters"), "complete": got.get("complete"),
+                                                       "why": got.get("why")}, ensure_ascii=False))
+
+
+def f01_office_off(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 1. Офис relay-a выключен на пять минут. Камеры за ним толкают в никуда; их книги стареют (агент\n"
+             "камеры не доходит до двери офиса), и карта 1-sd (when: offline) пишет; центр видит молчание офиса и его\n"
+             "камер разом.")
+    site.login("anna")
+    site.off("relay-a")
+    log.note("relay-a выключен. Первый шаг cam-a после этого:")
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {out.get('state')}")
+    site.sync("cam-a")
+    log.note("Шестьдесят секунд (свёрнуто: шаги камер, проходы агентов и держателя).")
+    with log.muted():
+        site.tick(60)
+    log.note("карта cam-a: " + _card_said(site, "cam-a"))
+    site.holder.run_pass()
+    site.console_pass()
+    _cameras_seen(site)
+    log.note("Ещё четыре минуты (свёрнуто).")
+    with log.muted():
+        site.tick(240)
+    log.note("карта cam-a: " + _card_said(site, "cam-a"))
+    log.note("relay-a включён. Офис встаёт: регистратор, передатчик, агент; камера возвращается к приёмнику.")
+    site.on("relay-a")
+    rec = site.recorders["relay-a"]
+    with log.acting("recworker r-relay-a-1 on relay-a"):
+        rec.heartbeat_once()
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {json.dumps({k: out.get(k) for k in ('state', 'pushed', 'continue')}, ensure_ascii=False)}")
+    site.sync("relay-a")
+    site.sync("cam-a")
+    with log.muted():
+        site.tick(30)
+    log.note("карта cam-a через 30 с: " + _card_said(site, "cam-a"))
+    site.holder.run_pass()
+    site.console_pass()
+    _cameras_seen(site)
+
+
+def f02_camera_road(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 2. Обрыв камера → офис: на минуту, потом на полчаса. Короткий обрыв продолжается из памяти камеры\n"
+             "(кольцо, have); длиннее кольца — карта и дозапись по слову камеры (ADR-0040).")
+    site.login("anna")
+    site.cut_road("cam-a", "relay-a")
+    log.note("Дорога cam-a — relay-a перерезана.")
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {out.get('state')}")
+    with log.muted():
+        site.tick(59, cams=("cam-a",))
+    site.mend_road("cam-a", "relay-a")
+    log.note("Минута прошла, дорога вернулась. Первый шаг:")
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {json.dumps({k: out.get(k) for k in ('state', 'pushed', 'continue', 'behind')}, ensure_ascii=False)}")
+    with log.muted():
+        site.tick(20, cams=("cam-a",))
+    log.note("карта cam-a: " + _card_said(site, "cam-a"))
+    log.note("Теперь на полчаса (свёрнуто).")
+    site.cut_road("cam-a", "relay-a")
+    with log.muted():
+        site.tick(1800, step=10, cams=("cam-a",))
+    log.note("карта cam-a в конце обрыва: " + _card_said(site, "cam-a"))
+    site.mend_road("cam-a", "relay-a")
+    log.note("Дорога вернулась. Первый шаг:")
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {json.dumps({k: out.get(k) for k in ('state', 'pushed', 'continue', 'behind')}, ensure_ascii=False)}")
+    with log.muted():
+        site.tick(30, cams=("cam-a",))
+    log.note("карта cam-a: " + _card_said(site, "cam-a"))
+
+
+def f03_uplink(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 3. Обрыв офис → центр. Запись в офисе идёт; зритель в центре теряет поток; передатчик держит\n"
+             "FORWARD_HOLD = 10 с несданного и повторяет без дублей; книги камер за офисом стареют — офис говорит их возраст.")
+    site.login("boris")
+    gw = site.gateway()
+    with log.acting("gateway gw-centre on srv"):
+        view = gw.watch("SN-A", site.tokens["boris"], "boris", maxsize=100000)
+    with log.muted():
+        site.tick(10, cams=("cam-a",))
+    with log.acting("gateway gw-centre on srv"):
+        gw.pump()
+    log.note(f"Борис смотрит: {len(view.drain())} кадров за 10 с. Дорога relay-a — srv перерезана.")
+    site.cut_road("relay-a", "srv")
+    site.wall.advance(1)
+    site.camera_step("cam-a")
+    site.forward("relay-a")
+    site.sync("relay-a")
+    with log.muted():
+        site.tick(30, cams=("cam-a",))
+    with log.acting("gateway gw-centre on srv"):
+        gw.pump()
+    log.note(f"Борис за 30 с обрыва получил {len(view.drain())} кадров. Офис пишет: подписчик в приёмнике relay-a "
+             f"получил {len(site.taken.drain())} кадров.")
+    site.sync("cam-a")
+    raw = site.cams["cam-a"].ram.get("domain/seen")
+    log.note("cam-a знает, сколько лет его книгам (domain/seen в RAM): " + (raw.decode() if raw else "нет"))
+    site.mend_road("relay-a", "srv")
+    log.note("Дорога вернулась.")
+    site.wall.advance(1)
+    site.camera_step("cam-a")
+    site.forward("relay-a")
+    with log.acting("gateway gw-centre on srv"):
+        gw.pump()
+    log.note(f"Борис снова получает: {len(view.drain())} кадров.")
+    rec = site.recorders["relay-a"]
+    rec.heartbeat_once()
+    site.say_heartbeat("relay-a", fields=("upstream",))
+
+
+def f04_centre_off(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 4. Центр srv выключен на шесть часов. Запись идёт по книгам и ключу потока, который камеры и офисы\n"
+             "уже несут; нового входа нет; книги стареют.")
+    site.login("anna")
+    entry = site.cams["cam-a"].pusher.entry()
+    until = float(entry["ingest"]["until"])
+    log.note(f"Токен потока cam-a действует до {until:.0f} — ещё {until - site.wall():.0f} с от выключения.")
+    site.off("srv")
+    log.note("srv выключен. Анна стучится в консоль домена; агент relay-a — в дверь подписывающего:")
+    site.ask("anna", "GET", "domain console", "/domain/vms/cameras")
+    site.sync("relay-a")
+    log.note("Шесть часов (свёрнуто: камеры толкают, офисы пишут, агенты не доходят до домена).")
+    with log.muted():
+        site.tick(6 * 3600, step=60, cams=("cam-a",), offices=("relay-a",), agents_every=300)
+    log.note("Через шесть часов: камера толкает по прежнему токену, офис принимает.")
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {out.get('state')}; токен действует ещё {until - site.wall():.0f} с")
+    log.note(f"На исходе суток токена ({until:.0f}) приёмник откажет камере: новый токен выдаёт только держатель, на\n"
+             "проходе книг после половины срока токена.")
+    site.on("srv")
+    log.note("srv включён: проходы держателя, книги, агенты.")
+    site.domain_pass()
+    site.sync("relay-a")
+    site.sync("cam-a")
+    site.domain_pass()
+    site.login("anna")                                     # her token of six hours ago lived 900 s
+    _cameras_seen(site)
+
+
+def f07_camera_reboot(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 7. Камера cam-a перезагрузилась. Эпоха +1 по CAS на флеше, RAM пуста — heartbeat и срез снапшота\n"
+             "публикуются заново, дверь после публикации; процесс камеры — новое кольцо, регистратор карты, толкатель.\n"
+             "Шаг часов камеры в стенде не показан: у камеры стенда нет своих часов (часы стенда одни).")
+    site.reboot("cam-a")
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a после загрузки: {json.dumps({k: out.get(k) for k in ('state', 'pushed')}, ensure_ascii=False)}")
+    site.sync("cam-a")
+    site.sync("relay-a")
+    site.domain_pass()
+    site.login("anna")
+    _, got = site.ask("anna", "GET", "domain console", "/domain/vms/cameras")
+
+
+def f08_centre_restart(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 8. Регистратор центра (а с ним приёмник центра) перезапустился посреди потока, который смотрит Борис.")
+    site.login("boris")
+    gw = site.gateway()
+    with log.acting("gateway gw-centre on srv"):
+        view = gw.watch("SN-A", site.tokens["boris"], "boris", maxsize=100000)
+    with log.muted():
+        site.tick(10, cams=("cam-a",))
+    log.note("Процесс r-srv-1 перезапущен: новый приёмник, память пуста.")
+    with log.muted():
+        site.cluster("srv").recorders = None
+    site.recorder("srv")
+    site.recorders["srv"].heartbeat_once()
+    site._gateway = None
+    gw = site.gateway()
+    with log.acting("gateway gw-centre on srv"):
+        view = gw.watch("SN-A", site.tokens["boris"], "boris", maxsize=100000)
+    for _ in range(2):
+        site.wall.advance(1)
+        site.camera_step("cam-a")
+        site.forward("relay-a")
+    with log.acting("gateway gw-centre on srv"):
+        gw.pump()
+    log.note(f"Борис снова получает: {len(view.drain())} кадров.")
+    rec = site.recorders["relay-a"]
+    rec.heartbeat_once()
+    site.say_heartbeat("relay-a", fields=("upstream",))
+    site.recorders["srv"].heartbeat_once()
+    site.say_heartbeat("srv", fields=("ingest", "ingest_streams"))
+
+
+def f10_member_leaves(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 10. Член уходит: Анна удаляет cam-a2 из списка членов. Следующий проход держателя его не читает;\n"
+             "дверь домена ему больше ничего не отдаёт.")
+    site.login("anna")
+    site.ask("anna", "DELETE", "domain console", "/domain/members/cam-a2")
+    site.domain_pass()
+    site.sync("relay-a")
+    site.sync("cam-a2")
+    _cameras_seen(site)
+
+
 SCENES = {
     "01-founding": s01_founding,
     "02-members-knock": s02_members_knock,
@@ -387,6 +621,13 @@ SCENES = {
     "10-watching": s10_watching,
     "11-scenario": s11_scenario,
     "12-alarm": s12_alarm,
+    "f01-office-off": f01_office_off,
+    "f02-camera-road": f02_camera_road,
+    "f03-uplink": f03_uplink,
+    "f04-centre-off": f04_centre_off,
+    "f07-camera-reboot": f07_camera_reboot,
+    "f08-centre-restart": f08_centre_restart,
+    "f10-member-leaves": f10_member_leaves,
 }
 
 

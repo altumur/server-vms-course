@@ -126,6 +126,7 @@ class Log(TraceLog):
         self.calls = _Calls(self)                      # the stand's object stores append here directly
         self.hosts: dict[str, str] = {}
         self.quiet = 0                   # > 0: nothing is recorded (a scene's set-up that is not its subject)
+        self.blocked = None              # (who, url) -> why the request does not get through, or None (a failure scene)
         self.lock = threading.Lock()
 
     # who is acting ------------------------------------------------------------------------------------------------------
@@ -433,6 +434,10 @@ def trace_http(log: Log) -> None:
         except ValueError:
             body = {"bytes": len(raw)}
         c = log.record_http(log.actor(), req.get_method(), req.full_url, dict(req.header_items()), body)
+        why = log.blocked(log.actor(), req.full_url) if log.blocked is not None else None
+        if why:                                         # a box off, a road cut: the request never arrives
+            log.answered(c, 0, f"no answer: {why}")
+            raise urllib.error.URLError(why)
         try:
             r = real(req, timeout=timeout) if timeout is not None else real(req)
             got = r.read()

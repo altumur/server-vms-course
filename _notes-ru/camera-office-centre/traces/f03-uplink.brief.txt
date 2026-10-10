@@ -1,0 +1,260 @@
+## Отказ 3. Обрыв офис → центр. Запись в офисе идёт; зритель в центре теряет поток; передатчик держит
+## FORWARD_HOLD = 10 с несданного и повторяет без дублей; книги камер за офисом стареют — офис говорит их возраст.
+
+# boris → srv:8070
+POST /api/login {"user": "boris", "password": "boris-test-password"}
+→ …
+
+# domain console on srv → srv:8071
+POST /api/login {"user": "boris", "password": "boris-test-password"}
+  X-Operator: domain-console
+→ 200 {"token": "«токен 1: person sub=boris на 900 с»"}
+
+# boris ← srv:8070: ответ на POST /api/login
+→ 200 {"token": "«токен 1: person sub=boris на 900 с»"}
+
+# gateway gw-centre on srv → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.want в процессе; у продукта RTSP rtsp://…/ingest/SN-A (recproc/ingest.go)
+RTSP rtsp://…/ingest/SN-A {"who": "gw-centre"}
+→ 200
+
+## Борис смотрит: 30 кадров за 10 с. Дорога relay-a — srv перерезана.
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "10 кадров, t 1757500332.1…1757500333.0",
+  "camera_now": 1757500333.0,
+  "rtt": 0.0
+}
+→ 200 10
+
+# domainagent on relay-a → relay-a:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-a → relay-b:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: the road relay-a — srv is cut"
+
+# domainagent on relay-a → srv:8071
+GET /api/carry/relay-a
+  X-W2C-Time: 1757500333.000
+  X-W2C-Seal: «ключ 3»
+  X-W2C-Signature: «подпись 2»
+→ 0 "no answer: the road relay-a — srv is cut"
+
+## Борис за 30 с обрыва получил 0 кадров. Офис пишет: подписчик в приёмнике relay-a получил 1000 кадров.
+
+# domainagent on cam-a → relay-a:8446
+GET /api/carry/cam-a
+  X-W2C-Time: 1757500363.000
+  X-W2C-Seal: «ключ 4»
+  X-W2C-Signature: «подпись 3»
+→ 200 {
+  "cluster": "cam-a",
+  "rows": {
+    "domain/keys": {
+      "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+    },
+    "domain/holder": {
+      "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 1}"
+    },
+    "domain/shared": {
+      "object": "shared/rev-1",
+      "rev": "1",
+      "term": "1",
+      "sha256": "«sha256 1»"
+    },
+    "domain/topology": {
+      "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+    },
+    "domain/members": {
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 6»\", \"seal\": \"«ключ 7»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 8»\", \"seal\": \"«ключ 9»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 10»\", \"seal\": \"«ключ 3»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+    },
+    "domain/backup/cam-a": {
+      "object": "backup/rev-4",
+      "rev": "4",
+      "term": "1",
+      "sha256": "«sha256 2»"
+    },
+    "domain/vms/primaries/cam-a": {
+      "SN-A": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано ключу члена 1»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}, \"recorded_by\": \"relay-a\", \"recording\": \"SN-A\", \"running\": false}"
+    },
+    "domain/vms/stream-accounts/cam-a": {
+      "accounts_secret": "«запечатано ключу члена 2»"
+    }
+  },
+  "objects": {
+    "shared/rev-1": "«base64 1, 344 байт»",
+    "backup/rev-4": "«base64 2, 2863 байт»"
+  },
+  "key": "«ключ 5»",
+  "seen": {
+    "n": 16,
+    "age": 31.0
+  }
+}
+
+# domainagent on cam-a → the objects of relay-a
+#   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/cam-a в дверь ретранслятора (relay-a:8446)
+PUT /domain/members/cam-a/o/vms/heartbeats/SN-A
+→ 200 {
+  "worker": "SN-A",
+  "ts": 1757500363.0,
+  "server": "SN-A",
+  "instance": "cam-a-boot-1",
+  "capacity": 1,
+  "headroom": 0,
+  "status": [
+    {
+      "id": 1,
+      "ref": "SN-A",
+      "name": "SN-A",
+      "enabled": true,
+      "phase": "running",
+      "position": "converged",
+      "revision": 1,
+      "observed_revision": 1,
+      "epoch": 1,
+      "can": {
+        "events": [
+          "motion"
+        ]
+      }
+    }
+  ],
+  "live_url": "rtsp://cam-a.local/live",
+  "playback_url": "http://cam-a.local/playback",
+  "coverage": null,
+  "push": true,
+  "polls": true,
+  "taken_by": []
+}
+
+# domainagent on cam-a → the objects of relay-a
+#   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/cam-a в дверь ретранслятора (relay-a:8446)
+PUT /domain/members/cam-a/o/vms/snapshot/SN-A
+→ 200 {
+  "cluster": "cam-a",
+  "worker": "SN-A",
+  "ts": 1757500363.0,
+  "cameras": [
+    {
+      "id": 1,
+      "name": "SN-A",
+      "ref": "SN-A",
+      "revision": 1,
+      "worker": "SN-A",
+      "server": "SN-A"
+    }
+  ]
+}
+
+# domainagent on cam-a → the objects of relay-a
+#   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/cam-a в дверь ретранслятора (relay-a:8446)
+PUT /domain/members/cam-a/p/alarms
+→ 200 {"from": 1757413963.0, "to": 1757500363.0, "events": [], "truncated": false}
+
+# domainagent on cam-a → the objects of relay-a
+#   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/cam-a в дверь ретранслятора (relay-a:8446)
+PUT /domain/members/cam-a/reported
+→ 200 {"ts": 1757500363.0, "seq": 7, "items": 12, "key": "«ключ 5»", "seal": "«ключ 4»"}
+
+## cam-a знает, сколько лет его книгам (domain/seen в RAM): {"ts": 1757500363.0, "cluster": "cam-a"}
+
+## Дорога вернулась.
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500364.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "10 кадров, t 1757500363.1…1757500364.0",
+  "camera_now": 1757500364.0,
+  "rtt": 0.0
+}
+→ 200 10
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"wait": 0.0}
+  Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 649632508673, "ranges": {}, "asks": {}}
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live {"frames": "300 кадров, t 1757500334.1…1757500364.0"}
+  Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
+→ 200 300
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
+GET /ingest/SN-A2/poll {"wait": 0.0}
+  Authorization: Bearer «токен 4: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
+→ 200 {"push": false, "version": 649632508671, "ranges": {}, "asks": {}}
+
+## Борис снова получает: 30 кадров.
+
+## heartbeat r-relay-a-1 (rec/heartbeats/r-relay-a-1, объект на relay-a):
+## {
+##  "upstream": {
+##   "SN-A": {
+##    "mode": "push",
+##    "state": "forwarding 300 frame(s) up; 290 dropped so far, past what it holds",
+##    "up_sent": 0,
+##    "up_dropped": 290,
+##    "up_gaps": 0,
+##    "up_resumed": 0,
+##    "up_have_every": 0.0,
+##    "up_unconfirmed_s": 0.0,
+##    "up_polls": 0,
+##    "up_cuts": 0,
+##    "up_kept": false,
+##    "up_expired": 0,
+##    "up_kept_writes": 2
+##   },
+##   "SN-A2": {
+##    "mode": "push",
+##    "state": "the centre does not want it",
+##    "up_sent": 0,
+##    "up_dropped": 0,
+##    "up_gaps": 0,
+##    "up_resumed": 0,
+##    "up_have_every": 0.0,
+##    "up_unconfirmed_s": 0.0,
+##    "up_polls": 0,
+##    "up_cuts": 0,
+##    "up_kept": false,
+##    "up_expired": 0,
+##    "up_kept_writes": 0
+##   }
+##  },
+##  "status": [
+##   {
+##    "id": "SN-A",
+##    "cam": "ref:SN-A",
+##    "phase": "waiting",
+##    "why": "camera held by nobody",
+##    "source": null
+##   }
+##  ]
+## }

@@ -1,0 +1,649 @@
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2017
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-b-1": 3017}}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-b-1
+→ 200 {
+  "items": {
+    "holder": "relay-b:3101:000c1d",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-b"
+  },
+  "index": 3017
+}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+## Отказ 2. Обрыв камера → офис: на минуту, потом на полчаса. Короткий обрыв продолжается из памяти камеры
+## (кольцо, have); длиннее кольца — карта и дозапись по слову камеры (ADR-0040).
+
+# anna → srv:8070
+POST /api/login {"user": "anna", "password": "anna-test-password"}
+→ …
+
+# domain console on srv → srv:8071
+POST /api/login {"user": "anna", "password": "anna-test-password"}
+  X-Operator: domain-console
+→ …
+
+# signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=identity/users/anna
+→ 200 {
+  "items": {
+    "id": "anna",
+    "kind": "local",
+    "roles": "",
+    "pwhash_secret": "«запечатано кольцом 1»",
+    "idp_subject": "",
+    "created": "1757500000.0"
+  },
+  "index": 1005
+}
+
+# domain console on srv ← srv:8071: ответ на POST /api/login
+→ 200 {"token": "«токен 1: person sub=anna на 900 с»"}
+
+# anna ← srv:8070: ответ на POST /api/login
+→ 200 {"token": "«токен 1: person sub=anna на 900 с»"}
+
+## Дорога cam-a — relay-a перерезана.
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2017
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-b-1": 3017}}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-b-1
+→ 200 {
+  "items": {
+    "holder": "relay-b:3101:000c1d",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-b"
+  },
+  "index": 3017
+}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# camera cam-a (its console) → the flash of cam-a
+GET /v1/get?key=vms/cameras/1
+→ 200 {"items": {"row": "{\"id\": 1, \"name\": \"SN-A\", \"ref\": \"SN-A\", \"revision\": 1}"}, "index": 4010}
+
+# pusher on cam-a → the flash of cam-a
+GET /v1/get?key=domain/vms/primaries
+→ 200 {
+  "items": {
+    "SN-A": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано кольцом 2»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}, \"recorded_by\": \"relay-a\", \"recording\": \"SN-A\", \"running\": false}"
+  },
+  "index": 4020
+}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+## толкатель cam-a: no ingest of relay-a answered
+
+## Минута прошла, дорога вернулась. Первый шаг:
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2017
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-b-1": 3017}}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-b-1
+→ 200 {
+  "items": {
+    "holder": "relay-b:3101:000c1d",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-b"
+  },
+  "index": 3017
+}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# camera cam-a (its console) → the flash of cam-a
+GET /v1/get?key=vms/cameras/1
+→ 200 {"items": {"row": "{\"id\": 1, \"name\": \"SN-A\", \"ref\": \"SN-A\", \"revision\": 1}"}, "index": 4010}
+
+# pusher on cam-a → the flash of cam-a
+GET /v1/get?key=domain/vms/primaries
+→ 200 {
+  "items": {
+    "SN-A": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано кольцом 2»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}, \"recorded_by\": \"relay-a\", \"recording\": \"SN-A\", \"running\": false}"
+  },
+  "index": 4020
+}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500383.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ …
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+GET /v1/get?key=domain/vms/sources
+→ 200 {
+  "items": {
+    "SN-A": "{\"as_of\": 1757500323.0, \"cluster\": \"cam-a\", \"live_url\": \"ingest://relay-a/SN-A\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-A\"}"
+  },
+  "index": 2033
+}
+
+# pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "300 кадров, t 1757500353.1…1757500383.0",
+  "camera_now": 1757500383.0,
+  "rtt": 0.0
+}
+→ …
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на POST /ingest/SN-A/live
+→ 200 300
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+## толкатель cam-a: {"state": "pushing to http://relay-a:8091/ingest", "pushed": 300, "continue": {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}, "behind": 0.0}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+## карта cam-a: {"1-sd": {"phase": "running", "hold": false, "card_segments": 15, "card_bytes": 369762, "samples_written": 1411}, "stream": {"state": "pushing to http://relay-a:8091/ingest", "up": true, "behind_s": 0.0, "cut_s": 0.0, "left_s": 0.0, "owed_s": 72.0, "owed_gaps": 1}}
+
+## Теперь на полчаса (свёрнуто).
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+## карта cam-a в конце обрыва: {"1-sd": {"phase": "running", "hold": false, "card_segments": 195, "card_bytes": 5086662, "samples_written": 19411}, "stream": {"state": "no ingest of relay-a answered", "up": false, "behind_s": 0.0, "cut_s": 0.0, "left_s": 0.0, "owed_s": 72.0, "owed_gaps": 1}}
+
+## Дорога вернулась. Первый шаг:
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2017
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-b-1": 3017}}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-b-1
+→ 200 {
+  "items": {
+    "holder": "relay-b:3101:000c1d",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-b"
+  },
+  "index": 3017
+}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# pusher on cam-a → the flash of cam-a
+GET /v1/get?key=domain/vms/primaries
+→ 200 {
+  "items": {
+    "SN-A": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано кольцом 2»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}, \"recorded_by\": \"relay-a\", \"recording\": \"SN-A\", \"running\": false}"
+  },
+  "index": 4020
+}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757502204.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ …
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+GET /v1/get?key=domain/vms/sources
+→ 200 {
+  "items": {
+    "SN-A": "{\"as_of\": 1757500388.0, \"cluster\": \"cam-a\", \"live_url\": \"ingest://relay-a/SN-A\", \"polls\": true, \"push\": true, \"reachable\": false, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-A\"}"
+  },
+  "index": 2036
+}
+
+# pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "300 кадров, t 1757502174.1…1757502204.0",
+  "camera_now": 1757502204.0,
+  "rtt": 0.0
+}
+→ …
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на POST /ingest/SN-A/live
+→ 200 300
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+## толкатель cam-a: {"state": "pushing to http://relay-a:8091/ingest", "pushed": 300, "continue": {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}, "behind": 0.0}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": ["rec/volumes/card"]}
+
+# recworker r-1 on cam-a → the flash of cam-a
+GET /v1/get?key=rec/volumes/card
+→ 200 {
+  "items": {
+    "name": "card",
+    "kind": "edge",
+    "url": "/data/cam-a/card",
+    "server": "cam-a",
+    "quota_bytes": "67108864",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "cam": "1",
+    "admits": "true"
+  },
+  "index": 4011
+}
+
+## карта cam-a: {"1-sd": {"phase": "running", "hold": false, "card_segments": 198, "card_bytes": 5167908, "samples_written": 19721}, "stream": {"state": "pushing to http://relay-a:8091/ingest", "up": true, "behind_s": 0.0, "cut_s": 0.0, "left_s": 0.0, "owed_s": 1843.0, "owed_gaps": 2}}

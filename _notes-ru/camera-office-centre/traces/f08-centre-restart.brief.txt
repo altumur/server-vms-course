@@ -1,0 +1,247 @@
+## Отказ 8. Регистратор центра (а с ним приёмник центра) перезапустился посреди потока, который смотрит Борис.
+
+# boris → srv:8070
+POST /api/login {"user": "boris", "password": "boris-test-password"}
+→ …
+
+# domain console on srv → srv:8071
+POST /api/login {"user": "boris", "password": "boris-test-password"}
+  X-Operator: domain-console
+→ 200 {"token": "«токен 1: person sub=boris на 900 с»"}
+
+# boris ← srv:8070: ответ на POST /api/login
+→ 200 {"token": "«токен 1: person sub=boris на 900 с»"}
+
+# gateway gw-centre on srv → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.want в процессе; у продукта RTSP rtsp://…/ingest/SN-A (recproc/ingest.go)
+RTSP rtsp://…/ingest/SN-A {"who": "gw-centre"}
+→ 200
+
+## Процесс r-srv-1 перезапущен: новый приёмник, память пуста.
+
+# recworker r-srv-1 on srv → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/slots/r-srv-1", "cas": 1043, "items": {
+  "holder": "srv:1102:00044e",
+  "until": "1757500377.0",
+  "released": "false",
+  "gen": "2",
+  "server": "srv"
+}}
+→ 200 {"index": 1072}
+
+# gateway gw-centre on srv → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.want в процессе; у продукта RTSP rtsp://…/ingest/SN-A (recproc/ingest.go)
+RTSP rtsp://…/ingest/SN-A {"who": "gw-centre"}
+→ 200
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500333.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "10 кадров, t 1757500332.1…1757500333.0",
+  "camera_now": 1757500333.0,
+  "rtt": 0.0
+}
+→ 200 10
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"wait": 0.0}
+  Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 630855976877, "ranges": {}, "asks": {}}
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live {"frames": "10 кадров, t 1757500332.1…1757500333.0"}
+  Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
+→ 200 10
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
+GET /ingest/SN-A2/poll {"wait": 0.0}
+  Authorization: Bearer «токен 4: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
+→ 200 {"push": false, "version": 630855976877, "ranges": {}, "asks": {}}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500334.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 2: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "10 кадров, t 1757500333.1…1757500334.0",
+  "camera_now": 1757500334.0,
+  "rtt": 0.0
+}
+→ 200 10
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"wait": 0.0}
+  Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 630855976877, "ranges": {}, "asks": {}}
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live {"frames": "10 кадров, t 1757500333.1…1757500334.0"}
+  Authorization: Bearer «токен 3: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»
+→ 200 10
+
+# forwarder in r-relay-a-1 on relay-a → srv:8091 (the ingest of r-srv-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A2/poll (recproc/ingest.go)
+GET /ingest/SN-A2/poll {"wait": 0.0}
+  Authorization: Bearer «токен 4: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»
+→ 200 {"push": false, "version": 630855976877, "ranges": {}, "asks": {}}
+
+## Борис снова получает: 20 кадров.
+
+## heartbeat r-relay-a-1 (rec/heartbeats/r-relay-a-1, объект на relay-a):
+## {
+##  "upstream": {
+##   "SN-A": {
+##    "mode": "push",
+##    "state": "forwarding 10 frame(s) up; 270 dropped so far, past what it holds",
+##    "up_sent": 0,
+##    "up_dropped": 270,
+##    "up_gaps": 0,
+##    "up_resumed": 0,
+##    "up_have_every": 0.0,
+##    "up_unconfirmed_s": 0.0,
+##    "up_polls": 0,
+##    "up_cuts": 0,
+##    "up_kept": false,
+##    "up_expired": 0,
+##    "up_kept_writes": 2
+##   },
+##   "SN-A2": {
+##    "mode": "push",
+##    "state": "the centre does not want it",
+##    "up_sent": 0,
+##    "up_dropped": 0,
+##    "up_gaps": 0,
+##    "up_resumed": 0,
+##    "up_have_every": 0.0,
+##    "up_unconfirmed_s": 0.0,
+##    "up_polls": 0,
+##    "up_cuts": 0,
+##    "up_kept": false,
+##    "up_expired": 0,
+##    "up_kept_writes": 0
+##   }
+##  },
+##  "status": [
+##   {
+##    "id": "SN-A",
+##    "cam": "ref:SN-A",
+##    "phase": "waiting",
+##    "why": "camera held by nobody",
+##    "source": null
+##   }
+##  ]
+## }
+
+## heartbeat r-srv-1 (rec/heartbeats/r-srv-1, объект на srv):
+## {
+##  "ingest": "http://srv:8091/ingest",
+##  "ingest_streams": {
+##   "SN-A": {
+##    "push": true,
+##    "live": true,
+##    "received": 20,
+##    "viewers": 1,
+##    "recorders": 0,
+##    "cut_for_full_queue": 0,
+##    "repeats_dropped": 0,
+##    "streams_replaced": 0,
+##    "clock_back": 0,
+##    "stream_gaps": 0,
+##    "camera_gaps": 0,
+##    "inject_dropped": 0,
+##    "inject_losses": 0,
+##    "lead_in": 0,
+##    "absurd_frames": 0,
+##    "ask_outcomes_dropped": 0,
+##    "have_answers": 0,
+##    "clock_step_forward": 0,
+##    "ahead_repeats": 0,
+##    "ahead_losses": 0,
+##    "clock_pieces": 0,
+##    "clock_steps_in_stream": 0,
+##    "clock_outliers": 0,
+##    "clock_ambiguous_frames": 0,
+##    "clock_unsure_frames": 0,
+##    "clock_drift_pieces": 0,
+##    "clock_step_back_word": 0,
+##    "clock_clamped_frames": 0,
+##    "clock_refined": 0,
+##    "clock_line_pieces": 0,
+##    "clock_pieces_restored": 0,
+##    "clock_step_back_withdrawn": 0,
+##    "clock_unplaceable_frames": 0,
+##    "clock_refined_by_road": 0,
+##    "clock_range_reasked": 0,
+##    "clock_road_forgiven": 0,
+##    "stream_gap_s": 0.0,
+##    "clock_step_forward_s": 0.0,
+##    "clock_step_back_s": 0.0,
+##    "clock_step_back_word_s": 0.0,
+##    "last": 1757500334.0,
+##    "polled_ago": 0.0
+##   },
+##   "SN-A2": {
+##    "push": false,
+##    "live": false,
+##    "received": 0,
+##    "viewers": 0,
+##    "recorders": 0,
+##    "cut_for_full_queue": 0,
+##    "repeats_dropped": 0,
+##    "streams_replaced": 0,
+##    "clock_back": 0,
+##    "stream_gaps": 0,
+##    "camera_gaps": 0,
+##    "inject_dropped": 0,
+##    "inject_losses": 0,
+##    "lead_in": 0,
+##    "absurd_frames": 0,
+##    "ask_outcomes_dropped": 0,
+##    "have_answers": 0,
+##    "clock_step_forward": 0,
+##    "ahead_repeats": 0,
+##    "ahead_losses": 0,
+##    "clock_pieces": 0,
+##    "clock_steps_in_stream": 0,
+##    "clock_outliers": 0,
+##    "clock_ambiguous_frames": 0,
+##    "clock_unsure_frames": 0,
+##    "clock_drift_pieces": 0,
+##    "clock_step_back_word": 0,
+##    "clock_clamped_frames": 0,
+##    "clock_refined": 0,
+##    "clock_line_pieces": 0,
+##    "clock_pieces_restored": 0,
+##    "clock_step_back_withdrawn": 0,
+##    "clock_unplaceable_frames": 0,
+##    "clock_refined_by_road": 0,
+##    "clock_range_reasked": 0,
+##    "clock_road_forgiven": 0,
+##    "stream_gap_s": 0.0,
+##    "clock_step_forward_s": 0.0,
+##    "clock_step_back_s": 0.0,
+##    "clock_step_back_word_s": 0.0,
+##    "polled_ago": 0.0
+##   }
+##  },
+##  "status": []
+## }

@@ -125,6 +125,7 @@ class Site:
         self.cut: set[tuple[str, str]] = set()      # roads cut: (from, to)
         for name in ("srv", "relay-a", "relay-b"):
             self.cluster(name)
+        self.log.blocked = self.blocked
 
     # -- the server clusters -----------------------------------------------------------------------------------------
     def cluster(self, name: str):
@@ -158,6 +159,74 @@ class Site:
 
     def bind(self, door: str, handler) -> None:
         self.servers[door].RequestHandlerClass = served_as(self.log, self.who_at[door], handler)
+
+    # -- failures: a box off, a road cut ----------------------------------------------------------------------------------
+    @staticmethod
+    def box_of(who: str) -> str:
+        """The box a process runs on, by its trace name (`… on relay-a`, `pusher on cam-a`, `anna` — a person's own)."""
+        if " on " in who:
+            return who.rsplit(" on ", 1)[1].split(" ")[0]
+        return who
+
+    def blocked(self, who: str, url: str) -> str | None:
+        """Why a request from `who` to `url` does not get through: the box at either end is off, or the road between is
+        cut. People reach the domain's doors from anywhere the centre is up."""
+        from urllib.parse import urlsplit
+        shown = self.log.hosts.get(urlsplit(url).netloc, "")
+        there = shown.split(":")[0]
+        here = self.box_of(who)
+        if there in self.down:
+            return f"{there} is off"
+        if here in self.down:
+            return f"{here} is off"
+        if (here, there) in self.cut or (there, here) in self.cut:
+            return f"the road {here} — {there} is cut"
+        return None
+
+    def off(self, name: str) -> None:
+        self.down.add(name)
+
+    def on(self, name: str) -> None:
+        self.down.discard(name)
+
+    def cut_road(self, a: str, b: str) -> None:
+        self.cut |= {(a, b), (b, a)}
+
+    def mend_road(self, a: str, b: str) -> None:
+        self.cut -= {(a, b), (b, a)}
+
+    def tick(self, seconds: float, step: float = 5.0, cams=("cam-a", "cam-a2", "cam-b"), offices=("relay-a", "relay-b"),
+             agents_every: float = 30.0, domain_every: float = 5.0) -> None:
+        """Time passing on the whole stand, every process that is on doing its passes: the cameras every `step` (their
+        sensor, pusher, card), the offices' recorders and forwarders, the agents every `agents_every`, the holder's
+        passes every `domain_every`. What a scene shows of it is the scene's to choose: this is usually muted."""
+        end = self.wall() + seconds
+        while self.wall() < end - 1e-9:
+            self.wall.advance(min(step, end - self.wall()))
+            now = self.wall()
+            for c in cams:
+                if c in self.cams and c not in self.down and getattr(self.cams[c], "pusher", None) is not None:
+                    self.camera_step(c)
+            for o in offices:
+                if o in self.recorders and o not in self.down:
+                    with self.log.acting(f"recworker r-{o}-1 on {o}"):
+                        self.recorders[o].heartbeat_once()
+                    if self.recorders[o].forwarder is not None and "srv" in self.recorders:
+                        self.forward(o)
+            if "srv" in self.recorders and "srv" not in self.down:
+                self.recorders["srv"].heartbeat_once()
+            if now - getattr(self, "_agents_at", -1e18) >= agents_every:
+                self._agents_at = now
+                for n in [a for a in self.agents if a not in self.down]:
+                    if n.startswith("relay"):
+                        self.sync(n)
+                for n in [a for a in self.agents if a not in self.down and a.startswith("cam")]:
+                    self.sync(n)
+                for n in [a for a in self.agents if a not in self.down and not a.startswith("cam")]:
+                    self.sync(n)
+            if "srv" not in self.down and now - getattr(self, "_domain_at", -1e18) >= domain_every:
+                self._domain_at = now
+                self.domain_pass()
 
     # -- rings ----------------------------------------------------------------------------------------------------------
     def ring(self, name: str):
@@ -738,6 +807,34 @@ class Site:
                     return TracedIngest(self.log, ing, f"pusher on {name} ({serial})",
                                         f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
             raise Unreachable(f"{url} did not answer {name}")
+        pusher = camera_process(serial, TracedVars(self.log, flash, f"pusher on {name}", door), dial, rec,
+                                perform=cam.perform)
+        pusher.sealer = self.ring(name)
+        cam.ring, cam.act, cam.rec, cam.pusher, cam.frames, cam.started = ring, act, rec, pusher, 0, self.wall()
+
+    def reboot(self, name: str) -> None:
+        """The camera loses power and comes back: the boot (a new epoch by CAS on the flash, the row kept, a publish into
+        a NEW RAM, the door after it) and its process started again — a new ring, the card's recorder, the pusher. The
+        card and its recording are on the flash and the card already: declared once, not again."""
+        from vms.card import CamRing, CardActuator, CardRecorder
+        from vms.domainpart.ingest import camera_process
+        cam = self.cams[name]
+        serial = CAMERAS[name][0]
+        door = f"the flash of {name}"
+        flash = cam.flash_store
+        cam.boot()
+        ring = CamRing(clock=self.wall, steady=self.wall, **({"max_bytes": RING_BYTES[name]} if name in RING_BYTES else {}))
+        act = CardActuator(ring, threaded=False, serial=serial)
+        base = CAMERAS[name][3] + 101 + cam.boots
+        rec = CardRecorder("r-1", TracedVars(self.log, flash, f"recworker r-1 on {name}", door), cam.local_objects(), ring,
+                           act, clock=self.wall, wall=self.wall, server=name, resource_root=cam.events,
+                           env={"SERVER_NAME": name, "INSTANCE_ID": f"{name}:{base}:{base:06x}"})
+        rec.lease_pass()
+        rec.heartbeat_once()
+        rec.reconcile_once()
+        rec.heartbeat_once()
+        old = cam.pusher
+        dial = old.dial
         pusher = camera_process(serial, TracedVars(self.log, flash, f"pusher on {name}", door), dial, rec,
                                 perform=cam.perform)
         pusher.sealer = self.ring(name)
