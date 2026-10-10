@@ -1329,8 +1329,8 @@
     }
     // Why a unit has no worker, from /unplaceable: the labels no live worker covers, or no live worker at all.
     function whyUnplaceable(sub, u) {
-      const x = ((st.unplaceable || {})[sub.name] || []).find(y => String(y.id ?? y.ID) === String(u.id)); if (!x) return "";
-      const labels = x.labels || x.Labels || [], live = x.workers_live ?? x.live ?? 0;
+      const x = ((st.unplaceable || {})[sub.name] || []).find(y => String(y.id) === String(u.id)); if (!x) return "";
+      const labels = x.labels || [], live = x.workers_live ?? 0;
       return labels.length ? W.whyLabels.replace("{n}", live).replace("{l}", labels.join(", ")) : W.whyLive.replace("{n}", live);
     }
     // the page's words about a unit that the spec cannot say (addNote): warnings under its placement
@@ -1409,7 +1409,7 @@
           const body = formBody(sub, form, false); if (!body) return;
           const out = await C.api("POST", rowsPath, body);
           await load(); C.toast(W.created);
-          const id = out && (out.id ?? out.ID ?? (out.unit && out.unit.id));
+          const id = out && out.id;
           if (id != null) C.select(unitRef(sub, id)); else paintMain();
         } catch (err) { form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; if (err.retry) C.toast(W.refused + ": " + err.message); }
       };
@@ -1464,7 +1464,7 @@
       sel.innerHTML = `<option value="">${h(W.every)}</option>` + subs.map(s => `<option value="${h(s)}">${h(s)}</option>`).join("");
       sel.value = subs.includes(st.evfilter) ? st.evfilter : "";
       const shown = st.events.filter(e => !sel.value || e.subsystem === sel.value).slice().reverse();
-      list.innerHTML = shown.map(e => `<li><span title="${h(e.kind)}">${h(fmt(e.t || e.ts))} <strong>${h(kindWord(e))}</strong></span> <small>${h(e.unit)}${e.of && e.of !== e.unit ? " · " + h(e.of) : ""}${eventNote(e) ? " · " + h(eventNote(e)) : ""}${e.server ? " · " + h(e.server) : ""}</small></li>`).join("");
+      list.innerHTML = shown.map(e => `<li><span title="${h(e.kind)}">${h(fmt(e.t))} <strong>${h(kindWord(e))}</strong></span> <small>${h(e.unit)}${e.of && e.of !== e.unit ? " · " + h(e.of) : ""}${eventNote(e) ? " · " + h(eventNote(e)) : ""}${e.server ? " · " + h(e.server) : ""}</small></li>`).join("");
     }
     // Nothing selected: the section's overview — what it holds; by servers, the cluster: its counts, the policy of
     // units on a server, the store's layout version (/schema) and who keeps it from rising, the drain under way.
@@ -1542,7 +1542,7 @@
           host.innerHTML = card(h(cap(t.title || t.table)), rows.length ? `<table><tr>${cols.map(c => `<th>${h(fieldTitle(sub, c))}</th>`).join("")}</tr>${rows.map(r => `<tr>${cols.map(c => `<td>${h(isSecret(c) ? (r[c] ? MASK : "") : Array.isArray(r[c]) ? r[c].join(", ") : r[c] ?? "")}</td>`).join("")}</tr>`).join("")}</table>` : `<p class="sub">${h(W.noRows)}</p>`, `<span class="sub" style="font-weight:400">${rows.length}</span>`);
         };
         draw([]);
-        getJSON(sub.base + "/" + t.table).then(d => { if (!host.isConnected) return; const all = Array.isArray(d) ? d : d && (d[t.table] || d.rows || d.configured) || []; draw(all.filter(r => String(r[t.by || "server"]) === server)); }).catch(() => {});
+        getJSON(sub.base + "/" + t.table).then(d => { if (!host.isConnected) return; const all = (d && d[t.table]) || []; draw(all.filter(r => String(r[t.by || "server"]) === server)); }).catch(() => {});
       }
     }
     const mc = (l, v) => `<div class="mc"><span>${h(l)}</span><b>${h(v)}</b></div>`;
@@ -2134,7 +2134,7 @@
       try {
         const d = await getJSON(`/events?from=${now - 86400}&to=${now}`);
         const list = (Array.isArray(d) ? d : d.events || []).slice(-200).reverse();
-        el.querySelector(".pc-evlist").innerHTML = list.map(e => `<li><span title="${h(e.kind)}">${h(fmt(e.t || e.ts))} <strong>${h(kindWord(e))}</strong></span> <small>${h(e.unit)}${e.of && e.of !== e.unit ? " · " + h(e.of) : ""}${eventNote(e) ? " · " + h(eventNote(e)) : ""}</small></li>`).join("") || `<li>${h(W.noEvents)}</li>`;
+        el.querySelector(".pc-evlist").innerHTML = list.map(e => `<li><span title="${h(e.kind)}">${h(fmt(e.t))} <strong>${h(kindWord(e))}</strong></span> <small>${h(e.unit)}${e.of && e.of !== e.unit ? " · " + h(e.of) : ""}${eventNote(e) ? " · " + h(eventNote(e)) : ""}</small></li>`).join("") || `<li>${h(W.noEvents)}</li>`;
       } catch (e) { el.querySelector(".pc-evlist").innerHTML = `<li class="bad">${h(e.message)}</li>`; }
     }
 
