@@ -417,19 +417,9 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     from vms.domainpart.ingest import should_from_snapshot
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables, Forbidden
-    r = rights()
     root = tempfile.mkdtemp()
-    inner, read = FileVariables(f"{root}/vars"), []
-
-    class AsRecorder:
-        def get(self, path):
-            read.append(path)
-            if not r.allows("recworker", "read", path):
-                raise Forbidden(f"recworker may not read {path}")
-            return inner.get(path)
-
-        def list(self, prefix):
-            return [k for k in inner.list(prefix) if r.allows("recworker", "read", k)]
+    read: list = []
+    AsRecorder = lambda: _AsRole("recworker", FileVariables(f"{root}/vars"), read)      # noqa: E731
 
     class Local:
         def listen(self, fn):
@@ -442,3 +432,51 @@ def test_the_recorder_reads_the_books_its_ingest_and_forwarder_read():
     books = {p for p in read if p.startswith("domain/vms/")}
     assert books == {"domain/vms/upstream", "domain/vms/asks", "domain/vms/sources"}, sorted(books)
     assert set(REC_SPEC.worker_reads) >= books, REC_SPEC.worker_reads
+
+
+class _AsRole:
+    """A store as the daemon answers `role` (`storemachine.answer`): a get it does not grant is `Forbidden`, a listing
+    names only what it may read. Every get is written down in `read`."""
+
+    def __init__(self, role: str, inner, read: list):
+        self.role, self.inner, self.read, self.r = role, inner, read, rights()
+
+    def get(self, path):
+        from w2cplatform.variables import Forbidden
+        self.read.append(path)
+        if not self.r.allows(self.role, "read", path):
+            raise Forbidden(f"{self.role} may not read {path}")
+        return self.inner.get(path)
+
+    def list(self, prefix):
+        return [k for k in self.inner.list(prefix) if self.r.allows(self.role, "read", k)]
+
+
+def test_the_consoles_doors_of_a_move_read_what_the_console_may():
+    """The scenario «камера — офис — центр», F2: `GET /api/held` on every cluster's console was a 403 from the store and
+    a dropped connection — `term.held` reads the holder's record and the pointer of the backup copy kept here, and the
+    role `console` read neither — so no agent following the holder by `CLUSTERS` heard a console, and a move found no
+    neighbour. `/api/held` and `/api/backup` (ADR-0066) read what the console's role grants, and answer whole."""
+    import json
+    import tempfile
+    import time
+    from w2cplatform.domain.term import BACKUP_TAKEN, HOLDER, MEMBER_LIST, backup_answer, backup_message, held
+    from w2cplatform.trust.memberkey import MemberKey
+    from w2cplatform.variables import FileVariables
+    from w2cplatform.objects import FsObjectStore
+    root = tempfile.mkdtemp()
+    inner, read, now = FileVariables(f"{root}/vars"), [], time.time()
+    east = MemberKey.new()
+    inner.put(HOLDER, {"doc": json.dumps({"holder": "north", "term": 2})})
+    inner.put(BACKUP_TAKEN, {"term": "2", "rev": "5", "sha256": "ab"})
+    inner.put(MEMBER_LIST, {"doc": json.dumps({"rev": 1, "members": {"east": {"key": east.pub, "seal": east.seal_pub}}})})
+    objects = FsObjectStore(f"{root}/objects")
+    objects.put(BACKUP_TAKEN, b'{"rev": 5}')
+    v = _AsRole("console", inner, read)
+    said = held("south", v)
+    assert said["term"] == 2 and said["backup"] == {"term": 2, "rev": 5}, said
+    st, got = backup_answer("south", v, objects, "east", now, east.sign(backup_message("south", "east", now)), now)
+    assert st == 200 and got["backup"] == '{"rev": 5}', (st, got)
+    r = rights()
+    assert all(r.allows("console", "read", p) for p in read), [p for p in read if not r.allows("console", "read", p)]
+    assert {HOLDER, BACKUP_TAKEN, MEMBER_LIST} <= set(read)
