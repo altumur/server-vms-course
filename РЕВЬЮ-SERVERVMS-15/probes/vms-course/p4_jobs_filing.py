@@ -13,7 +13,7 @@ from vms import jobs
 vars_, objects = FakeVariables(), Ram()
 rec_ctl = SpecController(REC_SPEC, vars_, objects)
 now = time.time()
-ok = jobs._ask_recorder(rec_ctl, "7", "7", now - 600, now - 540, now, "detjob/7-lpr-1-2")
+ok = jobs._ask_recorder(rec_ctl, "7", now - 600, now - 540, now, "detjob/7-lpr-1-2")  # подпись после major 4: без cam
 key = REC_SPEC.sub.request_key(f"7-{int(now - 600)}-{int(now - 540)}")
 row = vars_.get(key)[0]
 print("filed:", ok, "| row =", row)
