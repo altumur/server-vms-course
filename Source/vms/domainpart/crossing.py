@@ -535,11 +535,20 @@ class Source:
 
 # The recorder's side, in the recording cluster: `ref:<serial>` against this cluster's own copy of the book.
 # Any other source is this cluster's own and is found as it always was — in its own heartbeats.
+# The recorder asks it for each recording of such a camera on every pass (`RecWorker.source`), and reads the book once a
+# pass for all of them (`resolve_in`, over the pass's look); the product's `ResolveRef` and `sourceIn`.
 def resolve(cluster_vars, source: str, now: float) -> Source | None:
     if not str(source).startswith("ref:"):
         return None
-    ref = source[4:]
     items, _ = cluster_vars.get(SOURCES_PATH)
+    return resolve_in(items, source, now)
+
+
+def resolve_in(items, source: str, now: float) -> Source | None:
+    """`resolve` over the book already read: `items` — this cluster's copy, `{ref: entry}`."""
+    if not str(source).startswith("ref:"):
+        return None
+    ref = source[4:]
     if not items or ref not in items:
         raise NotResolvable(f"{ref} is not in this cluster's source book: the domain has not asked this cluster "
                             f"to record it, or has never seen it publish a door")

@@ -9,6 +9,8 @@ The ingest lives in a RECORDER of the room (`RecWorker.host_ingest`; ADR-0065, i
 each saying where its ingest takes streams in its heartbeat (`ingest`), and the domain writes the camera's book from what
 they say. Nothing here raises an ingest by hand.
 """
+import json
+
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import ClusterTrust, DomainAgent, DomainPublisher
@@ -27,7 +29,10 @@ SERIAL = "SN5001"
 URLS = ["srt://srv-1.south:9000", "srt://srv-2.south:9000"]
 
 
-def _site(wall, down=()):
+def _site(wall, down=(), writes=False):
+    """`writes`: the room's recorders write — each with a volume of its own (`ingest_recorder(volume=…)`), the recording
+    placed on one of them by the room's controller (`domain_pass.place`)."""
+    import tempfile
     from vms.config import REC_SPEC
     from w2cplatform.spec import SpecController
     fed = Federation()
@@ -45,11 +50,13 @@ def _site(wall, down=()):
             raise Unreachable(f"{url} did not answer")
         return inside[url]
     # Two recorders of the room, each hosting an ingest and saying where in its heartbeat (`ingest`)
-    recs = [ingest_recorder("south", u, wall, south.vars, south.objects, name=f"r-{i + 1}", dial=network)
+    recs = [ingest_recorder("south", u, wall, south.vars, south.objects, name=f"r-{i + 1}", dial=network,
+                            **({"volume": tempfile.mkdtemp(prefix=f"r-{i + 1}-")} if writes else {}))
             for i, u in enumerate(URLS)]
     inside.update({r.ingest_url: r.ingest for r in recs})
     ingest = recs[0].ingest
-    SpecController(REC_SPEC, south.vars, south.objects, wall=wall).create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
+    room = SpecController(REC_SPEC, south.vars, south.objects, wall=wall, cluster="south")
+    room.create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
 
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, pushes=True)
     cam.boot()
@@ -74,7 +81,12 @@ def _site(wall, down=()):
             r.heartbeat_once()                                         # the recorders say their ingests again
         view.refresh(); crossings.publish(); crossings.publish_primaries(); cam_agent.sync(); room_agent.sync()
 
-    domain_pass.recorders = recs
+    def place():                                                       # the room's controller places the recording
+        room.ensure_placed()
+        for r in recs:
+            r.lease_pass(); r.reconcile_once(); r.heartbeat_once()
+
+    domain_pass.recorders, domain_pass.place = recs, place
     domain_pass()
     return fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass
 
@@ -129,15 +141,27 @@ def test_a_token_the_current_key_did_not_sign_is_issued_again_whatever_its_half_
 
 def test_a_recorder_holding_an_always_recording_gets_the_stream_the_camera_pushes():
     """The recorder wants the stream for ever, so the camera pushes for ever — and it finds the camera the
-    way it found any camera of another cluster: in its own cluster's source book, which now says ingest."""
-    wall = Clock()
-    fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall)
+    way it found any camera of another cluster: in its own cluster's source book, which now says ingest. Nobody
+    subscribes for it: the recorder the recording is placed on starts it from the book and takes the stream at the
+    ingest it hosts (`vms.ingestrec`; the scenario «камера — офис — центр», O6). The camera pushes to the first ingest
+    of the room that answers; the recording may be on the other recorder — the ingests pass the stream on (AG)."""
+    from vms.domainpart.ingest import wire
+    from vms.obsd import archive_ms, video
+    wall = Clock(1_760_000_000.0)
+    fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall, writes=True)
     src = resolve(south.vars, f"ref:{SERIAL}", wall())
     assert src.live_url == f"ingest://south/{SERIAL}" and src.playback_url is None
-    ingest.want(SERIAL, "recorder:r-0")
-    q = ingest.subscribe(SERIAL, "recorder:r-0")
-    out = pusher.pass_once(["f1", "f2"])
-    assert out["pushed"] == 2 and q.drain() == ["f1", "f2"] and ingest.pushing(SERIAL)
+    domain_pass.place()
+    rec = next(r for r in domain_pass.recorders if SERIAL in {str(c) for c in r.reconciler.running()})
+    assert any(ing.taken(SERIAL) for ing in (r.ingest for r in domain_pass.recorders))   # wanted: the camera pushes
+    t0 = wall()
+    frames = [wire(video(archive_ms(t0 + i), archive_ms(t0 + i + 1), b"\x00" * 64, i == 0)) for i in range(2)]
+    out = pusher.pass_once(frames)
+    assert out["pushed"] == 2 and ingest.pushing(SERIAL)
+    rec.heartbeat_once()
+    st = next(s for s in json.loads(rec.objects.get(f"rec/heartbeats/{rec.name}"))["status"] if s["id"] == SERIAL)
+    assert (st["phase"], st["via"], st["samples_written"]) == ("running", "ingest", 2), st
+    assert abs(st["written_through"] - (t0 + 1)) < 0.01                 # how far it wrote: the camera's `have` next poll
 
 
 def test_live_view_on_demand_the_camera_pushes_only_while_somebody_watches():

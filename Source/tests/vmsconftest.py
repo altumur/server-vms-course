@@ -277,20 +277,34 @@ def four_workers(box):
             LiveWorker("g-1", live_vars, box.objects, ctl=SpecController(LIVE_SPEC, live_vars, box.objects, wall=box.wall), **common)]
 
 
-def ingest_recorder(cluster: str, url: str, wall=None, vars_=None, objects=None, name: str = "r-1", dial=None, **kw):
+def ingest_recorder(cluster: str, url: str, wall=None, vars_=None, objects=None, name: str = "r-1", dial=None,
+                    volume: str | None = None, **kw):
     """A recorder of cluster `cluster` that hosts an ingest at `url` and its relay's forwarder (`RecWorker.host_ingest`;
     ADR-0065, its addition of 2026-10-08: they live in the recorder, and a test raises them through one), and has said so
     in its heartbeat (`ingest`, `ingest_streams`, `upstream`). `vars_`, `objects`: the cluster's stores — a store of its
     own when not given; `dial(url)`: the network it reaches other ingests by (the centre's, this cluster's others);
     `kw`: `keys`, `archive`, `needs` (`host_ingest`). `rec.ingest` is the ingest, `rec.forwarder` the forwarder; a test that
     moves the clock past `ingest.INGEST_LOST_AFTER` says the heartbeat again (`rec.heartbeat_once()`) before the domain
-    reads where the cluster takes streams."""
+    reads where the cluster takes streams.
+
+    `volume`: a directory, and the recorder WRITES — a session of its own on the test daemon, its server's own volume
+    there (`ARCHIVE_VOLUME`; a volume declared in its cluster is taken first, as always), the test's small block, the
+    test's clock for its backoff too; its slot and its volume taken (`lease_pass`, `volume_pass`) before it first says its
+    heartbeat. A recording of a camera that pushes then runs on it as on a box: placed, started from the source book,
+    written from the ingest (`vms.ingestrec`; М12B урок 3, the scenario's finding O6)."""
     import time
     from w2cplatform.cluster.variables import FakeVariables
     from vms.domainpart.device import Ram
     from vms.recworker import RecWorker
+    writes = {}
+    if volume is not None:
+        writes = dict(obsd=obsd_session(f"rec-{name}-{os.path.basename(volume)}"), env={"ARCHIVE_VOLUME": f"file://{volume}"},
+                      default_quota=TEST_QUOTA, block=TEST_BLOCK, read=TEST_READ, clock=wall or time.monotonic)
     rec = RecWorker(name, vars_ if vars_ is not None else FakeVariables(), objects if objects is not None else Ram(),
-                    wall=wall or time.time, server=name, resource_root=tempfile.mkdtemp(prefix=f"{name}-"))
+                    wall=wall or time.time, server=name, resource_root=tempfile.mkdtemp(prefix=f"{name}-"), **writes)
     rec.host_ingest(cluster, url, dial=dial, **kw)
+    if volume is not None:
+        rec.lease_pass()
+        rec.volume_pass()
     rec.heartbeat_once()
     return rec

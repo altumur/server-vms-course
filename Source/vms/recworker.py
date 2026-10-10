@@ -48,11 +48,12 @@ from w2cplatform.secrets import hide_in_url
 from w2cplatform.objects import ObjectStore
 from w2cplatform.requests import FREE_PREFIX
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
-from w2cplatform.variables import Variables
+from w2cplatform.variables import Forbidden, Variables
 
 from . import volumes
 from .archive import SMALL_BLOCK, STITCH, Archive, ArchiveError, Fenced, classify, overlaps, stitch, subtract
 from .config import rec_row
+from .ingestrec import IngestRecordings, ingest_ref
 from .worker import FakeActuator, VmsWorker
 from .writerwatch import WriterWatch
 
@@ -75,10 +76,19 @@ box_instance = runtime.instance_on_box
 # under the prefix the platform gives it (`vms.domainpart.keys`); and where the agent says when it last reached the
 # domain — the platform's own mark (`w2cplatform.domain.agent.DOMAIN_SEEN`). The recorder reads; the agent writes.
 from vms.domainpart.keys import PRIMARIES_PATH as PRIMARIES  # noqa: E402
+# …and the source book, the other way: where each camera of another cluster that THIS one records is (М12B урок 2).
+from vms.domainpart.keys import SOURCES_PATH as SOURCES  # noqa: E402
 from w2cplatform.domain.agent import DOMAIN_SEEN  # noqa: E402,F401
 
 log = logging.getLogger("recworker")
 REC = Subsystem("rec")
+
+
+def _via(source: str) -> str:
+    """How a recording takes its source: a worker's shared memory, a fan-out over RTSP, or a camera's push into this
+    cluster's ingest (`vms.ingestrec`; the product's actuator says `via: ingest`)."""
+    return "shm" if source.startswith("shm://") else "ingest" if ingest_ref(source) is not None else "rtsp"
+
 
 VOLUME_MISSING = "VOLUME_MISSING"       # a volume in use at its address before, and not there now (`RecWorker._may_format`)
 
@@ -169,6 +179,11 @@ class Look:
 
     def domain_seen(self) -> bytes | None:
         return self._once("domain_seen", lambda: self.rec.objects.get(DOMAIN_SEEN))
+
+    # …and the source book it carries home: where each camera of ANOTHER cluster this one records is (`source`, М12B
+    # урок 2) — once a pass for every recording of such a camera, as the product's `passview` reads it.
+    def sources(self) -> dict | None:
+        return self._once("sources", lambda: self.rec.vars.get(SOURCES)[0])
 
     def edges(self) -> set[str]:
         return self._once("edges", lambda: volumes.edges(self.rec.vars))
@@ -556,6 +571,7 @@ class RecWorker(VmsWorker):
         self.last_source: dict[str, tuple[str, str]] = {}                     # camera -> (server, source) read last: the answer while the store is away
         self.last_holder: dict[str, str] = {}                                 # camera -> the worker that source was read from (`_held_by_the_book`)
         self._by_the_book: set[str] = set()                                   # cameras whose source stands on the store's word: said once
+        self.unresolved: dict[str, str] = {}                                  # `ref:` camera -> why the source book gives no source
 
     # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
     # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
@@ -581,7 +597,10 @@ class RecWorker(VmsWorker):
         """`(server, source)` of the worker holding the camera, from its heartbeat; None if nobody does.
         The source is the worker's shared-memory branch (`live_shm`, shm://…) when that worker is on
         THIS server — the same bytes with no RTSP hop, no fan-out process on the recording path — and
-        its RTSP fan-out (`live_url`) otherwise."""
+        its RTSP fan-out (`live_url`) otherwise. A camera of ANOTHER cluster (`ref:<serial>`) is in this cluster's
+        source book instead (`_source_of_ref`)."""
+        if str(cam).startswith("ref:"):
+            return self._source_of_ref(str(cam))
         # The store that does not answer says nothing — not "nobody holds it". A recorder whose camera's pipeline
         # fell over during the outage restarts it on the source it read last (the review's second pass, blocker 4:
         # the camera's worker is still there; what is away is the book). A camera never read stays unstartable.
@@ -619,6 +638,41 @@ class RecWorker(VmsWorker):
         self.behind_loopback.pop(str(cam), None)
         self.last_source[str(cam)] = (server, st["live_url"])
         return server, st["live_url"]
+
+    # A CAMERA OF ANOTHER CLUSTER IS FOUND IN THE BOOK (М12B урок 2; находка сценария «камера — офис — центр» O6). Its
+    # holder's heartbeat is in the camera's cluster, which this recorder does not read: the domain writes where the camera
+    # is into this cluster's source book, the agent carries it home, and the recorder reads its own copy — the product's
+    # `RecWorker.Source` over `ResolveRef`. The address there is a camera's door to pull (`rtsp://…`), or, for a camera
+    # nobody can dial, `ingest://<cluster>/<ref>`: the camera pushes to this cluster's ingest, and the recording takes it
+    # there (`vms.ingestrec`). An address the book last gave stands while the store does not answer; a camera the book
+    # does not name — or names in an entry that does not read — waits, and its status says why (`unresolved`).
+    def _source_of_ref(self, cam: str) -> tuple[str, str] | None:
+        from .config import local_only
+        from .domainpart.crossing import NotResolvable, resolve_in
+        try:
+            src = resolve_in(self._look().sources(), cam, self.wall())
+        except OSError as e:
+            self.store_errors += 1
+            last = self.last_source.get(cam)
+            log.warning("%s: the store did not answer for the source book (%s): %s", self.name, e,
+                        f"camera {cam}'s last source {last[1]} stands" if last else f"camera {cam} was never read there")
+            return last
+        except (NotResolvable, Forbidden) as e:
+            # …and a store that refuses this recorder the book is said as it is: its role's reads lack `domain/vms/sources`
+            # (the scenario's F3 — the rights are the platform's, from the spec's `worker.reads`)
+            why = str(e) if isinstance(e, NotResolvable) else f"this recorder may not read the source book {SOURCES} ({e})"
+            if self.unresolved.get(cam) != why:
+                log.warning("%s: camera %s: %s", self.name, cam, why)
+            self.unresolved[cam] = why
+            self.last_source.pop(cam, None)
+            return None
+        self.unresolved.pop(cam, None)
+        if local_only(src.live_url, src.cluster, self.server):
+            self.behind_loopback[cam] = src.cluster
+            return None
+        self.behind_loopback.pop(cam, None)
+        self.last_source[cam] = (src.cluster, src.live_url)
+        return src.cluster, src.live_url
 
     # A HOLDER NOT HEARD IS NOT A HOLDER GONE (the twelfth review, major 10). In a cluster the camera's heartbeat is an
     # object on its holder's server, read through that server's resource door: with only the door away (its port
@@ -678,16 +732,22 @@ class RecWorker(VmsWorker):
         if self.store is None or self.store.writer is None:
             self.waiting.add(cam["id"])
             return None                                  # no volume open to write into: the reconciler retries
+        pushed = ingest_ref(src[1]) is not None
+        if pushed and self.ingest is None:
+            self.waiting.add(cam["id"])                  # the camera pushes to this cluster's ingest, and this recorder hosts none
+            return None
         self.waiting.discard(cam["id"])
         self.sources[cam["id"]] = src[1]
         # The sink: this volume's writer, as the stream `<recording>/e<epoch>`. The epoch is in the stream's
         # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
-        out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
+        out = dict(cam, source=src[1], source_server=src[0], via=_via(src[1]),
                    sink=RecSink(lambda: self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
                                 on_wrong=self._volume_refuses, tally=self._tally))
         # A `when: offline` backup runs ON HOLD while its primary is written: the pipeline is up, subscribed,
-        # and recording into a ring in memory, writing nothing (Lesson 26).
-        if self._offline_backup(cam):
+        # and recording into a ring in memory, writing nothing (Lesson 26). Not one fed by the ingest (М12B урок 3): it
+        # writes what the camera brings, and the camera brings it here only when its primary does not take it — the
+        # product's `BackupGate.holdable`.
+        if self._offline_backup(cam) and not pushed:
             hold = not self.primary_needs_cover(cam)
             self.holding[str(cam["id"])] = hold
             out.update(hold=hold, ring_seconds=self.PREBUFFER, now=self.wall())
@@ -738,12 +798,21 @@ class RecWorker(VmsWorker):
 
     def status_extra(self, cam: dict) -> dict:
         src = self.source(cam["cam"])
-        out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": (None if src is None else "shm" if src[1].startswith("shm://") else "rtsp")}
+        out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": None if src is None else _via(src[1])}
         if cam["id"] in self.waiting and cam["id"] not in self.reconciler.running():
             out["why"] = "camera held by nobody"
             if str(cam["cam"]) in self.behind_loopback:
                 out["why"] = (f"the camera's stream is served on loopback on {self.behind_loopback[str(cam['cam'])]}: "
                               f"not reachable from {self.server} (RTSP_HOST there)")
+            if str(cam["cam"]) in self.unresolved:          # a camera of another cluster the source book does not give
+                out["why"] = self.unresolved[str(cam["cam"])]
+            if src is not None and ingest_ref(src[1]) is not None and self.ingest is None:
+                out["why"] = "the camera pushes to this cluster's ingest, and this recorder hosts none"
+        # A recording of a camera that pushes (`vms.ingestrec`): what it wrote and dropped, and — nothing since its start,
+        # past the grace — that it waits for the camera (`push_waiting`; `status` says `waiting` then), the product's words
+        said = self.actuator.stats(cam["id"]) if isinstance(self.actuator, IngestRecordings) else None
+        if said:
+            out.update(said)
         why = getattr(self, "unreachable_sources", {}).get(str(cam["id"]))
         if why:
             out.update(source_unreachable=True, why=f"source unreachable: {why}")
@@ -774,6 +843,11 @@ class RecWorker(VmsWorker):
         out = super().status()
         for st in out:
             if st["phase"] != "running" and st["id"] in self.waiting and st["enabled"]:
+                st["phase"] = "waiting"
+            # A pushed camera's recording that has had not a frame yet runs, and records nothing: said `waiting`, with why —
+            # "running" told the domain's book of primaries, and the camera's card, that the camera was recorded (the
+            # product's `statusFix`)
+            if st["phase"] == "running" and st.get("push_waiting"):
                 st["phase"] = "waiting"
             if st["phase"] == "running" and self.holding.get(str(st["id"])):
                 st["phase"], st["why"] = "standby", (f"the primary recording is being written; the last "
@@ -1028,6 +1102,7 @@ class RecWorker(VmsWorker):
     # part could not read it reports; it does not take the pass with it (the review's second pass, blocker 4).
     @one_look
     def reconcile_once(self, now: float | None = None) -> list[tuple[str, int]]:
+        self.take_pushed()
         self.resubscribe(now)
         out = super().reconcile_once(now)
         for part in (self.gate_pass, self.writer_pass):
@@ -1098,6 +1173,16 @@ class RecWorker(VmsWorker):
             self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
             self._lost_why, self._lost_at = f"the writer was {state['state']}: reopened", wall
         return state
+
+    # What the cameras that push here brought since the last pass, written (`vms.ingestrec`): on the reconcile, on the
+    # bus (`IngestRecordings.pump`) and before the heartbeat — which says `written_through`, the camera's `have`, and must
+    # not say less than was written.
+    def take_pushed(self) -> int:
+        return self.actuator.take() if isinstance(self.actuator, IngestRecordings) else 0
+
+    def heartbeat_once(self) -> None:
+        self.take_pushed()
+        super().heartbeat_once()
 
     # What this recorder adds to the heartbeat.
     def heartbeat_extra(self) -> dict:
@@ -1247,6 +1332,10 @@ class RecWorker(VmsWorker):
                      written=written_from_heartbeats(self.objects, self.wall))
         keep_clocks(ing, self.objects)                            # the camera's clock, kept for the next ingest
         self.ingest, self.ingest_url = ing, url
+        # …and its recordings of cameras that push here: subscribed to it, written from it (`vms.ingestrec`; the product's
+        # actuator given the process's ingest, `recact/ingestrec.go`)
+        if not isinstance(self.actuator, IngestRecordings):
+            self.actuator = IngestRecordings(self.actuator, self)
         self.forwarder = Forwarder(cluster, ing, self.vars, dial, archive=archive, needs=needs,  # `up:<cluster>` above
                                    objects=self.objects)
         return ing

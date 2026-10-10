@@ -1316,12 +1316,17 @@ class Ingest:
     def subscribe(self, ref: str, who: str, kind: str = "live", maxsize: int = 30, edge: bool = False) -> LeakyQueue:
         return self._tee(ref, "edge" if edge else kind).subscribe(who, maxsize)
 
-    def unsubscribe(self, ref: str, who: str, kind: str = "live", edge: bool = False) -> None:
-        """The subscription `subscribe` gave, ended: its queue no longer fills (a relay's forwarder, for a camera that left
-        its upstream book — the fifteenth review, minor 9)."""
-        tee = self.tees.get((str(ref), "edge" if edge else kind))
-        if tee is not None:
-            tee.unsubscribe(who)
+    def unsubscribe(self, ref: str, who: str, kind: str | None = None, edge: bool = False) -> None:
+        """The subscription `subscribe` gave, ended, and `who`'s want with it — at once, no linger, as the product's
+        `cancel` of `Subscribe`. A relay's forwarder names its tee (`kind`, `edge`: a camera that left its upstream book,
+        the fifteenth review, minor 9); a recording that stopped lets go of every tee of the camera (`vms.ingestrec`: a
+        recorder does not click back)."""
+        for (r, k), tee in list(self.tees.items()):
+            if r == str(ref) and (kind is None and not edge or k == ("edge" if edge else kind)):
+                tee.unsubscribe(who)
+        cam = self.cams.get(str(ref))
+        if cam is not None and cam.wants.pop(who, None) is not None:
+            self._changed()
 
     def taken(self, ref: str) -> bool:
         """A recorder of this cluster takes the stream — subscribed to it, at any ingest of the cluster. A recorder
