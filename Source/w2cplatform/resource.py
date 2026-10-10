@@ -258,7 +258,7 @@ class _TooBig(Exception):
 
 # Reads the watermark. `high` and `low` are USED fractions of the disk: over `high` the resource starts
 # freeing and stops at `low`, and the gap between them is the whole point — one mark alone gives a saw, a
-# file freed and a file written, for ever. Choose the gap in HOURS OF INGEST, not in percent: fifty streams
+# file freed and a file written, for ever. Choose the gap in HOURS OF WRITING, not in percent: fifty streams
 # at four megabit write about 2.2 TB a day, and ten percent of a 20 TB disk is less than one of them.
 # A floor no unit is cut below is the subsystem's own word, not the knob's: the resource asks for bytes (a request row,
 # `requests: {free: true}`), and what the subsystem gives up — and what it will not, by its rows — is its to decide; a

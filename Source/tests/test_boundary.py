@@ -126,6 +126,13 @@ PRODUCT_WORDS = [
     ("gstreamer", dict(forms=("gstreamer",), whole=True)),
     ("obsd", dict(forms=("obsd",), whole=True)),
     ("webrtc", dict(forms=("webrtc",), whole=True)),
+    # ADR-0001, its addition of 2026-10-10 (the fifteenth review, minor 18): the words of the subsystems' parts — the
+    # playback door, the recorder's ingest, the VMS's book of primaries, the camera's pusher, the incidents volume
+    ("playback", dict(forms=("playback",))),
+    ("ingest", dict(forms=("ingest", "ingests"))),
+    ("primaries", dict(forms=("primaries",))),
+    ("pusher", dict(forms=("pusher", "pushers"))),
+    ("incident", dict(forms=("incident", "incidents"))),
     ("камер", dict(stems=("камер",))),
     ("видео", dict(stems=("видео",))),
     ("архив", dict(stems=("архив",))),

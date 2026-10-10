@@ -11,7 +11,7 @@ report. It changes nothing. The taxonomy, per UNIT — a unit on a worker, of an
     stale_epoch   a worker reports a unit under a superseded epoch                  the fence catching a writer that should have stopped
 
 The one number is `unmanaged == 0`: anything running that the model does not describe is a gap in the model, and
-driving it to zero IS the design work. Ordering beats equality: "behind by 4 for 40 minutes" is an incident;
+driving it to zero IS the design work. Ordering beats equality: "behind by 4 for 40 minutes" is an outage;
 "diverged" is an alert you learn to ignore.
 """
 from __future__ import annotations

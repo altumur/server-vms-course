@@ -44,8 +44,8 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 # only the domain's agent writes, and only into a member — the root it pinned (М12 Lesson 15, written once, never
 # replaced), the grants, the revocation list, the emergency account's hash. Any of them and no key set is a cluster
 # that lost its keys — deleted, or the row rolled back from a backup — not one that never had any: shut, and it stays
-# shut across a restart of the console, which a flag in one process's memory did not. `domain/primaries` is not one
-# of them: a subsystem's worker writes it in a cluster of its own.
+# shut across a restart of the console, which a flag in one process's memory did not. A subsystem's book on the
+# domain is not one of them: a subsystem's worker writes it in a cluster of its own.
 DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break_glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
 MEMBER_MARK = DOMAIN_MARKS[0]         # the one a door that verifies no token reads (`Gate.gated`; the review's ninth pass)
 RANK = {"view": 0, "edit": 1, "admin": 2}
@@ -232,7 +232,7 @@ class Gate:
     # glass` was served by every door that mounts the shared gate — a holder, a gateway). Here `/session` is
     # routed by the console alone (`SpecConsole.dispatch`), and a session lives in the memory of the process that opened
     # it — but the gate a door holds read the session cookie all the same, so a door running in the console's process
-    # would have taken one. `glass=False` — a door that is not the console (the gateway, the holder's playback door):
+    # would have taken one. `glass=False` — a door that is not the console (the gateway, a holder's door of its own):
     # no emergency session is opened through it or honoured by it; a token is.
     def __init__(self, vars_, wall, journal=None, impl: Access | None = None, glass: bool = True):
         self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
@@ -242,8 +242,8 @@ class Gate:
         self._loaded: Access | None = None
 
     # Whether this cluster asks at all: a key set, or the marks of a member that lost it — without loading
-    # anything that verifies a token. For a door that checks something other than a token (a holder's playback
-    # door checks the console's signature) and must ask exactly when the console asks.
+    # anything that verifies a token. For a door that checks something other than a token (a holder's door of
+    # its own checks the console's signature) and must ask exactly when the console asks.
     # `Denied(503)` when the store does not answer: "I cannot tell" is not "open".
     #
     # …BY THE KEY SET AND THE MEMBERSHIP ROW ALONE (the review's ninth pass, minor): it read every mark the console reads,

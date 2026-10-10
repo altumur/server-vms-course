@@ -409,7 +409,7 @@ def heartbeats(objects, sub: str) -> dict[str, Heartbeat]:
 # `heartbeats` answers "what did each of them last say", which is what a screen wants. This answers "who
 # can I talk to", which is what a subscriber wants — and the difference is one comparison that every
 # caller was making differently or not at all (the holders of three subsystems leant on a dead
-# worker's last `phase: running`; the console's playback route checked nothing).
+# worker's last `phase: running`; a door of the console's answered checking nothing).
 #
 # It is the `?passing=true` of a service catalogue, and it is here rather than in each caller for the
 # reason Consul put it in the query: a filter that callers apply by hand is a filter callers forget.
@@ -434,7 +434,7 @@ def heard_live(sub: str, w: str, hb: Heartbeat, now: float, lost_after: float = 
 
 # `(worker, its heartbeat, the unit's status entry)` for the process holding `unit` right now, or None.
 # `phase` narrows it further when the caller needs the unit to be doing something and not merely held:
-# a subscriber to a fan-out takes it only in `running`, while a playback door answers in `held` too.
+# a subscriber to a fan-out takes it only in `running`, while a door that only reads answers in `held` too.
 def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
               phase: str | None = None, field: str | None = None, eyes=None):
     found = []

@@ -3,7 +3,7 @@
 The domain console's loop learnt it first (М10's seventh review, part 2): five steps under one `except Exception:
 pass`, and a member object that did not parse in the first froze the view of the whole domain with an empty log.
 The signer's loop kept the same `pass` (the review's eighth pass, major): one torn relay bundle stopped the pass over
-the books — sources, primaries, polls, upstream, asks — in silence, and the stream tokens in them are re-issued only
+the subsystems' books in silence, and the stream tokens in them are re-issued only
 there, so within a day every member of the domain was refused at the doors those tokens open. The books' pass itself was one
 step for five books, and the agent's pass one step for everything it carries and the report it leaves.
 
