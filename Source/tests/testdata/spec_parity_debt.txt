@@ -10,9 +10,6 @@ course-only rec.subsystem.yaml metrics[upstream_expired_total]   # ADR-0065 (its
 course-only vms.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
-product-only rec.subsystem.yaml holds.released   # ADR-0057: the product first (holds.released, review 15 minor 4); the course's side — «Лекции»
 product-only rec.subsystem.yaml secrets   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml secrets.reads   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
-product-only rec.subsystem.yaml tables.keeps.fields.released_at   # ADR-0057: the product first (holds.released, review 15 minor 4); the course's side — «Лекции»
-product-only rec.subsystem.yaml tables.keeps.fields.released_at.type   # ADR-0057: the product first (holds.released, review 15 minor 4); the course's side — «Лекции»
