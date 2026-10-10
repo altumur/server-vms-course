@@ -116,9 +116,9 @@ def test_a_heartbeat_field_its_spec_says_is_a_string_and_is_not_garbles_the_hear
         assert parse_heartbeat(key, bad) is None
     assert GARBLED["beater"] == before + 3
     assert parse_heartbeat("nobody/heartbeats/w-1", beat(shelf=5)) is not None
-    _refused(lambda: _spec(heartbeat={"strings": ["server"]}), "heartbeat.strings: 'server' is no field of its own")
-    _refused(lambda: _spec(heartbeat={"strings": ["fetched"]}), "heartbeat.strings: 'fetched' is no field of its own")
-    _refused(lambda: _spec(heartbeat={"strings": ["events"]}), "heartbeat.strings: 'events' is no field of its own")
+    _refused(lambda: _spec(heartbeat={"strings": ["server"]}), 'heartbeat.strings: "server" is no field of its own')
+    _refused(lambda: _spec(heartbeat={"strings": ["fetched"]}), 'heartbeat.strings: "fetched" is no field of its own')
+    _refused(lambda: _spec(heartbeat={"strings": ["events"]}), 'heartbeat.strings: "events" is no field of its own')
     _refused(lambda: _spec(heartbeat={"strings": ["a", "a"]}), "or is said twice")
     _refused(lambda: _spec(heartbeat={"strings": "a"}), "`heartbeat:` is {strings:")
 
@@ -579,36 +579,44 @@ def test_near_prefer_names_a_field_of_the_neighbours_row_and_through_a_ref_a_fie
 # set; a door's route is said once; `objects.rows` names no family of the platform's own (the product's refusals).
 def test_unit_id_field_type_door_routes_and_object_rows_are_closed():
     _refused(lambda: SubsystemSpec.from_dict(_named(unit__id="nosuch")),
-             "spec p: unit.id is `numeric` or a field of the row (name, home, keep_days), not 'nosuch'")
+             'spec p: unit.id is numeric or one of its fields [home keep_days name], not "nosuch"')
     SubsystemSpec.from_dict(_named(unit__id="numeric"))
     _refused(lambda: SubsystemSpec.from_dict(_named(unit__fields__home={"type": "text"})),
-             "spec p: field home: `type` is one of string, int, float, bool, list, json, blob, url, not 'text'")
+             "spec p: field home: `type` is one of string, int, float, bool, list, json, url, blob, not text")
     _refused(lambda: SubsystemSpec.from_dict(_named(tables__pins__fields__a={"type": "double"})),
-             "spec p: tables.pins: field a: `type` is one of string, int, float, bool, list, json, blob, url, not 'double'")
+             "spec p: tables.pins: field a: `type` is one of string, int, float, bool, list, json, url, blob, not double")
+    # `required`/`fixed` true or false, a default one value of its type — the product's words (`readFields`)
+    for k, v, words in (("required", "yes", "`required` is true or false, not yes"),
+                        ("fixed", "true", "`fixed` is true or false, not true"),
+                        ("default", {"a": 1}, "`default` of a string field is one value, not a map"),
+                        ("inherit", ["a"], "`inherit` of a string field is one value, not a list")):
+        _refused(lambda k=k, v=v: SubsystemSpec.from_dict(_named(unit__fields__home={"type": "string", k: v})),
+                 "spec p: field home: " + words)
+    SubsystemSpec.from_dict(_named(unit__fields__home={"type": "list", "default": ["a"]}))
+    SubsystemSpec.from_dict(_named(unit__fields__home={"type": "json", "default": {"a": 1}}))
     _refused(lambda: SubsystemSpec.from_dict(_named(door={"routes": ["read", "seek", "read"]})),
-             "spec p: door.routes: 'read' is said twice — a route is named once")
+             "spec p: door.routes: \"read\" is not a route's name (lower-case letters, digits and '-', once each)")
     SubsystemSpec.from_dict(_named(door={"routes": ["read", "seek"]}))
     for p in ("heartbeats/*", "contenders/x", "snapshot/*", "controller/*", "blobs/*", "*"):
         _refused(lambda p=p: SubsystemSpec.from_dict(_named(objects={"rows": [p]})),
-                 f"spec p: objects.rows: {p!r} names a family of the platform's own (heartbeats, contenders, snapshot, "
+                 f"spec p: objects.rows: \"{p}\" names a family of the platform's own (heartbeats, contenders, snapshot, "
                  f"controller, blobs, commands) or every one")
     SubsystemSpec.from_dict(_named(objects={"rows": ["used/*", "marks/*"]}))     # `used/*` is a subsystem's rows (rec's)
 
 
 # ADR-0067, the addendum of 2026-10-10 (the fifteenth review, minor 1): the controller deletes an unplaced unit outright and
 # leaves no tombstone, so `delete_after` is only where a name keeps nothing — no fixed field but the id, about nothing or
-# about its id (`live`).
+# about its id (a unit named by what it is about).
 def test_unplaced_delete_after_only_where_the_name_keeps_nothing():
-    words = ("placement.unplaced.delete_after with fixed fields or about — a deleted name would be reused with another "
+    words = ("unplaced.delete_after with fixed fields or about — a deleted name would be reused with another "
              "meaning; say no delete_after")
     ua = {"capacity": {"from": "capacity", "default": 4}, "unplaced": {"delete_after": 30}}
-    fixed = {"name": {"type": "string", "required": True, "fixed": True}, "cam": {"type": "string", "fixed": True}}
+    fixed = {"name": {"type": "string", "required": True, "fixed": True}, "of": {"type": "string", "fixed": True}}
     _refused(lambda: _spec(placement=ua, unit={"rows": "items", "id": "name", "fields": fixed}), "spec probe: " + words)
-    _refused(lambda: _spec(placement=ua, about={"sub": "vms", "field": "cam"},
+    _refused(lambda: _spec(placement=ua, about={"sub": "other", "field": "of"},
                            unit={"rows": "items", "id": "name",
                                  "fields": {"name": {"type": "string", "required": True},
-                                            "cam": {"type": "string", "fixed": True}}}), "spec probe: " + words)
-    _spec(placement=ua, about={"sub": "vms", "field": "cam"},                    # about its own id: live's form
-          unit={"rows": "items", "id": "cam", "fields": {"cam": {"type": "string", "required": True, "fixed": True}}})
+                                            "of": {"type": "string", "fixed": True}}}), "spec probe: " + words)
+    _spec(placement=ua, about={"sub": "other", "field": "of"},                  # about its own id: name and subject one
+          unit={"rows": "items", "id": "of", "fields": {"of": {"type": "string", "required": True, "fixed": True}}})
     _spec(placement=ua)                                                           # nothing fixed, about nothing
-    SubsystemSpec.load(os.path.join(os.path.dirname(TESTDATA), "..", "vms", "live.subsystem.yaml"))

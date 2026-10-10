@@ -366,7 +366,7 @@ def _capacity(name, cap) -> tuple[str, int]:
                          f"said nothing is counted at>}} — the default is the subsystem's to say, not {cap!r}")
     d = cap["default"]
     if isinstance(d, bool) or not isinstance(d, int) or d < 0:
-        raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {d!r}")
+        raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {_v(d)}")
     return str(cap.get("from", "capacity") or "capacity"), d
 ```
 

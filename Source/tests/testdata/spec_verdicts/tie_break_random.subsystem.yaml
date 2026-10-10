@@ -1,0 +1,503 @@
+name: testsub2
+slot:
+  prefix: t
+  name_env: TALLY_NAME
+worker:
+  writes:
+  - shelves
+  reads:
+  - testsub/counters
+  requests:
+  - testsub
+objects:
+  rows:
+  - marks/*
+  door:
+  - tickets/*
+heartbeat:
+  strings:
+  - jam
+lease:
+  unconfirmed_max: 600
+secrets:
+  readers:
+    door/signer:
+    - console
+  reads:
+  - testsub/counters
+about:
+  sub: testsub
+  field: of
+unit:
+  rows: tallies
+  id: name
+  fields:
+    name:
+      type: string
+      required: true
+      unique: true
+    of:
+      type: string
+      required: true
+      fixed: true
+    mode:
+      type: string
+      default: plain
+      enum:
+      - plain
+      - loud
+    step:
+      type: int
+      default: 1
+      schema:
+        minimum: 1
+        maximum: 100
+    weight:
+      type: float
+      default: 1.0
+    active:
+      type: bool
+      default: true
+    tags:
+      type: list
+    rule:
+      type: json
+    mask:
+      type: blob
+    shelf:
+      type: string
+      ref: testsub2/shelves
+      must_match:
+        zone: zone
+    zone:
+      type: string
+    feed:
+      type: url
+      unique: canonical
+      schemes:
+        https: {}
+        sftp: {}
+        mirror:
+          host: path
+          fragment: none
+          none:
+          - local
+      credentials:
+        login: feed_user
+        secret: feed_secret
+      secret_in:
+      - param:
+        - token*
+        - '*key'
+        - =who
+        login:
+        - =who
+      - nested:
+        - via
+      - regex: ^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$
+        in: fragment
+        schemes:
+        - sftp
+        decoded: false
+    feed_user:
+      type: string
+    feed_secret:
+      type: string
+      bound_to:
+      - feed
+    keep_days:
+      inherit: 7
+      type: int
+      merge: override
+    flags:
+      type: list
+      inherit: []
+      merge: union
+    state:
+      type: string
+      default: open
+    alarm_days:
+      type: int
+      inherit: 1095
+  derived:
+  - row: retention/{id}
+    items:
+      days: keep_days
+    on_delete:
+      days: '0'
+  - row: alarms_retention/{id}
+    items:
+      days: alarm_days
+tables:
+  shelves:
+    key: name
+    fields:
+      name:
+        type: string
+        required: true
+      zone:
+        type: string
+      server:
+        type: string
+      kind:
+        type: string
+        default: plain
+        enum:
+        - plain
+        - reserve
+        - closed
+      admits:
+        type: bool
+        default: true
+      enabled:
+        type: bool
+        default: true
+      feed:
+        type: url
+        schemes:
+          https: {}
+          mirror:
+            host: path
+            fragment: none
+            none:
+            - local
+        credentials:
+          login: feed_user
+          secret: feed_secret
+        secret_in:
+        - param:
+          - token*
+          - =who
+          login:
+          - =who
+        - nested:
+          - via
+        - regex: ^/~(?P<login>[^:/]+):(?P<secret>[^/]+)
+          in: path
+          schemes:
+          - https
+          decoded: true
+      feed_user:
+        type: string
+      feed_secret:
+        type: string
+        bound_to:
+        - feed
+      size:
+        type: int
+        default: 1
+        schema:
+          minimum: 1
+      over:
+        type: string
+        ref: testsub2/shelves
+        must_match:
+          zone: zone
+    schema:
+      if:
+        properties:
+          kind:
+            const: closed
+      then:
+        properties:
+          admits:
+            const: false
+        required:
+        - admits
+    stamp:
+    - by
+    - at
+    journal:
+      written: shelf.declared
+      deleted: shelf.withdrawn
+  notches:
+    key: '{of}-{from:int}-{to:int}'
+    fields:
+      of:
+        type: string
+        required: true
+      from:
+        type: float
+        required: true
+      to:
+        type: float
+        required: true
+    journal:
+      written: notch.cut
+      deleted: notch.cleared
+placement:
+  capacity:
+    from: capacity
+    default: 8
+  headroom:
+    from: headroom
+  constraint: labels-subset
+  requires: resource
+  servers: distinct
+  tie_break: random
+  near:
+    sub: testsub
+    by: of
+    of: name
+    prefer:
+      start:
+      - 0
+      - 1
+  spread_by: zone
+  group_by:
+    field: feed
+    cut_at: host
+  place_by: shelf
+  places:
+    table: shelves
+    where:
+      enabled: true
+    server_field: server
+    lease: strict
+  offers: true
+  home: shelf
+  retire_when:
+    field: state
+    in:
+    - done
+    - failed
+  rebalance:
+    dead_band: 0.2
+  affinity:
+    field: shelf
+    table: shelves
+    server_field: server
+    strict:
+      kind:
+      - reserve
+      enabled: true
+holds:
+  table: notches
+  unit: of
+  since: from
+  until: to
+  longest: 86400
+requests:
+  free: true
+  schema:
+    type: object
+    required:
+    - unit
+    - add
+    additionalProperties: false
+    properties:
+      unit:
+        type: string
+      add:
+        type: integer
+      valid_until:
+        type: number
+  key: '{unit}-{add:int}'
+  valid_for: 30
+  most_valid: 600
+  per_person: 3
+  settle: 30
+  ttl: 3600
+  stamp:
+  - by
+  - at
+  - about
+  journal: tally.asked
+  elsewhere:
+  - recount
+door:
+  routes:
+  - read
+  - play
+rights:
+  unit_of:
+    notches: of
+  routes:
+    view:
+    - notches
+    edit:
+    - shelves
+  cluster_rows: true
+  reach:
+    group:
+    - feed
+    cluster:
+    - zone
+    requests:
+    - add
+  names:
+  - field: rule
+    unit: unit
+    sub: sub
+  - field: rule
+    unit: of
+    of: testsub
+events:
+  older_epochs: fenced
+  suppress:
+    tally.tick:
+      window: 5
+      by:
+      - unit
+snapshot:
+- name
+- of
+- mode
+- step
+domain:
+  reports:
+  - counts/
+  witness:
+    report: seen
+    member_field: of
+metrics:
+- name: filings_total
+  from: heartbeat.filings.<outcome>
+  agg: sum
+  type: counter
+- name: tallies_running
+  from: status.phase
+  agg: count
+  equals: running
+  live: true
+- name: shelves_open
+  count: table shelves
+  where:
+    enabled: true
+  unheld: true
+- name: notches_unshelved
+  count: table notches
+  unless:
+    table: shelves
+    where:
+      kind: reserve
+- name: phases
+  from: status.phase
+  agg: count
+  when: phase
+- name: depth
+  from: status.depth
+  agg: value
+  type: gauge
+  default: 0
+- name: jam
+  from: heartbeat.jam
+  agg: flag
+  equals:
+  - stuck
+  - 'yes'
+- name: away_seconds
+  from: heartbeat.away_since
+  agg: age
+  default: 0
+- name: belt
+  from: heartbeat.belt.state
+  agg: label
+  label: state
+  default: ok
+  values:
+  - ok
+  - slow
+- name: adds_total
+  from: heartbeat.adds.<outcome>
+  agg: sum
+  type: counter
+  labels:
+    kind: add
+- name: queue_max
+  from: heartbeat.queue.<lane>
+  agg: max
+- name: wait_seconds
+  from: heartbeat.wait
+  agg: histogram
+  type: histogram
+  buckets:
+  - 1.0
+  - 5.0
+servers:
+  show:
+  - table: shelves
+    by: server
+    title: полки
+    columns:
+    - name
+    - kind
+    - enabled
+  status:
+  - field: jam
+    title: затор
+  - field: belt.state
+    title: лента
+  - field: shelved
+    title: счёты на полках
+    of: shelves
+display:
+  unit: счёт
+  units: счёты
+  units_count: счётов
+  section: Счета
+  events: false
+  field_help:
+    of: счётчик
+    shelf: полка
+    lane: полоса, по которой воркер ведёт счёт
+  kinds:
+    tally.tick: тик
+  actions:
+    add: прибавить
+  tree:
+    group_by: zone
+    nested_by: /
+    columns:
+    - field: name
+      width: 12
+    - field: phase
+      title: фаза
+    children: false
+    group_title: По зонам
+    group_hint: зоны → счёты
+    filter: имя счёта
+    no_group: Без зоны
+    contents_title: Состав зоны
+    group_word: зона
+    no_group_suffix: без зоны
+    pick_note: выберите счёт в дереве
+    new_root: Зона
+    new_sub: Подзона
+    add_here: Добавить счёт сюда
+    new_group_note: Зона создана — добавьте в неё счёт, иначе она не сохранится
+    remove: убрать из зоны
+    not_in: Не в зоне — попадёт в «без зоны».
+    add_to: Добавить в зону
+    no_others: других зон нет
+    new_group: Новая зона
+  general: Счёт
+  fields:
+    name: Имя
+    mode: Режим
+    id: ID
+  options:
+    mode:
+      plain: тихо
+      loud: громко
+    lane:
+      fast: быстрая
+      slow: медленная
+  form:
+  - title: Счёт
+    state: true
+    fields:
+    - name
+    - mode
+  - title: Где
+    placement: true
+    status:
+    - field: lane
+      since: lane_since
+      title: Полоса
+    fields:
+    - shelf
+    - zone
+    note: полка решает
+console:
+  running: tallies_running

@@ -42,7 +42,7 @@ def test_the_key_is_whole_seconds_one_or_more_and_nothing_else_under_unplaced():
         except ValueError as e:
             assert "placement.unplaced is {delete_after: <whole seconds, 1 or more>}" in str(e), e
     d = _raw()
-    d["unit"]["derived"] = [{"row": "tallies/{id}", "items": {"of": "id"}}]
+    d["unit"]["derived"] = [{"row": "tallies/{id}", "items": {"of": "name"}}]   # a field of the row (review 15, major 1)
     try:
         SubsystemSpec.from_dict(d)
         raise AssertionError("delete_after beside unit.derived loaded")

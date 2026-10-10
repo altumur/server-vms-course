@@ -12,22 +12,44 @@
 #   lease.unconfirmed_max: forever, off, or a whole number of seconds above 0 — nothing else, no empty lease:
 #   requests.stamp: [group] only with placement.group_by; a key template's braces closed
 #   a JSON default or inherit of a `json` field is any JSON value
-# Not here: what needs the whole catalogue (worker.requests naming a subsystem with no requests: — KnowSpecs), and
+#   every key naming a field of a DECLARED table or of the unit's row names one of its `fields:` or `stamp:` (the
+#   fifteenth review, major 1): unit.derived.items, rights.unit_of, servers.show.by/columns, placement.places.server_field/
+#   where, placement.affinity.server_field/strict, holds.unit/since/until, metrics where and unless.where; a table only
+#   named is not asked
+#   unit.id is `numeric` or a field; a field's type one of string, int, float, bool, list, json, url, blob; door.routes
+#   each once; objects.rows no platform family (heartbeats, contenders, snapshot, controller, blobs, commands, *);
+#   worker.requests not the spec itself (minor 10, 16)
+#   placement.unplaced.delete_after only with no fixed field but the id and no about but about the id (ADR-0067, 10.10)
+#   the fifteenth review's loader probes (РЕВЬЮ-SERVERVMS-15/probes/product/loader, mutations of the course's testsub2):
+#   required/fixed true or false; a default or inherit one value of its type; placement words, capacity.default,
+#   dead_band, slot.prefix, display.events typed; `worker` a platform word of a heartbeat; the console's routes as
+#   rows or tables; tables' fields without fixed/inherit; worker.reads `<family>/<name>`; domainconsole a role
+# Not here: what needs the whole catalogue (worker.requests naming a subsystem with no requests: — KnowSpecs; near.prefer
+# naming no field of the neighbour — NeighbourFault, `near_known`), and
 # sizes (a 10 MB spec; a depth limit is here, deep_flow_200 and deeper).
 #
 # Columns, tab-separated; a line that begins with '#' and an empty line are no row:
 #   case     the file spec_verdicts/<case>.subsystem.yaml beside this table, loaded alone as a subsystem's spec
 #   verdict  ok — it loads; refused — the loader refuses it, with a message naming where
+about_field_not_fixed_nowitness	refused
 anchor_alias_display_keys	refused
 anchor_merge_key	refused
 base	ok
 block_scalar_hides_lease	ok
 block_scalar_hides_tail	refused
 bom_utf8	refused
+bound_to_string	ok
+capacity_default_float	refused
+capacity_default_string	refused
+capacity_default_true	refused
+dead_band_word	refused
 deep_block_500	refused
 deep_flow_200	refused
 deep_flow_5000	refused
+default_map_string	refused
+delete_after_with_about	refused
 display_actions_nested	refused
+display_events_word	refused
 display_field_help_not_in_fields	refused
 display_field_not_in_fields	refused
 display_fields_nested_map	refused
@@ -51,13 +73,30 @@ display_tree_word_erase	refused
 display_unknown_section	refused
 display_word_On_Off_unquoted	ok
 display_word_not_string	refused
+door_routes_dup	refused
 dup_block_hides_unknown	refused
 dup_key_in_flow_map	refused
 dup_key_lease_value	refused
 dup_top_key_name	refused
 enum_default_not_in_enum	refused
+enum_on_list	refused
+fields_affinity_known	ok
+fields_affinity_server_field_unknown	refused
+fields_affinity_strict_unknown	refused
+fields_derived_items_unknown	refused
+fields_holds_unknown	refused
+fields_metrics_unless_where_unknown	refused
+fields_metrics_where_unknown	refused
+fields_places_server_field_unknown	refused
+fields_places_where_unknown	refused
+fields_rights_unit_of_unknown	refused
+fields_servers_show_by_unknown	refused
+fields_servers_show_columns_unknown	refused
+fields_servers_show_known	ok
 group_by_unknown_field	refused
+hb_worker	refused
 inherit_map	ok
+inherit_map_string	refused
 json_default_map	ok
 key_true_yaml11	refused
 lease_.inf	refused
@@ -87,21 +126,46 @@ multiline_plain_scalar	refused
 non_utf8_in_comment	refused
 non_utf8_in_word	refused
 nul_byte_in_word	refused
+objects_rows_heartbeats	refused
 overindent_hides_tail	refused
 requests_key_stray_brace	refused
 requests_key_unknown_field	refused
 requests_stamp_group_without_group_by	refused
 requests_unknown_key	refused
 requests_unknown_stamp	refused
+required_true_string	refused
+required_yes	refused
+requires_nothing	refused
 retire_when_unknown_field	refused
+rows_servers	refused
+rows_where	refused
+secrets_reader_domainconsole	ok
+servers_both	refused
+slot_prefix_digit	refused
+slot_prefix_long	refused
 snapshot_unknown_field	refused
 spread_by_not_string	refused
 spread_by_unknown_field	refused
+status_worker	refused
 tab_indent	refused
+table_events_shadow	refused
+table_field_fixed	refused
+table_field_inherit	refused
+table_marks	refused
+table_metrics_shadow	refused
+table_servers	refused
+tie_break_random	refused
+type_text	refused
+unit_id_nosuch	refused
+unit_id_numeric	ok
 unknown_depth1	refused
 unknown_depth2	refused
 unknown_depth3	refused
 unknown_depth4	refused
 unknown_in_lease	refused
+unplaced_delete_after_about_its_id	ok
+unplaced_delete_after_fixed_field	refused
+worker_reads_bare	refused
+worker_requests_itself	refused
 yaml_list_toplevel	refused
 yaml_two_documents	refused

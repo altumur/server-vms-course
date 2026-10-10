@@ -442,28 +442,43 @@ class Field:
 # The fields of a unit's row — or of a table's (`tables.py`) — as written: types, defaults, `required`, `inherit`, `fixed`,
 # `bound_to`, a url's words, `ref`/`must_match`/`unique`, `schema`; each checked at load, `where` naming whose they are.
 # …and a field's `type` is one of these, nothing else (ADR-0012; the fifteenth review, minor 16): `type: text` was read as
-# a string, the word a promise nobody keeps.
-FIELD_TYPES = ("string", "int", "float", "bool", "list", "json", "blob", "url")
+# a string, the word a promise nobody keeps. The product's `FieldTypes`, in its order: the refusal reads the same.
+FIELD_TYPES = ("string", "int", "float", "bool", "list", "json", "url", "blob")
+
+
+# What a field's own words are before anything reads them (ADR-0012; the fifteenth review, minor 16 and the product's
+# window A): a type of the set; `required` and `fixed` true or false — `required: "yes"` was read by its truth, the product
+# read it as false; `default`/`inherit` one value of the field's type — a map only of a json field, a list only of a json
+# or a list field. In the product's words, byte for byte (`readFields`, unit.go).
+def _field_words(where: str, n: str, f: dict) -> None:
+    t = f.get("type", "string")
+    if "type" in f and (not isinstance(t, str) or t not in FIELD_TYPES):
+        raise ValueError(f"{where}: field {n}: `type` is one of {', '.join(FIELD_TYPES)}, not {_v(t)}")
+    for k in ("required", "fixed"):
+        if k in f and not isinstance(f[k], bool):
+            raise ValueError(f"{where}: field {n}: `{k}` is true or false, not {_v(f[k])}")
+    for k in ("default", "inherit"):
+        if isinstance(f.get(k), dict) and t != "json":
+            raise ValueError(f"{where}: field {n}: `{k}` of a {t} field is one value, not a map")
+        if isinstance(f.get(k), list) and t not in ("json", "list"):
+            raise ValueError(f"{where}: field {n}: `{k}` of a {t} field is one value, not a list")
 
 
 def read_fields(where: str, raw: dict) -> dict:
     for n, f in raw.items():
-        if isinstance(f, dict) and f.get("type", "string") not in FIELD_TYPES:
-            raise ValueError(f"{where}: field {n}: `type` is one of {', '.join(FIELD_TYPES)}, not {f['type']!r}")
+        if isinstance(f, dict):
+            _field_words(where, n, f)
     fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)),
-                       f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(n, f.get("bound_to")),
+                       f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(where, n, f.get("bound_to")),
                        f.get("fixed", False) is True)
               for n, f in raw.items()}
-    for n, f in raw.items():
-        if "fixed" in f and not isinstance(f["fixed"], bool):
-            raise ValueError(f"field {n}: `fixed` is true or false, not {f['fixed']!r}")
     for n, f in raw.items():
         if "enum" in f:
             vals = f["enum"]
             if fields[n].type in ("list", "json", "blob") or not isinstance(vals, list) or not vals \
                     or not all(isinstance(x, (str, int, float, bool)) for x in vals):
-                raise ValueError(f"field {n}: `enum` is a list of the values a {fields[n].type} field may hold, not "
-                                 f"{vals!r}")
+                raise ValueError(f"{where}: field {n}: `enum` is a list of the values a {fields[n].type} field may "
+                                 f"hold, not {_v(vals)}")
             fields[n].enum = tuple(fields[n].parse(x) if fields[n].type != "string" else str(x) for x in vals)
         _url_words(fields, n, f, where)
         _ref_words(fields, n, f)
@@ -497,12 +512,12 @@ def _table_names(d: dict) -> tuple:
 
 
 # `bound_to:` as written — a name or a list of names — as a tuple of names; anything else refused at load.
-def _bound_to(name: str, v) -> tuple:
+def _bound_to(where: str, name: str, v) -> tuple:
     if v is None:
         return ()
     names = [v] if isinstance(v, str) else v
     if not isinstance(names, (list, tuple)) or not names or not all(isinstance(x, str) and x for x in names):
-        raise ValueError(f"field {name}: `bound_to` is a field name or a list of them, not {v!r}")
+        raise ValueError(f"{where}: field {name}: `bound_to` is a field name or a list of them, not {_v(v)}")
     return tuple(names)
 
 
@@ -594,13 +609,22 @@ def _ref_words(fields: dict, name: str, f: dict) -> None:
 # `placement.capacity: {from, default}` — `(from, default)`. The default is REQUIRED (the product's decision): the
 # number a worker that has said nothing yet is counted at is the subsystem's to say — fifty of one kind of unit is a
 # small worker and of another an impossible one — and a spec without it does not load.
+# `placement.rebalance.dead_band` — a number (ADR-0012; the fifteenth review, minor 15): `fast` was a Python error here
+# and 0 in the product, where the rebalance then moved units on every difference. The product's words.
+def _dead_band(name, rb) -> float:
+    db = (rb or {}).get("dead_band", 0.10) if isinstance(rb, dict) else 0.10
+    if isinstance(db, bool) or not isinstance(db, (int, float)):
+        raise ValueError(f"spec {name}: placement.rebalance.dead_band is a number, not {_v(db)}")
+    return float(db)
+
+
 def _capacity(name, cap) -> tuple[str, int]:
     if not isinstance(cap, dict) or set(cap) - {"from", "default"} or "default" not in cap:
         raise ValueError(f"spec {name}: placement.capacity is {{from: <heartbeat field>, default: <units a worker that "
                          f"said nothing is counted at>}} — the default is the subsystem's to say, not {cap!r}")
     d = cap["default"]
     if isinstance(d, bool) or not isinstance(d, int) or d < 0:
-        raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {d!r}")
+        raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {_v(d)}")
     return str(cap.get("from", "capacity") or "capacity"), d
 
 
@@ -659,8 +683,8 @@ def _object_patterns(name, objects, family: str) -> tuple:
         # as rows of the store the platform keeps as files; the product refused it, `objectPatternFault`, by this list).
         # `used` is not in it: the door gives a resource's `used/*` out unasked, and a subsystem keeps its own `used/*` as rows.
         if family == "rows" and segs[0] in ("*", *PLATFORM_ROWS):
-            raise ValueError(f"spec {name}: objects.rows: {p!r} names a family of the platform's own "
-                             f"({', '.join(PLATFORM_ROWS)}) or every one — the platform keeps those itself")
+            raise ValueError(f"spec {name}: objects.rows: {_q(str(p))} names a family of the platform's own "
+                             f"({', '.join(PLATFORM_ROWS)}) or every one")
         if family == "door" and segs[0] in ("*", *PLATFORM_FAMILIES):
             raise ValueError(f"spec {name}: objects.door: {p!r} names a family of the platform's own "
                              f"({', '.join(PLATFORM_FAMILIES)}) or every one — a door gives those out unasked")
@@ -692,8 +716,8 @@ def _heartbeat_strings(name, hb) -> tuple:
     word = re.compile(r"[a-z][a-z0-9_]*")
     for i, f in enumerate(got):
         if not isinstance(f, str) or not word.fullmatch(f) or f in PLATFORM_HEARTBEAT_STRINGS or f in got[:i]:
-            raise ValueError(f"spec {name}: heartbeat.strings: {f!r} is no field of its own heartbeats (the "
-                             f"platform's are {', '.join(PLATFORM_HEARTBEAT_STRINGS)}), or is said twice")
+            raise ValueError(f"spec {name}: heartbeat.strings: {_q(str(f))} is no field of its own (the platform's are "
+                             f"{', '.join(PLATFORM_HEARTBEAT_STRINGS)}), or is said twice")
     return tuple(got)
 
 
@@ -778,7 +802,7 @@ def _worker(name, worker) -> tuple[tuple, tuple, tuple]:
                          f"own units' work, it files to others")
     bad = [x for x in worker.get("reads") or [] if not re.fullmatch(r"[a-z][a-z0-9_]*(/[a-z0-9_*.-]+)+", str(x))]
     if bad:
-        raise ValueError(f"spec {name}: worker.reads takes keys of the store (`<family>/<name>`), not {bad}")
+        raise ValueError(f"spec {name}: worker.reads takes keys of the store (`<family>/<name>`), not {_q(str(bad[0]))}")
     return tuple(map(str, worker.get("writes") or ())), tuple(map(str, worker.get("reads") or ())), \
         tuple(map(str, worker.get("requests") or ()))
 
@@ -1438,7 +1462,7 @@ class SubsystemSpec:
                    home=str(pl.get("home", "") or ""),
                    retire_field=str((pl.get("retire_when") or {}).get("field", "") or ""),
                    retire_values=tuple(str(v) for v in ((pl.get("retire_when") or {}).get("in") or [])),
-                   dead_band=float((pl.get("rebalance", {}) or {}).get("dead_band", 0.10)),
+                   dead_band=_dead_band(d.get("name"), pl.get("rebalance")),
                    snapshot=(list(declared) if declared is not None else
                              [n for n, f in fields.items() if not is_secret_field(n) and f.type != "blob"]),
                    tables=_table_names(d),
@@ -1534,8 +1558,8 @@ class SubsystemSpec:
         # …and what names a unit, a field of its row or a number the console counts (ADR-0012; the fifteenth review, minor
         # 16): `id: nosuch` loaded, and every create answered "a unit needs a nosuch" — no unit was ever made.
         if spec.id != "numeric" and spec.id not in fields:
-            raise ValueError(f"spec {spec.name}: unit.id is `numeric` or a field of the row "
-                             f"({', '.join(fields) or 'none'}), not {spec.id!r}")
+            raise ValueError(f"spec {spec.name}: unit.id is numeric or one of its fields {_v(sorted(fields))}, "
+                             f"not {_q(spec.id)}")
         # …the capacity of a worker that said nothing: the spec's to say (`_capacity`).
         spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
         # …how long a unit nobody holds stands before its controller deletes it (`_unplaced`; ADR-0067)
@@ -1552,14 +1576,15 @@ class SubsystemSpec:
         # …and only where a name holds nothing to keep (ADR-0067, the addendum of 2026-10-10; the fifteenth review, minor 1):
         # the console deletes a unit by a tombstone that keeps its `fixed` fields, and a create under the name with another
         # `about` is refused; the controller deletes the row outright, and never writes one, so it can leave no tombstone.
-        # A unit with no fixed field but its id and about nothing but its id (`live/streams/<cam>`: name and subject one)
+        # A unit with no fixed field but its id and about nothing but its id (a fan-out named by what it is about: name and
+        # subject one)
         # may be deleted so; any other would have its name reused with another meaning — its buckets, marks and grants
         # read as the new unit's history.
         if spec.unplaced_delete_after and (
                 any(f.fixed and n != spec.id for n, f in spec.fields.items())
                 or (spec.about_sub and spec.about_field != spec.id)):
-            raise ValueError(f"spec {spec.name}: placement.unplaced.delete_after with fixed fields or about — a deleted "
-                             f"name would be reused with another meaning; say no delete_after")
+            raise ValueError(f"spec {spec.name}: unplaced.delete_after with fixed fields or about — a deleted name would "
+                             f"be reused with another meaning; say no delete_after")
         return spec
 
     # `about:` and `rights:` as written, checked at load: `about` names another subsystem by a name and a field of this
@@ -1892,7 +1917,7 @@ class SubsystemSpec:
                 raise ValueError(f"spec {self.name}: display.{w} is a word, not {disp[w]!r}")
         if not isinstance(disp.get("events", True), bool):
             raise ValueError(f"spec {self.name}: display.events is true or false — whether the card has the module's "
-                             f"journal tab — not {disp['events']!r}")
+                             f"journal tab — not {_v(disp['events'])}")
         for k in ("kinds", "actions"):
             got = disp.get(k) or {}
             if not isinstance(got, dict) or not all(isinstance(v, str) for v in got.values()):
@@ -1946,12 +1971,12 @@ class SubsystemSpec:
             raise ValueError(f"spec {self.name}: placement.constraint is one of {', '.join(CONSTRAINTS)}, not "
                              f"{self.constraint!r} — the catalogue is closed; declare what else a unit needs")
         if self.tie_break not in TIE_BREAKS:
-            raise ValueError(f"spec {self.name}: placement.tie_break is one of {', '.join(TIE_BREAKS)}, not {self.tie_break!r}")
+            raise ValueError(f"spec {self.name}: placement.tie_break is one of {', '.join(TIE_BREAKS)}, not {_v(self.tie_break)}")
         # …and the two words read by equality further on: a typo was `none` or `shared` without a word said
         if self.requires not in REQUIRES:
-            raise ValueError(f"spec {self.name}: placement.requires is one of {', '.join(REQUIRES)}, not {self.requires!r}")
+            raise ValueError(f"spec {self.name}: placement.requires is one of {', '.join(REQUIRES)}, not {_v(self.requires)}")
         if self.servers not in SERVERS:
-            raise ValueError(f"spec {self.name}: placement.servers is one of {', '.join(SERVERS)}, not {self.servers!r}")
+            raise ValueError(f"spec {self.name}: placement.servers is one of {', '.join(SERVERS)}, not {_v(self.servers)}")
         g = pl.get("group_by")
         if isinstance(g, dict):
             if set(g) - {"field", "cut_at"} or self.group_by not in self.fields:

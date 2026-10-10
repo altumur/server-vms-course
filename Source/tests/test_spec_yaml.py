@@ -145,10 +145,10 @@ def test_every_spec_of_the_course_reads_the_same_by_the_spec_loader_as_by_yaml_b
 def test_a_json_fields_default_or_inherit_is_any_json_value_and_another_types_is_still_walked():
     """The fourteenth review, minor 25: `{type: json, default: {a: 1}}` and `inherit: {…}` were refused as keys nobody
     reads (`unit.fields.*.default.a`). A `json` field's value is any JSON — a map or a list; another type's map is
-    walked and refused as before."""
+    refused — in the product's words since the fifteenth review (`readFields`: one value of its type, not a map)."""
     doc = SubsystemSpec.from_dict({"name": "probe", "unit": {"rows": "items", "id": "name", "fields": {
         "name": {"type": "string", "required": True}, "doc": {"type": "json", "default": {"a": 1, "b": [1, {"c": 2}]}},
         "up": {"type": "json", "inherit": {"x": {"y": 1}}}}}, "placement": {"capacity": {"from": "capacity", "default": 4}}})
     assert doc.fields["doc"].default == {"a": 1, "b": [1, {"c": 2}]} and doc.fields["up"].inherit == {"x": {"y": 1}}
     _refused(BASE.replace("    zone: {type: string}", "    zone: {type: string, default: {a: 1}}"),
-             "unit.fields.zone.default.a")
+             "spec probe: field zone: `default` of a string field is one value, not a map")

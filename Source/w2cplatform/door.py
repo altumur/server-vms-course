@@ -84,7 +84,9 @@ def parse_routes(where: str, raw) -> tuple:
     # …each once (ADR-0012; the fifteenth review, minor 16: `[read, read]` loaded — the product refuses it)
     twice = next((r for i, r in enumerate(routes) if r in routes[:i]), None)
     if twice is not None:
-        raise ValueError(f"{where}: door.routes: {twice!r} is said twice — a route is named once")
+        import json
+        raise ValueError(f"{where}: door.routes: {json.dumps(twice)} is not a route's name (lower-case letters, digits "
+                         f"and '-', once each)")
     return tuple(routes)
 
 

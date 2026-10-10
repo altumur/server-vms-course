@@ -311,7 +311,7 @@ def test_the_watermark_asks_and_never_deletes():
     assert asked() is None                                     # all of it on its way: not asked for again
 
     # and a subsystem that does not free is simply not asked: `retain` by days is its whole policy
-    other = SubsystemSpec.from_dict({"name": "other", "unit": {"rows": "units", "id": "name", "fields": {}},
+    other = SubsystemSpec.from_dict({"name": "other", "unit": {"rows": "units", "id": "numeric", "fields": {}},
                                      "placement": {"capacity": {"from": "capacity", "default": 4}}})
     assert box.vars.list(other.sub.requests_prefix()) == []
     res.space_probe = lambda root: (1_000_000, 500_000)        # back under the mark: nothing asked of anybody
