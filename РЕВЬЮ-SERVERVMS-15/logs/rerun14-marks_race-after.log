@@ -1,0 +1,72 @@
+m10-fs     N=300: holder answer lost=0, closer wrote first (then overwritten)=12, closer over an outcome=0, two closers wrote {0: 0, 1: 300, 2: 0}, create-only both/none=0, mark brought back after the sweep deleted it=0 -> OK
+Exception in thread Thread-2777 (run):
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 55, in run
+    out[i] = f()
+             ^^^
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 93, in <lambda>
+    r = race([lambda: delete(s, KEY) or True, lambda: complete_mark(s, KEY, "unknown", "gone", 6.0)])
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/requests.py", line 191, in complete_mark
+    raw, index = objects.get_at(key)
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 109, in get_at
+    data = self.get(key)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 168, in get
+    with open(p, "rb") as f:
+         ^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/rj/0mbpl0_d5jg43d1vmv_83cx00000gn/T/rc-n85mqinz/testsub/commands/r1'
+Exception in thread Thread-2921 (run):
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 55, in run
+    out[i] = f()
+             ^^^
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 93, in <lambda>
+    r = race([lambda: delete(s, KEY) or True, lambda: complete_mark(s, KEY, "unknown", "gone", 6.0)])
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/requests.py", line 191, in complete_mark
+    raw, index = objects.get_at(key)
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 109, in get_at
+    data = self.get(key)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 168, in get
+    with open(p, "rb") as f:
+         ^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/rj/0mbpl0_d5jg43d1vmv_83cx00000gn/T/rc-n85mqinz/testsub/commands/r1'
+Exception in thread Thread-3689 (run):
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 55, in run
+    out[i] = f()
+             ^^^
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 93, in <lambda>
+    r = race([lambda: delete(s, KEY) or True, lambda: complete_mark(s, KEY, "unknown", "gone", 6.0)])
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/requests.py", line 191, in complete_mark
+    raw, index = objects.get_at(key)
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 109, in get_at
+    data = self.get(key)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 168, in get
+    with open(p, "rb") as f:
+         ^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/rj/0mbpl0_d5jg43d1vmv_83cx00000gn/T/rc-n85mqinz/testsub/commands/r1'
+cluster-fs N=300: holder answer lost=0, closer wrote first (then overwritten)=8, closer over an outcome=0, two closers wrote {0: 0, 1: 300, 2: 0}, create-only both/none=0, mark brought back after the sweep deleted it=0 -> OK
+mem-rows   N=300: holder answer lost=0, closer wrote first (then overwritten)=0, closer over an outcome=0, two closers wrote {0: 0, 1: 300, 2: 0}, create-only both/none=0, mark brought back after the sweep deleted it=0 -> OK
+stores with no delete (Worker.sweep_marks -> AttributeError there): none
+RESULT OK
+exit=0

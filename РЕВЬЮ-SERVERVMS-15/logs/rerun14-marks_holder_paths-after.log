@@ -1,0 +1,10 @@
+t-1: request r1: the target did not answer within 10 s — whether it acted on c1 is not known
+T1 answer: [{'request': 'r1', 'unit': 'c1', 'error': 'the target did not answer'}] | mark after timeout: {'at': 1757500000, 'digest': 'b03cae4391567c3e693e706df61a896838245ceb88023818225d04b0c0f37b04', 'ended_at': 1757500000, 'error': 'the target did not answer', 'instance': 'Murats-MacBook-Pro.local:88287:069d62', 'outcome': 'unknown', 'slot': 't-1', 'unit': 'c1', 'valid_until': 1757500030}
+T1 row stands: False | mark after clear+sweep: {'at': 1757500000, 'digest': 'b03cae4391567c3e693e706df61a896838245ceb88023818225d04b0c0f37b04', 'ended_at': 1757500000, 'error': 'the target did not answer', 'instance': 'Murats-MacBook-Pro.local:88287:069d62', 'outcome': 'unknown', 'slot': 't-1', 'unit': 'c1', 'valid_until': 1757500030}
+T2 B answered: [] | A counts: {'performed': 1, 'refused': 0, 'expired': 0, 'unknown': 0} | B counts: {'performed': 0, 'refused': 0, 'expired': 0, 'unknown': 0} | final mark outcome: performed
+T2 one request counted 1 times across holders (once); calls into the target: A=1 B=0
+testsub: request garbled for c1 ended 3665 s past its deadline NOT KNOWN: its mark does not read: whoever began it is not known, nor how it went
+testsub: request parsed for c1 ended 3665 s past its deadline NOT KNOWN: its holder began it and is gone without saying how it went
+T3 after 5 h of reaper turns: garbled row stands=False, parsed (holder gone) row stands=False
+RESULT OK
+exit=0

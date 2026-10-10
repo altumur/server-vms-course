@@ -1,0 +1,4 @@
+loaded: derived items = {'days': 'keep_dayz'}
+unit row: {'id': 'u1', 'revision': '1', 'name': 'u1', 'keep_days': '7'}
+derived row p/retention/u1: None
+retention_days(p, u1) as the resource reads it: 365.0 (the operator said 7)

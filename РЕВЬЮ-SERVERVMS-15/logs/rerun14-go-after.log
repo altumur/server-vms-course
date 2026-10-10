@@ -1,0 +1,20 @@
+# vmsworker.local/vmsworker/w2cplatform_test [vmsworker.local/vmsworker/w2cplatform.test]
+vmsworker/w2cplatform/zz_marks_probe_test.go:203:72: undefined: p.LedgerPrefix
+vmsworker/w2cplatform/zz_r14_door_probe_test.go:74:21: undefined: p.LedgerName
+vmsworker/w2cplatform/zz_r14_door_probe_test.go:113:35: undefined: p.LedgerName
+vmsworker/w2cplatform/zz_r14_filings_platform_test.go:93:26: undefined: p.LedgerPrefix
+FAIL	vmsworker.local/vmsworker/w2cplatform [build failed]
+=== RUN   TestR14ARefusedActionStopsTheFiring
+2026/10/10 09:41:27 WARN worker: a request was not filed worker=a-1 request=vms/f-0 why="cas conflict: the ModifyIndex moved: request vms/f-0: under this rid stands a different request"
+    zz_r14_filings_vms_test.go:30: MEASURED File err=<nil> ; rec/requests/f-1 written=true
+--- PASS: TestR14ARefusedActionStopsTheFiring (0.42s)
+=== RUN   TestR14AScenarioNamedAsksIsNeverPerformed
+2026/10/10 09:41:27 w-1: the event command about 1 was not written: mkdir /data: read-only file system
+    zz_r14_filings_vms_test.go:56: MEASURED scenario "door": file err=<nil> filed=1 performed=1 outcome="performed" row-stands=true
+2026/10/10 09:41:27 w-1: the event command about 1 was not written: mkdir /data: read-only file system
+    zz_r14_filings_vms_test.go:56: MEASURED scenario "asks-door": file err=<nil> filed=1 performed=1 outcome="performed" row-stands=true
+--- PASS: TestR14AScenarioNamedAsksIsNeverPerformed (0.14s)
+PASS
+ok  	vmsworker.local/vmsworker/vms	1.819s
+FAIL
+exit=1

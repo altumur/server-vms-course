@@ -1,0 +1,56 @@
+t-1: request testsub/'s-by' refused: by is the platform's to stamp, not the row's
+t-1: request testsub/'s-at' refused: at is the platform's to stamp, not the row's
+t-1: request testsub/'s-filed' refused: filed is the platform's to stamp, not the row's
+t-1: request testsub/'fire-1-0' refused: under this rid stands a different request
+t-1: request testsub/'nan-at' refused: `at` is the moment the request is about, a finite number of seconds, not nan
+t-1: request testsub/'s-by' refused: by is the platform's to stamp, not the row's
+t-1: request testsub/'s-at' refused: at is the platform's to stamp, not the row's
+t-1: request testsub/'s-filed' refused: filed is the platform's to stamp, not the row's
+t-1: request testsub/'fire-1-0' refused: under this rid stands a different request
+t-1: request testsub/'nan-at' refused: `at` is the moment the request is about, a finite number of seconds, not nan
+t-1: request testsub/'s-by' refused: by is the platform's to stamp, not the row's
+t-1: request testsub/'s-at' refused: at is the platform's to stamp, not the row's
+t-1: request testsub/'s-filed' refused: filed is the platform's to stamp, not the row's
+t-1: request testsub/'fire-1-0' refused: under this rid stands a different request
+t-1: request testsub/'nan-at' refused: `at` is the moment the request is about, a finite number of seconds, not nan
+--- FileVariables (a box)
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: RequestRefused
+  filings: {'filed': 3, 'again': 1, 'refused': 5}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 5}
+--- MemVariables
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: RequestRefused
+  filings: {'filed': 3, 'again': 1, 'refused': 5}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 5}
+--- MemVariables under the worker's grant
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: RequestRefused
+  filings: {'filed': 3, 'again': 1, 'refused': 5}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 5}
+--- /metrics producers mentioning `filings`: ['vms/rec.subsystem.yaml:249', 'vms/rec.subsystem.yaml:251', 'vms/auto.subsystem.yaml:151', 'vms/auto.subsystem.yaml:153']
+exit=0

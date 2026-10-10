@@ -1,0 +1,7 @@
+{'jitter': 0} REFUSED
+{'jitter': nan} REFUSED
+{'jitter': 1.5} REFUSED
+{'base': 0} REFUSED
+{'base': -1} REFUSED
+{'base': 10, 'max': 1} REFUSED
+exit=0

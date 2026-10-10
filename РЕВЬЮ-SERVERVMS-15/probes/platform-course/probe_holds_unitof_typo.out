@@ -1,0 +1,6 @@
+spelt right (unit: item, unit_of: item):
+   bucket p/u1 [120, 180) held by pin1? True  (False: retain sweeps it past its days)
+   whose is row pin1 (rights.unit_of)?  ('p/u1', True)  (('', True): names nobody — listed to every viewer, console.py _table_route)
+misspelt (unit: itm, unit_of: itemm):
+   bucket p/u1 [120, 180) held by pin1? False  (False: retain sweeps it past its days)
+   whose is row pin1 (rights.unit_of)?  ('', True)  (('', True): names nobody — listed to every viewer, console.py _table_route)

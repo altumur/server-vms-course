@@ -1,0 +1,3 @@
+до прохода: строка ресурса стоит: True
+recworker.requests() -> [] | fetched = ['free-srv-1-vol'] | freeing = {'vol': 0}
+clear_requests(sweep=False) удалил строк: 1 | строка ресурса стоит: False

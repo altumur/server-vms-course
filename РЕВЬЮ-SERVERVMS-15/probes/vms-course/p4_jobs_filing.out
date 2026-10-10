@@ -1,0 +1,4 @@
+filed: True | row = {'unit': 'rec/7', 'cam': '7', 'from': '1791614373.513561', 'to': '1791614433.513561', 'at': '1791614973.513561', 'by': 'detjob/7-lpr-1-2', 'valid_until': '1791615573.513561'}
+схема семейства rec отвергла бы такую строку: the request has no key 'cam' — it takes from, to, unit
+штамп спеки: ['by', 'at', 'about'] | в строке: ['at', 'by']
+journal семейства: archive.backfill.asked | per_person: 7 — в _ask_recorder ни журнала, ни счёта (см. jobs.py:522-532)

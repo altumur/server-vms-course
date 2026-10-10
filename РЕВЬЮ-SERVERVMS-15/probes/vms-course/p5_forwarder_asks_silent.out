@@ -1,0 +1,22 @@
+Exception in thread fwd-asks-relay:
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/vms/domainpart/chain.py", line 533, in asks
+    book = self.book()
+           ^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/vms/domainpart/chain.py", line 263, in book
+    return self._entries(UPSTREAM_PATH, lambda k: True, entry)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/vms/domainpart/chain.py", line 242, in _entries
+    items = opened(self.vars.get(path)[0], path, self.sealer)
+                   ^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/probes15/vms-course/p5_forwarder_asks_silent.py", line 23, in get
+    raise OSError("the store did not answer")
+OSError: the store did not answer
+vars.get отказал раз: 1
+строк лога логгера chain уровня WARNING+ о провале lift(): 0
+все строки chain: []
+счётчик провалов у форвардера: нет

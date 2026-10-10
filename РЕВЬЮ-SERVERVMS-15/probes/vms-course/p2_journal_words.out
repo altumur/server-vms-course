@@ -1,0 +1,5 @@
+archive.read fields = ['addr', 'bytes', 'media', 'recording', 'sha256', 'status', 'user']
+  target в archive.read: False | addr: True
+liveworker.py live.view.ended: строка 480: поля ['addr', 'gateway', 'session', 'user'] | target: False | addr: True
+recworker.py archive.keep.verified: строка 3909: поля ['integrity', 'keep', 'ok', 'recordings', 'user'] | target: False | addr: False
+liveworker.py live.view: строка 445: поля ['addr', 'gateway', 'session', 'target', 'user'] | target: True | addr: True

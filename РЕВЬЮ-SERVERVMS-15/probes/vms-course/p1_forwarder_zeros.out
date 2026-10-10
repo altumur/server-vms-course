@@ -1,0 +1,6 @@
+upstream[SN7] = {"mode": "push", "state": "", "up_cuts": 0, "up_dropped": 150, "up_expired": 0, "up_gaps": 0, "up_have_every": 0.0, "up_kept": false, "up_kept_writes": 0, "up_polls": 0, "up_resumed": 0, "up_sent": 0, "up_unconfirmed_s": 0.0}
+нулей-констант в upstream (всегда 0 в курсе): 10 ['up_cuts', 'up_expired', 'up_gaps', 'up_have_every', 'up_kept', 'up_kept_writes', 'up_polls', 'up_resumed', 'up_sent', 'up_unconfirmed_s']
+реальная потеря форвардера: up_dropped = 150 (queue.dropped = 150 )
+ingest_streams[SN7].cut_for_full_queue = 0 | ingest.lost() = {"SN7": {"dropped": {"up:relay": 150}}}
+строк metrics: со словами upstream/ingest в rec.subsystem.yaml: []
+servers.status rec: ['volume_missing', 'shrink_pending', 'writer.state', 'objectstorage.block_small', 'keeps', 'incidents_lost', 'incidents_at_risk']

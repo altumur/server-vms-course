@@ -1,0 +1,171 @@
+ok     base                                 course=ACCEPT product=ACCEPT
+ok     unknown_depth1                       course=REFUSE product=REFUSE
+ok     unknown_depth2                       course=REFUSE product=REFUSE
+ok     unknown_depth3                       course=REFUSE product=REFUSE
+ok     unknown_depth4                       course=REFUSE product=REFUSE
+ok     unknown_in_lease                     course=REFUSE product=REFUSE
+ok     display_unknown_section              course=REFUSE product=REFUSE
+ok     display_field_not_in_fields          course=REFUSE product=REFUSE
+ok     display_field_help_not_in_fields     course=REFUSE product=REFUSE
+DIFFER display_fields_platform_key_age      course=REFUSE product=ACCEPT
+         course:  spec probe: display.fields is {<a field of the row or of form[].status>: <words>} — ['age'] names no field, not {'name': 'Name', 'start': 'Start', 'age': 'Age'} | 0.17s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER display_fields_platform_key_epoch    course=REFUSE product=ACCEPT
+         course:  spec probe: display.fields is {<a field of the row or of form[].status>: <words>} — ['epoch'] names no field, not {'name': 'Name', 'start': 'Start', 'epoch': 'E | 0.16s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     display_fields_status_field          course=ACCEPT product=ACCEPT
+ok     display_fields_nested_map            course=REFUSE product=REFUSE
+ok     display_options_not_in_enum          course=REFUSE product=REFUSE
+ok     display_options_field_without_enum   course=REFUSE product=REFUSE
+ok     display_options_not_a_field          course=REFUSE product=REFUSE
+DIFFER display_options_platform_key_server  course=REFUSE product=ACCEPT
+         course:  spec probe: display.options is {<a field with an enum>: {<one of its values>: <its word>}, <a field of form[].status>: {<a value>: <its word>}}, not {'kind': {' | 0.17s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     display_options_status_field         course=ACCEPT product=ACCEPT
+DIFFER display_form_fields_status_field     course=REFUSE product=ACCEPT
+         course:  spec probe: display.form is [{title, state?, placement?, fields: [<a field of the row>], status?, note?}], not [{'title': 'Main', 'fields': ['name', 'start', 'k | 0.16s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     display_form_fields_unknown          course=REFUSE product=REFUSE
+ok     display_form_unknown_key             course=REFUSE product=REFUSE
+DIFFER display_tree_word_remove             course=REFUSE product=ACCEPT
+         course:  spec probe: display.tree is {group_by: <a field>, columns, children: true|false, nested_by, group_title, group_hint, filter, no_group, contents_title, group_wor | 0.17s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER display_tree_group_by_unknown        course=REFUSE product=ACCEPT
+         course:  spec probe: display.tree is {group_by: <a field>, columns, children: true|false, nested_by, group_title, group_hint, filter, no_group, contents_title, group_wor | 0.16s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER display_tree_column_unknown          course=REFUSE product=ACCEPT
+         course:  spec probe: display.tree.columns names a field of the row or of the unit's status (phase, worker, server, revision, observed_revision), not {'field': 'nosuch',  | 0.30s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     display_word_not_string              course=REFUSE product=REFUSE
+ok     requests_unknown_stamp               course=REFUSE product=REFUSE
+ok     requests_unknown_key                 course=REFUSE product=REFUSE
+ok     worker_requests_unknown_sub          course=ACCEPT product=ACCEPT
+ok     lease_minus1                         course=REFUSE product=REFUSE
+ok     lease_forever_quoted                 course=ACCEPT product=ACCEPT
+ok     lease_forever                        course=ACCEPT product=ACCEPT
+ok     lease_zero                           course=REFUSE product=REFUSE
+DIFFER lease_1e308                          course=REFUSE product=ACCEPT
+         course:  spec probe: lease.unconfirmed_max is forever, off or a number of seconds — `lease:` is {unconfirmed_max: forever | off | <seconds>}, not {'unconfirmed_max': '1e | 0.15s
+         product: name=probe unconfirmed_max=1e+308 | 0.00s
+ok     lease_1.0e308                        course=ACCEPT product=ACCEPT
+ok     lease_inf                            course=REFUSE product=REFUSE
+ok     lease_Infinity                       course=REFUSE product=REFUSE
+ok     lease_.inf                           course=REFUSE product=REFUSE
+ok     lease_nan                            course=REFUSE product=REFUSE
+ok     lease_true                           course=REFUSE product=REFUSE
+DIFFER lease_false                          course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.16s
+         product: spec probe: `lease:` is {unconfirmed_max: forever | off | <seconds>}, not map[unconfirmed_max:false] | 0.00s
+DIFFER lease_no                             course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.18s
+         product: spec probe: `lease:` is {unconfirmed_max: forever | off | <seconds>}, not map[unconfirmed_max:no] | 0.00s
+DIFFER lease_OFF                            course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.17s
+         product: spec probe: `lease:` is {unconfirmed_max: forever | off | <seconds>}, not map[unconfirmed_max:OFF] | 0.00s
+ok     lease_90_quoted                      course=REFUSE product=REFUSE
+ok     lease_90s                            course=REFUSE product=REFUSE
+ok     lease_90                             course=ACCEPT product=ACCEPT
+DIFFER lease_hex_0x10                       course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=16.0 | 0.16s
+         product: spec probe: `lease:` is {unconfirmed_max: forever | off | <seconds>}, not map[unconfirmed_max:0x10] | 0.00s
+ok     lease_1_000                          course=ACCEPT product=ACCEPT
+ok     lease_huge_int                       course=ACCEPT product=ACCEPT
+DIFFER lease_null                           course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.16s
+         product: spec probe: `lease:` is {unconfirmed_max: forever | off | <seconds>}, not <nil> | 0.00s
+ok     lease_empty_map                      course=REFUSE product=REFUSE
+ok     lease_absent                         course=ACCEPT product=ACCEPT
+MISSED dup_top_key_name                     course=ACCEPT product=ACCEPT
+         course:  name=other unconfirmed_max=0.0 | 0.16s
+         product: name=other unconfirmed_max=off | 0.00s
+MISSED dup_key_lease_value                  course=ACCEPT product=ACCEPT
+         course:  name=probe unconfirmed_max=None | 0.15s
+         product: name=probe unconfirmed_max=forever | 0.00s
+MISSED dup_key_in_flow_map                  course=ACCEPT product=ACCEPT
+         course:  name=probe unconfirmed_max=None | 0.16s
+         product: name=probe unconfirmed_max=forever | 0.00s
+MISSED dup_block_hides_unknown              course=ACCEPT product=ACCEPT
+         course:  name=probe unconfirmed_max=0.0 | 0.17s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     anchor_alias_display_keys            course=ACCEPT product=ACCEPT
+ok     anchor_merge_key                     course=REFUSE product=REFUSE
+DIFFER block_scalar_hides_tail              course=REFUSE product=ACCEPT
+         course:  spec probe: no spec says `bogus_after` — a key the platform does not read is a mistake or another's word; it is refused, not passed over | 0.17s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     block_scalar_hides_lease             course=ACCEPT product=ACCEPT
+ok     overindent_hides_tail                course=CRASH  product=REFUSE
+         course:  ParserError: while parsing a block mapping   in "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratc | 0.15s
+         product: spec probe: placement.capacity.default — the capacity of a worker whose heartbeat says none — is not said: the platform has no number of its own for it | 0.00s
+DIFFER multiline_plain_scalar               course=REFUSE product=ACCEPT
+         course:  spec probe: no spec says `bogus_after` — a key the platform does not read is a mistake or another's word; it is refused, not passed over | 0.16s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     tab_indent                           course=CRASH  product=REFUSE
+         course:  ScannerError: while scanning for the next token found character '\t' that cannot start any token   in "/private/tmp/claude-501/-Users- | 0.15s
+         product: spec probe: headroom: unknown key | 0.00s
+DIFFER non_utf8_in_word                     course=REFUSE product=ACCEPT
+         course:  'utf-8' codec can't decode byte 0xff in position 627: invalid start byte | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER non_utf8_in_comment                  course=REFUSE product=ACCEPT
+         course:  'utf-8' codec can't decode byte 0xff in position 869: invalid start byte | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER bom_utf8                             course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.16s
+         product: spec: no name | 0.00s
+DIFFER nul_byte_in_word                     course=CRASH  product=ACCEPT
+         course:  ReaderError: unacceptable character #x0000: special characters are not allowed   in "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     deep_flow_200                        course=REFUSE product=REFUSE
+ok     deep_flow_5000                       course=CRASH  product=REFUSE
+         course:  RecursionError: maximum recursion depth exceeded | 0.30s
+         product: spec probe: requests.schema.x: a — not a keyword the platform reads ($comment, additionalProperties, allOf, anyOf, const, description, else, enum, exclusiveMaximum, exclusiveMinimum, if, items, maxItems, maxLength, maxProperties, maximum, minItems, minLength, minProperties, minimum, multipleOf, not, oneOf, pattern, properties, propertyNames, required, then, title, type, uniqueItems) | 0.12s
+ok     deep_block_500                       course=REFUSE product=REFUSE
+ok     size_10mb                            course=ACCEPT product=ACCEPT
+ok     yaml_list_toplevel                   course=CRASH  product=REFUSE
+         course:  AttributeError: 'list' object has no attribute 'get' | 0.18s
+         product: spec: no name | 0.00s
+ok     yaml_two_documents                   course=CRASH  product=REFUSE
+         course:  ComposerError: expected a single document in the stream   in "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a | 0.15s
+         product: yaml: bad line "---" | 0.00s
+DIFFER json_default_map                     course=REFUSE product=ACCEPT
+         course:  spec probe: no spec says `unit.fields.doc.default.a` — a key the platform does not read is a mistake or another's word; it is refused, not passed over | 0.16s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER inherit_map                          course=REFUSE product=ACCEPT
+         course:  spec probe: no spec says `unit.fields.doc.inherit.a` — a key the platform does not read is a mistake or another's word; it is refused, not passed over | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER display_kinds_nested                 course=REFUSE product=ACCEPT
+         course:  spec probe: display.kinds is {<a name>: <its words>}, not {'motion': {'x': 1}} | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER display_actions_nested               course=REFUSE product=ACCEPT
+         course:  spec probe: display.actions is {<a name>: <its words>}, not {'pulse': {'x': 1}} | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     display_options_bool_enum            course=ACCEPT product=ACCEPT
+DIFFER display_word_On_Off_unquoted         course=REFUSE product=ACCEPT
+         course:  spec probe: display.options is {<a field with an enum>: {<one of its values>: <its word>}, <a field of form[].status>: {<a value>: <its word>}}, not {'kind': {' | 0.14s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER display_options_yes_key              course=REFUSE product=ACCEPT
+         course:  spec probe: display.options is {<a field with an enum>: {<one of its values>: <its word>}, <a field of form[].status>: {<a value>: <its word>}}, not {'kind': {' | 0.16s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     snapshot_unknown_field               course=REFUSE product=REFUSE
+MISSED spread_by_unknown_field              course=ACCEPT product=ACCEPT
+         course:  name=probe unconfirmed_max=0.0 | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+DIFFER group_by_unknown_field               course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.15s
+         product: spec probe: placement.group_by names "nosuch", which is no field of its rows | 0.00s
+ok     retire_when_unknown_field            course=REFUSE product=REFUSE
+MISSED requests_key_unknown_field           course=ACCEPT product=ACCEPT
+         course:  name=probe unconfirmed_max=0.0 | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     enum_default_not_in_enum             course=REFUSE product=REFUSE
+DIFFER requests_key_stray_brace             course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.15s
+         product: spec probe: requests.key is a template of the body's fields ({field}, {field:int}), not x-{unit | 0.00s
+DIFFER requests_stamp_group_without_group_by course=ACCEPT product=REFUSE
+         course:  name=probe unconfirmed_max=0.0 | 0.15s
+         product: spec probe: requests.stamp names group, and the spec has no placement.group_by: there is no group to stamp | 0.00s
+MISSED spread_by_not_string                 course=ACCEPT product=ACCEPT
+         course:  name=probe unconfirmed_max=0.0 | 0.15s
+         product: name=probe unconfirmed_max=off | 0.00s
+ok     key_true_yaml11                      course=REFUSE product=REFUSE
+89 cases, 35 differ or missed
+exit=0

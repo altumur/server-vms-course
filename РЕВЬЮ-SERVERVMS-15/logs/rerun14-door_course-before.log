@@ -1,0 +1,25 @@
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+testsub2: a write failed: testsub2/requests/яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя…: 322 bytes over this store's limit of 246 — a key is at most 246 bytes here, as a file's name (a / or a % counts three): a shorter name
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+testsub2: a write failed: the stored row testsub2/requests/own-1 does not read (JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1))
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+testsub2: request t1-1 for t1 ended unperformed 3690 s past its deadline — no worker held its unit to perform it
+["cross_person_same_rid", 202, 202, {"id": "r1", "add": "1", "note": "anna's", "unit": "t1", "valid_until": "1757500030", "by": "anna", "at": "1757500000", "of": "c1"}]
+["idem_same", 202, 202, true]
+["idem_other_body", 422, "key reused"]
+["idem_other_user", 422, "key reused"]
+["rid_cyr150", 500, "the write failed"]
+["rid_cyr201", 400, "bad id"]
+["rid_backslash", 202, "a\\b"]
+["rid_u2028", 400, "bad id"]
+["rid_u0085", 400, "bad id"]
+["rid_dotdot", 400, "bad id"]
+["rid_slash", 400, "bad id"]
+["rid_bidi", 202, "a\u202eb"]
+["rid_empty_string", 202, "served-15"]
+["note_100000", 400, "too_long"]
+["forged_by_in_body", 400, "refused"]
+["rid_is_victims_ledger", 202, {"id": "asks-55579b557896d0ce", "asks": "[[\"secret-anna-ask\",1757500000]]", "by": "anna", "at": "1757500000"}]
+["garbled_own_row_in_ledger", 500, "the write failed", "the stored row testsub2/requests/own-1 does not read (JSONDecodeError: Expecting"]
+["ledger_after_ttl_sweep", 1, 0]
+exit=0

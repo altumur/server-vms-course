@@ -1,0 +1,4 @@
+t-1: unit u1 stopped: a newer epoch was issued for it
+lost ['u1'] mine 1 theirs 2 REFUSED_BEFORE_READ True
+after a read: epoch 3
+exit=0

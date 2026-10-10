@@ -1,0 +1,97 @@
+=== vet/compile w2cplatform (before) 09:40:39
+vmsworker/vms/auto.go:74:16: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:77:16: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:83:17: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:101:13: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:105:12: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:109:13: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:116:11: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:119:11: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:122:11: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:133:12: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:141:13: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:146:13: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:161:11: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:166:11: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+vmsworker/vms/auto.go:284:16: vmsworker.local/vmsworker/vms.Refused struct literal uses unkeyed fields
+=== go test (before) 09:41:21
+=== done (before) 09:41:49
+=== RUN   TestProbeMarksRace
+    zz_marks_probe_test.go:89: MEASURED files n=300: answer lost=0, closer over outcome=0, two closers wrote map[1:300], create-only both/none=0, mark resurrected after sweep=17
+    zz_marks_probe_test.go:89: MEASURED cluster-rows n=300: answer lost=0, closer over outcome=0, two closers wrote map[1:300], create-only both/none=0, mark resurrected after sweep=0
+--- PASS: TestProbeMarksRace (23.08s)
+=== RUN   TestProbeTimeoutLeavesTheMarkWithoutOutcome
+    zz_marks_probe_test.go:113: MEASURED answer=map[error:the target did not answer request:r1 unit:c1] mark after timeout=map[at:1000 instance:34C5E223-BEF8-59F5-AF57-072C5B498F8D:89597:5dea7f slot:w-1 unit:c1] (outcome=<nil>)
+    zz_marks_probe_test.go:118: MEASURED mark after the row was cleared and the sweep ran=map[]
+    zz_marks_probe_test.go:120: DEFECT: answered "the target did not answer" but the mark has no outcome; then swept
+--- FAIL: TestProbeTimeoutLeavesTheMarkWithoutOutcome (0.08s)
+=== RUN   TestProbeMovedUnitCountsOneRequestTwice
+    zz_marks_probe_test.go:145: MEASURED B's look=[map[error:unknown: an earlier instance (34C5E223-BEF8-59F5-AF57-072C5B498F8D:89597:9af62a) began it, and whether it was acted on is not known request:r1 unit:c1]] err=<nil> B calls=0
+    zz_marks_probe_test.go:149: MEASURED A counts=map[expired:0 performed:1 refused:0 unknown:0] B counts=map[expired:0 performed:0 refused:0 unknown:1] final mark=map[action: at:1000 instance:34C5E223-BEF8-59F5-AF57-072C5B498F8D:89597:9af62a outcome:performed slot:w-1 unit:c1]
+--- PASS: TestProbeMovedUnitCountsOneRequestTwice (0.10s)
+=== RUN   TestProbeGarbledMarkKeepsTheRowForEver
+    zz_marks_probe_test.go:169: MEASURED after 5 h of reaper turns: garbled row stands=true, parsed (holder gone) row stands=false
+    zz_marks_probe_test.go:171: DEFECT: a request whose mark does not parse is never ended by the reaper
+--- FAIL: TestProbeGarbledMarkKeepsTheRowForEver (0.07s)
+=== RUN   TestProbeTTLPathReadsTheMark
+    zz_marks_probe_test.go:216: MEASURED ttl path: answered row stands=false, begun row (holder there) stands=false, expired +2, unknown +0, begun mark={"instance":"I","slot":"w-1"}
+    zz_marks_probe_test.go:219: DEFECT: the ttl path ends a begun request and counts expired without reading the mark
+--- FAIL: TestProbeTTLPathReadsTheMark (0.02s)
+=== RUN   TestProbeB1RestartFailuresOfALongHeldKey
+    zz_probe_b1_test.go:26: t=100 failed=1 waiting=[] state=lagging failures=1 wait=1s
+    zz_probe_b1_test.go:26: t=103 failed=1 waiting=[] state=lagging failures=2 wait=2s
+    zz_probe_b1_test.go:26: t=106 failed=1 waiting=[] state=stalled failures=3 wait=4s
+    zz_probe_b1_test.go:26: t=109 failed=0 waiting=[a] state=stalled failures=3 wait=1s
+    zz_probe_b1_test.go:26: t=112 failed=1 waiting=[] state=stalled failures=4 wait=8s
+    zz_probe_b1_test.go:26: t=115 failed=0 waiting=[a] state=stalled failures=4 wait=5s
+    zz_probe_b1_test.go:26: t=118 failed=0 waiting=[a] state=stalled failures=4 wait=2s
+    zz_probe_b1_test.go:26: t=121 failed=1 waiting=[] state=stalled failures=5 wait=16s
+    zz_probe_b1_test.go:36: REV0_FAILING_STATUS {State:converged Lag:0 Failures:5 RetryAt:1970-01-01 02:06:56.988671774 +0200 EET}
+--- PASS: TestProbeB1RestartFailuresOfALongHeldKey (0.00s)
+=== RUN   TestProbeB3TakeEpochAfterLostToEpoch
+    zz_probe_b3_test.go:35: mine=1 theirs=2 retake=3 err=<nil> TAKEN_BACK=true
+--- PASS: TestProbeB3TakeEpochAfterLostToEpoch (0.00s)
+=== RUN   TestProbeB4ClaimHoldByAForeignClock
+    zz_probe_b4_test.go:30: t=+30.0s A.fresh=true B.claim="" TWO_WRITERS=false
+    zz_probe_b4_test.go:30: t=+36.0s A.fresh=true B.claim="" TWO_WRITERS=false
+    zz_probe_b4_test.go:30: t=+37.5s A.fresh=true B.claim="net" TWO_WRITERS=true
+    zz_probe_b4_test.go:30: t=+39.0s A.fresh=true B.claim="" TWO_WRITERS=true
+    zz_probe_b4_test.go:30: t=+41.0s A.fresh=false B.claim="" TWO_WRITERS=false
+--- PASS: TestProbeB4ClaimHoldByAForeignClock (0.00s)
+=== RUN   TestProbeYAMLSilent
+--- FAIL: TestProbeYAMLSilent (0.00s)
+=== RUN   TestR14DoorCrossPersonSameRid
+--- PASS: TestR14DoorCrossPersonSameRid (0.01s)
+=== RUN   TestR14DoorRidEdges
+--- PASS: TestR14DoorRidEdges (0.03s)
+=== RUN   TestR14DoorGarbledOwnRowInLedger
+--- PASS: TestR14DoorGarbledOwnRowInLedger (0.01s)
+=== RUN   TestR14DoorLedgerAfterTTL
+--- PASS: TestR14DoorLedgerAfterTTL (0.02s)
+=== RUN   TestR14DoorIdempotencyKey
+--- PASS: TestR14DoorIdempotencyKey (0.01s)
+=== RUN   TestR14ClaimsHold
+    zz_r14_filings_platform_test.go:61: MEASURED filings after 3 stamps + file + repeat + conflict: map[again:1 filed:1 refused:4] (keys [testsub/requests/r1])
+--- PASS: TestR14ClaimsHold (0.02s)
+=== RUN   TestR14GetFailureAfterConflictIsCountedNowhere
+    zz_r14_filings_platform_test.go:71: MEASURED get-error-after-conflict: filed=false err=store did not answer isRefused=false isConflict=false filings=map[]
+    zz_r14_filings_platform_test.go:75: MEASURED row-gone-after-conflict: err=cas conflict: the ModifyIndex moved: request testsub/g2: under this rid stands a different request (course says: 'the row that stood under this rid is gone')
+--- PASS: TestR14GetFailureAfterConflictIsCountedNowhere (0.00s)
+=== RUN   TestR14RefileAfterClearAndLedgerPrefixAndNaN
+    zz_r14_filings_platform_test.go:87: MEASURED refile after clear: first=true second=true err=<nil> filings=map[again:0 filed:2 refused:0]
+    zz_r14_filings_platform_test.go:89: MEASURED rid with the ledger prefix: filed=true err=<nil> (holder skips HasPrefix(rid, LedgerPrefix))
+    zz_r14_filings_platform_test.go:92: MEASURED NaN at: filed=true err=<nil> at="NaN"
+--- PASS: TestR14RefileAfterClearAndLedgerPrefixAndNaN (0.09s)
+FAIL
+FAIL	vmsworker.local/vmsworker/w2cplatform	24.316s
+=== RUN   TestR14ARefusedActionStopsTheFiring
+    zz_r14_filings_vms_test.go:30: MEASURED File err=cas conflict: the ModifyIndex moved: request vms/f-0: under this rid stands a different request ; rec/requests/f-1 written=false
+--- PASS: TestR14ARefusedActionStopsTheFiring (0.10s)
+=== RUN   TestR14AScenarioNamedAsksIsNeverPerformed
+    zz_r14_filings_vms_test.go:56: MEASURED scenario "door": file err=<nil> filed=1 performed=1 outcome="performed" row-stands=true
+    zz_r14_filings_vms_test.go:56: MEASURED scenario "asks-door": file err=<nil> filed=1 performed=0 outcome="" row-stands=true
+--- PASS: TestR14AScenarioNamedAsksIsNeverPerformed (0.07s)
+PASS
+ok  	vmsworker.local/vmsworker/vms	1.922s
+FAIL
+exit=1

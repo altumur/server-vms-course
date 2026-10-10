@@ -1,0 +1,7 @@
+{'jitter': 0} REFUSED
+{'jitter': nan} REFUSED
+{'jitter': 1.5} REFUSED
+{'base': 0} ACCEPTED delays [0.0, 0.0, 0.0]
+{'base': -1} ACCEPTED delays [-1.0, -2.0, -4.0]
+{'base': 10, 'max': 1} ACCEPTED delays [1.0, 1.0, 1.0]
+exit=0

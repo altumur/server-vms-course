@@ -1,0 +1,10 @@
+LOADED   unit.derived.items names a field that does not exist (dayz)
+LOADED   servers.show.by names no field of the table (servre)
+LOADED   holds.unit/since/until name no fields of the table (itm, aa, bb)
+LOADED   affinity.server_field names no field of the table (servre)
+LOADED   affinity.strict key names no field of the table (kinnd)
+LOADED   places.server_field / where name no fields of the table (servre, rolle)
+LOADED   rights.unit_of names no field of the table (itemm)
+LOADED   metrics count where names no field of the table (kinnd)
+REFUSED  display.tree.columns field of the row: CHECKED (control): spec p: display.tree.columns names a field of the row or of the unit's status (phase, worker, server, revision
+LOADED   near.prefer key names no field of the neighbour (kinnd), near_known passed

@@ -1,0 +1,8 @@
+t=+1s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+30s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+37.5s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+39s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+41s A.may_write=False B.claim=None TWO_WRITERS=False
+t=+52s A.may_write=False B.claim='net' TWO_WRITERS=False
+ANY_TWO_WRITERS False
+exit=0

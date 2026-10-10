@@ -1,0 +1,8 @@
+2026-10-10 09:39:33,458 w2cplatform.requests WARNING vms: request x2 for 1 ended unperformed 120 s past its deadline — no worker held its unit to perform it
+2026-10-10 09:39:33,458 w2cplatform.requests INFO vms: request x3 was answered (performed) and its answer never reached a heartbeat: its row is cleared
+2026-10-10 09:39:33,459 w2cplatform.requests WARNING vms: request x1 for 1 ended 120 s past its deadline NOT KNOWN: its holder began it and is gone without saying how it went
+author's M11 reaper test under the cluster's rights: ok
+console's delete of a mark refused: Forbidden console may not delete objects/vms/commands/m1
+console put_at at a stale index (0) took: False
+RESULT OK
+exit=0

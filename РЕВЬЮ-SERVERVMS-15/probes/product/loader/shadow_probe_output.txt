@@ -1,0 +1,3 @@
+    zz_probe15_shadow_test.go:71: MEASURED spec shadow loaded; GET /metrics -> 200 application/json "{\"metrics\":[]}"
+    zz_probe15_shadow_test.go:71: MEASURED spec shadow loaded; GET /events -> 200 application/json "{\"events\":[]}"
+    zz_probe15_shadow_test.go:71: MEASURED spec shadow2 loaded; GET /servers -> 200 application/json "{\"configured\":[],\"rows\":[]}"

@@ -1,0 +1,53 @@
+t-1: request testsub/s-by refused: by is the platform's to stamp, not the row's
+t-1: request testsub/s-at refused: at is the platform's to stamp, not the row's
+t-1: request testsub/s-filed refused: filed is the platform's to stamp, not the row's
+t-1: request testsub/fire-1-0 refused: under this rid stands a different request
+t-1: request testsub/s-by refused: by is the platform's to stamp, not the row's
+t-1: request testsub/s-at refused: at is the platform's to stamp, not the row's
+t-1: request testsub/s-filed refused: filed is the platform's to stamp, not the row's
+t-1: request testsub/fire-1-0 refused: under this rid stands a different request
+t-1: request testsub/s-by refused: by is the platform's to stamp, not the row's
+t-1: request testsub/s-at refused: at is the platform's to stamp, not the row's
+t-1: request testsub/s-filed refused: filed is the platform's to stamp, not the row's
+t-1: request testsub/fire-1-0 refused: under this rid stands a different request
+--- FileVariables (a box)
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: ValueError (not RequestRefused): nan is no JSON number
+  filings: {'filed': 3, 'again': 1, 'refused': 4}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 4}
+--- MemVariables
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: ValueError (not RequestRefused): nan is no JSON number
+  filings: {'filed': 3, 'again': 1, 'refused': 4}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 4}
+--- MemVariables under the worker's grant
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: ValueError (not RequestRefused): nan is no JSON number
+  filings: {'filed': 3, 'again': 1, 'refused': 4}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 4}
+--- /metrics producers mentioning `filings`: NONE
+exit=0

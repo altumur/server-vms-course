@@ -1,0 +1,175 @@
+=== base_b1 (after) 09:39:30
+t=100.0 failed=['a'] waiting=[] state=lagging failures=1 wait=1.00
+t=103.0 failed=['a'] waiting=[] state=lagging failures=2 wait=2.00
+t=106.0 failed=['a'] waiting=[] state=stalled failures=3 wait=4.00
+t=109.0 failed=[] waiting=['a'] state=stalled failures=3 wait=1.00
+t=112.0 failed=['a'] waiting=[] state=stalled failures=4 wait=8.00
+t=115.0 failed=[] waiting=['a'] state=stalled failures=4 wait=5.00
+RESTART_FAILURES_ACCUMULATE True EVER_STALLED True
+REV0_FAILING_STATUS Position(state='stalled', lag=0, failures=5, retry_at=422.64190260333135)
+exit=0
+=== base_b3 (after) 09:39:30
+t-1: unit u1 stopped: a newer epoch was issued for it
+lost ['u1'] mine 1 theirs 2 REFUSED_BEFORE_READ True
+after a read: epoch 3
+exit=0
+=== base_b4 (after) 09:39:30
+t=+1s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+30s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+37.5s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+39s A.may_write=True B.claim=None TWO_WRITERS=False
+t=+41s A.may_write=False B.claim=None TWO_WRITERS=False
+t=+52s A.may_write=False B.claim='net' TWO_WRITERS=False
+ANY_TWO_WRITERS False
+exit=0
+=== base_b5 (after) 09:39:31
+{'jitter': 0} REFUSED
+{'jitter': nan} REFUSED
+{'jitter': 1.5} REFUSED
+{'base': 0} REFUSED
+{'base': -1} REFUSED
+{'base': 10, 'max': 1} REFUSED
+exit=0
+=== door_course (after) 09:39:31
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+testsub2/requests/own-1: the request row a ledger names does not parse (the stored row testsub2/requests/own-1 does not read (JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1))); it keeps its place in its person's ledger until it is mended or its ttl passes
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+testsub2: request t1-1 for t1 ended unperformed 3690 s past its deadline — no worker held its unit to perform it
+["cross_person_same_rid", 202, 409, null]
+["idem_same", 202, 202, true]
+["idem_other_body", 422, "key reused"]
+["idem_other_user", 422, "key reused"]
+["rid_cyr150", 400, "bad id"]
+["rid_cyr201", 400, "bad id"]
+["rid_backslash", 400, "bad id"]
+["rid_u2028", 400, "bad id"]
+["rid_u0085", 400, "bad id"]
+["rid_dotdot", 400, "bad id"]
+["rid_slash", 400, "bad id"]
+["rid_bidi", 202, "a\u202eb"]
+["rid_empty_string", 202, "served-15"]
+["note_100000", 400, "too_long"]
+["forged_by_in_body", 400, "refused"]
+["rid_is_victims_ledger", 202, {"id": "asks-55579b557896d0ce", "add": "1", "unit": "t1", "valid_until": "1757500030", "by": "mallory", "at": "1757500000", "of": "c1"}]
+["garbled_own_row_in_ledger", 202, null, "whoever holds the unit answers it on its next look at the requests, in its heart"]
+["ledger_after_ttl_sweep", 0, 0]
+exit=0
+=== filings_course (after) 09:39:33
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: RequestRefused
+  filings: {'filed': 3, 'again': 1, 'refused': 5}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 5}
+--- MemVariables
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: RequestRefused
+  filings: {'filed': 3, 'again': 1, 'refused': 5}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 5}
+--- MemVariables under the worker's grant
+  stamp by: refused
+  stamp at: refused
+  stamp filed: refused
+  written after stamps: []
+  file: True
+  repeat: False
+  conflict: refused
+  refile after clear: True
+  rid asks-<16hex>: True
+  NaN at: RequestRefused
+  filings: {'filed': 3, 'again': 1, 'refused': 5}
+  heartbeat filings: {'filed': 3, 'again': 1, 'refused': 5}
+--- /metrics producers mentioning `filings`: ['vms/rec.subsystem.yaml:249', 'vms/rec.subsystem.yaml:251', 'vms/auto.subsystem.yaml:151', 'vms/auto.subsystem.yaml:153']
+exit=0
+=== filings_rid_namespace (after) 09:39:33
+this console is OPEN: the cluster's store holds no key set (domain/keys), so nobody is asked who they are and whoever reaches it is an administrator under any name
+t-1: request testsub/'op-1' refused: under this rid stands a different request
+worker files fire-1-0: True
+person POST same rid, other body -> 409 None
+row standing: {'unit': 'testsub/c1', 'add': '2', 'valid_until': '1757500030', 'by': 'testsub2/t1', 'at': '1757500000', 'filed': '1757500000'}
+person's request written anywhere: []
+person POST op-1 -> 202
+worker files op-1 after the person: refused: request testsub/op-1 refused: under this rid stands a different request
+worker filings: {'filed': 1, 'again': 0, 'refused': 1}
+exit=0
+=== filings_worker_requests_loader (after) 09:39:34
+worker.requests ['recc']: LOADED, worker_requests=('recc',), grant=['recc/requests/*']
+worker.requests ['testsub2']: LOADED, worker_requests=('testsub2',), grant=['testsub2/requests/*']
+worker.requests ['live']: LOADED, worker_requests=('live',), grant=['live/requests/*']
+exit=0
+=== marks_holder_paths (after) 09:39:35
+t-1: request r1: the target did not answer within 10 s — whether it acted on c1 is not known
+T1 answer: [{'request': 'r1', 'unit': 'c1', 'error': 'the target did not answer'}] | mark after timeout: {'at': 1757500000, 'digest': 'b03cae4391567c3e693e706df61a896838245ceb88023818225d04b0c0f37b04', 'ended_at': 1757500000, 'error': 'the target did not answer', 'instance': 'Murats-MacBook-Pro.local:88287:069d62', 'outcome': 'unknown', 'slot': 't-1', 'unit': 'c1', 'valid_until': 1757500030}
+T1 row stands: False | mark after clear+sweep: {'at': 1757500000, 'digest': 'b03cae4391567c3e693e706df61a896838245ceb88023818225d04b0c0f37b04', 'ended_at': 1757500000, 'error': 'the target did not answer', 'instance': 'Murats-MacBook-Pro.local:88287:069d62', 'outcome': 'unknown', 'slot': 't-1', 'unit': 'c1', 'valid_until': 1757500030}
+T2 B answered: [] | A counts: {'performed': 1, 'refused': 0, 'expired': 0, 'unknown': 0} | B counts: {'performed': 0, 'refused': 0, 'expired': 0, 'unknown': 0} | final mark outcome: performed
+T2 one request counted 1 times across holders (once); calls into the target: A=1 B=0
+testsub: request garbled for c1 ended 3665 s past its deadline NOT KNOWN: its mark does not read: whoever began it is not known, nor how it went
+testsub: request parsed for c1 ended 3665 s past its deadline NOT KNOWN: its holder began it and is gone without saying how it went
+T3 after 5 h of reaper turns: garbled row stands=False, parsed (holder gone) row stands=False
+RESULT OK
+exit=0
+=== marks_m11_rights (after) 09:39:36
+2026-10-10 09:39:36,501 w2cplatform.requests WARNING vms: request x2 for 1 ended unperformed 120 s past its deadline — no worker held its unit to perform it
+2026-10-10 09:39:36,501 w2cplatform.requests INFO vms: request x3 was answered (performed) and its answer never reached a heartbeat: its row is cleared
+2026-10-10 09:39:36,505 w2cplatform.requests WARNING vms: request x1 for 1 ended 120 s past its deadline NOT KNOWN: its holder began it and is gone without saying how it went
+author's M11 reaper test under the cluster's rights: ok
+console's delete of a mark refused: Forbidden console may not delete objects/vms/commands/m1
+console put_at at a stale index (0) took: False
+RESULT OK
+exit=0
+=== marks_race (after) 09:39:36
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 93, in <lambda>
+    r = race([lambda: delete(s, KEY) or True, lambda: complete_mark(s, KEY, "unknown", "gone", 6.0)])
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/requests.py", line 191, in complete_mark
+    raw, index = objects.get_at(key)
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 109, in get_at
+    data = self.get(key)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 168, in get
+    with open(p, "rb") as f:
+         ^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/rj/0mbpl0_d5jg43d1vmv_83cx00000gn/T/rc-n85mqinz/testsub/commands/r1'
+Exception in thread Thread-3689 (run):
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.15/Frameworks/Python.framework/Versions/3.12/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 55, in run
+    out[i] = f()
+             ^^^
+  File "/Users/murat/w2c/server-vms-course/РЕВЬЮ-SERVERVMS-14/probes/marks/p_marks_race_closer_vs_holder.py", line 93, in <lambda>
+    r = race([lambda: delete(s, KEY) or True, lambda: complete_mark(s, KEY, "unknown", "gone", 6.0)])
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/requests.py", line 191, in complete_mark
+    raw, index = objects.get_at(key)
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 109, in get_at
+    data = self.get(key)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/claude-501/-Users-murat-w2c/9fcfbba6-c100-4841-b1c3-27ac748a363f/scratchpad/r15/course/Source/w2cplatform/cluster/objectstore.py", line 168, in get
+    with open(p, "rb") as f:
+         ^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/rj/0mbpl0_d5jg43d1vmv_83cx00000gn/T/rc-n85mqinz/testsub/commands/r1'
+cluster-fs N=300: holder answer lost=0, closer wrote first (then overwritten)=8, closer over an outcome=0, two closers wrote {0: 0, 1: 300, 2: 0}, create-only both/none=0, mark brought back after the sweep deleted it=0 -> OK
+mem-rows   N=300: holder answer lost=0, closer wrote first (then overwritten)=0, closer over an outcome=0, two closers wrote {0: 0, 1: 300, 2: 0}, create-only both/none=0, mark brought back after the sweep deleted it=0 -> OK
+stores with no delete (Worker.sweep_marks -> AttributeError there): none
+RESULT OK
+exit=0

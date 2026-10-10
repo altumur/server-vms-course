@@ -1,0 +1,11 @@
+T1 answer: [{'request': 'r1', 'unit': 'c1', 'error': 'the target did not answer'}] | mark after timeout: {'at': 1757500000, 'instance': 'Murats-MacBook-Pro.local:88235:4eac2c', 'slot': 't-1', 'unit': 'c1'}
+T1 row stands: False | mark after clear+sweep: None
+T1 DEFECT: the request was answered (refused: did not answer) and its mark never had an outcome
+w-2: request r1 not performed — unknown: an earlier instance (Murats-MacBook-Pro.local:88235:ddf83d) began it, and whether it was acted on is not known
+T2 B answered: ['unknown: an earlier instance (Murats-Mac'] | A counts: {'performed': 1, 'refused': 0, 'expired': 0, 'unknown': 0} | B counts: {'performed': 0, 'refused': 0, 'expired': 0, 'unknown': 1} | final mark outcome: performed
+T2 one request counted 2 times across holders (DOUBLE); calls into the target: A=1 B=0
+testsub: request parsed for c1 ended 3665 s past its deadline NOT KNOWN: its holder began it and is gone without saying how it went
+T3 after 5 h of reaper turns: garbled row stands=True, parsed (holder gone) row stands=False
+T3 DEFECT: a request whose mark does not parse is never ended by the reaper (no holder of the unit)
+RESULT DEFECT
+exit=1

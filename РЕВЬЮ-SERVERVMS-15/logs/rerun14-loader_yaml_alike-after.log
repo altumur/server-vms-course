@@ -1,0 +1,21 @@
+SAME course/Source/tests/testdata/testsub.subsystem.yaml
+SAME course/Source/tests/testdata/testsub2.subsystem.yaml
+DIFF course/Source/vms/auto.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+SAME course/Source/vms/det.subsystem.yaml
+SAME course/Source/vms/detjob.subsystem.yaml
+DIFF course/Source/vms/live.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+SAME course/Source/vms/rec.subsystem.yaml
+SAME course/Source/vms/survey.subsystem.yaml
+SAME course/Source/vms/vms.subsystem.yaml
+DIFF product/vmsworker/vms/auto.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+DIFF product/vmsworker/vms/live.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+SAME product/vmsworker/vms/rec.subsystem.yaml
+SAME product/vmsworker/vms/vms.subsystem.yaml
+SAME product/vmsworker/w2cplatform/testdata/testsub.subsystem.yaml
+SAME product/vmsworker/w2cplatform/testdata/testsub2.subsystem.yaml
+15 files, 4 read differently
+exit=0

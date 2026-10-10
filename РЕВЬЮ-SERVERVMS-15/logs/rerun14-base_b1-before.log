@@ -1,0 +1,9 @@
+t=100.0 failed=['a'] waiting=[] state=lagging failures=0 wait=-100.00
+t=103.0 failed=['a'] waiting=[] state=lagging failures=0 wait=-103.00
+t=106.0 failed=['a'] waiting=[] state=lagging failures=0 wait=-106.00
+t=109.0 failed=['a'] waiting=[] state=lagging failures=0 wait=-109.00
+t=112.0 failed=['a'] waiting=[] state=lagging failures=0 wait=-112.00
+t=115.0 failed=['a'] waiting=[] state=lagging failures=0 wait=-115.00
+RESTART_FAILURES_ACCUMULATE False EVER_STALLED False
+REV0_FAILING_STATUS Position(state='converged', lag=0, failures=5, retry_at=422.6836140873245)
+exit=0

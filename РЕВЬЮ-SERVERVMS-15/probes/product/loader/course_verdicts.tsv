@@ -1,0 +1,71 @@
+about_field_not_fixed	refused	spec testsub2: about.field 'of' is what a unit is about, and that does not change — say `fixed: true` on it
+about_sub_self	refused	spec testsub2: `about:` is {sub: <another subsystem>, field: <a field of the row>}, not {'sub': 'testsub2', 'field': 'of'}
+base	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=name
+bound_to_string	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=name
+capacity_default_absent	refused	spec testsub2: placement.capacity is {from: <heartbeat field>, default: <units a worker that said nothing is counted at>} — the default is the subsystem's to say, not {'from': 'capacity'}
+capacity_default_float	refused	spec testsub2: placement.capacity.default is a whole number of units, not 2.5
+capacity_default_string	refused	spec testsub2: placement.capacity.default is a whole number of units, not '5'
+capacity_default_true	refused	spec testsub2: placement.capacity.default is a whole number of units, not True
+dead_band_negative	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=name
+dead_band_word	refused	could not convert string to float: 'fast'
+default_map_string	refused	spec testsub2: no spec says `unit.fields.zone.default.a` — a key the platform does not read is a mistake or another's word; it is refused, not passed over
+display_events_word	refused	spec testsub2: display.events is true or false — whether the card has the module's journal tab — not 'no'
+display_tree_unknown	refused	spec testsub2: display.tree is {group_by: <a field>, columns, children: true|false, nested_by, group_title, group_hint, filter, no_group, contents_title, group_word, no_group_suffix, pick_note, new_root, new_sub, add_her
+door_routes_dup	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=name
+enum_empty	refused	field mode: `enum` is a list of the values a string field may hold, not []
+enum_on_list	refused	field tags: `enum` is a list of the values a list field may hold, not ['a', 'b']
+field_type_text	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=name
+fixed_yes	refused	field of: `fixed` is true or false, not 'yes'
+hb_worker	refused	spec testsub2: heartbeat.strings: 'worker' is no field of its own heartbeats (the platform's are worker, server, url, instance, labels, fetched, events), or is said twice
+heartbeat_strings_dup	refused	spec testsub2: heartbeat.strings: 'jam' is no field of its own heartbeats (the platform's are worker, server, url, instance, labels, fetched, events), or is said twice
+heartbeat_strings_server	refused	spec testsub2: heartbeat.strings: 'server' is no field of its own heartbeats (the platform's are worker, server, url, instance, labels, fetched, events), or is said twice
+holds_longest_zero	refused	spec testsub2: holds.longest is seconds, more than none — not 0
+inherit_map_string	refused	spec testsub2: no spec says `unit.fields.zone.inherit.a` — a key the platform does not read is a mistake or another's word; it is refused, not passed over
+metric_unknown_agg	refused	spec testsub2: metric tallies_running: from is heartbeat.<path> or status.<path>, agg one of value, flag, age, label, count, sum, max, histogram — not 'status.phase', 'median'
+name_platform	refused	spec platform: `platform` is a name of the platform's own (one of audit, console, domain, platform), not a subsystem's
+near_prefer_without_of	refused	spec testsub2: near.prefer is {<their field>[.<field>]: <values>, …}, and only where `of` can find several of theirs — not {'start': [0, 1]}
+objects_door_heartbeats	refused	spec testsub2: objects.door: 'heartbeats/*' names a family of the platform's own (heartbeats, contenders, used, snapshot, controller, blobs) or every one — a door gives those out unasked
+objects_rows_commands	refused	spec testsub2: objects.rows: 'commands/*' is the platform's family — a request's marks are rows for every spec with `requests:` (`catalog.rows_of`), and a spec does not name them
+objects_rows_heartbeats	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=name
+offers_string	refused	spec testsub2: placement.offers is true or false — the slots offered are named by `slot.prefix` — not 'true'
+places_lease_lenient	refused	spec testsub2: placement.places is {table: <one of its tables>, where?, server_field?, lease?: strict}, for a subsystem placed by something other than the server (`place_by`) — not {'table': 'shelves', 'where': {'enabled
+places_place_by_server	refused	spec testsub2: placement.places is {table: <one of its tables>, where?, server_field?, lease?: strict}, for a subsystem placed by something other than the server (`place_by`) — not {'table': 'shelves', 'where': {'enabled
+requests_per_person_frac	refused	spec testsub2: requests.per_person is a whole number above 0 — how many of one person's may stand, not 2.5
+requests_ttl_nan	refused	spec testsub2: requests.ttl is a finite number of seconds, or 0: no limit, not nan
+requests_valid_past_most	refused	spec testsub2: requests.valid_for (700) is past requests.most_valid (600): a request given no deadline would be refused for its own
+required_yes	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=name
+requires_nothing	refused	spec testsub2: placement.requires is one of none, resource, not 'nothing'
+rows_asked	refused	spec testsub2: unit.rows is 'asked', a route the console answers itself (`/asked`) — no request would reach that family; name it otherwise (the console's routes: api, asked, domain, drain, events, healthz, index.html, ma
+rows_servers	refused	spec testsub2: unit.rows is 'servers', a route the console answers itself (`/servers`) — no request would reach that family; name it otherwise (the console's routes: api, asked, domain, drain, events, healthz, index.html
+secrets_reader_domainconsole	refused	spec testsub2: secrets.readers.door/signer is a list of roles — console, controller, worker, domainpart, domain, domainagent, resource — not ['domainconsole']
+secrets_reads_empty	refused	spec testsub2: secrets names '', which is no key of the store nor a prefix of keys (`door/signer`, `domain/<sub>/accounts/`)
+servers_both	refused	spec testsub2: placement.servers is one of shared, distinct, not 'both'
+slot_prefix_digit	refused	spec testsub2: slot.prefix names a slot `<prefix>-<n>` — a few small letters, not 't1'
+slot_prefix_long	refused	spec testsub2: slot.prefix names a slot `<prefix>-<n>` — a few small letters, not 'abcdefghij'
+snapshot_secret	refused	spec testsub2: a secret may not be in the snapshot: ['feed_secret'] — the snapshot is what leaves the cluster
+spread_by_eq_group_by	refused	spec testsub2: `group_by` and `spread_by` name the same field ('zone'): together they say units must be on one worker and on different servers
+status_url	refused	spec testsub2: servers.status: 'url' is the platform's own field of a heartbeat (worker, server, url, instance, labels, fetched, events) or a path into one, already in the row
+status_worker	refused	spec testsub2: servers.status: 'worker' is the platform's own field of a heartbeat (worker, server, url, instance, labels, fetched, events) or a path into one, already in the row
+suppress_window_zero	refused	spec testsub2: events.suppress.tally.tick.window is seconds and must be positive, not 0.0 — a kind with no window is a kind not listed here
+table_field_fixed	refused	spec testsub2: no spec says `tables.shelves.fields.zone.fixed` — a key the platform does not read is a mistake or another's word; it is refused, not passed over
+table_field_inherit	refused	spec testsub2: no spec says `tables.shelves.fields.zone.inherit` — a key the platform does not read is a mistake or another's word; it is refused, not passed over
+table_marks	refused	spec testsub2: tables.marks is 'marks', a route the console answers itself (`/marks`) — no request would reach that family; name it otherwise (the console's routes: api, asked, domain, drain, events, healthz, index.html,
+table_servers	refused	spec testsub2: tables.servers is 'servers', a route the console answers itself (`/servers`) — no request would reach that family; name it otherwise (the console's routes: api, asked, domain, drain, events, healthz, index
+tables_list_only_writes	refused	spec testsub2: worker.writes names shelves — neither its units' rows (tallies) nor one of its declared tables (none); declare it under `tables:` with its key and fields, or write nothing there
+tie_break_random	refused	spec testsub2: placement.tie_break is one of most-free-capacity, not 'random'
+unit_derived_with_unplaced	refused	spec testsub2: placement.unplaced.delete_after with unit.derived — the controller deletes a unit and cannot clean its derived rows, which are the console's
+unit_id_nosuch	ok	bound_to=['feed'] of.fixed=True name.required=True mode.enum=['plain', 'loud'] requires=resource servers=distinct tie_break=most-free-capacity id=nosuch
+unplaced_zero	refused	spec testsub2: placement.unplaced is {delete_after: <whole seconds, 1 or more>} — how long a unit nobody holds is kept before the controller deletes it — not {'delete_after': 0}
+worker_reads_bare	refused	spec testsub2: worker.reads takes keys of the store (`<family>/<name>`), not ['testsub']
+worker_writes_undeclared	refused	spec testsub2: worker.writes names ghosts — neither its units' rows (tallies) nor one of its declared tables (shelves, notches); declare it under `tables:` with its key and fields, or write nothing there
+xbase_testsub2_product	ok	of.fixed=True name.required=False requires=none servers=shared tie_break=most-free-capacity id=numeric
+xbase_testsub_course	ok	name.required=True requires=none servers=shared tie_break=most-free-capacity id=name
+xbase_testsub_product	ok	name.required=True requires=none servers=shared tie_break=most-free-capacity id=name
+xcourse_auto	ok	name.required=True requires=resource servers=shared tie_break=most-free-capacity id=name
+xcourse_live	ok	requires=none servers=shared tie_break=most-free-capacity id=cam
+xcourse_rec	ok	name.required=True requires=resource servers=distinct tie_break=most-free-capacity id=name
+xcourse_vms	ok	name.required=False requires=resource servers=shared tie_break=most-free-capacity id=numeric
+xproduct_auto	ok	name.required=True requires=resource servers=shared tie_break=most-free-capacity id=name
+xproduct_live	ok	requires=none servers=shared tie_break=most-free-capacity id=cam
+xproduct_rec	ok	name.required=True requires=resource servers=distinct tie_break=most-free-capacity id=name
+xproduct_vms	ok	name.required=False requires=resource servers=shared tie_break=most-free-capacity id=numeric

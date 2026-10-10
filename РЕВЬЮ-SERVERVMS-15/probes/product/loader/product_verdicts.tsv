@@ -1,0 +1,71 @@
+about_field_not_fixed	refused	spec testsub2: domain.witness.member_field: of is not a field of the unit declared `fixed: true` — the witness names a member by it, and a name that changes names another
+about_sub_self	refused	spec testsub2: `about:` is {sub: <another subsystem>, field: <a field of the row>}, not map[field:of sub:testsub2]
+base	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+bound_to_string	ok	bound_to=[] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+capacity_default_absent	refused	spec testsub2: placement.capacity.default — the capacity of a worker whose heartbeat says none — is not said: the platform has no number of its own for it
+capacity_default_float	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+capacity_default_string	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+capacity_default_true	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+dead_band_negative	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+dead_band_word	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+default_map_string	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+display_events_word	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+display_tree_unknown	refused	spec testsub2: display.tree.colour: unknown key
+door_routes_dup	refused	spec testsub2: door.routes: "read" is not a route's name (lower-case letters, digits and '-', once each)
+enum_empty	refused	spec testsub2: display.options.mode.loud: "loud" is not one of mode's enum [] — a word for a value the field does not take; display.options.mode.plain: "plain" is not one of mode's enum [] — a word for a value the fi
+enum_on_list	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+field_type_text	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+fixed_yes	refused	spec testsub2: domain.witness.member_field: of is not a field of the unit declared `fixed: true` — the witness names a member by it, and a name that changes names another
+hb_worker	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+heartbeat_strings_dup	refused	spec testsub2: heartbeat.strings: "jam" is no field of its own (the platform's are server, url, instance, labels, fetched, events), or is said twice
+heartbeat_strings_server	refused	spec testsub2: heartbeat.strings: "server" is no field of its own (the platform's are server, url, instance, labels, fetched, events), or is said twice
+holds_longest_zero	refused	spec testsub2: holds.longest is seconds, more than none — not 0
+inherit_map_string	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+metric_unknown_agg	refused	spec testsub2: metric tallies_running: from is heartbeat.<path> or status.<path>, agg one of value, flag, age, label, count, sum, max, histogram — not status.phase, median
+name_platform	refused	spec platform: "platform" is the name of the platform's own tree or space ([console audit platform domain]), which no subsystem takes
+near_prefer_without_of	refused	spec testsub2: near.prefer is {<their field>[.<field>]: <values>, …}, and only where `of` can find several of theirs — not map[start:[0 1]]
+objects_door_heartbeats	refused	spec testsub2: objects.door: "heartbeats/*" names a family of the platform's own (heartbeats, contenders, snapshot, controller, blobs, commands) or every one
+objects_rows_commands	refused	spec testsub2: objects.rows: "commands/*" names a family of the platform's own (heartbeats, contenders, snapshot, controller, blobs, commands) or every one
+objects_rows_heartbeats	refused	spec testsub2: objects.rows: "heartbeats/*" names a family of the platform's own (heartbeats, contenders, snapshot, controller, blobs, commands) or every one
+offers_string	refused	spec testsub2: placement.offers is true or false — the slots offered are named by `slot.prefix` — not true
+places_lease_lenient	refused	spec testsub2: placement.places.lease is strict — said of a place any box may write, let go when its hold has gone unconfirmed — not lenient
+places_place_by_server	refused	spec testsub2: placement.places is for a subsystem placed by something other than the server — say `placement.place_by: <the heartbeat field naming a worker's place>`, or no places
+requests_per_person_frac	refused	spec testsub2: requests.per_person is a whole number, not 2.5
+requests_ttl_nan	refused	spec testsub2: requests.ttl is seconds, 0 for no limit, not NaN
+requests_valid_past_most	refused	spec testsub2: requests.valid_for (700) is further than most_valid (600)
+required_yes	ok	bound_to=[feed] of.fixed=true name.required=false mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+requires_nothing	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=nothing servers=distinct tie_break=most-free-capacity id=name
+rows_asked	refused	spec testsub2: "asked" is the platform's (the people's ledgers, `/asked/<name>`; ADR-0060) — name the unit's rows otherwise
+rows_servers	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+secrets_reader_domainconsole	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+secrets_reads_empty	refused	spec testsub2: secrets.reads names an empty prefix
+servers_both	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=both tie_break=most-free-capacity id=name
+slot_prefix_digit	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+slot_prefix_long	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+snapshot_secret	refused	spec testsub2: a secret may not be in the snapshot: "feed_secret" — the snapshot is what leaves the cluster
+spread_by_eq_group_by	refused	spec testsub2: group_by and spread_by name the same field ("zone"): together they say units must be on one worker and on different servers
+status_url	refused	spec testsub2: servers.status: "url" is the platform's own field of a heartbeat (server, url, instance, labels, fetched, events), already in the row
+status_worker	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+suppress_window_zero	refused	spec testsub2: events.suppress.tally.tick.window is seconds and must be positive, not 0 — a kind with no window is a kind not listed here
+table_field_fixed	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+table_field_inherit	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+table_marks	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+table_servers	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+tables_list_only_writes	refused	spec testsub2: worker.writes names shelves — neither its units' rows (tallies) nor one of its declared tables (none); declare it under `tables:` with its key and fields, or write nothing there
+tie_break_random	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=random id=name
+unit_derived_with_unplaced	refused	spec testsub2: placement.unplaced.delete_after with unit.derived — the controller deletes a unit and cannot clean its derived rows, which are the console's
+unit_id_nosuch	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=nosuch
+unplaced_zero	refused	spec testsub2: placement.unplaced is {delete_after: <whole seconds, 1 or more>} — how long a unit nobody holds is kept before the controller deletes it — not map[delete_after:0]
+worker_reads_bare	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+worker_writes_undeclared	refused	spec testsub2: worker.writes names ghosts — neither its units' rows (tallies) nor one of its declared tables (notches, shelves); declare it under `tables:` with its key and fields, or write nothing there
+xbase_testsub2_product	ok	of.fixed=true name.required=false requires= servers=shared tie_break=most-free-capacity id=numeric
+xbase_testsub_course	ok	name.required=true requires= servers=shared tie_break=most-free-capacity id=name
+xbase_testsub_product	ok	name.required=true requires= servers=shared tie_break=most-free-capacity id=name
+xcourse_auto	ok	name.required=true requires=resource servers=shared tie_break=most-free-capacity id=name
+xcourse_live	ok	requires= servers=shared tie_break=most-free-capacity id=cam
+xcourse_rec	ok	name.required=true requires=resource servers=distinct tie_break=most-free-capacity id=name
+xcourse_vms	ok	name.required=false requires=resource servers=shared tie_break=most-free-capacity id=numeric
+xproduct_auto	ok	name.required=true requires=resource servers=shared tie_break=most-free-capacity id=name
+xproduct_live	ok	requires= servers=shared tie_break=most-free-capacity id=cam
+xproduct_rec	ok	name.required=true requires=resource servers=distinct tie_break=most-free-capacity id=name
+xproduct_vms	ok	name.required=false requires=resource servers=shared tie_break=most-free-capacity id=numeric

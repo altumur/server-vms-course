@@ -1,0 +1,4 @@
+worker.requests ['recc']: LOADED, worker_requests=('recc',), grant=['recc/requests/*']
+worker.requests ['testsub2']: LOADED, worker_requests=('testsub2',), grant=['testsub2/requests/*']
+worker.requests ['live']: LOADED, worker_requests=('live',), grant=['live/requests/*']
+exit=0

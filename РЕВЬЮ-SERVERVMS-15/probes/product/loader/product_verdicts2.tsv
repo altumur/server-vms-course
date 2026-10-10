@@ -1,0 +1,10 @@
+about_field_not_fixed_nowitness	ok	bound_to=[feed] of.fixed=false name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+bound_to_list_of_one	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+required_true_string	ok	bound_to=[feed] of.fixed=true name.required=false mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+rows_where	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+secrets_readers_role_number	refused	spec testsub2: secrets.readers.door/signer: "1" — a reader is a role: console, controller, worker, domainpart, domain, domainagent, resource, domainconsole
+table_events_shadow	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+table_field_merge	refused	spec testsub2: tables.shelves: field zone: `merge` is override or union (a list's) — said of a field that inherits, not union
+table_metrics_shadow	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+tie_break_absent	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+worker_writes_path	refused	spec testsub2: worker.writes takes names, not "shelves/x"

@@ -1,0 +1,29 @@
+SAME course-before/Source/tests/testdata/testsub.subsystem.yaml
+SAME course-before/Source/tests/testdata/testsub2.subsystem.yaml
+DIFF course-before/Source/vms/auto.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+SAME course-before/Source/vms/det.subsystem.yaml
+SAME course-before/Source/vms/detjob.subsystem.yaml
+DIFF course-before/Source/vms/live.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+SAME course-before/Source/vms/rec.subsystem.yaml
+SAME course-before/Source/vms/survey.subsystem.yaml
+DIFF course-before/Source/vms/vms.subsystem.yaml
+    .requests.schema.properties.n.maximum: 99999999999999999999999999999999 vs 1e+32
+    .requests.schema.properties.port.maximum: 99999999999999999999999999999999 vs 1e+32
+    .requests.schema.properties.pulse_ms.maximum: 99999999999999999999999999999999 vs 1e+32
+    .requests.schema.properties.state.maximum: 99999999999999999999999999999999 vs 1e+32
+DIFF product-before/vmsworker/vms/auto.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+DIFF product-before/vmsworker/vms/live.subsystem.yaml
+    .lease.unconfirmed_max: PyYAML False vs Go 'off'
+SAME product-before/vmsworker/vms/rec.subsystem.yaml
+DIFF product-before/vmsworker/vms/vms.subsystem.yaml
+    .requests.schema.properties.n.maximum: 99999999999999999999999999999999 vs 1e+32
+    .requests.schema.properties.port.maximum: 99999999999999999999999999999999 vs 1e+32
+    .requests.schema.properties.pulse_ms.maximum: 99999999999999999999999999999999 vs 1e+32
+    .requests.schema.properties.state.maximum: 99999999999999999999999999999999 vs 1e+32
+SAME product-before/vmsworker/w2cplatform/testdata/testsub.subsystem.yaml
+SAME product-before/vmsworker/w2cplatform/testdata/testsub2.subsystem.yaml
+15 files, 6 read differently
+exit=0

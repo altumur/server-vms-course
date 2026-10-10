@@ -1,0 +1,9 @@
+t=100.0 failed=['a'] waiting=[] state=lagging failures=1 wait=1.00
+t=103.0 failed=['a'] waiting=[] state=lagging failures=2 wait=2.00
+t=106.0 failed=['a'] waiting=[] state=stalled failures=3 wait=4.00
+t=109.0 failed=[] waiting=['a'] state=stalled failures=3 wait=1.00
+t=112.0 failed=['a'] waiting=[] state=stalled failures=4 wait=8.00
+t=115.0 failed=[] waiting=['a'] state=stalled failures=4 wait=5.00
+RESTART_FAILURES_ACCUMULATE True EVER_STALLED True
+REV0_FAILING_STATUS Position(state='stalled', lag=0, failures=5, retry_at=422.64190260333135)
+exit=0

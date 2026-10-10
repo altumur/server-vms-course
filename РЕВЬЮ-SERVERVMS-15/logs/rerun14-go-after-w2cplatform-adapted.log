@@ -1,0 +1,94 @@
+=== RUN   TestProbeMarksRace
+    zz_marks_probe_test.go:91: MEASURED files n=300: answer lost=0, closer over outcome=0, two closers wrote map[1:300], create-only both/none=0, mark resurrected after sweep=15
+    zz_marks_probe_test.go:91: MEASURED cluster-rows n=300: answer lost=0, closer over outcome=0, two closers wrote map[1:300], create-only both/none=0, mark resurrected after sweep=0
+--- PASS: TestProbeMarksRace (20.72s)
+=== RUN   TestProbeTimeoutLeavesTheMarkWithoutOutcome
+2026/10/10 09:43:36 w-1: request r1: the target did not answer within 10 s — whether it acted on c1 is not known
+    zz_marks_probe_test.go:115: MEASURED answer=map[error:the target did not answer request:r1 unit:c1] mark after timeout=map[at:1000 digest:1bfb96cf0f72bae9529d2f52a30a1ab4abe735950c9bb11c03f671aa511a05de ended_at:1010 error:the target did not answer instance:34C5E223-BEF8-59F5-AF57-072C5B498F8D:90688:c3b982 outcome:unknown slot:w-1 unit:c1 valid_until:1030] (outcome=unknown)
+    zz_marks_probe_test.go:120: MEASURED mark after the row was cleared and the sweep ran=map[at:1000 digest:1bfb96cf0f72bae9529d2f52a30a1ab4abe735950c9bb11c03f671aa511a05de ended_at:1010 error:the target did not answer instance:34C5E223-BEF8-59F5-AF57-072C5B498F8D:90688:c3b982 outcome:unknown slot:w-1 unit:c1 valid_until:1030]
+--- PASS: TestProbeTimeoutLeavesTheMarkWithoutOutcome (0.07s)
+=== RUN   TestProbeMovedUnitCountsOneRequestTwice
+2026/10/10 09:43:36 w-2: request r1 not performed — unknown: an earlier instance (34C5E223-BEF8-59F5-AF57-072C5B498F8D:90688:9e4016) began it, and whether it was acted on is not known
+    zz_marks_probe_test.go:147: MEASURED B's look=[map[error:unknown: an earlier instance (34C5E223-BEF8-59F5-AF57-072C5B498F8D:90688:9e4016) began it, and whether it was acted on is not known request:r1 unit:c1]] err=<nil> B calls=0
+    zz_marks_probe_test.go:151: MEASURED A counts=map[expired:0 performed:1 refused:0 unknown:0] B counts=map[expired:0 performed:0 refused:0 unknown:1] final mark=map[action: at:1000 digest:1bfb96cf0f72bae9529d2f52a30a1ab4abe735950c9bb11c03f671aa511a05de ended_at:1000 instance:34C5E223-BEF8-59F5-AF57-072C5B498F8D:90688:9e4016 outcome:performed slot:w-1 unit:c1 valid_until:1030]
+--- PASS: TestProbeMovedUnitCountsOneRequestTwice (0.10s)
+=== RUN   TestProbeGarbledMarkKeepsTheRowForEver
+2026/10/10 09:43:36 testsub: request garbled for c1 ended 3570 s past its deadline NOT KNOWN: its mark does not read: whoever began it is not known, nor how it went
+2026/10/10 09:43:36 testsub: request parsed for c1 ended 3570 s past its deadline NOT KNOWN: its holder began it and is gone without saying how it went
+    zz_marks_probe_test.go:171: MEASURED after 5 h of reaper turns: garbled row stands=false, parsed (holder gone) row stands=false
+--- PASS: TestProbeGarbledMarkKeepsTheRowForEver (0.08s)
+=== RUN   TestProbeTTLPathReadsTheMark
+2026/10/10 09:43:36 testsub2: request 1-1 was answered (refused) and its answer never reached a heartbeat: its row is cleared
+    zz_marks_probe_test.go:218: MEASURED ttl path: answered row stands=false, begun row (holder there) stands=true, expired +0, unknown +0, begun mark={"instance":"I","slot":"w-1"}
+--- PASS: TestProbeTTLPathReadsTheMark (0.01s)
+=== RUN   TestProbeB1RestartFailuresOfALongHeldKey
+    zz_probe_b1_test.go:26: t=100 failed=1 waiting=[] state=lagging failures=1 wait=1s
+    zz_probe_b1_test.go:26: t=103 failed=1 waiting=[] state=lagging failures=2 wait=2s
+    zz_probe_b1_test.go:26: t=106 failed=1 waiting=[] state=stalled failures=3 wait=4s
+    zz_probe_b1_test.go:26: t=109 failed=0 waiting=[a] state=stalled failures=3 wait=1s
+    zz_probe_b1_test.go:26: t=112 failed=1 waiting=[] state=stalled failures=4 wait=8s
+    zz_probe_b1_test.go:26: t=115 failed=0 waiting=[a] state=stalled failures=4 wait=5s
+    zz_probe_b1_test.go:26: t=118 failed=0 waiting=[a] state=stalled failures=4 wait=2s
+    zz_probe_b1_test.go:26: t=121 failed=1 waiting=[] state=stalled failures=5 wait=16s
+    zz_probe_b1_test.go:36: REV0_FAILING_STATUS {State:stalled Lag:0 Failures:5 RetryAt:1970-01-01 02:06:56.591944125 +0200 EET}
+--- PASS: TestProbeB1RestartFailuresOfALongHeldKey (0.00s)
+=== RUN   TestProbeB3TakeEpochAfterLostToEpoch
+    zz_probe_b3_test.go:32: lost=[u1] LostToEpoch=true
+    zz_probe_b3_test.go:35: mine=1 theirs=2 retake=3 err=<nil> TAKEN_BACK=true
+--- PASS: TestProbeB3TakeEpochAfterLostToEpoch (0.00s)
+=== RUN   TestProbeB4ClaimHoldByAForeignClock
+    zz_probe_b4_test.go:30: t=+30.0s A.fresh=true B.claim="" TWO_WRITERS=false
+    zz_probe_b4_test.go:30: t=+36.0s A.fresh=true B.claim="" TWO_WRITERS=false
+    zz_probe_b4_test.go:30: t=+37.5s A.fresh=true B.claim="" TWO_WRITERS=false
+    zz_probe_b4_test.go:30: t=+39.0s A.fresh=true B.claim="" TWO_WRITERS=false
+    zz_probe_b4_test.go:30: t=+41.0s A.fresh=false B.claim="" TWO_WRITERS=false
+--- PASS: TestProbeB4ClaimHoldByAForeignClock (0.00s)
+=== RUN   TestProbeYAMLSilent
+--- PASS: TestProbeYAMLSilent (0.00s)
+=== RUN   TestR14DoorCrossPersonSameRid
+    zz_r14_door_probe_test.go:70: cross_person_same_rid: anna 202, boris 409, boris was told <nil>
+--- PASS: TestR14DoorCrossPersonSameRid (0.01s)
+=== RUN   TestR14DoorRidEdges
+    zz_r14_door_probe_test.go:79: rid_cyr150: 400 bad id
+    zz_r14_door_probe_test.go:79: rid_cyr100: 202 <nil>
+    zz_r14_door_probe_test.go:79: rid_backslash: 400 bad id
+    zz_r14_door_probe_test.go:79: rid_u2028: 400 bad id
+    zz_r14_door_probe_test.go:79: rid_u0085: 400 bad id
+    zz_r14_door_probe_test.go:79: rid_bidi: 202 <nil>
+    zz_r14_door_probe_test.go:79: rid_dotdot: 400 bad id
+    zz_r14_door_probe_test.go:79: rid_slash: 400 bad id
+    zz_r14_door_probe_test.go:79: rid_ledger_name: 202 <nil>
+    zz_r14_door_probe_test.go:85: note_100000: 400 too_long
+--- PASS: TestR14DoorRidEdges (0.03s)
+=== RUN   TestR14DoorGarbledOwnRowInLedger
+2026/10/10 09:43:36 garbled row: testsub2/requests/own-1, field row holds "": it keeps its place in its person's ledger until it is mended or its ttl passes
+    zz_r14_door_probe_test.go:110: garbled_own_row_in_ledger: 202 <nil>
+--- PASS: TestR14DoorGarbledOwnRowInLedger (0.01s)
+=== RUN   TestR14DoorLedgerAfterTTL
+2026/10/10 09:43:36 testsub2: request 1-1 for 1 ended unperformed 3690 s past its deadline — no worker held its unit to perform it
+    zz_r14_door_probe_test.go:121: ledger_after_ttl_sweep: before 3 fields, after 0 fields (0 = removed)
+--- PASS: TestR14DoorLedgerAfterTTL (0.01s)
+=== RUN   TestR14DoorIdempotencyKey
+    zz_r14_door_probe_test.go:133: idem_same: 202 202 equal=true; idem_other_body: 422 key reused; idem_other_user: 422 key reused
+--- PASS: TestR14DoorIdempotencyKey (0.01s)
+=== RUN   TestR14ClaimsHold
+2026/10/10 09:43:36 WARN worker: a request was not filed worker=t-1 request=testsub/s-by why="request testsub/s-by refused: by is the platform's to stamp, not the row's"
+2026/10/10 09:43:36 WARN worker: a request was not filed worker=t-1 request=testsub/s-at why="request testsub/s-at refused: at is the platform's to stamp, not the row's"
+2026/10/10 09:43:36 WARN worker: a request was not filed worker=t-1 request=testsub/s-filed why="request testsub/s-filed refused: filed is the platform's to stamp, not the row's"
+2026/10/10 09:43:36 WARN worker: a request was not filed worker=t-1 request=testsub/r1 why="cas conflict: the ModifyIndex moved: request testsub/r1: under this rid stands a different request"
+    zz_r14_filings_platform_test.go:63: MEASURED filings after 3 stamps + file + repeat + conflict: map[again:1 filed:1 refused:4] (keys [testsub/requests/r1])
+--- PASS: TestR14ClaimsHold (0.04s)
+=== RUN   TestR14GetFailureAfterConflictIsCountedNowhere
+    zz_r14_filings_platform_test.go:73: MEASURED get-error-after-conflict: filed=false err=request testsub/g1: the row standing under this rid cannot be read (store did not answer); it is left as it is isRefused=false isConflict=false filings=map[]
+2026/10/10 09:43:36 WARN worker: a request was not filed worker=t-9 request=testsub/g2 why="cas conflict: the ModifyIndex moved: request testsub/g2: the row that stood under this rid is gone (performed or expired meanwhile); file under a new rid"
+    zz_r14_filings_platform_test.go:77: MEASURED row-gone-after-conflict: err=cas conflict: the ModifyIndex moved: request testsub/g2: the row that stood under this rid is gone (performed or expired meanwhile); file under a new rid (course says: 'the row that stood under this rid is gone')
+--- PASS: TestR14GetFailureAfterConflictIsCountedNowhere (0.01s)
+=== RUN   TestR14RefileAfterClearAndLedgerPrefixAndNaN
+    zz_r14_filings_platform_test.go:89: MEASURED refile after clear: first=true second=true err=<nil> filings=map[again:0 filed:2 refused:0]
+    zz_r14_filings_platform_test.go:91: MEASURED rid with the ledger prefix: filed=true err=<nil> (holder skips HasPrefix(rid, LedgerPrefix))
+2026/10/10 09:43:36 WARN worker: a request was not filed worker=t-1 request=testsub/nan-1 why="request testsub/nan-1 refused: the moment a request is about is a time, not NaN"
+    zz_r14_filings_platform_test.go:94: MEASURED NaN at: filed=false err=request testsub/nan-1 refused: the moment a request is about is a time, not NaN at=""
+--- PASS: TestR14RefileAfterClearAndLedgerPrefixAndNaN (0.08s)
+PASS
+ok  	vmsworker.local/vmsworker/w2cplatform	21.878s
+exit=0
