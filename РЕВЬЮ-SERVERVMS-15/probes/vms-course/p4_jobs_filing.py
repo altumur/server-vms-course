@@ -20,7 +20,8 @@ key = keys[0] if keys else None
 row = vars_.get(key)[0] if key else None
 print("filed:", ok, "| row =", row)
 schema = REC_SPEC.requests["schema"]
-body = {k: v for k, v in row.items() if k not in ("by", "at")}     # что дверь проверяет схемой (штампы ставит она сама)
+stamped = {"by", "at"} | ({REC_SPEC.about.field} if getattr(REC_SPEC, "about", None) and "about" in (REC_SPEC.requests.get("stamp") or ()) else set())
+body = {k: v for k, v in row.items() if k not in stamped}            # что дверь проверяет схемой (штампы — by, at и about-поле — ставит она сама)
 try:
     check(schema, {**body, "from": float(body["from"]), "to": float(body["to"]),
                    **({"valid_until": float(body["valid_until"])} if "valid_until" in body else {})}, "the request")
@@ -29,4 +30,4 @@ except Invalid as e:
     print("схема семейства rec отвергла бы такую строку:", e)
 print("штамп спеки:", REC_SPEC.requests.get("stamp"), "| в строке:", sorted(k for k in row if k in ("by", "at", "about")))
 print("journal семейства:", REC_SPEC.requests.get("journal"), "| per_person:", REC_SPEC.requests.get("per_person"),
-      "— в _ask_recorder ни журнала, ни счёта (см. jobs.py:522-532)")
+      "— после major 4 подача идёт через file_as: схема, штампы и журнал семейства (jobs.py:_ask_recorder)")
