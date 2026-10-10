@@ -74,7 +74,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
 from w2cplatform.console import Deadlined, open_doors, read_body
-from w2cplatform.variables import Conflict
+from w2cplatform.variables import Conflict, Forbidden
 
 from . import declared
 from .api import ApiError, ConsoleAPI
@@ -443,6 +443,18 @@ class Console:
                     return None
                 return body
 
+            # THE STORE'S NO IS SAID, NEVER A DROPPED CONNECTION (the scenario «камера — офис — центр», F1): a write or a
+            # read this console's role may not make (`configstore-rights.json`, `domainconsole`) raised `Forbidden` out of
+            # the handler, and the caller got no answer at all — `PUT /domain/grants/<cluster>` ended in
+            # `RemoteDisconnected`. It is this console's role that may not, not the person: 403, with the store's words.
+            # Raised before the reply was begun, so nothing of it was sent.
+            def _answered(self, route):
+                try:
+                    route()
+                except Forbidden as e:
+                    self._send(403, {"error": "forbidden", "detail": f"the domain's console may not do this in the "
+                                     f"holder's store: {e} (its role, domainconsole, in configstore-rights.json)"})
+
             def _early(self) -> bool:
                 refused = console.refused_early()
                 if refused:
@@ -451,6 +463,9 @@ class Console:
                 return False
 
             def do_GET(self):
+                self._answered(self._do_GET)
+
+            def _do_GET(self):
                 u = urlsplit(self.path)
                 q = {k: v[0] for k, v in parse_qs(u.query).items()}
                 try:
@@ -520,10 +535,15 @@ class Console:
                     self._send(404, {"detail": "no such route"})
                 except ApiError as e:
                     self._send(e.status, {"detail": e.detail})
+                except Forbidden:
+                    raise                                  # the store's no: said as such (`_answered`), not a 500
                 except Exception as e:                     # noqa: BLE001
                     self._send(500, {"detail": str(e)})
 
             def do_PUT(self):
+                self._answered(self._do_PUT)
+
+            def _do_PUT(self):
                 u = urlsplit(self.path)
                 if self._steered():
                     return
@@ -562,6 +582,9 @@ class Console:
                     self._send(e.status, {"detail": e.detail})
 
             def do_POST(self):
+                self._answered(self._do_POST)
+
+            def _do_POST(self):
                 u = urlsplit(self.path)
                 if u.path in ("/session", "/session/break-glass"):
                     return self._session("POST")
@@ -605,6 +628,9 @@ class Console:
                     self._send(e.status, {"detail": e.detail})
 
             def do_DELETE(self):
+                self._answered(self._do_DELETE)
+
+            def _do_DELETE(self):
                 u = urlsplit(self.path)
                 if u.path == "/session":
                     return self._session("DELETE")
