@@ -219,3 +219,31 @@ def test_a_cluster_with_no_cameras_yet_reports_that_it_has_none():
     view = ReadView(fed, wall=wall); view.refresh()
     page = view.list()
     assert page["total"] == 0 and page["complete"] and page["clusters"]["south"] == "ok"
+
+
+def test_a_report_sweeps_its_own_families_and_never_the_summary_a_relay_keeps_beside_them():
+    """The scenario «камера — офис — центр», O3: the office's own report deleted everything under
+    `domain/members/<office>/` it did not carry — its summary of the cameras behind it (`relay.BUNDLE`) among them — and
+    the bundle was written again at once: two writes on every pass for none, and between them no camera behind the office
+    reported to the holder. A report sweeps what is its own (`o/`, `v/`, `p/`): a row the member no longer has goes, the
+    bundle stays untouched."""
+    from w2cplatform.domain.relay import BUNDLE
+    from w2cplatform.domain.uplink import base
+    wall = Clock(NOW)
+    fed, north, _, devices, agents, _ = _site(wall, n=1)
+    _pass(agents)
+    b = base("cam-SN0")
+    north.objects.put(b + BUNDLE, b'{"cam-a": {}}')
+    north.objects.put(b + "o/vms/snapshot/gone", b"{}")                           # the member no longer has it
+    touched = []
+    real_put, real_delete = north.objects.put, north.objects.delete
+    north.objects.put = lambda k, d: (touched.append(("put", k)), real_put(k, d))[1]
+    north.objects.delete = lambda k: (touched.append(("delete", k)), real_delete(k))[1]
+    try:
+        wall.advance(5)
+        _pass(agents)
+    finally:
+        north.objects.put, north.objects.delete = real_put, real_delete
+    assert north.objects.get(b + BUNDLE) == b'{"cam-a": {}}'
+    assert not [t for t in touched if t[1] == b + BUNDLE], touched
+    assert ("delete", b + "o/vms/snapshot/gone") in touched and north.objects.get(b + "o/vms/snapshot/gone") is None

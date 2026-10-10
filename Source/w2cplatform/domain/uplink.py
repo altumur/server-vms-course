@@ -116,9 +116,13 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
         if domain_objects.get(b + k) != raw:                       # only what changed is rewritten
             domain_objects.put(b + k, raw)
             written += 1
-    keep = {b + k for k in want} | {b + REPORTED}
+    # Only the report's own families are the report's to sweep (`o/`, `v/`, `p/`): beside them under the same prefix
+    # lies what another writer keeps for this member — a relay's summary of its members (`relay.BUNDLE`) — and the
+    # office's own report deleted its bundle on every pass, written again at once: two writes for none, and between them
+    # no camera behind it reported to the holder (the scenario «камера — офис — центр», O3).
+    keep = {b + k for k in want}
     for full in domain_objects.list(b):
-        if full not in keep:
+        if full[len(b):].startswith(("o/", "v/", "p/")) and full not in keep:
             domain_objects.delete(full)                            # gone from the member: gone from its report
     # The mark of the last report, read to count on from. A mark that does not parse — half a write — raised here
     # before the new one was written, so it was never written again: the member stopped reporting for good, by one
