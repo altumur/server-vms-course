@@ -113,7 +113,7 @@ class ReportedDoor:
 
     # A member that reports no page of alarms (a cluster whose agent is given no `pages`) has none to show — not a page
     # that begins now: `{"from": now}` made every window before now "more alarms than one page holds" for a member with
-    # no alarm at all (the scenario «камера — офис — центр», O8). No page says nothing of where it starts.
+    # no alarm at all (the three-site scenario, O8). No page says nothing of where it starts.
     def _page(self, name: str) -> dict:
         from .uplink import page
         return page(self.member, name, self.store, self.lost_after, self.wall) or {"events": [], "truncated": False}
@@ -137,10 +137,10 @@ class ReportedDoor:
         return None if p is None else {**self._cut(p, since, until, limit), "known_until": p.get("to")}
 
 
-# A MEMBER'S PAGE IS READ WHERE ITS REPORT LIES — behind a relay, in the relay's summary (the scenario «камера — офис —
-# центр», O7). The doors read `domain/members/<member>/p/alarms` in the holder's objects, and a camera behind an office
-# reports into the office's objects: its page reaches the holder only inside the office's bundle, which they did not
-# read — every camera behind an office "has never reported to the domain", its alarms on no list. The road is the one
+# A MEMBER'S PAGE IS READ WHERE ITS REPORT LIES — behind a relay, in the relay's summary (the three-site scenario, O7).
+# The doors read `domain/members/<member>/p/alarms` in the holder's objects, and a member behind a relay reports into
+# the relay's objects: its page reaches the holder only inside the relay's bundle, which they did not read — every
+# member behind a relay "has never reported to the domain", its alarms on no list. The road is the one
 # its copy in the federation reads (`uplink.member_copy(..., via=…)`: the bundle, and its own report too — `NewerRoad`),
 # the same object pass after pass, so how old a report is stays remembered (`uplink.page`).
 def reported_doors(fed, domain_objects, lost_after: float = 45.0, wall=time.time):

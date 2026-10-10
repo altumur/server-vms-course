@@ -328,7 +328,7 @@ def apply(fed, members: Members, domain_objects, topology=None, lost_after: floa
 
 
 # On the holder: `PLATFORM_STORE=… python3 -m w2cplatform.domain.members key <member> <pub> <seal_pub>` — the keys its
-# agent printed at its first start. ON A FRESH DOMAIN TOO (the scenario «камера — офис — центр», O1): the list of members
+# agent printed at its first start. ON A FRESH DOMAIN TOO (the three-site scenario, O1): the list of members
 # is written by its first change, and that first write carries the members the configuration names (`CLUSTERS`, as the
 # domain's processes read it: `runtime.names_from_env`) — the command built the list with no configuration, nobody had
 # written it yet, and a member of `CLUSTERS` was "not registered — no such member". The product lists the members of

@@ -324,7 +324,7 @@ def test_a_relay_keeps_its_members_answers_in_memory_and_gives_each_only_its_own
 
 
 def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admitted_by_it():
-    """The scenario «камера — офис — центр», O2: an agent carrying through the domain's door that the door does not know
+    """The three-site scenario, O2: an agent carrying through the domain's door that the door does not know
     ended its pass at the refusal, before any report — and the domain knew of a cluster asking to join only from a
     report, so it never knocked and a person had nothing to compare. The ask names the key it is signed with; refused,
     it is remembered as a knock (the product's `Members.NoteKnock`), over HTTP as in process: named in `knocking` with
@@ -341,14 +341,14 @@ def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admit
     north = fed.clusters["north"]
     door = HolderDoor(north.vars, north.objects, holder_ring, wall)
     members = Members(north.vars, wall, domain="north")
-    cam, liar = MemberKey.new(), MemberKey.new()
-    try:                                                 # names cam's key and is signed by another: no knock
-        door.carry("cam-x", wall(), cam.seal_pub, liar.sign(request_message("cam-x", wall(), cam.seal_pub)), key=cam.pub)
+    box, liar = MemberKey.new(), MemberKey.new()
+    try:                                                 # names box's key and is signed by another: no knock
+        door.carry("box-x", wall(), box.seal_pub, liar.sign(request_message("box-x", wall(), box.seal_pub)), key=box.pub)
         raise AssertionError("the door answered")
     except Refused as e:
         assert e.status == 403
     assert north.objects.list(KNOCKS + "/") == [] and members.knocking(north.objects) == []
-    agent = DomainAgent("cam-x", CarryClient(door, "cam-x", cam, wall), fed.clusters["south"].vars, now=wall, key=cam)
+    agent = DomainAgent("box-x", CarryClient(door, "box-x", box, wall), fed.clusters["south"].vars, now=wall, key=box)
     assert agent.sync() is False and "refused" in agent.keys
     srv = open_doors("127.0.0.1", 0, Holder(north.vars, north.objects, signer, carry_door=door, wall=wall).handler(),
                      unix_env="KN_NO_SUCH_SOCKET", say=False)
@@ -356,27 +356,27 @@ def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admit
         url = f"http://127.0.0.1:{srv.server_address[1]}"
         wall.advance(30)
         try:
-            CarryClient(url, "cam-x", cam, wall).carry()
+            CarryClient(url, "box-x", box, wall).carry()
             raise AssertionError("the door answered over HTTP")
         except Refused as e:
             assert e.status == 403 and "no member with a key" in e.detail
         knocking = members.knocking(north.objects)
-        assert [k["name"] for k in knocking] == ["cam-x"] and knocking[0]["fingerprint"] == fingerprint(cam.pub)
+        assert [k["name"] for k in knocking] == ["box-x"] and knocking[0]["fingerprint"] == fingerprint(box.pub)
         assert knocking[0]["times"] == 2 and knocking[0]["last"] == wall(), knocking
-        assert members.accept("cam-x", "anna", north.objects, fingerprint=fingerprint(cam.pub))
+        assert members.accept("box-x", "anna", north.objects, fingerprint=fingerprint(box.pub))
         assert members.knocking(north.objects) == []
-        got = CarryClient(url, "cam-x", cam, wall).carry()
-        assert got["cluster"] == "cam-x" and "domain/keys" in got["rows"], urllib.parse.quote(str(got)[:200])
+        got = CarryClient(url, "box-x", box, wall).carry()
+        assert got["cluster"] == "box-x" and "domain/keys" in got["rows"], urllib.parse.quote(str(got)[:200])
     finally:
         srv.shutdown()
 
 
 def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_to_one_that_left():
-    """The scenario «камера — офис — центр», O9: the holder's door asked only the topology before answering a relay for a
-    member — `DELETE /domain/members/<camera>` and the office still got 200 for it (public rows, no secret, `key: null`),
-    and the office refused the camera as one "admitted without a key", not as one that left. The door carries for a member
+    """The three-site scenario, O9: the holder's door asked only the topology before answering a relay for a
+    member — `DELETE /domain/members/<member>` and the relay still got 200 for it (public rows, no secret, `key: null`),
+    and the relay refused the member as one "admitted without a key", not as one that left. The door carries for a member
     on the list alone (404, said); the relay drops what it kept for it, relays the others as before, and answers the
-    camera with the domain's words."""
+    member with the domain's words."""
     from w2cplatform.domain.agent import DomainAgent
     from w2cplatform.domain.carry import CarryClient, HolderDoor, Refused, request_message
     from w2cplatform.domain.members import Members
@@ -414,9 +414,9 @@ def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_t
 
 
 def test_a_member_behind_a_relay_over_the_network_judges_its_books_by_the_relays_age_mark():
-    """The scenario «камера — офис — центр», O10: a camera with `RELAY_URL` carries through a `CarryClient`, which has no
-    `seen()`; the relay's age mark came in its answer and was never used — while the office was cut from the centre the
-    camera wrote into `domain/seen` the time it last talked to the office and took its books for current. An answer that
+    """The three-site scenario, O10: a member with `RELAY_URL` carries through a `CarryClient`, which has no
+    `seen()`; the relay's age mark came in its answer and was never used — while the relay was cut from the domain the
+    member wrote into `domain/seen` the time it last talked to the relay and took its books for current. An answer that
     carries the relay's mark is measured by it: the books are as old as the relay's last contact with the domain."""
     from w2cplatform.domain.agent import DOMAIN_SEEN, DomainAgent
     from w2cplatform.domain.carry import CarryClient, HolderDoor
@@ -434,9 +434,9 @@ def test_a_member_behind_a_relay_over_the_network_judges_its_books_by_the_relays
                         relay_members=["south"], bundle_store=east.objects, sealer=ring())
     assert relay.sync()
     flash = FsObjectStore(tempfile.mkdtemp(prefix="flash-"))
-    cam = DomainAgent("south", CarryClient(Relay(relay).door, "south", keys["south"], wall), south.vars, now=wall,
+    member = DomainAgent("south", CarryClient(Relay(relay).door, "south", keys["south"], wall), south.vars, now=wall,
                       key=keys["south"], seen_store=flash, sealer=ring())
-    assert cam.sync()
+    assert member.sync()
     assert json.loads(flash.get(DOMAIN_SEEN))["ts"] == wall()                  # the relay reached the domain just now
 
     class Cut:
@@ -449,5 +449,5 @@ def test_a_member_behind_a_relay_over_the_network_judges_its_books_by_the_relays
     relay.domain_vars = Cut()
     wall.advance(600)
     assert relay.sync() is False                                               # cut: its mark says 600 s
-    assert cam.sync()                                                          # the camera still reaches the office…
+    assert member.sync()                                                          # the member still reaches the relay…
     assert json.loads(flash.get(DOMAIN_SEEN))["ts"] == reached                 # …and its books are 600 s old

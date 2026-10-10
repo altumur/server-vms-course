@@ -119,7 +119,7 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
     # Only the report's own families are the report's to sweep (`o/`, `v/`, `p/`): beside them under the same prefix
     # lies what another writer keeps for this member — a relay's summary of its members (`relay.BUNDLE`) — and the
     # office's own report deleted its bundle on every pass, written again at once: two writes for none, and between them
-    # no camera behind it reported to the holder (the scenario «камера — офис — центр», O3).
+    # no member behind it reported to the holder (the three-site scenario, O3).
     keep = {b + k for k in want}
     for full in domain_objects.list(b):
         if full[len(b):].startswith(("o/", "v/", "p/")) and full not in keep:
