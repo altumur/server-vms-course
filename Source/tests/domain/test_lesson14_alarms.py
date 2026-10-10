@@ -251,3 +251,48 @@ def test_a_storm_on_one_camera_does_not_push_the_others_off_the_page():
     assert ("cam-SN0", "door_forced") in [(e["member"], e["kind"]) for e in out["events"]]
     assert out["members"]["cam-SN1"]["truncated"] and not out["members"]["cam-SN0"]["truncated"]
     assert "cam-SN1 had more alarms than one page holds" in out["sentence"]
+
+
+def test_a_camera_behind_an_office_has_its_alarms_on_the_domains_list_and_an_office_with_no_page_has_none_cut():
+    """The scenario «камера — офис — центр», O7 and O8. A camera behind an office reports into the office's objects; its
+    page of alarms reaches the holder only inside the office's summary (`relay.BUNDLE`), and the doors read
+    `domain/members/<camera>/p/alarms` in the holder's objects — the list said of the camera "has never reported to the
+    domain", its alarm on no list. They read the road the camera's copy in the federation reads (`reported_doors`). And
+    the office, whose agent reports no page at all, "had more alarms than one page holds": a member with no page has no
+    alarm, and nothing is cut."""
+    import tempfile
+    from w2cplatform.cluster.variables import FakeVariables
+    from w2cplatform.domain.agent import DomainAgent
+    from w2cplatform.domain.alarms import Card, DomainAlarms, pages, reported_doors
+    from w2cplatform.domain.federation import Federation
+    from w2cplatform.domain.relay import Relay
+    from w2cplatform.domain.topology import Topology
+    from w2cplatform.domain.uplink import member_copy
+    from vms.domainpart.device import DeviceCluster
+    from tests.domain.conftest import Clock, make_cluster
+    wall = Clock(NOW)
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    office, _ = make_cluster("office")
+    fed.add(north)
+    cam = DeviceCluster("SN7", FakeVariables(), wall=wall)
+    cam.boot()
+    card = Card("vms", tempfile.mkdtemp(prefix="card-"))
+    fed.add(member_copy("office", north.objects, wall=wall))
+    fed.add(member_copy(cam.name, north.objects, wall=wall, via="office"))
+    topo = Topology(north.vars)
+    topo.edit(lambda d: d.update(centre="north", via={cam.name: "office"}), base_rev=0, known={"north", "office", cam.name})
+    relay = DomainAgent("office", north.vars, office.vars, now=wall, domain_objects=north.objects,
+                        published=office.objects, bundle_store=office.objects,
+                        relay_members=lambda: topo.relayed_by("office"), bundle_members=lambda: topo.relayed_by("office"))
+    office.objects.put("vms/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
+    through = Relay(relay, office.objects)
+    cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
+                            published=cam.local_objects(), pages=lambda: pages(card, wall()))
+    card.observe(1, wall() - 30, "card.prebuffer.short", alarm=True)
+    relay.sync(); cam_agent.sync(); relay.sync()
+    alarms = DomainAlarms(fed, reported_doors(fed, north.objects, wall=wall), wall)
+    got = alarms.list(wall() - 3600)
+    assert [(e["member"], e["kind"]) for e in got["events"]] == [(cam.name, "card.prebuffer.short")], got
+    assert got["members"][cam.name]["state"] == "ok", got["members"]
+    assert got["members"]["office"] == {"state": "ok", "truncated": False}, got["members"]

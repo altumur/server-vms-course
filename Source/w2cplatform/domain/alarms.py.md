@@ -12,6 +12,10 @@
 
 ## `class ReportedDoor` — a member's alarms from its last report. `alarms(...)` raises `Unreachable` when the report is older than `lost_after`; `last(...)` is the page of that last report anyway, `known_until` its time.
 
+A member that reports no page has no alarm to show: `{events: [], truncated: false}`, nothing cut (O8).
+
+## `reported_doors(fed, domain_objects, lost_after, wall)` — `doors(member)` for `DomainAlarms`: a `ReportedDoor` over the road the member's copy in `fed` reads — behind a relay, its bundle and its own report (`uplink.NewerRoad`), the same object pass after pass (the scenario «камера — офис — центр», O7).
+
 ## `class AlarmHistory` — `keep(member, events)`, `read(member, since, until)`, `cut_before(member)`; at most `max_lines` (2000), the newest, the object `{events, cut_before}`.
 
 ## `class DomainAlarms(fed, doors, wall, per_member, history, lost_after)`
