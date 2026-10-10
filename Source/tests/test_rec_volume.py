@@ -1552,7 +1552,10 @@ def test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_
     """The boundary's step 6: the resource's watermark called the subsystem's hook (`free`); it files a request row now
     (`rec.subsystem.yaml`: `requests: {free: true}`), and the recorder holding that volume decides. Its footage is a ring
     of the size the volume was given — nothing on the disk is the recorder's to give up early — so it answers nought in
-    its heartbeat (`freeing`: no deletion it waits to see) and closes the row; another server's ask is not its to answer."""
+    its heartbeat (`freeing`: no deletion it waits to see) while the row stands; another server's ask is not its to
+    answer. The row is the resource's (ADR-0059: «the holder neither performs nor marks it»): not answered into `fetched`,
+    so the console's clearing leaves it — it went there, and the row was deleted two seconds after the resource wrote it
+    (the fifteenth review, minor 5)."""
     from w2cplatform.resource import SPACE_KEY, Resource
     box, rec_con, rec_ctl = _site()
     r = recorder(box)
@@ -1568,7 +1571,10 @@ def test_the_resource_asks_the_recorder_to_free_bytes_and_the_recorder_says_its_
     r.heartbeat_once()
     from w2cplatform.contract import Heartbeat
     hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key(r.name)))
-    assert hb.extra["freeing"] == {r.volume: 0} and rid in hb.extra["fetched"].split(",")
-    assert "free-srv-9-other" not in hb.extra["fetched"]
+    assert hb.extra["freeing"] == {r.volume: 0} and "fetched" not in hb.extra, hb.extra
+    from w2cplatform.requests import clear_requests
+    from w2cplatform.spec import SpecController
+    assert clear_requests(SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall), sweep=False) == 0
+    assert box.vars.get(REC_SPEC.sub.request_key(rid))[0] is not None          # the resource's row stands
     out = res.relieve()
     assert out["freeing"] == 0 and out["short"] == 48                       # said as a shortfall, and nothing is cut

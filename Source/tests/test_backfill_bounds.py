@@ -150,8 +150,8 @@ def test_an_operators_request_is_served_off_the_loops_thread():
 
 def test_a_request_filed_as_the_family_files_one_is_fetched_and_one_past_its_deadline_unbegun_is_answered_expired():
     """The VMS's jobs ask the recorder as the platform's request family files a request (М10A 14): the unit as
-    `rec/<recording>`, a deadline (`jobs._ask_recorder`). The recorder reads both forms of the unit — the console's door
-    writes the id — and one not begun by its deadline is answered expired, not fetched: the asker asks again if it
+    `rec/<recording>` (a worker's filing), a deadline where the asker gave one. The recorder reads both forms of the unit —
+    the family's door (`requests.file`, the console's and `jobs._ask_recorder`'s) writes the id — and one not begun by its deadline is answered expired, not fetched: the asker asks again if it
     still wants it. A deadline that is not a time is that request's refusal."""
     box, r, con_rec = _recorder()
     _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
@@ -318,6 +318,9 @@ def test_a_recorder_reads_another_recorders_request_once_and_an_answered_one_nev
     reads: list[str] = []
     get = r.vars.get
     r.vars.get = lambda key: (reads.append(key) if "/requests/" in key else None, get(key))[1]
-    assert r.requests(now=NOW) and r.fetched == ["1-x"] and len(reads) == 51
+    # …beside them, one read a look of its own volume's ask to free bytes (`answer_free`, the product's `answerFree`;
+    # the fifteenth review, minor 5): the resource's row, not a request — said while it stands
+    free = [f"rec/requests/free-{r.server}-{r.volume}"] if r.volume else []
+    assert r.requests(now=NOW) and r.fetched == ["1-x"] and len(reads) == 51 + len(free), reads
     del reads[:]
-    assert r.requests(now=NOW) == [] and reads == []                        # nothing read again
+    assert r.requests(now=NOW) == [] and reads == free                      # nothing read again

@@ -46,6 +46,7 @@ from vms.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
 from w2cplatform.secrets import hide_in_url
 from w2cplatform.objects import ObjectStore
+from w2cplatform.requests import FREE_PREFIX
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.variables import Variables
 
@@ -2672,6 +2673,15 @@ class RecWorker(VmsWorker):
     @one_look
     def requests(self, budget: int = 2, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
+        # THE FAMILY'S MARKS ARE SWEPT BY ITS WORKERS (`Worker.sweep_marks`; ADR-0054): the VMS's jobs end a scenario's
+        # `record` with its outcome in `rec/commands/<id>` and never delete a mark (the fifteenth review, minor 7), so
+        # the recorder's look — its own, not the base's — sweeps them once they can no longer be met by a filing again.
+        try:
+            self.sweep_marks()
+        except Exception as e:                           # noqa: BLE001 — the store: swept on a later look
+            self.store_errors += 1
+            log.warning("%s: the request marks were not swept (%s)", self.name, e)
+        self.answer_free()
         if self.archive_busy():
             return []
         mine = {str(r["id"]) for r in self.rows}
@@ -2693,6 +2703,8 @@ class RecWorker(VmsWorker):
             known = self._requests_read.get(key.rsplit("/", 1)[1])
             if key.rsplit("/", 1)[1] in self.fetched or (known is not None and known[0] not in mine):
                 continue
+            if key.rsplit("/", 1)[1].startswith(FREE_PREFIX):
+                continue                                     # the resource's ask, not a request: `answer_free`
             it, _ = self.vars.get(key)
             if it:
                 # The unit as its id or as `rec/<id>`, the family's two forms (М10A 14): the console's door writes the
@@ -2700,19 +2712,6 @@ class RecWorker(VmsWorker):
                 ref = str(it.get("unit", ""))
                 it = {**it, "unit": ref.split("/", 1)[1] if ref.startswith(f"{REC.name}/") else ref}
                 self._requests_read[key.rsplit("/", 1)[1]] = (str(it["unit"]), None)
-            # THE RESOURCE ASKS TO FREE BYTES on a volume of its server (`free-<server>-<volume>`; the boundary's step 6: it
-            # was a hook of the VMS's the resource called). The recorder holding that volume decides, and answers in its
-            # heartbeat (`freeing`: the bytes its engine deleted and the volume does not show yet, which the resource
-            # takes off what it asks — `Resource.relieve`, ADR 0059; it was `freed`, ADR 0003). Its footage is a ring
-            # of the size the volume was given, which gives up its oldest minutes by itself, IN PLACE: blocks
-            # overwritten inside a volume formatted at its quota (`archive.py`, «the ring»), never a file deleted, so
-            # nothing is ever deleted and not yet visible — and nothing on the disk is the recorder's to give up
-            # early. Nought, always, said, and the row closed.
-            if it and key.rsplit("/", 1)[1].startswith("free-") and "free" in it:
-                if str(it.get("server", "")) == str(self.server) and str(it.get("volume", "")) == str(self.volume or ""):
-                    self.freeing[str(it["volume"])] = 0
-                    self.fetched.append(key.rsplit("/", 1)[1])
-                continue
             if not it or str(it.get("unit", "")) not in mine or key.rsplit("/", 1)[1] in self.fetched:
                 continue                                     # another recorder's recording, or answered already
             # One family, two kinds of asking. A backfill names a RANGE and this worker fetches it; a
@@ -2805,6 +2804,38 @@ class RecWorker(VmsWorker):
             self.fetched.append(rid)                         # the heartbeat says so; the console removes the row
             done.append({**r, "request": rid})
         return done
+
+    # THE RESOURCE ASKS TO FREE BYTES on a volume of its server (`free-<server>-<volume>`, ADR-0059; the boundary's step 6:
+    # it was a hook of the VMS's the resource called). The recorder holding that volume decides, and answers in its
+    # heartbeat (`freeing`: the bytes its engine deleted and the volume does not show yet, which the resource takes off
+    # what it asks — `Resource.relieve`; it was `freed`, ADR 0003). Its footage is a ring of the size the volume was
+    # given, which gives up its oldest minutes by itself, IN PLACE: blocks overwritten inside a volume formatted at its
+    # quota (`archive.py`, «the ring»), never a file deleted, so nothing is ever deleted and not yet visible — and nothing
+    # on the disk is the recorder's to give up early. Nought, always.
+    #
+    # SAID WHILE THE ROW STANDS, AND THE ROW IS NOT ANSWERED (the review's fifteenth pass, minor 5; ADR-0059: «the holder
+    # neither performs nor marks it»): it went into `fetched`, and the console's clearing deleted the resource's row two
+    # seconds later — the resource asked again on its next pass, and `freeing` stayed said for good. The row is the
+    # resource's: it writes it while the volume is above its mark and takes it away under it (or the family's `ttl` ends
+    # one it stopped writing). Only this recorder's own row is read — its server's, its volume's: one read, not the
+    # family's list (the product's `answerFree`); gone, `freeing` for that volume is said no more. A store that does not
+    # answer leaves what was said, until the next look.
+    def answer_free(self) -> None:
+        volume = str(self.volume or "")
+        if not volume or not self.server:
+            self.freeing = {}
+            return                                       # not pinned to a volume: no ask is addressed to it
+        from w2cplatform.requests import free_request_key, is_free_request
+        key = free_request_key(REC, str(self.server), volume)
+        try:
+            it, _ = self.vars.get(key)
+        except Exception as e:                           # noqa: BLE001 — not read: what was said stays, the next look
+            self.store_errors += 1
+            log.warning("%s: the resource's ask to free bytes on %s was not read (%s)", self.name, volume, e)
+            return
+        asked = is_free_request(key.rsplit("/", 1)[1], it) and str(it.get("server", "")) == str(self.server) \
+            and str(it.get("volume", "")) == volume
+        self.freeing = {volume: self.freeing.get(volume, 0)} if asked else {}
 
     BACKFILL_MAX, BACKFILL_MIN, BACKFILL_AHEAD = 86400.0, 1.0, 60.0
 

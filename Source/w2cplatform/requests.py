@@ -1,11 +1,14 @@
 """The request family's console side: `<sub>/requests/<id>`, bounded work somebody asked a unit's holder for (§3 row 3 of
 the boundary note — the family whole in the platform, driven by the spec's `requests:`; it was one subsystem's code).
 
-    filed       by the console (`POST /<sub>/requests`, the spec's schema, `SpecConsole._request_route`) or by another
-                subsystem's worker (`Worker.file_request`: only to a subsystem its spec's `worker: {requests: […]}` names,
-                refused otherwise on every store, ADR-0013) — a row, named by its idempotency key, written create-only
+    filed       through the family's door, `file` here — the console's `POST /<sub>/requests` and a subsystem's own
+                housekeeping process: the spec's schema, key, deadline, stamps, count and journal, the fifteenth
+                review's major 4 — or by another subsystem's worker (`Worker.file_request`: only to a subsystem its
+                spec's `worker: {requests: […]}` names, refused otherwise on every store, ADR-0013) — a row, named by
+                its idempotency key, written create-only; an id whose mark stands is answered by the mark (major 2)
     performed   by the worker holding the unit, at most once, its answer in the heartbeat's `fetched` and in its mark
-                `<sub>/commands/<id>` (`Worker.requests`)
+                `<sub>/commands/<id>` (`Worker.requests`); an action another process performs (`elsewhere`) by that
+                process, its outcome in the same mark
     cleared     here: a row a holder answered goes (`clear_requests`, every `CLEAR_EVERY`, no row read); and on the reaper's
                 slower turn (`sweep`) a row with a deadline nobody performed is ended `REAP_AFTER` past it — counted as
                 expired, or as not known when a holder began it and went — and a row with none ends after the spec's `ttl`
@@ -20,7 +23,7 @@ import json
 import logging
 
 from .canonical import canonical_json, field_text
-from .rows import PARSE_ERRORS, finite
+from .rows import PARSE_ERRORS, Table, finite
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +46,7 @@ def count_expired(sub: str) -> None:
 # being filed — the same text, byte for byte, on one form (`canonical_json` over the items as the store holds them),
 # leaving out only the filer's own moments, `moment`: what a retry of the same request cannot say the same — a worker's
 # `filed` (`Worker.file_request`); at the console's door `at` when it stamps it and a deadline it gave itself
-# (`SpecConsole._file_request`). Who filed it (`by`), for which unit, in which group, with what values — all compared:
+# (`requests.file`, the family's door). Who filed it (`by`), for which unit, in which group, with what values — all compared:
 # under one id, another person's request is ANOTHER request. The door answered it 202 with the stranger's row, and the
 # person's own command was not filed; a worker's filing was refused. Now both are refused, by this one function.
 #
@@ -134,12 +137,21 @@ def mark_request(row: dict) -> dict:
 # cleared seconds after the answer, and an evaluator that moved files the same id again — its cursor and `fired` stayed
 # behind. "Not more than once" is the mark's to hold, so it stands at least until the request could no longer be
 # performed: its deadline plus the reaper's margin — `REAP_AFTER`, or the family's `ttl` when that is longer (the holder
-# judges the deadline by its own clock, and whoever sweeps by another). None: a mark that names no deadline or does not
-# parse — swept with its row, as before.
+# judges the deadline by its own clock, and whoever sweeps by another).
+#
+# A MARK WITHOUT A DEADLINE STANDS TOO (the review's fifteenth pass, major 2; ADR-0054): a request of a family that ends
+# its rows by `ttl` names none, and its mark went with its row — the same id filed again a minute later was a fresh
+# filing, and the process that performs it did it twice. Its bound is the later of its moments (`ended_at`, `at`: when it was
+# answered, when it was begun) plus the same margin — a row of that family could have stood no longer. None: a mark
+# that does not parse, or says no moment at all — swept with its row, as before.
 def mark_kept_until(raw, ttl=None) -> float | None:
     try:
         mark = json.loads(raw) if raw else None
-        until = finite(mark.get("valid_until") or 0) if isinstance(mark, dict) else 0.0
+        if not isinstance(mark, dict):
+            return None
+        until = finite(mark.get("valid_until") or 0)
+        if not until:
+            until = max(finite(mark.get("ended_at") or 0), finite(mark.get("at") or 0))
     except (*PARSE_ERRORS, TypeError, ValueError, AttributeError):
         return None
     try:
@@ -147,6 +159,24 @@ def mark_kept_until(raw, ttl=None) -> float | None:
     except (TypeError, ValueError):
         margin = REAP_AFTER
     return until + margin if until else None
+
+
+# THE RESOURCE'S ASK TO FREE BYTES, ONE FORM (ADR-0059: «the row's form is the platform's»): `<sub>/requests/free-<server>-
+# <volume> {free, volume, server, at}`, written by the resource (`Resource._free_key`) and read by the worker of that
+# subsystem on that server — no holder performs it, none marks it, and no answer of it goes into `fetched`: the row is
+# the resource's to write and to take away (the fifteenth review, minor 5). The product's `FreeRequestPrefix`,
+# `IsFreeRequest`.
+FREE_PREFIX = "free-"
+
+
+def free_request_key(sub, server: str, volume: str) -> str:
+    """The resource's ask for `volume` of `server`, in subsystem `sub` (a `Subsystem`)."""
+    return sub.request_key(f"{FREE_PREFIX}{server}-{volume}")
+
+
+def is_free_request(rid: str, it) -> bool:
+    """Whether a row is the resource's ask to free bytes: its id says so and it says how many."""
+    return str(rid).startswith(FREE_PREFIX) and isinstance(it, dict) and "free" in it
 
 
 # A FOREIGN MARK'S WORDS ARE CLIPPED WHERE THEY ARE SAID («Сборка», window 3; ADR-0054): a mark is written by another
@@ -405,6 +435,318 @@ def clear_asked(ctl) -> int:
         except Exception:                                   # noqa: BLE001 — written meanwhile, or the store: the next turn
             continue
     return gone
+
+
+# THE FAMILY'S RULES, ONE FOR EVERY FILER THAT IS NOT A WORKER (the review's fifteenth pass, major 4; ГРАНИЦА §3 row 3,
+# ADR-0013, ADR-0012). They were the console's `_file_request`, and a subsystem's housekeeping process filed past them
+# with a raw `vars.put`: a row the family's schema refuses (a key it does not take), stamps of its own (`[at, by]` where
+# the spec says `[by, at, about]`), no line in the journal. Now, as the product has them (`requests.go`: `PrepareRequest`,
+# `FileAs`, `sayFiled` — one name on both sides):
+#
+#   prepare_request   the request's row as the platform files it, from a body — whoever files it: the spec's `schema`;
+#                     its `unit` `<sub>/<id>` of a unit that is; its id (the spec's `key` filled from the body, the
+#                     body's `id`, or `idem`, by the one table of names `doors.rid_fault`); its values in their one text
+#                     (`field_text`), `maxLength` over that text, NaN and the infinities refused; its deadline only with
+#                     `valid_for` (the body's, or now + `valid_for`, at most `most_valid` away; a family without it ends
+#                     its rows by `ttl` and takes none from anybody); the spec's `stamp`: `by`, `at`, `group`, the unit's
+#                     `about`. A refusal is the door's reply, in its words
+#   answered_by_mark  A SPENT ID IS ANSWERED BY ITS MARK (the fifteenth review, major 2; ADR-0054): a mark with an outcome
+#                     under the id — the request was answered, its row cleared or about to be — is the answer, nothing
+#                     written, no place counted: the same request (the same unit and action, or the same `digest`) 200
+#                     `{answered}` with the mark's words; another under the spent id 409 `spent`. A mark not read raises
+#   say_filed         the spec's `requests.journal`, one line per request filed, whoever filed it
+#   file              the console's door (`POST /<sub>/requests`): the above, a place in the person's ledger
+#                     (`per_person`, `<sub>/asked/…`, ADR 0060) by CAS, the row create-only; a taken id compared as every
+#                     filer compares (`filed_already`) — the same request → its row, 202; another → 409 `exists`, the
+#                     place given back. `(status, reply)`, as it is sent; `garbled(name, by, error)` says a ledger that does
+#                     not read and answers for it (the console's: 429, `/metrics`, an alarm), `read(name)` one read again
+#   file_as           a process's filing (`by`: what the process files as): the same rules, the row create-only, the
+#                     journal line — WITHOUT a person's ledger: a process files what a worker's report told it to, not on
+#                     a whim (the product's `FileAs`). `(rid, row, filed)`: `filed` False — the same request stands, or
+#                     was answered under its id (its mark); a refusal raises `spec.Refused`, a different request under
+#                     the id `Conflict`, a store that does not answer its own error
+
+
+# A request row a person's ledger names, read to tell whether it still stands (`per_person`): one that does not parse
+# stands — it keeps its place in that person's ledger until it is mended or `ttl` passes (the fourteenth review, minor
+# 2: it was a 500 to every request that person filed; the product's `requests.go` keeps the entry too).
+LEDGER_ROWS = Table("request_row", "it keeps its place in its person's ledger until it is mended or its ttl passes",
+                    "request row a ledger names")
+
+
+def _stands(ctl, key: str) -> bool:
+    try:
+        it = ctl.vars.get(key)[0]
+    except PARSE_ERRORS as e:                               # `Garbled` too: held by the store, and not read
+        LEDGER_ROWS.garbled(key, e)
+        return True
+    LEDGER_ROWS.parsed(key)
+    return bool(it)
+
+
+# The place a refused request took in its person's ledger, given back by CAS (the fourteenth review, major 1): the id
+# under which another request stands would otherwise count against this person until `ttl` — that row stands.
+def _ledger_release(ctl, ledger: str, rid: str, at: float) -> None:
+    from .canonical import parse_json
+    from .variables import Conflict
+    for _ in range(50):
+        try:
+            it, idx = ctl.vars.get(ledger)
+            held = [(str(r), finite(t)) for r, t in parse_json((it or {}).get("asks", "[]"))]
+        except PARSE_ERRORS:
+            return                                          # torn meanwhile: the next request says so
+        kept = [(r, t) for r, t in held if not (r == rid and t == at)]
+        if len(kept) == len(held):
+            return
+        try:
+            ctl.vars.put(ledger, {**it, "asks": canonical_json(kept)}, cas=idx)
+            return
+        except Conflict:
+            continue
+    log.warning("%s: the place request %s took in %s would not be given back: it counts until the ledger's ttl",
+                ctl.spec.name, rid, ledger)
+
+
+def _garbled_ledger(name: str, by: str, e: Exception, sub: str) -> tuple:
+    log.error("%s: the request ledger %s of %s does not read (%s): nothing is filed for it until an administrator "
+              "deletes it (DELETE /%s/asked/%s)", sub, name, by, e, sub, name)
+    return 429, {"detail": f"учёт не читается: the list of {by}'s open requests ({sub}/asked/{name}) does not read, "
+                           f"and nothing is filed for {by} until an administrator deletes it", "error": "учёт не читается"}
+
+
+# Whether a mark with an outcome stands under `rid` and says THIS request (`file`): `(None, "")` — no mark, or one with
+# no outcome yet (begun: the row stands, and the filing goes on to meet it); `(mark, "same")`; `(mark, "other")`. A mark
+# that does not parse names no request: another. Raises if the store does not answer.
+def _spent(ctl, rid: str, out: dict) -> tuple[dict | None, str]:
+    raw = ctl.objects.get(ctl.sub.command_key(rid))
+    if raw is None:
+        return None, ""
+    try:
+        mark = json.loads(raw)
+    except PARSE_ERRORS:
+        mark = None
+    if not isinstance(mark, dict):
+        return {"outcome": "?"}, "other"
+    if not mark.get("outcome"):
+        return None, ""
+    bare = lambda u: str(u or "").split("/", 1)[1] if str(u or "").startswith(ctl.spec.name + "/") else str(u or "")  # noqa: E731
+    if mark.get("digest") == request_digest(out):
+        return mark, "same"
+    same = bare(mark.get("unit")) == bare(out.get("unit")) and str(mark.get("action") or "") == str(out.get("action") or "")
+    return mark, "same" if same else "other"
+
+
+def prepare_request(ctl, body: dict, by: str, idem: str | None = None, now: float | None = None):
+    """`(rid, row, ref, None)` — or `("", None, "", (status, reply))`, the door's refusal."""
+    from .canonical import number_text
+    from .doors import parse_ref, rid_fault
+    spec, req = ctl.spec, ctl.spec.requests or {}
+    now = ctl.wall() if now is None else now
+    if not req:
+        return "", None, "", (404, {"detail": f"{spec.name} takes no requests (its spec declares no `requests:`)", "error": "no requests"})
+    if not isinstance(body, dict):
+        return "", None, "", (400, {"detail": "a request is a JSON object", "error": "bad body"})
+    if "schema" in req:
+        from .schema import Invalid, check
+        try:
+            check(req["schema"], body, "the request")
+        except Invalid as e:                                # past `maxLength`: the shared table's `too_long`
+            return "", None, "", (400, {"detail": str(e), "error": "refused", **({"fault": "too_long"} if e.keyword == "maxLength" else {})})
+        except RecursionError:
+            return "", None, "", (400, {"detail": "the request is nested past what is read", "error": "refused"})
+    ref = str(body.get("unit", ""))
+    got = parse_ref(ref)
+    if got is None or got[0] != spec.name:
+        return "", None, "", (400, {"detail": f"a request names its unit as {spec.name}/<id>, not {ref[:80]!r}", "error": "bad unit"})
+    try:
+        row = ctl.unit(spec.parse_id(got[1]))
+    except (ValueError, *PARSE_ERRORS):
+        row = None
+    if row is None:
+        return "", None, "", (404, {"detail": f"no unit {ref}", "error": "no such unit"})
+    uid = str(row["id"])
+    if "key" in req:
+        from .tables import KEY_TEMPLATE
+
+        def filled(m) -> str:                              # a field's text in the name is its text in the row
+            v = {**body, "unit": uid}[m.group(1)]
+            if v is None:
+                raise KeyError(m.group(1))                 # `null` is no value: the name is not filled in
+            if not m.group(2):
+                return field_text(v)
+            # `:int` — an integer in exactly its digits (through a float, 12345678901234567890 was …7168)
+            return str(v) if isinstance(v, int) and not isinstance(v, bool) else str(int(float(v)))
+        try:
+            rid = KEY_TEMPLATE.sub(filled, req["key"])
+        except (KeyError, *PARSE_ERRORS, OverflowError):
+            return "", None, "", (400, {"detail": f"a request is named {req['key']}, and the body does not fill it in", "error": "bad id"})
+    else:
+        rid = str(body.get("id") or idem or "")
+    why = rid_fault(rid)                                    # ONE TABLE OF NAMES, the worker's too (ADR 0060; `rid.tsv`)
+    if why:
+        return "", None, "", (400, {"detail": why, "error": "bad id"})
+    # A ROW'S VALUE IS ITS JSON TEXT, ONE FORM FOR THE COURSE AND THE PRODUCT (the architect, 2026-10-05, ADR 0012;
+    # «Паритет»'s `testdata/requests_body.tsv`): a string as it is, `true`/`false`, a whole number as its digits, any
+    # other the shortest decimal. `null` is no value: the field is absent. The text is what the schema's `maxLength`
+    # bounds — a number's too, as the holder reads it (`port: 1e40` is 41 characters).
+    try:
+        out = {k: t for k, v in body.items() if k not in ("unit", "id", "valid_until")
+               and (t := field_text(v)) is not None}
+    except PARSE_ERRORS:                                    # `NaN`, `Infinity`: Python reads them, JSON has none
+        return "", None, "", (400, {"detail": "a request's values are JSON, and NaN and the infinities are not", "error": "bad body",
+                     "fault": "not_json"})
+    props = (req["schema"].get("properties") or {}) if isinstance(req.get("schema"), dict) else {}
+    for k, t in out.items():
+        most = props[k].get("maxLength") if isinstance(props.get(k), dict) else None
+        if isinstance(most, int) and len(t) > most:
+            return "", None, "", (400, {"detail": f"the request's {k} is at most {most} characters as written, not {len(t)}",
+                         "error": "refused", "fault": "too_long"})
+    out.update(unit=uid)
+    if "valid_for" in req:
+        # A deadline is a finite number of seconds (the review's seventh pass, M3); how far one may be is declared
+        # (`most_valid`, required with `valid_for`): no bound is assumed (ADR 0012).
+        try:
+            until = finite(body.get("valid_until") or now + req["valid_for"])
+        except (TypeError, ValueError):
+            return "", None, "", (400, {"detail": f"`valid_until` is a time in seconds, not {body.get('valid_until')!r}", "error": "bad deadline"})
+        if until - now > req["most_valid"]:
+            return "", None, "", (400, {"detail": f"a request's `valid_until` is at most {req['most_valid']:.0f} s away", "error": "too far"})
+        out["valid_until"] = number_text(until)
+    stamp = set(req.get("stamp") or ())
+    if "by" in stamp:
+        out["by"] = str(by)
+    if "at" in stamp:
+        out["at"] = number_text(now)
+    if "group" in stamp and spec.group_by:                  # what the rights were asked on: the holder performs it there only
+        out["group"] = ctl.group_value(row)
+    if "about" in stamp and spec.about_field and row.get(spec.about_field) not in (None, ""):
+        out[spec.about_field] = str(row[spec.about_field])
+    return rid, out, ref, None
+
+
+def answered_by_mark(ctl, rid: str, out: dict) -> tuple | None:
+    """The reply a spent id gets from its mark — 200 `answered`, or 409 `spent` — or None: no mark with an outcome."""
+    mark, kind = _spent(ctl, rid, out)
+    if kind == "same":
+        return 200, {"answered": {"id": rid, "outcome": mark_text(mark, "outcome"),
+                                  **{k: mark_text(mark, k) for k in ("error", "ended_at", "late") if mark.get(k) not in (None, "")}},
+                     "detail": f"request {rid} was answered ({mark_text(mark, 'outcome')}): the same request is not "
+                               f"performed again — its answer is in its mark"}
+    if kind == "other":
+        return 409, {"detail": f"request {rid}: this id is spent — a request answered under it "
+                               f"({mark_text(mark, 'outcome')}) is not this one; name yours otherwise", "error": "spent"}
+    return None
+
+
+def say_filed(journal, spec, by: str, ref: str, rid: str, out: dict) -> None:
+    """The family's journal line of a request filed (`requests.journal`): who, of which unit, which request, its range
+    or action — one line for a person's at the door and a process's (`file_as`). No journal, or none declared: none."""
+    req = spec.requests or {}
+    if not req.get("journal") or journal is None:
+        return
+    journal.say(str(req["journal"]), user=str(by), target=ref, request=rid, sub=spec.name,
+                **{k: v for k, v in out.items() if k in ("from", "to", "action")})
+
+
+def file(ctl, body: dict, by: str, *, idem: str | None = None, journal=None, now: float | None = None,
+         garbled=None, read=None) -> tuple[int, dict]:
+    from .canonical import number_text, parse_json
+    from .variables import Conflict
+    spec, req = ctl.spec, ctl.spec.requests or {}
+    now = ctl.wall() if now is None else now
+    rid, out, ref, refused = prepare_request(ctl, body, by, idem, now)
+    if refused is not None:
+        return refused
+    stamp = set(req.get("stamp") or ())
+    # A SPENT ID: its mark answers (the fifteenth review, major 2). Read before any place is counted or row written.
+    spent = answered_by_mark(ctl, rid, out)
+    if spent is not None:
+        return spent
+    added, ledger = False, ""
+    if "per_person" in req:
+        # ONE PERSON'S OPEN REQUESTS, COUNTED BY CAS, NOT BY LOOKING (the review's sixth pass, minor): `<sub>/asked/<sha256
+        # of the asker, 16 hex>` (ADR 0060), the list of their ids, changed by CAS; an id stays in it while its row stands,
+        # and for `settle` seconds after it was added, row or no row, and never past the spec's `ttl` (`0`: no limit).
+        # A LEDGER THAT DOES NOT READ STOPS THAT ASKER, AND SAYS SO (`garbled`); a request row it names that does not read
+        # stands (`LEDGER_ROWS`).
+        ledger = spec.sub.asked_key(by)
+        name = ledger.rsplit("/", 1)[1]
+        settle, ttl = req.get("settle", 60.0), req["ttl"]   # the loader requires it with `per_person`; 0: no limit
+        for _ in range(50):
+            try:
+                it, idx = ctl.vars.get(ledger)
+                held = [(str(r), finite(at)) for r, at in parse_json((it or {}).get("asks", "[]"))]
+            except PARSE_ERRORS as e:                       # `Garbled` too: a row the store holds and cannot read
+                return garbled(name, by, e) if garbled else _garbled_ledger(name, by, e, spec.name)
+            if read:
+                read(name)
+            held = [(r, at) for r, at in held if (not ttl or now - at <= ttl)
+                    and (now - at < settle or _stands(ctl, spec.sub.request_key(r)))]
+            added = rid not in [r for r, _ in held]
+            if added:
+                if len(held) >= req["per_person"]:
+                    return 429, {"detail": f"{by} has {len(held)} requests nobody has answered yet, as many as one "
+                                           f"person files at once — wait for some to be answered", "error": "too many"}
+                held.append((rid, now))
+            try:
+                ctl.vars.put(ledger, {"asks": canonical_json(held), "by": str(by), "at": number_text(now)}, cas=idx)
+                break
+            except Conflict:
+                continue                                    # another request of this asker's got there first
+        else:
+            return 503, {"detail": "this person's list of requests would not settle — retry", "error": "busy"}
+    try:
+        ctl.vars.put(spec.sub.request_key(rid), out, cas=0)
+    except Conflict:
+        # THE ID IS TAKEN: THE SAME REQUEST, OR ANOTHER (the fourteenth review, major 1; ADR 0013, 0031), compared as a
+        # worker's filing compares it (`filed_already`) without the door's own stamps — `by` and `at` when it stamps them,
+        # a deadline it gave itself: WHAT is asked decides. The same → its row, 202; another or one that does not parse →
+        # 409 `exists`, the place given back; not read → 503.
+        moment = ("filed", *(k for k in ("by", "at") if k in stamp),
+                  *(("valid_until",) if "valid_for" in req and body.get("valid_until") in (None, "", 0) else ()))
+        kind, why = filed_already(ctl.vars, spec.sub.request_key(rid), out, moment)
+        if kind in ("other", "garbled", "store"):
+            if added:
+                _ledger_release(ctl, ledger, rid, now)
+            if kind == "store":
+                return 503, {"detail": f"request {rid}: {why}", "error": "store unavailable"}
+            return 409, {"detail": f"request {rid}: {why} — name yours otherwise", "error": "exists"}
+        if kind == "same":
+            out = ctl.vars.get(spec.sub.request_key(rid))[0] or out   # the same request, filed already: its row is the answer
+    say_filed(journal, spec, by, ref, rid, out)
+    return 202, {"queued": {"id": rid, **out},
+                 "detail": "whoever holds the unit answers it on its next look at the requests, in its heartbeat"
+                           + ("; after valid_until it expires unperformed" if "valid_for" in req else "")}
+
+
+
+
+def file_as(ctl, body: dict, by: str, *, journal=None, now: float | None = None) -> tuple[str, dict | None, bool]:
+    from .spec import Refused
+    from .variables import Conflict
+    spec = ctl.spec
+    now = ctl.wall() if now is None else now
+    rid, out, ref, refused = prepare_request(ctl, body, by, None, now)
+    if refused is not None:
+        raise Refused(str(refused[1].get("detail") or refused[1].get("error")))
+    spent = answered_by_mark(ctl, rid, out)              # raises if the store does not answer
+    if spent is not None:
+        if spent[0] == 200:
+            return rid, None, False                      # answered under its id: the mark says how
+        raise Conflict(f"request {rid}: {spent[1]['detail']}")
+    key = spec.sub.request_key(rid)
+    try:
+        ctl.vars.put(key, out, cas=0)
+    except Conflict:
+        stamp = set((spec.requests or {}).get("stamp") or ())
+        kind, why = filed_already(ctl.vars, key, out, ("filed", *(k for k in ("by", "at") if k in stamp)))
+        if kind == "same":
+            return rid, None, False                      # the same request stands
+        if kind == "store":
+            raise OSError(f"request {rid}: {why}") from None
+        raise Conflict(f"request {rid}: {why}") from None
+    say_filed(journal, spec, by, ref, rid, out)
+    return rid, out, True
 
 
 # One turn over the subsystems whose specs declare requests: what the console's housekeeping runs (`host.console`).

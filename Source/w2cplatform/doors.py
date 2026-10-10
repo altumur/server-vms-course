@@ -54,7 +54,7 @@ def unnamable(name: str, unit: bool = False) -> list[str]:
 # COURSE AND THE PRODUCT («Архитектор», 2026-10-06, ADR 0060; «Паритет»'s `testdata/rid.tsv`): at most `RID_BYTES` bytes
 # of UTF-8, not empty, not `.` or `..`; no `/`, `\`, `"`, `'`, and no character of Unicode's Cc, Zl or Zp. It counted
 # characters: 150 × «я» passed it and the store refused the 300-byte key with a 500, and `a\u0085b` was a 500 too. One
-# function for both who name a request: the console's door (`SpecConsole._file_request`, 400) and a worker's
+# function for both who name a request: the family's door (`requests.file`, 400) and a worker's
 # (`Worker.file_request`, `RequestRefused`). No prefix means anything: a person's ledger is not in this family (ADR 0060).
 RID_BYTES = 200
 

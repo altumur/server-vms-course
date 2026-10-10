@@ -191,11 +191,6 @@ from .spec import GARBLED_ROW, LABEL_WORD, Exists, Refused, SpecController, serv
 # that unit's events withheld from a grant by label, and nobody else's events (the scaling pass after the eighth review).
 UNIT_LABELS = Table("unit", "its events are shown only to a grant that needs no labels: the unit's own, or the whole "
                     "cluster's", "unit's row, read for its labels")
-# A request row a person's ledger names, read to tell whether it still stands (`_file_request`, `per_person`): one that
-# does not parse stands — it keeps its place in that person's ledger until it is mended or `ttl` passes (the fourteenth
-# review, minor 2: it was a 500 to every request that person filed; the product's `requests.go` keeps the entry too).
-LEDGER_ROWS = Table("request_row", "it keeps its place in its person's ledger until it is mended or its ttl passes",
-                    "request row a ledger names")
 # A person's ledger by name (`DELETE /asked/<name>`): 16 hex of the sha256 of the person (`Subsystem.asked_key`, ADR 0060).
 LEDGER_NAME = re.compile(r"[0-9a-f]{16}")
 from .variables import Conflict, Forbidden
@@ -3019,7 +3014,8 @@ class SpecConsole:
     # its unit to perform and answer in its heartbeat. A request is not idempotent by nature — the same relay pulsed
     # twice IS two pulses — so its NAME makes a retry the same request: the spec's `key` (a template of its fields), the
     # body's `id`, or the `Idempotency-Key`, written create-only; and the key is kept where every key is (`_idem`), so a
-    # retry after the row was answered and cleared is answered the same. What only the holder can judge — that a range
+    # retry after the row was answered and cleared is answered the same — and the same request under a new key, by the
+    # id's mark (`requests.file`, 200 `answered`; the fifteenth review, major 2). What only the holder can judge — that a range
     # is longer than it fetches, that an argument is past what its unit has — is the holder's, said in its heartbeat.
     def _request_route(self, h) -> None:
         key = self._idem(h)
@@ -3029,199 +3025,24 @@ class SpecConsole:
             resp = self._file_request(h, key)
         except Exception as e:                                       # noqa: BLE001
             return h._send(*self._failed(key, e))
-        if resp[0] == 202:
+        if resp[0] in (200, 202):                                  # filed, or answered by a spent id's mark
             self._remember(key, resp)
         else:
             self.seen.release(key)                                  # a refusal is not a request: the key is not spent
         return h._send(*resp)
 
+    # THE FAMILY'S DOOR IS THE PLATFORM'S (`requests.file`; the review's fifteenth pass, major 4): the schema, the id,
+    # the deadline, the stamps, a spent id answered by its mark, the asker's count, the row create-only and the journal —
+    # one function a subsystem's own housekeeping files through too. What is the console's here: the body read off the wire, the person
+    # (`X-User`), the `Idempotency-Key`, and what a ledger that does not read does to this console (`_ledger_garbled`).
     def _file_request(self, h, key: str) -> tuple:
-        ctl, spec, req = self.ctl, self.spec, self.spec.requests
-        user, now = h.headers.get("X-User", "operator"), self.wall()
+        from .requests import file
         try:
             body = object_body(h)
         except Refused as e:
             return 400, {"detail": str(e), "error": "bad body", **fault_of(e)}
-        if "schema" in req:
-            from .schema import Invalid, check
-            try:
-                check(req["schema"], body, "the request")
-            except Invalid as e:                         # past `maxLength`: the shared table's `too_long`
-                return 400, {"detail": str(e), "error": "refused", **({"fault": "too_long"} if e.keyword == "maxLength" else {})}
-            except RecursionError:
-                return 400, {"detail": "the request is nested past what is read", "error": "refused"}
-        ref = str(body.get("unit", ""))
-        got = parse_ref(ref)
-        if got is None or got[0] != spec.name:
-            return 400, {"detail": f"a request names its unit as {spec.name}/<id>, not {ref[:80]!r}", "error": "bad unit"}
-        try:
-            row = ctl.unit(spec.parse_id(got[1]))
-        except (ValueError, *PARSE_ERRORS):
-            row = None
-        if row is None:
-            return 404, {"detail": f"no unit {ref}", "error": "no such unit"}
-        uid = str(row["id"])
-        if "key" in req:
-            from .tables import KEY_TEMPLATE
-
-            def filled(m) -> str:                          # a field's text in the name is its text in the row
-                v = {**body, "unit": uid}[m.group(1)]
-                if v is None:
-                    raise KeyError(m.group(1))             # `null` is no value: the name is not filled in
-                if not m.group(2):
-                    return field_text(v)
-                # `:int` — an integer in exactly its digits (through a float, 12345678901234567890 was …7168)
-                return str(v) if isinstance(v, int) and not isinstance(v, bool) else str(int(float(v)))
-            try:
-                rid = KEY_TEMPLATE.sub(filled, req["key"])
-            except (KeyError, *PARSE_ERRORS, OverflowError):
-                return 400, {"detail": f"a request is named {req['key']}, and the body does not fill it in", "error": "bad id"}
-        else:
-            rid = str(body.get("id") or key)
-        from .doors import rid_fault
-        why = rid_fault(rid)                                 # ONE TABLE OF NAMES, the worker's too (ADR 0060; `rid.tsv`)
-        if why:
-            return 400, {"detail": why, "error": "bad id"}
-        # A ROW'S VALUE IS ITS JSON TEXT, ONE FORM FOR THE COURSE AND THE PRODUCT (the architect, 2026-10-05, ADR 0012;
-        # «Паритет»'s `testdata/requests_body.tsv`): a string as it is, `true`/`false`, a whole number as its digits, any
-        # other the shortest decimal — `str()` wrote Python's `True` and `5.0`, and a holder in Go read another value
-        # than the one in Python. `null` is no value: the field is absent, not the word `None`. The text is what the
-        # schema's `maxLength` bounds — a number's too, as the holder reads it (`port: 1e40` is 41 characters).
-        try:
-            out = {k: t for k, v in body.items() if k not in ("unit", "id", "valid_until")
-                   and (t := field_text(v)) is not None}
-        except PARSE_ERRORS:                                # `NaN`, `Infinity`: Python reads them, JSON has none
-            return 400, {"detail": "a request's values are JSON, and NaN and the infinities are not", "error": "bad body",
-                         "fault": "not_json"}
-        props = (req["schema"].get("properties") or {}) if isinstance(req.get("schema"), dict) else {}
-        for k, t in out.items():
-            most = props[k].get("maxLength") if isinstance(props.get(k), dict) else None
-            if isinstance(most, int) and len(t) > most:
-                return 400, {"detail": f"the request's {k} is at most {most} characters as written, not {len(t)}",
-                             "error": "refused", "fault": "too_long"}
-        out.update(unit=uid)
-        if "valid_for" in req:
-            # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity`
-            # reached the row as `nan`/`inf`, and a holder performed such a request hours late. How far one may be is
-            # declared (`most_valid`, required with `valid_for`): no bound is assumed, neither 600 nor none (ADR 0012).
-            try:
-                until = finite(body.get("valid_until") or now + req["valid_for"])
-            except (TypeError, ValueError):
-                return 400, {"detail": f"`valid_until` is a time in seconds, not {body.get('valid_until')!r}", "error": "bad deadline"}
-            if until - now > req["most_valid"]:
-                return 400, {"detail": f"a request's `valid_until` is at most {req['most_valid']:.0f} s away", "error": "too far"}
-            out["valid_until"] = number_text(until)
-        stamp = set(req.get("stamp") or ())
-        if "by" in stamp:
-            out["by"] = user
-        if "at" in stamp:
-            out["at"] = number_text(now)
-        if "group" in stamp and spec.group_by:               # what the rights were asked on: the holder performs it there only
-            out["group"] = ctl.group_value(row)
-        if "about" in stamp and spec.about_field and row.get(spec.about_field) not in (None, ""):
-            out[spec.about_field] = str(row[spec.about_field])
-        added = False
-        if "per_person" in req:
-            # ONE PERSON'S OPEN REQUESTS, COUNTED BY CAS, NOT BY LOOKING (the review's sixth pass, minor; a run: forty
-            # POSTs at once left fifteen rows). A person's open requests are ONE row — `<sub>/asked/<sha256 of the
-            # person, 16 hex>`, the list of their ids — changed by CAS; an id stays in it while its row stands, and
-            # for `settle` seconds after it was added, row or no row (the list is written before the request is), and
-            # never past the spec's `ttl` (`0`: no limit). The same request again is the same id, and is not counted twice.
-            # BESIDE THE FAMILY, NOT IN IT (ADR 0060): it was `<sub>/requests/asks-…`, and a request named so read that
-            # person's list; the holder, the reaper and a worker's filing know nothing of it now, and no `rid` is refused
-            # for a prefix.
-            #
-            # A LEDGER THAT DOES NOT READ STOPS THAT PERSON, AND SAYS SO (the architect's decision after step 7). It was read
-            # as an empty list and written over by CAS: the person's limit silently reset, nothing counted. Now it is 429
-            # «учёт не читается» to that person and nobody else, `<sub>_requests_ledger_garbled` on `/metrics`, the journal
-            # once per row (not per request); an administrator deletes the row (`DELETE /<sub>/asked/<name>`), and
-            # the ledger starts anew. A REQUEST ROW IT NAMES THAT DOES NOT READ stands (`LEDGER_ROWS`): its entry is kept and
-            # counted, the row counted garbled on `/metrics` — it was a 500 to every request of that person's.
-            ledger = spec.sub.asked_key(user)
-            name = ledger.rsplit("/", 1)[1]
-            settle, ttl = req.get("settle", 60.0), req["ttl"]   # the loader requires it with `per_person`; 0: no limit
-            for _ in range(50):
-                try:
-                    it, idx = ctl.vars.get(ledger)
-                    held = [(str(r), finite(at)) for r, at in parse_json((it or {}).get("asks", "[]"))]
-                except PARSE_ERRORS as e:                 # `Garbled` too: a row the store holds and cannot read
-                    return self._ledger_garbled(name, user, e)
-                self._ledger_read(name)
-                held = [(r, at) for r, at in held if (not ttl or now - at <= ttl)
-                        and (now - at < settle or self._stands(spec.sub.request_key(r)))]
-                added = rid not in [r for r, _ in held]
-                if added:
-                    if len(held) >= req["per_person"]:
-                        return 429, {"detail": f"{user} has {len(held)} requests nobody has answered yet, as many as one "
-                                               f"person files at once — wait for some to be answered", "error": "too many"}
-                    held.append((rid, now))
-                try:
-                    ctl.vars.put(ledger, {"asks": canonical_json(held), "by": user, "at": number_text(now)}, cas=idx)
-                    break
-                except Conflict:
-                    continue                                  # another request of this person's got there first
-            else:
-                return 503, {"detail": "this person's list of requests would not settle — retry", "error": "busy"}
-        try:
-            ctl.vars.put(spec.sub.request_key(rid), out, cas=0)
-        except Conflict:
-            # THE ID IS TAKEN: THE SAME REQUEST, OR ANOTHER (the fourteenth review, major 1; ADR 0013, 0031). The standing
-            # row was the answer whatever it was: boris's `{unit: t2, id: r1}` after anna's `{unit: t1, id: r1}` was 202
-            # with anna's row — his command not filed, a row of t1 shown to a person without rights on it, a place of his
-            # quota spent. Now it is compared as a worker's filing compares it (`requests.filed_already`, one function),
-            # without the door's own stamps — `by` and `at` when it stamps them, a deadline it gave itself: WHAT is asked
-            # decides, not who asked it when — two people asking for one thing the spec's `key` names (one range) ask for
-            # one fetch. The same request → its row, 202, as before; another (unit, values, a deadline the person gave)
-            # or one that does not parse → 409 `exists`, and the place this call took in its person's ledger is given
-            # back; not read → 503.
-            from .requests import filed_already
-            moment = ("filed", *(k for k in ("by", "at") if k in stamp),
-                      *(("valid_until",) if "valid_for" in req and body.get("valid_until") in (None, "", 0) else ()))
-            kind, why = filed_already(ctl.vars, spec.sub.request_key(rid), out, moment)
-            if kind in ("other", "garbled", "store"):
-                if added:
-                    self._ledger_release(ledger, rid, now)
-                if kind == "store":
-                    return 503, {"detail": f"request {rid}: {why}", "error": "store unavailable"}
-                return 409, {"detail": f"request {rid}: {why} — name yours otherwise", "error": "exists"}
-            if kind == "same":
-                out = ctl.vars.get(spec.sub.request_key(rid))[0] or out   # the same request, filed already: its row is the answer
-        if req.get("journal"):
-            self.journal.say(str(req["journal"]), user=user, target=ref, request=rid,
-                             **{k: v for k, v in out.items() if k in ("from", "to", "action")})
-        return 202, {"queued": {"id": rid, **out},
-                     "detail": "whoever holds the unit answers it on its next look at the requests, in its heartbeat"
-                               + ("; after valid_until it expires unperformed" if "valid_for" in req else "")}
-
-    # Whether a request row a person's ledger names still stands: one that does not parse does (`LEDGER_ROWS`, counted).
-    def _stands(self, key: str) -> bool:
-        try:
-            it = self.ctl.vars.get(key)[0]
-        except PARSE_ERRORS as e:                         # `Garbled` too: held by the store, and not read
-            LEDGER_ROWS.garbled(key, e)
-            return True
-        LEDGER_ROWS.parsed(key)
-        return bool(it)
-
-    # The place a refused request took in its person's ledger, given back by CAS (the fourteenth review, major 1): the id
-    # under which another request stands would otherwise count against this person until `ttl` — that row stands.
-    def _ledger_release(self, ledger: str, rid: str, at: float) -> None:
-        for _ in range(50):
-            try:
-                it, idx = self.ctl.vars.get(ledger)
-                held = [(str(r), finite(t)) for r, t in parse_json((it or {}).get("asks", "[]"))]
-            except PARSE_ERRORS:
-                return                                    # torn meanwhile: the next request says so
-            kept = [(r, t) for r, t in held if not (r == rid and t == at)]
-            if len(kept) == len(held):
-                return
-            try:
-                self.ctl.vars.put(ledger, {**it, "asks": canonical_json(kept)}, cas=idx)
-                return
-            except Conflict:
-                continue
-        log.warning("%s: the place request %s took in %s would not be given back: it counts until the ledger's ttl",
-                    self.spec.name, rid, ledger)
+        return file(self.ctl, body, h.headers.get("X-User", "operator"), idem=key, journal=self.journal, now=self.wall(),
+                    garbled=self._ledger_garbled, read=self._ledger_read)
 
     # A person's ledger that does not read: 429 to that person, said in the journal once per row — again only after it
     # read once more, or was deleted.

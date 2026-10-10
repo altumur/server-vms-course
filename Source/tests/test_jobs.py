@@ -228,10 +228,12 @@ def test_a_job_waiting_on_the_device_asks_the_recorder_once():
     assert ctl.unit(job)["state"] == "fetching"                    # the operator sees why it is not running
     assert adm.placement(job) is not None                          # …and it keeps its worker: this is a step, not an end
 
+    rec.create({"name": "7", "cam": "7"})                          # the recording the job reads
     assert ask_for_footage(ctl, rec) == 1
     it, _ = box.vars.get(REC_SPEC.sub.request_key("7-100-200"))
-    assert it and it["unit"] == "rec/7" and it["by"] == f"detjob/{job}"             # the family's form (М10A 14)…
-    assert float(it["valid_until"]) == box.wall() + __import__("vms.jobs", fromlist=["FETCH_WAIT"]).FETCH_WAIT   # …and its deadline: the job's, `rec` declares no most_valid
+    # filed through the family's door (`requests.file`; the fifteenth review, major 4): the schema's keys, the spec's
+    # stamps — `by` the job, `at`, the recording's `cam` as its `about` — and no deadline `rec` does not declare
+    assert it and it["unit"] == "7" and it["by"] == f"detjob/{job}" and it["cam"] == "7" and "valid_until" not in it, it
     assert ask_for_footage(ctl, rec) == 0                          # a pass every 30 s writes one row, not a queue
 
 

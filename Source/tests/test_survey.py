@@ -248,7 +248,7 @@ def test_the_console_turns_a_kept_stretch_into_a_request():
 
     assert keep_what_fired(survey, rec) == 1
     it, _ = box.vars.get(REC_SPEC.sub.request_key("7-1000-1120"))
-    assert it and it["unit"] == "rec/7" and it["by"] == "survey/7" and float(it["valid_until"]) > box.wall()
+    assert it and it["unit"] == "7" and it["by"] == "survey/7" and it["cam"] == "7"   # the family's door (`requests.file`)
     assert keep_what_fired(survey, rec) == 0                # one row, not a queue
 
     assert rec.unit("7")["enabled"] is False                # …and still nothing is recorded live

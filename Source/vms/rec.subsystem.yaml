@@ -235,7 +235,9 @@ requests:
     type: object
     required: [unit, from, to]
     additionalProperties: false
-    properties: {unit: {type: string}, from: {type: number}, to: {type: number}}
+    # lost: a span a recorder said it lost on the way in, filed by the console's pass (FileLostSpans) — worked as a
+    # known loss whatever its length, by whoever holds the recording then
+    properties: {unit: {type: string}, from: {type: number}, to: {type: number}, lost: {type: boolean}}
   key: "{unit}-{from:int}-{to:int}"
   per_person: 7
   settle: 60

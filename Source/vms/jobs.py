@@ -25,7 +25,8 @@ import json
 import logging
 import time
 
-from w2cplatform.requests import count_expired
+from w2cplatform.canonical import canonical_json
+from w2cplatform.requests import count_expired, mark_error, mark_request, mark_text
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import GARBLED_ROW, Refused, SpecController, take_written
 
@@ -142,6 +143,66 @@ class Remembered:
         self.deadlines.setdefault(sub, {})[str(uid)] = until
 
 
+# EVERY REQUEST THESE LOOPS END, ENDS WITH ITS OUTCOME IN ITS MARK (the review's fifteenth pass, minor 7 and major 2;
+# ADR-0054). `record`, `detect` and `scan` are the family's requests that another process performs (`requests.elsewhere`):
+# these loops are their holder. They deleted the row and said nothing anywhere — whoever filed one (a scenario's
+# evaluator, `Worker.file_request`) read no outcome, and the same id filed again after the row was gone, by an
+# evaluator that moved, was a fresh request: the recording extended twice, the scan queued twice. Now, as the holder does:
+#
+#   first        the mark `<sub>/commands/<id>` is read; one stands — the request was answered under this id — and the
+#                row goes, nothing performed again (the answer is the mark's, `_answered_before` on the holder's side)
+#   at the end   `performed`, `refused` (its reason, `mark_error`) or `expired`, CREATE-ONLY, with the request's words
+#                (`mark_request`: `digest`, `valid_until`) and `ended_by: jobs`; then the row goes. A mark the store
+#                did not take keeps the row: the next turn tries again (a store away is no answer)
+#
+# The mark stands until the request could no longer be performed (`requests.mark_kept_until`): a worker's filing under
+# the id meets it (`Worker._spent_by`). The workers of the family sweep it after that (`Worker.sweep_marks`; the
+# recorder's look too): this process, with the console's grant, writes marks and never deletes one (ADR-0054).
+ENDED_BY = "jobs"
+
+
+def _mark_stands(ctl, rid: str) -> dict | None:
+    """The mark under `rid` as it reads, or None; one that does not parse is a mark of nobody known. Raises if the store
+    does not answer: not known is not "nobody"."""
+    raw = ctl.objects.get(ctl.sub.command_key(rid))
+    if raw is None:
+        return None
+    try:
+        mark = json.loads(raw)
+    except PARSE_ERRORS:
+        mark = None
+    return mark if isinstance(mark, dict) else {"outcome": "?"}
+
+
+def _ended(ctl, key: str, rid: str, it: dict, outcome: str, now: float, why: str = "") -> bool:
+    """The outcome into the request's mark, create-only, then the row deleted. False when the mark was not written —
+    the store did not take it — and the row stays for the next turn."""
+    put_new = getattr(ctl.objects, "put_new", None)
+    if put_new is not None:
+        mark = {"unit": str(it.get("unit") or it.get("cam") or ""), "action": str(it.get("action") or ""),
+                "outcome": outcome, "at": now, "ended_at": now, "ended_by": ENDED_BY, **mark_request(it),
+                **({"error": mark_error(why)} if why else {})}
+        try:
+            put_new(ctl.sub.command_key(rid), canonical_json(mark).encode())   # False: a mark stood — its word stays
+        except Exception as e:                              # noqa: BLE001 — the store: the row stays, the next turn
+            log.warning("%s: request %s ended %s, and its mark was not written (%s): its row stays for the next turn",
+                        ctl.spec.name, rid, outcome, e)
+            return False
+    ctl.vars.delete(key)
+    return True
+
+
+def _answered_before(ctl, key: str, rid: str) -> bool:
+    """A mark stands under `rid`: the request was answered — its row goes, nothing is performed again."""
+    mark = _mark_stands(ctl, rid)
+    if mark is None:
+        return False
+    ctl.vars.delete(key)
+    log.info("%s: request %s was answered before (%s): its row goes, it is not performed again", ctl.spec.name, rid,
+             mark_text(mark, "outcome") or "begun")
+    return True
+
+
 # "Record this camera for ten minutes" — a request turned into a row, by the one token that may write
 # rows: the console's grant, which `vms jobs` holds. Run in its request loop, beside the reaper.
 #
@@ -175,22 +236,31 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
             continue                                        # a backfill: the recorder's, not ours
         rid = key.rsplit("/", 1)[1]
         try:
+            if _answered_before(rec_ctl, key, rid):         # its mark stands: answered under this id, not performed again
+                continue
+        except Exception as e:                              # noqa: BLE001 — the mark not read: not known, the next turn
+            log.warning("%s: whether %s was answered cannot be read (%s): the next turn", rec_ctl.spec.name, rid, e)
+            if mem is not None:
+                mem.failed(key, now)
+            continue
+        try:
             until, minutes = _deadline(it), finite(it.get("minutes", 0) or 0)
         except PARSE_ERRORS as e:
             REQUESTS.garbled(key, e)                        # refused, cleared: counted and said once
-            rec_ctl.vars.delete(key)
+            _ended(rec_ctl, key, rid, it, "refused", now, f"a request nobody can read: {e}")
             continue
         if until and now > until:
-            rec_ctl.vars.delete(key)                        # asked for too late to mean what it meant
-            count_expired(rec_ctl.spec.name)
-            log.warning("%s: %s expired before it was turned into a recording", rec_ctl.spec.name, rid)
+            if _ended(rec_ctl, key, rid, it, "expired", now):   # asked for too late to mean what it meant
+                count_expired(rec_ctl.spec.name)
+                log.warning("%s: %s expired before it was turned into a recording", rec_ctl.spec.name, rid)
             continue
         cam = str(it.get("cam") or it.get("unit") or "")
         if not cam or minutes <= 0:
-            rec_ctl.vars.delete(key)
             log.warning("%s: %s asks to record nothing: %s", rec_ctl.spec.name, rid, it)
+            _ended(rec_ctl, key, rid, it, "refused", now, "asks to record nothing: a camera and minutes")
             continue
         name, ends = f"{cam}-auto", now + minutes * 60
+        why = ""
         try:
             row = rec_ctl.unit(name)                        # in the try: that recording's row garbled is this request's trouble
             if row is None:
@@ -208,6 +278,7 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
                 mem.note(rec_ctl.spec.name, name, ends)     # its end, known without reading the row back
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused for %s: %s", rec_ctl.spec.name, rid, name, e)
+            why = str(e)
         except Exception as e:                              # noqa: BLE001
             # NOT an answer: the store conflicted, or did not answer at all. The request stays and the next
             # pass tries again — it carries `valid_until`, so it cannot wait for ever. It used to be deleted
@@ -217,7 +288,9 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
             if mem is not None:
                 mem.failed(key, now)
             continue
-        rec_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
+        # performed or refused: said in its mark, and the row goes (a mark the store did not take: the next turn)
+        if not _ended(rec_ctl, key, rid, it, "refused" if why else "performed", now, why) and mem is not None:
+            mem.failed(key, now)
     return started
 
 
@@ -314,20 +387,29 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float, mem: Remembered | N
             continue
         action = str(it.get("action", ""))
         try:
+            if _answered_before(det_ctl, key, rid):         # its mark stands: answered under this id, not performed again
+                continue
+        except Exception as e:                              # noqa: BLE001 — the mark not read: not known, the next turn
+            log.warning("%s: whether %s was answered cannot be read (%s): the next turn", det_ctl.spec.name, rid, e)
+            if mem is not None:
+                mem.failed(key, now)
+            continue
+        try:
             until = _deadline(it)
             for f in ("minutes", "at", "before", "after"):  # the request's own numbers, checked here: a row of a detector
                 if it.get(f) not in (None, ""):              # or a recording that does not parse is not THIS request's word
                     finite(it[f])
         except PARSE_ERRORS as e:
             REQUESTS.garbled(key, e)                        # refused, cleared: counted and said once
-            det_ctl.vars.delete(key)
+            _ended(det_ctl, key, rid, it, "refused", now, f"a request nobody can read: {e}")
             continue
         if until and now > until:
-            det_ctl.vars.delete(key)                        # asked for too late to mean what it meant
-            count_expired(det_ctl.spec.name)
-            log.warning("%s: %s expired before it was turned into work", det_ctl.spec.name, rid)
+            if _ended(det_ctl, key, rid, it, "expired", now):   # asked for too late to mean what it meant
+                count_expired(det_ctl.spec.name)
+                log.warning("%s: %s expired before it was turned into work", det_ctl.spec.name, rid)
             continue
         cam, kind = str(it.get("cam") or ""), str(it.get("kind") or "")
+        why = ""
         try:
             if not cam or not kind or action not in ("detect", "scan"):
                 raise Refused(f"a request names a camera, a model and detect|scan: {dict(it)}")
@@ -336,12 +418,15 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float, mem: Remembered | N
                 _scan(job_ctl, rec_ctl, cam, kind, it, same, now)
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused: %s", det_ctl.spec.name, rid, e)
+            why = str(e)
         except Exception as e:                              # noqa: BLE001 — not an answer: stays, and is tried again
             log.warning("%s: %s could not be turned into work this pass: %s", det_ctl.spec.name, rid, e)
             if mem is not None:
                 mem.failed(key, now)                        # …after a pause that doubles, not on every turn
             continue
-        det_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
+        # performed or refused: said in its mark, and the row goes (a mark the store did not take: the next turn)
+        if not _ended(det_ctl, key, rid, it, "refused" if why else "performed", now, why) and mem is not None:
+            mem.failed(key, now)
     return made
 
 
@@ -507,29 +592,36 @@ def forget_finished(ctl, now: float) -> int:
 #
 # The request id is the range, so a job asking every thirty seconds writes one row, not a queue.
 #
-# FILED AS THE PLATFORM'S REQUEST FAMILY FILES ONE (М10A 14): the unit as `rec/<recording>`, and a deadline —
-# `valid_until`, `FETCH_WAIT` away (never past the spec's `most_valid` where it says one; `rec`'s family is `free` and
-# says none, so the deadline is the job's: how long it waits for a recorder to begin). A recorder that has not
-# begun it by then answers it expired and the reaper ends the row; a job still fetching asks again on its next turn,
-# and the recorder goes on from the first moment its volume does not show (`RecWorker.requests`).
+# FILED BY THE FAMILY'S RULES (`requests.file_as`, the product's `p.FileAs`; the review's fifteenth pass, major 4;
+# ГРАНИЦА §3 row 3, ADR-0013, ADR-0012). It was a raw `vars.put` of a row of its own: `cam` the family's schema does not
+# take, `[at, by]` where the spec stamps `[by, at, about]`, a deadline `rec` does not declare, no line in the journal —
+# a person reading the journal for "who asked for this hour" found only the operators. Now the row is the family's,
+# whoever files it: the body `{unit: rec/<recording>, from, to}` the schema takes, the id the spec's `key`
+# (`{unit}-{from:int}-{to:int}`), the stamps the spec's (`by` — `detjob/<job>`, `survey/<camera>` —, `at`, and the
+# recording's `cam` as its `about`), create-only, the spec's journal line (`archive.backfill.asked`), and an id whose
+# mark stands answered by the mark. No person's ledger: a process files what a worker's report told it to, not on a
+# whim (as `FileAs`). `rec` declares no `valid_for`: the row ends as every backfill does, answered by the recorder in
+# its heartbeat, or by the family's `ttl`. A refusal is said in the log, and asked again on the next turn. Its `lost`
+# (the schema's word for a span a recorder lost on the way in, the product's `FileLostSpans`) is not this filing's: a
+# job's or a survey's range is a range it wants, not one a recorder said it lost.
 #
 # NOT A WORKER'S FILING (ADR-0013): the scan's worker only says `fetching` in its heartbeat — its spec names no
 # `worker.requests` and its grant reaches no `rec/requests/*`. This is the VMS's housekeeping, filing with the
-# console's grant through rec's controller, as an operator's console does; a worker files only by `Worker.file_request`.
-FETCH_WAIT = 600.0
-
-
-def _ask_recorder(rec_ctl, unit: str, cam: str, t0: float, t1: float, now: float, by: str) -> bool:
-    from w2cplatform.canonical import number_text
+# console's grant through rec's controller; a worker files only by `Worker.file_request`.
+def _ask_recorder(rec_ctl, unit: str, t0: float, t1: float, now: float, by: str, journal=None) -> bool:
+    """True when this call filed the request; False when it stood already, was answered under its id, or was
+    refused (said)."""
     from w2cplatform.doors import unit_ref
-    key = rec_ctl.sub.request_key(f"{unit}-{int(t0)}-{int(t1)}")
-    if rec_ctl.vars.get(key)[0]:
-        return False                                    # already asked; the recorder says when it is fetched
-    most = min(FETCH_WAIT, float(rec_ctl.spec.requests.get("most_valid", FETCH_WAIT)))
-    rec_ctl.vars.put(key, {"unit": unit_ref(rec_ctl.spec.name, unit), "cam": cam, "from": number_text(t0),
-                           "to": number_text(t1), "at": number_text(now), "by": by,
-                           "valid_until": number_text(now + most)})            # numbers by the platform's one rule
-    return True
+    from w2cplatform.requests import file_as
+    from w2cplatform.variables import Conflict
+    try:
+        _, _, filed = file_as(rec_ctl, {"unit": unit_ref(rec_ctl.spec.name, unit), "from": t0, "to": t1}, by,
+                              journal=rec_ctl.journal if journal is None else journal, now=now)
+    except (Refused, Conflict) as e:                    # the family's refusal, or another request under its id
+        log.warning("%s: asking the recorder for %s [%.0f, %.0f) for %s was refused: %s", rec_ctl.spec.name, unit,
+                    t0, t1, by, e)
+        return False
+    return filed                                        # False: it stands, or was answered — the recorder says when
 
 
 def ask_for_footage(job_ctl, rec_ctl) -> int:
@@ -541,8 +633,7 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
         unit, t0, t1 = str(st.get("rec", "")), number(f"{hk}.from", st.get("from", 0), float, None), number(f"{hk}.to", st.get("to", 0), float, None)
         if not unit or t0 is None or t1 is None or t1 <= t0:          # an end that is a word: not a range to ask for
             continue
-        if not _ask_recorder(rec_ctl, unit, str(st.get("cam", unit)), t0, t1, job_ctl.wall(),
-                             f"{job_ctl.spec.name}/{st.get('id')}"):
+        if not _ask_recorder(rec_ctl, unit, t0, t1, job_ctl.wall(), f"{job_ctl.spec.name}/{st.get('id')}"):
             continue
         asked += 1
         log.info("%s %s: asking the recorder for %s [%.0f, %.0f)", job_ctl.spec.name, st.get("id"), unit, t0, t1)
@@ -631,7 +722,7 @@ def keep_what_fired(survey_ctl, rec_ctl) -> int:
             unit = next((str(r["id"]) for r in rec_ctl.units() if str(r.get("cam", r["id"])) == cam), None)
             if unit is None:
                 continue                                # nothing on this server records that camera: nowhere to put it
-            if not _ask_recorder(rec_ctl, unit, cam, t0, t1, survey_ctl.wall(), f"{survey_ctl.spec.name}/{cam}"):
+            if not _ask_recorder(rec_ctl, unit, t0, t1, survey_ctl.wall(), f"{survey_ctl.spec.name}/{cam}"):
                 continue
             asked += 1
             log.info("%s: keeping %s [%.0f, %.0f) — a model liked it", survey_ctl.spec.name, unit, t0, t1)

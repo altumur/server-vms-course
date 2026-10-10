@@ -476,6 +476,12 @@ def jobs() -> None:
     vars_, objects = _stores("console", [a for s in families for a in s.acl_console()])   # the console's grant of them
     rec_ctl, det_ctl = SpecController(REC_SPEC, vars_, objects), SpecController(DET_SPEC, vars_, objects)
     job_ctl, survey_ctl = SpecController(DETJOB_SPEC, vars_, objects), SpecController(SURVEY_SPEC, vars_, objects)
+    # What it files through the family's door (`requests.file`: a job's or a survey's ask for footage) is said in the
+    # journal as the console's door says an operator's (the spec's `requests.journal`; the fifteenth review, major 4)
+    from w2cplatform import runtime
+    from w2cplatform.journal import Journal
+    import time
+    rec_ctl.journal = Journal(runtime.events_said(os.environ), "jobs", time.time)
 
     class H(SendMixin, Deadlined, BaseHTTPRequestHandler):
         def log_message(self, *a):

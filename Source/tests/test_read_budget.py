@@ -26,6 +26,8 @@ class MemObjects:
     """An object store in a dict: a thousand heartbeats and rows without a disk."""
     def __init__(self): self.d = {}
     def put(self, key, data): self.d[key] = bytes(data)
+    # create-only, as every object store has it: a request's mark (`jobs._ended`, the fifteenth review, minor 7)
+    def put_new(self, key, data): return False if key in self.d else self.d.setdefault(key, bytes(data)) is not None
     def get(self, key): return self.d.get(key)
     def list(self, prefix): return sorted(k for k in self.d if k.startswith(prefix))
     def delete(self, key): return self.d.pop(key, None) is not None
