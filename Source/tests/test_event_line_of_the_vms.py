@@ -82,7 +82,11 @@ def test_no_vms_module_says_what_a_unit_is_about_the_platform_stamps_it():
     (`Worker.of`, from the spec's `about` and the unit's row): nine call sites passed it by hand, and the one written
     through `observe` (a recording's refused backfill) did not. No VMS module passes `of` to anything now, and none
     writes a unit's lines through an `EventLog` of its own beside the worker's `observe` and `write_event` — the
-    camera's own log (`archive.event_log`: `vms/<cam>`, about nothing but itself) is the one writer left."""
+    camera's own log (`archive.event_log`: `vms/<cam>`, about nothing but itself) is the one writer left.
+
+    A line of the journal is not a unit's line: it lies in `audit`, one of the trees that say their own `of`
+    (`events.OWN_OF_TREES`), and a door's line names the unit it is about by `target` and `of` (ADR-0069; the review's
+    fifteenth pass, minor 6) — nobody's row says it for it. A `say` is left to that rule."""
     import ast
     from tests.productdir import SOURCE
     found = []
@@ -99,7 +103,7 @@ def test_no_vms_module_says_what_a_unit_is_about_the_platform_stamps_it():
                         continue
                     name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
                     where = f"{os.path.relpath(p, SOURCE)}:{node.lineno}"
-                    if any(k.arg == "of" for k in node.keywords):
+                    if any(k.arg == "of" for k in node.keywords) and name != "say":
                         found.append(f"{where}: says `of`")
                     if name == "EventLog" and os.path.relpath(p, SOURCE) != os.path.join("vms", "archive.py"):
                         found.append(f"{where}: an EventLog of its own")

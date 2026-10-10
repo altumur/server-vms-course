@@ -203,8 +203,13 @@ def footage_routes(objects, vars_, wall, journal=None, keeper=None, eyes=None):
         parts = rel.split("/")
         digest = sent.get("sha256") or (hashlib.sha256(sent["data"]).hexdigest() if whole and "data" in sent else None)
         log.info("archive read: %s got %s (%s, %d bytes) from %s", who, rel, sent.get("status"), sent.get("bytes", 0), addr)
+        # What the line is about, by the journal's rule (`w2cplatform/journal.py`; ADR-0069): `target`, the recording as a
+        # reference, and `of` — the index's column, by which a query for the recording finds who read it (the product's
+        # `p.FieldOf`, `recproc/door.go`). Neither was written (the review's fifteenth pass, minor 6).
+        ref = "/".join(parts[:2]) if len(parts) > 1 else ""
         if journal is not None:
             journal.say("archive.read", user=who, media=rel, addr=addr, status=sent.get("status"), bytes=sent.get("bytes", 0),
+                        target=ref, of=ref,
                         **({"sha256": digest} if digest else {}), **({"recording": parts[1]} if len(parts) > 1 else {}),
                         **({"unreachable": sent["unreachable"]} if sent.get("unreachable") else {}),
                         **({"broken": sent["broken"]} if sent.get("broken") else {}))

@@ -442,8 +442,8 @@ class LiveWorker(Worker):
                 # while it proxied the offer): who (the name the console gave the token to), which camera, the session,
                 # from where. And the session is that viewer's alone to hang up (the review's third pass).
                 gw.owners[sid] = who.get("sub")
-                gw.journal.say("live.view", user=who.get("sub") or "anybody", target=cam, session=sid, gateway=gw.name,
-                               addr=str(self.client_address[0]))
+                gw.journal.say("live.view", user=who.get("sub") or "anybody", target=cam, of=LIVE_SPEC.ref(cam), session=sid,
+                               gateway=gw.name, addr=str(self.client_address[0]))
                 data = answer.encode()
                 self.send_response(201); self.send_header("Content-Type", "application/sdp")
                 for k, v in gw.door_keeper().headers(self):
@@ -477,8 +477,10 @@ class LiveWorker(Worker):
                 ok = gw.hangup(sid)
                 if ok:
                     gw.owners.pop(sid, None)
-                    gw.journal.say("live.view.ended", user=who.get("sub") or "anybody", session=sid, gateway=gw.name,
-                                   addr=str(self.client_address[0]))
+                    # the camera of the session, as `live.view` names it: `target` and `of` (the review's fifteenth pass,
+                    # minor 6; ADR-0069) — the line did not say which stream was hung up
+                    gw.journal.say("live.view.ended", user=who.get("sub") or "anybody", target=held[0],
+                                   of=LIVE_SPEC.ref(held[0]), session=sid, gateway=gw.name, addr=str(self.client_address[0]))
                 self._send(200 if ok else 404, {"closed": ok})
 
             def do_GET(self):

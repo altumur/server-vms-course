@@ -548,7 +548,7 @@ def test_who_watched_a_camera_live_is_a_line_in_the_journal():
     srv.shutdown(); srv.server_close()
 
     def said(role="liveworker", kind="live.view"):
-        return [{k: e[k] for k in ("kind", "user", "target", "session", "gateway", "holder") if k in e}
+        return [{k: e[k] for k in ("kind", "user", "target", "of", "session", "gateway", "holder") if k in e}
                 for b in buckets_under(box.resource_root, "audit", role, 600)
                 for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"].startswith(kind)]
     with door_keys(box.vars):
@@ -566,10 +566,13 @@ def test_who_watched_a_camera_live_is_a_line_in_the_journal():
             code, _, loc = _whep(base, 1, headers=anna)
             assert code == 201
             sid = loc.rsplit("/", 1)[-1]
-            assert said() == [{"kind": "live.view", "user": "anna", "target": "1", "session": sid, "gateway": "g-1"}]
+            assert said() == [{"kind": "live.view", "user": "anna", "target": "1", "of": "live/1", "session": sid,
+                               "gateway": "g-1"}]
             assert {"kind": "door.issued", "user": "anna", "target": "1", "holder": "g-1"} in said("console", "door.")
             assert _whep(base, 1, headers=anna, method="DELETE", path=loc)[0] in (200, 204)
             assert [e["kind"] for e in said()] == ["live.view", "live.view.ended"] and said()[1]["user"] == "anna"
+            # …and which stream was hung up (the review's fifteenth pass, minor 6; ADR-0069)
+            assert (said()[1]["target"], said()[1]["of"], said()[1]["session"]) == ("1", "live/1", sid), said()
         finally:
             srv.shutdown(); srv.server_close()
 

@@ -1055,9 +1055,11 @@ def test_the_devices_own_footage_opens_only_to_the_token_the_console_gave():
         code, body = get(1)
         assert code == 401 and json.loads(body)["reason"] == "expired"   # two minutes on: ask `/rec/where` again
 
-        reads = [(e["user"], e.get("recording")) for b in buckets_under(box.resource_root, "audit", "door-r-1", 600)
+        reads = [(e["user"], e.get("recording"), e.get("target"), e.get("of"))
+                 for b in buckets_under(box.resource_root, "audit", "door-r-1", 600)
                  for e in map(json.loads, open(os.path.join(box.resource_root, b.path))) if e["kind"] == "archive.read"]
-        assert reads == [("viewer", "1")]                            # the door says the door was USED, and by whom
+        assert reads == [("viewer", "1", "rec/1", "rec/1")]          # the door says the door was USED, by whom, of what
+                                                                     # (`target`, `of`: the fifteenth pass, minor 6)
     finally:
         pd.shutdown(); play.shutdown(); srv.shutdown()
 

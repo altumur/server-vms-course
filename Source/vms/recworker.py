@@ -3906,7 +3906,14 @@ class RecWorker(VmsWorker):
         elif not names:
             every, integrity = False, "unknown: the keep names no recording"
         if journal is not None:
-            journal.say("archive.keep.verified", keep=keep_id, ok=every, integrity=integrity, user=who, recordings=out)
+            # About what, by the journal's rule (ADR-0069; the review's fifteenth pass, minor 6): the keep's row of rec's
+            # table, as the console names it when the row is written (`sub`, `target`, `table`), and `of` — the camera the
+            # keep holds (`holds: {unit: cam}`), by which a query for the camera finds the check.
+            from w2cplatform.doors import unit_ref
+            from .config import REC_SPEC
+            journal.say("archive.keep.verified", sub=REC_SPEC.name, table="keeps", target=keep_id,
+                        of=unit_ref(REC_SPEC.about_sub, keep.cam) if keep.cam else "", keep=keep_id, ok=every,
+                        integrity=integrity, user=who, recordings=out)
         return 200, {"keep": keep_id, "integrity": integrity, "ok": every, "recordings": out}
 
     # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole

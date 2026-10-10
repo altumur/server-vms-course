@@ -987,6 +987,8 @@ def test_a_keeps_seal_is_checked_at_the_door_of_the_recorder_that_holds_its_copy
         assert (line["from"], line["to"]) == (kp.since, kp.until)
         [line] = _verified_lines(k)
         assert line["keep"] == kp.id and line["ok"] is True and line["user"] == "anna" and line["integrity"] == "ok"
+        # what the line is about (ADR-0069; the review's fifteenth pass, minor 6): the keep's row, and the camera it holds
+        assert (line["sub"], line["table"], line["target"], line["of"]) == ("rec", "keeps", kp.id, f"vms/{kp.cam}"), line
         for path in (f"/keeps/{kp.id}/verify", f"/rec/keeps/{kp.id}/verify"):
             assert _post(base + path)[0] in (404, 405), path              # not the console's: the door's
     finally:
