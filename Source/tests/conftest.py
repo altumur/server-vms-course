@@ -86,9 +86,10 @@ def stamped(log, of: str):
 
 
 def as_kept(step):
-    """A long step of a resource's pass, as the one step a test may give it since the boundary's step 6 took the
-    subsystems' hooks out of the resource: `Resource.kept` — called once a pass, handed the pulse (`progressed`), and
-    holding nothing. `step.pass_(now[, progressed])` is what a hook's pass was."""
+    """A long step of a resource's pass, as a test double of the method `Resource.kept` — called once a pass, handed the
+    pulse (`progressed`), and holding nothing — put on one instance by the test that wants the pass slow. The platform
+    sets nothing there (the review's fifteenth pass, minor 4): the method reads the specs' `holds:`, and a test that
+    wants other specs read names them (`Resource(specs=)`). `step.pass_(now[, progressed])` is what a hook's pass was."""
     import inspect
 
     def kept(progressed=None):

@@ -57,7 +57,8 @@ home. No controller is involved in any of it.
 # timer: bucket retention by each subsystem's own `<sub>/retention[/<unit>]` row — less what a spec's `holds` keeps
 # (`holds.py`) — then the watermark, which asks the subsystems whose spec says `requests: {free: true}` to free bytes by
 # a request row, then the mirror. No subsystem's code is called here (the boundary's step 6: it was `register`, a hook
-# with a pass of its own and a `free`, and `kept`, set by a subsystem's builder of the resource). Mirroring is a knob (`platform/mirror`), and peers are chosen by a rule — the next `copies`
+# with a pass of its own and a `free`, and `kept`, set by a subsystem's builder of the resource; `kept` is a method now,
+# over the specs' `holds:` — the fifteenth pass, minor 4). Mirroring is a knob (`platform/mirror`), and peers are chosen by a rule — the next `copies`
 # live resources after mine in sorted order — so nobody assigns them. `restore` is the reverse, run by the
 # owner at start. No controller is involved in any of it. `eventdatabase.EventIndex` is the index the job
 # runs over this tree (`Resource.index`), served as `GET /events` and told by `retain` what it removed;
@@ -743,21 +744,6 @@ class PeerClient:
         return isinstance(d, dict) and isinstance(d.get("deleted"), dict) and any(d["deleted"].values())
 
 
-# A callable of the pass is called with what it takes of the optional words, and nothing it does not: `progressed`
-# (the pass's pulse: a step that works for minutes says it is moving, or the pulse calls it stuck — the review's fourth
-# pass). Asked by the signature and not by trying: a `TypeError` raised INSIDE one used to be read as "it does not take
-# the word", and it was run a second time.
-def _call_hook(fn, *args, **optional):
-    import inspect
-    try:
-        params = inspect.signature(fn).parameters
-    except (TypeError, ValueError):
-        return fn(*args)
-    if any(p.kind is p.VAR_KEYWORD for p in params.values()):
-        return fn(*args, **optional)
-    return fn(*args, **{k: v for k, v in optional.items() if k in params})
-
-
 # THE RESOURCE OF A SERVER, AS THE PLATFORM BUILDS IT (`python3 -m w2cplatform resource`, `host.resource`): the job over
 # its tree with the event index attached, and what is kept read from the loaded specs (`holds`). Nothing of a subsystem's
 # is installed on it (the boundary's step 6: it was a subsystem's builder of the resource, which set what it keeps).
@@ -768,13 +754,6 @@ def platform_resource(root: str, server: str, url: str, vars_, objects, wall=Non
     r = Resource(root, server, url, vars_, objects, bucket_seconds, wall, peers, **kw)
     r.index = EventIndex(root, server, wall, bucket_seconds)
     return r
-
-
-# What the loaded specs' `holds:` keep, for one pass (`holds.kept` over the catalogue: the specs this process loaded, or
-# the directory `SPEC_DIR` names).
-def kept_by_specs(vars_, progressed=None):
-    from . import catalog, holds
-    return holds.kept(vars_, catalog.specs(), progressed)
 
 
 # THE OBJECT DOOR SAYS WHAT WENT WRONG, NOT WHERE (the review's thirteenth pass, minors; the product's cross-check (c)).
@@ -824,7 +803,8 @@ class Resource:
 
     def __init__(self, root: str | None, server: str, url: str, vars_, objects, bucket_seconds: int = 600,
                  wall=time.time, peers: PeerClient | None = None, lost_after: float = 45.0, space_probe=None,
-                 volumes: dict[str, str] | None = None, quotas: dict[str, int] | None = None, clock=time.monotonic):
+                 volumes: dict[str, str] | None = None, quotas: dict[str, int] | None = None, clock=time.monotonic,
+                 specs=None):
         # A server's disks, named. One volume is the common case and stays the whole of `root`; several are
         # what a box with more than one disk actually has, and they are the resource's INTERNAL structure:
         # the resource is still one per server, because reachability is a property of a server and a volume
@@ -893,9 +873,10 @@ class Resource:
         self.retention_garbled: list[str] = []     # `<sub>/<unit>` whose days the last `retain` could not read: kept, not swept
         self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
         self.space_garbled = ""                    # what the watermark acts on while its row does not parse (`relieve`), for the heartbeat
-        # `(progressed) -> (subsystem, unit, start, end) -> bool`: the buckets `retain` must leave — what the loaded specs'
-        # `holds` say (`holds.py`), read once a pass. A test may give its own.
-        self.kept = lambda progressed=None: kept_by_specs(self.vars, progressed)
+        # Whose `holds:` the pass reads (`kept`): the specs this process loaded (`catalog.specs()`, asked each pass), or the
+        # ones a test names. Specs, not a function: what is kept is the platform's reading of them, never a subsystem's
+        # code (the review's fifteenth pass, minor 4; ADR-0002).
+        self._specs = tuple(specs) if specs is not None else None
         # How many `/events` it answers AT ONCE. The server starts a thread per request and never says no, so
         # without a limit a burst of readers is a queue with no end: every answer later, memory growing, and a
         # reader that times out cannot tell "slow" from "gone". Past the limit the answer is 503 with
@@ -1531,6 +1512,14 @@ class Resource:
         return self.eyes.fresh(key, hb.get("ts"), self.lost_after, hb.get("ts"), "platform")
 
     # -- the policy pass ------------------------------------------------------------------
+    # What the specs' `holds:` keep, for one pass: `(subsystem, unit, start, end) -> bool` (`holds.kept`). A method of the
+    # resource and nothing else — it was an attribute any builder of the resource could set to a function of its own,
+    # called by whatever words its signature took (the review's fifteenth pass, minor 4; ADR-0002). Each store read is
+    # a step of the pulse (`progressed`).
+    def kept(self, progressed=None):
+        from . import catalog, holds
+        return holds.kept(self.vars, self._specs if self._specs is not None else catalog.specs(), progressed)
+
     # For each subsystem and unit, delete bucket files whose `end` is older than `retention_days` — files
     # only; a subsystem that indexes its buckets in a file of its own drops the lines itself. The
     # resource's own index forgets each removed path. Returns the count. The test sets `other/retention {days: 1}`, advances three days and sees exactly the
@@ -1553,12 +1542,12 @@ class Resource:
                 self._progressed()                                      # a row read per unit: each is a step
         floor = console_floor({k: d for k, d in days_of.items() if d != float("inf")})
         # What somebody said to keep (feedback BH). The resource does not know what a keep is: the specs say which rows
-        # HOLD a unit for a stretch (`holds:`), and `self.kept` — called once a pass — reads them and returns
+        # HOLD a unit for a stretch (`holds:`), and `kept` — called once a pass — reads them and returns
         # `(subsystem, unit, start, end) -> bool`. It matters most for `{days: 0}`, which is what a deleted unit's
         # retention becomes: without this, deleting the unit erased the very events somebody had marked. If it raises,
         # the pass fails and nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by
         # row, so it is handed `progressed` (the review's sixth pass).
-        kept = _call_hook(self.kept, progressed=self._progressed) if self.kept is not None else None
+        kept = self.kept(self._progressed)
         self._progressed()
         self._retain_failed_pass = False
         swept: dict[tuple[str, str], tuple] = {}
@@ -1573,7 +1562,7 @@ class Resource:
                     # saw none of them.
                     for b in bucket_names_under(path, sub, unit, self.bucket_seconds, self._progressed):
                         if b.end < self.wall() - days * 86400:
-                            if kept is not None and kept(sub, unit, b.start, b.end):
+                            if kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
                             if not self._removed(os.path.join(path, b.path)):
                                 continue                                # that bucket's, said and counted: the rest go on
@@ -1603,7 +1592,7 @@ class Resource:
                         self._progressed()
                         for b in bucket_names_under(base, sub, unit, self.bucket_seconds, self._progressed):
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
-                                    and not (kept is not None and kept(sub, unit, b.start, b.end)):
+                                    and not kept(sub, unit, b.start, b.end):
                                 if self._removed(os.path.join(base, b.path)):
                                     self.mirror_removed += 1
                                 self._progressed()

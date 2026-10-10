@@ -427,7 +427,6 @@ def test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_ab
     buckets — and those of every unit about it, read through that unit's spec's `about` — for its stretch, at most
     `longest` from its start; a row whose bounds do not read holds its unit as far as they read; a unit whose row does
     not read, or names nobody, is held by every hold that reads; another unit's buckets go by their days."""
-    from w2cplatform import holds
     from w2cplatform.events import EventLog, bucket_names_under
     from w2cplatform.resource import platform_resource
     vars_, objects, wall = _box()
@@ -451,8 +450,7 @@ def test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_ab
     vars_.put("shelf/pins/q", {"item": "2", "a": "soon", "b": str(old + 60)})     # its start lost: from the start of time
     real = vars_.get
     vars_.get = lambda k, *a, **kw: (_ for _ in ()).throw(ValueError("torn")) if k == "label/tags/torn" else real(k, *a, **kw)
-    res = platform_resource(root, "s1", "http://s1", vars_, objects, wall=wall)
-    res.kept = lambda progressed=None: holds.kept(vars_, [owner, about], progressed)
+    res = platform_resource(root, "s1", "http://s1", vars_, objects, wall=wall, specs=[owner, about])
     res.retain()
     left = lambda sub, unit: len(bucket_names_under(root, sub, unit, 600))
     assert (left("shelf", "1"), left("label", "t1")) == (1, 1)            # the pin's hour: the unit and the unit about it
