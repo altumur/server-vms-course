@@ -321,3 +321,51 @@ def test_a_relay_keeps_its_members_answers_in_memory_and_gives_each_only_its_own
         raise AssertionError("the relay gave south's rows to west")
     except Refused:
         pass
+
+
+def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admitted_by_it():
+    """The scenario «камера — офис — центр», O2: an agent carrying through the domain's door that the door does not know
+    ended its pass at the refusal, before any report — and the domain knew of a cluster asking to join only from a
+    report, so it never knocked and a person had nothing to compare. The ask names the key it is signed with; refused,
+    it is remembered as a knock (the product's `Members.NoteKnock`), over HTTP as in process: named in `knocking` with
+    the key's fingerprint, accepted by it — and the next ask is answered. A knock signed by another key than it names,
+    or out of the clock, is not remembered; a knock admits nobody by itself."""
+    import urllib.parse
+    from w2cplatform.console import open_doors
+    from w2cplatform.domain.agent import DomainAgent
+    from w2cplatform.domain.carry import CarryClient, HolderDoor, Refused, request_message
+    from w2cplatform.domain.members import KNOCKS, Members, fingerprint
+    from w2cplatform.domain.signer_service import Holder
+    from w2cplatform.trust.memberkey import MemberKey
+    fed, wall, signer, holder_ring, keys = holder_with_members()
+    north = fed.clusters["north"]
+    door = HolderDoor(north.vars, north.objects, holder_ring, wall)
+    members = Members(north.vars, wall, domain="north")
+    cam, liar = MemberKey.new(), MemberKey.new()
+    try:                                                 # names cam's key and is signed by another: no knock
+        door.carry("cam-x", wall(), cam.seal_pub, liar.sign(request_message("cam-x", wall(), cam.seal_pub)), key=cam.pub)
+        raise AssertionError("the door answered")
+    except Refused as e:
+        assert e.status == 403
+    assert north.objects.list(KNOCKS + "/") == [] and members.knocking(north.objects) == []
+    agent = DomainAgent("cam-x", CarryClient(door, "cam-x", cam, wall), fed.clusters["south"].vars, now=wall, key=cam)
+    assert agent.sync() is False and "refused" in agent.keys
+    srv = open_doors("127.0.0.1", 0, Holder(north.vars, north.objects, signer, carry_door=door, wall=wall).handler(),
+                     unix_env="KN_NO_SUCH_SOCKET", say=False)
+    try:
+        url = f"http://127.0.0.1:{srv.server_address[1]}"
+        wall.advance(30)
+        try:
+            CarryClient(url, "cam-x", cam, wall).carry()
+            raise AssertionError("the door answered over HTTP")
+        except Refused as e:
+            assert e.status == 403 and "no member with a key" in e.detail
+        knocking = members.knocking(north.objects)
+        assert [k["name"] for k in knocking] == ["cam-x"] and knocking[0]["fingerprint"] == fingerprint(cam.pub)
+        assert knocking[0]["times"] == 2 and knocking[0]["last"] == wall(), knocking
+        assert members.accept("cam-x", "anna", north.objects, fingerprint=fingerprint(cam.pub))
+        assert members.knocking(north.objects) == []
+        got = CarryClient(url, "cam-x", cam, wall).carry()
+        assert got["cluster"] == "cam-x" and "domain/keys" in got["rows"], urllib.parse.quote(str(got)[:200])
+    finally:
+        srv.shutdown()

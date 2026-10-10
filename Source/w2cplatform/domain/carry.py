@@ -153,18 +153,29 @@ def request_message(cluster: str, at: float, seal: str) -> bytes:
 
 class HolderDoor:
     """The door's checks, over the holder's stores: who asks (a member's key, as admitted), when (its clock within
-    `SKEW` of ours), for whom (itself, or a member the topology says it relays) — then `answer`, sealed to the member."""
+    `SKEW` of ours), for whom (itself, or a member the topology says it relays) — then `answer`, sealed to the member.
+
+    A REFUSED ASK OF A CLUSTER NOT ON THE LIST IS A KNOCK (the scenario «камера — офис — центр», O2; the product's
+    `Members.NoteKnock`). An agent that carries through the door and that the door does not know never got as far as a
+    report — the pass ends at the refusal — so nobody saw it knock, and `POST /domain/members {name, fingerprint}` had
+    nothing to compare. The ask names the key it is signed with (`X-W2C-Key`, `key`); signed by that key and within
+    `SKEW`, the door remembers it in the holder's objects (`members.note_knock`) — the person who admits the cluster
+    compares that key's fingerprint with the one the box shows. Refused all the same: a knock admits nobody."""
 
     def __init__(self, holder_vars, holder_objects, sealer=None, wall=time.time):
         self.vars, self.objects, self.sealer, self.wall = holder_vars, holder_objects, sealer, wall
 
-    def carry(self, cluster: str, at: float, seal: str, signature: str, for_member: str | None = None) -> dict:
+    def carry(self, cluster: str, at: float, seal: str, signature: str, for_member: str | None = None,
+              key: str | None = None) -> dict:
         from w2cplatform.trust.memberkey import verify
-        from .members import Members
+        from .members import Members, note_knock
         from .topology import Topology
         members = Members(self.vars).read()["members"]
         me = members.get(cluster) or {}
         if not me.get("key"):
+            if cluster not in members and key and self.objects is not None and abs(self.wall() - at) <= SKEW \
+                    and verify(key, request_message(cluster, at, seal), signature):
+                note_knock(self.objects, cluster, key, seal, self.wall())
             raise Refused(403, f"{cluster} is no member with a key: admit it with its key, or register one "
                                f"(`python3 -m w2cplatform.domain.members key {cluster} <pub> <seal_pub>`)")
         if not verify(me["key"], request_message(cluster, at, seal), signature):
@@ -199,8 +210,8 @@ class CarryClient:
         at = self.wall()
         sig = self.key.sign(request_message(self.cluster, at, self.key.seal_pub))
         if isinstance(self.door, str):
-            return _http_ask(self.door, self.cluster, at, self.key.seal_pub, sig, for_member, self.timeout)
-        return self.door.carry(self.cluster, at, self.key.seal_pub, sig, for_member)
+            return _http_ask(self.door, self.cluster, at, self.key.seal_pub, sig, for_member, self.timeout, self.key.pub)
+        return self.door.carry(self.cluster, at, self.key.seal_pub, sig, for_member, key=self.key.pub)
 
     def carry(self) -> dict:
         got = self._ask()
@@ -223,12 +234,14 @@ def open_for(key, answer_: dict, cluster: str) -> dict:
     return {**answer_, "rows": rows}
 
 
-def _http_ask(base: str, cluster: str, at: float, seal: str, sig: str, for_member, timeout: float) -> dict:
+def _http_ask(base: str, cluster: str, at: float, seal: str, sig: str, for_member, timeout: float,
+              key: str | None = None) -> dict:
     import urllib.error
     import urllib.request
     from .federation import Unreachable
     url = f"{base.rstrip('/')}/api/carry/{cluster}" + (f"?for={for_member}" if for_member else "")
-    req = urllib.request.Request(url, headers={"X-W2C-Time": f"{at:.3f}", "X-W2C-Seal": seal, "X-W2C-Signature": sig})
+    req = urllib.request.Request(url, headers={"X-W2C-Time": f"{at:.3f}", "X-W2C-Seal": seal, "X-W2C-Signature": sig,
+                                               **({"X-W2C-Key": key} if key else {})})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read())
