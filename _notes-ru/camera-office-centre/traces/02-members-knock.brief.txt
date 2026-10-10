@@ -39,11 +39,35 @@ GET /api/carry/relay-a
 ## Камеры: кластер из одного на своём флеше, ещё не загружен; агент камеры видит только свой офис
 ## (RELAY_URL — дверь ретранслятора relay-a:8446, REPORT=1).
 
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
+  "seed_secret": "«запечатано кольцом 3»",
+  "pub": "«ключ 5»",
+  "seal_pub": "«ключ 6»"
+}}
+→ 200 {"index": 4001}
+
 ## агент cam-a печатает при первом старте: member key «ключ 5», fingerprint 3db59a1a7850f459,
 ## sealing key «ключ 6»
 
+# domainagent on cam-a2 → the flash of cam-a2
+POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
+  "seed_secret": "«запечатано кольцом 4»",
+  "pub": "«ключ 7»",
+  "seal_pub": "«ключ 8»"
+}}
+→ 200 {"index": 5001}
+
 ## агент cam-a2 печатает при первом старте: member key «ключ 7», fingerprint 0348b7626fa8f30c,
 ## sealing key «ключ 8»
+
+# domainagent on cam-b → the flash of cam-b
+POST /v1/write {"op": "put", "key": "domain/member-key", "cas": 0, "items": {
+  "seed_secret": "«запечатано кольцом 5»",
+  "pub": "«ключ 9»",
+  "seal_pub": "«ключ 10»"
+}}
+→ 200 {"index": 6001}
 
 ## агент cam-b печатает при первом старте: member key «ключ 9», fingerprint 8c35ca39522b674b,
 ## sealing key «ключ 10»

@@ -89,6 +89,18 @@ class XCall(Call):
     ref: object = None                   # an `answer`: the call it answers
     later: bool = False                  # a call whose answer is printed after what it caused (an `answer` of its own)
 
+    @property
+    def op(self) -> str:
+        """The store's words for a camera's flash too: `get`, `list`, `put`, `delete`."""
+        if self.kind in ("store", "flash"):
+            if self.target.startswith("/v1/get"):
+                return "get"
+            if self.target.startswith("/v1/list"):
+                return "list"
+            if isinstance(self.body, dict):
+                return str(self.body.get("op", self.method))
+        return self.method
+
 
 _actor = threading.local()
 

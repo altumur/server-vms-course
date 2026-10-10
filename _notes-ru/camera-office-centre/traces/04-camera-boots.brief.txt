@@ -1,0 +1,183 @@
+## Сцена 4. Камера cam-a (SN-A) загружается: кластер из одного (DeviceCluster.boot) — эпоха по CAS на флеше,
+## строка vms/cameras/1 с ref=SN-A при первой загрузке, heartbeat и срез снапшота в RAM, дверь после публикации.
+## Потом процесс камеры: карта — том card (kind: edge, cam: 1), запись 1-sd (home: card, when: offline),
+## регистратор карты r-1 над кольцом камеры, толкатель, связанный с ним (ingest.camera_process).
+
+# camera cam-a (its console) → the flash of cam-a
+POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 0, "items": {"epoch": 1}}
+→ 200 {"index": 4009}
+
+# camera cam-a (its console) → the flash of cam-a
+POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 0, "items": {
+  "row": "{\"id\": 1, \"name\": \"SN-A\", \"ref\": \"SN-A\", \"revision\": 1}"
+}}
+→ 200 {"index": 4010}
+
+## процесс камеры cam-a объявляет карту томом своего кластера (card.declare_card; у продукта vmscam при старте)
+
+# camera cam-a (its process) → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/volumes/card", "cas": 0, "items": {
+  "name": "card",
+  "kind": "edge",
+  "url": "/data/cam-a/card",
+  "server": "cam-a",
+  "quota_bytes": "67108864",
+  "enabled": "true",
+  "shrink_confirmed": "0",
+  "cam": "1",
+  "admits": "true"
+}}
+→ 200 {"index": 4011}
+
+## запись 1-sd на карте (в курсе — SpecController.create на флеше камеры; у продукта POST /rec/recordings консоли камеры, stand.sh setup)
+
+# console of cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/recordings/1-sd", "cas": 0, "items": {
+  "id": "1-sd",
+  "revision": "1",
+  "name": "1-sd",
+  "cam": "1",
+  "retention_days": "30",
+  "enabled": "true",
+  "labels": "",
+  "home": "card",
+  "until": "0.0",
+  "min_depth_days": "0.0",
+  "when": "offline"
+}}
+→ 200 {"index": 4012}
+
+# recworker r-1 on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/slots/r-1", "cas": 0, "items": {
+  "holder": "cam-a:4101:001005",
+  "until": 1757500225.0,
+  "released": "false",
+  "gen": 1,
+  "server": "cam-a"
+}}
+→ 200 {"index": 4013}
+
+# recworker r-1 on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/slots/r-1", "cas": 4013, "items": {
+  "holder": "cam-a:4101:001005",
+  "until": 1757500225.0,
+  "released": "false",
+  "gen": 1,
+  "server": "cam-a"
+}}
+→ 200 {"index": 4014}
+
+# recworker r-1 on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/holds/card", "cas": 0, "items": {
+  "holder": "cam-a:4101:001005",
+  "until": 1757500225.0,
+  "released": "false",
+  "gen": 1,
+  "by": "r-1"
+}}
+→ 200 {"index": 4015}
+
+# reccontroller on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/placement/1-sd", "cas": 0, "items": {
+  "worker": "r-1",
+  "reason": "most free capacity (50) among 1 worker(s); on cam-a, whose resource is unknown, at home on card",
+  "at": 1757500180.0,
+  "rev": 1
+}}
+→ 200 {"index": 4016}
+
+# reccontroller on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/workers/r-1", "cas": 0, "items": {"units": "1-sd", "rev": 1}}
+→ 200 {"index": 4017}
+
+# recworker r-1 on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "rec/epoch/1-sd", "cas": 0, "items": {"epoch": 1}}
+→ 200 {"index": 4018}
+
+## Пять секунд жизни камеры: сенсор пишет в кольцо, толкатель смотрит в книги (их ещё нет), карта — по воротам.
+
+## Что регистратор карты говорит о себе: heartbeat r-1 в RAM камеры.
+
+## {
+##  "worker": "r-1",
+##  "ts": 1757500181.0,
+##  "status": [
+##   {
+##    "id": "1-sd",
+##    "ref": "",
+##    "name": "1-sd",
+##    "enabled": true,
+##    "phase": "standby",
+##    "position": "converged",
+##    "revision": 1,
+##    "observed_revision": 1,
+##    "epoch": 1,
+##    "cam": "1",
+##    "source": "ring://camera",
+##    "via": "ring",
+##    "card_segments": 0,
+##    "card_bytes": 0,
+##    "card_budget": 67108864,
+##    "hold": true,
+##    "keep": false,
+##    "samples_written": 0,
+##    "samples_dropped": 0,
+##    "prebuffer_s": 60.0,
+##    "why": "the primary recording is being written; the last 1 s are held in memory"
+##   }
+##  ],
+##  "server": "cam-a",
+##  "instance": "cam-a:4101:001005",
+##  "labels": "",
+##  "capacity": 50,
+##  "headroom": 49,
+##  "conflicts": 0,
+##  "started": 1757500180.0,
+##  "previous_hb": 0.0,
+##  "previous_instance": "",
+##  "previous_server": "",
+##  "alloc": "cam-a:4101:001005",
+##  "assignment_rev": 1,
+##  "passes": 1,
+##  "store_errors": 0,
+##  "pass_failures": 0,
+##  "unconfirmed": 0,
+##  "devices": [],
+##  "archive": "",
+##  "volume": "card",
+##  "volume_error": "",
+##  "card": {
+##   "state": "recording",
+##   "tries": 1,
+##   "since": 1757500180.0,
+##   "segments": 0,
+##   "bytes": 0,
+##   "budget": 67108864
+##  },
+##  "feed": {
+##   "frames_connected": false,
+##   "ring_samples": 11,
+##   "ring_bytes": 2364,
+##   "ring_span_s": 1.1,
+##   "ring_window_s": 60.0,
+##   "ring_max_bytes": 33554432,
+##   "ring_reach_s": 60.0,
+##   "last_frame_age_s": 0.0
+##  },
+##  "stream": {
+##   "state": "no book yet",
+##   "up": false,
+##   "road": null,
+##   "behind_s": 0.0,
+##   "lagging": false,
+##   "cut_s": 0.0,
+##   "left_s": 0.0,
+##   "failed_s": 0.0,
+##   "failed": 0,
+##   "owed_s": 0.0,
+##   "owed_gaps": 0
+##  },
+##  "schema": 1,
+##  "build": "dev",
+##  "pending_writes": 0
+## }

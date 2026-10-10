@@ -634,3 +634,41 @@ GET /api/carry/cam-a
     "age": 0.0
   }
 }
+
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/root", "cas": "", "items": {"pub": "«ключ 2»"}}
+→ 200 {"index": 4002}
+
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/keys", "cas": 0, "items": {
+  "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+}}
+→ 200 {"index": 4003}
+
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/topology", "cas": 0, "items": {
+  "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+}}
+→ 200 {"index": 4004}
+
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/member-list", "cas": 0, "items": {
+  "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+}}
+→ 200 {"index": 4005}
+
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/vms/stream-accounts", "cas": 0, "items": {
+  "accounts_secret": "«запечатано кольцом 10»"
+}}
+→ 200 {"index": 4006}
+
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/member", "cas": 0, "items": {"cluster": "cam-a"}}
+→ 200 {"index": 4007}
+
+# domainagent on cam-a → the flash of cam-a
+POST /v1/write {"op": "put", "key": "domain/holder", "cas": 0, "items": {
+  "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 2»\", \"term\": 1}"
+}}
+→ 200 {"index": 4008}

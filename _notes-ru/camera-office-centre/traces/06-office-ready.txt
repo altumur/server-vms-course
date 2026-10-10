@@ -1,0 +1,784 @@
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {}}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+## Сцена 6. Офис готов писать. Анна на консоли relay-a объявляет том disk и запись камеры SN-A по ref:.
+## Консоль офиса проверяет её токен по ключам и правам, что принёс агент relay-a.
+
+# anna → srv:8070
+POST /api/login {"user": "anna", "password": "anna-test-password"}
+→ …
+
+# domain console on srv → srv:8071
+POST /api/login {"user": "anna", "password": "anna-test-password"}
+  X-Operator: domain-console
+→ …
+
+# signer on srv → /run/configstore/domain.sock
+GET /v1/get?key=identity/users/anna
+→ 200 {
+  "items": {
+    "id": "anna",
+    "kind": "local",
+    "roles": "",
+    "pwhash_secret": "«запечатано кольцом 1»",
+    "idp_subject": "",
+    "created": "1757500000.0"
+  },
+  "index": 1005
+}
+
+# domain console on srv ← srv:8071: ответ на POST /api/login
+→ 200 {"token": "«токен 1: person sub=anna на 900 с»"}
+
+# anna ← srv:8070: ответ на POST /api/login
+→ 200 {"token": "«токен 1: person sub=anna на 900 с»"}
+
+# anna → relay-a:8080
+POST /rec/volumes
+  Idempotency-Key: relay-a-disk
+  Authorization: Bearer «токен 1: person sub=anna на 900 с»
+{
+  "name": "disk",
+  "kind": "local",
+  "url": "file:///data/relay-a/relay-a/archive/volume",
+  "quota_bytes": 1073741824,
+  "server": "relay-a"
+}
+→ …
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": null, "index": ""}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": null, "index": ""}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/grants
+→ 200 {"items": {"anna|admin|": "1760092120.0"}, "index": 2005}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {"items": null, "index": ""}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/list?prefix=rec/recordings/
+→ 200 {"keys": {}}
+
+# console on relay-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "rec/volumes/disk", "cas": "", "items": {
+  "name": "disk",
+  "kind": "local",
+  "url": "file:///data/relay-a/relay-a/archive/volume",
+  "server": "relay-a",
+  "quota_bytes": "1073741824",
+  "enabled": "true",
+  "shrink_confirmed": "0",
+  "admits": "true"
+}}
+→ 200 {"index": 2011}
+
+# anna ← relay-a:8080: ответ на POST /rec/volumes
+→ 201 {
+  "row": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": 1073741824,
+    "enabled": true,
+    "shrink_confirmed": 0,
+    "admits": true
+  }
+}
+
+## Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest).
+## FINDINGS.md, F3: роли recworker не дано чтение книг, которые читают приёмник и передатчик
+## (domain/vms/sources, upstream, asks) — на configstore передатчик не строится вовсе. В сценарии их ручка —
+## роль recworker с этими чтениями сверх файла прав; каждая её строка помечена «(+F3)».
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/decommission/relay-a
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/slots/r-relay-a-1", "cas": "", "items": {
+  "holder": "relay-a:2101:000835",
+  "until": "1757500270.0",
+  "released": "false",
+  "gen": "1",
+  "server": "relay-a"
+}}
+→ 200 {"index": 2012}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+GET /v1/get?key=domain/vms/upstream
+→ 200 {"items": null, "index": ""}
+
+# anna → relay-a:8080
+POST /rec/recordings {"name": "SN-A", "cam": "ref:SN-A"}
+  Idempotency-Key: relay-a-SN-A
+  Authorization: Bearer «токен 1: person sub=anna на 900 с»
+→ …
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": null, "index": ""}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 1»\"}"
+  },
+  "index": 2004
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": null, "index": ""}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/grants
+→ 200 {"items": {"anna|admin|": "1760092120.0"}, "index": 2005}
+
+# console on relay-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "rec/idem/relay-a-SN-A", "cas": "", "items": {
+  "state": "pending",
+  "at": "1757500225.0",
+  "sub": "anna",
+  "digest": "«ключ 3»"
+}}
+→ 200 {"index": 2013}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/list?prefix=rec/idem/
+→ 200 {"keys": {"rec/idem/relay-a-SN-A": 2013}}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=rec/idem/relay-a-SN-A
+→ 200 {"items": {"state": "pending", "at": "1757500225.0", "sub": "anna", "digest": "«ключ 3»"}, "index": 2013}
+
+# console on relay-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "rec/idem/relay-a-SN-A", "cas": 2013, "items": {
+  "state": "pending",
+  "at": "1757500225.0",
+  "sub": "anna",
+  "digest": "«ключ 3»",
+  "id": "SN-A"
+}}
+→ 200 {"index": 2014}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=rec/recordings/SN-A
+→ 200 {"items": null, "index": ""}
+
+# console on relay-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "rec/recordings/SN-A", "cas": "", "items": {
+  "id": "SN-A",
+  "revision": "1",
+  "name": "SN-A",
+  "cam": "ref:SN-A",
+  "retention_days": "30",
+  "enabled": "true",
+  "labels": "",
+  "home": "",
+  "until": "0.0",
+  "min_depth_days": "0.0",
+  "when": "always"
+}}
+→ 200 {"index": 2015}
+
+# console on relay-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "rec/idem/relay-a-SN-A", "cas": 2014, "items": {
+  "state": "done",
+  "status": "201",
+  "body": "{\"cam\": \"ref:SN-A\", \"enabled\": true, \"home\": \"\", \"id\": \"SN-A\", \"labels\": [], \"min_depth_days\": 0, \"name\": \"SN-A\", \"retention_days\": 30, \"revision\": 1, \"until\": 0, \"when\": \"always\", \"worker\": null}",
+  "at": "1757500225.0",
+  "sub": "anna",
+  "digest": "«ключ 3»"
+}}
+→ 200 {"index": 2016}
+
+# anna ← relay-a:8080: ответ на POST /rec/recordings
+→ 201 {
+  "id": "SN-A",
+  "name": "SN-A",
+  "cam": "ref:SN-A",
+  "retention_days": 30,
+  "enabled": true,
+  "labels": [],
+  "home": "",
+  "until": 0.0,
+  "min_depth_days": 0.0,
+  "when": "always",
+  "revision": 1,
+  "worker": null
+}
+
+## Регистратор берёт слот и том, говорит heartbeat; контроллер записей офиса ставит запись на него; регистратор
+## запускает её и говорит heartbeat снова.
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2012
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/slots/r-relay-a-1", "cas": 2012, "items": {
+  "holder": "relay-a:2101:000835",
+  "until": "1757500270.0",
+  "released": "false",
+  "gen": "1",
+  "server": "relay-a"
+}}
+→ 200 {"index": 2017}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": {"rec/volumes/disk": 2011}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {
+  "items": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": "1073741824",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 2011
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/holds/disk
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/holds/disk", "cas": "", "items": {
+  "holder": "relay-a:2101:000835",
+  "until": "1757500270.0",
+  "released": "false",
+  "gen": "1",
+  "by": "r-relay-a-1"
+}}
+→ 200 {"index": 2018}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {
+  "items": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": "1073741824",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 2011
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=objects/rec/used/disk
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/holds/disk
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "by": "r-relay-a-1"
+  },
+  "index": 2018
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/holds/disk", "cas": 2018, "items": {
+  "holder": "relay-a:2101:000835",
+  "until": "1757500270.0",
+  "released": "false",
+  "gen": "1",
+  "by": "r-relay-a-1"
+}}
+→ 200 {"index": 2019}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {
+  "items": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": "1073741824",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 2011
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=objects/rec/used/disk
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "objects/rec/used/disk", "cas": null, "items": {
+  "data": "{\"url\": \"file:///data/relay-a/relay-a/archive/volume\", \"at\": 1757500225.0, \"by\": \"r-relay-a-1\", \"instance\": \"relay-a:2101:000835\", \"server\": \"relay-a\"}"
+}}
+→ 200 {"index": 2020}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": {"rec/volumes/disk": 2011}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {
+  "items": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": "1073741824",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 2011
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/holds/disk
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "by": "r-relay-a-1"
+  },
+  "index": 2019
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/holds/disk", "cas": 2019, "items": {
+  "holder": "relay-a:2101:000835",
+  "until": "1757500270.0",
+  "released": "false",
+  "gen": "1",
+  "by": "r-relay-a-1"
+}}
+→ 200 {"index": 2021}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {
+  "items": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": "1073741824",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 2011
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+GET /v1/get?key=domain/vms/upstream
+→ 200 {"items": null, "index": ""}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=platform/decommission/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/decommissioned/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/placement/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/workers/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/cameras/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=platform/servers/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=vms/policy
+→ 200 {"items": null, "index": ""}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/drain
+→ 200 {"items": null, "index": ""}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2017
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=platform/decommission/
+→ 200 {"keys": {}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/decommissioned/
+→ 200 {"keys": {}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/placement/
+→ 200 {"keys": {}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/workers/
+→ 200 {"keys": {}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/recordings/
+→ 200 {"keys": {"rec/recordings/SN-A": 2015}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/recordings/SN-A
+→ 200 {
+  "items": {
+    "id": "SN-A",
+    "revision": "1",
+    "name": "SN-A",
+    "cam": "ref:SN-A",
+    "retention_days": "30",
+    "enabled": "true",
+    "labels": "",
+    "home": "",
+    "until": "0.0",
+    "min_depth_days": "0.0",
+    "when": "always"
+  },
+  "index": 2015
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/placement/SN-A
+→ 200 {"items": null, "index": ""}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/policy
+→ 200 {"items": null, "index": ""}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/drain
+→ 200 {"items": null, "index": ""}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=platform/servers/
+→ 200 {"keys": {}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/servers/relay-a
+→ 200 {"items": null, "index": ""}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": {"rec/volumes/disk": 2011}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {
+  "items": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": "1073741824",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 2011
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/workers/r-relay-a-1
+→ 200 {"items": null, "index": ""}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+POST /v1/write {"op": "put", "key": "rec/placement/SN-A", "cas": "", "items": {
+  "worker": "r-relay-a-1",
+  "reason": "most free capacity (50) among 1 worker(s); on relay-a, whose resource is live",
+  "at": "1757500225.0",
+  "rev": "1"
+}}
+→ 200 {"index": 2022}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+POST /v1/write {"op": "put", "key": "rec/workers/r-relay-a-1", "cas": "", "items": {
+  "units": "SN-A",
+  "rev": "1"
+}}
+→ 200 {"index": 2023}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/placement/SN-A
+→ 200 {
+  "items": {
+    "worker": "r-relay-a-1",
+    "reason": "most free capacity (50) among 1 worker(s); on relay-a, whose resource is live",
+    "at": "1757500225.0",
+    "rev": "1"
+  },
+  "index": 2022
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/placement/
+→ 200 {"keys": {"rec/placement/SN-A": 2022}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/workers/r-relay-a-1
+→ 200 {"items": {"units": "SN-A", "rev": "1"}, "index": 2023}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/recordings/SN-A
+→ 200 {
+  "items": {
+    "id": "SN-A",
+    "revision": "1",
+    "name": "SN-A",
+    "cam": "ref:SN-A",
+    "retention_days": "30",
+    "enabled": "true",
+    "labels": "",
+    "home": "",
+    "until": "0.0",
+    "min_depth_days": "0.0",
+    "when": "always"
+  },
+  "index": 2015
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/epoch/SN-A
+→ 200 {"items": null, "index": ""}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/epoch/SN-A", "cas": "", "items": {"epoch": "1"}}
+→ 200 {"index": 2024}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/recordings/SN-A
+→ 200 {
+  "items": {
+    "id": "SN-A",
+    "revision": "1",
+    "name": "SN-A",
+    "cam": "ref:SN-A",
+    "retention_days": "30",
+    "enabled": "true",
+    "labels": "",
+    "home": "",
+    "until": "0.0",
+    "min_depth_days": "0.0",
+    "when": "always"
+  },
+  "index": 2015
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": {"rec/volumes/disk": 2011}}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disk
+→ 200 {
+  "items": {
+    "name": "disk",
+    "kind": "local",
+    "url": "file:///data/relay-a/relay-a/archive/volume",
+    "server": "relay-a",
+    "quota_bytes": "1073741824",
+    "enabled": "true",
+    "shrink_confirmed": "0",
+    "admits": "true"
+  },
+  "index": 2011
+}
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock (+F3)
+GET /v1/get?key=domain/vms/upstream
+→ 200 {"items": null, "index": ""}
+
+## heartbeat r-relay-a-1 (rec/heartbeats/r-relay-a-1, объект на relay-a):
+## {
+##  "ingest": "http://relay-a:8091/ingest",
+##  "ingest_streams": {},
+##  "volume": "disk",
+##  "status": [
+##   {
+##    "id": "SN-A",
+##    "cam": "ref:SN-A",
+##    "phase": "waiting",
+##    "why": "camera held by nobody",
+##    "source": null
+##   }
+##  ]
+## }

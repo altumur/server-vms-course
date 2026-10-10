@@ -1,0 +1,87 @@
+## Сцена 7. Кто пишет SN-A. Решение «камеру SN-A пишет кластер relay-a» — одно на камеру, у держателя
+## (domain/vms/crossings). Двери у него в курсе нет: это вызов Crossings.record в процессе воркера VMS на домене
+## (module-design.md М12B, открытый пункт 2); у продукта — POST /domain/vms/crossings {ref, on, move: true}
+## консоли srv (stand.sh setup).
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/crossings", "cas": "", "items": {"SN-A": "relay-a"}}
+→ 200 {"index": 1047}
+
+## → {"camera": "SN-A", "recorded_by": "relay-a", "from": "cam-a"}
+
+## Проход воркера VMS на домене: книги sources (relay-a), primaries (cam-a: куда толкать и токен потока),
+## polls, upstream (relay-a: куда передавать вверх, в центр); токены — у подписывающего, через его сокет токенов.
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/worker", "cas": 1042, "items": {
+  "instance": "srv:1201:0004b1",
+  "at": "1757500245.0"
+}}
+→ 200 {"index": 1049}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/sources/relay-a", "cas": "", "items": {
+  "SN-A": "{\"as_of\": 1757500181.0, \"cluster\": \"cam-a\", \"live_url\": \"ingest://relay-a/SN-A\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-A\"}"
+}}
+→ 200 {"index": 1050}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/sources/relay-b", "cas": "", "items": {
+  "SN-B": "{\"as_of\": 1757500185.0, \"cluster\": \"cam-b\", \"live_url\": \"ingest://relay-b/SN-B\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-B\"}"
+}}
+→ 200 {"index": 1051}
+
+# vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
+POST /tokens/stream {"sub": "cam-a", "claims": {"aud": "ingest:relay-a", "ref": "SN-A"}}
+→ 200 {"token": "«токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»"}
+
+# vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
+POST /tokens/stream {"sub": "cam-b", "claims": {"aud": "ingest:relay-b", "ref": "SN-B"}}
+→ 200 {"token": "«токен 2: stream sub=cam-b aud=ingest:relay-b ref=SN-B на 86400 с»"}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/primaries/cam-a", "cas": "", "items": {
+  "SN-A": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано кольцом 1»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}, \"recorded_by\": \"relay-a\", \"recording\": \"SN-A\", \"running\": false}"
+}}
+→ 200 {"index": 1052}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/primaries/cam-b", "cas": "", "items": {
+  "SN-B": "{\"enabled\": true, \"ingest\": {\"token_secret\": \"«запечатано кольцом 2»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-b:8091/ingest\"]}, \"recorded_by\": \"relay-b\", \"recording\": \"SN-B\", \"running\": false}"
+}}
+→ 200 {"index": 1053}
+
+# vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
+POST /tokens/stream {"sub": "cam-a2", "claims": {"aud": "ingest:relay-a", "ref": "SN-A2"}}
+→ 200 {"token": "«токен 3: stream sub=cam-a2 aud=ingest:relay-a ref=SN-A2 на 86400 с»"}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/polls/cam-a2", "cas": "", "items": {
+  "SN-A2": "{\"cluster\": \"relay-a\", \"token_secret\": \"«запечатано кольцом 3»\", \"until\": 1757586645.0, \"urls\": [\"http://relay-a:8091/ingest\"]}"
+}}
+→ 200 {"index": 1054}
+
+# vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
+POST /tokens/stream {"sub": "relay-a", "claims": {"aud": "ingest:srv", "ref": "SN-A"}}
+→ 200 {"token": "«токен 4: stream sub=relay-a aud=ingest:srv ref=SN-A на 86400 с»"}
+
+# vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
+POST /tokens/stream {"sub": "relay-b", "claims": {"aud": "ingest:srv", "ref": "SN-B"}}
+→ 200 {"token": "«токен 5: stream sub=relay-b aud=ingest:srv ref=SN-B на 86400 с»"}
+
+# vmsdomain on srv → the signer's token socket /run/w2c-signer/tokens.sock
+POST /tokens/stream {"sub": "relay-a", "claims": {"aud": "ingest:srv", "ref": "SN-A2"}}
+→ 200 {"token": "«токен 6: stream sub=relay-a aud=ingest:srv ref=SN-A2 на 86400 с»"}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/upstream/relay-a", "cas": "", "items": {
+  "SN-A": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 4»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}",
+  "SN-A2": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 5»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}"
+}}
+→ 200 {"index": 1055}
+
+# vmsdomain on srv → /run/configstore/vmsdomain.sock
+POST /v1/write {"op": "put", "key": "domain/vms/upstream/relay-b", "cas": "", "items": {
+  "SN-B": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 6»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}"
+}}
+→ 200 {"index": 1056}

@@ -155,32 +155,107 @@ def s06_office_ready(site) -> None:
              "Консоль офиса проверяет её токен по ключам и правам, что принёс агент relay-a.")
     site.login("anna")
     site.ask("anna", "POST", "console relay-a", "/rec/volumes",
-             {"name": "disk", "kind": "local", "url": f"file:///data/relay-a/objectstorage", "quota_bytes": 1 << 30,
+             {"name": "disk", "kind": "local", "url": site.cluster("relay-a").server.volume, "quota_bytes": 1 << 30,
               "server": "relay-a"}, headers={"Idempotency-Key": "relay-a-disk"})
-    log.note("Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest).")
+    log.note("Регистратор офиса r-relay-a-1 стартует; приёмник и передатчик живут в нём (RecWorker.host_ingest).\n"
+             "FINDINGS.md, F3: роли recworker не дано чтение книг, которые читают приёмник и передатчик\n"
+             "(domain/vms/sources, upstream, asks) — на configstore передатчик не строится вовсе. В сценарии их ручка —\n"
+             "роль recworker с этими чтениями сверх файла прав; каждая её строка помечена «(+F3)».")
     site.recorder("relay-a")
     site.ask("anna", "POST", "console relay-a", "/rec/recordings", {"name": "SN-A", "cam": "ref:SN-A"},
              headers={"Idempotency-Key": "relay-a-SN-A"})
-    log.note("Контроллер записей офиса ставит запись на регистратор; регистратор берёт том, слот, говорит heartbeat.")
-    site.place("relay-a")
+    log.note("Регистратор берёт слот и том, говорит heartbeat; контроллер записей офиса ставит запись на него; регистратор\n"
+             "запускает её и говорит heartbeat снова.")
     rec = site.recorders["relay-a"]
     with log.acting("recworker r-relay-a-1 on relay-a"):
         rec.lease_pass()
         rec.volume_pass()
+        rec.heartbeat_once()
+    site.place("relay-a")
+    with log.acting("recworker r-relay-a-1 on relay-a"):
         rec.reconcile_once()
         rec.heartbeat_once()
+    site.say_heartbeat("relay-a")
     with log.muted():
         site.ask("anna", "POST", "console relay-b", "/rec/volumes",
-                 {"name": "disk", "kind": "local", "url": "file:///data/relay-b/objectstorage", "quota_bytes": 1 << 30,
+                 {"name": "disk", "kind": "local", "url": site.cluster("relay-b").server.volume, "quota_bytes": 1 << 30,
                   "server": "relay-b"}, headers={"Idempotency-Key": "relay-b-disk"})
         site.recorder("relay-b")
         site.ask("anna", "POST", "console relay-b", "/rec/recordings", {"name": "SN-B", "cam": "ref:SN-B"},
                  headers={"Idempotency-Key": "relay-b-SN-B"})
-        site.place("relay-b")
         r = site.recorders["relay-b"]
-        r.lease_pass(); r.volume_pass(); r.reconcile_once(); r.heartbeat_once()
+        r.lease_pass(); r.volume_pass(); r.heartbeat_once()
+        site.place("relay-b")
+        r.reconcile_once(); r.heartbeat_once()
         site.recorder("srv")
         site.recorders["srv"].heartbeat_once()
+
+
+def s07_who_records(site) -> None:
+    log = site.log
+    site.wall.advance(20)
+    log.note("Сцена 7. Кто пишет SN-A. Решение «камеру SN-A пишет кластер relay-a» — одно на камеру, у держателя\n"
+             "(domain/vms/crossings). Двери у него в курсе нет: это вызов Crossings.record в процессе воркера VMS на домене\n"
+             "(module-design.md М12B, открытый пункт 2); у продукта — POST /domain/vms/crossings {ref, on, move: true}\n"
+             "консоли srv (stand.sh setup).")
+    with log.muted():                                      # the offices' and the centre's recorders say where they take streams
+        for name in ("relay-a", "relay-b", "srv"):
+            site.recorders[name].heartbeat_once()
+        site.agents_pass()
+        site.holder.run_pass()
+        site.console_pass()
+    with log.acting("vmsdomain on srv"):
+        got = site.crossings.record("SN-A", on="relay-a", move=True)
+    log.note(f"→ {json.dumps(got, ensure_ascii=False)}")
+    with log.muted():
+        site.crossings.record("SN-B", on="relay-b", move=True)
+    log.note("Проход воркера VMS на домене: книги sources (relay-a), primaries (cam-a: куда толкать и токен потока),\n"
+             "polls, upstream (relay-a: куда передавать вверх, в центр); токены — у подписывающего, через его сокет токенов.")
+    site.domainpart.pass_once()
+
+
+def s08_books_home(site) -> None:
+    log = site.log
+    site.wall.advance(10)
+    log.note("Сцена 8. Агенты несут книги домой: relay-a — свои (sources, upstream) и, по дороге, книги cam-a;\n"
+             "cam-a — через дверь relay-a, токен потока запечатан ключу камеры.")
+    site.sync("relay-a")
+    site.sync("cam-a")
+    with log.muted():
+        for n in ("relay-b", "cam-a2", "cam-b", "srv"):
+            site.sync(n)
+
+
+def s09_stream_flows(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Сцена 9. Поток пошёл. Регистратор офиса хочет поток SN-A — в курсе этого шва нет: RecWorker.source ищет\n"
+             "камеру в heartbeat'ах VMS своего кластера и пишет «camera held by nobody» (сцена 6); приёмник он не\n"
+             "спрашивает. Здесь подписку делает сценарий, как тесты урока 16 (ingest.want + subscribe от имени регистратора).")
+    ing = site.ingests["relay-a"]
+    with log.acting("recworker r-relay-a-1 on relay-a"):
+        ing.want("SN-A", "recorder:r-relay-a-1")
+        site.taken = ing.subscribe("SN-A", "recorder:r-relay-a-1", maxsize=100000)
+    log.note("Камера: опрос → «толкай» → толчок кадров из кольца; карта держится, пока поток берут.")
+    for _ in range(3):
+        site.wall.advance(1)
+        out = site.camera_step("cam-a")
+        log.note(f"толкатель cam-a: {json.dumps(out, ensure_ascii=False)}")
+    got = site.taken.drain()
+    log.note(f"подписчик в приёмнике relay-a получил {len(got)} кадров")
+    rec = site.recorders["relay-a"]
+    with log.acting("recworker r-relay-a-1 on relay-a"):
+        rec.heartbeat_once()
+    site.say_heartbeat("relay-a")
+    key = "rec/polled/" + "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in site.ingest_url("relay-a"))
+    raw = rec.objects.get(key)
+    log.note(f"свидетель для тревог {key} (объект на relay-a): " + (raw.decode() if raw else "нет"))
+    cam = site.cams["cam-a"]
+    cam.rec.heartbeat_once()
+    hb = json.loads(cam.ram.get("rec/heartbeats/r-1"))
+    log.note("регистратор карты r-1: " + json.dumps({"status": [{k: st.get(k) for k in ("id", "phase", "hold", "why")}
+                                                              for st in hb["status"]], "stream": hb.get("stream")},
+                                                            ensure_ascii=False, indent=1))
 
 
 SCENES = {
@@ -190,6 +265,9 @@ SCENES = {
     "04-camera-boots": s04_camera_boots,
     "05-domain-learns": s05_domain_learns,
     "06-office-ready": s06_office_ready,
+    "07-who-records": s07_who_records,
+    "08-books-home": s08_books_home,
+    "09-stream-flows": s09_stream_flows,
 }
 
 

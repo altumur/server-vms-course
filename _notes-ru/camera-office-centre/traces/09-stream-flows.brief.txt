@@ -1,0 +1,194 @@
+## Сцена 9. Поток пошёл. Регистратор офиса хочет поток SN-A — в курсе этого шва нет: RecWorker.source ищет
+## камеру в heartbeat'ах VMS своего кластера и пишет «camera held by nobody» (сцена 6); приёмник он не
+## спрашивает. Здесь подписку делает сценарий, как тесты урока 16 (ingest.want + subscribe от имени регистратора).
+
+## Камера: опрос → «толкай» → толчок кадров из кольца; карта держится, пока поток берут.
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500261.0, "version": -1, "wait": 0.0}
+  Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ …
+
+# recworker r-relay-a-1 on relay-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "objects/rec/ingest/clock/SN-A.json", "cas": null, "items": {
+  "data": "{\"v\": 1, \"at\": 1757500261000, \"pieces\": [{\"from\": 1757500261000, \"srv_from\": 1757500261000, \"off_ms\": 0}]}"
+}}
+→ 200 {"index": 2027}
+
+# pusher on cam-a (SN-A) ← relay-a:8091 (the ingest of r-relay-a-1): ответ на GET /ingest/SN-A/poll
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "611 кадров, t 1757500200.0…1757500261.0",
+  "camera_now": 1757500261.0,
+  "rtt": 0.0
+}
+→ 200 611
+
+## толкатель cam-a: {"state": "pushing to http://relay-a:8091/ingest", "pushed": 611, "uploaded": [], "asks": [], "road": "primary", "continue": {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}, "behind": 0.0, "lagging": false}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500262.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "10 кадров, t 1757500261.1…1757500262.0",
+  "camera_now": 1757500262.0,
+  "rtt": 0.0
+}
+→ 200 10
+
+## толкатель cam-a: {"state": "pushing to http://relay-a:8091/ingest", "pushed": 10, "uploaded": [], "asks": [], "road": "primary", "continue": {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}, "behind": 0.0, "lagging": false}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.poll в процессе; у продукта GET /ingest/SN-A/poll (recproc/ingest.go)
+GET /ingest/SN-A/poll {"camera_now": 1757500263.0, "rtt": 0.0, "version": 473846223336, "wait": 0.0}
+  Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+→ 200 {"push": true, "version": 473846223336, "ranges": {}, "asks": {}, "uncovered": false, "held": true}
+
+# pusher on cam-a (SN-A) → relay-a:8091 (the ingest of r-relay-a-1)
+#   в курсе — вызов Ingest.push в процессе; у продукта POST /ingest/SN-A/live (recproc/ingest.go)
+POST /ingest/SN-A/live
+  Authorization: Bearer «токен 1: stream sub=cam-a aud=ingest:relay-a ref=SN-A на 86400 с»
+{
+  "frames": "10 кадров, t 1757500262.1…1757500263.0",
+  "camera_now": 1757500263.0,
+  "rtt": 0.0
+}
+→ 200 10
+
+## толкатель cam-a: {"state": "pushing to http://relay-a:8091/ingest", "pushed": 10, "uploaded": [], "asks": [], "road": "primary", "continue": {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}, "behind": 0.0, "lagging": false}
+
+## подписчик в приёмнике relay-a получил 631 кадров
+
+## heartbeat r-relay-a-1 (rec/heartbeats/r-relay-a-1, объект на relay-a):
+## {
+##  "ingest": "http://relay-a:8091/ingest",
+##  "ingest_streams": {
+##   "SN-A": {
+##    "push": true,
+##    "live": true,
+##    "received": 631,
+##    "viewers": 0,
+##    "recorders": 1,
+##    "cut_for_full_queue": 0,
+##    "repeats_dropped": 0,
+##    "streams_replaced": 0,
+##    "clock_back": 0,
+##    "stream_gaps": 0,
+##    "camera_gaps": 0,
+##    "inject_dropped": 0,
+##    "inject_losses": 0,
+##    "lead_in": 0,
+##    "absurd_frames": 0,
+##    "ask_outcomes_dropped": 0,
+##    "have_answers": 0,
+##    "clock_step_forward": 0,
+##    "ahead_repeats": 0,
+##    "ahead_losses": 0,
+##    "clock_pieces": 1,
+##    "clock_steps_in_stream": 0,
+##    "clock_outliers": 0,
+##    "clock_ambiguous_frames": 0,
+##    "clock_unsure_frames": 0,
+##    "clock_drift_pieces": 0,
+##    "clock_step_back_word": 0,
+##    "clock_clamped_frames": 0,
+##    "clock_refined": 0,
+##    "clock_line_pieces": 0,
+##    "clock_pieces_restored": 0,
+##    "clock_step_back_withdrawn": 0,
+##    "clock_unplaceable_frames": 0,
+##    "clock_refined_by_road": 0,
+##    "clock_range_reasked": 0,
+##    "clock_road_forgiven": 0,
+##    "stream_gap_s": 0.0,
+##    "clock_step_forward_s": 0.0,
+##    "clock_step_back_s": 0.0,
+##    "clock_step_back_word_s": 0.0,
+##    "last": 1757500263.0,
+##    "skew_s": 0.0,
+##    "camera_rtt_s": 0.0,
+##    "polled_ago": 0.0
+##   }
+##  },
+##  "upstream": {
+##   "SN-A": {
+##    "mode": "push",
+##    "state": "",
+##    "up_sent": 0,
+##    "up_dropped": 0,
+##    "up_gaps": 0,
+##    "up_resumed": 0,
+##    "up_have_every": 0.0,
+##    "up_unconfirmed_s": 0.0,
+##    "up_polls": 0,
+##    "up_cuts": 0,
+##    "up_kept": false,
+##    "up_expired": 0,
+##    "up_kept_writes": 0
+##   },
+##   "SN-A2": {
+##    "mode": "push",
+##    "state": "",
+##    "up_sent": 0,
+##    "up_dropped": 0,
+##    "up_gaps": 0,
+##    "up_resumed": 0,
+##    "up_have_every": 0.0,
+##    "up_unconfirmed_s": 0.0,
+##    "up_polls": 0,
+##    "up_cuts": 0,
+##    "up_kept": false,
+##    "up_expired": 0,
+##    "up_kept_writes": 0
+##   }
+##  },
+##  "volume": "disk",
+##  "status": [
+##   {
+##    "id": "SN-A",
+##    "cam": "ref:SN-A",
+##    "phase": "waiting",
+##    "why": "camera held by nobody",
+##    "source": null
+##   }
+##  ]
+## }
+
+## свидетель для тревог rec/polled/http___relay-a_8091_ingest (объект на relay-a): {"cluster": "relay-a", "ingest": "http://relay-a:8091/ingest", "ts": 1757500263.0, "units": {"cam-a": 0.0}}
+
+## регистратор карты r-1: {
+##  "status": [
+##   {
+##    "id": "1-sd",
+##    "phase": "standby",
+##    "hold": true,
+##    "why": "the primary recording is being written; the last 61 s are held in memory"
+##   }
+##  ],
+##  "stream": {
+##   "state": "pushing to http://relay-a:8091/ingest",
+##   "up": true,
+##   "road": "primary",
+##   "behind_s": 0.0,
+##   "lagging": false,
+##   "cut_s": 0.0,
+##   "left_s": 0.0,
+##   "failed_s": 0.0,
+##   "failed": 0,
+##   "owed_s": 0.0,
+##   "owed_gaps": 0
+##  }
+## }

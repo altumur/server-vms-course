@@ -579,6 +579,22 @@ class Site:
             placement_pass(ctl)
 
     # -- a recorder with the ingest (and, on an office, the forwarder) -----------------------------------------------------
+    F3_READS = ["domain/vms/sources", "domain/vms/upstream", "domain/vms/asks"]
+
+    def f3_handle(self, name: str, who: str):
+        """The role `recworker`'s handle with the reads F3 names added — the scenario's overlay, not the rights file."""
+        from tests.cluster.conftest import RIGHTS
+        from w2cplatform.configstorevars import ConfigstoreVariables
+        from w2cplatform.storemachine import Rights, local_transport
+        with open(RIGHTS) as f:
+            doc = json.load(f)
+        role = doc["roles"]["recworker"]
+        role["read"] = list(role["read"]) + [k for k in self.F3_READS if k not in role["read"]]
+        c = self.cluster(name)
+        door = "/run/configstore/recworker.sock (+F3)"
+        transport = self.log.transport(who, door, local_transport(c.store.submit, Rights.parse(doc), "recworker"))
+        return ConfigstoreVariables("/run/configstore/recworker.sock", transport=transport)
+
     def ingest_url(self, name: str) -> str:
         """Where a cluster's recorder takes the streams cameras push: its door and `/ingest`, as the product's."""
         return f"http://{name}:{PORTS['recorder']}/ingest"
@@ -601,11 +617,31 @@ class Site:
                         raise Unreachable(f"{url} did not answer {name}")
                     return TracedIngest(self.log, ing, who, f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
             raise Unreachable(f"{url} did not answer {name}")
-        rec.host_ingest(name, self.ingest_url(name), dial=dial)
+        # F3 (FINDINGS.md): the role `recworker` may not read the books the ingest and the forwarder it hosts read. Their
+        # handle here is the recorder's own role WITH those reads added, said on every line it makes (`+F3`); the rights
+        # file is not changed, and the recorder's own handle stays as the file says.
+        was = rec.vars
+        rec.vars = self.f3_handle(name, f"recworker r-{name}-1 on {name}")
+        try:
+            rec.host_ingest(name, self.ingest_url(name), dial=dial)
+        finally:
+            rec.vars = was
         if rec.forwarder is not None:
             rec.forwarder.sealer = self.ring(name)             # the books its agent carried, opened with this box's ring
         self.recorders[name], self.ingests[name] = rec, rec.ingest
         return rec
+
+    def say_heartbeat(self, name: str, fields=("ingest", "ingest_streams", "upstream", "volume")) -> None:
+        """What a recorder says of itself in its heartbeat (an object on its server), as a line of the scenario's: the
+        fields asked, and each recording's phase and why."""
+        rec = self.recorders[name]
+        raw = rec.objects.get(f"rec/heartbeats/{rec.name}")
+        hb = json.loads(raw) if raw else {}
+        shown = {k: hb.get(k) for k in fields if k in hb}
+        shown["status"] = [{k: st.get(k) for k in ("id", "cam", "phase", "why", "source", "written_through") if k in st}
+                           for st in hb.get("status", [])]
+        self.log.note(f"heartbeat {rec.name} (rec/heartbeats/{rec.name}, объект на {name}):\n"
+                      + json.dumps(shown, ensure_ascii=False, indent=1))
 
     # -- a camera boots ------------------------------------------------------------------------------------------------------
     def boot(self, name: str, card_bytes: int = 64 << 20) -> None:
