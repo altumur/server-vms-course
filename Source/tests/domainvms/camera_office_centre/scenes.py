@@ -258,6 +258,122 @@ def s09_stream_flows(site) -> None:
                                                             ensure_ascii=False, indent=1))
 
 
+def s10_watching(site) -> None:
+    from vms.domainpart.ingest import LINGER
+    log = site.log
+    site.wall.advance(5)
+    log.note("Сцена 10. Борис смотрит SN-A из центра. Шлюз в центре — модель курса (domainpart/gateway.py поверх\n"
+             "приёмника srv); у продукта — RTSP-раздача приёмника rtsp://srv/ingest/SN-A и WHEP (VMS_LIVE_HTTP). Открыть\n"
+             "раздачу — значит захотеть поток: желание идёт вниз (центр → офис → камера), поток вверх.")
+    site.login("boris")
+    gw = site.gateway()
+    with log.acting("gateway gw-centre on srv"):
+        view = gw.watch("SN-A", site.tokens["boris"], "boris", maxsize=100000)
+    log.note("Передатчик relay-a держит опрос у приёмника центра: центр хочет SN-A — значит, и офис хочет его от камеры.")
+    log.note("в курсе передатчик ходит в приёмник центра вызовом (dial), у продукта — тот же опрос и толчок по HTTP")
+    site.forward("relay-a")
+    log.note("Камера толкает как толкала — один поток в офис; передатчик несёт его вверх.")
+    for _ in range(2):
+        site.wall.advance(1)
+        site.camera_step("cam-a")
+        site.forward("relay-a")
+    with log.acting("gateway gw-centre on srv"):
+        gw.pump()
+    log.note(f"Борис получил {len(view.drain())} кадров — живой край, не кольцо.")
+    log.note("Борис ушёл: желание живёт ещё LINGER = 10 с, потом центр не хочет SN-A, и офис перестаёт нести его вверх.")
+    with log.acting("gateway gw-centre on srv"):
+        gw.leave("SN-A", "boris")
+        site.ingests["srv"].release("SN-A", "gw-centre")
+    site.wall.advance(LINGER + 1)
+    site.camera_step("cam-a")
+    site.forward("relay-a")
+    rec = site.recorders["relay-a"]
+    with log.acting("recworker r-relay-a-1 on relay-a"):
+        rec.heartbeat_once()
+    site.say_heartbeat("relay-a", fields=("upstream",))
+
+
+SCENARIO = {"when": {"camera": "SN-A2", "kind": "vehicle"},
+            "then": {"camera": "SN-B", "action": "preset", "arg": 3, "within": 10}}
+
+
+def s11_scenario(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Сцена 11. Сценарий между объектами: «машина у ворот (cam-a2, объект A) — камера cam-b на объекте B в пресет 3».\n"
+             "Сценарий — документ auto в общих настройках домена (PUT /domain/shared → подписывающий проверяет и подписывает).")
+    site.login("anna")
+    _, shared = site.ask("anna", "GET", "domain console", "/domain/shared")
+    rev = int((shared.get("doc") or {}).get("rev", 0)) if isinstance(shared, dict) else 0
+    site.ask("anna", "PUT", "domain console", "/domain/shared",
+             {"base_rev": rev, "shared": {"auto": {"scenarios": [SCENARIO]}}})
+    log.note("Проход держателя: воркер VMS на домене строит книгу запросов — cam-a2 может спросить cam-b, дорогой через\n"
+             "свой офис relay-a и вверх, в центр (up: srv); relay-a получает право нести эту пару; токены «ask».")
+    site.holder.run_pass()
+    site.domainpart.pass_once()
+    log.note("Агенты несут книги и документ домой: relay-a — свою книгу запросов и книги cam-a2, cam-a2 — документ и книгу.")
+    site.sync("relay-a")
+    site.sync("cam-a2")
+    with log.muted():
+        site.agents_pass()
+    log.note("Событие на cam-a2: машина. Камера оставляет запрос у приёмника своего офиса (в курсе — вызов\n"
+             "Scenarios.on_event; у продукта — событие прошивки GET /api/v1/events → запрос POST /ingest/SN-B/ask).")
+    sc = site.scenarios("cam-a2")
+    with log.acting("automation on cam-a2"):
+        left = sc.on_event("vehicle")
+    log.note("→ " + json.dumps([{k: v for k, v in x.items() if k != "ingest"} for x in left], ensure_ascii=False))
+    log.note("Передатчик relay-a, разбуженный запросом, несёт его в центр.")
+    with log.acting("forwarder in r-relay-a-1 on relay-a"):
+        lifted = site.recorders["relay-a"].forwarder.lift()
+    log.note(f"→ {json.dumps(lifted, ensure_ascii=False)}")
+    log.note("Передатчик relay-b держит опрос у центра за SN-B: запрос приходит в ответе и спускается в приёмник relay-b.")
+    site.forward("relay-b")
+    log.note("cam-b на своём опросе получает запрос и выполняет его.")
+    site.wall.advance(1)
+    out = site.camera_step("cam-b")
+    log.note(f"толкатель cam-b: asks = {json.dumps(out.get('asks'), ensure_ascii=False)}")
+    log.note("Исход назад: relay-b — в центр, relay-a — из центра к спросившей камере.")
+    with log.acting("forwarder in r-relay-b-1 on relay-b"):
+        site.recorders["relay-b"].forwarder.lift()
+    with log.acting("forwarder in r-relay-a-1 on relay-a"):
+        site.recorders["relay-a"].forwarder.lift()
+    x = next((x for x in left if x.get("target") == "SN-B"), None)
+    if x and x.get("ask"):
+        with log.acting("automation on cam-a2"):
+            outcome = sc.asker.outcome("SN-B", x["ask"], x["deadline"])
+        log.note(f"cam-a2 читает исход своего запроса: {outcome}")
+
+
+def s12_alarm(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Сцена 12. Тревога с камеры. У cam-a2 мало памяти: кольцо держит ~20 с её потока, а карте, чтобы начало\n"
+             "обрыва попало на неё, нужно 50 с (обрыв замечают через LOST_AFTER + запас). Регистратор карты поднимает\n"
+             "тревогу card.prebuffer.short — событие на карте камеры.")
+    with log.muted():
+        for _ in range(25):
+            site.wall.advance(1)
+            site.camera_step("cam-a2")
+    cam = site.cams["cam-a2"]
+    with log.acting("recworker r-1 on cam-a2"):
+        short = cam.rec.prebuffer_pass()
+    log.note(f"prebuffer_pass: {json.dumps(short)}")
+    from w2cplatform.domain.alarms import Card
+    page = Card("rec", cam.events).alarms(site.wall() - 3600, site.wall() + 1, 10)
+    log.note("на карте cam-a2: " + json.dumps(page, ensure_ascii=False))
+    agent = site.agents["cam-a2"]
+    log.note(f"Агент cam-a2 спрашивает раз в секунду, нет ли на карте тревоги новее его последнего отчёта: due() = "
+             f"{agent.due()} — и отчитывается сразу, не дожидаясь прохода (report_now).")
+    with log.acting("domainagent on cam-a2"):
+        agent.report_now()
+    log.note("Офис relay-a несёт сводный отчёт; держатель держит неделю тревог; Анна смотрит список домена.")
+    site.sync("relay-a")
+    site.holder.run_pass()
+    site.console_pass()
+    site.login("anna")
+    site.ask("anna", "GET", "domain console", "/domain/alarms")
+
+
 SCENES = {
     "01-founding": s01_founding,
     "02-members-knock": s02_members_knock,
@@ -268,6 +384,9 @@ SCENES = {
     "07-who-records": s07_who_records,
     "08-books-home": s08_books_home,
     "09-stream-flows": s09_stream_flows,
+    "10-watching": s10_watching,
+    "11-scenario": s11_scenario,
+    "12-alarm": s12_alarm,
 }
 
 

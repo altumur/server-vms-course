@@ -43,6 +43,16 @@ CAMERAS = {    # name: (serial, office, REACHES, flash index base)
     "cam-a2": ("SN-A2", "relay-a", "vlan:site-a", 5000),
     "cam-b": ("SN-B", "relay-b", "lte:cam-b", 6000),
 }
+# What each camera raises and can be asked to do — `can` in its heartbeat (М10B Lesson 25; the firmware's own description
+# in the product): cam-a2 at the gate sees vehicles, cam-b on site B turns to presets
+CAN = {
+    "cam-a": {"events": ["motion"]},
+    "cam-a2": {"events": ["motion", "vehicle"]},
+    "cam-b": {"events": ["motion"], "ptz": True, "presets": 8},
+}
+# The camera's ring, where it is smaller than the course's default (`card.RING_BYTES`): cam-a2 is a camera with little
+# memory — its ring holds some twenty seconds of its stream, short of what its card needs (`card.prebuffer.short`)
+RING_BYTES = {"cam-a2": 50_000}
 TOPOLOGY = {"centre": "srv", "star": [], "via": {"cam-a": "relay-a", "cam-a2": "relay-a", "cam-b": "relay-b"}}
 # the stand's ports, as the product's stand counts them before its OFFSET: what a trace prints instead of loopback's
 PORTS = {"signer": 8071, "domain console": 8070, "console": 8080, "relay door": 8446, "recorder": 8091}
@@ -444,9 +454,12 @@ class Site:
     def camera(self, name: str):
         """A camera with the platform's firmware as the course builds one: a cluster of one on its flash
         (`DeviceCluster`, М12A Lesson 10) — not booted yet — and its agent, which reaches only its office: `RELAY_URL`
-        (the office's relay door), `REPORT=1` into the office's objects (`RELAY_OBJECTS_URL`)."""
+        (the office's relay door), `REPORT=1` into the office's objects (`RELAY_OBJECTS_URL`). The course has no camera
+        process: the agent is built as Lesson 17's tests build a camera's (`console`, `current`, `seen_store`,
+        `cluster_objects` — its durable objects, where it keeps the shared settings and a backup copy it was given)."""
         from w2cplatform.cluster.variables import FakeVariables
         from w2cplatform.domain.agent import DomainAgent
+        from w2cplatform.domain.alarms import Card, pages
         from w2cplatform.domain.carry import CarryClient
         from w2cplatform.domain.members import fingerprint
         from w2cplatform.trust.memberkey import MemberKey
@@ -456,8 +469,10 @@ class Site:
         flash._log = [base]
         door = f"the flash of {name}"
         cam = DeviceCluster(serial, TracedVars(self.log, flash, f"camera {name} (its console)", door), wall=self.wall,
-                            name=name, reaches=reaches.split(","), pushes=True)
+                            name=name, reaches=reaches.split(","), pushes=True, can=CAN[name])
         cam.flash_store = flash
+        cam.events = os.path.join(self.tmp, name, "archive")       # where its processes write their events: the card's
+        os.makedirs(cam.events, exist_ok=True)
         self.cams[name] = cam
         who = f"domainagent on {name}"
         own = TracedVars(self.log, flash, who, door)
@@ -471,6 +486,8 @@ class Site:
         agent = DomainAgent(name, CarryClient(self.doors[f"relay door {office}"], name, key, wall=self.wall), own,
                             now=self.wall, console=cam.local_console(), current=cam.current,
                             domain_objects=relay_objects, published=cam.local_objects(), seen_store=cam.local_objects(),
+                            cluster_objects=cam.disk, pages=lambda: pages(Card("rec", cam.events), self.wall()),
+                            alarm_waiting=Card("rec", cam.events).waiting,
                             reaches=lambda: reaches.split(","), own_objects=cam.local_objects(), sealer=sealer, key=key)
         cam.agent, cam.key = agent, key
         self.agents[name] = agent
@@ -643,6 +660,35 @@ class Site:
         self.log.note(f"heartbeat {rec.name} (rec/heartbeats/{rec.name}, объект на {name}):\n"
                       + json.dumps(shown, ensure_ascii=False, indent=1))
 
+    def forward(self, name: str) -> dict:
+        """One pass of the office's forwarder (`Forwarder.pass_once`; the product runs it as threads beside the recorder)."""
+        with self.log.acting(f"forwarder in r-{name}-1 on {name}"):
+            return self.recorders[name].forwarder.pass_once()
+
+    def gateway(self):
+        """The viewer's side in the centre: the course's MODEL of a live gateway over the centre's ingest
+        (`domainpart.gateway.Gateway` + `ingest.IngestLiveEndpoint`) — the course's WHEP gateway (`vms/liveworker.py`)
+        knows no ingest. It checks a person's token by the centre's own key set, as a cluster's endpoint does."""
+        if getattr(self, "_gateway", None) is not None:
+            return self._gateway
+        from vms.domainpart.gateway import Forbidden, Gateway
+        from vms.domainpart.ingest import IngestLiveEndpoint, audience
+        from w2cplatform.domain.agent import ClusterTrust
+        from w2cplatform.trust.tokens import PERSON, TokenError, verify
+        srv = self.cluster("srv")
+        who = "gateway gw-centre on srv"
+        trust = ClusterTrust(srv.door("console", who))
+
+        def authorise(token, camera):
+            try:
+                return verify(token, trust.keyset(), trust.revoked(), now=self.wall(), kind=PERSON)["sub"]
+            except TokenError as e:
+                raise Forbidden(str(e)) from None
+        ing = TracedIngest(self.log, self.ingests["srv"], who, f"srv:{PORTS['recorder']} (the ingest of r-srv-1)")
+        endpoint = IngestLiveEndpoint(ing, authorise)
+        self._gateway = Gateway("gw-centre", where=lambda c: audience("srv"), endpoint=lambda w: endpoint)
+        return self._gateway
+
     # -- a camera boots ------------------------------------------------------------------------------------------------------
     def boot(self, name: str, card_bytes: int = 64 << 20) -> None:
         """The camera's process at its start, as the course builds it (`tests/domainvms/test_lesson16_card._camera_process`;
@@ -668,11 +714,11 @@ class Site:
                       f"консоли камеры, stand.sh setup)")
         SpecController(REC_SPEC, TracedVars(self.log, flash, f"console of {name}", door), cam.local_objects(),
                        wall=self.wall, cluster=name).create({"name": "1-sd", "cam": "1", "home": "card", "when": "offline"})
-        ring = CamRing(clock=self.wall, steady=self.wall)
+        ring = CamRing(clock=self.wall, steady=self.wall, **({"max_bytes": RING_BYTES[name]} if name in RING_BYTES else {}))
         act = CardActuator(ring, threaded=False, serial=serial)
         rec = CardRecorder("r-1", TracedVars(self.log, flash, f"recworker r-1 on {name}", door), cam.local_objects(), ring,
                            act, clock=self.wall, wall=self.wall, server=name,
-                           resource_root=os.path.join(self.tmp, name, "archive"),
+                           resource_root=cam.events,
                            env={"SERVER_NAME": name, "INSTANCE_ID": f"{name}:{CAMERAS[name][3] + 101}:{CAMERAS[name][3] + 101:06x}"})
         rec.lease_pass()
         rec.heartbeat_once()
@@ -692,9 +738,35 @@ class Site:
                     return TracedIngest(self.log, ing, f"pusher on {name} ({serial})",
                                         f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
             raise Unreachable(f"{url} did not answer {name}")
-        pusher = camera_process(serial, TracedVars(self.log, flash, f"pusher on {name}", door), dial, rec)
+        pusher = camera_process(serial, TracedVars(self.log, flash, f"pusher on {name}", door), dial, rec,
+                                perform=cam.perform)
         pusher.sealer = self.ring(name)
         cam.ring, cam.act, cam.rec, cam.pusher, cam.frames, cam.started = ring, act, rec, pusher, 0, self.wall()
+
+    def scenarios(self, name: str):
+        """The camera's side of a scenario between cameras (`domainpart.scenario.Scenarios`): the shared document its
+        agent took (`SharedView` of its flash and its durable objects) and its `Asker` over its book of asks. In the
+        course an event is a call (`on_event`); in the product the firmware's event stream (`GET /api/v1/events`)."""
+        from vms.domainpart.ingest import Asker
+        from vms.domainpart.scenario import Scenarios
+        from w2cplatform.domain.shared import SharedView
+        cam = self.cams[name]
+        serial = CAMERAS[name][0]
+        door = f"the flash of {name}"
+
+        def dial(url):
+            from w2cplatform.domain.federation import Unreachable
+            for there, ing in self.ingests.items():
+                if self.ingest_url(there) == url:
+                    if there in self.down or name in self.down or (name, there) in self.cut:
+                        raise Unreachable(f"{url} did not answer {name}")
+                    return TracedIngest(self.log, ing, f"asker on {name} ({serial})",
+                                        f"{there}:{PORTS['recorder']} (the ingest of r-{there}-1)")
+            raise Unreachable(f"{url} did not answer {name}")
+        flash = TracedVars(self.log, cam.flash_store, f"automation on {name}", door)
+        asker = Asker(serial, flash, dial, clock=self.wall)
+        asker.sealer = self.ring(name)
+        return Scenarios(serial, SharedView(flash, cam.disk, self.wall), asker)
 
     def sense(self, name: str) -> None:
         """The camera's sensor up to now: ten frames a second into its ring, a key frame every two seconds, each stamped by

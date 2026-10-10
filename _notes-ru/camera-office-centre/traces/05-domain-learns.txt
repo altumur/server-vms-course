@@ -510,7 +510,12 @@ PUT /domain/members/cam-a/o/vms/heartbeats/SN-A
       "position": "converged",
       "revision": 1,
       "observed_revision": 1,
-      "epoch": 1
+      "epoch": 1,
+      "can": {
+        "events": [
+          "motion"
+        ]
+      }
     }
   ],
   "live_url": "rtsp://cam-a.local/live",
@@ -582,8 +587,13 @@ PUT /domain/members/cam-a/v/vms/epoch/1
 
 # domainagent on cam-a → the objects of relay-a
 #   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/cam-a в дверь ретранслятора (relay-a:8446)
+PUT /domain/members/cam-a/p/alarms
+→ 200 {"from": 1757413795.0, "to": 1757500195.0, "events": [], "truncated": false}
+
+# domainagent on cam-a → the objects of relay-a
+#   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/cam-a в дверь ретранслятора (relay-a:8446)
 PUT /domain/members/cam-a/reported
-→ 200 {"ts": 1757500195.0, "seq": 1, "items": 9, "key": "«ключ 4»", "seal": "«ключ 1»"}
+→ 200 {"ts": 1757500195.0, "seq": 1, "items": 10, "key": "«ключ 4»", "seal": "«ключ 1»"}
 
 ## Агент relay-a: свой отчёт и сводный отчёт за cam-a и cam-a2.
 
@@ -1307,9 +1317,10 @@ PUT /domain/members/relay-a/bundle
   "cam-a": {
     "o/domain/reaches": "{\"networks\": [\"vlan:site-a\"]}",
     "o/rec/heartbeats/r-1": "{\"worker\": \"r-1\", \"ts\": 1757500181.0, \"status\": [{\"id\": \"1-sd\", \"ref\": \"\", \"name\": \"1-sd\", \"enabled\": true, \"phase\": \"standby\", \"position\": \"converged\", \"revision\": 1, \"observed_revision\": 1, \"epoch\": 1, \"cam\": \"1\", \"source\": \"ring://camera\", \"via\": \"ring\", \"card_segments\": 0, \"card_bytes\": 0, \"card_budget\": 67108864, \"hold\": true, \"keep\": false, \"samples_written\": 0, \"samples_dropped\": 0, \"prebuffer_s\": 60.0, \"why\": \"the primary recording is being written; the last 1 s are held in memory\"}], \"server\": \"cam-a\", \"instance\": \"cam-a:4101:001005\", \"labels\": \"\", \"capacity\": 50, \"headroom\": 49, \"conflicts\": 0, \"started\": 1757500180.0, \"previous_hb\": 0.0, \"previous_instance\": \"\", \"previous_server\": \"\", \"alloc\": \"cam-a:4101:001005\", \"assignment_rev\": 1, \"passes\": 1, \"store_errors\": 0, \"pass_failures\": 0, \"unconfirmed\": 0, \"devices\": [], \"archive\": \"\", \"volume\": \"card\", \"volume_error\": \"\", \"card\": {\"state\": \"recording\", \"tries\": 1, \"since\": 1757500180.0, \"segments\": 0, \"bytes\": 0, \"budget\": 67108864}, \"feed\": {\"frames_connected\": false, \"ring_samples\": 11, \"ring_bytes\": 2364, \"ring_span_s\": 1.1, \"ring_window_s\": 60.0, \"ring_max_bytes\": 33554432, \"ring_reach_s\": 60.0, \"last_frame_age_s\": 0.0}, \"stream\": {\"state\": \"no book yet\", \"up\": false, \"road\": null, \"behind_s\": 0.0, \"lagging\": false, \"cut_s\": 0.0, \"left_s\": 0.0, \"failed_s\": 0.0, \"failed\": 0, \"owed_s\": 0.0, \"owed_gaps\": 0}, \"schema\": 1, \"build\": \"dev\", \"pending_writes\": 0}",
-    "o/vms/heartbeats/SN-A": "{\"worker\": \"SN-A\", \"ts\": 1757500181.0, \"server\": \"SN-A\", \"instance\": \"cam-a-boot-1\", \"capacity\": 1, \"headroom\": 0, \"status\": [{\"id\": 1, \"ref\": \"SN-A\", \"name\": \"SN-A\", \"enabled\": true, \"phase\": \"running\", \"position\": \"converged\", \"revision\": 1, \"observed_revision\": 1, \"epoch\": 1}], \"live_url\": \"rtsp://cam-a.local/live\", \"playback_url\": \"http://cam-a.local/playback\", \"coverage\": null, \"push\": true, \"polls\": true, \"taken_by\": []}",
+    "o/vms/heartbeats/SN-A": "{\"worker\": \"SN-A\", \"ts\": 1757500181.0, \"server\": \"SN-A\", \"instance\": \"cam-a-boot-1\", \"capacity\": 1, \"headroom\": 0, \"status\": [{\"id\": 1, \"ref\": \"SN-A\", \"name\": \"SN-A\", \"enabled\": true, \"phase\": \"running\", \"position\": \"converged\", \"revision\": 1, \"observed_revision\": 1, \"epoch\": 1, \"can\": {\"events\": [\"motion\"]}}], \"live_url\": \"rtsp://cam-a.local/live\", \"playback_url\": \"http://cam-a.local/playback\", \"coverage\": null, \"push\": true, \"polls\": true, \"taken_by\": []}",
     "o/vms/snapshot/SN-A": "{\"cluster\": \"cam-a\", \"worker\": \"SN-A\", \"ts\": 1757500181.0, \"cameras\": [{\"id\": 1, \"name\": \"SN-A\", \"ref\": \"SN-A\", \"revision\": 1, \"worker\": \"SN-A\", \"server\": \"SN-A\"}]}",
-    "reported": "{\"ts\": 1757500195.0, \"seq\": 1, \"items\": 9, \"key\": \"«ключ 4»\", \"seal\": \"«ключ 1»\"}",
+    "p/alarms": "{\"from\": 1757413795.0, \"to\": 1757500195.0, \"events\": [], \"truncated\": false}",
+    "reported": "{\"ts\": 1757500195.0, \"seq\": 1, \"items\": 10, \"key\": \"«ключ 4»\", \"seal\": \"«ключ 1»\"}",
     "v/domain/holder": "{\"idx\": 4008, \"items\": {\"doc\": \"{\\\"at\\\": 1757500000.0, \\\"holder\\\": \\\"srv\\\", \\\"kid\\\": \\\"root\\\", \\\"sig\\\": \\\"«подпись 3»\\\", \\\"term\\\": 1}\"}}",
     "v/domain/keys": "{\"idx\": 4003, \"items\": {\"doc\": \"{\\\"issuing\\\": [\\\"«серийный номер 1»\\\"], \\\"keys\\\": {\\\"current\\\": \\\"8c47b46a\\\", \\\"key:8c47b46a\\\": \\\"«ключ 2»\\\"}, \\\"kid\\\": \\\"root\\\", \\\"rev\\\": 1, \\\"revoked_ca\\\": [], \\\"root\\\": \\\"«ключ 3»\\\", \\\"sig\\\": \\\"«подпись 2»\\\"}\"}}",
     "v/domain/root": "{\"idx\": 4002, \"items\": {\"pub\": \"«ключ 3»\"}}",
@@ -1318,10 +1329,11 @@ PUT /domain/members/relay-a/bundle
   },
   "cam-a2": {
     "o/domain/reaches": "{\"networks\": [\"vlan:site-a\"]}",
-    "o/rec/heartbeats/r-1": "{\"worker\": \"r-1\", \"ts\": 1757500185.0, \"status\": [{\"id\": \"1-sd\", \"ref\": \"\", \"name\": \"1-sd\", \"enabled\": true, \"phase\": \"standby\", \"position\": \"converged\", \"revision\": 1, \"observed_revision\": 1, \"epoch\": 1, \"cam\": \"1\", \"source\": \"ring://camera\", \"via\": \"ring\", \"card_segments\": 0, \"card_bytes\": 0, \"card_budget\": 67108864, \"hold\": true, \"keep\": false, \"samples_written\": 0, \"samples_dropped\": 0, \"prebuffer_s\": 60.0, \"why\": \"the primary recording is being written; the last 0 s are held in memory\"}], \"server\": \"cam-a2\", \"instance\": \"cam-a2:5101:0013ed\", \"labels\": \"\", \"capacity\": 50, \"headroom\": 49, \"conflicts\": 0, \"started\": 1757500185.0, \"previous_hb\": 0.0, \"previous_instance\": \"\", \"previous_server\": \"\", \"alloc\": \"cam-a2:5101:0013ed\", \"assignment_rev\": 1, \"passes\": 1, \"store_errors\": 0, \"pass_failures\": 0, \"unconfirmed\": 0, \"devices\": [], \"archive\": \"\", \"volume\": \"card\", \"volume_error\": \"\", \"card\": {\"state\": \"recording\", \"tries\": 1, \"since\": 1757500185.0, \"segments\": 0, \"bytes\": 0, \"budget\": 67108864}, \"feed\": {\"frames_connected\": false, \"ring_samples\": 0, \"ring_bytes\": 0, \"ring_span_s\": 0.0, \"ring_window_s\": 60.0, \"ring_max_bytes\": 33554432, \"ring_reach_s\": 60.0}, \"schema\": 1, \"build\": \"dev\", \"pending_writes\": 0}",
-    "o/vms/heartbeats/SN-A2": "{\"worker\": \"SN-A2\", \"ts\": 1757500185.0, \"server\": \"SN-A2\", \"instance\": \"cam-a2-boot-1\", \"capacity\": 1, \"headroom\": 0, \"status\": [{\"id\": 1, \"ref\": \"SN-A2\", \"name\": \"SN-A2\", \"enabled\": true, \"phase\": \"running\", \"position\": \"converged\", \"revision\": 1, \"observed_revision\": 1, \"epoch\": 1}], \"live_url\": \"rtsp://cam-a2.local/live\", \"playback_url\": \"http://cam-a2.local/playback\", \"coverage\": null, \"push\": true, \"polls\": true, \"taken_by\": []}",
+    "o/rec/heartbeats/r-1": "{\"worker\": \"r-1\", \"ts\": 1757500185.0, \"status\": [{\"id\": \"1-sd\", \"ref\": \"\", \"name\": \"1-sd\", \"enabled\": true, \"phase\": \"standby\", \"position\": \"converged\", \"revision\": 1, \"observed_revision\": 1, \"epoch\": 1, \"cam\": \"1\", \"source\": \"ring://camera\", \"via\": \"ring\", \"card_segments\": 0, \"card_bytes\": 0, \"card_budget\": 67108864, \"hold\": true, \"keep\": false, \"samples_written\": 0, \"samples_dropped\": 0, \"prebuffer_s\": 60.0, \"why\": \"the primary recording is being written; the last 0 s are held in memory\"}], \"server\": \"cam-a2\", \"instance\": \"cam-a2:5101:0013ed\", \"labels\": \"\", \"capacity\": 50, \"headroom\": 49, \"conflicts\": 0, \"started\": 1757500185.0, \"previous_hb\": 0.0, \"previous_instance\": \"\", \"previous_server\": \"\", \"alloc\": \"cam-a2:5101:0013ed\", \"assignment_rev\": 1, \"passes\": 1, \"store_errors\": 0, \"pass_failures\": 0, \"unconfirmed\": 0, \"devices\": [], \"archive\": \"\", \"volume\": \"card\", \"volume_error\": \"\", \"card\": {\"state\": \"recording\", \"tries\": 1, \"since\": 1757500185.0, \"segments\": 0, \"bytes\": 0, \"budget\": 67108864}, \"feed\": {\"frames_connected\": false, \"ring_samples\": 0, \"ring_bytes\": 0, \"ring_span_s\": 0.0, \"ring_window_s\": 60.0, \"ring_max_bytes\": 50000, \"ring_reach_s\": 60.0}, \"schema\": 1, \"build\": \"dev\", \"pending_writes\": 0}",
+    "o/vms/heartbeats/SN-A2": "{\"worker\": \"SN-A2\", \"ts\": 1757500185.0, \"server\": \"SN-A2\", \"instance\": \"cam-a2-boot-1\", \"capacity\": 1, \"headroom\": 0, \"status\": [{\"id\": 1, \"ref\": \"SN-A2\", \"name\": \"SN-A2\", \"enabled\": true, \"phase\": \"running\", \"position\": \"converged\", \"revision\": 1, \"observed_revision\": 1, \"epoch\": 1, \"can\": {\"events\": [\"motion\", \"vehicle\"]}}], \"live_url\": \"rtsp://cam-a2.local/live\", \"playback_url\": \"http://cam-a2.local/playback\", \"coverage\": null, \"push\": true, \"polls\": true, \"taken_by\": []}",
     "o/vms/snapshot/SN-A2": "{\"cluster\": \"cam-a2\", \"worker\": \"SN-A2\", \"ts\": 1757500185.0, \"cameras\": [{\"id\": 1, \"name\": \"SN-A2\", \"ref\": \"SN-A2\", \"revision\": 1, \"worker\": \"SN-A2\", \"server\": \"SN-A2\"}]}",
-    "reported": "{\"ts\": 1757500195.0, \"seq\": 1, \"items\": 9, \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\"}",
+    "p/alarms": "{\"from\": 1757413795.0, \"to\": 1757500195.0, \"events\": [], \"truncated\": false}",
+    "reported": "{\"ts\": 1757500195.0, \"seq\": 1, \"items\": 10, \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\"}",
     "v/domain/holder": "{\"idx\": 5008, \"items\": {\"doc\": \"{\\\"at\\\": 1757500000.0, \\\"holder\\\": \\\"srv\\\", \\\"kid\\\": \\\"root\\\", \\\"sig\\\": \\\"«подпись 3»\\\", \\\"term\\\": 1}\"}}",
     "v/domain/keys": "{\"idx\": 5003, \"items\": {\"doc\": \"{\\\"issuing\\\": [\\\"«серийный номер 1»\\\"], \\\"keys\\\": {\\\"current\\\": \\\"8c47b46a\\\", \\\"key:8c47b46a\\\": \\\"«ключ 2»\\\"}, \\\"kid\\\": \\\"root\\\", \\\"rev\\\": 1, \\\"revoked_ca\\\": [], \\\"root\\\": \\\"«ключ 3»\\\", \\\"sig\\\": \\\"«подпись 2»\\\"}\"}}",
     "v/domain/root": "{\"idx\": 5002, \"items\": {\"pub\": \"«ключ 3»\"}}",
