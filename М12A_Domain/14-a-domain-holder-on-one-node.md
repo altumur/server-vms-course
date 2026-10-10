@@ -205,6 +205,8 @@ def take_record(member_vars, doc, keys, now: float) -> str:
 
 Все три через HTTP — `tests/test_domain_platform.py::test_a_clusters_console_says_held_to_anybody_the_backup_to_a_member_and_prepare_to_the_holder_alone`.
 
+Что эти двери читают, роль `console` в файле прав обязана читать: запись о держателе (`domain/holder`), указатель копии (`domain/backup-taken`) и список членов этого кластера (`domain/member-list`). Это три открытые строки: запись проверяет себя сама, в указателе только `{term, rev, sha256}`, в списке имена и открытые ключи. Сама копия лежит объектом, а не строкой. Пока роль этих строк не читала, на configstore `GET /api/held` получал от хранилища `403`, а консоль рвала соединение. Агенты не слышали ни одной консоли из `CLUSTERS`, и перенос не находил соседей: срок 2 начинался пустым, только с ключами. Это нашёл сценарий «камера — офис — центр» (находка F2). Чтения выводит генератор прав (`w2cplatform/cluster/rights.py`, `_moves`), тест — `tests/cluster/test_policies.py::test_the_consoles_doors_of_a_move_read_what_the_console_may`.
+
 ## Шаг 5 — Старый держатель возвращается
 
 SN0 не умерла, её только выдернули, и электрик втыкает её обратно. Она всё ещё считает себя держателем на сроке 1. При следующем взгляде она читает записи членов, находит срок 2 и уступает:

@@ -63,6 +63,17 @@ def _gate() -> list[str]:
     return [TRUST_KEYS, *DOMAIN_MARKS, "domain/grants/*"]
 
 
+# THE DOORS OF A MOVE ON THE CONSOLE (ADR-0066, ADR-0032): `GET /api/held` — the holder's record this cluster holds, the
+# key set, and which backup copy it keeps (`term.held`) — and `GET /api/backup`, the copy itself to a member that signs
+# for it by the key this cluster's list of members has (`term.backup_answer`). The console read neither row: every
+# `/api/held` was a 403 from the store and a dropped connection, and no agent following the holder by `CLUSTERS` heard a
+# console (the scenario «камера — офис — центр», F2). Public and signed things only: the record proves itself, the
+# pointer is `{term, rev, sha256}`, the list of members is names and public keys; the copy is an object, not a row.
+def _moves() -> list[str]:
+    from w2cplatform.domain.term import BACKUP_TAKEN, HOLDER, MEMBER_LIST
+    return [HOLDER, BACKUP_TAKEN, MEMBER_LIST]
+
+
 def _worker_objects(spec) -> list[str]:
     """A worker's objects that are rows: its marks before it acts, the places it opened (`catalog.rows_of`)."""
     return _rows(list(dict.fromkeys(spec.sub.acl_objects_worker() + [spec.sub.config(p) for p in catalog.rows_of(spec)])))
@@ -93,7 +104,7 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
     out = {
         # The page and the API, one per server: the operator's rows of every subsystem and what each server reaches
         # (`platform/servers/*`, one row a server, ADR-0026); reads every row of each, the platform's (drain,
-        # decommission, the servers' labels, the doors /servers shows), the gate's — and every worker's mark before it
+        # decommission, the servers' labels, the doors /servers shows), the gate's, the doors of a move's (`_moves`) — and every worker's mark before it
         # acts (a create-only row): the reaper reads it to tell a request its holder answered from one nobody performed.
         # And the cluster's door key (`door.py`): it makes it the first time it is asked for a door — the seed, sealed,
         # read by the console alone; the public halves every holder reads. It writes the end of a request into its mark
@@ -101,7 +112,7 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         # `acl_objects_console` that are rows.
         "console": role("console", [a for s in specs for a in s.acl_console()]
                         + [r for s in specs for r in _rows(s.sub.acl_objects_console())] + [SIGNER_KEY, KEYS_KEY],
-                        [SCHEMA_KEY, *every, "platform/*", *_gate(), *[r for s in specs for r in _worker_objects(s)],
+                        [SCHEMA_KEY, *every, "platform/*", *_gate(), *_moves(), *[r for s in specs for r in _worker_objects(s)],
                          SIGNER_KEY, KEYS_KEY],
                         # …and deletes what it writes but a mark: a mark is «not more than once» (ADR 0013), and taking
                         # one away opens a second performing — only the holder sweeps marks (`Worker.sweep_marks`) once
