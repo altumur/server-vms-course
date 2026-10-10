@@ -1317,15 +1317,15 @@ class Ingest:
         return self._tee(ref, "edge" if edge else kind).subscribe(who, maxsize)
 
     def unsubscribe(self, ref: str, who: str, kind: str | None = None, edge: bool = False) -> None:
-        """The subscription `subscribe` gave, ended, and `who`'s want with it — at once, no linger, as the product's
-        `cancel` of `Subscribe`. A relay's forwarder names its tee (`kind`, `edge`: a camera that left its upstream book,
-        the fifteenth review, minor 9); a recording that stopped lets go of every tee of the camera (`vms.ingestrec`: a
-        recorder does not click back)."""
+        """The subscription `subscribe` gave, ended. A relay's forwarder names its tee (`kind`, `edge`: a camera that
+        left its upstream book, the fifteenth review, minor 9) and lets its want go as a viewer's, with the linger
+        (`want(…, 0)`). A recording that stopped names none: every tee of the camera, and `who`'s want with it — at
+        once, no linger, as the product's `cancel` of `Subscribe` (`vms.ingestrec`: a recorder does not click back)."""
         for (r, k), tee in list(self.tees.items()):
             if r == str(ref) and (kind is None and not edge or k == ("edge" if edge else kind)):
                 tee.unsubscribe(who)
         cam = self.cams.get(str(ref))
-        if cam is not None and cam.wants.pop(who, None) is not None:
+        if kind is None and not edge and cam is not None and cam.wants.pop(who, None) is not None:
             self._changed()
 
     def taken(self, ref: str) -> bool:

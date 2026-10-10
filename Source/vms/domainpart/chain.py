@@ -412,7 +412,7 @@ class Forwarder:
         q = self.queues.pop(ref, None)
         if q is not None:
             self.dropped[ref] = self.dropped.get(ref, 0) + getattr(q, "dropped", 0)   # its losses stay counted
-            self.local.unsubscribe(ref, self.up)
+            self.local.unsubscribe(ref, self.up, "live")
         self.local.release(ref, self.up)
         for kept in (self.unsent, self.versions, self.forwarding, self.state):
             kept.pop(ref, None)
