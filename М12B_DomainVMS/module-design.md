@@ -79,8 +79,8 @@
 | № | Урок | Код | Тесты |
 |---|---|---|---|
 | 1 | VMS на домене: вклад подсистемы | `vms.subsystem.yaml`, `rec.subsystem.yaml` (`domain:`); `vms/domainpart/keys.py`, `worker.py`, `books.py`; платформа — `w2cplatform/domain/declared.py`, `rights.py`, `carry.py`, `tokendoor.py`, `w2cplatform/spec.py` (`DomainSection`) | `tests/domainvms/test_domain_secrets_vms.py` — 5; `tests/test_domain_platform.py` — 16 (платформа на `testsub`); `tests/test_boundary.py`; `tests/test_deploy_units.py` |
-| 2 | Поток из другого кластера | `vms/domainpart/crossing.py` — `Crossings` (`record`, `publish`, `publish_primaries`), `resolve`, `plan_backfill`; `vms/recworker.py` — `carried_primary` | `tests/domainvms/test_lesson13_crossing.py` — 8 |
-| 3 | Камера, до которой никто не дотягивается | `vms/recworker.py` — `RecWorker.host_ingest` (приёмник и передатчик живут в регистраторе, ADR-0065); `vms/domainpart/ingest.py` — `Ingest` (`stats`), `ingest_urls`, `heartbeat_peers`, `IngestLiveEndpoint`, `CameraPusher`, `Asker`, `publish_asks`, `stream_metrics`; `scenario.py` — от сценария к запросу, `refusals`, `catalog`; `crossing.py` — дорога (`_road`), ключ потока (`_ingest`), книга опроса, резерв (`backups_of`, `plan_takeback`, `ColdStandby`); `vms/card.py` — карта | `test_lesson16_nobody_reaches.py` — 31, `test_lesson16_card.py` — 35, `test_lesson16_break.py` — 26, `test_two_servers.py` — 12 |
+| 2 | Поток из другого кластера | `vms/domainpart/crossing.py` — `Crossings` (`record`, `publish`, `publish_primaries`), `resolve`, `resolve_in`, `plan_backfill`; `vms/recworker.py` — `carried_primary`, `source` по книге (`_source_of_ref`) | `tests/domainvms/test_lesson13_crossing.py` — 8 |
+| 3 | Камера, до которой никто не дотягивается | `vms/recworker.py` — `RecWorker.host_ingest` (приёмник и передатчик живут в регистраторе, ADR-0065); `vms/ingestrec.py` — `IngestRecordings` (запись подписана на приёмник и пишет пришедшее, `written_through`, `push_waiting`); `vms/domainpart/ingest.py` — `Ingest` (`stats`), `ingest_urls`, `heartbeat_peers`, `IngestLiveEndpoint`, `CameraPusher`, `Asker`, `publish_asks`, `stream_metrics`; `scenario.py` — от сценария к запросу, `refusals`, `catalog`; `crossing.py` — дорога (`_road`), ключ потока (`_ingest`), книга опроса, резерв (`backups_of`, `plan_takeback`, `ColdStandby`); `vms/card.py` — карта | `test_lesson16_nobody_reaches.py` — 31, `test_lesson16_card.py` — 35, `test_lesson16_break.py` — 26, `test_two_servers.py` — 14 |
 | 4 | Цепочка: объект, ретранслятор, центр | `vms/domainpart/chain.py` — `Forwarder` (вверх — `lift`, по событию — `serve`, `retry_wait`; слова продукта в heartbeat — `stats`), `publish_upstream`; `ingest.py` — `pull`, `inject`; платформа — `w2cplatform/domain/relay.py` (`relay_down`, `RelayDoor`, `bundle`, `BundleView`, `say_seen`), `topology.py` | `test_lesson17_chain.py` — 29; `tests/domain/test_topology.py` — 12 |
 
 ## Код целиком
@@ -91,7 +91,7 @@
 
 Уроки называют это в своих шагах; здесь — списком, для того, кто будет чинить код:
 
-1. **Регистратор не разрешает `ref:` по книге источников.** `crossing.resolve` есть, но `RecWorker.source` и `device_source` ищут держателя камеры только в heartbeat'ах своего кластера; тест урока 2 зовёт `resolve` сам.
+1. **Дозапись не разрешает `ref:` по книге источников.** Живой поток разрешается: `RecWorker.source` берёт камеру другого кластера из книги источников (`_source_of_ref`, `resolve_in`), а запись камеры, которая толкает, пишет из приёмника своего регистратора (`vms/ingestrec.py`; сценарий «камера — офис — центр», находка O6). Но `device_source` и `backup_sources` ищут карту и резервы только в heartbeat'ах своего кластера, а не в `backups` записи книги, как продукт (`backupSources` над `resolveRef`); тест урока 2 зовёт `resolve` и `plan_backfill` сам.
 2. **Решения о записи у держателя принимает только тест.** `Crossings.record` двери не имеет: у человека нет маршрута, чтобы сказать «эту камеру пишет та серверная».
 3. **Отметка возраста ретранслятора по `RELAY_URL`.** Дверь ретранслятора отдаёт `seen`, агент камеры кладёт его в `_carried_seen` и не использует; по сети камера за ретранслятором считает свежесть по своему разговору с ним.
 4. **Адрес двери воркера VMS.** Комментарий воркера обещает, что страница берёт его из общего вида, но в `domain/view` его нет; адрес знает только установка (`DOMAINPART_PORT`).
@@ -100,7 +100,7 @@
 
 ## План проверки
 
-**Дорожка 1 — без железа.** Всё, что выше: книги, их перенос и запечатывание, дорога камеры, ключ потока и его полусрок, долгий опрос, выгрузка по заявке кусками, часы камеры, продолжение обрыва, запросы сценариев, два сервера одним потоком, ретранслятор, звезда, сводный отчёт, топология. `Source/tests/domainvms/` — 136 тестов, `python3 tests/domainvms/run.py` из `Source/`; платформенная половина — `tests/domain/` и `tests/test_domain_platform.py`.
+**Дорожка 1 — без железа.** Всё, что выше: книги, их перенос и запечатывание, дорога камеры, ключ потока и его полусрок, долгий опрос, выгрузка по заявке кусками, часы камеры, продолжение обрыва, запросы сценариев, два сервера одним потоком, ретранслятор, звезда, сводный отчёт, топология. `Source/tests/domainvms/` — 155 тестов, `python3 tests/domainvms/run.py` из `Source/`; платформенная половина — `tests/domain/` и `tests/test_domain_platform.py`.
 
 **Дорожка 2 — нужен стенд.** Приёмник на SRT, долгий опрос по HTTP через NAT сотового оператора, карта на SD с пропаданием питания, ретранслятор без входящих, полоса звезды на настоящем канале.
 
