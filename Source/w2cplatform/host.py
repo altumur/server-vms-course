@@ -164,7 +164,10 @@ def run_resource(res, srv, every: float = 10.0, policy_every: float = 600.0) -> 
     except Exception:                                    # noqa: BLE001
         log.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
     log.info("resource %s on %s", res.server, srv.server_address)
-    last_policy = 0.0
+    # The policy's timer by the resource's monotonic clock (`res.clock`), as `requests_loop` keeps its own (the review's
+    # fifteenth pass, major 5): by the wall, a box started with its clock in the future and stepped back a day saw
+    # `now - last` negative — no retention, no watermark, no mirror, while its beat went on and the disk filled.
+    last_policy = None
     try:
         while not stop.is_set():
             try:
@@ -172,8 +175,9 @@ def run_resource(res, srv, every: float = 10.0, policy_every: float = 600.0) -> 
             except Exception:                            # noqa: BLE001
                 log.exception("resource heartbeat failed")
             try:
-                if time.time() - last_policy >= policy_every:
-                    last_policy = time.time()            # a pass that raised is tried in ten minutes, not in ten seconds
+                now = res.clock()
+                if last_policy is None or now - last_policy >= policy_every:
+                    last_policy = now                    # a pass that raised is tried in ten minutes, not in ten seconds
                     log.info("policy: %s", res.pass_())
             except Exception:                            # noqa: BLE001
                 log.exception("resource pass failed")

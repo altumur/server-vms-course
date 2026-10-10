@@ -93,3 +93,47 @@ def test_the_console_raises_the_schema_through_its_own_grants_on_a_box_and_in_a_
     assert ctls["testsub"].vars.get(SCHEMA_KEY)[0]["version"] == str(SCHEMA)
     spec = SubsystemSpec.load(os.path.join(TESTDATA, "testsub.subsystem.yaml"))
     assert SCHEMA_KEY in rights.roles([spec], "probe")["console"]["write"]
+
+
+def test_the_resources_policy_runs_by_its_monotonic_clock_when_the_wall_steps_back_a_day():
+    """The review's fifteenth pass, major 5: the policy's timer (`run_resource`) went by the wall. A box without an RTC
+    starts with its clock a day ahead, then steps back — `now - last` was negative from then on: no retention, no
+    watermark, no mirror, the beat going on and the disk filling. It goes by the resource's monotonic `clock` now."""
+    import threading
+    import types
+
+    class Res:
+        server, passes, ticks = "srv-9", [], [0.0]
+
+        def clock(self):                                 # monotonic: ten minutes and more between two turns
+            self.ticks[0] += 601.0
+            return self.ticks[0]
+        def heartbeat(self): return {}
+        def start_beat(self, stop): pass
+        def restore(self): return {}
+        def restore_due(self): return False
+        def pass_(self):
+            self.passes.append(walls[0]); return {}
+
+    class Door:
+        server_address = ("127.0.0.1", 0)
+        def shutdown(self): pass
+
+    walls = [2e9 + 86400.0]                              # a day in the future at the start…
+    def wall():
+        out = walls[0]
+        walls[0] = 2e9                                   # …stepped back a day after the first read
+        return out
+    res, real = Res(), host.time
+    host.time = types.SimpleNamespace(time=wall, monotonic=real.monotonic, sleep=real.sleep)
+    runner = threading.Thread(target=host.run_resource, args=(res, Door()), kwargs={"every": 0.01, "policy_every": 600.0},
+                              daemon=True)
+    try:
+        runner.start()
+        deadline = real.monotonic() + 5
+        while len(res.passes) < 3 and real.monotonic() < deadline:
+            real.sleep(0.01)
+    finally:
+        host.stop.set(); runner.join(5); host.stop.clear()
+        host.time = real
+    assert len(res.passes) >= 3, res.passes             # a pass every ten minutes of the resource's own clock
