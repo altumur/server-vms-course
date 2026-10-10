@@ -20,7 +20,7 @@ key = keys[0] if keys else None
 row = vars_.get(key)[0] if key else None
 print("filed:", ok, "| row =", row)
 schema = REC_SPEC.requests["schema"]
-stamped = {"by", "at"} | ({REC_SPEC.about.field} if getattr(REC_SPEC, "about", None) and "about" in (REC_SPEC.requests.get("stamp") or ()) else set())
+stamped = {"by", "at"} | ({REC_SPEC.about_field} if REC_SPEC.about_field and "about" in (REC_SPEC.requests.get("stamp") or ()) else set())
 body = {k: v for k, v in row.items() if k not in stamped}            # что дверь проверяет схемой (штампы — by, at и about-поле — ставит она сама)
 try:
     check(schema, {**body, "from": float(body["from"]), "to": float(body["to"]),
