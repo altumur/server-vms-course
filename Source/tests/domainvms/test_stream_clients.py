@@ -98,7 +98,8 @@ class Site:
                                refresh_interval=60, admin=may("admin"), viewer=may("view"), holder_vars=b.vars,
                                signer_url=f"http://127.0.0.1:{self.signer_srv.server_address[1]}")
         self.console_srv = self.console.serve(port=0)
-        self.doors = StreamClientDoors(guarded(b.vars), sealer=self.rings["srv-b"], wall=wall,
+        # the worker on the domain writes and removes in its own prefix by its role (`vmsdomain`, ADR-0021's addition)
+        self.doors = StreamClientDoors(guarded(b.vars.as_writer("vmsdomain")), sealer=self.rings["srv-b"], wall=wall,
                                        console=ConsoleDoor(f"http://127.0.0.1:{self.console_srv.server_address[1]}"))
         self.door = open_doors("127.0.0.1", 0, door_handler(fed, None, verifier=lambda t: t, viewer=may("view"),
                                                              admin=may("admin"), clients=self.doors),
@@ -249,7 +250,7 @@ def test_deleting_a_client_drops_every_grant_that_names_it_through_the_domain_co
             assert subjects("srv-a") == {"wall2"} and subjects("srv-c") == set()
             assert domain_may(s.b.vars, "anna", "admin", s.wall())               # the domain's own grants untouched
             assert sc.read_stream_client(s.b.vars, "wall1", s.rings["srv-b"]) == (None, "")
-            assert "password_secret" not in s.b.vars.get("domain/vms/stream-clients/wall1")[0]    # the mark: no password
+            assert s.b.vars.get("domain/vms/stream-clients/wall1")[0] is None    # its row removed, not marked (ADR-0021)
             assert [c.name for c in sc.stream_clients(s.b.vars)] == ["wall2"]
             s.carry()
             assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {"wall2": pw["wall2"]}
@@ -279,3 +280,77 @@ def _nothing_declared():
         assert sc.stream_accounts(s.a.vars, "srv-a", s.rings["srv-a"]) == {}
     finally:
         s.close()
+
+
+
+class _AsDaemon:
+    """The holder's store as its daemon answers `role` under the committed rights file (`storemachine.answer`): a get
+    the role may not read is `Forbidden`, a write it may not make too; a listing names every key (ADR-0021's addition
+    of 2026-10-10)."""
+
+    def __init__(self, role: str, inner):
+        from w2cplatform.storemachine import Rights
+        here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        self.role, self.inner = role, inner
+        self.r = Rights.load(os.path.join(here, "deploy", "cluster", "configstore-rights.json"))
+
+    def _may(self, action, key):
+        from w2cplatform.variables import Forbidden
+        if not self.r.allows(self.role, action, key):
+            raise Forbidden(f"{self.role} may not {action} {key}")
+
+    def get(self, path):
+        self._may("read", path)
+        return self.inner.get(path)
+
+    def put(self, path, items, cas=None):
+        self._may("write", path)
+        return self.inner.put(path, items, cas)
+
+    def delete(self, path, cas=None):
+        self._may("delete", path)
+        return self.inner.delete(path, cas)
+
+    def list(self, prefix):
+        return self.inner.list(prefix)
+
+
+def test_the_domain_console_grants_admin_and_edit_and_checks_an_accounts_name_by_its_key_alone():
+    """The three-site run, F1 (ADR-0021's addition of 2026-10-10): the domain's console, under its own role
+    (`domainconsole`, which does not read the RTSP accounts), wrote no grant of `admin` or `edit` — the name check read
+    `domain/vms/stream-clients/<subject>` and the store refused it. The name is checked by its key, listed (as the
+    product's `subjectsOf`): a person is granted `admin`, an account anything above `view` is refused in words (400), and
+    once the account is deleted — its row removed — the name is a person's to be granted again."""
+    with declared():
+        s = _site()
+        try:
+            s.call("POST", "/stream-clients", body={"name": "wall1"})
+            s.console.holder_vars = guarded(_AsDaemon("domainconsole", s.b.vars))
+            status, said = _console_call(s, "PUT", "/domain/grants/srv-a",
+                                         {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"},
+                                                    {"subject": "wall1", "cap": "view", "scope": "*"}]})
+            assert status == 200, said
+            status, said = _console_call(s, "PUT", "/domain/grants/domain",
+                                         {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"},
+                                                    {"subject": "boris", "cap": "edit", "scope": "*"}]})
+            assert status == 200, said
+            status, said = _console_call(s, "PUT", "/domain/grants/srv-a",
+                                         {"lines": [{"subject": "wall1", "cap": "edit", "scope": "*"}]})
+            assert status == 400 and "wall1" in said["detail"] and "view" in said["detail"], (status, said)
+            assert s.call("DELETE", "/stream-clients/wall1")[0] == 200
+            status, said = _console_call(s, "PUT", "/domain/grants/srv-a",
+                                         {"lines": [{"subject": "wall1", "cap": "edit", "scope": "*"}]})
+            assert status == 200, said                                   # the name is free: a person may take it
+        finally:
+            s.close()
+
+
+def _console_call(s, method, path, body, who="anna"):
+    base = f"http://127.0.0.1:{s.console_srv.server_address[1]}"
+    req = urllib.request.Request(base + path, method=method, data=json.dumps(body).encode(),
+                                 headers={"Authorization": f"Bearer {who}", "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req) as r:
+            return r.status, json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")

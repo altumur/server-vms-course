@@ -181,21 +181,17 @@ def set_stream_client_disabled(vars_, name: str, disabled: bool, by: str, now: f
     _put(vars_, c, password, sealer)
 
 
-# A CLIENT DELETED IS A MARK, NOT A ROW REMOVED. The product deletes the row. The course's store lets nobody but the
-# domain's own roles remove a row under `domain/` (`variables.refuse_delete`, the review's third pass, Н-M2) — this
-# worker's role writes `domain/vms/*` and removes nothing — so the row is written over with the platform's mark of a
-# subject gone, `{kind: deleted}` (as `identity.py` marks a person): no doc, no password, nobody reads it as a client, and
-# the name is free again for a person or a client (`declared._holds` reads the mark as nobody).
-DELETED = {"kind": "deleted"}
-
-
+# A CLIENT DELETED IS ITS ROW REMOVED (ADR-0021's addition of 2026-10-10; ADR-0003): the product deletes the row, and
+# so does the course now — the worker on the domain removes rows of its own prefix (`rights.may_delete_domain`). It was a
+# mark, `{kind: deleted}`, while the course's store let no `<sub>domain` delete; the platform checks a name by its key
+# listed (`declared._listed`), and a mark would hold the name for ever.
 def delete_stream_client(vars_, drop, name: str, sealer=None) -> list[str]:
     """Removes a client, and its grants everywhere (`drop`), as deleting a person does a person's."""
     if sc.read_stream_client(vars_, name, sealer)[0] is None:
         raise refused(404, f"no stream client {name}")
     clusters = drop(name)
     _, idx = vars_.get(sc.STREAM_CLIENTS_PREFIX + name)
-    vars_.put(sc.STREAM_CLIENTS_PREFIX + name, dict(DELETED), cas=idx)
+    vars_.delete(sc.STREAM_CLIENTS_PREFIX + name, cas=idx)
     return clusters
 
 

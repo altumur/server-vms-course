@@ -71,7 +71,10 @@ the group, and what a test stand applies in one process — the same code, so th
 # a role is WHICH socket a process could open (its unit's `SupplementaryGroups=`), and `Rights.allows` is asked
 # before anything is forwarded or applied. `admin` is the root-only socket and may do everything but two things
 # nobody does: delete an epoch row, or delete `domain/*` — which only the domain's own roles do (`DOMAIN_ROLES`:
-# `domain`, `domainagent`). `list` answers only the keys the role may read; `get` of a key it may not read is 403.
+# `domain`, `domainagent`; a subsystem's worker on the domain in its own prefix, `rights.may_delete_domain`). `list`
+# names every key under the prefix to every role — names, nothing of a value; `get` of a key it may not read is 403
+# (ADR-0021's addition of 2026-10-10, the product's rule: "`list` without `read`", as on Nomad — a role is a process of
+# this box, ADR-0034, and a row's name is no secret to it; what people see is the console's, by its own rights).
 #
 # `configstore` (`PEER`) — another daemon on the `-api` door — is not a role of the file and has NO grant on a row
 # (the review's twelfth pass, major 3: it had every right, so one daemon's certificate deleted slots, wrote the
@@ -98,7 +101,7 @@ import re
 import urllib.parse
 
 from .canonical import parse_json
-from .rights import DOMAIN_ROLES, allowed, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
+from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
 from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
@@ -300,7 +303,7 @@ class Rights:
                           for r, g in self.roles.items()}}
 
     def allows(self, role: str, action: str, key: str) -> bool:
-        if action == "delete" and (epoch_row(key) or (key.startswith("domain/") and role not in DOMAIN_ROLES)):
+        if action == "delete" and (epoch_row(key) or (key.startswith("domain/") and not may_delete_domain(role, key))):
             return False                          # nobody, `admin` included (`variables.refuse_delete`)
         if role == ADMIN:
             return True                           # `PEER` is no role of the file: no grant on any row (twelfth pass)
@@ -334,7 +337,7 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             if len(prefix.encode()) > KEY_BYTES:
                 return 200, {"keys": {}}          # longer than any key: nothing to match, nothing to ask the log
             got = submit({"op": "list", "prefix": prefix})
-            return 200, {"keys": {k: v for k, v in got["keys"].items() if rights.allows(role, "read", k)}}
+            return 200, {"keys": got["keys"]}     # every name, to every role: nothing of a value (ADR-0021, 2026-10-10)
         if method == "POST" and u.path == "/v1/write":
             try:
                 # the platform's one reading (`canonical.parse_json`): a body not UTF-8, a lone surrogate, `1e400` are

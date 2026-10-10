@@ -311,16 +311,16 @@ def test_every_write_the_code_makes_is_granted():
 
 
 def test_every_row_the_code_reads_is_granted():
-    """Every get and every listing a process made in the stand is allowed by its role's rights — a get the file does
-    not grant is a 403 from the daemon, a listing answers only what the role may read (and so would be silently
-    short): both are checked here, by the key and by what lies under the prefix."""
+    """Every get a process made in the stand is allowed by its role's rights — a get the file does not grant is a 403
+    from the daemon. A listing names every key to every role (ADR-0021's addition of 2026-10-10, the product's rule):
+    it needs no grant, and what the code reads of what it listed is a get, checked here."""
     reads, _ = code_calls()
     assert {"vmsworker", "recworker", "vmscontroller", "reccontroller", "console", "resource"} <= set(reads), sorted(reads)
     r = rights()
     for role, made in sorted(reads.items()):
         for op, key in sorted(made):
-            probe = key + "x" if op == "list" else key            # a listing is of a prefix: what lies under it
-            assert r.allows(role, "read", probe), f"{role} may not {op} {key}"
+            if op == "read":
+                assert r.allows(role, "read", key), f"{role} may not {op} {key}"
 
 
 def test_the_gate_and_the_schema_are_readable_by_every_process_that_asks_them():

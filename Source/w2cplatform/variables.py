@@ -258,8 +258,9 @@ def cas_pause(attempt: int, sleep=time.sleep) -> float:
 #                  handle with no writer either. Those rows are what makes a console ask who is calling: the key set
 #                  gone and the rows that say "a member" gone with it is a console as open as one nobody joined. A
 #                  store that cannot name its writer (М11's, where the ACL is the server's) refuses the delete for
-#                  everybody. The roles are the rights file's (`rights.DOMAIN_ROLES`: `domain`, `domainagent`), and
-#                  the pattern is asked by the same evaluator (`rights.allowed`), `!` denials first
+#                  everybody. The roles are the rights file's (`rights.DOMAIN_ROLES`: `domain`, `domainagent`; and a
+#                  subsystem's worker on the domain in its own prefix, `rights.may_delete_domain` — ADR-0021's
+#                  addition of 2026-10-10), and the pattern is asked by the same evaluator (`rights.allowed`)
 
 
 def epoch_row(path: str) -> bool:
@@ -270,8 +271,8 @@ def epoch_row(path: str) -> bool:
 def refuse_delete(path: str, writer: str | None, acl: dict) -> None:
     if epoch_row(path):
         raise Forbidden(f"{path} is an epoch: a counter nobody deletes")
-    from .rights import DOMAIN_ROLES, refusal
-    if path.startswith("domain/") and writer not in DOMAIN_ROLES:
+    from .rights import may_delete_domain, refusal
+    if path.startswith("domain/") and not may_delete_domain(writer, path):
         raise Forbidden(f"{path} is the domain's: only its own roles remove it")
     why = refusal(writer, acl, path, "delete")
     if why:

@@ -292,15 +292,33 @@ def test_a_role_without_the_grant_is_refused_before_anything_is_submitted():
     assert code == 403 and sub.calls == []
 
 
-def test_a_list_answers_only_what_the_role_may_read():
+def test_a_list_names_every_key_to_every_role_and_a_value_is_read_by_the_right_to_read_alone():
+    """ADR-0021's addition of 2026-10-10, the product's rule ("`list` without `read`"): a listing names every row under
+    the prefix to any role — names, nothing of a value — and a get of a row the role may not read is still 403. The
+    course cut the listing by the right to read, and a process could not check a name it may not read (the three-site
+    run, F1)."""
     m = StoreMachine()
     for k in ("testsub/counters/1", "testsub2/tallies/1", "secrets/testsub/token"):
         _put(m, k, {"x": 1})
     r = Rights.parse(RIGHTS)
-    code, body = answer("GET", "/v1/list?prefix=", b"", "testsubworker", r, _Submit(m))
-    assert code == 200 and list(body["keys"]) == ["testsub/counters/1"]
-    code, body = answer("GET", "/v1/list?prefix=", b"", "console", r, _Submit(m))
-    assert sorted(body["keys"]) == ["testsub/counters/1", "testsub2/tallies/1"]
+    for role in ("testsubworker", "console"):
+        code, body = answer("GET", "/v1/list?prefix=", b"", role, r, _Submit(m))
+        assert code == 200 and sorted(body["keys"]) == ["secrets/testsub/token", "testsub/counters/1",
+                                                        "testsub2/tallies/1"], (role, body)
+        assert not any(isinstance(v, dict) for v in body["keys"].values())          # no value rides on a name
+    assert answer("GET", "/v1/get?key=testsub2/tallies/1", b"", "testsubworker", r, _Submit(m))[0] == 403
+
+
+def test_a_subsystems_worker_on_the_domain_removes_rows_of_its_own_prefix_and_nothing_else_of_the_domain():
+    """ADR-0021's addition of 2026-10-10: a subject of a family deleted is its row removed, by the worker that keeps them
+    (`<sub>domain` deletes `domain/<sub>/*`, as the product's) — and of `domain/` only its own prefix: the key set, the
+    members, the grants stay the domain's own roles' to remove."""
+    from w2cplatform.rights import may_delete_domain
+    assert may_delete_domain("testsubdomain", "domain/testsub/names/n1")
+    assert not may_delete_domain("testsubdomain", "domain/keys") and not may_delete_domain("testsubdomain", "domain/grants/a")
+    assert not may_delete_domain("testsub2domain", "domain/testsub/names/n1")
+    assert not may_delete_domain("domainconsole", "domain/members") and not may_delete_domain(None, "domain/testsub/x")
+    assert may_delete_domain("domain", "domain/keys") and may_delete_domain("domainagent", "domain/keys")
 
 
 def test_the_api_says_absent_conflict_and_not_a_key_in_the_products_words():

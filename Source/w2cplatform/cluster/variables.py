@@ -82,7 +82,7 @@ class FakeVariables:
 
     def delete(self, path, cas=None):
         safe_path(path)
-        refuse_delete(path, None, {})            # the platform's rule: an epoch is a counter nobody deletes
+        refuse_delete(path, getattr(self, "writer", None), {})   # the platform's rule: an epoch nobody deletes, `domain/*` its roles
         self._acl(path)
         with self._lock:
             _, current = self._items.get(path, (None, 0))

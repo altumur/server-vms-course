@@ -40,6 +40,18 @@ DOMAIN_ROLES = frozenset({"domain", "domainagent"})
 DELETE_ONLY = "delete:"
 
 
+# …AND A SUBSYSTEM'S WORKER ON THE DOMAIN, IN ITS OWN PREFIX (ADR-0021's addition of 2026-10-10): a row of a table it
+# keeps there is removed, not marked — a subject of its family deleted is its row deleted (the product's `<sub>domain`
+# deletes `domain/<sub>/*`); a mark was the course's way round a store that let no `<sub>domain` delete. Its own prefix only:
+# `domain/<sub>/…` — the key set, the members, the grants stay the domain's own roles'.
+def may_delete_domain(role: str | None, key: str) -> bool:
+    """Whether `role` may remove `key` under `domain/` at all (the rights or the ACL decide the rest)."""
+    if role in DOMAIN_ROLES:
+        return True
+    sub = role[: -len("domain")] if role and role.endswith("domain") and role != "domain" else ""
+    return bool(sub) and "/" not in sub and key.startswith(f"domain/{sub}/")
+
+
 def hit(pattern: str, key: str) -> bool:
     return key == pattern or (pattern.endswith("*") and key.startswith(pattern[:-1]))
 

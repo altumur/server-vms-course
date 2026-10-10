@@ -123,6 +123,15 @@ def _holds(items) -> bool:
     return bool(items) and items.get("kind") != "deleted"
 
 
+# WHETHER A SUBJECT OF A FAMILY STANDS IS ITS KEY, LISTED — NEVER ITS VALUE (ADR-0021's addition of 2026-10-10; the
+# product's `subjectsOf`). A family of subjects holds secrets (an account's password: `secrets.readers`), and the
+# processes that write people and grants are no readers of it: the domain's console, writing a grant of `admin` or
+# `edit`, was refused the read of `domain/<sub>/<family>/<subject>` and dropped the connection (the three-site run,
+# F1). Every role lists every prefix (names only); a subject removed is its row removed, so a key listed is a subject.
+def _listed(vars_, row: str) -> bool:
+    return row in vars_.list(row)
+
+
 def subject_families() -> list[tuple[str, str, str, str | None]]:
     """`(sub, <family prefix 'domain/<sub>/<family>/'>, <the people's prefix>, <grant or None>)` of every loaded spec."""
     return [(s.name, f"{s.domain_prefix}{k}", PEOPLE[rule["exclusive_with"]], rule.get("grant")) for s in specs()
@@ -164,11 +173,11 @@ def refusal(vars_, path: str, items) -> tuple[type, str] | None:
                         return GrantTooWide, (f"{path}: {row} grants {name!r} {wide[0]}, wider than {ceiling!r} "
                                               f"({rule}.grant)")
         name = _name_under(path, people)
-        if name is not None and _holds(vars_.get(family + name)[0]):   # a person
+        if name is not None and _listed(vars_, family + name):          # a person
             return NameTaken, f"{path}: {name!r} is {family}{name} already ({rule} exclusive_with domain/users)"
         if ceiling is not None and path.startswith(GRANTS_PREFIX):  # grants
             for subject, cap in _grants(items):
-                if RANK.get(cap, len(RANK)) > RANK[ceiling] and _holds(vars_.get(family + subject)[0]):
+                if RANK.get(cap, len(RANK)) > RANK[ceiling] and _listed(vars_, family + subject):
                     return GrantTooWide, (f"{path}: {subject!r} is {family}{subject}, granted at most {ceiling!r} "
                                           f"({rule}.grant) — not {cap!r}")
     return None
