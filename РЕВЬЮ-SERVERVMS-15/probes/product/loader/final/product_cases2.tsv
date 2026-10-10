@@ -1,0 +1,10 @@
+about_field_not_fixed_nowitness	refused	spec testsub2: about.field 'of' is what a unit is about, and that does not change — say `fixed: true` on it
+bound_to_list_of_one	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+required_true_string	refused	spec testsub2: field name: `required` is true or false, not true
+rows_where	refused	spec testsub2: unit.rows is 'where', a route the console answers itself (`/where`) — no request would reach that family; name it otherwise (the console's routes: api, asked, domain, drain, events, healthz, index.html, 
+secrets_readers_role_number	refused	spec testsub2: secrets.readers.door/signer: "1" — a reader is a role: console, controller, worker, domainpart, domain, domainagent, resource, domainconsole
+table_events_shadow	refused	spec testsub2: tables.events is 'events', a route the console answers itself (`/events`) — no request would reach that family; name it otherwise (the console's routes: api, asked, domain, drain, events, healthz, index.
+table_field_merge	refused	spec testsub2: no spec says `tables.shelves.fields.zone.merge` — a key the platform does not read is a mistake or another's word; it is refused, not passed over
+table_metrics_shadow	refused	spec testsub2: tables.metrics is 'metrics', a route the console answers itself (`/metrics`) — no request would reach that family; name it otherwise (the console's routes: api, asked, domain, drain, events, healthz, ind
+tie_break_absent	ok	bound_to=[feed] of.fixed=true name.required=true mode.enum=[plain loud] requires=resource servers=distinct tie_break=most-free-capacity id=name
+worker_writes_path	refused	spec testsub2: worker.writes takes names, not "shelves/x"
