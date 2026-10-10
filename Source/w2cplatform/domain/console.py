@@ -859,7 +859,7 @@ def main() -> None:
     def viewer(subject: str) -> bool:
         return domain_may(fed.domain_holder.vars, subject, "view", time.time())
 
-    from .alarms import AlarmHistory, DomainAlarms, ReportedDoor
+    from .alarms import AlarmHistory, DomainAlarms, reported_doors
     from .members import Members
     from .uplink import _CopyObjects
     # Its own lines of the journal (ADR-0032): who admitted a member, changed the topology or the grants, kept an edit
@@ -868,7 +868,7 @@ def main() -> None:
     ho = fed.domain_holder.objects
     configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
     members = Members(fed.domain_holder.vars, configured=lambda: configured, domain=fed.domain_holder.name, journal=journal)
-    alarms = DomainAlarms(fed, lambda m: ReportedDoor(m, ho, lost_after), lost_after=lost_after,
+    alarms = DomainAlarms(fed, reported_doors(fed, ho, lost_after), lost_after=lost_after,
                           history=AlarmHistory(ho))                       # read: the week is kept by the signer's pass
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
                       holder_objects=ho, holder_vars=fed.domain_holder.vars, pending=pending,

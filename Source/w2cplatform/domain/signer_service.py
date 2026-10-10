@@ -921,7 +921,7 @@ def main() -> None:
 # sealed. The domain as `CLUSTERS` names it (`runtime.federation_from_env`); the term from the holder record in the
 # store, when a domain was installed with one (Lesson 15) — a domain that never moves holds none.
 def holder_pass(holder: Holder, domain: str, signer: Signer) -> None:
-    from .alarms import AlarmHistory, DomainAlarms, ReportedDoor
+    from .alarms import AlarmHistory, DomainAlarms, reported_doors
     from .members import Members
     from .pending import PendingEdits
     from .readview import ReadView
@@ -936,7 +936,7 @@ def holder_pass(holder: Holder, domain: str, signer: Signer) -> None:
     holder.fed, holder.view = fed, ReadView(fed, lost_after=lost_after)
     holder.members = Members(hv, configured=lambda: configured, domain=fed.domain_holder.name)
     holder.topology, holder.pending = Topology(hv), PendingEdits(hv)
-    holder.alarms = DomainAlarms(fed, lambda m: ReportedDoor(m, ho, lost_after), lost_after=lost_after,
+    holder.alarms = DomainAlarms(fed, reported_doors(fed, ho, lost_after), lost_after=lost_after,
                                  history=AlarmHistory(ho))
     holder.term = term_of(fed, signer, ho, holder.signer_url)
     if holder.term is not None and not signer.chain:
