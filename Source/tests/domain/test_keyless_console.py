@@ -322,3 +322,41 @@ def test_a_knocking_member_is_admitted_by_the_key_its_report_presents():
     assert members.accept("cam-SN7", by="anna", domain_objects=north.objects, fingerprint=fingerprint(key.pub))
     row = members.read()["members"]["cam-SN7"]
     assert (row["key"], row["seal"], row["how"]) == (key.pub, key.seal_pub, "accepted by anna")
+
+
+def test_the_stores_no_is_answered_403_in_words_never_a_dropped_connection():
+    """The scenario «камера — офис — центр», F1: on configstore a write of the grants the role `domainconsole` was refused
+    a read on the way (`declared.refusal` asks a family's row the role may not read) raised `Forbidden` out of the
+    handler, and the caller got no answer — `RemoteDisconnected`. Whatever the store refuses this console's role, on any
+    route, is answered: 403, the store's words, and that it is the console's role, not the person, that may not."""
+    from w2cplatform.variables import Forbidden
+    wall, fed, north, devices, cards, report, signer = _domain()
+    con = _console(fed, north, wall, [])
+
+    class Refusing:
+        def __init__(self, inner):
+            self.inner = inner
+
+        def put(self, key, *a, **kw):
+            if key.startswith("domain/grants/"):
+                raise Forbidden("domainconsole may not read domain/vms/stream-clients/anna")
+            return self.inner.put(key, *a, **kw)
+
+        def list(self, prefix):
+            if prefix.startswith("domain/grants"):
+                raise Forbidden(f"domainconsole may not read {prefix}")
+            return self.inner.list(prefix)
+
+        def __getattr__(self, name):
+            return getattr(self.inner, name)
+    con.holder_vars = Refusing(con.holder_vars)
+    door = con.serve(port=0)
+    base = f"http://127.0.0.1:{door.server_address[1]}"
+    try:
+        st, said = _call(base, "PUT", "/domain/grants/cam-SN1",
+                         {"lines": [{"subject": "anna", "cap": "admin", "scope": "*"}]}, "anna")
+        assert st == 403 and "stream-clients/anna" in said["detail"] and "domainconsole" in said["detail"], (st, said)
+        st, said = _call(base, "GET", "/domain/grants", None, "anna")
+        assert st == 403 and "domainconsole may not read domain/grants" in said["detail"], (st, said)
+    finally:
+        con.stop(door)
