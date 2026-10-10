@@ -196,3 +196,39 @@ def test_with_the_domain_gone_a_camera_that_reboots_still_has_its_defaults():
     devices[0].power_off(); devices[0].boot()
     assert SharedView(devices[0].flash, devices[0].disk, wall).effective(devices[0].row(), SPEC)["events_retention_days"] == (14, "domain rev 1")
     assert devices[0].disk.get(OBJECT) is not None
+
+
+def test_the_agent_a_unit_starts_keeps_the_shared_settings_and_the_backup_in_its_clusters_objects():
+    """The scenario «камера — офис — центр», O5: `agent.main` — the agent a unit starts — built its `DomainAgent` with no
+    `cluster_objects`, and the steps «the shared settings» and «the backup» run only with it: a unit's agent never carried
+    home the settings the domain signed (ADR-0032) nor the copy of the domain the holder chose it to keep; only the tests
+    gave it one. Its cluster's object store (`OBJECTS`) is where it keeps them."""
+    import os
+    import signal
+    import tempfile
+    from w2cplatform.domain import agent as agent_mod
+    root = tempfile.mkdtemp()
+    env = {"CLUSTER": "relay-b", "PLATFORM_STORE": f"file://{root}/vars", "OBJECTS": f"{root}/objects",
+           "DOMAIN_URL": "http://127.0.0.1:9", "SYNC_INTERVAL": "3600"}
+    made, saved = [], {k: os.environ.get(k) for k in (*env, "REPORT", "RELAY_URL", "RELAY", "RELAY_MEMBERS", "CLUSTERS")}
+    real_run = agent_mod.run
+    handlers = {s: signal.getsignal(s) for s in (signal.SIGTERM, signal.SIGINT)}
+    try:
+        for k in saved:
+            os.environ.pop(k, None)
+        os.environ.update(env)
+        agent_mod.run = lambda agent, interval, stop: made.append(agent)
+        agent_mod.main()
+    finally:
+        agent_mod.run = real_run
+        for s, h in handlers.items():
+            signal.signal(s, h)
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    (agent,) = made
+    assert agent.cluster_objects is not None and agent.cluster_objects is agent.own_objects
+    agent.cluster_objects.put("probe", b"x")
+    assert os.path.exists(os.path.join(root, "objects", "probe"))

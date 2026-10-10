@@ -649,7 +649,10 @@ def main() -> None:
     from .runtime import consoles_from_env
     consoles = consoles_from_env() if os.environ.get("DOMAIN_URL") and not os.environ.get("RELAY_URL") else {}
     follow = HolderFollower({n: (lambda u=u: ask_held(u)) for n, u in consoles.items()}) if consoles else None
-    agent = DomainAgent(cluster, domain_vars, own_vars, domain_objects=domain_objects,
+    # Its cluster's object store is also where it keeps the copies it verified (`cluster_objects`): the shared settings
+    # the domain signed (Lesson 12, ADR-0032) and the backup the holder chose it to keep (Lesson 15). Built without it,
+    # the agent of a unit carried neither home — only the tests gave it one (the scenario «камера — офис — центр», O5).
+    agent = DomainAgent(cluster, domain_vars, own_vars, domain_objects=domain_objects, cluster_objects=own_objects,
                         published=own_objects if report else None,
                         relay_members=relayed or None, bundle_members=relayed or None,
                         bundle_store=own_objects if relay else None,
