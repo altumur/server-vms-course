@@ -1350,7 +1350,7 @@ def test_what_the_chain_lost_is_on_rec_metrics_per_camera():
     rec.heartbeat_once()
     hb = json.loads(box.objects.get("rec/heartbeats/r-1"))
     st = hb["ingest_streams"][SERIAL]
-    assert q.dropped == st["cut_for_full_queue"] == 3 and st["repeats_dropped"] == 5 and st["absurd_frames"] == 4
+    assert q.dropped == 3 and "cut_for_full_queue" not in st and st["repeats_dropped"] == 5 and st["absurd_frames"] == 4
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     recs = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     srv = serve(ctl, box.resource_root, port=0, wall=box.wall, mounts={"rec": recs})
@@ -1361,11 +1361,11 @@ def test_what_the_chain_lost_is_on_rec_metrics_per_camera():
         srv.shutdown()
     lines = text.splitlines()
     for line in (f'rec_upstream_dropped_total{{camera="{SERIAL}"}} 3', 'rec_upstream_breaks_total{camera="SN7002"} 2',
-                 f'rec_upstream_expired_total{{camera="{SERIAL}"}} 1', f'rec_ingest_cut_total{{camera="{SERIAL}"}} 3',
+                 f'rec_upstream_expired_total{{camera="{SERIAL}"}} 1',
                  f'rec_ingest_absurd_frames_total{{camera="{SERIAL}"}} 4',
                  f'rec_ingest_ahead_losses_total{{camera="{SERIAL}"}} {st["ahead_losses"]}',
                  f'rec_ingest_repeats_dropped_total{{camera="{SERIAL}"}} 5'):
         assert line in lines, (line, [x for x in lines if "upstream" in x or "ingest_" in x])
-    for name in ("upstream_dropped_total", "upstream_breaks_total", "upstream_expired_total", "ingest_cut_total",
+    for name in ("upstream_dropped_total", "upstream_breaks_total", "upstream_expired_total",
                  "ingest_absurd_frames_total", "ingest_ahead_losses_total", "ingest_repeats_dropped_total"):
         assert f"# TYPE rec_{name} counter" in lines

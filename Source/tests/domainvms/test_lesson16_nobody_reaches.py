@@ -890,9 +890,9 @@ def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as
 # Words of the product's `Ingest.Stats` (`recproc/ingest.go`) a recorder's heartbeat says of each camera under
 # `ingest_streams` — only the ones the course counts (ADR-0065, its addition of 2026-10-10: the fifteenth review, major 3)
 # — and the four said only once there is one. The product's words the course does not count are not said at all.
-STREAM_WORDS = {"push", "live", "received", "viewers", "recorders", "cut_for_full_queue", "repeats_dropped",
+STREAM_WORDS = {"push", "live", "received", "viewers", "recorders", "repeats_dropped",
                 "absurd_frames", "ahead_losses", "clock_pieces", "clock_pieces_restored"}
-NOT_COUNTED = {"streams_replaced", "clock_back", "stream_gaps", "camera_gaps", "stream_gap_s", "inject_dropped",
+NOT_COUNTED = {"cut_for_full_queue", "streams_replaced", "clock_back", "stream_gaps", "camera_gaps", "stream_gap_s", "inject_dropped",
                "inject_losses", "lead_in", "ask_outcomes_dropped", "have_answers", "clock_step_forward",
                "clock_step_forward_s", "ahead_repeats", "clock_steps_in_stream", "clock_step_back_s", "clock_outliers",
                "clock_ambiguous_frames", "clock_unsure_frames", "clock_drift_pieces", "clock_step_back_word",

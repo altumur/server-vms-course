@@ -523,9 +523,6 @@ class Ingest:
     #     live                  the camera pushes here now (`pushing`)
     #     received              frames its recorders' tee took (`LiveTee.frames`)
     #     recorders, viewers    subscribers of the recorders' tee named `recorder…` (`taken`'s rule), of the viewers' tee
-    #     cut_for_full_queue    frames the subscribers' queues had no room for and dropped, the oldest first — what
-    #                           `lost` calls `dropped` (`LeakyQueue.dropped`). The product ends the stream instead, and
-    #                           counts the streams it ended: the same loss, counted where each side takes it
     #     repeats_dropped       repeats the tees handed to nobody (`_InOrder.repeats`)
     #     absurd_frames         frames refused at the door for no time or a time past now (`_timely`, `ahead`)
     #     ahead_losses          frames far past the stream that the next frame did not follow (`_InOrder.ahead`)
@@ -535,9 +532,11 @@ class Ingest:
     #
     # The product's other counts and seconds the course's ingest does not keep, and does not say: a word that is not there
     # is "not counted", one that is there is a count (the fifteenth review, major 3: `cut_for_full_queue` said 0 while the
-    # queues dropped). A camera nobody pushed or polled says its counts at nought. On `/metrics` the spec's lines over the
+    # queues dropped). Not `cut_for_full_queue` either: the product's counts the live STREAMS it ended for a subscriber's
+    # full queue, the course's queues drop FRAMES and end nothing — one word for two counts would be a lie; the frames
+    # the queues dropped are in `lost` (`dropped`, `rec/polled/<ingest>`). A camera nobody pushed or polled says its counts at nought. On `/metrics` the spec's lines over the
     # losses (`rec.subsystem.yaml`, `ingest_*_total`).
-    STREAM_COUNTS = ("received", "viewers", "recorders", "cut_for_full_queue", "repeats_dropped", "absurd_frames",
+    STREAM_COUNTS = ("received", "viewers", "recorders", "repeats_dropped", "absurd_frames",
                      "ahead_losses", "clock_pieces", "clock_pieces_restored")
 
     def stats(self) -> dict[str, dict]:
@@ -549,8 +548,6 @@ class Ingest:
             st.update(received=getattr(live, "frames", 0),
                       recorders=sum(1 for w in list(getattr(live, "subscribers", {})) if w.startswith("recorder")),
                       viewers=len(getattr(edge, "subscribers", {})),
-                      cut_for_full_queue=sum(getattr(q, "dropped", 0) for t in tees
-                                             for q in list(getattr(t, "subscribers", {}).values())),
                       repeats_dropped=sum(getattr(t, "repeats", 0) for t in tees),
                       absurd_frames=self.ahead.get(ref, 0), ahead_losses=sum(getattr(t, "ahead", 0) for t in tees),
                       clock_pieces=len(c.pieces), clock_pieces_restored=c.restored)

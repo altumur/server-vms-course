@@ -1229,7 +1229,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 | поле | что |
 |---|---|
 | `ingest` | где приёмник принимает потоки — строка, спека так и объявляет (`heartbeat: {strings: [volume, volume_error, archive, ingest, volume_missing]}`). Отсюда домен пишет адреса в книги камер, отсюда соседний приёмник находит этот |
-| `ingest_streams` | по каждой камере — слова `Ingest.Stats` продукта, которые курс считает: `push`, `live`, `received`, `recorders`, `viewers`, `cut_for_full_queue` и другие потери (`Ingest.stats`); чего курс не считает, того не говорит (ADR-0065, дополнение 2026-10-10) |
+| `ingest_streams` | по каждой камере — слова `Ingest.Stats` продукта, которые курс считает: `push`, `live`, `received`, `recorders`, `viewers` и потери — `repeats_dropped`, `absurd_frames`, `ahead_losses` (`Ingest.stats`); чего курс не считает, того не говорит (ADR-0065, дополнение 2026-10-10) |
 | `upstream` | по каждой камере книги `domain/upstream` — что передатчик передал и потерял: слова продукта, которые курс считает, и своё `errors` (`Forwarder.stats`); только пока книга кого-то называет |
 | `forwarder_errors` | сколько кругов потоков передатчика не удалось — всех вместе (`Forwarder.errors`, пятнадцатое ревью); только когда хоть один не удался |
 
