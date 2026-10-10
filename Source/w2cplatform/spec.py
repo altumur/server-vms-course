@@ -1813,8 +1813,8 @@ class SubsystemSpec:
         known = self.row_fields(table)
         if not isinstance(name, str) or name not in known:
             whose = "the unit's row" if table is None else f"the rows of {table}"
-            raise ValueError(f"spec {self.name}: {path} names a field of {whose} ({', '.join(known) or 'none'}), "
-                             f"not {name!r}{of}")
+            raise ValueError(f"spec {self.name}: {path} names a field of {whose} ({', '.join(sorted(known)) or 'none'}), "
+                             f"not {_q(name) if isinstance(name, str) else _v(name)}{of}")
 
     def _fields_named(self) -> None:
         for d in self.derived:

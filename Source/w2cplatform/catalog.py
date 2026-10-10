@@ -102,6 +102,7 @@ def spec(name: str, env: dict | None = None):
 # `load_dir`, and a controller's start (`SpecController`), after its process loaded what it loads. It was a pass's: the
 # preference read nothing and placed as if nothing were preferred, in silence (ADR 0012).
 def near_known(spec) -> None:
+    from .spec import _q
     if spec.near == "none" or not (spec.near_of or spec.near_prefer):
         return
     held = {s.name: s for s in specs()}
@@ -118,8 +119,8 @@ def near_known(spec) -> None:
         first, _, second = k.partition(".")
         f = them.fields.get(first)
         if f is None or (second and not f.ref):
-            raise ValueError(f"spec {spec.name}: near.prefer names {k!r}, and {first!r} is no field of {spec.near}'s row"
-                             f"{' with a ref' if second else ''} ({', '.join(them.fields) or 'none'})")
+            raise ValueError(f"spec {spec.name}: near.prefer names {_q(k)}, and {_q(first)} is no field of {spec.near}'s "
+                             f"row{' with a ref' if second else ''} ({', '.join(sorted(them.fields)) or 'none'})")
         if second:
             sub, _, rows = f.ref.partition("/")
             if sub not in names:
@@ -127,8 +128,8 @@ def near_known(spec) -> None:
             ref = held[sub]
             known = tuple(ref.fields) if rows == ref.rows else ref.row_fields(rows) if rows in ref.table_specs else None
             if known is not None and second not in known:
-                raise ValueError(f"spec {spec.name}: near.prefer names {k!r}, and {second!r} is no field of the rows of "
-                                 f"{f.ref} ({', '.join(known) or 'none'})")
+                raise ValueError(f"spec {spec.name}: near.prefer names {_q(k)}, and {_q(second)} is no field of the rows "
+                                 f"of {f.ref} ({', '.join(sorted(known)) or 'none'})")
 
 
 # The families a spec's worker files to (`worker: {requests: [<sub>, …]}`, `Worker.file_request`), each a subsystem this
