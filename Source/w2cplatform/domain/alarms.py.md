@@ -14,7 +14,7 @@
 
 A member that reports no page has no alarm to show: `{events: [], truncated: false}`, nothing cut (O8).
 
-## `reported_doors(fed, domain_objects, lost_after, wall)` — `doors(member)` for `DomainAlarms`: a `ReportedDoor` over the road the member's copy in `fed` reads — behind a relay, its bundle and its own report (`uplink.NewerRoad`), the same object pass after pass (the three-site scenario, O7).
+## `reported_doors(fed, domain_objects, lost_after, wall)` — `doors(member)` for `DomainAlarms`: a `ReportedDoor` over the road the member's copy in `fed` reads — behind a relay, its bundle and its own report (`uplink.NewerRoad`), the same object pass after pass (the three-site run, O7).
 
 ## `class AlarmHistory` — `keep(member, events)`, `read(member, since, until)`, `cut_before(member)`; at most `max_lines` (2000), the newest, the object `{events, cut_before}`.
 

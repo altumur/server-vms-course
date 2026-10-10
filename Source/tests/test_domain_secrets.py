@@ -324,7 +324,7 @@ def test_a_relay_keeps_its_members_answers_in_memory_and_gives_each_only_its_own
 
 
 def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admitted_by_it():
-    """The three-site scenario, O2: an agent carrying through the domain's door that the door does not know
+    """The three-site run, O2: an agent carrying through the domain's door that the door does not know
     ended its pass at the refusal, before any report — and the domain knew of a cluster asking to join only from a
     report, so it never knocked and a person had nothing to compare. The ask names the key it is signed with; refused,
     it is remembered as a knock (the product's `Members.NoteKnock`), over HTTP as in process: named in `knocking` with
@@ -372,7 +372,7 @@ def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admit
 
 
 def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_to_one_that_left():
-    """The three-site scenario, O9: the holder's door asked only the topology before answering a relay for a
+    """The three-site run, O9: the holder's door asked only the topology before answering a relay for a
     member — `DELETE /domain/members/<member>` and the relay still got 200 for it (public rows, no secret, `key: null`),
     and the relay refused the member as one "admitted without a key", not as one that left. The door carries for a member
     on the list alone (404, said); the relay drops what it kept for it, relays the others as before, and answers the
@@ -414,7 +414,7 @@ def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_t
 
 
 def test_a_member_behind_a_relay_over_the_network_judges_its_books_by_the_relays_age_mark():
-    """The three-site scenario, O10: a member with `RELAY_URL` carries through a `CarryClient`, which has no
+    """The three-site run, O10: a member with `RELAY_URL` carries through a `CarryClient`, which has no
     `seen()`; the relay's age mark came in its answer and was never used — while the relay was cut from the domain the
     member wrote into `domain/seen` the time it last talked to the relay and took its books for current. An answer that
     carries the relay's mark is measured by it: the books are as old as the relay's last contact with the domain."""

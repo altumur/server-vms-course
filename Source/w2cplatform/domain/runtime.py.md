@@ -19,7 +19,7 @@ Every store is opened behind `declared.guarded`: a write a spec's `domain.names`
 The holder is `DOMAIN_HOLDER` if set, otherwise the first entry. Empty entries are dropped; an empty list is `SystemExit` — a misconfigured unit dies at start rather than serving an empty domain. `reaches` is not set here; only the read side is wired. The units' own lines run through it in `tests/domain/test_lesson3_readview_api_gateway.py::test_the_domains_units_name_stores_that_open`.
 
 ### `names_from_env(var="CLUSTERS") -> (holder, reporting)`
-The holder and the members that report, as `CLUSTERS` names them, opening no store — what `members key` on the holder needs: the first write of the list of members carries the configuration's members (the three-site scenario, O1).
+The holder and the members that report, as `CLUSTERS` names them, opening no store — what `members key` on the holder needs: the first write of the list of members carries the configuration's members (the three-site run, O1).
 
 ### `consoles_from_env(var="CLUSTERS") -> {name: console}`
 The consoles `CLUSTERS` names — where an agent asks for the holder's record (`/api/held`, `agent.HolderFollower`), where a move reads its neighbours (`/api/held`, `/api/backup`) and where a handover asks its target (`/api/prepare`, `/api/take`): one declaration for all («Архитектор», 2026-10-06). A console that is not `http(s)://…`, or a name given twice, is `SystemExit`.
