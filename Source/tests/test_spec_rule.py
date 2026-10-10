@@ -55,7 +55,7 @@ IMPLEMENTED = {
     "placement.offers", "placement.home", "placement.retire_when.field", "placement.retire_when.in", "placement.unplaced.delete_after",
     "placement.rebalance.dead_band", "placement.affinity.field", "placement.affinity.table",
     "placement.affinity.server_field", "placement.affinity.strict",
-    "holds.table", "holds.unit", "holds.since", "holds.until", "holds.longest",
+    "holds.table", "holds.unit", "holds.since", "holds.until", "holds.longest", "holds.released",
     "requests.free", "requests.schema", "requests.key", "requests.valid_for", "requests.most_valid",
     "requests.per_person", "requests.settle", "requests.ttl", "requests.stamp", "requests.journal", "requests.elsewhere",
     "rights.unit_of", "rights.routes.view", "rights.routes.edit", "rights.cluster_rows", "rights.reach.group",

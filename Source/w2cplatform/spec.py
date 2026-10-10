@@ -1673,6 +1673,14 @@ class SubsystemSpec:
                 raise ValueError(f"spec {self.name}: {where} is {n!r}, a route the console answers itself "
                                  f"(`/{n}`) — no request would reach that family; name it otherwise "
                                  f"(the console's routes: {', '.join(sorted(CONSOLE_ROUTES))})")
+        # `holds.released` names a field of the held table's rows (ADR-0057, the addendum of 2026-10-10): a name that is
+        # not one is a hold nobody can let go — every row would hold for ever, as if the word were not there.
+        rel = (self.holds or {}).get("released")
+        if rel:
+            t = self.table_specs.get(self.holds["table"])
+            if t is None or rel not in t.fields:
+                raise ValueError(f"spec {self.name}: holds.released is {rel!r}, which is no field of "
+                                 f"tables.{self.holds['table']}.fields — declare it there, or let go of nothing")
         # WHAT A WORKER WRITES HAS A DECLARED FORM (ADR 0012; «Архитектор» with «Паритет», 2026-10-06): `worker.writes`
         # names its units' rows or one of its DECLARED tables (`{key, fields}`), whose field rules the write goes through
         # (`tables.write_row`). Any other family under `<sub>/` — a table only named, or none — is rows of no declared

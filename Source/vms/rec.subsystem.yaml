@@ -196,6 +196,10 @@ tables:
       # the camera's recordings when it was set, if whoever set it says them: a recording deleted since still has its
       # minutes copied (`keeps.spans_of`); left out, its camera's recordings as they are when it is copied
       recordings: {type: list}
+      # when a garbled keep was let go after it had held long enough (unix seconds, the product's `released_at`,
+      # ADR-0064): empty while it holds, and from then on it holds nothing (`holds.released`, ADR-0057). A string: a
+      # number field left out is written 0, which is not empty
+      released_at: {type: string}
     stamp: [by, at, made_at]                         # made_at: when the row was made — what a keep's seal is bound to (ADR-0057)
     journal: {written: archive.keep.made, deleted: archive.keep.lifted}
 # Whose a row of a table is: a keep is its camera's (`cam`, an id of the camera `about` names). Whoever writes one
@@ -208,7 +212,7 @@ rights:
 # What a keep HOLDS on every resource past its days (the boundary's step 6: it was the VMS's function the resource called,
 # `kept_buckets`): the events of its camera's units — the camera's own and every unit about it — for its stretch, at
 # most a week from its start (a stretch a person can mean, the review's fourth pass, Т-B6).
-holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800}
+holds: {table: keeps, unit: cam, since: from, until: to, longest: 604800, released: released_at}
 # What a recording's holder opens to a page itself (the boundary's step 6, the owner's decision 1: the bytes bypass the
 # console), in the product's paths: `/timeline/<recording>?from&to` — its spans, raw, from every recorder's door, and what
 # its camera holds itself as a span that yields — and `/segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4` (`.backfill.mp4`,

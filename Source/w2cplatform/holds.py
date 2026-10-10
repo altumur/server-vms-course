@@ -11,6 +11,9 @@ that rows of one of its tables HOLD a unit's buckets for a stretch of time:
       until: b
       longest: 604800     optional: a row holds at most this many seconds from its `since` — a stretch a person can mean,
                           not "everything there is" (the review's fourth pass, Т-B6)
+      released: c         optional: a field of the table's rows; a row in which it is not empty holds nothing — no
+                          bucket, no event (ADR-0057, the addendum of 2026-10-10; the review's fifteenth pass, minor 4).
+                          The field is declared in `tables.<table>.fields`, or the spec is refused (`holds.released`)
 
 and the resource holds a bucket of `(sub, unit)` whose time overlaps such a stretch when the unit IS the unit held, or is
 ABOUT it (its spec's `about`, read from its row — a deleted row's too: a tombstone keeps its fields). The alarms' tree of
@@ -43,15 +46,18 @@ def parse(name: str, raw, fields_of_table=None, tables: tuple = ()) -> dict:
     """`holds:` as written, checked at load: a table of the spec and three field names; `longest` seconds."""
     if raw is None:
         return {}
-    if not isinstance(raw, dict) or set(raw) - {"table", "unit", "since", "until", "longest"} \
+    if not isinstance(raw, dict) or set(raw) - {"table", "unit", "since", "until", "longest", "released"} \
             or raw.get("table") not in tables or not all(isinstance(raw.get(k), str) and raw[k] for k in ("unit", "since", "until")):
         raise ValueError(f"spec {name}: `holds:` is {{table: <one of its tables>, unit: <field>, since: <field>, "
-                         f"until: <field>, longest?}}, not {raw!r}")
+                         f"until: <field>, longest?, released?: <field>}}, not {raw!r}")
     longest = raw.get("longest")
     if longest is not None and (isinstance(longest, bool) or not isinstance(longest, (int, float)) or longest <= 0):
         raise ValueError(f"spec {name}: holds.longest is seconds, more than none — not {longest!r}")
+    released = raw.get("released")
+    if released is not None and not (isinstance(released, str) and released):
+        raise ValueError(f"spec {name}: holds.released names a field of the table's rows — not {released!r}")
     return {"table": raw["table"], "unit": raw["unit"], "since": raw["since"], "until": raw["until"],
-            "longest": float(longest) if longest is not None else None}
+            "longest": float(longest) if longest is not None else None, "released": released}
 
 
 class _Marked:
@@ -97,6 +103,9 @@ def kept(vars_, specs, progressed=None):
                 return items
             items = HOLDS.read(path, read, None)
             if not items:
+                continue
+            # let go: whoever owns the row said, in its own field, that it holds no more — not a bucket, not an event
+            if h.get("released") and items.get(h["released"]) not in (None, ""):
                 continue
             v = items.get(h["unit"])
             ref = (str(v) if parse_ref(str(v)) is not None else spec._ref_in(spec.about_sub or spec.name, v)) \

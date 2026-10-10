@@ -463,6 +463,36 @@ def test_what_a_table_holds_is_kept_past_its_days_for_the_unit_and_every_unit_ab
              "`holds:` is")
 
 
+def test_a_hold_let_go_by_its_released_field_holds_nothing_and_the_field_is_the_tables():
+    """`holds.released` (ADR-0057, the addendum of 2026-10-10; the review's fifteenth pass, minor 4): a row whose named
+    field is not empty holds nothing — no bucket, no event; one where it is empty holds as before. The field is one of
+    `tables.<table>.fields`: another name, or a table only named, is refused at load, under `holds.released`."""
+    from w2cplatform import holds
+    vars_, _, wall = _box()
+    pins = {"key": "{item}-{a:int}", "fields": {"item": {"type": "string", "required": True}, "a": {"type": "float"},
+                                               "b": {"type": "float"}, "gone": {"type": "string"}}}
+    shelf = {"name": "shelf", "unit": {"rows": "items", "id": "name", "fields": {"name": {"type": "string"}}},
+             "tables": {"pins": pins}, "placement": CAP}
+    spec = SubsystemSpec.from_dict({**shelf, "holds": {"table": "pins", "unit": "item", "since": "a", "until": "b",
+                                                       "released": "gone"}})
+    assert spec.holds["released"] == "gone"
+    t = wall() - 86400
+    vars_.put("shelf/pins/p", {"item": "1", "a": str(t), "b": str(t + 600)})
+    vars_.put("shelf/pins/q", {"item": "2", "a": str(t), "b": str(t + 600), "gone": str(t + 60)})
+    held = holds.kept(vars_, [spec])
+    assert held("shelf", "1", t + 10, t + 20)                             # stands: holds its stretch
+    assert not held("shelf", "2", t + 10, t + 20)                         # let go: holds nothing
+    vars_.put("shelf/pins/p", {"item": "1", "a": str(t), "b": str(t + 600), "gone": str(t + 90)})
+    assert not holds.kept(vars_, [spec])("shelf", "1", t + 10, t + 20)    # …and nothing is held at all
+    _refused(lambda: SubsystemSpec.from_dict({**shelf, "holds": {"table": "pins", "unit": "item", "since": "a",
+                                                                 "until": "b", "released": "gonne"}}), "holds.released")
+    _refused(lambda: SubsystemSpec.from_dict({**shelf, "tables": ["pins"], "holds": {"table": "pins", "unit": "item",
+                                                                                     "since": "a", "until": "b",
+                                                                                     "released": "gone"}}),
+             "holds.released")
+    _refused(lambda: SubsystemSpec.from_dict({**shelf, "holds": {"table": "pins", "unit": "item", "since": "a",
+                                                                 "until": "b", "released": ""}}), "holds.released")
+
 def test_the_resource_asks_a_subsystem_that_frees_by_a_request_row_and_reads_its_answer():
     """`requests: {free: true}` (it was a subsystem's hook the resource called, `free`): over the high mark the resource
     writes `<sub>/requests/free-<server>-<volume> {free, volume, server}` and reads what the subsystem's live workers

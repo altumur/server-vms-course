@@ -87,6 +87,7 @@ tables:
       of:   {type: string, required: true}
       from: {type: float, required: true}
       to:   {type: float, required: true}
+      released_at: {type: string}         # not empty: the notch holds nothing (`holds.released`)
     journal: {written: notch.cut, deleted: notch.cleared}
 placement:
   capacity:    {from: capacity, default: 8}
@@ -106,7 +107,7 @@ placement:
   retire_when: {field: state, in: [done, failed]}   # two ends, and the placement's reason says which
   rebalance:   {dead_band: 0.2}
   affinity:    {field: shelf, table: shelves, server_field: server, strict: {kind: [reserve], enabled: true}}
-holds: {table: notches, unit: of, since: from, until: to, longest: 86400}
+holds: {table: notches, unit: of, since: from, until: to, longest: 86400, released: released_at}
 requests:
   free: true
   schema:
