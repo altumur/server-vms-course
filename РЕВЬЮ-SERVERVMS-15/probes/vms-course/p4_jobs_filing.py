@@ -13,9 +13,11 @@ from vms import jobs
 vars_, objects = FakeVariables(), Ram()
 rec_ctl = SpecController(REC_SPEC, vars_, objects)
 now = time.time()
+rec_ctl.create({"name": "7", "cam": "7"})                      # дверь семейства требует, чтобы запись rec/7 стояла
 ok = jobs._ask_recorder(rec_ctl, "7", now - 600, now - 540, now, "detjob/7-lpr-1-2")  # подпись после major 4: без cam
-key = REC_SPEC.sub.request_key(f"7-{int(now - 600)}-{int(now - 540)}")
-row = vars_.get(key)[0]
+keys = [k for k in vars_.list(REC_SPEC.sub.request_key(""))]                 # ключ — как его дала дверь семейства
+key = keys[0] if keys else None
+row = vars_.get(key)[0] if key else None
 print("filed:", ok, "| row =", row)
 schema = REC_SPEC.requests["schema"]
 body = {k: v for k, v in row.items() if k not in ("by", "at")}     # что дверь проверяет схемой (штампы ставит она сама)
