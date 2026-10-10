@@ -69,9 +69,12 @@ def _gate() -> list[str]:
 # `/api/held` was a 403 from the store and a dropped connection, and no agent following the holder by `CLUSTERS` heard a
 # console (the three-site run, F2). Public and signed things only: the record proves itself, the
 # pointer is `{term, rev, sha256}`, the list of members is names and public keys; the copy is an object, not a row.
+# And `domain/backup` (ADR-0066's addition of 2026-10-10, «Архитектор»: the console is among the readers of the copy —
+# its secrets are sealed by a key from the root, and the console holds no key of the domain's, ADR-0032): the same
+# reads on both sides; the list of the platform roles' readers becomes a shared table of parity.
 def _moves() -> list[str]:
-    from w2cplatform.domain.term import BACKUP_TAKEN, HOLDER, MEMBER_LIST
-    return [HOLDER, BACKUP_TAKEN, MEMBER_LIST]
+    from w2cplatform.domain.term import BACKUP, BACKUP_TAKEN, HOLDER, MEMBER_LIST
+    return [HOLDER, BACKUP_TAKEN, BACKUP, MEMBER_LIST]
 
 
 def _worker_objects(spec) -> list[str]:

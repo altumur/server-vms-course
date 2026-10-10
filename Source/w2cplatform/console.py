@@ -3784,9 +3784,13 @@ class Mount:
     #                       (`SIGNED`) — the signer checks the outgoing holder's signature, the grant or the file itself;
     #                       90 s for `take` and `move`, 10 s for `prepare`; no signer here: 404, said (ADR-0066). A move
     #                       is made where the domain goes, never at the holder that is gone: not `domain_forward`
-    def held(self) -> dict:
-        from .domain.term import held
-        return held(self.root.ctl.cluster, self.root.ctl.vars)
+    def held(self) -> tuple[int, dict]:
+        """`/api/held`: 503 with why when a row of it did not read — never «no copy» (ADR-0066's addition 2026-10-10)."""
+        from .domain.term import StoreUnread, held
+        try:
+            return 200, held(self.root.ctl.cluster, self.root.ctl.vars)
+        except StoreUnread as e:
+            return 503, {"error": "the store did not answer", "detail": str(e)}
 
     def backup(self, h) -> tuple[int, dict]:
         from .domain.term import backup_answer
@@ -4024,7 +4028,7 @@ class Mount:
                         return self._send(*mnt.drain_route(method, q, user))
                     return self._send(*mnt.schema_route(method, q, user))
                 if u.path == "/api/held" and method == "GET":
-                    return self._send(200, mnt.held())                  # a process door: the record proves itself
+                    return self._send(*mnt.held())                      # a process door: the record proves itself
                 if u.path == "/api/backup" and method == "GET":
                     return self._send(*mnt.backup(self))                # …a member's signature, checked here
                 if u.path in mnt.TO_SIGNER and method == "POST":

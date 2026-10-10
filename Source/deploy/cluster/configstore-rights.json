@@ -22,6 +22,7 @@
     "domain/grants/*",
     "domain/holder",
     "domain/backup-taken",
+    "domain/backup",
     "domain/member-list",
     "objects/det/commands/*",
     "objects/rec/used/*",

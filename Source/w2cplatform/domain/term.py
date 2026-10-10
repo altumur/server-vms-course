@@ -166,23 +166,47 @@ def verified_record(doc, keys, now: float) -> dict | None:
 MEMBER_LIST = "domain/member-list"
 
 
+# A STORE THAT DOES NOT ANSWER IS NOT «NO COPY» (ADR-0066's addition of 2026-10-10). A row of these doors the store
+# refused (the role's rights) or could not give (the daemon away) read as absent: `/api/held` said `backup: null` and a
+# move went on without the neighbours' copies, saying nothing. Now it is `StoreUnread` — 503, with why — and «none»
+# is said only of a row that is not there.
+class StoreUnread(Exception):
+    """A row or an object of a door of a move the store did not give: the door answers 503."""
+
+
+def _read(vars_, path: str):
+    from w2cplatform.variables import Forbidden
+    try:
+        return vars_.get(path)
+    except (Forbidden, OSError) as e:
+        raise StoreUnread(f"{path} did not read: {type(e).__name__}: {e}") from None
+
+
+def _object(objects, key: str):
+    try:
+        return objects.get(key) if objects is not None else None
+    except OSError as e:
+        raise StoreUnread(f"the object {key} did not read: {type(e).__name__}: {e}") from None
+
+
 def held(cluster: str, vars_) -> dict:
+    """`GET /api/held`. Raises `StoreUnread` when a row of it did not read (503 at the door)."""
     from .agent import KEYS_PATH
 
     def doc_of(path):
-        items, _ = vars_.get(path)
+        items, _ = _read(vars_, path)
         try:
             doc = json.loads(items["doc"]) if items and items.get("doc") else None
         except PARSE_ERRORS:
             doc = None
         return doc if isinstance(doc, dict) else None
-    keys, _ = vars_.get(KEYS_PATH)
+    keys, _ = _read(vars_, KEYS_PATH)
     rec = doc_of(HOLDER)
     try:
         term = int(rec["term"]) if rec else None
     except PARSE_ERRORS:
         term = None
-    ptr, _ = vars_.get(BACKUP_TAKEN)
+    ptr, _ = _read(vars_, BACKUP_TAKEN)
     try:
         backup = copy_of(ptr)
     except PARSE_ERRORS:
@@ -264,9 +288,11 @@ def backup_answer(cluster: str, vars_, objects, member: str | None, at, signatur
                                "X-W2C-Time, X-W2C-Signature)"}
     try:
         at = float(at)
-        items, _ = vars_.get(MEMBER_LIST)
+        items, _ = _read(vars_, MEMBER_LIST)
         doc = json.loads(items["doc"]) if items and items.get("doc") else {}
         row = dict(doc.get("members", {})).get(member) or {}
+    except StoreUnread as e:
+        return 503, {"detail": f"{cluster}'s store did not answer: {e}"}
     except PARSE_ERRORS:
         return 401, {"detail": "an ask names its time, and this cluster's list of members must read"}
     if not row.get("key"):
@@ -277,9 +303,12 @@ def backup_answer(cluster: str, vars_, objects, member: str | None, at, signatur
         return 401, {"detail": f"the ask is not signed by {member}'s key"}
     if not (abs(now - at) <= SKEW):
         return 401, {"detail": f"the ask is {now - at:+.0f} s from {cluster}'s clock: more than {SKEW:.0f} s"}
-    ptr, _ = vars_.get(BACKUP_TAKEN)
-    raw = objects.get(BACKUP_TAKEN) if ptr and objects is not None else None
-    shared = objects.get(SHARED_OBJECT) if objects is not None else None
+    try:
+        ptr, _ = _read(vars_, BACKUP_TAKEN)
+        raw = _object(objects, BACKUP_TAKEN) if ptr else None
+        shared = _object(objects, SHARED_OBJECT)
+    except StoreUnread as e:
+        return 503, {"detail": f"{cluster}'s store did not answer: {e} — not «no copy»"}
     return 200, {"cluster": cluster, "pointer": dict(ptr) if ptr else None,
                  "backup": raw.decode() if raw is not None else None,
                  "shared": shared.decode() if shared is not None else None}

@@ -480,3 +480,43 @@ def test_the_consoles_doors_of_a_move_read_what_the_console_may():
     r = rights()
     assert all(r.allows("console", "read", p) for p in read), [p for p in read if not r.allows("console", "read", p)]
     assert {HOLDER, BACKUP_TAKEN, MEMBER_LIST} <= set(read)
+
+
+def test_a_door_of_a_move_whose_store_does_not_answer_says_503_never_no_copy():
+    """ADR-0066's addition of 2026-10-10: the role `console` reads the copy's rows too (`domain/backup`: its secrets
+    sealed by a key from the root, the console holding no key of the domain's), the same reads on both sides; and a row
+    of `/api/held` or `/api/backup` the store refused or could not give is 503 with why — it read as «no copy», and a
+    move went on without the neighbours' copies, saying nothing. «None» is said only of a row that is not there."""
+    import tempfile
+    import time
+    from w2cplatform.domain.term import BACKUP, BACKUP_TAKEN, StoreUnread, backup_answer, backup_message, held
+    from w2cplatform.trust.memberkey import MemberKey
+    from w2cplatform.variables import FileVariables, Forbidden
+    r = rights()
+    for key in ("domain/holder", BACKUP_TAKEN, BACKUP, "domain/member-list"):
+        assert r.allows("console", "read", key), key
+    root, now = tempfile.mkdtemp(), time.time()
+    inner = FileVariables(f"{root}/vars")
+    assert held("south", inner)["backup"] is None                           # no row: no copy, said as none
+
+    class Away:
+        def get(self, path):
+            raise OSError("the store's daemon is not there")
+
+    class Refusing:
+        def get(self, path):
+            if path == BACKUP_TAKEN:
+                raise Forbidden(f"console may not read {path}")
+            return inner.get(path)
+    for store in (Away(), Refusing()):
+        try:
+            held("south", store)
+            raise AssertionError("a store that did not answer read as no copy")
+        except StoreUnread as e:
+            assert "did not read" in str(e)
+    east = MemberKey.new()
+    inner.put("domain/member-list", {"doc": json.dumps({"rev": 1, "members": {"east": {"key": east.pub}}})})
+    st, said = backup_answer("south", Refusing(), None, "east", now, east.sign(backup_message("south", "east", now)), now)
+    assert st == 503 and "not «no copy»" in said["detail"], (st, said)
+    st, said = backup_answer("south", Away(), None, "east", now, east.sign(backup_message("south", "east", now)), now)
+    assert st == 503, (st, said)
