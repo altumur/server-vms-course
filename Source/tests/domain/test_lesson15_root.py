@@ -6,6 +6,8 @@ domain itself, by a holder record with a larger term. So the key that decides wh
 holder: the root is in the recovery file, and signs the key set, the holder record and the holder's issuing
 certificate. The holder keeps what signs every minute; a theft is answered by a move that drops those keys.
 """
+import json
+
 from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import LDEVID_PATH, ROOT_PATH, ClusterTrust, DomainAgent, DomainPublisher
@@ -314,3 +316,72 @@ def test_a_move_signs_a_revision_larger_than_any_a_member_out_of_reach_may_hold(
     wall.advance(10)
     _, later = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall)
     assert later["keys_rev"] > first["keys_rev"] >= 1000
+
+
+def test_the_signers_start_with_the_recovery_file_founds_the_domain_at_term_one_and_a_later_start_leaves_it():
+    """The three-site scenario, F4: the signer's first start with `RECOVERY_FILE` — the course's installer — signed the
+    keys with the root and wrote no record of the holder, so `term_of` found the domain not installed with a term and
+    the stand called `term.install` itself. As the product's `domain install` (`Install`, then `Found`): the record of
+    the holder at term 1, signed by the root, written once into a store that names none; a later start leaves it; a start
+    that names no holder writes nothing."""
+    import os
+    import tempfile
+    from w2cplatform.domain.federation import Cluster
+    from w2cplatform.domain.signer_service import first_signer, term_of
+    from w2cplatform.domain.term import HOLDER
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.variables import FileVariables
+    root_dir = tempfile.mkdtemp()
+    vars_, objects = FileVariables(f"{root_dir}/vars"), FsObjectStore(f"{root_dir}/objects")
+    recovery = os.path.join(root_dir, "recovery.bin")
+    with open(recovery, "wb") as f:
+        f.write(DomainRoot(DOMAIN).recovery())
+    try:
+        first_signer(vars_, DOMAIN, None, DomainPublisher(vars_), {"RECOVERY_FILE": recovery})
+        raise AssertionError("a domain was founded with no holder named")
+    except SystemExit as e:
+        assert "DOMAIN_HOLDER" in str(e)
+    assert vars_.list("domain/") == []                                    # nothing written
+    env = {"RECOVERY_FILE": recovery, "CLUSTERS": "srv,relay-a=report"}
+    signer = first_signer(vars_, DOMAIN, None, DomainPublisher(vars_), env)
+    keys = ClusterTrust(vars_).keyset()
+    rec = read_holder(vars_, keys, signer.now())
+    assert rec["holder"] == "srv" and int(rec["term"]) == 1, rec
+    was = vars_.get(HOLDER)
+    fed = Federation()
+    fed.add(Cluster("srv", vars_, objects, is_domain_holder=True))
+    term = term_of(fed, signer, objects)
+    assert term is not None and term.term == 1 and term.record is not None    # the root's record, not the signer's
+    again = first_signer(vars_, DOMAIN, None, DomainPublisher(vars_), env)
+    assert again.chain and vars_.get(HOLDER)[0] == was[0]                   # a later start: the record as it was
+
+
+def test_install_seals_the_holders_keys_with_the_installers_ring():
+    """The three-site scenario, F5: `term.install` made the signer with no ring, and `domain/signer` lay in the store in
+    the clear until the signer's first start sealed it. The installer's ring seals it at once — the one it is given, or
+    the one `SECRETS_KEY` names, as the product's install seals with its process's key."""
+    import os
+    import tempfile
+    from w2cplatform.sealing import Sealer, is_sealed, new_key_file
+    from w2cplatform.secrets import is_secret_field
+    wall = Clock()
+    path = os.path.join(tempfile.mkdtemp(prefix="ring-"), "platform.key")
+    new_key_file(path)
+    for given, env in ((Sealer.from_file(path), None), (None, path)):
+        fed = Federation()
+        d = DeviceCluster("SN0", FakeVariables(), wall=wall)
+        d.boot()
+        fed.add(d.cluster(domain=True))
+        saved = os.environ.get("SECRETS_KEY")
+        try:
+            if env:
+                os.environ["SECRETS_KEY"] = env
+            install(fed, "cam-SN0", DOMAIN, DomainRoot(DOMAIN, now=wall), wall=wall, sealer=given)
+        finally:
+            if saved is None:
+                os.environ.pop("SECRETS_KEY", None)
+            else:
+                os.environ["SECRETS_KEY"] = saved
+        items, _ = fed.clusters["cam-SN0"].vars.get("domain/signer")
+        secrets = {k: v for k, v in items.items() if is_secret_field(k) and v}
+        assert secrets and all(is_sealed(v) for v in secrets.values()), sorted(secrets)

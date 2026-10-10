@@ -322,14 +322,17 @@ def handover(holder: DomainHolder, to: str, objects_of, carry_to, take,
 
 ```python
 def install(fed, name: str, domain_id: str, root: DomainRoot, wall=time.time, objects=None,
-            member_key: str | None = None) -> "DomainHolder":
+            member_key: str | None = None, sealer=None) -> "DomainHolder":
+    from w2cplatform.sealing import Sealer
     vars_ = fed.clusters[name].vars
-    signer = Signer(domain_id, vars_, now=wall, root=root)
+    signer = Signer(domain_id, vars_, now=wall, root=root, sealer=sealer if sealer is not None else Sealer.from_env())
     DomainPublisher(vars_).publish_keys(root.key_set(signer.tokens.keyset(), rev=1,
                                                      issuing=[signer.root.cert.serial_number]))
     record = sign({"term": 1, "holder": name, "at": wall()}, root)
     …
 ```
+
+**Установка основывает домен целиком.** Ключи держателя под корнем, набор ключей rev 1 и запись о держателе на сроке 1, подписанная корнем, пишутся одной установкой. Так делает и команда продукта `domain install` (`Install`, затем `Found`, ADR-0031): ни один процесс, который просто стартует, домена не основывает. В курсе установщик — первый старт подписывающего с `RECOVERY_FILE` (`signer_service.first_signer`). Раньше он подписывал ключи корнем, а записи срока 1 не писал, и `term_of` считал домен установленным без срока: такой домен некому было переносить, и стенд звал `term.install` сам (находка F4 сценария «камера — офис — центр»). Теперь он пишет и запись (`term.found`), но только в хранилище, где держатель ещё не назван. Держатель — тот, кого называет `DOMAIN_HOLDER`, иначе первый в `CLUSTERS`, иначе этот кластер (`CLUSTER`). Если никто не назван, старт отказывает словами и не пишет ничего. Ключи держателя установка пишет сразу запечатанными: кольцом, которое ей дали, или тем, что называет `SECRETS_KEY`, как продукт запечатывает ключом своего процесса. Раньше `domain/signer` лежал открытым до первого старта подписывающего (находка F5). Тесты — `test_the_signers_start_with_the_recovery_file_founds_the_domain_at_term_one_and_a_later_start_leaves_it` и `test_install_seals_the_holders_keys_with_the_installers_ring`.
 
 **Члены закрепляют корень.** Первый набор ключей, подписанный корнем, закрепляет его открытый ключ у члена (`domain/root`); в продукте он приходит при вступлении, вместе с доверенным корнем урока 6. С этого момента агент несёт набор ключей только подписанный этим корнем и никогда не старше того, что держит (`_carry_keys`). Запись о держателе член принимает только от корня (`read_holder`, `carry_holder`).
 

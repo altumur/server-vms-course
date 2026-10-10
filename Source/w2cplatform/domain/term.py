@@ -359,10 +359,28 @@ class AskedCluster:
 # Step 9's cold start: a domain whose root is off the holder from the first day. The installer holds the root
 # for the minutes this takes — the holder's issuing certificate, the first key set, the record of term 1 — and
 # then hands it to the operator as the recovery file. Nothing of it is written on the holder.
+# THE DOMAIN IS FOUNDED BY WHAT INSTALLS IT (ADR-0031; the product's `domain install`: `Install`, then `Found`): the
+# holder's keys under the root, key set rev 1 signed by the root, and the record of the holder at term 1 the root signs
+# — in a store that names no holder. Written by the installer, never by a process that merely starts: the signer's
+# first start with the recovery file is the course's installer (`signer_service.first_signer`), and it wrote the keys
+# and no record — `term_of` found no term, and the domain was held by nobody who could move it (the three-site
+# scenario, F4). `found` is that record alone: a store that names a holder is left as it is.
+def found(vars_, name: str, root: DomainRoot, wall=time.time) -> bool:
+    """The root's record of `name` holding term 1, written into `vars_` when it names no holder; False when it does."""
+    if vars_.get(HOLDER)[0] is not None:
+        return False
+    vars_.put(HOLDER, {"doc": json.dumps(sign({"term": 1, "holder": name, "at": wall()}, root), sort_keys=True)}, cas=0)
+    return True
+
+
+# The holder's keys go into the store SEALED by the installer's ring (`sealer`; else the one `SECRETS_KEY` names — the
+# product's install seals with its process's key, `SealFields`): with no ring here, `domain/signer` lay in the clear
+# until the signer's first start sealed it (the three-site scenario, F5).
 def install(fed, name: str, domain_id: str, root: DomainRoot, wall=time.time, objects=None,
-            member_key: str | None = None) -> "DomainHolder":
+            member_key: str | None = None, sealer=None) -> "DomainHolder":
+    from w2cplatform.sealing import Sealer
     vars_ = fed.clusters[name].vars
-    signer = Signer(domain_id, vars_, now=wall, root=root)
+    signer = Signer(domain_id, vars_, now=wall, root=root, sealer=sealer if sealer is not None else Sealer.from_env())
     DomainPublisher(vars_).publish_keys(root.key_set(signer.tokens.keyset(), rev=1,
                                                      issuing=[signer.root.cert.serial_number]))
     record = sign({"term": 1, "holder": name, "at": wall()}, root)
