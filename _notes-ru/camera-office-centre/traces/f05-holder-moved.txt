@@ -1,0 +1,652 @@
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2017
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-b-1": 3017}}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-b-1
+→ 200 {
+  "items": {
+    "holder": "relay-b:3101:000c1d",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-b"
+  },
+  "index": 3017
+}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+## Отказ 5. Держатель потерян: srv выключен, и, по слову оператора, навсегда. Домен поднимают на relay-a по
+## файлу восстановления: на relay-a стоят подписывающий и консоль домена члена, который может взять домен
+## (SIGNER_URL, ADR-0066; у продукта — SIGNER_* и DOMAIN_CONSOLE_* на каждом офисе, stand.sh).
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=domain/
+→ 200 {
+  "keys": {
+    "domain/grants": 2005,
+    "domain/holder": 2010,
+    "domain/keys": 2004,
+    "domain/member": 2009,
+    "domain/member-key": 2002,
+    "domain/member-list": 2007,
+    "domain/root": 2003,
+    "domain/topology": 2006,
+    "domain/vms/asks": 2031,
+    "domain/vms/sources": 2025,
+    "domain/vms/stream-accounts": 2008,
+    "domain/vms/upstream": 2026
+  }
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants
+→ 200 {"items": {"anna|admin|": "1760092120.0"}, "index": 2005}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 2010
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 2004
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/member
+→ 200 {"items": {"cluster": "relay-a"}, "index": 2009}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/member-key
+→ 200 {"items": {"seed_secret": "«запечатано кольцом 1»", "pub": "«ключ 3»", "seal_pub": "«ключ 4»"}, "index": 2002}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/member-list
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}}, \"rev\": 8}"
+  },
+  "index": 2007
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/root
+→ 200 {"items": {"pub": "«ключ 2»"}, "index": 2003}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2006
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/asks
+→ 200 {
+  "items": {
+    "SN-B|SN-A2": "{\"roads\": [{\"acts\": [{\"action\": \"preset\", \"arg\": 3}], \"cluster\": \"srv\", \"token_secret\": \"«запечатано кольцом 2»\", \"until\": 1757586686.0, \"urls\": [\"http://srv:8091/ingest\"]}]}"
+  },
+  "index": 2031
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/sources
+→ 200 {
+  "items": {
+    "SN-A": "{\"as_of\": 1757500181.0, \"cluster\": \"cam-a\", \"live_url\": \"ingest://relay-a/SN-A\", \"polls\": true, \"push\": true, \"reachable\": true, \"road\": \"the camera says it pushes\", \"taken_by\": [], \"worker\": \"SN-A\"}"
+  },
+  "index": 2025
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/stream-accounts
+→ 200 {"items": {"accounts_secret": "«запечатано кольцом 3»"}, "index": 2008}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/upstream
+→ 200 {
+  "items": {
+    "SN-A": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 4»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}",
+    "SN-A2": "{\"mode\": \"push\", \"token_secret\": \"«запечатано кольцом 5»\", \"until\": 1757586645.0, \"urls\": [\"http://srv:8091/ingest\"]}"
+  },
+  "index": 2026
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/list?prefix=identity/
+→ 200 {"keys": {}}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/signer
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/signer
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/signer", "cas": "", "items": {
+  "issuing_key_secret": "«запечатано кольцом 6»",
+  "issuing_cert": "«сертификат 1»",
+  "token_key_secret": "«запечатано кольцом 7»",
+  "kid": "066b8cfa",
+  "gen": "1",
+  "previous": "[]",
+  "backup_key_secret": "«запечатано кольцом 8»",
+  "backup_key_rev": "1"
+}}
+→ 200 {"index": 2033}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 2010
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 2004
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 2010
+}
+
+## Оператор на relay-a: python3 -m w2cplatform.w2cctl domain move http://relay-a:8070 /root/acme.recovery
+## (POST /domain/move консоли домена relay-a → её подписывающий: POST /api/move; соседей он читает через их
+## консоли — GET /api/held, GET /api/backup).
+
+# operator on relay-a → relay-a:8070
+POST /domain/move
+{
+  "recovery": "{\"domain\": \"acme\", \"root_key\": \"«ключ 13»\", \"root_cert\": \"«сертификат 2»\"}",
+  "stolen": false
+}
+→ …
+
+# domain console on relay-a → relay-a:8071
+POST /api/move
+  X-Operator: domain-console
+{
+  "recovery": "{\"domain\": \"acme\", \"root_key\": \"«ключ 13»\", \"root_cert\": \"«сертификат 2»\"}",
+  "stolen": false
+}
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/member-key
+→ 200 {"items": {"seed_secret": "«запечатано кольцом 1»", "pub": "«ключ 3»", "seal_pub": "«ключ 4»"}, "index": 2002}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 2004
+}
+
+# signer on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# signer on relay-a → relay-b:8080
+GET /api/held
+→ …
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 3004
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/holder
+→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+
+# signer on relay-a ← relay-b:8080: ответ на GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 2004
+}
+
+# signer on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# signer on relay-a → relay-b:8080
+GET /api/held
+→ …
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 3004
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/holder
+→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+
+# signer on relay-a ← relay-b:8080: ответ на GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/signer
+→ 200 {
+  "items": {
+    "issuing_key_secret": "«запечатано кольцом 6»",
+    "issuing_cert": "«сертификат 1»",
+    "token_key_secret": "«запечатано кольцом 7»",
+    "kid": "066b8cfa",
+    "gen": "1",
+    "previous": "[]",
+    "backup_key_secret": "«запечатано кольцом 8»",
+    "backup_key_rev": "1"
+  },
+  "index": 2033
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/signer", "cas": 2033, "items": {
+  "issuing_key_secret": "«запечатано кольцом 9»",
+  "issuing_cert": "«сертификат 3»",
+  "token_key_secret": "«запечатано кольцом 10»",
+  "kid": "69d5ceb6",
+  "gen": "1",
+  "previous": "[]",
+  "backup_key_secret": "«запечатано кольцом 11»",
+  "backup_key_rev": "1",
+  "issued": "true"
+}}
+→ 200 {"index": 2034}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 2010
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/backup-taken
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# signer on relay-a → relay-b:8080
+GET /api/held
+→ …
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 3004
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/holder
+→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+
+# signer on relay-a ← relay-b:8080: ответ на GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 2004
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/keys", "cas": 2004, "items": {
+  "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+}}
+→ 200 {"index": 2035}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+  },
+  "index": 2010
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/holder", "cas": 2010, "items": {
+  "doc": "{\"at\": 1757500322.0, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 2}"
+}}
+→ 200 {"index": 2036}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+  },
+  "index": 2035
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 2}"
+  },
+  "index": 2036
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/revoked", "cas": "", "items": {"jtis": ""}}
+→ 200 {"index": 2037}
+
+# domain console on relay-a ← relay-a:8071: ответ на POST /api/move
+→ 200 {
+  "term": 2,
+  "rev": 0,
+  "restored_from": null,
+  "keys_rev": 1757500322,
+  "stolen": false,
+  "reissued": [],
+  "shared_from": null,
+  "sentence": "term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys"
+}
+
+# operator on relay-a ← relay-a:8070: ответ на POST /domain/move
+→ 200 {
+  "term": 2,
+  "rev": 0,
+  "restored_from": null,
+  "keys_rev": 1757500322,
+  "stolen": false,
+  "reissued": [],
+  "shared_from": null,
+  "sentence": "term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys"
+}
+
+## w2cctl: 200 term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys
+
+## Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS (F2: не отвечает).
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-a-1": 2017}}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-a-1
+→ 200 {
+  "items": {
+    "holder": "relay-a:2101:000835",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-a"
+  },
+  "index": 2017
+}
+
+# reccontroller on relay-a → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-a
+→ 200 {"items": {"url": "http://relay-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 2001}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmscontroller on relay-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {"rec/slots/r-relay-b-1": 3017}}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=rec/slots/r-relay-b-1
+→ 200 {
+  "items": {
+    "holder": "relay-b:3101:000c1d",
+    "until": "1757500270.0",
+    "released": "false",
+    "gen": "1",
+    "server": "relay-b"
+  },
+  "index": 3017
+}
+
+# reccontroller on relay-b → /run/configstore/reccontroller.sock
+GET /v1/get?key=platform/doors/relay-b
+→ 200 {"items": {"url": "http://relay-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 3001}
+
+# domainagent on relay-b → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 3004
+}
+
+# domainagent on relay-b → relay-a:8080
+GET /api/held
+→ …
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+  },
+  "index": 2035
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/holder
+→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+
+# domainagent on relay-b ← relay-a:8080: ответ на GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-b → relay-b:8080
+GET /api/held
+→ …
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 3004
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/holder
+→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+
+# domainagent on relay-b ← relay-b:8080: ответ на GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-b → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# domainagent on relay-b → srv:8071
+GET /api/carry/relay-b
+  X-W2C-Time: 1757500327.000
+  X-W2C-Seal: «ключ 12»
+  X-W2C-Signature: «подпись 5»
+→ 0 "no answer: srv is off"
+
+# domainagent on relay-a → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+  },
+  "index": 2035
+}
+
+# domainagent on relay-a → relay-a:8080
+GET /api/held
+→ …
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+  },
+  "index": 2035
+}
+
+# console on relay-a → /run/configstore/console.sock
+GET /v1/get?key=domain/holder
+→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+
+# domainagent on relay-a ← relay-a:8080: ответ на GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-a → relay-b:8080
+GET /api/held
+→ …
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"8c47b46a\", \"key:8c47b46a\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+  },
+  "index": 3004
+}
+
+# console on relay-b → /run/configstore/console.sock
+GET /v1/get?key=domain/holder
+→ 403 {"kind": "forbidden", "error": "console may not read domain/holder"}
+
+# domainagent on relay-a ← relay-b:8080: ответ на GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# domainagent on relay-a → srv:8071
+GET /api/carry/relay-a
+  X-W2C-Time: 1757500327.000
+  X-W2C-Seal: «ключ 4»
+  X-W2C-Signature: «подпись 6»
+→ 0 "no answer: srv is off"

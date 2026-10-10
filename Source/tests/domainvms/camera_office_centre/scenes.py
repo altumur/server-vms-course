@@ -608,6 +608,119 @@ def f10_member_leaves(site) -> None:
     _cameras_seen(site)
 
 
+def f09_backup_office(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 9. Резервный офис relay-b2 (объекты A и B, uplink) держит SN-A резервом when: offline на томе backup.\n"
+             "Пока relay-a не берёт поток, камера толкает вторым путём — в relay-b2; вернулся relay-a — поток назад.")
+    site.login("anna")
+    with log.muted():
+        site.cluster("relay-b2")
+        site.cluster_console("relay-b2")
+        site.office_agent("relay-b2")
+    log.note("Анна принимает relay-b2, оператор регистрирует его ключ и права Анны на нём (F1: через дверь нельзя).")
+    site.ask("anna", "POST", "domain console", "/domain/members", {"name": "relay-b2"})
+    site.operator_key("relay-b2")
+    site.operator_grants("relay-b2", [{"subject": "anna", "cap": "admin"}])
+    with log.muted():
+        site.domain_pass()
+        site.sync("relay-b2")
+    log.note("На консоли relay-b2: том disk вида backup и запись SN-A when: offline (у продукта — stand.sh setup).")
+    site.ask("anna", "POST", "console relay-b2", "/rec/volumes",
+             {"name": "disk", "kind": "backup", "url": site.cluster("relay-b2").server.volume, "quota_bytes": 1 << 30,
+              "server": "relay-b2"}, headers={"Idempotency-Key": "relay-b2-disk"})
+    site.recorder("relay-b2")
+    site.ask("anna", "POST", "console relay-b2", "/rec/recordings",
+             {"name": "SN-A", "cam": "ref:SN-A", "when": "offline", "home": "disk"},
+             headers={"Idempotency-Key": "relay-b2-SN-A"})
+    with log.muted():
+        r = site.recorders["relay-b2"]
+        r.lease_pass(); r.volume_pass(); r.heartbeat_once()
+        site.place("relay-b2")
+        r.reconcile_once(); r.heartbeat_once()
+        site.tick(60, offices=("relay-a", "relay-b", "relay-b2"), agents_every=15)
+    log.note("Проход книг: у SN-A теперь резерв — в книге основных cam-a второй путь (backup) к приёмнику relay-b2.")
+    site.domainpart.pass_once()
+    site.sync("relay-a")
+    site.sync("cam-a")
+    from vms.domainpart.keys import PRIMARIES_PATH, opened
+    items = opened(site.cams["cam-a"].flash_store.get(PRIMARIES_PATH)[0], PRIMARIES_PATH, site.ring("cam-a"))
+    entry = json.loads((items or {}).get("SN-A", "{}"))
+    for road in ("ingest", "backup"):
+        if isinstance(entry.get(road), dict):
+            entry[road] = {k: v for k, v in entry[road].items() if k != "token_secret"}
+    log.note("книга основных cam-a, SN-A (токены опущены): " + json.dumps(entry, ensure_ascii=False))
+    log.note("relay-a выключен.")
+    site.off("relay-a")
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {out.get('state')}")
+    with log.muted():
+        site.tick(30, cams=("cam-a",), offices=("relay-b2",))
+    r.heartbeat_once()
+    site.say_heartbeat("relay-b2", fields=("ingest_streams",))
+    log.note("relay-a включён.")
+    site.on("relay-a")
+    site.recorders["relay-a"].heartbeat_once()
+    site.wall.advance(1)
+    out = site.camera_step("cam-a")
+    log.note(f"толкатель cam-a: {out.get('state')}")
+
+
+def _holder_moves(site) -> None:
+    log = site.log
+    site.wall.advance(5)
+    log.note("Отказ 5. Держатель потерян: srv выключен, и, по слову оператора, навсегда. Домен поднимают на relay-a по\n"
+             "файлу восстановления: на relay-a стоят подписывающий и консоль домена члена, который может взять домен\n"
+             "(SIGNER_URL, ADR-0066; у продукта — SIGNER_* и DOMAIN_CONSOLE_* на каждом офисе, stand.sh).")
+    site.off("srv")
+    site.start_signer("relay-a")
+    site.start_domain_console("relay-a")
+    log.note("Оператор на relay-a: python3 -m w2cplatform.w2cctl domain move http://relay-a:8070 /root/acme.recovery\n"
+             "(POST /domain/move консоли домена relay-a → её подписывающий: POST /api/move; соседей он читает через их\n"
+             "консоли — GET /api/held, GET /api/backup).")
+    from w2cplatform.w2cctl import move
+    with log.acting("operator on relay-a"):
+        st, said = move(site.doors["domain console relay-a"], site.recovery)
+    log.note(f"w2cctl: {st} {said.get('sentence') or said.get('detail')}")
+    log.note("Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS (F2: не отвечает).")
+    site.wall.advance(5)
+    site.sync("relay-b")
+    site.sync("relay-a")
+
+
+def f05_holder_moved(site) -> None:
+    _holder_moves(site)
+
+
+def f06_old_holder_back(site) -> None:
+    log = site.log
+    with log.muted():
+        _holder_moves(site)
+    site.wall.advance(60)
+    log.note("Отказ 6. Старый держатель srv вернулся. Его подписывающий смотрит, держит ли он ещё домен (DomainHolder.check):\n"
+             "свой store, потом соседи — по их отчётам у себя.")
+    site.on("srv")
+    site.holder.run_pass()
+    st, said = 0, {}
+    with log.acting("operator on srv"):
+        import urllib.request
+        with urllib.request.urlopen(site.signer_url + "/api/holder", timeout=10) as r:
+            said = json.loads(r.read())
+    log.note("srv о себе (GET /api/holder): " + json.dumps({k: said.get(k) for k in ("term", "deposed", "deposed_by")},
+                                                          ensure_ascii=False))
+    log.note("Агент relay-a отчитывается в объекты srv; в отчёте — запись держателя из его store (срок 2, relay-a).\n"
+             "Следующий проход srv её видит.")
+    site.sync("relay-a")
+    site.holder.run_pass()
+    with log.acting("operator on srv"):
+        with urllib.request.urlopen(site.signer_url + "/api/holder", timeout=10) as r:
+            said = json.loads(r.read())
+    log.note("srv о себе (GET /api/holder): " + json.dumps({k: said.get(k) for k in ("term", "deposed", "deposed_by",
+                                                                                     "stranded")}, ensure_ascii=False))
+    site.sync("relay-b")
+
+
 SCENES = {
     "01-founding": s01_founding,
     "02-members-knock": s02_members_knock,
@@ -625,8 +738,11 @@ SCENES = {
     "f02-camera-road": f02_camera_road,
     "f03-uplink": f03_uplink,
     "f04-centre-off": f04_centre_off,
+    "f05-holder-moved": f05_holder_moved,
+    "f06-old-holder-back": f06_old_holder_back,
     "f07-camera-reboot": f07_camera_reboot,
     "f08-centre-restart": f08_centre_restart,
+    "f09-backup-office": f09_backup_office,
     "f10-member-leaves": f10_member_leaves,
 }
 

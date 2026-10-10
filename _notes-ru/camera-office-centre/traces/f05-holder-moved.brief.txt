@@ -1,0 +1,157 @@
+## Отказ 5. Держатель потерян: srv выключен, и, по слову оператора, навсегда. Домен поднимают на relay-a по
+## файлу восстановления: на relay-a стоят подписывающий и консоль домена члена, который может взять домен
+## (SIGNER_URL, ADR-0066; у продукта — SIGNER_* и DOMAIN_CONSOLE_* на каждом офисе, stand.sh).
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/signer", "cas": "", "items": {
+  "issuing_key_secret": "«запечатано кольцом 6»",
+  "issuing_cert": "«сертификат 1»",
+  "token_key_secret": "«запечатано кольцом 7»",
+  "kid": "066b8cfa",
+  "gen": "1",
+  "previous": "[]",
+  "backup_key_secret": "«запечатано кольцом 8»",
+  "backup_key_rev": "1"
+}}
+→ 200 {"index": 2033}
+
+## Оператор на relay-a: python3 -m w2cplatform.w2cctl domain move http://relay-a:8070 /root/acme.recovery
+## (POST /domain/move консоли домена relay-a → её подписывающий: POST /api/move; соседей он читает через их
+## консоли — GET /api/held, GET /api/backup).
+
+# operator on relay-a → relay-a:8070
+POST /domain/move
+{
+  "recovery": "{\"domain\": \"acme\", \"root_key\": \"«ключ 13»\", \"root_cert\": \"«сертификат 2»\"}",
+  "stolen": false
+}
+→ …
+
+# domain console on relay-a → relay-a:8071
+POST /api/move
+  X-Operator: domain-console
+{
+  "recovery": "{\"domain\": \"acme\", \"root_key\": \"«ключ 13»\", \"root_cert\": \"«сертификат 2»\"}",
+  "stolen": false
+}
+→ …
+
+# signer on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# signer on relay-a → relay-b:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# signer on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# signer on relay-a → relay-b:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/signer", "cas": 2033, "items": {
+  "issuing_key_secret": "«запечатано кольцом 9»",
+  "issuing_cert": "«сертификат 3»",
+  "token_key_secret": "«запечатано кольцом 10»",
+  "kid": "69d5ceb6",
+  "gen": "1",
+  "previous": "[]",
+  "backup_key_secret": "«запечатано кольцом 11»",
+  "backup_key_rev": "1",
+  "issued": "true"
+}}
+→ 200 {"index": 2034}
+
+# signer on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# signer on relay-a → relay-b:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/keys", "cas": 2004, "items": {
+  "doc": "{\"issuing\": [\"«серийный номер 1»\", \"«серийный номер 2»\"], \"keys\": {\"current\": \"69d5ceb6\", \"key:69d5ceb6\": \"«ключ 14»\", \"key:8c47b46a\": \"«ключ 1»\", \"retire:8c47b46a\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 3»\"}"
+}}
+→ 200 {"index": 2035}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/holder", "cas": 2010, "items": {
+  "doc": "{\"at\": 1757500322.0, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 4»\", \"term\": 2}"
+}}
+→ 200 {"index": 2036}
+
+# signer on relay-a → /run/configstore/domain.sock
+POST /v1/write {"op": "put", "key": "domain/revoked", "cas": "", "items": {"jtis": ""}}
+→ 200 {"index": 2037}
+
+# domain console on relay-a ← relay-a:8071: ответ на POST /api/move
+→ 200 {
+  "term": 2,
+  "rev": 0,
+  "restored_from": null,
+  "keys_rev": 1757500322,
+  "stolen": false,
+  "reissued": [],
+  "shared_from": null,
+  "sentence": "term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys"
+}
+
+# operator on relay-a ← relay-a:8070: ответ на POST /domain/move
+→ 200 {
+  "term": 2,
+  "rev": 0,
+  "restored_from": null,
+  "keys_rev": 1757500322,
+  "stolen": false,
+  "reissued": [],
+  "shared_from": null,
+  "sentence": "term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys"
+}
+
+## w2cctl: 200 term 2 on relay-a: no backup could be reached — the domain starts empty but for its keys
+
+## Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS (F2: не отвечает).
+
+# domainagent on relay-b → relay-a:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-b → relay-b:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-b → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# domainagent on relay-b → srv:8071
+GET /api/carry/relay-b
+  X-W2C-Time: 1757500327.000
+  X-W2C-Seal: «ключ 12»
+  X-W2C-Signature: «подпись 5»
+→ 0 "no answer: srv is off"
+
+# domainagent on relay-a → relay-a:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-a → relay-b:8080
+GET /api/held
+→ 0 "no answer: RemoteDisconnected"
+
+# domainagent on relay-a → srv:8080
+GET /api/held
+→ 0 "no answer: srv is off"
+
+# domainagent on relay-a → srv:8071
+GET /api/carry/relay-a
+  X-W2C-Time: 1757500327.000
+  X-W2C-Seal: «ключ 4»
+  X-W2C-Signature: «подпись 6»
+→ 0 "no answer: srv is off"

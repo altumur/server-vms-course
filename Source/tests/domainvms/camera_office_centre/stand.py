@@ -245,15 +245,15 @@ class Site:
         offices = [n for n in ("relay-a", "relay-b", "relay-b2") if n in self.clusters]
         return ",".join(["srv", *[f"{n}=http://{n}:{PORTS['console']}" for n in offices]])
 
-    def federation(self, vars_, objects):
+    def federation(self, vars_, objects, box: str = "srv"):
         """`runtime.federation_from_env` over the stand: srv by the process's own store (guarded, as every domain process
         opens it), every other cluster read from its reports in the holder's objects (`member_copy`)."""
         from w2cplatform.domain.declared import guarded
         from w2cplatform.domain.federation import Cluster, Federation
         from w2cplatform.domain.uplink import member_copy
         fed = Federation()
-        fed.add(Cluster("srv", guarded(vars_), objects, is_domain_holder=True))
-        for n in [n for n in ("relay-a", "relay-b", "relay-b2") if n in self.clusters]:
+        fed.add(Cluster(box, guarded(vars_), objects, is_domain_holder=True))
+        for n in [n for n in ("srv", "relay-a", "relay-b", "relay-b2") if n in self.clusters and n != box]:
             fed.add(member_copy(n, objects, lost_after=45.0, wall=self.wall))
         return fed
 
@@ -286,7 +286,7 @@ class Site:
         set_domain_grants(v, [Grant(who, "admin", None, 0.0)], self.wall(), by="installer")
         self.passwords = {who: password}
 
-    def start_signer(self) -> None:
+    def start_signer(self, box: str = "srv") -> None:
         """`signer_service.main` on srv: its store by the role `domain`, its secrets sealed at start, the identity set, the
         holder's pass given CLUSTERS (`holder_pass`), its door, and the token socket for the VMS's worker."""
         from w2cplatform.console import UnixConsoleServer
@@ -300,37 +300,41 @@ class Site:
         from w2cplatform.trust.tokens import DeclaredIssuer
         from w2cplatform.w2cctl import DOMAIN_PREFIXES, seal as seal_stored
         import threading
-        srv = self.cluster("srv")
-        who = "signer on srv"
+        srv = self.cluster(box)
+        who = f"signer on {box}"
         vars_ = srv.door("domain", who)
-        sealer = self.ring("srv")
+        sealer = self.ring(box)
         seal_stored(vars_, sealer, DOMAIN_PREFIXES)
-        objects = srv.objects_on("srv", vars_, who)
+        objects = srv.objects_on(box, vars_, who)
         pub = DomainPublisher(vars_)
         signer = Signer(DOMAIN, vars_, sealer=sealer)
         journal = Journal(srv.server.resource, "domain", self.wall)
         ids = IdentityStore(signer, vars_, objects, publish_floor=60.0, sealer=sealer, journal=journal, now=self.wall)
         # the door first: the holder's record says where the signer answers, and the agents carry through it
-        self.signer_url = self.serve("signer", f"srv:{PORTS['signer']}", who=who)
-        self.domain_console_url = self.serve("domain console", f"srv:{PORTS['domain console']}", who="domain console on srv")
+        sfx = "" if box == "srv" else f" {box}"            # a member that may take the domain runs them too (ADR-0066)
+        signer_url = self.serve("signer" + sfx, f"{box}:{PORTS['signer']}", who=who)
+        console_url = self.serve("domain console" + sfx, f"{box}:{PORTS['domain console']}", who=f"domain console on {box}")
         holder = Holder(vars_, objects, signer, sealer=sealer, ids=ids, revoked=revocations(vars_), pub=pub,
                         carry_door=HolderDoor(vars_, objects, sealer, wall=self.wall), journal=journal,
-                        console_url=self.domain_console_url, signer_url=self.signer_url, wall=self.wall)
-        self._holder_pass(holder, signer, vars_, objects)
-        self.holder = holder
-        self.bind("signer", holder.handler())
+                        console_url=console_url, signer_url=signer_url, wall=self.wall)
+        self._holder_pass(holder, signer, vars_, objects, box)
+        self.bind("signer" + sfx, holder.handler())
+        self.signers = {**getattr(self, "signers", {}), box: holder}
+        if box != "srv":
+            return holder
+        self.holder, self.signer_url, self.domain_console_url = holder, signer_url, console_url
         path = os.path.join(tempfile.mkdtemp(prefix="sig-"), "tokens.sock")
 
         class Current:                                   # the key the holder signs with NOW: a move here changes it
             def __getattr__(self, name):
                 return getattr(holder.signer.tokens, name)
-        tokens_door = UnixConsoleServer(path, served_as(self.log, "signer on srv",
+        tokens_door = UnixConsoleServer(path, served_as(self.log, f"signer on {box}",
                                                          tokendoor.handler(DeclaredIssuer(Current(), declared.token_kinds()))),
                                         self.servers["signer"].bounds)
         threading.Thread(target=tokens_door.serve_forever, daemon=True).start()
         self.tokens_socket = path
 
-    def _holder_pass(self, holder, signer, vars_, objects) -> None:
+    def _holder_pass(self, holder, signer, vars_, objects, box: str = "srv") -> None:
         """`signer_service.holder_pass`, with the stand's federation instead of `federation_from_env`."""
         from w2cplatform.domain.alarms import AlarmHistory, DomainAlarms, ReportedDoor
         from w2cplatform.domain.members import Members
@@ -339,19 +343,20 @@ class Site:
         from w2cplatform.domain.signer_service import move_by_handover, term_of
         from w2cplatform.domain.topology import Topology
         from w2cplatform.domain.uplink import _CopyObjects
-        fed = self.federation(vars_, objects)
-        holder.consoles = {n: f"http://{n}:{PORTS['console']}" for n in fed.clusters if not n.startswith("cam-")} or None
+        fed = self.federation(vars_, objects, box)
+        holder.consoles = {n: self.doors[f"console {n}"] for n in fed.clusters
+                           if n != box and f"console {n}" in self.doors} or None      # CLUSTERS' consoles, where a move reads
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
         hv, ho = fed.domain_holder.vars, fed.domain_holder.objects
         holder.fed, holder.view = fed, ReadView(fed, lost_after=45.0, wall=self.wall)
-        holder.members = Members(hv, wall=self.wall, configured=lambda: configured, domain="srv")
+        holder.members = Members(hv, wall=self.wall, configured=lambda: configured, domain=box)
         holder.topology, holder.pending = Topology(hv), PendingEdits(hv, self.wall)
         holder.alarms = DomainAlarms(fed, lambda m: ReportedDoor(m, ho, 45.0), lost_after=45.0, history=AlarmHistory(ho))
         holder.term = term_of(fed, signer, ho, holder.signer_url)
         if holder.term is not None and not signer.chain:
             holder.hand_to = lambda to: move_by_handover(holder, to, DOMAIN, signer)
 
-    def start_domain_console(self) -> None:
+    def start_domain_console(self, box: str = "srv") -> None:
         """`console.main` on srv: the people's door, no key; its store by the role `domainconsole`. Its read pass is not a
         thread here (`Console.serve` starts one): the scenario runs it (`console_pass`)."""
         from w2cplatform.domain.agent import ClusterTrust, Untrusted
@@ -367,10 +372,10 @@ class Site:
         from w2cplatform.domain.uplink import _CopyObjects
         from w2cplatform.journal import Journal
         from w2cplatform.trust.tokens import PERSON, verify
-        srv = self.cluster("srv")
-        who = "domain console on srv"
+        srv = self.cluster(box)
+        who = f"domain console on {box}"
         v = srv.door("domainconsole", who)
-        fed = self.federation(v, srv.objects_on("srv", v, who))
+        fed = self.federation(v, srv.objects_on(box, v, who), box)
         directory = DomainDirectory(fed, wall=self.wall)
         view = ReadView(fed, lost_after=45.0, wall=self.wall)
         trust = ClusterTrust(fed.domain_holder.vars)
@@ -392,15 +397,19 @@ class Site:
         hv, ho = fed.domain_holder.vars, fed.domain_holder.objects
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
         journal = Journal(srv.server.resource, "domainconsole", self.wall)
-        members = Members(hv, wall=self.wall, configured=lambda: configured, domain="srv", journal=journal)
+        members = Members(hv, wall=self.wall, configured=lambda: configured, domain=box, journal=journal)
         alarms = DomainAlarms(fed, lambda m: ReportedDoor(m, ho, 45.0, wall=self.wall), lost_after=45.0,
                               history=AlarmHistory(ho, wall=self.wall), wall=self.wall)
-        self.console = Console(directory, view, api, refresh_interval=5.0, holder_objects=ho, holder_vars=hv,
+        console = Console(directory, view, api, refresh_interval=5.0, holder_objects=ho, holder_vars=hv,
                                pending=pending, topology=Topology(hv), members=members,
                                admin=lambda s: domain_may(hv, s, "admin", self.wall()),
                                viewer=lambda s: domain_may(hv, s, "view", self.wall()),
-                               signer_url=self.signer_url, alarms=alarms, journal=journal, person=person)
-        self.bind("domain console", self.console.handler())
+                               signer_url=self.signers[box].signer_url, alarms=alarms, journal=journal, person=person)
+        sfx = "" if box == "srv" else f" {box}"
+        self.bind("domain console" + sfx, console.handler())
+        self.domain_consoles = {**getattr(self, "domain_consoles", {}), box: console}
+        if box == "srv":
+            self.console = console
 
     def console_pass(self) -> None:
         """One pass of the domain console's reader (`Console._refresher`): the members, the topology, the read view."""
