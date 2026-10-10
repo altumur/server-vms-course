@@ -785,7 +785,8 @@ class Holder:
                     try:
                         got = holder.carry_door.carry(u.path[len("/api/carry/"):], float(self.headers.get("X-W2C-Time", "nan")),
                                                       self.headers.get("X-W2C-Seal", ""), self.headers.get("X-W2C-Signature", ""),
-                                                      (parse_qs(u.query).get("for") or [None])[0])
+                                                      (parse_qs(u.query).get("for") or [None])[0],
+                                                      key=self.headers.get("X-W2C-Key") or None)
                     except ValueError:
                         return self._send(400, {"detail": "an ask names its time"})
                     except Refused as e:

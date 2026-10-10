@@ -199,7 +199,10 @@ class RelayDoor:
                                f"reached the domain for it yet")
         return {**kept, "seen": seen_mark(self.objects)}
 
-    def carry(self, cluster: str, at: float, seal: str, signature: str, for_member: str | None = None) -> dict:
+    def carry(self, cluster: str, at: float, seal: str, signature: str, for_member: str | None = None,
+              key: str | None = None) -> dict:
+        """`key`: the key the ask says it is signed with — the holder's door remembers a cluster it does not know by it
+        (a knock); the relay checks the member by the key the domain answered with, and no other."""
         from w2cplatform.trust.memberkey import verify
         from .carry import SKEW, Refused, request_message
         kept = self._kept(cluster)

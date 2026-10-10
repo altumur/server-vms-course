@@ -35,6 +35,40 @@ from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.variables import Conflict
 
 MEMBERS = "domain/members"
+# A cluster the domain's door refused, remembered as asking to join (`carry.HolderDoor`; the product's `NoteKnock`): one
+# object a cluster in the holder's object store, `{name, last, times, key, seal}` — the signer's door writes it, the
+# console reads it (`Members.knocking`). At most `MAX_KNOCKS` names (a name nobody admits is not a leak), each written
+# again at most every `KNOCK_EVERY` seconds unless its key changed.
+KNOCKS = "domain/knocks"
+MAX_KNOCKS = 64
+KNOCK_EVERY = 10.0
+
+
+def note_knock(objects, name: str, key: str, seal: str, now: float) -> bool:
+    """Remember that `name` asked the door with `key` and was refused. False when nothing was written."""
+    path = f"{KNOCKS}/{name}"
+    try:
+        was = json.loads(objects.get(path) or b"null")
+    except PARSE_ERRORS:
+        was = None
+    was = was if isinstance(was, dict) else None
+    if was is None and len(objects.list(KNOCKS + "/")) >= MAX_KNOCKS:
+        return False
+    if was is not None and was.get("key") == key and was.get("seal") == seal \
+            and isinstance(was.get("last"), (int, float)) and now - was["last"] < KNOCK_EVERY:
+        return False
+    times = was.get("times") if was is not None and isinstance(was.get("times"), int) else 0
+    objects.put(path, json.dumps({"name": name, "last": now, "times": times + 1, "key": key, "seal": seal}).encode())
+    return True
+
+
+def _knock(objects, name: str) -> dict:
+    """The knock the door remembered for `name`, or {} — one that does not read is none."""
+    try:
+        k = json.loads(objects.get(f"{KNOCKS}/{name}") or b"null")
+    except PARSE_ERRORS:
+        return {}
+    return k if isinstance(k, dict) else {}
 
 
 class Members:
@@ -217,10 +251,13 @@ class Members:
 
     @staticmethod
     def presented(name: str, domain_objects) -> dict:
-        """The keys `name` presents on its last report mark: {key, seal, fingerprint} — {} when it presents none."""
+        """The keys `name` presents on its last report mark — or, with no report, on its last knock at the domain's door
+        (`note_knock`): {key, seal, fingerprint}; {} when it presents none."""
         from .federation import published
         from .uplink import REPORTED, base
         mark = published(name, base(name) + REPORTED, domain_objects.get(base(name) + REPORTED)) or {}
+        if not mark.get("key"):
+            mark = _knock(domain_objects, name)
         key, seal = mark.get("key"), mark.get("seal")
         if not isinstance(key, str) or not isinstance(seal, str):
             return {}
@@ -230,23 +267,36 @@ class Members:
             return {}                                    # a key that is no hex is no key to admit by
 
     def knocking(self, domain_objects) -> list[dict]:
-        """Clusters that report into the domain's store and are not on the list — once the list is written.
-        Each with when it last reported (`last`, its own clock), how many reports it has left (`times`), the key it
-        presents with its fingerprint, and which root it pinned (`pinned`) — the product's words."""
+        """Clusters that report into the domain's store, or that the domain's door refused (`note_knock`), and are not on
+        the list — the list as written, or, before anybody wrote it, the members the configuration names (as its first
+        write will list them; the product's `Listed`). Each with when it last reported or asked (`last`, its own clock for
+        a report, the holder's for a knock), how many times (`times`), the key it presents with its fingerprint, and
+        which root it pinned (`pinned`) — the product's words. A cluster that both reports and knocks is said once, by
+        its report."""
         from .uplink import REPORTED, UPLINK
         doc = self.read()
-        if doc["rev"] == 0:
+        if doc.get("unreadable"):
             return []
-        out, own = [], self.own_root()
+        listed = set(doc["members"]) | (set(self.configured()) if doc["rev"] == 0 else set())
+        out, own, seen = [], self.own_root(), set()
         for key in domain_objects.list(f"{UPLINK}/"):
             name, _, sub = key[len(UPLINK) + 1:].partition("/")
-            if sub != REPORTED or name in doc["members"] or name == self.domain:
+            if sub != REPORTED or name in listed or name == self.domain:
                 continue
             raw = domain_objects.get(key)
             from .federation import published
             mark = published(name, key, raw) or {}        # a mark nobody can read: knocking, with no time (the seventh review)
             shown = {k: v for k, v in self.presented(name, domain_objects).items() if k != "seal"}
             out.append({"name": name, "last": mark.get("ts"), "times": mark.get("seq"), **shown,
+                        **self.pinned(name, domain_objects, own)})
+            seen.add(name)
+        for key in domain_objects.list(f"{KNOCKS}/"):
+            name = key[len(KNOCKS) + 1:]
+            if not name or "/" in name or name in listed or name in seen or name == self.domain:
+                continue
+            k = _knock(domain_objects, name)
+            shown = {f: v for f, v in self.presented(name, domain_objects).items() if f != "seal"}
+            out.append({"name": name, "last": k.get("last"), "times": k.get("times"), **shown,
                         **self.pinned(name, domain_objects, own)})
         return sorted(out, key=lambda x: x["name"])
 
