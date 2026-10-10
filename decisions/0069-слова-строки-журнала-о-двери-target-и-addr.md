@@ -47,3 +47,5 @@ VMS (`liveproc`, `recproc`) и платформа (`console.go`, `door.go`, `acc
 ## More Information
 Правило журнала: `Source/w2cplatform/journal.py:31`, `vmsworker/w2cplatform/journal.go:29` (обратная связь BN).
 Связано: ADR-0003, ADR-0057 (`journal:` таблиц спеки). Решение по вопросу «Лекций» 2026-10-08.
+
+**Поправка 2026-10-10 (ревью 15, minor 6).** В Context сказано, что строки `archive.read` курса пишут `target` — неверно: `footage.py:207` пишет `media`, `recording`, `addr`; `live.view.ended` и `archive.keep.verified` тоже без `target`. Решение не меняется: `target` — единица строки; курс добавляет `target=rec/<unit>` и `of` в эти строки («Лекции»), продукт — `target` рядом с `of` в `archive.read` («Сборка»).
