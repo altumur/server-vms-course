@@ -711,8 +711,11 @@ def _lease(name, lease, said: bool = False) -> float | None:
 # else's its worker reads. The course's rights are the grants the specs make (`w2cplatform/cluster/rights.py`), so the
 # declaration is a promise held to them: the rights file is not generated while any role reads a declared row and is
 # not named, or is named and does not read it (`cluster.rights.check_secrets`). A role is one of `SECRET_ROLES`:
-# `controller`, `worker` and `domainpart` (its worker on the domain, the role `<sub>domain`) are the subsystem's own.
-SECRET_ROLES = ("console", "controller", "worker", "domainpart", "domain", "domainagent", "resource")
+# `controller`, `worker` and `domainpart` (its worker on the domain, the role `<sub>domain`) are the subsystem's own;
+# `domainconsole` is the domain's console, its own identity on the holder's store (ADR-0032). The list is a shared table
+# of parity, as the platform's heartbeat strings are (`tests/testdata/platform_lists.tsv`; ADR-0019, its addition of
+# 2026-10-10): one set on both sides, the product's `known.go`.
+SECRET_ROLES = ("console", "controller", "worker", "domainpart", "domain", "domainagent", "resource", "domainconsole")
 _SECRET_ROW = re.compile(r"[a-z0-9_][a-z0-9_.\-]*(/[a-z0-9_.\-]+)*/?")
 
 
