@@ -382,15 +382,17 @@ class Holder:
             self._took(new)
         finally:
             self._moving.release()
-        # …with the operator's word when there was one: the copy named and why, or the holder reported stolen
-        # (ADR-0066's addition of 2026-10-11 — the explicit word a move restores an older copy by, written down)
-        restored = report.get("restored_copy") or {}
-        said = {"restored_from": report.get("restored_from"), "restored_term": restored.get("term"),
-                "restored_rev": restored.get("rev"), "copy": f"{copy['term']}.{copy['rev']}" if copy else None,
-                "why": reason or None}
-        self._say("domain.moved", user="recovery file", target=me, term=report["term"], stolen=stolen,
-                  reissued=len(report.get("reissued") or []), by="the recovery file",
-                  **{k: v for k, v in said.items() if v is not None})
+        # A copy the operator named, or a holder reported stolen: the explicit word a move restores by, written down
+        # in the journal (ADR-0066's addition of 2026-10-11, the product's form). An ordinary move says itself in the
+        # holder's record (`restored_from`, the term) — no journal line of its own, as the product's.
+        if copy or stolen:
+            restored = report.get("restored_copy") or {}
+            said = {"restored_from": report.get("restored_from"), "restored_term": restored.get("term"),
+                    "restored_rev": restored.get("rev"), "copy": {"term": copy["term"], "rev": copy["rev"]} if copy else None,
+                    "why": reason or None}
+            self._say("domain.moved", user="recovery file", target=f"domain/{me}", term=report["term"], stolen=stolen,
+                      reissued=len(report.get("reissued") or []), by="the recovery file",
+                      **{k: v for k, v in said.items() if v is not None})
         return 200, {k: report.get(k) for k in ("term", "rev", "restored_from", "keys_rev", "stolen", "reissued",
                                                 "shared_from", "sentence")}
 

@@ -1268,7 +1268,8 @@ def test_a_move_is_made_on_the_new_holder_by_its_signer_through_the_door_and_che
         assert south.vars.get("domain/testsub/ledger")[0] == {"s1": "seen"}
         said = _call(signer_url, "GET", "/api/holder")[1]
         assert said["term"] == 2 and said["record"]["holder"] == "south" and said["record"]["url"] == "http://south.site:8445"
-        assert lines[-1][0] == "domain.moved" and lines[-1][1]["term"] == 2 and lines[-1][1]["target"] == "south"
+        # an ordinary move is said by the holder's record, not by a journal line (ADR-0066's addition of 2026-10-11)
+        assert not any(k == "domain.moved" for k, _ in lines), lines
         st, out = w2cctl.move(base, right)
         assert st == 409 and "south holds the domain at term 2" in out["detail"], out
         assert holder.hand_to is not None                                            # its own root: it can hand on

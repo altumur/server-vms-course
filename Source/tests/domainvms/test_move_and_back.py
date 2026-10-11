@@ -164,7 +164,7 @@ def test_a_move_that_cannot_read_a_newer_copy_a_neighbour_announces_refuses_and_
         st, report = srv.move({"recovery": s.recovery, "copy": older, "why": why})
         assert st == 200 and report["term"] == 3 and report["rev"] == older["rev"], report
         kind, fields = lines.lines[-1]
-        assert kind == "domain.moved" and fields["copy"] == f"1.{older['rev']}" and fields["why"] == why, lines.lines
+        assert kind == "domain.moved" and fields["copy"] == {"term": 1, "rev": older["rev"]} and fields["why"] == why, lines.lines
         assert fields["restored_term"] == 1 and fields["restored_rev"] == older["rev"] and fields["stolen"] is False
     finally:
         s.close()
