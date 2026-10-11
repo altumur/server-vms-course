@@ -682,7 +682,7 @@ OLD_KEYS_OVERLAP = 3600.0
 
 
 def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall=time.time,
-                stolen: bool = False, sealer=None) -> tuple[DomainHolder, dict]:
+                stolen: bool = False, sealer=None, copy: dict | None = None) -> tuple[DomainHolder, dict]:
     """Move the domain on `new` from the signer's backup and the newest verified state any reachable
     member holds. `objects_of(member)` is that member's durable store.
 
@@ -690,7 +690,11 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     keys the old one did) or — step 9 — the root's recovery file: then the new holder gets keys of its OWN,
     the root signs the next key set and the record of the new term, and `stolen` says what happens to the
     old holder's keys — kept an hour for the tokens they signed, or dropped at once, with its issuing
-    certificates revoked and every member's LDevID signed again."""
+    certificates revoked and every member's LDevID signed again.
+
+    `copy`: `{term, rev}` — the operator's word (with why, at the door): restore exactly that copy, from any neighbour
+    that holds it; none gave it — refused. It, or `stolen`, is the explicit word that lets a move restore a copy older
+    than one a reachable neighbour declared and did not give (ADR-0066's addition of 2026-10-11)."""
     now = wall()
     new_vars = fed.clusters[new].vars
     root = DomainRoot.restore(domain_id, signer_backup, now=wall) if is_recovery_file(signer_backup) else None
@@ -704,6 +708,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         keys = _trusted_keys(fed, new, root, now)        # what members trust NOW — the old holder's keys, under the root
         signer = Signer.issued(domain_id, new_vars, root, now=wall, sealer=sealer)
     top_term, top_holder, best, ignored, unread = 0, None, None, [], []
+    holder_keys: dict[str, str] = {}                     # each holder's member key, as a copy it signed vouches for it
     for name, c in fed.clusters.items():
         try:
             rec = read_holder(c.vars, keys, now)
@@ -731,6 +736,10 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         except (NotTaken, *PARSE_ERRORS) as e:
             ignored.append((name, str(e)))
             continue
+        if doc.get("holder") and doc.get("holder_key"):
+            holder_keys[doc["holder"]] = doc["holder_key"]
+        if copy is not None and (int(doc["term"]), int(doc["rev"])) != (copy["term"], copy["rev"]):
+            continue                                     # the operator named the copy: exactly that one, from whoever holds it
         if best is None or (int(doc["term"]), int(doc["rev"])) > (int(best[1]["term"]), int(best[1]["rev"])):
             best = (name, doc)
     # A COPY NEWER THAN THE ONE TO RESTORE FROM, WHICH A NEIGHBOUR SAYS IT KEEPS AND DID NOT GIVE, STOPS THE MOVE
@@ -738,15 +747,17 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     # a neighbour that announces a newer copy and refused it (403, 401, 503) is a state this move would roll back,
     # silently — a blocker. Refused, with who keeps what and why it did not give it; restoring from the older copy is
     # the operator's explicit word (`stolen`), and the move's line in the journal says so.
+    if copy is not None and best is None:
+        raise ValueError(f"nothing was restored: no neighbour gave the copy named, term {copy['term']} rev {copy['rev']} "
+                         f"({'; '.join(f'{n}: {why}' for n, why in ignored)})")
     have = (int(best[1]["term"]), int(best[1]["rev"])) if best else None
-    newer = [(n, c, why) for n, c, why in unread if have is None or (c["term"], c["rev"]) > have]
-    if newer and not stolen:
-        raise ValueError(
-            "a newer copy of the domain than the one this move would restore from "
-            f"({'term %d rev %d, from %s' % (have[0], have[1], best[0]) if have else 'none'}) is kept by "
-            + "; ".join(f"{n} (term {c['term']} rev {c['rev']}: not given — {why})" for n, c, why in newer)
-            + ". Restoring from the older copy would roll the domain back: let that member give its copy (it must "
-              "know this cluster as a member), or move with stolen: true to start from the older one")
+    newer = [f"{n} keeps term {c['term']} rev {c['rev']} and did not give it ({why})" for n, c, why in unread
+             if have is None or (c["term"], c["rev"]) > have]
+    if newer and copy is None and not stolen:
+        raise ValueError(f"nothing was restored: the newest copy this move could read is "
+                         f"{'term %d rev %d' % have if have else 'none'}, and {'; '.join(newer)} — restoring it would "
+                         f"roll the domain back. Make the newer copy readable here, or name the copy to restore "
+                         f"(copy: {{term, rev}}) and say why")
     if best:
         # Each secret opened with the backup key this holder derives — from the recovery file's root, or the signer's
         # backup — and sealed again with this holder's own ring. A backup this holder cannot open is not a backup of
@@ -759,6 +770,11 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         for key, text in best[1].get("objects", {}).items():
             objects_of(new).put(key, text.encode())      # the alarm history, as of the backup
         _keep_member_key(new_vars, best[1], new, wall, revoked=keys.revoked_members)
+    # …and the holder it replaces stays one — the domain moved away from it, it did not leave — with the key a copy it
+    # signed vouches for, unless it was stolen (ADR-0066's addition of 2026-10-11; the product's `rep.Replaced`); this
+    # holder lists itself when it claims (`DomainHolder.claim`)
+    if top_holder and top_holder != new and not stolen:
+        _keep_replaced(new_vars, top_holder, top_term, holder_keys.get(top_holder), wall, revoked=keys.revoked_members)
     keys_rev = None
     if root is None:
         DomainPublisher(new_vars).publish_keys(keys)
@@ -810,7 +826,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
                                revoked=revoked_now) if stolen else []
     rev = holder.backup_rev
     report = {"term": holder.term, "record": json.loads(new_vars.get(HOLDER)[0]["doc"]),
-              "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
+              "restored_from": best[0] if best else None, "restored_copy": restored_from, "rev": rev, "ignored": ignored,
               "shared_from": shared_from, "keys_rev": keys_rev, "stolen": stolen, "reissued": reissued,
               "state": best[1]["state"] if best else {},
               "sentence": (f"term {holder.term} on {new}: the domain's state from backup rev {rev}, held by {best[0]}; "
@@ -868,6 +884,23 @@ def _keep_member_key(domain_vars, backup: dict, new: str, wall, revoked=frozense
         members[old] = {**(row or {"how": "former holder", "serial": None, "since": wall(), "by": None}), "key": key}
         return True
     m._change(mutate)
+
+
+def _keep_replaced(domain_vars, name: str, term: int, key: str | None, wall, revoked=frozenset()) -> None:
+    from .members import Members
+
+    def mutate(members):
+        row = members.get(name)
+        if row is not None and row.get("key"):
+            return False                                 # a key it has stays as it is
+        fresh = row if row is not None else {"how": f"held the domain until term {term}", "serial": None,
+                                             "since": wall(), "by": None}
+        ok = key and key not in revoked and key not in fresh.get("revoked_keys", [])
+        if row is not None and not ok:
+            return False
+        members[name] = {**fresh, **({"key": key} if ok else {})}
+        return True
+    Members(domain_vars, wall)._change(mutate)
 
 
 # The newest key set the ROOT signed that any reachable member holds — verified against the root in the

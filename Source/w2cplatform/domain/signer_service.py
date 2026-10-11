@@ -351,9 +351,16 @@ class Holder:
         me = self.fed.domain_holder.name
         if self.term is not None and not self.term.deposed_by:
             return 409, {"detail": f"{me} holds the domain at term {self.term.term}: there is nothing to move here"}
-        raw, stolen = body.get("recovery"), body.get("stolen", False)
-        if not isinstance(raw, str) or not raw or not isinstance(stolen, bool):
-            return 400, {"detail": "a move is {recovery: <the recovery file, as its text>, stolen?: true | false}"}
+        raw, stolen, copy, reason = body.get("recovery"), body.get("stolen", False), body.get("copy"), body.get("why", "")
+        bad_copy = copy is not None and not (isinstance(copy, dict) and set(copy) == {"term", "rev"}
+                                             and all(isinstance(copy[k], int) and not isinstance(copy[k], bool)
+                                                     and copy[k] >= 1 for k in ("term", "rev"))
+                                             and isinstance(reason, str) and reason.strip())
+        if not isinstance(raw, str) or not raw or not isinstance(stolen, bool) or bad_copy or not isinstance(reason, str) \
+                or set(body) - {"recovery", "stolen", "copy", "why"}:
+            return 400, {"error": "refused", "detail": "a move is {recovery: <the recovery file, as its text>, stolen?: "
+                                                       "true | false, copy?: {term, rev} with why: <words>} — a planned "
+                                                       "handover is the holder's (POST /domain/handover)"}
         blob = raw.encode()
         if stolen and not is_recovery_file(blob):
             return 400, {"detail": "a stolen holder is answered by the root's recovery file: the signer's backup holds "
@@ -369,14 +376,21 @@ class Holder:
             from .term import move_domain
             try:
                 new, report = move_domain(fed, me, blob, self.signer.domain, lambda n: fed.clusters[n].objects,
-                                          self.wall, stolen=stolen, sealer=self.sealer)
+                                          self.wall, stolen=stolen, sealer=self.sealer, copy=copy)
             except (ValueError, RuntimeError, Unreachable) as e:
                 return 409, {"detail": f"the domain was not moved: {e}"}
             self._took(new)
         finally:
             self._moving.release()
+        # …with the operator's word when there was one: the copy named and why, or the holder reported stolen
+        # (ADR-0066's addition of 2026-10-11 — the explicit word a move restores an older copy by, written down)
+        restored = report.get("restored_copy") or {}
+        said = {"restored_from": report.get("restored_from"), "restored_term": restored.get("term"),
+                "restored_rev": restored.get("rev"), "copy": f"{copy['term']}.{copy['rev']}" if copy else None,
+                "why": reason or None}
         self._say("domain.moved", user="recovery file", target=me, term=report["term"], stolen=stolen,
-                  reissued=len(report.get("reissued") or []))
+                  reissued=len(report.get("reissued") or []), by="the recovery file",
+                  **{k: v for k, v in said.items() if v is not None})
         return 200, {k: report.get(k) for k in ("term", "rev", "restored_from", "keys_rev", "stolen", "reissued",
                                                 "shared_from", "sentence")}
 

@@ -4,7 +4,7 @@ to srv. On the stand every neighbour answered srv 403 — the former holder was 
 restored from its own old copy: the domain's state rolled back, said by nobody. Two rules, as the product's: the holder
 and the former holder are always on the list of members; and a move refuses when it cannot read a copy newer than the
 one it would restore from, which it learns of by the public pointers (`/api/held`) — the older copy only by the
-operator's explicit word (`stolen`).
+operator's explicit word — a copy named (`copy: {term, rev}` with `why`) or `stolen` — written into the journal.
 
 Three clusters on files, each with its console (the processes' doors, `/api/held` and `/api/backup`), the holder's
 signer moving the domain at its door (`Holder.move`, as `POST /domain/move` hands it on); every holder installed as a
@@ -29,7 +29,7 @@ from w2cplatform.variables import FileVariables
 from tests.domain.conftest import Clock
 
 DOMAIN = "acme"
-NAMES = ("srv", "relay-a", "relay-b")
+NAMES = ("srv", "relay-a", "relay-b", "relay-c")
 GONE = "http://127.0.0.1:9"                      # a console that does not answer: its box is off
 
 
@@ -49,7 +49,7 @@ class Site:
         self.root = DomainRoot(DOMAIN, now=wall)
         self.recovery = self.root.recovery().decode()
         self.holder = install(fed, "srv", DOMAIN, self.root, wall=wall, objects=self.c["srv"].objects)
-        for n in ("relay-a", "relay-b"):
+        for n in ("relay-a", "relay-b", "relay-c"):
             Members(self.c["srv"].vars, wall, domain="srv").add(n, "voucher", key=self.keys[n].pub,
                                                                   seal=self.keys[n].seal_pub)
         self.grant("srv", "anna")
@@ -76,14 +76,14 @@ class Site:
             self.consoles[n] = (srv, f"http://127.0.0.1:{srv.server_address[1]}")
         return self.consoles[n][1]
 
-    def signer(self, at: str, gone: str) -> Holder:
+    def signer(self, at: str, gone: str, journal=None) -> Holder:
         """`at`'s signer, its box's own: the domain read by `at` itself and the others by their consoles, `gone` off."""
         mine = Federation()
         me = self.c[at]
         mine.add(Cluster(at, me.vars, me.objects, is_domain_holder=True))
         consoles = {n: (GONE if n == gone else self.console(n)) for n in NAMES if n != at}
         return Holder(me.vars, me.objects, Signer(DOMAIN, me.vars, now=self.wall), fed=mine, wall=self.wall,
-                      consoles=consoles)
+                      consoles=consoles, journal=journal)
 
     def close(self):
         for srv, _ in self.consoles.values():
@@ -91,51 +91,80 @@ class Site:
             srv.server_close()
 
 
-def _moved_to_relay_a_and_on(s: Site) -> Holder:
-    """srv backs up to both relays and goes; the domain moves to relay-a from relay-b's copy; relay-a changes the
-    state (boris), backs it up to relay-b, and relay-b's agent carries it home. Then relay-a goes too."""
-    s.holder.backup(["relay-a", "relay-b"], s.c["srv"].objects)
-    s.carry("srv", "relay-a", "relay-b")
+class Lines:
+    def __init__(self):
+        self.lines = []
+
+    def say(self, kind, cls="observation", **fields):
+        self.lines.append((kind, fields))
+
+
+def _moved_to_relay_a_and_on(s: Site):
+    """The drill (`_notes-ru/drills/2026-10-11-move-rollback.md`) on three members and a holder: srv backs up to every
+    relay (term 1) and goes; the domain moves to relay-a from a neighbour's copy; relay-a decides more (boris) and backs
+    it up to relay-b alone (term 2), which carries it home; relay-c keeps the copy of term 1. Then relay-a goes too."""
+    first = s.holder.backup(["relay-a", "relay-b", "relay-c"], s.c["srv"].objects)
+    s.carry("srv", "relay-a", "relay-b", "relay-c")
     a = s.signer("relay-a", gone="srv")
     st, report = a.move({"recovery": s.recovery})
     assert st == 200 and report["term"] == 2, report
     assert s.grants("relay-a") == {"anna"}
     s.wall.advance(60)
     s.grant("relay-a", "boris")                              # what the domain decided after the move
-    a.term.backup(["relay-b"], s.c["relay-a"].objects)
+    newer = a.term.backup(["relay-b"], s.c["relay-a"].objects)
     s.carry("relay-a", "relay-b")
-    return a
+    return {"term": 1, "rev": first}, {"term": 2, "rev": newer}
 
 
 def test_the_domain_moves_back_to_its_former_holder_from_the_newest_copy_and_never_rolls_back():
+    """The return finds the newest copy and takes it: srv, the former holder, is on relay-b's list — relay-a listed
+    itself and kept srv when it took the domain — and relay-b gives srv its copy. Before the rules every neighbour
+    answered srv 403 and srv started from what it had («no backup could be reached»): the state of term 1."""
     s = Site()
     try:
-        _moved_to_relay_a_and_on(s)
+        _, newer = _moved_to_relay_a_and_on(s)
+        listed = Members(s.c["relay-a"].vars).read()["members"]
+        assert listed["srv"].get("key") == s.keys["srv"].pub, listed.get("srv")          # the holder it replaced, kept
+        assert listed["relay-a"].get("key") == s.keys["relay-a"].pub, listed.get("relay-a")   # the holder itself
         srv = s.signer("srv", gone="relay-a")
         st, report = srv.move({"recovery": s.recovery})
         assert st == 200, report
-        assert report["term"] == 3 and report["restored_from"] == "relay-b", report
+        assert report["term"] == 3 and report["restored_from"] == "relay-b" and report["rev"] == newer["rev"], report
         assert s.grants("srv") == {"boris"}, s.grants("srv")      # the newest state, not srv's own of term 1
         listed = Members(s.c["srv"].vars).read()["members"]
-        assert {"srv", "relay-a", "relay-b"} <= set(listed), sorted(listed)   # the holder and the former holder too
+        assert listed["srv"].get("key") == s.keys["srv"].pub and listed["relay-a"].get("key") == s.keys["relay-a"].pub
     finally:
         s.close()
 
 
-def test_a_move_that_cannot_read_a_newer_copy_a_neighbour_announces_refuses_and_says_who_holds_what():
+def test_a_move_that_cannot_read_a_newer_copy_a_neighbour_announces_refuses_and_a_copy_named_with_why_is_restored():
+    """relay-b keeps the newest copy and will not give it to srv (its list does not know srv: 403), though its
+    `/api/held` says which it keeps; relay-c gives the older one. Without a word the move is refused — 409, who keeps
+    what and why it did not give it, nothing restored; `copy: {term, rev}` without `why` is 400; a copy nobody gives is
+    409; the older copy named, with why, is restored exactly, and the journal says so (`domain.moved`, copy, why)."""
     s = Site()
     try:
-        _moved_to_relay_a_and_on(s)
-        # relay-b's list no longer knows srv: it will not give srv its copy (403), though its /api/held says it keeps one
+        older, newer = _moved_to_relay_a_and_on(s)
         items, _ = s.c["relay-b"].vars.get(MEMBER_LIST)
         doc = json.loads(items["doc"])
         doc["members"].pop("srv", None)
         s.c["relay-b"].vars.put(MEMBER_LIST, {"doc": json.dumps(doc)})
-        srv = s.signer("srv", gone="relay-a")
+        lines = Lines()
+        srv = s.signer("srv", gone="relay-a", journal=lines)
         st, said = srv.move({"recovery": s.recovery})
-        assert st == 409 and "relay-b" in said["detail"] and "newer" in said["detail"], (st, said)
-        assert srv.term is None and s.grants("srv") == {"anna"}              # nothing moved, nothing rolled back
-        st, report = srv.move({"recovery": s.recovery, "stolen": True})      # the operator's word: the older copy
-        assert st == 200 and report["term"] == 3, report
+        assert st == 409 and said["detail"].startswith("the domain was not moved: nothing was restored: the newest copy "
+                                                       f"this move could read is term 1 rev {older['rev']}"), said
+        assert f"relay-b keeps term 2 rev {newer['rev']} and did not give it" in said["detail"], said
+        assert "would roll the domain back" in said["detail"] and "(copy: {term, rev}) and say why" in said["detail"]
+        assert srv.term is None and s.grants("srv") == {"anna"}               # nothing moved, nothing rolled back
+        assert srv.move({"recovery": s.recovery, "copy": older})[0] == 400        # a copy named, and no why
+        st, said = srv.move({"recovery": s.recovery, "copy": {"term": 1, "rev": 99}, "why": "a typo"})
+        assert st == 409 and "no neighbour gave the copy named, term 1 rev 99" in said["detail"], said
+        why = "relay-b is away for the week; the decision after term 2 is taken again by hand"
+        st, report = srv.move({"recovery": s.recovery, "copy": older, "why": why})
+        assert st == 200 and report["term"] == 3 and report["rev"] == older["rev"], report
+        kind, fields = lines.lines[-1]
+        assert kind == "domain.moved" and fields["copy"] == f"1.{older['rev']}" and fields["why"] == why, lines.lines
+        assert fields["restored_term"] == 1 and fields["restored_rev"] == older["rev"] and fields["stolen"] is False
     finally:
         s.close()
