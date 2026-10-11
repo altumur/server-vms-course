@@ -273,7 +273,7 @@ def test_the_name_comes_from_the_unit_and_a_spare_has_none():
     assert runtime.slot({"WORKER_NAME": "w-srv-a-1"}) == "w-srv-a-1"
     assert runtime.slot({"WORKER_NAME": "r-srv-a-1"}, "RECORDER_NAME", "r") == "r-srv-a-1"
     assert runtime.slot({"RECORDER_NAME": "r-2", "WORKER_NAME": "x"}, "RECORDER_NAME", "r") == "r-2"
-    assert runtime.slot({"SLOT_INDEX": "3"}, "GATEWAY_NAME", "g") == "g-3" and runtime.slot({}) is None
+    assert runtime.slot({"SLOT_INDEX": "3"}, "LIVE_NAME", "g") == "g-3" and runtime.slot({}) is None
     assert runtime.spare_for({}) is None and runtime.spare_for({"SPARE_FOR": ""}) == ""
     box = Box()
     w = _worker(box, env={"WORKER_NAME": "w-srv-a-1"})

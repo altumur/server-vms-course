@@ -20,7 +20,7 @@ beside its workers is its housekeeping, `jobs`: the requests turned into work an
                                      SECOND gateway on one box needs); the URL its door is handed out at
     RTSP_PORT=8554  PLAYBACK_PORT=8083   the worker's two doors, `auto` likewise: a template that fixes a
                                      number is a door only the first instance on the box can open
-    GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
+    LIVE_NAME=g-1                    its slot (systemd: %i); CAPACITY here is viewers
     DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; LABELS=gpu says where it is
     COMMANDS_BEAT=0.25               worker: how often it looks at its request rows between passes, in seconds; 0 — only on the pass
     REACH_BUDGET=10                  controller: units it moves in one pass to a server that reaches them (`ensure_reach`);

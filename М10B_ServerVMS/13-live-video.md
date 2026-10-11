@@ -44,7 +44,7 @@
 
 ```yaml
 name: live
-slot: {prefix: g, name_env: GATEWAY_NAME}
+slot: {prefix: g, name_env: LIVE_NAME}
 worker: {writes: [streams]}   # a gateway deletes the fan-out it holds once nobody has watched it for `grace`
 about: {sub: vms, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:

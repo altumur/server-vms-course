@@ -13,7 +13,7 @@ After=network.target
 [Container]
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms gateway
-Environment=GATEWAY_NAME=%i
+Environment=LIVE_NAME=%i
 Environment=GATEWAY_HOST=0.0.0.0
 # NOT a port number in a template. `liveworker@g-1` and `liveworker@g-2` on one box are the ordinary way
 # to use capacity — and with a fixed 8082 the second one binds a taken socket, dies, and `Restart=always`
