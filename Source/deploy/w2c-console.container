@@ -76,8 +76,7 @@ Volume=/run/w2c-console:/run/w2c-console:z
 # connections of their own, which a flood from the network cannot take; anyone else is answered `/metrics` only from
 # the common slots. Set it to Prometheus's address in `vms.env` (`CONSOLE_MONITORS=10.0.0.5`); unset — no lane.
 #Environment=CONSOLE_MONITORS=10.0.0.5
-# `PLATFORM_DIR`, `RESOURCE_ROOT` (both the platform's, `w2c.env`), `CAPACITY` (the fallback capacity its controller object carries; it
-# never places, so it is unused in practice), `LOG_LEVEL`.
+# `PLATFORM_DIR`, `RESOURCE_ROOT` (both the platform's, `w2c.env`), `LOG_LEVEL`.
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
 # read-write: the console's token writes camera rows, `next_id`, derived retention rows and idempotency

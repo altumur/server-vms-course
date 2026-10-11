@@ -43,7 +43,7 @@ Exec=python3 -m vms worker
 # exactly that slot by CAS, even from a holder that has not lapsed — systemd is the authority on which
 # process is the current `w-1`, and the old one finds out at its next `renew_slot` and fences.
 Environment=WORKER_NAME=%i
-# `PLATFORM_DIR`, `RESOURCE_ROOT` (`w2c.env.example`), `MEDIA_DIR`, `CAPACITY`, `LOG_LEVEL` (`vms.env.example`):
+# `PLATFORM_DIR`, `RESOURCE_ROOT` (`w2c.env.example`), `MEDIA_DIR`, `LOG_LEVEL` (`vms.env.example`), `CAPACITY` (`roles/vmsworker.env.example`):
 # `/etc/w2c` and `/etc/vms` are links into the data partition, never a rootfs slot.
 # The worker's TWO doors, and neither may be a constant in a template: the RTSP fan-out and the playback
 # surface. A second `vmsworker@w-2` on the same box is the ordinary way to use capacity (the autoscaler
@@ -54,6 +54,9 @@ Environment=RTSP_PORT=auto
 Environment=PLAYBACK_PORT=auto
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
+# the role's declaration on this box (ADR-0070): CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB — the administrator's
+# file, read last, so its CAPACITY is the role's own and no other role's
+EnvironmentFile=/etc/vms/roles/vmsworker.env
 # the two stores, read-write: the worker writes `vms/epoch/*`, `vms/slots/*`, `vms/devices/*` (its token) and its heartbeat
 # object. `:z` relabels for SELinux, shared.
 # The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid

@@ -29,6 +29,7 @@ from .contract import (ASSIGNMENTS, Assignment, BUILD, CONTENDER_FRESH, CONTEND_
 from .canonical import canonical_json
 from .doors import numeric
 from .epoch import Lease, next_epoch
+from .memorybudget import memory_budget
 from .events import ALARM, COMMAND, COMMAND_FAILED, OBSERVATION, OF
 from .journal import Journal
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
@@ -80,6 +81,8 @@ class Worker:
         self.spec = spec if spec is not None else self._catalogue_spec(sub, env)
         if self.spec.name != sub.name:
             raise ValueError(f"a worker of {sub.name} runs by {sub.name}'s spec, not {self.spec.name}'s")
+        # Its units fit the memory its role's declaration gives it, or it does not start (ADR-0070, step 3).
+        memory_budget(self.spec, os.environ if env is None else env)
         # This server's resource tree — where `observe` and the journal write (`runtime.events_root`: the caller's,
         # else `RESOURCE_ROOT`, else the platform's events root). Set here, before the claim, so no subsystem has to
         # remember it: one that forgot had `observe` write nothing, silently, and a journal opened on no tree.

@@ -14,7 +14,8 @@
 # partition); /opt/w2c/{Source,bin/w2c-run.sh}; `w2c-cluster.sysusers` and `.tmpfiles`; the archive's
 # engine by М10's own installer (`install-obsd.sh`), its unit aliased `vms-obsd.service`; the rights file
 # `/etc/w2c/configstore-rights.json` (checked against the spec first: a stale file is refused, not installed); the two
-# env files from their examples when absent (never overwritten); the TLS bundle given to `configstore`; the units,
+# env files and the roles' declarations (`/etc/vms/roles/<role>.env`, ADR-0070) from their examples when absent (never
+# overwritten); the TLS bundle given to `configstore`; the units,
 # enabled and started — `configstore` first.
 #
 # macOS (launchd) — THE BOX IS A DIRECTORY (the thirteenth review, major 15, the decision aligned with the product).
@@ -116,6 +117,11 @@ if [ "$OS" = macos ]; then
       echo "# The recorder's own volume, on a Mac: the box's (the default is a Linux server's)."
       echo "ARCHIVE_VOLUME=file://$BOX/state/vms/obsd/volume"; } > "$BOX/vms.env"
   fi
+  # the roles' declarations (ADR-0070: CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB), each laid once, never over a file
+  mkdir -p "$BOX/roles"
+  for f in "$SOURCE"/deploy/roles/*.env.example; do
+    r="$BOX/roles/$(basename "$f" .example)"; [ -f "$r" ] || cp "$f" "$r"
+  done
   mkdir -p "$BOX/secrets" "$BOX/tls"
   chmod 0700 "$BOX/secrets" "$BOX/tls"
   [ -f "$BOX/secrets/platform.key" ] || echo "warning: no $BOX/secrets/platform.key — the same key on every server (python3 -m w2cplatform.sealing new …)" >&2
@@ -172,6 +178,11 @@ mkdir -p /var/log/w2c
 install -m 0644 "$HERE/configstore-rights.json" /etc/w2c/configstore-rights.json
 [ -f /etc/w2c/w2c.env ] || install -m 0644 "$HERE/systemd/w2c.env.example" /etc/w2c/w2c.env
 [ -f /etc/vms/vms.env ] || install -m 0644 "$HERE/systemd/vms.env.example" /etc/vms/vms.env
+# the roles' declarations (ADR-0070: CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB), each laid once, never over a file
+for f in "$SOURCE"/deploy/roles/*.env.example; do
+  mkdir -p /etc/vms/roles
+  r="/etc/vms/roles/$(basename "$f" .example)"; [ -f "$r" ] || install -m 0644 "$f" "$r"
+done
 [ -f /etc/w2c/tls/server.pem ] || echo "warning: no /etc/w2c/tls/server.pem — the store's -api door will not open (w2c-ca.sh issue $(hostname -s) configstore)" >&2
 [ -f /etc/w2c/secrets/platform.key ] || echo "warning: no /etc/w2c/secrets/platform.key — the same key on every server (python3 -m w2cplatform.sealing new …)" >&2
 

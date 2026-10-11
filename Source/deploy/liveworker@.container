@@ -24,6 +24,9 @@ Environment=GATEWAY_HOST=0.0.0.0
 Environment=GATEWAY_PORT=auto
 EnvironmentFile=/etc/w2c/w2c.env
 EnvironmentFile=/etc/vms/vms.env
+# the role's declaration on this box (ADR-0070): CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB — the administrator's
+# file, read last, so its CAPACITY is the role's own and no other role's
+EnvironmentFile=/etc/vms/roles/liveworker.env
 # The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
 # `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
 Volume=/data/platform/config:/data/platform/config:z

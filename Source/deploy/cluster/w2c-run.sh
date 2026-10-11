@@ -12,10 +12,12 @@
 #   w2c-run.sh spares <role>...             a box on macOS: `w2c-spares.sh` with the box's two files read (a Linux
 #                                           server's timers give it them by `EnvironmentFile=`)
 #
-# The environment comes from two files, the platform's and the subsystem's (the product's split):
+# The environment comes from two files, the platform's and the subsystem's (the product's split), and a third for a
+# unit that names its role (`W2C_ROLE`, ADR-0070):
 #
 #   /etc/w2c/w2c.env    PLATFORM_DIR, SERVER_NAME, BOX_ID, LABELS, the store's addresses (CONFIGSTORE_*), secrets
-#   /etc/vms/vms.env    the VMS subsystem's settings: CAPACITY, ports, budgets
+#   /etc/vms/vms.env    the VMS subsystem's settings: ports, budgets
+#   /etc/vms/roles/<role>.env   the role's declaration on this host: CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB
 #
 # read here — not by `EnvironmentFile=` — so a launchd plist, a spare started from its template and a person at a
 # shell all get the same. What the unit itself said WINS: a line of a file sets a name only when the unit did not
@@ -61,6 +63,16 @@ load() {
         export "$name=${line#*=}"
     done <"$1"
 }
+# The role's declaration first (ADR-0070, step 3), when the unit names a role (`W2C_ROLE`): `roles/<role>.env` beside
+# the subsystem's file — CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB, this role's and no other's, so its CAPACITY wins
+# over any the shared files still say. A role named and no declaration: the process starts on its defaults, and the
+# spares pass, which reads the same file, starts none of it.
+ROLES_DIR="${ROLES_DIR:-${BOX:+$BOX/roles}}"; ROLES_DIR="${ROLES_DIR:-/etc/vms/roles}"
+case "${W2C_ROLE:-}" in
+    '') ;;
+    *[!a-z0-9_-]*) echo "w2c-run.sh: W2C_ROLE='$W2C_ROLE' is no role's name" >&2; exit 2 ;;
+    *) load "$ROLES_DIR/$W2C_ROLE.env" ;;
+esac
 load "$W2C_ENV"
 load "$VMS_ENV"
 

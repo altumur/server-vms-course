@@ -1,6 +1,6 @@
 # /etc/systemd/system/w2c-spares-autoworker.service — the one-shot its timer fires: spare evaluators
 # (`w2c-spares.sh autoworker`), for the label sets this server covers, as many as `auto_workers_needed on /auto/metrics` says and
-# `MAX_EVALUATORS` allows. Each is `systemctl start vms-autoworker-spare@<n>` — its role's unit's template, the same user, groups and key —
+# the role's declaration allows (`/etc/vms/roles/autoworker.env`: HOST_MEMORY_MB / WORKER_MEMORY_MB, ADR-0070). Each is `systemctl start vms-autoworker-spare@<n>` — its role's unit's template, the same user, groups and key —
 # with `SPARE_FOR=<set>` in its one-line file: it takes an offer of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
 # `w2c-spares.service`.
 [Unit]

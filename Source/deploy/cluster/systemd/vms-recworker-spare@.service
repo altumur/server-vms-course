@@ -19,6 +19,9 @@ User=vms
 Group=vms
 SupplementaryGroups=vms-recworker vms-obsd w2c-events w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/recworker.sock
+# The role's declaration on this host, read by w2c-run.sh (ADR-0070): /etc/vms/roles/recworker.env — CAPACITY,
+# WORKER_MEMORY_MB, HOST_MEMORY_MB; the administrator's file, not the spares pass's.
+Environment=W2C_ROLE=recworker
 Environment=OBSD_SOCKET=/run/vms-obsd/obsd.sock
 Environment=BOX_ID=%m
 # A second recorder on this server: its door on a port the OS gives, published in its heartbeat on the address

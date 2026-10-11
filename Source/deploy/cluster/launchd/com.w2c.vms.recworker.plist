@@ -21,6 +21,8 @@
 		<string>__BOX__</string>
 		<key>PLATFORM_STORE</key>
 		<string>configstore://__BOX__/state/run/configstore/recworker.sock</string>
+		<key>W2C_ROLE</key>
+		<string>recworker</string>
 		<key>WORKER_NAME</key>
 		<string>r-@HOST@-1</string>
 		<key>OBSD_SOCKET</key>

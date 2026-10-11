@@ -151,6 +151,11 @@ link_etc "$R/etc/w2c" "$R/data/platform/etc"
 link_etc "$R/etc/vms" "$R/data/vms/etc"
 [ -f "$R/etc/w2c/w2c.env" ] || install -m 0644 "$HERE/w2c.env.example" "$R/etc/w2c/w2c.env"
 [ -f "$R/etc/vms/vms.env" ] || install -m 0644 "$HERE/vms.env.example" "$R/etc/vms/vms.env"
+# the roles' declarations (ADR-0070: CAPACITY, WORKER_MEMORY_MB, HOST_MEMORY_MB) — each container of a role reads its own
+for f in "$HERE"/roles/*.env.example; do
+  mkdir -p "$R/etc/vms/roles"
+  r="$R/etc/vms/roles/$(basename "$f" .example)"; [ -f "$r" ] || install -m 0644 "$f" "$r"
+done
 # The events tree is the platform's: its root is a key of w2c.env.
 if [ -f "$R/etc/w2c/w2c.env" ] && ! grep -q '^RESOURCE_ROOT=' "$R/etc/w2c/w2c.env"; then
   printf '%s\n' "RESOURCE_ROOT=/data/platform/events" >> "$R/etc/w2c/w2c.env"

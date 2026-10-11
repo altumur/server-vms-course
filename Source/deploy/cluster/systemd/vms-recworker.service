@@ -17,6 +17,9 @@ Group=vms
 # box's layout's (WP-E): the events archive, the objects, the key ring.
 SupplementaryGroups=vms-recworker vms-obsd w2c-events w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/recworker.sock
+# The role's declaration on this host, read by w2c-run.sh (ADR-0070): /etc/vms/roles/recworker.env — CAPACITY,
+# WORKER_MEMORY_MB, HOST_MEMORY_MB; the administrator's file, not the spares pass's.
+Environment=W2C_ROLE=recworker
 Environment=WORKER_NAME=r-%l-1
 Environment=OBSD_SOCKET=/run/vms-obsd/obsd.sock
 # WHICH BOX: the machine id — the same across restarts, not the hostname, which two boxes may share (М10's eighth

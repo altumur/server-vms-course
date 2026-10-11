@@ -73,8 +73,11 @@ def test_the_units_run_the_entrypoints_the_package_has():
             assert u["Container"]["Exec"] == f"python3 -m w2cplatform controller {entry}"   # the instance names the spec
         else:
             assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
-        # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it
-        assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env"]
+        # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it — and a
+        # role of the spares, its declaration last (ADR-0070: its CAPACITY and memory budget, no other role's)
+        role = name.split("@")[0]
+        declared = [f"/etc/vms/roles/{role}.env"] if role in ("vmsworker", "recworker", "liveworker", "autoworker") else []
+        assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env", *declared], name
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
             assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/w2c-console:",   # sockets on a tmpfs, not state
                                    f"{KEY}:")), vol                                              # the key ring: one file
@@ -125,7 +128,10 @@ def test_the_image_carries_the_three_packages_and_nothing_else():
     env = open(os.path.join(DEPLOY, "vms.env.example")).read()
     platform = open(os.path.join(DEPLOY, "w2c.env.example")).read()
     assert "PLATFORM_DIR=/data/platform" in platform and f"RESOURCE_ROOT={EVENTS}" in platform   # the events archive is the platform's
-    assert "CAPACITY=" in env
+    assert not re.search(r"^#? ?CAPACITY=", env, re.M)                # each role's, in its declaration (ADR-0070)
+    for role in ("vmsworker", "recworker", "liveworker", "autoworker"):
+        said = _env_names(os.path.join("roles", f"{role}.env.example"))
+        assert said == {"CAPACITY", "WORKER_MEMORY_MB", "HOST_MEMORY_MB"}, (role, said)
     assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
 
 
@@ -143,7 +149,8 @@ def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
     half and only there — `RESOURCE_ROOT` the platform's."""
     platform, vms = _env_names("w2c.env.example"), _env_names("vms.env.example")
     assert {"PLATFORM_DIR", "RESOURCE_ROOT", "PLATFORM_STORE", "SERVER_NAME", "LABELS", "BOX_ID"} <= platform
-    assert {"CAPACITY", "MEDIA_DIR", "SHM_DIR", "OBSD_SOCKET", "ARCHIVE_VOLUME"} <= vms
+    assert {"MEDIA_DIR", "SHM_DIR", "OBSD_SOCKET", "ARCHIVE_VOLUME"} <= vms
+    assert not {"CAPACITY", "MAX_WORKERS", "MAX_RECORDERS", "MAX_GATEWAYS", "MAX_EVALUATORS"} & (vms | platform)   # ADR-0070
     assert not platform & vms, platform & vms
     for n in os.listdir(DEPLOY):
         if n.startswith("w2c-spares") and n.endswith(".service"):
@@ -606,7 +613,14 @@ def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_g
 ROLES_WITH_TEMPLATES = ("vmsworker", "recworker", "liveworker", "autoworker")
 
 
-def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_WITH_TEMPLATES, refused=()):
+# The roles' declarations a run of the script finds (`ROLES_DIR`, ADR-0070): the examples' numbers, a ceiling of 4 or 2.
+DECLARED = {"vmsworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=2048\n",
+            "recworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=2048\n",
+            "liveworker": "CAPACITY=100\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n",
+            "autoworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}
+
+
+def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_WITH_TEMPLATES, refused=(), roles=None):
     """`w2c-spares.sh` RUN, every command it talks to a shim: `curl` answers from `pages` (`{path: text}`, a missing
     path is a console that does not answer); on Linux `systemctl cat` finds the spare templates of `templates`,
     `systemctl start` writes its line down and the unit is active from then on — but a unit of `refused` is refused,
@@ -615,7 +629,7 @@ def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_
     the roles' plists of `templates` in `$LAUNCHD_DIR` (as `install.sh` lays them), the real `plutil`, a `launchctl`
     that writes its line down and has the label loaded from then on. Every shim writes before it returns: nothing runs
     in the background, so the lines are there when the script ends. `(the finished process — its `dir` the shims' —,
-    the lines)`."""
+    the lines)`. `roles`: the declarations in `ROLES_DIR` over `DECLARED` (`None` as a role's text: no file)."""
     import plistlib
     import shutil
     import subprocess
@@ -632,6 +646,11 @@ def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_
         open(os.path.join(bin_, "refused-" + unit), "w").close()
     launchd = os.path.join(bin_, "launchd")
     os.makedirs(launchd)
+    os.makedirs(os.path.join(bin_, "roles"))
+    for role, text in {**DECLARED, **(roles or {})}.items():
+        if text is not None:
+            with open(os.path.join(bin_, "roles", f"{role}.env"), "w") as f:
+                f.write(text)
     for role in templates:
         open(os.path.join(bin_, f"template-vms-{role}-spare@.service"), "w").close()
         with open(os.path.join(launchd, f"com.w2c.vms.{role}.plist"), "wb") as f:     # the role's own, as installed
@@ -664,7 +683,8 @@ def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_
                 os.symlink(found, os.path.join(bin_, tool))
         path = bin_
     full = {"PATH": path, "CONSOLE": "http://console", "SERVER_NAME": "srv-a", "SPARES_DIR": os.path.join(bin_, "spares"),
-            "SPARES_ENV": os.path.join(bin_, "env"), "LAUNCHD_DIR": launchd, **(env or {})}
+            "SPARES_ENV": os.path.join(bin_, "env"), "LAUNCHD_DIR": launchd, "ROLES_DIR": os.path.join(bin_, "roles"),
+            **(env or {})}
     out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "w2c-spares.sh"), *args], env=full, capture_output=True,
                          text=True, timeout=30)
     out.dir = bin_
@@ -690,11 +710,13 @@ vms_server_labels{server="srv-b",labels="vlan:x",source="console"} 1
 def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_its_ceiling_and_stops_nothing():
     """The product's P5, the course's `w2c-spares.sh vmsworker`, run with its commands shimmed. The console wants one
     camera worker on no label, two on `vlan:dmz`, one on `vlan:x`; srv-a reaches `vlan:dmz` by the console's row
-    (`vms_server_labels … source="console"`). Under `MAX_WORKERS=2`: a spare for the empty set and one for `vlan:dmz`,
+    (`vms_server_labels … source="console"`). Under a ceiling of 2 (the role's declaration: 1024 MiB of the host's for
+    workers of 512 each, ADR-0070): a spare for the empty set and one for `vlan:dmz`,
     each `systemctl start vms-vmsworker-spare@<n>` with its set in the one-line file its template reads; none for
     `vlan:x`, which srv-a does not reach; the second `vlan:dmz` not, the ceiling. Run again: the two run, the ceiling is
     reached, nothing more. Never a stop, never a kill."""
-    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"})
+    two = {"vmsworker": "CAPACITY=50\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}
+    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, roles=two)
     assert out.returncode == 0, out.stderr
     started = [c for c in calls if c.startswith("systemctl start")]
     assert started == ["systemctl start vms-vmsworker-spare@1", "systemctl start vms-vmsworker-spare@2"], calls
@@ -702,17 +724,46 @@ def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_it
     assert "which srv-a does not reach" in out.stdout and "the ceiling here is 2" in out.stderr, out.stdout + out.stderr
     assert not any(" stop " in c or c.startswith(("systemctl stop", "kill")) for c in calls), calls
     assert all(c.startswith("systemctl start ") for c in calls), calls      # the one verb polkit gives its user
-    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"},
+    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, roles=two,
                          active=("vms-vmsworker-spare@1", "vms-vmsworker-spare@2"))
     assert out.returncode == 0 and not [c for c in calls if c.startswith("systemctl start")], calls
+
+
+def test_the_spares_ceiling_is_derived_from_the_roles_declaration_and_nothing_else():
+    """ADR-0070, step 3 (the product's 6aeebf4): a role's ceiling is `HOST_MEMORY_MB / WORKER_MEMORY_MB` of its
+    declaration on the host (`ROLES_DIR/<role>.env`), rounded down — 1000 / 300 is 3 — two lines taken by parsing, the
+    file never run (`$(…)` in it runs nothing). No file, no line, 0, a fraction, a negative, a word, a file with
+    `CAPACITY` alone: nothing started for that role and the file named; the other roles go on. The hand-written ceilings
+    are gone without a fallback (ADR-0003): `MAX_WORKERS` in the environment counts for nothing."""
+    many = 'vms_workers_needed{labels=""} 9\n'
+    out, calls = _spares("vmsworker", pages={"/metrics": many}, env={"MAX_WORKERS": "9"},
+                         roles={"vmsworker": "CAPACITY=50\nWORKER_MEMORY_MB=300\nHOST_MEMORY_MB=1000\n"})
+    assert out.returncode == 0, out.stderr
+    assert [c for c in calls if c.startswith("systemctl start")] == [f"systemctl start vms-vmsworker-spare@{n}" for n in (1, 2, 3)]
+    assert "the ceiling here is 3" in out.stderr, out.stderr
+    for text in (None, "", "CAPACITY=50\n", "WORKER_MEMORY_MB=0\nHOST_MEMORY_MB=1000\n",
+                 "WORKER_MEMORY_MB=2.5\nHOST_MEMORY_MB=1000\n", "WORKER_MEMORY_MB=-1\nHOST_MEMORY_MB=1000\n",
+                 "WORKER_MEMORY_MB=lots\nHOST_MEMORY_MB=1000\n", "WORKER_MEMORY_MB=512\n"):
+        out, calls = _spares("vmsworker", "recworker", roles={"vmsworker": text},
+                             pages={"/metrics": many, "/rec/metrics": 'rec_workers_needed{labels=""} 1\n'})
+        assert out.returncode == 0, (text, out.stderr)
+        assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-recworker-spare@1"], (text, calls)
+        assert "vmsworker.env" in out.stderr and "nothing started" in out.stderr, (text, out.stderr)
+    out, calls = _spares("vmsworker", pages={"/metrics": many},
+                         roles={"vmsworker": "WORKER_MEMORY_MB=$(touch ran)512\nHOST_MEMORY_MB=1024\n"})
+    assert not os.path.exists(os.path.join(out.dir, "ran")) and not os.path.exists("ran")
+    assert not [c for c in calls if c.startswith("systemctl start")], calls
+    out, calls = _spares("vmsworker", pages={"/metrics": many},
+                         roles={"vmsworker": "WORKER_MEMORY_MB=999\n  WORKER_MEMORY_MB=512  \nHOST_MEMORY_MB=1024\n"})
+    assert len([c for c in calls if c.startswith("systemctl start")]) == 2, calls     # the last line of a key, as `.` leaves it
 
 
 def test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried():
     """The script runs as the platform's `w2c` now (ADR 0030), whom polkit lets `start` a spare template's instance and nothing else (the
     product's cross-check, 4 Oct) — so no `reset-failed` before a start either: an instance past systemd's start limit,
     or one polkit refuses, fails its `start`. That is said, and the next number is tried, within the ceiling."""
-    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, env={"MAX_WORKERS": "2"},
-                         refused=("vms-vmsworker-spare@1",))
+    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'},
+                         roles={"vmsworker": "WORKER_MEMORY_MB=512\nHOST_MEMORY_MB=1024\n"}, refused=("vms-vmsworker-spare@1",))
     assert out.returncode == 0, out.stderr
     assert calls == ["systemctl start vms-vmsworker-spare@1 (refused)", "systemctl start vms-vmsworker-spare@2"], calls
     assert "vms-vmsworker-spare@1 did not start — the next number is tried" in out.stderr, out.stderr
@@ -790,7 +841,8 @@ def test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_
                                          "ARCHIVE_PORT": "8084", "SPARE_FOR": "", "RTSP_PORT": "auto"}, p
     assert p["StandardErrorPath"] == "/var/log/w2c/com.w2c.vms.vmsworker.spare-1.log" and p["KeepAlive"] is True
     out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, linux=False,
-                         env={"MAX_WORKERS": "1"}, active=("com.w2c.vms.vmsworker.spare-1",))
+                         roles={"vmsworker": "WORKER_MEMORY_MB=512\nHOST_MEMORY_MB=512\n"},
+                         active=("com.w2c.vms.vmsworker.spare-1",))
     assert out.returncode == 0 and calls == [], calls
 
 

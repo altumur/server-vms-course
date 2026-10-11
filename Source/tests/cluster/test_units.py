@@ -128,6 +128,47 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
                       "-tls /etc/w2c/tls -tuning lan -join srv-a@10.0.0.1:8300 -force")
 
 
+def test_a_unit_that_names_its_role_gets_its_declaration_first_and_the_spares_pass_reads_the_same_file():
+    """ADR-0070, step 3 (the product's `W2C_ROLE`, 6aeebf4 and bdd1e1e): the worker's and the recorder's units — and their
+    spares' templates, line for line — name their role, and the runner reads the role's declaration
+    (`/etc/vms/roles/<role>.env`; `<box>/roles/` on a Mac) before the two shared files: its `CAPACITY`, `WORKER_MEMORY_MB`,
+    `HOST_MEMORY_MB` win over any a shared file still says, and what the unit says wins over all. A role that is no
+    role's name is refused; no file is no failure. The plists name it too, and `install.sh` lays the examples."""
+    import subprocess
+    for role in ("vmsworker", "recworker"):
+        for name in (f"vms-{role}", f"vms-{role}-spare@"):
+            assert unit(os.path.join(SYSTEMD, f"{name}.service"))["env"]["W2C_ROLE"] == role, name
+        with open(os.path.join(DEPLOY, "launchd", f"com.w2c.vms.{role}.plist"), "rb") as f:
+            assert plistlib.load(f)["EnvironmentVariables"]["W2C_ROLE"] == role
+    d = tempfile.mkdtemp(prefix="role-")
+    py = os.path.join(d, "python3")
+    with open(py, "w") as f:
+        f.write("#!/bin/sh\nenv\n")
+    os.chmod(py, 0o755)
+    os.makedirs(os.path.join(d, "roles"))
+    with open(os.path.join(d, "roles", "vmsworker.env"), "w") as f:
+        f.write("CAPACITY=40\nWORKER_MEMORY_MB=512\nHOST_MEMORY_MB=2048\n")
+    with open(os.path.join(d, "vms.env"), "w") as f:
+        f.write("CAPACITY=9\nSHM_DIR=/run/vms\n")
+    open(os.path.join(d, "w2c.env"), "w").close()
+    env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d, "W2C_ROLE": "vmsworker"}
+
+    def run(**more):
+        out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "console"], env={**env, **more},
+                             capture_output=True, text=True)
+        return out.returncode, dict(l.split("=", 1) for l in out.stdout.splitlines() if "=" in l), out.stderr
+    code, got, _ = run()
+    assert code == 0 and got["CAPACITY"] == "40" and got["WORKER_MEMORY_MB"] == "512" and got["SHM_DIR"] == "/run/vms"
+    code, got, _ = run(CAPACITY="7")
+    assert got["CAPACITY"] == "7"                                       # the unit's word wins
+    code, got, _ = run(W2C_ROLE="recworker")
+    assert code == 0 and got["CAPACITY"] == "9" and "WORKER_MEMORY_MB" not in got   # no declaration: no failure
+    code, got, err = run(W2C_ROLE="../x")
+    assert code == 2 and "no role's name" in err, err
+    script = open(os.path.join(DEPLOY, "install.sh"), encoding="utf-8").read()
+    assert script.count("deploy/roles/*.env.example") == 2              # Linux and the box
+
+
 def test_the_runner_writes_as_its_group_however_it_was_started_and_finds_a_box_by_its_directory():
     """The thirteenth review, major 13: a unit says `UMask=0007`, but Nomad's `raw_exec` hands on the agent's 0022 —
     the events archive's buckets came out 2755 `vms:w2c-events`, the resource (`w2c`) could not delete them, and its

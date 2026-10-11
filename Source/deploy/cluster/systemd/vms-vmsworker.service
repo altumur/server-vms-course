@@ -17,6 +17,9 @@ Group=vms
 # box's layout (WP-E); the key ring's.
 SupplementaryGroups=vms-vmsworker w2c-events w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/vmsworker.sock
+# The role's declaration on this host, read by w2c-run.sh (ADR-0070): /etc/vms/roles/vmsworker.env — CAPACITY,
+# WORKER_MEMORY_MB, HOST_MEMORY_MB; the administrator's file, not the spares pass's.
+Environment=W2C_ROLE=vmsworker
 Environment=WORKER_NAME=w-%l-1
 # The fan-out, OPENED: its default is loopback (М10B Lesson 4), and a recorder or a gateway on another server has to
 # reach it. Nobody is asked who they are at this door: the cluster's network keeps it closed to everybody else.

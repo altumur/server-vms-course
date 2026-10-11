@@ -1,6 +1,6 @@
 # /etc/systemd/system/w2c-spares-liveworker.service — the one-shot its timer fires: spare live gateways
 # (`w2c-spares.sh liveworker`), for the label sets this server covers, as many as `live_workers_needed on /live/metrics` says and
-# `MAX_GATEWAYS` allows. Each is `systemctl start vms-liveworker-spare@<n>` — its role's unit's template, the same user, groups and key —
+# the role's declaration allows (`/etc/vms/roles/liveworker.env`: HOST_MEMORY_MB / WORKER_MEMORY_MB, ADR-0070). Each is `systemctl start vms-liveworker-spare@<n>` — its role's unit's template, the same user, groups and key —
 # with `SPARE_FOR=<set>` in its one-line file: it takes an offer of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
 # `w2c-spares.service`.
 [Unit]

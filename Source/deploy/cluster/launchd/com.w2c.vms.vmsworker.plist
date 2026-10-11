@@ -21,6 +21,8 @@
 		<string>__BOX__</string>
 		<key>PLATFORM_STORE</key>
 		<string>configstore://__BOX__/state/run/configstore/vmsworker.sock</string>
+		<key>W2C_ROLE</key>
+		<string>vmsworker</string>
 		<key>WORKER_NAME</key>
 		<string>w-@HOST@-1</string>
 		<key>RTSP_HOST</key>

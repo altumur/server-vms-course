@@ -3,11 +3,21 @@
 #
 #   w2c-spares.sh [role ...]        roles as arguments, else $SPARES_ROLES (spaces or commas), else recworker
 #
-#   role         the console's number                                   this server's ceiling
-#   recworker    rec_workers_needed{labels=""}  on /rec/metrics         MAX_RECORDERS  (8)
-#   vmsworker    vms_workers_needed{labels}     on /metrics             MAX_WORKERS    (4)
-#   liveworker   live_workers_needed{labels}    on /live/metrics        MAX_GATEWAYS   (4)
-#   autoworker   auto_workers_needed{labels}    on /auto/metrics        MAX_EVALUATORS (4)
+#   role         the console's number                                   its declaration (the ceiling)
+#   recworker    rec_workers_needed{labels=""}  on /rec/metrics         $ROLES_DIR/recworker.env
+#   vmsworker    vms_workers_needed{labels}     on /metrics             $ROLES_DIR/vmsworker.env
+#   liveworker   live_workers_needed{labels}    on /live/metrics        $ROLES_DIR/liveworker.env
+#   autoworker   auto_workers_needed{labels}    on /auto/metrics        $ROLES_DIR/autoworker.env
+#
+# THE CEILING IS DERIVED FROM MEMORY, NOT WRITTEN BY HAND (ADR-0070, step 3; the product's `w2c-spares.sh`, 6aeebf4). A
+# role's declaration on this host — `<role>.env` in ROLES_DIR (`/etc/vms/roles` on Linux, `<box>/roles` on a Mac box,
+# `install.sh` lays the examples `deploy/roles/<role>.env.example` there when it finds none): `CAPACITY`,
+# `WORKER_MEMORY_MB`, `HOST_MEMORY_MB`, in MiB. The ceiling is `HOST_MEMORY_MB / WORKER_MEMORY_MB`, rounded down: as many
+# workers of the role, each with its budget, as the memory the host gave the role holds. Two lines are taken from the
+# file, by parsing — never `.`: a declaration is no script of this pass's, and `CAPACITY` is not its (the worker checks
+# it against its budget itself, `w2cplatform/memorybudget.py`). No file, no line, or a number that is not a whole one
+# above 0: nothing is started for that role, a line says which file; the other roles go on. The hand-written ceilings
+# (`MAX_WORKERS`, `MAX_RECORDERS`, `MAX_GATEWAYS`, `MAX_EVALUATORS`) are gone with no fallback (ADR-0003).
 #
 # It runs on the HOST, from `w2c-spares[-<role>].timer` — and that placement is the whole point of the file. Starting a
 # process means talking to systemd (launchd); a console that could do it would be a console holding the power to
@@ -34,8 +44,8 @@
 #      not reach that VLAN. The server's labels are the console's (`<prefix>_server_labels{server=…,source="console"}`
 #      — what the administrator wrote for it), else this host's `$LABELS` — and none while the console says it does not
 #      know them (`source="unknown"`, ADR-0026's addition): then only the sets that need no label.
-#   4. Its own ceiling per role, counting the spares already running here: a bug on the other side that reported
-#      "nine hundred missing" costs a log line, not nine hundred processes.
+#   4. Its own ceiling per role — from the role's declaration, above — counting the spares already running here: a bug
+#      on the other side that reported "nine hundred missing" costs a log line, not nine hundred processes.
 #   5. A camera worker, gateway or evaluator starts as a SPARE (`SPARE_FOR=<label set>`): it takes only an offer of
 #      its set (`<sub>/slots/<w-N>` with `offer`), by CAS, and with none it waits holding nothing — two scripts on two
 #      servers racing for one missing worker start two spares, and exactly one takes the slot. A recorder needs no
@@ -74,6 +84,8 @@ SPARES_ENV="${SPARES_ENV:-/run/w2c-spares}"         # Linux: each spare's set, r
 LAUNCHD_DIR="${LAUNCHD_DIR:-${HOME:-}/Library/LaunchAgents}" # macOS: where `install.sh --box` put the roles' plists
 DOMAIN="gui/$(id -u)"                               # macOS: the box's user's launchd domain
 NAME=vms
+ROLES_DIR="${ROLES_DIR:-${W2C_BOX:+$W2C_BOX/roles}}"   # the roles' declarations (the ceiling, above)
+ROLES_DIR="${ROLES_DIR:-/etc/$NAME/roles}"
 roles=$(printf '%s' "${*:-${SPARES_ROLES:-recworker}}" | tr ',' ' ')
 
 # Whether the label set $1 (comma-joined; "" the empty set) is within the labels $2 (comma-joined).
@@ -84,6 +96,25 @@ covers() {
     done
     IFS=$old_ifs
     return 0
+}
+
+# The ceiling of role $1 from its declaration: HOST_MEMORY_MB / WORKER_MEMORY_MB, rounded down — those two lines and
+# nothing else (the last of each, as `.` would have left it); the file is never run. Said and refused on stderr.
+mb_ok() { case "$1" in ''|0*|*[!0-9]*) return 1 ;; esac; }
+mb_of() { sed -n "s/^[[:space:]]*$1=//p" "$2" | sed -n '$s/[[:space:]]*$//p'; }
+ceiling_of() {
+    f="$ROLES_DIR/$1.env"
+    if [ ! -f "$f" ]; then
+        echo "$ME: no declaration of role $1 — $f (HOST_MEMORY_MB, WORKER_MEMORY_MB): no ceiling, nothing started" >&2
+        return 1
+    fi
+    host=$(mb_of HOST_MEMORY_MB "$f"); worker=$(mb_of WORKER_MEMORY_MB "$f")
+    for kv in "HOST_MEMORY_MB=$host" "WORKER_MEMORY_MB=$worker"; do
+        mb_ok "${kv#*=}" && continue
+        echo "$ME: $f: ${kv%%=*}='${kv#*=}' — a whole number of MiB above 0 is needed: no ceiling for role $1, nothing started" >&2
+        return 1
+    done
+    echo $((host / worker))
 }
 
 # Whether spare <n> of a role runs here.
@@ -152,12 +183,13 @@ srv=$(printf '%s' "$SERVER" | sed 's/[.]/\\./g')
 
 for role in $roles; do
     case "$role" in
-        recworker)  page=/rec/metrics;  prefix=rec;  cap=${MAX_RECORDERS:-8} ;;
-        vmsworker)  page=/metrics;      prefix=vms;  cap=${MAX_WORKERS:-4} ;;
-        liveworker) page=/live/metrics; prefix=live; cap=${MAX_GATEWAYS:-4} ;;
-        autoworker) page=/auto/metrics; prefix=auto; cap=${MAX_EVALUATORS:-4} ;;
+        recworker)  page=/rec/metrics;  prefix=rec ;;
+        vmsworker)  page=/metrics;      prefix=vms ;;
+        liveworker) page=/live/metrics; prefix=live ;;
+        autoworker) page=/auto/metrics; prefix=auto ;;
         *) echo "$ME: no role $role (recworker, vmsworker, liveworker, autoworker)" >&2; continue ;;
     esac
+    cap=$(ceiling_of "$role") || continue           # said on stderr; the other roles go on
     text=$(curl -fsS --max-time 5 "$CONSOLE$page" 2>/dev/null) || {
         echo "$ME: no answer from $CONSOLE$page — nothing started for $role" >&2
         continue                                    # the console being down is not a reason to start anything

@@ -618,14 +618,28 @@ def _dead_band(name, rb) -> float:
     return float(db)
 
 
-def _capacity(name, cap) -> tuple[str, int]:
-    if not isinstance(cap, dict) or set(cap) - {"from", "default"} or "default" not in cap:
+# …and `unit_mb`, `base_mb` (ADR-0070, step 3; the product's 7e9fcdb): what one unit costs a worker and what the process
+# costs with none, in MB — the subsystem's word about itself. Said together or not at all, each a number above 0; said,
+# the base worker refuses to start when its units do not fit its budget (`memorybudget.py`). Not said: 0, not checked.
+def _capacity(name, cap) -> tuple[str, int, float, float]:
+    if not isinstance(cap, dict) or set(cap) - {"from", "default", "unit_mb", "base_mb"} or "default" not in cap:
         raise ValueError(f"spec {name}: placement.capacity is {{from: <heartbeat field>, default: <units a worker that "
                          f"said nothing is counted at>}} — the default is the subsystem's to say, not {cap!r}")
     d = cap["default"]
     if isinstance(d, bool) or not isinstance(d, int) or d < 0:
         raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {_v(d)}")
-    return str(cap.get("from", "capacity") or "capacity"), d
+    unit_said, base_said = "unit_mb" in cap, "base_mb" in cap
+    if unit_said != base_said:
+        missing = "placement.capacity.base_mb" if unit_said else "placement.capacity.unit_mb"
+        raise ValueError(f"spec {name}: {missing} is not said: unit_mb (what one unit costs a worker) and base_mb (what "
+                         f"the process costs with none) are said together, in MB, or neither")
+    mb = {"unit_mb": 0.0, "base_mb": 0.0}
+    for k in mb if unit_said else ():
+        v = cap[k]
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not v > 0 or v != v or v == float("inf"):
+            raise ValueError(f"spec {name}: placement.capacity.{k} is a number of MB above 0, not {_v(v)}")
+        mb[k] = float(v)
+    return str(cap.get("from", "capacity") or "capacity"), d, mb["unit_mb"], mb["base_mb"]
 
 
 # `placement.unplaced: {delete_after: <whole seconds, 1 or more>}` — how long a unit nobody holds stands before its
@@ -1161,6 +1175,8 @@ class SubsystemSpec:
     derived: list[Derived] = field(default_factory=list)
     capacity_from: str = "capacity"
     capacity_default: int = 50    # `placement.capacity.default`: a worker that has said nothing yet (the spec must say it)
+    capacity_unit_mb: float = 0.0  # `placement.capacity.unit_mb`: what one unit costs a worker, MB (0: not said; ADR-0070)
+    capacity_base_mb: float = 0.0  # `placement.capacity.base_mb`: what its process costs with none, MB (said with unit_mb)
     unplaced_delete_after: int = 0   # `placement.unplaced.delete_after`: a unit nobody holds that long goes (0: never; ADR-0067)
     headroom_from: str = "headroom"
     constraint: str = "none"
@@ -1561,7 +1577,7 @@ class SubsystemSpec:
             raise ValueError(f"spec {spec.name}: unit.id is numeric or one of its fields {_v(sorted(fields))}, "
                              f"not {_q(spec.id)}")
         # …the capacity of a worker that said nothing: the spec's to say (`_capacity`).
-        spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
+        spec.capacity_from, spec.capacity_default, spec.capacity_unit_mb, spec.capacity_base_mb = _capacity(spec.name, cap)
         # …how long a unit nobody holds stands before its controller deletes it (`_unplaced`; ADR-0067)
         if "unplaced" in pl:
             spec.unplaced_delete_after = _unplaced(spec.name, pl["unplaced"])
