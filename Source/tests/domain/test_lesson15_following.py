@@ -156,6 +156,86 @@ def test_the_roots_record_of_a_move_by_the_file_names_the_new_holders_door_and_t
     assert not _follows({"cam-SN2": lost}, "cam-SN2", "cam-SN1") and "names no door" in lost.followed, lost.followed
 
 
+def _door_site(wall):
+    """`test_lesson15_root._site`, its members admitted with the keys their agents make (`MemberKey`: the signing key and
+    the sealing key) — a member's agent asks the holder's DOOR (`carry.HolderDoor`), never its stores."""
+    from w2cplatform.cluster.variables import FakeVariables
+    from w2cplatform.domain.federation import Federation
+    from w2cplatform.domain.members import Members
+    from w2cplatform.domain.term import install
+    from w2cplatform.trust.memberkey import MemberKey
+    from w2cplatform.trust.signer import DomainRoot
+    from vms.domainpart.device import DeviceCluster
+    fed, devices, keys = Federation(), {}, {}
+    for i in range(4):
+        d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall)
+        d.boot()
+        devices[d.name] = d
+        fed.add(d.cluster(domain=i == 0))
+    root = DomainRoot(rooted.DOMAIN, now=wall)
+    holder = install(fed, "cam-SN0", rooted.DOMAIN, root, wall=wall, objects=devices["cam-SN0"].disk)
+    members = Members(holder.vars, wall)
+    for name in devices:
+        keys[name] = MemberKey.new()
+        if name != "cam-SN0":
+            members.add(name, "voucher", serial=name[4:], key=keys[name].pub, seal=keys[name].seal_pub)
+        holder.signer.issue(name[4:], "ldevid", keys[name].signing.public_key())
+    return fed, devices, root, holder, keys
+
+
+def _through_doors(fed, devices, keys, name, wall):
+    """A member's agent as `agent.main` builds it with `DOMAIN_URL`: it carries through the holder's door, follows the
+    record's `url` (`http://<cluster>:8445` — that cluster's door here), and is given no holder objects to report into:
+    its report goes through the door it carries through (`POST /api/member/<name>`)."""
+    from w2cplatform.domain.carry import CarryClient, HolderDoor
+    d = devices[name]
+    ask = {n: (lambda n=n: held(n, fed.clusters[n].vars)) for n in devices}
+
+    def door(n):
+        return CarryClient(HolderDoor(fed.clusters[n].vars, devices[n].disk_door(), wall=wall), name, keys[name], wall)
+
+    def open_door(rec):
+        n = (rec.get("url") or "").removeprefix("http://").removesuffix(":8445")
+        return (door(n), None) if n in fed.clusters else None
+    return DomainAgent(name, door("cam-SN0"), d.flash, now=wall, console=d.local_console(), current=d.current,
+                       cluster_objects=d.disk, published=d.local_objects(), key=keys[name],
+                       follow=HolderFollower(ask), open_door=open_door)
+
+
+def test_after_a_move_by_the_file_a_members_report_goes_to_the_new_holders_door_and_none_to_the_old():
+    """The scenario «камера — офис — центр», N5: after the domain moved, a member's agent carried its rows through the new
+    holder's door and kept writing its report into the OLD holder's objects — set once when it started
+    (`DOMAIN_OBJECTS_URL`) — so the new holder heard no member at all. The report goes through the door now, as the
+    product's does (`POST /api/member/<m>`, signed `X-Agent-Signature`; ADR-0066), and follows the holder with the rows:
+    after a move by the recovery file each member's report reaches the new holder, and not one more reaches the old."""
+    from w2cplatform.domain.uplink import REPORTED, base
+    wall = Clock()
+    fed, devices, root, holder, keys = _door_site(wall)
+    agents = {n: _through_doors(fed, devices, keys, n, wall) for n in devices if n != "cam-SN0"}
+    for a in agents.values():
+        assert a.sync() and a.reported == "reported through the door", (a.cluster, a.reported, a.keys)
+    old, new = devices["cam-SN0"].disk, devices["cam-SN1"].disk
+    for name in agents:
+        assert json.loads(old.get(base(name) + REPORTED))["key"] == keys[name].pub        # the door keeps it
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door())
+    for a in agents.values():
+        a.sync()
+    before = {k: old.get(k) for k in old.list(base(""))}
+    devices["cam-SN0"].power_off()
+    _, moved = move_domain(fed, "cam-SN1", root.recovery(), rooted.DOMAIN, rooted._objects(devices), wall,
+                           url="http://cam-SN1:8445")
+    assert moved["term"] == 2 and moved["record"]["url"] == "http://cam-SN1:8445"
+    for name in agents:
+        assert _follows(agents, name, "cam-SN1"), (name, agents[name].followed)
+    wall.advance(1)
+    for name in ("cam-SN2", "cam-SN3"):
+        a = agents[name]
+        assert a.sync() and a.reported == "reported through the door", (name, a.reported)
+        mark = json.loads(new.get(base(name) + REPORTED))
+        assert mark["key"] == keys[name].pub and mark["ts"] == wall(), mark            # this pass's, at the new holder
+    assert {k: old.get(k) for k in old.list(base(""))} == before                        # and nothing more at the old
+
+
 def test_a_planned_handover_is_taken_by_the_target_and_the_outgoing_holder_writes_no_store_but_its_own():
     """SN0 hands the domain to SN1. SN0 freezes and seals its last backup in its own store; SN1's agent carries it; SN1
     takes the domain onto its own store (`take`). Every write into SN1's stores is SN1's own — its agent's or its move's —
