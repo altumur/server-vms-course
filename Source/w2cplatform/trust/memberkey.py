@@ -121,3 +121,47 @@ def verify(pub_hex: str, message: bytes, sig_hex: str) -> bool:
         return True
     except Exception:                                    # noqa: BLE001 — any garbage is "does not verify"
         return False
+
+
+# -- the agent's form: a request with the member in its path (ADR-0066's addition of 2026-10-11, night) ------------------
+# The product's `trust.SignAgentRequest`/`VerifyRequest`, byte for byte: the header `X-Agent-Signature: <ms>.<sig>`, the
+# signature Ed25519 by the member key over `method\npath\n<ms>\n<sha256 hex of the body>`, base64 URL-safe without padding.
+# It signs the doors that name the member in their path and carry a body — `POST /api/member/<m>` (a member's report),
+# `POST /api/relay/<r>` (a relay's summary report). The ask form (`carry|<c>|<at>|<seal>`, `X-W2C-Member/Time/Signature`)
+# stays with the asks it signs; two forms, a closed list, merged in the plan of the doors (ADR-0034).
+AGENT_HEADER = "X-Agent-Signature"
+
+
+def agent_signing(method: str, path: str, at_ms: int, body: bytes) -> bytes:
+    import hashlib
+    return f"{method}\n{path}\n{at_ms}\n{hashlib.sha256(body).hexdigest()}".encode()
+
+
+def sign_request(key: MemberKey, method: str, path: str, body: bytes, now: float) -> str:
+    """The header's value for a request this member's agent sends."""
+    ms = int(now * 1000)
+    sig = key.signing.sign(agent_signing(method, path, ms, body))
+    return f"{ms}.{base64.urlsafe_b64encode(sig).decode().rstrip('=')}"
+
+
+def verify_request(pub_hex: str, header: str, method: str, path: str, body: bytes, now: float, window: float) -> str:
+    """"" when `header` signs this request by `pub_hex` within `window` seconds of `now`; else what is wrong, in the
+    product's words."""
+    at, dot, sig_text = (header or "").partition(".")
+    try:
+        if not dot or not at.lstrip("-").isdigit():
+            raise ValueError(at)
+        ms = int(at)
+    except ValueError:
+        return "no signature"
+    d = abs(now - ms / 1000)
+    if d > window:
+        return f"signed {d:.0f} s away from this clock (more than {window:.0f}): a clock is off, or it is a replay"
+    try:
+        if not sig_text or sig_text.strip("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"):
+            raise ValueError("not base64url without padding")       # Go's RawURLEncoding: nothing else is read
+        sig = base64.urlsafe_b64decode(sig_text + "=" * (-len(sig_text) % 4))
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(pub_hex)).verify(sig, agent_signing(method, path, ms, body))
+    except Exception:                                    # noqa: BLE001 — any garbage is "not by this key"
+        return "the signature is not by this member's key"
+    return ""
