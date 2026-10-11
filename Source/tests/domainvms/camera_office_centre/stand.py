@@ -59,9 +59,9 @@ PORTS = {"signer": 8071, "domain console": 8070, "console": 8080, "relay door": 
 
 
 class Remote:
-    """What a process reaches in ANOTHER box's objects with no wire in the course — a member's report into the holder's
-    objects (`DOMAIN_OBJECTS_URL`), a camera's into its office's (`RELAY_OBJECTS_URL`): the store's own calls, made in
-    this process, each recorded (kind `objects`) and marked with the product's request for the same thing."""
+    """What a process reaches in ANOTHER box's objects with no wire in the course — a camera's report into its office's
+    (`RELAY_OBJECTS_URL`; an office's report goes through the holder's door, `POST /api/member`): the store's own calls,
+    made in this process, each recorded (kind `objects`) and marked with the product's request for the same thing."""
 
     def __init__(self, log: Log, inner, who: str, door: str, product: str, writes_only: bool = True, site=None,
                  box: str = ""):
@@ -508,15 +508,10 @@ class Site:
         return {n: self.doors[f"console {n}"] for n in ("srv", "relay-a", "relay-b", "relay-b2") if f"console {n}" in self.doors}
 
     # -- an office: its agent, with the relay's door ------------------------------------------------------------------------
-    def holder_objects(self, who: str, product: str):
-        """The holder's objects as a member's agent reaches them to report (`DOMAIN_OBJECTS_URL`): no wire in the course."""
-        srv = self.cluster("srv")
-        return Remote(self.log, srv.objects_on("srv", srv.vars), who, f"the holder's objects on srv:{8090}", product,
-                      site=self, box="srv")
-
     def office_agent(self, name: str):
-        """`agent.main` on an office: `DOMAIN_URL` (the signer's door), `RELAY=1` (it relays the members the topology puts
-        behind it, and opens the relay's door), `REPORT=1`, `CLUSTERS` with the consoles it follows the holder by."""
+        """`agent.main` on an office: `DOMAIN_URL` (the signer's door — its report goes there too, `POST /api/member`,
+        and its summary of the cameras, `POST /api/relay`), `RELAY=1` (it relays the members the topology puts behind
+        it, and opens the relay's door), `REPORT=1`, `CLUSTERS` with the consoles it follows the holder by."""
         from w2cplatform.domain.agent import DomainAgent, HolderFollower, ask_held
         from w2cplatform.domain.carry import CarryClient
         from w2cplatform.domain.members import fingerprint
@@ -533,8 +528,6 @@ class Site:
         consoles = self.console_urls()
         follow = HolderFollower({n: (lambda u=u: ask_held(u)) for n, u in consoles.items()})
         agent = DomainAgent(name, CarryClient(self.signer_url, name, key, wall=self.wall), own, now=self.wall,
-                            domain_objects=self.holder_objects(who, f"у продукта POST /api/member/{name} подписывающему "
-                                                                    f"(srv:{PORTS['signer']})"),
                             published=own_objects, bundle_store=own_objects, cluster_objects=own_objects,
                             relay_members=lambda: agent.relays(), bundle_members=lambda: agent.relays(),
                             reaches=lambda: CLUSTERS[name][0].split(","), own_objects=own_objects, sealer=sealer, key=key,
