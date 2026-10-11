@@ -1173,6 +1173,42 @@ def test_a_backup_restores_into_a_fresh_group_above_its_highest_version():
                 h.put(key, {"name": "stale"}, cas=index)
 
 
+def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
+    """The external review of 2026-10-11 (checked by «Архитектор»; ADR-0070): a backup holds epoch 3 of a unit, the group
+    goes on and issues 4 and 5, and is lost; `restore` into a fresh group counted on from the backup's 3 and issued 4
+    again — two writers of one unit. The restore raises the floor under every epoch a generation first, by `recover`'s
+    rule: the next epoch of that unit, and of one never seen, is 2^32+1. Restored twice — a restore that stopped and is
+    asked again — it is the same floor; a door still neither changes nor deletes it."""
+    from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, next_epoch
+    with Daemon(LocalBackend("srv-a", 1000)) as a:
+        h = open_vars(url(a.dir))
+        assert [next_epoch(h, "testsub/epoch/7")[0] for _ in range(3)] == [1, 2, 3]
+        out = io.StringIO()
+        with redirect_stdout(out):
+            configstore.main(["backup", "--socket", url(a.dir)])
+        backup = json.loads(out.getvalue())
+        assert [next_epoch(h, "testsub/epoch/7")[0] for _ in range(2)] == [4, 5]          # after the backup
+    path = os.path.join(tempfile.mkdtemp(), "rows.json")
+    with open(path, "w") as f:
+        json.dump(backup, f)
+    with Daemon(LocalBackend("srv-b", backup["highest"])) as b:
+        for _ in range(2):
+            out = io.StringIO()
+            with redirect_stdout(out):
+                configstore.main(["restore", "--from", path, "--socket", url(b.dir)])
+            assert json.loads(out.getvalue())["epoch_floor"] == 1 << 32
+        h = open_vars(url(b.dir))
+        assert epoch_floor(h) == 1 << 32 and h.get("testsub/epoch/7")[0] == {"epoch": "3"}
+        assert next_epoch(h, "testsub/epoch/7")[0] == (1 << 32) + 1                    # not 4
+        assert next_epoch(h, "testsub/epoch/new")[0] == (1 << 32) + 1
+        for body in ({"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}},
+                     {"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}, "cas": h.get(EPOCH_FLOOR_KEY)[1]},
+                     {"op": "delete", "key": EPOCH_FLOOR_KEY}):
+            with pytest.raises((Forbidden, Conflict)):
+                h._call("POST", "/v1/write", body)
+        assert epoch_floor(h) == 1 << 32
+
+
 def test_the_operator_commands_speak_to_the_admin_socket():
     """`python3 -m w2cplatform.configstore status | rights [file]` — the product's own `configstore …` command."""
     with Daemon() as dm:

@@ -172,7 +172,10 @@ and one on a STOPPED daemon's directory, when the group's majority is gone for g
 # member; and refused whole, before the first write, when the file holds a row that does not read or a row heavier
 # than the store takes (`storemachine.MAX_VALUE`).
 # `backup` writes every row and the highest version it saw; `restore` is the same import from that file, into a
-# fresh group whose base is above that version.
+# fresh group whose base is above that version, the floor under every epoch raised a generation first (ADR-0070; the
+# external review of 2026-10-11: the old group issued epochs after the backup, and the restored one issued them again).
+# A TEACHING SIMPLIFICATION (the same review): `backup` reads the rows one `list` and one `get` at a time, through the
+# log — not one moment's picture while processes write; the product's is a snapshot of the state machine under its lock.
 # AN IMPORT THAT STOPPED IS CONTINUED (the review's twelfth pass, minor: it could not be). The same `import` or
 # `restore` again goes on where the last one stopped when every row the group holds is one it loaded — the same key,
 # the same items; a row it did not load, or one changed since, refuses it as before: rows are loaded into a group
@@ -1277,7 +1280,7 @@ def recover(node_id: str, data: str, peers: dict[str, str]) -> dict:
     from pysyncobj import pickle as wire
     from pysyncobj.journal import MetaStorer, createJournal
     from pysyncobj.node import TCPNode
-    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY, next_epoch_floor
+    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
     if node_id not in peers:
         raise ValueError(f"-peers does not name this server ({node_id}): it would not be a member of the group it recovers")
     if not RaftBackend.has_state(data):
@@ -1288,12 +1291,7 @@ def recover(node_id: str, data: str, peers: dict[str, str]) -> dict:
     last = log[-1]
     prev = log[-2] if len(log) > 1 and log[-2][1] == last[1] - 1 else (bytes([1]), last[1] - 1, last[2])   # NO_OP
     # THE FLOOR: over the highest of the old floor and every epoch this member holds (`epoch.py`, The floor).
-    floor = 0
-    for key, (items, _) in machine.rows.items():
-        said = items.get(EPOCH_FLOOR_FIELD) if key == EPOCH_FLOOR_KEY else items.get("epoch") if "/epoch/" in key else None
-        if said is not None and str(said).isascii() and str(said).isdigit():
-            floor = max(floor, int(said))
-    floor = next_epoch_floor(floor)
+    floor = raised_floor((key, items) for key, (items, _) in machine.rows.items())
     machine.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor)}, machine.version(last[1]))
     machine.wrote = True
     # The members as the group is to be: the others' rows go, so they may join again; ours say where we are.
@@ -1404,12 +1402,32 @@ def backup_rows(src) -> dict:
     return {"configstore_backup": 1, "highest": highest, "rows": rows}
 
 
+# The floor a group made from `rows` starts with (the notes: recover): the next generation over the highest of their
+# floor and every epoch among them — the rule `recover` raises it by (ADR-0070).
+def raised_floor(rows) -> int:
+    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY, next_epoch_floor
+    floor = 0
+    for key, items in rows:
+        said = items.get(EPOCH_FLOOR_FIELD) if key == EPOCH_FLOOR_KEY else items.get("epoch") if "/epoch/" in key else None
+        if said is not None and str(said).isascii() and str(said).isdigit():
+            floor = max(floor, int(said))
+    return next_epoch_floor(floor)
+
+
 def restore_rows(backup: dict, dst) -> dict:
-    """A backup into a fresh group (`configstore restore`), its base above the backup's highest version."""
+    """A backup into a fresh group (`configstore restore`), its base above the backup's highest version — and THE FLOOR
+    UNDER EVERY EPOCH RAISED A GENERATION, written first (the external review of 2026-10-11, checked by «Архитектор»;
+    ADR-0070): the group the backup was taken of went on issuing epochs after it, and a restore that went on counting
+    from the backup's rows issued an epoch issued before — two writers of one unit. The same rule as `recover`'s
+    (`raised_floor`), the floor row of the backup itself not loaded as it was."""
+    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
     if not isinstance(backup, dict) or backup.get("configstore_backup") != 1:
         raise ValueError("not a configstore backup")
-    rows = [(k, dict(r["items"])) for k, r in sorted(backup["rows"].items())]
-    return _load_fresh(rows, int(backup["highest"]), dst, "the backup")
+    rows = [(k, dict(r["items"])) for k, r in sorted(backup["rows"].items()) if k != EPOCH_FLOOR_KEY]
+    floor = raised_floor([(k, dict(r["items"])) for k, r in backup["rows"].items()])
+    out = _load_fresh([(EPOCH_FLOOR_KEY, {EPOCH_FLOOR_FIELD: str(floor)})] + rows, int(backup["highest"]), dst,
+                      "the backup")
+    return {**out, "epoch_floor": floor}
 
 
 # -- the command line ------------------------------------------------------------------------------------

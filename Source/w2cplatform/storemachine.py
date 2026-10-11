@@ -356,7 +356,10 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             except ValueError as e:
                 return fault(400, "badrequest", str(e))
             action = "write" if body["op"] == "put" else "delete"
-            if not rights.allows(role, action, key):
+            # The floor under every epoch: `restore`'s first row in a fresh group, through root's socket and create-only;
+            # never changed or deleted through a door (ADR-0070 — `recover` writes it into the state, not through one).
+            floor_made = (role == ADMIN and key == EPOCH_FLOOR_KEY and body["op"] == "put" and body.get("cas") in (0, ""))
+            if not floor_made and not rights.allows(role, action, key):
                 return fault(403, "forbidden", f"{role} may not {action} {key}")
             cmd = {"op": body["op"], "key": key, "cas": body.get("cas")}
             if body["op"] == "put":
