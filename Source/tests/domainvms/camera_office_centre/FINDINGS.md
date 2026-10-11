@@ -219,6 +219,16 @@ be told from anybody on the site» — о члене, которого удал�
 
 ### N5. После переноса отчёт члена уходит к прежнему держателю
 
+**Исправлено:** 22ca51d9…f47be0df (ветка `domain-n5`; дополнение ADR-0066 2026-10-11, ночь). Отчёт члена идёт в ту же
+дверь, через которую агент несёт, — `POST /api/member/<член>`, сводка офиса — `POST /api/relay/<офис>`, подпись агента
+продукта байт в байт (`X-Agent-Signature: <мс>.<base64url>`, `memberkey.sign_request`); дверь держателя
+(`carry.HolderDoor.member`/`.relay`) кладёт его в свои объекты. `DOMAIN_OBJECTS_URL` у агента с `DOMAIN_URL` больше нет:
+дверь переехала — переехал и отчёт. Тест — `tests/domain/test_lesson15_following.py::
+test_after_a_move_by_the_file_a_members_report_goes_to_the_new_holders_door_and_none_to_the_old`. Пересъёмка `f05-holder-moved` и
+`f06-old-holder-back`: после переноса relay-a и relay-b шлют `POST /api/member` и `POST /api/relay` на `relay-a:8071` —
+200; записей в объекты srv нет (в f06 вернувшийся srv отчётов больше не получает). Остальные трассы ещё показывают
+отчёт офиса прежней записью в объекты srv с пометкой продуктового запроса — до следующей пересъёмки всех сцен.
+
 `agent.main` отдаёт агенту объекты держателя `DOMAIN_OBJECTS_URL` один раз, а `open_door` при следовании за новым
 держателем возвращает новую дверь переноса (`CarryClient(rec["url"])`) и `None` вместо объектов — объекты остаются
 прежние. После переноса агент несёт строки через дверь нового держателя (200), а отчёт кладёт в объекты старого: пока
