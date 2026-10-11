@@ -1,0 +1,148 @@
+"""ADR-0074: publication interleavings return a pinned whole report or explicit unknown."""
+import json
+import tempfile
+import threading
+
+import pytest
+
+from w2cplatform.objects import FsObjectStore
+from w2cplatform.domain.reports import accept, read, prune, StaleReport
+from w2cplatform.domain.federation import Unreachable
+from w2cplatform.domain.uplink import base, REPORTED
+
+
+def _store():
+    return FsObjectStore(tempfile.mkdtemp())
+
+
+def _body(seq):
+    return json.dumps({'seq':seq,'sent_at':seq,'objects':{},'pages':{},
+                      'rows':{'testsub/status':{'items':{'n':str(seq)},'idx':seq},
+                              'testsub2/status':{'items':{'n':str(seq)},'idx':seq}}},indent=1).encode()
+
+
+def test_every_publication_boundary_reads_whole_old_or_new_and_preserves_original_bytes():
+    store=_store()
+    accept('a',_body(1),store,received_at=100)
+    pinned=read('a',store)
+    old_new=store.put_new
+    def inspect(key,raw):
+        assert read('a',store).raw == _body(1)
+        result=old_new(key,raw)
+        assert read('a',store).raw == _body(1)
+        return result
+    store.put_new=inspect
+    accept('a',_body(2),store,received_at=101)
+    assert read('a',store).raw == _body(2) and pinned.raw == _body(1)
+    assert not any('/v/' in k or '/o/' in k or '/p/' in k for k in store.list(base('a')))
+
+
+def test_crash_before_pointer_does_not_publish_and_same_bytes_can_finish_after_restart():
+    store=_store()
+    accept('a',_body(1),store,received_at=1)
+    store.put_at=lambda *args: (_ for _ in ()).throw(OSError('power loss'))
+    with pytest.raises(OSError):
+        accept('a',_body(2),store,received_at=2)
+    assert read('a',store).raw == _body(1)
+    store=FsObjectStore(store.root)
+    accept('a',_body(2),store,received_at=3)
+    assert read('a',store).raw == _body(2)
+    mark=store.get(base('a')+REPORTED)
+    for seq in (1,2):
+        with pytest.raises(StaleReport):
+            accept('a',_body(seq),store,received_at=999)
+        assert store.get(base('a')+REPORTED) == mark
+
+
+def test_reordered_concurrent_publishers_never_move_pointer_backwards():
+    store=_store()
+    accept('a',_body(1),store,received_at=1)
+    wrote=threading.Event()
+    resume=threading.Event()
+    put=store.put_at
+    errors=[]
+    def delayed(key,raw,index):
+        if json.loads(raw)['seq']==2:
+            wrote.set()
+            assert resume.wait(5)
+        return put(key,raw,index)
+    store.put_at=delayed
+    def old():
+        try:
+            accept('a',_body(2),store,received_at=2)
+        except StaleReport:
+            errors.append('stale')
+    t=threading.Thread(target=old)
+    t.start()
+    assert wrote.wait(5)
+    accept('a',_body(3),store,received_at=3)
+    resume.set()
+    t.join(5)
+    assert not t.is_alive() and errors==['stale']
+    assert read('a',store).raw==_body(3)
+
+
+def test_missing_or_corrupt_parts_are_unknown_and_never_repaired_from_other_generations():
+    for broken in (None,b'{}',b'{'):
+        store=_store()
+        accept('a',_body(1),store,received_at=1)
+        accept('a',_body(2),store,received_at=2)
+        key=base('a')+'reports/2'
+        if broken is None:
+            store.delete(key)
+        else:
+            store.put(key,broken)
+        with pytest.raises(Unreachable):
+            read('a',store)
+    for part in ('objects','rows','pages'):
+        doc=json.loads(_body(1));del doc[part]
+        with pytest.raises(ValueError):
+            accept('a',json.dumps(doc).encode(),_store(),received_at=1)
+
+
+def test_pruning_keeps_two_generations_and_a_pinned_reader_survives_move_and_cleanup():
+    store=_store()
+    accept('a',_body(1),store,received_at=1)
+    pinned=read('a',store)
+    for seq in (2,3,4):
+        accept('a',_body(seq),store,received_at=seq)
+    assert prune('a',store)==2
+    assert store.list(base('a')+'reports/')==[base('a')+'reports/3',base('a')+'reports/4']
+    assert pinned.document()['rows']['testsub/status']['items']=={'n':'1'}
+    other=_store()
+    for key in store.list(base('a')):
+        other.put(key,store.get(key))
+    assert read('a',other).raw==_body(4)
+    assert read('a',other).mark==read('a',store).mark
+
+
+def test_a_reader_pins_the_pointer_before_a_concurrent_prune_and_never_switches_generations():
+    store=_store()
+    accept('a',_body(1),store,received_at=1)
+    get=store.get
+    fired=[False]
+    def race(key):
+        if key==base('a')+'reports/1' and not fired[0]:
+            fired[0]=True
+            accept('a',_body(2),store,received_at=2)
+            accept('a',_body(3),store,received_at=3)
+            prune('a',store)
+        return get(key)
+    store.get=race
+    with pytest.raises(Unreachable):
+        read('a',store)
+    assert read('a',store).raw==_body(3)
+
+
+def test_unknown_sequence_shape_or_reused_sequence_with_other_bytes_never_replaces_a_body():
+    for seq in (None,True,0,-1,1.5,2**53):
+        doc=json.loads(_body(1));doc['seq']=seq
+        with pytest.raises(ValueError):
+            accept('a',json.dumps(doc).encode(),_store(),received_at=1)
+    store=_store()
+    store.put_new(base('a')+'reports/1',_body(1))
+    changed=json.loads(_body(1));changed['objects']={'testsub/extra':{}}
+    with pytest.raises(ValueError):
+        accept('a',json.dumps(changed).encode(),store,received_at=1)
+    assert store.get(base('a')+REPORTED) is None
+    assert store.get(base('a')+'reports/1')==_body(1)
