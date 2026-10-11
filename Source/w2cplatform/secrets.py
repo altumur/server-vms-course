@@ -86,6 +86,21 @@ from .schema import go_regex, re2_fault
 
 SECRET_MASK = "***"
 
+# THE PLATFORM'S OWN SECRET ROWS AND WHO READS THEM — the third list of the shared table of parity
+# (`tests/testdata/platform_lists.tsv`, `secret_readers`: `<row or prefix>=<role>`, `<row>=` nobody but a spec that names a
+# reader; the product's `PlatformSecretReaders`, «Сборка» first, ADR-0019's addition and ADR-0066's of 2026-10-10: the
+# console reads the copy of the backup, to give it to a member that signs). In the product's names; where the course
+# keeps such a row under another name — `domain/break_glass/` for `domain/break-glass/`, `identity/users/` for
+# `domain/users/` — and where its rights file grants otherwise, that is a debt of parity named in its report, not here.
+PLATFORM_SECRET_READERS: dict[str, tuple[str, ...]] = {
+    "domain/break-glass/": ("console", "domain", "domainagent"),
+    "domain/signer": ("domain",),
+    "domain/users/": ("domain",),
+    "domain/member-key": ("domainagent", "console", "domain"),
+    "domain/backup": ("console", "domain", "domainagent"),
+    "door/signer": (),            # nobody here: a spec of a subsystem with doors names its console (`secrets.readers`)
+}
+
 
 # The rule, in one line. `cred_secret` is a secret; `cred_username` is not, and neither is `secret_note` —
 # the suffix is the rule and there is no second one.

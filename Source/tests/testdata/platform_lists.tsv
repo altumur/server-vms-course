@@ -4,6 +4,9 @@
 # addition of 2026-10-10 (review 15 minor 15). A row is list, word; each list is a set — its order is not compared.
 #   heartbeat_strings  the platform's own string fields of every heartbeat: a spec's heartbeat.strings names none of them
 #   secret_roles       the roles secrets.readers may name
+#   secret_readers     the platform's own secret rows and who reads them, <row or prefix>=<role> (`<row>=` — nobody but
+#                      a spec that names a reader); ADR-0032, ADR-0066's addition of 2026-10-10 (the console reads the
+#                      copy of the backup, to give it to a member that signs)
 heartbeat_strings	worker
 heartbeat_strings	server
 heartbeat_strings	url
@@ -19,3 +22,15 @@ secret_roles	domain
 secret_roles	domainagent
 secret_roles	resource
 secret_roles	domainconsole
+secret_readers	domain/break-glass/=console
+secret_readers	domain/break-glass/=domain
+secret_readers	domain/break-glass/=domainagent
+secret_readers	domain/signer=domain
+secret_readers	domain/users/=domain
+secret_readers	domain/member-key=domainagent
+secret_readers	domain/member-key=console
+secret_readers	domain/member-key=domain
+secret_readers	domain/backup=console
+secret_readers	domain/backup=domain
+secret_readers	domain/backup=domainagent
+secret_readers	door/signer=

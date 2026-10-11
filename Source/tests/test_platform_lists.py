@@ -1,6 +1,6 @@
 """The platform's closed lists as a shared table of parity (`testdata/platform_lists.tsv`; ADR-0019, its addition of
-2026-10-10, review 15 minor 15): the words of a heartbeat that are the platform's, and the roles a secret's readers may
-be. The course's code holds exactly the table's sets, and the table is the product's byte for byte when the product's
+2026-10-10, review 15 minor 15): the words of a heartbeat that are the platform's, the roles a secret's readers may
+be, and the platform's own secret rows with who reads them (`secret_readers`, ADR-0066's addition of 2026-10-10). The course's code holds exactly the table's sets, and the table is the product's byte for byte when the product's
 `main` keeps one — a list that differs is a red test, not a difference found by a review."""
 from __future__ import annotations
 
@@ -8,9 +8,14 @@ import os
 
 from tests.productdir import SOURCE, product_file
 from w2cplatform import spec
+from w2cplatform.secrets import PLATFORM_SECRET_READERS
 
 TABLE = os.path.join(SOURCE, "tests", "testdata", "platform_lists.tsv")
-LISTS = {"heartbeat_strings": spec.PLATFORM_HEARTBEAT_STRINGS, "secret_roles": spec.SECRET_ROLES}
+# `secret_readers`: the platform's own secret rows and their readers, a word `<row or prefix>=<role>` each — `<row>=`
+# for a row nobody of the platform reads (the product's `PlatformSecretReaders`; ADR-0066's addition of 2026-10-10)
+READERS = {f"{row}={r}" for row, roles in PLATFORM_SECRET_READERS.items() for r in (roles or ("",))}
+LISTS = {"heartbeat_strings": spec.PLATFORM_HEARTBEAT_STRINGS, "secret_roles": spec.SECRET_ROLES,
+         "secret_readers": READERS}
 
 
 def _rows() -> dict[str, set[str]]:
@@ -40,3 +45,10 @@ def test_the_table_is_the_products_byte_for_byte_when_the_product_keeps_one():
         return
     with open(TABLE, "rb") as b:
         assert theirs == b.read(), f"{TABLE} is not the product's testdata/platform_lists.tsv byte for byte"
+
+
+def test_every_reader_of_the_platforms_secret_rows_is_a_role_a_secret_may_name():
+    """A reader in `secret_readers` is one of `secret_roles`, and a row says nobody only with an empty word (`<row>=`)."""
+    for row, roles in PLATFORM_SECRET_READERS.items():
+        assert row and not set(roles) - set(spec.SECRET_ROLES), (row, roles)
+        assert len(set(roles)) == len(roles), (row, roles)
