@@ -190,13 +190,14 @@ BY_MEANING = {
         context=("recording", "recordings", "recorder", "recorders", "camera", "cameras", "cam", "footage", "archive",
                  "vms", "live", "det")),
     # stream  allowed as a stream of bytes, events or a reply (`octet-stream`, a door that streams a reply); the
-    #         product's as a camera's media stream: its tokens, its accounts, a relay taking streams from the centre.
+    #         product's as a camera's media stream: its tokens, keys, clients and accounts, a unit's stream, a relay
+    #         taking streams from the centre, a camera pushing one — the product's rule (93c9530), word for word.
     "stream": dict(
-        forbid=_regs(r"(?i)\bstream[ -]tokens?\b", r"\bstream-(accounts|clients)\b", r"(?i)\btakes? (its|their) streams?\b",
-                     r"(?i)\bstreams? from the centre\b", r"(?i)\ba unit's stream\b", r"(?i)\basking for a stream\b",
-                     r"(?i)\bstream is a viewer's\b", r"(?i)\ba stream's key\b"),
-        context=("camera", "cameras", "video", "rtsp", "ingest", "relay", "relays", "centre", "viewer", "viewers",
-                 "footage", "frames", "receiver", "whep", "fan")),
+        allow=_regs(r"\boctet-stream\b", r"\bnewTLSStream\b", r"Stream: stream", r"\bstream, err :="),
+        forbid=_regs(r"(?i)\bstreams?[ -]?(clients?|tokens?|keys?|accounts?)\b", r"(?i)\b(a|the|its) unit's stream\b",
+                     r"(?i)\btakes? (its|their) streams? from\b", r"(?i)\bpush(es|ing)? a stream\b",
+                     r"(?i)\btakes its stream\b"),
+        context=("viewer", "viewers", "whep", "gateway", "gateways", "player", "picture")),
     "запис": dict(
         forbid=_regs(r"(?i)\bзаписыва(ть|ется|ются)\b", r">Записи<"),
         context=("камер", "видео", "архив", "регистратор", "рекордер")),
