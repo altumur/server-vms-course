@@ -186,6 +186,24 @@ class Members:
             self.journal.say("domain.member.key", user=by or "?", target=name, key=key)
         return done
 
+    # THE HOLDER IS ON THE LIST, AND SO IS THE ONE IT TOOK THE DOMAIN FROM (ADR-0066's addition of 2026-10-11; the
+    # product's rule). A holder was on no list while it held, and the list is what a cluster's console knows a member by
+    # (`term.backup_answer`): moved back to its former holder, the domain asked every neighbour for its copy and every one
+    # answered 403 — the former holder was nobody's member — and the move restored from what it had: the domain's
+    # state rolled back, said by nobody («Сборка»'s drill). A holder lists itself when it takes its term (`DomainHolder.
+    # claim`), with the key its agent made on its box (`memberkey.ROW`, the public halves), and nothing removes it there:
+    # the next holder restores the list with it. A key a row has is never replaced; a row a person may not touch
+    # (`_refuse_domain`) is written by the holder alone.
+    def list_holder(self, name: str, key: str | None, seal: str | None) -> bool:
+        def mutate(m):
+            row = m.get(name)
+            if row is not None and (row.get("key") or not key):
+                return False
+            m[name] = {**(row or {"how": "holder", "serial": None, "since": self.wall(), "by": None}),
+                       **({"key": key, "seal": seal} if key and seal else {})}
+            return True
+        return self._change(mutate)
+
     def remove(self, name: str, by: str | None = None) -> bool:
         self._refuse_domain(name)
         done = self._change(lambda m: m.pop(name, None) is not None)

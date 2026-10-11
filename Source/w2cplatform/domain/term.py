@@ -457,6 +457,19 @@ class DomainHolder:
                                    **({"url": self.url} if self.url else {})}, self.signer.tokens)
         _, idx = self.vars.get(HOLDER)
         self.vars.put(HOLDER, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
+        self._list_self()
+
+    # On the list of members with the key its agent made (`Members.list_holder`, ADR-0066's addition of 2026-10-11): what
+    # it presents when, a member again, it asks a neighbour for the copy it keeps. The list's first write carries the
+    # configuration — every cluster of the site, as the first backup's does (`_settle_members`).
+    def _list_self(self) -> None:
+        from w2cplatform.trust.memberkey import ROW
+        from .members import Members
+        mine, _ = self.vars.get(ROW)
+        key, seal = (mine or {}).get("pub"), (mine or {}).get("seal_pub")
+        Members(self.vars, self.wall, configured=lambda: sorted(self.fed.clusters)).list_holder(self.name, key, seal)
+        if key and not self.member_key:
+            self.member_key = key
 
     # A holder process starting — after a reboot, a crash, a power cut. It LOOKS before it claims (feedback AS): its
     # own agent may have carried a larger term into this cluster before this process came up, and then there is
@@ -690,7 +703,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     else:
         keys = _trusted_keys(fed, new, root, now)        # what members trust NOW — the old holder's keys, under the root
         signer = Signer.issued(domain_id, new_vars, root, now=wall, sealer=sealer)
-    top_term, top_holder, best, ignored = 0, None, None, []
+    top_term, top_holder, best, ignored, unread = 0, None, None, [], []
     for name, c in fed.clusters.items():
         try:
             rec = read_holder(c.vars, keys, now)
@@ -704,6 +717,12 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         except Unreachable as e:
             if isinstance(c, AskedCluster):              # its console answered the record and refused the backup: said
                 ignored.append((name, str(e)))
+                try:                                     # …and which copy it says it keeps: public (`/api/held`)
+                    said = copy_of(c.held().get("backup"))
+                except (Unreachable, *PARSE_ERRORS):
+                    said = None
+                if said is not None:
+                    unread.append((name, said, str(e)))
             continue
         if raw is None:
             continue
@@ -714,6 +733,20 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
             continue
         if best is None or (int(doc["term"]), int(doc["rev"])) > (int(best[1]["term"]), int(best[1]["rev"])):
             best = (name, doc)
+    # A COPY NEWER THAN THE ONE TO RESTORE FROM, WHICH A NEIGHBOUR SAYS IT KEEPS AND DID NOT GIVE, STOPS THE MOVE
+    # (ADR-0066's addition of 2026-10-11, «Сборка»'s drill). The pointers are public (`/api/held`, `backup: {term, rev}`):
+    # a neighbour that announces a newer copy and refused it (403, 401, 503) is a state this move would roll back,
+    # silently — a blocker. Refused, with who keeps what and why it did not give it; restoring from the older copy is
+    # the operator's explicit word (`stolen`), and the move's line in the journal says so.
+    have = (int(best[1]["term"]), int(best[1]["rev"])) if best else None
+    newer = [(n, c, why) for n, c, why in unread if have is None or (c["term"], c["rev"]) > have]
+    if newer and not stolen:
+        raise ValueError(
+            "a newer copy of the domain than the one this move would restore from "
+            f"({'term %d rev %d, from %s' % (have[0], have[1], best[0]) if have else 'none'}) is kept by "
+            + "; ".join(f"{n} (term {c['term']} rev {c['rev']}: not given — {why})" for n, c, why in newer)
+            + ". Restoring from the older copy would roll the domain back: let that member give its copy (it must "
+              "know this cluster as a member), or move with stolen: true to start from the older one")
     if best:
         # Each secret opened with the backup key this holder derives — from the recovery file's root, or the signer's
         # backup — and sealed again with this holder's own ring. A backup this holder cannot open is not a backup of
