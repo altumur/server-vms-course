@@ -173,18 +173,20 @@ def test_the_domains_console_has_a_role_of_its_own_with_no_key_and_no_people():
     writes what a person decides there with no key: the members, the topology, the grants, an edit kept again; and it
     reads the rest of the domain and the units, for the views it serves — but no secret row of the shared table, which
     names it a reader of none (ADR-0019, ADR-0010; «Архитектор» 2026-10-11): not the emergency hashes, not the member's
-    seed, not the backup's copy nor anything under `domain/backup`."""
+    seed, not the backup's copy nor anything under `domain/backup`. The pointers of the copy are not in that family: they
+    are `domain/keepers/<member>`, public, and the console reads them (`GET /domain/backup`, ADR-0066's addition of
+    2026-10-11)."""
     r = rights()
     assert r.groups["domainconsole"] == "w2c-domainconsole"
-    for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/shared", "domain/backup/north",
+    for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/shared", "domain/keepers/north",
                 "domain/view", "domain/vms/crossings"):
         assert not r.allows("domainconsole", "write", key), key
     for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/break-glass/north",
-                "domain/member-key", "domain/backup", "domain/backup/north"):
+                "domain/member-key", "domain/backup", "domain/backup-taken"):
         assert not r.allows("domainconsole", "read", key), key
     for key in ("domain/members", "domain/topology", "domain/grants/north", "domain/grants/domain", "domain/pending/north"):
         assert r.allows("domainconsole", "write", key), key
-    for key in ("domain/keys", "domain/shared", "domain/vms/crossings", "vms/cameras/7"):
+    for key in ("domain/keys", "domain/shared", "domain/vms/crossings", "vms/cameras/7", "domain/keepers/north"):
         assert r.allows("domainconsole", "read", key), key
     assert not r.allows("domainconsole", "delete", "domain/members")          # the store's rule: the domain's roles alone
 
@@ -553,11 +555,11 @@ def test_a_door_of_a_move_whose_store_does_not_answer_says_503_never_no_copy():
     move went on without the neighbours' copies, saying nothing. «None» is said only of a row that is not there."""
     import tempfile
     import time
-    from w2cplatform.domain.term import BACKUP, BACKUP_TAKEN, StoreUnread, backup_answer, backup_message, held
+    from w2cplatform.domain.term import BACKUP_TAKEN, StoreUnread, backup_answer, backup_message, held
     from w2cplatform.trust.memberkey import MemberKey
     from w2cplatform.variables import FileVariables, Forbidden
     r = rights()
-    for key in ("domain/holder", BACKUP_TAKEN, BACKUP, "domain/member-list"):
+    for key in ("domain/holder", BACKUP_TAKEN, "domain/backup", "domain/member-list"):
         assert r.allows("console", "read", key), key
     root, now = tempfile.mkdtemp(), time.time()
     inner = FileVariables(f"{root}/vars")

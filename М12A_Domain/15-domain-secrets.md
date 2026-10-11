@@ -242,13 +242,13 @@ def seal_to(seal_pub_hex: str, field: str, value: str, ctx: str) -> str:
 
 Секретные строки в этих чтениях никто не пишет руками. Кто их читает, говорит общая таблица паритета (`tests/testdata/platform_lists.tsv`, список `secret_readers`, байт в байт как у продукта; в курсе `secrets.PLATFORM_SECRET_READERS`) и раздел `secrets:` спек. Генератор (`domain/rights.secret_reads`) даёт строку роли-читателю и запрещает её по имени остальным, если их гранты до неё достают (ADR-0019, ADR-0010, решение «Архитектора» 2026-10-11). Имена строк те же, что у продукта: `domain/users/<имя>`, `domain/break-glass/<кластер>` (ADR-0003, без псевдонимов).
 
-Агенту можно `domain/*`, потому что на члене он пишет туда свои копии: набор ключей, права, книги, свой `member-key`. Но то, что пишет только держатель, ему запрещено **по имени**:
+Агенту можно `domain/*`, потому что на члене он пишет туда свои копии: набор ключей, права, книги, свой аварийный хеш (`domain/break-glass/<кластер>`, под тем же именем, что у держателя), свой `member-key`. Но то, что пишет только держатель, ему запрещено **по имени**:
 
 ```python
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
     out = [SIGNER_KEYS, "!domain/users/*", "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
-           "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break-glass/*", "!domain/ldevid/*"]
+           "!domain/grants/*", "!domain/pending/*", "!domain/keepers/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
         # what a subsystem keeps for the domain: a row, or every row of a family (`kept: [x/]`)
@@ -258,7 +258,7 @@ def agent_denials(specs=None) -> list[str]:
     return out
 ```
 
-`SIGNER_KEYS` — это `"!domain/signer*"`. Заметьте `domain/grants/*` против `domain/grants`: копию своих прав у себя дома агент пишет, а права держателя для каждого члена — нет. Так же `domain/backup/*` против `domain/backup-taken`: указатель, который держатель пишет каждому хранителю копии, агенту запрещён, а взятую копию — строку `{rev, term, sha256}` и документ рядом, которые член публикует в отчёте (урок 14), — агент пишет у себя дома. Имя `domain/backup-taken` — продуктовое, одно по обе стороны («Архитектор» 2026-10-06, ADR 0003: старого имени нет). Книги и `kept` берутся из раздела `domain:` каждой спеки (ADR 0031): у `testsub` это `!domain/testsub/tallies/*` и `!domain/testsub/ledger`, `!domain/testsub/badges/*`.
+`SIGNER_KEYS` — это `"!domain/signer*"`. Заметьте `domain/grants/*` против `domain/grants`: копию своих прав у себя дома агент пишет, а права держателя для каждого члена — нет. Так же `domain/keepers/*` против `domain/backup-taken`: указатель, который держатель пишет каждому хранителю копии, агенту запрещён, а взятую копию — строку `{rev, term, sha256}` и документ рядом, которые член публикует в отчёте (урок 14), — агент пишет у себя дома. Имя `domain/backup-taken` — продуктовое, одно по обе стороны («Архитектор» 2026-10-06, ADR 0003: старого имени нет). Книги и `kept` берутся из раздела `domain:` каждой спеки (ADR 0031): у `testsub` это `!domain/testsub/tallies/*` и `!domain/testsub/ledger`, `!domain/testsub/badges/*`.
 
 **Запрет сильнее гранта, где бы он ни стоял.** Это одна функция, `w2cplatform/rights.py`, и спрашивают её оба места, где решаются права: файл прав демона configstore (`storemachine.Rights`) и ACL, который несёт ручка хранилища в процессе, — на коробке с `file://` или `memory://`, где демона между процессом и строками нет:
 

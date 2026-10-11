@@ -271,7 +271,7 @@ def test_every_output_of_the_holders_pass_has_one_writer_and_it_is_the_signer():
     h.run_pass()
     outputs = set(signer_wrote)
     assert {DOMAIN_VIEW, "domain/alarm-history/cam-SN2"} <= outputs and h.loop.failing == set()
-    assert any(k.startswith("backup/rev-") for k in outputs) and any(k.startswith("domain/backup/cam-") for k in outputs)
+    assert any(k.startswith("backup/rev-") for k in outputs) and any(k.startswith("domain/keepers/cam-") for k in outputs)
     srv, signer_url = _serve(h)
     con = _console(fed, north, wall, console_wrote, signer_url=signer_url, journal=Lines())
     con._steps(("following the members", con._follow_members), ("following the topology", con._follow_topology),
@@ -358,5 +358,55 @@ def test_the_stores_no_is_answered_403_in_words_never_a_dropped_connection():
         assert st == 403 and "stream-clients/anna" in said["detail"] and "domainconsole" in said["detail"], (st, said)
         st, said = _call(base, "GET", "/domain/grants", None, "anna")
         assert st == 403 and "domainconsole may not read domain/grants" in said["detail"], (st, said)
+    finally:
+        con.stop(door)
+
+
+def test_the_domain_console_reads_the_backups_keepers_and_a_store_that_does_not_give_them_is_503():
+    """ADR-0066's addition of 2026-10-11 («Архитектор»): the holder's pointers of the backup lay in the copy's family,
+    `domain/backup/<member>`, and `domain/backup*` is a secret row of the shared table the domain's console is no reader
+    of — so on configstore `GET /domain/backup` was the store's 403, whatever the signer had written. The pointers are a
+    family of their own, `domain/keepers/<member>` (ADR-0003, no alias): the console's role reads them by the committed
+    rights file, and answers who keeps the copy. A store that refuses them or does not answer is 503 with why — never
+    «nobody keeps it»."""
+    from w2cplatform.storemachine import Rights
+    from w2cplatform.variables import Forbidden
+    wall, fed, north, devices, cards, report, signer = _domain()
+    h = _signer(fed, north, signer, wall, [])
+    h.run_pass()
+    assert north.vars.list("domain/keepers/") and not north.vars.list("domain/backup/")
+    con = _console(fed, north, wall, [])
+    r = Rights.load(os.path.join(HERE, "deploy", "cluster", "configstore-rights.json"))
+
+    class AsConsole:                                     # the store as the daemon answers the console's socket
+        def __init__(self, inner, refuse=None):
+            self.inner, self.refuse = inner, refuse
+
+        def get(self, key):
+            if not r.allows("domainconsole", "read", key) or (isinstance(self.refuse, str) and key.startswith(self.refuse)):
+                raise Forbidden(f"domainconsole may not read {key}")
+            return self.inner.get(key)
+
+        def list(self, prefix):                          # a listing names every key, to every role (F1)
+            if isinstance(self.refuse, type) and issubclass(self.refuse, OSError):
+                raise self.refuse("the store's daemon is not there")
+            return self.inner.list(prefix)
+
+        def __getattr__(self, name):
+            return getattr(self.inner, name)
+    plain = con.holder_vars
+    door = con.serve(port=0)
+    base = f"http://127.0.0.1:{door.server_address[1]}"
+    try:
+        con.holder_vars = AsConsole(plain)
+        st, said = _call(base, "GET", "/domain/backup", None, "anna")
+        assert st == 200 and said["holders"] and all(v["pointer"]["object"].startswith("backup/rev-")
+                                                      for v in said["holders"].values()), (st, said)
+        con.holder_vars = AsConsole(plain, refuse="domain/keepers/")
+        st, said = _call(base, "GET", "/domain/backup", None, "anna")
+        assert st == 503 and "domain/keepers/" in said["detail"] and "not «nobody keeps it»" in said["detail"], (st, said)
+        con.holder_vars = AsConsole(plain, refuse=OSError)
+        st, said = _call(base, "GET", "/domain/backup", None, "anna")
+        assert st == 503 and "did not list" in said["detail"], (st, said)
     finally:
         con.stop(door)

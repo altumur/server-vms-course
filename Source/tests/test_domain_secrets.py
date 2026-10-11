@@ -273,7 +273,7 @@ def test_the_agents_rights_deny_what_only_the_holder_writes_and_its_reads_never_
     mine = ["domain/keys", "domain/grants", "domain/pending", "domain/backup-taken", TALLIES, "domain/member-key",
             "domain/break-glass/south", "domain/holder"]
     holders = ["domain/signer", "domain/members", "domain/grants/south", "domain/pending/south", f"{TALLIES}/south",
-               "domain/testsub/ledger", "domain/backup/south"]
+               "domain/testsub/ledger", "domain/keepers/south"]
     box = FileVariables(tempfile.mkdtemp(prefix="acl-"), "domainagent", {"domainagent": agent["write"]}, volatile=True)
     for key in mine:
         assert rights.allows("domainagent", "write", key), key

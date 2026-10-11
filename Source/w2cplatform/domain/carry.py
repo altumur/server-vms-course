@@ -56,8 +56,8 @@ def own_rows(cluster: str) -> list[str]:
     from .agent import GRANTS_PATH, per_cluster
     from .pending import PENDING_PATH
     from .agent import break_glass_row
-    from .term import BACKUP
-    return [f"{GRANTS_PATH}/{cluster}", f"{PENDING_PATH}/{cluster}", f"{BACKUP}/{cluster}", break_glass_row(cluster),
+    from .term import KEEPERS
+    return [f"{GRANTS_PATH}/{cluster}", f"{PENDING_PATH}/{cluster}", f"{KEEPERS}/{cluster}", break_glass_row(cluster),
             *[f"{p}/{cluster}" for p in per_cluster()]]
 
 

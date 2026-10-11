@@ -16,7 +16,7 @@ from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.members import Members
 from w2cplatform.domain.shared import SharedSettings, SharedView, sign
 from w2cplatform.trust.signer import DomainRoot, Signer, TrustBundle, VerifyError, _key_bytes
-from w2cplatform.domain.term import BACKUP, carry_holder, find_holder, install, move_domain, read_holder
+from w2cplatform.domain.term import carry_holder, find_holder, install, move_domain, read_holder
 from w2cplatform.trust.tokens import KeySet, TokenError, verify
 from tests.domain.conftest import Clock
 

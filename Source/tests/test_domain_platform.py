@@ -648,13 +648,15 @@ def test_the_holder_backs_up_what_a_spec_keeps_and_a_move_restores_it():
 def test_a_member_publishes_the_copy_it_took_as_backup_taken_and_nothing_under_the_old_name():
     """What a member publishes of the backup copy it took — `{rev, term, sha256}` and the document beside it — is
     `domain/backup-taken`, the product's name (one name on both sides, «Архитектор» 2026-10-06; ADR 0003: no alias).
-    `domain/backup/<member>` stays the holder's pointer; no row and no object of the bare old name is written, in the
-    member's store or in its report the holder reads (`term.copies`, a handover's wait)."""
+    The holder's pointer is `domain/keepers/<member>`, a family of its own (ADR-0066's addition of 2026-10-11):
+    `domain/backup*` is the copy alone, at the holder as on the member; no row and no object of an old name is written,
+    in the member's store or in its report the holder reads (`term.copies`, a handover's wait)."""
     from w2cplatform.domain.agent import DomainAgent, DomainPublisher
-    from w2cplatform.domain.term import BACKUP, BACKUP_TAKEN, DomainHolder, copies
+    from w2cplatform.domain.term import BACKUP_TAKEN, KEEPERS, DomainHolder, copies, keepers
     from w2cplatform.domain.uplink import _rows
     from w2cplatform.trust.signer import Signer
-    assert BACKUP_TAKEN == "domain/backup-taken" and BACKUP_TAKEN in _rows() and BACKUP not in _rows()
+    assert BACKUP_TAKEN == "domain/backup-taken" and BACKUP_TAKEN in _rows() and KEEPERS not in _rows()
+    assert KEEPERS == "domain/keepers"
     fed, wall = site()
     north, south = fed.clusters["north"], fed.clusters["south"]
     signer = Signer("acme", north.vars, now=wall)
@@ -664,7 +666,8 @@ def test_a_member_publishes_the_copy_it_took_as_backup_taken_and_nothing_under_t
     holder.backup(["south"], north.objects)
     assert DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
                        cluster_objects=south.objects, published=south.objects).sync()
-    pointer = north.vars.get(f"{BACKUP}/south")[0]
+    pointer = north.vars.get(f"{KEEPERS}/south")[0]
+    assert keepers(north.vars) == {"south": pointer} and north.vars.list("domain/backup") == []   # no pointer under the copy's name
     taken = south.vars.get(BACKUP_TAKEN)[0]
     assert taken and {k: taken[k] for k in ("rev", "term", "sha256")} == \
         {k: pointer[k] for k in ("rev", "term", "sha256")}, (taken, pointer)

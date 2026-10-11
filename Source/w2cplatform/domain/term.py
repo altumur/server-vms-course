@@ -21,7 +21,7 @@ stolen. So moving the domain has to become an ordinary operation, and three thin
 
     domain/holder                 in the holder's Variables, and carried to every member: {term, holder, from}, signed —
                                 `from`: the backup {term, rev} this term was restored from
-    domain/backup/<member>      in the holder's Variables: a pointer, for each member chosen to keep a copy
+    domain/keepers/<member>     in the holder's Variables: a pointer, for each member chosen to keep a copy
     backup/rev-<n>              in the holder's durable objects: the signed state
     domain/backup-taken         in a chosen member: its agent's copy of the pointer, and of the document — written
                                 only once the copy verified, and carried up in its report: the member says it took it
@@ -70,11 +70,15 @@ from .federation import Unreachable
 # `AttributeError` (a doc that is a list), and one such peer stopped the search for the holder and the move (the
 # review's eighth pass, sibling of the relay's bundle).
 
-HOLDER, BACKUP, STRANDED = "domain/holder", "domain/backup", "domain/stranded"
-# `BACKUP` names the holder's pointers, one per backup holder (`domain/backup/<member>`); what a member publishes of
-# the copy it took — the row `{rev, term, sha256}` and the object beside it — is `BACKUP_TAKEN`: the product's name
-# (СЕССИИ §1 rule 5, one name on both sides, «Архитектор» 2026-10-06; ADR 0003 — no alias for the old one).
-BACKUP_TAKEN = "domain/backup-taken"
+HOLDER, KEEPERS, STRANDED = "domain/holder", "domain/keepers", "domain/stranded"
+# `KEEPERS` names the holder's pointers, one per member chosen to keep the copy (`domain/keepers/<member>`) — a family of
+# its own (ADR-0066's addition of 2026-10-11, «Архитектор»; ADR-0003, no alias for `domain/backup/<member>`): the
+# `domain/backup*` family is the COPY alone — a secret row of the shared table, which the domain's console does not read —
+# and the pointers lay inside it, so the console's `GET /domain/backup` was refused them. What a member publishes of the
+# copy it took — the row `{rev, term, sha256}` and the object beside it — is `BACKUP_TAKEN`: the product's name
+# (СЕССИИ §1 rule 5, one name on both sides, «Архитектор» 2026-10-06; ADR 0003 — no alias for the old one); a copy it
+# would not take, and why, is `BACKUP_REFUSED`.
+BACKUP_TAKEN, BACKUP_REFUSED = "domain/backup-taken", "domain/backup-refused"
 # Everything the domain DECIDED and nobody else holds (feedback AS: the first list stopped at Lesson 14, and a
 # move lost the topology of Lesson 17 — every chain through a relay —, the list of members, and every road a
 # subsystem had decided, which was decided again differently). The platform's own rows, and what each subsystem
@@ -225,18 +229,31 @@ def copy_of(ptr) -> dict | None:
 # says it keeps. So the comparison lives on the holder's card (`signer_service.Holder.term_view`), and only there:
 #
 #     backup    the last copy the holder wrote — the newest by (term, rev) of the pointers it keeps for its backup
-#               holders (`domain/backup/<member>`); a pointer that does not read is left out of the newest
+#               holders (`domain/keepers/<member>`); a pointer that does not read is left out of the newest
 #     copies    {<member>: {term, rev}} — the copy each member says it keeps: the `domain/backup-taken` row its agent
 #               writes only when the copy it took matched the pointer and verified (`shared.carry`), carried up with
 #               every report (`uplink`). A member that keeps none is not listed; one whose row does not read is
 #               `{garbled: <why>}` — said, not left out. A former backup holder's copy too, and a former holder's:
 #               nobody updates them and nobody drops them — they are a move's last way back (`move_domain` reads the
 #               newest anyone keeps)
+# A POINTER THE STORE DID NOT GIVE IS NOT «NO KEEPER» (ADR-0066's addition of 2026-10-11): `keepers` reads them through
+# `_read` — a listing or a row the store refused or could not give is `StoreUnread`, 503 with why at the door
+# (`GET /domain/backup`), never an empty list of keepers.
+def keepers(vars_) -> dict[str, dict | None]:
+    """`{member: pointer}` — the pointers the holder keeps, one per member chosen to keep the copy. Raises `StoreUnread`."""
+    from w2cplatform.variables import Forbidden
+    try:
+        paths = vars_.list(KEEPERS + "/")
+    except (Forbidden, OSError) as e:
+        raise StoreUnread(f"{KEEPERS}/ did not list: {type(e).__name__}: {e}") from None
+    return {path[len(KEEPERS) + 1:]: _read(vars_, path)[0] for path in paths}
+
+
 def last_written(vars_) -> dict | None:
     best = None
-    for path in vars_.list(BACKUP + "/"):
+    for ptr in keepers(vars_).values():
         try:
-            c = copy_of(vars_.get(path)[0])
+            c = copy_of(ptr)
         except PARSE_ERRORS:
             continue
         if c and (best is None or (c["term"], c["rev"]) > (best["term"], best["rev"])):
@@ -530,7 +547,7 @@ class DomainHolder:
         objects.put(key, raw)
         import hashlib
         for t in targets:
-            path = f"{BACKUP}/{t}"
+            path = f"{KEEPERS}/{t}"
             _, idx = self.vars.get(path)
             self.vars.put(path, {"object": key, "rev": self.backup_rev, "term": self.term,
                                  "sha256": hashlib.sha256(raw).hexdigest()}, cas=idx)

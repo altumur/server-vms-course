@@ -193,16 +193,20 @@ class Console:
             return 400, {"detail": "since and until are times, in seconds"}
         return 200, self.alarms.list(since, until)
 
-    def backup_doc(self) -> dict:
+    def backup_doc(self) -> tuple[int, dict]:
         """`GET /domain/backup`: for each member chosen to keep the domain's backup, the pointer the holder wrote for it
-        and the one its last report says it took — and the term, as the signer says it."""
-        from .term import BACKUP, BACKUP_TAKEN
+        (`domain/keepers/<member>`) and the one its last report says it took — and the term, as the signer says it. A
+        pointer the store refused or could not give is 503 with why (`term.StoreUnread`), never «nobody keeps it»
+        (ADR-0066's addition of 2026-10-11)."""
+        from .term import BACKUP_TAKEN, StoreUnread, keepers
         from .uplink import member_copy
         from .federation import Unreachable
         holders = {}
-        for path in self.holder_vars.list(BACKUP + "/") if self.holder_vars is not None else []:
-            name = path[len(BACKUP) + 1:]
-            pointer, _ = self.holder_vars.get(path)
+        try:
+            kept = keepers(self.holder_vars) if self.holder_vars is not None else {}
+        except StoreUnread as e:
+            return 503, {"detail": f"the domain's store did not give the backup's keepers: {e} — not «nobody keeps it»"}
+        for name, pointer in kept.items():
             try:
                 taken = member_copy(name, self.holder_objects, wall=self.view.wall).vars.get(BACKUP_TAKEN)[0] \
                     if self.holder_objects is not None else None
@@ -210,7 +214,7 @@ class Console:
                 taken = None
             holders[name] = {"pointer": pointer, "taken": taken}
         st, said = self.ask_signer("GET", "/api/holder") if self.signer_url else (404, {})
-        return {"term": said.get("term") if st == 200 else None, "holders": holders}
+        return 200, {"term": said.get("term") if st == 200 else None, "holders": holders}
 
     def grants_doc(self) -> dict:
         """`GET /domain/grants`: every cluster's grants and the domain's own, as lines `{subject, cap, scope, until}`."""
@@ -502,7 +506,7 @@ class Console:
                     if u.path == "/domain/alarms":
                         return self._send(*console.alarms_doc(q))
                     if u.path == "/domain/backup":
-                        return self._send(200, console.backup_doc())
+                        return self._send(*console.backup_doc())
                     if u.path == "/domain/grants":
                         return self._send(200, console.grants_doc())
                     if u.path == "/domain/shared":
