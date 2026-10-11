@@ -447,6 +447,8 @@ class DomainHolder:
         self.objects, self.record = objects, record
         self.backup_rev = 0
         self.backups = objects                           # where its own backups are written — read again on deposition
+        self._backup_content: str | None = None          # the digest of what the last backup said (`backup`), in memory
+        self._backup_pointer: dict | None = None         # and the pointer to it
         self.restored_from: dict | None = None           # {term, rev} of the backup this term started from
         self.deposed_by: dict | None = None
         self.frozen_for: str | None = None               # the member a planned handover is moving the domain to
@@ -505,15 +507,24 @@ class DomainHolder:
 
     def export(self) -> dict[str, dict]:
         """What the domain decided, each row's secrets moved from the holder's ring to the backup key."""
-        from .carry import open_row, seal_row
+        return self._sealed(self._plain())
+
+    def _plain(self) -> dict[str, dict]:
+        """What the domain decided, each row's secrets open — what a revision is compared by, never written."""
+        from .carry import open_row
         self._settle_members()
-        box, out = self.signer.backup_sealer(), {}
+        out = {}
         for prefix in exported():
             for path in self.vars.list(prefix):
                 items, _ = self.vars.get(path)
                 if items is not None:
-                    out[path] = seal_row(box, open_row(self.signer.sealer, items, path), path)
+                    out[path] = open_row(self.signer.sealer, items, path)
         return out
+
+    def _sealed(self, plain: dict[str, dict]) -> dict[str, dict]:
+        from .carry import seal_row
+        box = self.signer.backup_sealer()
+        return {path: seal_row(box, items, path) for path, items in plain.items()}
 
     # Publish the state beyond the holder: one signed document in the holder's durable store, and a pointer for
     # each member chosen to keep it, which that member's agent carries home as it carries the settings.
@@ -535,22 +546,39 @@ class DomainHolder:
                     out[key] = raw.decode()
         return out
 
+    # A REVISION IS THE DOMAIN'S CONTENT (the scenario «камера — офис — центр», N10, «Архитектор» 2026-10-11): the
+    # signer's pass backs up every `backup_every`, and a pass that found nothing changed sealed a new revision all the
+    # same — and every keeper's agent, seeing a newer pointer, wrote `domain/backup-taken` to its flash: some 2880 writes a
+    # day into a camera's flash, for nothing. Now the pass compares what it would seal — the rows with their secrets OPEN
+    # (sealing draws a fresh nonce: two seals of one row never match), the objects, the backup key's revision, the
+    # holder's key — with what the last backup said; the same is no new revision, and a pointer that already names it is
+    # not written again. The digest lives in this process only: a restarted holder writes one revision more, once.
+    # The product: `Term.Backup` (lastHash), the same rule.
     def backup(self, targets: list[str], objects) -> int:
+        import hashlib
         self._not_deposed()                              # a FROZEN holder still backs up: that is how it hands over
         self.backups = objects
-        self.backup_rev += 1
-        doc = sign({"term": self.term, "rev": self.backup_rev, "holder": self.name, "at": self.wall(),
-                    "state": self.export(), "objects": self.export_objects(), "backup_key_rev": self.signer.backup_rev,
-                    **({"holder_key": self.member_key} if self.member_key else {})}, self.signer.tokens)
-        raw = json.dumps(doc, sort_keys=True, ensure_ascii=False).encode()
-        key = f"backup/rev-{self.backup_rev}"
-        objects.put(key, raw)
-        import hashlib
+        plain, objs = self._plain(), self.export_objects()
+        content = hashlib.sha256(json.dumps({"state": plain, "objects": objs, "backup_key_rev": self.signer.backup_rev,
+                                             "holder_key": self.member_key}, sort_keys=True, ensure_ascii=False,
+                                            default=str).encode()).hexdigest()
+        if content != self._backup_content or self._backup_pointer is None:
+            self.backup_rev += 1
+            doc = sign({"term": self.term, "rev": self.backup_rev, "holder": self.name, "at": self.wall(),
+                        "state": self._sealed(plain), "objects": objs, "backup_key_rev": self.signer.backup_rev,
+                        **({"holder_key": self.member_key} if self.member_key else {})}, self.signer.tokens)
+            raw = json.dumps(doc, sort_keys=True, ensure_ascii=False).encode()
+            key = f"backup/rev-{self.backup_rev}"
+            objects.put(key, raw)
+            self._backup_content = content
+            self._backup_pointer = {"object": key, "rev": self.backup_rev, "term": self.term,
+                                    "sha256": hashlib.sha256(raw).hexdigest()}
+        want = {k: str(v) for k, v in self._backup_pointer.items()}
         for t in targets:
             path = f"{KEEPERS}/{t}"
-            _, idx = self.vars.get(path)
-            self.vars.put(path, {"object": key, "rev": self.backup_rev, "term": self.term,
-                                 "sha256": hashlib.sha256(raw).hexdigest()}, cas=idx)
+            have, idx = self.vars.get(path)
+            if {k: str(v) for k, v in (have or {}).items()} != want:
+                self.vars.put(path, dict(self._backup_pointer), cas=idx)
         return self.backup_rev
 
     # Is this holder still the holder? Any member that carries a larger term says no. Read, not told: the
