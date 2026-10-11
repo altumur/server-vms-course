@@ -72,6 +72,10 @@ GET /v1/get?key=vms/cameras/2
 }
 
 # vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/epoch_floor
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/epoch/2
 → 200 {"items": {"epoch": "1"}, "index": 1018}
 

@@ -234,7 +234,7 @@ POST /v1/write {"op": "put", "key": "vms/epoch/3", "cas": 1019, "items": {"epoch
 Последние строки трассы:
 
 ```
-# … and 84 GET requests, omitted
+# … and 87 GET requests, omitted
 # 93 s after the power went: w-srv-b-1 runs [1, 2, 3] under epochs {1: 2, 2: 2, 3: 2}; where(1..3) = ['w-srv-b-1', 'w-srv-b-1', 'w-srv-b-1']
 ```
 
