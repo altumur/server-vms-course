@@ -13,6 +13,9 @@ unit — and THE GROUP COMES BACK, three voters as declared (`-group-size 3`), o
   journals. What this drill is NOT is a power cut of the machine: the library's journal is a memory-mapped file nobody
   syncs, the page cache outlives a killed process and would not outlive the power (`configstore.py`: TEACHING-ONLY, NOT
   DURABLE). The product's store syncs before it acknowledges; the course's says so instead.
+- a door without a vote (ADR-0070 step 5): the group of three and a door on a fourth server; the voters killed, the door
+  answers 503 `unavailable` at once and its worker writes on by its last assignment — a silent lease, not a fenced one;
+  the voters back, the lease is confirmed and the next epoch is the next one.
 
 Skipped where the raft library is not installed. Daemons are processes (`python3 -m w2cplatform.configstore`, the command
 line an installation runs) for the recover and the power loss, and members in this process for the partition — the
@@ -76,10 +79,11 @@ def _metric(sock: str, name: str) -> float | None:
 
 
 class Daemon:
-    """One server's daemon, a process: `-group-size 3`, `-tuning lan`, its own directory, sockets and log."""
+    """One server's daemon, a process: `-group-size 3`, `-tuning lan`, its own directory, sockets and log — and its
+    rights file, every start (`rights`: a door's drill asks it of the roles a door forwards)."""
 
-    def __init__(self, root: str, name: str):
-        self.root, self.name = root, name
+    def __init__(self, root: str, name: str, rights: str | None = None):
+        self.root, self.name, self.rights = root, name, rights
         self.tls = os.path.join(TLS, name)
         self.raft, self.api_port = f"127.0.0.1:{_port()}", _port()
         self.adv = f"{name}@127.0.0.1:{self.api_port}"
@@ -91,7 +95,7 @@ class Daemon:
     def spawn(self, *flags: str) -> subprocess.Popen:
         cmd = [sys.executable, "-m", "w2cplatform.configstore", "-id", self.name, "-dir", self.data, "-raft", self.raft,
                "-api", f"127.0.0.1:{self.api_port}", "-advertise", self.adv, "-sockets", self.sockets, "-tls", self.tls,
-               "-tuning", "lan", "-group-size", "3", *flags]
+               "-tuning", "lan", "-group-size", "3", *(["-rights", self.rights] if self.rights else []), *flags]
         with open(self.log, "a") as log:
             self.proc = subprocess.Popen(cmd, cwd=SOURCE, stdout=log, stderr=log)
         return self.proc
@@ -124,9 +128,9 @@ class Daemon:
         shutil.rmtree(self.data, ignore_errors=True)
 
 
-def _group(root: str) -> list[Daemon]:
+def _group(root: str, rights: str | None = None) -> list[Daemon]:
     """Three, as an installation grows one: srv-a bootstraps, srv-b joins with -force (two is even), srv-c plainly."""
-    a, b, c = (Daemon(root, n) for n in NAMES)
+    a, b, c = (Daemon(root, n, rights) for n in NAMES)
     a.start("-bootstrap")
     _wait("srv-a to lead", a.leads)
     b.start("-join", a.adv, "-force")
@@ -299,3 +303,77 @@ def test_a_partition_leaves_the_leader_cut_off_issuing_nothing_and_it_follows_wh
             assert len(m.daemon.backend.raft.otherNodes) + 1 == 3
     finally:
         g.stop()
+
+
+def test_a_door_without_a_vote_through_the_power_loss_of_the_voters_its_worker_goes_on_by_its_last_assignment():
+    """ADR-0070 step 5's drill («Архитектор» 2026-10-11): a group of three and a door without a vote on a fourth server,
+    a process as an installation runs it (`configstore -door -voters <one seed>`). A worker on the door's socket takes an
+    epoch and holds its lease through the door. The leader killed (SIGKILL): the door follows the group, the lease is
+    renewed. All three killed at once: the door answers 503 `unavailable` with the reason, at once — the lease is SILENT,
+    not fenced, and the worker writes on by its last assignment (`may_write`, `unconfirmed_max`). The three started again
+    from their journals: the lease is confirmed again, and the next epoch, asked through the door, is above every one
+    before it — none issued twice. The door counts in `configstore_doors`, never in `configstore_raft_voters`."""
+    import json
+    from w2cplatform.epoch import Lease
+    root = tempfile.mkdtemp(prefix="drill-")
+    ds, door = [], None
+    rights = os.path.join(root, "rights.json")
+    with open(rights, "w") as f:
+        json.dump({"roles": {"testsub2worker": {"read": ["testsub2/*", "platform/epoch_floor"],
+                                                "write": ["testsub2/*"]}}}, f)
+    key = "testsub2/epoch/7"
+    try:
+        ds = _group(root, rights)
+        a = ds[0]
+        sockets = os.path.join(root, "srv-d.s")
+        with open(os.path.join(root, "srv-d.log"), "a") as log:
+            door = subprocess.Popen([sys.executable, "-m", "w2cplatform.configstore", "-door", "-id", "srv-d",
+                                     "-voters", a.adv, "-sockets", sockets, "-rights", rights,
+                                     "-tls", os.path.join(TLS, "srv-d")], cwd=SOURCE, stdout=log, stderr=log)
+        worker = open_vars(f"configstore://{sockets}/testsub2worker.sock?timeout=3")
+        _wait("the door to know the three voters", lambda: door.poll() is None and len(worker.status()["voters"]) == 3)
+        _wait("the door to reach the three", lambda: _metric(os.path.join(sockets, "admin.sock"),
+                                                              "configstore_door_voters_reachable") == 3)
+        _wait("a voter to count the door", lambda: _metric(a.admin, "configstore_doors") == 1)
+        assert _metric(a.admin, "configstore_raft_voters") == 3
+        epoch = next_epoch(worker, key)[0]
+        lease = Lease(worker, key, epoch, ttl=4.0, margin=1.0, unconfirmed_max=None)
+        assert lease.renew()
+        lead = _leader(ds)
+        lead.stop(signal.SIGKILL)
+        _wait("the lease renewed through the door after the leader was lost", lease.renew)
+        for d in ds:
+            if d.proc is not None:
+                d.stop(signal.SIGKILL)
+        t0 = time.monotonic()
+        try:
+            worker.put("testsub2/counters/1", {"n": "1"})
+            raise AssertionError("a write through a door with no voter answered")
+        except OSError as e:                                                    # StoreUnavailable: 503 unavailable
+            assert "reached none of the group's voters" in str(e), e
+        assert time.monotonic() - t0 < 3.0
+        errors = lease.store_errors
+        assert lease.renew() is True and lease.store_errors > errors            # silence, while the lease is good
+        time.sleep(4.0)                                                         # past the lease, the store silent
+        assert lease.renew() is True
+        assert not lease.fenced and not lease.may_act() and lease.may_write(), "the worker stopped by a silent store"
+        for d in ds:
+            d.spawn()                                                           # all three at once, from their journals
+        for d in ds:
+            _wait(f"{d.name}'s admin socket", lambda d=d: d.vars().status(), 60)
+        _back(ds)
+        _wait("the lease confirmed through the door again", lambda: lease.renew() and lease.may_act())
+        again = next_epoch(worker, key)[0]
+        assert again == epoch + 1, (epoch, again)
+        assert door.poll() is None, "the door died"
+    finally:
+        if door is not None and door.poll() is None:
+            door.send_signal(signal.SIGTERM)
+            try:
+                door.wait(20)
+            except subprocess.TimeoutExpired:
+                door.kill()
+                door.wait()
+        for d in ds:
+            d.stop(signal.SIGKILL)
+        shutil.rmtree(root, ignore_errors=True)

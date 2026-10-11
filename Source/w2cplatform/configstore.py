@@ -22,13 +22,19 @@ and the operator's commands, through this server's `admin.sock` (the product's o
     python3 -m w2cplatform.configstore restore --from rows.json  # into a fresh group
     python3 -m w2cplatform.configstore import --from file:///data/platform/config   # a box's rows, once
 
+a door without a vote on a server beyond the group's three or five — no raft, its processes' requests checked there and
+passed on to the voters over their `-api` doors (ADR-0070 step 5; `configstoredoor.py`):
+
+    python3 -m w2cplatform.configstore -door -id srv-d -voters srv-a@10.0.0.1:8300 -rights … -tls /etc/w2c/tls
+
 and one on a STOPPED daemon's directory, when the group's majority is gone for good (ADR-0070):
 
     python3 -m w2cplatform.configstore recover -id srv-c -dir /data/platform/configstore -peers srv-c=10.0.0.3:8301
 
 `GET /metrics` on every door says what its raft is doing, in the product's words (ADR-0070): `configstore_raft_term`,
 `configstore_raft_state{state}`, `configstore_raft_elections_total`, `configstore_raft_index{kind}`,
-`configstore_raft_last_contact_seconds`, `configstore_raft_voters`, `configstore_raft_voters_expected`.
+`configstore_raft_last_contact_seconds`, `configstore_raft_voters`, `configstore_raft_voters_expected` — and how many
+doors without a vote said they were alive, `configstore_doors`.
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -57,8 +63,9 @@ and one on a STOPPED daemon's directory, when the group's majority is gone for g
 #   `import` — the product's `configstore` command has the same verbs) and the contract suite use it.
 # - `-api host:port` — the other daemons' door: `/v1/status`, and `/v1/join` / `/v1/leave` of the calling daemon's
 #   OWN server (the id in the body is the server its certificate names). Mutual TLS, mandatory (`tls.py`): a client
-#   certificate of the installation's CA with the role `configstore`, or the handshake fails (no certificate) or the
-#   door answers 403 (another role's certificate). A certificate the CA has revoked fails the handshake (`tls.py`,
+#   certificate of the installation's CA with the role `configstore` — or a door's, `configstore-door`, which may only
+#   forward (Doors without a vote, below) — or the handshake fails (no certificate) or the door answers 403 (another
+#   role's certificate). A certificate the CA has revoked fails the handshake (`tls.py`,
 #   `crl.pem`; the review's thirteenth pass, major 5), and one that names no server is refused (minor). A daemon has
 #   NO right on a row (the review's twelfth pass, major 3; `storemachine.Rights`), and no request on this door is
 #   answered as anybody else's: a data request is 403, whatever it carries (the thirteenth pass, major 1 — below).
@@ -96,12 +103,26 @@ and one on a STOPPED daemon's directory, when the group's majority is gone for g
 # A command that arrives at a follower is carried to the leader by the library over the raft port — the daemon's
 # forwarding is the library's (`appendEntriesUseBatch=False`: at once, not at the next tick — 150 ms a write
 # otherwise). The rights were checked on the way in, by the daemon whose socket the caller opened.
-# NO DAEMON FORWARDS A REQUEST OVER THE `-api` DOOR, AND THE DOOR TAKES NONE (the review's thirteenth pass, major 1;
-# the author's decision). The door answered a data request marked `X-Configstore-Forwarded: <role>` with that role's
-# rights — the product's `hashicorp/raft` carries no commands, so its daemon forwards them so — but this daemon
+# NO VOTER FORWARDS A REQUEST OVER THE `-api` DOOR, AND THE DOOR TAKES NONE FROM A VOTER (the review's thirteenth pass,
+# major 1; the author's decision). The door answered a data request marked `X-Configstore-Forwarded: <role>` with that
+# role's rights — the product's `hashicorp/raft` carries no commands, so its daemon forwards them so — but this daemon
 # never sent the mark, and any daemon's certificate made itself any role with it: srv-b's certificate deleted
 # another role's slots and `domain/keys/*` as `domain` at srv-a's door. The path is gone: a data request on
-# the `-api` door is 403, marked or not, until a daemon that forwards exists (mTLS, its second round).
+# the `-api` door with a daemon's certificate is 403, marked or not.
+# The one daemon that forwards is a door without a vote (below), and it does so with a certificate of its own kind.
+#
+# ## Doors without a vote (ADR-0070 step 5; `configstoredoor.py`)
+# A daemon with no raft on a server beyond the group (`-door -voters …`) takes its processes' requests on its role
+# sockets and passes them to a voter's `-api` door. A voter lets its certificate in — `configstore-door` alone, its own
+# kind (`tls.py`) — as `DOOR`, and asks of every such request (`_who_asks`, the product's `doorRefuses`): it names the
+# door it comes from (`X-Configstore-Door`), the server the certificate is for; it is one of `DOOR_PATHS` — a read, a
+# write, the status, the metrics; never a join, a leave or the rights — and it is not asked as the admin. Asked as a
+# process's role (`X-Configstore-Role`, the role of the socket it came in on at the door), it is answered by the SAME
+# rights file as a socket here would answer it: the door checked first, the voter checks again, and nothing a door says
+# widens a role. Asked as the door itself (`DOOR`), it may write its own row of the doors, `platform/doors/configstore/<id>`
+# `{seen_at}`, and nothing else (`_DoorRights`). A request on a SOCKET that says who it is with those headers is refused:
+# the socket says that. `configstore_doors` counts the rows of the doors seen within three `DOOR_BEAT`s; a door is in no
+# voter's count and in no member list. A voter does not start on a door's certificate (`start_member`).
 #
 # ## Faults — "not done" and "do not know" are different answers
 # `commandsWaitLeader=False`: with no leader the library refuses a command at once instead of queueing it, so
@@ -217,7 +238,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import runtime, tls
 from .canonical import Fault, NotJson, parse_json
-from .storemachine import ADMIN, MAX_VALUE, PEER, Ambiguous, Rights, StoreMachine, Unavailable, answer
+from .storemachine import (ADMIN, DOOR, DOORS_PREFIX, MAX_VALUE, PEER, Ambiguous, Rights, StoreMachine, Unavailable,
+                           answer)
 from .variables import STORE_SCHEME, items_bytes
 
 # What an installation sees, each said once (the product names them; a rename is a line here).
@@ -248,6 +270,16 @@ API_PER_ADDRESS = 8        # …of which one address holds this many, so a stran
 HEADERS_WAIT = 5.0         # seconds a request's line and headers may take, whole
 DOOR_TIMEOUT = 10.0        # seconds a door's socket waits on a caller that sends or reads nothing
 MAX_BODY = 6 * MAX_VALUE + (64 << 10)   # a row at its ceiling, every character escaped (`\u00XX`), and its key
+
+# A door without a vote (ADR-0070 step 5; `configstoredoor.py`; the notes: Doors without a vote). The headers by the
+# product's names: which door forwards a request, and the role of the socket its process came in on. A door writes its row
+# of the doors every `DOOR_BEAT`; a voter counts the rows seen within three (`configstore_doors`).
+HEADER_DOOR = "X-Configstore-Door"
+HEADER_ROLE = "X-Configstore-Role"
+DOOR_BEAT = 30.0
+# What a door may ask of a voter: its processes' reads and writes, the group's status, the voter's metrics. Never a join,
+# a leave or the rights: those are a member's and its operator's.
+DOOR_PATHS = (("GET", "/v1/get"), ("GET", "/v1/list"), ("POST", "/v1/write"), ("GET", "/v1/status"), ("GET", "/metrics"))
 
 # The sizes a group may be declared (`-group-size`, ADR-0070): odd, and no larger than five.
 GROUP_SIZES = (1, 3, 5)
@@ -462,6 +494,21 @@ NO_SECRET = ("a raft port without its secret is a group of one on this box's loo
              "code execution for anyone who reaches it: -tls <dir> with raft.secret (deploy/w2c-ca.sh)")
 
 
+def fresh_doors(machine: StoreMachine, now: float, within: float) -> int:
+    """How many rows of the doors (`DOORS_PREFIX<id>`) say their door was seen within the last `within` seconds, as this
+    member's machine holds them — a dead door's row stays, and leaves the count (the notes: Doors without a vote)."""
+    fresh = 0
+    for key, (items, _) in list(machine.rows.items()):
+        if not key.startswith(DOORS_PREFIX):
+            continue
+        try:
+            if now - float(items.get("seen_at", "")) <= within:
+                fresh += 1
+        except ValueError:
+            pass
+    return fresh
+
+
 class RaftBackend:
     """One member of the group. `raft` is this member's raft address, `partners` the others' ([] for a group of
     one), `data` the directory of its journal, dump and `member.json`. Without `password` it is a group of one,
@@ -560,6 +607,8 @@ class RaftBackend:
         line("configstore_raft_voters", "gauge", "the voters of the group as this server knows it", f" {len(r.otherNodes) + 1}")
         line("configstore_raft_voters_expected", "gauge", "the voters the group is declared to have (-group-size)",
              f" {self.group_size}")
+        line("configstore_doors", "gauge", "doors without a vote that said they were alive within three beats (ADR-0070 step 5)",
+             f" {fresh_doors(self.rep.m, time.time(), 3 * DOOR_BEAT)}")
         return "".join(out)
 
     def _open_only_to_this_box(self) -> None:
@@ -820,11 +869,11 @@ def _door(daemon: "StoreDaemon", role_of):
                 n = int(self.headers.get("Content-Length") or 0)
                 raw = self.rfile.read(n) if n else b""
                 try:
-                    role = role_of(self)
+                    role = _who_asks(self, method, role_of(self))
                 except PermissionError as e:
                     return self._send(403, {"kind": "forbidden", "error": str(e)})
                 if method == "GET" and urllib.parse.urlsplit(self.path).path == "/metrics":
-                    return self._send_text(daemon.backend.metrics_text())     # every door, every role (ADR-0070)
+                    return self._send_text(daemon.metrics_text())             # every door, every role (ADR-0070)
                 try:
                     deadline = float(self.headers.get("X-Deadline") or daemon.leader_wait)
                 except ValueError:
@@ -971,12 +1020,63 @@ class _TlsServer(_Bounded, ThreadingHTTPServer):
 
 # A daemon's certificate, and the server it names — a certificate that names none (no «.» in its CN, no SAN DNS) is
 # refused here, so `peer` is never "" behind this door (the review's thirteenth pass, minor: `join` with `id: ""`
-# passed the check that the id is the caller's own).
+# passed the check that the id is the caller's own). A door's certificate (`configstore-door` alone, ADR-0070 step 5)
+# is let in too, as `DOOR`: what it may ask is `_who_asks`'s to say.
 def _peer_role(handler) -> str:
-    handler.peer = tls.peer_server(tls.require_role(handler.connection, PEER))
+    cert = handler.connection.getpeercert()
+    role = DOOR if tls.peer_roles(cert) == {DOOR} else PEER
+    if role == PEER:
+        cert = tls.require_role(handler.connection, PEER)
+    handler.peer = tls.peer_server(cert)
     if not handler.peer:
         raise PermissionError("the peer's certificate names no server (CN <role>.<server>, or a SAN DNS)")
-    return PEER
+    return role
+
+
+# Who a request is asked as (the notes: Doors without a vote; the product's `guard` and `doorRefuses`). On a socket, the
+# socket's role, and a request that says another (`X-Configstore-Role`, `X-Configstore-Door`) is refused — the socket
+# says who calls, and nothing else may. On the `-api` door, a daemon's certificate never says it forwards for a door; a
+# door's certificate names the door it is (the server the certificate is for), asks only `DOOR_PATHS`, and never as the
+# admin: its process's role when it forwards one (the voter asks the same rights file again), its own (`DOOR`) when not.
+def _who_asks(handler, method: str, role: str) -> str:
+    said_role, door = handler.headers.get(HEADER_ROLE, ""), handler.headers.get(HEADER_DOOR, "")
+    if role not in (PEER, DOOR):
+        if said_role or door:
+            raise PermissionError(f"a request on the {role} socket says who it is ({HEADER_ROLE}): the socket says that, "
+                                  f"and nothing else may")
+        return role
+    if role == PEER:
+        if door:
+            raise PermissionError(f"a request forwarded by the door {door!r}, with the certificate of {handler.peer}: a "
+                                  f"door forwards with its own door certificate")
+        return role
+    path = urllib.parse.urlsplit(handler.path).path
+    if not door:
+        raise PermissionError(f"a door's certificate, and the request names no door ({HEADER_DOOR}): a door says which "
+                              f"it is")
+    if door != handler.peer:
+        raise PermissionError(f"a request forwarded by the door {door!r}, with the certificate of {handler.peer}: a door "
+                              f"forwards with its own door certificate")
+    if (method, path) not in DOOR_PATHS:
+        raise PermissionError(f"{method} {path} is not a door's to ask: a door forwards its processes' reads and writes, "
+                              f"and asks the status")
+    if said_role == ADMIN:
+        raise PermissionError("a door says it asks as the admin: the operator's role is admin.sock's on its own server, "
+                              "and is not forwarded")
+    return said_role or DOOR
+
+
+class _DoorRights:
+    """The rights file, and a door's own role on top of it: `DOOR` writes its row of the doors, the one the door's
+    certificate names, and nothing else (the product's `may`, `RoleDoor`)."""
+
+    def __init__(self, rights: Rights, door: str):
+        self.rights, self.door = rights, door
+
+    def allows(self, role: str, action: str, key: str) -> bool:
+        if role == DOOR:
+            return action == "write" and key == DOORS_PREFIX + self.door
+        return self.rights.allows(role, action, key)
 
 
 # What a join or a leave names, bounded before it is a command of the log or a voter (the review's thirteenth pass,
@@ -1046,6 +1146,9 @@ class StoreDaemon:
     def status(self) -> dict:
         return {**self.backend.status(), "api": self.api_url}
 
+    def metrics_text(self) -> str:
+        return self.backend.metrics_text()
+
     # `role` is who the door says is calling; on the `-api` door that is `PEER`, with `peer` the server its certificate
     # names (the notes: Doors).
     def serve(self, method: str, target: str, raw: bytes, role: str, deadline: float, peer: str = "") -> tuple[int, dict]:
@@ -1081,7 +1184,10 @@ class StoreDaemon:
         if role == PEER:
             # A daemon has no right on a row, and speaks for nobody else (the notes: no daemon forwards).
             return 403, {"kind": "forbidden", "error": "a daemon may not read or write rows"}
-        return answer(method, target, raw, role, self.rights,
+        # A door's own request (`DOOR`): its row of the doors, the one its certificate names (`peer`); a process's that a
+        # door forwarded: the role of its socket there, asked of the same rights file here (the notes: Doors without a vote).
+        rights = _DoorRights(self.rights, peer) if role == DOOR else self.rights
+        return answer(method, target, raw, role, rights,
                       lambda cmd: self.backend.submit(cmd, min(self.leader_wait, deadline)))
 
     def stop(self) -> None:
@@ -1154,6 +1260,9 @@ def start_member(node_id: str, data: str, raft: str, *, group_size: int, bootstr
     new member of the group a member's door (`join`) belongs to. `group_size`: the voters the group is declared to have
     (1, 3 or 5, ADR-0070); `force`: a join that makes it even or larger goes through."""
     check_group_size(group_size)
+    if tls_dir and os.path.exists(tls.Bundle(tls_dir).cert) and tls.own_roles(tls_dir) == {DOOR}:
+        raise ValueError(f"the certificate in {tls_dir} is a door's: it never votes — start the daemon with -door, "
+                         f"or give it a voter's certificate (w2c-ca.sh issue {node_id} configstore)")
     # Without `-tls` there is no secret, and `RaftBackend` takes no partner and listens on loopback only, by its socket
     # (the review's twelfth pass, blocker 1) — a join is refused here, before anything is asked of a member.
     password = tls.raft_secret(tls_dir) if tls_dir else None
@@ -1565,6 +1674,9 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv[:1] and argv[0] in COMMANDS:
         return _command(argv)
+    if "-door" in argv:
+        from .configstoredoor import main as door    # a door without a vote (ADR-0070 step 5): no raft, no group
+        return door(argv)
     a = _serve_args(argv)
     rights = Rights.load(a.rights) if a.rights else Rights()
     tls_dir = a.tls or (tls.TLS_DIR if a.api or a.join else None)

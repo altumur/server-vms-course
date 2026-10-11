@@ -7,7 +7,9 @@
 #                                       certificate with CN <first role>.<server>, SAN DNS <server> and one SAN URI
 #                                       urn:w2c:role:<role> per role (default role: configstore). The store daemon's is
 #                                       server.pem / server.key, its role alone (configstore with another is
-#                                       refused); another role's is <role>.pem / <role>.key.
+#                                       refused); another role's is <role>.pem / <role>.key. A door without a vote
+#                                       (ADR-0070 step 5: `configstore -door`) gets its own kind, configstore-door,
+#                                       alone too, as server.pem / server.key — and no raft.secret: a door holds no raft.
 #   w2c-ca.sh revoke <server>           every certificate ever issued for <server> onto the revocation list, and a
 #                                       new crl.pem (in the CA directory and in every bundle under it)
 #   w2c-ca.sh crl                       crl.pem made again from what is revoked — before the list's nextUpdate, and
@@ -38,6 +40,7 @@
 #   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 W2C_CA_CA_DAYS=36500 deploy/w2c-ca.sh init
 #   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 deploy/w2c-ca.sh issue srv-a   (and srv-b, srv-c)
 #   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 deploy/w2c-ca.sh issue srv-a testsub2worker
+#   W2C_CA_DIR=tests/tls W2C_CA_DAYS=36500 deploy/w2c-ca.sh issue srv-d configstore-door   (a door, ADR-0070 step 5)
 #   W2C_CA_DIR=tests/tls W2C_CA_CRL_DAYS=36500 deploy/w2c-ca.sh crl      (their list, made after them)
 set -eu
 
@@ -45,6 +48,7 @@ CA_DIR=${W2C_CA_DIR:-./w2c-ca}
 DAYS=${W2C_CA_DAYS:-825}
 ROLE_URI=urn:w2c:role:          # w2cplatform/tls.py ROLE_URI: the same prefix, said once in each
 STORE_ROLE=configstore         # the store daemon's role: its files are server.pem / server.key
+DOOR_ROLE=configstore-door     # a door without a vote (ADR-0070 step 5): server.pem / server.key too, no raft.secret
 CA_DAYS=${W2C_CA_CA_DAYS:-3650}
 CRL_DAYS=${W2C_CA_CRL_DAYS:-3650}
 
@@ -114,12 +118,17 @@ issue() {
     if [ $# -gt 1 ]; then
         for r in "$@"; do
             [ "$r" = "$STORE_ROLE" ] && die "$STORE_ROLE with another role ($*): a daemon's certificate carries one role — issue $STORE_ROLE alone, the others apart"
+            [ "$r" = "$DOOR_ROLE" ] && die "$DOOR_ROLE with another role ($*): a door's certificate carries one role — issue $DOOR_ROLE alone (a door without a vote, ADR-0070), the others apart"
         done
     fi
     [ -e "$CA_DIR/ca.key" ] || die "no CA in $CA_DIR: w2c-ca.sh init first"
     [ -e "$CA_DIR/crl.pem" ] || crl >/dev/null
     name=$1
-    for r in "$@"; do [ "$r" = "$STORE_ROLE" ] && name=server; done
+    door=no
+    for r in "$@"; do
+        [ "$r" = "$STORE_ROLE" ] && name=server
+        [ "$r" = "$DOOR_ROLE" ] && name=server && door=yes
+    done
     out="$CA_DIR/$server"
     mkdir -p "$out"
     chmod 700 "$out"
@@ -147,8 +156,10 @@ EOF
     cp "$out/$name.pem" "$CA_DIR/issued/$server/$serial.pem"
     cp "$CA_DIR/ca.pem" "$out/ca.pem"
     cp "$CA_DIR/crl.pem" "$out/crl.pem"
-    cp "$CA_DIR/raft.secret" "$out/raft.secret"
-    chmod 600 "$out/raft.secret"
+    if [ "$door" = no ]; then
+        cp "$CA_DIR/raft.secret" "$out/raft.secret"
+        chmod 600 "$out/raft.secret"
+    fi
     echo "$out/$name.pem: CN $1.$server, SAN $san, serial $serial"
 }
 

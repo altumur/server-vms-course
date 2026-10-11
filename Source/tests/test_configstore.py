@@ -712,7 +712,8 @@ def _metrics(sock: str) -> dict[str, float]:
 def test_every_door_says_its_raft_on_metrics_in_the_products_words():
     """ADR-0070, step 1 (the product's `node/metrics.go`, cf55cbd): a member's raft on `GET /metrics` of every door —
     the term, the state, the elections it stood in, its log's last, committed and applied index, how long since a
-    leader spoke to it (0 on the leader), the voters it counts and the voters the group is declared to have. A follower
+    leader spoke to it (0 on the leader), the voters it counts and the voters the group is declared to have — and the
+    doors without a vote seen alive (step 5). A follower
     has heard its leader; after the leader is gone, the one that took over stood in an election and counts it."""
     g = Group(3)
     try:
@@ -722,11 +723,12 @@ def test_every_door_says_its_raft_on_metrics_in_the_products_words():
                  'configstore_raft_state{state="candidate"}', "configstore_raft_elections_total",
                  'configstore_raft_index{kind="last"}', 'configstore_raft_index{kind="commit"}',
                  'configstore_raft_index{kind="applied"}', "configstore_raft_last_contact_seconds",
-                 "configstore_raft_voters", "configstore_raft_voters_expected"}
+                 "configstore_raft_voters", "configstore_raft_voters_expected", "configstore_doors"}
         lead = _metrics(os.path.join(leader.sockets, "admin.sock"))
         assert set(lead) == names, set(lead) ^ names
         assert lead['configstore_raft_state{state="leader"}'] == 1 and lead["configstore_raft_last_contact_seconds"] == 0
         assert lead["configstore_raft_voters"] == 3 == lead["configstore_raft_voters_expected"]
+        assert lead["configstore_doors"] == 0                     # no door without a vote said it is alive (ADR-0070 step 5)
         assert lead['configstore_raft_index{kind="last"}'] >= lead['configstore_raft_index{kind="commit"}'] > 0
         assert lead["configstore_raft_term"] == leader.status()["term"]
         # every name an alert reads is one a live daemon gives (`deploy/cluster/prometheus/configstore.rules.yml`)

@@ -57,6 +57,14 @@ can take it as it is — a role is a name in the certificate, not a property of 
 # asks (`require_role`), and no context is built on such a certificate of our own (`_context`) — the daemon does not
 # start with one.
 #
+# ## A door's certificate is its own kind (ADR-0070 step 5)
+# A door without a vote (`configstoredoor.py`, `configstore -door`) forwards its processes' requests to a voter's `-api`
+# door, and holds a certificate of its own kind: CN `configstore-door.<server>`, SAN URI `urn:w2c:role:configstore-door`
+# alone (`w2c-ca.sh issue <server> configstore-door`; the product's `DoorRoleURI`). A voter lets it onto its `-api` door
+# to forward — never to join or leave, never to vote: the raft port's secret is not in a door's bundle at all. It is a
+# sole role too: with another beside it, that role's processes would forward as any role. A voter started on a door's
+# certificate, and a door on a voter's, do not start (`configstore.start_member`, `configstoredoor.DoorDaemon`).
+#
 # ## The CA is one certificate (the product's cross-check)
 # `load_verify_locations(ca.pem)` trusts every certificate in the file: a CA appended to it — and its list appended
 # to `crl.pem`, which the leaf check asks — let that CA's daemon through the door. `ca.pem` holds exactly one CA
@@ -271,8 +279,9 @@ def peer_server(cert: dict | None) -> str:
     return next((v for k, v in cert.get("subjectAltName", ()) if k == "DNS"), "")
 
 
-# Roles a certificate never carries with another (the notes: one role) — the store's: its daemon is a member of the group.
-SOLE_ROLES = frozenset({"configstore"})
+# Roles a certificate never carries with another (the notes: one role) — the store's: its daemon is a member of the group,
+# and a door's, which forwards for any role of its server (the notes: a door's certificate).
+SOLE_ROLES = frozenset({"configstore", "configstore-door"})
 
 
 def _sole_refusal(roles: set[str]) -> str:
@@ -287,6 +296,11 @@ def own_roles(directory: str, name: str = "server") -> set[str]:
     """The roles of our own certificate in `directory`, read as a peer reads them."""
     # `_test_decode_cert` is the `ssl` module's own reading of a PEM file into `getpeercert()`'s form (CPython's).
     return peer_roles(ssl._ssl._test_decode_cert(Bundle(directory, name).cert))
+
+
+def own_server(directory: str, name: str = "server") -> str:
+    """The server our own certificate in `directory` names, read as a peer reads it."""
+    return peer_server(ssl._ssl._test_decode_cert(Bundle(directory, name).cert))
 
 
 def require_role(sock, role: str) -> dict:

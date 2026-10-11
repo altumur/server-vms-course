@@ -112,6 +112,11 @@ CAS_MAX = 1 << 63                                    # a `cas` that is a number:
 MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
+# A door without a vote (ADR-0070 step 5; `configstoredoor.py`), on a voter's `-api` door with a door's certificate: its
+# own requests are asked as this role — its row of the doors, `DOORS_PREFIX<id>`, and nothing else; its processes'
+# requests as the role of the socket they came in on.
+DOOR = "configstore-door"
+DOORS_PREFIX = "platform/doors/configstore/"
 # The roles that may delete `domain/*`, and how a pattern is asked: the platform's one evaluator (`rights.py`), which the
 # in-process ACL of a box's `file://` and `memory://` stores asks too.
 
@@ -290,9 +295,9 @@ class Rights:
                              '"delete": [...]}}}')
         roles = {}
         for role, grants in doc["roles"].items():
-            if not isinstance(role, str) or not _ROLE.match(role) or role in (ADMIN, PEER):
-                raise ValueError(f"not a role name: {role!r} (lower case, digits, - and _; {ADMIN!r} and {PEER!r} are "
-                                 f"the store's own)")
+            if not isinstance(role, str) or not _ROLE.match(role) or role in (ADMIN, PEER, DOOR):
+                raise ValueError(f"not a role name: {role!r} (lower case, digits, - and _; {ADMIN!r}, {PEER!r} and "
+                                 f"{DOOR!r} are the store's own)")
             if not isinstance(grants, dict) or set(grants) - set(ACTIONS) - {"group"}:
                 raise ValueError(f"{role}: a role says its socket's group, and read, write and delete, each a list of "
                                  f"keys or prefixes")
