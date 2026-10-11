@@ -4,14 +4,6 @@ course-only auto.subsystem.yaml worker.requests[det]   # ADR-0058: detectors are
 course-only vms.subsystem.yaml heartbeat   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
 course-only vms.subsystem.yaml heartbeat.strings[playback_key]   # ADR-0034: the playback door's key waits for the plan of the doors between processes — «Сборка»
-product-only auto.subsystem.yaml placement.capacity.base_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
-product-only auto.subsystem.yaml placement.capacity.unit_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
-product-only live.subsystem.yaml placement.capacity.base_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
-product-only live.subsystem.yaml placement.capacity.unit_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
-product-only rec.subsystem.yaml placement.capacity.base_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
-product-only rec.subsystem.yaml placement.capacity.unit_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
 product-only rec.subsystem.yaml secrets   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml secrets.reads   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
 product-only rec.subsystem.yaml secrets.reads[domain/member-key]   # ADR-0034: the recorder signs as the agent until the plan of the doors between processes — «Сборка»
-product-only vms.subsystem.yaml placement.capacity.base_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
-product-only vms.subsystem.yaml placement.capacity.unit_mb   # ADR-0070 step 3: the memory a unit and the process cost, measured 2026-10-11; the product lays it first, the course mirrors it (step 4) — «Лекции»
