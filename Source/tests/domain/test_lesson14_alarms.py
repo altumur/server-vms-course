@@ -296,3 +296,33 @@ def test_a_camera_behind_an_office_has_its_alarms_on_the_domains_list_and_an_off
     assert [(e["member"], e["kind"]) for e in got["events"]] == [(cam.name, "card.prebuffer.short")], got
     assert got["members"][cam.name]["state"] == "ok", got["members"]
     assert got["members"]["office"] == {"state": "ok", "truncated": False}, got["members"]
+
+
+def test_an_office_with_no_page_that_reported_and_went_quiet_is_silent_by_its_last_report_not_never_reported():
+    """The scenario «камера — офис — центр», N9 («Архитектор» 2026-10-11). An office reports no page of alarms (its agent
+    is given no `pages`). Gone quiet, it was "has never reported to the domain" — the list looked for its silence in a
+    page it never had. The holder raises `silent` for any member by its LAST REPORT, the office too, by the same rule and
+    threshold as a camera's: silent since the report plus `lost_after`. "Has never reported" stays for a member with no
+    report at all — another state, not `silent`."""
+    wall = Clock(NOW)
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    office, _ = make_cluster("office")
+    fed.add(north)
+    fed.add(member_copy("office", north.objects, wall=wall))
+    fed.add(member_copy("cam-SN9", north.objects, wall=wall))            # admitted, and never reported
+    office.objects.put("vms/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
+    agent = DomainAgent("office", north.vars, office.vars, now=wall, domain_objects=north.objects,
+                        published=office.objects)                       # no `pages`: the office says no alarms
+    agent.sync()
+    reported = lambda name: ReportedDoor(name, north.objects, wall=wall)
+    out = DomainAlarms(fed, reported, wall).list(since=NOW - 3600)        # the domain's pass: it has seen the report
+    assert out["members"]["office"] == {"state": "ok", "truncated": False}, out["members"]
+    wall.advance(60)                                                     # the office goes quiet
+    out = DomainAlarms(fed, reported, wall).list(since=NOW - 3600)
+    m = out["members"]["office"]
+    assert (m["state"], m["known_until"], m["silent_since"]) == ("last_report", NOW, NOW + 45), m
+    assert [(e["kind"], e["t"]) for e in out["events"] if e["member"] == "office"] == [("silent", NOW + 45)]
+    assert "office silent since" in out["sentence"] and "office has never reported" not in out["sentence"]
+    assert out["members"]["cam-SN9"]["state"] == "unreachable"
+    assert "cam-SN9 has never reported to the domain" in out["sentence"]
