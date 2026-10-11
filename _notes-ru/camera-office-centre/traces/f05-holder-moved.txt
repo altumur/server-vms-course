@@ -189,7 +189,7 @@ POST /v1/write {"op": "put", "key": "domain/signer", "cas": "", "items": {
   "issuing_key_secret": "«запечатано кольцом 6»",
   "issuing_cert": "«сертификат 1»",
   "token_key_secret": "«запечатано кольцом 7»",
-  "kid": "00da92aa",
+  "kid": "550eed15",
   "gen": "1",
   "previous": "[]",
   "backup_key_secret": "«запечатано кольцом 8»",
@@ -341,7 +341,7 @@ GET /v1/get?key=domain/signer
     "issuing_key_secret": "«запечатано кольцом 6»",
     "issuing_cert": "«сертификат 1»",
     "token_key_secret": "«запечатано кольцом 7»",
-    "kid": "00da92aa",
+    "kid": "550eed15",
     "gen": "1",
     "previous": "[]",
     "backup_key_secret": "«запечатано кольцом 8»",
@@ -355,7 +355,7 @@ POST /v1/write {"op": "put", "key": "domain/signer", "cas": 2047, "items": {
   "issuing_key_secret": "«запечатано кольцом 9»",
   "issuing_cert": "«сертификат 3»",
   "token_key_secret": "«запечатано кольцом 10»",
-  "kid": "83f49668",
+  "kid": "e03e7607",
   "gen": "1",
   "previous": "[]",
   "backup_key_secret": "«запечатано кольцом 11»",
@@ -593,7 +593,7 @@ GET /v1/get?key=domain/keys
 
 # signer on relay-a → /run/configstore/domain.sock
 POST /v1/write {"op": "put", "key": "domain/keys", "cas": 2004, "items": {
-  "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
 }}
 → 200 {"index": 2060}
 
@@ -668,7 +668,7 @@ GET /v1/get?key=domain/members
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -717,8 +717,8 @@ POST /v1/write {"op": "put", "key": "domain/revoked", "cas": "", "items": {"jtis
 ## w2cctl: 200 term 2 on relay-a: the domain's state from backup rev 3, held by relay-b; anything the old holder changed after rev 3 is not here
 
 ## Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS и берёт запись срока 2.
-## Дверь, через которую нести дальше, называет поле url записи — дверь подписывающего relay-a. Отчёт агент
-## кладёт по-прежнему в объекты srv (DOMAIN_OBJECTS_URL не следует за держателем) — FINDINGS.md, N5.
+## Дверь, через которую нести дальше, называет поле url записи — дверь подписывающего relay-a. Туда же
+## агент шлёт и отчёт (POST /api/member/<член>), и сводку камер (POST /api/relay/<офис>) — FINDINGS.md, N5.
 
 # vmscontroller on relay-a → /run/configstore/vmscontroller.sock
 GET /v1/list?prefix=vms/slots/
@@ -795,7 +795,7 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -830,7 +830,7 @@ GET /v1/get?key=domain/backup-taken
   },
   "term": 2,
   "keys": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "backup": null
 }
@@ -938,7 +938,7 @@ GET /v1/get?key=domain/members
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1027,7 +1027,7 @@ GET /v1/get?key=domain/vms/upstream/relay-b
   "cluster": "relay-b",
   "rows": {
     "domain/keys": {
-      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
     },
     "domain/revoked": {
       "jtis": ""
@@ -1080,7 +1080,7 @@ GET /v1/get?key=domain/keys
 
 # domainagent on relay-b → /run/configstore/domainagent.sock
 POST /v1/write {"op": "put", "key": "domain/keys", "cas": 3004, "items": {
-  "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
 }}
 → 200 {"index": 3034}
 
@@ -1170,7 +1170,7 @@ GET /v1/get?key=domain/pending
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 3034
 }
@@ -1233,7 +1233,7 @@ GET /v1/get?key=domain/root
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 3034
 }
@@ -1270,16 +1270,682 @@ GET /v1/list?prefix=survey/epoch/
 GET /v1/list?prefix=vms/epoch/
 → 200 {"keys": {}}
 
-# domainagent on relay-b → the holder's objects on srv:8090
-#   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/relay-b подписывающему (srv:8071)
-GET /domain/members/relay-b/o/rec/heartbeats/r-relay-b-1
-→ 0 "no answer: srv is off"
+# domainagent on relay-b → relay-a:8071
+POST /api/member/relay-b
+  X-Agent-Signature: 1757500327000.«подпись 9»
+{
+  "key": "«ключ 11»",
+  "objects": {
+    "domain/reaches": {
+      "networks": [
+        "vlan:site-b",
+        "vlan:uplink"
+      ]
+    },
+    "rec/heartbeats/r-relay-b-1": {
+      "alloc": "relay-b:3101:000c1d",
+      "archive": "file:///data/relay-b/relay-b/volume",
+      "archive_away_since": 0.0,
+      "archive_error": "",
+      "archive_failure": "",
+      "archive_quota": 67108864,
+      "assignment_rev": 1,
+      "backfill": {
+        "refused_seconds": 0
+      },
+      "build": "dev",
+      "capacity": 50,
+      "closed": "",
+      "conflicts": 0,
+      "devices": [],
+      "headroom": 49,
+      "ingest": "http://relay-b:8091/ingest",
+      "ingest_streams": {},
+      "instance": "relay-b:3101:000c1d",
+      "labels": "vlan:site-b,vlan:uplink",
+      "nowhere_seconds": 0,
+      "objectstorage": {
+        "block_bytes": 4194304,
+        "volume": "disk"
+      },
+      "pass_failures": 0,
+      "passes": 1,
+      "pending_writes": 0,
+      "present": true,
+      "previous_hb": 0.0,
+      "previous_instance": "",
+      "previous_server": "",
+      "refused": {},
+      "schema": 1,
+      "server": "relay-b",
+      "started": 1757500225.0,
+      "status": [
+        {
+          "cam": "ref:SN-B",
+          "enabled": true,
+          "epoch": 1,
+          "id": "SN-B",
+          "name": "SN-B",
+          "observed_revision": 0,
+          "phase": "waiting",
+          "position": "lagging",
+          "ref": "",
+          "revision": 1,
+          "source": null,
+          "via": null,
+          "why": "SN-B is not in this cluster's source book: the domain has not asked this cluster to record it, or has never seen it publish a door"
+        }
+      ],
+      "store_errors": 0,
+      "ts": 1757500245.0,
+      "unconfirmed": 0,
+      "volume": "disk",
+      "volume_error": "",
+      "volume_quota": 1073741824,
+      "worker": "r-relay-b-1",
+      "writer": {
+        "state": "ok"
+      }
+    },
+    "rec/polled/http___relay-b_8091_ingest": {
+      "cluster": "relay-b",
+      "ingest": "http://relay-b:8091/ingest",
+      "ts": 1757500245.0,
+      "units": {}
+    },
+    "rec/snapshot/r-relay-b-1": {
+      "cluster": "relay-b",
+      "recordings": [
+        {
+          "cam": "ref:SN-B",
+          "enabled": true,
+          "home": "",
+          "id": "SN-B",
+          "labels": [],
+          "name": "SN-B",
+          "retention_days": 30,
+          "revision": 1,
+          "server": "relay-b",
+          "until": 0.0,
+          "when": "always",
+          "worker": "r-relay-b-1"
+        }
+      ],
+      "ts": 1757500225.0,
+      "worker": "r-relay-b-1"
+    },
+    "rec/snapshot/unplaced": {
+      "cluster": "relay-b",
+      "recordings": [],
+      "ts": 1757500225.0,
+      "worker": null
+    },
+    "vms/snapshot/unplaced": {
+      "cameras": [],
+      "cluster": "relay-b",
+      "ts": 1757500225.0,
+      "worker": null
+    }
+  },
+  "pages": {},
+  "rows": {
+    "domain/backup-taken": {
+      "idx": 3030,
+      "items": {
+        "rev": "3",
+        "sha256": "«sha256 2»",
+        "term": "1"
+      }
+    },
+    "domain/holder": {
+      "idx": 3033,
+      "items": {
+        "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+      }
+    },
+    "domain/keys": {
+      "idx": 3034,
+      "items": {
+        "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+      }
+    },
+    "domain/root": {
+      "idx": 3003,
+      "items": {
+        "pub": "«ключ 2»"
+      }
+    },
+    "domain/shared": {
+      "idx": 3037,
+      "items": {
+        "rev": "1",
+        "sha256": "«sha256 3»",
+        "term": "2"
+      }
+    },
+    "rec/epoch/SN-B": {
+      "idx": 3024,
+      "items": {
+        "epoch": "1"
+      }
+    }
+  },
+  "seal": "«ключ 12»",
+  "sent_at": 1757500327.0
+}
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": {"jtis": ""}, "index": 2063}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+  },
+  "index": 2062
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": {"object": "shared/rev-1-term-2", "rev": "1", "term": "2", "sha256": "«sha256 3»"}, "index": 2061}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/relay-b
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 2051}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/pending/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keepers/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/break-glass/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/ldevid/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/asks/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/polls/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/primaries/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/sources/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/stream-accounts/relay-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/upstream/relay-b
+→ 200 {"items": null, "index": ""}
+
+# domainagent on relay-b ← relay-a:8071: ответ на POST /api/member/relay-b
+→ 200 {
+  "cluster": "relay-b",
+  "rows": {
+    "domain/keys": {
+      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    },
+    "domain/revoked": {
+      "jtis": ""
+    },
+    "domain/holder": {
+      "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+    },
+    "domain/shared": {
+      "object": "shared/rev-1-term-2",
+      "rev": "1",
+      "term": "2",
+      "sha256": "«sha256 3»"
+    },
+    "domain/topology": {
+      "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+    },
+    "domain/members": {
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+    },
+    "domain/grants/relay-b": {
+      "anna|admin|": "1757586520.0"
+    }
+  },
+  "objects": {
+    "shared/rev-1-term-2": "«base64 1, 344 байт»"
+  }
+}
+
+# domainagent on relay-b → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 3006
+}
+
+# domainagent on relay-b → relay-a:8071
+GET /api/carry/relay-b?for=cam-b
+  X-W2C-Time: 1757500327.000
+  X-W2C-Seal: «ключ 12»
+  X-W2C-Signature: «подпись 8»
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": {"jtis": ""}, "index": 2063}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+  },
+  "index": 2062
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": {"object": "shared/rev-1-term-2", "rev": "1", "term": "2", "sha256": "«sha256 3»"}, "index": 2061}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/pending/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keepers/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/break-glass/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/ldevid/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/asks/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/polls/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/primaries/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/sources/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/stream-accounts/cam-b
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/upstream/cam-b
+→ 200 {"items": null, "index": ""}
+
+# domainagent on relay-b ← relay-a:8071: ответ на GET /api/carry/relay-b?for=cam-b
+→ 200 {
+  "cluster": "cam-b",
+  "rows": {
+    "domain/keys": {
+      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    },
+    "domain/revoked": {
+      "jtis": ""
+    },
+    "domain/holder": {
+      "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+    },
+    "domain/shared": {
+      "object": "shared/rev-1-term-2",
+      "rev": "1",
+      "term": "2",
+      "sha256": "«sha256 3»"
+    },
+    "domain/topology": {
+      "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+    },
+    "domain/members": {
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+    }
+  },
+  "objects": {
+    "shared/rev-1-term-2": "«base64 1, 344 байт»"
+  },
+  "key": "«ключ 9»"
+}
+
+# domainagent on relay-b → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 3006
+}
+
+# domainagent on relay-b → relay-a:8071
+POST /api/relay/relay-b
+  X-Agent-Signature: 1757500327000.«подпись 10»
+{
+  "relayed": {
+    "cam-b": {
+      "key": "«ключ 9»",
+      "objects": {
+        "domain/reaches": {
+          "networks": [
+            "lte:cam-b"
+          ]
+        },
+        "rec/heartbeats/r-1": {
+          "alloc": "cam-b:6101:0017d5",
+          "archive": "",
+          "assignment_rev": 1,
+          "build": "dev",
+          "capacity": 50,
+          "card": {
+            "budget": 67108864,
+            "bytes": 0,
+            "segments": 0,
+            "since": 1757500185.0,
+            "state": "recording",
+            "tries": 1
+          },
+          "conflicts": 0,
+          "devices": [],
+          "feed": {
+            "frames_connected": false,
+            "ring_bytes": 0,
+            "ring_max_bytes": 33554432,
+            "ring_reach_s": 60.0,
+            "ring_samples": 0,
+            "ring_span_s": 0.0,
+            "ring_window_s": 60.0
+          },
+          "headroom": 49,
+          "instance": "cam-b:6101:0017d5",
+          "labels": "",
+          "pass_failures": 0,
+          "passes": 1,
+          "pending_writes": 0,
+          "previous_hb": 0.0,
+          "previous_instance": "",
+          "previous_server": "",
+          "schema": 1,
+          "server": "cam-b",
+          "started": 1757500185.0,
+          "status": [
+            {
+              "cam": "1",
+              "card_budget": 67108864,
+              "card_bytes": 0,
+              "card_segments": 0,
+              "enabled": true,
+              "epoch": 1,
+              "hold": true,
+              "id": "1-sd",
+              "keep": false,
+              "name": "1-sd",
+              "observed_revision": 1,
+              "phase": "standby",
+              "position": "converged",
+              "prebuffer_s": 60.0,
+              "ref": "",
+              "revision": 1,
+              "samples_dropped": 0,
+              "samples_written": 0,
+              "source": "ring://camera",
+              "via": "ring",
+              "why": "no primary recording of this camera is known — not in this cluster, not in the book of primaries: nothing to stand in for; the last 0 s are held in memory"
+            }
+          ],
+          "store_errors": 0,
+          "ts": 1757500185.0,
+          "unconfirmed": 0,
+          "volume": "card",
+          "volume_error": "",
+          "worker": "r-1"
+        },
+        "vms/heartbeats/SN-B": {
+          "capacity": 1,
+          "coverage": null,
+          "headroom": 0,
+          "instance": "cam-b-boot-1",
+          "live_url": "rtsp://cam-b.local/live",
+          "playback_url": "http://cam-b.local/playback",
+          "polls": true,
+          "push": true,
+          "server": "SN-B",
+          "status": [
+            {
+              "can": {
+                "events": [
+                  "motion"
+                ],
+                "presets": 8,
+                "ptz": true
+              },
+              "enabled": true,
+              "epoch": 1,
+              "id": 1,
+              "name": "SN-B",
+              "observed_revision": 1,
+              "phase": "running",
+              "position": "converged",
+              "ref": "SN-B",
+              "revision": 1
+            }
+          ],
+          "taken_by": [],
+          "ts": 1757500185.0,
+          "worker": "SN-B"
+        },
+        "vms/snapshot/SN-B": {
+          "cameras": [
+            {
+              "id": 1,
+              "name": "SN-B",
+              "ref": "SN-B",
+              "revision": 1,
+              "server": "SN-B",
+              "worker": "SN-B"
+            }
+          ],
+          "cluster": "cam-b",
+          "ts": 1757500185.0,
+          "worker": "SN-B"
+        }
+      },
+      "pages": {
+        "alarms": "{\"from\": 1757413886.0, \"to\": 1757500286.0, \"events\": [], \"truncated\": false}"
+      },
+      "rows": {
+        "domain/holder": {
+          "idx": 6008,
+          "items": {
+            "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+          }
+        },
+        "domain/keys": {
+          "idx": 6003,
+          "items": {
+            "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+          }
+        },
+        "domain/root": {
+          "idx": 6002,
+          "items": {
+            "pub": "«ключ 2»"
+          }
+        },
+        "domain/shared": {
+          "idx": 6020,
+          "items": {
+            "rev": "1",
+            "sha256": "«sha256 1»",
+            "term": "1"
+          }
+        },
+        "rec/epoch/1-sd": {
+          "idx": 6018,
+          "items": {
+            "epoch": "1"
+          }
+        },
+        "vms/epoch/1": {
+          "idx": 6009,
+          "items": {
+            "epoch": "1"
+          }
+        }
+      },
+      "seal": "«ключ 10»",
+      "sent_at": 1757500286.0
+    }
+  }
+}
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# domainagent on relay-b ← relay-a:8071: ответ на POST /api/relay/relay-b
+→ 200 {"refused": {}}
 
 # domainagent on relay-a → /run/configstore/domainagent.sock
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1292,7 +1958,7 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1327,7 +1993,7 @@ GET /v1/get?key=domain/backup-taken
   },
   "term": 2,
   "keys": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "backup": null
 }
@@ -1340,7 +2006,7 @@ GET /api/held
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 3034
 }
@@ -1375,7 +2041,7 @@ GET /v1/get?key=domain/backup-taken
   },
   "term": 2,
   "keys": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "backup": {
     "term": 1,
@@ -1409,7 +2075,7 @@ GET /v1/get?key=domain/holder
 GET /api/carry/relay-a
   X-W2C-Time: 1757500327.000
   X-W2C-Seal: «ключ 4»
-  X-W2C-Signature: «подпись 9»
+  X-W2C-Signature: «подпись 11»
 → …
 
 # signer on relay-a → /run/configstore/domain.sock
@@ -1425,7 +2091,7 @@ GET /v1/get?key=domain/members
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1514,7 +2180,7 @@ GET /v1/get?key=domain/vms/upstream/relay-a
   "cluster": "relay-a",
   "rows": {
     "domain/keys": {
-      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
     },
     "domain/revoked": {
       "jtis": ""
@@ -1551,7 +2217,7 @@ GET /v1/get?key=domain/root
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1560,7 +2226,7 @@ GET /v1/get?key=domain/keys
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1653,7 +2319,7 @@ GET /v1/get?key=domain/pending
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1708,7 +2374,7 @@ GET /v1/get?key=domain/root
 GET /v1/get?key=domain/keys
 → 200 {
   "items": {
-    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"83f49668\", \"key:83f49668\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
   },
   "index": 2060
 }
@@ -1745,7 +2411,1060 @@ GET /v1/list?prefix=survey/epoch/
 GET /v1/list?prefix=vms/epoch/
 → 200 {"keys": {}}
 
-# domainagent on relay-a → the holder's objects on srv:8090
-#   в курсе — запись в чужое хранилище объектов в процессе, провода нет; у продукта POST /api/member/relay-a подписывающему (srv:8071)
-GET /domain/members/relay-a/o/rec/heartbeats/r-relay-a-1
-→ 0 "no answer: srv is off"
+# domainagent on relay-a → relay-a:8071
+POST /api/member/relay-a
+  X-Agent-Signature: 1757500327000.«подпись 12»
+{
+  "key": "«ключ 3»",
+  "objects": {
+    "domain/reaches": {
+      "networks": [
+        "vlan:site-a",
+        "vlan:uplink"
+      ]
+    },
+    "rec/heartbeats/r-relay-a-1": {
+      "alloc": "relay-a:2101:000835",
+      "archive": "file:///data/relay-a/relay-a/volume",
+      "archive_away_since": 0.0,
+      "archive_error": "",
+      "archive_failure": "",
+      "archive_quota": 67108864,
+      "assignment_rev": 1,
+      "backfill": {
+        "refused_seconds": 0
+      },
+      "build": "dev",
+      "capacity": 50,
+      "closed": "",
+      "conflicts": 0,
+      "devices": [],
+      "headroom": 49,
+      "ingest": "http://relay-a:8091/ingest",
+      "ingest_streams": {
+        "SN-A": {
+          "absurd_frames": 0,
+          "ahead_losses": 0,
+          "camera_rtt_s": 0.0,
+          "clock_pieces": 1,
+          "clock_pieces_restored": 0,
+          "last": 1757500281.0,
+          "live": true,
+          "polled_ago": 0.0,
+          "push": true,
+          "received": 811,
+          "recorders": 1,
+          "repeats_dropped": 0,
+          "skew_s": 0.0,
+          "viewers": 0
+        }
+      },
+      "instance": "relay-a:2101:000835",
+      "labels": "vlan:site-a,vlan:uplink",
+      "nowhere_seconds": 0,
+      "objectstorage": {
+        "block_bytes": 4194304,
+        "volume": "disk"
+      },
+      "pass_failures": 0,
+      "passes": 5,
+      "pending_writes": 0,
+      "present": true,
+      "previous_hb": 0.0,
+      "previous_instance": "",
+      "previous_server": "",
+      "refused": {},
+      "schema": 1,
+      "server": "relay-a",
+      "started": 1757500225.0,
+      "status": [
+        {
+          "cam": "ref:SN-A",
+          "enabled": true,
+          "epoch": 2,
+          "id": "SN-A",
+          "last_frame_at": 1757500281.0,
+          "name": "SN-A",
+          "observed_revision": 1,
+          "phase": "running",
+          "position": "converged",
+          "ref": "",
+          "revision": 1,
+          "samples_dropped": 0,
+          "samples_written": 811,
+          "source": "ingest://relay-a/SN-A",
+          "via": "ingest",
+          "written_through": 1757500281.0
+        }
+      ],
+      "store_errors": 0,
+      "ts": 1757500281.0,
+      "unconfirmed": 0,
+      "upstream": {
+        "SN-A": {
+          "errors": 0,
+          "mode": "push",
+          "state": "the centre does not want it",
+          "up_dropped": 0,
+          "up_expired": 0,
+          "up_kept": false,
+          "up_kept_writes": 1
+        },
+        "SN-A2": {
+          "errors": 0,
+          "mode": "push",
+          "state": "the centre does not want it",
+          "up_dropped": 0,
+          "up_expired": 0,
+          "up_kept": false,
+          "up_kept_writes": 0
+        }
+      },
+      "volume": "disk",
+      "volume_error": "",
+      "volume_quota": 1073741824,
+      "worker": "r-relay-a-1",
+      "writer": {
+        "state": "ok"
+      }
+    },
+    "rec/polled/http___relay-a_8091_ingest": {
+      "cluster": "relay-a",
+      "ingest": "http://relay-a:8091/ingest",
+      "ts": 1757500281.0,
+      "units": {
+        "cam-a": 0.0
+      }
+    },
+    "rec/snapshot/r-relay-a-1": {
+      "cluster": "relay-a",
+      "recordings": [
+        {
+          "cam": "ref:SN-A",
+          "enabled": true,
+          "home": "",
+          "id": "SN-A",
+          "labels": [],
+          "name": "SN-A",
+          "retention_days": 30,
+          "revision": 1,
+          "server": "relay-a",
+          "until": 0.0,
+          "when": "always",
+          "worker": "r-relay-a-1"
+        }
+      ],
+      "ts": 1757500225.0,
+      "worker": "r-relay-a-1"
+    },
+    "rec/snapshot/unplaced": {
+      "cluster": "relay-a",
+      "recordings": [],
+      "ts": 1757500225.0,
+      "worker": null
+    },
+    "vms/snapshot/unplaced": {
+      "cameras": [],
+      "cluster": "relay-a",
+      "ts": 1757500225.0,
+      "worker": null
+    }
+  },
+  "pages": {},
+  "rows": {
+    "domain/holder": {
+      "idx": 2062,
+      "items": {
+        "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+      }
+    },
+    "domain/keys": {
+      "idx": 2060,
+      "items": {
+        "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+      }
+    },
+    "domain/root": {
+      "idx": 2003,
+      "items": {
+        "pub": "«ключ 2»"
+      }
+    },
+    "domain/shared": {
+      "idx": 2061,
+      "items": {
+        "object": "shared/rev-1-term-2",
+        "rev": "1",
+        "sha256": "«sha256 3»",
+        "term": "2"
+      }
+    },
+    "rec/epoch/SN-A": {
+      "idx": 2030,
+      "items": {
+        "epoch": "2"
+      }
+    }
+  },
+  "seal": "«ключ 4»",
+  "sent_at": 1757500327.0
+}
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": {"jtis": ""}, "index": 2063}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+  },
+  "index": 2062
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": {"object": "shared/rev-1-term-2", "rev": "1", "term": "2", "sha256": "«sha256 3»"}, "index": 2061}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/relay-a
+→ 200 {"items": {"anna|admin|": "1757586520.0"}, "index": 2050}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/pending/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keepers/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/break-glass/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/ldevid/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/asks/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/polls/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/primaries/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/sources/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/stream-accounts/relay-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/upstream/relay-a
+→ 200 {"items": null, "index": ""}
+
+# domainagent on relay-a ← relay-a:8071: ответ на POST /api/member/relay-a
+→ 200 {
+  "cluster": "relay-a",
+  "rows": {
+    "domain/keys": {
+      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    },
+    "domain/revoked": {
+      "jtis": ""
+    },
+    "domain/holder": {
+      "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+    },
+    "domain/shared": {
+      "object": "shared/rev-1-term-2",
+      "rev": "1",
+      "term": "2",
+      "sha256": "«sha256 3»"
+    },
+    "domain/topology": {
+      "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+    },
+    "domain/members": {
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+    },
+    "domain/grants/relay-a": {
+      "anna|admin|": "1757586520.0"
+    }
+  },
+  "objects": {
+    "shared/rev-1-term-2": "«base64 1, 344 байт»"
+  }
+}
+
+# domainagent on relay-a → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# domainagent on relay-a → relay-a:8071
+GET /api/carry/relay-a?for=cam-a
+  X-W2C-Time: 1757500327.000
+  X-W2C-Seal: «ключ 4»
+  X-W2C-Signature: «подпись 11»
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": {"jtis": ""}, "index": 2063}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+  },
+  "index": 2062
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": {"object": "shared/rev-1-term-2", "rev": "1", "term": "2", "sha256": "«sha256 3»"}, "index": 2061}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/pending/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keepers/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/break-glass/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/ldevid/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/asks/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/polls/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/primaries/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/sources/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/stream-accounts/cam-a
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/upstream/cam-a
+→ 200 {"items": null, "index": ""}
+
+# domainagent on relay-a ← relay-a:8071: ответ на GET /api/carry/relay-a?for=cam-a
+→ 200 {
+  "cluster": "cam-a",
+  "rows": {
+    "domain/keys": {
+      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    },
+    "domain/revoked": {
+      "jtis": ""
+    },
+    "domain/holder": {
+      "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+    },
+    "domain/shared": {
+      "object": "shared/rev-1-term-2",
+      "rev": "1",
+      "term": "2",
+      "sha256": "«sha256 3»"
+    },
+    "domain/topology": {
+      "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+    },
+    "domain/members": {
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+    }
+  },
+  "objects": {
+    "shared/rev-1-term-2": "«base64 1, 344 байт»"
+  },
+  "key": "«ключ 5»"
+}
+
+# domainagent on relay-a → relay-a:8071
+GET /api/carry/relay-a?for=cam-a2
+  X-W2C-Time: 1757500327.000
+  X-W2C-Seal: «ключ 4»
+  X-W2C-Signature: «подпись 11»
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/revoked
+→ 200 {"items": {"jtis": ""}, "index": 2063}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/holder
+→ 200 {
+  "items": {
+    "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+  },
+  "index": 2062
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/shared
+→ 200 {"items": {"object": "shared/rev-1-term-2", "rev": "1", "term": "2", "sha256": "«sha256 3»"}, "index": 2061}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/grants/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/pending/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keepers/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/break-glass/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/ldevid/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/asks/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/polls/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/primaries/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/sources/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/stream-accounts/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/vms/upstream/cam-a2
+→ 200 {"items": null, "index": ""}
+
+# domainagent on relay-a ← relay-a:8071: ответ на GET /api/carry/relay-a?for=cam-a2
+→ 200 {
+  "cluster": "cam-a2",
+  "rows": {
+    "domain/keys": {
+      "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+    },
+    "domain/revoked": {
+      "jtis": ""
+    },
+    "domain/holder": {
+      "doc": "{\"at\": 1757500322.0, \"from\": {\"rev\": 3, \"term\": 1}, \"holder\": \"relay-a\", \"kid\": \"root\", \"sig\": \"«подпись 7»\", \"term\": 2, \"url\": \"http://relay-a:8071\"}"
+    },
+    "domain/shared": {
+      "object": "shared/rev-1-term-2",
+      "rev": "1",
+      "term": "2",
+      "sha256": "«sha256 3»"
+    },
+    "domain/topology": {
+      "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+    },
+    "domain/members": {
+      "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+    }
+  },
+  "objects": {
+    "shared/rev-1-term-2": "«base64 1, 344 байт»"
+  },
+  "key": "«ключ 7»"
+}
+
+# domainagent on relay-a → /run/configstore/domainagent.sock
+GET /v1/get?key=domain/topology
+→ 200 {
+  "items": {
+    "doc": "{\"by\": \"anna\", \"centre\": \"srv\", \"rev\": 1, \"star\": [], \"via\": {\"cam-a\": \"relay-a\", \"cam-a2\": \"relay-a\", \"cam-b\": \"relay-b\"}}"
+  },
+  "index": 2055
+}
+
+# domainagent on relay-a → relay-a:8071
+POST /api/relay/relay-a
+  X-Agent-Signature: 1757500327000.«подпись 13»
+{
+  "relayed": {
+    "cam-a": {
+      "key": "«ключ 5»",
+      "objects": {
+        "domain/reaches": {
+          "networks": [
+            "vlan:site-a"
+          ]
+        },
+        "rec/heartbeats/r-1": {
+          "alloc": "cam-a:4101:001005",
+          "archive": "",
+          "assignment_rev": 1,
+          "build": "dev",
+          "capacity": 50,
+          "card": {
+            "budget": 67108864,
+            "bytes": 0,
+            "segments": 0,
+            "since": 1757500180.0,
+            "state": "recording",
+            "tries": 1
+          },
+          "conflicts": 0,
+          "devices": [],
+          "feed": {
+            "frames_connected": false,
+            "last_frame_age_s": 0.0,
+            "ring_bytes": 130794,
+            "ring_max_bytes": 33554432,
+            "ring_reach_s": 60.0,
+            "ring_samples": 611,
+            "ring_span_s": 61.1,
+            "ring_window_s": 60.0
+          },
+          "headroom": 49,
+          "instance": "cam-a:4101:001005",
+          "labels": "",
+          "pass_failures": 0,
+          "passes": 1,
+          "pending_writes": 0,
+          "previous_hb": 0.0,
+          "previous_instance": "",
+          "previous_server": "",
+          "schema": 1,
+          "server": "cam-a",
+          "started": 1757500180.0,
+          "status": [
+            {
+              "cam": "1",
+              "card_budget": 67108864,
+              "card_bytes": 0,
+              "card_segments": 0,
+              "enabled": true,
+              "epoch": 1,
+              "hold": true,
+              "id": "1-sd",
+              "keep": false,
+              "name": "1-sd",
+              "observed_revision": 1,
+              "phase": "standby",
+              "position": "converged",
+              "prebuffer_s": 60.0,
+              "ref": "",
+              "revision": 1,
+              "samples_dropped": 0,
+              "samples_written": 0,
+              "source": "ring://camera",
+              "via": "ring",
+              "why": "the camera says its primary takes the stream; the last 61 s are held in memory"
+            }
+          ],
+          "store_errors": 0,
+          "stream": {
+            "behind_s": 0.0,
+            "cut_s": 0.0,
+            "failed": 0,
+            "failed_s": 0.0,
+            "lagging": false,
+            "left_s": 0.0,
+            "owed_gaps": 0,
+            "owed_s": 0.0,
+            "road": "primary",
+            "state": "pushing to http://relay-a:8091/ingest",
+            "up": true
+          },
+          "ts": 1757500281.0,
+          "unconfirmed": 0,
+          "volume": "card",
+          "volume_error": "",
+          "worker": "r-1"
+        },
+        "vms/heartbeats/SN-A": {
+          "capacity": 1,
+          "coverage": null,
+          "headroom": 0,
+          "instance": "cam-a-boot-1",
+          "live_url": "rtsp://cam-a.local/live",
+          "playback_url": "http://cam-a.local/playback",
+          "polls": true,
+          "push": true,
+          "server": "SN-A",
+          "status": [
+            {
+              "can": {
+                "events": [
+                  "motion"
+                ]
+              },
+              "enabled": true,
+              "epoch": 1,
+              "id": 1,
+              "name": "SN-A",
+              "observed_revision": 1,
+              "phase": "running",
+              "position": "converged",
+              "ref": "SN-A",
+              "revision": 1
+            }
+          ],
+          "taken_by": [],
+          "ts": 1757500281.0,
+          "worker": "SN-A"
+        },
+        "vms/snapshot/SN-A": {
+          "cameras": [
+            {
+              "id": 1,
+              "name": "SN-A",
+              "ref": "SN-A",
+              "revision": 1,
+              "server": "SN-A",
+              "worker": "SN-A"
+            }
+          ],
+          "cluster": "cam-a",
+          "ts": 1757500281.0,
+          "worker": "SN-A"
+        }
+      },
+      "pages": {
+        "alarms": "{\"from\": 1757413886.0, \"to\": 1757500286.0, \"events\": [], \"truncated\": false}"
+      },
+      "rows": {
+        "domain/backup-taken": {
+          "idx": 4023,
+          "items": {
+            "rev": "3",
+            "sha256": "«sha256 2»",
+            "term": "1"
+          }
+        },
+        "domain/holder": {
+          "idx": 4008,
+          "items": {
+            "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+          }
+        },
+        "domain/keys": {
+          "idx": 4003,
+          "items": {
+            "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+          }
+        },
+        "domain/root": {
+          "idx": 4002,
+          "items": {
+            "pub": "«ключ 2»"
+          }
+        },
+        "domain/shared": {
+          "idx": 4022,
+          "items": {
+            "rev": "1",
+            "sha256": "«sha256 1»",
+            "term": "1"
+          }
+        },
+        "rec/epoch/1-sd": {
+          "idx": 4018,
+          "items": {
+            "epoch": "1"
+          }
+        },
+        "vms/epoch/1": {
+          "idx": 4009,
+          "items": {
+            "epoch": "1"
+          }
+        }
+      },
+      "seal": "«ключ 6»",
+      "sent_at": 1757500286.0
+    },
+    "cam-a2": {
+      "key": "«ключ 7»",
+      "objects": {
+        "domain/reaches": {
+          "networks": [
+            "vlan:site-a"
+          ]
+        },
+        "rec/heartbeats/r-1": {
+          "alloc": "cam-a2:5101:0013ed",
+          "archive": "",
+          "assignment_rev": 1,
+          "build": "dev",
+          "capacity": 50,
+          "card": {
+            "budget": 67108864,
+            "bytes": 0,
+            "segments": 0,
+            "since": 1757500185.0,
+            "state": "recording",
+            "tries": 1
+          },
+          "conflicts": 0,
+          "devices": [],
+          "feed": {
+            "frames_connected": false,
+            "last_frame_age_s": 0.0,
+            "ring_bytes": 47325,
+            "ring_max_bytes": 50000,
+            "ring_reach_s": 23.3,
+            "ring_samples": 221,
+            "ring_span_s": 22.1,
+            "ring_window_s": 60.0
+          },
+          "headroom": 49,
+          "instance": "cam-a2:5101:0013ed",
+          "labels": "",
+          "pass_failures": 0,
+          "passes": 1,
+          "pending_writes": 0,
+          "previous_hb": 0.0,
+          "previous_instance": "",
+          "previous_server": "",
+          "schema": 1,
+          "server": "cam-a2",
+          "started": 1757500185.0,
+          "status": [
+            {
+              "cam": "1",
+              "card_budget": 67108864,
+              "card_bytes": 0,
+              "card_segments": 0,
+              "enabled": true,
+              "epoch": 1,
+              "hold": true,
+              "id": "1-sd",
+              "keep": false,
+              "name": "1-sd",
+              "observed_revision": 1,
+              "phase": "standby",
+              "position": "converged",
+              "prebuffer_s": 23.3,
+              "prebuffer_short": 50.0,
+              "ref": "",
+              "revision": 1,
+              "samples_dropped": 0,
+              "samples_written": 0,
+              "source": "ring://camera",
+              "via": "ring",
+              "why": "no primary recording of this camera is known — not in this cluster, not in the book of primaries: nothing to stand in for; the last 22 s are held in memory"
+            }
+          ],
+          "store_errors": 0,
+          "stream": {
+            "behind_s": 0.0,
+            "cut_s": 0.0,
+            "failed": 0,
+            "failed_s": 0.0,
+            "lagging": false,
+            "left_s": 0.0,
+            "owed_gaps": 0,
+            "owed_s": 0.0,
+            "road": "primary",
+            "state": "polling http://relay-a:8091/ingest: nobody records it, asks only",
+            "up": false
+          },
+          "ts": 1757500313.0,
+          "unconfirmed": 0,
+          "volume": "card",
+          "volume_error": "",
+          "worker": "r-1"
+        },
+        "vms/heartbeats/SN-A2": {
+          "capacity": 1,
+          "coverage": null,
+          "headroom": 0,
+          "instance": "cam-a2-boot-1",
+          "live_url": "rtsp://cam-a2.local/live",
+          "playback_url": "http://cam-a2.local/playback",
+          "polls": true,
+          "push": true,
+          "server": "SN-A2",
+          "status": [
+            {
+              "can": {
+                "events": [
+                  "motion",
+                  "vehicle"
+                ]
+              },
+              "enabled": true,
+              "epoch": 1,
+              "id": 1,
+              "name": "SN-A2",
+              "observed_revision": 1,
+              "phase": "running",
+              "position": "converged",
+              "ref": "SN-A2",
+              "revision": 1
+            }
+          ],
+          "taken_by": [],
+          "ts": 1757500313.0,
+          "worker": "SN-A2"
+        },
+        "vms/snapshot/SN-A2": {
+          "cameras": [
+            {
+              "id": 1,
+              "name": "SN-A2",
+              "ref": "SN-A2",
+              "revision": 1,
+              "server": "SN-A2",
+              "worker": "SN-A2"
+            }
+          ],
+          "cluster": "cam-a2",
+          "ts": 1757500313.0,
+          "worker": "SN-A2"
+        }
+      },
+      "pages": {
+        "alarms": "{\"from\": 1757413917.0, \"to\": 1757500317.0, \"events\": [{\"t\": 1757500293.0, \"kind\": \"card.prebuffer.short\", \"class\": \"alarm\", \"id\": \"1-sd-e1-kemubcrdls-15\", \"cam\": \"1\", \"reach_s\": 23.3, \"need_s\": 50.0, \"ring_bytes\": 50000, \"window_s\": 60.0, \"of\": \"vms/1\"}], \"truncated\": false}"
+      },
+      "rows": {
+        "domain/holder": {
+          "idx": 5008,
+          "items": {
+            "doc": "{\"at\": 1757500000.0, \"holder\": \"srv\", \"kid\": \"root\", \"sig\": \"«подпись 1»\", \"term\": 1}"
+          }
+        },
+        "domain/keys": {
+          "idx": 5003,
+          "items": {
+            "doc": "{\"issuing\": [\"«серийный номер 1»\"], \"keys\": {\"current\": \"fc357029\", \"key:fc357029\": \"«ключ 1»\"}, \"kid\": \"root\", \"rev\": 1, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 2»\"}"
+          }
+        },
+        "domain/root": {
+          "idx": 5002,
+          "items": {
+            "pub": "«ключ 2»"
+          }
+        },
+        "domain/shared": {
+          "idx": 5021,
+          "items": {
+            "rev": "1",
+            "sha256": "«sha256 1»",
+            "term": "1"
+          }
+        },
+        "rec/epoch/1-sd": {
+          "idx": 5018,
+          "items": {
+            "epoch": "1"
+          }
+        },
+        "vms/epoch/1": {
+          "idx": 5009,
+          "items": {
+            "epoch": "1"
+          }
+        }
+      },
+      "seal": "«ключ 8»",
+      "sent_at": 1757500317.0
+    }
+  }
+}
+→ …
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/members
+→ 200 {
+  "items": {
+    "doc": "{\"members\": {\"cam-a\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 5»\", \"seal\": \"«ключ 6»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-a2\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 7»\", \"seal\": \"«ключ 8»\", \"serial\": null, \"since\": 1757500120.0}, \"cam-b\": {\"by\": \"anna\", \"how\": \"accepted by anna\", \"key\": \"«ключ 9»\", \"seal\": \"«ключ 10»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-a\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 3»\", \"seal\": \"«ключ 4»\", \"serial\": null, \"since\": 1757500120.0}, \"relay-b\": {\"by\": null, \"how\": \"configuration\", \"key\": \"«ключ 11»\", \"seal\": \"«ключ 12»\", \"serial\": null, \"since\": 1757500120.0}, \"srv\": {\"by\": null, \"how\": \"held the domain until term 1\", \"serial\": null, \"since\": 1757500322.0}}, \"rev\": 6}"
+  },
+  "index": 2059
+}
+
+# signer on relay-a → /run/configstore/domain.sock
+GET /v1/get?key=domain/keys
+→ 200 {
+  "items": {
+    "doc": "{\"issuing\": [\"«серийный номер 2»\", \"«серийный номер 1»\"], \"keys\": {\"current\": \"e03e7607\", \"key:e03e7607\": \"«ключ 14»\", \"key:fc357029\": \"«ключ 1»\", \"retire:fc357029\": \"1757503922.0\"}, \"kid\": \"root\", \"rev\": 1757500322, \"revoked_ca\": [], \"root\": \"«ключ 2»\", \"sig\": \"«подпись 6»\"}"
+  },
+  "index": 2060
+}
+
+# domainagent on relay-a ← relay-a:8071: ответ на POST /api/relay/relay-a
+→ 200 {"refused": {}}
