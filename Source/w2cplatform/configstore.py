@@ -1,19 +1,34 @@
 """configstore — the cluster's config store daemon: one per server, a member of the raft group, a unix socket per
 role for the processes of its server, a mutually authenticated door for the other daemons.
 
+TEACHING-ONLY, NOT DURABLE (ADR-0070). The library under it (`pysyncobj`) acknowledges a write before the write is on
+disk: its journal is a memory-mapped file that nobody syncs. A killed process loses nothing; a power cut of a majority may
+lose writes the group acknowledged — an epoch among them, and an epoch issued twice is two writers of one unit. The
+product's store (`hashicorp/raft` with `raft-boltdb`) syncs every batch before it acknowledges it. Run this one to learn
+the shape — doors, rights, joins, faults, `recover`, the metrics — never to keep an installation's rows.
+
     python3 -m w2cplatform.configstore -id srv-a -dir /data/platform/configstore -raft 10.0.0.1:8301 \\
-        -api 10.0.0.1:8300 -rights /etc/w2c/configstore-rights.json -tls /etc/w2c/tls -bootstrap
-    python3 -m w2cplatform.configstore -id srv-b … -join srv-a@10.0.0.1:8300
+        -api 10.0.0.1:8300 -group-size 3 -rights /etc/w2c/configstore-rights.json -tls /etc/w2c/tls -bootstrap
+    python3 -m w2cplatform.configstore -id srv-b … -group-size 3 -join srv-a@10.0.0.1:8300 -force   # the second of three
+    python3 -m w2cplatform.configstore -id srv-c … -group-size 3 -join srv-a@10.0.0.1:8300          # the third
 
 and the operator's commands, through this server's `admin.sock` (the product's own `configstore …` command):
 
     python3 -m w2cplatform.configstore status
-    python3 -m w2cplatform.configstore join <id> <raft host:port> [<api server@host:port>]
+    python3 -m w2cplatform.configstore join [-force] <id> <raft host:port> [<api server@host:port>]
     python3 -m w2cplatform.configstore leave <id>
     python3 -m w2cplatform.configstore rights [<file>]          # what the daemon holds, or check a file
     python3 -m w2cplatform.configstore backup > rows.json
     python3 -m w2cplatform.configstore restore --from rows.json  # into a fresh group
     python3 -m w2cplatform.configstore import --from file:///data/platform/config   # a box's rows, once
+
+and one on a STOPPED daemon's directory, when the group's majority is gone for good (ADR-0070):
+
+    python3 -m w2cplatform.configstore recover -id srv-c -dir /data/platform/configstore -peers srv-c=10.0.0.3:8301
+
+`GET /metrics` on every door says what its raft is doing, in the product's words (ADR-0070): `configstore_raft_term`,
+`configstore_raft_state{state}`, `configstore_raft_elections_total`, `configstore_raft_index{kind}`,
+`configstore_raft_last_contact_seconds`, `configstore_raft_voters`, `configstore_raft_voters_expected`.
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -117,6 +132,38 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # (`start_member`); only a group that shrank to it, by the library's own word (`alone`), is a group of one.
 # The operator's `join` / `leave` are the same change asked through `admin.sock`, for a member already running.
 #
+# ## The group's declared size (ADR-0070)
+# `-group-size 1|3|5`, the same on every member; anything else does not start — a group of two or four survives no more
+# losses than one smaller and waits for one more vote. A join that would make the group even, or larger than the size
+# of the member it is asked of, is refused (409 `refused`, said at once: a daemon's `-join` does not retry it) unless it
+# says `force` — `-force` beside `-join`, `configstore join -force`: growing a group 1→2→3 passes two, and the operator
+# who means it says so. A join retried by a member already a voter changes no size and is not asked; the size is asked
+# last, after every refusal of the address — a join wrong in itself is told what is wrong with it.
+#
+# ## /metrics (ADR-0070)
+# Every door answers `GET /metrics` — a role's socket, `admin.sock`, the `-api` door to another daemon — with this
+# member's raft in Prometheus' text, by the product's names: `configstore_raft_term`, `_state{state}`,
+# `_elections_total`, `_index{kind=last|commit|applied}`, `_last_contact_seconds`, `_voters`, `_voters_expected`. Two of
+# them the library keeps to itself, and the daemon counts them on the library's own paths: an election is a change of
+# state to candidate (`onStateChanged`, the library's hook), the last contact the last `append_entries` of a leader's
+# term this member was sent (`Raft`, around the library's handler). `_last_contact_seconds` is 0 on the leader and not
+# said at all before a leader was heard — no word without a count (ADR-0065's addition). A follower's lag is the
+# difference of `configstore_raft_index` between servers, in the alert (`deploy/cluster/prometheus/configstore.rules.yml`);
+# no member asks another. A stand's machine (`LocalBackend`) is no raft group and says nothing.
+#
+# ## recover — the group given back to what is left (ADR-0070)
+# When the majority is gone for good, the group cannot elect, and no door can change that: `recover` is a command on a
+# STOPPED daemon's directory. It reads the state the member holds — the library's dump and every entry of its journal
+# after it, applied as the product's `raft.RecoverCluster` applies them — and writes it back as a group of `-peers`
+# (this server among them): a fresh dump with that membership, a journal of the dump's two entries, `member.json`. Member
+# rows of servers not among the peers go, so they may join again. The daemon then starts on it as usual and the others
+# join it again — each with an empty directory, as any new server. What the lost majority acknowledged and this member
+# did not hold is lost with them: that is what losing a majority costs, and why this is the operator's word.
+# THE FLOOR UNDER EVERY EPOCH (the blocker of ADR-0070's drill): this member may have been behind, and the epochs the
+# majority issued without it are gone with them — how many, nobody here knows. So `recover` writes `platform/epoch_floor`
+# into the state it gives back, before the daemon starts: `((floor >> 32) + 1) << 32` over the highest of the old floor and
+# every epoch it holds; `epoch.next_epoch` issues above it (`epoch.py`, The floor). Two recovers raise it twice.
+#
 # ## The one-time import (a box becomes a cluster), and backup / restore
 # A box keeps `file://`. `configstore import --from file:///data/platform/config` copies its rows, values untouched,
 # through `admin.sock` into a FRESH group — no rows yet — whose base (`-index-base N`) is at least the file's
@@ -125,8 +172,7 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # member; and refused whole, before the first write, when the file holds a row that does not read or a row heavier
 # than the store takes (`storemachine.MAX_VALUE`).
 # `backup` writes every row and the highest version it saw; `restore` is the same import from that file, into a
-# fresh group whose base is above that version. (The product's `recover` — a group rebuilt from one survivor's
-# journal when the majority is gone for good — is not here.)
+# fresh group whose base is above that version.
 # AN IMPORT THAT STOPPED IS CONTINUED (the review's twelfth pass, minor: it could not be). The same `import` or
 # `restore` again goes on where the last one stopped when every row the group holds is one it loaded — the same key,
 # the same items; a row it did not load, or one changed since, refuses it as before: rows are loaded into a group
@@ -135,7 +181,11 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # ## What pysyncobj does not give (and the product's library does)
 # - the journal is a memory-mapped file with no fsync before an entry is acknowledged: it survives a killed
 #   process, not a power cut of a majority (`FileVariables` has its barriers for exactly that, feedback BD); the
-#   product's `raft-boltdb` syncs every batch before it is acknowledged. Open here, and said in lesson 2.
+#   product's `raft-boltdb` syncs every batch before it is acknowledged. THIS STORE IS TEACHING-ONLY, NOT DURABLE
+#   (ADR-0070; the docstring's first paragraph and lesson 2 say it). Not mended here, because the library offers no
+#   way to: its `FileJournal.flush` is an `msync` nobody calls per entry, the term and commit beside the journal
+#   (`journal.meta`) and the dump are written without `fsync`, and an `msync` on macOS does not reach the platter
+#   either — a patch inside the library would be ours to keep, and still not the product's guarantee.
 # - no pre-vote and no leader lease; a leader cut off from the others steps down after `leaderFallbackTimeout`
 #   (30 s by default) — harmless for correctness, because reads go through the log
 # ================================================================================================
@@ -191,6 +241,17 @@ HEADERS_WAIT = 5.0         # seconds a request's line and headers may take, whol
 DOOR_TIMEOUT = 10.0        # seconds a door's socket waits on a caller that sends or reads nothing
 MAX_BODY = 6 * MAX_VALUE + (64 << 10)   # a row at its ceiling, every character escaped (`\u00XX`), and its key
 
+# The sizes a group may be declared (`-group-size`, ADR-0070): odd, and no larger than five.
+GROUP_SIZES = (1, 3, 5)
+
+
+def check_group_size(size) -> int:
+    if isinstance(size, bool) or size not in GROUP_SIZES:
+        raise ValueError(f"-group-size is 1, 3 or 5, not {size}: the group's size is declared, and an even one survives "
+                         f"no more losses than one smaller (ADR-0070)")
+    return int(size)
+
+
 # Timings by name (`-tuning`). `default` is the library's own (election 0.4–1.4 s, heartbeat 0.1 s); `lan` is
 # what a LAN of three can afford; `slow` is a loaded box or a WAN — the shape Consul ships (five times its LAN
 # timings), kept for the measurement (`tests/configstore_election.py`): it is what leases do NOT survive.
@@ -215,7 +276,7 @@ class LocalBackend:
         with self.lock:
             return self.machine.apply(cmd)
 
-    def add(self, node_id: str, raft: str, api: str, deadline: float = JOIN_WAIT) -> None:
+    def add(self, node_id: str, raft: str, api: str, deadline: float = JOIN_WAIT, force: bool = False) -> None:
         raise Unavailable("this store is not a raft group: nothing to join")
 
     def remove(self, node_id: str, deadline: float = JOIN_WAIT) -> None:
@@ -225,6 +286,9 @@ class LocalBackend:
         return {"id": self.node_id, "state": "leader", "leader": self.node_id, "members": [{"id": self.node_id}],
                 "term": 0, "commit": self.machine.applied, "applied": self.machine.applied,
                 "index_base": self.machine.base, "rows": len(self.machine.rows)}
+
+    def metrics_text(self) -> str:
+        return ""                                    # no raft group: nothing to say of one (the notes: /metrics)
 
     def stop(self) -> None:
         pass
@@ -239,6 +303,24 @@ def _library():
         return _BUILT
     from pysyncobj import FAIL_REASON, SyncObj, SyncObjConf, SyncObjConsumer, replicated
 
+    # What `/metrics` says that the library keeps to itself (the notes: /metrics): the last time a leader of this
+    # member's term spoke to it — counted in the library's own handler of its messages, which this calls through — and
+    # the last entry of its log. Both on the library's private names (`_SyncObj__…`), as `listening` reads its socket:
+    # a library that renamed them leaves the contact unsaid and the index refused, and `test_configstore` goes red.
+    class Raft(SyncObj):
+        def __init__(self, *args, **kwargs):
+            self.heard_at: float | None = None
+            super().__init__(*args, **kwargs)
+
+        def _SyncObj__onMessageReceived(self, node, message):
+            if isinstance(message, dict) and message.get("type") == "append_entries" \
+                    and message.get("term", -1) >= self.raftCurrentTerm:
+                self.heard_at = time.monotonic()
+            return SyncObj._SyncObj__onMessageReceived(self, node, message)
+
+        def last_index(self) -> int:
+            return self._SyncObj__getCurrentLogIndex()
+
     class Replicated(SyncObjConsumer):
         # Everything set after `super().__init__()` is the replicated state, and what a dump carries.
         def __init__(self):
@@ -251,7 +333,7 @@ def _library():
         def command(self, cmd):
             return self.m.apply(cmd, self._syncObj.raftLastApplied + 1)
 
-    _BUILT.update(FAIL_REASON=FAIL_REASON, SyncObj=SyncObj, SyncObjConf=SyncObjConf, Replicated=Replicated)
+    _BUILT.update(FAIL_REASON=FAIL_REASON, SyncObj=Raft, SyncObjConf=SyncObjConf, Replicated=Replicated)
     return _BUILT
 
 
@@ -378,7 +460,9 @@ class RaftBackend:
     listening on loopback, or it is not at all (the notes: Doors)."""
 
     def __init__(self, node_id: str, raft: str, partners: list[str], data: str, tuning: str | dict = "default",
-                 password: str | None = None, leader_wait: float = LEADER_WAIT):
+                 password: str | None = None, leader_wait: float = LEADER_WAIT, *, group_size: int):
+        self.group_size = check_group_size(group_size)
+        self.elections = 0                           # times this member stood for leader since it started (/metrics)
         ip, port = _bind_address(raft)
         if not password:
             if partners:
@@ -401,7 +485,8 @@ class RaftBackend:
         # an HTTP server's threads in it is what macOS refuses to promise anything about.
         conf = {"dynamicMembershipChange": True, "useFork": False, "appendEntriesUseBatch": False,
                 "commandsWaitLeader": False, "journalFile": os.path.join(data, "journal"),
-                "fullDumpFile": os.path.join(data, "dump"), "bindAddress": f"{ip}:{port}"}
+                "fullDumpFile": os.path.join(data, "dump"), "bindAddress": f"{ip}:{port}",
+                "onStateChanged": self._state_changed}
         if password:
             try:
                 import cryptography  # noqa: F401 — pysyncobj's `password=` is built on it
@@ -435,6 +520,39 @@ class RaftBackend:
                 return None
             time.sleep(0.02)
         return None
+
+    # The library's own word that this member's state changed: an election is a change to candidate (/metrics).
+    def _state_changed(self, old, new) -> None:
+        if new == 1 and old != 1:
+            self.elections += 1
+
+    # This member's raft in Prometheus' text, by the product's names (the notes: /metrics; ADR-0070).
+    def metrics_text(self) -> str:
+        out: list[str] = []
+
+        def line(name: str, typ: str, help_: str, *samples: str) -> None:
+            out.append(f"# HELP {name} {help_}\n# TYPE {name} {typ}\n")
+            out.extend(f"{name}{x}\n" for x in samples)
+
+        r = self.raft
+        state = {0: "follower", 1: "candidate", 2: "leader"}.get(r.getStatus()["state"])
+        line("configstore_raft_term", "gauge", "the raft term this server is in", f" {r.raftCurrentTerm}")
+        line("configstore_raft_state", "gauge", "1 for the role this server has now",
+             *(f'{{state="{x}"}} {int(x == state)}' for x in ("leader", "follower", "candidate")))
+        line("configstore_raft_elections_total", "counter", "times this server stood for leader since it started",
+             f" {self.elections}")
+        line("configstore_raft_index", "gauge", "the last entry of this server's log, the last committed, the last applied",
+             f'{{kind="last"}} {r.last_index()}', f'{{kind="commit"}} {r.raftCommitIndex}',
+             f'{{kind="applied"}} {r.raftLastApplied}')
+        if state == "leader":
+            line("configstore_raft_last_contact_seconds", "gauge", "since this server last heard from a leader; 0 on the leader", " 0")
+        elif r.heard_at is not None:
+            line("configstore_raft_last_contact_seconds", "gauge", "since this server last heard from a leader; 0 on the leader",
+                 f" {time.monotonic() - r.heard_at:.3f}")
+        line("configstore_raft_voters", "gauge", "the voters of the group as this server knows it", f" {len(r.otherNodes) + 1}")
+        line("configstore_raft_voters_expected", "gauge", "the voters the group is declared to have (-group-size)",
+             f" {self.group_size}")
+        return "".join(out)
 
     def _open_only_to_this_box(self) -> None:
         where = self.listening()
@@ -567,7 +685,7 @@ class RaftBackend:
     # address that resolves to nothing, or to every interface (`0.0.0.0`), names no server; and a new voter must
     # answer on its raft port before it is added — its daemon starts before it asks to join (`start_member`) — as a
     # raft member of this installation that calls itself that very address, not merely as a listener (`_raft_says`).
-    def add(self, node_id: str, raft: str, api: str, deadline: float = JOIN_WAIT) -> None:
+    def add(self, node_id: str, raft: str, api: str, deadline: float = JOIN_WAIT, force: bool = False) -> None:
         if not self.secret:
             raise PermissionError(NO_SECRET)
         here = _places(raft)
@@ -593,9 +711,27 @@ class RaftBackend:
             if said != raft:
                 raise PermissionError(f"the raft port at {raft} calls itself {said}: join it as {said}, the address "
                                       f"its daemon was started with (-raft)")
+            why = self.size_refuses(node_id, len(voters), force)    # last: a join wrong in itself is told what is wrong
+            if why:
+                raise PermissionError(why)
             self._apply(self.raft.addNodeToCluster, raft, deadline=deadline, write=True)
             self._save_partners()
         self.submit({"op": "member", "id": node_id, "raft": raft, "api": api}, max(1.0, end - time.monotonic()))
+
+    # Why a join would leave the group a size it is not declared to be (the notes: The group's declared size): even, or
+    # above this member's `-group-size`. `force` goes through — growing a group 1→2→3 passes two.
+    def size_refuses(self, node_id: str, voters: int, force: bool) -> str:
+        after = voters + 1
+        if force:
+            return ""
+        if after % 2 == 0:
+            return (f"{node_id} would make the group {after} voters: an even group survives no more losses than one "
+                    f"smaller and waits for one more vote — join a third server as well, each with -force on the step "
+                    f"between (ADR-0070)")
+        if after > self.group_size:
+            return (f"{node_id} would make the group {after} voters, and it is declared {self.group_size} (-group-size of "
+                    f"{self.node_id}): declare the larger group first, or join with -force")
+        return ""
 
     def remove(self, node_id: str, deadline: float = JOIN_WAIT) -> None:
         row = self.rep.m.members_copy().get(node_id)
@@ -657,6 +793,16 @@ def _door(daemon: "StoreDaemon", role_of):
             self.end_headers()
             self.wfile.write(raw)
 
+        def _send_text(self, text: str) -> None:
+            raw = text.encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Connection", "close")
+            self.close_connection = True
+            self.end_headers()
+            self.wfile.write(raw)
+
         def _serve(self, method: str) -> None:
             try:
                 # The body first, bounded and under its deadline: a 403 sent over a body left unread is a reset the
@@ -669,6 +815,8 @@ def _door(daemon: "StoreDaemon", role_of):
                     role = role_of(self)
                 except PermissionError as e:
                     return self._send(403, {"kind": "forbidden", "error": str(e)})
+                if method == "GET" and urllib.parse.urlsplit(self.path).path == "/metrics":
+                    return self._send_text(daemon.backend.metrics_text())     # every door, every role (ADR-0070)
                 try:
                     deadline = float(self.headers.get("X-Deadline") or daemon.leader_wait)
                 except ValueError:
@@ -843,14 +991,16 @@ def _membership(path: str, raw: bytes) -> tuple[str, tuple | None]:
         if not isinstance(node_id, str) or not (_SERVER_ID.match(node_id) or _ADDRESS.match(node_id)):
             raise ValueError("id is a server's name or a voter's raft address")
         return node_id, None
-    raft, api = body.get("raft"), body.get("api", "")
+    raft, api, force = body.get("raft"), body.get("api", ""), body.get("force", False)
+    if not isinstance(force, bool):
+        raise ValueError("force is true or false (ADR-0070: a join that makes the group even or larger than declared)")
     if not isinstance(node_id, str) or not _SERVER_ID.match(node_id):
         raise ValueError("id is a server's name: up to 64 letters, digits, '.', '-' and '_'")
     if not isinstance(raft, str) or not _ADDRESS.match(raft):
         raise ValueError("raft is host:port")
     if not isinstance(api, str) or (api and not _API.match(api)):
         raise ValueError("api is server@host:port, or nothing")
-    return node_id, (node_id, raft, api)
+    return node_id, (node_id, raft, api, force)
 
 
 class StoreDaemon:
@@ -911,7 +1061,8 @@ class StoreDaemon:
                                                            f"for its own server, not for {node_id}"}
             try:
                 if join:
-                    self.backend.add(*join)
+                    node, raft, api, force = join
+                    self.backend.add(node, raft, api, force=force)
                 else:
                     self.backend.remove(node_id)
             except PermissionError as e:
@@ -955,6 +1106,10 @@ class _PeerConnection(http.client.HTTPSConnection):
         tls.require_role(self.sock, PEER)
 
 
+class JoinRefused(OSError):
+    """The group refused a join (409 `refused`: an address, the declared size — ADR-0070). Said at once, never retried."""
+
+
 def peer_call(address: str, tls_dir: str, method: str, route: str, body: dict | None = None,
               timeout: float = JOIN_WAIT + 5) -> dict:
     conn = _PeerConnection(address, tls_dir, timeout)
@@ -964,7 +1119,8 @@ def peer_call(address: str, tls_dir: str, method: str, route: str, body: dict | 
         r = conn.getresponse()
         said = json.loads(r.read() or b"{}")
         if r.status != 200:
-            raise OSError(f"{address} {route}: {r.status} {said.get('kind', '')} {said.get('error', '')}".strip())
+            why = f"{address} {route}: {r.status} {said.get('kind', '')} {said.get('error', '')}".strip()
+            raise (JoinRefused if r.status == 409 and said.get("kind") == "refused" else OSError)(why)
         return said
     finally:
         conn.close()
@@ -982,11 +1138,14 @@ def _wait_leader(backend: RaftBackend, within: float = 30.0) -> None:
                 raise
 
 
-def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False, join: str | None = None,
-                 tls_dir: str | None = None, tuning: str | dict = "default", index_base: int = 0,
-                 api_advertised: str = "", leader_wait: float = LEADER_WAIT) -> RaftBackend:
+def start_member(node_id: str, data: str, raft: str, *, group_size: int, bootstrap: bool = False,
+                 join: str | None = None, force: bool = False, tls_dir: str | None = None,
+                 tuning: str | dict = "default", index_base: int = 0, api_advertised: str = "",
+                 leader_wait: float = LEADER_WAIT) -> RaftBackend:
     """The backend of a member: from its journal when `data` holds one; else a new group of one (`bootstrap`) or a
-    new member of the group a member's door (`join`) belongs to."""
+    new member of the group a member's door (`join`) belongs to. `group_size`: the voters the group is declared to have
+    (1, 3 or 5, ADR-0070); `force`: a join that makes it even or larger goes through."""
+    check_group_size(group_size)
     # Without `-tls` there is no secret, and `RaftBackend` takes no partner and listens on loopback only, by its socket
     # (the review's twelfth pass, blocker 1) — a join is refused here, before anything is asked of a member.
     password = tls.raft_secret(tls_dir) if tls_dir else None
@@ -1001,14 +1160,14 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
         partners = list(doc.get("partners") or [])
         if not partners and doc.get("how") != "bootstrap" and not doc.get("alone"):
             partners = _rejoin(node_id, raft, data, join, tls_dir)
-        b = RaftBackend(node_id, raft, partners, data, tuning, password, leader_wait)
+        b = RaftBackend(node_id, raft, partners, data, tuning, password, leader_wait, group_size=group_size)
         b.resumed(doc, partners)
         return b
     if bootstrap == bool(join):
         raise ValueError("an empty -dir needs -bootstrap (a new group of one) or -join <a member's api>")
     RaftBackend.forget_failed_start(data)
     if bootstrap:
-        b = RaftBackend(node_id, raft, [], data, tuning, password, leader_wait)
+        b = RaftBackend(node_id, raft, [], data, tuning, password, leader_wait, group_size=group_size)
         try:
             _wait_leader(b)
             got = b.submit({"op": "base", "base": index_base}, 10.0)
@@ -1024,17 +1183,19 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
         raise ValueError("-join speaks to a member's -api door, which is mutual TLS: -tls <dir>")
     members = peer_call(join, tls_dir, "GET", "/v1/status", timeout=10.0)["members"]
     partners = _others((m["raft"] for m in members), raft)
-    b = RaftBackend(node_id, raft, partners, data, tuning, password, leader_wait)
+    b = RaftBackend(node_id, raft, partners, data, tuning, password, leader_wait, group_size=group_size)
     end = time.monotonic() + JOIN_WAIT
     while True:
         try:
-            said = peer_call(join, tls_dir, "POST", "/v1/join", {"id": node_id, "raft": raft, "api": api_advertised})
+            said = peer_call(join, tls_dir, "POST", "/v1/join",
+                             {"id": node_id, "raft": raft, "api": api_advertised, "force": force})
             # The members the group named when it took this daemon, with the partners it started with: written with
             # the membership itself (the notes: A group).
             b.became_member("join", partners + [m["raft"] for m in said.get("members", []) if m.get("raft")])
             return b
-        except (OSError, http.client.HTTPException, ValueError):
-            if time.monotonic() > end:
+        except (OSError, http.client.HTTPException, ValueError) as e:
+            # the group's refusal is said at once (ADR-0070); a group out of reach is asked again, up to the wait
+            if isinstance(e, JoinRefused) or time.monotonic() > end:
                 b.stop()
                 RaftBackend.forget_failed_start(data)
                 raise
@@ -1054,6 +1215,127 @@ def _rejoin(node_id: str, raft: str, data: str, join: str | None, tls_dir: str |
     if not any(m.get("id") == node_id or m.get("raft") == raft for m in members):
         raise ValueError(f"{stay}, and the group at {join} does not count it: empty {data} and join again")
     return _others((m.get("raft") for m in members), raft)
+
+
+# -- recover: the group given back to what is left (ADR-0070; the notes: recover) ------------------------------------
+def parse_peers(text: str) -> dict[str, str]:
+    """`-peers id=host:port[,id=host:port…]` — the group as it is to be — as `{id: raft address}`."""
+    out: dict[str, str] = {}
+    for part in (text or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        node, sep, raft = part.partition("=")
+        if not sep or not _SERVER_ID.match(node) or not _ADDRESS.match(raft) or node in out:
+            raise ValueError(f"-peers is id=host:port[,id=host:port…], each server once, not {part!r}")
+        out[node] = raft
+    if not out:
+        raise ValueError("-peers names the group as it is to be: id=host:port[,id=host:port…], this server among them")
+    return out
+
+
+def _held(data: str) -> tuple[StoreMachine, list[tuple], int, int]:
+    """What a stopped member holds: its machine as its dump left it, with every entry of its journal after the dump
+    applied — as `raft.RecoverCluster` replays a log, committed or not — the entries of its log by index, its term,
+    and how many commands were replayed."""
+    import gzip
+    from pysyncobj import pickle as wire
+    from pysyncobj.journal import MetaStorer, createJournal
+    machine, applied, entries = StoreMachine(), 0, {}
+    dump = os.path.join(data, "dump")
+    if os.path.exists(dump):
+        with open(dump, "rb") as f, gzip.GzipFile(fileobj=f) as g:
+            state, last, prev, _cluster = wire.load(g)
+        machine, applied = state[1]["m"], last[1]           # [the library's own, our consumer's], (command, index, term)
+        entries.update({prev[1]: tuple(prev), last[1]: tuple(last)})
+    journal = createJournal(os.path.join(data, "journal"))
+    try:
+        held = [tuple(journal[i]) for i in range(len(journal))]
+    finally:
+        journal._destroy()
+    replayed = 0
+    for command, index, term in held:
+        entries[index] = (command, index, term)
+        if index <= applied:
+            continue
+        if command[:1] == b"\x00":                           # the library's REGULAR entry: our `command(cmd)`, pickled
+            call = wire.loads(command[1:])
+            args = call[1] if isinstance(call, tuple) and len(call) >= 2 else ()
+            if len(args) == 1 and isinstance(args[0], dict):
+                machine.apply(args[0], index)
+                replayed += 1
+        applied = index
+    log = [entries[i] for i in sorted(entries)]
+    meta = MetaStorer(os.path.join(data, "journal.meta")).getMeta()
+    term = max([int(meta.get("currentTerm", 0) or 0)] + [e[2] for e in log])
+    return machine, log, term, replayed
+
+
+def recover(node_id: str, data: str, peers: dict[str, str]) -> dict:
+    """`configstore recover` on a STOPPED daemon's directory: its state given back as a group of `peers` (this server
+    among them), with the floor under every epoch raised a generation (the notes: recover; ADR-0070)."""
+    from pysyncobj import pickle as wire
+    from pysyncobj.journal import MetaStorer, createJournal
+    from pysyncobj.node import TCPNode
+    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY, next_epoch_floor
+    if node_id not in peers:
+        raise ValueError(f"-peers does not name this server ({node_id}): it would not be a member of the group it recovers")
+    if not RaftBackend.has_state(data):
+        raise ValueError(f"{data} holds no member's state (member.json): nothing to recover")
+    machine, log, term, replayed = _held(data)
+    if not log:
+        raise ValueError(f"{data} holds no journal and no dump: nothing to recover")
+    last = log[-1]
+    prev = log[-2] if len(log) > 1 and log[-2][1] == last[1] - 1 else (bytes([1]), last[1] - 1, last[2])   # NO_OP
+    # THE FLOOR: over the highest of the old floor and every epoch this member holds (`epoch.py`, The floor).
+    floor = 0
+    for key, (items, _) in machine.rows.items():
+        said = items.get(EPOCH_FLOOR_FIELD) if key == EPOCH_FLOOR_KEY else items.get("epoch") if "/epoch/" in key else None
+        if said is not None and str(said).isascii() and str(said).isdigit():
+            floor = max(floor, int(said))
+    floor = next_epoch_floor(floor)
+    machine.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor)}, machine.version(last[1]))
+    machine.wrote = True
+    # The members as the group is to be: the others' rows go, so they may join again; ours say where we are.
+    for gone in [k for k in machine.members if k not in peers]:
+        machine.members.pop(gone)
+    for node, raft in peers.items():
+        machine.members[node] = {"raft": raft, "api": machine.members.get(node, {}).get("api", "")}
+    # Written back as the library reads a member at its start: the dump with that membership, a journal of the dump's
+    # two entries, the term beside it — and `member.json`, last, which makes it a member's directory again.
+    for f in ("journal", "journal.meta", "dump", "dump.tmp"):
+        try:
+            os.remove(os.path.join(data, f))
+        except FileNotFoundError:
+            pass
+    MetaStorer(os.path.join(data, "journal.meta")).storeMeta(
+        {"raftCommitIndex": last[1], "currentTerm": term, "votedForNodeId": None})
+    journal = createJournal(os.path.join(data, "journal"))
+    try:
+        journal.add(*prev)
+        journal.add(*last)
+        journal.flush()
+    finally:
+        journal._destroy()
+    import gzip
+    tmp = os.path.join(data, "dump.tmp")
+    with open(tmp, "wb") as f:
+        with gzip.GzipFile(fileobj=f, mode="wb") as g:
+            wire.dump(([{}, {"m": machine}], last, prev, {TCPNode(r) for r in peers.values()}), g)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, os.path.join(data, "dump"))
+    others = sorted(r for n, r in peers.items() if n != node_id)
+    doc = {"id": node_id, "raft": peers[node_id], "how": "join" if others else "bootstrap", "partners": others,
+           "alone": False}
+    tmp = os.path.join(data, "member.json.tmp")
+    with open(tmp, "w") as f:
+        json.dump(doc, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, os.path.join(data, "member.json"))
+    return {"recovered": node_id, "peers": sorted(peers), "index": last[1], "term": term, "replayed": replayed,
+            "epoch_floor": floor}
 
 
 # -- loading rows into a fresh group: import, restore ----------------------------------------------------
@@ -1144,22 +1426,56 @@ def _serve_args(argv: list[str]) -> argparse.Namespace:
     ap.add_argument("-tuning", default="default", choices=sorted(TUNINGS))
     ap.add_argument("-index-base", type=int, default=0, help="versions start above this (an import's highest)")
     ap.add_argument("-leader-wait", type=float, default=LEADER_WAIT, help="seconds a command waits for a leader")
+    ap.add_argument("-group-size", type=int, required=True,
+                    help="the voters this group is declared to have: 1, 3 or 5 (required); a join that makes it even or "
+                         "larger is refused without -force (ADR-0070)")
+    ap.add_argument("-force", action="store_true",
+                    help="with -join: through a group it makes even or larger than its -group-size (the step 1→2→3)")
     how = ap.add_mutually_exclusive_group()
     how.add_argument("-bootstrap", action="store_true", help="a new group of one")
     how.add_argument("-join", help="a member's -api, server@host:port: become a member of its group")
-    return ap.parse_args(argv)
+    a = ap.parse_args(argv)
+    try:
+        check_group_size(a.group_size)
+    except ValueError as e:
+        ap.error(str(e))                             # exit 2: the daemon does not start
+    return a
 
 
 # The operator's commands: each one request to this server's `admin.sock` (root's), or a file read.
-COMMANDS = ("status", "join", "leave", "rights", "backup", "restore", "import")
+COMMANDS = ("status", "join", "leave", "rights", "backup", "restore", "import", "recover")
+
+
+def _recover(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser(prog="python3 -m w2cplatform.configstore recover",
+                                 description="on a STOPPED daemon's directory: its state given back as a group of -peers, "
+                                             "the floor under every epoch raised (ADR-0070)")
+    ap.add_argument("-id", required=True, help="this server's name")
+    ap.add_argument("-dir", default=DATA, help=f"its journal, dump, member.json (default {DATA})")
+    ap.add_argument("-peers", required=True,
+                    help="the group as it is to be: id=host:port[,id=host:port…] (this server among them)")
+    a = ap.parse_args(argv)
+    try:
+        out = recover(a.id, a.dir, parse_peers(a.peers))
+    except ValueError as e:
+        print(f"configstore recover: {e}", file=sys.stderr)
+        return 1
+    print(json.dumps(out), flush=True)
+    print(f"the group in {a.dir} is now {len(out['peers'])} server(s), the floor under every epoch {out['epoch_floor']}; "
+          f"start the daemon, then let the others join it again", file=sys.stderr)
+    return 0
 
 
 def _command(argv: list[str]) -> int:
     from .variables import open_vars
     verb = argv[0]
+    if verb == "recover":
+        return _recover(argv[1:])
     ap = argparse.ArgumentParser(prog=f"python3 -m w2cplatform.configstore {verb}")
     ap.add_argument("--socket", "-socket", default=ADMIN_URL, help=f"this server's admin socket ({ADMIN_URL})")
     if verb == "join":
+        ap.add_argument("--force", "-force", action="store_true",
+                        help="through a group it makes even or larger than its -group-size (the step 1→2→3)")
         ap.add_argument("id")
         ap.add_argument("raft", help="the new member's raft address, host:port — its daemon already running")
         ap.add_argument("api", nargs="?", default="", help="its -api, server@host:port")
@@ -1178,7 +1494,7 @@ def _command(argv: list[str]) -> int:
         if verb == "status":
             out = h.status()
         elif verb == "join":
-            out = h._call("POST", "/v1/join", {"id": a.id, "raft": a.raft, "api": a.api})
+            out = h._call("POST", "/v1/join", {"id": a.id, "raft": a.raft, "api": a.api, "force": a.force})
         elif verb == "leave":
             out = h._call("POST", "/v1/leave", {"id": a.id})
         elif verb == "rights":
@@ -1206,8 +1522,9 @@ def main(argv: list[str] | None = None) -> int:
         host, port = a.api.rsplit(":", 1)
         api = (host, int(port))
     advertised = a.advertise or (f"{a.id}@{a.api}" if a.api else "")
-    backend = start_member(a.id, a.dir, a.raft, bootstrap=a.bootstrap, join=a.join, tls_dir=tls_dir, tuning=a.tuning,
-                           index_base=a.index_base, api_advertised=advertised, leader_wait=a.leader_wait)
+    backend = start_member(a.id, a.dir, a.raft, group_size=a.group_size, bootstrap=a.bootstrap, join=a.join,
+                           force=a.force, tls_dir=tls_dir, tuning=a.tuning, index_base=a.index_base,
+                           api_advertised=advertised, leader_wait=a.leader_wait)
     daemon = StoreDaemon(backend, node_id=a.id, sockets=a.sockets, rights=rights, api=api, tls_dir=tls_dir,
                          api_advertised=advertised, leader_wait=a.leader_wait)
     print(json.dumps({"serving": a.sockets, "raft": a.raft, "api": daemon.api_url}), flush=True)

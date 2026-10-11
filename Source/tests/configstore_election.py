@@ -101,7 +101,8 @@ class Node:
         cmd = [sys.executable, "-m", "w2cplatform.configstore", "-id", self.name, "-dir", self.data,
                "-raft", self.raft, "-api", f"127.0.0.1:{self.api_port}", "-advertise", self.adv,
                "-sockets", self.sockets, "-tls", os.path.join(TLS, self.name), "-tuning", self.timing]
-        cmd += ["-join", self.join] if self.join else ["-bootstrap"]
+        cmd += ["-group-size", "3"]                     # declared (ADR-0070); the second of three joins with -force
+        cmd += ["-join", self.join, "-force"] if self.join else ["-bootstrap"]
         self.proc = subprocess.Popen(cmd, cwd=HERE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         end = time.monotonic() + 60
         while _status(self) is None:

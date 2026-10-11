@@ -1,0 +1,32 @@
+# configstore.rules.yml — what an alert says of a server's config store (ADR-0070, step 1; the product's file of the same
+# name, its rules word for word): Prometheus' rules over the lines every configstore daemon gives on GET /metrics of its
+# doors (`w2cplatform/configstore.py`, the notes: /metrics). Loaded beside the scrape of the doors:
+# `rule_files: [/etc/w2c/prometheus/configstore.rules.yml]`.
+#
+# A follower's lag is the difference of configstore_raft_index between the servers of one group — no server asks
+# another; the servers of a group are one job.
+groups:
+  - name: configstore
+    rules:
+      # A group is declared 1, 3 or 5 voters (-group-size); fewer survive fewer losses, an even number waits for one more
+      # vote. A server taken out, a join with -force that was never followed by the third: said, not silent.
+      - alert: ConfigstoreVotersNotAsDeclared
+        expr: configstore_raft_voters != configstore_raft_voters_expected
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "configstore {{ $labels.instance }}: {{ $value }} voters, the group is declared otherwise"
+      # A server whose state machine is more than a thousand entries behind the group's furthest: it answers late, and
+      # a leader lost now would elect one that must catch up first.
+      - alert: ConfigstoreFollowerBehind
+        expr: 'max without (instance) (configstore_raft_index{kind="applied"}) - ignoring (instance) group_right configstore_raft_index{kind="applied"} > 1000'
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "configstore {{ $labels.instance }}: {{ $value }} entries behind the group"
+      # Elections over and over: a network that drops the leader's heartbeats, a clock too short for it (-tuning).
+      - alert: ConfigstoreElectionsChurn
+        expr: increase(configstore_raft_elections_total[10m]) > 3
+        labels: {severity: warning}
+        annotations:
+          summary: "configstore {{ $labels.instance }}: {{ $value }} elections in ten minutes"

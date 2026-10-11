@@ -101,6 +101,7 @@ import re
 import urllib.parse
 
 from .canonical import parse_json
+from .epoch import EPOCH_FLOOR_KEY
 from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
 from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
@@ -305,6 +306,8 @@ class Rights:
     def allows(self, role: str, action: str, key: str) -> bool:
         if action == "delete" and (epoch_row(key) or (key.startswith("domain/") and not may_delete_domain(role, key))):
             return False                          # nobody, `admin` included (`variables.refuse_delete`)
+        if action != "read" and key == EPOCH_FLOOR_KEY:
+            return False                          # the floor under every epoch is `configstore recover`'s alone (ADR-0070)
         if role == ADMIN:
             return True                           # `PEER` is no role of the file: no grant on any row (twelfth pass)
         return allowed(self.roles.get(role, {}).get(action, []), key)   # a denial first, wherever it stands

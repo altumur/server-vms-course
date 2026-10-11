@@ -118,12 +118,14 @@ def test_the_runner_reads_the_two_files_under_what_the_unit_said():
     assert got["EVIL"] == "$(touch " + d + "/ran)" and not os.path.exists(os.path.join(d, "ran"))   # a value, never run
     assert got["PYTHONPATH"].startswith(f"{d}/Source")
     with open(w2c, "a") as f:
-        f.write("CONFIGSTORE_RAFT=10.0.0.2:8301\nCONFIGSTORE_API=10.0.0.2:8300\nCONFIGSTORE_JOIN=srv-a@10.0.0.1:8300\n")
+        f.write("CONFIGSTORE_RAFT=10.0.0.2:8301\nCONFIGSTORE_API=10.0.0.2:8300\nCONFIGSTORE_JOIN=srv-a@10.0.0.1:8300\n"
+                "CONFIGSTORE_GROUP_SIZE=3\nCONFIGSTORE_FLAGS=-force\n")
     out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "configstore"], env=env, capture_output=True,
                          text=True, check=True).stdout.splitlines()
+    # the group's declared size, and -force on the server whose join makes it even (ADR-0070)
     assert out[0] == ("-m w2cplatform.configstore -id srv-b -dir /data/platform/configstore -raft 10.0.0.2:8301 -api "
-                      "10.0.0.2:8300 -sockets /run/configstore -rights /etc/w2c/configstore-rights.json -tls "
-                      "/etc/w2c/tls -tuning lan -join srv-a@10.0.0.1:8300")
+                      "10.0.0.2:8300 -group-size 3 -sockets /run/configstore -rights /etc/w2c/configstore-rights.json "
+                      "-tls /etc/w2c/tls -tuning lan -join srv-a@10.0.0.1:8300 -force")
 
 
 def test_the_runner_writes_as_its_group_however_it_was_started_and_finds_a_box_by_its_directory():
@@ -138,7 +140,8 @@ def test_the_runner_writes_as_its_group_however_it_was_started_and_finds_a_box_b
         f.write("#!/bin/sh\necho \"$@\"\necho \"umask=$(umask)\"\nenv\n")
     os.chmod(py, 0o755)
     with open(os.path.join(d, "w2c.env"), "w") as f:
-        f.write("SERVER_NAME=mac-a\nCONFIGSTORE_RAFT=127.0.0.1:8301\nCONFIGSTORE_API=127.0.0.1:8300\n")
+        f.write("SERVER_NAME=mac-a\nCONFIGSTORE_RAFT=127.0.0.1:8301\nCONFIGSTORE_API=127.0.0.1:8300\n"
+                "CONFIGSTORE_GROUP_SIZE=1\n")
     with open(os.path.join(d, "vms.env"), "w") as f:
         f.write("CAPACITY=9\n")
     env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d}
@@ -151,8 +154,8 @@ def test_the_runner_writes_as_its_group_however_it_was_started_and_finds_a_box_b
     out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), "configstore"], env=env, capture_output=True,
                          text=True, check=True).stdout.splitlines()
     assert out[0] == (f"-m w2cplatform.configstore -id mac-a -dir {d}/state/configstore -raft 127.0.0.1:8301 -api "
-                      f"127.0.0.1:8300 -sockets {d}/state/run/configstore -rights {d}/configstore-rights.json -tls "
-                      f"{d}/tls -tuning lan -bootstrap")
+                      f"127.0.0.1:8300 -group-size 1 -sockets {d}/state/run/configstore -rights "
+                      f"{d}/configstore-rights.json -tls {d}/tls -tuning lan -bootstrap")
 
 
 def test_the_controllers_reach_budget_is_named_where_an_operator_looks():
@@ -560,7 +563,7 @@ def test_the_stores_journal_is_its_members_alone_however_it_was_started():
         f.write("#!/bin/sh\necho \"umask=$(umask)\"\n")
     os.chmod(py, 0o755)
     with open(os.path.join(d, "w2c.env"), "w") as f:
-        f.write("SERVER_NAME=a\nCONFIGSTORE_RAFT=127.0.0.1:8301\nCONFIGSTORE_API=127.0.0.1:8300\n")
+        f.write("SERVER_NAME=a\nCONFIGSTORE_RAFT=127.0.0.1:8301\nCONFIGSTORE_API=127.0.0.1:8300\nCONFIGSTORE_GROUP_SIZE=1\n")
     env = {"PATH": os.environ["PATH"], "PYTHON": py, "W2C_BOX": d}
     for program, mask in (("configstore", ("0077", "077")), ("console", ("0007", "007"))):
         out = subprocess.run(["sh", os.path.join(DEPLOY, "w2c-run.sh"), program], env=env, capture_output=True,

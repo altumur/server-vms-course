@@ -116,12 +116,16 @@ case "$program" in
             : "${CONFIGSTORE_DIR:=$BOX/state/configstore}" "${CONFIGSTORE_SOCKETS:=$BOX/state/run/configstore}"
             : "${CONFIGSTORE_RIGHTS:=$BOX/configstore-rights.json}" "${W2C_TLS:=$BOX/tls}"
         fi
+        # The group's declared size (ADR-0070): 1, 3 or 5, the same on every server — the daemon refuses to start without
+        # it; `CONFIGSTORE_FLAGS=-force` on the server whose join makes the group even (the second of three).
         # shellcheck disable=SC2086
         exec "$PYTHON" -m w2cplatform.configstore -id "${SERVER_NAME:?SERVER_NAME in $W2C_ENV}" \
             -dir "${CONFIGSTORE_DIR:-/data/platform/configstore}" -raft "${CONFIGSTORE_RAFT:?CONFIGSTORE_RAFT in $W2C_ENV}" \
-            -api "${CONFIGSTORE_API:?CONFIGSTORE_API in $W2C_ENV}" -sockets "${CONFIGSTORE_SOCKETS:-/run/configstore}" \
+            -api "${CONFIGSTORE_API:?CONFIGSTORE_API in $W2C_ENV}" \
+            -group-size "${CONFIGSTORE_GROUP_SIZE:?CONFIGSTORE_GROUP_SIZE in $W2C_ENV}" \
+            -sockets "${CONFIGSTORE_SOCKETS:-/run/configstore}" \
             -rights "${CONFIGSTORE_RIGHTS:-/etc/w2c/configstore-rights.json}" -tls "${W2C_TLS:-/etc/w2c/tls}" \
-            -tuning "${CONFIGSTORE_TUNING:-lan}" $start "$@" ;;
+            -tuning "${CONFIGSTORE_TUNING:-lan}" $start ${CONFIGSTORE_FLAGS:-} "$@" ;;
     controller|console|resource|rights)
         exec "$PYTHON" -m w2cplatform.cluster "$program" "$@" ;;
     signer)

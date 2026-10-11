@@ -43,8 +43,10 @@ NAMES = ("srv-a", "srv-b", "srv-c")                  # one TLS bundle each under
 for _name in NAMES:
     os.chmod(os.path.join(TLS, _name, "raft.secret"), 0o600)
 RIGHTS = Rights.parse({"roles": {
-    # `platform/schema` too: a worker checks the store's schema version before it runs (`contract.check_schema`).
-    "testsubworker": {"read": ["testsub/*", "platform/schema"], "write": ["testsub/epoch/*", "testsub/slots/*"],
+    # `platform/schema` too: a worker checks the store's schema version before it runs (`contract.check_schema`); and
+    # the floor under every epoch, which it takes its epochs above (`epoch.next_epoch`, ADR-0070).
+    "testsubworker": {"read": ["testsub/*", "platform/schema", "platform/epoch_floor"],
+                      "write": ["testsub/epoch/*", "testsub/slots/*"],
                   "delete": ["testsub/slots/*"]},
 }})
 
@@ -58,7 +60,7 @@ def _port() -> int:
 
 
 class Member:
-    def __init__(self, group: "Group", k: int, join: str | None):
+    def __init__(self, group: "Group", k: int, join: str | None, force: bool = True):
         self.k, self.name = k, NAMES[k]
         self.tls = os.path.join(TLS, self.name)
         self.raft = f"127.0.0.1:{_port()}"
@@ -67,11 +69,15 @@ class Member:
         self.data = os.path.join(group.root, f"d{k}")
         self.sockets = os.path.join(group.root, f"s{k}")
         self.tuning = group.tuning
+        self.group_size, self.force = group.group_size, force
         self.daemon = None
         self.start(join, group.index_base)
 
     def start(self, join: str | None = None, index_base: int = 0) -> None:
-        backend = configstore.start_member(self.name, self.data, self.raft, bootstrap=join is None, join=join,
+        # Declared as the product's test groups are (ADR-0070): the smallest of 1, 3, 5 at or above its size, every join
+        # with -force — a test group grows through every size.
+        backend = configstore.start_member(self.name, self.data, self.raft, group_size=self.group_size,
+                                           bootstrap=join is None, join=join, force=self.force,
                                            tls_dir=self.tls, tuning=self.tuning, index_base=index_base,
                                            api_advertised=self.adv)
         self.daemon = StoreDaemon(backend, node_id=self.name, sockets=self.sockets, rights=RIGHTS,
@@ -93,9 +99,11 @@ class Group:
     """A box (a group of one), and as many servers joined to it as asked — each through the member named, over its
     `-api` door, each with its journal on disk."""
 
-    def __init__(self, n: int, tuning: str = "lan", index_base: int = 1000, via_follower: bool = False):
+    def __init__(self, n: int, tuning: str = "lan", index_base: int = 1000, via_follower: bool = False,
+                 group_size: int | None = None):
         self.root = tempfile.mkdtemp(prefix="cs")
         self.tuning, self.index_base = tuning, index_base
+        self.group_size = group_size or next(s for s in configstore.GROUP_SIZES if s >= n)
         self.members: list[Member] = []
         for k in range(n):
             via = None
@@ -409,7 +417,7 @@ def test_a_member_without_the_raft_secret_listens_on_loopback_only_and_takes_nob
     import subprocess
     d = tempfile.mkdtemp(prefix="cs")
     port = _port()
-    b = configstore.start_member("solo", d, f"127.0.0.1:{port}", bootstrap=True, tls_dir=None, tuning="lan")
+    b = configstore.start_member("solo", d, f"127.0.0.1:{port}", group_size=1, bootstrap=True, tls_dir=None, tuning="lan")
     dm = None
     try:
         assert _listening(b)[0] == "127.0.0.1", _listening(b)
@@ -429,7 +437,7 @@ def test_a_member_without_the_raft_secret_listens_on_loopback_only_and_takes_nob
         json.dump({**doc, "partners": [f"127.0.0.1:{_port()}"]}, f)
     try:
         with pytest.raises(ValueError):
-            configstore.start_member("solo", d, f"127.0.0.1:{port}", tls_dir=None, tuning="lan")
+            configstore.start_member("solo", d, f"127.0.0.1:{port}", group_size=1, tls_dir=None, tuning="lan")
     finally:
         shutil.rmtree(d, ignore_errors=True)
 
@@ -591,7 +599,7 @@ def test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_ref
         stranger = f"127.0.0.1:{_port()}"
         dirs.append(tempfile.mkdtemp(prefix="cs"))
         backends.append(configstore.RaftBackend("stranger", stranger, [], dirs[-1], "lan",
-                                                tls.raft_secret(stranger_tls)))
+                                                tls.raft_secret(stranger_tls), group_size=1))
         for raft in (f"127.0.0.1:{a.api_port}", f"127.0.0.1:{silent.getsockname()[1]}", stranger):
             t0 = time.monotonic()
             code, said = _api(a, ctx_b, "/v1/join", {"id": "srv-b", "raft": raft})
@@ -600,13 +608,13 @@ def test_a_join_whose_raft_address_is_no_raft_member_of_this_installation_is_ref
         c_port = _port()
         dirs.append(tempfile.mkdtemp(prefix="cs"))
         backends.append(configstore.RaftBackend("srv-c", f"127.0.0.1:{c_port}", [a.raft], dirs[-1], "lan",
-                                                tls.raft_secret(os.path.join(TLS, "srv-c"))))
+                                                tls.raft_secret(os.path.join(TLS, "srv-c")), group_size=3))
         code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"localhost:{c_port}"})
         assert (code, said["kind"]) == (409, "refused") and f"127.0.0.1:{c_port}" in said["error"], (code, said)
         assert [m["id"] for m in a.status()["members"]] == ["srv-a"] and not a.daemon.backend.raft.otherNodes
         v.put("testsub/counters/after-the-refusals", {"name": "x"}, cas=0)          # the group of one still writes
-        code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"127.0.0.1:{c_port}"})
-        assert code == 200, said
+        code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": f"127.0.0.1:{c_port}", "force": True})
+        assert code == 200, said                                                      # two: even, so with -force
         assert sorted(m["id"] for m in a.status()["members"]) == ["srv-a", "srv-c"]
         v.put("testsub/counters/with-srv-c", {"name": "y"}, cas=0)                  # a majority of two answers
     finally:
@@ -672,3 +680,183 @@ def test_the_platforms_cas_loops_run_on_configstore_unchanged():
         assert open_vars(g.members[0].url()).get("testsub/slots/w-1")[0]["released"] == "true"
     finally:
         g.stop()
+
+
+# -- ADR-0070: the raft's metrics, the declared size, the floor under every epoch after a recover ------------------
+import contextlib
+
+
+@contextlib.contextmanager
+def _says(kind, words: str):
+    """The block raises `kind` with `words` in what it says (the runner's `pytest` stand-in has no `match`)."""
+    try:
+        yield
+    except kind as e:
+        assert words in str(e), (words, str(e))
+        return
+    raise AssertionError(f"{kind.__name__} not raised: {words}")
+
+def _metrics(sock: str) -> dict[str, float]:
+    """`GET /metrics` at a door's unix socket, as `{name{labels}: value}` — the text a Prometheus scrape reads."""
+    from w2cplatform.configstorevars import unix_transport
+    code, raw = unix_transport(sock)("GET", "/metrics", None, {}, 5.0)
+    assert code == 200, (code, raw[:200])
+    out = {}
+    for line in raw.decode().splitlines():
+        if line and not line.startswith("#"):
+            name, _, value = line.rpartition(" ")
+            out[name] = float(value)
+    return out
+
+
+def test_every_door_says_its_raft_on_metrics_in_the_products_words():
+    """ADR-0070, step 1 (the product's `node/metrics.go`, cf55cbd): a member's raft on `GET /metrics` of every door —
+    the term, the state, the elections it stood in, its log's last, committed and applied index, how long since a
+    leader spoke to it (0 on the leader), the voters it counts and the voters the group is declared to have. A follower
+    has heard its leader; after the leader is gone, the one that took over stood in an election and counts it."""
+    g = Group(3)
+    try:
+        leader = g.leader()
+        follower = next(m for m in g.members if m is not leader)
+        names = {"configstore_raft_term", 'configstore_raft_state{state="leader"}', 'configstore_raft_state{state="follower"}',
+                 'configstore_raft_state{state="candidate"}', "configstore_raft_elections_total",
+                 'configstore_raft_index{kind="last"}', 'configstore_raft_index{kind="commit"}',
+                 'configstore_raft_index{kind="applied"}', "configstore_raft_last_contact_seconds",
+                 "configstore_raft_voters", "configstore_raft_voters_expected"}
+        lead = _metrics(os.path.join(leader.sockets, "admin.sock"))
+        assert set(lead) == names, set(lead) ^ names
+        assert lead['configstore_raft_state{state="leader"}'] == 1 and lead["configstore_raft_last_contact_seconds"] == 0
+        assert lead["configstore_raft_voters"] == 3 == lead["configstore_raft_voters_expected"]
+        assert lead['configstore_raft_index{kind="last"}'] >= lead['configstore_raft_index{kind="commit"}'] > 0
+        assert lead["configstore_raft_term"] == leader.status()["term"]
+        # every name an alert reads is one a live daemon gives (`deploy/cluster/prometheus/configstore.rules.yml`)
+        import re
+        with open(os.path.join(os.path.dirname(HERE), "deploy", "cluster", "prometheus", "configstore.rules.yml")) as f:
+            read = set(re.findall(r"configstore_raft_\w+", f.read()))
+        assert read and read <= {n.split("{")[0] for n in lead}, read
+        foll = _metrics(os.path.join(follower.sockets, "testsubworker.sock"))     # a role's socket says it too
+        assert foll['configstore_raft_state{state="follower"}'] == 1, foll
+        assert 0 <= foll["configstore_raft_last_contact_seconds"] < 5, foll
+        # …and the `-api` door, to another daemon's certificate
+        import http.client
+        ctx = tls.client_context(follower.tls)
+        s = ctx.wrap_socket(socket.create_connection(("127.0.0.1", leader.api_port), timeout=10), server_hostname=leader.name)
+        conn = http.client.HTTPConnection("127.0.0.1", leader.api_port, timeout=10)
+        conn.sock = s
+        conn.request("GET", "/metrics")
+        r = conn.getresponse()
+        assert r.status == 200 and b"configstore_raft_voters_expected 3" in r.read()
+        leader.stop()
+        end = time.monotonic() + 20
+        while (g.leader() in (None, leader)) and time.monotonic() < end:
+            time.sleep(0.05)
+        new = g.leader()
+        assert new not in (None, leader)
+        assert _metrics(os.path.join(new.sockets, "admin.sock"))["configstore_raft_elections_total"] >= 1
+    finally:
+        g.stop()
+
+
+def test_a_group_is_declared_one_three_or_five_and_a_join_that_makes_it_even_or_larger_is_refused_without_force():
+    """ADR-0070, step 1 (the product's `sizeRefuses`): `-group-size` is 1, 3 or 5 — anything else does not start, the
+    command line refuses it before anything runs. A join that makes the group even, or larger than declared, is refused
+    — at once, a daemon's `-join` does not wait out its 30 s — and goes through with `force`; the third of three joins
+    plainly. A retried join of a member already in changes no size and is not asked."""
+    import subprocess
+    import sys
+    for size in (0, 2, 4, 7):
+        with _says(ValueError, "-group-size is 1, 3 or 5"):
+            configstore.check_group_size(size)
+        p = subprocess.run([sys.executable, "-m", "w2cplatform.configstore", "-id", "x", "-raft", "127.0.0.1:1",
+                            "-group-size", str(size), "-bootstrap"], cwd=os.path.dirname(HERE), capture_output=True, text=True)
+        assert p.returncode == 2 and "-group-size is 1, 3 or 5" in p.stderr, (size, p.stderr)
+    g = Group(1, group_size=3)                          # declared three, one so far
+    a = g.members[0]
+    try:
+        t0 = time.monotonic()
+        with _says(configstore.JoinRefused, "even group"):
+            Member(g, 1, a.adv, force=False)
+        assert time.monotonic() - t0 < 10, "a refused join is said at once"
+        assert not configstore.RaftBackend.has_state(os.path.join(g.root, "d1"))   # nothing it would start from
+        b = Member(g, 1, a.adv, force=True)                           # the second of three: -force
+        g.members.append(b)
+        _ready(b)
+        code, said = _api(a, tls.client_context(b.tls), "/v1/join", {"id": b.name, "raft": b.raft, "api": b.adv})
+        assert code == 200, said                                      # a retry: no size asked
+        c = Member(g, 2, a.adv, force=False)                          # the third, plainly
+        g.members.append(c)
+        _ready(c)
+        assert sorted(m["id"] for m in a.status()["members"]) == ["srv-a", "srv-b", "srv-c"]
+        assert _metrics(os.path.join(a.sockets, "admin.sock"))["configstore_raft_voters"] == 3
+        # a fourth, a raft member of this installation that answers: larger than declared — refused, then with force
+        d_dir = tempfile.mkdtemp(prefix="cs")
+        d_raft = f"127.0.0.1:{_port()}"
+        d = configstore.RaftBackend("srv-d", d_raft, [a.raft, b.raft, c.raft], d_dir, "lan",
+                                    tls.raft_secret(a.tls), group_size=3)
+        try:
+            admin = open_vars(a.url())
+            try:
+                admin._call("POST", "/v1/join", {"id": "srv-d", "raft": d_raft})
+                raise AssertionError("a fourth voter of a group declared three was taken")
+            except Conflict as e:
+                assert "would make the group 4 voters" in str(e), e
+            assert len(a.daemon.backend.raft.otherNodes) == 2
+        finally:
+            d.stop()
+            shutil.rmtree(d_dir, ignore_errors=True)
+    finally:
+        g.stop()
+
+
+def test_a_recovered_lagging_minority_issues_no_epoch_it_issued_before():
+    """ADR-0070, the blocker of step 1's drill (the product's `TestARecoveredLaggingMinorityIssuesNoEpochItIssuedBefore`,
+    47c3e11): srv-c saw epochs 1..3 and stopped; the majority issued 4 and 5 and is gone for good. `recover` gives the
+    group to srv-c — and writes the floor under every epoch into the state before its daemon starts: 2^32. The next
+    epoch of the unit is 2^32+1, of a unit nobody took one of 2^32+1 too — none issued before. A second recover raises
+    the floor again, to 2^33. Nobody writes or deletes the floor through a door, root's `admin.sock` included."""
+    from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, next_epoch
+    g = Group(3)
+    try:
+        a, b, c = g.members
+        key = "testsub/epoch/7"
+        admin = open_vars(g.leader().url())
+        assert [next_epoch(admin, key)[0] for _ in range(3)] == [1, 2, 3]
+        _caught_up(c, g.leader())
+        c.stop()
+        assert [next_epoch(admin, key)[0] for _ in range(2)] == [4, 5]
+        a.stop()
+        b.stop()
+        with _says(ValueError, "does not name this server"):
+            configstore.recover(c.name, c.data, {a.name: a.raft})
+        said = configstore.recover(c.name, c.data, {c.name: c.raft})
+        assert said["epoch_floor"] == 1 << 32 and said["peers"] == [c.name], said
+        c.start()
+        _ready(c)
+        v = open_vars(c.url())
+        assert c.status()["state"] == "leader" and [m["id"] for m in c.status()["members"]] == [c.name]
+        assert epoch_floor(v) == 1 << 32
+        assert next_epoch(v, key)[0] == (1 << 32) + 1                 # not 4: two writers of epoch 4 was the blocker
+        assert next_epoch(v, "testsub/epoch/new")[0] == (1 << 32) + 1
+        assert v.get("testsub/epoch/7")[0] == {"epoch": str((1 << 32) + 1)}
+        for op in ({"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}}, {"op": "delete", "key": EPOCH_FLOOR_KEY}):
+            with pytest.raises(Forbidden):
+                v._call("POST", "/v1/write", op)
+        c.stop()
+        assert configstore.recover(c.name, c.data, {c.name: c.raft})["epoch_floor"] == 2 << 32
+        c.start()
+        _ready(c)
+        assert next_epoch(open_vars(c.url()), key)[0] == (2 << 32) + 1
+    finally:
+        g.stop()
+
+
+def test_an_epoch_of_the_generation_after_a_recover_reads_as_a_number_in_every_name():
+    """ADR-0070: after a recover the epochs are 2^32 and above — `e4294967297` in the names the platform reads (the
+    events' directory of an epoch, a name taken as a number). Python's `int` has no int32 anywhere, and the number stays
+    below 2^53, what a JSON number carries exactly to the console's page. The subsystem's readers: its own test."""
+    from w2cplatform import events
+    from w2cplatform.doors import numeric
+    big = (1 << 32) + 1
+    assert events.EPOCH_DIR.match(f"e{big}").group(1) == str(big)
+    assert numeric(str(big)) == big
+    assert json.loads(json.dumps({"epoch": big}))["epoch"] == big and big < 1 << 53

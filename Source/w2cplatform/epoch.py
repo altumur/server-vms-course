@@ -3,7 +3,8 @@ two instances. The subsystem decides what key the epoch goes in; the
 platform only promises that it comes from one issuer and increases.
 
     next_epoch(vars, key)   issue the next epoch for `key` by check-and-set: two callers
-                            racing get two different numbers, in order
+                            racing get two different numbers, in order — above the group's
+                            floor (`platform/epoch_floor`, raised by `configstore recover`)
     Lease                   may_act while now − last_renewal < TTL − margin, on a
                             monotonic clock (may_write: also through a silent store, up to
                             its ceiling); renew = read the key and find it still mine
@@ -24,7 +25,18 @@ platform only promises that it comes from one issuer and increases.
 # segment and bucket path so a stale writer's output is identifiable afterwards.
 #
 # ## Module-level names
-# None.
+# - `EPOCH_FLOOR_KEY = "platform/epoch_floor"`, `EPOCH_FLOOR_FIELD = "floor"` — the floor under every epoch of the group
+#   (ADR-0070, the blocker of step 1's drill), and `next_epoch_floor(floor)` — the next generation, `((floor >> 32) + 1) << 32`.
+#
+# ## The floor (ADR-0070)
+# A group given back to a member that was BEHIND (`configstore recover`, the majority gone for good) has lost the epochs the
+# others issued since — and nobody left knows how many. A count cannot mend that; a floor can. `recover` writes
+# `platform/epoch_floor` into the state it gives the member, before its daemon starts (so nothing is issued between the
+# start and the floor): the next multiple of 2^32 above the highest of the old floor and every epoch the member holds.
+# `next_epoch` issues `max(current, floor) + 1` for ANY unit — one never seen too — so every epoch issued after a recover is
+# above every one issued before it, of any unit. The price is names like `e4294967297` after a recover; Python's `int` reads
+# them as it reads `e7`, and they stay below 2^53, what JSON carries exactly. The floor is written by `recover` alone: no door
+# writes or deletes it (`storemachine.Rights.allows`), and a worker's role reads it (`cluster/rights.py`).
 #
 # ## Notes
 # - `test_lease_on_a_monotonic_clock`: at 24.9 s the lease may write; at 25.1 s it may not and
@@ -46,6 +58,27 @@ import time
 from .variables import Conflict, Variables, cas_pause
 from .rows import PARSE_ERRORS
 
+# The floor under every epoch of the group — written by `configstore recover` alone (the notes above; ADR-0070).
+EPOCH_FLOOR_KEY = "platform/epoch_floor"
+EPOCH_FLOOR_FIELD = "floor"
+
+
+# The floor a recover raises `floor` to: the next generation, in the upper 32 bits.
+def next_epoch_floor(floor: int) -> int:
+    return ((int(floor) >> 32) + 1) << 32
+
+
+# The group's floor under every epoch: 0 where no recover ever raised one. A floor row that does not read is said, not
+# counted as 0 — under it, epochs already issued would be issued again.
+def epoch_floor(vars_: Variables) -> int:
+    items, _ = vars_.get(EPOCH_FLOOR_KEY)
+    if not items:
+        return 0
+    raw = str(items.get(EPOCH_FLOOR_FIELD, ""))
+    if not (raw.isascii() and raw.isdigit()):
+        raise ValueError(f"{EPOCH_FLOOR_KEY} says {raw!r}: the floor under every epoch is a whole number (ADR-0070)")
+    return int(raw)
+
 
 # Issues the next epoch for `key` by check-and-set: read `{epoch}` and its ModifyIndex (missing key means
 # epoch 0), try to `put` `epoch + 1` with `cas=idx`; on `Conflict` re-read and try again, up to `retries`
@@ -53,10 +86,14 @@ from .rows import PARSE_ERRORS
 # different numbers in order and no number is ever reused — `test_epoch_issuer_never_reuses_a_number` runs
 # four threads issuing 25 each and asserts the set is exactly 1..100. The returned index is the row's
 # ModifyIndex after the write (unused by `Worker.take_epoch`, which keeps only the epoch).
+# ABOVE THE GROUP'S FLOOR (ADR-0070): `max(current, floor) + 1`, for a unit never seen as well — a group recovered from
+# a member that was behind issues no epoch it issued before (the notes: The floor). The floor is read once a call: it
+# moves only with a recover, and a recover starts its daemon with it already there.
 def next_epoch(vars_: Variables, key: str, retries: int = 200) -> tuple[int, int]:
+    floor = epoch_floor(vars_)
     for attempt in range(retries):
         items, idx = vars_.get(key)
-        current = int(items["epoch"]) if items else 0
+        current = max(int(items["epoch"]) if items else 0, floor)
         try:
             new_idx = vars_.put(key, {"epoch": current + 1}, cas=idx)
             return current + 1, new_idx

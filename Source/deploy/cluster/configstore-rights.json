@@ -176,6 +176,7 @@
    "group": "vms-autoworker",
    "read": [
     "platform/schema",
+    "platform/epoch_floor",
     "auto/*",
     "platform/decommission/*",
     "platform/servers/*",
@@ -233,6 +234,7 @@
    "group": "vms-detworker",
    "read": [
     "platform/schema",
+    "platform/epoch_floor",
     "det/*",
     "vms/*",
     "platform/decommission/*",
@@ -282,6 +284,7 @@
    "group": "vms-detjobworker",
    "read": [
     "platform/schema",
+    "platform/epoch_floor",
     "detjob/*",
     "vms/*",
     "platform/decommission/*",
@@ -327,6 +330,7 @@
    "group": "vms-liveworker",
    "read": [
     "platform/schema",
+    "platform/epoch_floor",
     "live/*",
     "vms/*",
     "platform/decommission/*",
@@ -377,6 +381,7 @@
    "group": "vms-recworker",
    "read": [
     "platform/schema",
+    "platform/epoch_floor",
     "rec/*",
     "vms/*",
     "platform/decommission/*",
@@ -446,6 +451,7 @@
    "group": "vms-surveyworker",
    "read": [
     "platform/schema",
+    "platform/epoch_floor",
     "survey/*",
     "vms/*",
     "platform/decommission/*",
@@ -491,6 +497,7 @@
    "group": "vms-vmsworker",
    "read": [
     "platform/schema",
+    "platform/epoch_floor",
     "vms/*",
     "platform/decommission/*",
     "platform/servers/*",

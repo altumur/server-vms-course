@@ -314,7 +314,7 @@ def test_a_daemon_will_not_open_its_doors_unprotected():
     with pytest.raises(ValueError):
         StoreDaemon(LocalBackend(), node_id="srv-a", api=("127.0.0.1", 0), tls_dir=None)
     with pytest.raises(ValueError):
-        configstore.start_member("srv-a", short_dir(), "10.0.0.1:8301", bootstrap=True)
+        configstore.start_member("srv-a", short_dir(), "10.0.0.1:8301", group_size=1, bootstrap=True)
 
 
 def _free_port() -> int:
@@ -332,11 +332,11 @@ def test_a_raft_port_without_its_secret_is_refused_on_every_interface_but_loopba
     listened on the port. A join makes a group of more, and is refused too. No raft library is needed to say so."""
     port = _free_port()
     with refused("loopback"):
-        configstore.start_member("srv-a", short_dir(), f"0.0.0.0:{port}", bootstrap=True)
+        configstore.start_member("srv-a", short_dir(), f"0.0.0.0:{port}", group_size=1, bootstrap=True)
     with pytest.raises(ConnectionRefusedError):
         socket.create_connection(("127.0.0.1", port), timeout=1).close()
     with refused("loopback"):
-        configstore.start_member("srv-b", short_dir(), f"127.0.0.1:{_free_port()}", join="srv-a@127.0.0.1:1")
+        configstore.start_member("srv-b", short_dir(), f"127.0.0.1:{_free_port()}", group_size=3, join="srv-a@127.0.0.1:1")
 
 
 # -- every door of the daemon is bounded (the review's twelfth pass, major 1) -----------------------------
@@ -768,7 +768,8 @@ def test_a_certificate_with_the_store_role_and_another_is_no_daemons_at_the_door
         with refused("one role"):
             StoreDaemon(LocalBackend(), node_id="srv-b", api=("127.0.0.1", 0), tls_dir=dual)
         with refused("one role"):
-            configstore.start_member("srv-b", short_dir(), f"127.0.0.1:{_free_port()}", bootstrap=True, tls_dir=dual)
+            configstore.start_member("srv-b", short_dir(), f"127.0.0.1:{_free_port()}", group_size=1, bootstrap=True,
+                                         tls_dir=dual)
     finally:
         shutil.rmtree(ca, ignore_errors=True)
         shutil.rmtree(dual, ignore_errors=True)
