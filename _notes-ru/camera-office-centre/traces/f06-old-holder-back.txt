@@ -315,8 +315,9 @@ GET /v1/get?key=domain/holder
 
 ## srv о себе (GET /api/holder): {"term": 1, "deposed": false, "deposed_by": null}
 
-## Агент relay-a отчитывается в объекты srv; в отчёте — запись держателя из его store (срок 2, relay-a).
-## Следующий проход srv её видит.
+## Агент relay-a отчитывается в дверь держателя срока 2 — relay-a:8071 (N5 исправлена), не в объекты srv:
+## из отчётов членов srv о сроке 2 не узнает. Свой агент srv за /api/held не следует (у курса следует только
+## агент с DOMAIN_URL), и srv держателем себя считать не перестаёт — FINDINGS.md, N6.
 
 # resource on relay-a → /run/configstore/resource.sock
 GET /v1/list?prefix=platform/doors/
