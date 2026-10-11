@@ -200,6 +200,60 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
     assert pass_() == {"recorded_by": "south", "recording": "", "enabled": True, "running": False}
 
 
+def test_the_book_of_primaries_says_running_at_the_first_pass_after_the_rooms_report_carries_its_recorder():
+    """The scenario «камера — офис — центр», N6: the book said `running: false` in scenes 9–12 while the office recorded
+    the camera. Not the book: the domain reads a member's recorder ONLY by the member's report (ADR-0074 — the books are
+    computed from the members' rows), and the scenario's passes of the VMS worker on the domain ran before the office's
+    agent carried its recorder's `running` up (scene 11), or not at all after it (9, 10, 12). Here the room is read by its
+    report, as the holder reads every member: its recorder writes, and the book says nothing new until the room's agent
+    reports; the first pass after that report says `running`, and the book stays so while the reports go on."""
+    import json
+    from vms.config import REC_SPEC
+    from vms.recworker import PRIMARIES
+    from w2cplatform.contract import Heartbeat, Subsystem
+    from w2cplatform.spec import SpecController
+
+    wall = Clock()
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    south, _ = make_cluster("south")
+    fed.add(north); fed.add(member_copy("south", north.objects, wall=wall))       # the room: by its report
+    Running(south, wall).create(201)                                  # its VMS published: it reports from now on
+    cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, address="10.1.0.71")
+    cam.boot(); fed.add(member_copy(cam.name, north.objects, wall=wall))
+    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                            published=cam.local_objects())
+    room_agent = DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
+                             published=south.objects)
+    cam_agent.sync(); room_agent.sync()
+    view = ReadView(fed, wall=wall); view.refresh()
+    crossings = Crossings(north.vars, view, wall)
+    crossings.record(SERIAL, on="south")
+    rec = SpecController(REC_SPEC, south.vars, south.objects, wall=wall)
+    rec.create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
+
+    def recorder(phase: str):                                         # the room's recorder says its heartbeat
+        rec.publish_snapshot()
+        st = [{"id": SERIAL, "cam": f"ref:{SERIAL}", "enabled": True, "phase": phase}]
+        south.objects.put(Subsystem("rec").heartbeat_key("r-0"), Heartbeat("r-0", wall(), st, {}).to_bytes())
+
+    def book():
+        crossings.publish_primaries(); cam_agent.sync()
+        return json.loads(cam.flash.get(PRIMARIES)[0][SERIAL])["running"]
+
+    recorder("pending"); room_agent.sync()
+    assert book() is False
+    wall.advance(5); recorder("running")                              # the room writes the camera now…
+    assert book() is False                                            # …and its report does not say so yet
+    room_agent.sync()                                                 # the room's agent reports
+    assert book() is True                                             # the first pass after it: running
+    for _ in range(6):                                                # 30 s of passes, the room reporting every 30 s
+        wall.advance(5); recorder("running")
+        if _ == 5:
+            room_agent.sync()
+        assert book() is True
+
+
 def test_a_recording_moves_to_another_cluster_and_the_books_follow():
     """Feedback AN. The site is re-wired: the camera is to be recorded by north now. A second cluster is still
     refused — but a MOVE rewrites the decision, and on the next pass south's source book loses the camera (its
