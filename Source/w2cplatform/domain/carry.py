@@ -207,6 +207,94 @@ class HolderDoor:
         return out
 
 
+    # REPORTS COME IN BY THE SAME DOOR (the three-site scenario, N5; ADR-0066's addition of 2026-10-11,
+    # night). A member's agent wrote its report straight into the holder's object store (`DOMAIN_OBJECTS_URL`), set once
+    # when it started: after a move it carried through the new holder's door and reported into the old holder's objects,
+    # and the new holder heard from no member. The product's door takes it — `POST /api/member/<m>`, signed by the
+    # member's key in the agent's form (`memberkey.sign_request`, `X-Agent-Signature`) — and so does this one: a report
+    # goes where the rows come from, and follows the holder with them.
+    def _member_key(self, name: str, path: str, body: bytes, signature: str, presented: str | None = None,
+                    seal: str | None = None) -> dict:
+        """The member `name` as admitted, once `signature` is its key's over this request; else Refused — and a cluster
+        not on the list that signed with the key it presents is remembered as knocking (`note_knock`)."""
+        from w2cplatform.trust.memberkey import verify_request
+        from w2cplatform.trust.tokens import KeySet
+        from .agent import KEYS_PATH
+        from .members import Members, note_knock
+        members = Members(self.vars).read()["members"]
+        me = members.get(name)
+        if me is None:
+            if presented and self.objects is not None and not verify_request(presented, signature, "POST", path, body,
+                                                                             self.wall(), SKEW):
+                note_knock(self.objects, name, presented, seal or "", self.wall())
+            raise Refused(404, f"no member called {name}")
+        if not me.get("key"):
+            raise Refused(403, f"{name} has no key at the domain: register it on the holder "
+                               f"(`python3 -m w2cplatform.domain.members key {name} <pub> <seal_pub>`)")
+        items, _ = self.vars.get(KEYS_PATH)
+        try:
+            revoked = KeySet.from_items(items).revoked_members if items else set()
+        except PARSE_ERRORS:
+            revoked = set()
+        if me["key"] in revoked:
+            raise Refused(403, f"{name}'s key was revoked by the root (a holder reported stolen): it is admitted again "
+                               f"only with a new key")
+        why = verify_request(me["key"], signature, "POST", path, body, self.wall(), SKEW)
+        if why:
+            raise Refused(401, f"{name}: {why}")
+        return me
+
+    def member(self, cluster: str, body: bytes, signature: str) -> dict:
+        """`POST /api/member/<cluster>`: the member's publication (`uplink.publication`), kept in the holder's objects
+        (`uplink.take`); the answer is what it carries home, as `GET /api/carry` answers it — sealed to the key the
+        publication names (`seal`), which the signature covers."""
+        from .uplink import MAX_PUBLICATION, take
+        if len(body) > MAX_PUBLICATION:
+            raise Refused(413, f"the publication of {cluster} is over {MAX_PUBLICATION >> 20} MiB — a publication this "
+                               f"large is the sign to publish changes instead of all")
+        try:
+            pub = json.loads(body)
+        except PARSE_ERRORS:
+            pub = None
+        if not isinstance(pub, dict):
+            raise Refused(400, "a publication: {sent_at, objects}")
+        me = self._member_key(cluster, f"/api/member/{cluster}", body, signature,
+                              pub.get("key") if isinstance(pub.get("key"), str) else None,
+                              pub.get("seal") if isinstance(pub.get("seal"), str) else None)
+        seal = pub.get("seal")
+        if not isinstance(seal, str) or not seal or seal != me.get("seal", seal):
+            raise Refused(401, f"the publication names a sealing key that is not {cluster}'s")
+        if self.objects is None:
+            raise Refused(503, "this door keeps no reports: the holder's objects are not open here")
+        try:
+            take(cluster, pub, self.objects)
+        except ValueError as e:
+            raise Refused(400, f"{cluster}: {e}") from None
+        return answer(self.vars, self.objects, cluster, seal_to=seal, sealer=self.sealer)
+
+    def relay(self, relay: str, body: bytes, signature: str) -> dict:
+        """`POST /api/relay/<relay>`: `{relayed: {member: publication}}` — the summary report of the members behind the
+        relay, signed by the relay's key, kept as its bundle (`relay.take_bundle`). The answer: `{refused: {member:
+        why}}`, the members not carried."""
+        from .relay import MAX_RELAY_BATCH, take_bundle
+        if len(body) > MAX_RELAY_BATCH:
+            raise Refused(413, f"the batch of relay {relay} is over {MAX_RELAY_BATCH >> 20} MiB — a relay sends its "
+                               f"members in batches under this bound")
+        self._member_key(relay, f"/api/relay/{relay}", body, signature)
+        try:
+            env = json.loads(body)
+        except PARSE_ERRORS:
+            env = None
+        got = env.get("relayed") if isinstance(env, dict) else None
+        if not isinstance(got, dict):
+            raise Refused(400, f"relay {relay}: this relay's build sends what this domain cannot read — it reads "
+                               f"{{relayed: {{member: publication}}}}")
+        if self.objects is None:
+            raise Refused(503, "this door keeps no reports: the holder's objects are not open here")
+        _, refused = take_bundle(relay, got, self.objects)
+        return {"refused": refused}
+
+
 # -- the member's side -------------------------------------------------------------------------------------------------
 class CarryClient:
     """A member's agent's way to its holder: `carry()` asks the door (an in-process `HolderDoor`, or an HTTP base URL
@@ -236,6 +324,23 @@ class CarryClient:
         """What the agent's pass asks of its `domain_vars` (`DomainAgent._answer`): this client's own answer."""
         return self.carry()
 
+    def publish(self, pub: dict) -> dict:
+        """This member's report to the door it carries through (`POST /api/member/<cluster>`, `HolderDoor.member`),
+        signed in the agent's form; the door's answer."""
+        return self._post(f"/api/member/{self.cluster}", pub, "member")
+
+    def relay_up(self, publications: dict) -> dict:
+        """A relay's summary report to the door it carries through (`POST /api/relay/<cluster>`, `HolderDoor.relay`)."""
+        return self._post(f"/api/relay/{self.cluster}", {"relayed": publications}, "relay")
+
+    def _post(self, path: str, doc: dict, what: str) -> dict:
+        from w2cplatform.trust.memberkey import sign_request
+        body = json.dumps(doc, sort_keys=True).encode()
+        sig = sign_request(self.key, "POST", path, body, self.wall())
+        if isinstance(self.door, str):
+            return _http_post(self.door, path, body, sig, self.timeout)
+        return getattr(self.door, what)(self.cluster, body, sig)
+
     def pass_on(self, cluster: str, at: float, seal: str, signature: str, key: str | None) -> dict:
         """Another cluster's ask, passed on to the holder's door as it came — its time, its sealing key, ITS signature and
         the key it names — by the road this client carries on (`relay.RelayDoor`, a knock behind a relay). Nothing of
@@ -260,6 +365,26 @@ def _http_ask(base: str, cluster: str, at: float, seal: str, sig: str, for_membe
     url = f"{base.rstrip('/')}/api/carry/{cluster}" + (f"?for={for_member}" if for_member else "")
     req = urllib.request.Request(url, headers={"X-W2C-Time": f"{at:.3f}", "X-W2C-Seal": seal, "X-W2C-Signature": sig,
                                                **({"X-W2C-Key": key} if key else {})})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        try:
+            detail = json.loads(e.read()).get("detail", "")
+        except PARSE_ERRORS:
+            detail = ""
+        raise Refused(e.code, detail or f"the door said {e.code}") from None
+    except OSError as e:
+        raise Unreachable(f"the domain's door {base} did not answer: {e}") from None
+
+
+def _http_post(base: str, path: str, body: bytes, signature: str, timeout: float) -> dict:
+    import urllib.error
+    import urllib.request
+    from w2cplatform.trust.memberkey import AGENT_HEADER
+    from .federation import Unreachable
+    req = urllib.request.Request(f"{base.rstrip('/')}{path}", data=body, method="POST",
+                                 headers={"Content-Type": "application/json", AGENT_HEADER: signature})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read())
