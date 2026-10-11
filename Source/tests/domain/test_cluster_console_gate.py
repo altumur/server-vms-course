@@ -173,13 +173,15 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
     a session in its own memory — no token is made, so none can be taken from the store. Every attempt is an
     alarm, the refused ones too; every request under it is one."""
     import itertools
-    from w2cplatform.domain.agent import BREAK_GLASS_PATH, per_cluster, DomainPublisher
+    from w2cplatform.domain.agent import MEMBER_PATH, DomainPublisher, break_glass_row
+    from w2cplatform.domain.carry import own_rows
     from w2cplatform.domain.identity import _hash
     from w2cplatform.eventdatabase import EventIndex
-    assert BREAK_GLASS_PATH in per_cluster()                                            # carried home by the agent like the grants
+    glass = break_glass_row("south")
+    assert glass in own_rows("south")                   # carried home by the agent like the grants — under its own name
     home = FakeVariables()
     DomainPublisher(home).publish_break_glass("south", _hash("glass-for-south"), 1000.0)
-    assert home.get(f"{BREAK_GLASS_PATH}/south")[0]["pwhash_secret"].count(":") == 1          # a hash, never the password
+    assert home.get(glass)[0]["pwhash_secret"].count(":") == 1                         # a hash, never the password
 
     clk = Clock(1_757_500_000.0)
     vars_ = FakeVariables()
@@ -205,7 +207,9 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
         assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "x"})[0] == 400   # open: nothing to break into
         vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
         assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "x"})[0] == 403   # no account for this cluster
-        vars_.put(BREAK_GLASS_PATH, home.get(f"{BREAK_GLASS_PATH}/south")[0])            # what the agent carried home
+        vars_.put(glass, home.get(glass)[0])                                            # what the agent carried home…
+        assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "glass-for-south"})[0] == 403
+        vars_.put(MEMBER_PATH, {"cluster": "south"})    # …and the mark that names this member: its hash is the one read
         assert raw("POST", "/session/break-glass", {"who": "", "why": "", "password": "glass-for-south"})[0] == 400      # who and why are said
         assert raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "wrong"})[0] == 401
         code, body, cookie = raw("POST", "/session/break-glass", {"who": "carol", "why": "uplink down", "password": "glass-for-south"})
@@ -214,8 +218,8 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
         me = {"Cookie": cookie.split(";")[0]}
         assert raw("GET", "/session", headers=me)[1]["user"] == "break-glass(carol)"
         assert raw("POST", "/cameras", {"source": "driverpack://file/1.mp4"}, me)[0] == 201                          # it is let in…
-        refused = ("access.break_glass.refused", "break-glass(carol)")                                             # no account here, then a wrong password
-        assert alarms() == [refused, refused, ("access.break_glass.opened", "break-glass(carol)"),
+        refused = ("access.break_glass.refused", "break-glass(carol)")       # no account here, no member named, a wrong password
+        assert alarms() == [refused, refused, refused, ("access.break_glass.opened", "break-glass(carol)"),
                             ("access.break_glass", "break-glass(carol)")]                                            # …and every step is said
         assert raw("GET", "/cameras", {"Cookie": "w2c_glass=guessed"})[0] == 401                                      # a session is this process's, not a guess
         clk.advance(901)

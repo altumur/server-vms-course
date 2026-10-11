@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import time
 
-from .agent import BREAK_GLASS_PATH
+from .agent import break_glass_row
 
 
 def set_password(holder_vars, cluster: str, password: str, now: float, sealer=None, journal=None, by: str | None = None) -> None:
@@ -24,7 +24,7 @@ def set_password(holder_vars, cluster: str, password: str, now: float, sealer=No
     from .identity import _hash
     if not password:
         raise ValueError("an emergency password is not empty")
-    path = f"{BREAK_GLASS_PATH}/{cluster}"
+    path = break_glass_row(cluster)
     _, idx = holder_vars.get(path)
     holder_vars.put(path, seal_row(sealer, {"pwhash_secret": _hash(password), "set_at": str(now)}, path), cas=idx)
     if journal is not None:

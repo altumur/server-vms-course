@@ -198,10 +198,10 @@ class RelayDoor:
     domain's answer carried it), its clock within `carry.SKEW` of the relay's. A member admitted without a key is
     answered only in the same process (`plain`: the tests' members), never over the network.
 
-    A CLUSTER THE RELAY DOES NOT RELAY KNOCKS THROUGH IT (the scenario «камера — офис — центр», N1; ADR-0066's addition of
+    A CLUSTER THE RELAY DOES NOT RELAY KNOCKS THROUGH IT (the three-site scenario, N1; ADR-0066's addition of
     2026-10-11, «Архитектор»). The knock is remembered by the holder's door alone (`carry.HolderDoor`, `note_knock`), and
-    a camera behind an office reaches no door but the office's: it was answered 404 «relays no member», nothing was passed
-    on, and no camera behind an office was ever in `knocking` — none could be admitted by its fingerprint. Now an ask the
+    a member behind an office reaches no door but the office's: it was answered 404 «relays no member», nothing was passed
+    on, and no member behind an office was ever in `knocking` — none could be admitted by its fingerprint. Now an ask the
     relay has nothing for and no refusal of goes on to the holder by the relay's own road to it — the one its relaying
     down takes (`CarryClient.pass_on`) — as it came: the cluster's time, sealing key, signature and the key it names. The
     relay keeps nothing of it and vouches for nothing; the holder checks the signature as at its own door, remembers the

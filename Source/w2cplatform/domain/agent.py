@@ -37,8 +37,15 @@ LDEVID_PATH = "domain/ldevid"
 # subsystem's process reads to judge the age of the books its agent carried, without the books themselves changing.
 DOMAIN_SEEN = "domain/seen"
 # The emergency account's password HASH for one cluster (Lesson 4, step 7): set at the domain, carried home, checked
-# at the cluster's console with the domain away — which is the only time it is for.
-BREAK_GLASS_PATH = "domain/break-glass"
+# at the cluster's console with the domain away — which is the only time it is for. ONE NAME ON BOTH SIDES (ADR-0003,
+# «Архитектор» 2026-10-11): `domain/break-glass/<cluster>` at the holder and on the member alike, as the product keeps it
+# (`trust.BreakGlassPrefix + cluster`); the member's bare `domain/break-glass` is gone, with no alias.
+BREAK_GLASS_PREFIX = "domain/break-glass/"
+
+
+def break_glass_row(cluster: str) -> str:
+    return BREAK_GLASS_PREFIX + cluster
+
 # That this cluster IS a member — written on every pass that leaves a key set here, so the cluster's console can tell
 # "the keys were lost" from "there never were any" (`w2cplatform/access.py`, `DOMAIN_MARKS`). The other marks are each
 # conditional — `domain/root` only with a root-signed key set, grants and the rest only when the domain has some for
@@ -46,8 +53,9 @@ BREAK_GLASS_PATH = "domain/break-glass"
 # fourth pass). This one has no condition but the keys themselves.
 MEMBER_PATH = "domain/member"
 # What the domain decided for ONE cluster, each a row of the same kind: written by the domain under `<path>/<cluster>`,
-# carried home to `<path>`. The platform's own, and every book a subsystem's spec declares (`declared.books`).
-PLATFORM_PER_CLUSTER = (LDEVID_PATH, BREAK_GLASS_PATH)
+# carried home to `<path>`. The platform's own, and every book a subsystem's spec declares (`declared.books`). The
+# emergency hash is not one of them: it keeps its name on the member (`break_glass_row`).
+PLATFORM_PER_CLUSTER = (LDEVID_PATH,)
 
 
 def per_cluster() -> tuple[str, ...]:
@@ -75,7 +83,7 @@ class DomainPublisher:
         """The one local account of `cluster`: its password's hash, never the password, sealed under the holder's ring
         (`pwhash_secret`). Rotating it is publishing a new one (`breakglass.set_password`)."""
         from .carry import seal_row
-        path = f"{BREAK_GLASS_PATH}/{cluster}"
+        path = break_glass_row(cluster)
         _, idx = self.vars.get(path)
         self.vars.put(path, seal_row(sealer, {"pwhash_secret": pwhash, "set_at": now}, path), cas=idx)
 
@@ -390,6 +398,14 @@ class DomainAgent:
         for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), (TOPOLOGY, dv.get(TOPOLOGY)[0]),
                             (MEMBER_LIST, dv.get(MEMBERS)[0]), *later):
             self._carry(path, items)
+        # The emergency hash under its own name (`break_glass_row`): on the holder that row IS the domain's, and the
+        # holder's own agent, which reads it as stored — sealed by the holder's ring — takes nothing: only this side
+        # seals what it carried (the product's `keepPeople`), and a sealed value came from no door.
+        from w2cplatform.sealing import is_sealed
+        glass = break_glass_row(self.cluster)
+        items, _ = dv.get(glass)
+        if not any(is_sealed(v) for v in (items or {}).values() if isinstance(v, str)):
+            self._carry(glass, items)
         # Edits the domain kept while this cluster was off (Lesson 9) — carried home even when there are
         # none left, because an edit the domain has cleared must stop being applied here. Then applied, by
         # this cluster's console and as the operator who made each one, and what happened written where the

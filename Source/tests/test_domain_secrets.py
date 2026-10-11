@@ -76,7 +76,7 @@ def test_a_member_gets_through_the_door_its_own_rows_only_and_every_secret_seale
     assert is_sealed_to(glass) and is_sealed_to(entry["token_secret"])
     for other in (keys["east"],):
         try:
-            other.open("pwhash_secret", glass, "domain/break-glass")
+            other.open("pwhash_secret", glass, "domain/break-glass/south")
             raise AssertionError("another member opened south's emergency hash")
         except NotMine:
             pass
@@ -110,7 +110,7 @@ def test_the_door_answers_only_the_admitted_key_within_its_clock_and_a_relay_onl
     got = CarryClient(door, "east", keys["east"], wall).carry_for("south")
     assert got["key"] == keys["south"].pub and f"{TALLIES}/south" in got["rows"]
     try:
-        keys["east"].open("pwhash_secret", got["rows"]["domain/break-glass/south"]["pwhash_secret"], "domain/break-glass")
+        keys["east"].open("pwhash_secret", got["rows"]["domain/break-glass/south"]["pwhash_secret"], "domain/break-glass/south")
         raise AssertionError("the relay opened its member's secret")
     except Exception:                                    # noqa: BLE001 — sealed to south, not to east
         pass
@@ -119,7 +119,7 @@ def test_the_door_answers_only_the_admitted_key_within_its_clock_and_a_relay_onl
 def test_an_agent_keeps_what_it_carried_sealed_with_its_own_ring_and_reads_nothing_of_the_holders_store():
     """South's agent, given the door and its key, never reads north's store — every row it writes at home holds its
     secrets sealed with SOUTH's ring, and opens to what the holder decided."""
-    from w2cplatform.domain.agent import BREAK_GLASS_PATH, DomainAgent
+    from w2cplatform.domain.agent import DomainAgent, break_glass_row
     from w2cplatform.domain.carry import CarryClient, HolderDoor, open_row
     fed, wall, signer, holder_ring, keys = holder_with_members()
     north, south = fed.clusters["north"], fed.clusters["south"]
@@ -136,9 +136,11 @@ def test_an_agent_keeps_what_it_carried_sealed_with_its_own_ring_and_reads_nothi
     assert not hasattr(agent.domain_vars, "get")            # its handle on the domain is the door, not a store
     watched = Watched(north.vars)
     assert agent.sync() and not reads
-    stored, _ = south.vars.get(BREAK_GLASS_PATH)
+    glass = break_glass_row("south")                    # the holder's name for it, on the member too (ADR-0003)
+    stored, _ = south.vars.get(glass)
     assert stored["pwhash_secret"].startswith("enc:v1:") and not sealed_everywhere(south.vars.get(TALLIES)[0])
-    assert open_row(south_ring, stored, BREAK_GLASS_PATH)["pwhash_secret"].count(":") == 1
+    assert open_row(south_ring, stored, glass)["pwhash_secret"].count(":") == 1
+    assert south.vars.get("domain/break-glass")[0] is None                       # and under no bare name beside it
     assert json.loads(open_row(south_ring, south.vars.get(TALLIES)[0], TALLIES)["s1"])["token_secret"].count(".") == 2
     del watched
     idx = south.vars.get(TALLIES)[1]
@@ -269,9 +271,9 @@ def test_the_agents_rights_deny_what_only_the_holder_writes_and_its_reads_never_
     agent = r["domainagent"]
     rights = Rights({"domainagent": agent})
     mine = ["domain/keys", "domain/grants", "domain/pending", "domain/backup-taken", TALLIES, "domain/member-key",
-            "domain/break-glass", "domain/holder"]
+            "domain/break-glass/south", "domain/holder"]
     holders = ["domain/signer", "domain/members", "domain/grants/south", "domain/pending/south", f"{TALLIES}/south",
-               "domain/testsub/ledger", "domain/break-glass/south", "domain/backup/south"]
+               "domain/testsub/ledger", "domain/backup/south"]
     box = FileVariables(tempfile.mkdtemp(prefix="acl-"), "domainagent", {"domainagent": agent["write"]}, volatile=True)
     for key in mine:
         assert rights.allows("domainagent", "write", key), key
@@ -372,12 +374,12 @@ def test_a_cluster_the_door_refuses_knocks_by_the_key_it_signs_with_and_is_admit
 
 
 def test_a_cluster_behind_a_relay_knocks_through_it_and_only_the_holder_remembers_the_knock():
-    """The scenario «камера — офис — центр», N1 (ADR-0066's addition of 2026-10-11, «Архитектор»): the knock is remembered
-    by the holder's door alone, and a camera behind an office reaches no door but the office's — which answered 404
-    «relays no member», passed nothing on, and no camera behind an office was ever in `knocking`. The relay passes the ask
+    """The three-site scenario, N1 (ADR-0066's addition of 2026-10-11, «Архитектор»): the knock is remembered
+    by the holder's door alone, and a box behind an office reaches no door but the office's — which answered 404
+    «relays no member», passed nothing on, and no box behind an office was ever in `knocking`. The relay passes the ask
     of a cluster it does not relay on to the holder by its own road there, as it came — the cluster's signature, the key
     it names — keeps nothing of it, and answers with the holder's words; the holder remembers the knock, a person admits
-    the camera by its fingerprint, and once the topology puts it behind the relay it is answered through it. Over HTTP,
+    the box by its fingerprint, and once the topology puts it behind the relay it is answered through it. Over HTTP,
     both doors; a knock signed by another key than it names is passed on and not remembered; a domain the relay cannot
     reach is the relay's 503, said."""
     from w2cplatform.console import open_doors
@@ -404,43 +406,43 @@ def test_a_cluster_behind_a_relay_knocks_through_it_and_only_the_holder_remember
     relay_srv = open_doors("127.0.0.1", 0, door_handler(RelayDoor(relay)), unix_env="RK_NO_SUCH_SOCKET", say=False)
     relay_url = f"http://127.0.0.1:{relay_srv.server_address[1]}"
     members = Members(north.vars, wall, domain="north")
-    cam, liar = MemberKey.new(), MemberKey.new()
+    box, liar = MemberKey.new(), MemberKey.new()
     try:
         assert relay.sync() and set(relay.relayed) == {"south"}
-        try:                                             # names cam's key and is signed by another: passed on, not remembered
-            Relay(relay).door.carry("cam-x", wall(), cam.seal_pub, liar.sign(request_message("cam-x", wall(), cam.seal_pub)),
-                                    key=cam.pub)
+        try:                                             # names box's key and is signed by another: passed on, not remembered
+            Relay(relay).door.carry("box-x", wall(), box.seal_pub, liar.sign(request_message("box-x", wall(), box.seal_pub)),
+                                    key=box.pub)
             raise AssertionError("the relay answered a stranger")
         except Refused as e:
             assert e.status == 403 and "no member with a key" in e.detail, e.detail          # the holder's words
         assert north.objects.list(KNOCKS + "/") == []
-        try:                                             # the camera's own agent, behind the office: RELAY_URL
-            CarryClient(relay_url, "cam-x", cam, wall).carry()
+        try:                                             # the box's own agent, behind the office: RELAY_URL
+            CarryClient(relay_url, "box-x", box, wall).carry()
             raise AssertionError("the relay answered a stranger over HTTP")
         except Refused as e:
             assert e.status == 403 and "no member with a key" in e.detail, (e.status, e.detail)
         knocking = members.knocking(north.objects)
-        assert [k["name"] for k in knocking] == ["cam-x"] and knocking[0]["fingerprint"] == fingerprint(cam.pub)
-        assert "cam-x" not in relay.relayed and "cam-x" not in relay.__dict__.get("relay_refused", {})
-        assert not [k for k in east.objects.list("") if "cam-x" in k] and not [p for p in east.vars.list("") if "cam-x" in p]
-        assert members.accept("cam-x", "anna", north.objects, fingerprint=fingerprint(cam.pub))
-        Topology(north.vars).edit(lambda d: d["via"].update({"cam-x": "east"}), Topology(north.vars).read()["rev"],
-                                  known={"north", "south", "east", "cam-x"})
-        assert relay.sync() and set(relay.relayed) == {"south", "cam-x"}
-        got = CarryClient(relay_url, "cam-x", cam, wall).carry()
-        assert got["cluster"] == "cam-x" and "domain/keys" in got["rows"]                  # admitted: answered through east
+        assert [k["name"] for k in knocking] == ["box-x"] and knocking[0]["fingerprint"] == fingerprint(box.pub)
+        assert "box-x" not in relay.relayed and "box-x" not in relay.__dict__.get("relay_refused", {})
+        assert not [k for k in east.objects.list("") if "box-x" in k] and not [p for p in east.vars.list("") if "box-x" in p]
+        assert members.accept("box-x", "anna", north.objects, fingerprint=fingerprint(box.pub))
+        Topology(north.vars).edit(lambda d: d["via"].update({"box-x": "east"}), Topology(north.vars).read()["rev"],
+                                  known={"north", "south", "east", "box-x"})
+        assert relay.sync() and set(relay.relayed) == {"south", "box-x"}
+        got = CarryClient(relay_url, "box-x", box, wall).carry()
+        assert got["cluster"] == "box-x" and "domain/keys" in got["rows"]                  # admitted: answered through east
         wall.advance(30)
         relay.domain_vars = CarryClient("http://127.0.0.1:9", "east", keys["east"], wall, timeout=1)   # the centre away
         stranger = MemberKey.new()
         try:
-            CarryClient(relay_url, "cam-y", stranger, wall).carry()
+            CarryClient(relay_url, "box-y", stranger, wall).carry()
             raise AssertionError("the relay answered with the domain away")
         except Refused as e:
             assert e.status == 503 and "could not pass" in e.detail, (e.status, e.detail)
     finally:
         relay_srv.shutdown()
         holder_srv.shutdown()
-    assert [k["name"] for k in members.knocking(north.objects)] == []                     # cam-y's knock reached nobody
+    assert [k["name"] for k in members.knocking(north.objects)] == []                     # box-y's knock reached nobody
 
 
 def test_the_door_carries_for_a_member_on_the_list_alone_and_the_relay_says_so_to_one_that_left():

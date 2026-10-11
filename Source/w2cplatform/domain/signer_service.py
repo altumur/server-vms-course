@@ -697,17 +697,17 @@ class Holder:
         return 200, {"user": name}
 
     def _break_glass(self, method: str, cluster: str, who: str, body: dict) -> tuple[int, dict]:
-        from .agent import BREAK_GLASS_PATH
+        from .agent import BREAK_GLASS_PREFIX
         from .breakglass import set_password
         from .grants import name_refused
         if method == "GET" and not cluster:
             out = {}
-            for path in self.vars.list(BREAK_GLASS_PATH + "/"):
+            for path in self.vars.list(BREAK_GLASS_PREFIX):
                 items, _ = self.vars.get(path)
                 try:
-                    out[path[len(BREAK_GLASS_PATH) + 1:]] = {"set_at": float((items or {}).get("set_at"))}
+                    out[path[len(BREAK_GLASS_PREFIX):]] = {"set_at": float((items or {}).get("set_at"))}
                 except PARSE_ERRORS:
-                    out[path[len(BREAK_GLASS_PATH) + 1:]] = {"set_at": None}
+                    out[path[len(BREAK_GLASS_PREFIX):]] = {"set_at": None}
             return 200, {"clusters": out}
         if method != "PUT" or not cluster:
             return 405, {"detail": "PUT /domain/break-glass/<cluster> {password}"}

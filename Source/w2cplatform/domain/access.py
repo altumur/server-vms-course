@@ -42,19 +42,25 @@ class ClusterAccess:
         except TokenError as e:
             raise Denied(401, f"token refused: {e}") from None
 
-    # The emergency entry, checked HERE: the hash the agent carried (`domain/break-glass`), scrypt, and a
+    # The emergency entry, checked HERE: the hash the agent carried (`domain/break-glass/<cluster>`, this cluster's name
+    # as its member mark says it — `domain/member`, written by the same agent), scrypt, and a
     # payload the gate keeps in memory for fifteen minutes. The domain is not asked — it is away, which is why
     # somebody is breaking the glass. The gate alarms on every attempt; the domain rotates the password when it
     # sees them.
     def glass(self, who: str, why: str, password: str) -> dict:
-        from .agent import BREAK_GLASS_PATH
+        from .agent import MEMBER_PATH, break_glass_row
         from .carry import open_row
         from .identity import TOKEN_LIFETIME, _check
-        items, _ = self.trust.vars.get(BREAK_GLASS_PATH)
+        mark, _ = self.trust.vars.get(MEMBER_PATH)
+        name = (mark or {}).get("cluster")
+        if not name:
+            raise Denied(403, f"this cluster has no emergency account: its store names no member ({MEMBER_PATH})")
+        row = break_glass_row(name)
+        items, _ = self.trust.vars.get(row)
         if not items or not items.get("pwhash_secret"):
             raise Denied(403, "this cluster has no emergency account")
         try:
-            pwhash = open_row(self.sealer, items, BREAK_GLASS_PATH)["pwhash_secret"]
+            pwhash = open_row(self.sealer, items, row)["pwhash_secret"]
         except Exception as e:                               # noqa: BLE001 — sealed, and no key here: nobody gets in by it
             raise Denied(503, f"the emergency hash is sealed and this console cannot open it ({e})") from None
         if not _check(password, pwhash):

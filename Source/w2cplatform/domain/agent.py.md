@@ -5,7 +5,7 @@
 ## Module-level names
 - `KEYS_PATH`, `REVOKED_PATH`, `GRANTS_PATH` — `domain/keys`, `domain/revoked`, `domain/grants` (per cluster in the holder: `domain/grants/<cluster>`).
 - `ROOT_PATH = "domain/root"` — the domain root's public key, pinned once in a member (Lesson 15).
-- `LDEVID_PATH = "domain/ldevid"`, `BREAK_GLASS_PATH = "domain/break-glass"` — per-cluster rows of the platform's own.
+- `LDEVID_PATH = "domain/ldevid"`, `PLATFORM_PER_CLUSTER` — the per-cluster rows of the platform's own, carried home to the bare path; `BREAK_GLASS_PREFIX = "domain/break-glass/"`, `break_glass_row(cluster)` — the emergency hash, under the same name at the holder and on the member (ADR-0003, the product's name).
 - `MEMBER_PATH = "domain/member"` — written on every pass that leaves a key set: "this cluster IS a member", so a console tells "keys lost" from "never joined".
 - `DOMAIN_SEEN = "domain/seen"` — in the member's own object store: when it last reached the domain (through a relay: when the relay did). Through a relay over the network too: an answer that carries the relay's age mark (`seen`) is measured by it (the three-site run, O10). A subsystem's process judges the age of its carried books by it.
 - `PLATFORM_PER_CLUSTER`, `per_cluster()` — the per-cluster rows carried home: the platform's, then every spec's books (`declared.books()`), read from the catalogue at each pass.

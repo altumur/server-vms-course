@@ -77,7 +77,7 @@ def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_whe
     from w2cplatform.domain.agent import MEMBER_PATH
     from vms.console import make_console
     from vms.controller import VmsController
-    from w2cplatform.access import DOMAIN_MARKS
+    from w2cplatform.access import DOMAIN_MARKS, has_mark
     clk = Clock(1000.0)
     fed, links, dc, signer = _domain(clk)
     south = fed.clusters["south"]
@@ -85,7 +85,7 @@ def test_a_member_always_carries_a_mark_that_it_is_one_and_its_console_shuts_whe
     agent = DomainAgent("south", dc.vars, south.vars, now=clk)
     assert agent.sync()
     assert MEMBER_PATH in DOMAIN_MARKS and south.vars.get(MEMBER_PATH)[0] == {"cluster": "south"}
-    assert [p for p in DOMAIN_MARKS if south.vars.get(p)[0]] == [MEMBER_PATH]     # the only mark there is
+    assert [p for p in DOMAIN_MARKS if has_mark(south.vars, p)] == [MEMBER_PATH]     # the only mark there is
     idx = south.vars.get(MEMBER_PATH)[1]
     agent.sync()
     assert south.vars.get(MEMBER_PATH)[1] == idx                                   # not rewritten every pass

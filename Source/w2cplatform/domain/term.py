@@ -455,7 +455,7 @@ class DomainHolder:
         doc = self.record or sign({"term": self.term, "holder": self.name, "at": self.wall(),
                                    **({"from": self.restored_from} if self.restored_from else {}),
                                    **({"url": self.url} if self.url else {})}, self.signer.tokens)
-        # The record the store already holds is not written again (the scenario «камера — офис — центр», N2): the root's
+        # The record the store already holds is not written again (the three-site scenario, N2): the root's
         # record of term 1 was written by `found` and then once more, the same document, by every start of the signer
         # (`term_of` → `start` → here) — a write that changed nothing, on every start.
         have, idx = self.vars.get(HOLDER)
@@ -816,7 +816,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     for name, c in fed.clusters.items():
         c.is_domain_holder = name == new
     restored_from = {"term": int(best[1]["term"]), "rev": int(best[1]["rev"])} if best else None
-    # THE RECORD OF THE NEW TERM NAMES ITS DOOR (the scenario «камера — офис — центр», N4; ADR-0066's addition of
+    # THE RECORD OF THE NEW TERM NAMES ITS DOOR (the three-site scenario, N4; ADR-0066's addition of
     # 2026-10-11). The root signs the record here, with the recovery file in hand, and nobody can sign it again later:
     # it carried no `url` — the signer's own claim adds one only to a record it signs itself (`Holder._took`) — so the
     # agents took term 2 by `/api/held` and went on carrying through the dead holder's door («the record names no

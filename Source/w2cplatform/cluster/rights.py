@@ -61,7 +61,7 @@ def _rows(objects: list[str]) -> list[str]:
 def _gate() -> list[str]:
     """What the console's gate reads on every request in a cluster that may be a domain's member (М10A Lesson 15): the
     key set and every row that marks a member (`access.TRUST_KEYS`, `DOMAIN_MARKS`), the grants by cluster too."""
-    return [TRUST_KEYS, *DOMAIN_MARKS, "domain/grants/*"]
+    return [TRUST_KEYS, *[m + "*" if m.endswith("/") else m for m in DOMAIN_MARKS], "domain/grants/*"]
 
 
 # THE DOORS OF A MOVE ON THE CONSOLE (ADR-0066, ADR-0032): `GET /api/held` — the holder's record this cluster holds, the

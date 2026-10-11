@@ -171,9 +171,12 @@ def test_a_cluster_that_is_in_a_domain_stays_shut_without_its_keys_after_a_resta
     back, the console restarted, and every request passed as `admin`. What says "a member" is in the store: the root
     the agent pinned, or any other row only the agent writes (`DOMAIN_MARKS`). With one of them and no key set a
     console that has never seen the keys is shut too. And `domain/*` is deleted by nobody but the agent."""
-    from w2cplatform.access import DOMAIN_MARKS
+    from w2cplatform.access import DOMAIN_MARKS, has_mark
     from w2cplatform.variables import Forbidden
     box = Box()
+
+    def row(mark):                                       # a family's mark (`domain/break-glass/`) is a row under it
+        return mark + "south" if mark.endswith("/") else mark
     box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})
     box.vars.put("domain/root", {"pub": "ab" * 32})
     box.vars.put("domain/grants", {"anna": "admin"})
@@ -185,19 +188,19 @@ def test_a_cluster_that_is_in_a_domain_stays_shut_without_its_keys_after_a_resta
             pass
     os.remove(box.vars._file(TRUST_KEYS))                              # rolled back from a backup, past the store
     for mark in DOMAIN_MARKS:                                          # …a console started afterwards, by each mark alone
-        others = [p for p in DOMAIN_MARKS if p != mark and box.vars.get(p)[0]]
+        others = [p for p in DOMAIN_MARKS if p != mark and has_mark(box.vars, p)]
         for p in others:
-            os.remove(box.vars._file(p))
-        if not box.vars.get(mark)[0]:
-            box.vars.put(mark, {"x": "1"})
+            os.remove(box.vars._file(row(p)))
+        if not has_mark(box.vars, mark):
+            box.vars.put(row(mark), {"x": "1"})
         ctl, rec, m, srv, base = _console(box)
         try:
             code, body = _call(base, "GET", "/cameras", user="admin")
             assert code == 503 and mark in body["detail"], (mark, code, body)
         finally:
             srv.shutdown()
-    box.vars.as_writer("domainagent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
-    assert not any(box.vars.get(p)[0] for p in DOMAIN_MARKS)
+    box.vars.as_writer("domainagent", ["domain/*"]).delete(row(DOMAIN_MARKS[-1]))  # the agent may; then nothing says "a member"
+    assert not any(has_mark(box.vars, p) for p in DOMAIN_MARKS)
     ctl, rec, m, srv, base = _console(box)
     try:
         assert _call(base, "GET", "/cameras")[0] == 200                   # a cluster nobody joined: open, as it was

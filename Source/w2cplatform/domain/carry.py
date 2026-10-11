@@ -55,8 +55,9 @@ def public_rows() -> list[str]:
 def own_rows(cluster: str) -> list[str]:
     from .agent import GRANTS_PATH, per_cluster
     from .pending import PENDING_PATH
+    from .agent import break_glass_row
     from .term import BACKUP
-    return [f"{GRANTS_PATH}/{cluster}", f"{PENDING_PATH}/{cluster}", f"{BACKUP}/{cluster}",
+    return [f"{GRANTS_PATH}/{cluster}", f"{PENDING_PATH}/{cluster}", f"{BACKUP}/{cluster}", break_glass_row(cluster),
             *[f"{p}/{cluster}" for p in per_cluster()]]
 
 
@@ -119,7 +120,11 @@ def open_row(sealer, items: dict, ctx: str) -> dict:
 
 
 def _member_ctx(path: str, cluster: str) -> str:
-    """Where a row of the holder lies in the member's store: `<path>/<cluster>` → `<path>`."""
+    """Where a row of the holder lies in the member's store: `<path>/<cluster>` → `<path>` — but the emergency hash,
+    which keeps its name there (`agent.break_glass_row`)."""
+    from .agent import BREAK_GLASS_PREFIX
+    if path.startswith(BREAK_GLASS_PREFIX):
+        return path
     return path[: -len(cluster) - 1] if path.endswith(f"/{cluster}") else path
 
 

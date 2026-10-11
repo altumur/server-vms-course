@@ -45,10 +45,17 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 # replaced), the grants, the revocation list, the emergency account's hash. Any of them and no key set is a cluster
 # that lost its keys — deleted, or the row rolled back from a backup — not one that never had any: shut, and it stays
 # shut across a restart of the console, which a flag in one process's memory did not. A subsystem's book on the
-# domain is not one of them: a subsystem's worker writes it in a cluster of its own.
-DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break-glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
+# domain is not one of them: a subsystem's worker writes it in a cluster of its own. A mark that ends in `/` is a family:
+# any row under it marks (the emergency hash keeps the member's name, `domain/break-glass/<cluster>` — the product's
+# `DomainEvidence` names that family the same way).
+DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break-glass/")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
 MEMBER_MARK = DOMAIN_MARKS[0]         # the one a door that verifies no token reads (`Gate.gated`; the review's ninth pass)
 RANK = {"view": 0, "edit": 1, "admin": 2}
+
+
+def has_mark(vars_, mark: str) -> bool:
+    """Whether `mark` (one of `DOMAIN_MARKS`) is in the store: the row, or — a family — any row under it."""
+    return bool(vars_.list(mark)) if mark.endswith("/") else bool(vars_.get(mark)[0])
 MODULE_ROUTES = ("/platform/console.js", "/platform/console.css")       # the console module every page is built from
 # the page and its module, what monitoring reads, and the door in
 OPEN_ROUTES = ("/", "/index.html", *MODULE_ROUTES, "/metrics", "/healthz", "/session", "/session/break-glass")
@@ -247,7 +254,7 @@ class Gate:
     # `Denied(503)` when the store does not answer: "I cannot tell" is not "open".
     #
     # …BY THE KEY SET AND THE MEMBERSHIP ROW ALONE (the review's ninth pass, minor): it read every mark the console reads,
-    # and so the holder's policy let it read `domain/break-glass` — the emergency password's hash — and the grants, of
+    # and so the holder's policy let it read `domain/break-glass/*` — the emergency password's hashes — and the grants, of
     # which it needs nothing but that they exist. `domain/member` is written by the domain's agent on every pass that
     # leaves keys, and a cluster that lost its keys still has it; the other marks are the console's, which verifies
     # tokens and reads them anyway.
@@ -268,7 +275,7 @@ class Gate:
             return self.impl
         try:
             items, _ = self.vars.get(TRUST_KEYS)
-            marked = None if items else next((p for p in DOMAIN_MARKS if self.vars.get(p)[0]), None)
+            marked = None if items else next((p for p in DOMAIN_MARKS if has_mark(self.vars, p)), None)
         except OSError as e:
             raise Denied(503, f"this console cannot read the cluster's trust ({e}): it admits nobody until it can") from None
         if not items and (self._seen_keys or marked):

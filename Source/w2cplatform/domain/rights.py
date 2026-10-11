@@ -11,7 +11,8 @@
                   rows the holder keeps for the others, a subsystem's books for the others and its kept rows — DENIED by
                   name, so a grant on `domain/*` cannot reach them (the product's r23-domain note: careful with what the
                   agent writes on a member — its own copies of `domain/keys`, `root`, `grants`, `pending`, `backup-taken`, the
-                  books carried home, its `member-key`; deny only what it writes nowhere). It reads `*` less every secret
+                  books carried home, its emergency hash under its own name (`break-glass/<cluster>`, as the holder names
+                  it), its `member-key`; deny only what it writes nowhere). It reads `*` less every secret
                   row it is not a reader of (`secret_reads`) — the signer's row among them
     <sub>domain   a subsystem's worker on the domain, on the holder (`domain.books` of its spec): its own prefix
                   `domain/<sub>/*`; reads what its books are made of — the key set, the topology, the members, the
@@ -45,7 +46,7 @@ def tokens_group(sub: str, deployment: str) -> str:
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
     out = [SIGNER_KEYS, "!domain/users/*", "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
-           "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break-glass/*", "!domain/ldevid/*"]
+           "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
         # what a subsystem keeps for the domain: a row, or every row of a family (`kept: [x/]`)
@@ -60,32 +61,25 @@ def agent_denials(specs=None) -> list[str]:
 # `secrets.PLATFORM_SECRET_READERS` (`tests/testdata/platform_lists.tsv`, the product's bytes), a spec's from its
 # `secrets.readers` and `secrets.reads` (`secrets.secret_readers`). For each such row a role is either among its readers —
 # and is given it, `<row>*`, where its other grants do not reach it — or is not, and is denied it, `!<row>*`: a prefix's
-# rows, and a row's own family of books (`stream-accounts` and `stream-accounts/<cluster>`) with it. A row the domain
-# writes per cluster and its agent carries home to the bare path (`agent.PLATFORM_PER_CLUSTER`: `domain/break-glass/<c>`
-# → `domain/break-glass` on the member) is the same secret: its bare path goes with the prefix, granted and denied alike.
+# rows, and a row's own family of books (`stream-accounts` and `stream-accounts/<cluster>`) with it. The emergency hash
+# keeps its name on the member (`domain/break-glass/<cluster>`, ADR-0003): no bare path goes with its prefix any more.
 # No hand list of secret rows stands in any role: a role's reads are what it needs, and this decides the secrets in them.
 def secret_reads(role: str, readers: dict[str, set], read: list[str]) -> list[str]:
     """The patterns `role` gets for the secret rows `readers` names (`secrets.secret_readers`), beside its `read`: a
     grant where it is a reader and `read` does not reach the row, a denial where it is not and a grant of `read` reaches
     any row under it (a denial nothing reaches would deny nothing: the course's roles read by grants, not `*`)."""
     from w2cplatform.rights import allowed
-    from .agent import PLATFORM_PER_CLUSTER
 
-    def reaches(prefix: str, exact: bool = False) -> bool:
+    def reaches(prefix: str) -> bool:
         grants = [p for p in read if not p.startswith("!")]
-        if exact:
-            return allowed(read, prefix)
         return any(p[:-1].startswith(prefix) or prefix.startswith(p[:-1]) if p.endswith("*") else p.startswith(prefix)
                    for p in grants)
     out = []
     for row, names in sorted(readers.items()):
-        carried = [row[:-1]] if row.endswith("/") and row[:-1] in PLATFORM_PER_CLUSTER else []
         if role in names:
             out += [] if allowed(read, row + "_" if row.endswith("/") else row) else [f"{row}*"]
-            out += [c for c in carried if not allowed(read, c)]
         else:
             out += [f"!{row}*"] if reaches(row) else []
-            out += [f"!{c}" for c in carried if reaches(c, exact=True)]
     return out
 
 
