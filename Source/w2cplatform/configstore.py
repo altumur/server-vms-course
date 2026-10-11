@@ -172,8 +172,10 @@ and one on a STOPPED daemon's directory, when the group's majority is gone for g
 # member; and refused whole, before the first write, when the file holds a row that does not read or a row heavier
 # than the store takes (`storemachine.MAX_VALUE`).
 # `backup` writes every row and the highest version it saw; `restore` is the same import from that file, into a
-# fresh group whose base is above that version, the floor under every epoch raised a generation first (ADR-0070; the
-# external review of 2026-10-11: the old group issued epochs after the backup, and the restored one issued them again).
+# fresh group whose base is above that version, the floor under every epoch raised a generation before the first row
+# (ADR-0070; the external review of 2026-10-11: the old group issued epochs after the backup, and the restored one issued
+# them again) — by the machine's `floor` command, `{"op": "floor", "floor": N}` on `/v1/write`, which only raises and
+# which only `admin.sock` may send (the product's `OpFloor`).
 # A TEACHING SIMPLIFICATION (the same review): `backup` reads the rows one `list` and one `get` at a time, through the
 # log — not one moment's picture while processes write; the product's is a snapshot of the state machine under its lock.
 # AN IMPORT THAT STOPPED IS CONTINUED (the review's twelfth pass, minor: it could not be). The same `import` or
@@ -1337,7 +1339,7 @@ def recover(node_id: str, data: str, peers: dict[str, str]) -> dict:
 
 
 # -- loading rows into a fresh group: import, restore ----------------------------------------------------
-def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str) -> dict:
+def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floor: int = 0) -> dict:
     """Write `rows` into the group behind `dst` (an admin handle), each created with `cas=0`, values untouched.
     Refused whole, before the first write, when a row is heavier than the store takes, when the group's base is below
     `highest`, or when the group holds a row this load did not write — a row that is one of `rows`, the same, is one
@@ -1351,12 +1353,20 @@ def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str) -> d
     if base < highest:
         raise ValueError(f"the group's base is {base} and {what} handed out versions up to {highest}: start the group "
                          f"with -index-base {highest} or more, or a version remembered from {what} could match a new row")
+    from .epoch import EPOCH_FLOOR_KEY
     want = dict(rows)
     held = set(dst.list(""))
-    alien = sorted(k for k in held if k not in want or dst.get(k)[0] != want[k])
+    # …the floor a restore that stopped had raised is its own, not a row it did not write (raised again below)
+    alien = sorted(k for k in held if not (floor and k == EPOCH_FLOOR_KEY) and (k not in want or dst.get(k)[0] != want[k]))
     if alien:
         raise ValueError(f"the group holds rows this load did not write ({', '.join(alien[:5])}"
                          f"{', …' if len(alien) > 5 else ''}): rows are loaded into a fresh group only")
+    if floor:
+        # the floor under every epoch raised, once the rows are found fit and before the first of them (ADR-0070)
+        try:
+            dst._call("POST", "/v1/write", {"op": "floor", "floor": floor})
+        except OSError as e:
+            raise ValueError(f"the floor under every epoch was not raised, and nothing was written: {e}") from None
     for key, items in rows:
         if key not in held:
             dst.put(key, items, cas=0)
@@ -1416,17 +1426,18 @@ def raised_floor(rows) -> int:
 
 def restore_rows(backup: dict, dst) -> dict:
     """A backup into a fresh group (`configstore restore`), its base above the backup's highest version — and THE FLOOR
-    UNDER EVERY EPOCH RAISED A GENERATION, written first (the external review of 2026-10-11, checked by «Архитектор»;
-    ADR-0070): the group the backup was taken of went on issuing epochs after it, and a restore that went on counting
-    from the backup's rows issued an epoch issued before — two writers of one unit. The same rule as `recover`'s
-    (`raised_floor`), the floor row of the backup itself not loaded as it was."""
-    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
+    UNDER EVERY EPOCH RAISED A GENERATION before the first row (the external review of 2026-10-11, checked by
+    «Архитектор»; ADR-0070; the product's `RestoreBackup`, ceb1362): the group the backup was taken of went on issuing
+    epochs after it, and a restore that went on counting from the backup's rows issued an epoch issued before — two
+    writers of one unit. The same rule as `recover`'s (`raised_floor`), over the backup's epochs and its floor; the
+    floor's row of the backup (one taken after a recover holds it) is no row to put — it is folded into that number and
+    raised by the machine's `floor` command, the operator's alone."""
+    from .epoch import EPOCH_FLOOR_KEY
     if not isinstance(backup, dict) or backup.get("configstore_backup") != 1:
         raise ValueError("not a configstore backup")
     rows = [(k, dict(r["items"])) for k, r in sorted(backup["rows"].items()) if k != EPOCH_FLOOR_KEY]
     floor = raised_floor([(k, dict(r["items"])) for k, r in backup["rows"].items()])
-    out = _load_fresh([(EPOCH_FLOOR_KEY, {EPOCH_FLOOR_FIELD: str(floor)})] + rows, int(backup["highest"]), dst,
-                      "the backup")
+    out = _load_fresh(rows, int(backup["highest"]), dst, "the backup", floor)
     return {**out, "epoch_floor": floor}
 
 

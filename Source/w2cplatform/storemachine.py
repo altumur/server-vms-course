@@ -101,7 +101,7 @@ import re
 import urllib.parse
 
 from .canonical import parse_json
-from .epoch import EPOCH_FLOOR_KEY
+from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
 from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
 from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
@@ -209,6 +209,14 @@ class StoreMachine:
                 return {"refused": f"the group holds rows: its base stays {self.base}", "base": self.base}
             self.base = int(cmd.get("base", 0))
             return {"base": self.base}
+        if op == "floor":
+            # the floor under every epoch, raised and never lowered (`answer`: the operator's alone; ADR-0070)
+            have = self.rows.get(EPOCH_FLOOR_KEY, ({}, 0))[0].get(EPOCH_FLOOR_FIELD, "0")
+            floor = int(cmd.get("floor", 0) or 0)
+            if floor > (int(have) if have.isascii() and have.isdigit() else 0):
+                self.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor)}, self.version(index))
+            self.wrote = True
+            return {"index": self.version(index)}
         if op == "member":
             self.members[str(cmd["id"])] = {"raft": str(cmd.get("raft", "")), "api": str(cmd.get("api", ""))}
             return {"members": self.members_copy()}
@@ -348,6 +356,16 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                 body = parse_json(raw or b"{}")
             except (ValueError, RecursionError) as e:
                 return fault(400, "badrequest", "the body is not JSON", fault=getattr(e, "fault", "") or "not_json")
+            if isinstance(body, dict) and body.get("op") == "floor":
+                # THE FLOOR UNDER EVERY EPOCH, RAISED (ADR-0070; the external review of 2026-10-11; the product's
+                # `OpFloor`): the operator's alone — root's `admin.sock`, a restore before its first row — never a
+                # role's; raised, never lowered. No `put` or `delete` of the row goes through any door (`Rights.allows`).
+                floor = body.get("floor")
+                if role != ADMIN or isinstance(floor, bool) or not isinstance(floor, int) or not 0 < floor < CAS_MAX:
+                    return fault(403, "forbidden", "the floor under every epoch is raised by the operator alone "
+                                                   "(admin.sock: a restore), to a number above 0")
+                got = submit({"op": "floor", "floor": floor})
+                return 200, {"index": got["index"]}
             if not isinstance(body, dict) or body.get("op") not in ("put", "delete"):
                 return fault(400, "badrequest", 'a write is {"op": "put"|"delete", "key", "items", "cas", "id"}')
             key = check_key(body.get("key", ""))
@@ -356,10 +374,7 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             except ValueError as e:
                 return fault(400, "badrequest", str(e))
             action = "write" if body["op"] == "put" else "delete"
-            # The floor under every epoch: `restore`'s first row in a fresh group, through root's socket and create-only;
-            # never changed or deleted through a door (ADR-0070 — `recover` writes it into the state, not through one).
-            floor_made = (role == ADMIN and key == EPOCH_FLOOR_KEY and body["op"] == "put" and body.get("cas") in (0, ""))
-            if not floor_made and not rights.allows(role, action, key):
+            if not rights.allows(role, action, key):
                 return fault(403, "forbidden", f"{role} may not {action} {key}")
             cmd = {"op": body["op"], "key": key, "cas": body.get("cas")}
             if body["op"] == "put":

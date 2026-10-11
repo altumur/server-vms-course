@@ -93,3 +93,30 @@ def test_the_console_hands_its_mounts_meanings_to_the_query():
     later = SpecConsole(SpecController(testsub2(), box.vars, box.objects, wall=box.wall))
     m.mount("testsub2", later)
     assert root.epoch_policy["testsub2"] == "fenced"     # a console mounted later is known to the ones before it
+
+
+def test_a_garbled_epoch_is_an_error_not_zero_and_fences_the_lease():
+    """The external review of 2026-10-11, its finding 3 (ADR-0070; the product's
+    `TestAGarbledEpochIsAnErrorNotZeroAndFencesTheLease`, 310c616): an epoch's row that is no epoch — `seven`, nothing, a
+    sign, the field gone — is an error, never 0: the issuer refuses on it, and a lease renewing under it is FENCED
+    (`fenced`, a conflict counted), not left silent — a writer whose spec lets it write for ever unconfirmed
+    (`unconfirmed_max: None`) does not write on under a row nobody can read."""
+    from w2cplatform.epoch import EpochUnreadable, Lease, current_epoch, next_epoch
+    from w2cplatform.memvariables import MemVariables
+    key = "testsub/epoch/7"
+    for garbled in ({"epoch": "seven"}, {"epoch": ""}, {"epoch": "-5"}, {"epoch": "٣"}, {"other": "1"}):
+        v = MemVariables()
+        epoch, _ = next_epoch(v, key)
+        now = [0.0]
+        lease = Lease(v, key, epoch, 30, 5, clock=lambda: now[0], unconfirmed_max=None)
+        v.put(key, garbled)
+        for read in (lambda: current_epoch(v, key), lambda: next_epoch(v, key)):
+            try:
+                read()
+                raise AssertionError(f"{garbled}: read as an epoch")
+            except EpochUnreadable:
+                pass
+        now[0] = 1
+        assert lease.renew() is False and lease.fenced and lease.conflicts == 1 and lease.silent_since is None, garbled
+        now[0] = 100
+        assert not lease.may_write() and not lease.may_act(), garbled

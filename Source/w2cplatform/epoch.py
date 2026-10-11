@@ -63,6 +63,22 @@ EPOCH_FLOOR_KEY = "platform/epoch_floor"
 EPOCH_FLOOR_FIELD = "floor"
 
 
+class EpochUnreadable(ValueError):
+    """An epoch's row that is no epoch — a word, nothing, a sign: an error, never 0 (the product's `ErrEpochUnreadable`)."""
+
+
+# The epoch an epoch's row says, or `EpochUnreadable` (the external review of 2026-10-11, its finding 3; ADR-0070): read as
+# 0, a garbled row handed out epochs already issued; read as silence, a lease under it wrote on for as long as its spec
+# allows. ASCII digits only — `-5` and `٣` are no epoch either.
+def _epoch_of(items: dict, key: str) -> int:
+    raw = items.get("epoch") if isinstance(items, dict) else None
+    if isinstance(raw, int) and not isinstance(raw, bool) and raw >= 0:
+        return raw                                   # a store that keeps what it was given (`memory://`)
+    if not (isinstance(raw, str) and raw.isascii() and raw.isdigit()):
+        raise EpochUnreadable(f"{key} says {raw!r}: an epoch is a whole number")
+    return int(raw)
+
+
 # The floor a recover raises `floor` to: the next generation, in the upper 32 bits.
 def next_epoch_floor(floor: int) -> int:
     return ((int(floor) >> 32) + 1) << 32
@@ -93,7 +109,7 @@ def next_epoch(vars_: Variables, key: str, retries: int = 200) -> tuple[int, int
     floor = epoch_floor(vars_)
     for attempt in range(retries):
         items, idx = vars_.get(key)
-        current = max(int(items["epoch"]) if items else 0, floor)
+        current = max(_epoch_of(items, key) if items else 0, floor)
         try:
             new_idx = vars_.put(key, {"epoch": current + 1}, cas=idx)
             return current + 1, new_idx
@@ -107,7 +123,7 @@ def next_epoch(vars_: Variables, key: str, retries: int = 200) -> tuple[int, int
 # console's `/events` route to compute the current epoch per unit for fencing in the index's reply.
 def current_epoch(vars_: Variables, key: str) -> int:
     items, _ = vars_.get(key)
-    return int(items["epoch"]) if items else 0
+    return _epoch_of(items, key) if items else 0
 
 
 # What a worker holds per unit once it has taken the epoch. It answers two questions from a monotonic clock, not

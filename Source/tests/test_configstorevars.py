@@ -1174,39 +1174,60 @@ def test_a_backup_restores_into_a_fresh_group_above_its_highest_version():
 
 
 def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
-    """The external review of 2026-10-11 (checked by «Архитектор»; ADR-0070): a backup holds epoch 3 of a unit, the group
-    goes on and issues 4 and 5, and is lost; `restore` into a fresh group counted on from the backup's 3 and issued 4
-    again — two writers of one unit. The restore raises the floor under every epoch a generation first, by `recover`'s
-    rule: the next epoch of that unit, and of one never seen, is 2^32+1. Restored twice — a restore that stopped and is
-    asked again — it is the same floor; a door still neither changes nor deletes it."""
+    """The external review of 2026-10-11 (checked by «Архитектор»; ADR-0070; the product's `restore_floor_test.go`): a
+    backup holds epoch 3 of a unit, the group goes on and issues 4, and is lost; `restore` into a fresh group counted on
+    from the backup's 3 and issued 4 again — two writers of one unit. The restore raises the floor under every epoch a
+    generation before its first row, by `recover`'s rule: the next epoch of that unit, and of one never seen, is 2^32+1.
+    Asked again — a restore that stopped — it goes on, the same floor. And a backup taken of a group that holds a floor
+    (after a recover) restores whole: the floor's row is no row to put, it is folded into the floor raised (2^33)."""
     from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, next_epoch
+
+    def backup_of(h_url: str) -> str:
+        out = io.StringIO()
+        with redirect_stdout(out):
+            configstore.main(["backup", "--socket", h_url])
+        path = os.path.join(tempfile.mkdtemp(), "rows.json")
+        with open(path, "w") as f:
+            f.write(out.getvalue())
+        return path
+
+    def restore(path: str, h_url: str) -> dict:
+        out = io.StringIO()
+        with redirect_stdout(out):
+            configstore.main(["restore", "--from", path, "--socket", h_url])
+        return json.loads(out.getvalue())
+
     with Daemon(LocalBackend("srv-a", 1000)) as a:
         h = open_vars(url(a.dir))
         assert [next_epoch(h, "testsub/epoch/7")[0] for _ in range(3)] == [1, 2, 3]
-        out = io.StringIO()
-        with redirect_stdout(out):
-            configstore.main(["backup", "--socket", url(a.dir)])
-        backup = json.loads(out.getvalue())
-        assert [next_epoch(h, "testsub/epoch/7")[0] for _ in range(2)] == [4, 5]          # after the backup
-    path = os.path.join(tempfile.mkdtemp(), "rows.json")
-    with open(path, "w") as f:
-        json.dump(backup, f)
-    with Daemon(LocalBackend("srv-b", backup["highest"])) as b:
+        path = backup_of(url(a.dir))
+        highest = json.load(open(path))["highest"]
+        assert next_epoch(h, "testsub/epoch/7")[0] == 4                                 # after the backup
+    with Daemon(LocalBackend("srv-b", highest)) as b:
         for _ in range(2):
-            out = io.StringIO()
-            with redirect_stdout(out):
-                configstore.main(["restore", "--from", path, "--socket", url(b.dir)])
-            assert json.loads(out.getvalue())["epoch_floor"] == 1 << 32
+            assert restore(path, url(b.dir))["epoch_floor"] == 1 << 32
         h = open_vars(url(b.dir))
         assert epoch_floor(h) == 1 << 32 and h.get("testsub/epoch/7")[0] == {"epoch": "3"}
         assert next_epoch(h, "testsub/epoch/7")[0] == (1 << 32) + 1                    # not 4
         assert next_epoch(h, "testsub/epoch/new")[0] == (1 << 32) + 1
+        # the floor: raised by the operator's `floor` alone, never lowered, never put or deleted through a door
         for body in ({"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}},
                      {"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}, "cas": h.get(EPOCH_FLOOR_KEY)[1]},
-                     {"op": "delete", "key": EPOCH_FLOOR_KEY}):
-            with pytest.raises((Forbidden, Conflict)):
+                     {"op": "delete", "key": EPOCH_FLOOR_KEY}, {"op": "floor", "floor": 0}, {"op": "floor", "floor": "9"}):
+            with pytest.raises(Forbidden):
                 h._call("POST", "/v1/write", body)
+        with pytest.raises(Forbidden):
+            open_vars(url(b.dir, "testsubworker"))._call("POST", "/v1/write", {"op": "floor", "floor": 1 << 40})
+        h._call("POST", "/v1/write", {"op": "floor", "floor": 5})                       # lower: taken, and nothing moves
         assert epoch_floor(h) == 1 << 32
+        again = backup_of(url(b.dir))                                                   # a backup holding the floor's row
+        highest = json.load(open(again))["highest"]
+    with Daemon(LocalBackend("srv-c", highest)) as c:
+        said = restore(again, url(c.dir))
+        assert said["epoch_floor"] == 2 << 32 and said["rows"] == len(json.load(open(again))["rows"]) - 1, said
+        h = open_vars(url(c.dir))
+        assert h.get("testsub/epoch/7")[0] == {"epoch": str((1 << 32) + 1)}
+        assert next_epoch(h, "testsub/epoch/7")[0] == (2 << 32) + 1
 
 
 def test_the_operator_commands_speak_to_the_admin_socket():
