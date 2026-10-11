@@ -127,7 +127,7 @@ def test_the_first_viewer_creates_the_stream_and_the_controller_places_it():
         assert _door(base, 1) == {"url": g.url, "token": None, "expires": None, "routes": ["whep"]}   # no door key in the store: open
         g.heartbeat_once()                                                               # what the page reads: the gateway's word, from its heartbeat
         st = _stream(base, 1)
-        assert st["worker"] == "g-1" and st["phase"] == "live" and st["sessions"] == 1
+        assert st["worker"] == "g-1" and st["phase"] == "running" and st["viewers"] == 1
     finally:
         srv.shutdown(); srv.server_close()
 

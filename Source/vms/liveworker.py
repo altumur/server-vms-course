@@ -79,7 +79,10 @@ class Upstream:
         self.codec: str = ""
 
     def to_status(self) -> dict:
-        st = {"id": self.cam, "phase": "live" if self.peers else "idle", "sessions": len(self.peers),
+        # `running` for every fan-out held, watched or not — the spec counts `phase == running`
+        # (`live_streams_live`), and whether anybody watches is `viewers`, the product's word (ADR-0019, its
+        # addition of 2026-10-11: `live`/`idle` and `sessions` were words nobody counted).
+        st = {"id": self.cam, "phase": "running", "viewers": len(self.peers),
               "server": self.server, "source": self.url, "epoch": self.epoch}
         if self.codec:
             st["codec"] = self.codec
