@@ -525,3 +525,65 @@ def test_a_member_behind_a_relay_over_the_network_judges_its_books_by_the_relays
     assert relay.sync() is False                                               # cut: its mark says 600 s
     assert member.sync()                                                          # the member still reaches the relay…
     assert json.loads(flash.get(DOMAIN_SEEN))["ts"] == reached                 # …and its books are 600 s old
+
+
+def test_a_report_comes_in_at_the_door_signed_in_the_products_agent_form_by_the_admitted_key_alone():
+    """ADR-0066's addition of 2026-10-11, night (the three-site scenario, N5): a member's report and a
+    relay's summary come in at the holder's door — `POST /api/member/<m>`, `POST /api/relay/<r>` — signed as the
+    product's `trust.SignAgentRequest` signs: `X-Agent-Signature: <ms>.<base64url, no padding>` over
+    `method\\npath\\n<ms>\\n<sha256 hex of the body>`, by the member key. The door keeps what is signed by the admitted key
+    within `SKEW`, and answers with the member's carry; another key, an hour off, a body changed after signing, another
+    path: 401. A name off the list is 404 — remembered as knocking when it signed with the key it presents."""
+    import base64
+    import hashlib
+    from w2cplatform.domain.carry import HolderDoor, Refused
+    from w2cplatform.domain.members import KNOCKS
+    from w2cplatform.domain.relay import BUNDLE
+    from w2cplatform.domain.uplink import REPORTED, base
+    from w2cplatform.trust.memberkey import MemberKey, agent_signing, sign_request
+    fed, wall, signer, holder_ring, keys = holder_with_members()
+    north = fed.clusters["north"]
+    door = HolderDoor(north.vars, north.objects, holder_ring, wall)
+    south = keys["south"]
+
+    def publication(key):
+        return json.dumps({"sent_at": wall(), "objects": {"testsub/heartbeats/w": {"ts": wall()}, "elsewhere/x": {}},
+                           "key": key.pub, "seal": key.seal_pub}).encode()
+    body = publication(south)
+    head = sign_request(south, "POST", "/api/member/south", body, wall())
+    ms, sig = head.split(".")
+    msg = b"POST\n/api/member/south\n" + ms.encode() + b"\n" + hashlib.sha256(body).hexdigest().encode()
+    assert ms == str(int(wall() * 1000)) and "=" not in sig and agent_signing("POST", "/api/member/south", int(ms), body) == msg
+    south.signing.public_key().verify(base64.urlsafe_b64decode(sig + "=" * (-len(sig) % 4)), msg)
+
+    got = door.member("south", body, head)
+    assert f"{TALLIES}/south" in got["rows"] and not [p for p in got["rows"] if p.endswith("/east")]   # its carry
+    assert json.loads(north.objects.get(base("south") + REPORTED))["key"] == south.pub
+    assert json.loads(north.objects.get(base("south") + "o/testsub/heartbeats/w")) == {"ts": wall()}
+    assert north.objects.get(base("south") + "o/elsewhere/x") is None                # what the domain does not read: dropped
+
+    stranger = MemberKey.new()
+    for name, b, h, status in (
+            ("south", body, sign_request(stranger, "POST", "/api/member/south", body, wall()), 401),
+            ("south", body, sign_request(south, "POST", "/api/member/south", body, wall() - 3600), 401),
+            ("south", body + b" ", head, 401),
+            ("south", body, sign_request(south, "POST", "/api/member/east", body, wall()), 401),
+            ("south", body, head.replace(".", ".+"), 401),
+            ("west", publication(stranger), sign_request(stranger, "POST", "/api/member/west", publication(stranger),
+                                                         wall()), 404)):
+        try:
+            door.member(name, b, h)
+            raise AssertionError(f"{name}: taken")
+        except Refused as e:
+            assert e.status == status, (name, e.status, e.detail)
+    assert json.loads(north.objects.get(f"{KNOCKS}/west"))["key"] == stranger.pub     # knocking, by the key it signed with
+
+    batch = json.dumps({"relayed": {"west": json.loads(body)}}).encode()
+    assert door.relay("south", batch, sign_request(south, "POST", "/api/relay/south", batch, wall())) == {"refused": {}}
+    bundle = json.loads(north.objects.get(base("south") + BUNDLE))
+    assert json.loads(bundle["west"][REPORTED])["key"] == south.pub and "o/testsub/heartbeats/w" in bundle["west"]
+    try:
+        door.relay("south", batch, sign_request(stranger, "POST", "/api/relay/south", batch, wall()))
+        raise AssertionError("a summary signed by another key was taken")
+    except Refused as e:
+        assert e.status == 401
