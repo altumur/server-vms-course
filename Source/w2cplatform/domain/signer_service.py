@@ -20,6 +20,8 @@ rules — whoever hands it on (the domain's console, which has no key, forwards 
     POST /revoke              {"token"}                    -> revokes that token's jti
     GET  /keys                the key set (what agents copy)
     GET  /api/carry/<c>       what member <c> carries home, to the member alone, its secrets sealed to its key (`carry.py`)
+    POST /api/member/<c>      member <c>'s report, signed `X-Agent-Signature` (`HolderDoor.member`); the answer: its carry
+    POST /api/relay/<r>       {relayed: {member: publication}} — relay <r>'s summary report (`HolderDoor.relay`)
     GET  /api/holder          the holder's claim about itself: {record, term, deposed[, deposed_by, stranded][,
                               frozen_for][, console]}; 404 for a domain that holds no term
     PUT  /api/shared          {base_rev, shared} — the shared settings, checked and signed (`Holder.shared`)
@@ -810,7 +812,30 @@ class Holder:
                     return self._send(200, got)
                 self._send(404, {"detail": "no such route"})
 
+            # A member's report and a relay's summary (`carry.HolderDoor.member`/`.relay`; ADR-0066's addition of
+            # 2026-10-11, night): read raw — the signature is over the bytes — under the product's bounds, not the
+            # login door's.
+            def _report(self, path: str) -> None:
+                from w2cplatform.console import read_body
+                from w2cplatform.trust.memberkey import AGENT_HEADER
+                from .carry import Refused
+                from .relay import MAX_RELAY_BATCH
+                from .uplink import MAX_PUBLICATION
+                relay = path.startswith("/api/relay/")
+                if not read_body(self, MAX_RELAY_BATCH if relay else MAX_PUBLICATION):
+                    return
+                raw = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+                name, sig = path.split("/", 3)[3], self.headers.get(AGENT_HEADER, "")
+                try:
+                    got = (holder.carry_door.relay if relay else holder.carry_door.member)(name, raw, sig)
+                except Refused as e:
+                    return self._send(e.status, {"detail": e.detail})
+                self._send(200, got)
+
             def do_POST(self):
+                path = self.path.split("?", 1)[0]
+                if path.startswith(("/api/member/", "/api/relay/")) and holder.carry_door is not None:
+                    return self._report(path)
                 body = self._body()
                 if body is None:
                     return
