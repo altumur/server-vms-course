@@ -1343,6 +1343,7 @@ def test_what_the_chain_lost_is_on_rec_metrics_per_camera():
     _in_book(rec, SERIAL); _in_book(rec, "SN7002", mode="pull")
     fwd, ing = rec.forwarder, rec.ingest
     fwd.dropped[SERIAL], fwd.up_expired[SERIAL], fwd.holes["SN7002"] = 3, 1, 2
+    fwd.errors[SERIAL] = 2                                               # two rounds its store failed (the blocker)
     q = ing.subscribe(SERIAL, "recorder:r-9", maxsize=2)
     frames = _frames(5, box.wall() - 1)
     ing.inject(SERIAL, frames); ing.inject(SERIAL, frames)              # three past a queue of two; five repeats
@@ -1362,10 +1363,11 @@ def test_what_the_chain_lost_is_on_rec_metrics_per_camera():
     lines = text.splitlines()
     for line in (f'rec_upstream_dropped_total{{camera="{SERIAL}"}} 3', 'rec_upstream_breaks_total{camera="SN7002"} 2',
                  f'rec_upstream_expired_total{{camera="{SERIAL}"}} 1',
+                 f'rec_forwarder_errors_total{{camera="{SERIAL}"}} 2',
                  f'rec_ingest_absurd_frames_total{{camera="{SERIAL}"}} 4',
                  f'rec_ingest_ahead_losses_total{{camera="{SERIAL}"}} {st["ahead_losses"]}',
                  f'rec_ingest_repeats_dropped_total{{camera="{SERIAL}"}} 5'):
         assert line in lines, (line, [x for x in lines if "upstream" in x or "ingest_" in x])
-    for name in ("upstream_dropped_total", "upstream_breaks_total", "upstream_expired_total",
+    for name in ("upstream_dropped_total", "upstream_breaks_total", "upstream_expired_total", "forwarder_errors_total",
                  "ingest_absurd_frames_total", "ingest_ahead_losses_total", "ingest_repeats_dropped_total"):
         assert f"# TYPE rec_{name} counter" in lines
