@@ -11,8 +11,8 @@ road to the domain both ways:
             MEMORY — never in its stores, which every member of the site reaches — and gives each member only its own,
             by the member's signature (`RelayDoor`); with the time the relay last reached the domain (`say_seen`).
             What a relay can open of its members' secrets: nothing
-    up      the member reports into the relay's store and the relay carries ONE object for all such members (`bundle`,
-            `member_copy(..., via=relay)`)
+    up      the member reports into the relay's store and the relay carries ONE object for all such members — sent to
+            the holder's door, `POST /api/relay/<relay>` (`take_bundle`), read by `member_copy(..., via=relay)`
 
 The price: a relay down makes its members silent too, and nothing can be done about it — there is no other road. What
 travels on the media road between the levels is a subsystem's, not this module's.
@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import json
 import logging
+
+from w2cplatform.rows import PARSE_ERRORS
 
 from .federation import Unreachable
 from .uplink import UPLINK, base
@@ -31,7 +33,10 @@ log = logging.getLogger("relay")
 # -- the summary report ------------------------------------------------------------------------------------
 # The relay carries its members' reports as ONE object in the domain holder. Members report to the RELAY's
 # object store (the relay is reachable from its sites — that is the whole premise of this layout); the
-# relay's agent folds what is there into `domain/members/<relay>/bundle`, only when it changed.
+# relay's agent sends what is there to the holder's door, each member's report as a publication (`uplink.publication`'s
+# words): `POST /api/relay/<relay>` with `{relayed: {member: publication}}` — the product's door and words (ADR-0066's
+# addition of 2026-10-11, night), the same door its relaying down asks, so the summary follows the holder as the rows
+# do. The door folds them into `domain/members/<relay>/bundle` (`take_bundle`), only when it changed.
 BUNDLE = "bundle"
 # What one member's report may weigh in its relay's bundle (feedback from the product, checking the eighth review: a
 # bundle bounded only as a whole let one large member crowd out the others behind the relay). Thirty members' reports
@@ -39,30 +44,83 @@ BUNDLE = "bundle"
 # `REFUSED_KEY` — the domain names the reason with the member (`BundleView`), and the others are carried whole.
 MEMBER_SHARE = 256 << 10
 REFUSED_KEY = "!refused"                 # not a member's name: `!` is in no cluster's name
+# The largest batch a relay sends up at once (the product's `maxRelayBatch`): several members' worth.
+MAX_RELAY_BATCH = 4 * (16 << 20)
 
 
-def bundle(relay: str, members: list[str], relay_objects, domain_objects) -> bool:
-    out: dict[str, dict[str, str]] = {}
-    refused: dict[str, str] = {}
+def relayed(members: list[str], relay_objects) -> dict[str, dict]:
+    """What the relay's agent sends up: each member's report in its store, as the publication it was — `{member:
+    publication}`; a member that has not reported to the relay is not in it."""
+    from .uplink import REPORTED
+    out: dict[str, dict] = {}
     for m in members:
         b = base(m)
         keys = relay_objects.list(b)
-        if keys:
-            entry = {k[len(b):]: (relay_objects.get(k) or b"").decode("utf-8", "surrogateescape") for k in keys}
-            size = sum(len(k) + len(v) for k, v in entry.items())
-            if size > MEMBER_SHARE:
-                refused[m] = (f"its report is {size} bytes, over the {MEMBER_SHARE} its relay carries for one member — "
-                              f"the relay carried the others")
-                continue
-            out[m] = entry
+        if not keys:
+            continue
+        pub: dict = {"objects": {}, "rows": {}, "pages": {}}
+        for k in keys:
+            sub, raw = k[len(b):], relay_objects.get(k) or b""
+            try:
+                if sub == REPORTED:
+                    mark = json.loads(raw)
+                    pub["sent_at"] = mark.get("ts")
+                    pub.update({f: mark[f] for f in ("key", "seal") if isinstance(mark.get(f), str)})
+                elif sub.startswith("o/"):
+                    pub["objects"][sub[2:]] = json.loads(raw)
+                elif sub.startswith("v/"):
+                    pub["rows"][sub[2:]] = json.loads(raw)
+                elif sub.startswith("p/"):
+                    pub["pages"][sub[2:]] = raw.decode("utf-8", "surrogateescape")
+            except PARSE_ERRORS:
+                continue                                 # one record the relay cannot read is left out, not the member
+        out[m] = pub
+    return out
+
+
+def take_bundle(relay: str, publications: dict, domain_objects) -> tuple[bool, dict[str, str]]:
+    """The holder's half of `POST /api/relay/<relay>`: the members' publications folded into the relay's bundle — each
+    member's records as the holder keeps a report (`uplink.entries`), a member over `MEMBER_SHARE` or whose publication
+    does not read refused by name, under `REFUSED_KEY`, and the others carried. `(written, refused)`."""
+    from .uplink import REPORTED, entries
+    key = base(relay) + BUNDLE
+    try:
+        before = json.loads(domain_objects.get(key) or b"{}")
+        before = before if isinstance(before, dict) else {}
+    except PARSE_ERRORS:
+        before = {}
+    out: dict[str, dict[str, str]] = {}
+    refused: dict[str, str] = {}
+    for m, pub in sorted(publications.items()):
+        was = before.get(m) if isinstance(before.get(m), dict) else {}
+        prev = was.get(REPORTED)
+        try:
+            want, mark = entries(pub, prev.encode("utf-8", "surrogateescape") if isinstance(prev, str) else None,
+                                 keep_seq=True)
+        except ValueError as e:
+            refused[m] = f"its report does not read: {e}"
+            continue
+        entry = {**{k: v.decode("utf-8", "surrogateescape") for k, v in want.items()},
+                 REPORTED: mark.decode("utf-8", "surrogateescape")}
+        size = sum(len(k) + len(v) for k, v in entry.items())
+        if size > MEMBER_SHARE:
+            refused[m] = (f"its report is {size} bytes, over the {MEMBER_SHARE} its relay carries for one member — "
+                          f"the relay carried the others")
+            continue
+        out[m] = entry
     if refused:
         out[REFUSED_KEY] = refused
     raw = json.dumps(out, sort_keys=True).encode()
-    key = base(relay) + BUNDLE
     if domain_objects.get(key) == raw:
-        return False
+        return False, refused
     domain_objects.put(key, raw)
-    return True
+    return True, refused
+
+
+def bundle(relay: str, members: list[str], relay_objects, domain_objects) -> bool:
+    """The summary report with no door between — the tests, and a relay whose road up is a store: `take_bundle` over
+    what `relayed` sends."""
+    return take_bundle(relay, relayed(members, relay_objects), domain_objects)[0]
 
 
 class BundleView:
