@@ -26,17 +26,21 @@ platform only promises that it comes from one issuer and increases.
 #
 # ## Module-level names
 # - `EPOCH_FLOOR_KEY = "platform/epoch_floor"`, `EPOCH_FLOOR_FIELD = "floor"` — the floor under every epoch of the group
-#   (ADR-0070, the blocker of step 1's drill), and `next_epoch_floor(floor)` — the next generation, `((floor >> 32) + 1) << 32`.
+#   (ADR-0070, the blocker of step 1's drill), `EPOCH_FLOOR_AT = "generation_at"` — the hour its generation was set; and
+#   `next_epoch_floor(floor, hours)` — the next generation, `max((floor >> 32) + 1, hours) << 32`, `hours` the clock's
+#   (`generation_hours`: whole hours of UTC since 2026-01-01; ADR-0070's addition of 2026-10-11).
 #
 # ## The floor (ADR-0070)
 # A group given back to a member that was BEHIND (`configstore recover`, the majority gone for good) has lost the epochs the
 # others issued since — and nobody left knows how many. A count cannot mend that; a floor can. `recover` writes
 # `platform/epoch_floor` into the state it gives the member, before its daemon starts (so nothing is issued between the
-# start and the floor): the next multiple of 2^32 above the highest of the old floor and every epoch the member holds.
+# start and the floor): the generation `max(by the content + 1, the clock)` in the upper 32 bits — the content the highest
+# of the old floor and every epoch the member holds, the clock below. `restore` and `import` raise it by the same rule.
 # `next_epoch` issues `max(current, floor) + 1` for ANY unit — one never seen too — so every epoch issued after a recover is
 # above every one issued before it, of any unit. The price is names like `e4294967297` after a recover; Python's `int` reads
 # them as it reads `e7`, and they stay below 2^53, what JSON carries exactly. The floor is written by `recover` alone: no door
-# writes or deletes it (`storemachine.Rights.allows`), and a worker's role reads it (`cluster/rights.py`).
+# writes or deletes it (`storemachine.Rights.allows`; `restore` and `import` raise it with the machine's `floor` command,
+# the operator's alone), and a worker's role reads it (`cluster/rights.py`).
 #
 # ## Notes
 # - `test_lease_on_a_monotonic_clock`: at 24.9 s the lease may write; at 25.1 s it may not and
@@ -58,9 +62,41 @@ import time
 from .variables import Conflict, Variables, cas_pause
 from .rows import PARSE_ERRORS
 
-# The floor under every epoch of the group — written by `configstore recover` alone (the notes above; ADR-0070).
+# The floor under every epoch of the group — raised by a state put in (`configstore recover`, `restore`, `import`) alone
+# (the notes above; ADR-0070); `generation_at`, the hour its generation was set, for diagnosis and the clock's check.
 EPOCH_FLOOR_KEY = "platform/epoch_floor"
 EPOCH_FLOOR_FIELD = "floor"
+EPOCH_FLOOR_AT = "generation_at"
+
+# THE GENERATION FROM THE CLOCK, NOT ONLY FROM THE CONTENT (ADR-0070's addition of 2026-10-11, the model's blocker): a
+# state put in knows only the generations it holds — a backup restored after the group it was taken of went through a
+# recover or a restore of its own repeated a generation (backup → recover 2^32 → epoch 2^32+1 → restore of that backup →
+# floor 2^32 → 2^32+1 again). So the generation of any input is `max(by the content + 1, the clock)`, the clock being
+# whole HOURS of UTC since 2026-01-01: 2^21 hours are 239 years, and an epoch stays below 2^53 — it travels in JSON as a
+# number (seconds, proposed first, would have passed that in three weeks). A repeat stays possible only for an older copy
+# put in within the same hour as another input — the operator's condition (lesson 2 of М11). An input whose machine's
+# clock is before the hour of the generation in the state put in (the clock went back) is refused without `-force`.
+GENERATION_FROM = 1767225600                      # 2026-01-01T00:00:00Z, unix seconds
+GENERATION_LIMIT = 1 << 21                        # hours: a generation above it would carry an epoch past 2^53
+
+
+def generation_hours(now: float | None = None) -> int:
+    """The clock's generation: whole hours of UTC since 2026-01-01 (`now`: unix seconds; None — this machine's)."""
+    return max(0, int(((time.time() if now is None else now) - GENERATION_FROM) // 3600))
+
+
+def hour_stamp(hours: int) -> str:
+    """`hours` since 2026-01-01 as the hour it is, `2026-10-11T15:00:00Z` — what `generation_at` says."""
+    return time.strftime("%Y-%m-%dT%H:00:00Z", time.gmtime(GENERATION_FROM + int(hours) * 3600))
+
+
+def hours_of(stamp) -> int | None:
+    """The hours since 2026-01-01 a `generation_at` says, or None when it says none that reads."""
+    import calendar
+    try:
+        return (calendar.timegm(time.strptime(str(stamp), "%Y-%m-%dT%H:%M:%SZ")) - GENERATION_FROM) // 3600
+    except (ValueError, OverflowError):
+        return None
 
 
 class EpochUnreadable(ValueError):
@@ -79,9 +115,13 @@ def _epoch_of(items: dict, key: str) -> int:
     return int(raw)
 
 
-# The floor a recover raises `floor` to: the next generation, in the upper 32 bits.
-def next_epoch_floor(floor: int) -> int:
-    return ((int(floor) >> 32) + 1) << 32
+# The floor a state put in raises `floor` to (the generation in the upper 32 bits): `max(by the content + 1, the clock's
+# hours)` — the addition above. Past `GENERATION_LIMIT` it refuses: the epoch would no longer be a JSON number exactly.
+def next_epoch_floor(floor: int, hours: int) -> int:
+    generation = max((int(floor) >> 32) + 1, int(hours))
+    if generation >= GENERATION_LIMIT:
+        raise ValueError(f"the generation {generation} is past {GENERATION_LIMIT}: an epoch above it is past 2^53 (ADR-0070)")
+    return generation << 32
 
 
 # The group's floor under every epoch: 0 where no recover ever raised one. A floor row that does not read is said, not

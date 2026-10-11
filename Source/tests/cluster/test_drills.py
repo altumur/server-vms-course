@@ -32,7 +32,7 @@ import pytest
 
 from w2cplatform.configstore import have_library
 from w2cplatform.configstorevars import unix_transport
-from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, next_epoch
+from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, generation_hours, hours_of, next_epoch
 from w2cplatform.variables import open_vars
 
 pytestmark = pytest.mark.skipif(not have_library(), reason="the raft library is not installed: pip install pysyncobj")
@@ -163,7 +163,8 @@ def test_recover_from_the_member_that_was_behind_issues_no_epoch_twice_and_the_g
     its daemon started: the floor is 2^32, the next epoch of the unit 2^32+1 and of a new unit 2^32+1 — 4 and 5 are not
     issued again. srv-a, emptied, asks to join plainly: two voters, even — refused, at once, and the daemon does not run;
     with -force it joins; srv-b, emptied, joins plainly as the third. Three voters of three, and the next epoch, asked at
-    srv-b, is 2^32+2."""
+    srv-b, is 2^32+2. (The generation is `max(by the content + 1, the clock's hours since 2026-01-01)`, ADR-0070's
+    addition: on this machine's clock the floor is its hour's generation, and the numbers follow it.)"""
     root = tempfile.mkdtemp(prefix="drill-")
     ds = []
     try:
@@ -176,14 +177,16 @@ def test_recover_from_the_member_that_was_behind_issues_no_epoch_twice_and_the_g
         assert [next_epoch(a.vars(), KEY)[0] for _ in range(2)] == [4, 5]       # the majority, without srv-c
         a.stop(signal.SIGKILL)
         b.stop()
+        hour = generation_hours()
         out = subprocess.run([sys.executable, "-m", "w2cplatform.configstore", "recover", "-id", c.name, "-dir", c.data,
                               "-peers", f"{c.name}={c.raft}"], cwd=SOURCE, capture_output=True, text=True)
         assert out.returncode == 0, out.stderr
         c.start()
         _wait("srv-c to lead", c.leads)
-        assert epoch_floor(c.vars()) == 1 << 32
-        assert next_epoch(c.vars(), KEY)[0] == (1 << 32) + 1, "4 and 5 were issued before: two writers of one epoch"
-        assert next_epoch(c.vars(), "drill/epoch/new")[0] == (1 << 32) + 1
+        floor = epoch_floor(c.vars())                    # max(by the content + 1, the clock's hours) << 32 (ADR-0070)
+        assert floor % (1 << 32) == 0 and floor >> 32 >= max(1, hour) and floor < 1 << 53, floor
+        assert next_epoch(c.vars(), KEY)[0] == floor + 1, "4 and 5 were issued before: two writers of one epoch"
+        assert next_epoch(c.vars(), "drill/epoch/new")[0] == floor + 1
         a.wipe()
         b.wipe()
         refused = a.spawn("-join", c.adv)
@@ -194,8 +197,9 @@ def test_recover_from_the_member_that_was_behind_issues_no_epoch_twice_and_the_g
         b.start("-join", c.adv)
         lead = _back(ds)
         assert lead is c or lead in ds
-        assert next_epoch(b.vars(), KEY)[0] == (1 << 32) + 2
-        assert c.vars().get(EPOCH_FLOOR_KEY)[0] == {"floor": str(1 << 32)}
+        assert next_epoch(b.vars(), KEY)[0] == floor + 2
+        said = c.vars().get(EPOCH_FLOOR_KEY)[0]
+        assert said["floor"] == str(floor) and hours_of(said["generation_at"]) >= hour, said
     finally:
         for d in ds:
             d.stop(signal.SIGKILL)

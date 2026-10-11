@@ -1132,7 +1132,7 @@ def test_an_import_that_stopped_goes_on_and_a_row_heavier_than_the_store_takes_r
         admin = open_vars(url(dm.dir))
         with pytest.raises(OSError):
             configstore.import_rows("file://" + box.root, Cut(admin, 2))
-        assert len(admin.list("")) == 2
+        assert len([k for k in admin.list("") if k != "platform/epoch_floor"]) == 2   # and the floor, raised first (ADR-0070)
         got = configstore.import_rows("file://" + box.root, admin)
         assert (got["rows"], got["there_before"]) == (len(remembered), 2)
         assert {k: admin.get(k)[0] for k in remembered} == {k: box.get(k)[0] for k in remembered}
@@ -1179,8 +1179,11 @@ def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
     from the backup's 3 and issued 4 again — two writers of one unit. The restore raises the floor under every epoch a
     generation before its first row, by `recover`'s rule: the next epoch of that unit, and of one never seen, is 2^32+1.
     Asked again — a restore that stopped — it goes on, the same floor. And a backup taken of a group that holds a floor
-    (after a recover) restores whole: the floor's row is no row to put, it is folded into the floor raised (2^33)."""
-    from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, next_epoch
+    (after a recover) restores whole: the floor's row is no row to put, it is folded into the floor raised. The
+    generation is `max(by the content + 1, the clock's hours since 2026-01-01)` (ADR-0070's addition of 2026-10-11): the
+    command line runs on this machine's clock, so the floors here are at least its hour."""
+    from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, generation_hours, next_epoch
+    hour = generation_hours()
 
     def backup_of(h_url: str) -> str:
         out = io.StringIO()
@@ -1204,12 +1207,14 @@ def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
         highest = json.load(open(path))["highest"]
         assert next_epoch(h, "testsub/epoch/7")[0] == 4                                 # after the backup
     with Daemon(LocalBackend("srv-b", highest)) as b:
-        for _ in range(2):
-            assert restore(path, url(b.dir))["epoch_floor"] == 1 << 32
+        f1 = restore(path, url(b.dir))["epoch_floor"]
+        assert f1 % (1 << 32) == 0 and f1 >> 32 >= max(1, hour) and f1 < 1 << 53, f1
+        assert restore(path, url(b.dir))["epoch_floor"] >= f1                           # asked again: it goes on
         h = open_vars(url(b.dir))
-        assert epoch_floor(h) == 1 << 32 and h.get("testsub/epoch/7")[0] == {"epoch": "3"}
-        assert next_epoch(h, "testsub/epoch/7")[0] == (1 << 32) + 1                    # not 4
-        assert next_epoch(h, "testsub/epoch/new")[0] == (1 << 32) + 1
+        f1 = epoch_floor(h)
+        assert h.get("testsub/epoch/7")[0] == {"epoch": "3"} and h.get(EPOCH_FLOOR_KEY)[0]["generation_at"].endswith(":00:00Z")
+        assert next_epoch(h, "testsub/epoch/7")[0] == f1 + 1                             # not 4
+        assert next_epoch(h, "testsub/epoch/new")[0] == f1 + 1
         # the floor: raised by the operator's `floor` alone, never lowered, never put or deleted through a door
         for body in ({"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}},
                      {"op": "put", "key": EPOCH_FLOOR_KEY, "items": {"floor": "0"}, "cas": h.get(EPOCH_FLOOR_KEY)[1]},
@@ -1219,15 +1224,23 @@ def test_an_epoch_issued_after_the_backup_is_not_issued_again_after_a_restore():
         with pytest.raises(Forbidden):
             open_vars(url(b.dir, "testsubworker"))._call("POST", "/v1/write", {"op": "floor", "floor": 1 << 40})
         h._call("POST", "/v1/write", {"op": "floor", "floor": 5})                       # lower: taken, and nothing moves
-        assert epoch_floor(h) == 1 << 32
+        assert epoch_floor(h) == f1
         again = backup_of(url(b.dir))                                                   # a backup holding the floor's row
         highest = json.load(open(again))["highest"]
     with Daemon(LocalBackend("srv-c", highest)) as c:
         said = restore(again, url(c.dir))
-        assert said["epoch_floor"] == 2 << 32 and said["rows"] == len(json.load(open(again))["rows"]) - 1, said
+        f2 = said["epoch_floor"]
+        assert f2 >= f1 + (1 << 32) and said["rows"] == len(json.load(open(again))["rows"]) - 1, said
         h = open_vars(url(c.dir))
-        assert h.get("testsub/epoch/7")[0] == {"epoch": str((1 << 32) + 1)}
-        assert next_epoch(h, "testsub/epoch/7")[0] == (2 << 32) + 1
+        assert h.get("testsub/epoch/7")[0] == {"epoch": str(f1 + 1)}
+        assert next_epoch(h, "testsub/epoch/7")[0] == f2 + 1
+    # the clock behind the hour of the generation in the backup: refused without -force
+    with Daemon(LocalBackend("srv-d", highest)) as d:
+        backup = json.load(open(again))
+        with pytest.raises(ValueError):
+            configstore.restore_rows(backup, open_vars(url(d.dir)), hours=0)
+        assert open_vars(url(d.dir)).list("") == []                                      # nothing written
+        assert configstore.restore_rows(backup, open_vars(url(d.dir)), hours=0, force=True)["epoch_floor"] == f1 + (1 << 32)
 
 
 def test_backup_restore_and_issue_in_any_order_never_issue_a_generation_twice():
@@ -1236,9 +1249,10 @@ def test_backup_restore_and_issue_in_any_order_never_issue_a_generation_twice():
     in orders a seeded random walk picks — held to the invariants: no epoch of a unit is issued twice across every group
     of the lineage, and the floor under every epoch never goes down. (`recover`, the raft group's, is held to the same in
     `test_configstore.py` and the drills of `tests/cluster/test_drills.py`.) What the protocol covers, the model walks: a
-    restored group is backed up before it issues — its floor is then in every later backup. Without that, a backup
-    restored a second time after the group it made issued and was lost raises the same floor again (seed 1 of the walk
-    below without the backup after a restore): reported to «Архитектор» 2026-10-11, the form of its mending is theirs."""
+    restored group is backed up before it issues — its floor is then in every later backup. The command line runs on
+    this machine's clock, and two inputs within one hour may still repeat a generation (ADR-0070's addition of
+    2026-10-11: the operator's condition); the walk with the clock said, recover and the clock stepped back is
+    `tests/cluster/test_generation_model.py`."""
     import random
     from w2cplatform.epoch import epoch_floor, next_epoch
     units = ("testsub/epoch/1", "testsub/epoch/2")

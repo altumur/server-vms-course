@@ -161,8 +161,11 @@ and one on a STOPPED daemon's directory, when the group's majority is gone for g
 # did not hold is lost with them: that is what losing a majority costs, and why this is the operator's word.
 # THE FLOOR UNDER EVERY EPOCH (the blocker of ADR-0070's drill): this member may have been behind, and the epochs the
 # majority issued without it are gone with them — how many, nobody here knows. So `recover` writes `platform/epoch_floor`
-# into the state it gives back, before the daemon starts: `((floor >> 32) + 1) << 32` over the highest of the old floor and
-# every epoch it holds; `epoch.next_epoch` issues above it (`epoch.py`, The floor). Two recovers raise it twice.
+# into the state it gives back, before the daemon starts: the generation `max(by the content + 1, the clock's hours since
+# 2026-01-01)` in the upper 32 bits — the content the highest of the old floor and every epoch it holds — with the hour
+# it was set (`generation_at`); `epoch.next_epoch` issues above it (`epoch.py`, The floor). Two recovers raise it twice.
+# A machine whose clock is before the hour of the generation in the state is refused without `-force` (ADR-0070's
+# addition of 2026-10-11: the same for `restore` and `import` — every input of a state).
 #
 # ## The one-time import (a box becomes a cluster), and backup / restore
 # A box keeps `file://`. `configstore import --from file:///data/platform/config` copies its rows, values untouched,
@@ -1276,13 +1279,13 @@ def _held(data: str) -> tuple[StoreMachine, list[tuple], int, int]:
     return machine, log, term, replayed
 
 
-def recover(node_id: str, data: str, peers: dict[str, str]) -> dict:
+def recover(node_id: str, data: str, peers: dict[str, str], hours: int | None = None, force: bool = False) -> dict:
     """`configstore recover` on a STOPPED daemon's directory: its state given back as a group of `peers` (this server
     among them), with the floor under every epoch raised a generation (the notes: recover; ADR-0070)."""
     from pysyncobj import pickle as wire
     from pysyncobj.journal import MetaStorer, createJournal
     from pysyncobj.node import TCPNode
-    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
+    from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
     if node_id not in peers:
         raise ValueError(f"-peers does not name this server ({node_id}): it would not be a member of the group it recovers")
     if not RaftBackend.has_state(data):
@@ -1293,8 +1296,8 @@ def recover(node_id: str, data: str, peers: dict[str, str]) -> dict:
     last = log[-1]
     prev = log[-2] if len(log) > 1 and log[-2][1] == last[1] - 1 else (bytes([1]), last[1] - 1, last[2])   # NO_OP
     # THE FLOOR: over the highest of the old floor and every epoch this member holds (`epoch.py`, The floor).
-    floor = raised_floor((key, items) for key, (items, _) in machine.rows.items())
-    machine.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor)}, machine.version(last[1]))
+    floor, at = raised_floor(((key, items) for key, (items, _) in machine.rows.items()), hours, force)
+    machine.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor), EPOCH_FLOOR_AT: at}, machine.version(last[1]))
     machine.wrote = True
     # The members as the group is to be: the others' rows go, so they may join again; ours say where we are.
     for gone in [k for k in machine.members if k not in peers]:
@@ -1335,11 +1338,11 @@ def recover(node_id: str, data: str, peers: dict[str, str]) -> dict:
         os.fsync(f.fileno())
     os.replace(tmp, os.path.join(data, "member.json"))
     return {"recovered": node_id, "peers": sorted(peers), "index": last[1], "term": term, "replayed": replayed,
-            "epoch_floor": floor}
+            "epoch_floor": floor, "generation_at": at}
 
 
 # -- loading rows into a fresh group: import, restore ----------------------------------------------------
-def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floor: int = 0) -> dict:
+def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floor: int = 0, at: str = "") -> dict:
     """Write `rows` into the group behind `dst` (an admin handle), each created with `cas=0`, values untouched.
     Refused whole, before the first write, when a row is heavier than the store takes, when the group's base is below
     `highest`, or when the group holds a row this load did not write — a row that is one of `rows`, the same, is one
@@ -1355,16 +1358,16 @@ def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floo
                          f"with -index-base {highest} or more, or a version remembered from {what} could match a new row")
     from .epoch import EPOCH_FLOOR_KEY
     want = dict(rows)
-    held = set(dst.list(""))
-    # …the floor a restore that stopped had raised is its own, not a row it did not write (raised again below)
-    alien = sorted(k for k in held if not (floor and k == EPOCH_FLOOR_KEY) and (k not in want or dst.get(k)[0] != want[k]))
+    # …the floor a load that stopped had raised is its own, not a row it did not write (raised again below)
+    held = set(dst.list("")) - ({EPOCH_FLOOR_KEY} if floor else set())
+    alien = sorted(k for k in held if k not in want or dst.get(k)[0] != want[k])
     if alien:
         raise ValueError(f"the group holds rows this load did not write ({', '.join(alien[:5])}"
                          f"{', …' if len(alien) > 5 else ''}): rows are loaded into a fresh group only")
     if floor:
         # the floor under every epoch raised, once the rows are found fit and before the first of them (ADR-0070)
         try:
-            dst._call("POST", "/v1/write", {"op": "floor", "floor": floor})
+            dst._call("POST", "/v1/write", {"op": "floor", "floor": floor, **({"generation_at": at} if at else {})})
         except OSError as e:
             raise ValueError(f"the floor under every epoch was not raised, and nothing was written: {e}") from None
     for key, items in rows:
@@ -1373,9 +1376,10 @@ def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str, floo
     return {"rows": len(rows), "highest_before": highest, "index_base": base, "there_before": len(held)}
 
 
-def import_rows(src_url: str, dst) -> dict:
+def import_rows(src_url: str, dst, hours: int | None = None, force: bool = False) -> dict:
     """A box's `file://` rows into a fresh group (`configstore import`); a row of the file that does not read
-    refuses the whole import — dropped, it would read as absent, and an absent epoch starts again from 1."""
+    refuses the whole import — dropped, it would read as absent, and an absent epoch starts again from 1. A state put in
+    like any other: the floor under every epoch raised a generation first (ADR-0070's addition of 2026-10-11)."""
     from .variables import FileVariables, Garbled, open_vars
     src = open_vars(src_url)
     if not isinstance(src, FileVariables):
@@ -1396,7 +1400,9 @@ def import_rows(src_url: str, dst) -> dict:
             rows.append((key, items))
     if torn:
         raise ValueError("rows that do not read — fix or remove them first: " + "; ".join(torn))
-    return _load_fresh(rows, counter, dst, "the file")
+    floor, at = raised_floor(rows, hours, force)
+    out = _load_fresh(rows, counter, dst, "the file", floor, at)
+    return {**out, "epoch_floor": floor, "generation_at": at}
 
 
 def backup_rows(src) -> dict:
@@ -1414,17 +1420,27 @@ def backup_rows(src) -> dict:
 
 # The floor a group made from `rows` starts with (the notes: recover): the next generation over the highest of their
 # floor and every epoch among them — the rule `recover` raises it by (ADR-0070).
-def raised_floor(rows) -> int:
-    from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY, next_epoch_floor
-    floor = 0
+# …and from the clock (ADR-0070's addition of 2026-10-11): `max(by the content + 1, the clock's hours)` — `hours` this
+# machine's (`epoch.generation_hours`) unless a caller says them. A state whose floor says a generation set at an hour
+# later than this machine's clock says now — the clock went back — is refused without `force`: a generation from a
+# clock that runs behind is one a later input may already have used. `(floor, generation_at)`.
+def raised_floor(rows, hours: int | None = None, force: bool = False) -> tuple[int, str]:
+    from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY, generation_hours, hour_stamp, hours_of, next_epoch_floor
+    hours = generation_hours() if hours is None else int(hours)
+    floor, at = 0, None
     for key, items in rows:
         said = items.get(EPOCH_FLOOR_FIELD) if key == EPOCH_FLOOR_KEY else items.get("epoch") if "/epoch/" in key else None
         if said is not None and str(said).isascii() and str(said).isdigit():
             floor = max(floor, int(said))
-    return next_epoch_floor(floor)
+        if key == EPOCH_FLOOR_KEY and items.get(EPOCH_FLOOR_AT):
+            at = hours_of(items[EPOCH_FLOOR_AT])
+    if at is not None and hours < at and not force:
+        raise ValueError(f"this machine's clock says {hour_stamp(hours)}, before the hour of the generation in the state "
+                         f"put in ({hour_stamp(at)}): its clock went back — set it right, or say -force (ADR-0070)")
+    return next_epoch_floor(floor, hours), hour_stamp(hours)
 
 
-def restore_rows(backup: dict, dst) -> dict:
+def restore_rows(backup: dict, dst, hours: int | None = None, force: bool = False) -> dict:
     """A backup into a fresh group (`configstore restore`), its base above the backup's highest version — and THE FLOOR
     UNDER EVERY EPOCH RAISED A GENERATION before the first row (the external review of 2026-10-11, checked by
     «Архитектор»; ADR-0070; the product's `RestoreBackup`, ceb1362): the group the backup was taken of went on issuing
@@ -1436,9 +1452,9 @@ def restore_rows(backup: dict, dst) -> dict:
     if not isinstance(backup, dict) or backup.get("configstore_backup") != 1:
         raise ValueError("not a configstore backup")
     rows = [(k, dict(r["items"])) for k, r in sorted(backup["rows"].items()) if k != EPOCH_FLOOR_KEY]
-    floor = raised_floor([(k, dict(r["items"])) for k, r in backup["rows"].items()])
-    out = _load_fresh(rows, int(backup["highest"]), dst, "the backup", floor)
-    return {**out, "epoch_floor": floor}
+    floor, at = raised_floor([(k, dict(r["items"])) for k, r in backup["rows"].items()], hours, force)
+    out = _load_fresh(rows, int(backup["highest"]), dst, "the backup", floor, at)
+    return {**out, "epoch_floor": floor, "generation_at": at}
 
 
 # -- the command line ------------------------------------------------------------------------------------
@@ -1483,9 +1499,11 @@ def _recover(argv: list[str]) -> int:
     ap.add_argument("-dir", default=DATA, help=f"its journal, dump, member.json (default {DATA})")
     ap.add_argument("-peers", required=True,
                     help="the group as it is to be: id=host:port[,id=host:port…] (this server among them)")
+    ap.add_argument("-force", action="store_true",
+                    help="put the state in although this machine's clock is before the hour of its generation (ADR-0070)")
     a = ap.parse_args(argv)
     try:
-        out = recover(a.id, a.dir, parse_peers(a.peers))
+        out = recover(a.id, a.dir, parse_peers(a.peers), force=a.force)
     except ValueError as e:
         print(f"configstore recover: {e}", file=sys.stderr)
         return 1
@@ -1515,6 +1533,8 @@ def _command(argv: list[str]) -> int:
     elif verb in ("restore", "import"):
         ap.add_argument("--from", "-from", dest="src", required=True,
                         help="a backup's file" if verb == "restore" else "file:///data/platform/config")
+        ap.add_argument("--force", "-force", action="store_true",
+                        help="put the state in although this machine's clock is before the hour of its generation (ADR-0070)")
     a = ap.parse_args(argv[1:])
     if verb == "rights" and a.file:
         out = Rights.load(a.file).doc()
@@ -1532,9 +1552,9 @@ def _command(argv: list[str]) -> int:
             out = backup_rows(h)
         elif verb == "restore":
             with open(a.src, encoding="utf-8") as f:
-                out = restore_rows(json.load(f), h)
+                out = restore_rows(json.load(f), h, force=a.force)
         else:
-            out = import_rows(a.src, h)
+            out = import_rows(a.src, h, force=a.force)
     print(json.dumps(out, indent=1 if verb in ("status", "rights", "backup") else None), flush=True)
     return 0
 

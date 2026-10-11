@@ -813,7 +813,10 @@ def test_a_recovered_lagging_minority_issues_no_epoch_it_issued_before():
     47c3e11): srv-c saw epochs 1..3 and stopped; the majority issued 4 and 5 and is gone for good. `recover` gives the
     group to srv-c — and writes the floor under every epoch into the state before its daemon starts: 2^32. The next
     epoch of the unit is 2^32+1, of a unit nobody took one of 2^32+1 too — none issued before. A second recover raises
-    the floor again, to 2^33. Nobody writes or deletes the floor through a door, root's `admin.sock` included."""
+    the floor again, to 2^33. Nobody writes or deletes the floor through a door, root's `admin.sock` included. The
+    generation is `max(by the content + 1, the clock's hours)` (ADR-0070's addition of 2026-10-11): here the clock is said
+    — 0 for the content alone, then 10 hours — and a clock behind the hour of the generation in the state is refused
+    without `force`; the floor's row says that hour (`generation_at`)."""
     from w2cplatform.epoch import EPOCH_FLOOR_KEY, epoch_floor, next_epoch
     g = Group(3)
     try:
@@ -827,8 +830,8 @@ def test_a_recovered_lagging_minority_issues_no_epoch_it_issued_before():
         a.stop()
         b.stop()
         with _says(ValueError, "does not name this server"):
-            configstore.recover(c.name, c.data, {a.name: a.raft})
-        said = configstore.recover(c.name, c.data, {c.name: c.raft})
+            configstore.recover(c.name, c.data, {a.name: a.raft}, hours=0)
+        said = configstore.recover(c.name, c.data, {c.name: c.raft}, hours=0)
         assert said["epoch_floor"] == 1 << 32 and said["peers"] == [c.name], said
         c.start()
         _ready(c)
@@ -842,10 +845,21 @@ def test_a_recovered_lagging_minority_issues_no_epoch_it_issued_before():
             with pytest.raises(Forbidden):
                 v._call("POST", "/v1/write", op)
         c.stop()
-        assert configstore.recover(c.name, c.data, {c.name: c.raft})["epoch_floor"] == 2 << 32
+        assert configstore.recover(c.name, c.data, {c.name: c.raft}, hours=0)["epoch_floor"] == 2 << 32
         c.start()
         _ready(c)
         assert next_epoch(open_vars(c.url()), key)[0] == (2 << 32) + 1
+        c.stop()
+        said = configstore.recover(c.name, c.data, {c.name: c.raft}, hours=10)          # the clock is ahead of the content
+        assert said["epoch_floor"] == 10 << 32 and said["generation_at"] == "2026-01-01T10:00:00Z", said
+        with _says(ValueError, "its clock went back"):
+            configstore.recover(c.name, c.data, {c.name: c.raft}, hours=9)
+        assert configstore.recover(c.name, c.data, {c.name: c.raft}, hours=9, force=True)["epoch_floor"] == 11 << 32
+        c.start()
+        _ready(c)
+        v = open_vars(c.url())
+        assert v.get(EPOCH_FLOOR_KEY)[0] == {"floor": str(11 << 32), "generation_at": "2026-01-01T09:00:00Z"}
+        assert next_epoch(v, key)[0] == (11 << 32) + 1
     finally:
         g.stop()
 

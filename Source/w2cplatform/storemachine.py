@@ -101,13 +101,14 @@ import re
 import urllib.parse
 
 from .canonical import parse_json
-from .epoch import EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
+from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
 from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
 from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
 OP_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")         # a write's operation id (the handle's: 32 hex digits)
 CAS_WORD = re.compile(r"^[A-Za-z0-9_-]{0,32}$")      # a `cas` that is a string: "" (create-only), digits, a word
+GENERATION_AT = re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:00:00Z)?$")   # a floor's `generation_at`: an hour of UTC
 CAS_MAX = 1 << 63                                    # a `cas` that is a number: a version, which is a log index
 MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
 ADMIN = "admin"            # the root-only socket's role
@@ -210,11 +211,15 @@ class StoreMachine:
             self.base = int(cmd.get("base", 0))
             return {"base": self.base}
         if op == "floor":
-            # the floor under every epoch, raised and never lowered (`answer`: the operator's alone; ADR-0070)
+            # the floor under every epoch, raised and never lowered, with the hour its generation was set
+            # (`answer`: the operator's alone; ADR-0070)
             have = self.rows.get(EPOCH_FLOOR_KEY, ({}, 0))[0].get(EPOCH_FLOOR_FIELD, "0")
             floor = int(cmd.get("floor", 0) or 0)
             if floor > (int(have) if have.isascii() and have.isdigit() else 0):
-                self.rows[EPOCH_FLOOR_KEY] = ({EPOCH_FLOOR_FIELD: str(floor)}, self.version(index))
+                items = {EPOCH_FLOOR_FIELD: str(floor)}
+                if cmd.get("generation_at"):
+                    items[EPOCH_FLOOR_AT] = str(cmd["generation_at"])
+                self.rows[EPOCH_FLOOR_KEY] = (items, self.version(index))
             self.wrote = True
             return {"index": self.version(index)}
         if op == "member":
@@ -360,11 +365,13 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                 # THE FLOOR UNDER EVERY EPOCH, RAISED (ADR-0070; the external review of 2026-10-11; the product's
                 # `OpFloor`): the operator's alone — root's `admin.sock`, a restore before its first row — never a
                 # role's; raised, never lowered. No `put` or `delete` of the row goes through any door (`Rights.allows`).
-                floor = body.get("floor")
+                floor, at = body.get("floor"), body.get(EPOCH_FLOOR_AT, "")
                 if role != ADMIN or isinstance(floor, bool) or not isinstance(floor, int) or not 0 < floor < CAS_MAX:
                     return fault(403, "forbidden", "the floor under every epoch is raised by the operator alone "
                                                    "(admin.sock: a restore), to a number above 0")
-                got = submit({"op": "floor", "floor": floor})
+                if not isinstance(at, str) or not GENERATION_AT.match(at):
+                    return fault(400, "badrequest", f"{EPOCH_FLOOR_AT} is an hour of UTC, 2026-10-11T15:00:00Z, or nothing")
+                got = submit({"op": "floor", "floor": floor, **({EPOCH_FLOOR_AT: at} if at else {})})
                 return 200, {"index": got["index"]}
             if not isinstance(body, dict) or body.get("op") not in ("put", "delete"):
                 return fault(400, "badrequest", 'a write is {"op": "put"|"delete", "key", "items", "cas", "id"}')
