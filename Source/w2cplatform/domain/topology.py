@@ -2,7 +2,7 @@
 
 Lesson 17 needed three facts that no cluster can observe about itself, because they are the network's POLICY,
 not its state: which member reaches the domain only through a relay (`via`), which relays cannot be pushed
-to and take their streams from the centre (`star`), and which cluster is the centre. They lived in the
+to and take their members' data from the centre (`star`), and which cluster is the centre. They lived in the
 environment of three different jobs (`name=report@relay`, RELAY_MEMBERS, CENTRE/STAR). Now they live here,
 in the domain holder, edited by CAS and checked when written — and every pass reads them from here: the
 books (`Crossings`), the relay's copying down and its bundle (its agent), the domain's copy of each member (`apply`).
@@ -71,7 +71,7 @@ def refusals(doc: dict, known=None, domain: str | None = None) -> list[str]:
     if known is not None:
         out += [f"{what}: {n} is not a cluster of this domain" for what, n in names if n not in known]
     if star and not centre:
-        out.append("a star relay takes its streams from the centre, and there is no centre")
+        out.append("a star relay takes its members' data from the centre, and there is no centre")
     if centre and centre in star:
         out.append(f"{centre} is the centre and cannot be a star relay")
     for m, o in sorted(via.items()):

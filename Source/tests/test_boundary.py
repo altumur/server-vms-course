@@ -133,6 +133,9 @@ PRODUCT_WORDS = [
     ("primaries", dict(forms=("primaries",))),
     ("pusher", dict(forms=("pusher", "pushers"))),
     ("incident", dict(forms=("incident", "incidents"))),
+    # ADR-0074 (2026-10-11): a camera's media stream is the product's; a stream of bytes, of events, of a reply is the
+    # language's (BY_MEANING)
+    ("stream", dict(forms=("stream", "streams"), mean=True)),
     ("камер", dict(stems=("камер",))),
     ("видео", dict(stems=("видео",))),
     ("архив", dict(stems=("архив",))),
@@ -186,6 +189,14 @@ BY_MEANING = {
                      r"\brecs?\.(subsystem|yaml)\b", r"\bREC_SPEC\b"),
         context=("recording", "recordings", "recorder", "recorders", "camera", "cameras", "cam", "footage", "archive",
                  "vms", "live", "det")),
+    # stream  allowed as a stream of bytes, events or a reply (`octet-stream`, a door that streams a reply); the
+    #         product's as a camera's media stream: its tokens, its accounts, a relay taking streams from the centre.
+    "stream": dict(
+        forbid=_regs(r"(?i)\bstream[ -]tokens?\b", r"\bstream-(accounts|clients)\b", r"(?i)\btakes? (its|their) streams?\b",
+                     r"(?i)\bstreams? from the centre\b", r"(?i)\ba unit's stream\b", r"(?i)\basking for a stream\b",
+                     r"(?i)\bstream is a viewer's\b", r"(?i)\ba stream's key\b"),
+        context=("camera", "cameras", "video", "rtsp", "ingest", "relay", "relays", "centre", "viewer", "viewers",
+                 "footage", "frames", "receiver", "whep", "fan")),
     "запис": dict(
         forbid=_regs(r"(?i)\bзаписыва(ть|ется|ются)\b", r">Записи<"),
         context=("камер", "видео", "архив", "регистратор", "рекордер")),

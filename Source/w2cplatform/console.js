@@ -41,7 +41,7 @@
       noWorkerSuffix: "without a worker", allPlaced: "Everything is placed", serversNets: "Servers' networks", noServers: "No servers",
       unplacedNote: "The controller places a unit at its next pass. If it stays here, see whether there is a live worker whose labels cover the unit's, and whether its server's resource answers.",
       srcConsole: "set in the console", srcUnknown: "the row cannot be read", srcNode: "from the node's settings", unknownW: "unknown",
-      centreTip: "Centre: the top; units nobody records poll its receiver", starTip: "Star relay: it cannot be dialled; it takes its streams from the centre",
+      centreTip: "Centre: the top; units nobody records poll its receiver", starTip: "Star relay: it cannot be dialled; it takes its members' data from the centre",
       viaTip: "Goes to the domain only through this relay", domSilentNote: "The domain is silent: its view was updated {a} ago. Below is the last it saw — not «nothing there».",
       longAgo: "long", listIncomplete: "The list is incomplete: {m} have not published for long. What they carry is shown by their last publication.",
       holderIs: "The domain's holder is", viewAge: "the view was updated", ago: "ago", knockTimes: "tried to publish {n} time(s), the last at {t}",
@@ -2002,7 +2002,7 @@
         ${empty.length ? `<p class="sub">${h(W.kNowEmpty)}: ${empty.map(f => h(f.title)).join(", ")}.</p>` : ""}`;
       box.querySelectorAll("[data-fam]").forEach(b => { b.onclick = () => { const t = box.querySelector("#pc-dk-" + b.dataset.fam); if (t && t.scrollIntoView) t.scrollIntoView({ block: "start" }); }; });
     }
-    // Topology: the centre, the star relays (dialled from nowhere: they take their streams from the centre), and
+    // Topology: the centre, the star relays (dialled from nowhere: they take their members' data from the centre), and
     // through whom each member goes to the domain. A draft until written; the write names the revision it read.
     function paintTopo(box) {
       if (!box) return;

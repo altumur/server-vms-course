@@ -77,7 +77,7 @@ class BundleView:
     # raised `JSONDecodeError`/`AttributeError` out of every read of every member behind it, and the readers above take
     # only `Unreachable` for "did not answer". `DomainDirectory.where` scans every cluster, so `/domain/where` and every
     # edit through the domain failed for every unit of the domain; the pass over the books raised, and the signer's
-    # loop swallowed it — the stream tokens in the books stopped being re-issued. Now the bundle is read through the
+    # loop swallowed it — the tokens in the books stopped being re-issued. Now the bundle is read through the
     # members' one reader (`MEMBER_OBJECTS`): what does not parse is counted once under `<relay>/bundle`, logged once,
     # and is `Unreachable` for the members behind that relay — each reader's own "not reached" decides, and the rest
     # of the domain is read. A list is REFUSED by name, not parsed: an older relay is updated, not guessed at (the

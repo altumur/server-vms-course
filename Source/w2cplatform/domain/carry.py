@@ -1,7 +1,7 @@
 """What a member carries home, and the door it carries it through.
 
 Until now a member's agent read the holder's store: every row of `domain/*`, every member's. The holder's store holds
-the signer's keys, every cluster's emergency hash, every member's stream tokens — and the rights that let a member read
+the signer's keys, every cluster's emergency hash, every member's tokens — and the rights that let a member read
 its own rows let it read all of them (DOMAIN-PLATFORM.md, «Course check of domain secrets»: the read scope was the
 bigger hole). So a member reads NOTHING of the holder's store. It asks the domain's door for what is its own:
 

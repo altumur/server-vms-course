@@ -1102,7 +1102,7 @@ def door_server(addr, handler, limit: int = DOOR_CONNECTIONS, per_address: int =
 
 
 # WHAT A DOOR STREAMS, IT WRITES IN PIECES, TO A CLIENT THAT TAKES THEM (the review's sixth pass, major). The holder's
-# door wrote a minute of a unit's stream in one `sendall`, and a socket's timeout is the whole of a `sendall`: a
+# door wrote a minute of a unit's data in one `sendall`, and a socket's timeout is the whole of a `sendall`: a
 # source of 100 kB/s read by a client at 150 kB/s — faster than it was written — was cut after 36 s, six megabytes
 # not sent inside thirty seconds. So a stream is written `STREAM_PIECE` at a time, each piece under the socket's
 # timeout; and the bound on a client that hardly reads is a floor on its pace, as an export's is (`EXPORT_MIN_RATE`):
@@ -2594,7 +2594,7 @@ class SpecConsole:
 
     # What a route needs: `(capability, unit, labels, of)` — what `Gate.admit` takes.
     #
-    #   view    every GET, and a write the spec says changes nothing (`rights.routes.view` — asking for a stream)
+    #   view    every GET, and a write the spec says changes nothing (`rights.routes.view` — asking a unit's door to serve)
     #   edit    acting through the system without changing what it IS — a mark, a request to a holder, a
     #           backfill, a keep
     #   admin   everything else that writes: units, volumes, policy, drain, a server decommissioned
@@ -2650,7 +2650,7 @@ class SpecConsole:
     def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list, str | None]:
         head = path.strip("/").split("/")[0]
         # `rights.routes`: a family's writes that need less than admin. Of the unit rows, the CREATE alone — asking for a
-        # stream is a viewer's; changing what a row is stays the administrator's
+        # being served is a viewer's; changing what a row is stays the administrator's
         caps = self.spec.route_caps if head != self.spec.rows or method == "POST" else {}
         ledger = head == ASKED                            # a person's ledger (`DELETE /asked/<name>`): the administrator's
         cap = "view" if method == "GET" \

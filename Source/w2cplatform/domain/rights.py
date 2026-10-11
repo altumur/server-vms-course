@@ -61,7 +61,7 @@ def agent_denials(specs=None) -> list[str]:
 # `secrets.PLATFORM_SECRET_READERS` (`tests/testdata/platform_lists.tsv`, the product's bytes), a spec's from its
 # `secrets.readers` and `secrets.reads` (`secrets.secret_readers`). For each such row a role is either among its readers —
 # and is given it, `<row>*`, where its other grants do not reach it — or is not, and is denied it, `!<row>*`: a prefix's
-# rows, and a row's own family of books (`stream-accounts` and `stream-accounts/<cluster>`) with it. The emergency hash
+# rows, and a row's own family of books (a book `<book>` and `<book>/<cluster>`) with it. The emergency hash
 # keeps its name on the member (`domain/break-glass/<cluster>`, ADR-0003): no bare path goes with its prefix any more.
 # No hand list of secret rows stands in any role: a role's reads are what it needs, and this decides the secrets in them.
 def secret_reads(role: str, readers: dict[str, set], read: list[str]) -> list[str]:

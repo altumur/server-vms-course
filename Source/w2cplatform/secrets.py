@@ -302,7 +302,7 @@ NO_RULES = SecretRules()
 
 # THE PLATFORM'S OWN NAMES OF A CREDENTIAL (the product's decision, the architect's word, 5 Oct): what every system
 # spells a password, a token or a key by — read in every address beside whatever its field's `secret_in` says, which
-# adds the spellings of what its subsystem opens (a vendor's `loginpas`, a stream's key run into one word) and never
+# adds the spellings of what its subsystem opens (a vendor's `loginpas`, a key run into one word) and never
 # takes these away. Written as `secret_in` writes them: `key` the whole name or its last word (`hot_key`, `streamKey` —
 # not `hotkey`, `monkey`); `=auth`, `=pin` the whole name only (`enable_auth`, `gpio_pin` name a thing, not a secret).
 # No single letter: `p` is a profile as often as a password.

@@ -698,7 +698,7 @@ def find_holder(fed, member_vars, keys, now: float) -> str | None:
 
 
 # How long the old holder's token keys stay trusted after a PLANNED move (step 9): the people's tokens it issued
-# live fifteen minutes, and the books issue their stream tokens again on the new holder's first pass (a token
+# live fifteen minutes, and the books issue their tokens again on the new holder's first pass (a token
 # the current key did not sign is not kept, `kid_of`). After a theft: not a second.
 OLD_KEYS_OVERLAP = 3600.0
 
