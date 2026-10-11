@@ -543,9 +543,9 @@ class DomainAgent:
         door = self.open_door(kept) if self.open_door is not None else None
         if door is None:
             return f"{said} ({took}); the record names no door — carrying through the one this agent has"
-        self.domain_vars, objects = door
-        if objects is not None:
-            self.domain_objects = objects
+        # The report goes where the door says: `objects` None — through the door (`CarryClient.publish`). The holder's own
+        # agent that reported into its own objects reports to the new holder from now on, as any member (N12).
+        self.domain_vars, self.domain_objects = door
         log.warning("%s: the domain is held by %s at term %s; carrying through its door from now on", self.cluster,
                     kept["holder"], kept["term"])
         self.holder_at = kept["holder"]
@@ -710,12 +710,15 @@ def main() -> None:
     if relay and not relayed:
         relayed = lambda: agent.relays()                                  # noqa: E731  the topology, as carried
     own_objects = open_store(os.environ["OBJECTS"]) if os.environ.get("OBJECTS") else None
-    # Lesson 15: a member that carries through the domain's door FOLLOWS the holder by itself — it asks the consoles of
+    # Lesson 15: an agent that does not carry through a relay FOLLOWS the holder by itself — it asks the consoles of
     # the domain's clusters `CLUSTERS` names (`runtime.consoles_from_env`) for the holder's record (`/api/held`), and
     # carries through the door the record of the greatest term names (its `url`, the signer's). Behind a relay, the
-    # relay is its road, whoever holds the domain.
+    # relay is its road, whoever holds the domain. The holder's own agent (`DOMAIN_CONFIG_URL`) follows too: the holder
+    # is a member first, and the signed record its agent carries home is how a holder that came back learns it was
+    # replaced (`term.DomainHolder.check`, the product's `Term.Check`; «Архитектор» 2026-10-11, ADR-0066; the
+    # camera-office-centre scenario's N12) — and from then on it carries through the new holder's door, as any member.
     from .runtime import consoles_from_env
-    consoles = consoles_from_env() if os.environ.get("DOMAIN_URL") and not os.environ.get("RELAY_URL") else {}
+    consoles = consoles_from_env() if not os.environ.get("RELAY_URL") else {}
     follow = HolderFollower({n: (lambda u=u: ask_held(u)) for n, u in consoles.items()}) if consoles else None
     # Its cluster's object store is also where it keeps the copies it verified (`cluster_objects`): the shared settings
     # the domain signed (Lesson 12, ADR-0032) and the backup the holder chose it to keep (Lesson 15). Built without it,

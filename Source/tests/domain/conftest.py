@@ -176,3 +176,19 @@ class SharedDoor:
 
     def set_scenarios(self, scenarios: list) -> int:
         return self.put({"auto": {"scenarios": scenarios}})
+
+
+def holder_agent(fed, devices, name: str, wall):
+    """The holder's OWN agent on camera `name` (`agent.main` with `DOMAIN_CONFIG_URL`: it reads its own store) — following
+    the holder by `CLUSTERS` like any member's agent: every cluster's `/api/held`, through that cluster's door here (one
+    that is off does not answer), the greatest term that verifies, carried home as signed (`take_record`). That record is
+    what the holder's `check` yields to (the product's `Term.Check`; «Архитектор» 2026-10-11, ADR-0066; the
+    camera-office-centre scenario's N12). Replaced, it carries through the new holder's door, as any member."""
+    from w2cplatform.domain.agent import DomainAgent, HolderFollower
+    from w2cplatform.domain.term import held
+    ask = {n: (lambda n=n: held(n, fed.clusters[n].vars)) for n in devices}
+
+    def open_door(rec):
+        return fed.clusters[rec["holder"]].vars, devices[rec["holder"]].disk_door()
+    return DomainAgent(name, fed.clusters[name].vars, devices[name].flash, now=wall, follow=HolderFollower(ask),
+                       open_door=open_door)

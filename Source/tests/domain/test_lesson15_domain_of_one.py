@@ -27,7 +27,7 @@ from w2cplatform.domain.term import (BACKUP_TAKEN, Deposed, DomainHolder, Guarde
 from w2cplatform.trust.tokens import TokenIssuer
 from w2cplatform.domain.federation import Unreachable
 from w2cplatform.domain.uplink import member_copy
-from tests.domain.conftest import Clock
+from tests.domain.conftest import Clock, holder_agent
 
 DOMAIN = "acme"
 
@@ -176,6 +176,7 @@ def test_an_old_holder_that_comes_back_steps_down_and_lists_what_it_alone_holds(
     _agent(fed, devices, "cam-SN3", "cam-SN1", wall).sync()          # a member now carries term 2
 
     devices["cam-SN0"].boot()
+    holder_agent(fed, devices, "cam-SN0", wall).sync()                  # its own agent: term 2, carried home
     assert holder.check() is False
     try:
         holder.backup(["cam-SN3"], devices["cam-SN0"].disk_door())
@@ -185,6 +186,52 @@ def test_an_old_holder_that_comes_back_steps_down_and_lists_what_it_alone_holds(
     left = stranded(fed.clusters["cam-SN0"].vars, report["state"])
     assert [(p, k) for p, k, _ in left] == [("domain/pending/cam-SN2", "SN2")]
     assert json.loads(left[0][2])["fields"]["name"]["new"] == "SN2-renamed"
+
+
+def test_a_holder_that_comes_back_yields_on_its_own_agents_first_pass_by_the_signed_record_of_the_larger_term():
+    """The camera-office-centre scenario's N12 (ADR-0066, «Архитектор» 2026-10-11; the product's `Term.Check`). SN0 died,
+    the domain went to SN1 at term 2, and the members report to SN1 now: nothing about term 2 lands in SN0's store. SN0
+    comes back. Its process looks at its OWN store only — the record its agent carried home — and before the agent's pass
+    there is nothing there to yield to: a neighbour's `/api/held` is not read by `check`. The holder is a member first:
+    its agent follows `CLUSTERS` as any member's does, and on its first pass carries the root-signed record of term 2
+    home. The next look yields to it, and the agent carries through the new holder's door from then on."""
+    wall = Clock()
+    fed, devices, signer, offline, holder, agents = _site(wall)
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    devices["cam-SN0"].power_off()
+    move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
+    for name in ("cam-SN2", "cam-SN3"):
+        _agent(fed, devices, name, "cam-SN1", wall).sync()               # the members are on term 2
+
+    devices["cam-SN0"].boot()
+    assert holder.check() is True and holder.deposed_by is None          # its own store still says term 1
+    own = holder_agent(fed, devices, "cam-SN0", wall)
+    own.sync()                                                           # the agent's first pass
+    keys = signer.tokens.keyset()
+    assert read_holder(devices["cam-SN0"].flash, keys, wall())["term"] == 2 and "following cam-SN1" in own.followed
+    assert holder.check() is False and (holder.deposed_by["holder"], holder.deposed_by["term"]) == ("cam-SN1", 2)
+    assert own.holder_at == "cam-SN1"                                    # a member now: it carries through SN1's door
+
+
+def test_a_forged_or_unsigned_record_of_a_larger_term_deposes_no_holder():
+    """Never on a bare word (N12, ADR-0066). A neighbour holds a record of term 9 signed by a key the domain never
+    trusted, another an unsigned one of term 7: the holder's agent refuses both, carries nothing home, and the holder
+    stays. A forged record put straight into the holder's own store — past its agent — does not depose it either:
+    `check` verifies what it reads."""
+    wall = Clock()
+    fed, devices, signer, offline, holder, agents = _site(wall)
+    forged = sign({"term": 9, "holder": "cam-SN2", "at": wall()}, TokenIssuer(DOMAIN))
+    devices["cam-SN2"].flash.put("domain/holder", {"doc": json.dumps(forged, sort_keys=True)})
+    devices["cam-SN3"].flash.put("domain/holder", {"doc": json.dumps({"term": 7, "holder": "cam-SN3", "at": wall()})})
+    own = holder_agent(fed, devices, "cam-SN0", wall)
+    own.sync()
+    keys = signer.tokens.keyset()
+    assert read_holder(devices["cam-SN0"].flash, keys, wall())["term"] == 1
+    assert "refused from cam-SN2, cam-SN3" in own.followed, own.followed
+    assert holder.check() is True and holder.deposed_by is None
+    _, idx = holder.vars.get("domain/holder")
+    holder.vars.put("domain/holder", {"doc": json.dumps(forged, sort_keys=True)}, cas=idx)   # past the agent
+    assert holder.check() is True and holder.deposed_by is None
 
 
 def test_a_backup_not_signed_by_the_domain_is_ignored_however_new_it_claims_to_be():
@@ -233,6 +280,7 @@ def test_every_move_takes_a_larger_term_than_any_member_has_seen():
     assert report["term"] == 3
     _agent(fed, devices, "cam-SN3", "cam-SN2", wall).sync()
     devices["cam-SN1"].boot()
+    holder_agent(fed, devices, "cam-SN1", wall).sync()
     assert second.check() is False and find_holder(fed, devices["cam-SN3"].flash, signer.tokens.keyset(), wall()) == "cam-SN2"
 
 
@@ -407,6 +455,7 @@ def test_the_holders_card_says_each_members_copy_by_term_and_rev_a_former_holder
     new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
     assert (new.term, new.backup_rev) == (2, 1), (new.term, new.backup_rev)
     devices["cam-SN0"].boot()
+    holder_agent(fed, devices, "cam-SN0", wall).sync()
     assert holder.check() is False                                        # the former holder, a member now
     devices["cam-SN2"].boot()
     following = {n: _agent(fed, devices, n, "cam-SN1", wall) for n in ("cam-SN0", "cam-SN2", "cam-SN3", "cam-SN4")}
