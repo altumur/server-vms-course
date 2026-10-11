@@ -59,7 +59,7 @@ Group=2100
 # proxy. With one in front, set `127.0.0.1` here and name the proxy in `TRUSTED_PROXY` (the emergency entry's
 # limit then counts the address the proxy saw, not the proxy).
 Environment=CONSOLE_HOST=0.0.0.0
-# the port the README's `PLATFORM_DIR=… python3 -m vms controller  # the console on :8080` line refers to;
+# the port the README's `… python3 -m w2cplatform console   # the console on :8080` line refers to;
 # the page, `/spec`, `/cameras`, `/where`, `/metrics`, `/marks`, `/rec/…` all live here.
 Environment=CONSOLE_PORT=8080
 # THE BOX'S OWN DOOR (the review's sixth pass): the same console on a unix socket, beside the port. Who is "on the

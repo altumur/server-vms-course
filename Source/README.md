@@ -1,6 +1,8 @@
-# Source — the course's code, one root; М10, whole: the platform's shape on one box
+# Source — the course's code, one root: the platform, the VMS, the cluster, the domain
 
-The eleven lessons as one runnable package. No scheduler, no KVS, no database: two stores on disk, a controller that is the only writer, a worker that is DriverPack and holds the camera, a recorder that is the only writer of footage, into volumes of ObjectStorage through the host's `obsd` — and three more subsystems through the same platform, which proves it knows nothing about video.
+The lessons of five modules as one runnable package — 78 of them: М10A_Platform 21, М10B_ServerVMS 28, М11_Cluster 10,
+М12A_Domain 15, М12B_DomainVMS 4 (М13_Observability and М14_VendorVMS have a design, `module-design.md`, and no lessons
+yet). On one box (М10A, М10B): no scheduler, no KVS, no database: two stores on disk, a controller that is the only writer, a worker that is DriverPack and holds the camera, a recorder that is the only writer of footage, into volumes of ObjectStorage through the host's `obsd` — and three more subsystems through the same platform, which proves it knows nothing about video.
 
 ```
 Source/
@@ -28,8 +30,9 @@ Source/
                                `credentials` for what it found
     catalog.py                 the specs this process loaded (or `SPEC_DIR` names): which objects are rows, how an address
                                carries a login — what the platform used to know by name (the boundary's step 4)
-    host.py, __main__.py       the platform's own processes for any subsystem (the boundary's step 5): `python3 -m w2cplatform
-                               controller <sub> | resource` from `SPEC_DIR`, and the loops every controller, console and resource
+    host.py, __main__.py       the platform's own processes for any subsystem (the boundary's steps 5 and 6): `python3 -m w2cplatform
+                               controller <sub> | resource | console` from `SPEC_DIR` (`CONSOLE_ROOT` names the spec at `/`),
+                               and the loops every controller, console and resource
                                runs — `controller_loop`, `placement_pass`, `step` (said once a spell), `sweep_loop`, `run_resource`
     console.js, console.css    Lesson 16 the console module every page is built from (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md, version 1, the product's file):
                                the tree, the forms, servers, the domain, rights, the journal — from /spec and the platform's doors
@@ -56,9 +59,10 @@ Source/
                                at a time, a recording that goes on from where it stopped), CardRecorder (RecWorker's gate over the card; a failing card closed,
                                said and opened again; `card.prebuffer.short`)
     vms.subsystem.yaml         Lesson 6  the VMS's controller, as a spec: cameras numbered, seven operator fields, vms/retention/<cam> derived, labels-subset placement, requires: resource (for its events), the snapshot
-    controller.py              Lesson 6  vmscontroller: the platform's SpecController run from the spec, in the VMS's words (create_camera, cameras)
-    console.py                 Lesson 7  the console, its own process with its own token (the operator's rows, never placement): the platform's SpecConsole over the
-                               VMS's specs and nothing of the VMS's own — no media route: /where/<id> hands out the holder's door with a token, and the page reads
+    controller.py              Lesson 6  the VMS's words (create_camera, cameras) over the platform's SpecController, for the tests and the
+                               lessons — no process: the controller of `vms` is `python3 -m w2cplatform controller vms`
+    console.py                 Lesson 7  the one-box console's Mount for the tests and the lessons (the process is `python3 -m w2cplatform
+                               console`, `CONSOLE_ROOT=vms`): the platform's SpecConsole over the VMS's specs and nothing of the VMS's own — no media route: /where/<id> hands out the holder's door with a token, and the page reads
                                the footage from the recorder (/timeline, /segment) and the stream from the gateway (/whep) itself; the first viewer asks for a
                                fan-out with POST /live/streams
     vms.shell.html             Lesson 12 the VMS's page, `/` when CONSOLE_ROOT=vms (beside vms.subsystem.yaml): a shell over the platform's console module —
@@ -71,13 +75,13 @@ Source/
                                the kinds the row names in `alarms` as alarms (det.alarms/…), `motion` suppressed by the spec's window
     liveworker.py              Lesson 8  LiveWorker, a worker whose unit is a camera's fan-out and whose capacity is viewers: one subscription to the worker's
                                RTSP fan-out (live_url) per camera, N webrtcbin peers behind it, WHEP (POST /whep/<cam>, DELETE /whep/session/<id>), demand-created and demand-deleted units
-    resource.py                Lesson 10  the resource process: the platform's Resource with an EventIndex attached and the keeps for bucket retention — events only;
-                               the same function М11 runs as the resource job
     config.py                  the schema's Python view over the spec: row() and items()
+    jobs.py                    the VMS's housekeeping: the requests turned into work and the finished work into closed rows
+    domainpart/                М12B  the VMS's part on the domain's holder (vms/domainpart/README.md)
     __main__.py                python3 -m vms worker | recorder | gateway | detworker | detjobworker | surveyworker | autoworker — the
-                               VMS's workers — and controller | console | resource: the platform's loops over the VMS's own controller,
-                               console and resource, until their hooks are declarations (the boundary's step 6). The other
-                               subsystems' controllers are `python3 -m w2cplatform controller <sub>`
+                               VMS's workers — and jobs | domainpart. Every controller, the resource and the console are the
+                               platform's (`python3 -m w2cplatform …`, the boundary's step 6): the VMS has no process of its own
+                               beside its workers and these two
   gstvms/                      Track 2 — needs GStreamer
     uri.py                     Lesson 2  driverpack://file/<name> resolved and refused — pure, no GStreamer
     webrtc.py                  Lesson 8  the gateway's media path (Track 2): rtspsrc ! depay ! parse ! pay ! tee per camera, queue ! webrtcbin per viewer, WHEP without trickle
@@ -87,27 +91,41 @@ Source/
                                Lesson 5  GstRecActuator: shmsrc (the worker on this server) or rtspsrc ! rtph264depay (another server), then h264parse ! watchdog ! appsink —
                                each access unit a sample into the volume's writer
   deploy/                      Quadlet, on М9's box: Containerfile (localhost/vmsserver:latest, the image М11 builds FROM), obsd.service (the host's archive engine),
-                               vmsworker@.container, recworker@.container (the only writer of footage), w2c-controller@.container (every subsystem's
-                               controller, one instance per spec, as `w2c`), w2c-console.container, w2c-resource.container,
-                               liveworker@.container, detworker@.container, w2c.env.example + vms.env.example, check-quadlet.sh
+                               w2c-controller@.container (every subsystem's controller, one instance per spec, as `w2c`), w2c-console.container,
+                               w2c-resource.container — the platform's; vmsworker@, recworker@ (the only writer of footage), liveworker@, detworker@,
+                               detjobworker@, surveyworker@, autoworker@.container and vmsjobs.container — the VMS's; w2c-spares.sh and its units
+                               (a spare for an offer); w2c.env.example + vms.env.example, check-quadlet.sh
   tests/                       the suite: no GStreamer, but the archive's tests start a real obsd (OBSD_BIN); every runner keeps the run's
                                temp dirs under a root of its own (/tmp/w2c-tests-<pid> on macOS), removed at exit (runroot.py)
     cluster/                   М11's suite, its own runner (python3 tests/cluster/run.py), the traced stand (stand.py, trace.py)
-    domain/                    М12's suite, its own runner (python3 tests/domain/run.py)
-  cluster/                     М11: the package `cluster` — what a cluster adds on top of the above (cluster/README.md)
-  domain/                      М12: the package `domain` — the layer above the clusters (domain/README.md)
-  deploy/cluster/, deploy/domain/   М11's units and installer, М12's Nomad jobs and image
+    domain/                    М12A's suite, its own runner (python3 tests/domain/run.py)
+    domainvms/                 М12B's suite, its own runner (python3 tests/domainvms/run.py)
+    console/                   the console module's and the pages' jsdom tests, run by tests/run.py (`npm install` there, once)
+  w2cplatform/cluster/         М11: what a cluster adds on top of the above (w2cplatform/cluster/README.md) — `python3 -m
+                               w2cplatform.cluster controller <sub> | console | resource | rights`; the store's daemon is
+                               `python3 -m w2cplatform.configstore`
+  w2cplatform/domain/, trust/  М12A: the layer above the clusters — `python3 -m w2cplatform.domain.signer_service | .console |
+                               .agent`, the holder's tools `w2cplatform.domain.members | grants | breakglass`; the operator's
+                               tool `python3 -m w2cplatform.w2cctl`
+  deploy/cluster/, deploy/domain/   М11's units and installer (`w2c-run.sh <program>` runs every one of them), the domain's
+                               units (М12A, `vms-domainpart.service` М12B) and its image
   traces/                      М11's stand's traces, quoted by its lessons (python3 tests/cluster/stand.py --write)
 ```
 
 ```bash
 OBSD_BIN=<out>/build/obsd python3 tests/run.py        # obsd built from ObjectStorage: standalone-build/build.sh <out>
-PLATFORM_DIR=/data/platform python3 -m vms controller  # the console on :8080
+python3 tests/cluster/run.py; python3 tests/domain/run.py; python3 tests/domainvms/run.py   # М11's, М12A's, М12B's suites
+SPEC_DIR=vms python3 -m w2cplatform controller vms     # the cameras' controller: the platform's, from vms.subsystem.yaml
+SPEC_DIR=vms python3 -m w2cplatform controller rec     # the recordings' — one per spec: vms rec live det detjob survey auto
+SPEC_DIR=vms python3 -m w2cplatform resource           # the box's resource: heartbeat, every spec's buckets, /events
+SPEC_DIR=vms CONSOLE_ROOT=vms python3 -m w2cplatform console   # the console on :8080: the VMS at /, the others under /rec/, /live/, …
 WORKER_NAME=w-1 python3 -m vms worker                  # with GStreamer: holds cameras, rtsp://<box>:8554/<cam>; without: the fake actuator
 RECORDER_NAME=r-1 python3 -m vms recorder              # subscribes to the fan-out, writes into its volume through the host's obsd
+LIVE_NAME=g-1 python3 -m vms gateway                   # a live gateway: WHEP for the camera's viewers
 python3 -m vms worker                                  # no name: claims the first free slot — a lapsed one first
-SPEC_DIR=vms python3 -m w2cplatform controller rec     # the recordings' controller: the platform's, from rec.subsystem.yaml
+python3 -m vms jobs                                    # the VMS's housekeeping: requests into work, finished work into closed rows
 ```
+(`PLATFORM_DIR`, by default `/data/platform`, is where every one of them finds the box's two stores.)
 
 ## The Go implementation — the product's
 
@@ -116,7 +134,9 @@ subsystem, the same decisions. **It belongs to the product, not to the course.**
 this package, and lessons no longer promise that Go has caught up: where they compare the two, they are
 describing how the product does it, not a second thing kept in step lesson by lesson.
 
-## What each lesson's deliverable became
+## What each lesson's deliverable became — М10's first eleven, by its first plan
+
+The numbers are the ones the `tests/test_lessonN_*.py` names keep, not today's lesson numbers of М10A and М10B.
 
 | Lesson | Deliverable | Test |
 |---|---|---|
