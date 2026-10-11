@@ -716,27 +716,22 @@ def f06_old_holder_back(site) -> None:
     with log.muted():
         _holder_moves(site)
     site.wall.advance(60)
-    log.note("Отказ 6. Старый держатель srv вернулся. Его подписывающий смотрит, держит ли он ещё домен (DomainHolder.check):\n"
-             "свой store, потом соседи — по их отчётам у себя.")
+    log.note("Отказ 6. Старый держатель srv вернулся. Держатель — прежде всего член: его агент, как агент любого члена,\n"
+             "спрашивает консоли CLUSTERS, у кого домен (GET /api/held), и несёт домой подписанную запись большего срока\n"
+             "(take_record) — FINDINGS.md, N12.")
     site.on("srv")
+    site.sync("srv")
+    log.note("Подписывающий srv смотрит, держит ли он ещё домен (DomainHolder.check, у продукта Term.Check): только своё\n"
+             "хранилище — запись срока 2, которую принёс его агент, проверенная корнем. Срок больше его — он уступает.")
     site.holder.run_pass()
-    st, said = 0, {}
     with log.acting("operator on srv"):
         import urllib.request
         with urllib.request.urlopen(site.signer_url + "/api/holder", timeout=10) as r:
             said = json.loads(r.read())
-    log.note("srv о себе (GET /api/holder): " + json.dumps({k: said.get(k) for k in ("term", "deposed", "deposed_by")},
-                                                          ensure_ascii=False))
-    log.note("Агент relay-a отчитывается в дверь держателя срока 2 — relay-a:8071 (N5 исправлена), не в объекты srv:\n"
-             "из отчётов членов srv о сроке 2 не узнает. Свой агент srv за /api/held не следует (у курса следует только\n"
-             "агент с DOMAIN_URL), и srv держателем себя считать не перестаёт — FINDINGS.md, N12.")
-    site.sync("relay-a")
-    site.holder.run_pass()
-    with log.acting("operator on srv"):
-        with urllib.request.urlopen(site.signer_url + "/api/holder", timeout=10) as r:
-            said = json.loads(r.read())
     log.note("srv о себе (GET /api/holder): " + json.dumps({k: said.get(k) for k in ("term", "deposed", "deposed_by",
                                                                                      "stranded")}, ensure_ascii=False))
+    log.note("Агент srv теперь член: несёт через дверь держателя срока 2 — relay-a:8071.")
+    site.sync("srv")
     site.sync("relay-b")
 
 

@@ -30,8 +30,9 @@ stolen. So moving the domain has to become an ordinary operation, and three thin
 Who opens which connection (Lesson 10, step 7). The holder reads the other members only by their REPORTS, left
 in its own store by their agents (`reported`) — a planned handover sees that the target took the last backup
 in the target's report, never by calling it. The site's doors are used only by a member acting as a member:
-one that boots and looks for the holder (`find_holder`), an old holder that comes back and looks whether it still is
-one (`check`), and the operator moving the domain to a member, which reads its neighbours for the newest backup and
+one that boots and looks for the holder (`find_holder`), every member's agent following the holder — the holder's own
+agent too, which is how an old holder that comes back learns it was replaced (`check` reads what its agent carried
+home; N12) — and the operator moving the domain to a member, which reads its neighbours for the newest backup and
 the largest term (`move_domain`) — the one exception the lesson names, because the holder that would have held the
 reports is the one that is gone. That move is the new holder's signer's operation (`signer_service.Holder.move`,
 `POST /api/move`, which `w2cctl domain move` calls), checked by the recovery file.
@@ -558,6 +559,13 @@ class DomainHolder:
         import hashlib
         self._not_deposed()                              # a FROZEN holder still backs up: that is how it hands over
         self.backups = objects
+        # The holder's member key as its agent made it, read at every backup as the product reads it (`MemberKey` in
+        # `Term.Backup`): an agent that made its key after this process claimed the term — both start at boot — left
+        # the backups without it, and the holder, replaced and a member again, was refused at the new holder's door
+        # (the office–centre scenario, f06, with N12).
+        if not self.member_key:
+            from w2cplatform.trust.memberkey import ROW
+            self.member_key = (self.vars.get(ROW)[0] or {}).get("pub") or None
         plain, objs = self._plain(), self.export_objects()
         content = hashlib.sha256(json.dumps({"state": plain, "objects": objs, "backup_key_rev": self.signer.backup_rev,
                                              "holder_key": self.member_key}, sort_keys=True, ensure_ascii=False,
@@ -581,25 +589,22 @@ class DomainHolder:
                 self.vars.put(path, dict(self._backup_pointer), cas=idx)
         return self.backup_rev
 
-    # Is this holder still the holder? Any member that carries a larger term says no. Read, not told: the
-    # loser finds out on its next look, exactly as a fenced worker does. It looks as any member looks for the
-    # holder at boot — opening the connections itself: the members that follow the new term report to the NEW
-    # holder, so nothing about it would ever land in this one's store.
-    #
-    # Its OWN store first: this cluster is a member too, and its agent carries the holder record home like any
-    # agent — a holder whose neighbours' doors are closed learns it was replaced from its own agent, or not at all.
+    # Is this holder still the holder? Its OWN store says (the product's `Term.Check`; «Архитектор» 2026-10-11, ADR-0066,
+    # the office–centre scenario's N12). This cluster is a member first: its agent follows `CLUSTERS` like any
+    # member's (`agent.HolderFollower` — `/api/held` at every console, the greatest term that verifies) and carries the
+    # SIGNED record home (`take_record`). `check` yields to that record when it names a larger term AND verifies against
+    # the key set this cluster carries (`read_holder` → `verified_record`: by the root once a root is pinned) — never to
+    # a bare word, and never to a console's `/api/held` read here: what it said counts only once the agent took it.
+    # Read, not told: the loser finds out on its agent's next pass, exactly as a fenced worker does. It used to look
+    # through its neighbours' stores too — by their reports in its own objects, and members that follow the new term
+    # report to the NEW holder: a holder that came back kept holding (N12).
     def check(self) -> bool:
         from .agent import ClusterTrust
         keys = ClusterTrust(self.vars).keyset() or self.signer.tokens.keyset()   # the published set: the root in it
-        for name, c in [(self.name, self.fed.clusters[self.name]),
-                        *[(n, c) for n, c in self.fed.clusters.items() if n != self.name]]:
-            try:
-                rec = read_holder(c.vars, keys, self.wall())
-            except Unreachable:
-                continue
-            if rec and int(rec["term"]) > self.term:
-                self.depose(rec)
-                return False
+        rec = read_holder(self.vars, keys, self.wall())
+        if rec and int(rec["term"]) > self.term:
+            self.depose(rec)
+            return False
         return True
 
     # Replaced, by the record given — verified by whoever read it: `check`, or a planned handover whose target answered
@@ -1116,8 +1121,8 @@ def handover(holder: DomainHolder, to: str, objects_of, carry_to, take,
     except RuntimeError:
         holder.frozen_for = None
         raise
-    # The record the target claimed, as it answered: verified here like any record a member reads — and, where the
-    # target is reachable as a store of the site (the lessons), read there by `check` as well.
+    # The record the target claimed, as it answered: verified here like any record a member reads — or, where it
+    # answered none, the record this holder's own agent carried home by then (`check`).
     from .agent import ClusterTrust, Untrusted
     try:
         keys = ClusterTrust(holder.vars).keyset() or holder.signer.tokens.keyset()

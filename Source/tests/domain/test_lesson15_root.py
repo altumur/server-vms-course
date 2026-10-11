@@ -18,7 +18,7 @@ from w2cplatform.domain.shared import SharedSettings, SharedView, sign
 from w2cplatform.trust.signer import DomainRoot, Signer, TrustBundle, VerifyError, _key_bytes
 from w2cplatform.domain.term import carry_holder, find_holder, install, move_domain, read_holder
 from w2cplatform.trust.tokens import KeySet, TokenError, verify
-from tests.domain.conftest import Clock
+from tests.domain.conftest import Clock, holder_agent
 
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -169,6 +169,7 @@ def test_a_planned_move_gives_the_new_holder_keys_of_its_own_and_the_old_ones_li
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall)
     a2.sync()
     assert verify(old_token, ClusterTrust(devices["cam-SN2"].flash).keyset(), now=wall())["sub"] == "anna"
+    holder_agent(fed, devices, "cam-SN0", wall).sync()                  # its own agent carries term 2 home
     assert holder.check() is False
     stored, _ = holder.vars.get("domain/signer")
     assert "token_key" not in stored and "deposed by term 2" in stored["forgotten"]
