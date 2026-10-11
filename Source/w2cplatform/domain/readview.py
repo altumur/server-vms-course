@@ -189,10 +189,10 @@ class ReadView:
             self.retry_at.pop(name, None)
         self.passes += 1
 
-    # A MEMBER THAT LEFT LEAVES THE VIEW IN THE SAME PASS (the scenario «камера — офис — центр», N8; ADR-0074, its
+    # A MEMBER THAT LEFT LEAVES THE VIEW IN THE SAME PASS (the three-site run, N8; ADR-0074, its
     # addition). `members.apply` drops it from the federation; this view kept what it last read of it — a silent member's
-    # rows are kept on purpose (`last_known`), and a removed one's were kept the same way: `/domain/vms/cameras` listed
-    # its camera as live, `clusters` no longer named it. Whatever is not in the federation is forgotten here, all of it.
+    # rows are kept on purpose (`last_known`), and a removed one's were kept the same way: a subsystem's list of units
+    # showed its units as live, `clusters` no longer named it. Whatever is not in the federation is forgotten here, all of it.
     def _forget_gone(self) -> None:
         here = set(self.fed.clusters)
         for key in [k for k in self.snapshots if k[0] not in here]:

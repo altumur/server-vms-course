@@ -142,9 +142,9 @@ class BundleView:
     # coordinator's decision). One member's entry that is not an object is that member's alone, and one record of an
     # entry that is not a string is that record's (feedback from the product: one record rejected its relay's bundle).
     #
-    # READ ONCE A PASS (the scenario «камера — офис — центр», N11): every look at a member behind the relay — its mark,
+    # READ ONCE A PASS (the three-site run, N11): every look at a member behind the relay — its mark,
     # each road's mark, its heartbeats, its snapshot, its page — read the whole bundle from the store and parsed it, some
-    # forty times a camera a pass. Inside a pass (`steps.once`) the bundle is read and parsed once; outside one, every time.
+    # forty times a member a pass. Inside a pass (`steps.once`) the bundle is read and parsed once; outside one, every time.
     def _doc(self):
         """The bundle as parsed: a dict, None when there is none, or what is wrong with it (an exception, not raised)."""
         from w2cplatform.rows import PARSE_ERRORS

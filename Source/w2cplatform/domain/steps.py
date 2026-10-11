@@ -19,8 +19,8 @@ import contextlib
 import logging
 import threading
 
-# ONE READ A PASS (the scenario «камера — офис — центр», N11). What a pass reads many times and nobody writes while it
-# runs — a relay's summary report, read again for every look at every member behind it, some forty times a camera — is
+# ONE READ A PASS (the three-site run, N11). What a pass reads many times and nobody writes while it
+# runs — a relay's summary report, read again for every look at every member behind it, some forty times a member — is
 # read once: `once(key, read)` inside a pass gives what `read()` gave the first time; outside a pass (a door answering a
 # request, a test) it reads every time, as before. A pass is `Steps.run`, or `one_pass()` around several of them; this
 # thread's only — a pass's lanes read for themselves.

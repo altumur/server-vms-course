@@ -546,10 +546,10 @@ class DomainHolder:
                     out[key] = raw.decode()
         return out
 
-    # A REVISION IS THE DOMAIN'S CONTENT (the scenario «камера — офис — центр», N10, «Архитектор» 2026-10-11): the
+    # A REVISION IS THE DOMAIN'S CONTENT (the three-site run, N10, «Архитектор» 2026-10-11): the
     # signer's pass backs up every `backup_every`, and a pass that found nothing changed sealed a new revision all the
     # same — and every keeper's agent, seeing a newer pointer, wrote `domain/backup-taken` to its flash: some 2880 writes a
-    # day into a camera's flash, for nothing. Now the pass compares what it would seal — the rows with their secrets OPEN
+    # day into a small member's flash, for nothing. Now the pass compares what it would seal — the rows with their secrets OPEN
     # (sealing draws a fresh nonce: two seals of one row never match), the objects, the backup key's revision, the
     # holder's key — with what the last backup said; the same is no new revision, and a pointer that already names it is
     # not written again. The digest lives in this process only: a restarted holder writes one revision more, once.

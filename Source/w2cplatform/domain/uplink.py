@@ -418,8 +418,8 @@ _FRESH: dict[tuple[int, str], _Fresh] = {}
 
 def last_report_at(member: str, domain_objects, lost_after: float = 45.0, wall=time.time) -> float | None:
     """When the member's last report was made, on the domain's clock — however old; None: it never reported (or its mark
-    does not read). What the domain calls a member silent by when it reports no page (the scenario «камера — офис —
-    центр», N9): the same remembered sequence as its pages' (`_FRESH`)."""
+    does not read). What the domain calls a member silent by when it reports no page (the three-site
+    run, N9): the same remembered sequence as its pages' (`_FRESH`)."""
     f = _FRESH.setdefault((id(domain_objects), member), _Fresh(member, domain_objects, lost_after, wall))
     f.lost_after, f.wall = lost_after, wall
     try:
