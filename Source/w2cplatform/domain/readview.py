@@ -150,7 +150,8 @@ class ReadView:
 
     def refresh(self) -> None:
         now = self.wall()
-        due = [(n, c) for n, c in self.fed.clusters.items() if self.retry_at.get(n, 0) <= now]
+        self._forget_gone()
+        due =[(n, c) for n, c in self.fed.clusters.items() if self.retry_at.get(n, 0) <= now]
         if self.lanes > 1 and len(due) > 1:
             from concurrent.futures import ThreadPoolExecutor
             with ThreadPoolExecutor(max_workers=min(self.lanes, len(due))) as pool:
@@ -187,6 +188,19 @@ class ReadView:
             self.failures.pop(name, None)
             self.retry_at.pop(name, None)
         self.passes += 1
+
+    # A MEMBER THAT LEFT LEAVES THE VIEW IN THE SAME PASS (the three-site run, N8; ADR-0074, its
+    # addition). `members.apply` drops it from the federation; this view kept what it last read of it — a silent member's
+    # rows are kept on purpose (`last_known`), and a removed one's were kept the same way: a subsystem's list of units
+    # showed its units as live, `clusters` no longer named it. Whatever is not in the federation is forgotten here, all of it.
+    def _forget_gone(self) -> None:
+        here = set(self.fed.clusters)
+        for key in [k for k in self.snapshots if k[0] not in here]:
+            del self.snapshots[key]
+        for kept in (self.configured, self.configured_at, self.cluster_ok, self.cluster_down_since, self.failures,
+                     self.retry_at, self.why):
+            for name in [n for n in kept if n not in here]:
+                del kept[name]
 
     def _try(self, c):
         try:

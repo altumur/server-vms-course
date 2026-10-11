@@ -123,6 +123,30 @@ def test_a_viewer_in_the_centre_the_want_travels_down_and_the_stream_up():
     assert {u for who, u in dialled if who == "camera"} == set(RELAY_URLS)       # the camera dialled its relay only
 
 
+def test_a_relay_the_centre_stopped_wanting_lets_go_of_its_subscription_and_the_next_viewer_gets_no_old_frames():
+    """The scenario «камера — офис — центр», N7: when the centre no longer wanted the stream, the relay's forwarder let go
+    of its want — and stayed subscribed to the camera's stream at its own ingest, its queue filling (up to
+    `FORWARD_FRAMES`) while the relay's recorder still took the camera. The next viewer in the centre got the backlog
+    first — up to ~10 s of old frames before the live edge. Now a stream nobody up there wants is unsubscribed (its losses
+    counted), and a viewer that comes later starts at the live edge."""
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    relay.want(SERIAL, "recorder:east")                                # the relay's own recorder takes the camera
+    rq = relay.subscribe(SERIAL, "recorder:east")
+    gw = Gateway("gw-centre", where=lambda c: audience("north"), endpoint=lambda w: IngestLiveEndpoint(centre, lambda t, c: "anna"))
+    vq = gw.watch(SERIAL, "anna-token", "anna")
+    fwd.pass_once(); pusher.pass_once(["f1", "f2"]); fwd.pass_once(); gw.pump()
+    assert vq.drain() == ["f1", "f2"]
+    gw.leave(SERIAL, "anna"); wall.advance(LINGER + 1)
+    fwd.pass_once()                                                    # the centre wants it no more
+    assert fwd.up not in relay.tees[(SERIAL, "live")].subscribers      # …and the relay is no longer subscribed
+    assert pusher.pass_once(["old1", "old2", "old3"])["pushed"] == 3   # the relay's recorder still takes the camera
+    assert rq.drain()[-3:] == ["old1", "old2", "old3"]
+    vq = gw.watch(SERIAL, "anna-token", "anna")                        # a new viewer in the centre
+    fwd.pass_once(); pusher.pass_once(["new1"]); fwd.pass_once(); gw.pump()
+    assert vq.drain() == ["new1"]                                      # the live edge, nothing old
+
+
 def test_the_centres_copy_is_fed_by_the_relay_and_the_camera_serves_one_session():
     """An important camera kept in the centre too (a backup recording on the centre's volume, М10B Lesson 26).
     The camera still serves one session — to its relay; the centre receives from the relay."""

@@ -84,6 +84,11 @@ def _keep_an_edit_for(fed, devices, camera, holder_vars, wall, holder="cam-SN0")
     return api.update_unit(camera, {"name": f"{camera}-renamed"}, idempotency_key=f"k-{camera}", token="anna")
 
 
+def _grant(holder_vars, who, wall):
+    """A change of the domain's state — a grant — so that the next backup is a new revision (N10)."""
+    DomainPublisher(holder_vars).publish_grants("cam-SN3", [Grant(who, "view", None, wall() + 86400)])
+
+
 def _objects(devices):
     return lambda name: devices[name].disk_door()
 
@@ -393,7 +398,8 @@ def test_the_holders_card_says_each_members_copy_by_term_and_rev_a_former_holder
     fed, devices, signer, offline, holder, agents = _site(wall, n=5)
     holder.backup(["cam-SN1", "cam-SN2"], devices["cam-SN0"].disk_door())
     agents["cam-SN1"].sync()
-    for _ in range(4):
+    for i in range(4):                                   # a revision is a change (N10): four edits, four revisions
+        _grant(holder.vars, f"p{i}", wall)
         holder.backup(["cam-SN2"], devices["cam-SN0"].disk_door())
     agents["cam-SN2"].sync()
     devices["cam-SN2"].power_off()
@@ -406,6 +412,7 @@ def test_the_holders_card_says_each_members_copy_by_term_and_rev_a_former_holder
     following = {n: _agent(fed, devices, n, "cam-SN1", wall) for n in ("cam-SN0", "cam-SN2", "cam-SN3", "cam-SN4")}
     assert new.backup(["cam-SN0", "cam-SN3"], devices["cam-SN1"].disk_door()) == 2
     following["cam-SN0"].sync(); following["cam-SN3"].sync()
+    _grant(new.vars, "q", wall)
     assert new.backup(["cam-SN3"], devices["cam-SN1"].disk_door()) == 3
     following["cam-SN3"].sync()
     devices["cam-SN4"].flash.put(BACKUP_TAKEN, {"rev": "seven", "term": 2, "sha256": "x"})   # a row nobody can read as a pair
@@ -423,3 +430,30 @@ def test_the_holders_card_says_each_members_copy_by_term_and_rev_a_former_holder
 
     said = held("cam-SN2", devices["cam-SN2"].flash)
     assert said["backup"] == {"term": 1, "rev": 5} and "copies" not in said    # its own pair, and only that
+
+
+def test_a_quiet_domain_writes_no_new_backup_and_touches_no_keepers_flash():
+    """The scenario «камера — офис — центр», N10: the signer sealed a new revision every pass, changed or not, and the
+    keeper camera wrote `domain/backup-taken` to its flash on each (~2880 a day). A revision is the domain's CONTENT: a
+    quiet domain over many passes writes no new revision and no pointer, and the keeper's agent writes nothing to its
+    flash; a change — a grant — is the next revision, carried home once."""
+    wall = Clock()
+    fed, devices, signer, offline, holder, agents = _site(wall)
+    disk, flash = devices["cam-SN0"].disk, devices["cam-SN1"].flash
+    assert holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()) == 1
+    agents["cam-SN1"].sync()
+    taken, idx = flash.get(BACKUP_TAKEN)
+    pointer = holder.vars.get("domain/keepers/cam-SN1")
+    assert int(taken["rev"]) == 1
+    for _ in range(10):                                  # ten quiet passes, 30 s apart
+        wall.advance(30)
+        assert holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()) == 1
+        agents["cam-SN1"].sync()
+    assert disk.list("backup/rev-") == ["backup/rev-1"], disk.list("backup/rev-")
+    assert holder.vars.get("domain/keepers/cam-SN1") == pointer          # the pointer not written again
+    assert flash.get(BACKUP_TAKEN)[1] == idx                             # the keeper's flash not touched
+    _grant(holder.vars, "boris", wall)
+    wall.advance(30)
+    assert holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()) == 2
+    agents["cam-SN1"].sync()
+    assert int(flash.get(BACKUP_TAKEN)[0]["rev"]) == 2

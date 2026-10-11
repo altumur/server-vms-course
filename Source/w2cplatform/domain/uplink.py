@@ -416,6 +416,20 @@ def offset_of(copy: Cluster) -> float:
 _FRESH: dict[tuple[int, str], _Fresh] = {}
 
 
+def last_report_at(member: str, domain_objects, lost_after: float = 45.0, wall=time.time) -> float | None:
+    """When the member's last report was made, on the domain's clock — however old; None: it never reported (or its mark
+    does not read). What the domain calls a member silent by when it reports no page (the three-site
+    run, N9): the same remembered sequence as its pages' (`_FRESH`)."""
+    f = _FRESH.setdefault((id(domain_objects), member), _Fresh(member, domain_objects, lost_after, wall))
+    f.lost_after, f.wall = lost_after, wall
+    try:
+        f.check()
+    except Unreachable:
+        if f.seq is None:
+            return None
+    return f.seen_at
+
+
 def page(member: str, name: str, domain_objects, lost_after: float = 45.0, wall=time.time,
          stale_ok: bool = False) -> dict | None:
     """One page a member reported (Lesson 14's alarms), with its times on the domain's clock, or Unreachable

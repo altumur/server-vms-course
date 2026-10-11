@@ -247,6 +247,17 @@ def s09_stream_flows(site) -> None:
     with log.acting("recworker r-relay-a-1 on relay-a"):
         rec.heartbeat_once()
     site.say_heartbeat("relay-a")
+    # N6: the domain hears the office's recorder only by the office's report — the book says `running` at the first pass
+    # of the VMS worker on the domain after relay-a's agent carried this heartbeat up, not before (ADR-0074).
+    log.note("Агент relay-a несёт отчёт с этим биением (свёрнуто); проход воркера VMS на домене видит запись SN-A идущей:\n"
+             "книга основных cam-a — running. Раньше отчёта офиса домен этого не знает: книги — из отчётов членов.")
+    with log.muted():
+        site.sync("relay-a")
+    site.domainpart.pass_once()
+    log.note("Агенты relay-a и cam-a несут новую книгу домой (свёрнуто): копия на флеше cam-a тоже говорит running.")
+    with log.muted():
+        site.sync("relay-a")
+        site.sync("cam-a")
     key = "rec/polled/" + "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in site.ingest_url("relay-a"))
     raw = rec.objects.get(key)
     log.note(f"свидетель для тревог {key} (объект на relay-a): " + (raw.decode() if raw else "нет"))

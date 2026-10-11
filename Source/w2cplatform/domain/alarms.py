@@ -128,13 +128,19 @@ class ReportedDoor:
 
     # The last report of a member that has gone silent — one agent pass behind the member, less when the alarm
     # woke the agent. `known_until` is when the report was made, on the domain's clock. None: it never reported.
+    # A member that reports NO page — an office, whose agent is given no `pages` — is silent by its last report all the
+    # same, by the same rule and threshold as any member with a page (the three-site run, N9, «Архитектор»
+    # 2026-10-11): it was "has never reported to the domain", the list looking for its silence in a page it never had.
     def last(self, since, until, limit) -> dict | None:
-        from .uplink import page
+        from .uplink import last_report_at, page
         try:
             p = page(self.member, "alarms", self.store, self.lost_after, self.wall, stale_ok=True)
         except Unreachable:
             return None
-        return None if p is None else {**self._cut(p, since, until, limit), "known_until": p.get("to")}
+        if p is None:
+            at = last_report_at(self.member, self.store, self.lost_after, self.wall)
+            return None if at is None else {"events": [], "truncated": False, "known_until": at}
+        return {**self._cut(p, since, until, limit), "known_until": p.get("to")}
 
 
 # A MEMBER'S PAGE IS READ WHERE ITS REPORT LIES — behind a relay, in the relay's summary (the three-site run, O7).

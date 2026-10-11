@@ -404,15 +404,20 @@ class Forwarder:
         log.warning("%s: the centre wanted %s and has said nothing for longer than it is kept (%.0f s); the camera's card "
                     "goes by this relay's word again", self.name, ref, UP_KEPT_FOR)
 
+    def _unsubscribe(self, ref: str) -> None:
+        """This relay's subscription to the camera's stream at its own ingest let go — what its queue held dropped, and
+        counted (`dropped`) as before."""
+        q = self.queues.pop(ref, None)
+        if q is not None:
+            self.dropped[ref] = self.dropped.get(ref, 0) + getattr(q, "dropped", 0)   # its losses stay counted
+            self.local.unsubscribe(ref, self.up, "live")
+
     def _left(self, ref: str, stop: threading.Event) -> None:
         """A camera's loop ended — its camera left the upstream book (the fifteenth review, minor 9; the product's `Pass`
         closes `c.stop`, `recproc/forwarder.go`), or the recorder stops: what it held goes with it — its subscription at
         this relay's ingest and its want there, what it kept to push again, the centre's word told to the camera. Its
         thread and its subscription grew with every camera the relay ever forwarded."""
-        q = self.queues.pop(ref, None)
-        if q is not None:
-            self.dropped[ref] = self.dropped.get(ref, 0) + getattr(q, "dropped", 0)   # its losses stay counted
-            self.local.unsubscribe(ref, self.up, "live")
+        self._unsubscribe(ref)
         self.local.release(ref, self.up)
         for kept in (self.unsent, self.versions, self.forwarding, self.state):
             kept.pop(ref, None)
@@ -453,6 +458,10 @@ class Forwarder:
         else:
             self.local.release(ref, self.up)
             self.unsent.pop(ref, None)                          # nobody up there wants it: nothing to send again
+            # …and nothing to keep (the scenario «камера — офис — центр», N7): subscribed still, the queue filled while
+            # this relay's own recorder took the camera, and the next viewer up there got up to `FORWARD_FRAMES` old
+            # frames before the live edge. Unsubscribed now, its losses counted; the next want subscribes afresh.
+            self._unsubscribe(ref)
             said = "the centre does not want it"
         # The card's rule, one level up — all of it (the sixth review): the recording the centre named goes to the
         # archive's reader, and an archive that could not read the range says so (`failed`) instead of leaving the
