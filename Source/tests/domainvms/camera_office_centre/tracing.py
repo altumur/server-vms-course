@@ -296,9 +296,9 @@ class Log(TraceLog):
 
 CANONICAL = {"authorization": "Authorization", "x-w2c-time": "X-W2C-Time", "x-w2c-seal": "X-W2C-Seal",
              "x-w2c-signature": "X-W2C-Signature", "idempotency-key": "Idempotency-Key", "x-operator": "X-Operator",
-             "x-camera-clock": "X-Camera-Clock"}
+             "x-camera-clock": "X-Camera-Clock", "x-agent-signature": "X-Agent-Signature"}
 SHOWN_HEADERS = ("authorization", "x-w2c-time", "x-w2c-seal", "x-w2c-signature", "idempotency-key", "x-operator",
-                 "x-camera-clock")
+                 "x-camera-clock", "x-agent-signature")
 
 
 def _parsed(raw):
@@ -336,6 +336,9 @@ class Names:
     def header(self, k: str, v: str) -> str:
         if k.lower() == "authorization" and v.startswith("Bearer "):
             return "Bearer " + self.one("token", v[7:])
+        if k.lower() == "x-agent-signature" and "." in v:          # the agent's form: `<ms>.<signature>` — the time shown
+            ms, _, sig = v.partition(".")
+            return f"{ms}." + self.name("подпись", sig)
         return self.one(k.lower(), v)
 
     def one(self, key: str, v: str) -> str:
