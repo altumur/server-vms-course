@@ -562,7 +562,7 @@ class DomainHolder:
         # The holder's member key as its agent made it, read at every backup as the product reads it (`MemberKey` in
         # `Term.Backup`): an agent that made its key after this process claimed the term — both start at boot — left
         # the backups without it, and the holder, replaced and a member again, was refused at the new holder's door
-        # (the camera-office-centre scenario, f06, with N12).
+        # (the office–centre scenario, f06, with N12).
         if not self.member_key:
             from w2cplatform.trust.memberkey import ROW
             self.member_key = (self.vars.get(ROW)[0] or {}).get("pub") or None
@@ -590,7 +590,7 @@ class DomainHolder:
         return self.backup_rev
 
     # Is this holder still the holder? Its OWN store says (the product's `Term.Check`; «Архитектор» 2026-10-11, ADR-0066,
-    # the camera-office-centre scenario's N12). This cluster is a member first: its agent follows `CLUSTERS` like any
+    # the office–centre scenario's N12). This cluster is a member first: its agent follows `CLUSTERS` like any
     # member's (`agent.HolderFollower` — `/api/held` at every console, the greatest term that verifies) and carries the
     # SIGNED record home (`take_record`). `check` yields to that record when it names a larger term AND verifies against
     # the key set this cluster carries (`read_holder` → `verified_record`: by the root once a root is pinned) — never to

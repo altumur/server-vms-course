@@ -716,7 +716,7 @@ def main() -> None:
     # relay is its road, whoever holds the domain. The holder's own agent (`DOMAIN_CONFIG_URL`) follows too: the holder
     # is a member first, and the signed record its agent carries home is how a holder that came back learns it was
     # replaced (`term.DomainHolder.check`, the product's `Term.Check`; «Архитектор» 2026-10-11, ADR-0066; the
-    # camera-office-centre scenario's N12) — and from then on it carries through the new holder's door, as any member.
+    # office–centre scenario's N12) — and from then on it carries through the new holder's door, as any member.
     from .runtime import consoles_from_env
     consoles = consoles_from_env() if not os.environ.get("RELAY_URL") else {}
     follow = HolderFollower({n: (lambda u=u: ask_held(u)) for n, u in consoles.items()}) if consoles else None
