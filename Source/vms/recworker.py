@@ -540,6 +540,7 @@ class RecWorker(VmsWorker):
         self._rows_seen: dict[str, dict | None] = {}   # recording -> its row as last read, for the door (`_visible_from`)
         self._not_written_since: dict[str, float] = {}   # primary recording -> since when nobody writes it
         self.holding: dict[str, bool] = {}          # `when: offline` recording -> is its pipeline on hold now
+        self.gate_why: dict[str, str] = {}          # `when: offline` recording -> the gate's last reason (`primary_needs_cover`)
         self._primary_back_since: dict[str, float] = {}  # released backup -> since when its primary is written again
         # KEEPS (feedback BH): a recorder holding an INCIDENTS volume copies into it what somebody said to keep
         # (`keep_pass`). What each keep holds there, as last seen, and what the last pass found.
@@ -850,8 +851,8 @@ class RecWorker(VmsWorker):
             if st["phase"] == "running" and st.get("push_waiting"):
                 st["phase"] = "waiting"
             if st["phase"] == "running" and self.holding.get(str(st["id"])):
-                st["phase"], st["why"] = "standby", (f"the primary recording is being written; the last "
-                                                     f"{self.prebuffered(st['id']):.0f} s are held in memory")
+                st["phase"], st["why"] = "standby", (f"{self.gate_why.get(str(st['id'])) or 'held by the gate'}; the "
+                                                     f"last {self.prebuffered(st['id']):.0f} s are held in memory")
                 if str(st["id"]) in self._cover_since:
                     st["why"] = (f"the stream broke {self.wall() - self._cover_since[str(st['id'])]:.0f} s ago; held in "
                                  f"memory for {self.defer_for():.0f} s before the card writes — the camera may continue it")
@@ -975,23 +976,36 @@ class RecWorker(VmsWorker):
         if keeper is not None:
             keeper(uid, keep)
 
+    # WHY, said in the status (finding O4 of the scenario «камера — офис — центр»). The gate's every answer has a
+    # reason, and a held backup's status said one for all of them — "the primary recording is being written" — of a camera
+    # whose primary nobody knew of: a camera alone, or one whose agent had not yet carried the book of primaries home.
+    # The decision there is the product's (`BackupGate`, `primaryNeedsCover`): no primary known anywhere — not in this
+    # cluster, not in the book — is nothing to stand in for, and the card holds (a backup covers a failure, never a
+    # decision) until the agent carries an entry, and the entry decides. Only the words were wrong. Each answer leaves
+    # its reason in `gate_why`, by recording, and the held backup's status says it — the product's `link`.
     def primary_needs_cover(self, row: dict, now: float | None = None) -> bool:
-        now = self.wall() if now is None else now
+        need, why = self._primary_word(row, self.wall() if now is None else now)
+        self.gate_why[str(row["id"])] = why
+        return need
+
+    def _primary_word(self, row: dict, now: float) -> tuple[bool, str]:
         said = self.stream_says(row) if self.stream_says is not None else None
         if said is not None:
-            return bool(said)
-        carried = self.carried_primary(row, now)
+            return bool(said), ("the camera says its primary does not take the stream" if said else
+                                "the camera says its primary takes the stream")
+        carried = self.carried_word(row, now)
         if carried is not None:
             return carried
         look = self._look()
         names = look.backups()
         units = look.units(self.SUB.name)
-        need = False
+        need, known, failing, starting, written = False, False, "", "", ""
         # The camera's other recordings from the pass's map by camera, and what the recorders say of each from its map
         # by recording (the scaling pass): every row and every recorder's heartbeat were read again for each backup.
         for other in look.by_cam().get(str(row["cam"]), ()):
             if str(other["id"]) == str(row["id"]) or volumes.is_backup(other, names=names):
                 continue
+            known = True
             # Running in a LIVE heartbeat (`is_live`: a clock from the future does not keep a dead recorder alive — the
             # review's second pass, M9), and — the third pass — running in one that went stale not long ago: a recorder
             # that VANISHED. Its recordings were written until its last heartbeat, so that is when "not written" began,
@@ -1007,10 +1021,19 @@ class RecWorker(VmsWorker):
             should = bool(other.get("enabled")) and (until == 0 or until > now)
             if not should or running:
                 self._not_written_since.pop(str(other["id"]), None)
+                written = written or (f"the primary recording {other['id']} is being written" if should else "")
                 continue
             since = self._not_written_since.setdefault(str(other["id"]), min(now, max(gone) if gone else now))
-            need = need or now - since >= self.START_GRACE
-        return need
+            if now - since >= self.START_GRACE:
+                need, failing = True, failing or f"the primary recording {other['id']} is not being written"
+            else:
+                starting = starting or f"the primary recording {other['id']} is starting"
+        if need or written or starting:
+            return need, failing or written or starting
+        if known:
+            return False, "the primary recording is off: a decision, nothing to stand in for"
+        return False, ("no primary recording of this camera is known — not in this cluster, not in the book of "
+                       "primaries: nothing to stand in for")
 
     # -- a primary in ANOTHER cluster (М12 Lesson 13) --------------------------------------------------------
     # The rule above looks for the primary in this cluster's rows and this cluster's heartbeats. A camera
@@ -1029,6 +1052,11 @@ class RecWorker(VmsWorker):
     # nobody can vouch for, and then the backup records: it cannot know, and not knowing is a failure.
     def carried_primary(self, row: dict, now: float) -> bool | None:
         """None: the camera's primary is not in another cluster — decide as always. Else: whether to cover."""
+        word = RecWorker.carried_word(self, row, now)            # М12's two-server tests run it over its two stores
+        return None if word is None else word[0]
+
+    def carried_word(self, row: dict, now: float) -> tuple[bool, str] | None:
+        """`carried_primary`, with why — the words of the product's `carriedPrimary`."""
         look = look_of(self)                                     # a recorder, or only its two stores (М12's gate)
         items = look.primaries()                                 # once a pass, not once a backup (the scaling pass)
         if not items:
@@ -1054,8 +1082,9 @@ class RecWorker(VmsWorker):
         except PARSE_ERRORS as err:
             FIELDS.garbled(f"{PRIMARIES}#{ref}", err)
             self._not_written_since.pop(key, None)
-            return True
+            return True, f"the book of primaries' entry for {ref} does not parse: nobody can vouch for it"
         FIELDS.parsed(f"{PRIMARIES}#{ref}")
+        rec = f"{e.get('recording') or ref} in {e.get('recorded_by') or 'another cluster'}"
         # …as old by what THIS recorder saw change (the product's r29-writers2): `ts` is the agent's clock, and an agent
         # whose clock ran an hour ahead and then lost the domain vouched for the book for that hour. A recorder that has
         # only its two stores (М12's gate) reads the agent's clock as before.
@@ -1064,15 +1093,19 @@ class RecWorker(VmsWorker):
             now - seen > self.CARRIED_LOST_AFTER
         if stale:                                                # the book is as old as the agent's last contact
             self._not_written_since.pop(key, None)
-            return True
-        if not e.get("enabled") or e.get("running"):           # the product's names (`PrimaryEntry`, ADR-0003)
+            return True, (f"nothing is known of the primary recording {rec}: the agent has not reached the domain"
+                          + (" since the start" if not raw else " for longer than the book is vouched for"))
+        if not e.get("enabled"):                                 # the product's names (`PrimaryEntry`, ADR-0003)
             self._not_written_since.pop(key, None)
-            return False
+            return False, f"the primary recording {rec} is off: a decision, nothing to stand in for"
+        if e.get("running"):
+            self._not_written_since.pop(key, None)
+            return False, f"the primary recording {rec} is being written"
         if not e.get("starting"):                                # absent: it ran and stopped — cover at once (feedback AB)
             self._not_written_since.pop(key, None)
-            return True
+            return True, f"the primary recording {rec} is not being written"
         since = self._not_written_since.setdefault(key, now)    # still starting: every event begins this way
-        return now - since >= self.START_GRACE
+        return now - since >= self.START_GRACE, f"the primary recording {rec} has not started yet"
 
     # -- the passes: the worker's, plus a re-subscription when the camera's holder moved -------------------
     # The camera's worker moved: the source is another server's fan-out now — or, if it moved HERE, the

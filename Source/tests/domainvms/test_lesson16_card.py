@@ -502,14 +502,14 @@ def _gate(ring, act, pusher, wall, row):
             self.ring, self.actuator, self.wall, self.name, self.rows = ring, act, wall, "cam", [row]
             self.reconciler = SimpleNamespace(running=lambda: {row["id"]: 1})
             self.holding = {row["id"]: True}
-            self._primary_back_since, self._cover_since, self._kept_until = {}, {}, {}
+            self._primary_back_since, self._cover_since, self._kept_until, self.gate_why = {}, {}, {}, {}
             self.stream_says, self.resumes = edge_gate(pusher), edge_resumes(pusher)
 
         def _offline_backup(self, r):
             return True
 
-        def carried_primary(self, r, now):
-            return False
+        def carried_word(self, r, now):
+            return False, "the book says the primary is written"
 
         def _actuate(self, verb, r):                                    # held again: a restart, its hold by the gate's rule
             self.holding[r["id"]] = hold = not self.primary_needs_cover(r)

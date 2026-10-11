@@ -440,6 +440,29 @@ def test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits():
     assert not card.primary_needs_cover(row)                  # a decision is still never covered
 
 
+def test_a_card_with_no_book_holds_and_says_nobody_is_known_to_write_its_primary():
+    """Finding O4 of the scenario «камера — офис — центр». A camera cluster whose agent has not carried the book of
+    primaries home yet: no entry for its camera, no primary in its own cluster. The card holds — no primary is known
+    anywhere, and a backup covers a failure, never a decision (the product's `primaryNeedsCover`: no entry, not known,
+    "основная запись выключена") — but its status said "the primary recording is being written", of a camera nobody
+    was known to write. It says what the gate found now. A running entry holds the card and names who writes it; an
+    entry that stopped releases it, and the reason goes with it."""
+    box, card, row, carry = _camera_cluster()
+    card.reconcile_once(); card.gate_pass()
+    st = next(s for s in card.status() if s["id"] == "1-card")
+    assert card.holding["1-card"] is True and st["phase"] == "standby", st
+    assert "no primary recording of this camera is known" in st["why"] and "being written" not in st["why"], st
+    carry(running=True)
+    card.gate_pass()
+    st = next(s for s in card.status() if s["id"] == "1-card")
+    assert card.holding["1-card"] is True and st["phase"] == "standby", st
+    assert st["why"].startswith("the primary recording SN1 in room is being written"), st
+    carry(running=False, starting=False)
+    assert ("1-card", "released") in card.gate_pass()
+    assert card.holding["1-card"] is False
+    assert card.gate_why["1-card"] == "the primary recording SN1 in room is not being written"
+
+
 def test_a_backup_of_another_servers_camera_finds_its_primary_by_the_domains_name():
     """Two servers as two clusters of one (М11 lesson 1). The backup on the second server names the camera the
     way a recording names a camera of another cluster — `cam: ref:<serial>` — and there is no camera row here
