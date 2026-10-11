@@ -85,6 +85,33 @@ def test_a_member_that_leaves_is_dropped_whatever_report_it_left_behind():
     assert view.list()["rows"] == []                                   # its last report is still there; it is not read
 
 
+def test_a_member_that_leaves_leaves_the_running_views_list_in_the_same_pass():
+    """The scenario «камера — офис — центр», N8: after `DELETE /domain/members/cam-a2` the domain's console still listed
+    cam-a2's camera in `/domain/vms/cameras` as live — its view, made before the leave, kept the member's heartbeats and
+    snapshot after the member left the federation (`clusters` no longer named it, the rows did). A member removed leaves
+    the list in the same pass it leaves the membership (ADR-0074, its addition): nothing of it is kept as last known."""
+    wall = Clock(1000.0)
+    fed, north, signer, members = _domain(wall)
+    vendor = Manufacturer("vendor", now=wall)
+    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members,
+                    cluster_of=member_name)
+    _enroll(reg, vendor, "SN9012")
+    cam = DeviceCluster("SN9012", FakeVariables(), wall=wall)
+    cam.boot()
+    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                published=cam.local_objects()).sync()
+    apply(fed, members, north.objects)
+    view = ReadView(fed, wall=wall); view.refresh()                    # the console's view, alive across the leave
+    assert [r["cluster"] for r in view.list()["rows"]] == ["cam-SN9012"]
+
+    assert reg.leave("SN9012", by="anna")
+    apply(fed, members, north.objects)
+    view.refresh()                                                     # the same pass
+    got = view.list()
+    assert got["rows"] == [] and "cam-SN9012" not in got["clusters"] and "cam-SN9012" not in got["rpo"], got
+    assert view.last_known(cam.serial) is None and view.where(cam.serial).cluster is None
+
+
 def test_with_no_list_written_the_configuration_stands():
     wall = Clock(1000.0)
     fed, north, signer, members = _domain(wall)
