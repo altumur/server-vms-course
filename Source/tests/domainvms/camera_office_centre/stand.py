@@ -471,17 +471,29 @@ class Site:
 
     # -- the agents ---------------------------------------------------------------------------------------------------------
     def holder_agent(self):
-        """`agent.main` on srv: `DOMAIN_CONFIG_URL` — the holder's own agent reads its own store, no door, no report."""
-        from w2cplatform.domain.agent import DomainAgent
+        """`agent.main` on srv: `DOMAIN_CONFIG_URL` — the holder's own agent reads its own store, no door, no report — and
+        `CLUSTERS` with the consoles it follows the holder by, as every member's agent (N12): the record of a larger term
+        it carries home is how the holder learns it was replaced, and from then on it carries through the new door."""
+        from w2cplatform.domain.agent import DomainAgent, HolderFollower, ask_held
+        from w2cplatform.domain.carry import CarryClient
+        from w2cplatform.domain.federation import Unreachable
         from w2cplatform.trust.memberkey import MemberKey
         srv = self.cluster("srv")
         who = "domainagent on srv"
         own = srv.door("domainagent", who)
         sealer = self.ring("srv")
         key = MemberKey.load_or_make(own, sealer)
+
+        def ask(n):                                          # CLUSTERS names it now; its console is up when it is
+            if f"console {n}" not in self.doors:
+                raise Unreachable(f"{n}: its console is not up")
+            return ask_held(self.doors[f"console {n}"])
+        named = [e.split("=", 1)[0] for e in self.clusters_line().split(",") if "=" in e]   # `consoles_from_env`
         agent = DomainAgent("srv", srv.door("domainagent", who), own, now=self.wall,
                             reaches=lambda: CLUSTERS["srv"][0].split(","), own_objects=srv.objects_on("srv", own, who),
-                            sealer=sealer, key=key)
+                            sealer=sealer, key=key, follow=HolderFollower({n: (lambda n=n: ask(n)) for n in named}),
+                            open_door=lambda rec: (CarryClient(rec["url"], "srv", key, wall=self.wall), None)
+                            if rec.get("url") else None)
         self.agents["srv"] = agent
         return agent
 
