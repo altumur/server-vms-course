@@ -689,8 +689,8 @@ def _holder_moves(site) -> None:
         st, said = move(site.doors["domain console relay-a"], site.recovery)
     log.note(f"w2cctl: {st} {said.get('sentence') or said.get('detail')}")
     log.note("Члены следуют за держателем сами: агент спрашивает /api/held у консолей CLUSTERS и берёт запись срока 2.\n"
-             "Дверь, через которую нести дальше, называет поле url записи — дверь подписывающего relay-a. Отчёт агент\n"
-             "кладёт по-прежнему в объекты srv (DOMAIN_OBJECTS_URL не следует за держателем) — FINDINGS.md, N5.")
+             "Дверь, через которую нести дальше, называет поле url записи — дверь подписывающего relay-a. Туда же\n"
+             "агент шлёт и отчёт (POST /api/member/<член>), и сводку камер (POST /api/relay/<офис>) — FINDINGS.md, N5.")
     site.wall.advance(5)
     site.sync("relay-b")
     site.sync("relay-a")
