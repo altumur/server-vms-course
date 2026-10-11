@@ -144,7 +144,7 @@ def test_the_domain_console_holds_no_key_material_and_has_no_role_on_the_signers
     assert {"/etc/w2c/secrets", "/run/w2c-signer", "/run/w2c-domain"} <= set(hidden)
     r = Rights.load(os.path.join(HERE, "deploy", "cluster", "configstore-rights.json"))
     for action in ("read", "write", "delete"):
-        for key in ("domain/signer", "domain/signer/old", "identity/users/anna"):
+        for key in ("domain/signer", "domain/signer/old", "domain/users/anna"):
             assert not r.allows("domainconsole", action, key), (action, key)
     tree = ast.parse(open(os.path.join(HERE, "w2cplatform", "domain", "console.py"), encoding="utf-8").read())
     imported = {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) for a in n.names} | \
@@ -183,7 +183,7 @@ def test_each_of_the_five_operations_runs_in_the_signer_and_refuses_while_a_hand
     st, body = ops[1]()
     assert st == 200 and h.ids.get("vera").kind == "local"
     st, body = ops[2]()
-    assert st == 200 and north.vars.get("domain/break_glass/cam-SN1")[0]["pwhash_secret"] != "glass glass glass"
+    assert st == 200 and north.vars.get("domain/break-glass/cam-SN1")[0]["pwhash_secret"] != "glass glass glass"
     assert isinstance(h.backup(), int) and any(k.startswith("backup/rev-") for k in wrote)
     st, body = ops[4]()
     assert st == 409 and "holds the domain at term 1" in body["detail"], body      # nothing to move onto a holder

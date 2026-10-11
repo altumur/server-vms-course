@@ -154,7 +154,7 @@ def test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone():
     through the domain's door)."""
     r = rights()
     assert r.groups["domain"] == "w2c-domain"
-    for action, key in (("read", "domain/signer"), ("write", "domain/signer"), ("write", "identity/users/u1"),
+    for action, key in (("read", "domain/signer"), ("write", "domain/signer"), ("write", "domain/users/u1"),
                         ("read", "identity/pointer"), ("write", "domain/vms/crossings"), ("read", "vms/cameras/7"),
                         ("delete", "domain/pending/north")):
         assert r.allows("domain", action, key), (action, key)
@@ -171,20 +171,84 @@ def test_the_domains_console_has_a_role_of_its_own_with_no_key_and_no_people():
     """ADR-0032: the domain's console is its own process with its own role — `domainconsole`, the platform's group — and
     no part of the domain's keys, read or written; the people's rows (sealed with the ring) are the signer's too. It
     writes what a person decides there with no key: the members, the topology, the grants, an edit kept again; and it
-    reads the rest of the domain and the units, for the views it serves."""
+    reads the rest of the domain and the units, for the views it serves — but no secret row of the shared table, which
+    names it a reader of none (ADR-0019, ADR-0010; «Архитектор» 2026-10-11): not the emergency hashes, not the member's
+    seed, not the backup's copy nor anything under `domain/backup`."""
     r = rights()
     assert r.groups["domainconsole"] == "w2c-domainconsole"
-    for key in ("domain/signer", "domain/signer/backup", "identity/users/u1", "domain/shared", "domain/backup/north",
+    for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/shared", "domain/backup/north",
                 "domain/view", "domain/vms/crossings"):
         assert not r.allows("domainconsole", "write", key), key
-    for key in ("domain/signer", "domain/signer/backup", "identity/users/u1"):
+    for key in ("domain/signer", "domain/signer/backup", "domain/users/u1", "domain/break-glass/north", "domain/break-glass",
+                "domain/member-key", "domain/backup", "domain/backup/north"):
         assert not r.allows("domainconsole", "read", key), key
     for key in ("domain/members", "domain/topology", "domain/grants/north", "domain/grants/domain", "domain/pending/north"):
         assert r.allows("domainconsole", "write", key), key
-    for key in ("domain/keys", "domain/backup/north", "domain/shared", "domain/vms/crossings", "vms/cameras/7"):
+    for key in ("domain/keys", "domain/shared", "domain/vms/crossings", "vms/cameras/7"):
         assert r.allows("domainconsole", "read", key), key
     assert not r.allows("domainconsole", "delete", "domain/members")          # the store's rule: the domain's roles alone
 
+
+def test_every_secret_row_of_the_shared_table_is_read_by_its_readers_and_by_nobody_else():
+    """ADR-0019, ADR-0010 («Архитектор» 2026-10-11): who reads the platform's own secret rows is the shared table
+    (`tests/testdata/platform_lists.tsv`, `secret_readers`; `secrets.PLATFORM_SECRET_READERS`, the product's
+    `PlatformSecretReaders`), with the specs' `secrets.readers`/`reads` beside it — and the generated file says exactly
+    that: for every row, the roles that read it are its readers, each of them, and no other. A row is asked by a key under
+    it (a prefix) or by itself; the bare path a member's agent carries a per-cluster row home to (`domain/break-glass`) is
+    the same secret. The generators read the table (`secrets.secret_readers`): the table is changed, the file follows."""
+    from w2cplatform.domain.agent import PLATFORM_PER_CLUSTER
+    from w2cplatform.secrets import PLATFORM_SECRET_READERS, secret_readers
+    r, readers = rights(), secret_readers(SPECS)
+    assert set(PLATFORM_SECRET_READERS) <= set(readers)
+    for row, want in sorted(readers.items()):
+        keys = [row + "north", row + "a/b"] if row.endswith("/") else [row]
+        if row.endswith("/") and row[:-1] in PLATFORM_PER_CLUSTER:
+            keys.append(row[:-1])
+        for key in keys:
+            have = {role for role in r.roles if r.allows(role, "read", key)}
+            assert have == set(want), (row, key, sorted(have), sorted(want))
+    for row, names in PLATFORM_SECRET_READERS.items():          # the table's own readers, whatever a spec adds
+        assert set(names) <= readers[row], row
+
+
+
+def test_the_domains_agent_reads_star_less_the_secrets_and_reports_a_recorders_epoch_on_the_real_rights():
+    """The scenario «камера — офис — центр», N3: once a listing named every key to every role (2cd2947a), a member's
+    report carried the subsystems' epochs (`rec/epoch/*`, `declared.epoch_prefixes`) and the office's agent fell on
+    `Forbidden` — the role `domainagent` read `domain/*` alone. It reads `*` less every secret row it is not a reader of
+    (the shared table, the specs' secrets, the people's ledgers) — the product's `domainagent`, word for word — and a
+    member whose recorder took an epoch reports, through a store that answers as the daemon answers that role."""
+    from vms.controller import VmsController
+    from w2cplatform.domain import declared
+    from w2cplatform.domain.uplink import report
+    from w2cplatform.variables import Forbidden
+    from tests.domain.conftest import Clock, make_cluster
+    r = rights()
+    assert sorted(doc()["roles"]["domainagent"]["read"]) == sorted(
+        ["*", "!domain/signer*", "!domain/users/*", "!domain/vms/stream-clients/*", "!door/signer*", "!rec/asked/*"])
+
+    class AsAgent:                       # the daemon: every name listed to every role, a get as the file says
+        def __init__(self, inner):
+            self.inner, self.read = inner, []
+
+        def list(self, prefix):
+            return self.inner.list(prefix)
+
+        def get(self, path):
+            self.read.append(path)
+            if not r.allows("domainagent", "read", path):
+                raise Forbidden(f"domainagent may not read {path}")
+            return self.inner.get(path)
+    wall = Clock(1000.0)
+    north, _ = make_cluster("north", domain=True)
+    office, _ = make_cluster("office")
+    VmsController(office.vars, office.objects, wall=wall, cluster="office").publish_snapshot()
+    assert "rec/epoch/" in declared.epoch_prefixes()
+    office.vars.put("rec/epoch/r-srv-a-1", {"epoch": "3", "holder": "srv-a:1"})     # the recorder took its slot's epoch
+    office.vars.put("domain/users/anna", {"pwhash_secret": "x"})                   # a secret beside it: never asked
+    member = AsAgent(office.vars)
+    report("office", member, office.objects, north.objects, wall())
+    assert "rec/epoch/r-srv-a-1" in member.read and "domain/users/anna" not in member.read
 
 # -- what the processes DO: every scene of the stand, and the doors the scenes do not knock on ------------------------
 def _doors(s) -> None:
@@ -341,7 +405,7 @@ def test_the_gate_and_the_schema_are_readable_by_every_process_that_asks_them():
 
 def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     """М10's ninth review, minor: the holder's grant once covered every row that marks a member — the grants and
-    `domain/break_glass`, the emergency password's hash, among them — while its playback door verifies no token and
+    `domain/break-glass`, the emergency password's hash, among them — while its playback door verifies no token and
     asks only whether the cluster is in a domain (`Gate.gated`: the key set, and `domain/member` while there is none).
     Not wider than the code: of `domain/*` the worker reads exactly those two rows."""
     import tempfile
@@ -368,9 +432,12 @@ def test_the_clusters_key_is_a_credential_of_the_three_units_that_open_a_passwor
     that three policies read and a template rendered; here it is a file on every server, and the three units — and no
     other — load it as a systemd credential, readable by their own process only (`%d/platform.key`); and the spares of
     the two that open one, which are their units but the name (the twelfth review, blocker 6). No role of the store
-    reads any `secrets/` row: there is none."""
+    reads any `secrets/` row: there is none — but the domain's agent, which reads `*` less the secret rows (N3, the
+    product's form), and would read one if there were."""
     r = rights()
-    for role in r.roles:
+    star = {role for role, g in doc()["roles"].items() if "*" in g["read"]}
+    assert star == {"domainagent"}, star
+    for role in set(r.roles) - star:
         assert not r.allows(role, "read", "secrets/vms"), role
     deploy = os.path.join(os.path.dirname(RIGHTS), "systemd")
     loaders = {f for f in os.listdir(deploy) if f.endswith(".service")

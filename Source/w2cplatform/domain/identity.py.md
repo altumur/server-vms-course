@@ -1,6 +1,6 @@
-# identity.py — Lesson 4: users as Variables under `identity/*` with the signer the only writer, IdP subjects with no secret, the identity set published object-first, prefs as objects, and break-glass
+# identity.py — Lesson 4: users as Variables under `domain/users/*` with the signer the only writer, IdP subjects with no secret, the identity set published object-first, prefs as objects, and break-glass
 
-**Role in the module.** Lesson 4, "where users live, and creating a user touches no cluster". The docstring's table: `identity/users/<id>` in the domain holder's Variables, the signer the only writer (`deploy/domain/signer-policy.hcl` grants `identity/*` to the signer job) — a local user is a scrypt hash, a federated one an IdP subject and no secret; `identity/pointer` → `identity/rev-N`, the whole set as one object, published object-first (the pointer moves only after the object exists — М11's publish-then-point with different nouns); `users/<id>/prefs`, per-user UI configuration as an object, last write wins with a revision. Nothing about a user ever reaches a worker: authentication ends in a token naming the subject (`tokens.py`), and what the subject may do is each cluster's grants (`grants.py`), carried by the agent. The RPO for users is the publication interval, and it is stated (`publish_floor`). Break-glass is the honest residue: one local account, audited on every use, alarmed on, rotated after — it reintroduces exactly the password hash the design removed, "and the module says so out loud". Used by `signer_service.main` (login, publish) and the Lesson 4 tests.
+**Role in the module.** Lesson 4, "where users live, and creating a user touches no cluster". The docstring's table: `domain/users/<id>` in the domain holder's Variables, the signer the only writer (the role `domain` writes `domain/*`, and `identity/*` for the pointer; `domain/users/` is a secret row of the platform's table, read by `domain` alone — `tests/testdata/platform_lists.tsv`) — a local user is a scrypt hash, a federated one an IdP subject and no secret; `identity/pointer` → `identity/rev-N`, the whole set as one object, published object-first (the pointer moves only after the object exists — М11's publish-then-point with different nouns); `users/<id>/prefs`, per-user UI configuration as an object, last write wins with a revision. Nothing about a user ever reaches a worker: authentication ends in a token naming the subject (`tokens.py`), and what the subject may do is each cluster's grants (`grants.py`), carried by the agent. The RPO for users is the publication interval, and it is stated (`publish_floor`). Break-glass is the honest residue: one local account, audited on every use, alarmed on, rotated after — it reintroduces exactly the password hash the design removed, "and the module says so out loud". Used by `signer_service.main` (login, publish) and the Lesson 4 tests.
 
 ## Module-level names
 - `TOKEN_LIFETIME = 15 * 60.0` — 900 s: "the number the product states; Lesson 4 makes students defend it". Every `login` issues with it; `grants.revocation_window` takes it as one of its two bounds.
@@ -28,7 +28,7 @@ Re-derives with the stored salt and compares in constant time.
 ### `__init__(self, signer, vars_, objects, publish_floor=60.0, now=time.time)`
 `signer` issues tokens (`signer.tokens`); `vars_` is the domain holder's Variables (records and the pointer), held behind `declared.guarded` — a person is not made under the name of a subject a spec keeps beside the people (`domain.names.<family>/.exclusive_with: domain/users`, ADR-0031): `create_local`/`create_federated` raise `declared.NameTaken` naming the row it would meet; `objects` the object store (the published set and prefs); `publish_floor` is the minimum seconds between publishes — the stated RPO; `_dirty` marks unpublished changes; `published_rev`, `publishes` are counters.
 
-### `_path(self, uid)` — `identity/users/<uid>`.
+### `_path(self, uid)` — `domain/users/<uid>`.
 ### `get(self, uid) -> User | None` — reads the record (a tombstone comes back as a `User` of kind `deleted`).
 ### `_put(self, u)` — read the index, `put` with CAS, mark dirty.
 ### `create_local(self, uid, password, roles) -> User` — refuses an existing id (`ValueError`), hashes, stores.
@@ -36,7 +36,7 @@ Re-derives with the stored salt and compares in constant time.
 "The customer has an IdP: the record holds a subject, not a person, and no secret." Stores without an existence check.
 ### `set_roles(self, uid, roles)` — `KeyError` if unknown; rewrites the record.
 ### `delete(self, uid)` — writes the tombstone `{id, kind: "deleted"}` by CAS (not a Variable delete, so the id stays reserved and the publish notices the change).
-### `users(self) -> list[User]` — every record under `identity/users/` whose kind is `local` or `idp`.
+### `users(self) -> list[User]` — every record under `domain/users/` whose kind is `local` or `idp`.
 
 ### `login(self, uid, password) -> str`
 Local users only; wrong id, kind or password → `AuthError("bad credentials")`. Success is `signer.tokens.issue(uid, TOKEN_LIFETIME, now=…)` — the token names the subject and nothing else.

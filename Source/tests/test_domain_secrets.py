@@ -71,17 +71,17 @@ def test_a_member_gets_through_the_door_its_own_rows_only_and_every_secret_seale
     door = HolderDoor(north.vars, north.objects, holder_ring, wall)
     raw = CarryClient(door, "south", keys["south"], wall)._ask()
     assert not [p for p in raw["rows"] if p.endswith("/east")] and f"{TALLIES}/south" in raw["rows"]
-    glass = raw["rows"]["domain/break_glass/south"]["pwhash_secret"]
+    glass = raw["rows"]["domain/break-glass/south"]["pwhash_secret"]
     entry = json.loads(raw["rows"][f"{TALLIES}/south"]["s1"])
     assert is_sealed_to(glass) and is_sealed_to(entry["token_secret"])
     for other in (keys["east"],):
         try:
-            other.open("pwhash_secret", glass, "domain/break_glass")
+            other.open("pwhash_secret", glass, "domain/break-glass")
             raise AssertionError("another member opened south's emergency hash")
         except NotMine:
             pass
     got = CarryClient(door, "south", keys["south"], wall).carry()
-    assert got["rows"]["domain/break_glass/south"]["pwhash_secret"].count(":") == 1          # the hash: salt:digest
+    assert got["rows"]["domain/break-glass/south"]["pwhash_secret"].count(":") == 1          # the hash: salt:digest
     assert json.loads(got["rows"][f"{TALLIES}/south"]["s1"])["token_secret"].count(".") == 2   # a token again
 
 
@@ -110,7 +110,7 @@ def test_the_door_answers_only_the_admitted_key_within_its_clock_and_a_relay_onl
     got = CarryClient(door, "east", keys["east"], wall).carry_for("south")
     assert got["key"] == keys["south"].pub and f"{TALLIES}/south" in got["rows"]
     try:
-        keys["east"].open("pwhash_secret", got["rows"]["domain/break_glass/south"]["pwhash_secret"], "domain/break_glass")
+        keys["east"].open("pwhash_secret", got["rows"]["domain/break-glass/south"]["pwhash_secret"], "domain/break-glass")
         raise AssertionError("the relay opened its member's secret")
     except Exception:                                    # noqa: BLE001 — sealed to south, not to east
         pass
@@ -170,7 +170,7 @@ def test_the_signers_keys_lie_sealed_and_a_token_key_rotation_survives_a_restart
 
 
 def test_the_backup_carries_the_people_and_the_emergency_hashes_under_the_backup_key_and_a_move_opens_them():
-    """The keepers of a backup copy read no hash of it: the people (`identity/users/*`) and every emergency hash are in
+    """The keepers of a backup copy read no hash of it: the people (`domain/users/*`) and every emergency hash are in
     it sealed under the backup key, HMAC of the root's key — and a move by the recovery file derives that key again,
     opens them, and seals them under the new holder's ring."""
     from w2cplatform.domain.agent import DomainAgent, DomainPublisher
@@ -186,18 +186,18 @@ def test_the_backup_carries_the_people_and_the_emergency_hashes_under_the_backup
     holder.signer.sealer = north_ring
     holder.signer._persist()
     IdentityStore(holder.signer, north.vars, north.objects, now=wall).create_local("anna", "pw", ["admin"])
-    assert north.vars.get("identity/users/anna")[0]["pwhash_secret"].startswith("enc:v1:")
+    assert north.vars.get("domain/users/anna")[0]["pwhash_secret"].startswith("enc:v1:")
     holder.backup(["south"], north.objects)
     doc = json.loads(north.objects.get("backup/rev-1"))
-    assert doc["state"]["identity/users/anna"]["pwhash_secret"].startswith("enc:v1:backup")
+    assert doc["state"]["domain/users/anna"]["pwhash_secret"].startswith("enc:v1:backup")
     assert DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects,
                        cluster_objects=south.objects).sync() and south.objects.get(BACKUP_TAKEN)
     DomainPublisher(north.vars)
     new, report = move_domain(fed, "south", root.recovery(), "acme", lambda n: fed.clusters[n].objects, wall,
                               sealer=south_ring)
-    restored = south.vars.get("identity/users/anna")[0]
+    restored = south.vars.get("domain/users/anna")[0]
     assert restored["pwhash_secret"].startswith("enc:v1:"), report["sentence"]
-    assert _check("pw", open_row(south_ring, restored, "identity/users/anna")["pwhash_secret"])
+    assert _check("pw", open_row(south_ring, restored, "domain/users/anna")["pwhash_secret"])
 
 
 def test_what_a_returning_holder_stranded_names_a_secret_and_never_copies_it():
@@ -206,10 +206,10 @@ def test_what_a_returning_holder_stranded_names_a_secret_and_never_copies_it():
     from w2cplatform.domain.term import stranded
     fed, _ = site()
     north = fed.clusters["north"]
-    north.vars.put("identity/users/anna", {"pwhash_secret": "scrypt$the-old-hash", "roles": "admin,viewer"})
-    left = stranded(north.vars, {"identity/users/anna": {"pwhash_secret": "scrypt$the-new-hash", "roles": "admin"}})
-    assert sorted(left) == [["identity/users/anna", "pwhash_secret", "<secret: differs>"],
-                            ["identity/users/anna", "roles", "admin,viewer"]]
+    north.vars.put("domain/users/anna", {"pwhash_secret": "scrypt$the-old-hash", "roles": "admin,viewer"})
+    left = stranded(north.vars, {"domain/users/anna": {"pwhash_secret": "scrypt$the-new-hash", "roles": "admin"}})
+    assert sorted(left) == [["domain/users/anna", "pwhash_secret", "<secret: differs>"],
+                            ["domain/users/anna", "roles", "admin,viewer"]]
 
 
 def test_the_emergency_password_has_a_writer_and_the_cluster_checks_it_sealed():
@@ -246,13 +246,13 @@ def test_w2cctl_counts_the_domains_secrets_in_the_clear_and_seals_them():
     from w2cplatform.domain.carry import open_row
     fed, wall = site()
     north = fed.clusters["north"]
-    north.vars.put("domain/break_glass/south", {"pwhash_secret": "salt:digest", "set_at": "1"})
+    north.vars.put("domain/break-glass/south", {"pwhash_secret": "salt:digest", "set_at": "1"})
     north.vars.put(f"{TALLIES}/south", {"s1": json.dumps({"token_secret": "a.b.c"})})
     r = ring()
     got = w2cctl.status(north.vars, r, ["domain/"])
     assert got["domain/"]["clear"] == 2
     assert w2cctl.seal(north.vars, r, ["domain/"]) == 2 and w2cctl.status(north.vars, r, ["domain/"])["domain/"]["clear"] == 0
-    assert open_row(r, north.vars.get("domain/break_glass/south")[0], "domain/break_glass/south")["pwhash_secret"] == "salt:digest"
+    assert open_row(r, north.vars.get("domain/break-glass/south")[0], "domain/break-glass/south")["pwhash_secret"] == "salt:digest"
 
 
 def test_the_agents_rights_deny_what_only_the_holder_writes_and_its_reads_never_the_signers_row():
@@ -269,9 +269,9 @@ def test_the_agents_rights_deny_what_only_the_holder_writes_and_its_reads_never_
     agent = r["domainagent"]
     rights = Rights({"domainagent": agent})
     mine = ["domain/keys", "domain/grants", "domain/pending", "domain/backup-taken", TALLIES, "domain/member-key",
-            "domain/break_glass", "domain/holder"]
+            "domain/break-glass", "domain/holder"]
     holders = ["domain/signer", "domain/members", "domain/grants/south", "domain/pending/south", f"{TALLIES}/south",
-               "domain/testsub/ledger", "domain/break_glass/south", "domain/backup/south"]
+               "domain/testsub/ledger", "domain/break-glass/south", "domain/backup/south"]
     box = FileVariables(tempfile.mkdtemp(prefix="acl-"), "domainagent", {"domainagent": agent["write"]}, volatile=True)
     for key in mine:
         assert rights.allows("domainagent", "write", key), key

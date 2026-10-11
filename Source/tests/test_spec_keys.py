@@ -125,10 +125,9 @@ def test_a_heartbeat_field_its_spec_says_is_a_string_and_is_not_garbles_the_hear
 
 def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to_it():
     """`secrets: {readers: {<row>: [<role>]}, reads: [<row>]}` (the product's key, the course checks it): the rights file
-    is the grants the specs make, and the declaration is the promise they are held to (`cluster.rights.check_secrets`).
-    testsub2's console alone reads its door's seed, as it says. Named with a role that does not read it — or kept under
-    the subsystem's own name, where its controller and worker read every row — it is no file at all, the disagreement
-    named; a role is one of the platform's. `reads` grants as well, as the product's key does (ADR-0024): the worker
+    says who reads the row, and the file is made so (`cluster.rights._secrets`, held by `check_secrets`): testsub2's
+    console alone reads its door's seed, as it says; a role named is given the row, every other role is denied it — a
+    row kept under the subsystem's own name as well; a role is one of the platform's. `reads` grants as well, as the product's key does (ADR-0024): the worker
     that names a row reads it — a prefix as its rows — and a row another spec keeps secret has that worker among its
     readers, the others still held to the declaration."""
     from w2cplatform.cluster.rights import roles
@@ -142,12 +141,15 @@ def test_who_reads_a_secret_row_is_what_the_specs_say_and_the_rights_are_held_to
         assert allowed(got["testsub2worker"]["read"], row), (secrets, got["testsub2worker"]["read"])
         assert not allowed(roles([SubsystemSpec.from_dict(_testsub()), SubsystemSpec.from_dict(two)],
                                  "test")["testsub2worker"]["read"], row), row    # …and not without it
-    for secrets, words in (({"readers": {"door/signer": ["console", "worker"]}}, "the rights let console read it"),
-                           ({"readers": {"testsub2/vault/": ["console"]}},
-                            "testsub2/vault/: the specs name console as its readers, and the rights let console, "
-                            "domain, domainconsole, testsub2controller, testsub2worker, testsubdomain read it")):
-        _refused(lambda secrets=secrets: roles([SubsystemSpec.from_dict(_testsub()),
-                                                SubsystemSpec.from_dict({**two, "secrets": secrets})], "test"), words)
+    # The declaration IS the file (ADR-0019, ADR-0010; «Архитектор» 2026-10-11 — the product's generator, `*` less every
+    # secret a role is not a reader of): a role named reads the row, every other role whose grants reach it is denied it
+    # by name — a row kept under the subsystem's own name too, where its controller and worker read every other row
+    for secrets, row, want in (({"readers": {"door/signer": ["console", "worker"]}}, "door/signer",
+                                {"console", "testsub2worker"}),
+                               ({"readers": {"testsub2/vault/": ["console"]}}, "testsub2/vault/a", {"console"})):
+        got = roles([SubsystemSpec.from_dict(_testsub()), SubsystemSpec.from_dict({**two, "secrets": secrets})], "test")
+        assert {r for r, g in got.items() if allowed(g["read"], row)} == want, (secrets, row)
+        assert allowed(got["testsub2worker"]["read"], "testsub2/tallies/a")          # its other rows: as before
     for bad, words in (({"readers": {"door/signer": ["operator"]}}, "is a list of roles"),
                        ({"readers": {"/door": ["console"]}}, "no key of the store"),
                        ({"reads": "door/signer"}, "`secrets:` is {readers:"), ({}, "`secrets:` is {readers:")):

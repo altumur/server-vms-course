@@ -70,11 +70,11 @@ def _gate() -> list[str]:
 # console (the three-site run, F2). Public and signed things only: the record proves itself, the
 # pointer is `{term, rev, sha256}`, the list of members is names and public keys; the copy is an object, not a row.
 # And `domain/backup` (ADR-0066's addition of 2026-10-10, «Архитектор»: the console is among the readers of the copy —
-# its secrets are sealed by a key from the root, and the console holds no key of the domain's, ADR-0032): the same
-# reads on both sides; the list of the platform roles' readers becomes a shared table of parity.
+# its secrets are sealed by a key from the root, and the console holds no key of the domain's, ADR-0032) is no grant
+# here: it is a secret row of the shared table, and its readers are the table's (`_secrets`).
 def _moves() -> list[str]:
-    from w2cplatform.domain.term import BACKUP, BACKUP_TAKEN, HOLDER, MEMBER_LIST
-    return [HOLDER, BACKUP_TAKEN, BACKUP, MEMBER_LIST]
+    from w2cplatform.domain.term import BACKUP_TAKEN, HOLDER, MEMBER_LIST
+    return [HOLDER, BACKUP_TAKEN, MEMBER_LIST]
 
 
 def _worker_objects(spec) -> list[str]:
@@ -123,16 +123,13 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
                         delete=[a for s in specs for a in s.acl_console()] + [SIGNER_KEY, KEYS_KEY]),
     }
     for s in specs:
-        # The people's ledgers (`<sub>/asked/*`, ADR 0060) are the console's alone: read by neither the controller nor
-        # the holder of the subsystem whose tree they are in — a denial before `<sub>/*`.
-        asked = [f"!{s.sub.asked_prefix()}*"] if "per_person" in (s.requests or {}) else []
         # Placement, one pass at a time and safe at two: its prefixes; reads its subsystem, the ones it refers to, the
         # platform's rows (decommission, the drain, what each server reaches: `platform/servers/*`).
         # …and, with `placement.unplaced.delete_after`, deletes a unit's row nobody held that long — never writes one
         # (`delete:`, ADR-0067; `rights.split`)
         writes, deletes = split(s.acl_controller())
         out[f"{s.name}controller"] = role(f"{s.name}controller", writes,
-                                          [SCHEMA_KEY, *asked, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"],
+                                          [SCHEMA_KEY, f"{s.name}/*", *[f"{r}/*" for r in _referred(s, names)], "platform/*"],
                                           delete=deletes, platform=True)
         # The holder: its claims, what its spec says it writes, its marks; reads its subsystem, what its units are about,
         # whether its server is decommissioned (`Worker._claim_slot`), what a holder's door asks (`Gate.gated`: the key
@@ -151,7 +148,7 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
         grants = [f"{GRANTS_PREFIX}*"] if s.door_routes else []
         filed_to = [r for t in s.worker_requests for r in (f"{t}/{REQUESTS}/*", *_rows([f"{t}/{COMMANDS}/*"]))]
         out[f"{s.name}worker"] = role(f"{s.name}worker", s.acl_worker_role() + rows,
-                                      [SCHEMA_KEY, *asked, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
+                                      [SCHEMA_KEY, f"{s.name}/*", *([f"{s.about_sub}/*"] if s.about_sub in names else []),
                                        DECOMMISSION + "*", SERVERS_PREFIX + "*", TRUST_KEYS, MEMBER_MARK, KEYS_KEY, *s.worker_reads,
                                        *[r + "*" if r.endswith("/") else r for r in s.secret_reads], *rows, *filed_to, *grants])
     # The platform's resource on every server: where it answers for its objects (`platform/doors/<server>`), and its ask to
@@ -168,39 +165,45 @@ def roles(specs: list, deployment: str) -> dict[str, dict]:
     # The domain's roles — its own processes on the holder, its agent in every cluster with `!` denials on what only the
     # holder writes, a subsystem's worker on the domain — are the platform domain's to say, from the specs
     # (`w2cplatform/domain/rights.py`). A member reads nothing of the holder's store: there is no member role.
+    _secrets(specs, out)
     from w2cplatform.domain.rights import roles as domain_roles
     out.update(domain_roles(lambda r: group(r, deployment), SCHEMA_KEY, specs))
     check_secrets(specs, out)
     return out
 
 
-# WHO READS A SECRET ROW IS WHAT THE SPECS SAY (`secrets: {readers, reads}`, the product's key; `spec._secrets`). Here the
-# reads are the grants above, so a declaration is held to them, never the other way: the file is not made while a role
-# reads a declared row and is not named (a grant that reaches a seed nobody meant it to — a worker's `<sub>/*` over a
-# secret kept under its subsystem's name), or is named and reads nothing of it. A spec's `controller`/`worker` is its
-# subsystem's; `console`, `domain`, `domainagent`, `resource` are the one role of that name. `reads` is the one key that
-# grants as well (the product's meaning, ADR-0024): the worker that says it reads a row is let read it (`roles`), and a
-# row another spec keeps secret is held to its readers with that worker among them.
+# THE SECRET ROWS IN THE CLUSTER'S ROLES ARE THE SHARED TABLE'S AND THE SPECS' (ADR-0019, ADR-0010; «Архитектор»
+# 2026-10-11): each role a row's readers name is given it where its reads do not reach it — the console the emergency
+# hash, the member's seed, the copy of the backup (`secrets.PLATFORM_SECRET_READERS`) — and each other role is denied it
+# by name, as the product's generator does (`specrights.go`: "*" less every secret it is not a reader of). The domain's
+# roles get theirs the same way (`domain/rights.py`, `secret_reads`).
+# The people's ledgers (`<sub>/asked/*`, ADR 0060) are the console's alone, read by neither the controller nor the holder
+# of the subsystem whose tree they are in: a secret row of `secret_readers`, denied here like the others.
+def _secrets(specs: list, out: dict[str, dict]) -> None:
+    from w2cplatform.domain.rights import secret_reads
+    from w2cplatform.secrets import secret_readers
+    readers = secret_readers(specs)
+    for name, grant in out.items():
+        grant["read"] = list(dict.fromkeys([*grant["read"], *secret_reads(name, readers, grant["read"])]))
+
+
+# WHO READS A SECRET ROW IS WHAT THE TABLE AND THE SPECS SAY (`secrets.PLATFORM_SECRET_READERS`, the shared table;
+# `secrets: {readers, reads}`, the product's key; `spec._secrets`). `_secrets` and `domain/rights.secret_reads` make the
+# reads so; this holds the finished file to it, so that no grant written later — a worker's `<sub>/*` over a secret kept
+# under its subsystem's name, a role's `domain/*` — reaches a row its readers do not name, and no reader is left without
+# it: the file is not made otherwise. A spec's `controller`/`worker` is its subsystem's; `console`, `domain`,
+# `domainagent`, `resource` are the one role of that name. `reads` is the one key that grants as well (the product's
+# meaning, ADR-0024): the worker that says it reads a row is let read it (`roles`), and a row another spec keeps secret
+# is held to its readers with that worker among them.
 def check_secrets(specs: list, out: dict[str, dict]) -> None:
     from w2cplatform.rights import allowed
-
-    def role(spec, name: str) -> str:
-        if name == "domainpart":                                # its worker on the domain (`domain/rights.py`)
-            return f"{spec.name}domain"
-        return f"{spec.name}{name}" if name in ("controller", "worker") else name
+    from w2cplatform.secrets import secret_readers
 
     def reading(row: str) -> set[str]:
         key = row + "_" if row.endswith("/") else row          # a prefix: one row under it stands for every row
         return {r for r, grant in out.items() if allowed(grant["read"], key)}
 
-    declared: dict[str, set[str]] = {}
-    for s in specs:
-        for row, names in s.secret_readers.items():
-            declared.setdefault(row, set()).update(role(s, n) for n in names)
-    for s in specs:
-        for row in s.secret_reads:
-            if row in declared:
-                declared[row].add(role(s, "worker"))
+    declared = secret_readers(specs)                            # the shared table's rows, and the specs'
     faults = []
     for row, want in sorted(declared.items()):
         have = reading(row)
@@ -208,7 +211,8 @@ def check_secrets(specs: list, out: dict[str, dict]) -> None:
             faults.append(f"{row}: the specs name {', '.join(sorted(want))} as its readers, and the rights let "
                           f"{', '.join(sorted(have)) or 'nobody'} read it")
     if faults:
-        raise ValueError("the secret rows the specs declare are not read as they say (secrets.readers, secrets.reads):\n  "
+        raise ValueError("the secret rows the table and the specs declare are not read as they say "
+                         "(PLATFORM_SECRET_READERS, secrets.readers, secrets.reads):\n  "
                          + "\n  ".join(faults))
 
 

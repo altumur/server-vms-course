@@ -1,7 +1,8 @@
 """The domain's roles in a cluster's rights file (`storemachine.Rights`, `w2cplatform/rights.py`), from the specs.
 
     domain        the signer on the HOLDER's store — the one process with the domain's keys, and the holder's whole pass:
-                  every row of the domain and the people (`identity/*`); reads the cluster's units too, for its own copy
+                  every row of the domain, the people among them (`domain/users/*`), and the published set's pointer
+                  (`identity/*`); reads the cluster's units too, for its own copy
     domainconsole the domain's console on the holder's store (ADR-0032): no key — `domain/signer*` neither read nor
                   written, no people — and the records a person decides there with no key: admitting a member, the
                   topology, the grants, an edit kept again; it reads the rest of the domain, and the units
@@ -10,13 +11,13 @@
                   rows the holder keeps for the others, a subsystem's books for the others and its kept rows — DENIED by
                   name, so a grant on `domain/*` cannot reach them (the product's r23-domain note: careful with what the
                   agent writes on a member — its own copies of `domain/keys`, `root`, `grants`, `pending`, `backup-taken`, the
-                  books carried home, its `member-key`; deny only what it writes nowhere). It reads what it writes, and
-                  never the signer's row
+                  books carried home, its `member-key`; deny only what it writes nowhere). It reads `*` less every secret
+                  row it is not a reader of (`secret_reads`) — the signer's row among them
     <sub>domain   a subsystem's worker on the domain, on the holder (`domain.books` of its spec): its own prefix
                   `domain/<sub>/*`; reads what its books are made of — the key set, the topology, the members, the
                   shared settings' pointer, the units of every subsystem and the platform's rows — and, when its spec
-                  keeps a family of subjects (`domain.names`), the people and the grants, which the platform asks on
-                  each of its writes
+                  keeps a family of subjects (`domain.names`), the grants, which the platform asks on each of its
+                  writes (the people it lists, never reads: `domain/users/` is `domain`'s alone)
 
 There is no `member` role any more: a member reads NOTHING of the holder's store; what it carries comes through the
 domain's door (`carry.py`).
@@ -43,8 +44,8 @@ def tokens_group(sub: str, deployment: str) -> str:
 
 def agent_denials(specs=None) -> list[str]:
     """What only the holder writes, by name: the agent may hold `domain/*` and none of these."""
-    out = [SIGNER_KEYS, "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
-           "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break_glass/*", "!domain/ldevid/*"]
+    out = [SIGNER_KEYS, "!domain/users/*", "!domain/members", "!domain/placement*", "!domain/licence", "!domain/stranded",
+           "!domain/grants/*", "!domain/pending/*", "!domain/backup/*", "!domain/break-glass/*", "!domain/ldevid/*"]
     for s in _on_domain(specs):
         out += [f"!{s.domain_prefix}{b}/*" for b in s.domain.books]       # the books the holder keeps for each member
         # what a subsystem keeps for the domain: a row, or every row of a family (`kept: [x/]`)
@@ -54,19 +55,38 @@ def agent_denials(specs=None) -> list[str]:
     return out
 
 
-# A SECRET ROW UNDER `domain/` IS READ BY THOSE ITS SPEC NAMES, AND BY NO OTHER ROLE OF THE DOMAIN («Архитектор»
-# 2026-10-07, as the product's generator does): the domain's roles read `domain/*`, and a secret row there (`secrets.readers`,
-# ADR-0024) was theirs to read whatever the spec said — the cluster's rights check (`cluster.rights.check_secrets`) refused
-# the file. Each role of the domain a row's readers do not name gets a denial of it, `!<row>*` — a prefix's rows, and a
-# row's own family of books (`stream-accounts` and `stream-accounts/<cluster>`) with it. A reader `domainpart` is the
-# subsystem's worker on the domain, `<sub>domain`.
-def secret_denials(role: str, specs=None) -> list[str]:
-    readers: dict[str, set] = {}
-    for s in (specs if specs is not None else declared.specs()):
-        for row, names in s.secret_readers.items():
-            if row.startswith("domain/"):
-                readers.setdefault(row, set()).update(f"{s.name}domain" if n == "domainpart" else n for n in names)
-    return [f"!{row}*" for row, names in sorted(readers.items()) if role not in names]
+# WHO READS A SECRET ROW IS THE SHARED TABLE AND THE SPECS, AND NOBODY ELSE (ADR-0019, ADR-0010; «Архитектор» 2026-10-11 —
+# and 2026-10-07 for the specs' rows, as the product's generator does): the platform's own rows from
+# `secrets.PLATFORM_SECRET_READERS` (`tests/testdata/platform_lists.tsv`, the product's bytes), a spec's from its
+# `secrets.readers` and `secrets.reads` (`secrets.secret_readers`). For each such row a role is either among its readers —
+# and is given it, `<row>*`, where its other grants do not reach it — or is not, and is denied it, `!<row>*`: a prefix's
+# rows, and a row's own family of books (`stream-accounts` and `stream-accounts/<cluster>`) with it. A row the domain
+# writes per cluster and its agent carries home to the bare path (`agent.PLATFORM_PER_CLUSTER`: `domain/break-glass/<c>`
+# → `domain/break-glass` on the member) is the same secret: its bare path goes with the prefix, granted and denied alike.
+# No hand list of secret rows stands in any role: a role's reads are what it needs, and this decides the secrets in them.
+def secret_reads(role: str, readers: dict[str, set], read: list[str]) -> list[str]:
+    """The patterns `role` gets for the secret rows `readers` names (`secrets.secret_readers`), beside its `read`: a
+    grant where it is a reader and `read` does not reach the row, a denial where it is not and a grant of `read` reaches
+    any row under it (a denial nothing reaches would deny nothing: the course's roles read by grants, not `*`)."""
+    from w2cplatform.rights import allowed
+    from .agent import PLATFORM_PER_CLUSTER
+
+    def reaches(prefix: str, exact: bool = False) -> bool:
+        grants = [p for p in read if not p.startswith("!")]
+        if exact:
+            return allowed(read, prefix)
+        return any(p[:-1].startswith(prefix) or prefix.startswith(p[:-1]) if p.endswith("*") else p.startswith(prefix)
+                   for p in grants)
+    out = []
+    for row, names in sorted(readers.items()):
+        carried = [row[:-1]] if row.endswith("/") and row[:-1] in PLATFORM_PER_CLUSTER else []
+        if role in names:
+            out += [] if allowed(read, row + "_" if row.endswith("/") else row) else [f"{row}*"]
+            out += [c for c in carried if not allowed(read, c)]
+        else:
+            out += [f"!{row}*"] if reaches(row) else []
+            out += [f"!{c}" for c in carried if reaches(c, exact=True)]
+    return out
 
 
 def _on_domain(specs) -> list:
@@ -80,29 +100,38 @@ def roles(group=lambda r: f"w2c-{r}", schema: str = "platform/schema", specs=Non
         write = list(dict.fromkeys(write))
         return {"group": group(name), "read": list(dict.fromkeys(read)), "write": write,
                 "delete": list(dict.fromkeys(write if delete is None else delete))}
+    from w2cplatform.secrets import secret_readers
     on = _on_domain(specs)
-    units = list(dict.fromkeys([f"{s.name}/*" for s in (specs if specs is not None else declared.specs())]))
+    every = specs if specs is not None else declared.specs()
+    readers = secret_readers(every)
+    units = list(dict.fromkeys([f"{s.name}/*" for s in every]))
+
+    def reads(name: str, read: list[str]) -> list[str]:
+        return [*read, *secret_reads(name, readers, read)]
     agent = ["domain/*", *agent_denials(specs)]
     out = {
-        "domain": role("domain", ["domain/*", "identity/*"], [schema, "domain/*", "identity/*", "platform/*", *units,
-                                                            *secret_denials("domain", specs)]),
+        "domain": role("domain", ["domain/*", "identity/*"], reads("domain", [schema, "domain/*", "identity/*", "platform/*",
+                                                                            *units])),
         # The domain's console: the keys are not its to read, and the people's rows are opened where the ring is — the
         # signer's; what it writes is plain and a person's (`console.Console`).
         "domainconsole": role("domainconsole", list(CONSOLE_WRITES),
-                              [schema, "domain/*", SIGNER_KEYS, "platform/*", *units,
-                               *secret_denials("domainconsole", specs)]),
+                              reads("domainconsole", [schema, "domain/*", SIGNER_KEYS, "platform/*", *units])),
         # It reads what it carries, on a member, and on the holder what the holder's own agent reads through `answer` —
-        # the holder's rows for every member included; never the signer's.
-        "domainagent": role("domainagent", agent, [schema, "domain/*", SIGNER_KEYS, *secret_denials("domainagent", specs)]),
+        # the holder's rows for every member included — and what a member's report carries beyond `domain/`: the epochs
+        # of every subsystem (`declared.epoch_prefixes`, `<sub>/epoch/*`), whatever the catalogue holds. So `*`, less every
+        # secret row it is not a reader of — the signer's keys, the people, a spec's secrets, the people's ledgers — as
+        # the product's `domainagent` reads (the three-site scenario, N3: with `domain/*` alone a member's agent fell on
+        # `Forbidden` at a subsystem's epoch once a listing named every key, 2cd2947a).
+        "domainagent": role("domainagent", agent, reads("domainagent", ["*"])),
     }
     for s in on:
         if not (s.domain.books or s.domain.kept):
             continue
-        # …and, with a family of subjects (`domain.names`), the people and the grants the platform asks on its writes
-        apart = [x for r in s.domain.names.values() for x in (f"{declared.PEOPLE[r['exclusive_with']]}*",
-                                                               f"{declared.GRANTS_PREFIX}*")]
+        # …and, with a family of subjects (`domain.names`), the grants the platform asks on its writes; the people it
+        # does not read (`domain/users/` is the role `domain`'s alone, the shared table): it lists their keys, as every
+        # role lists every prefix (`declared._person`)
+        apart = [f"{declared.GRANTS_PREFIX}*"] if s.domain.names else []
         out[f"{s.name}domain"] = role(f"{s.name}domain", [f"{s.domain_prefix}*"],
-                                      [schema, f"{s.domain_prefix}*", "domain/keys", "domain/topology", "domain/members",
-                                       "domain/shared", "platform/*", *units, *apart,
-                                       *secret_denials(f"{s.name}domain", specs)])
+                                      reads(f"{s.name}domain", [schema, f"{s.domain_prefix}*", "domain/keys", "domain/topology",
+                                                                "domain/members", "domain/shared", "platform/*", *units, *apart]))
     return out

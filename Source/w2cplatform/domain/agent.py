@@ -38,7 +38,7 @@ LDEVID_PATH = "domain/ldevid"
 DOMAIN_SEEN = "domain/seen"
 # The emergency account's password HASH for one cluster (Lesson 4, step 7): set at the domain, carried home, checked
 # at the cluster's console with the domain away — which is the only time it is for.
-BREAK_GLASS_PATH = "domain/break_glass"
+BREAK_GLASS_PATH = "domain/break-glass"
 # That this cluster IS a member — written on every pass that leaves a key set here, so the cluster's console can tell
 # "the keys were lost" from "there never were any" (`w2cplatform/access.py`, `DOMAIN_MARKS`). The other marks are each
 # conditional — `domain/root` only with a root-signed key set, grants and the rest only when the domain has some for

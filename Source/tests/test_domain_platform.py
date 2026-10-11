@@ -692,7 +692,7 @@ def test_a_domain_section_that_names_what_is_not_there_is_refused_when_the_spec_
                 # names: a kept family, with its `/`, apart from the people, granted one of the platform's grants
                 {"kept": ["a/"], "names": {"b/": {"exclusive_with": "domain/users"}}},
                 {"kept": ["a"], "names": {"a": {"exclusive_with": "domain/users"}}},
-                {"kept": ["a/"], "names": {"a/": {"exclusive_with": "identity/users"}}},
+                {"kept": ["a/"], "names": {"a/": {"exclusive_with": "domain/users"}}},
                 {"kept": ["a/"], "names": {"a/": {"grant": "view"}}},
                 {"kept": ["a/"], "names": {"a/": {"exclusive_with": "domain/users", "grant": "root"}}},
                 {"kept": ["a/"], "names": {"a/": {"exclusive_with": "domain/users", "unique": True}}},
@@ -1009,11 +1009,12 @@ def _refused(write, cls, names):
 
 def test_a_subject_of_a_family_and_a_person_never_share_a_name_whichever_is_written_second():
     """`names.badges/.exclusive_with: domain/users` — the platform asks it of every write through its guard: a badge
-    under a person's name is refused naming the person's row (the course keeps the people as `identity/users/<name>`), a
+    under a person's name is refused naming the person's row (`domain/users/<name>`, the product's name), a
     person under a badge's name naming the badge's. A person deleted (the platform's tombstone, never refused) frees the
-    name. The stores the platform's processes open are guarded (`runtime.federation_from_env`), and a subsystem's worker
-    on the domain may read the people's rows and the grants the check asks."""
-    from w2cplatform.domain.declared import Guarded, NameTaken, guarded
+    name. The stores the platform's processes open are guarded (`runtime.federation_from_env`); a subsystem's worker on
+    the domain reads the grants the check asks and not the people (`domain/users/` is `domain`'s alone, the shared table):
+    it lists their keys, and a person's row it may not open stands as a person."""
+    from w2cplatform.domain.declared import Guarded, NameTaken, guarded, refusal
     from w2cplatform.domain.identity import IdentityStore
     from w2cplatform.domain.rights import roles
     from w2cplatform.trust.signer import Signer
@@ -1023,7 +1024,7 @@ def test_a_subject_of_a_family_and_a_person_never_share_a_name_whichever_is_writ
     assert guarded(store) is store
     ids = IdentityStore(Signer("acme", north.vars, now=wall), north.vars, north.objects, now=wall)
     ids.create_local("anna", "a long password 1", ["admin"])
-    _refused(lambda: store.put("domain/testsub/badges/anna", {"since": "1"}), NameTaken, "identity/users/anna")
+    _refused(lambda: store.put("domain/testsub/badges/anna", {"since": "1"}), NameTaken, "domain/users/anna")
     store.put("domain/testsub/badges/bob", {"since": "1"})
     _refused(lambda: ids.create_local("bob", "a long password 2", []), NameTaken, "domain/testsub/badges/bob")
     assert north.vars.get("domain/testsub/badges/anna")[0] is None and ids.get("bob") is None
@@ -1040,10 +1041,28 @@ def test_a_subject_of_a_family_and_a_person_never_share_a_name_whichever_is_writ
         for k, v in saved.items():
             os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
     assert isinstance(opened, Guarded)
-    opened.put("identity/users/dora", {"id": "dora", "kind": "local"})
-    _refused(lambda: opened.put("domain/testsub/badges/dora", {"since": "1"}), NameTaken, "identity/users/dora")
+    opened.put("domain/users/dora", {"id": "dora", "kind": "local"})
+    _refused(lambda: opened.put("domain/testsub/badges/dora", {"since": "1"}), NameTaken, "domain/users/dora")
     read = roles(specs=[spec()])["testsubdomain"]["read"]
-    assert "identity/users/*" in read and "domain/grants/*" in read
+    from w2cplatform.rights import allowed
+    from w2cplatform.variables import Forbidden
+    assert "domain/grants/*" in read and not allowed(read, "domain/users/anna")   # the people: `domain`'s alone (the table)
+
+    class NoPeople:                                                         # its store, as the rights file opens it
+        def __init__(self, inner):
+            self.inner = inner
+
+        def list(self, prefix):
+            return self.inner.list(prefix)
+
+        def get(self, path):
+            if path.startswith("domain/users/"):
+                raise Forbidden(f"testsubdomain may not read {path}")
+            return self.inner.get(path)
+    worker = NoPeople(opened.inner)
+    _refused(lambda: Guarded(worker).put("domain/testsub/badges/dora", {"since": "1"}), NameTaken,
+             "domain/users/dora")                                           # a row it may not open is a person
+    assert refusal(worker, "domain/testsub/badges/nobody", {"since": "1"}) is None   # no key listed: nobody, no read asked
 
 
 def test_a_subject_of_a_family_is_granted_no_wider_than_its_grant_and_a_token_carries_no_rights():

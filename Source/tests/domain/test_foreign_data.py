@@ -403,7 +403,7 @@ def test_one_users_record_that_does_not_parse_stops_neither_the_publication_nor_
     north, _ = make_cluster("north", domain=True)
     ids = IdentityStore(Signer("acme", north.vars, now=wall), north.vars, north.objects, now=wall)
     ids.create_federated("bob", "bob@corp", ["admin"])
-    north.vars.put("identity/users/eve", {"id": "eve", "kind": "local", "created": "yesterday"})
+    north.vars.put("domain/users/eve", {"id": "eve", "kind": "local", "created": "yesterday"})
     assert [u.id for u in ids.users()] == ["bob"] and ids.publish(force=True)
     assert ids.login_federated({"sub": "bob@corp"})
 

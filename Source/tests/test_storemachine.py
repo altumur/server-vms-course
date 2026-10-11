@@ -218,9 +218,9 @@ def test_nobody_deletes_an_epoch_and_only_the_domains_roles_delete_domain_rows()
 def test_a_denial_wins_over_every_grant_wherever_it_stands():
     """The product's format (its configstore round 2): a pattern with a leading `!` DENIES, asked before the grants —
     a role may read the domain's rows but not the emergency password's hash, whichever order the file lists them in."""
-    for read in (["domain/*", "!domain/break_glass"], ["!domain/break_glass", "domain/*"]):
+    for read in (["domain/*", "!domain/break-glass"], ["!domain/break-glass", "domain/*"]):
         r = Rights.parse({"roles": {"console": {"read": read, "write": ["testsub/*", "!testsub/epoch/*"]}}})
-        assert r.allows("console", "read", "domain/keys") and not r.allows("console", "read", "domain/break_glass")
+        assert r.allows("console", "read", "domain/keys") and not r.allows("console", "read", "domain/break-glass")
         assert r.allows("console", "write", "testsub/counters/1") and not r.allows("console", "write", "testsub/epoch/1")
     r = Rights.parse({"roles": {"console": {"read": ["!testsub/secret*"]}}})
     assert not r.allows("console", "read", "testsub/counters/1"), "a denial alone grants nothing"
@@ -409,7 +409,7 @@ def test_another_daemon_has_no_right_on_any_row_and_the_file_may_not_name_it():
     `admin`: a socket of either name would be that door."""
     r = Rights.parse(RIGHTS)
     for action, key in (("delete", "testsub/slots/a"), ("write", "platform/schema"), ("read", "testsub/counters/1"),
-                        ("write", "testsub/epoch/7"), ("read", "domain/break_glass")):
+                        ("write", "testsub/epoch/7"), ("read", "domain/break-glass")):
         assert not r.allows(PEER, action, key), (action, key)
     sub = _Submit()
     code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "platform/schema", "items": {"v": "9"}}),

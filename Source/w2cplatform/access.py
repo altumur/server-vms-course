@@ -46,7 +46,7 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 # that lost its keys — deleted, or the row rolled back from a backup — not one that never had any: shut, and it stays
 # shut across a restart of the console, which a flag in one process's memory did not. A subsystem's book on the
 # domain is not one of them: a subsystem's worker writes it in a cluster of its own.
-DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break_glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
+DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break-glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
 MEMBER_MARK = DOMAIN_MARKS[0]         # the one a door that verifies no token reads (`Gate.gated`; the review's ninth pass)
 RANK = {"view": 0, "edit": 1, "admin": 2}
 MODULE_ROUTES = ("/platform/console.js", "/platform/console.css")       # the console module every page is built from
@@ -247,7 +247,7 @@ class Gate:
     # `Denied(503)` when the store does not answer: "I cannot tell" is not "open".
     #
     # …BY THE KEY SET AND THE MEMBERSHIP ROW ALONE (the review's ninth pass, minor): it read every mark the console reads,
-    # and so the holder's policy let it read `domain/break_glass` — the emergency password's hash — and the grants, of
+    # and so the holder's policy let it read `domain/break-glass` — the emergency password's hash — and the grants, of
     # which it needs nothing but that they exist. `domain/member` is written by the domain's agent on every pass that
     # leaves keys, and a cluster that lost its keys still has it; the other marks are the console's, which verifies
     # tokens and reads them anyway.

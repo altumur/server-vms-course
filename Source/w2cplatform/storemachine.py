@@ -66,7 +66,7 @@ the group, and what a test stand applies in one process — the same code, so th
 #     {"roles": {"testsubworker": {"group": "testsub-worker", "read": ["testsub/*"],
 #                                  "write": ["testsub/epoch/*", "testsub/slots/*"], "delete": []}, …}}
 # A trailing `*` is a prefix, anything else one key; a pattern that starts with `!` DENIES, and the denials are asked
-# before the grants (`"read": ["domain/*", "!domain/break_glass"]`). The daemon opens a socket per role, owned by the
+# before the grants (`"read": ["domain/*", "!domain/break-glass"]`). The daemon opens a socket per role, owned by the
 # role's `group` (`configstore.socket_group`; a role without one: `w2c-<role>`), so
 # a role is WHICH socket a process could open (its unit's `SupplementaryGroups=`), and `Rights.allows` is asked
 # before anything is forwarded or applied. `admin` is the root-only socket and may do everything but two things

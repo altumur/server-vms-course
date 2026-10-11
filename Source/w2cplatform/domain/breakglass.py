@@ -1,7 +1,7 @@
 """The emergency account of a cluster: its hash set and rotated at the holder, carried home sealed.
 
 Lesson 4's honest residue — one local account per cluster, for when the domain is away, which is the only time it is
-for. Its password's HASH (scrypt, `identity._hash`) is set at the holder (`domain/break_glass/<cluster>`, field
+for. Its password's HASH (scrypt, `identity._hash`) is set at the holder (`domain/break-glass/<cluster>`, field
 `pwhash_secret`: sealed under the holder's ring at rest), carried home by that cluster's agent through the domain's door
 — sealed to the member's key on the way, sealed with the member's ring at home — and checked by the cluster's console
 (`access.ClusterAccess.glass`). Every use is an alarm; the domain rotates the password when it sees one. The course had

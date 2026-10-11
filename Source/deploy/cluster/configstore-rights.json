@@ -18,11 +18,10 @@
     "domain/root",
     "domain/grants",
     "domain/revoked",
-    "domain/break_glass",
+    "domain/break-glass",
     "domain/grants/*",
     "domain/holder",
     "domain/backup-taken",
-    "domain/backup",
     "domain/member-list",
     "objects/det/commands/*",
     "objects/rec/used/*",
@@ -32,7 +31,10 @@
     "objects/rec/sealed/*",
     "objects/vms/commands/*",
     "door/signer",
-    "door/keys"
+    "door/keys",
+    "domain/backup*",
+    "domain/break-glass/*",
+    "domain/member-key*"
    ],
    "write": [
     "auto/scenarios/*",
@@ -211,7 +213,8 @@
     "det/*",
     "rec/*",
     "vms/*",
-    "platform/*"
+    "platform/*",
+    "!rec/asked/*"
    ],
    "write": [
     "det/workers/*",
@@ -259,7 +262,8 @@
     "detjob/*",
     "rec/*",
     "vms/*",
-    "platform/*"
+    "platform/*",
+    "!rec/asked/*"
    ],
    "write": [
     "detjob/workers/*",
@@ -351,10 +355,10 @@
    "group": "w2c-reccontroller",
    "read": [
     "platform/schema",
-    "!rec/asked/*",
     "rec/*",
     "vms/*",
-    "platform/*"
+    "platform/*",
+    "!rec/asked/*"
    ],
    "write": [
     "rec/workers/*",
@@ -373,7 +377,6 @@
    "group": "vms-recworker",
    "read": [
     "platform/schema",
-    "!rec/asked/*",
     "rec/*",
     "vms/*",
     "platform/decommission/*",
@@ -392,7 +395,8 @@
     "objects/rec/sealed/*",
     "vms/requests/*",
     "objects/vms/commands/*",
-    "domain/grants/*"
+    "domain/grants/*",
+    "!rec/asked/*"
    ],
    "write": [
     "rec/epoch/*",
@@ -467,7 +471,8 @@
     "platform/schema",
     "vms/*",
     "rec/*",
-    "platform/*"
+    "platform/*",
+    "!rec/asked/*"
    ],
    "write": [
     "vms/workers/*",
@@ -582,7 +587,8 @@
     "live/*",
     "rec/*",
     "survey/*",
-    "vms/*"
+    "vms/*",
+    "!rec/asked/*"
    ],
    "write": [
     "domain/*",
@@ -607,8 +613,14 @@
     "rec/*",
     "survey/*",
     "vms/*",
+    "!domain/backup*",
+    "!domain/break-glass/*",
+    "!domain/break-glass",
+    "!domain/member-key*",
+    "!domain/users/*",
     "!domain/vms/stream-accounts*",
-    "!domain/vms/stream-clients/*"
+    "!domain/vms/stream-clients/*",
+    "!rec/asked/*"
    ],
    "write": [
     "domain/members",
@@ -626,14 +638,17 @@
   "domainagent": {
    "group": "w2c-domainagent",
    "read": [
-    "platform/schema",
-    "domain/*",
+    "*",
     "!domain/signer*",
-    "!domain/vms/stream-clients/*"
+    "!domain/users/*",
+    "!domain/vms/stream-clients/*",
+    "!door/signer*",
+    "!rec/asked/*"
    ],
    "write": [
     "domain/*",
     "!domain/signer*",
+    "!domain/users/*",
     "!domain/members",
     "!domain/placement*",
     "!domain/licence",
@@ -641,7 +656,7 @@
     "!domain/grants/*",
     "!domain/pending/*",
     "!domain/backup/*",
-    "!domain/break_glass/*",
+    "!domain/break-glass/*",
     "!domain/ldevid/*",
     "!domain/vms/asks/*",
     "!domain/vms/polls/*",
@@ -658,6 +673,7 @@
    "delete": [
     "domain/*",
     "!domain/signer*",
+    "!domain/users/*",
     "!domain/members",
     "!domain/placement*",
     "!domain/licence",
@@ -665,7 +681,7 @@
     "!domain/grants/*",
     "!domain/pending/*",
     "!domain/backup/*",
-    "!domain/break_glass/*",
+    "!domain/break-glass/*",
     "!domain/ldevid/*",
     "!domain/vms/asks/*",
     "!domain/vms/polls/*",
@@ -697,8 +713,8 @@
     "rec/*",
     "survey/*",
     "vms/*",
-    "identity/users/*",
-    "domain/grants/*"
+    "domain/grants/*",
+    "!rec/asked/*"
    ],
    "write": [
     "domain/vms/*"

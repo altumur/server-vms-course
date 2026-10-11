@@ -89,9 +89,9 @@ SECRET_MASK = "***"
 # THE PLATFORM'S OWN SECRET ROWS AND WHO READS THEM — the third list of the shared table of parity
 # (`tests/testdata/platform_lists.tsv`, `secret_readers`: `<row or prefix>=<role>`, `<row>=` nobody but a spec that names a
 # reader; the product's `PlatformSecretReaders`, «Сборка» first, ADR-0019's addition and ADR-0066's of 2026-10-10: the
-# console reads the copy of the backup, to give it to a member that signs). In the product's names; where the course
-# keeps such a row under another name — `domain/break_glass/` for `domain/break-glass/`, `identity/users/` for
-# `domain/users/` — and where its rights file grants otherwise, that is a debt of parity named in its report, not here.
+# console reads the copy of the backup, to give it to a member that signs). The rows are the product's names and the
+# course's (ADR-0003, «Архитектор» 2026-10-11: one name on both sides), and the rights file's reads of them are made
+# from this table and nothing else (`secret_readers`; `domain/rights.secret_reads`, ADR-0019, ADR-0010).
 PLATFORM_SECRET_READERS: dict[str, tuple[str, ...]] = {
     "domain/break-glass/": ("console", "domain", "domainagent"),
     "domain/signer": ("domain",),
@@ -100,6 +100,32 @@ PLATFORM_SECRET_READERS: dict[str, tuple[str, ...]] = {
     "domain/backup": ("console", "domain", "domainagent"),
     "door/signer": (),            # nobody here: a spec of a subsystem with doors names its console (`secrets.readers`)
 }
+
+
+# WHO READS EACH SECRET ROW, AS ROLES OF A RIGHTS FILE — the product's `SecretReaders` (variables.go), worked out the same
+# way: the platform's own rows from the table above, each spec's `secrets.readers` (a spec's `controller`, `worker` are its
+# subsystem's, `domainpart` its worker on the domain, `<sub>domain`; any other name is the platform's one role of it), and
+# the worker of every spec whose `secrets.reads` or `worker.reads` names a row somebody keeps secret; and the people's
+# ledgers of a spec whose requests are counted per person (`<sub>/asked/`, ADR-0060), the console's alone. A row nobody
+# keeps secret is everybody's already, and is not here.
+def secret_readers(specs) -> dict[str, set[str]]:
+    def role(spec, name: str) -> str:
+        if name == "domainpart":
+            return f"{spec.name}domain"
+        return f"{spec.name}{name}" if name in ("controller", "worker") else name
+
+    out = {row: set(names) for row, names in PLATFORM_SECRET_READERS.items()}
+    for s in specs:
+        for row, names in s.secret_readers.items():
+            out.setdefault(row, set()).update(role(s, n) for n in names)
+    for s in specs:
+        if "per_person" in (s.requests or {}):
+            out.setdefault(s.sub.asked_prefix(), set()).add("console")
+    for s in specs:
+        for row in (*s.secret_reads, *s.worker_reads):
+            if row in out:
+                out[row].add(f"{s.name}worker")
+    return out
 
 
 # The rule, in one line. `cred_secret` is a secret; `cred_username` is not, and neither is `secret_note` —

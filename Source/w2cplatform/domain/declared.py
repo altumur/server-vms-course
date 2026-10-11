@@ -100,9 +100,9 @@ def edit_fields(sub: str) -> tuple[str, ...]:
 # `runtime.federation_from_env` — without a line of its own):
 #   a row of the family under a person's name, and a person under a row's name     `NameTaken`
 #   a grant to a row of the family wider than its `grant` (`domain/grants/*`)       `GrantTooWide`
-# `domain/users` is the platform's word for its people; the course keeps them as `identity/users/<name>`
-# (`identity.IdentityStore._path`).
-PEOPLE = {"domain/users": "identity/users/"}
+# `domain/users` is the platform's word for its people, and their rows are `domain/users/<name>` on both sides
+# (`identity.IdentityStore._path`; ADR-0003, «Архитектор» 2026-10-11: one row name, no alias).
+PEOPLE = {"domain/users": "domain/users/"}
 GRANTS_PREFIX = "domain/grants/"         # `agent.GRANTS_PATH`: a row per cluster and the domain's own, `domain/grants/domain`
 
 
@@ -130,6 +130,21 @@ def _holds(items) -> bool:
 # F1). Every role lists every prefix (names only); a subject removed is its row removed, so a key listed is a subject.
 def _listed(vars_, row: str) -> bool:
     return row in vars_.list(row)
+
+
+# WHETHER A PERSON STANDS UNDER A NAME, ASKED BY A PROCESS THAT IS NO READER OF THE PEOPLE (ADR-0019, ADR-0010;
+# «Архитектор» 2026-10-11): `domain/users/` is read by the role `domain` alone (`secrets.PLATFORM_SECRET_READERS`, the
+# shared table), so a subsystem's worker on the domain lists the row's key, as the product's `subjectsOf` does, and opens
+# it only to tell a person from the platform's tombstone of one deleted. A row it may not open is a person: the name
+# stays refused until a reader says otherwise — never a write let through because a read was refused.
+def _person(vars_, row: str) -> bool:
+    from w2cplatform.variables import Forbidden
+    if not _listed(vars_, row):
+        return False
+    try:
+        return _holds(vars_.get(row)[0])
+    except Forbidden:
+        return True
 
 
 def subject_families() -> list[tuple[str, str, str, str | None]]:
@@ -164,7 +179,7 @@ def refusal(vars_, path: str, items) -> tuple[type, str] | None:
         rule = f"{sub}'s domain.names.{family.split('/', 2)[2]}"
         name = _name_under(path, family)
         if name is not None:                                        # a row of the family
-            if _holds(vars_.get(people + name)[0]):
+            if _person(vars_, people + name):
                 return NameTaken, f"{path}: {name!r} is a person of the domain already, {people}{name} ({rule})"
             if ceiling is not None:
                 for row in vars_.list(GRANTS_PREFIX):

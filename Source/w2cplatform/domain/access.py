@@ -42,7 +42,7 @@ class ClusterAccess:
         except TokenError as e:
             raise Denied(401, f"token refused: {e}") from None
 
-    # The emergency entry, checked HERE: the hash the agent carried (`domain/break_glass`), scrypt, and a
+    # The emergency entry, checked HERE: the hash the agent carried (`domain/break-glass`), scrypt, and a
     # payload the gate keeps in memory for fifteen minutes. The domain is not asked — it is away, which is why
     # somebody is breaking the glass. The gate alarms on every attempt; the domain rotates the password when it
     # sees them.

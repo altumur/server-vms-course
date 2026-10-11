@@ -1,6 +1,6 @@
 """Lesson 4 — where users live, and creating a user touches no cluster.
 
-    identity/users/<id>   in the domain holder's store, the signer the only writer
+    domain/users/<id>     in the domain holder's store, the signer the only writer (the product's name, ADR-0003)
                           local: a scrypt hash (`pwhash_secret`, sealed under the platform's ring at rest);
                           federated: an IdP subject and no secret
     identity/pointer      -> identity/rev-N object: the whole set, published object-first
@@ -101,7 +101,7 @@ class IdentityStore:
 
     # -- records ----------------------------------------------------------------
     def _path(self, uid: str) -> str:
-        return f"identity/users/{uid}"
+        return f"domain/users/{uid}"
 
     def get(self, uid: str) -> User | None:
         from w2cplatform.sealing import open_row
@@ -178,7 +178,7 @@ class IdentityStore:
     def users(self) -> list[User]:
         out = []
         from w2cplatform.sealing import open_row
-        for p in self.vars.list("identity/users/"):
+        for p in self.vars.list("domain/users/"):
             items, _ = self.vars.get(p)
             u = USERS.read(p, lambda items=items, p=p: User.from_items(open_row(self.sealer, items, p))
                            if items and items.get("kind") in ("local", "idp") else None)
