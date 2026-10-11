@@ -137,8 +137,8 @@ WantedBy=multi-user.target
 
 | Файл | Чей | Что в нём |
 |---|---|---|
-| `/etc/w2c/w2c.env` ([пример](../Source/deploy/cluster/systemd/w2c.env.example)) | платформы | `SERVER_NAME`, `LABELS`, `PLATFORM_DIR`, `RESOURCE_ROOT` (архив событий, `/data/platform/events`), `OBJECTS`, `RESOURCE_URL`, адреса хранилища `CONFIGSTORE_*`, `W2C_TLS`, настройки запасных (`CONSOLE`, `MAX_WORKERS`, `MAX_RECORDERS`) |
-| `/etc/vms/vms.env` ([пример](../Source/deploy/cluster/systemd/vms.env.example)) | подсистемы VMS | `CAPACITY`, порты, дверь архива регистратора, `CONSOLE_MONITORS`, `CLUSTER` |
+| `/etc/w2c/w2c.env` ([пример](../Source/deploy/cluster/systemd/w2c.env.example)) | платформы | `SERVER_NAME`, `LABELS`, `PLATFORM_DIR`, `RESOURCE_ROOT` (архив событий, `/data/platform/events`), `OBJECTS`, `RESOURCE_URL`, адреса хранилища `CONFIGSTORE_*`, `W2C_TLS`, размер группы `CONFIGSTORE_GROUP_SIZE` (ADR-0070), настройки запасных (`CONSOLE`) |
+| `/etc/vms/vms.env` ([пример](../Source/deploy/cluster/systemd/vms.env.example)) | подсистемы VMS | порты (`CAPACITY` — в объявлении роли `/etc/vms/roles/<роль>.env`, ADR-0070), дверь архива регистратора, `CONSOLE_MONITORS`, `CLUSTER` |
 
 У другой подсистемы был бы свой файл рядом; скрипт запуска читает файл платформы и файл подсистемы, в этом порядке.
 

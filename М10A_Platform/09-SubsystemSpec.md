@@ -230,6 +230,8 @@ class SubsystemSpec:
     derived: list[Derived] = field(default_factory=list)
     capacity_from: str = "capacity"
     capacity_default: int = 50    # `placement.capacity.default`: a worker that has said nothing yet (the spec must say it)
+    capacity_unit_mb: float = 0.0  # `placement.capacity.unit_mb`: what one unit costs a worker, MB (0: not said; ADR-0070)
+    capacity_base_mb: float = 0.0  # `placement.capacity.base_mb`: what its process costs with none, MB (said with unit_mb)
     headroom_from: str = "headroom"
     constraint: str = "none"
     requires: str = "none"        # "resource": a worker is eligible only while its server's resource is not silent
@@ -326,7 +328,7 @@ class SubsystemSpec:
         if spec.near_by != "id" and spec.near_by not in fields:
             raise ValueError(f"spec {spec.name}: near.by names no field: {spec.near_by!r}")
         …
-        spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
+        spec.capacity_from, spec.capacity_default, spec.capacity_unit_mb, spec.capacity_base_mb = _capacity(spec.name, cap)
         from .speckeys import refuse_unknown
         refuse_unknown(spec.name, d)
         return spec
@@ -360,17 +362,24 @@ spec counter: no spec says `placement.spred_by` — a key the platform does not 
 Обязательных два. `d["name"]`, без `get`: спецификация без имени бессмысленна, и падение здесь лучше, чем подсистема с пустым префиксом. Имя — ещё и префикс в хранилище и дерево событий, поэтому четыре имени заняты платформой: `console` и `audit` (её деревья, чьи строки сами называют своё `of`), `platform` и `domain` (её ключи и пространство домена) — `spec.RESERVED_NAMES`. Спека с таким именем не загружается ни из файла, ни из словаря (ADR 0012; тест `tests/test_base_worker.py::test_a_spec_named_as_one_of_the_platforms_own_names_does_not_load`). И ёмкость:
 
 ```python
-def _capacity(name, cap) -> tuple[str, int]:
-    if not isinstance(cap, dict) or set(cap) - {"from", "default"} or "default" not in cap:
+def _capacity(name, cap) -> tuple[str, int, float, float]:
+    if not isinstance(cap, dict) or set(cap) - {"from", "default", "unit_mb", "base_mb"} or "default" not in cap:
         raise ValueError(f"spec {name}: placement.capacity is {{from: <heartbeat field>, default: <units a worker that "
                          f"said nothing is counted at>}} — the default is the subsystem's to say, not {cap!r}")
     d = cap["default"]
     if isinstance(d, bool) or not isinstance(d, int) or d < 0:
         raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {_v(d)}")
-    return str(cap.get("from", "capacity") or "capacity"), d
+    unit_said, base_said = "unit_mb" in cap, "base_mb" in cap
+    if unit_said != base_said:
+        missing = "placement.capacity.base_mb" if unit_said else "placement.capacity.unit_mb"
+        raise ValueError(f"spec {name}: {missing} is not said: unit_mb (what one unit costs a worker) and base_mb (what "
+                         f"the process costs with none) are said together, in MB, or neither")
+    …
 ```
 
 Сколько единиц считать воркеру, который ещё не сказал своей ёмкости, — число предметной области: пятьдесят камер, два скана, четыре счётчика. У платформы своего такого числа нет и быть не должно, поэтому подсистема говорит его сама, а `capacity:` без `default` — отказ при загрузке.
+
+**Сколько стоит единица в памяти** ([ADR-0070](../decisions/0070-консенсусный-долг-метрики-raft-состав-группы-учения-потолок-лидера.md), шаг 3). `CAPACITY` воркера и потолок запасных на сервере долго были двумя числами, которые ничто не сверяло: сервер, посчитанный под пятьдесят камер, с четырьмя воркерами по пятьдесят объявлял двести. Теперь подсистема может сказать о себе ещё два числа — `unit_mb`, сколько одна единица стоит воркеру, и `base_mb`, сколько стоит процесс без единиц, оба в МиБ, — и говорит их парой или не говорит вовсе: одно без другого не загружается, ноль, отрицательное и слово — тоже. Сказанные, они сверяются базовым воркером с объявлением роли на хосте (`roles/<роль>.env`: `CAPACITY`, `WORKER_MEMORY_MB`, `HOST_MEMORY_MB`): если `CAPACITY · unit_mb + base_mb > WORKER_MEMORY_MB`, процесс не стартует (`w2cplatform/memorybudget.py`), а проход запасных берёт потолок как `HOST_MEMORY_MB / WORKER_MEMORY_MB` (урок 4 М11). Платформа по-прежнему не читает `CAPACITY` как ёмкость — только сверяет с бюджетом (ADR-0030, п. 6). Спеки VMS этих чисел пока не несут, как и у продукта: они берутся из замера, не из головы. Тесты — `tests/test_memory_budget.py`.
 
 **Умолчания разбираются один раз.** Цикл в конце `read_fields` — самая неочевидная часть чтения полей:
 
@@ -884,6 +893,7 @@ clothes — it goes, or a spec that has nothing to do with the product shows wha
 | Ключ | Что значит | Кто читает |
 |---|---|---|
 | `capacity: {from, default}` | поле heartbeat'а с ёмкостью и число для молчащего воркера — обязательно | контроллер |
+| `capacity: {unit_mb, base_mb}` | цена единицы и процесса в МиБ, парой или никак (ADR-0070) | базовый воркер: сверка с `WORKER_MEMORY_MB` |
 | `headroom: {from}` | поле heartbeat'а с запасом | контроллер, консоль (метрики) |
 | `constraint`, `tie_break` | имя из закрытого каталога: `none`, `labels-subset`; `most-free-capacity` | контроллер |
 | `requires` | `none` или `resource`: воркер годится, пока ресурс его сервера не молчит (`REQUIRES`; другое слово — отказ) | контроллер, консоль |

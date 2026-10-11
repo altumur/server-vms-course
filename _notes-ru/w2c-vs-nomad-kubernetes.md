@@ -14,6 +14,8 @@ status: draft
 > **Источник истины — код.** Где записка расходится с кодом, прав код.
 > Смежные разборы: [raft-prototype.md](raft-prototype.md), [without-an-orchestrator.md](without-an-orchestrator.md), [instead-of-nomad-variables.md](instead-of-nomad-variables.md), [three-cameras/10-limits-and-scale.md](three-cameras/10-limits-and-scale.md), [whose-architecture.md](whose-architecture.md).
 
+> **Решение по записке:** [ADR-0070](../decisions/0070-консенсусный-долг-метрики-raft-состав-группы-учения-потолок-лидера.md) — консенсусный долг закрывается до продукта: метрики raft, объявленный состав группы, `recover` с порогом эпох, учения, ёмкость из бюджета памяти; курс повторяет это формой продукта и помечает своё хранилище учебным.
+
 [← все записки](README.md)
 
 ## Коротко — одна страница для руководства

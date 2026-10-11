@@ -340,10 +340,9 @@ RESOURCE_ROOT=/data/platform/events
 # SERVER_NAME=
 # LABELS=
 # BOX_ID=
-# the spares' script: where the console answers, and how many spares of each role this server may run
+# the spares' script: where the console answers; how many spares of each role this server may run is the role's
+# declaration's to derive (/etc/vms/roles/<role>.env: HOST_MEMORY_MB / WORKER_MEMORY_MB, ADR-0070)
 # CONSOLE=http://127.0.0.1:8080
-# MAX_RECORDERS=8
-…
 ```
 
 Окружение коробки — два файла. `/etc/w2c/w2c.env` — то, что процессу нужно, чтобы быть членом платформы: где её состояние, где архив событий, какое хранилище, кто этот сервер, что он достаёт (`LABELS`), какая это машина (`BOX_ID`). Этот файл не меняется, когда на коробку добавляют подсистему. Настройки подсистем — в её файле (у VMS — `/etc/vms/vms.env`). Каждый юнит называет оба, платформу первой:
