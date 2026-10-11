@@ -118,11 +118,12 @@ def test_one_record_of_a_bundle_is_that_records_and_one_member_over_its_share_is
     relay = make_cluster("relay")[0].objects
     store = make_cluster("centre")[0].objects
     relay.put(base("cam-A") + "reported", b'{"ts": 1, "seq": 1}')
-    relay.put(base("cam-A") + "o/vms/snapshot/w", b"x" * (MEMBER_SHARE + 1))
+    relay.put(base("cam-A") + "o/vms/snapshot/w", json.dumps({"pad": "x" * (MEMBER_SHARE + 1)}).encode())
     relay.put(base("cam-B") + "reported", b'{"ts": 1, "seq": 1}')
     bundle("relay", ["cam-A", "cam-B"], relay, store)
     view = BundleView("relay", store)
-    assert view.get(base("cam-B") + "reported") == b'{"ts": 1, "seq": 1}'
+    mark = json.loads(view.get(base("cam-B") + "reported"))             # the door's mark: the member's time, counted there
+    assert (mark["ts"], mark["seq"]) == (1, 1), mark
     try:
         view.get(base("cam-A") + "reported"); raise AssertionError("must say why")
     except Unreachable as e:
@@ -130,7 +131,7 @@ def test_one_record_of_a_bundle_is_that_records_and_one_member_over_its_share_is
     doc = json.loads(store.get(base("relay") + BUNDLE))
     doc["cam-B"]["o/vms/heartbeats/w"] = 42                             # one record that is not a string
     store.put(base("relay") + BUNDLE, json.dumps(doc).encode())
-    assert view.get(base("cam-B") + "reported") == b'{"ts": 1, "seq": 1}'
+    assert json.loads(view.get(base("cam-B") + "reported")) == mark
     assert view.list(base("cam-B") + "o/") == [] and "relay/bundle#cam-B/o/vms/heartbeats/w" in MEMBER_OBJECTS.bad
 
 
