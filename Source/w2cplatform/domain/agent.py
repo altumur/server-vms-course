@@ -181,8 +181,10 @@ class DomainAgent:
 
         `published` and `pages` are the uplink (`domain/uplink.py`): this member's own object store, where
         its workers publish, and a callable returning the pages it is asked to show (Lesson 14). Given
-        them, every pass ends with a REPORT into the domain holder's object store — the domain never opens
-        a connection to this member; this pass is the only one there is, and it carries both ways.
+        them, every pass ends with a REPORT — to the door it carries through (`POST /api/member/<cluster>`), or
+        into `domain_objects` when it is given one (the holder's own box, a member behind a relay, the tests) —
+        the domain never opens a connection to this member; this pass is the only one there is, and it carries
+        both ways.
 
         `domain_vars` is where the pass reads what this member carries (`carry.py`): a door — `carry.CarryClient`, a
         relay's `relay.Relay(...).vars` — whose answer is this member's own rows, its secrets sealed to `key` (this
@@ -193,7 +195,8 @@ class DomainAgent:
         `follow` and `open_door` are Lesson 15: the agent follows the holder by itself (`HolderFollower`) — every pass
         it asks the domain's clusters for the record of the greatest term, carries it home, and when it names another
         holder, `open_door(record)` gives the door to carry through from now on: `(domain_vars, domain_objects)`, or None
-        where the record names no door (the agent keeps the one it has)."""
+        where the record names no door (the agent keeps the one it has). `domain_objects` None: the report goes through
+        that door too (`CarryClient.publish`)."""
         self.cluster, self.domain_vars, self.cluster_vars, self.now = cluster, domain_vars, cluster_vars, now
         self.follow, self.open_door = follow, open_door
         self.holder_at: str | None = None                  # the holder whose door this agent carries through, once known
@@ -218,6 +221,7 @@ class DomainAgent:
         # (`own_objects`, or the one it reports from), where the domain reads it. Written only when it changes.
         self.reaches, self.own_objects = reaches, own_objects if own_objects is not None else published
         self.reported = ""                                  # what the last pass did with the report
+        self.bundled: dict = {}                             # a relay: the members the door did not carry, and why
         self.shared = self.backup = self.holder = self.keys = ""   # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
@@ -457,16 +461,33 @@ class DomainAgent:
             self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": seen or 0.0, "cluster": self.cluster}).encode())
         # Up, on the same connection: what the domain reads of this member, left where it reads it. Last,
         # so the outcomes of the edits applied above go up in this same pass.
-        if self.published is not None and self.domain_objects is not None:
-            from .uplink import NotPublished, report
+        #
+        # Into `domain_objects` when the agent was given a store to report into — the holder's own box, a member behind a
+        # relay into its relay's objects, the tests — else through the door it carries through (`POST /api/member`,
+        # `CarryClient.publish`): after a move that is the new holder's door, and the report goes there with the rows
+        # (the three-site scenario, N5).
+        door = self.domain_objects is None and hasattr(self.domain_vars, "publish")
+        if self.published is not None and (self.domain_objects is not None or door):
+            from .carry import Refused
+            from .uplink import NotPublished, publication, report
             try:
                 paged_at = self.now()
-                n = report(self.cluster, self.cluster_vars, self.published, self.domain_objects, paged_at,
-                           self.pages() if self.pages else None, key=self.key)
+                pages = self.pages() if self.pages else None
+                if door:
+                    self.domain_vars.publish(publication(self.cluster, self.cluster_vars, self.published, paged_at,
+                                                         pages, key=self.key))
+                    self.reported = "reported through the door"
+                else:
+                    n = report(self.cluster, self.cluster_vars, self.published, self.domain_objects, paged_at, pages,
+                               key=self.key)
+                    self.reported = f"reported ({n} written)"
                 self._paged_at = paged_at
-                self.reported = f"reported ({n} written)"
+                self._say_refused("the report", "")
             except NotPublished as e:
                 self.reported = str(e)
+            except Refused as e:                           # the door said no: said once, the pass goes on
+                self.reported = f"refused by the domain's door: {e.detail}"
+                self._say_refused("the report", self.reported)
             except Unreachable:
                 self.reported = "the domain did not take the report"
                 return False
@@ -477,12 +498,19 @@ class DomainAgent:
                     self, self.relay_members() if callable(self.relay_members) else self.relay_members))
             except Unreachable:
                 return False
-        if self.bundle_members and self.bundle_store is not None and self.domain_objects is not None:
-            from .relay import bundle
+        if self.bundle_members and self.bundle_store is not None and (self.domain_objects is not None or door):
+            from .carry import Refused
+            from .relay import bundle, relayed
+            members = self.bundle_members() if callable(self.bundle_members) else self.bundle_members
             try:
-                self._step("the bundle", lambda: bundle(
-                    self.cluster, self.bundle_members() if callable(self.bundle_members) else self.bundle_members,
-                    self.bundle_store, self.domain_objects))
+                if door:                                   # `POST /api/relay/<relay>`, to the door it carries through
+                    said = self.domain_vars.relay_up(relayed(members, self.bundle_store))
+                    self.bundled = (said.get("refused") or {}) if isinstance(said, dict) else {}
+                    self._say_refused("the bundle", "")
+                else:
+                    self._step("the bundle", lambda: bundle(self.cluster, members, self.bundle_store, self.domain_objects))
+            except Refused as e:
+                self._say_refused("the bundle", f"refused by the domain's door: {e.detail}")
             except Unreachable:
                 return False
         return True
@@ -645,8 +673,10 @@ def main() -> None:
     from w2cplatform.variables import open_vars, store_url
 
     cluster = os.environ.get("CLUSTER", "local")
-    # REPORT=1: this member is one the domain never reaches (`uplink.py`) — every pass also leaves its report in the
-    # domain holder's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own `OBJECTS` (`w2c.env`).
+    # REPORT=1: this member is one the domain never reaches (`uplink.py`) — every pass also sends its report, read from
+    # this cluster's own `OBJECTS` (`w2c.env`): through the holder's door (`POST /api/member/<cluster>`), which it follows
+    # with the rows; behind a relay, into the relay's objects (`RELAY_OBJECTS_URL`); on the holder's own box, into its
+    # objects (`DOMAIN_OBJECTS_URL`).
     report = os.environ.get("REPORT") == "1"
     from w2cplatform.sealing import Sealer
     from w2cplatform.trust.memberkey import MemberKey
@@ -666,8 +696,7 @@ def main() -> None:
         domain_objects = open_store(os.environ["RELAY_OBJECTS_URL"])
     elif os.environ.get("DOMAIN_URL"):
         domain_vars = CarryClient(os.environ["DOMAIN_URL"], cluster, key)
-        domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") \
-            or os.environ.get("RELAY") == "1" else None
+        domain_objects = None                            # the report and the relay's summary go through the door
     else:
         domain_vars = open_vars(os.environ["DOMAIN_CONFIG_URL"])
         domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") else None
@@ -676,7 +705,7 @@ def main() -> None:
     # relay at all: it keeps the relay and the bundle in its own stores.
     relayed = [m for m in os.environ.get("RELAY_MEMBERS", "").split(",") if m]
     relay = os.environ.get("RELAY") == "1" or bool(relayed)
-    if relay and domain_objects is None:
+    if relay and domain_objects is None and not os.environ.get("DOMAIN_URL"):
         domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"])
     if relay and not relayed:
         relayed = lambda: agent.relays()                                  # noqa: E731  the topology, as carried
