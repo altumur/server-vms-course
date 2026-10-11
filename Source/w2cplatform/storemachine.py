@@ -33,7 +33,7 @@ the group, and what a test stand applies in one process — the same code, so th
 # FENCES the worker (`Worker._renew_slot`). So a write carries an operation id (`id`, made by the handle once per
 # call), and the machine answers a repeat of an id it has seen with the first answer — the client sessions of the
 # Raft dissertation, § 6.3. The memory is the last `OP_MEMORY` ids, in log order, so every member forgets the same.
-# An id is answered from memory only for the SAME write — op, key, items, cas (`_fingerprint`): an id that comes back
+# An id is answered from memory only for the SAME write — op, key, items, cas, guard (`_fingerprint`): an id that comes back
 # with another write is refused, never answered with a first answer that was not its own (the review's thirteenth
 # pass, major 4: the handle sent a new write under an old id and was told «OK» for a write it never made; the handle
 # is mended too, `configstorevars._Unknown`).
@@ -103,7 +103,7 @@ import urllib.parse
 from .canonical import parse_json
 from .epoch import EPOCH_FLOOR_AT, EPOCH_FLOOR_FIELD, EPOCH_FLOOR_KEY
 from .rights import DOMAIN_ROLES, allowed, may_delete_domain, valid as _pattern   # noqa: F401  DOMAIN_ROLES: named here for the daemon
-from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
+from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path, guard_check
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
 OP_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")         # a write's operation id (the handle's: 32 hex digits)
@@ -144,9 +144,15 @@ def check_key(key) -> str:
 # What a write names besides its key and items, bounded (the notes: "What a caller names is bounded too"). Raises
 # `ValueError` naming the field, never quoting it.
 def check_write(cmd: dict) -> None:
+    if "guard" in cmd and cmd["guard"] is None:
+        raise ValueError("guard is {key, index}, never null")
     op_id = cmd.get("id")
     if op_id is not None and not (isinstance(op_id, str) and OP_ID.match(op_id)):
         raise ValueError("a write's id is up to 64 letters, digits, - and _")
+    guard_check(cmd.get("guard"))
+    if cmd.get("guard") is not None:
+        check_key(cmd["guard"]["key"])
+        check_write({"cas": cmd["guard"]["index"]})
     cas = cmd.get("cas")
     if cas is None or isinstance(cas, bool):
         return
@@ -161,7 +167,7 @@ def check_write(cmd: dict) -> None:
 # alone, so every member keeps the same.
 def _fingerprint(cmd: dict) -> str:
     what = json.dumps([cmd.get("op"), cmd.get("key"), cmd.get("items") if cmd.get("op") == "put" else None,
-                       cmd.get("cas")], sort_keys=True, default=str)
+                       cmd.get("cas"), cmd.get("guard")], sort_keys=True, default=str)
     return hashlib.sha256(what.encode()).hexdigest()
 
 
@@ -252,7 +258,11 @@ class StoreMachine:
             return dict(res)
         current = self.rows.get(key, (None, 0))[1]
         cas = _cas(cmd.get("cas"))
-        if cas is not None and cas != current:
+        guard = cmd.get("guard")
+        guarded = self.rows.get(guard["key"], (None, 0))[1] if guard is not None else None
+        if guard is not None and guard["index"] != guarded:
+            res = {"error": "guard", "key": guard["key"], "index": guarded}
+        elif cas is not None and cas != current:
             res = {"conflict": True, "index": current}
         elif cmd["op"] == "put" and items_bytes(cmd.get("items") or {}) > MAX_VALUE:
             res = {"toolarge": items_bytes(cmd["items"])}      # the door refuses it first; the log must agree anyway
@@ -389,6 +399,11 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             if not rights.allows(role, action, key):
                 return fault(403, "forbidden", f"{role} may not {action} {key}")
             cmd = {"op": body["op"], "key": key, "cas": body.get("cas")}
+            if body.get("guard") is not None:
+                guard = body["guard"]
+                if not rights.allows(role, "read", guard["key"]):
+                    return fault(403, "forbidden", f"{role} may not read {guard['key']}")
+                cmd["guard"] = dict(guard)
             if body["op"] == "put":
                 items = body.get("items")
                 if not isinstance(items, dict) or not all(isinstance(k, str) for k in items):
@@ -400,6 +415,8 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             if body.get("id"):
                 cmd["id"] = body["id"]
             got = submit(cmd)
+            if got.get("error") == "guard":
+                return 412, got
             if "error" in got:
                 return fault(400, "badkey", got["error"])
             if "toolarge" in got:
