@@ -2,7 +2,8 @@
 Held here from the course's side, as the product holds it from its own (`vmsworker/vms/spec_parity_test.go`): the key
 paths of each spec both have are the same, and what differs today is the debt in `testdata/spec_parity_debt.txt` — a
 byte copy of the product's file, which only shrinks; and every spec of the product loads with the course's loader,
-what it refuses today being the debt in `testdata/spec_load_debt.txt`, which only shrinks too. What is read of the product is its committed `main` (`productdir.py`), never a working tree a
+what it refuses today being the debt in `testdata/spec_load_debt.txt`, which only shrinks too; and the values of a
+closed list of keys, the operational names (`VALUE_KEYS`), are one value for value, with no debt. What is read of the product is its committed `main` (`productdir.py`), never a working tree a
 product author is editing; without the product's checkout beside the course the module is skipped: the course builds
 alone.
 
@@ -194,6 +195,65 @@ def test_the_parity_debt_is_the_products_file_byte_for_byte():
         assert raw == b.read(), (f"the course's {PARITY_DEBT} is not the product's {PRODUCT_SPECS}/spec_parity_debt.txt "
                                  f"byte for byte — copy it")
 
+
+# The keys whose VALUES are one on both sides, not only their paths (ревью 2026-10-11): a value here is an operational
+# name — the variable a unit gives a worker its slot in, the letters its slots are made of — which a deploy unit, a
+# console, an operator's `systemctl start …@g-1` and the other side's code all say; two spellings of it are two products
+# (ADR-0003: one name, no alias; ADR-0019: one YAML). The list is closed: a key joins it by a decision, not by a test
+# that happened to need it. The rest of a spec's values (titles, defaults, words) the key paths and the lists' words hold.
+VALUE_KEYS = ("slot.prefix", "slot.name_env")
+
+
+def _value(d: dict, path: str):
+    """The value at the dotted `path` of a spec, or `_ABSENT` — a key one side lacks is the key paths' business."""
+    for k in path.split("."):
+        if not isinstance(d, dict) or k not in d:
+            return _ABSENT
+        d = d[k]
+    return d
+
+
+_ABSENT = object()
+
+
+def _value_differences() -> tuple[set[str], int]:
+    """`<spec> <key>: course <v> product <v>` for every key of `VALUE_KEYS` both sides' spec has and spell apart, and
+    how many values were compared."""
+    found, compared = set(), 0
+    for c in sorted(glob.glob(os.path.join(COURSE_SPECS, "*.subsystem.yaml"))):
+        name = os.path.basename(c)
+        theirs = product_file(f"{PRODUCT_SPECS}/{name}")
+        if theirs is None:
+            continue                                     # a subsystem only the course has
+        with open(c, encoding="utf-8") as f:
+            mine = specyaml.loads(f.read(), f"the course's {name}") or {}
+        other = specyaml.loads(theirs, f"the product's {name}") or {}
+        for key in VALUE_KEYS:
+            a, b = _value(mine, key), _value(other, key)
+            if a is _ABSENT or b is _ABSENT:
+                continue
+            compared += 1
+            if a != b:
+                found.add(f"{name} {key}: course {a!r} product {b!r}")
+    return found, compared
+
+
+def test_the_operational_names_in_the_specs_are_the_products_value_for_value():
+    """`slot.prefix` and `slot.name_env` (`VALUE_KEYS`) of every spec both sides have are one value: the course said
+    `GATEWAY_NAME` where the product says `LIVE_NAME` and the key paths, alike, did not see it (ревью 2026-10-11). A
+    difference is a failure, made good on one side — there is no debt of values: none is owed today, and the form of
+    one is «Архитектор»'s to give when a decision first brings a value to one side alone."""
+    found, compared = _value_differences()
+    assert compared >= len(VALUE_KEYS), f"only {compared} values compared: the specs' `slot:` is not read"
+    assert not found, ("the operational names of the specs differ from the product's — one name on both sides "
+                       "(ADR-0003, ADR-0019):\n  " + "\n  ".join(sorted(found)))
+
+
+def test_a_value_is_read_at_its_path_and_a_missing_key_is_absent():
+    """The reader of `VALUE_KEYS`, on a made-up spec."""
+    d = specyaml.loads("name: x\nslot: {prefix: g, name_env: LIVE_NAME}\n", "a made-up spec")
+    assert (_value(d, "slot.prefix"), _value(d, "slot.name_env")) == ("g", "LIVE_NAME")
+    assert _value(d, "slot.nosuch") is _ABSENT and _value({"name": "x"}, "slot.prefix") is _ABSENT
 
 def refused_paths(d: dict) -> list[str]:
     """The key paths of a spec the course's loader refuses: every key it reads none of (`speckeys.unknown`), and then,
