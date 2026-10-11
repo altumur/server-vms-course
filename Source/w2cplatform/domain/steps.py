@@ -15,7 +15,37 @@ last one written, which is the point of a book.
 """
 from __future__ import annotations
 
+import contextlib
 import logging
+import threading
+
+# ONE READ A PASS (the scenario «камера — офис — центр», N11). What a pass reads many times and nobody writes while it
+# runs — a relay's summary report, read again for every look at every member behind it, some forty times a camera — is
+# read once: `once(key, read)` inside a pass gives what `read()` gave the first time; outside a pass (a door answering a
+# request, a test) it reads every time, as before. A pass is `Steps.run`, or `one_pass()` around several of them; this
+# thread's only — a pass's lanes read for themselves.
+_PASS = threading.local()
+
+
+@contextlib.contextmanager
+def one_pass():
+    if getattr(_PASS, "memo", None) is not None:
+        yield                                  # inside a pass already: the same one
+        return
+    _PASS.memo = {}
+    try:
+        yield
+    finally:
+        _PASS.memo = None
+
+
+def once(key, read):
+    memo = getattr(_PASS, "memo", None)
+    if memo is None:
+        return read()
+    if key not in memo:
+        memo[key] = read()                     # what raised is not kept: the next look reads again
+    return memo[key]
 
 
 class Steps:
@@ -29,21 +59,25 @@ class Steps:
     def run(self, *steps) -> dict:
         """`steps`: (name, fn). Returns {name: what fn returned} for the steps that did not raise."""
         out = {}
-        for what, step in steps:
-            try:
-                out[what] = step()
-            except Exception:                  # noqa: BLE001 — a bad step is a stale part of the pass, not a dead loop
-                self.failures += 1
-                self.by_step[what] = self.by_step.get(what, 0) + 1
-                if what not in self.failing:
-                    self.failing.add(what)
-                    self.log.exception("%s: %s failed; the other steps go on, and this one is tried again%s", self.who,
-                                       what, f" every {self.every:.0f} s" if self.every else " on the next pass")
-            else:
-                if what in self.failing:
-                    self.failing.discard(what)
-                    self.log.warning("%s: %s works again", self.who, what)
+        with one_pass():
+            for what, step in steps:
+                self._one(what, step, out)
         return out
+
+    def _one(self, what, step, out: dict) -> None:
+        try:
+            out[what] = step()
+        except Exception:                  # noqa: BLE001 — a bad step is a stale part of the pass, not a dead loop
+            self.failures += 1
+            self.by_step[what] = self.by_step.get(what, 0) + 1
+            if what not in self.failing:
+                self.failing.add(what)
+                self.log.exception("%s: %s failed; the other steps go on, and this one is tried again%s", self.who,
+                                   what, f" every {self.every:.0f} s" if self.every else " on the next pass")
+        else:
+            if what in self.failing:
+                self.failing.discard(what)
+                self.log.warning("%s: %s works again", self.who, what)
 
     def said(self) -> dict:
         return {"step_failures": self.failures, "failing": sorted(self.failing)}

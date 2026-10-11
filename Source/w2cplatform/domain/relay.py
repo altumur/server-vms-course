@@ -141,13 +141,16 @@ class BundleView:
     # of the domain is read. A list is REFUSED by name, not parsed: an older relay is updated, not guessed at (the
     # coordinator's decision). One member's entry that is not an object is that member's alone, and one record of an
     # entry that is not a string is that record's (feedback from the product: one record rejected its relay's bundle).
-    def _entries(self, member: str) -> dict[str, str]:
+    #
+    # READ ONCE A PASS (the scenario «камера — офис — центр», N11): every look at a member behind the relay — its mark,
+    # each road's mark, its heartbeats, its snapshot, its page — read the whole bundle from the store and parsed it, some
+    # forty times a camera a pass. Inside a pass (`steps.once`) the bundle is read and parsed once; outside one, every time.
+    def _doc(self):
+        """The bundle as parsed: a dict, None when there is none, or what is wrong with it (an exception, not raised)."""
         from w2cplatform.rows import PARSE_ERRORS
-        from .federation import MEMBER_OBJECTS
-        key = base(self.relay) + BUNDLE
-        raw = self.store.get(key)
+        raw = self.store.get(base(self.relay) + BUNDLE)
         if not raw:
-            return {}
+            return None
         try:
             doc = json.loads(raw)
             if isinstance(doc, list):
@@ -155,8 +158,18 @@ class BundleView:
             if not isinstance(doc, dict):
                 raise TypeError(f"relay {self.relay}'s bundle is not an object: {type(doc).__name__}")
         except PARSE_ERRORS as e:
-            MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}", e)
-            raise Unreachable(f"{member} reports through relay {self.relay}, whose bundle cannot be read: {e}") from None
+            return e
+        return doc
+
+    def _entries(self, member: str) -> dict[str, str]:
+        from .federation import MEMBER_OBJECTS
+        from .steps import once
+        doc = once(("relay bundle", id(self.store), self.relay), self._doc)
+        if doc is None:
+            return {}
+        if isinstance(doc, Exception):
+            MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}", doc)
+            raise Unreachable(f"{member} reports through relay {self.relay}, whose bundle cannot be read: {doc}") from None
         MEMBER_OBJECTS.parsed(f"{self.relay}/{BUNDLE}")
         why = doc.get(REFUSED_KEY, {}).get(member) if isinstance(doc.get(REFUSED_KEY), dict) else None
         if why is not None:

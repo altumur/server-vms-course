@@ -13,7 +13,7 @@ from w2cplatform.cluster.variables import FakeVariables
 
 from w2cplatform.domain.agent import DomainAgent
 from vms.domainpart.ingest import POLLED
-from w2cplatform.domain.alarms import AlarmHistory, Card, DomainAlarms, ReportedDoor, pages
+from w2cplatform.domain.alarms import AlarmHistory, Card, DomainAlarms, ReportedDoor, pages, reported_doors
 from vms.domainpart.device import DeviceCluster
 from w2cplatform.domain.federation import Federation
 from w2cplatform.domain.uplink import member_copy
@@ -326,3 +326,58 @@ def test_an_office_with_no_page_that_reported_and_went_quiet_is_silent_by_its_la
     assert "office silent since" in out["sentence"] and "office has never reported" not in out["sentence"]
     assert out["members"]["cam-SN9"]["state"] == "unreachable"
     assert "cam-SN9 has never reported to the domain" in out["sentence"]
+
+
+def test_a_pass_reads_an_offices_bundle_once_however_many_cameras_are_behind_it():
+    """The scenario «камера — офис — центр», N11: the signer's pass read an office's summary report (`relay.BUNDLE`) some
+    forty times per camera behind it — every read of a camera's copy (its mark, its heartbeats, its snapshot, its page,
+    and each road's mark again) fetched the whole bundle from the store and parsed it. A pass (`steps.Steps.run`) reads
+    each bundle once; outside a pass — a door answering a request — every read is fresh, as before."""
+    from w2cplatform.domain.relay import BUNDLE, Relay
+    from w2cplatform.domain.steps import Steps
+    from w2cplatform.domain.topology import Topology
+    from w2cplatform.domain.uplink import base
+    from w2cplatform.domain.readview import ReadView
+    wall = Clock(NOW)
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    office, _ = make_cluster("office")
+    fed.add(north)
+    fed.add(member_copy("office", north.objects, wall=wall))
+    cams = [DeviceCluster(f"SN7{i}", FakeVariables(), wall=wall) for i in range(3)]
+    topo = Topology(north.vars)
+    topo.edit(lambda d: d.update(centre="north", via={c.name: "office" for c in cams}), base_rev=0,
+              known={"north", "office", *(c.name for c in cams)})
+    relay = DomainAgent("office", north.vars, office.vars, now=wall, domain_objects=north.objects,
+                        published=office.objects, bundle_store=office.objects,
+                        relay_members=lambda: topo.relayed_by("office"), bundle_members=lambda: topo.relayed_by("office"))
+    office.objects.put("vms/snapshot/w-1", b'{"ts": %f, "cameras": []}' % wall())
+    through = Relay(relay, office.objects)
+    agents = []
+    for c in cams:
+        c.boot()
+        fed.add(member_copy(c.name, north.objects, wall=wall, via="office"))
+        card = Card("vms", tempfile.mkdtemp(prefix="card-"))
+        agents.append(DomainAgent(c.name, through.vars, c.flash, now=wall, domain_objects=through.objects,
+                                  published=c.local_objects(), pages=lambda card=card: pages(card, wall())))
+    relay.sync()
+    for a in agents:
+        a.sync()
+    relay.sync()
+    key = base("office") + BUNDLE
+    reads = []
+    real_get = north.objects.get
+    north.objects.get = lambda k: (reads.append(k), real_get(k))[1]
+    try:
+        view = ReadView(fed, wall=wall)
+        alarms = DomainAlarms(fed, reported_doors(fed, north.objects, wall=wall), wall, history=AlarmHistory(north.objects, wall=wall))
+        got = Steps("the signer's pass").run(("the read view's pass", view.refresh), ("the week of alarms", alarms.keep),
+                                             ("the list", lambda: alarms.list(wall() - 3600)))
+        assert sorted({r.cluster for r in view.rows()}) == sorted(c.name for c in cams), view.rows()
+        assert all(got["the list"]["members"][c.name]["state"] == "ok" for c in cams), got["the list"]["members"]
+        assert reads.count(key) == 1, reads.count(key)                   # once in the pass…
+        reads.clear()
+        alarms.list(wall() - 3600)
+        assert reads.count(key) >= 1                                     # …and a door outside a pass reads it fresh
+    finally:
+        north.objects.get = real_get
